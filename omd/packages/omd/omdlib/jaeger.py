@@ -5,8 +5,12 @@
 
 from pathlib import Path
 
+from omdlib.config_api import Config, PortHook
 
-def write_jaeger_receiver_conf(omd_root: str, address: str, port: str) -> None:
+
+def _write_jaeger_receiver_conf(_site_name: str, site_home: Path, config: Config) -> None:
+    address = config.get("TRACE_RECEIVE_ADDRESS", "0")
+    port = config["TRACE_RECEIVE_PORT"]
     content = f"""\
 # Written by TRACE_RECEIVE_ADDRESS or TRACE_RECEIVE_PORT hook
 ---
@@ -16,11 +20,12 @@ receivers:
             grpc:
                 endpoint: "{address}:{port}"
 """
-    with open(Path(omd_root, "etc", "jaeger", "omd-grpc.yaml"), "w") as f:
+    with open(site_home / "etc" / "jaeger" / "omd-grpc.yaml", "w") as f:
         f.write(content)
 
 
-def write_jaeger_ui_port_conf(omd_root: str, site_name: str, port: str) -> None:
+def _write_jaeger_ui_port_conf(site_name: str, site_home: Path, config: Config) -> None:
+    port = config["TRACE_JAEGER_UI_PORT"]
     apache_content = f"""\
 # Written by TRACE_JAEGER_UI_PORT hook
 LoadModule proxy_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy.so
@@ -29,7 +34,7 @@ LoadModule proxy_http_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy
 ProxyPass "/{site_name}/jaeger" "http://[::1]:{port}/{site_name}/jaeger" retry=0 timeout=120
 ProxyPassReverse "/{site_name}/jaeger"  "http://[::1]:{port}/{site_name}/jaeger"
 """
-    with open(Path(omd_root, "etc", "jaeger", "apache.conf"), "w") as f:
+    with open(site_home / "etc" / "jaeger" / "apache.conf", "w") as f:
         f.write(apache_content)
 
     query_content = f"""\
@@ -40,11 +45,12 @@ extensions:
         http:
             endpoint: "[::1]:{port}"
 """
-    with open(Path(omd_root, "etc", "jaeger", "omd-query-port.yaml"), "w") as f:
+    with open(site_home / "etc" / "jaeger" / "omd-query-port.yaml", "w") as f:
         f.write(query_content)
 
 
-def write_jaeger_admin_port_conf(omd_root: str, port: str) -> None:
+def _write_jaeger_admin_port_conf(_site_name: str, site_home: Path, config: Config) -> None:
+    port = config["TRACE_JAEGER_ADMIN_PORT"]
     content = f"""\
 # Written by TRACE_JAEGER_ADMIN_PORT hook
 ---
@@ -59,5 +65,27 @@ service:
                       host: "[::1]"
                       port: {port}
 """
-    with open(Path(omd_root, "etc", "jaeger", "omd-admin-port.yaml"), "w") as f:
+    with open(site_home / "etc" / "jaeger" / "omd-admin-port.yaml", "w") as f:
         f.write(content)
+
+
+TRACE_JAEGER_ADMIN_PORT_HOOK = PortHook(
+    name="TRACE_JAEGER_ADMIN_PORT",
+    display_name="The port",
+    default_port=14269,
+    activation=_write_jaeger_admin_port_conf,
+)
+
+TRACE_JAEGER_UI_PORT_HOOK = PortHook(
+    name="TRACE_JAEGER_UI_PORT",
+    display_name="The port",
+    default_port=16686,
+    activation=_write_jaeger_ui_port_conf,
+)
+
+TRACE_RECEIVE_PORT_HOOK = PortHook(
+    name="TRACE_RECEIVE_PORT",
+    display_name="Trace receiving port",
+    default_port=4417,
+    activation=_write_jaeger_receiver_conf,
+)

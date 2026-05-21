@@ -5,8 +5,7 @@
 
 from pathlib import Path
 
-from omdlib.config_api import Config
-from omdlib.site_paths import SitePaths
+from omdlib.config_api import Config, PortHook
 
 LIVESTATUS_CONFIG_HEADER = """# This file is managed by OMD
 # Do not change anything in this file. Use omd config instead.
@@ -58,30 +57,23 @@ LIVESTATUS_CONFIG_TEMPLATE = """service livestatus
 """
 
 
-def _write_livestatus_xinetd_conf_file(
-    site_name: str,
-    livestatus_tcp: str,
-    livestatus_tcp_only_from: str,
-    livestatus_tcp_port: str,
-    livestatus_tcp_instances: str,
-    livestatus_tcp_per_source: str,
-    omd_path: Path = Path("/omd/"),
-) -> None:
-    site_home = SitePaths.from_site_name(site_name, omd_path).home
-    match livestatus_tcp:
+def write_livestatus_xinetd_conf(site_name: str, site_home: Path, config: Config) -> None:
+    match config["LIVESTATUS_TCP"]:
         case "off":
             content = LIVESTATUS_CONFIG_HEADER
         case "on":
             content = LIVESTATUS_CONFIG_HEADER + LIVESTATUS_CONFIG_TEMPLATE.format(
-                LIVESTATUS_TCP_ONLY_FROM=livestatus_tcp_only_from,
-                LIVESTATUS_TCP_PORT=livestatus_tcp_port,
-                LIVESTATUS_TCP_INSTANCES=livestatus_tcp_instances,
-                LIVESTATUS_TCP_PER_SOURCE=livestatus_tcp_per_source,
+                LIVESTATUS_TCP_ONLY_FROM=config["LIVESTATUS_TCP_ONLY_FROM"],
+                LIVESTATUS_TCP_PORT=config["LIVESTATUS_TCP_PORT"],
+                LIVESTATUS_TCP_INSTANCES=config["LIVESTATUS_TCP_INSTANCES"],
+                LIVESTATUS_TCP_PER_SOURCE=config["LIVESTATUS_TCP_PER_SOURCE"],
                 OMD_SITE=site_name,
                 OMD_ROOT=site_home,
             )
         case _:
-            raise NotImplementedError(f"Invalid value for LIVESTATUS_TCP: {livestatus_tcp}")
+            raise NotImplementedError(
+                f"Invalid value for LIVESTATUS_TCP: {config['LIVESTATUS_TCP']}"
+            )
 
     conf_path = Path(site_home, "etc/xinetd.d/livestatusv1")
     conf_path.parent.mkdir(parents=True, exist_ok=True)
@@ -89,69 +81,9 @@ def _write_livestatus_xinetd_conf_file(
         livestatus_xinetd_conf.write(content)
 
 
-def set_livestatus_tcp(site_name: str, config: Config, omd_path: Path, value: str) -> str:
-    _write_livestatus_xinetd_conf_file(
-        site_name,
-        value,
-        config["LIVESTATUS_TCP_ONLY_FROM"],
-        config["LIVESTATUS_TCP_PORT"],
-        config["LIVESTATUS_TCP_INSTANCES"],
-        config["LIVESTATUS_TCP_PER_SOURCE"],
-        omd_path,
-    )
-    return value
-
-
-def set_livestatus_tcp_port(site_name: str, config: Config, omd_path: Path, value: str) -> str:
-    """Write the xinetd config with the given port. Caller is responsible for port conflict resolution."""
-    _write_livestatus_xinetd_conf_file(
-        site_name,
-        config["LIVESTATUS_TCP"],
-        config["LIVESTATUS_TCP_ONLY_FROM"],
-        value,
-        config["LIVESTATUS_TCP_INSTANCES"],
-        config["LIVESTATUS_TCP_PER_SOURCE"],
-        omd_path,
-    )
-    return value
-
-
-def set_livestatus_tcp_only_from(site_name: str, config: Config, omd_path: Path, value: str) -> str:
-    _write_livestatus_xinetd_conf_file(
-        site_name,
-        config["LIVESTATUS_TCP"],
-        value,
-        config["LIVESTATUS_TCP_PORT"],
-        config["LIVESTATUS_TCP_INSTANCES"],
-        config["LIVESTATUS_TCP_PER_SOURCE"],
-        omd_path,
-    )
-    return value
-
-
-def set_livestatus_tcp_instances(site_name: str, config: Config, omd_path: Path, value: str) -> str:
-    _write_livestatus_xinetd_conf_file(
-        site_name,
-        config["LIVESTATUS_TCP"],
-        config["LIVESTATUS_TCP_ONLY_FROM"],
-        config["LIVESTATUS_TCP_PORT"],
-        value,
-        config["LIVESTATUS_TCP_PER_SOURCE"],
-        omd_path,
-    )
-    return value
-
-
-def set_livestatus_tcp_per_source(
-    site_name: str, config: Config, omd_path: Path, value: str
-) -> str:
-    _write_livestatus_xinetd_conf_file(
-        site_name,
-        config["LIVESTATUS_TCP"],
-        config["LIVESTATUS_TCP_ONLY_FROM"],
-        config["LIVESTATUS_TCP_PORT"],
-        config["LIVESTATUS_TCP_INSTANCES"],
-        value,
-        omd_path,
-    )
-    return value
+LIVESTATUS_TCP_PORT_HOOK = PortHook(
+    name="LIVESTATUS_TCP_PORT",
+    display_name="Livestatus port",
+    default_port=6557,
+    activation=write_livestatus_xinetd_conf,
+)

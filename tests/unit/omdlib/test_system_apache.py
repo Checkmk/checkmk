@@ -130,7 +130,9 @@ def test_create_apache_hook_world_readable(tmp_path: Path) -> None:
 
 def test_write_apache_listen_conf_ipv4(tmp_path: Path) -> None:
     (tmp_path / "etc/apache").mkdir(parents=True)
-    write_apache_listen_conf(str(tmp_path), "127.0.0.1", "5000")
+    write_apache_listen_conf(
+        "mysite", tmp_path, {"APACHE_TCP_ADDR": "127.0.0.1", "APACHE_TCP_PORT": "5000"}
+    )
     content = (tmp_path / "etc/apache/listen-port.conf").read_text()
     assert "ServerName 127.0.0.1:5000" in content
     assert "Listen 127.0.0.1:5000" in content
@@ -138,7 +140,9 @@ def test_write_apache_listen_conf_ipv4(tmp_path: Path) -> None:
 
 def test_write_apache_listen_conf_ipv6(tmp_path: Path) -> None:
     (tmp_path / "etc/apache").mkdir(parents=True)
-    write_apache_listen_conf(str(tmp_path), "[::1]", "5000")
+    write_apache_listen_conf(
+        "mysite", tmp_path, {"APACHE_TCP_ADDR": "[::1]", "APACHE_TCP_PORT": "5000"}
+    )
     content = (tmp_path / "etc/apache/listen-port.conf").read_text()
     assert "Listen [::1]:5000" in content
     assert "ServerName" not in content

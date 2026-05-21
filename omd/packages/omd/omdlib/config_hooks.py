@@ -26,7 +26,7 @@ from pathlib import Path
 from re import Pattern
 from typing import TYPE_CHECKING
 
-from omdlib.config_api import Config
+from omdlib.config_api import Activation, Config, null_action, PortHook
 from omdlib.config_choices import (
     ApacheNetworkPortHasError,
     ApacheTCPAddrHasError,
@@ -36,21 +36,20 @@ from omdlib.config_choices import (
     NetworkPortHasError,
 )
 from omdlib.jaeger import (
-    write_jaeger_admin_port_conf,
-    write_jaeger_receiver_conf,
-    write_jaeger_ui_port_conf,
+    TRACE_JAEGER_ADMIN_PORT_HOOK,
+    TRACE_JAEGER_UI_PORT_HOOK,
+    TRACE_RECEIVE_PORT_HOOK,
 )
-from omdlib.livestatus import (
-    set_livestatus_tcp,
-    set_livestatus_tcp_instances,
-    set_livestatus_tcp_only_from,
-    set_livestatus_tcp_per_source,
-    set_livestatus_tcp_port,
+from omdlib.livestatus import LIVESTATUS_TCP_PORT_HOOK, write_livestatus_xinetd_conf
+from omdlib.rabbitmq import (
+    RABBITMQ_DIST_PORT_HOOK,
+    RABBITMQ_MANAGEMENT_PORT_HOOK,
+    RABBITMQ_PORT_HOOK,
+    write_rabbitmq_default_conf,
 )
-from omdlib.rabbitmq import write_rabbitmq_default_conf, write_rabbitmq_management_port_conf
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites
-from omdlib.system_apache import write_apache_listen_conf
+from omdlib.system_apache import APACHE_TCP_PORT_HOOK, write_apache_listen_conf
 
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import edition
@@ -209,24 +208,10 @@ def load_hook_dependencies(
     return config_hooks
 
 
-_PORT_DEFAULTS: dict[str, int] = {
-    "AGENT_RECEIVER_PORT": 8000,
-    "APACHE_TCP_PORT": 5000,
-    "LIVESTATUS_TCP_PORT": 6557,
-    "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT": 14317,
-    "RABBITMQ_DIST_PORT": 25672,
-    "RABBITMQ_MANAGEMENT_PORT": 15671,
-    "RABBITMQ_PORT": 5672,
-    "TRACE_JAEGER_ADMIN_PORT": 14269,
-    "TRACE_JAEGER_UI_PORT": 16686,
-    "TRACE_RECEIVE_PORT": 4417,
-}
-
-
-def _default_port(hook_name: str, site_name: str, site_configs: _SiteConfigs) -> str:
-    _report_error(hook_name, site_configs.sites_with_unreadable_configs)
+def _default_port(site_name: str, port_hook: PortHook, site_configs: _SiteConfigs) -> str:
+    _report_error(port_hook.name, site_configs.sites_with_unreadable_configs)
     return str(
-        _next_free_port(hook_name, site_name, _PORT_DEFAULTS[hook_name], site_configs.configs)
+        _next_free_port(port_hook.name, site_name, port_hook.default_port, site_configs.configs)
     )
 
 
@@ -236,14 +221,14 @@ def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/
 
     Puts these variables into the config dict without the CONFIG_. Also
     puts the variables into the process environment."""
-    site_home = SitePaths.from_site_name(site.name).home
+    site_home = SitePaths.from_site_name(site.name, omd_path).home
     config = read_site_config(site_home)
     site_configs = _build_site_configs(site.name, omd_path)
     if site.hook_dir and os.path.exists(site.hook_dir):
         for hook_name in _sort_hooks(os.listdir(site.hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
-                if hook_name in _PORT_DEFAULTS:
-                    config[hook_name] = _default_port(hook_name, site.name, site_configs)
+                if (port_hook := _get_port_hook(hook_name)) is not None:
+                    config[hook_name] = _default_port(site.name, port_hook, site_configs)
                 else:
                     config[hook_name] = _call_hook(
                         site, hook_name, ["default", edition(Path(site_home)).long], verbose
@@ -337,20 +322,6 @@ def config_set_all(
         _config_set(site, config, hook_name, verbose)
 
 
-_PORT_HOOK_MSG_PREFIX: dict[str, str] = {
-    "APACHE_TCP_PORT": "Apache port ",
-    "AGENT_RECEIVER_PORT": "agent-receiver port ",
-    "LIVESTATUS_TCP_PORT": "Livestatus port ",
-    "TRACE_RECEIVE_PORT": "Trace receiving port ",
-    "TRACE_JAEGER_UI_PORT": "The port ",
-    "TRACE_JAEGER_ADMIN_PORT": "The port ",
-    "RABBITMQ_PORT": "RabbitMQ port ",
-    "RABBITMQ_MANAGEMENT_PORT": "RabbitMQ management port ",
-    "RABBITMQ_DIST_PORT": "RabbitMQ distribution port ",
-    "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT": "Port ",
-}
-
-
 def _report_error(key: str, sites_with_unreadable_configs: Sequence[str]) -> None:
     if sites_with_unreadable_configs:
         sites_str = ",".join(sites_with_unreadable_configs)
@@ -360,6 +331,57 @@ def _report_error(key: str, sites_with_unreadable_configs: Sequence[str]) -> Non
         )
 
 
+def _get_port_hook(hook_name: str) -> PortHook | None:
+    for hook in PORT_HOOKS:
+        if hook.name == hook_name:
+            return hook
+    return None
+
+
+_AGENT_RECEIVER_PORT_HOOK = PortHook(
+    name="AGENT_RECEIVER_PORT",
+    display_name="agent-receiver port",
+    default_port=8000,
+    activation=null_action,
+)
+
+_OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT_HOOK = PortHook(
+    name="OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT",
+    display_name="Otel Collector self-monitoring port",
+    default_port=14317,
+    activation=null_action,
+)
+
+PORT_HOOKS: Sequence[PortHook] = [
+    APACHE_TCP_PORT_HOOK,
+    _AGENT_RECEIVER_PORT_HOOK,
+    LIVESTATUS_TCP_PORT_HOOK,
+    _OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT_HOOK,
+    RABBITMQ_DIST_PORT_HOOK,
+    RABBITMQ_MANAGEMENT_PORT_HOOK,
+    RABBITMQ_PORT_HOOK,
+    TRACE_JAEGER_ADMIN_PORT_HOOK,
+    TRACE_JAEGER_UI_PORT_HOOK,
+    TRACE_RECEIVE_PORT_HOOK,
+]
+
+
+_MIGRATED_ACTIVATION: Mapping[str, Activation] = {
+    "APACHE_TCP_ADDR": write_apache_listen_conf,
+    "LIVESTATUS_TCP": write_livestatus_xinetd_conf,
+    # Do not patch the xinetd config directly here, because that would lead to
+    # later conflicts during omd cp/mv. The xinetd config points to a link
+    # live-tcp instead which always points to the correct socket. This is
+    # done by "omd", because the hook can not change things in tmp since the
+    # tmpfs may not be available during hook execution.
+    "LIVESTATUS_TCP_TLS": null_action,
+    "LIVESTATUS_TCP_ONLY_FROM": write_livestatus_xinetd_conf,
+    "LIVESTATUS_TCP_INSTANCES": write_livestatus_xinetd_conf,
+    "LIVESTATUS_TCP_PER_SOURCE": write_livestatus_xinetd_conf,
+    "RABBITMQ_ONLY_FROM": write_rabbitmq_default_conf,
+}
+
+
 def _config_set(
     site: "SiteContext",
     config: Config,
@@ -367,133 +389,35 @@ def _config_set(
     verbose: bool,
     omd_path: Path = Path("/omd/"),
 ) -> None:
-    value = config[hook_name]
-    output: str | None = None
-    new_value = value
-    if hook_name in _PORT_HOOK_MSG_PREFIX:
+    site_home = Path(SitePaths.from_site_name(site.name).home)
+
+    if (port_hook := _get_port_hook(hook_name)) is not None:
         site_configs = _build_site_configs(site.name, omd_path)
         _report_error(hook_name, site_configs.sites_with_unreadable_configs)
+        value = config[hook_name]
         new_value = str(_next_free_port(hook_name, site.name, int(value), site_configs.configs))
         if value != new_value:
-            prefix = _PORT_HOOK_MSG_PREFIX[hook_name]
-            sys.stderr.write(f"{prefix}{value} is in use. I've chosen {new_value} instead.\n")
-    match hook_name:
-        case "APACHE_TCP_ADDR":
-            try:
-                port = config.get("APACHE_TCP_PORT", "0")
-                write_apache_listen_conf(SitePaths.from_site_name(site.name).home, value, port)
-            except Exception:
-                traceback.print_exc()
-                return
-        case "APACHE_TCP_PORT":
-            try:
-                addr = config.get("APACHE_TCP_ADDR", "127.0.0.1")
-                write_apache_listen_conf(SitePaths.from_site_name(site.name).home, addr, new_value)
-                output = new_value
-            except Exception:
-                traceback.print_exc()
-                return
-        case "AGENT_RECEIVER_PORT":
-            output = new_value
-        case "LIVESTATUS_TCP":
-            try:
-                output = set_livestatus_tcp(site.name, config, omd_path, value)
-            except Exception:
-                traceback.print_exc()
-                return
-        case "LIVESTATUS_TCP_PORT":
-            try:
-                output = set_livestatus_tcp_port(site.name, config, omd_path, new_value)
-            except Exception:
-                traceback.print_exc()
-                return
-        case "LIVESTATUS_TCP_TLS":
-            # Do not patch the xinetd config directly here, because that would lead to
-            # later conflicts during omd cp/mv. The xinetd config points to a link
-            # live-tcp instead which always points to the correct socket. This is
-            # done by "omd", because the hook can not change things in tmp since the
-            # tmpfs may not be available during hook execution.
+            sys.stderr.write(
+                f"{port_hook.display_name} {value} is in use. I've chosen {new_value} instead.\n"
+            )
+        config[hook_name] = new_value
+        try:
+            port_hook.activation(site.name, site_home, config)
+        except Exception:
+            traceback.print_exc()
             return
-        case "LIVESTATUS_TCP_ONLY_FROM":
-            try:
-                output = set_livestatus_tcp_only_from(site.name, config, omd_path, value)
-            except Exception:
-                traceback.print_exc()
-                return
-        case "LIVESTATUS_TCP_INSTANCES":
-            try:
-                output = set_livestatus_tcp_instances(site.name, config, omd_path, value)
-            except Exception:
-                traceback.print_exc()
-                return
-        case "LIVESTATUS_TCP_PER_SOURCE":
-            try:
-                output = set_livestatus_tcp_per_source(site.name, config, omd_path, value)
-            except Exception:
-                traceback.print_exc()
-                return
-        case "TRACE_RECEIVE_PORT":
-            try:
-                output = new_value
-                address = config.get("TRACE_RECEIVE_ADDRESS", "0")
-                write_jaeger_receiver_conf(
-                    SitePaths.from_site_name(site.name).home, address, new_value
-                )
-            except Exception:
-                traceback.print_exc()
-                return
-        case "TRACE_JAEGER_UI_PORT":
-            try:
-                write_jaeger_ui_port_conf(
-                    SitePaths.from_site_name(site.name).home, site.name, new_value
-                )
-                output = new_value
-            except Exception:
-                traceback.print_exc()
-                return
-        case "TRACE_JAEGER_ADMIN_PORT":
-            try:
-                write_jaeger_admin_port_conf(SitePaths.from_site_name(site.name).home, new_value)
-                output = new_value
-            except Exception:
-                traceback.print_exc()
-                return
-        case "RABBITMQ_PORT":
-            try:
-                only_from = config.get("RABBITMQ_ONLY_FROM", ":: 0.0.0.0")
-                write_rabbitmq_default_conf(
-                    SitePaths.from_site_name(site.name).home, only_from, new_value
-                )
-                output = new_value
-            except Exception:
-                traceback.print_exc()
-                return
-        case "RABBITMQ_ONLY_FROM":
-            try:
-                port = config.get("RABBITMQ_PORT", "5672")
-                write_rabbitmq_default_conf(SitePaths.from_site_name(site.name).home, value, port)
-            except Exception:
-                traceback.print_exc()
-                return
-        case "RABBITMQ_MANAGEMENT_PORT":
-            try:
-                write_rabbitmq_management_port_conf(
-                    SitePaths.from_site_name(site.name).home, new_value
-                )
-                output = new_value
-            except Exception:
-                traceback.print_exc()
-                return
-        case "RABBITMQ_DIST_PORT":
-            output = new_value
-        case "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT":
-            output = new_value
-        case _:
-            exitcode, output = _call_hook(site, hook_name, ["set", value], verbose)
-            if exitcode:
-                return
-    if output:
-        config[hook_name] = output
+    elif (activation := _MIGRATED_ACTIVATION.get(hook_name)) is not None:
+        try:
+            activation(site.name, site_home, config)
+        except Exception:
+            traceback.print_exc()
+            return
+    else:
+        exitcode, output = _call_hook(site, hook_name, ["set", config[hook_name]], verbose)
+        if exitcode:
+            return
+        if output:
+            config[hook_name] = output
 
     os.environ["CONFIG_" + hook_name] = config[hook_name]
 

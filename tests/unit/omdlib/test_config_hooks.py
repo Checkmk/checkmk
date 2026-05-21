@@ -7,12 +7,13 @@ from pathlib import Path
 
 import pytest
 
+from omdlib.config_api import PortHook
 from omdlib.config_hooks import (
     _build_site_configs,
     _default_port,
     _next_free_port,
-    _PORT_DEFAULTS,
     _report_error,
+    PORT_HOOKS,
 )
 
 
@@ -64,25 +65,22 @@ def test_next_free_port_missing_config_current_site(tmp_path: Path) -> None:
     assert _next_free_port("APACHE_TCP_PORT", "newsite", 5000, site_configs.configs) == 5000
 
 
-@pytest.mark.parametrize("hook_name,default_port", list(_PORT_DEFAULTS.items()))
-def test_default_port_cross_key_conflict(tmp_path: Path, hook_name: str, default_port: int) -> None:
+@pytest.mark.parametrize("port_hook", PORT_HOOKS, ids=[h.name for h in PORT_HOOKS])
+def test_default_port_cross_key_conflict(tmp_path: Path, port_hook: PortHook) -> None:
     sites = tmp_path / "sites"
-    _make_site(sites, "other", f"CONFIG_OTHER_KEY='{default_port}'\n")
+    _make_site(sites, "other", f"CONFIG_OTHER_KEY='{port_hook.default_port}'\n")
     _make_site(sites, "mysite", "")
 
     site_configs = _build_site_configs("mysite", tmp_path)
-    assert _default_port(hook_name, "mysite", site_configs) == str(default_port + 1)
+    assert _default_port("mysite", port_hook, site_configs) == str(port_hook.default_port + 1)
 
 
-@pytest.mark.parametrize("hook_name", list(_PORT_DEFAULTS))
+@pytest.mark.parametrize("port_hook", PORT_HOOKS, ids=[h.name for h in PORT_HOOKS])
 def test_default_port_warns_on_unreadable_site(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], hook_name: str
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], port_hook: PortHook
 ) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "mysite", "")
-    (sites / "ghost").mkdir(parents=True)
-
+    (tmp_path / "sites" / "ghost").mkdir(parents=True)  # no site.conf
     site_configs = _build_site_configs("mysite", tmp_path)
-    _default_port(hook_name, "mysite", site_configs)
+    _default_port("mysite", port_hook, site_configs)
 
     assert "ghost" in capsys.readouterr().err

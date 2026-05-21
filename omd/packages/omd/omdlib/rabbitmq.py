@@ -5,8 +5,12 @@
 
 from pathlib import Path
 
+from omdlib.config_api import Config, null_action, PortHook
 
-def write_rabbitmq_default_conf(omd_root: str, only_from: str, port: str) -> None:
+
+def write_rabbitmq_default_conf(_site_name: str, site_home: Path, config: Config) -> None:
+    only_from = config.get("RABBITMQ_ONLY_FROM", ":: 0.0.0.0")
+    port = config.get("RABBITMQ_PORT", "5672")
     lines = [
         "# Port and IP addresses set by `omd config` hooks `RABBITMQ_ONLY_FROM` and\n",
         "# `RABBITMQ_PORT`. Better do not edit manually.\n",
@@ -15,14 +19,37 @@ def write_rabbitmq_default_conf(omd_root: str, only_from: str, port: str) -> Non
             for i, addr in enumerate(only_from.split(), start=1)
         ),
     ]
-    with open(Path(omd_root, "etc", "rabbitmq", "conf.d", "01-default.conf"), "w") as f:
+    with open(site_home / "etc" / "rabbitmq" / "conf.d" / "01-default.conf", "w") as f:
         f.write("".join(lines))
 
 
-def write_rabbitmq_management_port_conf(omd_root: str, port: str) -> None:
+def _write_rabbitmq_management_port_conf(_site_name: str, site_home: Path, config: Config) -> None:
+    port = config["RABBITMQ_MANAGEMENT_PORT"]
     content = f"""\
 # Port set by `omd config` hook `RABBITMQ_MANAGEMENT_PORT`. Better do not edit manually.
 management.ssl.port = {port}
 """
-    with open(Path(omd_root, "etc", "rabbitmq", "conf.d", "02-management-port.conf"), "w") as f:
+    with open(site_home / "etc" / "rabbitmq" / "conf.d" / "02-management-port.conf", "w") as f:
         f.write(content)
+
+
+RABBITMQ_DIST_PORT_HOOK = PortHook(
+    name="RABBITMQ_DIST_PORT",
+    display_name="RabbitMQ distribution port",
+    default_port=25672,
+    activation=null_action,
+)
+
+RABBITMQ_MANAGEMENT_PORT_HOOK = PortHook(
+    name="RABBITMQ_MANAGEMENT_PORT",
+    display_name="RabbitMQ management port",
+    default_port=15671,
+    activation=_write_rabbitmq_management_port_conf,
+)
+
+RABBITMQ_PORT_HOOK = PortHook(
+    name="RABBITMQ_PORT",
+    display_name="RabbitMQ port",
+    default_port=5672,
+    activation=write_rabbitmq_default_conf,
+)

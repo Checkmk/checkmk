@@ -10,6 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from omdlib.config_api import Config, PortHook
 from omdlib.config_choices import ApacheNetworkPortHasError, ApacheTCPAddrHasError
 from omdlib.console import show_success
 from omdlib.utils import is_containerized
@@ -30,8 +31,10 @@ _CONF_HEADER = (
 )
 
 
-def write_apache_listen_conf(omd_root: str, addr: str, port: str) -> None:
-    conf_path = os.path.join(omd_root, "etc", "apache", "listen-port.conf")
+def write_apache_listen_conf(_site_name: str, site_home: Path, config: Config) -> None:
+    port = config.get("APACHE_TCP_PORT", "0")
+    addr = config.get("APACHE_TCP_ADDR", "127.0.0.1")
+    conf_path = os.path.join(site_home, "etc", "apache", "listen-port.conf")
 
     if addr.startswith("["):
         content = f"{_CONF_HEADER}Listen {addr}:{port}\n"
@@ -40,6 +43,14 @@ def write_apache_listen_conf(omd_root: str, addr: str, port: str) -> None:
 
     with open(conf_path, "w") as f:
         f.write(content)
+
+
+APACHE_TCP_PORT_HOOK = PortHook(
+    name="APACHE_TCP_PORT",
+    display_name="Apache port",
+    default_port=5000,
+    activation=write_apache_listen_conf,
+)
 
 
 def register_with_system_apache(

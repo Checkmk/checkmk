@@ -85,7 +85,6 @@ def test_automation_user_gui(with_automation_user: tuple[str, str], site: Site) 
     )
     assert "cmk-dashboard" in response.text
     assert not session.is_logged_in()
-    assert session.get_auth_cookie() is None
 
     session = CMKWebSession(site)
     response = session.get(
@@ -96,7 +95,6 @@ def test_automation_user_gui(with_automation_user: tuple[str, str], site: Site) 
     )
     assert "cmk-dashboard" in response.text
     assert not session.is_logged_in()
-    assert session.get_auth_cookie() is None
 
 
 @pytest.mark.skip_if_edition("cloud")
@@ -115,7 +113,6 @@ def test_automation_user_rest_api(with_automation_user: tuple[str, str], site: S
     )
     assert "site" in response.json()
     assert not session.is_logged_in()
-    assert session.get_auth_cookie() is None
 
     session = CMKWebSession(site)
     response = session.get(
@@ -126,7 +123,6 @@ def test_automation_user_rest_api(with_automation_user: tuple[str, str], site: S
     )
     assert "site" in response.json()
     assert not session.is_logged_in()
-    assert session.get_auth_cookie() is None
 
 
 @pytest.mark.skip_if_edition("cloud")
@@ -150,7 +146,6 @@ def test_human_user_gui(site: Site) -> None:
     )
     assert "cmk-dashboard" not in response.text
     assert not session.is_logged_in()
-    assert session.get_auth_cookie() is None
 
     session = CMKWebSession(site)
     response = session.get(
@@ -159,7 +154,6 @@ def test_human_user_gui(site: Site) -> None:
     )
     assert "cmk-dashboard" in response.text
     assert session.is_logged_in()
-    assert session.get_auth_cookie() is not None
 
     session = CMKWebSession(site)
     response = session.get(
@@ -170,7 +164,6 @@ def test_human_user_gui(site: Site) -> None:
     )
     assert "cmk-dashboard" in response.text
     assert session.is_logged_in()
-    assert session.get_auth_cookie() is not None
 
 
 @pytest.mark.skip_if_edition("cloud")
@@ -194,7 +187,6 @@ def test_human_user_restapi(site: Site) -> None:
         expected_code=401,
     )
     assert not session.is_logged_in()
-    assert session.get_auth_cookie() is None
 
     session = CMKWebSession(site)
     response = session.get(
@@ -203,7 +195,6 @@ def test_human_user_restapi(site: Site) -> None:
     )
     assert "site" in response.json()
     assert not session.is_logged_in()
-    assert session.get_auth_cookie() is None
 
     session = CMKWebSession(site)
     response = session.get(
@@ -214,7 +205,6 @@ def test_human_user_restapi(site: Site) -> None:
     )
     assert "site" in response.json()
     assert not session.is_logged_in()
-    assert session.get_auth_cookie() is None
 
 
 def _get_failed_logins(site: Site, user: str) -> int:
@@ -310,7 +300,6 @@ def test_local_secret_no_sessions(site: Site) -> None:
     )
     assert "site" in response.json()
     assert not session.is_logged_in()
-    assert session.get_auth_cookie() is None
 
     session = CMKWebSession(site)
     response = session.get(
@@ -321,7 +310,6 @@ def test_local_secret_no_sessions(site: Site) -> None:
     )
     assert "cmk-dashboard" in response.text
     assert not session.is_logged_in()
-    assert session.get_auth_cookie() is None
 
 
 def test_local_secret_permissions(site: Site) -> None:

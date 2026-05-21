@@ -233,12 +233,14 @@ class CMKWebSession:
         assert 'action="login.py"' in r.text
 
     def is_logged_in(self) -> bool:
+        """Check whether this session has an auth cookie and can access a protected page.
+
+        On cloud, only the cookie is checked because forwarding to change_log.py would
+        trigger the OAuth mock and establish a session as a side effect."""
+        if self.get_auth_cookie() is None:
+            return False
         if edition_from_env().is_cloud_edition():
-            # On cloud, GETting change_log.py would log the session in via the
-            # OAuth provider mock started by the cloud lifecycle wrapper,
-            # masking whatever auth state we are trying to observe. Auth state
-            # on cloud is the auth cookie set by a prior successful login.
-            return self.get_auth_cookie() is not None
+            return True
         return "Change log (Werks)" in self.get("change_log.py", allow_redirect_to_login=True).text
 
     def get_auth_cookie(self) -> Cookie | None:

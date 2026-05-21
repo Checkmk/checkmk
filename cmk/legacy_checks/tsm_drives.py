@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # <<<tsm_drives>>>
 # tsmfarm3   LIBRARY3           DRIVE01        LOADED             YES            000782XXXX
 # tsmfarm3   LIBRARY3           DRIVE02        LOADED             YES            002348XXXX
@@ -34,60 +32,68 @@
 # POLLING?
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
-
-
-def discover_tsm_drives(info):
-    inventory = []
-    for line in info:
-        if len(line) == 6:
-            inst, library, drive, _state, _online = line[:5]
-            item = f"{library} / {drive}"
-            if inst != "default":
-                item = inst + " / " + item
-            inventory.append((item, None))
-
-    return inventory
-
-
-def check_tsm_drives(item, params, info):
-    for line in info:
-        if len(line) >= 5:
-            inst, library, drive, state, online = line[:5]
-            libdev = f"{library} / {drive}"
-            if item in {libdev, inst + " / " + libdev}:
-                if len(line) >= 6:
-                    serial = line[5]
-                    infotext = "[%s] " % serial
-                else:
-                    serial = None
-                    infotext = ""
-
-                monstate = 0
-                infotext += "state: %s" % state
-                if state in ["UNAVAILABLE", "UNKNOWN"]:
-                    monstate = 2
-                    infotext += "(!!)"
-
-                infotext += ", online: %s" % online
-                if online != "YES":
-                    monstate = 2
-                    infotext += "(!!)"
-
-                return (monstate, infotext)
-    return (3, "drive not found")
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
 def parse_tsm_drives(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["tsm_drives"] = LegacyCheckDefinition(
+def discover_tsm_drives(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if len(line) == 6:
+            inst, library, drive = line[0], line[1], line[2]
+            item = f"{library} / {drive}"
+            if inst != "default":
+                item = f"{inst} / {item}"
+            yield Service(item=item)
+
+
+def check_tsm_drives(item: str, section: StringTable) -> CheckResult:
+    for line in section:
+        if len(line) < 5:
+            continue
+        inst, library, drive, state, online = line[:5]
+        libdev = f"{library} / {drive}"
+        if item not in {libdev, f"{inst} / {libdev}"}:
+            continue
+
+        infotext = f"[{line[5]}] " if len(line) >= 6 else ""
+
+        monstate = State.OK
+        infotext += f"state: {state}"
+        if state in ("UNAVAILABLE", "UNKNOWN"):
+            monstate = State.CRIT
+            infotext += "(!!)"
+
+        infotext += f", online: {online}"
+        if online != "YES":
+            monstate = State.CRIT
+            infotext += "(!!)"
+
+        yield Result(state=monstate, summary=infotext)
+        return
+
+    yield Result(state=State.UNKNOWN, summary="drive not found")
+
+
+agent_section_tsm_drives = AgentSection(
     name="tsm_drives",
     parse_function=parse_tsm_drives,
+)
+
+
+check_plugin_tsm_drives = CheckPlugin(
+    name="tsm_drives",
     service_name="TSM Drive %s",
     discovery_function=discover_tsm_drives,
     check_function=check_tsm_drives,

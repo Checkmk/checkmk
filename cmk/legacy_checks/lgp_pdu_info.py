@@ -14,45 +14,56 @@
 # [['1', 'TEST-123-HOST', '1', '535055G103T2010JUN240295', '1']]
 
 
-from collections.abc import Iterable
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lgp.lib import DETECT_LGP
 
-check_info = {}
+
+def discover_lgp_pdu_info(section: StringTable) -> DiscoveryResult:
+    for pdu in section:
+        # Use the SysAssignLabel as item
+        yield Service(item=pdu[2])
 
 
-def discover_lgp_pdu_info(info: list[list[str]]) -> Iterable[tuple[str, None]]:
-    if info:
-        inv = []
-        for pdu in info:
-            # Use the SysAssignLabel as item
-            inv.append((pdu[2], None))
-        return inv
-    return []
-
-
-def check_lgp_pdu_info(item: str, params: object, info: list[list[str]]) -> tuple[int, str]:
-    for pdu in info:
+def check_lgp_pdu_info(item: str, section: StringTable) -> CheckResult:
+    for pdu in section:
         if pdu[2] == item:
-            return (0, "Entry-ID: %s, Label: %s (%s), S/N: %s, Num. RCs: %s" % tuple(pdu))
+            entry_id, label, sys_label, serial, num_rcs = pdu
+            yield Result(
+                state=State.OK,
+                summary=f"Entry-ID: {entry_id}, Label: {label} ({sys_label}), S/N: {serial}, Num. RCs: {num_rcs}",
+            )
+            return
 
-    return (3, "Device can not be found in SNMP output.")
+    yield Result(state=State.UNKNOWN, summary="Device can not be found in SNMP output.")
 
 
 def parse_lgp_pdu_info(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["lgp_pdu_info"] = LegacyCheckDefinition(
+snmp_section_lgp_pdu_info = SimpleSNMPSection(
     name="lgp_pdu_info",
-    parse_function=parse_lgp_pdu_info,
     detect=DETECT_LGP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.8.20.1",
         oids=["5", "10", "15", "45", "50"],
     ),
+    parse_function=parse_lgp_pdu_info,
+)
+
+
+check_plugin_lgp_pdu_info = CheckPlugin(
+    name="lgp_pdu_info",
     service_name="Liebert PDU Info %s",
     discovery_function=discover_lgp_pdu_info,
     check_function=check_lgp_pdu_info,

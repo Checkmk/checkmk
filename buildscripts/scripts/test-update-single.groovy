@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-update-single-f12less.groovy
+/// file: test-update-single.groovy
 
 def build_make_target(edition) {
     def prefix = "test-update-";

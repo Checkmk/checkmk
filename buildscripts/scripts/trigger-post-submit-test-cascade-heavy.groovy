@@ -21,7 +21,7 @@ def main() {
         "test-integration-cre",
         "test-gui-crawl-node",
         "test-gui-e2e",
-        "test-update-single-f12less",
+        "test-update-cee",
     ];
 
     print(

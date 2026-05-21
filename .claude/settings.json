@@ -8,11 +8,17 @@
           {
             "type": "command",
             "command": ".claude/hooks/format.sh"
-          },
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/lint-async.sh",
-            "async": true
+            "command": ".claude/hooks/commit-lint.sh"
           }
         ]
       }

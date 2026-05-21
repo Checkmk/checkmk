@@ -6,9 +6,7 @@
 bep_json=$(mktemp /tmp/bep_XXXXXX.json)
 trap 'rm -f "$bep_json"' EXIT
 
-# ci converts commas to spaces, restore comma separation for Bazel
-_extra_filters="${BAZEL_EXTRA_TAG_FILTERS// /,}"
-tag_filters="-component${_extra_filters:+,${_extra_filters}}"
+tag_filters="-component${BAZEL_EXTRA_TAG_FILTERS:+,${BAZEL_EXTRA_TAG_FILTERS}}"
 
 RC=0
 bazel test \

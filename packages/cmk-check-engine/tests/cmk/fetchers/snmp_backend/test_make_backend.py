@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
-
 import dataclasses
 import logging
 from pathlib import Path
@@ -15,15 +12,7 @@ import pytest
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.fetchers.snmp_backend import make_backend
 from cmk.snmp_backends.classic import ClassicSNMPBackend
-from cmk.snmplib import SNMPBackend, SNMPBackendEnum, SNMPHostConfig, SNMPVersion
-
-InlineSNMPBackend: type[SNMPBackend] | None = None
-try:
-    from cmk.snmp_backends.inline import (  # type: ignore[import,unused-ignore,no-redef]
-        InlineSNMPBackend,
-    )
-except ImportError:
-    pass
+from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 
 
 @pytest.fixture(name="snmp_config")
@@ -51,13 +40,6 @@ def test_factory_snmp_backend_classic(snmp_config: SNMPHostConfig) -> None:
         make_backend(snmp_config, logging.getLogger()),
         ClassicSNMPBackend,
     )
-
-
-@pytest.mark.skipif(InlineSNMPBackend is None, reason="Inline SNMP backend not available")
-def test_factory_snmp_backend_inline(snmp_config: SNMPHostConfig) -> None:
-    snmp_config = dataclasses.replace(snmp_config, snmp_backend=SNMPBackendEnum.INLINE)
-    assert InlineSNMPBackend is not None  # Just for the benefit of type checking
-    assert isinstance(make_backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
 
 
 def test_factory_snmp_backend_inline_unavailable(

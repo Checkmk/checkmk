@@ -25,7 +25,7 @@ void main() {
         "test-integration-community",
         "test-integration-pro",
         "test-integration-ultimatemt",
-        "test-plugins-k8s",
+        "test-plugins",
         "test-plugins-piggyback-k8s",
         "test-update-single-f12less-k8s",
         "test-update-single-f12less-community-pro-k8s",

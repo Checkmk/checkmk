@@ -61,26 +61,33 @@ def test_factory_snmp_backend_inline(snmp_config: SNMPHostConfig) -> None:
 
 
 def test_factory_snmp_backend_inline_unavailable(
-    snmp_config: SNMPHostConfig, monkeypatch: pytest.MonkeyPatch
+    snmp_config: SNMPHostConfig,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     import cmk.fetchers.snmp_backend as snmp_backend_module
 
-    monkeypatch.setattr(snmp_backend_module, "InlineSNMPBackend", None)
+    monkeypatch.setattr(
+        snmp_backend_module,
+        "_BACKENDS",
+        {
+            k: v
+            for k, v in snmp_backend_module._BACKENDS.items()  # noqa: SLF001
+            if k is not SNMPBackendEnum.INLINE
+        },
+    )
     snmp_config = dataclasses.replace(snmp_config, snmp_backend=SNMPBackendEnum.INLINE)
-    with pytest.raises(NotImplementedError, match="Unknown SNMP backend"):
-        make_backend(snmp_config, logging.getLogger())
+    logger = logging.getLogger()
+    with caplog.at_level(logging.ERROR, logger=logger.name):
+        backend = make_backend(snmp_config, logger)
+    assert isinstance(backend, ClassicSNMPBackend)
+    assert any(
+        record.levelno == logging.ERROR and "Unknown SNMP backend" in record.getMessage()
+        for record in caplog.records
+    )
 
 
 def test_factory_snmp_backend_unknown_backend(snmp_config: SNMPHostConfig) -> None:
-    with pytest.raises(NotImplementedError, match="Unknown SNMP backend"):
+    with pytest.raises(AssertionError, match="Unknown SNMP backend"):
         snmp_config = dataclasses.replace(snmp_config, snmp_backend="bla")  # type: ignore[arg-type]
-        if InlineSNMPBackend is not None:
-            assert isinstance(
-                make_backend(snmp_config, logging.getLogger()),
-                InlineSNMPBackend,
-            )
-        else:
-            assert isinstance(
-                make_backend(snmp_config, logging.getLogger()),
-                ClassicSNMPBackend,
-            )
+        make_backend(snmp_config, logging.getLogger())

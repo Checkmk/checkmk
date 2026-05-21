@@ -10,7 +10,15 @@ from pathlib import Path
 from typing import Final
 
 from cmk.helper_interface import FetcherError
-from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPHostConfig, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib import (
+    OID,
+    SNMPBackend,
+    SNMPBackendEnum,
+    SNMPContext,
+    SNMPHostConfig,
+    SNMPRawValue,
+    SNMPRowInfo,
+)
 
 from ._utils import strip_snmp_value
 
@@ -23,6 +31,10 @@ class StoredWalkSNMPBackend(SNMPBackend):
         self.path: Final = snmp_config.stored_walk_path / snmp_config.hostname
         if not self.path.exists():
             raise FetcherError(f"No snmpwalk file {self.path}")
+
+    @staticmethod
+    def get_type() -> SNMPBackendEnum:
+        return SNMPBackendEnum.STORED_WALK
 
     def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
         walk = self.walk(oid, context=context)

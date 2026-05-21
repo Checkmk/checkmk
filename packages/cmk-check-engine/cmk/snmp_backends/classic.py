@@ -10,7 +10,15 @@ from typing import assert_never, Literal
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.helper_interface import FetcherError
-from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo, SNMPVersion
+from cmk.snmplib import (
+    OID,
+    SNMPBackend,
+    SNMPBackendEnum,
+    SNMPContext,
+    SNMPRawValue,
+    SNMPRowInfo,
+    SNMPVersion,
+)
 
 from ._utils import strip_snmp_value
 
@@ -35,6 +43,10 @@ def _sanitize_tuple(tuple_: object) -> str:
 
 
 class ClassicSNMPBackend(SNMPBackend):
+    @staticmethod
+    def get_type() -> SNMPBackendEnum:
+        return SNMPBackendEnum.CLASSIC
+
     def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]

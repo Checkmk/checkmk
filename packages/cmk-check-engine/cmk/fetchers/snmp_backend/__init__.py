@@ -4,19 +4,48 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Home of our open source SNMP backends."""
 
+import importlib
+import inspect
 import logging
+import pkgutil
+from collections.abc import Mapping
 
-from cmk.snmp_backends.classic import ClassicSNMPBackend as ClassicSNMPBackend
-from cmk.snmp_backends.stored_walk import StoredWalkSNMPBackend as StoredWalkSNMPBackend
+import cmk.snmp_backends
 from cmk.snmplib import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
-InlineSNMPBackend: type[SNMPBackend] | None = None
-try:
-    from cmk.snmp_backends.inline import (  # type: ignore[import,no-redef,unused-ignore]
-        InlineSNMPBackend,
-    )
-except ImportError:
-    pass
+
+def discover_backends() -> Mapping[SNMPBackendEnum, type[SNMPBackend]]:
+    """Find every concrete `SNMPBackend` subclass exposed by `cmk.snmp_backends.*`.
+
+    Backends register themselves by living in a submodule of the namespace package
+    `cmk.snmp_backends` and exposing a concrete `SNMPBackend` subclass (typically
+    via the submodule's `__init__.py`). Each backend identifies itself through its
+    static `get_type()` method, which is also the dispatch key used by
+    `make_backend`.
+    """
+    backends: dict[SNMPBackendEnum, type[SNMPBackend]] = {}
+    for mod_info in pkgutil.iter_modules(
+        cmk.snmp_backends.__path__, f"{cmk.snmp_backends.__name__}."
+    ):
+        if mod_info.name.rsplit(".", 1)[-1].startswith("_"):
+            # Private submodules are expected to not expose a backend!
+            continue
+        try:
+            module = importlib.import_module(mod_info.name)
+        except ImportError:
+            continue
+        for value in vars(module).values():
+            if (
+                isinstance(value, type)
+                and issubclass(value, SNMPBackend)
+                and value is not SNMPBackend
+                and not inspect.isabstract(value)
+            ):
+                backends[value.get_type()] = value
+    return backends
+
+
+_BACKENDS: Mapping[SNMPBackendEnum, type[SNMPBackend]] = discover_backends()
 
 
 def make_backend(
@@ -25,13 +54,12 @@ def make_backend(
     *,
     use_cache: bool = False,
 ) -> SNMPBackend:
-    if use_cache or snmp_config.snmp_backend is SNMPBackendEnum.STORED_WALK:
-        return StoredWalkSNMPBackend(snmp_config, logger)
-
-    if InlineSNMPBackend is not None and snmp_config.snmp_backend is SNMPBackendEnum.INLINE:
-        return InlineSNMPBackend(snmp_config, logger)
-
-    if snmp_config.snmp_backend is SNMPBackendEnum.CLASSIC:
-        return ClassicSNMPBackend(snmp_config, logger)
-
-    raise NotImplementedError(f"Unknown SNMP backend: {snmp_config.snmp_backend}")
+    # Apparently, this could be a thing.
+    assert isinstance(snmp_config.snmp_backend, SNMPBackendEnum), "Unknown SNMP backend"
+    backend_type = SNMPBackendEnum.STORED_WALK if use_cache else snmp_config.snmp_backend
+    try:
+        backend_cls = _BACKENDS[backend_type]
+    except KeyError:
+        logger.error("Unknown SNMP backend: %s. Using CLASSIC backend as fallback", backend_type)
+        backend_cls = _BACKENDS[SNMPBackendEnum.CLASSIC]
+    return backend_cls(snmp_config, logger)

@@ -60,6 +60,10 @@ SNMPConfig = SNMPHostConfig(
 
 
 class SNMPTestBackend(SNMPBackend):
+    @staticmethod
+    def get_type() -> SNMPBackendEnum:
+        return SNMPBackendEnum.CLASSIC
+
     def get(self, /, oid, *, context):
         pass
 
@@ -196,6 +200,10 @@ def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
 
 def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> None:
     class Backend(SNMPBackend):
+        @staticmethod
+        def get_type() -> SNMPBackendEnum:
+            return SNMPBackendEnum.CLASSIC
+
         def get(self, /, *args: object, **kw: object) -> NoReturn:
             assert False
 
@@ -239,6 +247,10 @@ def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> Non
 
 def test_walk_raises_on_timeout_without_snmpv3_context_stop_on_timeout() -> None:
     class Backend(SNMPBackend):
+        @staticmethod
+        def get_type() -> SNMPBackendEnum:
+            return SNMPBackendEnum.CLASSIC
+
         def get(self, /, *args: object, **kw: object) -> NoReturn:
             assert False
 

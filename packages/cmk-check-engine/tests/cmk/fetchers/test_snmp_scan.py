@@ -41,6 +41,10 @@ class SNMPTestBackend(SNMPBackend):
     def __init__(self) -> None:
         super().__init__(SNMP_CONFIG, logging.getLogger())
 
+    @staticmethod
+    def get_type() -> SNMPBackendEnum:
+        return SNMPBackendEnum.CLASSIC
+
     def get(self, /, *_a: object, **_kw: object) -> None:
         # See also: `snmp_mode.get_single_oid()`
         return None

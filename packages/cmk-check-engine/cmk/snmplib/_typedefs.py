@@ -247,6 +247,11 @@ class SNMPBackend(abc.ABC):
     def port(self, new_port: int) -> None:
         self.config = dataclasses.replace(self.config, port=new_port)
 
+    @staticmethod
+    @abc.abstractmethod
+    def get_type() -> SNMPBackendEnum:
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
         """Fetch a single OID from the given host in the given SNMP context

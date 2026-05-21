@@ -634,9 +634,7 @@ allows = [
   "@plugin_apis",
   "@relay_protocols",
   "cmk.helper_interface",
-  "cmk.snmp_backends.inline",
-  "cmk.snmp_backends.classic",
-  "cmk.snmp_backends.stored_walk",
+  "cmk.snmp_backends",
   "cmk.snmplib",
 ]
 

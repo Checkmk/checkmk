@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-gui-crawl-f12less.groovy
+/// file: test-gui-crawl-node.groovy
 
 def main() {
     check_job_parameters([

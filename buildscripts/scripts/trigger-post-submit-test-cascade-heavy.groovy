@@ -19,7 +19,7 @@ def main() {
         "test-integration-cee",
         "test-integration-cme",
         "test-integration-cre",
-        "test-gui-crawl-f12less",
+        "test-gui-crawl-node",
         "test-gui-e2e",
         "test-update-single-f12less",
     ];

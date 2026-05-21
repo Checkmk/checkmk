@@ -1498,7 +1498,7 @@
           "@@rules_python~//tools/publish/requirements_linux.txt": "d576e0d8542df61396a9b38deeaa183c24135ed5e8e73bb9622f298f2671811e",
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
           "@@rules_python~//tools/publish/requirements_windows.txt": "d18538a3982beab378fd5687f4db33162ee1ece69801f9a451661b1b64286b76",
-          "@@//requirements_all_lock.txt": "bdb247c4147f24502a8bb13868bdae1d309232d517913f0192206b40bb31de0c",
+          "@@//requirements_all_lock.txt": "9e42a4c438cf7c4813a9301b79af5a347f134ee87ea1d75a70e74e2ad926d484",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5",
           "@@rules_python~//tools/publish/requirements_darwin.txt": "095d4a4f3d639dce831cd493367631cd51b53665292ab20194bac2c0c6458fa8"
@@ -7830,7 +7830,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "werkzeug==3.1.5 --hash=sha256:5111e36e91086ece91f93268bb39b4a35c1e6f1feac762c9c822ded0a4e322dc --hash=sha256:6a548b0e88955dd07ccb25539d7d0cc97417ee9e179677d22c7041c8f078ce67"
+              "requirement": "werkzeug==3.1.8 --hash=sha256:63a77fb8892bf28ebc3178683445222aa500e48ebad5ec77b0ad80f8726b1f50 --hash=sha256:9bad61a4268dac112f1c5cd4630a56ede601b6ed420300677a869083d70a4c44"
             }
           },
           "cmk_requirements_312_wrapt": {

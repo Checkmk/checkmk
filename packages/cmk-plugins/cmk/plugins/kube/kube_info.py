@@ -16,11 +16,11 @@ from cmk.plugins.kube.schemata.section import (
 )
 
 
-def result_simple(display_name: str, notice_only: bool = False) -> Callable[[object], Result]:
+def result_simple(display_name: str, notice_only: bool = False) -> Callable[[object], CheckResult]:
     key = "notice" if notice_only else "summary"
 
-    def result_func(value: object) -> Result:
-        return Result(state=State.OK, **{key: f"{display_name}: {value}"})
+    def result_func(value: object) -> CheckResult:
+        yield Result(state=State.OK, **{key: f"{display_name}: {value}"})
 
     return result_func
 
@@ -28,18 +28,19 @@ def result_simple(display_name: str, notice_only: bool = False) -> Callable[[obj
 Age = NewType("Age", float)
 
 
-def result_from_age(value: Age | None) -> Result:
+def result_from_age(value: Age | None) -> CheckResult:
     if value is None:
-        return Result(state=State.OK, summary="Age: unknown")
-    return Result(
+        yield Result(state=State.OK, summary="Age: unknown")
+        return
+    yield Result(
         state=State.OK,
         summary=f"Age: {render.timespan(value)}",
     )
 
 
-def result_from_control_chain(control_chain: ControlChain) -> Result:
+def result_from_control_chain(control_chain: ControlChain) -> CheckResult:
     chain_display = " <- ".join(f"{c.type_}/{c.name}" for c in control_chain)
-    return Result(
+    yield Result(
         state=State.OK, summary=f"Controlled by: {chain_display if chain_display else None}"
     )
 
@@ -65,7 +66,7 @@ InfoTypes = Literal[
     "suspend",
 ]
 
-_RESULT_FUNC: Mapping[InfoTypes, Callable[[Any], Result]] = {
+_RESULT_FUNC: Mapping[InfoTypes, Callable[[Any], CheckResult]] = {
     "name": result_simple("Name"),
     "node": result_simple("Node"),
     "namespace": result_simple("Namespace"),
@@ -92,7 +93,7 @@ _RESULT_FUNC: Mapping[InfoTypes, Callable[[Any], Result]] = {
 def check_info(info: Mapping[InfoTypes, Any]) -> CheckResult:
     for info_type, function in _RESULT_FUNC.items():
         if info_type in info:
-            yield function(info[info_type])
+            yield from function(info[info_type])
 
 
 def host_labels(

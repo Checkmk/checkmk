@@ -17,7 +17,7 @@ void main() {
         "test-bazel-lint",
         "test-format",
         "test-github-actions",
-        "test-plugins-siteless-k8s",
+        "test-plugins-siteless",
         // the werk test needs all git tags available in the checkout
         "test-werks",
         "test-python3-typing",

@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-integration-single-f12less-k8s.groovy
+/// file: test-integration-single.groovy
 
 void main() {
     check_job_parameters([

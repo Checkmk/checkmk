@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-integration-single-f12less-redfish.groovy
+/// file: test-integration-otel.groovy
 
 void main() {
     check_job_parameters([
@@ -21,7 +21,7 @@ void main() {
     def distro = params.DISTRO;
     def edition = params.EDITION;
 
-    def make_target = "test-integration-redfish-docker";
+    def make_target = "test-integration-otel-docker";
     def download_dir = "package_download";
     def result_dir = "test-results";
 
@@ -76,9 +76,6 @@ void main() {
                             branch_name: setup_values.safe_branch_name,
                             make_target: make_target,
                             test_filter: params.TEST_FILTER,
-                            // can hit 10min during the heavy chain runs (without wait time)
-                            // using FoS of 3
-                            timeout: 30,
                         );
                     }
                 }

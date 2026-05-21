@@ -86,6 +86,7 @@ from cmk.utils.notify_types import (
     OpsGeniePluginName,
     PagerDutyPluginModel,
     PagerdutyPluginName,
+    PagerDutyWebhookURL,
     PluginNameWithParameters,
     PluginOptions,
     PushoverPluginModel,
@@ -1184,9 +1185,7 @@ class PagerDutyPlugin:
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
-    webhook_url: Literal["https://events.pagerduty.com/v2/enqueue"] = (
-        "https://events.pagerduty.com/v2/enqueue"
-    )
+    webhook_url: PagerDutyWebhookURL = "https://events.pagerduty.com/v2/enqueue"
 
     @classmethod
     def from_mk_file_format(cls, pluginparams: PagerDutyPluginModel | None) -> PagerDutyPlugin:
@@ -1205,6 +1204,7 @@ class PagerDutyPlugin:
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_mk_file_format(
                 pluginparams.get("url_prefix"),
             ),
+            webhook_url=pluginparams.get("webhook_url", "https://events.pagerduty.com/v2/enqueue"),
         )
 
     @classmethod
@@ -1224,6 +1224,7 @@ class PagerDutyPlugin:
             url_prefix_for_links_to_checkmk=CheckboxURLPrefix.from_api_request(
                 params["url_prefix_for_links_to_checkmk"]
             ),
+            webhook_url=params.get("webhook_url", "https://events.pagerduty.com/v2/enqueue"),
         )
 
     def api_response(self) -> APINotifyPlugin:
@@ -1235,6 +1236,7 @@ class PagerDutyPlugin:
                     "disable_ssl_cert_verification": self.disable_ssl_cert_verification.api_response(),
                     "http_proxy": self.http_proxy.api_response(),
                     "url_prefix_for_links_to_checkmk": self.url_prefix_for_links_to_checkmk.api_response(),
+                    "webhook_url": self.webhook_url,
                 }
             )
         return APINotifyPlugin(option=self.option, plugin_params=plugin_params)

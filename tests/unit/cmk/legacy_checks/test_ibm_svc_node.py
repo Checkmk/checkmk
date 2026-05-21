@@ -4,14 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.ibm_svc_node import (
     check_ibm_svc_node,
     discover_ibm_svc_node,
@@ -109,25 +107,26 @@ from cmk.legacy_checks.ibm_svc_node import (
                     "",
                 ],
             ],
-            [("io_grp0", {}), ("io_grp1", {})],
+            [Service(item="io_grp0"), Service(item="io_grp1")],
         ),
     ],
 )
 def test_discover_ibm_svc_node(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for ibm_svc_node check."""
     parsed = parse_ibm_svc_node(string_table)
     result = list(discover_ibm_svc_node(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(result, key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "item, string_table, expected_results",
     [
         (
             "io_grp0",
-            {},
             [
                 [
                     "1",
@@ -214,11 +213,10 @@ def test_discover_ibm_svc_node(
                     "",
                 ],
             ],
-            [(0, "Node N1_164191 is online, Node N2_164373 is online")],
+            [Result(state=State.OK, summary="Node N1_164191 is online, Node N2_164373 is online")],
         ),
         (
             "io_grp1",
-            {},
             [
                 [
                     "1",
@@ -305,14 +303,14 @@ def test_discover_ibm_svc_node(
                     "",
                 ],
             ],
-            [(0, "Node N3_162711 is online, Node N4_164312 is online")],
+            [Result(state=State.OK, summary="Node N3_162711 is online, Node N4_164312 is online")],
         ),
     ],
 )
 def test_check_ibm_svc_node(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str, string_table: StringTable, expected_results: Sequence[Result]
 ) -> None:
     """Test check function for ibm_svc_node check."""
     parsed = parse_ibm_svc_node(string_table)
-    result = list(check_ibm_svc_node(item, params, parsed))
+    result = list(check_ibm_svc_node(item, parsed))
     assert result == expected_results

@@ -16,9 +16,10 @@ from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title as TitleV1
+from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
+from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -95,13 +96,15 @@ def get_graph_plugin_from_id(
 ) -> GraphFromAPI:
     if graph_id.startswith("METRIC_"):
         metric_name = graph_id[7:]
-        return graphs_v1.Graph(
+        return graphs_v2_unstable.Graph(
             name=graph_id,
             title=TitleV1(""),
             compound_lines=[metric_name],
             simple_lines=[
                 metrics_v1.WarningOf(metric_name),
                 metrics_v1.CriticalOf(metric_name),
+                metrics_v2_unstable.LowerWarningOf(metric_name),
+                metrics_v2_unstable.LowerCriticalOf(metric_name),
             ],
         )
     for name, graph_plugin in sort_registered_graph_plugins(registered_graphs):

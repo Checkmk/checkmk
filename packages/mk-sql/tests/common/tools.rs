@@ -18,17 +18,17 @@ use tempfile::NamedTempFile;
 pub use tempfile::TempDir;
 use yaml_rust2::YamlLoader;
 
-static CONTROLLER_COMMAND_PATH: OnceLock<OsString> = OnceLock::new();
+static BIN_COMMAND_PATH: OnceLock<OsString> = OnceLock::new();
 
 #[cfg(not(feature = "build_system_bazel"))]
-fn controller_command_path_impl() -> OsString {
+fn bin_command_path_impl() -> OsString {
     let path = assert_cmd::cargo::cargo_bin("mk-sql");
     assert!(path.is_file());
     path.into()
 }
 
 #[cfg(feature = "build_system_bazel")]
-fn controller_command_path_impl() -> OsString {
+fn bin_command_path_impl() -> OsString {
     let cwd = std::env::current_dir().unwrap();
     // Binary has same name as parent directory
     let relative_path: std::path::PathBuf = ["packages", "mk-sql", "mk-sql"].iter().collect();
@@ -38,8 +38,8 @@ fn controller_command_path_impl() -> OsString {
 }
 
 pub fn run_bin() -> Command {
-    let controller_command_path = CONTROLLER_COMMAND_PATH.get_or_init(controller_command_path_impl);
-    Command::new(controller_command_path)
+    let bin_command_path = BIN_COMMAND_PATH.get_or_init(bin_command_path_impl);
+    Command::new(bin_command_path)
 }
 
 pub fn run_bin_error() -> Output {

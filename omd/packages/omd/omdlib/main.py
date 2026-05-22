@@ -354,6 +354,7 @@ def walk_skel(
         "local/share/nagios/htdocs/theme",
         "var/check_mk/wato/auth",
         "var/check_mk/wato/auth/auth.php",
+        "var/check_mk/persisted",
     ]
 
     with contextlib.chdir(root):

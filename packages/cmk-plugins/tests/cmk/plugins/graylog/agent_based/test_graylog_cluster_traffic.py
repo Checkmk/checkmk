@@ -9,7 +9,7 @@ import time
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.graylog_cluster_traffic import (
+from cmk.plugins.graylog.agent_based.graylog_cluster_traffic import (
     check_graylog_cluster_traffic,
     discover_graylog_cluster_traffic,
 )

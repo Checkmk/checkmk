@@ -20,7 +20,7 @@ import cmk.gui.pages
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
-from cmk.graphing.v1 import entry_point_prefixes
+from cmk.graphing.v1 import entry_point_prefixes as entry_point_prefixes_v1
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.gui.graphing import (
     check_metrics,
@@ -77,7 +77,7 @@ def _load_graphing_plugins() -> DiscoveredPlugins[
         | translations_v1.Translation
     ] = discover_all_plugins(
         PluginGroup.GRAPHING,
-        entry_point_prefixes(),
+        entry_point_prefixes_v1(),
         skip_wrong_types=False,
         raise_errors=cmk.ccc.debug.enabled(),
     )

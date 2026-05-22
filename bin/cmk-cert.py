@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.gui.cmkcert.main import main  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.cmkcert.main import main
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

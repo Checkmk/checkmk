@@ -362,8 +362,8 @@ def test_real_config_has_plugin_families_smoke_test(real_config: ModuleLayersCon
 
 
 def test_real_config_file_components_present_smoke_test(real_config: ModuleLayersConfig) -> None:
-    assert real_config.file_components[ModulePath("bin/check_mk")] == Component("cmk.base")
-    assert real_config.file_components[ModulePath("bin/mkeventd")] == Component("cmk.ec")
+    assert real_config.file_components[ModulePath("bin/check_mk.py")] == Component("cmk.base")
+    assert real_config.file_components[ModulePath("bin/mkeventd.py")] == Component("cmk.ec")
 
 
 def test_real_config_checker_behavior_smoke_test(real_config: ModuleLayersConfig) -> None:

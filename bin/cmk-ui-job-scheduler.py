@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.gui.job_scheduler.main import (  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.job_scheduler.main import (
     default_crash_report_callback,
     main,
 )

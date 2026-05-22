@@ -9,8 +9,8 @@ import sys
 from argparse import ArgumentParser, Namespace
 from collections.abc import Sequence
 
-import cmk.utils.paths  # astrein: disable=cmk-module-layer-violation
-from cmk.inventory.transformation.main import (  # astrein: disable=cmk-module-layer-violation
+import cmk.utils.paths
+from cmk.inventory.transformation.main import (
     transform_inventory_trees,
 )
 

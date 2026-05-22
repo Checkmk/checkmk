@@ -10,8 +10,8 @@ from pathlib import Path
 
 import rrdtool  # type: ignore[import-not-found]
 
-from cmk.ccc.hostaddress import HostName  # astrein: disable=cmk-module-layer-violation
-from cmk.utils.log import verbosity_to_log_level  # astrein: disable=cmk-module-layer-violation
+from cmk.ccc.hostaddress import HostName
+from cmk.utils.log import verbosity_to_log_level
 
 from .. import RRDPaths
 from ._main import convert_rrds

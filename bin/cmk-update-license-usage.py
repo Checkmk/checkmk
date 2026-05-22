@@ -6,27 +6,27 @@
 import argparse
 import sys
 
-from cmk.ccc.site import omd_site  # astrein: disable=cmk-module-layer-violation
-from cmk.ccc.version import Edition, edition  # astrein: disable=cmk-module-layer-violation
-from cmk.licensing.active_metric_series_retriever_registry import (  # astrein: disable=cmk-module-layer-violation
+from cmk.ccc.site import omd_site
+from cmk.ccc.version import Edition, edition
+from cmk.licensing.active_metric_series_retriever_registry import (
     active_metric_series_retriever_registry,
 )
-from cmk.licensing.basics.paths import (  # astrein: disable=cmk-module-layer-violation
+from cmk.licensing.basics.paths import (
     get_instance_id_file_path,
     get_next_run_file_path,
 )
-from cmk.licensing.helper import (  # astrein: disable=cmk-module-layer-violation
+from cmk.licensing.helper import (
     hash_site_id,
     init_logging,
     load_instance_id,
 )
-from cmk.licensing.usage import (  # astrein: disable=cmk-module-layer-violation
+from cmk.licensing.usage import (
     create_sample,
     Now,
     try_update_license_usage,
 )
-from cmk.utils import paths  # astrein: disable=cmk-module-layer-violation
-from cmk.utils.paths import omd_root  # astrein: disable=cmk-module-layer-violation
+from cmk.utils import paths
+from cmk.utils.paths import omd_root
 
 
 def _parse_arguments() -> argparse.Namespace:
@@ -46,10 +46,10 @@ def _parse_arguments() -> argparse.Namespace:
 
 def average_active_metric_series_retriever() -> int | None:
     # Note: these type hints are needed to avoid breaking Github actions.
-    from cmk.metric_backend.query.query_client import (  # type: ignore[import-untyped, unused-ignore]  # astrein: disable=cmk-module-layer-violation
+    from cmk.metric_backend.query.query_client import (  # type: ignore[import-untyped, unused-ignore]
         RetryingQueryClient,
     )
-    from cmk.metric_backend.retrying_client import (  # type: ignore[import-untyped, unused-ignore]  # astrein: disable=cmk-module-layer-violation
+    from cmk.metric_backend.retrying_client import (  # type: ignore[import-untyped, unused-ignore]
         RetryingClient,
     )
 

@@ -13,7 +13,7 @@ import rrdtool  # type: ignore[import-not-found]
 
 from cmk.rrd import RRDPaths
 from cmk.rrd.create_rrd import create_rrd
-from cmk.utils.log import verbosity_to_log_level  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.log import verbosity_to_log_level
 
 
 def _set_log_level(verbosity: int) -> None:

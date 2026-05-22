@@ -20,22 +20,22 @@ from contextlib import contextmanager, suppress
 from pathlib import Path
 from typing import NamedTuple, NoReturn
 
-import cmk.ccc.version as cmk_version  # astrein: disable=cmk-module-layer-violation
-from cmk.backup.utils.config import Config  # astrein: disable=cmk-module-layer-violation
-from cmk.backup.utils.job import Job  # astrein: disable=cmk-module-layer-violation
-from cmk.backup.utils.targets import TargetId  # astrein: disable=cmk-module-layer-violation
-from cmk.backup.utils.targets.aws_s3_bucket import (  # astrein: disable=cmk-module-layer-violation
+import cmk.ccc.version as cmk_version
+from cmk.backup.utils.config import Config
+from cmk.backup.utils.job import Job
+from cmk.backup.utils.targets import TargetId
+from cmk.backup.utils.targets.aws_s3_bucket import (
     S3Target,
 )
-from cmk.backup.utils.targets.azure_blob_storage import (  # astrein: disable=cmk-module-layer-violation
+from cmk.backup.utils.targets.azure_blob_storage import (
     BlobStorageTarget,
 )
-from cmk.backup.utils.targets.local import (  # astrein: disable=cmk-module-layer-violation
+from cmk.backup.utils.targets.local import (
     LocalTarget,
 )
-from cmk.backup.utils.targets.protocol import Target  # astrein: disable=cmk-module-layer-violation
-from cmk.backup.utils.type_defs import SiteBackupInfo  # astrein: disable=cmk-module-layer-violation
-from cmk.backup.utils.utils import (  # astrein: disable=cmk-module-layer-violation
+from cmk.backup.utils.targets.protocol import Target
+from cmk.backup.utils.type_defs import SiteBackupInfo
+from cmk.backup.utils.utils import (
     current_site_id,
     do_site_backup,
     do_site_restore,
@@ -45,12 +45,12 @@ from cmk.backup.utils.utils import (  # astrein: disable=cmk-module-layer-violat
     SITE_BACKUP_MARKER,
     State,
 )
-from cmk.ccc import daemon  # astrein: disable=cmk-module-layer-violation
-from cmk.ccc.exceptions import (  # astrein: disable=cmk-module-layer-violation
+from cmk.ccc import daemon
+from cmk.ccc.exceptions import (
     MKGeneralException,
     MKTerminate,
 )
-from cmk.utils import render, schedule  # astrein: disable=cmk-module-layer-violation
+from cmk.utils import render, schedule
 
 ################
 # Utility Code #

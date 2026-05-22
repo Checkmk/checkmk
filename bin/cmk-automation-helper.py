@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.base.automation_helper import main  # astrein: disable=cmk-module-layer-violation
+from cmk.base.automation_helper import main
 
 if __name__ == "__main__":
     sys.exit(main())

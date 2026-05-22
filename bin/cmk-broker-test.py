@@ -27,8 +27,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 
-from cmk.ccc.site import omd_site  # astrein: disable=cmk-module-layer-violation
-from cmk.messaging import (  # astrein: disable=cmk-module-layer-violation
+from cmk.ccc.site import omd_site
+from cmk.messaging import (
     AppName,
     Channel,
     Connection,
@@ -36,7 +36,7 @@ from cmk.messaging import (  # astrein: disable=cmk-module-layer-violation
     QueueName,
     RoutingKey,
 )
-from cmk.utils.paths import omd_root  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.paths import omd_root
 
 
 class TestMessage(BaseModel):

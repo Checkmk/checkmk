@@ -971,7 +971,7 @@ allows = ["@ccc"]
 allows = ["@ccc", "cmk.helper_interface", "cmk.snmplib"]
 
 [components."cmk.inventory"]
-allows = ["@ccc"]
+allows = ["@ccc", "cmk.utils.paths"]
 
 [components."cmk.dcd_connector_parameters"]
 allows = ["cmk.rulesets"]
@@ -1601,19 +1601,19 @@ allows = [
 
 
 [file_components]
-"bin/check_mk" = "cmk.base"
-"bin/cmk-automation-helper" = "cmk.base"
-"bin/cmk-cert" = "cmk.gui.cmkcert"
+"bin/check_mk.py" = "cmk.base"
+"bin/cmk-automation-helper.py" = "cmk.base"
+"bin/cmk-cert.py" = "cmk.gui.cmkcert"
 "bin/message-broker-certs" = "cmk.message_broker_certs"
 "bin/cmk-config-anonymizer.py" = "cmk.config_anonymizer"
 "bin/cmk-convert-rrds" = "cmk.rrd"
 "bin/cmk-create-rrd.py" = "cmk.rrd"
-"bin/cmk-migrate-extension-rulesets" = "cmk.update_config"
-"bin/cmk-passwd" = "cmk.cmkpasswd"
-"bin/cmk-ui-job-scheduler" = "cmk.gui"
-"bin/cmk-validate-config" = "cmk.validate_config"
-"bin/cmk-validate-plugins" = "cmk.validate_plugins"
-"bin/mkeventd" = "cmk.ec"
+"bin/cmk-migrate-extension-rulesets.py" = "cmk.update_config"
+"bin/cmk-passwd.py" = "cmk.cmkpasswd"
+"bin/cmk-ui-job-scheduler.py" = "cmk.gui"
+"bin/cmk-validate-config.py" = "cmk.validate_config"
+"bin/cmk-validate-plugins.py" = "cmk.validate_plugins"
+"bin/mkeventd.py" = "cmk.ec"
 "cmk/active_checks/check_cmk_inv.py" = "cmk.base"
 "omd/packages/appliance/webconf_snapin.py" = "cmk.gui"
 "omd/non-free/packages/cmk-dcd/cmk-dcd.py" = "cmk.dcd.daemon"
@@ -1644,29 +1644,29 @@ allows = [
 # Files that depend on more than one component, yet we do not want to
 # add all those dependencies to one of those components.
 
-[file_dependencies."bin/cmk-broker-test"]
+[file_dependencies."bin/cmk-broker-test.py"]
 allows = ["@ccc", "@messaging", "cmk.utils.paths"]
 
-[file_dependencies."bin/cmk-piggyback-hub"]
+[file_dependencies."bin/cmk-piggyback-hub.py"]
 allows = ["@ccc", "cmk.piggyback", "cmk.utils"]
 
-[file_dependencies."bin/cmk-piggyback"]
+[file_dependencies."bin/cmk-piggyback.py"]
 allows = ["@livestatus_client", "cmk.piggyback", "cmk.utils"]
 
-[file_dependencies."bin/cmk-update-license-usage"]
-allows = ["@ccc", "cmk.licensing", "cmk.utils"]
+[file_dependencies."bin/cmk-update-license-usage.py"]
+allows = ["@ccc", "cmk.licensing", "cmk.metric_backend", "cmk.utils"]
 
 [file_dependencies."bin/cmk-transform-inventory-trees"]
 allows = ["cmk.inventory", "cmk.utils.paths"]
 
-[file_dependencies."bin/init-redis"]
+[file_dependencies."bin/init-redis.py"]
 allows = ["cmk.utils.setup_search_index"]
 
 [file_dependencies."bin/mkbackup"]
 allows = ["@ccc", "cmk.backup", "cmk.utils"]
 
-[file_dependencies."bin/mkp"]
-allows = ["@ccc", "@mkp_tool", "cmk.discover_plugins", "cmk.utils"]
+[file_dependencies."bin/mkp.py"]
+allows = ["@ccc", "@mkp_tool", "cmk.discover_plugins", "cmk.ec", "cmk.utils"]
 
 [file_dependencies."buildscripts/scripts/build-cmk-container.py"]
 allows = ["@ccc"]

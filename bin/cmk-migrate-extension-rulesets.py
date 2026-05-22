@@ -9,40 +9,40 @@ import sys
 from collections.abc import Sequence
 from typing import assert_never
 
-from cmk.ccc.version import edition  # astrein: disable=cmk-module-layer-violation
-from cmk.discover_plugins import (  # astrein: disable=cmk-module-layer-violation
+from cmk.ccc.version import edition
+from cmk.discover_plugins import (
     CMK_ADDONS_PLUGINS,
     CMK_PLUGINS,
     discover_plugins_from_modules,
     PluginGroup,
 )
-from cmk.gui import main_modules  # astrein: disable=cmk-module-layer-violation
-from cmk.gui.config import active_config  # astrein: disable=cmk-module-layer-violation
-from cmk.gui.rule_specs.loader import (  # astrein: disable=cmk-module-layer-violation
+from cmk.gui import main_modules
+from cmk.gui.config import active_config
+from cmk.gui.rule_specs.loader import (
     load_discovered_rule_specs,
 )
-from cmk.gui.rule_specs.types import RuleSpec  # astrein: disable=cmk-module-layer-violation
-from cmk.gui.rulespec import register_plugins  # astrein: disable=cmk-module-layer-violation
-from cmk.gui.script_helpers import gui_context  # astrein: disable=cmk-module-layer-violation
-from cmk.gui.session_context import SuperUserContext  # astrein: disable=cmk-module-layer-violation
-from cmk.gui.watolib.notification_parameter import (  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.rule_specs.types import RuleSpec
+from cmk.gui.rulespec import register_plugins
+from cmk.gui.script_helpers import gui_context
+from cmk.gui.session_context import SuperUserContext
+from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
 )
-from cmk.gui.watolib.rulesets import (  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.watolib.rulesets import (
     AllRulesets,
     RulesetCollection,
 )
-from cmk.gui.watolib.rulespecs import (  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
 )
-from cmk.mkp_tool import (  # astrein: disable=cmk-module-layer-violation
+from cmk.mkp_tool import (
     Installer,
     Manifest,
     PackageName,
     PackagePart,
 )
-from cmk.rulesets.v1 import entry_point_prefixes  # astrein: disable=cmk-module-layer-violation
-from cmk.rulesets.v1.rule_specs import (  # astrein: disable=cmk-module-layer-violation
+from cmk.rulesets.v1 import entry_point_prefixes
+from cmk.rulesets.v1.rule_specs import (
     ActiveCheck,
     AgentAccess,
     AgentConfig,
@@ -58,15 +58,15 @@ from cmk.rulesets.v1.rule_specs import (  # astrein: disable=cmk-module-layer-vi
     SNMP,
     SpecialAgent,
 )
-from cmk.update_config.plugins.actions.rulesets import (  # astrein: disable=cmk-module-layer-violation
+from cmk.update_config.plugins.actions.rulesets import (
     validate_rule_values,
 )
-from cmk.update_config.plugins.lib.rulesets import (  # astrein: disable=cmk-module-layer-violation
+from cmk.update_config.plugins.lib.rulesets import (
     transform_wato_rulesets_params,
 )
-from cmk.utils import paths  # astrein: disable=cmk-module-layer-violation
-from cmk.utils.redis import disable_redis  # astrein: disable=cmk-module-layer-violation
-from cmk.utils.rulesets.definition import RuleGroup  # astrein: disable=cmk-module-layer-violation
+from cmk.utils import paths
+from cmk.utils.redis import disable_redis
+from cmk.utils.rulesets.definition import RuleGroup
 
 logger = logging.getLogger(__name__)
 

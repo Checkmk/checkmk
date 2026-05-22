@@ -109,9 +109,7 @@ def check_ups_capacity(
     section_ups_on_battery: Battery | None,
     section_ups_seconds_on_battery: Battery | None,
 ) -> CheckResult:
-    """Check battery capacity in percent and minutes remaining.
-    Apply WARN/CRIT levels and minutes-remaining metric only if on battery.
-    """
+    """Check battery capacity in percent and minutes remaining."""
     battery = _assemble_battery(
         section_ups_battery_capacity,
         section_ups_on_battery,
@@ -121,7 +119,7 @@ def check_ups_capacity(
     on_battery = _is_on_battery(battery)
 
     yield from _output_time_remaining(battery.seconds_left, on_battery, params["battime"])
-    yield from _output_percent_charged(battery.percent_charged, on_battery, params["capacity"])
+    yield from _output_percent_charged(battery.percent_charged, params["capacity"])
     yield from _output_seconds_on_battery(battery.seconds_on_bat)
 
 
@@ -169,7 +167,6 @@ def _output_time_remaining(
 
 def _output_percent_charged(
     percent_charged: int | None,
-    on_battery: bool,
     levels: tuple[int, int],
 ) -> CheckResult:
     if percent_charged is None:
@@ -178,7 +175,7 @@ def _output_percent_charged(
     yield from check_levels_v1(
         percent_charged,
         metric_name="battery_capacity",
-        levels_lower=levels if on_battery else None,
+        levels_lower=levels,
         render_func=render.percent,
     )
 

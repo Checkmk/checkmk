@@ -19,13 +19,11 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.watolib.automations import do_site_login, remote_automation_config_from_site_config
 from cmk.gui.watolib.broker_certificates import trigger_remote_certs_creation
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain
-from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain, GUI
+from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.licensing.license_distribution_registry import distribute_license_to_remotes
 
@@ -132,7 +130,7 @@ def add_changes_after_editing_broker_connection(
     connection_id: str,
     is_new_broker_connection: bool,
     sites: list[SiteId],
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> str:
     change_message = (
         _("Created new peer-to-peer broker connection ID %s") % connection_id
@@ -140,15 +138,15 @@ def add_changes_after_editing_broker_connection(
         else _("Modified peer-to-peer broker connection ID %s") % connection_id
     )
 
-    add_change(
-        action_name="edit-sites",
-        text=change_message,
-        user_id=user.id,
-        need_sync=True,
-        need_restart=True,
-        sites=[omd_site()] + sites,
-        domains=[ConfigDomainGUI()],
-        use_git=use_git,
+    pending_changes.add(
+        Change(
+            action_name="edit-sites",
+            text=change_message,
+            force_sync=True,
+            force_restart=True,
+            domains=[GUI],
+        ),
+        ChangeScope.sites([omd_site()] + sites),
     )
 
     return change_message
@@ -161,7 +159,7 @@ def add_changes_after_editing_site_connection(
     replication_enabled: bool,
     is_local_site: bool,
     connected_sites: Set[SiteId],
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> str:
     change_message = (
         _("Created new connection to site %s") % site_id
@@ -170,43 +168,43 @@ def add_changes_after_editing_site_connection(
     )
 
     sites_to_update = connected_sites | {site_id}
-    add_change(
-        action_name="edit-sites",
-        text=change_message,
-        user_id=user.id,
-        sites=list(sites_to_update),
-        # This was ABCConfigDomain.enabled_domains() before. Since e.g. apache config domain takes
-        # significant more time to restart than the other domains, we now try to be more specific
-        # and mention potentially affected domains instead. The idea here is to first hard code
-        # the list of config domains produced by enabled_domains and then reduce it step by step.
-        #
-        # One the list is minimized, we can turn it into an explicit positive list.
-        #
-        # If you extend this, please also check the other "add_change" calls triggered by the site
-        # management.
-        domains=[
-            d
-            for d in ABCConfigDomain.enabled_domains()
-            if d.ident()
-            not in {
-                "apache",
-                "ca-certificates",
-                "check_mk",
-                "diskspace",
-                "ec",
-                "metric_backend",
-                "omd",
-                "otel_collector",
-                "rrdcached",
-                # Can we remove more here? Investigate further to minimize the domains:
-                # "liveproxyd",
-                # "multisite",
-                # "piggyback_hub",
-                # "dcd",
-                # "mknotifyd",
-            }
-        ],
-        use_git=use_git,
+    pending_changes.add(
+        Change(
+            action_name="edit-sites",
+            text=change_message,
+            # This was ABCConfigDomain.enabled_domains() before. Since e.g. apache config domain takes
+            # significant more time to restart than the other domains, we now try to be more specific
+            # and mention potentially affected domains instead. The idea here is to first hard code
+            # the list of config domains produced by enabled_domains and then reduce it step by step.
+            #
+            # One the list is minimized, we can turn it into an explicit positive list.
+            #
+            # If you extend this, please also check the other "add_change" calls triggered by the site
+            # management.
+            domains=[
+                d.ident()
+                for d in ABCConfigDomain.enabled_domains()
+                if d.ident()
+                not in {
+                    "apache",
+                    "ca-certificates",
+                    "check_mk",
+                    "diskspace",
+                    "ec",
+                    "metric_backend",
+                    "omd",
+                    "otel_collector",
+                    "rrdcached",
+                    # Can we remove more here? Investigate further to minimize the domains:
+                    # "liveproxyd",
+                    # "multisite",
+                    # "piggyback_hub",
+                    # "dcd",
+                    # "mknotifyd",
+                }
+            ],
+        ),
+        ChangeScope.sites(sites_to_update),
     )
 
     # In case a site is not being replicated anymore, confirm all changes for this site!
@@ -215,13 +213,13 @@ def add_changes_after_editing_site_connection(
 
     if site_id != omd_site():
         # On central site issue a change only affecting the GUI
-        add_change(
-            action_name="edit-sites",
-            text=change_message,
-            user_id=user.id,
-            sites=[omd_site()],
-            domains=[ConfigDomainGUI()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="edit-sites",
+                text=change_message,
+                domains=[GUI],
+            ),
+            ChangeScope.sites([omd_site()]),
         )
 
     return change_message

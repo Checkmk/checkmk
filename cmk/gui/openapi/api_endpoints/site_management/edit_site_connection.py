@@ -5,7 +5,7 @@
 
 from typing import Annotated
 
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
@@ -22,6 +22,13 @@ from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlai
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.gui.site_config import site_is_local
+from cmk.gui.user_sites import activation_sites
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.site_management import (
     add_changes_after_editing_site_connection,
     SitesApiMgr,
@@ -78,7 +85,16 @@ def edit_site_connection_v1(
         replication_enabled=bool(site_config_spec_from_request.get("replication")),
         is_local_site=site_is_local(site_config_spec_from_request),
         connected_sites=sites_to_update,
-        use_git=api_context.config.wato_use_git,
+        pending_changes=PendingChanges(
+            activation_sites=activation_sites(api_context.config.sites),
+            local_site=omd_site(),
+            acting_user=api_context.user_id,
+            store=PendingChangesStore(),
+            hooks=(
+                make_audit_log_change_hook(use_git=api_context.config.wato_use_git),
+                index_update_change_hook,
+            ),
+        ),
     )
 
     return SiteConnectionModel.from_internal(SitesApiMgr().get_a_site(site_id))

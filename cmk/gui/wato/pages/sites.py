@@ -82,6 +82,7 @@ from cmk.gui.site_config import (
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.compatibility import make_site_version_info
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -103,6 +104,7 @@ from cmk.gui.wato.pages.global_settings import (
 )
 from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.activate_changes import get_free_message
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
     do_site_login,
@@ -140,9 +142,15 @@ from cmk.gui.watolib.hosts_and_folders import (
     make_action_link,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.piggyback_hub import (
     validate_piggyback_hub_config,
 )
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.site_management import (
     add_changes_after_editing_broker_connection,
     add_changes_after_editing_site_connection,
@@ -345,7 +353,7 @@ class ModeEditSite(WatoMode):
         configured_sites: SiteConfigurations,
         *,
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("sites"))
@@ -389,7 +397,7 @@ class ModeEditSite(WatoMode):
             replication_enabled=is_replication_enabled(site_spec),
             is_local_site=site_is_local(site_spec),
             connected_sites=sites_to_update,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
 
         flash(msg)
@@ -401,7 +409,12 @@ class ModeEditSite(WatoMode):
             site_spec,
             self._configured_sites,
             pprint_value=config.wato_pprint_config,
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes(
+                config.sites,
+                use_git=config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
 
     def page(self, config: Config) -> None:
@@ -907,7 +920,12 @@ class ModeEditBrokerConnection(WatoMode):
             connection_id=raw_site_spec["unique_id"],
             is_new_broker_connection=self._is_new,
             sites=[source_site, dest_site],
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes(
+                config.sites,
+                use_git=config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
 
         flash(msg)
@@ -1085,7 +1103,12 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_delete_broker_connection(
                 ConnectionId(delete_connection_id),
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config.sites,
+                    use_git=config.wato_use_git,
+                    local_site=omd_site(),
+                    user_id=user.id,
+                ),
             )
 
         logout_id = request.get_ascii_input("_logout")
@@ -1212,7 +1235,11 @@ class ModeDistributedMonitoring(WatoMode):
         return redirect(mode_url("sites"))
 
     def _action_delete_broker_connection(
-        self, delete_connection_id: ConnectionId, *, pprint_value: bool, use_git: bool
+        self,
+        delete_connection_id: ConnectionId,
+        *,
+        pprint_value: bool,
+        pending_changes: PendingChanges,
     ) -> ActionResult:
         source_site, dest_site = self._site_mgmt.delete_broker_connection(
             delete_connection_id, pprint_value=pprint_value
@@ -1221,7 +1248,7 @@ class ModeDistributedMonitoring(WatoMode):
             connection_id=delete_connection_id,
             is_new_broker_connection=False,
             sites=[source_site, dest_site],
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
         return redirect(mode_url("sites"))
 
@@ -2255,5 +2282,25 @@ def sort_sites(sites: SiteConfigurations) -> list[tuple[SiteId, SiteConfiguratio
             is_replication_enabled(sid_s[1]),
             sid_s[1]["alias"],
             sid_s[0],
+        ),
+    )
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
         ),
     )

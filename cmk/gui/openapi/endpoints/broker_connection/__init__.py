@@ -20,9 +20,10 @@ The broker connection endpoints allow for:
 from collections.abc import Mapping
 from typing import Any
 
-from livestatus import BrokerConnections, ConnectionId
+from livestatus import BrokerConnections, ConnectionId, SiteConfigurations
 
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.definitions import ConnectionIdentifier
@@ -44,11 +45,18 @@ from cmk.gui.openapi.restful_objects.constructors import (
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.broker_connections import (
     BrokerConnectionConfig,
     BrokerConnectionInfo,
     SiteConnectionInfo,
+)
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
 )
 from cmk.gui.watolib.site_management import (
     add_changes_after_editing_broker_connection,
@@ -144,7 +152,7 @@ def _validate_and_save_boker_connection(
     *,
     is_new_connection: bool,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> BrokerConnectionConfig:
     connection_info = BrokerConnectionInfo(
         connecter=SiteConnectionInfo(site_id=connection_request["connecter"]["site_id"]),
@@ -164,7 +172,7 @@ def _validate_and_save_boker_connection(
         connection_id=connection_id_request,
         is_new_broker_connection=is_new_connection,
         sites=list(site_to_update),
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
 
     return connection_obj
@@ -192,7 +200,12 @@ def create_broker_connection(params: Mapping[str, Any]) -> Response:
             connection_request=connection_request,
             is_new_connection=True,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                active_config.sites,
+                use_git=active_config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
     except MKUserError as exc:
         return _validation_error(exc)
@@ -228,7 +241,12 @@ def edit_broker_connection(params: Mapping[str, Any]) -> Response:
             connection_request=connection_request,
             is_new_connection=False,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                active_config.sites,
+                use_git=active_config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
     except MKUserError as exc:
         return _validation_error(exc)
@@ -260,7 +278,12 @@ def delete_broker_connection(params: Mapping[str, Any]) -> Response:
         connection_id=connection_id_request,
         is_new_broker_connection=False,
         sites=list(site_to_update),
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            active_config.sites,
+            use_git=active_config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ),
     )
 
     return Response(status=204)
@@ -272,3 +295,19 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(create_broker_connection)
     endpoint_registry.register(edit_broker_connection)
     endpoint_registry.register(delete_broker_connection)
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(make_audit_log_change_hook(use_git=use_git), index_update_change_hook),
+    )

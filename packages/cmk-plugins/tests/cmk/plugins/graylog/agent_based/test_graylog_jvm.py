@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.graylog_jvm import check_graylog_jvm, discover_graylog_jvm
+from cmk.plugins.graylog.agent_based.graylog_jvm import check_graylog_jvm, discover_graylog_jvm
 from cmk.plugins.graylog.lib import deserialize_and_merge_json
 
 _SECTION = [

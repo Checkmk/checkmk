@@ -566,6 +566,84 @@ def test_monitoring_cores_packaging(package_path: str) -> None:
     assert len(_get_file_from_package(package_path, version_rel_path="bin/nagios")) > 0
 
 
+def _parse_pipfile_packages(pipfile_path: Path) -> tuple[str, dict[str, str]]:
+    """Parse package names/versions and python_version from a Pipfile.
+
+    Returns (python_version, {package_name: exact_version_or_empty}).
+    Version is empty string for non-exact specs (e.g. ~=).
+    """
+    python_version = ""
+    packages: dict[str, str] = {}
+    in_packages = False
+
+    for line in pipfile_path.read_text().splitlines():
+        stripped = line.strip()
+        if stripped == "[packages]":
+            in_packages = True
+            continue
+        if stripped.startswith("["):
+            in_packages = False
+
+        if stripped.startswith("python_version"):
+            match = re.search(r'"([\d.]+)"', stripped)
+            if match:
+                python_version = match.group(1)
+
+        if in_packages and "=" in stripped and not stripped.startswith("#"):
+            name = stripped.split("=", 1)[0].strip().strip('"')
+            version_match = re.search(r"==\s*([\d.]+)", stripped)
+            if version_match:
+                packages[name] = version_match.group(1)
+            else:
+                version_match = re.search(r'version\s*=\s*"([\d.]+)"', stripped)
+                packages[name] = version_match.group(1) if version_match else ""
+
+    return python_version, packages
+
+
+def test_python3_cab_integrity(package_path: str) -> None:
+    """Test may be a bit fragile, still it is the best option to validate that bcab is ok"""
+    if package_path.endswith(".tar.gz"):
+        pytest.skip("%s is a source package" % os.path.basename(package_path))
+
+    if _edition_from_pkg_path(package_path) == "community":
+        pytest.skip("python-3.cab is not shipped in CRE packages")
+
+    data = _get_file_from_package(
+        package_path,
+        version_rel_path="share/check_mk/agents/windows/python-3.cab",
+    )
+    assert len(data) > 0, f"python-3.cab is empty in {os.path.basename(package_path)}"
+
+    pipfile_path = Path(__file__).parents[2] / "agents/modules/windows/pipfiles/3/Pipfile"
+    python_version, packages = _parse_pipfile_packages(pipfile_path)
+
+    cab_strings = data.decode("ascii", errors="ignore")
+
+    if python_version:
+        expected = f"python{python_version.replace('.', '')}"
+        assert expected in cab_strings, (
+            f"Expected Python {python_version} ({expected}) not found in python-3.cab"
+        )
+
+    missing = []
+    found = []
+    for name, version in packages.items():
+        if version:
+            pattern = f"{name}-{version}.dist-info"
+        else:
+            pattern = f"{name}-"
+        if pattern.lower() not in cab_strings.lower():
+            missing.append(pattern)
+        else:
+            found.append(pattern)
+
+    LOGGER.info("Verified %d packages in python-3.cab: %s", len(found), found)
+    if missing:
+        LOGGER.error("Missing %d packages: %s", len(missing), missing)
+    assert not missing, f"Packages missing from python-3.cab: {missing}"
+
+
 @pytest.mark.skip_if_faked_artifacts
 def test_not_rc_tag(package_path: str) -> None:
     msi_file_path = os.path.join(

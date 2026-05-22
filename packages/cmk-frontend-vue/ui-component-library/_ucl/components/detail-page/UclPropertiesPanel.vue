@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { ListPropDef, PanelConfig, PanelState } from '@ucl/_ucl/types/prop-panel.ts'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import useId from '@/lib/useId'
@@ -20,6 +20,8 @@ import CmkSwitch from '@/components/CmkSwitch.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
+import UclStringArrayTextarea from './UclStringArrayTextarea.vue'
+
 const { config, title = 'Properties' } = defineProps<{ config: PanelConfig; title?: string }>()
 
 const state = defineModel<PanelState>({ required: true })
@@ -28,30 +30,6 @@ const uid = useId()
 
 const router = useRouter()
 const route = useRoute()
-
-const stringArrayInputs = ref<Record<string, string>>(
-  Object.fromEntries(
-    Object.entries(config)
-      .filter(([, def]) => def.type === 'string-array')
-      .map(([key, def]) => [key, formatStringArray(def.initialState as string[])])
-  )
-)
-
-function formatStringArray(arr: string[]): string {
-  return arr.join('\n')
-}
-
-function parseStringArray(raw: string): string[] {
-  return raw
-    .split('\n')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0)
-}
-
-function handleStringArrayInput(key: string, raw: string) {
-  stringArrayInputs.value[key] = raw
-  state.value[key] = parseStringArray(raw)
-}
 
 const url = computed(() => {
   const urlQuery: Record<string, string | string[]> = {}
@@ -86,11 +64,9 @@ onMounted(() => {
       } else if (configValue.type === 'number') {
         state.value[configKey] = parseFloat(urlValue as string)
       } else if (configValue.type === 'string-array') {
-        const values = (Array.isArray(urlValue) ? urlValue : [urlValue]).filter(
+        state.value[configKey] = (Array.isArray(urlValue) ? urlValue : [urlValue]).filter(
           (v): v is string => v !== null
         )
-        state.value[configKey] = values
-        stringArrayInputs.value[configKey] = formatStringArray(values)
       } else {
         state.value[configKey] = (Array.isArray(urlValue) ? urlValue[0] : urlValue) ?? ''
       }
@@ -157,14 +133,12 @@ onMounted(() => {
         :selected-option="state[key] as string"
         @update:selected-option="$event !== null && (state[key] = $event)"
       />
-      <textarea
+      <UclStringArrayTextarea
         v-else-if="def.type === 'string-array'"
         :id="`${uid}-${key}`"
-        rows="3"
-        class="ucl-properties-panel__textarea"
-        :value="stringArrayInputs[key] ?? ''"
-        @input="handleStringArrayInput(key, ($event.target as HTMLTextAreaElement).value)"
-      ></textarea>
+        :model-value="state[key] as string[]"
+        @update:model-value="state[key] = $event"
+      />
     </div>
   </div>
 </template>

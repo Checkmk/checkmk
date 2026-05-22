@@ -14,3 +14,4 @@ tests/qa-test-data
 
 # .claude/skills/ symlinks point to .github/skills/ — ignore to avoid duplicate bazel packages
 .claude/skills/crash_report
+.claude/skills/crash_owner_rollup

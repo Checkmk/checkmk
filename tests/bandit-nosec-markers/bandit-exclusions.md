@@ -51,3 +51,5 @@ Note that Bandit is picky about the exact format.
 | `BNS:a52d7f`    | `B605`         | Developer-only CLI tool (werk management). Shell commands via `os.system` are used intentionally and not exposed to end users.                                                       |
 | `BNS:e18b63`    | `B303`         | Test code verifying that MD5 is correctly rejected as unsupported by the cryptography layer.                                                                                         |
 | `BNS:dcaf44`    | `B102`         | Well using exec to read `etc/omd/distributed.mk`                                                                                                                                     |
+| `BNS:59d87e`    | `B108`         | Developer-only CLI tool (`cmk-dev-deploy`) using namespaced temp directory; not exposed to site users.                                                                               |
+| `BNS:d18fa0`    | `B103`         | Downloaded binary made executable after SHA256 checksum verification.                                                                                                                |

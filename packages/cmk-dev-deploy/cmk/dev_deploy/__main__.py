@@ -829,7 +829,7 @@ def main(argv: list[str] | None = None) -> int:
 
         # Last resort: scan overlay base dir for orphaned site overlays.
         if site_root is None:
-            overlay_base = Path("/var/tmp/cmk-dev-deploy")  # nosec B108
+            overlay_base = Path("/var/tmp/cmk-dev-deploy")  # nosec B108 # BNS:59d87e
             if overlay_base.is_dir():
                 candidates = [d.name for d in overlay_base.iterdir() if d.is_dir()]
                 if len(candidates) == 1:

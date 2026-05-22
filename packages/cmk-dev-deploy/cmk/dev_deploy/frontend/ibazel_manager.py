@@ -262,7 +262,7 @@ def _download_with_progress(url: str, dest: Path) -> str:
     """
     try:
         req = urllib.request.Request(url)
-        response = urllib.request.urlopen(req, timeout=_DOWNLOAD_TIMEOUT)  # nosec B310
+        response = urllib.request.urlopen(req, timeout=_DOWNLOAD_TIMEOUT)  # nosec B310 # BNS:28af27
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
         raise IBazelError(
             f"Failed to download iBazel from {url}\n  Error: {exc}",
@@ -334,7 +334,7 @@ def _download_and_verify() -> Path:
             )
 
         os.rename(str(tmp_path), str(final_path))
-        os.chmod(str(final_path), 0o755)  # nosec B103
+        os.chmod(str(final_path), 0o755)  # nosec B103 # BNS:d18fa0
         output.success(f"iBazel {_IBAZEL_VERSION} downloaded and verified")
         return final_path
     except BaseException:

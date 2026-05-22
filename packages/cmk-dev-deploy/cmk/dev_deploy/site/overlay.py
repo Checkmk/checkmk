@@ -41,7 +41,7 @@ from cmk.dev_deploy.site.privilege import (
 
 # Persistent storage for overlay upper/work directories.
 # /var/tmp survives reboots (unlike /tmp which may be tmpfs).
-_OVERLAY_BASE = Path("/var/tmp/cmk-dev-deploy")  # nosec B108
+_OVERLAY_BASE = Path("/var/tmp/cmk-dev-deploy")  # nosec B108 # BNS:59d87e
 
 # File in the overlay base that records which version was materialized.
 # Used to detect version changes that require re-materialization.

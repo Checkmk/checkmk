@@ -19,6 +19,7 @@ import random
 import re
 import subprocess
 import sys
+import tomllib
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
@@ -26,6 +27,24 @@ DEFAULT_DOC = Path("bandit-exclusions.md")
 ID_LEN = 6
 BNS_PATTERN = rf"BNS:[0-9a-f]{{{ID_LEN}}}"
 NOSEC_PATTERN = "# nosec"
+
+
+def _load_bandit_exclude_dirs(src_root: Path) -> list[str]:
+    """Read `[tool.bandit].exclude_dirs` from `<src_root>/pyproject.toml`.
+
+    Returns an empty list if the file is missing or the key is absent.
+    Bandit applies these as substring matches against file paths.
+    """
+    pyproject = src_root / "pyproject.toml"
+    if not pyproject.is_file():
+        return []
+    try:
+        with open(pyproject, "rb") as f:
+            data = tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError):
+        return []
+    excl = data.get("tool", {}).get("bandit", {}).get("exclude_dirs", [])
+    return [str(e) for e in excl] if isinstance(excl, list) else []
 
 
 def parse_args() -> argparse.Namespace:
@@ -73,8 +92,13 @@ def parse_args() -> argparse.Namespace:
     parser_check.add_argument(
         "-x",
         "--exclude",
-        default="tests",
-        help="Comma separated list of paths to exclude, relative to 'src_root' (default: 'tests')",
+        default=None,
+        help=(
+            "Comma separated list of path substrings to exclude (substring "
+            "match, same semantics as bandit's `exclude_dirs`). "
+            "Default: read `[tool.bandit].exclude_dirs` from "
+            "`<src_root>/pyproject.toml`. Pass '' to exclude nothing."
+        ),
         type=str,
         action="store",
     )
@@ -200,8 +224,12 @@ class Nosec:
         return f"{self.location}\n>\t{self.line}"
 
 
-def find_nosecs(src_root: Path, excluded: Sequence[Path]) -> Sequence[Nosec]:
-    """Scan the codebase for '# nosec' markers"""
+def find_nosecs(src_root: Path, excluded: Sequence[str]) -> Sequence[Nosec]:
+    """Scan the codebase for '# nosec' markers.
+
+    `excluded` is a list of substrings; any file path containing one of them
+    is skipped. Matches bandit's `exclude_dirs` semantics.
+    """
 
     if not (src_root / "scripts").is_dir():
         # we need the find-python-files script and this is an easy sanity check
@@ -230,12 +258,12 @@ def find_nosecs(src_root: Path, excluded: Sequence[Path]) -> Sequence[Nosec]:
 
     logging.info(
         f"Checking {len(files)} python files in '{src_root}'"
-        + (f" excluding '{', '.join(map(str, excluded))}'." if excluded else "")
+        + (f" excluding paths containing '{', '.join(excluded)}'." if excluded else "")
     )
 
     result = []
     for f in files:
-        if any(f.startswith(str(p)) for p in excluded):
+        if any(substr in f for substr in excluded):
             continue
         matches = subprocess.run(
             ["grep", "-n", NOSEC_PATTERN, f],
@@ -281,21 +309,26 @@ def cmd_new(args: argparse.Namespace) -> None:
     )
 
 
+def _resolve_excluded(args: argparse.Namespace) -> Sequence[str]:
+    """Resolve the exclude list. Falls back to pyproject.toml when not set."""
+    if args.exclude is None:
+        return _load_bandit_exclude_dirs(args.src_root.resolve())
+    if args.exclude == "":
+        return []
+    return [e.strip() for e in args.exclude.split(",") if e.strip()]
+
+
 def cmd_check(args: argparse.Namespace) -> None:
     fail = False
 
     logging.getLogger().setLevel(logging.INFO)
 
-    excluded_paths = (
-        []  # exclude nothing (as opposed to src_root/"")
-        if args.exclude == ""
-        else [args.src_root.resolve() / e for e in args.exclude.split(",")]
-    )
+    excluded = _resolve_excluded(args)
 
     if args.rg:
         markers = find_nosecs_rg(args.src_root)
     else:
-        markers = find_nosecs(args.src_root, excluded_paths)
+        markers = find_nosecs(args.src_root, excluded)
 
     print(f"Found {len(markers)} '# nosec' markers.")
 
@@ -325,10 +358,8 @@ def cmd_check(args: argparse.Namespace) -> None:
 
 
 def cmd_local_check(args: argparse.Namespace) -> None:
-    excluded_paths = (
-        [] if args.exclude == "" else [args.src_root.resolve() / e for e in args.exclude.split(",")]
-    )
-    markers = find_nosecs(args.src_root, excluded_paths)
+    excluded = _resolve_excluded(args)
+    markers = find_nosecs(args.src_root, excluded)
     annotated, not_annotated = _partition(lambda marker: marker.bns_id is not None, markers)
     bns_ids = existing_ids(args.doc)
     invalid = [m for m in annotated if m.bns_id not in bns_ids]

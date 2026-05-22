@@ -111,7 +111,7 @@ def open_log_file(site_name: str) -> None:
         log_dir.mkdir(parents=True, exist_ok=True)
     except OSError:
         # Fall back to /tmp if home directory is not writable
-        log_dir = Path("/tmp/cmk-dev-deploy-logs") / site_name  # nosec B108
+        log_dir = Path("/tmp/cmk-dev-deploy-logs") / site_name  # nosec B108 # BNS:59d87e
         log_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(tz=UTC).strftime("%Y%m%d_%H%M%S")
     _config.log_file_path = log_dir / f"deploy_{ts}.log"

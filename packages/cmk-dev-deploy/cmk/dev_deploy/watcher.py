@@ -132,14 +132,14 @@ def _get_content_hash(build_commit: str | None, repo_root: Path) -> str:
     )
 
     # Build hash: filename list + per-file content hashes
-    hasher = hashlib.md5(usedforsecurity=False)  # nosec B324
+    hasher = hashlib.md5(usedforsecurity=False)
     for relpath in all_files:
         hasher.update(relpath.encode())
         hasher.update(b"\n")
         abs_path = repo_root / relpath
         try:
             if abs_path.is_file():
-                content_hash = hashlib.md5(  # nosec B324
+                content_hash = hashlib.md5(
                     abs_path.read_bytes(),
                     usedforsecurity=False,
                 ).hexdigest()

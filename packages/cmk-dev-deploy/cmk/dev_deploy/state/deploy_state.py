@@ -44,7 +44,7 @@ class DeployState:
 
 def state_file_path(site_root: Path) -> Path:
     """Return the canonical state file path for a site."""
-    return Path("/var/tmp/cmk-dev-deploy") / site_root.name / STATE_FILE_NAME  # nosec B108
+    return Path("/var/tmp/cmk-dev-deploy") / site_root.name / STATE_FILE_NAME  # nosec B108 # BNS:59d87e
 
 
 def load_state(site_root: Path) -> DeployState | None:

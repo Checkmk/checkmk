@@ -55,7 +55,7 @@ def find_site_root(site_name: str | None) -> Path | None:
         return site_root
     # Site dir gone but overlay data may still exist — return the path
     # so teardown_overlay can clean up.
-    overlay_dir = Path("/var/tmp/cmk-dev-deploy") / site_name  # nosec B108
+    overlay_dir = Path("/var/tmp/cmk-dev-deploy") / site_name  # nosec B108 # BNS:59d87e
     if overlay_dir.exists():
         return site_root
     return None

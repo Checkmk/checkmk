@@ -245,7 +245,7 @@ def get_exclude_patterns(options: BackupExclusions) -> list[str]:
 
 class _RRDSocket(contextlib.AbstractContextManager["_RRDSocket"]):
     def __init__(self, site_stopped: bool, site_home: str, site_name: str, verbose: bool) -> None:
-        self._rrdcached_socket_path = Path(site_home, "tmp/run/rrdcached.sock")  # nosec B108 # not system /tmp; site_home is owned by the site user
+        self._rrdcached_socket_path = Path(site_home, "tmp/run/rrdcached.sock")
         self._site_requires_suspension = not site_stopped and os.path.exists(
             self._rrdcached_socket_path
         )

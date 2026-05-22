@@ -24,9 +24,10 @@ from collections.abc import Mapping
 from typing import Any
 
 import cmk.utils.paths
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
@@ -65,10 +66,17 @@ from cmk.gui.user_connection_config_types import (
     LDAPUserConnectionConfig,
     SAMLUserConnectionConfig,
 )
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_ldap_connections, UserConnectionConfigFile
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.wato.pages.userdb_common import get_affected_sites
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 
 RO_PERMISSIONS = permissions.AllPerm(
     [
@@ -163,14 +171,13 @@ def delete_ldap_connection(params: Mapping[str, Any]) -> Response:
         deleted_connection = [c for c in all_connections if c["id"] == ldap_id][0]
         update_suffixes(updated_connections)
         config_file.delete(
-            user_id=user.id,
             cfg=updated_connections,
             connection_id=ldap_id,
             connection_type="ldap",
             sites=_get_affected_sites(deleted_connection),
             domains=[ConfigDomainGUI()],
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(active_config, omd_site(), user.id),
         )
 
     return Response(status=204)
@@ -203,13 +210,12 @@ def create_ldap_connection(params: Mapping[str, Any]) -> Response:
     update_suffixes(all_connections)
 
     config_file.create(
-        user_id=user.id,
         cfg=all_connections,
         connection_type="ldap",
         sites=_get_affected_sites(connection.to_mk_format()),
         domains=[ConfigDomainGUI()],
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(active_config, omd_site(), user.id),
     )
 
     return response_with_etag_created_from_dict(
@@ -266,14 +272,13 @@ def edit_ldap_connection(params: Mapping[str, Any]) -> Response:
         update_suffixes(modified_connections)
 
         config_file.update(
-            user_id=user.id,
             cfg=modified_connections,
             connection_id=ldap_id,
             connection_type="ldap",
             sites=_get_affected_sites(updated_connection),
             domains=[ConfigDomainGUI()],
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(active_config, omd_site(), user.id),
         )
 
     except MKUserError as exc:
@@ -305,3 +310,13 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(delete_ldap_connection)
     endpoint_registry.register(create_ldap_connection)
     endpoint_registry.register(edit_ldap_connection)
+
+
+def _pending_changes(config: Config, local_site: SiteId, user_id: UserId | None) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(make_audit_log_change_hook(use_git=config.wato_use_git), index_update_change_hook),
+    )

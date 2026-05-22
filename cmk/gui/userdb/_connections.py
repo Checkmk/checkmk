@@ -17,7 +17,6 @@ from livestatus import (
 
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
@@ -28,8 +27,8 @@ from cmk.gui.user_connection_config_types import (
     SAMLUserConnectionConfig,
     UserConnectionConfig,
 )
-from cmk.gui.watolib import changes as _changes
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
+from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
@@ -283,69 +282,65 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
 
     def update(
         self,
-        user_id: UserId | None,
         cfg: list[ConfigurableUserConnectionSpec],
         connection_id: str,
         connection_type: Literal["ldap", "saml2"],
         sites: list[SiteId],
         domains: Sequence[ABCConfigDomain],
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
-        _changes.add_change(
-            action_name=f"edit-{connection_type}-connection",
-            text=_("Changed %s connection %s") % (connection_type.upper(), connection_id),
-            user_id=user_id,
-            domains=domains,
-            sites=sites,
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name=f"edit-{connection_type}-connection",
+                text=_("Changed %s connection %s") % (connection_type.upper(), connection_id),
+                domains=[d.ident() for d in domains],
+            ),
+            ChangeScope.sites(sites),
         )
         self.save(cfg, pprint_value=pprint_value)
 
     def create(
         self,
-        user_id: UserId | None,
         cfg: list[ConfigurableUserConnectionSpec],
         connection_type: Literal["ldap", "saml2"],
         sites: list[SiteId],
         domains: Sequence[ABCConfigDomain],
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
-        _changes.add_change(
-            action_name=f"new-{connection_type}-connection",
-            text=_("Created new %s connection") % connection_type.upper(),
-            user_id=user_id,
-            domains=domains,
-            sites=sites,
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name=f"new-{connection_type}-connection",
+                text=_("Created new %s connection") % connection_type.upper(),
+                domains=[d.ident() for d in domains],
+            ),
+            ChangeScope.sites(sites),
         )
         self.save(cfg, pprint_value=pprint_value)
 
     def delete(
         self,
-        user_id: UserId | None,
         cfg: list[ConfigurableUserConnectionSpec],
         connection_id: str,
         connection_type: Literal["ldap", "saml2"],
         sites: list[SiteId],
         domains: Sequence[ABCConfigDomain],
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
-        _changes.add_change(
-            action_name=f"delete-{connection_type}-connection",
-            text=_("Deleted %s connection %s") % (connection_type.upper(), connection_id),
-            user_id=user_id,
-            domains=domains,
-            sites=sites,
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name=f"delete-{connection_type}-connection",
+                text=_("Deleted %s connection %s") % (connection_type.upper(), connection_id),
+                domains=[d.ident() for d in domains],
+            ),
+            ChangeScope.sites(sites),
         )
         self.save(cfg, pprint_value=pprint_value)
 
     def move(
         self,
-        user_id: UserId | None,
         cfg: list[ConfigurableUserConnectionSpec],
         connection_id: str,
         connection_type: Literal["ldap", "saml2"],
@@ -353,15 +348,15 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         sites: list[SiteId],
         domains: Sequence[ABCConfigDomain],
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
-        _changes.add_change(
-            action_name=f"move-{connection_type}-connection",
-            text=_("Changed position of connection %s to %d") % (connection_id, to_index),
-            user_id=user_id,
-            domains=domains,
-            sites=sites,
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name=f"move-{connection_type}-connection",
+                text=_("Changed position of connection %s to %d") % (connection_id, to_index),
+                domains=[d.ident() for d in domains],
+            ),
+            ChangeScope.sites(sites),
         )
         self.save(cfg, pprint_value=pprint_value)
 

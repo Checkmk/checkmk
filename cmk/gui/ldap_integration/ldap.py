@@ -11,6 +11,8 @@ from collections.abc import Callable, Collection
 from copy import deepcopy
 from typing import Any, cast, Literal, override
 
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.customer import customer_api
@@ -36,6 +38,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_connection_config_types import ACTIVE_DIR, LDAPUserConnectionConfig
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import (
     get_connection,
     get_ldap_connections,
@@ -74,8 +77,15 @@ from cmk.gui.wato.pages.userdb_common import (
     get_affected_sites,
     render_connections_page,
 )
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -724,7 +734,7 @@ class ModeLDAPConfig(WatoMode):
             connection_type=self.type,
             custom_config_dirs=(),
             site_configs=config.sites,
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes(config, omd_site(), user.id),
         )
 
     @override
@@ -853,13 +863,12 @@ class ModeEditLDAPConnection(WatoMode):
             self._connection_cfg = connection_cfg
             connection_list = list(_all_connections.values())
             UserConnectionConfigFile().create(
-                user_id=user.id,
                 cfg=connection_list,
                 connection_type="ldap",
                 sites=get_affected_sites(self._edition, config.sites, connection_cfg),
                 domains=[ConfigDomainGUI()],
                 pprint_value=config.wato_use_git,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(config, omd_site(), user.id),
             )
 
         else:
@@ -867,14 +876,13 @@ class ModeEditLDAPConnection(WatoMode):
             self._connection_cfg = connection_cfg
             connection_list = list(_all_connections.values())
             UserConnectionConfigFile().update(
-                user_id=user.id,
                 cfg=connection_list,
                 connection_id=connection_cfg["id"],
                 connection_type="ldap",
                 sites=get_affected_sites(self._edition, config.sites, connection_cfg),
                 domains=[ConfigDomainGUI()],
                 pprint_value=config.wato_use_git,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(config, omd_site(), user.id),
             )
 
         config.user_connections = connection_list  # make directly available on current page
@@ -1108,3 +1116,17 @@ class ModeEditLDAPConnection(WatoMode):
 
     def _valuespec(self) -> LDAPConnectionValuespec:
         return LDAPConnectionValuespec(self._new, self._connection_id)
+
+
+def _pending_changes(config: Config, local_site: SiteId, user_id: UserId | None) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

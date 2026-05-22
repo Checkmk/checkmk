@@ -10,7 +10,6 @@ from typing import Any, Literal, NewType
 
 from livestatus import SiteConfigurations
 
-import cmk.gui.watolib.changes as _changes
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import Breadcrumb
@@ -20,7 +19,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -36,10 +34,10 @@ from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
 from cmk.gui.userdb import load_connection_config, UserConnectionConfigFile
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri_contextless
-from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import redirect
+from cmk.gui.watolib.pending_changes import PendingChanges
 
 DisplayIndex = NewType("DisplayIndex", int)
 RealIndex = NewType("RealIndex", int)
@@ -210,17 +208,6 @@ def render_connections_page(
             html.write_text_permissive(connection["description"])
 
 
-def add_change(*, action_name: str, text: LogMessage, sites: list[SiteId], use_git: bool) -> None:
-    _changes.add_change(
-        action_name=action_name,
-        text=text,
-        user_id=user.id,
-        domains=[ConfigDomainGUI()],
-        sites=sites,
-        use_git=use_git,
-    )
-
-
 def get_affected_sites(
     edition: Edition, site_configs: SiteConfigurations, connection: ConfigurableUserConnectionSpec
 ) -> list[SiteId]:
@@ -242,7 +229,7 @@ def _delete_connection(
     connection_type: Literal["ldap", "saml2"],
     custom_config_dirs: Iterable[Path],
     site_configs: SiteConfigurations,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     user_connection_config_file = UserConnectionConfigFile()
     connections = user_connection_config_file.load_for_modification()
@@ -255,14 +242,13 @@ def _delete_connection(
 
     del connections[index]
     user_connection_config_file.delete(
-        user_id=user.id,
         cfg=connections,
         connection_id=connection_id,
         connection_type=connection_type,
         sites=get_affected_sites(edition, site_configs, connection),
         domains=[ConfigDomainGUI()],
         pprint_value=active_config.wato_pprint_config,
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
 
 
@@ -279,7 +265,7 @@ def _move_connection(
     connection_type: Literal["ldap", "saml2"],
     site_configs: SiteConfigurations,
     *,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     user_connection_config_file = UserConnectionConfigFile()
     connections = user_connection_config_file.load_for_modification()
@@ -287,7 +273,6 @@ def _move_connection(
     del connections[from_index]  # make to_pos now match!
     connections[to_index:to_index] = [connection]
     user_connection_config_file.move(
-        user_id=user.id,
         cfg=connections,
         connection_id=connection["id"],
         connection_type=connection_type,
@@ -295,7 +280,7 @@ def _move_connection(
         sites=get_affected_sites(edition, site_configs, connection),
         domains=[ConfigDomainGUI()],
         pprint_value=active_config.wato_pprint_config,
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
 
 
@@ -319,7 +304,7 @@ def connection_actions(
     custom_config_dirs: Iterable[Path],
     site_configs: SiteConfigurations,
     *,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> ActionResult:
     if not transactions.check_transaction():
         return redirect(config_mode_url)
@@ -331,7 +316,7 @@ def connection_actions(
             connection_type=connection_type,
             custom_config_dirs=custom_config_dirs,
             site_configs=site_configs,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
 
     elif request.has_var("_move"):
@@ -345,7 +330,7 @@ def connection_actions(
             ),
             connection_type=connection_type,
             site_configs=site_configs,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
 
     return redirect(config_mode_url)

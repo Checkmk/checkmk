@@ -22,6 +22,7 @@ void main() {
     def safe_branch_name = versioning.safe_branch_name();
 
     /// NOTE: this way ALL parameter are being passed through..
+    /// DISTRO is set lazily below, once the FIPS distro list has been resolved.
     def job_parameters = [
         EDITION: params.EDITION,
         VERSION: params.VERSION,
@@ -57,6 +58,16 @@ void main() {
     // We currently run those tests sequential due to resource constraints.
     // use smart_stage to capture build result, but continue with next steps
     inside_container_minimal(safe_branch_name: safe_branch_name) {
+        /// Resolve the FIPS distro list from editions.yml (or OVERRIDE_DISTROS if supplied).
+        /// test-gui-e2e-fips is a single-distro runner, so DISTRO must be a concrete value.
+        def fips_distros = versioning.get_distros(
+            edition: params.EDITION,
+            use_case: "fips",
+            override: params.OVERRIDE_DISTROS,
+        );
+        assert fips_distros : "No FIPS distros resolved for edition '${params.EDITION}'";
+        job_parameters.DISTRO = fips_distros.first();
+
         success &= smart_stage(
                 name: "Run composition tests on FIPS",
                 condition: true,

@@ -24,7 +24,7 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import { extractUnitFields } from './converters'
-import { unitDigitsHasError, unitSymbolHasError } from './unitErrors'
+import { unitDigitsHasError } from './unitErrors'
 
 const { _t } = usei18n()
 
@@ -72,15 +72,6 @@ const precisionRoundingModeSuggestions: Suggestion[] = [
 
 const displayErrors = ref(false)
 
-const symbolErrors = computed<string[]>(() => {
-  if (!displayErrors.value) {
-    return []
-  }
-  return unitSymbolHasError(dataUnitChoice.value, dataNotation.value, dataNotationSymbol.value)
-    ? [_t('Symbol is required')]
-    : []
-})
-
 const digitsErrors = computed<string[]>(() => {
   if (!displayErrors.value) {
     return []
@@ -92,7 +83,7 @@ const digitsErrors = computed<string[]>(() => {
 
 function validate(): boolean {
   displayErrors.value = true
-  return symbolErrors.value.length === 0 && digitsErrors.value.length === 0
+  return digitsErrors.value.length === 0
 }
 
 defineExpose({ validate })
@@ -178,12 +169,7 @@ watch(
               :label="_t('Notation')"
             />
             <CmkIndent v-if="dataNotation !== 'time'">
-              <CmkInput
-                v-model="dataNotationSymbol"
-                placeholder="symbol"
-                type="text"
-                :external-errors="symbolErrors"
-              />
+              <CmkInput v-model="dataNotationSymbol" placeholder="symbol" type="text" />
             </CmkIndent>
           </CmkIndent>
           <CmkLabel>

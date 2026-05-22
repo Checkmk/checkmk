@@ -61,7 +61,7 @@ import {
 } from '@/graph-designer/private/converters'
 import { fetchMetricColor } from '@/graph-designer/private/fetch_metric_properties'
 import { type AjaxGraph, type GraphRenderer, fetchAjaxGraph } from '@/graph-designer/private/graph'
-import { unitDigitsHasError, unitSymbolHasError } from '@/graph-designer/private/unitErrors'
+import { unitDigitsHasError } from '@/graph-designer/private/unitErrors'
 
 import type { Topic } from './type_defs'
 
@@ -1024,13 +1024,8 @@ function unitHasError(): boolean {
   if (dataUnit.value[0] !== 'custom') {
     return false
   }
-  const { notation, precision } = dataUnit.value[1]
-  const notationType = notation[0]
-  const symbol = notation[0] === 'time' ? '' : notation[1]
-  return (
-    unitSymbolHasError('custom', notationType, symbol) ||
-    unitDigitsHasError('custom', precision.digits)
-  )
+  const { precision } = dataUnit.value[1]
+  return unitDigitsHasError('custom', precision.digits)
 }
 
 function graphLinesHaveError(): boolean {

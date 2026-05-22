@@ -5962,6 +5962,10 @@ msgid "All hosts"
 msgstr "Tous les hôtes"
 
 #, fuzzy
+msgid "All hosts (experimental)"
+msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
 msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
@@ -7490,6 +7494,10 @@ msgstr "Agent de contrôle"
 msgid "Ask for an optional comment"
 msgstr "Demandez un commentaire facultatif"
 
+#, fuzzy
+msgid "Assertion Consumer Service URL"
+msgstr "Point de terminaison du service consommateur d'assertions"
+
 msgid "Assertion Consumer Service endpoint"
 msgstr "Point de terminaison du service consommateur d'assertions"
 
@@ -7802,6 +7810,10 @@ msgstr "Authentification (spécifique à l'instance)"
 
 msgid "Authentication Expiration"
 msgstr "Expiration de l'authentification"
+
+#, fuzzy
+msgid "Authentication connections"
+msgstr "Méthode d'authentification"
 
 #, fuzzy
 msgid "Authentication context class reference"
@@ -10593,31 +10605,6 @@ msgstr ""
 "n'incluent pas leur vCenter dans la surveillance peuvent choisir d'afficher "
 "le résumé des instantanés sur l'hôte ESX lui-même."
 
-#, fuzzy
-msgid ""
-"By default the users are synchronized automatically in the interval "
-"configured in the connection. For example the LDAP connector synchronizes "
-"the users every five minutes by default. The interval can be changed for "
-"each connection individually in the <a href=\"wato.py?"
-"mode=ldap_config\">connection settings</a>. Please note that the "
-"synchronization is only performed on the central site in distributed setups "
-"by default.<br>The remote sites don't perform automatic user "
-"synchronizations with the configured connections. But you can configure each "
-"site to either synchronize the users with all configured connections or a "
-"specific list of connections."
-msgstr ""
-"Par défaut, les utilisateurs sont synchronisés automatiquement dans "
-"l'intervalle configuré dans la connexion. Par exemple, le connecteur LDAP "
-"synchronise les utilisateurs toutes les cinq minutes par défaut. "
-"L'intervalle peut être modifié pour chaque connexion individuellement dans "
-"les <a href=\"wato.py?mode=ldap_config\">paramètres de connexion</a>. "
-"Veuillez noter que la synchronisation n'est effectuée par défaut que sur le "
-"site maître dans les configurations distribuées.<br>Les sites distants "
-"n'effectuent pas de synchronisation automatique des utilisateurs avec les "
-"connexions configurées. Mais vous pouvez configurer chaque site pour "
-"synchroniser les utilisateurs avec toutes les connexions configurées ou une "
-"liste spécifique de connexions."
-
 #, python-brace-format
 msgid ""
 "By default, Checkmk does not import annotations. If this option is enabled, "
@@ -13193,7 +13180,8 @@ msgstr "Serveurs de contrôle"
 msgid "Checkmk servers"
 msgstr "Serveurs de contrôle"
 
-msgid "Checkmk service provider metadata (generated automatically)"
+#, fuzzy
+msgid "Checkmk service provider metadata"
 msgstr ""
 "Métadonnées du fournisseur de services Checkmk (générées automatiquement)"
 
@@ -20384,7 +20372,7 @@ msgid "Disable automatic host removal"
 msgstr "Désactiver la suppression automatique des hôtes"
 
 #, fuzzy
-msgid "Disable automatic user synchronization (use central site users)"
+msgid "Disable automatic user attribute synchronization"
 msgstr ""
 "Désactiver la synchronisation automatique des utilisateurs (utiliser les "
 "utilisateurs du site maître)"
@@ -23611,6 +23599,12 @@ msgstr "Point d'accès"
 #, fuzzy
 msgid "Endpoint URL (optional)"
 msgstr "Commentaire (facultatif)"
+
+msgid ""
+"Endpoint where Checkmk receives the SAML response with the user's assertion "
+"from the identity provider. This value is auto-generated from the Checkmk "
+"server URL (<tt>{Checkmk server URL}/saml_acs.py?acs</tt>)."
+msgstr ""
 
 #, fuzzy
 msgid "Endpoints to monitor"
@@ -32684,11 +32678,6 @@ msgstr ""
 "hôtes conserveront leurs paramètres individuels."
 
 msgid ""
-"If a service's current state differs from its requested state, the state of "
-"the Service will be set to this value."
-msgstr ""
-
-msgid ""
 "If a source host does not send data for its piggybacked hosts at all or for "
 "single piggybacked hosts then a period can be set in order to treat outdated "
 "piggybacked host files/data as valid within this period. Moreover the status "
@@ -35387,6 +35376,10 @@ msgstr "Hériter de la plage horaire du rapport (Reporting uniquement)"
 msgid "Inherited from "
 msgstr "Hérité de "
 
+#, fuzzy
+msgid "Inherited from central site"
+msgstr "Copier les règles du site central"
+
 msgid "Init duration"
 msgstr "Durée d'initialisation"
 
@@ -37106,6 +37099,12 @@ msgstr "Paramètres de temps de Kaspersky Anti-Virus"
 msgid "Keep comment after acknowledgment expires (persistent comment)"
 msgstr ""
 
+msgid "Keep containers exited with non-zero exit code"
+msgstr ""
+
+msgid "Keep containers exited with non-zero exit code in monitoring"
+msgstr ""
+
 msgid "Keep existing connections"
 msgstr "Conserver les connexions existantes"
 
@@ -37376,6 +37375,10 @@ msgstr "Attribut LDAP à synchroniser"
 
 msgid "LDAP base, e.g. ou=Development, o=Checkmk GmbH, c=de"
 msgstr "Base LDAP, par exemple ou=Development, o=Checkmk GmbH, c=de"
+
+#, fuzzy
+msgid "LDAP connection"
+msgstr "Connexions LDAP"
 
 #, python-format
 msgid ""
@@ -37794,6 +37797,9 @@ msgstr ""
 
 msgid "Learning Checkmk"
 msgstr "Contrôle de l'apprentissage"
+
+msgid "Leave empty to auto-generate from Checkmk server URL"
+msgstr ""
 
 msgid "Left"
 msgstr "Gauche"
@@ -42337,6 +42343,10 @@ msgid "Metadata"
 msgstr "Métadonnées"
 
 msgid "Metadata endpoint"
+msgstr "Point d'arrivée des métadonnées"
+
+#, fuzzy
+msgid "Metadata endpoint URL"
 msgstr "Point d'arrivée des métadonnées"
 
 msgid ""
@@ -51188,6 +51198,13 @@ msgstr "Notifications périodiques lors de problèmes de service"
 msgid "Periodic service discovery"
 msgstr "Découverte périodique des services"
 
+msgid ""
+"Periodic user attribute synchronization keeps user attributes (alias, email, "
+"roles, contact groups) up to date on this site. This is primarily relevant "
+"for LDAP connections. SAML connections update attributes only when a user "
+"logs in, so they do not need to be listed here."
+msgstr ""
+
 #, fuzzy
 msgid "Permanent generation memory"
 msgstr "Mémoire de génération permanente"
@@ -54234,6 +54251,11 @@ msgstr "Mode lecture seule"
 msgid "Read-only mode for configuration"
 msgstr "Configuration à distance"
 
+msgid ""
+"Read-only summary of the connections inherited from the central site. "
+"Refreshed each time this dialog is opened."
+msgstr ""
+
 msgid "Reading connections"
 msgstr "Liens de lecture"
 
@@ -57139,6 +57161,10 @@ msgstr "Certificat de routeur SAP"
 msgid "SAML built-in signing certificate"
 msgstr "Certificat de routeur SAP"
 
+#, fuzzy
+msgid "SAML connection"
+msgstr "Connexions SAML"
+
 msgid "SAML connections"
 msgstr "Connexions SAML"
 
@@ -58577,6 +58603,16 @@ msgid ""
 "only global and manual proxy configurations are supported."
 msgstr ""
 
+msgid ""
+"Select the connections that are available for login on this site. Choose "
+"<i>Use the same connections as the central site</i> to inherit the central "
+"site's selection (changes made on the central site take effect after the "
+"next configuration sync), or <i>Use the following connections</i> to pick "
+"specific LDAP and SAML connections. Each SAML entry may optionally override "
+"the SP entity ID, which is useful when multiple sites share the same SAML "
+"connection but need to be registered separately at the IdP."
+msgstr ""
+
 #, fuzzy
 msgid "Select the contact group that can edit this OAuth2 connection."
 msgstr "Ajouter une connexion"
@@ -59504,7 +59540,7 @@ msgid "Service state age"
 msgstr "Âge de l'état de service"
 
 #, fuzzy
-msgid "Service state for Differing Service States"
+msgid "Service state for differing VM/LXC states"
 msgstr "Pourcentage de l'état de service"
 
 #, fuzzy
@@ -64090,6 +64126,9 @@ msgstr "Niveaux d'époques d'état et moyenne"
 msgid "Status flapping"
 msgstr "Battement d'état"
 
+msgid "Status host"
+msgstr "Hôte d'état"
+
 msgid "Status notification period"
 msgstr "Période de notification du statut"
 
@@ -64815,6 +64854,14 @@ msgid "Symmetric encryption (Linux, Solaris, Windows)"
 msgstr "Chiffrement symétrique (Linux, Windows)"
 
 #, fuzzy
+msgid "Sync attributes for all LDAP connections"
+msgstr "Synchronisation avec les connexions LDAP suivantes"
+
+#, fuzzy
+msgid "Sync attributes only for the following connections"
+msgstr "Synchronisation avec les connexions LDAP suivantes"
+
+#, fuzzy
 msgid "Sync disabled"
 msgstr "désactivé"
 
@@ -64834,15 +64881,6 @@ msgstr "Latence de synchronisation"
 
 msgid "Sync losses"
 msgstr "Pertes de synchronisation"
-
-msgid "Sync users with all connections"
-msgstr "Synchroniser les utilisateurs avec toutes les connexions"
-
-msgid "Sync with LDAP connections"
-msgstr "Synchronisation avec les connexions LDAP"
-
-msgid "Sync with the following LDAP connections"
-msgstr "Synchronisation avec les connexions LDAP suivantes"
 
 #, fuzzy
 msgid "Sync-plug-in: Roles"
@@ -70379,6 +70417,11 @@ msgstr ""
 "à 28 d'un mois."
 
 msgid ""
+"The state of the Proxmox VE HA Manager Watcher service will be set to this "
+"value if the current state of a VM/LXC differs from its requested state"
+msgstr ""
+
+msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
 "is based on the assumption that you want to be informed when there is new "
 "information. However, there are also use cases where new incoming messages "
@@ -75699,6 +75742,10 @@ msgstr ""
 "Cette variable est configurée dans <a href=\"%s\">les paramètres généraux</"
 "a>."
 
+#, fuzzy
+msgid "This view"
+msgstr "Cette vue en PDF"
+
 msgid "This view as PDF"
 msgstr "Cette vue en PDF"
 
@@ -76000,6 +76047,13 @@ msgstr "Désactiver toutes les notifications personnelles"
 
 msgid "This year"
 msgstr "Cette année"
+
+#, python-brace-format
+msgid ""
+"This {type_name} is part of the {config_name} {product} configuration.<br>To "
+"access further parts of the {product} configuration, go to the related "
+"{product} configuration."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -80410,6 +80464,19 @@ msgstr ""
 "jour d'un hôte automatiquement lors de l'enregistrement ou de la mise à jour "
 "de l'agent."
 
+msgid ""
+"URL where this site receives SAML responses from the IdP for this "
+"connection. Register this URL with the IdP's client configuration. The URL "
+"is only shown after saving the site configuration and reopening this dialog."
+msgstr ""
+
+msgid ""
+"URL where this site serves the SAML Service Provider metadata for this "
+"connection. Derived from the site's <i>Server URL for SAML ACS callback</i> "
+"and the connection ID. The URL is only shown after saving the site "
+"configuration and reopening this dialog."
+msgstr ""
+
 msgid "URL:"
 msgstr "URL :"
 
@@ -80868,6 +80935,13 @@ msgstr ""
 #, fuzzy
 msgid "Unique host name template"
 msgstr "Modèle de nom d'hôte"
+
+msgid ""
+"Unique identifier for this Checkmk Service Provider, used by the identity "
+"provider to recognize requests originating from Checkmk. Leave empty to auto-"
+"generate the value from the Checkmk server URL (<tt>{Checkmk server URL}/"
+"saml_metadata.py</tt>) or specify an arbitrary value."
+msgstr ""
 
 msgid "Unit"
 msgstr "Unité"
@@ -82712,6 +82786,10 @@ msgid ""
 "configuration:"
 msgstr ""
 
+#, fuzzy
+msgid "Use the following connections"
+msgstr "Utilisez la couleur suivante"
+
 msgid "Use the following credentials"
 msgstr "Utilisez les informations d'identification suivantes"
 
@@ -82772,6 +82850,10 @@ msgstr ""
 
 msgid "Use the remote SID"
 msgstr "Utiliser le SID distant"
+
+#, fuzzy
+msgid "Use the same connections as the central site"
+msgstr "Délai de connexion TCP pour la connexion au maître"
 
 msgid "Use the status of the Check_MK Service"
 msgstr ""
@@ -83303,6 +83385,10 @@ msgstr "Utilisateur et mot de passe"
 msgid "User asserts"
 msgstr "%s Assertions"
 
+#, fuzzy
+msgid "User attribute synchronization"
+msgstr "Synchronisation des utilisateurs"
+
 msgid "User base DN"
 msgstr "Base d'utilisateurs DN"
 
@@ -83313,6 +83399,10 @@ msgstr "Authentification par jeton"
 #, fuzzy
 msgid "User certificate path"
 msgstr "Vérifier les certificats"
+
+#, fuzzy
+msgid "User configuration"
+msgstr "configuration"
 
 #, fuzzy
 msgid "User creation options"
@@ -85746,6 +85836,15 @@ msgstr ""
 "Lors de la découverte de services sur les commutateurs Brocade, seuls les "
 "ports avec les états physiques donnés seront ajoutés au système de "
 "surveillance."
+
+msgid ""
+"When enabled (default), containers that have exited with a non-zero exit "
+"code will continue to be monitored individually. When disabled, they are "
+"removed from individual monitoring. Note: containers exited with exit code 0 "
+"are always removed from individual monitoring regardless of this setting. "
+"All exited containers are still counted in the container count service on "
+"the Podman host."
+msgstr ""
 
 msgid ""
 "When enabled all exceptions occuring during the helper execution will raise "
@@ -95433,14 +95532,6 @@ msgstr "Ajouter une nouvelle configuration utilisateur"
 msgid "An unexpected error occurred. Please try again."
 msgstr "Une exception s'est produite : %s"
 
-#, fuzzy
-msgid "newly created"
-msgstr "Fichier créé"
-
-#, fuzzy
-msgid "existing"
-msgstr "Essais"
-
 msgid "Basic auth (user: %{user}, password: %{password})"
 msgstr ""
 
@@ -95453,20 +95544,18 @@ msgid "No encryption"
 msgstr "Cryptage"
 
 #, fuzzy
-msgid "Event Console resource attribute"
+msgid "Enabled (Resource attribute: %{attribute})"
 msgstr "Attribut du rôle"
 
 #, fuzzy
 msgid "The hosts will be created in the \"Telemetry\" folder."
 msgstr "Ajouter une configuration d'état"
 
-#, fuzzy
-msgid "gRPC protocol"
-msgstr "Protocole"
+msgid "gRPC-based OTLP receiver:"
+msgstr ""
 
-#, fuzzy
-msgid "HTTP protocol"
-msgstr "Protocole"
+msgid "HTTP-based OTLP receiver:"
+msgstr ""
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -95537,6 +95626,10 @@ msgstr "Fichiers de configuration"
 #, fuzzy
 msgid "Could not create the configuration bundle"
 msgstr "Ajouter une nouvelle configuration utilisateur"
+
+#, fuzzy
+msgid "Prometheus scraper:"
+msgstr "Alertmanager"
 
 msgid ""
 "Insecure connection detected (HTTP). For better security, we recommend "
@@ -96609,6 +96702,57 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid ""
+#~ "By default the users are synchronized automatically in the interval "
+#~ "configured in the connection. For example the LDAP connector synchronizes "
+#~ "the users every five minutes by default. The interval can be changed for "
+#~ "each connection individually in the <a href=\"wato.py?"
+#~ "mode=ldap_config\">connection settings</a>. Please note that the "
+#~ "synchronization is only performed on the central site in distributed "
+#~ "setups by default.<br>The remote sites don't perform automatic user "
+#~ "synchronizations with the configured connections. But you can configure "
+#~ "each site to either synchronize the users with all configured connections "
+#~ "or a specific list of connections."
+#~ msgstr ""
+#~ "Par défaut, les utilisateurs sont synchronisés automatiquement dans "
+#~ "l'intervalle configuré dans la connexion. Par exemple, le connecteur LDAP "
+#~ "synchronise les utilisateurs toutes les cinq minutes par défaut. "
+#~ "L'intervalle peut être modifié pour chaque connexion individuellement "
+#~ "dans les <a href=\"wato.py?mode=ldap_config\">paramètres de connexion</"
+#~ "a>. Veuillez noter que la synchronisation n'est effectuée par défaut que "
+#~ "sur le site maître dans les configurations distribuées.<br>Les sites "
+#~ "distants n'effectuent pas de synchronisation automatique des utilisateurs "
+#~ "avec les connexions configurées. Mais vous pouvez configurer chaque site "
+#~ "pour synchroniser les utilisateurs avec toutes les connexions configurées "
+#~ "ou une liste spécifique de connexions."
+
+#~ msgid "Sync users with all connections"
+#~ msgstr "Synchroniser les utilisateurs avec toutes les connexions"
+
+#~ msgid "Sync with LDAP connections"
+#~ msgstr "Synchronisation avec les connexions LDAP"
+
+#, fuzzy
+#~ msgid "newly created"
+#~ msgstr "Fichier créé"
+
+#, fuzzy
+#~ msgid "existing"
+#~ msgstr "Essais"
+
+#, fuzzy
+#~ msgid "Event Console resource attribute"
+#~ msgstr "Attribut du rôle"
+
+#, fuzzy
+#~ msgid "gRPC protocol"
+#~ msgstr "Protocole"
+
+#, fuzzy
+#~ msgid "HTTP protocol"
+#~ msgstr "Protocole"
+
+#, fuzzy
 #~ msgid "Address pool name"
 #~ msgstr "Adresse Nom de la piscine"
 
@@ -96717,9 +96861,6 @@ msgstr ""
 
 #~ msgid "Ports to open"
 #~ msgstr "Ports à ouvrir"
-
-#~ msgid "Status host"
-#~ msgstr "Hôte d'état"
 
 #, fuzzy
 #~ msgid "Deploy IBM MQ plug-in"
@@ -102283,10 +102424,6 @@ msgstr ""
 #~ msgstr "Gérer les instantanés"
 
 #, fuzzy
-#~ msgid "OpenTelemetry (experimental)"
-#~ msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
 #~ msgid "OpenTelemetry Collector (Experimental)"
 #~ msgstr "Ajouter une configuration d'état"
 
@@ -102494,10 +102631,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Data point attribute filters"
 #~ msgstr "Modifier les attributs"
-
-#, fuzzy
-#~ msgid "Resource attribute filters"
-#~ msgstr "Attribut du rôle"
 
 #, fuzzy
 #~ msgid "Scope attribute filters"

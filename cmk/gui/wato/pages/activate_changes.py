@@ -17,10 +17,10 @@ from typing import Literal, override
 
 from livestatus import SiteConfiguration, SiteConfigurations
 
-import cmk.gui.watolib.changes as _changes
 from cmk.ccc.archive import CheckmkTarArchive
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition_has_enforced_licensing
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -67,6 +67,7 @@ from cmk.gui.watolib.activate_changes import (
     prevent_discard_changes,
     verify_remote_site_config,
 )
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.backup_snapshots import get_last_wato_snapshot_file
@@ -74,6 +75,14 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, D
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
@@ -223,13 +232,14 @@ class ModeRevertChanges(WatoMode):
         msg = _("Discarded pending changes (restored %s)") % file_to_restore
 
         # All sites and domains can be affected by a restore: Better restart everything.
-        _changes.add_change(
-            action_name="changes-discarded",
-            text=msg,
-            user_id=user.id,
-            domains=ABCConfigDomain.enabled_domains(),
-            need_restart=True,
-            use_git=config.wato_use_git,
+        _pending_changes(config, omd_site(), user.id).add(
+            Change(
+                action_name="changes-discarded",
+                text=msg,
+                domains=[d.ident() for d in ABCConfigDomain.enabled_domains()],
+                force_restart=True,
+            ),
+            ChangeScope.all_activation_sites(),
         )
 
         _extract_snapshot(file_to_restore)
@@ -1108,3 +1118,17 @@ class AutomationActivateChanges(AutomationCommand[DomainRequests]):
             return activate_changes.execute_activate_changes(api_request, is_remote_site=True)
         finally:
             timeout_manager.disable_timeout()
+
+
+def _pending_changes(config: Config, local_site: SiteId, user_id: UserId | None) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

@@ -9,9 +9,10 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.graphing.v1 import graphs, metrics, Title
+from cmk.graphing.v1 import graphs, metrics
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import Title as TitleV1
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource
 from cmk.gui.graphing._graph_specification import (
@@ -47,7 +48,7 @@ from cmk.utils.servicename import ServiceName
 _CPU_UTIL_GRAPHS = {
     "cpu_utilization_simple": graphs_v1.Graph(
         name="cpu_utilization_simple",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -70,7 +71,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "util_average_1": graphs_v1.Graph(
         name="util_average_1",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -92,7 +93,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "util_average_2": graphs_v1.Graph(
         name="util_average_2",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -106,7 +107,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization_3": graphs_v1.Graph(
         name="cpu_utilization_3",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -120,7 +121,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization_4": graphs_v1.Graph(
         name="cpu_utilization_4",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -134,7 +135,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization_5": graphs_v1.Graph(
         name="cpu_utilization_5",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -147,7 +148,7 @@ _CPU_UTIL_GRAPHS = {
         simple_lines=[
             "util_average",
             metrics_v1.Sum(
-                Title("Total"),
+                TitleV1("Total"),
                 metrics_v1.Color.GREEN,
                 [
                     "user",
@@ -166,7 +167,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization_5_util": graphs_v1.Graph(
         name="cpu_utilization_5_util",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -190,7 +191,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization_6_steal": graphs_v1.Graph(
         name="cpu_utilization_6_steal",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -204,7 +205,7 @@ _CPU_UTIL_GRAPHS = {
         simple_lines=[
             "util_average",
             metrics_v1.Sum(
-                Title("Total"),
+                TitleV1("Total"),
                 metrics_v1.Color.GREEN,
                 [
                     "user",
@@ -222,7 +223,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization_6_steal_util": graphs_v1.Graph(
         name="cpu_utilization_6_steal_util",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -244,7 +245,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization_6_guest": graphs_v1.Graph(
         name="cpu_utilization_6_guest",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -258,7 +259,7 @@ _CPU_UTIL_GRAPHS = {
         simple_lines=[
             "util_average",
             metrics_v1.Sum(
-                Title("Total"),
+                TitleV1("Total"),
                 metrics_v1.Color.GREEN,
                 [
                     "user",
@@ -273,7 +274,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization_6_guest_util": graphs_v1.Graph(
         name="cpu_utilization_6_guest_util",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -295,7 +296,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization_7": graphs_v1.Graph(
         name="cpu_utilization_7",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -310,7 +311,7 @@ _CPU_UTIL_GRAPHS = {
         simple_lines=[
             "util_average",
             metrics_v1.Sum(
-                Title("Total"),
+                TitleV1("Total"),
                 metrics_v1.Color.GREEN,
                 [
                     "user",
@@ -326,7 +327,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization_7_util": graphs_v1.Graph(
         name="cpu_utilization_7_util",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -348,7 +349,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization_8": graphs_v1.Graph(
         name="cpu_utilization_8",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -361,7 +362,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "util_fallback": graphs_v1.Graph(
         name="util_fallback",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             100,
@@ -379,7 +380,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization": graphs_v1.Graph(
         name="cpu_utilization",
-        title=Title("CPU utilization"),
+        title=TitleV1("CPU utilization"),
         simple_lines=[
             "util",
             "engine_cpu_util",
@@ -387,7 +388,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_utilization_numcpus": graphs_v1.Graph(
         name="cpu_utilization_numcpus",
-        title=Title(
+        title=TitleV1(
             'CPU utilization (_EXPRESSION:{"metric":"util_numcpu_as_max","scalar":"max"} CPU Threads)'
         ),
         minimal_range=graphs_v1.MinimalRange(
@@ -410,7 +411,7 @@ _CPU_UTIL_GRAPHS = {
     ),
     "cpu_entitlement": graphs_v1.Graph(
         name="cpu_entitlement",
-        title=Title("CPU entitlement"),
+        title=TitleV1("CPU entitlement"),
         compound_lines=["cpu_entitlement"],
         simple_lines=["cpu_entitlement_util"],
     ),
@@ -419,7 +420,7 @@ _CPU_UTIL_GRAPHS = {
 _MAIL_GRAPHS = {
     "amount_of_mails_in_queues": graphs_v1.Graph(
         name="amount_of_mails_in_queues",
-        title=Title("Amount of mails in queues"),
+        title=TitleV1("Amount of mails in queues"),
         compound_lines=[
             "mail_queue_deferred_length",
             "mail_queue_active_length",
@@ -431,7 +432,7 @@ _MAIL_GRAPHS = {
     ),
     "size_of_mails_in_queues": graphs_v1.Graph(
         name="size_of_mails_in_queues",
-        title=Title("Size of mails in queues"),
+        title=TitleV1("Size of mails in queues"),
         compound_lines=[
             "mail_queue_deferred_size",
             "mail_queue_active_size",
@@ -443,7 +444,7 @@ _MAIL_GRAPHS = {
     ),
     "amount_of_mails_in_secondary_queues": graphs_v1.Graph(
         name="amount_of_mails_in_secondary_queues",
-        title=Title("Amount of mails in queues"),
+        title=TitleV1("Amount of mails in queues"),
         compound_lines=[
             "mail_queue_hold_length",
             "mail_queue_incoming_length",
@@ -459,7 +460,7 @@ _MAIL_GRAPHS = {
 _MEM_GRAPHS = {
     "ram_used": graphs_v1.Graph(
         name="ram_used",
-        title=Title("RAM used"),
+        title=TitleV1("RAM used"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             metrics_v1.MaximumOf(
@@ -483,11 +484,11 @@ _MEM_GRAPHS = {
     ),
     "ram_swap_used": graphs_v1.Graph(
         name="ram_swap_used",
-        title=Title("RAM + Swap used"),
+        title=TitleV1("RAM + Swap used"),
         minimal_range=graphs_v1.MinimalRange(
             0,
             metrics_v1.Sum(
-                Title(""),
+                TitleV1(""),
                 metrics_v1.Color.GRAY,
                 [
                     metrics_v1.MaximumOf(
@@ -507,7 +508,7 @@ _MEM_GRAPHS = {
         ],
         simple_lines=[
             metrics_v1.Sum(
-                Title("Total RAM + Swap installed"),
+                TitleV1("Total RAM + Swap installed"),
                 metrics_v1.Color.DARK_CYAN,
                 [
                     metrics_v1.MaximumOf(
@@ -532,7 +533,7 @@ _MEM_GRAPHS = {
 _HEAP_MEM_GRAPH = {
     "heap_and_non_heap_memory": graphs_v1.Graph(
         name="heap_and_non_heap_memory",
-        title=Title("Heap and non-heap memory"),
+        title=TitleV1("Heap and non-heap memory"),
         compound_lines=[
             "mem_heap",
             "mem_nonheap",
@@ -544,7 +545,7 @@ _HEAP_MEM_GRAPH = {
     ),
     "heap_memory_usage": graphs_v1.Graph(
         name="heap_memory_usage",
-        title=Title("Heap memory usage"),
+        title=TitleV1("Heap memory usage"),
         simple_lines=[
             "mem_heap_committed",
             "mem_heap",
@@ -554,7 +555,7 @@ _HEAP_MEM_GRAPH = {
     ),
     "non-heap_memory_usage": graphs_v1.Graph(
         name="non-heap_memory_usage",
-        title=Title("Non-heap memory usage"),
+        title=TitleV1("Non-heap memory usage"),
         simple_lines=[
             "mem_nonheap_committed",
             "mem_nonheap",
@@ -735,12 +736,12 @@ def test_template_recipes_matching(
         registered_graphs={
             "graph1": graphs_v1.Graph(
                 name="graph1",
-                title=Title("Graph 1"),
+                title=TitleV1("Graph 1"),
                 simple_lines=["metric1"],
             ),
             "graph2": graphs_v1.Graph(
                 name="graph2",
-                title=Title("Graph 2"),
+                title=TitleV1("Graph 2"),
                 simple_lines=["metric2"],
             ),
         },
@@ -761,12 +762,12 @@ def _env_for_resolve_helper(registered_metrics: Mapping[str, RegisteredMetric]) 
         registered_graphs={
             "graph1": graphs_v1.Graph(
                 name="graph1",
-                title=Title("Graph 1"),
+                title=TitleV1("Graph 1"),
                 simple_lines=["metric1"],
             ),
             "graph2": graphs_v1.Graph(
                 name="graph2",
-                title=Title("Graph 2"),
+                title=TitleV1("Graph 2"),
                 simple_lines=["metric2"],
             ),
         },
@@ -1007,7 +1008,7 @@ def test_resolve_graph_id_from_index_no_metrics(monkeypatch: pytest.MonkeyPatch)
             {
                 "aws_ec2_running_ondemand_instances_t2": graphs_v1.Graph(
                     name="aws_ec2_running_ondemand_instances_t2",
-                    title=Title("Total running on-demand instances of type t2"),
+                    title=TitleV1("Total running on-demand instances of type t2"),
                     compound_lines=[
                         "aws_ec2_running_ondemand_instances_t2.2xlarge",
                         "aws_ec2_running_ondemand_instances_t2.large",
@@ -1029,7 +1030,7 @@ def test_resolve_graph_id_from_index_no_metrics(monkeypatch: pytest.MonkeyPatch)
                 ),
                 "aws_ec2_running_ondemand_instances": graphs_v1.Graph(
                     name="aws_ec2_running_ondemand_instances",
-                    title=Title("Total running on-demand instances"),
+                    title=TitleV1("Total running on-demand instances"),
                     simple_lines=["aws_ec2_running_ondemand_instances_total"],
                 ),
             },
@@ -1176,7 +1177,7 @@ def test__evaluate_graph_plugins_2(
             {
                 "inbound_and_outbound_messages": graphs_v1.Graph(
                     name="inbound_and_outbound_messages",
-                    title=Title("Inbound and Outbound Messages"),
+                    title=TitleV1("Inbound and Outbound Messages"),
                     compound_lines=[
                         "messages_outbound",
                         "messages_inbound",
@@ -1337,7 +1338,7 @@ def test__evaluate_graph_plugins_2(
             {
                 "inbound_and_outbound_messages": graphs_v1.Graph(
                     name="inbound_and_outbound_messages",
-                    title=Title("Inbound and Outbound Messages"),
+                    title=TitleV1("Inbound and Outbound Messages"),
                     compound_lines=[
                         "messages_outbound",
                         "messages_inbound",
@@ -1564,7 +1565,7 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
             {
                 "used_cpu_time": graphs_v1.Graph(
                     name="used_cpu_time",
-                    title=Title("Used CPU Time"),
+                    title=TitleV1("Used CPU Time"),
                     compound_lines=[
                         "user_time",
                         "children_user_time",
@@ -1573,7 +1574,7 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
                     ],
                     simple_lines=[
                         metrics_v1.Sum(
-                            Title("Total"),
+                            TitleV1("Total"),
                             metrics_v1.Color.DARK_BLUE,
                             [
                                 "user_time",
@@ -1606,7 +1607,7 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
             {
                 "used_cpu_time": graphs_v1.Graph(
                     name="used_cpu_time",
-                    title=Title("Used CPU Time"),
+                    title=TitleV1("Used CPU Time"),
                     compound_lines=[
                         "user_time",
                         "children_user_time",
@@ -1615,7 +1616,7 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
                     ],
                     simple_lines=[
                         metrics_v1.Sum(
-                            Title("Total"),
+                            TitleV1("Total"),
                             metrics_v1.Color.DARK_BLUE,
                             [
                                 "user_time",
@@ -1648,14 +1649,14 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
             {
                 "cpu_time": graphs_v1.Graph(
                     name="cpu_time",
-                    title=Title("CPU Time"),
+                    title=TitleV1("CPU Time"),
                     compound_lines=[
                         "user_time",
                         "system_time",
                     ],
                     simple_lines=[
                         metrics_v1.Sum(
-                            Title("Total"),
+                            TitleV1("Total"),
                             metrics_v1.Color.GRAY,
                             [
                                 "user_time",
@@ -1674,14 +1675,14 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
             {
                 "cpu_time": graphs_v1.Graph(
                     name="cpu_time",
-                    title=Title("CPU Time"),
+                    title=TitleV1("CPU Time"),
                     compound_lines=[
                         "user_time",
                         "system_time",
                     ],
                     simple_lines=[
                         metrics_v1.Sum(
-                            Title("Total"),
+                            TitleV1("Total"),
                             metrics_v1.Color.GRAY,
                             [
                                 "user_time",
@@ -1896,7 +1897,7 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
             {
                 "fs_used": graphs_v1.Graph(
                     name="fs_used",
-                    title=Title("Size and used space"),
+                    title=TitleV1("Size and used space"),
                     minimal_range=graphs_v1.MinimalRange(
                         0,
                         metrics_v1.MaximumOf(
@@ -1924,7 +1925,7 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
             {
                 "fs_used": graphs_v1.Graph(
                     name="fs_used",
-                    title=Title("Size and used space"),
+                    title=TitleV1("Size and used space"),
                     minimal_range=graphs_v1.MinimalRange(
                         0,
                         metrics_v1.MaximumOf(
@@ -2032,7 +2033,7 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
             {
                 "active_and_inactive_memory": graphs_v1.Graph(
                     name="active_and_inactive_memory",
-                    title=Title("Active and inactive memory"),
+                    title=TitleV1("Active and inactive memory"),
                     compound_lines=[
                         "mem_lnx_active",
                         "mem_lnx_inactive",
@@ -2172,7 +2173,7 @@ def test_template_recipes_fs(load_plugins: None) -> None:
         registered_graphs={
             "fs_used": graphs.Graph(
                 name="fs_used",
-                title=Title("Size and used space"),
+                title=TitleV1("Size and used space"),
                 minimal_range=graphs.MinimalRange(
                     0,
                     metrics.MaximumOf(

@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.graphing.v1 import Title
+from cmk.graphing.v1 import Title as TitleV1
 from cmk.graphing.v1.graphs import Graph
 from cmk.gui.dashboard.dashlet.dashlets.graph import (
     _graph_templates_autocompleter_testable,
@@ -22,7 +22,7 @@ def test_graph_templates_autocompleter_testable_unconstrained() -> None:
         registered_graphs={
             "graph1": Graph(
                 name="graph1",
-                title=Title("Graph 1"),
+                title=TitleV1("Graph 1"),
                 simple_lines=["metric1"],
             )
         },
@@ -70,7 +70,7 @@ ColumnHeaders: off
             registered_graphs={
                 "graph1": Graph(
                     name="graph1",
-                    title=Title("Graph 1"),
+                    title=TitleV1("Graph 1"),
                     simple_lines=["metric1"],
                 )
             },
@@ -122,7 +122,7 @@ ColumnHeaders: off
             registered_graphs={
                 "graph1": Graph(
                     name="graph1",
-                    title=Title("Graph 1"),
+                    title=TitleV1("Graph 1"),
                     simple_lines=["metric1"],
                 )
             },

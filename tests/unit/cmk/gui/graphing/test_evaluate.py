@@ -9,7 +9,7 @@ import pytest
 
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers as perfometers_v1
-from cmk.graphing.v1 import Title
+from cmk.graphing.v1 import Title as TitleV1
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.gui.graphing._evaluations_from_api import evaluate_quantity
 from cmk.gui.graphing._perfometer import _perfometer_plugin_matches
@@ -37,7 +37,7 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers_v1.Perfometer:
             metrics_v1.MinimumOf(f"metric-name{start_idx + 5}", metrics_v1.Color.BLUE),
             metrics_v1.MaximumOf(f"metric-name{start_idx + 6}", metrics_v1.Color.BLUE),
             metrics_v1.Sum(
-                Title("Title"),
+                TitleV1("Title"),
                 metrics_v1.Color.BLUE,
                 [
                     f"metric-name{start_idx + 7}",
@@ -45,7 +45,7 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers_v1.Perfometer:
                 ],
             ),
             metrics_v1.Product(
-                Title("Title"),
+                TitleV1("Title"),
                 UNIT,
                 metrics_v1.Color.BLUE,
                 [
@@ -54,13 +54,13 @@ def _make_perfometer(name: str, start_idx: int) -> perfometers_v1.Perfometer:
                 ],
             ),
             metrics_v1.Difference(
-                Title("Title"),
+                TitleV1("Title"),
                 metrics_v1.Color.BLUE,
                 minuend=f"metric-name{start_idx + 11}",
                 subtrahend=f"metric-name{start_idx + 12}",
             ),
             metrics_v1.Fraction(
-                Title("Title"),
+                TitleV1("Title"),
                 UNIT,
                 metrics_v1.Color.BLUE,
                 dividend=f"metric-name{start_idx + 13}",
@@ -285,7 +285,7 @@ def test__perfometer_plugin_matches(
         ),
         pytest.param(
             metrics_v1.Constant(
-                Title("Title"),
+                TitleV1("Title"),
                 UNIT,
                 metrics_v1.Color.BLUE,
                 5.0,
@@ -385,7 +385,7 @@ def test__perfometer_plugin_matches(
         ),
         pytest.param(
             metrics_v1.Sum(
-                Title("Title"),
+                TitleV1("Title"),
                 metrics_v1.Color.BLUE,
                 ["name1", "name2"],
             ),
@@ -420,7 +420,7 @@ def test__perfometer_plugin_matches(
         ),
         pytest.param(
             metrics_v1.Product(
-                Title("Title"),
+                TitleV1("Title"),
                 UNIT,
                 metrics_v1.Color.BLUE,
                 ["name1", "name2"],
@@ -456,7 +456,7 @@ def test__perfometer_plugin_matches(
         ),
         pytest.param(
             metrics_v1.Difference(
-                Title("Title"),
+                TitleV1("Title"),
                 metrics_v1.Color.BLUE,
                 minuend="name1",
                 subtrahend="name2",
@@ -492,7 +492,7 @@ def test__perfometer_plugin_matches(
         ),
         pytest.param(
             metrics_v1.Fraction(
-                Title("Title"),
+                TitleV1("Title"),
                 UNIT,
                 metrics_v1.Color.BLUE,
                 dividend="name1",

@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing import v1 as graphing_api
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import Title as TitleV1
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
 from cmk.gui.graphing._graph_templates import get_graph_plugin_from_id
 from cmk.gui.graphing._legacy import check_metrics
@@ -54,7 +54,7 @@ def test_add_graphing_plugins() -> None:
 
     assert get_graph_plugin_from_id(graphs_from_api, "db_connections") == graphs_v1.Graph(
         name="db_connections",
-        title=graphing_api.Title("DB Connections"),
+        title=TitleV1("DB Connections"),
         simple_lines=[
             "active_connections",
             "idle_connections",

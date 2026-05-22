@@ -3,20 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
-
-# mypy: disable-error-code="var-annotated"
 
 import json
 import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.graylog.lib import handle_iso_utc_to_localtimestamp
 
-check_info = {}
+Section = dict[str, dict[str, Any]]
 
 # <<<graylog_sidecars>>>
 # {"sort": "node_name", "pagination": {"count": 1, "per_page": 50, "total": 1,
@@ -40,8 +47,8 @@ check_info = {}
 # false, "query  ": "", "total": 1, "order": "asc"}
 
 
-def parse_graylog_sidecars(string_table):
-    parsed = {}
+def parse_graylog_sidecars(string_table: StringTable) -> Section:
+    parsed: Section = {}
 
     for line in string_table:
         sidecar_data = json.loads(line[0])
@@ -68,32 +75,33 @@ def parse_graylog_sidecars(string_table):
     return parsed
 
 
-def check_graylog_sidecars(item, params, parsed):
-    if not (item_data := parsed.get(item)):
+def discover_graylog_sidecars(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_graylog_sidecars(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (item_data := section.get(item)):
         return
 
     active_msg = item_data.get("active")
     if active_msg is not None:
-        active_state = 0
         msg = str(active_msg).replace("True", "yes").replace("False", "no")
-        if not active_msg:
-            active_state = params.get("active_state", 2)
-
-        yield active_state, "Active: %s" % msg
+        active_state = State.OK if active_msg else State(params.get("active_state", 2))
+        yield Result(state=active_state, summary=f"Active: {msg}")
 
     last_seen = item_data.get("last_seen")
     if last_seen is not None:
         local_timestamp = handle_iso_utc_to_localtimestamp(last_seen)
         age = time.time() - local_timestamp
 
-        yield 0, "Last seen: %s" % render.datetime(local_timestamp)
+        yield Result(state=State.OK, summary=f"Last seen: {render.datetime(local_timestamp)}")
 
-        yield check_levels(
-            age,
-            None,
-            params.get("last_seen"),
-            human_readable_func=render.timespan,
-            infoname="Before",
+        warn, crit = params.get("last_seen", (None, None))
+        yield from check_levels_v1(
+            value=age,
+            levels_upper=(warn, crit),
+            render_func=render.timespan,
+            label="Before",
         )
 
     collector_state = _handle_collector_states(item_data.get("status", 3), params)
@@ -104,72 +112,67 @@ def check_graylog_sidecars(item, params, parsed):
             for num_collector in msg:
                 count, status = num_collector.strip().split(" ")
 
-                collector_nr_levels = params.get("%s_upper" % status, (None, None))
-                collector_nr_levels_lower = params.get("%s_lower" % status, (None, None))
-
-                yield check_levels(
-                    int(count),
-                    "collectors_%s" % status,
-                    collector_nr_levels + collector_nr_levels_lower,
-                    human_readable_func=int,
-                    infoname="Collectors %s" % status,
+                yield from check_levels_v1(
+                    value=int(count),
+                    metric_name=f"collectors_{status}",
+                    levels_upper=params.get(f"{status}_upper", (None, None)),
+                    levels_lower=params.get(f"{status}_lower", (None, None)),
+                    render_func=lambda v: f"{int(v)}",
+                    label=f"Collectors {status}",
                 )
-
         else:
-            yield collector_state, "Collectors: %s" % collector_msg
+            yield Result(state=State(collector_state), summary=f"Collectors: {collector_msg}")
 
     collector_data = item_data.get("collectors")
     if collector_data is None:
         return
 
-    long_output = []
+    long_output: list[tuple[int, str]] = []
     for collector in collector_data:
         long_output_str = ""
 
         collector_id = collector.get("collector_id")
         if collector_id is not None:
-            long_output_str += "ID: %s" % collector_id
+            long_output_str += f"ID: {collector_id}"
 
-        collector_msg = collector.get("message")
-        if collector_msg is not None:
-            long_output_str += ", Message: %s" % collector_msg
+        msg_text = collector.get("message")
+        if msg_text is not None:
+            long_output_str += f", Message: {msg_text}"
 
         collector_state = _handle_collector_states(collector.get("status", 3), params)
-
         long_output.append((collector_state, long_output_str))
 
     if not long_output:
         return
 
     max_state = max(state for state, _infotext in long_output)
-
-    yield max_state, "see long output for more details"
+    yield Result(state=State(max_state), summary="see long output for more details")
 
     for state, line in long_output:
-        yield state, "\n%s" % line
+        yield Result(state=State(state), notice=line)
 
 
-def _handle_collector_states(collector_state, params):
+def _handle_collector_states(collector_state: int, params: Mapping[str, Any]) -> int:
     if collector_state == 0:
-        return params.get("running", 0)
+        return int(params.get("running", 0))
     # "Received no ping signal from sidecar"
     if collector_state == 1:
-        return params.get("no_ping", 2)
+        return int(params.get("no_ping", 2))
     if collector_state == 2:
-        return params.get("failing", 2)
+        return int(params.get("failing", 2))
     if collector_state == 3:
-        return params.get("stopped", 2)
-
+        return int(params.get("stopped", 2))
     return 3
 
 
-def discover_graylog_sidecars(section):
-    yield from ((item, {}) for item in section)
-
-
-check_info["graylog_sidecars"] = LegacyCheckDefinition(
+agent_section_graylog_sidecars = AgentSection(
     name="graylog_sidecars",
     parse_function=parse_graylog_sidecars,
+)
+
+
+check_plugin_graylog_sidecars = CheckPlugin(
+    name="graylog_sidecars",
     service_name="Graylog Sidecar %s",
     discovery_function=discover_graylog_sidecars,
     check_function=check_graylog_sidecars,

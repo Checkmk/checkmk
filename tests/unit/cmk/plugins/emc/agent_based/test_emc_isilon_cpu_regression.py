@@ -13,7 +13,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.emc_isilon_cpu import (
+from cmk.plugins.emc.agent_based.emc_isilon_cpu import (
     check_emc_isilon_cpu_utilization,
     discover_emc_isilon_cpu_utilization,
     parse_emc_isilon_cpu,

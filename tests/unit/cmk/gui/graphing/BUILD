@@ -24,6 +24,7 @@ py_test(
         "//cmk/gui/graphing",
         "//cmk/gui/utils:roles",
         "//cmk/gui/utils:temperate_unit",
+        "//cmk/plugins",
         "//cmk/utils",
         "//packages/cmk-livestatus-client:livestatus-api",
         "//tests/unit:conftest",

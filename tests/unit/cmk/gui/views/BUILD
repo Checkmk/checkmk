@@ -34,6 +34,7 @@ py_test(
         "//cmk/gui/utils:html",
         "//cmk/gui/views",
         "//cmk/gui/visuals",
+        "//cmk/plugins",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
         requirement("flask"),

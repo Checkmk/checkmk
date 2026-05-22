@@ -25,6 +25,7 @@ py_test(
         "//cmk/gui/utils:output_funnel",
         "//cmk/gui/visuals",
         "//cmk/gui/wato",
+        "//cmk/plugins",
         "//cmk/utils",
         "//packages/cmk-ccc:site",
         "//packages/cmk-livestatus-client:livestatus-api",

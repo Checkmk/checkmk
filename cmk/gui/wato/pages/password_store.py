@@ -10,7 +10,6 @@ import copy
 from collections.abc import Collection, Sequence
 
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
@@ -43,10 +42,8 @@ from cmk.gui.wato.pages._simple_modes import (
     SimpleListMode,
     SimpleModeType,
 )
-from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
-    config_domain_registry,
     ConfigDomainName,
     PasswordChange,
     SerializedSettings,
@@ -56,6 +53,7 @@ from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import password_change_effect_registry, sorted_contact_group_choices
+from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.rulesets.v1.form_specs import DictElement
 from cmk.utils.password_store import PasswordConfig
 
@@ -198,14 +196,13 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
         *,
         action: str,
         text: str,
-        user_id: UserId | None,
         affected_sites: list[SiteId] | None,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         """Add a Setup change entry for this object type modifications"""
 
         affected_domains: Sequence[ConfigDomainName] = []
-        domain_settings = {}
+        domain_settings: dict[ConfigDomainName, SerializedSettings] = {}
         match action:
             case "delete":
                 if (ident := request.get_ascii_input("_delete")) is None:
@@ -220,14 +217,18 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
             case _:
                 raise NotImplementedError(f"Unknown action {action} for mode {self.name()}")
 
-        add_change(
-            action_name=f"{action}-{self._mode_type.type_name()}",
-            text=text,
-            user_id=user_id,
-            domains=[config_domain_registry[d] for d in affected_domains],
-            domain_settings=domain_settings,
-            sites=affected_sites,
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name=f"{action}-{self._mode_type.type_name()}",
+                text=text,
+                domains=affected_domains,
+                domain_settings=domain_settings,
+            ),
+            (
+                ChangeScope.all_activation_sites()
+                if affected_sites is None
+                else ChangeScope.sites(affected_sites)
+            ),
         )
 
 
@@ -375,9 +376,8 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
         *,
         action: str,
         text: str,
-        user_id: UserId | None,
         affected_sites: list[SiteId] | None,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         """Add a Setup change entry for this object type modifications"""
 
@@ -385,7 +385,7 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
             return
 
         affected_domains: Sequence[ConfigDomainName] = []
-        domain_settings = None
+        domain_settings: dict[ConfigDomainName, SerializedSettings] = {}
         match action:
             case "add":
                 affected_domains = password_change_effect_registry.affected_domains_add
@@ -410,12 +410,16 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
             case _:
                 raise NotImplementedError(f"Unknown action {action} for mode {self.name()}")
 
-        add_change(
-            action_name=f"{action}-{self._mode_type.type_name()}",
-            text=text,
-            user_id=user_id,
-            domains=[config_domain_registry[d] for d in affected_domains],
-            domain_settings=domain_settings,
-            sites=affected_sites,
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name=f"{action}-{self._mode_type.type_name()}",
+                text=text,
+                domains=affected_domains,
+                domain_settings=domain_settings,
+            ),
+            (
+                ChangeScope.all_activation_sites()
+                if affected_sites is None
+                else ChangeScope.sites(affected_sites)
+            ),
         )

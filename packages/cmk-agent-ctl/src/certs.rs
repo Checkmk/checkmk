@@ -223,7 +223,9 @@ pub fn client(
             CryptoProvider::get_default().ok_or(anyhow!("No default crypto provider set"))?,
         )?)
     } else {
-        client_builder.danger_accept_invalid_certs(true)
+        client_builder
+            .use_rustls_tls()
+            .danger_accept_invalid_certs(true)
     };
 
     if !use_proxy {

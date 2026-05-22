@@ -11,7 +11,10 @@ import re
 from collections.abc import Collection, Iterable, Sequence
 from datetime import datetime
 
-import cmk.gui.watolib.changes as _changes
+from livestatus import SiteConfigurations
+
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -41,10 +44,12 @@ from cmk.gui.type_defs import (
     PermissionName,
     StaticIcon,
 )
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
+from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
@@ -54,6 +59,14 @@ from cmk.gui.watolib.custom_attributes import (
 from cmk.gui.watolib.host_attributes import host_attribute_topic_registry
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.users import remove_custom_attribute_from_all_users, user_features_registry
 
 
@@ -197,20 +210,32 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
 
             self._attrs.append(self._attr)
 
-            _changes.add_change(
-                action_name="edit-%sattr" % self._type,
-                text=_("Create new %s attribute %s") % (self._type, self._name),
-                user_id=user.id,
-                domains=[ConfigDomainCore()],
+            _pending_changes(
+                config.sites,
                 use_git=config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ).add(
+                Change(
+                    action_name="edit-%sattr" % self._type,
+                    text=_("Create new %s attribute %s") % (self._type, self._name),
+                    domains=[CORE],
+                ),
+                ChangeScope.all_activation_sites(),
             )
         else:
-            _changes.add_change(
-                action_name="edit-%sattr" % self._type,
-                text=_("Modified %s attribute %s") % (self._type, self._name),
-                user_id=user.id,
-                domains=[ConfigDomainCore()],
+            _pending_changes(
+                config.sites,
                 use_git=config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ).add(
+                Change(
+                    action_name="edit-%sattr" % self._type,
+                    text=_("Modified %s attribute %s") % (self._type, self._name),
+                    domains=[CORE],
+                ),
+                ChangeScope.all_activation_sites(),
             )
             self._attr["title"] = title
             self._attr["topic"] = topic
@@ -535,12 +560,18 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
             use_git=config.wato_use_git,
         )
         self._update_config(self._attrs, pprint_value=config.wato_pprint_config)
-        _changes.add_change(
-            action_name="edit-%sattrs" % self._type,
-            text=_("Deleted attribute %s") % (delname),
-            user_id=user.id,
-            domains=[ConfigDomainCore()],
+        _pending_changes(
+            config.sites,
             use_git=config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ).add(
+            Change(
+                action_name="edit-%sattrs" % self._type,
+                text=_("Deleted attribute %s") % (delname),
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites(),
         )
         return redirect(self.mode_url())
 
@@ -652,3 +683,23 @@ class ModeCustomHostAttrs(ModeCustomAttrs[CustomHostAttrSpec]):
                 )
             ),
         )
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

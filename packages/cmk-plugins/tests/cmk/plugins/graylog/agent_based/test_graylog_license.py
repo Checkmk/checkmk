@@ -11,7 +11,7 @@
 from typing import Any
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.graylog_license import (
+from cmk.plugins.graylog.agent_based.graylog_license import (
     check_graylog_license,
     discover_graylog_license,
 )

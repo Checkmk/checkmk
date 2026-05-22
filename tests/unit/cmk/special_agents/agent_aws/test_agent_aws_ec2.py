@@ -211,6 +211,25 @@ def test_agent_aws_ec2_limits(
             ] or limit.key.startswith("running_ondemand_instances_")
 
 
+@pytest.mark.parametrize(
+    ("key", "expected_limit"),
+    [
+        pytest.param("vpc_elastic_ip_addresses", 8, id="vpc_eip-from_quota"),
+        pytest.param("vpc_sec_groups", 42, id="vpc_sec_groups-from_quota"),
+        pytest.param("if_vpc_sec_group", 13, id="if_vpc_sec_group-from_quota"),
+        pytest.param("vpc_sec_group_rules", 120, id="vpc_sec_group_rules-default"),
+    ],
+)
+def test_agent_aws_ec2_limits_vpc_limit(
+    get_ec2_sections: EC2Sections, key: str, expected_limit: int
+) -> None:
+    ec2_limits, *_ = get_ec2_sections()
+    results = ec2_limits.run().results
+
+    limits_by_key = {limit.key: limit for result in results for limit in result.content}
+    assert limits_by_key[key].limit == expected_limit
+
+
 @pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
 def test_agent_aws_ec2_summary(
     get_ec2_sections: EC2Sections,

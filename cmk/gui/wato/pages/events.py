@@ -29,6 +29,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import WatoMode
+from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.utils.notify_types import EventRule
 
@@ -332,7 +333,12 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
 
     @abc.abstractmethod
     def _add_change(
-        self, *, action_name: str, text: str, use_git: bool, site_configs: SiteConfigurations
+        self,
+        *,
+        action_name: str,
+        text: str,
+        pending_changes: PendingChanges,
+        site_configs: SiteConfigurations,
     ) -> None: ...
 
     def _generic_rule_list_actions(
@@ -342,7 +348,7 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
         what_title: str,
         save_rules: Callable[[list[T_EventSpec]], None],
         *,
-        use_git: bool,
+        pending_changes: PendingChanges,
         site_configs: SiteConfigurations,
     ) -> None:
         edit_rules = list(rules)
@@ -351,7 +357,7 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
             self._add_change(
                 action_name=what + "-delete-rule",
                 text=_("Deleted %s %d") % (what_title, nr),
-                use_git=use_git,
+                pending_changes=pending_changes,
                 site_configs=site_configs,
             )
             del edit_rules[nr]
@@ -368,7 +374,7 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
                 self._add_change(
                     action_name=what + "-move-rule",
                     text=_("Changed position of %s %d") % (what_title, from_pos),
-                    use_git=use_git,
+                    pending_changes=pending_changes,
                     site_configs=site_configs,
                 )
 

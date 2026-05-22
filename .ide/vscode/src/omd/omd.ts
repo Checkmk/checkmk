@@ -287,7 +287,7 @@ export async function createSite(): Promise<void> {
   const exec = runCommand(`Create Site: ${version} (${edition.label})`, cmd)
   if (exec) {
     await waitForTask(exec)
-    triggerRefresh()
+    triggerOmdRefresh()
   }
 }
 
@@ -340,7 +340,7 @@ export function registerOmd(
         const label = id.replace('cmk.omd', 'OMD ')
         log(`${label}: ${siteName}`)
         await omdServiceCommand(action, siteName, '')
-        triggerRefresh()
+        triggerOmdRefresh()
       })
     )
   }
@@ -392,8 +392,8 @@ export function registerOmd(
       ].join(' && ')
       term.sendText(loopCmd)
 
-      setTimeout(() => triggerRefresh(), 3000)
-      setTimeout(() => triggerRefresh(), 6000)
+      setTimeout(() => triggerOmdRefresh(), 3000)
+      setTimeout(() => triggerOmdRefresh(), 6000)
 
       const disposable = vscode.window.onDidCloseTerminal((closedTerm) => {
         if (closedTerm === term) {
@@ -401,7 +401,7 @@ export function registerOmd(
           _keepaliveTerm = null
           setKeepaliveTerminal(null)
           clearKeepaliveReady()
-          triggerRefresh()
+          triggerOmdRefresh()
         }
       })
       context.subscriptions.push(disposable)
@@ -422,7 +422,7 @@ export function registerOmd(
       const siteName = await pickSite(detectOmdSites())
       if (!siteName) return
       await promptSocketProxy(siteName)
-      triggerRefresh()
+      triggerOmdRefresh()
     })
   )
 
@@ -434,7 +434,7 @@ export function registerOmd(
   })
 }
 
-function triggerRefresh(): void {
+export function triggerOmdRefresh(): void {
   if (_onRefresh) _onRefresh()
 }
 

@@ -95,7 +95,8 @@ export function wrap(
   .codicon-warning::before { content: "\\ea6c"; }
   .codicon-extensions::before { content: "\\eae6"; }
   .codicon-git-commit::before { content: "\\eafc"; }
-  .codicon-source-control::before { content: "\\ea68"; }`
+  .codicon-source-control::before { content: "\\ea68"; }
+  .codicon-rocket::before { content: "\\eb44"; }`
     : ''
   return `<!DOCTYPE html>
 <html lang="en">
@@ -122,6 +123,7 @@ ${body}
       'omd-site-action',
       'omd-service-action',
       'omd-install-devsite',
+      'omd-deploy',
       'apply-setting',
       'apply-family-mismatches',
       'apply-all-mismatches',
@@ -176,6 +178,7 @@ ${body}
       case 'omd-proxy-start': vscode.postMessage({ type: 'omdProxyStart', site: el.dataset.site, service: el.dataset.service }); break;
       case 'omd-proxy-stop': vscode.postMessage({ type: 'omdProxyStop', site: el.dataset.site, service: el.dataset.service }); break;
       case 'omd-proxy-site': vscode.postMessage({ type: 'omdProxySite', site: el.dataset.site }); break;
+      case 'omd-deploy': vscode.postMessage({ type: 'omdDeploy', site: el.dataset.site }); break;
       case 'copy-setting': {
         const text = el.dataset.value;
         navigator.clipboard.writeText(text);

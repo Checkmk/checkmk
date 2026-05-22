@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -181,6 +181,11 @@
       {
         "command": "cmk.omdProxy",
         "title": "CMK ▸ OMD: Socket Proxy"
+      },
+      {
+        "command": "cmk.omdDeploy",
+        "title": "CMK ▸ OMD: Deploy (cmk-dev-deploy)",
+        "icon": "$(rocket)"
       },
       {
         "command": "cmk.omdLogRefresh",
@@ -637,6 +642,10 @@
         },
         {
           "command": "cmk.omdProxy",
+          "when": "cmk.omdAvailable"
+        },
+        {
+          "command": "cmk.omdDeploy",
           "when": "cmk.omdAvailable"
         },
         {

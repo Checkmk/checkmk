@@ -20,9 +20,10 @@ import {
 import { error, log, notifyInfo, registerErrorHandlers } from './core/log'
 import { bindPersistedCacheContext } from './core/persistedCache'
 import { checkVersionMismatch } from './core/versionCheck'
+import { deployToSite } from './omd/devDeployTools'
 import { checkForUpdates, isInstalledAsync as isDevSiteInstalledAsync } from './omd/devSiteTools'
 import { registerLogs } from './omd/logs'
-import { createSite, registerOmd } from './omd/omd'
+import { createSite, detectOmdSites, registerOmd } from './omd/omd'
 import { registerProfileDetector } from './profiles/profileDetector'
 import * as profileManager from './profiles/profileManager'
 import { registerDmypyHealth } from './profiles/python/dmypyHealth'
@@ -131,6 +132,21 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('cmk.omdCreateSite', () => {
       log('Create OMD site')
       return createSite()
+    })
+  )
+  context.subscriptions.push(
+    vscode.commands.registerCommand('cmk.omdDeploy', async (siteArg?: string) => {
+      let siteName = siteArg
+      if (!siteName) {
+        const sites = detectOmdSites()
+        const pick = await vscode.window.showQuickPick(
+          sites.map((s) => ({ label: s.name, description: s.version })),
+          { placeHolder: 'Select OMD site to deploy to' }
+        )
+        if (!pick) return
+        siteName = pick.label
+      }
+      await deployToSite(siteName)
     })
   )
   checkForUpdates(context)

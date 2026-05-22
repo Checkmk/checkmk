@@ -28,12 +28,12 @@ from typing import (
 
 from livestatus import SiteConfiguration
 
-import cmk.gui.watolib.changes as _changes
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName, HostNameValidationError
 from cmk.ccc.regex import escape_regex_chars
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import deprecations, forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -95,6 +95,7 @@ from cmk.gui.type_defs import (
     RenderMode,
     StaticIcon,
 )
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash
@@ -125,6 +126,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.valuespec import LabelGroups as VSLabelGroups
 from cmk.gui.view_utils import render_label_groups
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -137,7 +139,7 @@ from cmk.gui.watolib.check_mk_automations import (
     find_unknown_check_parameter_rule_sets,
     get_check_information,
 )
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
@@ -154,6 +156,13 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
@@ -194,6 +203,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecGroup,
     RulespecSubGroup,
 )
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.utils import mk_eval, mk_repr
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
@@ -2392,16 +2402,16 @@ class ABCEditRuleMode(WatoMode):
         self._rulesets.save_folder(pprint_value=config.wato_pprint_config, debug=config.debug)
 
         affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
-        _changes.add_change(
-            action_name="edit-rule",
-            text=_('Changed properties of rule "%s", moved rule from folder "%s" to "%s"')
-            % (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
-            user_id=user.id,
-            sites=affected_sites,
-            diff_text=self._ruleset.diff_rules(self._orig_rule, self._rule),
-            object_ref=self._rule.object_ref(),
-            domains=[ConfigDomainCore()],
-            use_git=config.wato_use_git,
+        _pending_changes(config, omd_site(), user.id).add(
+            Change(
+                action_name="edit-rule",
+                text=_('Changed properties of rule "%s", moved rule from folder "%s" to "%s"')
+                % (self._ruleset.title(), self._folder.alias_path(), new_rule_folder.alias_path()),
+                diff_text=self._ruleset.diff_rules(self._orig_rule, self._rule),
+                object_ref=self._rule.object_ref(),
+                domains=[CORE],
+            ),
+            ChangeScope.sites(affected_sites),
         )
 
         flash(self._success_message())
@@ -3874,3 +3884,17 @@ def render_value_model_readonly(
     if isinstance(value, DefaultValue):
         value = used_value_model.default_value()
     return used_value_model.value_to_html(value)
+
+
+def _pending_changes(config: Config, local_site: SiteId, user_id: UserId | None) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

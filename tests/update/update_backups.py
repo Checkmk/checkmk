@@ -22,7 +22,6 @@ import logging
 import tarfile
 from pathlib import Path
 
-from tests.testlib.common.utils2 import run
 from tests.testlib.site import SiteFactory
 from tests.testlib.version import (
     CMKEdition,
@@ -59,13 +58,6 @@ def _make_cmk_package_info(omd_version: str) -> CMKPackageInfo:
         CMKVersion(version_str),
         CMKEdition.edition_from_text(edition_str),
     )
-
-
-def _backup_site(site_name: str, output_path: Path) -> None:
-    logger.info("Creating backup of site '%s' to '%s'...", site_name, output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    run(["omd", "backup", "--no-past", site_name, str(output_path)], check=True, sudo=True)
-    logger.info("Backup created at '%s'.", output_path)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -126,9 +118,7 @@ def main() -> None:
     # Activate changes via the site's openapi session
     target_site.openapi.changes.activate_and_wait_for_completion()
 
-    # Create the new backup with --no-past
-    _backup_site(target_site.id, output_path)
-
+    target_site_factory.backup_site(target_site.id, output_path, no_past=True)
     logger.info("Done.")
 
 

@@ -2112,6 +2112,31 @@ class SiteFactory:
 
         return site
 
+    @staticmethod
+    def backup_site(site_id: str, backup_path: Path, no_past: bool = False) -> None:
+        """Generate a backup of the given site and save it to the given path.
+
+        Args:
+            site_id: ID of the site to back up.
+            backup_path: Full path (including filename) where the save the backup.
+            no_past: If True, the backup will be created with the '--no-past' flag.
+        """
+        logger.info("Creating backup of site '%s' to '%s'...", site_id, backup_path)
+        backup_path.parent.mkdir(parents=True, exist_ok=True)
+        cmd = [
+            "omd",
+            "backup",
+            *(["--no-past"] if no_past else []),
+            site_id,
+            str(backup_path),
+        ]
+        run(
+            cmd,
+            check=True,
+            sudo=True,
+        )
+        logger.info("Backup of site '%s' created at '%s'.", site_id, backup_path)
+
     @contextmanager
     def copy_site(self, site: Site, copy_name: str) -> Iterator[Site]:
         site_copy = self._site_obj(copy_name)

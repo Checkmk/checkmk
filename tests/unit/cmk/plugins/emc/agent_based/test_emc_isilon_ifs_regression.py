@@ -11,9 +11,12 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks import emc_isilon_ifs as legacy_emc_isilon_ifs
-from cmk.legacy_checks.emc_isilon_ifs import check_emc_isilon_ifs, discover_emc_isilon_ifs
-from cmk.plugins.emc.agent_based.emc_isilon_ifs import parse_emc_isilon_ifs
+from cmk.plugins.emc.agent_based import emc_isilon_ifs as emc_isilon_ifs_module
+from cmk.plugins.emc.agent_based.emc_isilon_ifs import (
+    check_emc_isilon_ifs,
+    discover_emc_isilon_ifs,
+    parse_emc_isilon_ifs,
+)
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_LEVELS, FSBlock
 
 
@@ -24,7 +27,7 @@ def _emc_isilon_ifs_regression_data() -> StringTable:
 
 @pytest.fixture(autouse=True)
 def _value_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(legacy_emc_isilon_ifs, "get_value_store", dict)
+    monkeypatch.setattr(emc_isilon_ifs_module, "get_value_store", dict)
 
 
 def _results_and_metrics(

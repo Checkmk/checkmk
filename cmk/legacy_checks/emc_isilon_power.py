@@ -3,43 +3,49 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.emc.lib import DETECT_ISILON
-
-check_info = {}
 
 
 # Power Supply 1 Input Voltage --> Power Supply 1 Input
 # Battery 1 Voltage (now) --> Battery 1 (now)
 # Voltage 1.5v --> 1.5v
-def isilon_power_item_name(sensor_name: str) -> str:
+def _isilon_power_item_name(sensor_name: str) -> str:
     return sensor_name.replace("Voltage", "").replace("  ", " ").strip()
 
 
-def discover_emc_isilon_power(info: StringTable) -> LegacyDiscoveryResult:
-    for line in info:
+def parse_emc_isilon_power(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def discover_emc_isilon_power(section: StringTable) -> DiscoveryResult:
+    for line in section:
         # only monitor power supply currently
         if "Power Supply" in line[0] or "PS" in line[0]:
-            yield isilon_power_item_name(line[0]), {}
+            yield Service(item=_isilon_power_item_name(line[0]))
 
 
 def check_emc_isilon_power(
-    item: str, params: Mapping[str, Any], info: StringTable
-) -> LegacyCheckResult:
-    for line in info:
-        if item == isilon_power_item_name(line[0]):
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
+    for line in section:
+        if item == _isilon_power_item_name(line[0]):
             volt = float(line[1])
 
-            infotext = "%.1f V" % volt
+            infotext = f"{volt:.1f} V"
             warn_lower, crit_lower = params["levels_lower"]
             warn_upper, crit_upper = params.get("levels_upper", (None, None))
             lower_text = f" (warn/crit below {warn_lower:.1f}/{crit_lower:.1f} V)"
@@ -50,29 +56,25 @@ def check_emc_isilon_power(
             )
 
             if volt < crit_lower:
-                state = 2
+                state = State.CRIT
                 infotext += lower_text
             elif crit_upper is not None and volt >= crit_upper:
-                state = 2
+                state = State.CRIT
                 infotext += upper_text
             elif volt < warn_lower:
-                state = 1
+                state = State.WARN
                 infotext += lower_text
             elif warn_upper is not None and volt >= warn_upper:
-                state = 1
+                state = State.WARN
                 infotext += upper_text
             else:
-                state = 0
+                state = State.OK
 
-            yield state, infotext
+            yield Result(state=state, summary=infotext)
             return
 
 
-def parse_emc_isilon_power(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["emc_isilon_power"] = LegacyCheckDefinition(
+snmp_section_emc_isilon_power = SimpleSNMPSection(
     name="emc_isilon_power",
     parse_function=parse_emc_isilon_power,
     detect=DETECT_ISILON,
@@ -80,6 +82,11 @@ check_info["emc_isilon_power"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.12124.2.55.1",
         oids=["3", "4"],
     ),
+)
+
+
+check_plugin_emc_isilon_power = CheckPlugin(
+    name="emc_isilon_power",
     service_name="Voltage %s",
     discovery_function=discover_emc_isilon_power,
     check_function=check_emc_isilon_power,

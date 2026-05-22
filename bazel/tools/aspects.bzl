@@ -13,6 +13,7 @@ load("@cmk_types//:types.bzl", "types")
 load("@rules_mypy//mypy:mypy.bzl", "mypy")
 load("//bazel/tools:lint_astrein.bzl", "lint_astrein_aspect")
 load("//bazel/tools:lint_license_header.bzl", "lint_license_header_aspect")
+load("//bazel/tools:lint_ps_script_analyzer.bzl", "lint_ps_script_analyzer_aspect")
 load("//bazel/tools:lint_py_import_cycles.bzl", "lint_py_import_cycles_aspect")
 load("//bazel/tools:lint_python_extensions.bzl", "lint_python_extension_aspect")
 
@@ -103,4 +104,11 @@ license_header_checker = lint_license_header_aspect(
 
 python_extension_checker = lint_python_extension_aspect(
     binary = Label("//bazel/tools:python_extension_checker"),
+)
+
+ps_script_analyzer = lint_ps_script_analyzer_aspect(
+    binary = Label("@pwsh//:pwsh"),
+    psscriptanalyzer = Label("@psscriptanalyzer//:files"),
+    converttosarif = Label("@converttosarif//:files"),
+    config = Label("@//:PSScriptAnalyzerSettings.psd1"),
 )

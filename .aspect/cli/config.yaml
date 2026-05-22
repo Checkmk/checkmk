@@ -14,3 +14,4 @@ lint:
     - //bazel/tools:aspects.bzl%stylelint
     - //bazel/tools:aspects.bzl%license_header_checker
     - //bazel/tools:aspects.bzl%python_extension_checker
+    - //bazel/tools:aspects.bzl%ps_script_analyzer

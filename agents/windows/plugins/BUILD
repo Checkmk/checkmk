@@ -19,6 +19,7 @@ filegroup(
             ".f12",
         ],
     ),
+    tags = ["lint-with-psscriptanalyzer"],
     visibility = ["//visibility:public"],
 )
 

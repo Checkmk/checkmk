@@ -39,6 +39,7 @@ exports_files(
         "requirements.txt",
         "runtime-requirements.txt",
         "site.Cargo.lock.bazel",
+        "PSScriptAnalyzerSettings.psd1",
     ],
     visibility = ["//:__subpackages__"],
 )

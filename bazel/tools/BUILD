@@ -12,6 +12,11 @@ load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_cons
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 
+exports_files(
+    ["ps_script_analyzer_wrapper.ps1"],
+    visibility = ["//visibility:public"],
+)
+
 npm_link_all_packages(name = "node_modules")
 
 eslint_bin.eslint_binary(

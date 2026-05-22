@@ -2,6 +2,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSAvoidUsingConvertToSecureStringWithPlainText', '',
+    Justification = 'msoffice_cfg.json stores the secret as plaintext; the Microsoft.Graph SDK requires a SecureString for the PSCredential parameter. Revisit if the config format migrates to a SecureString-end-to-end source.'
+)]
+param()
+
 $CMK_VERSION = "2.6.0b1"
 $MK_CONFDIR = $env:MK_CONFDIR
 $ClientId = ""

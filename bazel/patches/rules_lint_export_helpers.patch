@@ -3,14 +3,16 @@ new file mode 100644
 index 0000000..5ec52f8
 --- /dev/null
 +++ b/lint/defs.bzl
-@@ -0,0 +1,11 @@
+@@ -0,0 +1,13 @@
 +"""Make helpers available to internal tooling."""
 +
++load("//lint/private:lint_aspect.bzl", _LintOptionsInfo = "LintOptionsInfo")
 +load("//lint/private:lint_aspect.bzl", _filter_srcs = "filter_srcs")
 +load("//lint/private:lint_aspect.bzl", _noop_lint_action = "noop_lint_action")
 +load("//lint/private:lint_aspect.bzl", _output_files = "output_files")
 +load("//lint/private:lint_aspect.bzl", _should_visit = "should_visit")
 +
++LintOptionsInfo = _LintOptionsInfo
 +filter_srcs = _filter_srcs
 +noop_lint_action = _noop_lint_action
 +output_files = _output_files

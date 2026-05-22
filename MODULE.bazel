@@ -707,6 +707,9 @@ multitool.hub(
 )
 use_repo(multitool, "multitool", "multitool_hub")
 
+powershell_repos = use_extension("//bazel/tools:powershell_repositories.bzl", "repos")
+use_repo(powershell_repos, "converttosarif", "psscriptanalyzer", "pwsh")
+
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",

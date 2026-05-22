@@ -45,7 +45,10 @@ function describeAuth(auth: AuthConfig, passwordName: string): string {
     return _t('No authentication')
   }
   const user = auth.credential?.username ?? ''
-  return _t('Basic auth (user: %{user}, password: %{password})', { user, password: passwordName })
+  return _t('Basic auth (user: %{user}, password title: %{password})', {
+    user,
+    password: passwordName
+  })
 }
 
 function formatEndpoint(endpoint: EndpointConfig, defaultPort: number): string | null {

@@ -129,7 +129,9 @@ describe('OTelConfigurationSummary', () => {
         grpcPasswordName: 'My new password'
       })
 
-      expect(screen.getByText(/Basic auth.*alice.*My new password/)).toBeInTheDocument()
+      expect(
+        screen.getByText(/Basic auth.*alice.*password title: My new password/)
+      ).toBeInTheDocument()
       // Never leak the password-store ID.
       expect(screen.queryByText(/quick_setup_password_/)).toBeNull()
     })
@@ -141,7 +143,9 @@ describe('OTelConfigurationSummary', () => {
         grpcPasswordName: 'Existing pw label'
       })
 
-      expect(screen.getByText(/Basic auth.*alice.*Existing pw label/)).toBeInTheDocument()
+      expect(
+        screen.getByText(/Basic auth.*alice.*password title: Existing pw label/)
+      ).toBeInTheDocument()
       expect(screen.queryByText(/some_existing_id/)).toBeNull()
     })
   })

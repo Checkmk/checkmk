@@ -32,6 +32,8 @@ def parse_postfix_mailq_status(string_table: StringTable) -> dict[str, PostfixPi
 
     for line in string_table:
         stripped_line = [x.strip() for x in line]
+        if not stripped_line or not stripped_line[0]:
+            continue
         # In the new agent the main postfix service is now discovered as 'default';
         # in the previous agent version it was simply discovered as 'postfix'.
         # For backward compatibility I therefore convert the queuename

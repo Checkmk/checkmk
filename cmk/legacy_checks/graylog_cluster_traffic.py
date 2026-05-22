@@ -3,19 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
 
 import calendar
 import time
-from collections.abc import Iterable
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
-from cmk.plugins.graylog.lib import deserialize_and_merge_json, GraylogSection
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+)
+from cmk.plugins.graylog.lib import deserialize_and_merge_json
 
-check_info = {}
+Section = dict[str, Any]
 
 # <<<graylog_cluster_traffic>>>
 # {"to": "2019-09-20T12:00:00.000Z", "output": {"2019-09-17T03:00:00.000Z":
@@ -33,13 +40,13 @@ check_info = {}
 # 15022425, "2019-09-10T21:00:00.000Z": 7688443}}
 
 
-def discover_graylog_cluster_traffic(section: GraylogSection) -> Iterable[tuple[None, dict]]:
+def discover_graylog_cluster_traffic(section: Section) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_graylog_cluster_traffic(_no_item, params, parsed):
-    if parsed is None:
+def check_graylog_cluster_traffic(params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not section:
         return
 
     for key, infotext in [
@@ -47,33 +54,41 @@ def check_graylog_cluster_traffic(_no_item, params, parsed):
         ("output", "Output"),
         ("decoded", "Decoded"),
     ]:
-        traffic_value = parsed.get(key)
+        traffic_value = section.get(key)
         if traffic_value is not None:
             try:
                 latest_entry = sorted(traffic_value, reverse=True)[0]
             except IndexError:
                 continue
 
-            yield check_levels(
-                traffic_value[latest_entry],
-                "graylog_%s" % key,
-                params.get(key),
-                infoname=infotext,
-                human_readable_func=render.bytes,
+            yield from check_levels_v1(
+                value=traffic_value[latest_entry],
+                metric_name=f"graylog_{key}",
+                levels_upper=params.get(key),
+                render_func=render.bytes,
+                label=infotext,
             )
 
-    last_updated = parsed.get("to")
+    last_updated = section.get("to")
     if last_updated is not None:
         local_timestamp = calendar.timegm(time.strptime(last_updated, "%Y-%m-%dT%H:%M:%S.%fZ"))
+        yield Result(
+            state=State.OK,
+            summary=f"Last updated: {render.datetime(local_timestamp)}",
+        )
 
-        yield 0, "Last updated: %s" % render.datetime(local_timestamp)
 
-
-check_info["graylog_cluster_traffic"] = LegacyCheckDefinition(
+agent_section_graylog_cluster_traffic = AgentSection(
     name="graylog_cluster_traffic",
     parse_function=deserialize_and_merge_json,
+)
+
+
+check_plugin_graylog_cluster_traffic = CheckPlugin(
+    name="graylog_cluster_traffic",
     service_name="Graylog Cluster Traffic",
     discovery_function=discover_graylog_cluster_traffic,
     check_function=check_graylog_cluster_traffic,
     check_ruleset_name="graylog_cluster_traffic",
+    check_default_parameters={},
 )

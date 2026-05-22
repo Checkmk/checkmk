@@ -59,7 +59,6 @@ py_test(
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/gui/openapi/spec/editions/community",
         "//cmk/gui/openapi/spec/spec_generator",
-        "//cmk/gui/openapi/spec/spec_generator:_core",
         "//cmk/gui/utils:permission_verification",
         "//cmk/gui/utils:roles",
         "//cmk/gui/watolib",

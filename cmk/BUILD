@@ -536,6 +536,8 @@ _KNOWN_UNUSED = [
     "setuptools",  # pinned transitive dependency
     "setuptools-scm",
     "pysmi",  # used outside of cmk/ in omd/packages/net-snmp/compile_mibs.py
+    "apispec-oneofschema",  # only imported by build-time spec generator
+    "openapi-spec-validator",  # only imported by tests
 ]
 
 py_requirements_test(

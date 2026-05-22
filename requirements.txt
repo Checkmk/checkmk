@@ -159,9 +159,9 @@ anyio==4.12.1 \
     # via
     #   httpx
     #   starlette
-apispec==6.9.0 \
-    --hash=sha256:4c275f0a6dac0bcfcceee00b451a16b650f9184a57c624b0b6d12d82b8d15a61 \
-    --hash=sha256:7a38ce7c3eedc7771e6e33295afdd8c4b0acdd9865b483f8cf6cc369c93e8d1e
+apispec==6.10.0 \
+    --hash=sha256:0a888555cd4aa5fb7176041be15684154fd8961055e1672e703abf737e8761bf \
+    --hash=sha256:8ff23e0de9a0ceb62ff70047241126315bd17b8d0565a567934c0156f4ddbb43
     # via
     #   -r cmk/requirements.in
     #   apispec-oneofschema

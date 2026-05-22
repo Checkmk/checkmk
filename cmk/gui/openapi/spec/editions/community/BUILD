@@ -45,8 +45,10 @@ py_binary(
         ":community",
         "//cmk/gui:config",
         "//cmk/gui/openapi/spec/editions",
-        "//cmk/gui/openapi/spec/spec_generator:_core",
+        "//cmk/gui/openapi/spec/spec_generator",
         "//cmk/gui/plugins/wato/check_parameters:stub",
+        requirement("apispec"),
+        requirement("apispec-oneofschema"),
         requirement("pyyaml"),
     ],
 )

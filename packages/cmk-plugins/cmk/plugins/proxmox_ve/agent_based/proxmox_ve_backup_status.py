@@ -43,7 +43,7 @@ class BackupData(TypedDict, total=False):
     error: str
 
 
-Section = Mapping[str, BackupData | bool]
+Section = Mapping[str, Any]
 
 
 def parse_proxmox_ve_vm_backup_status(

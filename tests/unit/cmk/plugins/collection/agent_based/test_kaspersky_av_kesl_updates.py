@@ -42,3 +42,15 @@ def set_fixed_timezone():
 )
 def test_check_kaskpersky_av_client(section: Section, results: Sequence[Result]) -> None:
     assert list(check_kaspersky_av_kesl_updates(section)) == results
+
+
+@pytest.mark.xfail(strict=True, reason="Crash group 4485: KeyError on newer Kaspersky agent output")
+def test_check_kaskpersky_av_client_newer_agent_keys() -> None:
+    # Kaspersky Endpoint Security 12.3 for Linux emits "Application databases
+    # loaded" instead of "Anti-virus databases loaded" and no longer emits
+    # "Anti-virus database records". The check must not crash with KeyError.
+    section: Section = {
+        "Application databases loaded": "Yes",
+        "Last release date of databases": "2025-11-28 12:58:00",
+    }
+    list(check_kaspersky_av_kesl_updates(section))

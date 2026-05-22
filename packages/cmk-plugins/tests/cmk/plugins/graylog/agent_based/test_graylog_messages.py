@@ -13,8 +13,8 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service
-from cmk.legacy_checks import graylog_messages
 from cmk.plugins.graylog import lib as graylog
+from cmk.plugins.graylog.agent_based import graylog_messages
 
 
 def test_discovery_graylog_messages() -> None:

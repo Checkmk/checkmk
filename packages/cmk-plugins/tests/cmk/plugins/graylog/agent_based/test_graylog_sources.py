@@ -8,11 +8,11 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.legacy_checks.graylog_sources import (
+from cmk.plugins.graylog import lib as graylog
+from cmk.plugins.graylog.agent_based.graylog_sources import (
     check_graylog_sources,
     parse_graylog_sources,
 )
-from cmk.plugins.graylog import lib as graylog
 
 
 @pytest.mark.parametrize(

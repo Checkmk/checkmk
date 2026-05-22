@@ -12,13 +12,13 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from livestatus import SiteConfiguration
+from livestatus import SiteConfiguration, SiteConfigurations
 
 import cmk.utils.paths
 from cmk.ccc import store, version
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import edition_supports_nagvis
 from cmk.gui import userdb
 from cmk.gui.background_job.job import BackgroundJob, BackgroundProcessInterface
@@ -28,11 +28,21 @@ from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import CustomUserAttrSpec
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     make_automation_config,
+)
+from cmk.gui.watolib.config_domain_name import CORE
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
 )
 from cmk.utils.agent_registration import UUIDLinkManager
 from cmk.utils.automation_config import LocalAutomationConfig
@@ -42,9 +52,7 @@ from cmk.utils.object_diff import make_diff_text
 from .audit_log import log_audit
 from .automation_commands import AutomationCommand
 from .automations import AnnotatedHostName, do_remote_automation
-from .changes import add_change
 from .check_mk_automations import rename_hosts
-from .config_domains import ConfigDomainCore
 from .hosts_and_folders import (
     call_hook_hosts_changed,
     Folder,
@@ -100,6 +108,7 @@ def perform_rename_hosts(
     *,
     custom_user_attributes: Sequence[CustomUserAttrSpec],
     site_configs: Mapping[SiteId, SiteConfiguration],
+    pending_changes: PendingChanges,
     pprint_value: bool,
     use_git: bool,
     debug: bool,
@@ -120,7 +129,11 @@ def perform_rename_hosts(
         try:
             update_interface(_("Renaming host(s) in folders..."))
             setup_actions[renaming] = _rename_host_in_folder(
-                folder, oldname, newname, pprint_value=pprint_value, use_git=use_git
+                folder,
+                oldname,
+                newname,
+                pprint_value=pprint_value,
+                use_git=use_git,
             )
         except MKAuthException as e:
             auth_problems.append((oldname, e))
@@ -150,7 +163,12 @@ def perform_rename_hosts(
             update_interface(_("Renaming host(s) in rule sets..."))
             this_host_actions.extend(
                 _rename_host_in_rulesets(
-                    oldname, newname, use_git=use_git, pprint_value=pprint_value, debug=debug
+                    oldname,
+                    newname,
+                    pending_changes=pending_changes,
+                    use_git=use_git,
+                    pprint_value=pprint_value,
+                    debug=debug,
                 )
             )
 
@@ -168,7 +186,10 @@ def perform_rename_hosts(
     update_interface(_("This might take some time and involves a core restart..."))
     renamings_by_site = group_renamings_by_site(successful_renamings)
     action_counts = _rename_hosts_in_check_mk(
-        renamings_by_site, site_configs=site_configs, use_git=use_git, debug=debug
+        renamings_by_site,
+        site_configs=site_configs,
+        pending_changes=pending_changes,
+        debug=debug,
     )
 
     # 3. Notification settings ----------------------------------------------
@@ -200,7 +221,12 @@ def perform_rename_hosts(
 
 
 def _rename_host_in_folder(
-    folder: Folder, oldname: HostName, newname: HostName, *, pprint_value: bool, use_git: bool
+    folder: Folder,
+    oldname: HostName,
+    newname: HostName,
+    *,
+    pprint_value: bool,
+    use_git: bool,
 ) -> list[str]:
     folder.rename_host(oldname, newname, pprint_value=pprint_value, use_git=use_git)
     folder_tree().invalidate_caches()
@@ -264,7 +290,13 @@ def _rename_host_in_parents(
 
 
 def _rename_host_in_rulesets(
-    oldname: HostName, newname: HostName, *, use_git: bool, pprint_value: bool, debug: bool
+    oldname: HostName,
+    newname: HostName,
+    *,
+    pending_changes: PendingChanges,
+    use_git: bool,
+    pprint_value: bool,
+    debug: bool,
 ) -> list[str]:
     # Rules that explicitely name that host (no regexes)
     changed_rulesets = []
@@ -297,15 +329,15 @@ def _rename_host_in_rulesets(
                     )
 
         if changed_folder_rulesets:
-            add_change(
-                action_name="edit-ruleset",
-                text=_l("Renamed host in %d rule sets of folder %s")
-                % (len(changed_folder_rulesets), folder.title()),
-                user_id=user.id,
-                object_ref=folder.object_ref(),
-                sites=folder.all_site_ids(),
-                domains=[ConfigDomainCore()],
-                use_git=use_git,
+            pending_changes.add(
+                Change(
+                    action_name="edit-ruleset",
+                    text=_l("Renamed host in %d rule sets of folder %s")
+                    % (len(changed_folder_rulesets), folder.title()),
+                    object_ref=folder.object_ref(),
+                    domains=[CORE],
+                ),
+                ChangeScope.sites(folder.all_site_ids()),
             )
             rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
@@ -328,7 +360,7 @@ def _rename_hosts_in_check_mk(
     renamings_by_site: Mapping[SiteId, Sequence[tuple[HostName, HostName]]],
     *,
     site_configs: Mapping[SiteId, SiteConfiguration],
-    use_git: bool,
+    pending_changes: PendingChanges,
     debug: bool,
 ) -> dict[str, int]:
     action_counts: dict[str, int] = {}
@@ -339,15 +371,15 @@ def _rename_hosts_in_check_mk(
 
         # Restart is done by remote automation (below), so don't do it during rename/sync
         # The sync is automatically done by the remote automation call
-        add_change(
-            action_name="renamed-hosts",
-            text=message,
-            user_id=user.id,
-            sites=[site_id],
-            need_restart=False,
-            prevent_discard_changes=True,
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="renamed-hosts",
+                text=message,
+                force_restart=False,
+                prevent_discard_changes=True,
+                domains=[CORE],
+            ),
+            ChangeScope.sites([site_id]),
         )
 
         new_counts = rename_hosts(
@@ -613,6 +645,16 @@ def rename_hosts_job_entry_point(
             job_interface,
             custom_user_attributes=args.custom_user_attributes,
             site_configs=args.site_configs,
+            pending_changes=PendingChanges(
+                activation_sites=activation_sites(SiteConfigurations(dict(args.site_configs))),
+                local_site=omd_site(),
+                acting_user=user.id,
+                store=PendingChangesStore(),
+                hooks=(
+                    make_audit_log_change_hook(use_git=args.use_git),
+                    index_update_change_hook,
+                ),
+            ),
             pprint_value=args.pprint_value,
             use_git=args.use_git,
             debug=args.debug,
@@ -650,6 +692,7 @@ def _rename_hosts(
     *,
     custom_user_attributes: Sequence[CustomUserAttrSpec],
     site_configs: Mapping[SiteId, SiteConfiguration],
+    pending_changes: PendingChanges,
     pprint_value: bool,
     use_git: bool,
     debug: bool,
@@ -659,6 +702,7 @@ def _rename_hosts(
         job_interface,
         custom_user_attributes=custom_user_attributes,
         site_configs=site_configs,
+        pending_changes=pending_changes,
         pprint_value=pprint_value,
         use_git=use_git,
         debug=debug,

@@ -20,8 +20,10 @@ from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.livestatus_client import (
     SiteConfiguration,
+    SiteConfigurations,
 )
 from cmk.utils.redis import disable_redis
 
@@ -157,6 +159,13 @@ def test_rename_host(
                 is_trusted=False,
             )
         },
+        pending_changes=PendingChanges(
+            activation_sites=SiteConfigurations({}),
+            local_site=SiteId("NO_SITE"),
+            acting_user=None,
+            store=NoopPendingChangesStore(),
+            hooks=(),
+        ),
         pprint_value=False,
         use_git=False,
         debug=False,

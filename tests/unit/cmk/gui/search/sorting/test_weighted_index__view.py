@@ -30,7 +30,7 @@ def get_results_alphabetically() -> list[UnifiedSearchResultItem]:
         I(title="Couchbase Node: Size of spacial views", topic="Enforced services"),
         I(title="Couchbase Node: Size of spacial views", topic="Service monitoring rules"),
         I(title="Hide hosttags in Setup folder view", topic="Global settings"),
-        I(title="Limit the number of rows in View tables", topic="Global settings"),
+        I(title="Row limit in view tables", topic="Global settings"),
         I(title="Sounds in Views", topic="Global settings"),
         I(title="Threshold for slow views", topic="Global settings"),
         I(title="Views", topic="Visualization", provider=ProviderName.customize),
@@ -49,7 +49,7 @@ def test_weighted_index_sorting_with_view_query() -> None:
         ("Couchbase Node: Size of spacial views", "Service monitoring rules"),
         ("Views", "Visualization"),  # customize
         ("Hide hosttags in Setup folder view", "Global settings"),
-        ("Limit the number of rows in View tables", "Global settings"),
+        ("Row limit in view tables", "Global settings"),
         ("Sounds in Views", "Global settings"),
         ("Threshold for slow views", "Global settings"),
         ("Cisco Meraki Organisation Licenses Overview", "Enforced services"),

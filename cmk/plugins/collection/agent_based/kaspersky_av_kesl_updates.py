@@ -62,15 +62,19 @@ def discover_kaspersky_av_kesl_updates(section: Section) -> DiscoveryResult:
 
 
 def check_kaspersky_av_kesl_updates(section: Section) -> CheckResult:
-    loaded = section["Anti-virus databases loaded"] == "Yes"
-    yield Result(state=State.OK if loaded else State.CRIT, summary=f"Databases loaded: {loaded}")
-    db_release_date = time.mktime(
-        time.strptime(section["Last release date of databases"], "%Y-%m-%d %H:%M:%S")
+    loaded_raw = section.get("Anti-virus databases loaded") or section.get(
+        "Application databases loaded"
     )
-    yield Result(state=State.OK, summary=f"Database date: {render.datetime(db_release_date)}")
-    yield Result(
-        state=State.OK, summary=f"Database records: {section['Anti-virus database records']}"
-    )
+    if loaded_raw is not None:
+        loaded = loaded_raw == "Yes"
+        yield Result(
+            state=State.OK if loaded else State.CRIT, summary=f"Databases loaded: {loaded}"
+        )
+    if (release_date := section.get("Last release date of databases")) is not None:
+        db_release_date = time.mktime(time.strptime(release_date, "%Y-%m-%d %H:%M:%S"))
+        yield Result(state=State.OK, summary=f"Database date: {render.datetime(db_release_date)}")
+    if (records := section.get("Anti-virus database records")) is not None:
+        yield Result(state=State.OK, summary=f"Database records: {records}")
 
 
 check_plugin_kaspersky_av_kesl_updates = CheckPlugin(

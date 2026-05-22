@@ -32,6 +32,33 @@ const twoStepOverviewWizard = defineComponent({
   `
 })
 
+const twoStepOverviewWizardWithButtons = defineComponent({
+  components: { CmkWizard, CmkWizardStep, CmkWizardButton },
+  setup() {
+    const currentStep = ref(1)
+    return { currentStep }
+  },
+  template: `
+    <CmkWizard v-model="currentStep" mode="overview">
+      <CmkWizardStep :index="1" :is-completed="() => currentStep > 1">
+        <template #header><h2>Step 1 heading</h2></template>
+        <template #content><div data-testid="content-1">Content 1</div></template>
+        <template #actions>
+          <CmkWizardButton type="next" />
+          <CmkWizardButton type="previous" />
+        </template>
+      </CmkWizardStep>
+      <CmkWizardStep :index="2" :is-completed="() => currentStep > 2">
+        <template #header><h2>Step 2 heading</h2></template>
+        <template #content><div data-testid="content-2">Content 2</div></template>
+        <template #actions>
+          <CmkWizardButton type="finish" />
+        </template>
+      </CmkWizardStep>
+    </CmkWizard>
+  `
+})
+
 const twoStepWizard = defineComponent({
   components: { CmkWizard, CmkWizardStep, CmkWizardButton },
   setup() {
@@ -181,5 +208,18 @@ describe('CmkWizardStep overview mode', () => {
     // Both contents remain visible — no navigation occurred
     expect(screen.getByTestId('content-1')).toBeVisible()
     expect(screen.getByTestId('content-2')).toBeVisible()
+  })
+
+  test('finish button is visible in overview mode', () => {
+    render(twoStepOverviewWizardWithButtons)
+
+    expect(screen.getByRole('button', { name: /finish/i })).toBeVisible()
+  })
+
+  test('next and previous buttons are hidden in overview mode', () => {
+    render(twoStepOverviewWizardWithButtons)
+
+    expect(screen.queryByRole('button', { name: /next step/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /previous step/i })).not.toBeInTheDocument()
   })
 })

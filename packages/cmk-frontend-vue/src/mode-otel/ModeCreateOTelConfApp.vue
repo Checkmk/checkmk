@@ -277,7 +277,7 @@ const STEP_FINALIZE = 4
 // but never get saved. The wizard's `locked` binding below also disables
 // Previous / step-badge navigation.
 watch(saveState, (value) => {
-  if (value === 'success') {
+  if (value === 'success' && currentMode.value !== 'overview') {
     currentMode.value = 'guided'
     currentStep.value = STEP_FINALIZE
   }
@@ -312,6 +312,18 @@ async function onSaveClick(): Promise<void> {
     }
     window.location.href = props.overview_url
     return
+  }
+  // In overview mode the per-step Next buttons (which normally carry
+  // validation callbacks) are hidden, so we must validate all steps here
+  // before handing off to the save actions.
+  if (currentMode.value === 'overview') {
+    const [generalValid, collectorValid] = await Promise.all([
+      validateGeneralProperties(),
+      validateCollector()
+    ])
+    if (!generalValid || !collectorValid) {
+      return
+    }
   }
   await finalizeRef.value?.runActions()
 }

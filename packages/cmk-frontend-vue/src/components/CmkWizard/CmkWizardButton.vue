@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
@@ -107,10 +109,15 @@ function getButtonConfig(
 }
 
 const buttonConfig = getButtonConfig(props.type, props.iconName, props.iconRotate)
+
+const isVisible = computed(
+  () => context.mode() !== 'overview' || (props.type !== 'next' && props.type !== 'previous')
+)
 </script>
 
 <template>
   <CmkButton
+    v-if="isVisible"
     class="cmk-wizard-button"
     :variant="buttonConfig.variant"
     :disabled="props.disabled"

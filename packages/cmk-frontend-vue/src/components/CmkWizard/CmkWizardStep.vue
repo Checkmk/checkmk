@@ -55,6 +55,9 @@ function onClickGoTo() {
       <slot name="header"></slot>
       <div v-if="context.mode() === 'overview'" ref="contentRef">
         <slot name="content" />
+        <div class="cmk-wizard-step__actions" @click.stop>
+          <slot name="actions" />
+        </div>
       </div>
       <CmkCollapsible
         v-else
@@ -181,5 +184,9 @@ function onClickGoTo() {
   flex-direction: row;
   align-items: center;
   gap: var(--dimension-4);
+}
+
+.cmk-wizard-step--overview .cmk-wizard-step__actions {
+  margin-top: var(--dimension-4);
 }
 </style>

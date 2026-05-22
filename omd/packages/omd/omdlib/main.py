@@ -1542,7 +1542,7 @@ def config_show(config: Config, config_hooks: ConfigHooks, args: Arguments) -> N
         hook_names = sorted(config_hooks.keys())
         for hook_name in hook_names:
             hook = config_hooks[hook_name]
-            if active_map[hook_name] and not hook.deprecated:
+            if active_map[hook_name]:
                 sys.stdout.write(f"{hook_name}: {config[hook_name]}\n")
     else:
         output = []
@@ -1577,7 +1577,7 @@ def config_configure(
         menu: dict[str, list[tuple[str, str]]] = {}
         for hook_name in hook_names:
             hook = config_hooks[hook_name]
-            if active_map[hook_name] and not hook.deprecated:
+            if active_map[hook_name]:
                 mp = hook.menu
                 entries = menu.get(mp, [])
                 entries.append((hook_name, config[hook_name]))

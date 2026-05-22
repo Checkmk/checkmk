@@ -76,7 +76,6 @@ class ConfigHook:
     description: str
     alias: str
     menu: str
-    deprecated: bool
 
 
 ConfigHooks = dict[str, ConfigHook]
@@ -132,7 +131,6 @@ def _config_load_hook(
     alias = None
     description = ""
     menu = "Other"
-    deprecated = False
     description_active = False
     with Path(site.hook_dir, hook_name).open() as hook_file:
         for line in hook_file:
@@ -140,8 +138,6 @@ def _config_load_hook(
                 alias = line[8:].strip()
             elif line.startswith("# Menu:"):
                 menu = line[7:].strip()
-            elif line.startswith("# Deprecated: yes"):
-                deprecated = True
             elif line.startswith("# Description:"):
                 description_active = True
             elif line.startswith("#  ") and description_active:
@@ -157,7 +153,6 @@ def _config_load_hook(
         alias=alias,
         menu=menu,
         description=description,
-        deprecated=deprecated,
     )
 
 

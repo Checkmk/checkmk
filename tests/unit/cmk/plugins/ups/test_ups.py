@@ -62,8 +62,22 @@ RESULTS_NOT_ON_BATTERY: CheckResult = [
     Result(state=State.OK, summary="10 minutes 0 seconds"),
     Metric("battery_seconds_remaining", 600.0),
     Result(state=State.OK, summary="On mains"),
-    Result(state=State.OK, summary="80.00%"),
+    Result(state=State.CRIT, summary="80.00% (warn/crit below 95.00%/90.00%)"),
     Metric("battery_capacity", 80.0),
+]
+
+
+SECTION_BATTERY_CAPACITY_FULL = Battery(
+    seconds_left=600,
+    percent_charged=100,
+)
+
+RESULTS_NOT_ON_BATTERY_HEALTHY: CheckResult = [
+    Result(state=State.OK, summary="10 minutes 0 seconds"),
+    Metric("battery_seconds_remaining", 600.0),
+    Result(state=State.OK, summary="On mains"),
+    Result(state=State.OK, summary="100.00%"),
+    Metric("battery_capacity", 100.0),
 ]
 
 
@@ -107,8 +121,21 @@ RESULTS_NOT_ON_BATTERY: CheckResult = [
             None,
             RESULTS_NOT_ON_BATTERY,
         ),
+        (
+            CHECK_DEFAULT_PARAMETERS,
+            SECTION_BATTERY_CAPACITY_FULL,
+            SECTION_ON_BATTERY_NO,
+            None,
+            RESULTS_NOT_ON_BATTERY_HEALTHY,
+        ),
     ],
-    ids=["on_battery", "on_battery_no_time", "on_battery_no_flag", "not_on_battery"],
+    ids=[
+        "on_battery",
+        "on_battery_no_time",
+        "on_battery_no_flag",
+        "not_on_battery",
+        "not_on_battery_healthy",
+    ],
 )
 def test_check_ups_capacity(
     params: UpsParameters,

@@ -90,3 +90,16 @@ def test_check_postfix_mailq_status(
     section: Mapping[str, PostfixError | PostfixPid], item: str, expected_output: Sequence[object]
 ) -> None:
     assert list(check_postfix_mailq_status(item, section)) == expected_output
+
+
+@pytest.mark.xfail(strict=True, reason="Crash group 4757: TypeError on empty queuename from agent")
+def test_discovery_postfix_mailq_status_empty_queuename() -> None:
+    # Some agents emit a line with an empty first column.  Service(item='')
+    # then raises TypeError during discovery.  Discovery must skip such lines
+    # instead of crashing.
+    section = parse_postfix_mailq_status(
+        [
+            ["", " the Postfix mail system is running", " PID", " 12910"],
+        ]
+    )
+    list(discovery_postfix_mailq_status(section))

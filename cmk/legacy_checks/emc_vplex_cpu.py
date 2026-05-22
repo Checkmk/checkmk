@@ -3,16 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
+import time
 from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
-from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
-from cmk.legacy_includes.cpu_util import check_cpu_util
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.emc.lib import DETECT_VPLEX
-
-check_info = {}
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 
 def parse_emc_vplex_cpu(string_table: StringTable) -> Mapping[str, int]:
@@ -24,14 +30,19 @@ def discover_emc_vplex_cpu(section: Mapping[str, int]) -> DiscoveryResult:
 
 
 def check_emc_vplex_cpu(
-    item: str, params: Mapping[str, object], section: Mapping[str, int]
-) -> LegacyCheckResult:
+    item: str, params: Mapping[str, Any], section: Mapping[str, int]
+) -> CheckResult:
     if (util := section.get(item)) is None:
         return
-    yield from check_cpu_util(max(100 - util, 0), params)
+    yield from check_cpu_util(
+        util=max(100 - util, 0),
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
 
 
-check_info["emc_vplex_cpu"] = LegacyCheckDefinition(
+snmp_section_emc_vplex_cpu = SimpleSNMPSection(
     name="emc_vplex_cpu",
     detect=DETECT_VPLEX,
     fetch=SNMPTree(
@@ -39,6 +50,11 @@ check_info["emc_vplex_cpu"] = LegacyCheckDefinition(
         oids=["1.1.3", "3.1.1"],
     ),
     parse_function=parse_emc_vplex_cpu,
+)
+
+
+check_plugin_emc_vplex_cpu = CheckPlugin(
+    name="emc_vplex_cpu",
     service_name="CPU Utilization %s",
     discovery_function=discover_emc_vplex_cpu,
     check_function=check_emc_vplex_cpu,

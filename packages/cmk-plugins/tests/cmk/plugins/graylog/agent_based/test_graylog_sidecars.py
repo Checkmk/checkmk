@@ -11,7 +11,7 @@
 from typing import Any
 
 from cmk.agent_based.v2 import Result, State
-from cmk.legacy_checks.graylog_sidecars import (
+from cmk.plugins.graylog.agent_based.graylog_sidecars import (
     check_graylog_sidecars,
     discover_graylog_sidecars,
     parse_graylog_sidecars,

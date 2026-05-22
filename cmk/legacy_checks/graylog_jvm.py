@@ -3,17 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
 
+from collections.abc import Mapping
+from typing import Any
 
-from collections.abc import Iterable
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+)
+from cmk.plugins.graylog.lib import deserialize_and_merge_json
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
-from cmk.plugins.graylog.lib import deserialize_and_merge_json, GraylogSection
-
-check_info = {}
+Section = dict[str, Any]
 
 # <<<graylog_jvm>>>
 # {"jvm.memory.heap.init": 1073741824, "jvm.memory.heap.used": 357154208,
@@ -21,13 +28,13 @@ check_info = {}
 # "jvm.memory.heap.usage": 0.35012789737592354}
 
 
-def discover_graylog_jvm(section: GraylogSection) -> Iterable[tuple[None, dict]]:
+def discover_graylog_jvm(section: Section) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_graylog_jvm(_no_item, params, parsed):
-    if parsed is None:
+def check_graylog_jvm(params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not section:
         return
 
     has_mem_data = False
@@ -35,27 +42,34 @@ def check_graylog_jvm(_no_item, params, parsed):
         ("used", "mem_heap"),
         ("committed", "mem_heap_committed"),
     ]:
-        mem_data = parsed.get("jvm.memory.heap.%s" % key)
+        mem_data = section.get(f"jvm.memory.heap.{key}")
         if mem_data is None:
             continue
 
         has_mem_data = True
-        yield check_levels(
-            mem_data,
-            metric_name,
-            params.get(key),
-            human_readable_func=render.bytes,
-            infoname="%s heap space" % key.title(),
+        yield from check_levels_v1(
+            value=mem_data,
+            metric_name=metric_name,
+            levels_upper=params.get(key),
+            render_func=render.bytes,
+            label=f"{key.title()} heap space",
         )
+
     if not has_mem_data:
-        yield 3, "No heap space data available"
+        yield Result(state=State.UNKNOWN, summary="No heap space data available")
 
 
-check_info["graylog_jvm"] = LegacyCheckDefinition(
+agent_section_graylog_jvm = AgentSection(
     name="graylog_jvm",
     parse_function=deserialize_and_merge_json,
+)
+
+
+check_plugin_graylog_jvm = CheckPlugin(
+    name="graylog_jvm",
     service_name="Graylog JVM",
     discovery_function=discover_graylog_jvm,
     check_function=check_graylog_jvm,
     check_ruleset_name="graylog_jvm",
+    check_default_parameters={},
 )

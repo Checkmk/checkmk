@@ -321,6 +321,29 @@ def test_job_parse_real_time(timestr: str, expected_result: float) -> None:
             },
             id="localised float (comma instead of dot as decimal marker)",
         ),
+        pytest.param(
+            [
+                ["==>", "IBM", "AIX", "7.3", "Weird", "Time", "Labels", "<=="],
+                ["start_time", "1776568200"],
+                ["Real", "1.28"],
+                ["User", "0.48"],
+                ["System", "0.02"],
+                ["exit_code", "0"],
+            ],
+            {
+                "IBM AIX 7.3 Weird Time Labels": {
+                    "running": False,
+                    "start_time": 1776568200,
+                    "exit_code": 0,
+                    "metrics": {
+                        "real_time": 1.28,
+                        "user_time": 0.48,
+                        "system_time": 0.02,
+                    },
+                }
+            },
+            id="AIX time output with capitalized labels",
+        ),
     ],
 )
 def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> None:

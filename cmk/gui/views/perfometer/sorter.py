@@ -5,11 +5,11 @@
 
 from collections.abc import Mapping
 
+from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.gui.config import Config
 from cmk.gui.graphing import (
     metrics_from_api,
     perfometers_from_api,
-    perfometers_v1,
     RegisteredMetric,
 )
 from cmk.gui.http import Request

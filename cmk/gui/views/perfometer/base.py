@@ -6,12 +6,12 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
     get_first_matching_perfometer,
     get_temperature_unit,
     parse_perf_data,
-    perfometers_v1,
     RegisteredMetric,
     translate_metrics,
 )

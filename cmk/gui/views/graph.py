@@ -13,6 +13,7 @@ from typing import Literal
 from uuid import uuid4
 
 from cmk.ccc.user import UserId
+from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
     compute_html_graph_ranges,
@@ -23,7 +24,6 @@ from cmk.gui.graphing import (
     GraphEnvironment,
     GraphRenderOptions,
     graphs_from_api,
-    graphs_v1,
     METRIC_BACKEND_KEY,
     metric_backend_registry,
     metrics_from_api,

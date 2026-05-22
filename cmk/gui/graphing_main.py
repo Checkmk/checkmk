@@ -21,6 +21,9 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes as entry_point_prefixes_v1
+from cmk.graphing.v1 import graphs as graphs_v1
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.gui.graphing import (
     check_metrics,
@@ -28,15 +31,12 @@ from cmk.gui.graphing import (
     get_temperature_unit,
     GraphEnvironment,
     graphs_from_api,
-    graphs_v1,
     host_service_graph_popup_cmk,
     METRIC_BACKEND_KEY,
     metric_backend_registry,
     metrics_from_api,
-    metrics_v1,
     parse_metric_from_api,
     perfometers_from_api,
-    perfometers_v1,
 )
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user

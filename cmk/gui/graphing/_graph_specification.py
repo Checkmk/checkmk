@@ -21,12 +21,12 @@ from pydantic import (
 )
 
 from cmk.ccc.plugin_registry import Registry
+from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.gui.color import Color
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
-from ._api_types import graphs_v1
 from ._from_api import RegisteredMetric
 from ._graph_display_config import GraphRenderOptions
 from ._graph_metric_expressions import (

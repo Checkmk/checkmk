@@ -17,12 +17,13 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing import v1 as graphing_api
+from cmk.graphing.v1 import graphs as graphs_v1
+from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
-from ._api_types import graphs_v1, metrics_v1
 from ._evaluations_from_api import (
     evaluate_graph_plugin_metrics,
     evaluate_graph_plugin_range,

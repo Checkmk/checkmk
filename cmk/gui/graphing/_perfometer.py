@@ -14,13 +14,15 @@ from dataclasses import dataclass
 from itertools import repeat
 from typing import assert_never, Self
 
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import perfometers as perfometers_v1
+from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.gui.color import Color
 from cmk.gui.log import logger
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from ._api_types import metrics_v1, metrics_v2_unstable, perfometers_v1
 from ._evaluations_from_api import evaluate_quantity, EvaluatedQuantity, Quantity
 from ._from_api import RegisteredMetric
 from ._perfometer_superseding import PERFOMETER_SUPERSEDED_TO_SUPERSEDER

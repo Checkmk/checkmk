@@ -13,12 +13,14 @@ from pydantic import BaseModel
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.site import SiteId
+from cmk.graphing.v1 import graphs as graphs_v1
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.gui.color import Color, parse_color_from_api
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
-from ._api_types import graphs_v1, metrics_v1, metrics_v2_unstable
 from ._from_api import parse_unit_from_api, RegisteredMetric
 from ._graph_metric_expressions import (
     create_graph_metric_expression_from_translated_metric,

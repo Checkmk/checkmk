@@ -16,6 +16,7 @@ import livestatus
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.exceptions import WidgetRenderError
@@ -33,7 +34,6 @@ from cmk.gui.graphing import (
     GraphPluginChoice,
     GraphRecipeWithOverrides,
     graphs_from_api,
-    graphs_v1,
     GraphSpecification,
     metrics_from_api,
     MKCombinedGraphLimitExceededError,

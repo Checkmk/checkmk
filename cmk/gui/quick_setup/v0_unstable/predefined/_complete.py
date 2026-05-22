@@ -45,8 +45,7 @@ from cmk.gui.watolib.automations import (
     make_automation_config,
     remote_automation_config_from_site_config,
 )
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
 from cmk.gui.watolib.configuration_bundles import (
     create_config_bundle,
@@ -66,6 +65,8 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
     index_update_change_hook,
     PendingChanges,
     PendingChangesStore,
@@ -409,13 +410,14 @@ def _create_and_save_special_agent_bundle(
 
     # revert changes does not work correctly when a config sync to another site occurred
     # for consistency reasons we always prevent the user from reverting the changes
-    add_change(
-        action_name="create-quick-setup",
-        text=_("Created Quick Setup {bundle_id}").format(bundle_id=bundle_id),
-        user_id=user.id,
-        prevent_discard_changes=True,
-        domains=[ConfigDomainCore()],
-        use_git=active_config.wato_use_git,
+    pending_changes.add(
+        Change(
+            action_name="create-quick-setup",
+            text=_("Created Quick Setup {bundle_id}").format(bundle_id=bundle_id),
+            prevent_discard_changes=True,
+            domains=[CORE],
+        ),
+        ChangeScope.all_activation_sites(),
     )
 
     return makeuri_contextless(

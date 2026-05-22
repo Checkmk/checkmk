@@ -18,7 +18,11 @@ all notification rules configured.
 from collections.abc import Mapping
 from typing import Any
 
+from livestatus import SiteConfigurations
+
 from cmk import fields
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
@@ -33,11 +37,18 @@ from cmk.gui.openapi.restful_objects.constructors import domain_object
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import ProblemException, serve_json
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.notifications import (
     BulkNotAllowedException,
     NotificationRule,
     NotificationRuleConfigFile,
+)
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
 )
 from cmk.utils.notify_types import EventRule, NotificationRuleID
 
@@ -144,7 +155,12 @@ def post_rule(params: Mapping[str, Any]) -> Response:
     NotificationRuleConfigFile().rule_created(
         rules=notification_rules,
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            active_config.sites,
+            use_git=active_config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ),
     )
 
     return serve_json(data=_serialize_notification_rule(rule_from_request))
@@ -189,7 +205,12 @@ def put_rule(params: Mapping[str, Any]) -> Response:
                 rules=notification_rules,
                 rule_number=str(n),
                 pprint_value=active_config.wato_pprint_config,
-                use_git=active_config.wato_use_git,
+                pending_changes=_pending_changes(
+                    active_config.sites,
+                    use_git=active_config.wato_use_git,
+                    local_site=omd_site(),
+                    user_id=user.id,
+                ),
             )
 
             return serve_json(data=_serialize_notification_rule(rule_from_request))
@@ -230,7 +251,12 @@ def delete_rule(params: Mapping[str, Any]) -> Response:
             rules=notification_rules,
             rule_number=rule_number,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                active_config.sites,
+                use_git=active_config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
     return Response(status=204)
 
@@ -252,3 +278,19 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(post_rule)
     endpoint_registry.register(put_rule)
     endpoint_registry.register(delete_rule)
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(make_audit_log_change_hook(use_git=use_git), index_update_change_hook),
+    )

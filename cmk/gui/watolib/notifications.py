@@ -34,7 +34,6 @@ from cmk.ccc import store, version
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.rest_api_types.notifications_rule_types import (
     APIConditions,
     APIContactSelection,
@@ -63,8 +62,8 @@ from cmk.gui.rest_api_types.notifications_types import (
     PluginAdapter,
 )
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.config_domain_name import CORE
+from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.simple_config_file import (
     ConfigFileRegistry,
     WatoListConfigFile,
@@ -118,16 +117,17 @@ class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
         rules: list[EventRule],
         rule_number: str,
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         """Update a notification rule."""
-        add_change(
-            action_name="edit-notification-rule",
-            text=_("Changed notification rule #%s") % rule_number,
-            user_id=user.id,
-            need_restart=False,
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="edit-notification-rule",
+                text=_("Changed notification rule #%s") % rule_number,
+                force_restart=False,
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites(),
         )
 
         self.save(rules, pprint_value=pprint_value)
@@ -136,16 +136,17 @@ class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
         self,
         rules: list[EventRule],
         pprint_value: bool,
-        use_git: bool = True,
+        pending_changes: PendingChanges,
     ) -> None:
         """Create new notification rule."""
-        add_change(
-            action_name="new-notification-rule",
-            text=_("Created new notification rule"),
-            user_id=user.id,
-            need_restart=False,
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="new-notification-rule",
+                text=_("Created new notification rule"),
+                force_restart=False,
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites(),
         )
         self.save(rules, pprint_value=pprint_value)
 
@@ -154,16 +155,17 @@ class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
         rules: list[EventRule],
         rule_number: str,
         pprint_value: bool,
-        use_git: bool = True,
+        pending_changes: PendingChanges,
     ) -> None:
         """Delete a notification rule."""
-        add_change(
-            action_name="notification-delete-rule",
-            text=_("Deleted notification rule #%s") % rule_number,
-            user_id=user.id,
-            need_restart=False,
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="notification-delete-rule",
+                text=_("Deleted notification rule #%s") % rule_number,
+                force_restart=False,
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites(),
         )
         self.save(rules, pprint_value=pprint_value)
 

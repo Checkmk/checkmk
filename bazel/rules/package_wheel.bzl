@@ -9,7 +9,6 @@ load("//bazel/rules:patchelf.bzl", "set_runpath_tree")
 def _package_wheel_impl(
         name,
         whl,
-        excludes,
         additional_files,
         rpath,
         visibility):
@@ -23,10 +22,11 @@ def _package_wheel_impl(
         whl = whl,
     )
 
+    # TODO: Is this a no-op now and can be removed?
     filter_directory(
         name = filtered_name,
         src = whl_filegroup_name,
-        excludes = excludes,
+        excludes = [],
     )
 
     if rpath:
@@ -68,7 +68,6 @@ package_wheel = macro(
     implementation = _package_wheel_impl,
     attrs = {
         "additional_files": attr.label_list(default = [], doc = "List of additional files to put in the tar."),
-        "excludes": attr.label_list(default = [], doc = "Optional, exclude files from packaging."),
         "rpath": attr.string(
             default = "",
             doc = "When non-empty, patch all ELF .so files in the wheel with this RUNPATH via set_runpath_tree.",

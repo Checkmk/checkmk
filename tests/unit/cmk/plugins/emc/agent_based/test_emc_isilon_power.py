@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, State
-from cmk.legacy_checks.emc_isilon_power import check_emc_isilon_power
+from cmk.plugins.emc.agent_based.emc_isilon_power import check_emc_isilon_power
 
 
 def test_upper_levels_absent_keeps_legacy_behavior() -> None:

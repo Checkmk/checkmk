@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-20 17:53+0000\n"
+"PO-Revision-Date: 2026-05-21 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -34304,11 +34304,6 @@ msgstr ""
 "individuais."
 
 msgid ""
-"If a service's current state differs from its requested state, the state of "
-"the Service will be set to this value."
-msgstr ""
-
-msgid ""
 "If a source host does not send data for its piggybacked hosts at all or for "
 "single piggybacked hosts then a period can be set in order to treat outdated "
 "piggybacked host files/data as valid within this period. Moreover the status "
@@ -62424,7 +62419,7 @@ msgid "Service state age"
 msgstr "Idade do estado de serviço"
 
 #, fuzzy
-msgid "Service state for Differing Service States"
+msgid "Service state for differing VM/LXC states"
 msgstr "Estado do serviço se nenhuma regra do mapa corresponder"
 
 #, fuzzy
@@ -73787,6 +73782,11 @@ msgstr ""
 "dias 1 a 28 de um mês."
 
 msgid ""
+"The state of the Proxmox VE HA Manager Watcher service will be set to this "
+"value if the current state of a VM/LXC differs from its requested state"
+msgstr ""
+
+msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
 "is based on the assumption that you want to be informed when there is new "
 "information. However, there are also use cases where new incoming messages "
@@ -79630,6 +79630,13 @@ msgstr "Esta ação suprimirá todas as notificações"
 
 msgid "This year"
 msgstr "Este ano"
+
+#, python-brace-format
+msgid ""
+"This {type_name} is part of the {config_name} {product} configuration.<br>To "
+"access further parts of the {product} configuration, go to the related "
+"{product} configuration."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -99258,14 +99265,6 @@ msgid "An unexpected error occurred. Please try again."
 msgstr ""
 "Nome de utilizador ou palavra-passe incorrectos. Por favor, tente novamente."
 
-#, fuzzy
-msgid "newly created"
-msgstr "Arquivo criado"
-
-#, fuzzy
-msgid "existing"
-msgstr "Testes"
-
 msgid "Basic auth (user: %{user}, password: %{password})"
 msgstr ""
 
@@ -99277,21 +99276,18 @@ msgstr "STARTTLS ativado."
 msgid "No encryption"
 msgstr "Criptografia"
 
-#, fuzzy
-msgid "Event Console resource attribute"
-msgstr "Configurações do console de eventos"
+msgid "Enabled (Resource attribute: %{attribute})"
+msgstr ""
 
 #, fuzzy
 msgid "The hosts will be created in the \"Telemetry\" folder."
 msgstr "não criar hospedeiros de gateway"
 
-#, fuzzy
-msgid "gRPC protocol"
-msgstr "Protocolo"
+msgid "gRPC-based OTLP receiver:"
+msgstr ""
 
-#, fuzzy
-msgid "HTTP protocol"
-msgstr "Protocolo"
+msgid "HTTP-based OTLP receiver:"
+msgstr ""
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -99362,6 +99358,10 @@ msgstr "Ficheiros de configuração"
 #, fuzzy
 msgid "Could not create the configuration bundle"
 msgstr "Eliminar esta ligação"
+
+#, fuzzy
+msgid "Prometheus scraper:"
+msgstr "Gestor de alertas"
 
 msgid ""
 "Insecure connection detected (HTTP). For better security, we recommend "
@@ -100400,6 +100400,26 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "newly created"
+#~ msgstr "Arquivo criado"
+
+#, fuzzy
+#~ msgid "existing"
+#~ msgstr "Testes"
+
+#, fuzzy
+#~ msgid "Event Console resource attribute"
+#~ msgstr "Configurações do console de eventos"
+
+#, fuzzy
+#~ msgid "gRPC protocol"
+#~ msgstr "Protocolo"
+
+#, fuzzy
+#~ msgid "HTTP protocol"
+#~ msgstr "Protocolo"
 
 #, fuzzy
 #~ msgid ""

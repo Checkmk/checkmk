@@ -34590,11 +34590,6 @@ msgstr ""
 "hôtes conserveront leurs paramètres individuels."
 
 msgid ""
-"If a service's current state differs from its requested state, the state of "
-"the Service will be set to this value."
-msgstr ""
-
-msgid ""
 "If a source host does not send data for its piggybacked hosts at all or for "
 "single piggybacked hosts then a period can be set in order to treat outdated "
 "piggybacked host files/data as valid within this period. Moreover the status "
@@ -62955,7 +62950,7 @@ msgid "Service state age"
 msgstr "Âge de l'état de service"
 
 #, fuzzy
-msgid "Service state for Differing Service States"
+msgid "Service state for differing VM/LXC states"
 msgstr "État du service si aucune règle de carte ne correspond"
 
 #, fuzzy
@@ -74454,6 +74449,11 @@ msgstr ""
 "à 28 d'un mois."
 
 msgid ""
+"The state of the Proxmox VE HA Manager Watcher service will be set to this "
+"value if the current state of a VM/LXC differs from its requested state"
+msgstr ""
+
+msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
 "is based on the assumption that you want to be informed when there is new "
 "information. However, there are also use cases where new incoming messages "
@@ -80417,6 +80417,13 @@ msgstr "Désactiver toutes les notifications personnelles"
 
 msgid "This year"
 msgstr "Cette année"
+
+#, python-brace-format
+msgid ""
+"This {type_name} is part of the {config_name} {product} configuration.<br>To "
+"access further parts of the {product} configuration, go to the related "
+"{product} configuration."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -100270,14 +100277,6 @@ msgstr "Ajouter, modifier et supprimer des connexions InfluxDB."
 msgid "An unexpected error occurred. Please try again."
 msgstr "Une exception s'est produite : %s"
 
-#, fuzzy
-msgid "newly created"
-msgstr "Fichier créé"
-
-#, fuzzy
-msgid "existing"
-msgstr "Essais"
-
 msgid "Basic auth (user: %{user}, password: %{password})"
 msgstr ""
 
@@ -100289,21 +100288,18 @@ msgstr "STARTTLS activé."
 msgid "No encryption"
 msgstr "Cryptage"
 
-#, fuzzy
-msgid "Event Console resource attribute"
-msgstr "Paramètres de la console d'événements"
+msgid "Enabled (Resource attribute: %{attribute})"
+msgstr ""
 
 #, fuzzy
 msgid "The hosts will be created in the \"Telemetry\" folder."
 msgstr "ne pas créer d'hôtes passerelle"
 
-#, fuzzy
-msgid "gRPC protocol"
-msgstr "Protocole"
+msgid "gRPC-based OTLP receiver:"
+msgstr ""
 
-#, fuzzy
-msgid "HTTP protocol"
-msgstr "Protocole"
+msgid "HTTP-based OTLP receiver:"
+msgstr ""
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -100374,6 +100370,10 @@ msgstr "Fichiers de configuration"
 #, fuzzy
 msgid "Could not create the configuration bundle"
 msgstr "Supprimer cette connexion"
+
+#, fuzzy
+msgid "Prometheus scraper:"
+msgstr "Alertmanager"
 
 msgid ""
 "Insecure connection detected (HTTP). For better security, we recommend "
@@ -101412,6 +101412,26 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "newly created"
+#~ msgstr "Fichier créé"
+
+#, fuzzy
+#~ msgid "existing"
+#~ msgstr "Essais"
+
+#, fuzzy
+#~ msgid "Event Console resource attribute"
+#~ msgstr "Paramètres de la console d'événements"
+
+#, fuzzy
+#~ msgid "gRPC protocol"
+#~ msgstr "Protocole"
+
+#, fuzzy
+#~ msgid "HTTP protocol"
+#~ msgstr "Protocole"
 
 #, fuzzy
 #~ msgid ""

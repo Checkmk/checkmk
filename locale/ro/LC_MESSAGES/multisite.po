@@ -34383,11 +34383,6 @@ msgstr ""
 "setările individuale."
 
 msgid ""
-"If a service's current state differs from its requested state, the state of "
-"the Service will be set to this value."
-msgstr ""
-
-msgid ""
 "If a source host does not send data for its piggybacked hosts at all or for "
 "single piggybacked hosts then a period can be set in order to treat outdated "
 "piggybacked host files/data as valid within this period. Moreover the status "
@@ -62606,7 +62601,7 @@ msgid "Service state age"
 msgstr "Vârsta statului de serviciu"
 
 #, fuzzy
-msgid "Service state for Differing Service States"
+msgid "Service state for differing VM/LXC states"
 msgstr ""
 "Starea serviciului în cazul în care nicio regulă de hartă nu corespunde"
 
@@ -74074,6 +74069,11 @@ msgstr ""
 "pentru zilele 1-28 ale unei luni."
 
 msgid ""
+"The state of the Proxmox VE HA Manager Watcher service will be set to this "
+"value if the current state of a VM/LXC differs from its requested state"
+msgstr ""
+
+msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
 "is based on the assumption that you want to be informed when there is new "
 "information. However, there are also use cases where new incoming messages "
@@ -80030,6 +80030,13 @@ msgstr "Acest lucru va suprima toate notificările"
 
 msgid "This year"
 msgstr "În acest an"
+
+#, python-brace-format
+msgid ""
+"This {type_name} is part of the {config_name} {product} configuration.<br>To "
+"access further parts of the {product} configuration, go to the related "
+"{product} configuration."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -99689,14 +99696,6 @@ msgid "An unexpected error occurred. Please try again."
 msgstr ""
 "Nume de utilizator sau parolă incorectă. Vă rugăm să încercați din nou."
 
-#, fuzzy
-msgid "newly created"
-msgstr "Fișier creat"
-
-#, fuzzy
-msgid "existing"
-msgstr "Testare"
-
 msgid "Basic auth (user: %{user}, password: %{password})"
 msgstr ""
 
@@ -99708,21 +99707,18 @@ msgstr "STARTTLS activat."
 msgid "No encryption"
 msgstr "Criptare"
 
-#, fuzzy
-msgid "Event Console resource attribute"
-msgstr "Setări ale consolei de evenimente"
+msgid "Enabled (Resource attribute: %{attribute})"
+msgstr ""
 
 #, fuzzy
 msgid "The hosts will be created in the \"Telemetry\" folder."
 msgstr "nu creați gazde gateway"
 
-#, fuzzy
-msgid "gRPC protocol"
-msgstr "Protocol"
+msgid "gRPC-based OTLP receiver:"
+msgstr ""
 
-#, fuzzy
-msgid "HTTP protocol"
-msgstr "Protocol"
+msgid "HTTP-based OTLP receiver:"
+msgstr ""
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -99793,6 +99789,10 @@ msgstr "Fișiere de configurare"
 #, fuzzy
 msgid "Could not create the configuration bundle"
 msgstr "Ștergeți această conexiune"
+
+#, fuzzy
+msgid "Prometheus scraper:"
+msgstr "Alertmanager"
 
 msgid ""
 "Insecure connection detected (HTTP). For better security, we recommend "
@@ -100836,6 +100836,26 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "newly created"
+#~ msgstr "Fișier creat"
+
+#, fuzzy
+#~ msgid "existing"
+#~ msgstr "Testare"
+
+#, fuzzy
+#~ msgid "Event Console resource attribute"
+#~ msgstr "Setări ale consolei de evenimente"
+
+#, fuzzy
+#~ msgid "gRPC protocol"
+#~ msgstr "Protocol"
+
+#, fuzzy
+#~ msgid "HTTP protocol"
+#~ msgstr "Protocol"
 
 #, fuzzy
 #~ msgid ""

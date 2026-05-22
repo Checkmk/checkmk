@@ -34111,11 +34111,6 @@ msgstr ""
 "individuali."
 
 msgid ""
-"If a service's current state differs from its requested state, the state of "
-"the Service will be set to this value."
-msgstr ""
-
-msgid ""
 "If a source host does not send data for its piggybacked hosts at all or for "
 "single piggybacked hosts then a period can be set in order to treat outdated "
 "piggybacked host files/data as valid within this period. Moreover the status "
@@ -62206,7 +62201,7 @@ msgid "Service state age"
 msgstr "Età dello stato di servizio"
 
 #, fuzzy
-msgid "Service state for Differing Service States"
+msgid "Service state for differing VM/LXC states"
 msgstr "Stato del servizio se nessuna regola della mappa corrisponde"
 
 #, fuzzy
@@ -73658,6 +73653,11 @@ msgstr ""
 "per i giorni 1-28 di un mese."
 
 msgid ""
+"The state of the Proxmox VE HA Manager Watcher service will be set to this "
+"value if the current state of a VM/LXC differs from its requested state"
+msgstr ""
+
+msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
 "is based on the assumption that you want to be informed when there is new "
 "information. However, there are also use cases where new incoming messages "
@@ -79556,6 +79556,13 @@ msgstr "In questo modo si sopprimono tutte le notifiche"
 
 msgid "This year"
 msgstr "Quest'anno"
+
+#, python-brace-format
+msgid ""
+"This {type_name} is part of the {config_name} {product} configuration.<br>To "
+"access further parts of the {product} configuration, go to the related "
+"{product} configuration."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -99173,14 +99180,6 @@ msgstr "Aggiungere, modificare ed eliminare configurazioni OpenTelemetry."
 msgid "An unexpected error occurred. Please try again."
 msgstr "Credenziali errate. Ritenta per favore."
 
-#, fuzzy
-msgid "newly created"
-msgstr "File creato"
-
-#, fuzzy
-msgid "existing"
-msgstr "Test"
-
 msgid "Basic auth (user: %{user}, password: %{password})"
 msgstr ""
 
@@ -99192,21 +99191,18 @@ msgstr "STARTTLS abilitato."
 msgid "No encryption"
 msgstr "Crittografia"
 
-#, fuzzy
-msgid "Event Console resource attribute"
-msgstr "Impostazioni della console eventi"
+msgid "Enabled (Resource attribute: %{attribute})"
+msgstr ""
 
 #, fuzzy
 msgid "The hosts will be created in the \"Telemetry\" folder."
 msgstr "non creare host gateway"
 
-#, fuzzy
-msgid "gRPC protocol"
-msgstr "Protocollo"
+msgid "gRPC-based OTLP receiver:"
+msgstr ""
 
-#, fuzzy
-msgid "HTTP protocol"
-msgstr "Protocollo"
+msgid "HTTP-based OTLP receiver:"
+msgstr ""
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -99277,6 +99273,10 @@ msgstr "File di configurazione"
 #, fuzzy
 msgid "Could not create the configuration bundle"
 msgstr "Cancellare questa connessione"
+
+#, fuzzy
+msgid "Prometheus scraper:"
+msgstr "Alertmanager"
 
 msgid ""
 "Insecure connection detected (HTTP). For better security, we recommend "
@@ -100317,6 +100317,26 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "newly created"
+#~ msgstr "File creato"
+
+#, fuzzy
+#~ msgid "existing"
+#~ msgstr "Test"
+
+#, fuzzy
+#~ msgid "Event Console resource attribute"
+#~ msgstr "Impostazioni della console eventi"
+
+#, fuzzy
+#~ msgid "gRPC protocol"
+#~ msgstr "Protocollo"
+
+#, fuzzy
+#~ msgid "HTTP protocol"
+#~ msgstr "Protocollo"
 
 #, fuzzy
 #~ msgid ""

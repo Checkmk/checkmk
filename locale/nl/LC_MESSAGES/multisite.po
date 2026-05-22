@@ -34301,11 +34301,6 @@ msgstr ""
 "behouden alle hosts hun individuele instellingen."
 
 msgid ""
-"If a service's current state differs from its requested state, the state of "
-"the Service will be set to this value."
-msgstr ""
-
-msgid ""
 "If a source host does not send data for its piggybacked hosts at all or for "
 "single piggybacked hosts then a period can be set in order to treat outdated "
 "piggybacked host files/data as valid within this period. Moreover the status "
@@ -62428,7 +62423,7 @@ msgid "Service state age"
 msgstr "Leeftijd dienststaat"
 
 #, fuzzy
-msgid "Service state for Differing Service States"
+msgid "Service state for differing VM/LXC states"
 msgstr "Dienst status als er geen kaart regel overeenkomt"
 
 #, fuzzy
@@ -73818,6 +73813,11 @@ msgstr ""
 "dagen 1-28 van een maand."
 
 msgid ""
+"The state of the Proxmox VE HA Manager Watcher service will be set to this "
+"value if the current state of a VM/LXC differs from its requested state"
+msgstr ""
+
+msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
 "is based on the assumption that you want to be informed when there is new "
 "information. However, there are also use cases where new incoming messages "
@@ -79678,6 +79678,13 @@ msgstr "Alle persoonlijke meldingen uitschakelen"
 
 msgid "This year"
 msgstr "Dit jaar"
+
+#, python-brace-format
+msgid ""
+"This {type_name} is part of the {config_name} {product} configuration.<br>To "
+"access further parts of the {product} configuration, go to the related "
+"{product} configuration."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -99365,14 +99372,6 @@ msgstr "InfluxDB verbindingen toevoegen, bewerken en verwijderen."
 msgid "An unexpected error occurred. Please try again."
 msgstr "Er is een uitzondering opgetreden: %s"
 
-#, fuzzy
-msgid "newly created"
-msgstr "Bestand aangemaakt"
-
-#, fuzzy
-msgid "existing"
-msgstr "Test"
-
 msgid "Basic auth (user: %{user}, password: %{password})"
 msgstr ""
 
@@ -99384,21 +99383,18 @@ msgstr "STARTTLS ingeschakeld."
 msgid "No encryption"
 msgstr "Encryptie"
 
-#, fuzzy
-msgid "Event Console resource attribute"
-msgstr "Gebeurtenis Console instellingen"
+msgid "Enabled (Resource attribute: %{attribute})"
+msgstr ""
 
 #, fuzzy
 msgid "The hosts will be created in the \"Telemetry\" folder."
 msgstr "geen gateway hosts aanmaken"
 
-#, fuzzy
-msgid "gRPC protocol"
-msgstr "Protocol"
+msgid "gRPC-based OTLP receiver:"
+msgstr ""
 
-#, fuzzy
-msgid "HTTP protocol"
-msgstr "Protocol"
+msgid "HTTP-based OTLP receiver:"
+msgstr ""
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -99469,6 +99465,10 @@ msgstr "Configuratiebestanden"
 #, fuzzy
 msgid "Could not create the configuration bundle"
 msgstr "Verwijder deze verbinding"
+
+#, fuzzy
+msgid "Prometheus scraper:"
+msgstr "Alertmanager"
 
 msgid ""
 "Insecure connection detected (HTTP). For better security, we recommend "
@@ -100505,6 +100505,26 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "newly created"
+#~ msgstr "Bestand aangemaakt"
+
+#, fuzzy
+#~ msgid "existing"
+#~ msgstr "Test"
+
+#, fuzzy
+#~ msgid "Event Console resource attribute"
+#~ msgstr "Gebeurtenis Console instellingen"
+
+#, fuzzy
+#~ msgid "gRPC protocol"
+#~ msgstr "Protocol"
+
+#, fuzzy
+#~ msgid "HTTP protocol"
+#~ msgstr "Protocol"
 
 #, fuzzy
 #~ msgid ""

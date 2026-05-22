@@ -32508,11 +32508,6 @@ msgstr ""
 "を維持することになります。"
 
 msgid ""
-"If a service's current state differs from its requested state, the state of "
-"the Service will be set to this value."
-msgstr ""
-
-msgid ""
 "If a source host does not send data for its piggybacked hosts at all or for "
 "single piggybacked hosts then a period can be set in order to treat outdated "
 "piggybacked host files/data as valid within this period. Moreover the status "
@@ -59215,7 +59210,7 @@ msgid "Service state age"
 msgstr "サービス状態経過日数"
 
 #, fuzzy
-msgid "Service state for Differing Service States"
+msgid "Service state for differing VM/LXC states"
 msgstr "一致するマップルールがない場合のサービス状態"
 
 msgid "Service state for failing text search condition."
@@ -70151,6 +70146,11 @@ msgid ""
 msgstr "定期的なダウンタイムの開始は、1ヶ月のうち1～28日目にのみ設定できます。"
 
 msgid ""
+"The state of the Proxmox VE HA Manager Watcher service will be set to this "
+"value if the current state of a VM/LXC differs from its requested state"
+msgstr ""
+
+msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
 "is based on the assumption that you want to be informed when there is new "
 "information. However, there are also use cases where new incoming messages "
@@ -75849,6 +75849,16 @@ msgstr "これは全ての通知を抑制する"
 
 msgid "This year"
 msgstr "今年"
+
+#, fuzzy, python-brace-format
+msgid ""
+"This {type_name} is part of the {config_name} {product} configuration.<br>To "
+"access further parts of the {product} configuration, go to the related "
+"{product} configuration."
+msgstr ""
+"この{type_name}は、{qs_name}構成バンドルの一部です。<br>このバンドルには、概"
+"要ページでアクセス可能かつ要約されている追加のコンポーネントが含まれていま"
+"す。"
 
 #, python-brace-format
 msgid ""
@@ -94222,14 +94232,6 @@ msgstr "OpenTelemetry 設定の追加、編集、削除。"
 msgid "An unexpected error occurred. Please try again."
 msgstr "ユーザー名またはパスワードが間違っています。もう一度お試しください。"
 
-#, fuzzy
-msgid "newly created"
-msgstr "作成されたファイル"
-
-#, fuzzy
-msgid "existing"
-msgstr "テスト"
-
 msgid "Basic auth (user: %{user}, password: %{password})"
 msgstr ""
 
@@ -94241,21 +94243,20 @@ msgstr "STARTTLSが有効になっています。"
 msgid "No encryption"
 msgstr "暗号化"
 
-#, fuzzy
-msgid "Event Console resource attribute"
-msgstr "イベントコンソールの設定"
+msgid "Enabled (Resource attribute: %{attribute})"
+msgstr ""
 
 #, fuzzy
 msgid "The hosts will be created in the \"Telemetry\" folder."
 msgstr "ゲートウェイホストを作成しないでください"
 
 #, fuzzy
-msgid "gRPC protocol"
-msgstr "プロトコル"
+msgid "gRPC-based OTLP receiver:"
+msgstr "GRPCベースの受信機"
 
 #, fuzzy
-msgid "HTTP protocol"
-msgstr "プロトコル"
+msgid "HTTP-based OTLP receiver:"
+msgstr "HTTPベースの受信機"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -94329,6 +94330,10 @@ msgstr "設定バンドルID"
 #, fuzzy
 msgid "Could not create the configuration bundle"
 msgstr "この構成を適用しないでください"
+
+#, fuzzy
+msgid "Prometheus scraper:"
+msgstr "Prometheus アラートマネージャ"
 
 msgid ""
 "Insecure connection detected (HTTP). For better security, we recommend "
@@ -95381,6 +95386,26 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "newly created"
+#~ msgstr "作成されたファイル"
+
+#, fuzzy
+#~ msgid "existing"
+#~ msgstr "テスト"
+
+#, fuzzy
+#~ msgid "Event Console resource attribute"
+#~ msgstr "イベントコンソールの設定"
+
+#, fuzzy
+#~ msgid "gRPC protocol"
+#~ msgstr "プロトコル"
+
+#, fuzzy
+#~ msgid "HTTP protocol"
+#~ msgstr "プロトコル"
 
 #~ msgid ""
 #~ "Invalid custom field. Only the characters a-z, A-Z, 0-9, _ and - are "

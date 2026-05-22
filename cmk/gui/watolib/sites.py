@@ -50,7 +50,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
     has_distributed_setup_remote_sites,
@@ -91,6 +90,7 @@ from cmk.gui.watolib.config_sync import (
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.mode import mode_registry
+from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.licensing.handler import LicenseState
 from cmk.rulesets.internal.form_specs import (
@@ -826,7 +826,13 @@ class SiteManagement:
 
             self._liveproxy_hook.on_sites_saved(sites)
 
-    def delete_site(self, site_id: SiteId, *, pprint_value: bool, use_git: bool) -> None:
+    def delete_site(
+        self,
+        site_id: SiteId,
+        *,
+        pprint_value: bool,
+        pending_changes: PendingChanges,
+    ) -> None:
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import folder_tree
 
@@ -880,16 +886,16 @@ class SiteManagement:
         del all_sites[site_id]
         self.save_sites(all_sites, activate=True, pprint_value=pprint_value)
 
-        cmk.gui.watolib.changes.add_change(
-            action_name="edit-sites",
-            text=_("Deleted site %s") % site_id,
-            user_id=user.id,
-            domains=domains,
+        pending_changes.add(
+            Change(
+                action_name="edit-sites",
+                text=_("Deleted site %s") % site_id,
+                domains=[d.ident() for d in domains],
+                force_restart=True,
+            ),
             # Exclude site which is about to be removed. The activation won't be executed for that
             # site anymore, so there is no point in adding a change for this site
-            sites=list(connected_sites - {site_id}),
-            need_restart=True,
-            use_git=use_git,
+            ChangeScope.sites(connected_sites - {site_id}),
         )
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
 

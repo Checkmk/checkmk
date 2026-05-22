@@ -1089,7 +1089,12 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_delete(
                 SiteId(delete_id),
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config.sites,
+                    use_git=config.wato_use_git,
+                    local_site=omd_site(),
+                    user_id=user.id,
+                ),
             )
 
         delete_folders_id = request.get_ascii_input("_delete_folders")
@@ -1141,7 +1146,7 @@ class ModeDistributedMonitoring(WatoMode):
         return redirect(mode_url("sites"))
 
     def _action_delete(
-        self, delete_id: SiteId, *, pprint_value: bool, use_git: bool
+        self, delete_id: SiteId, *, pprint_value: bool, pending_changes: PendingChanges
     ) -> ActionResult:
         # TODO: Can we delete this ancient code? The site attribute is always available
         # these days and the following code does not seem to have any effect.
@@ -1216,7 +1221,7 @@ class ModeDistributedMonitoring(WatoMode):
         self._site_mgmt.delete_site(
             delete_id,
             pprint_value=pprint_value,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
         return redirect(mode_url("sites"))
 

@@ -49,9 +49,17 @@ class SitesApiMgr:
             raise SiteDoesNotExistException
         return existing_site
 
-    def delete_a_site(self, site_id: SiteId, *, pprint_value: bool, use_git: bool) -> None:
+    def delete_a_site(
+        self,
+        site_id: SiteId,
+        *,
+        pprint_value: bool,
+        pending_changes: PendingChanges,
+    ) -> None:
         if self.all_sites.get(site_id):
-            self.site_mgmt.delete_site(site_id, pprint_value=pprint_value, use_git=use_git)
+            self.site_mgmt.delete_site(
+                site_id, pprint_value=pprint_value, pending_changes=pending_changes
+            )
         raise SiteDoesNotExistException
 
     def login_to_site(

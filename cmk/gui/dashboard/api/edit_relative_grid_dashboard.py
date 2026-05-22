@@ -25,6 +25,7 @@ from cmk.gui.type_defs import AnnotatedUserId
 from ._family import DASHBOARD_FAMILY
 from ._utils import (
     get_permitted_user_id,
+    make_pending_changes,
     PERMISSIONS_DASHBOARD_EDIT,
     save_dashboard_to_file,
     serialize_relative_grid_dashboard,
@@ -67,7 +68,11 @@ def edit_relative_grid_dashboard_v1(
     new_dashboard = body.to_internal(user_id, embedded_views, old_dashboard.get("public_token_id"))
 
     save_dashboard_to_file(
-        api_context.config.sites, new_dashboard, user_id, old_dashboard_id=dashboard_id
+        api_context.config.sites,
+        new_dashboard,
+        user_id,
+        pending_changes=make_pending_changes(api_context),
+        old_dashboard_id=dashboard_id,
     )
     disable_dashboard_token(new_dashboard)
 

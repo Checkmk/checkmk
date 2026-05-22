@@ -25,6 +25,7 @@ from ._utils import (
     dashboard_owner_description,
     DashboardOwnerWithBuiltin,
     get_dashboard_for_read,
+    make_pending_changes,
     PERMISSIONS_DASHBOARD,
     save_dashboard_to_file,
     serialize_relative_grid_dashboard,
@@ -116,7 +117,12 @@ def clone_as_relative_grid_dashboard_v1(
     if cloned_dashboard.get("public_token_id"):
         cloned_dashboard["public_token_id"] = None  # Remove token reference in cloned dashboard
 
-    save_dashboard_to_file(api_context.config.sites, cloned_dashboard, owner)
+    save_dashboard_to_file(
+        api_context.config.sites,
+        cloned_dashboard,
+        owner,
+        pending_changes=make_pending_changes(api_context),
+    )
 
     return ApiResponse(
         serialize_relative_grid_dashboard(

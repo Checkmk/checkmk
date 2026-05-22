@@ -10,19 +10,28 @@ from typing import Any, Literal
 from livestatus import SiteConfigurations
 
 import cmk.gui.utils.permission_verification as permissions
+from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard.dashlet import dashlet_registry
 from cmk.gui.dashboard.type_defs import DashboardConfig
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.framework.utils import dump_dict_without_omitted
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import AnnotatedUserId, VisualTypeName
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import load_user
 from cmk.gui.visuals._store import load_raw_visuals_of_a_user
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     remote_automation_config_from_site_config,
+)
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
 )
 from cmk.gui.watolib.profile_replication import add_profile_replication_change
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
@@ -55,6 +64,20 @@ from .model.widget import (
     WidgetRelativeGridSize,
     WidgetResponsiveGridSize,
 )
+
+
+def make_pending_changes(api_context: ApiContext) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(api_context.config.sites),
+        local_site=omd_site(),
+        acting_user=api_context.user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=api_context.config.wato_use_git),
+            index_update_change_hook,
+        ),
+    )
+
 
 INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
     "problem_graph": "problem_graph",
@@ -258,6 +281,8 @@ def save_dashboard_to_file(
     sites: SiteConfigurations,
     dashboard: DashboardConfig,
     user_id: UserId,
+    *,
+    pending_changes: PendingChanges,
     old_dashboard_id: str | None = None,
 ) -> None:
     dashboard_id = dashboard["name"]
@@ -274,10 +299,15 @@ def save_dashboard_to_file(
     store.all[(user_id, dashboard_id)] = dashboard
 
     save_all_dashboards(user_id)
-    sync_user_to_remotes(sites, user_id)
+    sync_user_to_remotes(sites, user_id, pending_changes=pending_changes)
 
 
-def sync_user_to_remotes(sites: SiteConfigurations, user_id: UserId) -> None:
+def sync_user_to_remotes(
+    sites: SiteConfigurations,
+    user_id: UserId,
+    *,
+    pending_changes: PendingChanges,
+) -> None:
     """Synchronize the user profile and their dashboards to all enabled remote sites.
 
     This does not sync other visuals."""
@@ -293,7 +323,9 @@ def sync_user_to_remotes(sites: SiteConfigurations, user_id: UserId) -> None:
     remote_configs = []
     for site_id, site in user_remote_sites.items():
         if "secret" not in site:
-            add_profile_replication_change(site_id, "Not logged in.")
+            add_profile_replication_change(
+                site_id, "Not logged in.", pending_changes=pending_changes
+            )
             continue
 
         remote_configs.append(remote_automation_config_from_site_config(site))

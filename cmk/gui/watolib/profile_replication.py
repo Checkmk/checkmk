@@ -14,9 +14,11 @@ from typing import Any, cast, get_args, override
 
 from pydantic import BaseModel
 
+from livestatus import SiteConfigurations
+
 import cmk.utils.paths
 from cmk.ccc import store
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.background_job.job import (
@@ -27,16 +29,24 @@ from cmk.gui.background_job.job import (
     InitialStatusArgs,
     JobTarget,
 )
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import AnnotatedUserId, UserSpec, VisualTypeName
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC, update_activation_time
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import remote_automation_config_from_site_config
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.config_domain_name import CORE
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 from cmk.utils.automation_config import RemoteAutomationConfig
@@ -124,25 +134,46 @@ def _replicate_to_sites_parallel(
         return [future.result() for future in as_completed(futures)]
 
 
-def add_profile_replication_change(site_id: SiteId, result: bool | str) -> None:
-    """Add pending change entry to make sync possible later for admins"""
-    add_change(
-        action_name="edit-users",
-        text=_l("Profile changed (sync failed: %s)") % result,
-        user_id=user.id,
-        sites=[site_id],
-        need_restart=False,
-        domains=[ConfigDomainCore()],
-        use_git=active_config.wato_use_git,
-    )
-
-
 class ProfileReplicationArgs(BaseModel, frozen=True):
     user_id: AnnotatedUserId
     automation_configs: Mapping[SiteId, RemoteAutomationConfig]
     back_url: str
     user_permission_config: UserPermissionSerializableConfig
     debug: bool
+    activation_site_configs: SiteConfigurations
+    local_site: SiteId
+    wato_use_git: bool
+
+
+def _make_pending_changes(args: "ProfileReplicationArgs") -> PendingChanges:
+    return PendingChanges(
+        activation_sites=args.activation_site_configs,
+        local_site=args.local_site,
+        acting_user=args.user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=args.wato_use_git),
+            index_update_change_hook,
+        ),
+    )
+
+
+def add_profile_replication_change(
+    site_id: SiteId,
+    result: bool | str,
+    *,
+    pending_changes: PendingChanges,
+) -> None:
+    """Add pending change entry to make sync possible later for admins"""
+    pending_changes.add(
+        Change(
+            action_name="edit-users",
+            text=_l("Profile changed (sync failed: %s)") % result,
+            domains=[CORE],
+            force_restart=False,
+        ),
+        ChangeScope.sites([site_id]),
+    )
 
 
 def profile_replication_entry_point(
@@ -211,9 +242,14 @@ class ProfileReplicationBackgroundJob(BackgroundJob):
             debug=args.debug,
         )
 
+        pending_changes = _make_pending_changes(args)
         for site_result in results:
             if isinstance(site_result, _ReplicationFailure):
-                add_profile_replication_change(site_result.site_id, site_result.error)
+                add_profile_replication_change(
+                    site_result.site_id,
+                    site_result.error,
+                    pending_changes=pending_changes,
+                )
                 job_interface.send_progress_update(
                     _("Replication to %s failed: %s") % (site_result.site_id, site_result.error)
                 )
@@ -243,12 +279,32 @@ def start_profile_replication_job(back_url: str, *, config: Config) -> None:
     if not remote_sites:
         return
 
+    assert user.id is not None
     automation_configs: dict[SiteId, RemoteAutomationConfig] = {}
+    sites_without_secret: list[SiteId] = []
     for site_id, site_config in remote_sites.items():
         if "secret" not in site_config:
-            add_profile_replication_change(site_id, _("Not logged in."))
+            sites_without_secret.append(site_id)
             continue
         automation_configs[site_id] = remote_automation_config_from_site_config(site_config)
+
+    args = ProfileReplicationArgs(
+        user_id=user.id,
+        automation_configs=automation_configs,
+        back_url=back_url,
+        user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
+        debug=config.debug,
+        activation_site_configs=activation_sites(config.sites),
+        local_site=omd_site(),
+        wato_use_git=config.wato_use_git,
+    )
+
+    if sites_without_secret:
+        pending_changes = _make_pending_changes(args)
+        for site_id in sites_without_secret:
+            add_profile_replication_change(
+                site_id, _("Not logged in."), pending_changes=pending_changes
+            )
 
     if not automation_configs:
         logging.getLogger(__name__).debug(
@@ -256,18 +312,11 @@ def start_profile_replication_job(back_url: str, *, config: Config) -> None:
         )
         return
 
-    assert user.id is not None
     job = ProfileReplicationBackgroundJob(back_url=back_url, user_id=user.id)
     start_result = job.start(
         JobTarget(
             callable=profile_replication_entry_point,
-            args=ProfileReplicationArgs(
-                user_id=user.id,
-                automation_configs=automation_configs,
-                back_url=back_url,
-                user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
-                debug=config.debug,
-            ),
+            args=args,
         ),
         InitialStatusArgs(
             title=job.gui_title(),

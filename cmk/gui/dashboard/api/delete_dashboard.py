@@ -24,7 +24,12 @@ from cmk.gui.type_defs import AnnotatedUserId
 
 from ..store import get_all_dashboards, save_all_dashboards
 from ._family import DASHBOARD_FAMILY
-from ._utils import get_permitted_user_id, PERMISSIONS_DASHBOARD_EDIT, sync_user_to_remotes
+from ._utils import (
+    get_permitted_user_id,
+    make_pending_changes,
+    PERMISSIONS_DASHBOARD_EDIT,
+    sync_user_to_remotes,
+)
 
 
 def delete_dashboard_v1(
@@ -60,7 +65,11 @@ def delete_dashboard_v1(
             token_store.delete(TokenId(token_id))
 
     save_all_dashboards(user_id)
-    sync_user_to_remotes(api_context.config.sites, user_id)
+    sync_user_to_remotes(
+        api_context.config.sites,
+        user_id,
+        pending_changes=make_pending_changes(api_context),
+    )
 
 
 ENDPOINT_DELETE_DASHBOARD = VersionedEndpoint(

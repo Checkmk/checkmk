@@ -17,7 +17,12 @@ from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 
 from ._family import DASHBOARD_FAMILY
-from ._utils import PERMISSIONS_DASHBOARD, save_dashboard_to_file, serialize_relative_grid_dashboard
+from ._utils import (
+    make_pending_changes,
+    PERMISSIONS_DASHBOARD,
+    save_dashboard_to_file,
+    serialize_relative_grid_dashboard,
+)
 from .model.dashboard import RelativeGridDashboardRequest, RelativeGridDashboardResponse
 from .model.response_model import RelativeGridDashboardDomainObject
 
@@ -31,7 +36,12 @@ def create_relative_grid_dashboard_v1(
 
     owner = user.ident
     internal = body.to_internal(owner, embedded_views={}, public_token_id=None)
-    save_dashboard_to_file(api_context.config.sites, internal, owner)
+    save_dashboard_to_file(
+        api_context.config.sites,
+        internal,
+        owner,
+        pending_changes=make_pending_changes(api_context),
+    )
 
     return ApiResponse(
         serialize_relative_grid_dashboard(

@@ -18,7 +18,12 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import get_token_store, TokenId
 
 from ._family import DASHBOARD_FAMILY
-from ._utils import get_dashboard_for_edit, PERMISSIONS_DASHBOARD_EDIT, save_dashboard_to_file
+from ._utils import (
+    get_dashboard_for_edit,
+    make_pending_changes,
+    PERMISSIONS_DASHBOARD_EDIT,
+    save_dashboard_to_file,
+)
 from .model.token import DeleteDashboardToken
 
 
@@ -38,7 +43,12 @@ def delete_dashboard_token_v1(api_context: ApiContext, body: DeleteDashboardToke
         token_store.delete(TokenId(token_id))
 
     del dashboard["public_token_id"]
-    save_dashboard_to_file(api_context.config.sites, dashboard, body.dashboard_owner)
+    save_dashboard_to_file(
+        api_context.config.sites,
+        dashboard,
+        body.dashboard_owner,
+        pending_changes=make_pending_changes(api_context),
+    )
 
 
 ENDPOINT_DELETE_DASHBOARD_TOKEN = VersionedEndpoint(

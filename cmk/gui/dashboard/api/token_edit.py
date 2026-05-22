@@ -24,7 +24,12 @@ from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
 from cmk.gui.openapi.utils import ProblemException
 
 from ._family import DASHBOARD_FAMILY
-from ._utils import get_dashboard_for_edit, PERMISSIONS_DASHBOARD_EDIT, save_dashboard_to_file
+from ._utils import (
+    get_dashboard_for_edit,
+    make_pending_changes,
+    PERMISSIONS_DASHBOARD_EDIT,
+    save_dashboard_to_file,
+)
 from .model.token import DashboardTokenMetadata, DashboardTokenObjectModel, EditDashboardToken
 
 
@@ -40,7 +45,12 @@ def edit_dashboard_token_v1(
         if isinstance(e, InvalidDashboardTokenReference):
             # remove invalid token reference
             dashboard["public_token_id"] = None
-            save_dashboard_to_file(api_context.config.sites, dashboard, body.dashboard_owner)
+            save_dashboard_to_file(
+                api_context.config.sites,
+                dashboard,
+                body.dashboard_owner,
+                pending_changes=make_pending_changes(api_context),
+            )
         raise ProblemException(
             status=404,
             title="Dashboard token not found",

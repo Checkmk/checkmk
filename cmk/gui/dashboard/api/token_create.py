@@ -25,7 +25,12 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import get_token_store
 
 from ._family import DASHBOARD_FAMILY
-from ._utils import get_dashboard_for_edit, PERMISSIONS_DASHBOARD_EDIT, save_dashboard_to_file
+from ._utils import (
+    get_dashboard_for_edit,
+    make_pending_changes,
+    PERMISSIONS_DASHBOARD_EDIT,
+    save_dashboard_to_file,
+)
 from .model.token import CreateDashboardToken, DashboardTokenMetadata, DashboardTokenObjectModel
 
 
@@ -63,7 +68,12 @@ def create_dashboard_token_v1(
 
     dashboard["public_token_id"] = token.token_id
     try:
-        save_dashboard_to_file(api_context.config.sites, dashboard, body.dashboard_owner)
+        save_dashboard_to_file(
+            api_context.config.sites,
+            dashboard,
+            body.dashboard_owner,
+            pending_changes=make_pending_changes(api_context),
+        )
     except:
         # rollback token creation
         token_store.delete(token.token_id)

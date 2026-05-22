@@ -20,6 +20,7 @@ from ._utils import (
     DashboardOwnerWithBuiltin,
     get_dashboard_for_read,
     get_permitted_user_id,
+    make_pending_changes,
     PERMISSIONS_DASHBOARD,
     PERMISSIONS_DASHBOARD_EDIT,
     save_dashboard_to_file,
@@ -41,6 +42,7 @@ __all__ = [
     "get_permitted_user_id",
     "get_validated_internal_figure_request",
     "get_validated_internal_graph_request",
+    "make_pending_changes",
     "register_endpoints",
     "save_dashboard_to_file",
 ]

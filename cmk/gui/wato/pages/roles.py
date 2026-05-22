@@ -17,7 +17,10 @@ configuration of all roles.
 
 from collections.abc import Collection
 
-import cmk.gui.watolib.changes as _changes
+from livestatus import SiteConfigurations
+
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
@@ -47,6 +50,7 @@ from cmk.gui.permissions import (
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices, IconNames, PermissionName, StaticIcon
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserRole
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
@@ -59,9 +63,18 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.watolib import userroles
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
+from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.userroles import RoleID
 
 
@@ -123,25 +136,35 @@ class ModeRoles(WatoMode):
                 get_user_attributes(config.wato_user_attrs),
                 pprint_value=config.wato_pprint_config,
             )
-            _changes.add_change(
-                action_name="edit-roles",
-                text=_("Deleted role '%s'") % role_id,
-                user_id=user.id,
-                sites=get_login_sites(config.sites),
-                domains=[ConfigDomainCore()],
+            _pending_changes(
+                config.sites,
                 use_git=config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ).add(
+                Change(
+                    action_name="edit-roles",
+                    text=_("Deleted role '%s'") % role_id,
+                    domains=[CORE],
+                ),
+                ChangeScope.sites(get_login_sites(config.sites)),
             )
 
         elif request.var("_clone"):
             role_id = RoleID(request.get_ascii_input_mandatory("_clone"))
             cloned_role = userroles.clone_role(role_id, pprint_value=config.wato_pprint_config)
-            _changes.add_change(
-                action_name="edit-roles",
-                text=_("Created new role '%s'") % cloned_role.name,
-                user_id=user.id,
-                sites=get_login_sites(config.sites),
-                domains=[ConfigDomainCore()],
+            _pending_changes(
+                config.sites,
                 use_git=config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ).add(
+                Change(
+                    action_name="edit-roles",
+                    text=_("Created new role '%s'") % cloned_role.name,
+                    domains=[CORE],
+                ),
+                ChangeScope.sites(get_login_sites(config.sites)),
             )
 
         return redirect(self.mode_url())
@@ -282,13 +305,18 @@ class ModeRoleTwoFactor(WatoMode):
             pprint_value=config.wato_pprint_config,
         )
         userroles.logout_users_with_role(self._role_id, get_user_attributes(config.wato_user_attrs))
-        _changes.add_change(
-            action_name="edit-roles",
-            text=_("Modified user role '%s'") % self._role_id,
-            user_id=user.id,
-            sites=get_login_sites(config.sites),
-            domains=[ConfigDomainCore()],
+        _pending_changes(
+            config.sites,
             use_git=config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ).add(
+            Change(
+                action_name="edit-roles",
+                text=_("Modified user role '%s'") % self._role_id,
+                domains=[CORE],
+            ),
+            ChangeScope.sites(get_login_sites(config.sites)),
         )
         return redirect(mode_url(ModeRoles.name()))
 
@@ -375,13 +403,18 @@ class ModeEditRole(WatoMode):
         )
         self._role_id = RoleID(new_id)
 
-        _changes.add_change(
-            action_name="edit-roles",
-            text=_("Modified user role '%s'") % new_id,
-            user_id=user.id,
-            sites=get_login_sites(config.sites),
-            domains=[ConfigDomainCore()],
+        _pending_changes(
+            config.sites,
             use_git=config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ).add(
+            Change(
+                action_name="edit-roles",
+                text=_("Modified user role '%s'") % new_id,
+                domains=[CORE],
+            ),
+            ChangeScope.sites(get_login_sites(config.sites)),
         )
         return url
 
@@ -562,3 +595,23 @@ class ModeRoleMatrix(WatoMode):
                         table.cell(role.name, css=["center"])
                         if icon_name:
                             html.static_icon(icon_name)
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.graylog_cluster_stats import (
+from cmk.plugins.graylog.agent_based.graylog_cluster_stats import (
     check_graylog_cluster_stats,
     discover_graylog_cluster_stats,
 )

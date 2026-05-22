@@ -211,6 +211,7 @@ class Document:
             "heading_offset": 0,
         }
         self._gfx_state_stack: list[GFXState] = []
+        self._heading_level_stack: list[int] = []
         self.set_gfx_state()
 
     def end(self, sendas: str | None = None, do_send: bool = True) -> bytes | None:
@@ -235,6 +236,7 @@ class Document:
 
     def save_state(self) -> None:
         self._gfx_state_stack.append(self._gfx_state.copy())
+        self._heading_level_stack.append(self._heading_level)
         self._canvas.saveState()  # needed for clip rect
 
     def restore_state(self) -> None:
@@ -247,6 +249,7 @@ class Document:
         if self._canvas.state_stack:
             self._canvas.restoreState()  # needed for clip rect
         self._gfx_state = self._gfx_state_stack.pop()
+        self._heading_level = self._heading_level_stack.pop()
         self.set_gfx_state()
 
     # Private function for making all graphics settings active. We could

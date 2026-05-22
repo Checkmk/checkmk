@@ -3,18 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
 
 import calendar
 import json
 import time
-from collections.abc import Generator, Mapping
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels
-from cmk.agent_based.v2 import get_average, get_rate, get_value_store, render, StringTable
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckResult,
+    get_average,
+    get_rate,
+    get_value_store,
+    LevelsT,
+    render,
+    StringTable,
+)
 
-GraylogSection = dict
+GraylogSection = dict[str, Any]
 
 
 def deserialize_and_merge_json(string_table: StringTable) -> GraylogSection:
@@ -22,7 +29,7 @@ def deserialize_and_merge_json(string_table: StringTable) -> GraylogSection:
     >>> deserialize_and_merge_json([['{"a": 1, "b": 2}'], ['{"b": 3, "c": 4}']])
     {'a': 1, 'b': 3, 'c': 4}
     """
-    parsed = {}
+    parsed: GraylogSection = {}
 
     for line in string_table:
         parsed.update(json.loads(line[0]))
@@ -41,26 +48,31 @@ def handle_iso_utc_to_localtimestamp(iso_8601_time: str) -> int:
     return local_timestamp
 
 
-def handle_graylog_messages(
-    messages: int | float, params: Mapping[str, Any], *, include_diff: bool
-) -> Generator[
-    tuple[int, str, list[tuple[str, float, float | None, float | None, float | None, float | None]]]
-]:
-    msgs_levels_upper = params.get("msgs_upper", (None, None))
-    msgs_levels_lower = params.get("msgs_lower", (None, None))
+def v2_levels(levels: tuple[int, int] | float | None) -> LevelsT[int]:
+    match levels:
+        case tuple((int(w), int(c))):
+            return ("fixed", (w, c))
+        case None:
+            return ("no_levels", None)
+        case other:
+            raise TypeError(other)
 
-    yield check_levels(
+
+def handle_graylog_messages(
+    messages: int | float, params: Mapping[str, tuple[int, int] | float], *, include_diff: bool
+) -> CheckResult:
+    yield from check_levels(
         messages,
-        "messages",
-        msgs_levels_upper + msgs_levels_lower,
-        human_readable_func=int,
-        infoname="Total number of messages",
+        metric_name="messages",
+        levels_upper=v2_levels(params.get("msgs_upper")),
+        levels_lower=v2_levels(params.get("msgs_lower")),
+        render_func=str,
+        label="Total number of messages",
     )
 
     avg_key = "msgs_avg"
     avg = params.get(avg_key, 30)
-    msgs_avg_levels_upper = params.get("msgs_avg_upper", (None, None))
-    msgs_avg_levels_lower = params.get("msgs_avg_lower", (None, None))
+    assert isinstance(avg, (int, float))
     this_time = time.time()
 
     value_store = get_value_store()
@@ -70,11 +82,12 @@ def handle_graylog_messages(
     )
     avg_rate = get_average(value_store, f"graylog_{avg_key}.avg", this_time, rate, avg)
 
-    yield check_levels(
+    yield from check_levels(
         avg_rate,
-        avg_key,
-        msgs_avg_levels_upper + msgs_avg_levels_lower,
-        infoname="Average number of messages (%s)" % render.timespan(avg * 60),
+        metric_name=avg_key,
+        levels_upper=v2_levels(params.get("msgs_avg_upper")),
+        levels_lower=v2_levels(params.get("msgs_avg_lower")),
+        label="Average number of messages (%s)" % render.timespan(avg * 60),
     )
 
     if not include_diff:
@@ -82,18 +95,17 @@ def handle_graylog_messages(
 
     diff_key = "msgs_diff"
     timespan = params.get(diff_key, 1800)
-    diff_levels_upper = params.get("%s_upper" % diff_key, (None, None))
-    diff_levels_lower = params.get("%s_lower" % diff_key, (None, None))
+    assert isinstance(timespan, (int, float))
 
     diff = _get_value_diff("graylog_%s" % diff_key, messages, timespan)
 
-    yield check_levels(
+    yield from check_levels(
         diff,
-        "graylog_diff",
-        diff_levels_upper + diff_levels_lower,
-        human_readable_func=int,
-        infoname="Total number of messages since last check (within %s)"
-        % render.timespan(timespan),
+        metric_name="graylog_diff",
+        levels_upper=v2_levels(params.get("%s_upper" % diff_key)),
+        levels_lower=v2_levels(params.get("%s_lower" % diff_key)),
+        render_func=str,
+        label="Total number of messages since last check (within %s)" % render.timespan(timespan),
     )
 
 

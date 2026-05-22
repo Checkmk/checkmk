@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.legacy_checks.graylog_sources import (
     check_graylog_sources,
     parse_graylog_sources,
@@ -28,17 +28,18 @@ from cmk.plugins.graylog import lib as graylog
             [['{"sources": {"172.18.0.1": {"messages": 457, "has_since_argument": false}}}']],
             "172.18.0.1",
             [
-                (0, "Total number of messages: 457", [("messages", 457, None, None)]),
-                (
-                    0,
-                    "Average number of messages (30 minutes 0 seconds): 0.00",
-                    [("msgs_avg", 0.0, None, None)],
+                Result(state=State.OK, summary="Total number of messages: 457"),
+                Metric("messages", 457),
+                Result(
+                    state=State.OK,
+                    summary="Average number of messages (30 minutes 0 seconds): 0.00",
                 ),
-                (
-                    0,
-                    "Total number of messages since last check (within 30 minutes 0 seconds): 0",
-                    [("graylog_diff", 0.0, None, None)],
+                Metric("msgs_avg", 0.0),
+                Result(
+                    state=State.OK,
+                    summary="Total number of messages since last check (within 30 minutes 0 seconds): 0",
                 ),
+                Metric("graylog_diff", 0.0),
             ],
             id="Timeframe for 'source_since' not configured.",
         ),
@@ -50,17 +51,18 @@ from cmk.plugins.graylog import lib as graylog
             ],
             "172.18.0.1",
             [
-                (0, "Total number of messages: 457", [("messages", 457, None, None)]),
-                (
-                    0,
-                    "Average number of messages (30 minutes 0 seconds): 0.00",
-                    [("msgs_avg", 0.0, None, None)],
+                Result(state=State.OK, summary="Total number of messages: 457"),
+                Metric("messages", 457),
+                Result(
+                    state=State.OK,
+                    summary="Average number of messages (30 minutes 0 seconds): 0.00",
                 ),
-                (
-                    0,
-                    "Total number of messages in the last 30 minutes 0 seconds: 5",
-                    [("graylog_diff", 5.0, None, None)],
+                Metric("msgs_avg", 0.0),
+                Result(
+                    state=State.OK,
+                    summary="Total number of messages in the last 30 minutes 0 seconds: 5",
                 ),
+                Metric("graylog_diff", 5.0),
             ],
             id="Timeframe for 'source_since' configured. Now the check gives information about the total number of messages received in the timeframe.",
         ),
@@ -70,10 +72,12 @@ def test_check_graylog_sources(
     monkeypatch: pytest.MonkeyPatch,
     section: StringTable,
     item: str,
-    expected_check_result: Sequence[object],  # fixed upon migration
+    expected_check_result: Sequence[Result | Metric],
 ) -> None:
     monkeypatch.setattr(
-        graylog, "get_value_store", lambda: {"graylog_msgs_avg.rate": (1670328674.09963, 457)}
+        graylog,
+        "get_value_store",
+        lambda: {"graylog_msgs_avg.rate": (1670328674.09963, 457)},
     )
 
     assert (

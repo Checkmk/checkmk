@@ -3,23 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="arg-type"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
-    LegacyService,
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
 )
-from cmk.agent_based.v2 import render
-from cmk.plugins.graylog.lib import deserialize_and_merge_json, GraylogSection
+from cmk.plugins.graylog.lib import deserialize_and_merge_json
 
-check_info = {}
+Section = dict[str, Any]
 
 # <<<graylog_cluster_stats>>>
 # [[u'{"stream_rule_count": 7, "input_count_by_type":
@@ -61,15 +62,13 @@ check_info = {}
 # "alarmcallback_count_by_type": {}}}']]
 
 
-def discover_graylog_cluster_stats(section: GraylogSection) -> LegacyDiscoveryResult:
+def discover_graylog_cluster_stats(section: Section) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_graylog_cluster_stats(
-    _no_item: None, params: Mapping[str, Any], parsed: GraylogSection
-) -> LegacyCheckResult:
-    if not parsed:
+def check_graylog_cluster_stats(params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not section:
         return
 
     for key, infotext, m_name in [
@@ -80,42 +79,46 @@ def check_graylog_cluster_stats(
         ("extractor_count", "Number of extractors", "num_extractor"),
         ("user_count", "Number of user", "num_user"),
     ]:
-        data = parsed.get(key)
+        data = section.get(key)
         if data is not None:
-            levels = params.get("%s_upper" % key, (None, None))
-            levels_lower = params.get("%s_lower" % key, (None, None))
-            yield check_levels(
-                data, m_name, levels + levels_lower, human_readable_func=int, infoname=infotext
+            yield from check_levels_v1(
+                value=data,
+                metric_name=m_name,
+                levels_upper=params.get(f"{key}_upper", (None, None)),
+                levels_lower=params.get(f"{key}_lower", (None, None)),
+                render_func=lambda v: f"{int(v)}",
+                label=infotext,
             )
 
 
-check_info["graylog_cluster_stats"] = LegacyCheckDefinition(
+agent_section_graylog_cluster_stats = AgentSection(
     name="graylog_cluster_stats",
     parse_function=deserialize_and_merge_json,
+)
+
+
+check_plugin_graylog_cluster_stats = CheckPlugin(
+    name="graylog_cluster_stats",
     service_name="Graylog Cluster Stats",
     discovery_function=discover_graylog_cluster_stats,
     check_function=check_graylog_cluster_stats,
     check_ruleset_name="graylog_cluster_stats",
+    check_default_parameters={},
 )
 
 
-def discover_graylog_cluster_stats_elastic(parsed: GraylogSection) -> Sequence[LegacyService]:
-    elastic_data = parsed.get("elasticsearch")
-    if elastic_data is not None:
-        return [(None, {})]
-    return []
+def discover_graylog_cluster_stats_elastic(section: Section) -> DiscoveryResult:
+    if section.get("elasticsearch") is not None:
+        yield Service()
 
 
 def check_graylog_cluster_stats_elastic(
-    _no_item: None,
     params: Mapping[str, Any],
-    parsed: GraylogSection,
-) -> LegacyCheckResult:
-    elastic_data = parsed.get("elasticsearch")
+    section: Section,
+) -> CheckResult:
+    elastic_data = section.get("elasticsearch")
     if elastic_data is None:
         return
-
-    state = 0
 
     for key, infotext in [
         ("cluster_name", "Name"),
@@ -123,11 +126,14 @@ def check_graylog_cluster_stats_elastic(
     ]:
         value = elastic_data.get(key)
         if value is not None:
-            yield state, f"{infotext}: {value.title()}"
+            yield Result(state=State.OK, summary=f"{infotext}: {value.title()}")
 
     status_data = elastic_data.get("status")
     if status_data:
-        yield params.get(status_data.lower(), 3), "Status: %s" % status_data.title()
+        yield Result(
+            state=State(params.get(status_data.lower(), 3)),
+            summary=f"Status: {status_data.title()}",
+        )
 
     health_data = elastic_data.get("cluster_health")
     if health_data:
@@ -145,55 +151,51 @@ def check_graylog_cluster_stats_elastic(
             if health_value is None:
                 continue
 
-            levels = params.get("%s_upper" % health_section, (None, None))
-            levels_lower = params.get("%s_lower" % health_section, (None, None))
-
-            if health_section == "pending_tasks":
-                health_section = "number_of_%s" % health_section
-
-            yield check_levels(
-                health_value,
-                health_section,
-                levels + levels_lower,
-                human_readable_func=int,
-                infoname=health_info,
+            metric_name = (
+                f"number_of_{health_section}"
+                if health_section == "pending_tasks"
+                else health_section
             )
 
-    timedout_data = health_data.get("timed_out")
-    if timedout_data is not None:
-        timedout_info = "Timed out: "
-        if timedout_data:
-            timedout_info += "yes"
-        else:
-            timedout_info += "no"
+            yield from check_levels_v1(
+                value=health_value,
+                metric_name=metric_name,
+                levels_upper=params.get(f"{health_section}_upper", (None, None)),
+                levels_lower=params.get(f"{health_section}_lower", (None, None)),
+                render_func=lambda v: f"{int(v)}",
+                label=health_info,
+            )
 
-        yield 0, timedout_info
+        timedout_data = health_data.get("timed_out")
+        if timedout_data is not None:
+            yield Result(
+                state=State.OK,
+                summary=f"Timed out: {'yes' if timedout_data else 'no'}",
+            )
 
     indice_data = elastic_data.get("indices_stats")
     if indice_data:
-        for section, info, hr_func in [
-            ("index_count", "Index count", int),
+        for section_name, info, hr_func in [
+            ("index_count", "Index count", lambda v: f"{int(v)}"),
             ("store_size", "Store size", render.bytes),
             ("id_cache_size", "ID cache size", render.bytes),
             ("field_data_size", "Field data size", render.bytes),
         ]:
-            indice_value = indice_data.get(section)
+            indice_value = indice_data.get(section_name)
             if indice_value is None:
                 continue
 
-            levels = params.get("%s_upper" % section, (None, None))
-            levels_lower = params.get("%s_lower" % section, (None, None))
-
-            yield check_levels(
-                indice_value,
-                section,
-                levels + levels_lower,
-                human_readable_func=hr_func,
-                infoname=info,
+            yield from check_levels_v1(
+                value=indice_value,
+                metric_name=section_name,
+                levels_upper=params.get(f"{section_name}_upper", (None, None)),
+                levels_lower=params.get(f"{section_name}_lower", (None, None)),
+                render_func=hr_func,
+                label=info,
             )
 
 
-check_info["graylog_cluster_stats.elastic"] = LegacyCheckDefinition(
+check_plugin_graylog_cluster_stats_elastic = CheckPlugin(
     name="graylog_cluster_stats_elastic",
     service_name="Graylog Cluster Elasticsearch Stats",
     sections=["graylog_cluster_stats"],
@@ -208,17 +210,13 @@ check_info["graylog_cluster_stats.elastic"] = LegacyCheckDefinition(
 )
 
 
-def discover_graylog_cluster_stats_mongodb(parsed: GraylogSection) -> Sequence[LegacyService]:
-    mongo_data = parsed.get("mongo")
-    if mongo_data is not None:
-        return [(None, {})]
-    return []
+def discover_graylog_cluster_stats_mongodb(section: Section) -> DiscoveryResult:
+    if section.get("mongo") is not None:
+        yield Service()
 
 
-def check_graylog_cluster_stats_mongodb(
-    _no_item: None, params: Mapping[str, Any], parsed: GraylogSection
-) -> LegacyCheckResult:
-    mongo_data = parsed.get("mongo")
+def check_graylog_cluster_stats_mongodb(params: Mapping[str, Any], section: Section) -> CheckResult:
+    mongo_data = section.get("mongo")
     if mongo_data is None:
         return
 
@@ -226,14 +224,14 @@ def check_graylog_cluster_stats_mongodb(
     if db_data:
         db_name = db_data.get("db")
         if db_name:
-            yield 0, "Name: %s" % db_name.title()
+            yield Result(state=State.OK, summary=f"Name: {db_name.title()}")
 
         version = mongo_data.get("build_info", {}).get("version")
         if version:
-            yield 0, "Version: %s" % version
+            yield Result(state=State.OK, summary=f"Version: {version}")
 
         for key, infotext, metric_name, hr_func in [
-            ("indexes", "Indices", "index_count", int),
+            ("indexes", "Indices", "index_count", lambda v: f"{int(v)}"),
             (
                 "storage_size",
                 "Allocated storage",
@@ -250,31 +248,30 @@ def check_graylog_cluster_stats_mongodb(
             ("file_size", "Total data files size", "file_size", render.bytes),
             ("ns_size_mb", "Total namespace size", "namespace_size", render.bytes),
             ("avg_obj_size", "Average document size", "avg_doc_size", render.bytes),
-            ("num_extents", "Number of extents", "num_extents", int),
-            ("collections", "Number of collections", "num_collections", int),
-            ("objects", "Number of objects", "num_objects", int),
+            ("num_extents", "Number of extents", "num_extents", lambda v: f"{int(v)}"),
+            ("collections", "Number of collections", "num_collections", lambda v: f"{int(v)}"),
+            ("objects", "Number of objects", "num_objects", lambda v: f"{int(v)}"),
         ]:
             db_value = db_data.get(key)
             if db_value is None:
                 continue
 
-            levels = params.get("%s_upper" % key, (None, None))
-            levels_lower = params.get("%s_lower" % key, (None, None))
-
-            yield check_levels(
-                db_value,
-                metric_name,
-                levels + levels_lower,
-                human_readable_func=hr_func,
-                infoname=infotext,
+            yield from check_levels_v1(
+                value=db_value,
+                metric_name=metric_name,
+                levels_upper=params.get(f"{key}_upper", (None, None)),
+                levels_lower=params.get(f"{key}_lower", (None, None)),
+                render_func=hr_func,
+                label=infotext,
             )
 
 
-check_info["graylog_cluster_stats.mongodb"] = LegacyCheckDefinition(
+check_plugin_graylog_cluster_stats_mongodb = CheckPlugin(
     name="graylog_cluster_stats_mongodb",
     service_name="Graylog Cluster MongoDB Stats",
     sections=["graylog_cluster_stats"],
     discovery_function=discover_graylog_cluster_stats_mongodb,
     check_function=check_graylog_cluster_stats_mongodb,
     check_ruleset_name="graylog_cluster_stats_mongodb",
+    check_default_parameters={},
 )

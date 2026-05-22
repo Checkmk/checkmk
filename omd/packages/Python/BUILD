@@ -221,7 +221,14 @@ copy_to_directory(
         ["lib/python%s/lib-dynload/**" % PYTHON_MAJOR_DOT_MINOR] +
         ["lib/%s" % i[0] for i in lib_symlinks] +
         ["lib/pkgconfig/%s" % i[0] for i in pkgconfig_symlinks] +
-        ["share/man/man1/%s" % i[0] for i in share_symlinks],
+        ["share/man/man1/%s" % i[0] for i in share_symlinks] +
+        # CPython's bytecode writer creates `.pyc.<pid>.<counter>` tempfiles
+        # and renames them onto `.pyc`. Skip the tempfiles so a concurrent
+        # writer can't make copy_to_directory lstat a file that disappears
+        # before it's read.
+        [
+            "**/*.pyc.*",
+        ],
     include_external_repositories = ["**"],
     include_srcs_patterns = [
         "include/**",

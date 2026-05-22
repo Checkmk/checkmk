@@ -18,7 +18,7 @@ void main() {
                 name: "test-unit-all",
                 cmd: """\
 make_rc=0
-BAZEL_EXTRA_TAG_FILTERS="-cpp" buildscripts/scripts/bazel_test_ci.sh \
+BAZEL_EXTRA_TAG_FILTERS="-cpp,-requires-git" buildscripts/scripts/bazel_test_ci.sh \
     --test_verbose_timeout_warnings \
     --test_env=TZ='America/Chicago' \
     --cmk_edition=ultimate \

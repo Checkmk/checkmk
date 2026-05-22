@@ -46,8 +46,8 @@ py_test(
     # of running in Bazel.  Instead, we depend on `//.werks` and run
     # outside of the sandbox.
     tags = [
-        "manual",
         "no-sandbox",
+        "requires-git",
     ],
     deps = [
         ":__test__",

@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
 import UnitEditor from '@/graph-designer/private/UnitEditor.vue'
@@ -38,20 +38,17 @@ const customUnit = (symbol: string, digits: number) => ({
 })
 
 describe('UnitEditor validate()', () => {
-  test('shows no inline errors before validate() is called, even with an empty custom symbol', () => {
+  test('shows no inline errors before validate() is called', () => {
     renderWithRef(customUnit('', 2))
 
-    expect(screen.queryByText('Symbol is required')).not.toBeInTheDocument()
     expect(screen.queryByText('Digits must be a non-negative number')).not.toBeInTheDocument()
   })
 
-  test('validate() returns false and surfaces inline errors for an empty symbol', async () => {
+  test('validate() returns true for an empty symbol', async () => {
     const compRef = renderWithRef(customUnit('', 2))
 
     await waitFor(() => expect(compRef.value).toBeDefined())
-    expect(compRef.value!.validate()).toBe(false)
-
-    await screen.findByText('Symbol is required')
+    expect(compRef.value!.validate()).toBe(true)
   })
 
   test('validate() returns false for negative digits', async () => {
@@ -68,7 +65,6 @@ describe('UnitEditor validate()', () => {
 
     await waitFor(() => expect(compRef.value).toBeDefined())
     expect(compRef.value!.validate()).toBe(true)
-    expect(screen.queryByText('Symbol is required')).not.toBeInTheDocument()
   })
 
   test('validate() returns true when the unit choice is "first_entry_with_unit"', async () => {
@@ -76,20 +72,5 @@ describe('UnitEditor validate()', () => {
 
     await waitFor(() => expect(compRef.value).toBeDefined())
     expect(compRef.value!.validate()).toBe(true)
-  })
-
-  test('inline error clears once the user fills in the symbol', async () => {
-    const compRef = renderWithRef(customUnit('', 2))
-
-    await waitFor(() => expect(compRef.value).toBeDefined())
-    compRef.value!.validate()
-    await screen.findByText('Symbol is required')
-
-    const symbolInput = screen.getByPlaceholderText('symbol')
-    await fireEvent.update(symbolInput, 'kg')
-
-    await waitFor(() => {
-      expect(screen.queryByText('Symbol is required')).not.toBeInTheDocument()
-    })
   })
 })

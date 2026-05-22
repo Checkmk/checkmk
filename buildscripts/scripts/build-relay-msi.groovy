@@ -25,9 +25,12 @@ void main() {
     def match = (cmk_version =~ /(\d+\.\d+\.\d+)/);
     def msi_version = match ? match[0][1] + ".0" : "0.0.0.0";
 
+    // When FORCE_SIGN parameter is present we honour it. Otherwise we sign the MSI.
+    def should_sign = (params.FORCE_SIGN == null) || (params.FORCE_SIGN == true);
+
     dir("${checkout_dir}") {
         windows.build(
-            TARGET: 'relay_msi_no_sign',
+            TARGET: should_sign ? 'relay_msi_with_sign' : 'relay_msi_no_sign',
             VERSION: msi_version,
         );
     }

@@ -21,7 +21,11 @@ A service group object can have the following relations present in `links`:
 from collections.abc import Mapping
 from typing import Any
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc import version
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -52,10 +56,17 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_sch
 from cmk.gui.openapi.restful_objects.parameters import GROUP_NAME_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib import groups
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
 from cmk.gui.watolib.groups_io import load_service_group_information
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.utils import paths
 
 PERMISSIONS = permissions.Perm("wato.groups")
@@ -91,7 +102,12 @@ def create(params: Mapping[str, Any]) -> Response:
         "service",
         group_details,
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            active_config.sites,
+            use_git=active_config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ),
     )
     group = fetch_group(name, "service")
     return serve_group(group, serialize_group("service_group_config"))
@@ -120,7 +136,12 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
             "service",
             group_details,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                active_config.sites,
+                use_git=active_config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
         service_group_names.append(group_name)
 
@@ -178,7 +199,12 @@ def delete(params: Mapping[str, Any]) -> Response:
             name,
             group_type="service",
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                active_config.sites,
+                use_git=active_config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
     except GroupInUseException as exc:
         raise ProblemException(
@@ -216,7 +242,12 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
                 group_name,
                 group_type="service",
                 pprint_value=active_config.wato_pprint_config,
-                use_git=active_config.wato_use_git,
+                pending_changes=_pending_changes(
+                    active_config.sites,
+                    use_git=active_config.wato_use_git,
+                    local_site=omd_site(),
+                    user_id=user.id,
+                ),
             )
         except GroupInUseException as exc:
             raise ProblemException(
@@ -256,7 +287,12 @@ def update(params: Mapping[str, Any]) -> Response:
         "service",
         updated_group_details(name, "service", params["body"]),
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            active_config.sites,
+            use_git=active_config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ),
     )
     group = fetch_group(name, "service")
     return serve_group(group, serialize_group("service_group_config"))
@@ -285,7 +321,12 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
         "service",
         entries,
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            active_config.sites,
+            use_git=active_config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ),
     )
     return serve_json(serialize_group_list("service_group_config", updated_service_groups))
 
@@ -299,3 +340,22 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(bulk_delete)
     endpoint_registry.register(update)
     endpoint_registry.register(bulk_update)
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            index_update_change_hook,
+        ),
+    )

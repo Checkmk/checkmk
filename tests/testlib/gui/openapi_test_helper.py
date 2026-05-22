@@ -10,15 +10,19 @@ from collections.abc import Iterator
 
 import pytest
 
+from livestatus import SiteConfigurations
+
 import cmk.gui.mkeventd.wato as mkeventd
 from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.gui.script_helpers import session_wsgi_app
 from cmk.gui.session_context import SuperUserContext
 from cmk.gui.watolib import groups
 from cmk.gui.watolib.groups import HostAttributeContactGroups
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.wsgi.blueprints import checkmk, rest_api
 from tests.testlib.rest_api_client import RestApiClient
 
@@ -32,14 +36,33 @@ def create_api_client(
 
 
 def create_test_groups(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    groups.add_group("windows", "host", {"alias": "windows"}, pprint_value=False, use_git=False)
-    groups.add_group("routers", "service", {"alias": "routers"}, pprint_value=False, use_git=False)
-    groups.add_group("admins", "contact", {"alias": "admins"}, pprint_value=False, use_git=False)
+    pending_changes = _pending_changes()
+    groups.add_group(
+        "windows",
+        "host",
+        {"alias": "windows"},
+        pprint_value=False,
+        pending_changes=pending_changes,
+    )
+    groups.add_group(
+        "routers",
+        "service",
+        {"alias": "routers"},
+        pprint_value=False,
+        pending_changes=pending_changes,
+    )
+    groups.add_group(
+        "admins",
+        "contact",
+        {"alias": "admins"},
+        pprint_value=False,
+        pending_changes=pending_changes,
+    )
     yield
-    groups.delete_group("windows", "host", pprint_value=False, use_git=False)
-    groups.delete_group("routers", "service", pprint_value=False, use_git=False)
+    groups.delete_group("windows", "host", pprint_value=False, pending_changes=pending_changes)
+    groups.delete_group("routers", "service", pprint_value=False, pending_changes=pending_changes)
     monkeypatch.setattr(mkeventd, "_get_rule_stats_from_ec", lambda: {})
-    groups.delete_group("admins", "contact", pprint_value=False, use_git=False)
+    groups.delete_group("admins", "contact", pprint_value=False, pending_changes=pending_changes)
 
 
 def create_sample_host_context() -> Iterator[str]:
@@ -70,3 +93,13 @@ def clear_app_instance_caches() -> None:
     session_wsgi_app.cache_clear()
     rest_api.app_instance.cache_clear()
     checkmk.app_instance.cache_clear()
+
+
+def _pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("test"),
+        acting_user=None,
+        store=PendingChangesStore(),
+        hooks=(),
+    )

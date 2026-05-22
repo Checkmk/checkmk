@@ -8,7 +8,10 @@
 import abc
 from collections.abc import Collection, Iterator, Sequence
 
+from livestatus import SiteConfigurations
+
 import cmk.utils.paths
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition_supports_nagvis
 from cmk.gui import forms, userdb
@@ -21,6 +24,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_simple_link,
@@ -32,6 +36,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
@@ -45,6 +50,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
 )
 from cmk.gui.watolib import groups
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.groups_io import (
     load_contact_group_information,
     load_host_group_information,
@@ -52,6 +58,12 @@ from cmk.gui.watolib.groups_io import (
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -160,7 +172,12 @@ class ModeGroups(WatoMode, abc.ABC):
                 delname,
                 self.type_name,
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config.sites,
+                    use_git=config.wato_use_git,
+                    local_site=omd_site(),
+                    user_id=user.id,
+                ),
             )
             self._groups = self._load_groups()
 
@@ -280,7 +297,12 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
                 self.type_name,
                 self.group,
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config.sites,
+                    use_git=config.wato_use_git,
+                    local_site=omd_site(),
+                    user_id=user.id,
+                ),
             )
         else:
             assert self._name is not None
@@ -289,7 +311,12 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
                 self.type_name,
                 self.group,
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config.sites,
+                    use_git=config.wato_use_git,
+                    local_site=omd_site(),
+                    user_id=user.id,
+                ),
             )
 
         return redirect(mode_url("%s_groups" % self.type_name))
@@ -425,10 +452,10 @@ class ModeContactgroups(ModeGroups):
     def _collect_additional_data(self) -> None:
         users = userdb.load_users()
         self._members = {}
-        for userid, user in users.items():
-            cgs = user.get("contactgroups", [])
+        for userid, user_spec in users.items():
+            cgs = user_spec.get("contactgroups", [])
             for cg in cgs:
-                self._members.setdefault(cg, []).append((userid, user.get("alias", userid)))
+                self._members.setdefault(cg, []).append((userid, user_spec.get("alias", userid)))
 
     def _show_row_cells(
         self, nr: int, table: Table, name: GroupName, group: GroupSpec, config: Config
@@ -621,3 +648,23 @@ class ModeEditContactgroup(ABCModeEditGroup):
             if f.name[0] != "." and f.name.endswith(".cfg"):
                 maps.append((f.name[:-4], f.name[:-4]))
         return sorted(maps)
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

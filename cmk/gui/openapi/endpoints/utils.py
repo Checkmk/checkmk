@@ -30,6 +30,7 @@ from cmk.gui.openapi.utils import (
 from cmk.gui.watolib.groups import edit_group
 from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.utils import paths
@@ -106,14 +107,20 @@ def update_groups(
     entries: list[dict[str, Any]],
     *,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> list[GroupSpec]:
     groups = []
     for details in entries:
         name = details["name"]
         group_details = details["attributes"]
         updated_details = updated_group_details(name, group_type, group_details)
-        edit_group(name, group_type, updated_details, pprint_value=pprint_value, use_git=use_git)
+        edit_group(
+            name,
+            group_type,
+            updated_details,
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
+        )
         groups.append(name)
 
     return fetch_specific_groups(groups, group_type)

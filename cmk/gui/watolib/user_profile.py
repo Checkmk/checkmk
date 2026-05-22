@@ -15,7 +15,7 @@ from typing import Any, cast, Literal, NamedTuple
 from livestatus import SiteConfigurations
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites, userdb
 from cmk.gui.config import Config
@@ -30,15 +30,23 @@ from cmk.gui.site_config import (
 from cmk.gui.sites import SiteStatus
 from cmk.gui.type_defs import CustomUserAttrSpec, UserSpec, VisualTypeName
 from cmk.gui.user_connection_config_types import UserConnectionConfig
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.request_context import copy_request_context
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
     remote_automation_config_from_site_config,
 )
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.config_domain_name import CORE
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.utils.automation_config import RemoteAutomationConfig
 
 # Callback for dashboard migration — injected at startup from
@@ -82,7 +90,7 @@ def _synchronize_profiles_to_sites(
     remote_sites: Sequence[tuple[SiteId, RemoteAutomationConfig]],
     *,
     wato_enabled: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
     debug: bool,
 ) -> None:
     if not profiles_to_synchronize:
@@ -134,14 +142,14 @@ def _synchronize_profiles_to_sites(
         if result.error_text:
             logger.info(f"  FAILED [{result.site_id}]: {result.error_text}")
             if wato_enabled:
-                add_change(
-                    action_name="edit-users",
-                    text=_l("Password changed (sync failed: %s)") % result.error_text,
-                    user_id=None,
-                    sites=[result.site_id],
-                    need_restart=False,
-                    domains=[ConfigDomainCore()],
-                    use_git=use_git,
+                pending_changes.add(
+                    Change(
+                        action_name="edit-users",
+                        text=_l("Password changed (sync failed: %s)") % result.error_text,
+                        force_restart=False,
+                        domains=[CORE],
+                    ),
+                    ChangeScope.sites([result.site_id]),
                 )
 
     pool.terminate()
@@ -196,6 +204,16 @@ def handle_ldap_sync_finished(
     use_git: bool,
     debug: bool,
 ) -> None:
+    pending_changes = PendingChanges(
+        activation_sites=activation_sites(site_configs),
+        local_site=omd_site(),
+        acting_user=None,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            index_update_change_hook,
+        ),
+    )
     _synchronize_profiles_to_sites(
         logger,
         profiles_to_synchronize,
@@ -204,17 +222,18 @@ def handle_ldap_sync_finished(
             for site_id in login_enabled_distributed_remote_sites(site_configs)
         ],
         wato_enabled=wato_enabled,
-        use_git=use_git,
+        pending_changes=pending_changes,
         debug=debug,
     )
 
     if changes and wato_enabled and not is_distributed_setup_remote_site(site_configs):
-        add_change(
-            action_name="edit-users",
-            text="<br>".join(changes),
-            user_id=None,
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="edit-users",
+                text="<br>".join(changes),
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites(),
         )
 
 

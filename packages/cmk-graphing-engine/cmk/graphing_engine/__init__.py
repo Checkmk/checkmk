@@ -10,6 +10,7 @@ from ._explicit import (
     ExplicitOptions,
 )
 from ._fetch import FetchRRD, RRDKey, Scalars, TimeSeries, TranslatedMetric
+from ._from_api import parse_graph_from_api
 from ._objects import (
     AutoPrecision,
     Bidirectional,
@@ -107,5 +108,6 @@ __all__ = [
     "WarningOf",
     "discover_explicit_graphs",
     "discover_template_graphs",
+    "parse_graph_from_api",
     "update_graph_data",
 ]

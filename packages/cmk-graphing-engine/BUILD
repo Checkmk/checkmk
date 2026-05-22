@@ -18,6 +18,7 @@ py_library(
         "cmk/graphing_engine/_discovery.py",
         "cmk/graphing_engine/_explicit.py",
         "cmk/graphing_engine/_fetch.py",
+        "cmk/graphing_engine/_from_api.py",
         "cmk/graphing_engine/_objects.py",
         "cmk/graphing_engine/_options.py",
         "cmk/graphing_engine/_template.py",
@@ -26,6 +27,9 @@ py_library(
     data = [":py_typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
+    deps = [
+        "//packages/cmk-plugin-apis:graphing",
+    ],
 )
 
 _ALL = [

@@ -6,17 +6,8 @@
 # Make the site python know about the Checkmk specific python module paths
 
 import os
-import site
 import sys
 from pathlib import Path
-
-# Set the Checkmk version specific python module directory. This is the
-# location for the extra python modules shipped with Checkmk.
-# NOTE: Modifying sys.path alone is not enough, site.addsitedir makes sure that
-# path configuration files (*.pth) are actually found!
-version_path = os.path.dirname(os.path.dirname(sys.executable))
-site.addsitedir(version_path + "/lib/python3")
-
 
 # Regular use case: When "omd" is being executed as root, we don't know
 # anything about the site -> Only set the version specific directory.

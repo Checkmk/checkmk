@@ -125,9 +125,9 @@ def test_linked_libraries(site: Site) -> None:
 
     exclude_entirely = [
         # These are platform specific binaries.
-        "lib/python3/cmk/plugins/oracle/agents/mk-oracle.solaris",
-        "lib/python3/cmk/plugins/oracle/agents/mk-oracle.aix",
-        "lib/python3/cmk/plugins/oracle/agents/mk-oracle.exe",
+        "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris",
+        "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.aix",
+        "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.exe",
     ]
 
     exclude_from_forbidden_links_check = [
@@ -139,7 +139,7 @@ def test_linked_libraries(site: Site) -> None:
         "lib/nagios/plugins/check_pgsql",
         # To be investigated
         "bin/heirloom-mailx",
-        "lib/python3.13/site-packages/netsnmp/client_intf.cpython-313-x86_64-linux-gnu.so",
+        "lib/python3.13/site-packages.13/site-packages/netsnmp/client_intf.cpython-313-x86_64-linux-gnu.so",
         "var/tmp/xinetd",
         # Actually fixed, but not here
         "lib/nagios/plugins/check_nrpe",

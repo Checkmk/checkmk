@@ -34,7 +34,7 @@ pkg_files(
     attributes = pkg_attributes(
         mode = "0644",
     ),
-    prefix = "lib/python3/cmk/gui/plugins/sidebar",
+    prefix = "lib/python3.13/site-packages/cmk/gui/plugins/sidebar",
     tags = ["manual"],
 )
 

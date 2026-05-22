@@ -110,7 +110,6 @@ def test_03_python_path(site: Site) -> None:
         # there may be more, but these have to occur in this order:
         site.root.as_posix() + f"/local/lib/python{python_version.major}",
         site.root.as_posix() + f"/lib/python{python_version.major}.{python_version.minor}",
-        site.root.as_posix() + f"/lib/python{python_version.major}",
     ]
     assert [s for s in sys_path if s in ordered_path_elements] == ordered_path_elements
 
@@ -210,8 +209,8 @@ def test_python_optimized_and_lto_enable(site: Site) -> None:
     [
         pytest.param(
             "cmk.base.config",
-            f"lib/python{PYVER.major}/cmk/base/config.py",
-            f"lib/python{PYVER.major}/cmk/base/__pycache__/config.cpython-{PYVER.major}{PYVER.minor}.pyc",
+            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/cmk/base/config.py",
+            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/cmk/base/__pycache__/config.cpython-{PYVER.major}{PYVER.minor}.pyc",
             id="pyc for imports from the big monolith cmk namespace",
         ),
         pytest.param(
@@ -222,8 +221,8 @@ def test_python_optimized_and_lto_enable(site: Site) -> None:
         ),
         pytest.param(
             "omdlib.main",
-            f"lib/python{PYVER.major}/omdlib/main.py",
-            f"lib/python{PYVER.major}/omdlib/__pycache__/main.cpython-{PYVER.major}{PYVER.minor}.pyc",
+            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/omdlib/main.py",
+            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/omdlib/__pycache__/main.cpython-{PYVER.major}{PYVER.minor}.pyc",
             id="pyc for imports from omdlib",
         ),
         pytest.param(

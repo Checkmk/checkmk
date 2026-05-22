@@ -3,20 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 
 import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.graylog.lib import (
     deserialize_and_merge_json,
     handle_iso_utc_to_localtimestamp,
 )
 
-check_info = {}
+Section = dict[str, Any]
 
 # <<<graylog_license>>>
 # {"status": [{"violated": true,"expired": false,"expiration_upcoming":
@@ -37,21 +45,22 @@ check_info = {}
 # false,"nodes_exceeded": false,"remote_checks_failed": true,"valid": false}]}
 
 
-def discover_graylog_license(parsed):
-    license_state = parsed.get("status")
-    if license_state is not None:
-        return [(None, {})]
-    return []
+def discover_graylog_license(section: Section) -> DiscoveryResult:
+    if section.get("status") is not None:
+        yield Service()
 
 
-def check_graylog_license(_no_item, params, parsed):
-    license_state = parsed.get("status")
+def check_graylog_license(params: Mapping[str, Any], section: Section) -> CheckResult:
+    license_state = section.get("status")
     if license_state is None:
         return
 
     # if no enterprise licence could be found
     if not license_state:
-        yield params.get("no_enterprise"), "No enterprise license found"
+        yield Result(
+            state=State(params.get("no_enterprise", 0)),
+            summary="No enterprise license found",
+        )
         return
 
     license_data = license_state[0]
@@ -67,52 +76,56 @@ def check_graylog_license(_no_item, params, parsed):
     ]:
         data = license_data.get(key)
         if data is not None:
-            state = 0
-            if str(data) != expected:
-                state = params.get(key, 2)
-
-            yield state, f"{infotext}: {_handle_readable_output(data)}"
+            state = State.OK if str(data) == expected else State(params.get(key, 2))
+            yield Result(
+                state=state,
+                summary=f"{infotext}: {_handle_readable_output(data)}",
+            )
 
     traffic_limit = license_data.get("license", {}).get("enterprise", {}).get("traffic_limit")
     if traffic_limit is not None:
-        yield 0, "Traffic limit: %s" % render.bytes(traffic_limit)
+        yield Result(state=State.OK, summary=f"Traffic limit: {render.bytes(traffic_limit)}")
 
     expires = license_data.get("license", {}).get("expiration_date")
     if expires is not None:
         timestamp = handle_iso_utc_to_localtimestamp(expires)
         time_to_expiration = int(timestamp) - time.time()
         warn, crit = params.get("expiration", (None, None))
-        yield check_levels(
-            time_to_expiration,
-            None,
-            (None, None, warn, crit),
-            human_readable_func=render.time_offset,
-            infoname="Expires in",
+        yield from check_levels_v1(
+            value=time_to_expiration,
+            levels_lower=(warn, crit),
+            render_func=render.time_offset,
+            label="Expires in",
         )
 
-    for key in [
-        ("subject"),
-        ("trial"),
-    ]:
+    for key in ("subject", "trial"):
         value = license_data.get("license", {}).get(key)
         if value is not None:
-            yield (
-                0,
-                "{}: {}".format(" ".join(key.split("_")).title(), _handle_readable_output(value)),
+            yield Result(
+                state=State.OK,
+                summary=f"{' '.join(key.split('_')).title()}: {_handle_readable_output(value)}",
             )
 
     remote_check = license_data.get("license", {}).get("enterprise", {}).get("require_remote_check")
     if remote_check is not None:
-        yield 0, "Requires remote checks: %s" % _handle_readable_output(remote_check)
+        yield Result(
+            state=State.OK,
+            summary=f"Requires remote checks: {_handle_readable_output(remote_check)}",
+        )
 
 
-def _handle_readable_output(value):
+def _handle_readable_output(value: object) -> str:
     return str(value).replace("False", "no").replace("True", "yes")
 
 
-check_info["graylog_license"] = LegacyCheckDefinition(
+agent_section_graylog_license = AgentSection(
     name="graylog_license",
     parse_function=deserialize_and_merge_json,
+)
+
+
+check_plugin_graylog_license = CheckPlugin(
+    name="graylog_license",
     service_name="Graylog License",
     discovery_function=discover_graylog_license,
     check_function=check_graylog_license,

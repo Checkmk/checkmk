@@ -1,0 +1,14 @@
+diff --git a/mypy/private/mypy.bzl b/mypy/private/mypy.bzl
+--- a/mypy/private/mypy.bzl
++++ b/mypy/private/mypy.bzl
+@@ -269,8 +269,8 @@
+             ),
+             # pass the dict[Label, Label] in parts because Bazel doesn't have
+             # this kind of attr to pass naturally
+-            "_types_keys": attr.label_list(default = types.keys()),
+-            "_types_values": attr.label_list(default = types.values()),
++            "_types_keys": attr.label_list(default = types.keys(), cfg = "exec"),
++            "_types_values": attr.label_list(default = types.values(), cfg = "exec"),
+             "_suppression_tags": attr.string_list(default = suppression_tags or ["no-mypy"]),
+             "_opt_in_tags": attr.string_list(default = opt_in_tags or []),
+             "cache": attr.bool(default = cache),

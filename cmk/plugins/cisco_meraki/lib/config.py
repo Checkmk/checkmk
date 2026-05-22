@@ -10,7 +10,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Self
 
-from meraki import DashboardAPI  # type: ignore[import-not-found]
+from meraki import DashboardAPI
 
 from cmk.server_side_programs.v1_unstable import Storage
 

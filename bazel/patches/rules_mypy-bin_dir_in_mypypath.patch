@@ -1,0 +1,8 @@
+diff --git a/mypy/private/mypy.bzl b/mypy/private/mypy.bzl
+--- a/mypy/private/mypy.bzl
++++ b/mypy/private/mypy.bzl
+@@ -138,3 +138,4 @@
+         # file roots?
+
++    generated_dirs[ctx.bin_dir.path] = 1
+     generated_imports_dirs = []

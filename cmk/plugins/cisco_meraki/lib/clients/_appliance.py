@@ -5,7 +5,7 @@
 from collections.abc import Sequence
 from typing import Protocol
 
-from meraki.exceptions import APIError  # type: ignore[import-not-found]
+from meraki.exceptions import APIError
 
 from cmk.plugins.cisco_meraki.lib import log, schema
 from cmk.plugins.cisco_meraki.lib.constants import DEFAULT_TIMESPAN

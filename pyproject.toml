@@ -220,6 +220,13 @@ enable_error_code = [
 module = ["cmc_proto.*"]
 disallow_untyped_calls = false
 
+# meraki has no type annotations; with explicit_package_bases=true and mypy 1.19+, following it
+# silently triggers "Source file found twice under different module names". Skip it entirely —
+# all meraki types remain Any either way since the package ships no py.typed or stubs.
+[[tool.mypy.overrides]]
+module = ["meraki", "meraki.*"]
+follow_imports = "skip"
+
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true

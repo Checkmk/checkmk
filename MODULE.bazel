@@ -10,7 +10,7 @@ bazel_dep(name = "asio", version = "1.34.2.cmk.1")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.0")
 bazel_dep(name = "aspect_rules_js", version = "2.3.7")
 bazel_dep(name = "aspect_rules_lint", version = "2.0.0")
-bazel_dep(name = "aspect_rules_py", version = "1.5.2")
+bazel_dep(name = "aspect_rules_py", version = "1.11.5")
 bazel_dep(name = "aspect_rules_ts", version = "3.6.0")
 bazel_dep(name = "aspect_rules_webpack", version = "0.17.0")
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
@@ -37,17 +37,17 @@ bazel_dep(name = "rules_go", version = "0.58.3")
 bazel_dep(name = "rules_gzip", version = "1.0.0")
 bazel_dep(name = "rules_multirun", version = "0.12.0")
 bazel_dep(name = "rules_multitool", version = "1.9.0")
-bazel_dep(name = "rules_mypy", version = "0.37.0")
+bazel_dep(name = "rules_mypy", version = "0.41.0")
 bazel_dep(name = "rules_nodejs", version = "6.5.2")
 bazel_dep(name = "rules_oci", version = "2.2.6")
 bazel_dep(name = "rules_distroless", version = "0.6.2")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
 bazel_dep(name = "rules_proto", version = "7.1.0")
 bazel_dep(name = "rules_proto_grpc", version = "5.3.1")
-bazel_dep(name = "rules_python", version = "1.6.0")
+bazel_dep(name = "rules_python", version = "2.0.1")
 bazel_dep(name = "rules_rust", version = "0.68.1")
 bazel_dep(name = "rules_shell", version = "0.8.0")
-bazel_dep(name = "rules_uv", version = "0.71.0")
+bazel_dep(name = "rules_uv", version = "0.89.2")
 bazel_dep(name = "shunit2", version = "2.1.9pre.cmk.1")
 bazel_dep(name = "tar.bzl", version = "0.6.0")
 bazel_dep(name = "toolchains_musl", version = "0.1.20")
@@ -123,6 +123,8 @@ git_override(
         "bazel/patches/rules_mypy.patch",
         "bazel/patches/rules_mypy-show_column_numbers.patch",
         "bazel/patches/rules_mypy-pyhardlink-cache-merge.patch",
+        "bazel/patches/rules_mypy-exec_cfg_types.patch",
+        "bazel/patches/rules_mypy-bin_dir_in_mypypath.patch",
     ],
     remote = "https://github.com/bazel-contrib/rules_mypy.git",
 )

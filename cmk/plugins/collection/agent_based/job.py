@@ -51,6 +51,12 @@ _METRIC_TRANSLATION: Final = {
     "real": "real_time",
     "user": "user_time",
     "sys": "system_time",
+    # On AIX, /usr/bin/time localises its labels through LC_MESSAGES (catgets),
+    # so non-POSIX locales can emit "Real"/"User"/"System". The legacy IBM
+    # en_US.ISO8859-1 catalog is the known case where this happens.
+    "Real": "real_time",
+    "User": "user_time",
+    "System": "system_time",
 }
 
 Metrics = dict[str, float]

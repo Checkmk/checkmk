@@ -27,6 +27,7 @@ from typing import Literal
 from cmk.base import config as base_config
 from cmk.base.app import make_app
 from cmk.ccc import debug, tty
+from cmk.ccc.site import omd_site
 from cmk.ccc.version import Edition
 from cmk.ccc.version import edition as cmk_edition
 from cmk.gui import main_modules
@@ -36,9 +37,18 @@ from cmk.gui.log import logger as gui_logger
 from cmk.gui.script_helpers import gui_context
 from cmk.gui.session_context import SuperUserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site
+from cmk.gui.user_sites import activation_sites
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
-from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.changes import ActivateChangesWriter
+from cmk.gui.watolib.config_domain_name import CORE
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 from cmk.utils import log, paths
@@ -287,13 +297,20 @@ def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
 
         if not has_errors and not is_distributed_setup_remote_site(active_config.sites):
             # Force synchronization of the config after a successful configuration update
-            add_change(
-                action_name="cmk-update-config",
-                text="Successfully updated Checkmk configuration",
-                user_id=None,
-                need_sync=True,
-                domains=[ConfigDomainCore()],
-                use_git=False,
+            PendingChanges(
+                activation_sites=activation_sites(active_config.sites),
+                local_site=omd_site(),
+                acting_user=None,
+                store=PendingChangesStore(),
+                hooks=(make_audit_log_change_hook(use_git=False), index_update_change_hook),
+            ).add(
+                Change(
+                    action_name="cmk-update-config",
+                    text="Successfully updated Checkmk configuration",
+                    force_sync=True,
+                    domains=[CORE],
+                ),
+                ChangeScope.all_activation_sites(),
             )
 
     if has_errors:

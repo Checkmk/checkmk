@@ -7,16 +7,23 @@ from logging import Logger
 
 from cmk import messaging
 from cmk.ccc.i18n import _
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.watolib.activate_changes import get_all_replicated_sites
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.broker_certificates import (
     clean_remote_sites_certs,
 )
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.config_domain_name import GUI
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.post_rename_site.internal import (
     Name,
     RenameAction,
@@ -40,14 +47,20 @@ def update_broker_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logge
     clean_remote_sites_certs(kept_sites=[])
 
     logger.debug("Add changes for the connected sites")
-    add_change(
-        action_name="edit-sites",
-        text=_("Renamed site %s") % old_site_id,
-        user_id=user.id,
-        domains=[ConfigDomainGUI()],
-        sites=list(get_all_replicated_sites(activation_sites(active_config.sites))),
-        need_restart=True,
-        use_git=False,
+    PendingChanges(
+        activation_sites=activation_sites(active_config.sites),
+        local_site=omd_site(),
+        acting_user=user.id,
+        store=PendingChangesStore(),
+        hooks=(make_audit_log_change_hook(use_git=False), index_update_change_hook),
+    ).add(
+        Change(
+            action_name="edit-sites",
+            text=_("Renamed site %s") % old_site_id,
+            force_restart=True,
+            domains=[GUI],
+        ),
+        ChangeScope.sites(get_all_replicated_sites(activation_sites(active_config.sites))),
     )
 
 

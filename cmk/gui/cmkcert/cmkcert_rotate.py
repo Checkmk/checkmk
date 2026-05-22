@@ -28,6 +28,7 @@ import cmk.gui.site_config
 from cmk.ccc.site import omd_site, SiteId
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.gui.config import load_config
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.wato._check_mk_configuration import ConfigVariableTrustedCertificateAuthorities
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
@@ -44,7 +45,6 @@ from cmk.gui.watolib.pending_changes import (
     PendingChanges,
     PendingChangesStore,
 )
-from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.certs import (
     cert_dir,
@@ -183,18 +183,16 @@ def start_rotate_site_ca_certificate(
             new_ca_settings["trusted_certificate_authorities"],
         )
 
-        pending_changes = PendingChanges(
-            activation_sites=config.sites,
+        PendingChanges(
+            activation_sites=activation_sites(config.sites),
             local_site=omd_site(),
             acting_user=None,
             store=PendingChangesStore(),
             hooks=(
                 make_audit_log_change_hook(use_git=config.wato_use_git),
-                sidebar_reload_change_hook,
                 index_update_change_hook,
             ),
-        )
-        pending_changes.add(
+        ).add(
             Change(
                 action_name="edit-configvar",
                 text=f"Added new Site CA certificate for site {site_id} to trusted CAs store",
@@ -208,7 +206,7 @@ def start_rotate_site_ca_certificate(
                 force_restart=True,
                 force_apache_reload=True,
             ),
-            ChangeScope.sites(list(config.sites.keys())),
+            ChangeScope.sites(config.sites.keys()),
         )
 
         sys.stdout.write(

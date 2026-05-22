@@ -251,17 +251,23 @@ def test_rotate_site_ca(
 ) -> None:
     _mock_site_and_config(mocker)
 
-    with patch("cmk.gui.cmkcert.cmkcert_rotate.PendingChanges") as mock_pending_changes:
-        with patch("cmk.gui.watolib.config_domains.ConfigDomainCACertificates.save") as mock_save:
-            _run_rotate(
-                omd_root=omd_root,
-                site_id=_site_id(),
-                target_certificate="site-ca",
-                expiry=90,
-                finalize=False,
-            )
-            mock_pending_changes.return_value.add.assert_called_once()
-            mock_save.assert_called_once()
+    with (
+        patch(
+            "cmk.gui.cmkcert.cmkcert_rotate.activation_sites",
+            return_value=SiteConfigurations({}),
+        ),
+        patch("cmk.gui.cmkcert.cmkcert_rotate.PendingChanges") as mock_pending_changes,
+        patch("cmk.gui.watolib.config_domains.ConfigDomainCACertificates.save") as mock_save,
+    ):
+        _run_rotate(
+            omd_root=omd_root,
+            site_id=_site_id(),
+            target_certificate="site-ca",
+            expiry=90,
+            finalize=False,
+        )
+        mock_pending_changes.return_value.add.assert_called_once()
+        mock_save.assert_called_once()
 
     # site-ca rotation requires a second call with finalize=True to complete the rotation
     _run_rotate(

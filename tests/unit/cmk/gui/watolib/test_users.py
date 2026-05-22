@@ -24,6 +24,7 @@ from cmk.gui.session_context import _UserContext, SuperUserContext
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.watolib.paths import wato_var_dir
+from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.gui.watolib.users import (
     create_user,
@@ -303,6 +304,13 @@ def test_remove_custom_attribute_only_touches_affected_users(sites: list[SiteId]
             CUSTOM_ATTR_NAME,
             default_sites,
             get_user_attributes([]),
+            pending_changes=PendingChanges(
+                activation_sites=active_config.sites,
+                local_site=SITE1,
+                acting_user=None,
+                store=PendingChangesStore(),
+                hooks=(),
+            ),
             use_git=False,
         )
 
@@ -353,6 +361,13 @@ def test_remove_custom_attribute_only_affected_sites_require_activation(
             CUSTOM_ATTR_NAME,
             default_sites,
             get_user_attributes([]),
+            pending_changes=PendingChanges(
+                activation_sites=active_config.sites,
+                local_site=SITE1,
+                acting_user=None,
+                store=PendingChangesStore(),
+                hooks=(),
+            ),
             use_git=False,
         )
 
@@ -379,5 +394,12 @@ def test_remove_custom_attribute_requires_permissions(sites: list[SiteId]) -> No
             CUSTOM_ATTR_NAME,
             default_sites,
             get_user_attributes([]),
+            pending_changes=PendingChanges(
+                activation_sites=active_config.sites,
+                local_site=SITE1,
+                acting_user=None,
+                store=PendingChangesStore(),
+                hooks=(),
+            ),
             use_git=False,
         )

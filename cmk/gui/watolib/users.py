@@ -30,9 +30,11 @@ from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.user_scripts import (
     declare_notification_plugin_permissions,
@@ -268,6 +270,7 @@ def remove_custom_attribute_from_all_users(
     sites: _UserAssociatedSitesFn,
     user_attributes: Sequence[tuple[str, UserAttribute]],
     *,
+    pending_changes: PendingChanges,
     use_git: bool,
 ) -> None:
     # This function duplicates code from edit_user. However, it is the only place in the codebase
@@ -320,13 +323,15 @@ def remove_custom_attribute_from_all_users(
         all_users[user_id] = changed_user_attrs
 
     if modified_users_info:
-        add_change(
-            action_name="edit-users",
-            text=_l("Modified users: %s") % ", ".join(modified_users_info),
-            user_id=user.id,
-            sites=None if affected_sites == "all" else list(affected_sites),
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="edit-users",
+                text=_l("Modified users: %s") % ", ".join(modified_users_info),
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites()
+            if affected_sites == "all"
+            else ChangeScope.sites(list(affected_sites)),
         )
         userdb.save_users(
             all_users,

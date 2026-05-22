@@ -14,9 +14,12 @@ import abc
 from collections.abc import Collection, Sequence
 from typing import cast
 
-import cmk.gui.watolib.changes as _changes
+from livestatus import SiteConfigurations
+
 import cmk.utils.tags
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -42,6 +45,7 @@ from cmk.gui.type_defs import (
     PermissionName,
     StaticIcon,
 )
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -62,12 +66,21 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.wato.pages._html_elements import wato_html_head
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
+from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host, make_action_link
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.rulesets import Ruleset
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.tags import (
     ABCOperation,
     ABCTagGroupOperation,
@@ -191,27 +204,17 @@ class ModeTags(ABCTagMode):
             return redirect(makeuri(request, []))
 
         if request.has_var("_delete"):
-            return self._delete_tag_group(
-                pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
-                debug=config.debug,
-            )
+            return self._delete_tag_group(config)
 
         if request.has_var("_del_aux"):
-            return self._delete_aux_tag(
-                pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
-                debug=config.debug,
-            )
+            return self._delete_aux_tag(config)
 
         if request.var("_move"):
-            return self._move_tag_group(
-                pprint_value=config.wato_pprint_config, use_git=config.wato_use_git
-            )
+            return self._move_tag_group(config)
 
         return redirect(makeuri(request, []))
 
-    def _delete_tag_group(self, *, pprint_value: bool, use_git: bool, debug: bool) -> ActionResult:
+    def _delete_tag_group(self, config: Config) -> ActionResult:
         del_id = TagGroupID(
             request.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[1]
         )
@@ -219,9 +222,9 @@ class ModeTags(ABCTagMode):
         message = _rename_tags_after_confirmation(
             self.breadcrumb(),
             OperationRemoveTagGroup(del_id),
-            pprint_value=pprint_value,
-            debug=debug,
-            use_git=use_git,
+            pprint_value=config.wato_pprint_config,
+            debug=config.debug,
+            use_git=config.wato_use_git,
         )
         if message is False:
             return FinalizeRequest(code=200)
@@ -232,19 +235,25 @@ class ModeTags(ABCTagMode):
                 self._tag_config.validate_config()
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
-            update_tag_config(self._tag_config, pprint_value=pprint_value)
-            _changes.add_change(
-                action_name="edit-tags",
-                text=_("Removed tag group %s (%s)") % (message, del_id),
+            update_tag_config(self._tag_config, pprint_value=config.wato_pprint_config)
+            _pending_changes(
+                config.sites,
+                use_git=config.wato_use_git,
+                local_site=omd_site(),
                 user_id=user.id,
-                domains=[ConfigDomainCore()],
-                use_git=use_git,
+            ).add(
+                Change(
+                    action_name="edit-tags",
+                    text=_("Removed tag group %s (%s)") % (message, del_id),
+                    domains=[CORE],
+                ),
+                ChangeScope.all_activation_sites(),
             )
             if isinstance(message, str):
                 flash(message)
         return redirect(makeuri(request, [], delvars=["_delete"]))
 
-    def _delete_aux_tag(self, *, pprint_value: bool, use_git: bool, debug: bool) -> ActionResult:
+    def _delete_aux_tag(self, config: Config) -> ActionResult:
         del_id = TagID(
             request.get_item_input("_del_aux", dict(self._tag_config.aux_tag_list.get_choices()))[1]
         )
@@ -265,9 +274,9 @@ class ModeTags(ABCTagMode):
         message = _rename_tags_after_confirmation(
             self.breadcrumb(),
             OperationRemoveAuxTag(TagGroupID(del_id)),
-            pprint_value=pprint_value,
-            debug=debug,
-            use_git=use_git,
+            pprint_value=config.wato_pprint_config,
+            debug=config.debug,
+            use_git=config.wato_use_git,
         )
         if message is False:
             return FinalizeRequest(code=200)
@@ -278,19 +287,25 @@ class ModeTags(ABCTagMode):
                 self._tag_config.validate_config()
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
-            update_tag_config(self._tag_config, pprint_value=pprint_value)
-            _changes.add_change(
-                action_name="edit-tags",
-                text=_("Removed auxiliary tag %s (%s)") % (message, del_id),
+            update_tag_config(self._tag_config, pprint_value=config.wato_pprint_config)
+            _pending_changes(
+                config.sites,
+                use_git=config.wato_use_git,
+                local_site=omd_site(),
                 user_id=user.id,
-                domains=[ConfigDomainCore()],
-                use_git=use_git,
+            ).add(
+                Change(
+                    action_name="edit-tags",
+                    text=_("Removed auxiliary tag %s (%s)") % (message, del_id),
+                    domains=[CORE],
+                ),
+                ChangeScope.all_activation_sites(),
             )
             if isinstance(message, str):
                 flash(message)
         return redirect(makeuri(request, [], delvars=["_del_aux"]))
 
-    def _move_tag_group(self, *, pprint_value: bool, use_git: bool) -> ActionResult:
+    def _move_tag_group(self, config: Config) -> ActionResult:
         move_nr = request.get_integer_input_mandatory("_move")
         move_to = request.get_integer_input_mandatory("_index")
 
@@ -301,14 +316,20 @@ class ModeTags(ABCTagMode):
             self._tag_config.validate_config()
         except MKGeneralException as e:
             raise MKUserError(None, "%s" % e)
-        update_tag_config(self._tag_config, pprint_value=pprint_value)
+        update_tag_config(self._tag_config, pprint_value=config.wato_pprint_config)
         self._load_effective_config()
-        _changes.add_change(
-            action_name="edit-tags",
-            text=_("Changed order of tag groups"),
+        _pending_changes(
+            config.sites,
+            use_git=config.wato_use_git,
+            local_site=omd_site(),
             user_id=user.id,
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+        ).add(
+            Change(
+                action_name="edit-tags",
+                text=_("Changed order of tag groups"),
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites(),
         )
         return None
 
@@ -851,12 +872,18 @@ class ModeEditTagGroup(ABCEditTagMode):
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)
             update_tag_config(changed_hosttags_config, pprint_value=config.wato_pprint_config)
-            _changes.add_change(
-                action_name="edit-hosttags",
-                text=_("Created new host tag group '%s'") % changed_tag_group.id,
-                user_id=user.id,
-                domains=[ConfigDomainCore()],
+            _pending_changes(
+                config.sites,
                 use_git=config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ).add(
+                Change(
+                    action_name="edit-hosttags",
+                    text=_("Created new host tag group '%s'") % changed_tag_group.id,
+                    domains=[CORE],
+                ),
+                ChangeScope.all_activation_sites(),
             )
             flash(_("Created new host tag group '%s'") % changed_tag_group.title)
             return redirect(mode_url("tags"))
@@ -888,12 +915,18 @@ class ModeEditTagGroup(ABCEditTagMode):
             return FinalizeRequest(code=200)
 
         update_tag_config(changed_hosttags_config, pprint_value=config.wato_pprint_config)
-        _changes.add_change(
-            action_name="edit-hosttags",
-            text=_("Edited host tag group %s (%s)") % (message, self._id),
-            user_id=user.id,
-            domains=[ConfigDomainCore()],
+        _pending_changes(
+            config.sites,
             use_git=config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ).add(
+            Change(
+                action_name="edit-hosttags",
+                text=_("Edited host tag group %s (%s)") % (message, self._id),
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites(),
         )
         if isinstance(message, str):
             flash(message)
@@ -1190,3 +1223,23 @@ def _is_removing_tags(operation: ABCOperation) -> bool:
         return True
 
     return False
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

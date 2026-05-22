@@ -226,7 +226,7 @@ class Graph:
 
     def metric_names(self) -> Sequence[MetricName]:
         return list(
-            dict.fromkeys(
+            set(
                 name
                 for quantity in itertools.chain(
                     (m for g in self.stack_groups for m in g.members),
@@ -245,4 +245,4 @@ class Bidirectional:
     upper: Graph
 
     def metric_names(self) -> Sequence[MetricName]:
-        return list(dict.fromkeys((*self.lower.metric_names(), *self.upper.metric_names())))
+        return list(set((*self.lower.metric_names(), *self.upper.metric_names())))

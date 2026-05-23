@@ -130,39 +130,39 @@ $CACHE_MAXAGE = 600
 #
 
 function Test-Administrator {
-     return (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+    return (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
 }
 
 $is_admin = Test-Administrator
-Function debug_echo {
-     Param(
-          [Parameter(Mandatory = $True, Position = 1)]
-          [string]$error_message
-     )
-     # if debug=1 then output
-     if ($DEBUG -gt 0) {
-          $MYTIME = Get-Date -Format o
-          echo "${MYTIME} DEBUG:${error_message}"
-     }
-     # log to a %PROGRAMDATA%\temp\cmk_oracle_plugin-{%USERNAME%}{user|admin}.log if PROGRAMDATA/Temp/cmk_enable_oracle_logging exists
-     try {
-          $temp = Join-Path -Path $env:PROGRAMDATA -ChildPath "Temp"
-          if (Test-Path (Join-Path -Path $temp -ChildPath "cmk_enable_oracle_logging")) {
-               $MYTIME = Get-Date -Format o
-               if ($is_admin) {
-                    $mode = "admin"
-               }
-               else {
-                    $mode = "user"
-               }
-               $user_name = (whoami).replace("\", ",")
-               $log_file = Join-Path -Path $temp -ChildPath "cmk_oracle_plugin-{$user_name}{$mode}.log"
-               Add-Content -Path $log_file -Value "${MYTIME} [LOG] ${error_message}"
-          }
-     }
-     catch {
-          # do nothing on "surprise"
-     }
+function debug_echo {
+    param(
+        [Parameter(Mandatory = $True, Position = 1)]
+        [string]$error_message
+    )
+    # if debug=1 then output
+    if ($DEBUG -gt 0) {
+        $MYTIME = Get-Date -Format o
+        echo "${MYTIME} DEBUG:${error_message}"
+    }
+    # log to a %PROGRAMDATA%\temp\cmk_oracle_plugin-{%USERNAME%}{user|admin}.log if PROGRAMDATA/Temp/cmk_enable_oracle_logging exists
+    try {
+        $temp = Join-Path -Path $env:PROGRAMDATA -ChildPath "Temp"
+        if (Test-Path (Join-Path -Path $temp -ChildPath "cmk_enable_oracle_logging")) {
+            $MYTIME = Get-Date -Format o
+            if ($is_admin) {
+                $mode = "admin"
+            }
+            else {
+                $mode = "user"
+            }
+            $user_name = (whoami).replace("\", ",")
+            $log_file = Join-Path -Path $temp -ChildPath "cmk_oracle_plugin-{$user_name}{$mode}.log"
+            Add-Content -Path $log_file -Value "${MYTIME} [LOG] ${error_message}"
+        }
+    }
+    catch {
+        # do nothing on "surprise"
+    }
 }
 
 # filename for timestamp
@@ -170,21 +170,21 @@ $MK_CONFDIR = $env:MK_CONFDIR
 
 # To execute the script standalone in the environment of the installed agent
 if (!$MK_CONFDIR) {
-     $MK_CONFDIR = "C:\ProgramData\checkmk\agent\config"
+    $MK_CONFDIR = "C:\ProgramData\checkmk\agent\config"
 }
 
 $MK_TEMPDIR = $env:MK_TEMPDIR
 if ($is_admin) {
-     debug_echo "Admin mode"
+    debug_echo "Admin mode"
 }
 else {
-     debug_echo "User mode"
+    debug_echo "User mode"
 }
 
 
 # To execute the script standalone in the environment of the installed agent
 if (!$MK_TEMPDIR) {
-     $MK_TEMPDIR = "C:\ProgramData\checkmk\agent\tmp"
+    $MK_TEMPDIR = "C:\ProgramData\checkmk\agent\tmp"
 }
 
 debug_echo "MK_TEMPDIR = $MK_TEMPDIR"
@@ -192,28 +192,28 @@ debug_echo "MK_CONFDIR = $MK_CONFDIR"
 
 # Source the optional configuration file for this agent plugin
 $CONFIG_FILE = "${MK_CONFDIR}\mk_oracle_cfg.ps1"
-if (test-path -path "${CONFIG_FILE}" ) {
-     debug_echo "${CONFIG_FILE} found, reading"
-     . "${CONFIG_FILE}"
+if (Test-Path -Path "${CONFIG_FILE}" ) {
+    debug_echo "${CONFIG_FILE} found, reading"
+    . "${CONFIG_FILE}"
 }
 else {
-     debug_echo "${CONFIG_FILE} not found"
+    debug_echo "${CONFIG_FILE} not found"
 }
 
 # If sqlnet.ora or tnsnames.ora exist in MK_CONFDIR set it as %TNS_ADMIN%
-if ((test-path -path "${MK_CONFDIR}\sqlnet.ora") -or (test-path -path "${MK_CONFDIR}\tnsnames.ora")) {
-     $env:TNS_ADMIN = "${MK_CONFDIR}"
+if ((Test-Path -Path "${MK_CONFDIR}\sqlnet.ora") -or (Test-Path -Path "${MK_CONFDIR}\tnsnames.ora")) {
+    $env:TNS_ADMIN = "${MK_CONFDIR}"
 }
 debug_echo "value of TNS_ADMIN = $env:TNS_ADMIN"
 
 if ($ORACLE_HOME) {
-     # if the ORACLE_HOME is set in the config file then we
-     # set the environment variable %ORACLE_HOME% for the time this script is run
-     $env:ORACLE_HOME = "$ORACLE_HOME"
-     $env:PATH = "$ORACLE_HOME\bin;" + $env:PATH
+    # if the ORACLE_HOME is set in the config file then we
+    # set the environment variable %ORACLE_HOME% for the time this script is run
+    $env:ORACLE_HOME = "$ORACLE_HOME"
+    $env:PATH = "$ORACLE_HOME\bin;" + $env:PATH
 
-     debug_echo "value of ORACLE_HOME = $env:ORACLE_HOME"
-     debug_echo "value of PATH = $env:PATH"
+    debug_echo "value of ORACLE_HOME = $env:ORACLE_HOME"
+    debug_echo "value of PATH = $env:PATH"
 }
 # setting the output error language to be English
 $env:NLS_LANG = "AMERICAN_AMERICA.AL32UTF8"
@@ -244,8 +244,8 @@ set echo on
 # use this workaround to avoid the message that the "<" symbol is reserved for future use
 $LESS_THAN = '<'
 
-Function should_exclude($exclude, $section) {
-     return (($exclude -Match "ALL") -or ($exclude -Match $section))
+function should_exclude($exclude, $section) {
+    return (($exclude -match "ALL") -or ($exclude -match $section))
 }
 
 <#
@@ -256,11 +256,11 @@ Function should_exclude($exclude, $section) {
         The reason: those groups must not be included in Administrators group but certainly are safe.
 #>
 function Test-DomainSid([string]$sid) {
-     $domain_sid_pattern = "S-1-5-(.*)-51[2,9]"
-     ($sid -match $domain_sid_pattern)[0]
-     # TODO(sk): check whether domain is valid, matches[1] contains domain id
-     # it is highly unlikely that domain id will mismatch
-     # still we may check it, but in the future
+    $domain_sid_pattern = "S-1-5-(.*)-51[2,9]"
+    ($sid -match $domain_sid_pattern)[0]
+    # TODO(sk): check whether domain is valid, matches[1] contains domain id
+    # it is highly unlikely that domain id will mismatch
+    # still we may check it, but in the future
 }
 
 <#
@@ -272,16 +272,16 @@ function Test-DomainSid([string]$sid) {
         WINDOWS_SAFE_ENTRIES is generated by WATO
 #>
 function Test-SafeEntry([string]$entry) {
-     $safe_entries = $CURRENT_SAFE_ENTRIES + $WINDOWS_SAFE_ENTRIES
-     foreach ( $safe in $safe_entries ) {
-          if (-not $safe ) {
-               continue
-          }
-          if ( $entry.ToLower() -eq $safe.ToLower()) {
-               return $True
-          }
-     }
-     return $False
+    $safe_entries = $CURRENT_SAFE_ENTRIES + $WINDOWS_SAFE_ENTRIES
+    foreach ( $safe in $safe_entries ) {
+        if (-not $safe ) {
+            continue
+        }
+        if ( $entry.ToLower() -eq $safe.ToLower()) {
+            return $True
+        }
+    }
+    return $False
 }
 
 <#
@@ -292,425 +292,425 @@ function Test-SafeEntry([string]$entry) {
         then returns error with detailed description.
 #>
 function Invoke-SafetyCheck( [String]$file ) {
-     if (-not (Test-Path -path $file)) {
-          return
-     }
+    if (-not (Test-Path -Path $file)) {
+        return
+    }
 
-     # the groups are confirmed by Security team too
-     $admin_sids = @(
-          "S-1-5-18", # SYSTEM
-          "S-1-5-32-544" # Administrators
-     )
-     $forbidden_rights = @("Modify", "FullControl", "Write")
-     class Actor {
-          [string]$name
-          [string]$sid
-          [string]$rights
-     }
-     try {
-          $acl = Get-Acl $file -ErrorAction Stop
-          $access = $acl.Access
-          $admins = Get-LocalGroupMember -SID "S-1-5-32-544"
-          $actors = $access | ForEach-Object {
-               $a = [Actor]::new()
-               $object = New-Object System.Security.Principal.NTAccount -ArgumentList $_.IdentityReference
-               $a.name = $object
-               try {
-                    $a.sid = $object.Translate([System.Security.Principal.SecurityIdentifier])
-                    $a.rights = $_.FileSystemRights.ToString()
-                    $a
-               }
-               catch {
-                    # we skip silently not convertable from the name to sid objects
-                    # they are doesn't exist for the OS
-                    # code below may be executed for files that are not converted to trace problems
-                    # debug_echo "$_  $object can not be translated"
-               }
-          }
+    # the groups are confirmed by Security team too
+    $admin_sids = @(
+        "S-1-5-18", # SYSTEM
+        "S-1-5-32-544" # Administrators
+    )
+    $forbidden_rights = @("Modify", "FullControl", "Write")
+    class Actor {
+        [string]$name
+        [string]$sid
+        [string]$rights
+    }
+    try {
+        $acl = Get-Acl $file -ErrorAction Stop
+        $access = $acl.Access
+        $admins = Get-LocalGroupMember -SID "S-1-5-32-544"
+        $actors = $access | ForEach-Object {
+            $a = [Actor]::new()
+            $object = New-Object System.Security.Principal.NTAccount -ArgumentList $_.IdentityReference
+            $a.name = $object
+            try {
+                $a.sid = $object.Translate([System.Security.Principal.SecurityIdentifier])
+                $a.rights = $_.FileSystemRights.ToString()
+                $a
+            }
+            catch {
+                # we skip silently not convertable from the name to sid objects
+                # they are doesn't exist for the OS
+                # code below may be executed for files that are not converted to trace problems
+                # debug_echo "$_  $object can not be translated"
+            }
+        }
 
-          foreach ($entry in $actors ) {
-               $name = $entry.name
-               $sid = $entry.sid
-               if ( $admin_sids -contains $sid ) {
-                    # predefined admin groups are safe
-                    continue
-               }
-               if (Test-DomainSid $sid) {
-                    # 'Domain Admins' and 'Enterprise Admins' are safe too
-                    continue
-               }
-               if ( Test-SafeEntry $name ) {
-                    # Some entries may be assumed safe, see $CURRENT_SAFE_ENTRIES
-                    continue
-               }
-               if ( $admins.Name -contains "$name" ) {
-                    # members of local admin groups are safe
-                    continue
-               }
+        foreach ($entry in $actors ) {
+            $name = $entry.name
+            $sid = $entry.sid
+            if ( $admin_sids -contains $sid ) {
+                # predefined admin groups are safe
+                continue
+            }
+            if (Test-DomainSid $sid) {
+                # 'Domain Admins' and 'Enterprise Admins' are safe too
+                continue
+            }
+            if ( Test-SafeEntry $name ) {
+                # Some entries may be assumed safe, see $CURRENT_SAFE_ENTRIES
+                continue
+            }
+            if ( $admins.Name -contains "$name" ) {
+                # members of local admin groups are safe
+                continue
+            }
 
-               # check for forbidden rights
-               $rights = $entry.rights
-               $forbidden_rights |
-               Foreach-Object {
+            # check for forbidden rights
+            $rights = $entry.rights
+            $forbidden_rights |
+                ForEach-Object {
                     if ($rights -match $_) {
-                         return "$name has '$_' access permissions '$file'"
+                        return "$name has '$_' access permissions '$file'"
                     }
-               }
-          }
-     }
-     catch {
-          return "Exception '$_' during check '$file'"
-     }
+                }
+        }
+    }
+    catch {
+        return "Exception '$_' during check '$file'"
+    }
 }
 
-Function get_dbversion_database ($ORACLE_HOME) {
-     # The output of this command contains -- among others -- the version
-     $version_str = (Invoke-Expression $ORACLE_HOME'\bin\sqlplus.exe -v')
-     debug_echo "xx $version_str xx"
+function get_dbversion_database ($ORACLE_HOME) {
+    # The output of this command contains -- among others -- the version
+    $version_str = (Invoke-Expression $ORACLE_HOME'\bin\sqlplus.exe -v')
+    debug_echo "xx $version_str xx"
 
 
-     # The output string can have arbitrary content. We rely on the assumption that the first
-     # three elements have always the same syntax, e.g.: SQL*Plus: Release 12.1.0.2.0
-     # so we take the third element separated by a whitespace as the version number and remove
-     # all dots resulting in: 121020
-     (([string]$version_str).split(' '))[3] -replace '\D+', ''
+    # The output string can have arbitrary content. We rely on the assumption that the first
+    # three elements have always the same syntax, e.g.: SQL*Plus: Release 12.1.0.2.0
+    # so we take the third element separated by a whitespace as the version number and remove
+    # all dots resulting in: 121020
+    (([string]$version_str).split(' '))[3] -replace '\D+', ''
 }
 
 
 function is_async_running ($fullPath) {
-     if (-not(Test-Path -path "$ASYNC_PROC_PATH")) {
-          # no file, no running process
-          return $false
-     }
+    if (-not(Test-Path -Path "$ASYNC_PROC_PATH")) {
+        # no file, no running process
+        return $false
+    }
 
-     $proc_pid = (Get-Content ${ASYNC_PROC_PATH})
+    $proc_pid = (Get-Content ${ASYNC_PROC_PATH})
 
-     # Check if the process with `$proc_pid` is still running AND if its commandline contains `$fullPath`.
-     # Our async process always contains `$fullPath` in their own command line.
-     $command_line = (Get-CimInstance -Query "SELECT CommandLine FROM Win32_Process WHERE ProcessID = $proc_pid").CommandLine
+    # Check if the process with `$proc_pid` is still running AND if its commandline contains `$fullPath`.
+    # Our async process always contains `$fullPath` in their own command line.
+    $command_line = (Get-CimInstance -Query "SELECT CommandLine FROM Win32_Process WHERE ProcessID = $proc_pid").CommandLine
 
-     if ($command_line -like "*$fullPath*") {
-          return $true
-     }
+    if ($command_line -like "*$fullPath*") {
+        return $true
+    }
 
-     # The process to the PID cannot be found, so remove also the proc file
-     rm $ASYNC_PROC_PATH
-     return $false
+    # The process to the PID cannot be found, so remove also the proc file
+    rm $ASYNC_PROC_PATH
+    return $false
 }
 
 ################################################################################
 # Run any SQL against the Oracle database
 ################################################################################
-Function sqlcall {
-     Param(
-          [Parameter(Mandatory = $True, Position = 1)]
-          [string]$sql_message,
+function sqlcall {
+    param(
+        [Parameter(Mandatory = $True, Position = 1)]
+        [string]$sql_message,
 
-          [Parameter(Mandatory = $True, Position = 2)]
-          [string]$sqltext,
+        [Parameter(Mandatory = $True, Position = 2)]
+        [string]$sqltext,
 
-          [Parameter(Mandatory = $True, Position = 3)]
-          [int]$run_async,
+        [Parameter(Mandatory = $True, Position = 3)]
+        [int]$run_async,
 
-          [Parameter(Mandatory = $True, Position = 4)]
-          [string]$sqlsid
-     )
-     ################################################################################
-     # Meaning of parameters in function sqlcall
-     ################################################################################
-     # 1. sql_message - section banner *without* chevrons <<<>>> (only text)
-     #    The sql_message is also used as the job name if run asynchronously
-     #    The sql_message is also used as a temporary filename
-     # 2. sqltext - The text of the SQL statement
-     # 3. run_async, set to 1 if this SQL should run asynchronously. If the SQL takes a long time to run
-     #    we do not want to wait for the output of the SQL, but simply use the last output if it is fresh enough.
-     # 4. the oracle sid
+        [Parameter(Mandatory = $True, Position = 4)]
+        [string]$sqlsid
+    )
+    ################################################################################
+    # Meaning of parameters in function sqlcall
+    ################################################################################
+    # 1. sql_message - section banner *without* chevrons <<<>>> (only text)
+    #    The sql_message is also used as the job name if run asynchronously
+    #    The sql_message is also used as a temporary filename
+    # 2. sqltext - The text of the SQL statement
+    # 3. run_async, set to 1 if this SQL should run asynchronously. If the SQL takes a long time to run
+    #    we do not want to wait for the output of the SQL, but simply use the last output if it is fresh enough.
+    # 4. the oracle sid
 
 
 
-     # Here we set our connection string to the database instance.
-     # This code could be expanded in future to support the oracle wallet.
+    # Here we set our connection string to the database instance.
+    # This code could be expanded in future to support the oracle wallet.
 
-     # we no longer assume we can login using "/ as sysdba", as we want to check if the listener is running
-     $SQL_CONNECT = "user_connection_not_set"
-     $SKIP_DOUBLE_ERROR = 0
-     $ASM_FIRST_CHAR = "+"
-     $CHECK_FIRST_CHAR = $sqlsid.substring(0, 1)
-     $UPPER_SID = $sqlsid.toupper()
-     if ( $CHECK_FIRST_CHAR.compareTo($ASM_FIRST_CHAR) -eq 0 ) {
-          if ($ASMUSER) {
-               # The ASMUSER variable is set in the config file , so we will use that for the connection
-               $counter = 0
-               # set default values for the connection variables
-               $the_user = ""
-               $the_password = ""
-               $the_sysdba = ""
-               $the_host = "localhost"
-               $the_port = "1521"
+    # we no longer assume we can login using "/ as sysdba", as we want to check if the listener is running
+    $SQL_CONNECT = "user_connection_not_set"
+    $SKIP_DOUBLE_ERROR = 0
+    $ASM_FIRST_CHAR = "+"
+    $CHECK_FIRST_CHAR = $sqlsid.substring(0, 1)
+    $UPPER_SID = $sqlsid.toupper()
+    if ( $CHECK_FIRST_CHAR.compareTo($ASM_FIRST_CHAR) -eq 0 ) {
+        if ($ASMUSER) {
+            # The ASMUSER variable is set in the config file , so we will use that for the connection
+            $counter = 0
+            # set default values for the connection variables
+            $the_user = ""
+            $the_password = ""
+            $the_sysdba = ""
+            $the_host = "localhost"
+            $the_port = "1521"
 
-               # cycle through the $ASMUSER variable, to get our connection data
-               foreach ($the_dbuser in $ASMUSER) {
-                    $counter = $counter + 1
-                    switch ($counter) {
-                         1 { $the_user = $the_dbuser }
-                         2 { $the_password = $the_dbuser }
-                         3 { $the_sysdba = $the_dbuser }
-                         4 { $the_host = $the_dbuser }
-                         5 { $the_port = $the_dbuser }
-                         default { "Error handling Oracle database connection with config for ASMUSER." }
+            # cycle through the $ASMUSER variable, to get our connection data
+            foreach ($the_dbuser in $ASMUSER) {
+                $counter = $counter + 1
+                switch ($counter) {
+                    1 { $the_user = $the_dbuser }
+                    2 { $the_password = $the_dbuser }
+                    3 { $the_sysdba = $the_dbuser }
+                    4 { $the_host = $the_dbuser }
+                    5 { $the_port = $the_dbuser }
+                    default { "Error handling Oracle database connection with config for ASMUSER." }
+                }
+            }
+            if ($the_sysdba ) {
+                $assysdbaconnect = " as $the_sysdba"
+            }
+            else {
+                $assysdbaconnect = ""
+            }
+            #$TNSALIAS="$the_host`:$the_port/$sqlsid"
+            $TNSALIAS = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$the_host)(PORT=$the_port))(CONNECT_DATA=(SERVICE_NAME=+ASM)(INSTANCE_NAME=$UPPER_SID)(UR=A)))"
+            # we presume we can use an EZconnect
+            $SQL_CONNECT = "$the_user/$the_password@$TNSALIAS$assysdbaconnect"
+            debug_echo "value of sql_connect in ASMUSER = $SQL_CONNECT"
+        }
+        else {
+            debug_echo "ASMUSER is not defined"
+        }
+
+        # if $asmuser_$sqlsid is not used, then we will get an error here
+        # Powershell cannot really use dynamic variables, as a workaround we silently continue
+        # for this section of code
+        $ErrorActionPreference = "SilentlyContinue"
+
+        if ((Get-Variable "asmuser_$sqlsid").value -ne $null) {
+            # The ASMUSER_SID variable is set in the config file, so we will use that for the connection
+            $counter = 0
+            # set default values for the connection variables
+            $the_user = ""
+            $the_password = ""
+            $the_sysdba = ""
+            $the_host = "localhost"
+            $the_port = "1521"
+
+            # cycle through the "$ASMUSER$inst_name" variable, to get our connection data
+            foreach ($the_dbuser in (Get-Variable "asmuser_$sqlsid").value) {
+                $counter = $counter + 1
+                switch ($counter) {
+                    1 { $the_user = $the_dbuser }
+                    2 { $the_password = $the_dbuser }
+                    3 { $the_sysdba = $the_dbuser }
+                    4 { $the_host = $the_dbuser }
+                    5 { $the_port = $the_dbuser }
+                    default { "Error handling Oracle database connection with config for ASMUSER_SID." }
+                }
+            }
+            if ($the_sysdba ) {
+                $assysdbaconnect = " as $the_sysdba"
+            }
+            else {
+                $assysdbaconnect = ""
+            }
+            # $TNSALIAS="$the_host`:$the_port/$the_service"
+            $TNSALIAS = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$the_host)(PORT=$the_port))(CONNECT_DATA=(SID=$UPPER_SID)))"
+            # we presume we can use an EZconnect
+            $SQL_CONNECT = "$the_user/$the_password@$TNSALIAS$assysdbaconnect"
+            debug_echo "value of sql_connect in asmuser_sid = $SQL_CONNECT"
+        }
+        # now we set our action on error back to our normal value
+        $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
+    }
+    else {
+        if ($DBUSER) {
+            # The DBUSER variable is set in the config file , so we will use that for the connection
+            $counter = 0
+            # set default values for the connection variables
+            $the_user = ""
+            $the_password = ""
+            $the_sysdba = ""
+            $the_host = "localhost"
+            $the_port = "1521"
+
+            # cycle through the $DBUSER variable, to get our connection data
+            foreach ($the_dbuser in $DBUSER) {
+                $counter = $counter + 1
+                switch ($counter) {
+                    1 { $the_user = $the_dbuser }
+                    2 { $the_password = $the_dbuser }
+                    3 { $the_sysdba = $the_dbuser }
+                    4 { $the_host = $the_dbuser }
+                    5 { $the_port = $the_dbuser }
+                    default { "Error handling Oracle database connection with config for DBUSER." }
+                }
+            }
+            if ($the_sysdba ) {
+                $assysdbaconnect = " as $the_sysdba"
+            }
+            else {
+                $assysdbaconnect = ""
+            }
+            $UPPER_SID = $sqlsid.toupper()
+
+            # use oracle wallet if requested in cfg file
+            if ($the_user -like "/" ) {
+                $SQL_CONNECT = "/@$UPPER_SID$assysdbaconnect"
+            }
+            else {
+                $TNSALIAS = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$the_host)(PORT=$the_port))(CONNECT_DATA=(SID=$UPPER_SID)))"
+                # we presume we can use an EZconnect
+                $SQL_CONNECT = "$the_user/$the_password@$TNSALIAS$assysdbaconnect"
+            }
+            debug_echo "value of sql_connect in dbuser = $SQL_CONNECT"
+        }
+        else {
+            debug_echo "DBUSER is not defined"
+        }
+
+        # if $dbuser_$sqlsid is not used, then we will get an error here
+        # Powershell cannot really use dynamic variables, as a workaround we silently continue
+        # for this section of code
+        $ErrorActionPreference = "SilentlyContinue"
+
+        if ((Get-Variable "dbuser_$sqlsid").value -ne $null) {
+            # The DBUSER_SID variable is set in the config file, so we will use that for the connection
+            $counter = 0
+            # set default values for the connection variables
+            $the_user = ""
+            $the_password = ""
+            $the_sysdba = ""
+            $the_host = "localhost"
+            $the_port = "1521"
+
+            # cycle through the "$DBUSER$inst_name" variable, to get our connection data
+            foreach ($the_dbuser in (Get-Variable "dbuser_$sqlsid").value) {
+                $counter = $counter + 1
+                switch ($counter) {
+                    1 { $the_user = $the_dbuser }
+                    2 { $the_password = $the_dbuser }
+                    3 { $the_sysdba = $the_dbuser }
+                    4 { $the_host = $the_dbuser }
+                    5 { $the_port = $the_dbuser }
+                    default { "Error handling Oracle database connection with config for DBUSER_SID." }
+                }
+            }
+            if ($the_sysdba ) {
+                $assysdbaconnect = " as $the_sysdba"
+            }
+            else {
+                $assysdbaconnect = ""
+            }
+            # $TNSALIAS="$the_host`:$the_port/$the_service"
+            $TNSALIAS = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$the_host)(PORT=$the_port))(CONNECT_DATA=(SID=$UPPER_SID)))"
+            # we presume we can use an EZconnect
+            $SQL_CONNECT = "$the_user/$the_password@$TNSALIAS$assysdbaconnect"
+            debug_echo "value of sql_connect in dbuser_sid = $SQL_CONNECT"
+        }
+        # now we set our action on error back to our normal value
+        $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
+    }
+
+
+
+
+    # set the environment variable %ORACLE_SID% for the time this script is run
+    $env:ORACLE_SID = "$sqlsid"
+    # add the standard SQL (linesize, on error quit, etc.) to this SQL
+    $THE_SQL = $SQL_START + $sqltext
+
+    # The temporary file to store the output of the SQL
+    # currently default path is used here. change this @TBR?
+    $fullpath = $MK_TEMPDIR + "\" + "$sql_message.$sqlsid.txt"
+
+    if ($run_async -eq 0) {
+        $SKIP_DOUBLE_ERROR = 0
+        try {
+            $res = ( $THE_SQL | sqlplus -L -s "$SQL_CONNECT")
+            if ($LastExitCode -eq 0) {
+                # we only show the output if there was no error...
+                $res | Set-Content $fullpath
+                cat $fullpath
+            }
+            else {
+                $SKIP_DOUBLE_ERROR = 1
+                # an error occurred
+                # add the SID and "FAILURE" to the output
+                $res = "$sqlsid|FAILURE|" + $res | Select-String -Pattern "ERROR"
+                # write the output to the file
+                $res = "<<<oracle_instance:sep(124)>>>" + "`n" + $res
+                $res | Set-Content $fullpath
+                # show the contents of the file
+                cat $fullpath
+            }
+        }
+
+        catch {
+            if ($SKIP_DOUBLE_ERROR -eq 0) {
+                $SKIP_DOUBLE_ERROR = 1
+                # an error occurred
+                # add the SID and "FAILURE" to the output
+                $res = "$sqlsid|FAILURE|" + $res | Select-String -Pattern "ERROR"
+                # write the output to the file
+                $res = "<<<oracle_instance:sep(124)>>>" + "`n" + $res
+                $res | Set-Content $fullpath
+                # show the contents of the file
+                cat $fullpath
+            }
+
+        }
+
+    }
+    else {
+        [bool]$need_async_process = $false
+        # We first check if the file exists, otherwise we cannot show the old SQL output
+        if (Test-Path -Path "$fullPath") {
+            cat $fullpath
+            # the file exists, so now we can check how old it is
+            debug_echo "file found $run_async"
+            $lastWrite = (Get-Item $fullPath).LastWriteTime
+            # How old may the SQL Output files be, before new ones are generated?
+            $timespan = New-TimeSpan -Days 0 -Hours 0 -Minutes ($CACHE_MAXAGE / 60)
+            if (((Get-Date) - $lastWrite) -gt $timespan) {
+                # the file is too old - so start a new process
+                $need_async_process = $true
+            }
+        }
+        else {
+            # file not found, so we need to run it
+            $need_async_process = $true
+        }
+
+        if ($need_async_process) {
+            #####################################################
+            # now we ensure that the async SQL Calls have up-to-date SQL outputs, running this job asynchronously...
+            #####################################################
+            debug_echo "about to call bg task $sql_message"
+            if (-not(is_async_running($fullPath))) {
+
+                $command = {
+                    param([string]$sql_connect, [string]$sql, [string]$path, [string]$sql_sid)
+                    $res = ("$sql" | sqlplus -s -L $sql_connect)
+                    if ($LastExitCode -eq 0) {
+                        $res | Set-Content $path
                     }
-               }
-               if ($the_sysdba ) {
-                    $assysdbaconnect = " as $the_sysdba"
-               }
-               else {
-                    $assysdbaconnect = ""
-               }
-               #$TNSALIAS="$the_host`:$the_port/$sqlsid"
-               $TNSALIAS = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$the_host)(PORT=$the_port))(CONNECT_DATA=(SERVICE_NAME=+ASM)(INSTANCE_NAME=$UPPER_SID)(UR=A)))"
-               # we presume we can use an EZconnect
-               $SQL_CONNECT = "$the_user/$the_password@$TNSALIAS$assysdbaconnect"
-               debug_echo "value of sql_connect in ASMUSER = $SQL_CONNECT"
-          }
-          else {
-               debug_echo "ASMUSER is not defined"
-          }
-
-          # if $asmuser_$sqlsid is not used, then we will get an error here
-          # Powershell cannot really use dynamic variables, as a workaround we silently continue
-          # for this section of code
-          $ErrorActionPreference = "SilentlyContinue"
-
-          if ((get-variable "asmuser_$sqlsid").value -ne $null) {
-               # The ASMUSER_SID variable is set in the config file, so we will use that for the connection
-               $counter = 0
-               # set default values for the connection variables
-               $the_user = ""
-               $the_password = ""
-               $the_sysdba = ""
-               $the_host = "localhost"
-               $the_port = "1521"
-
-               # cycle through the "$ASMUSER$inst_name" variable, to get our connection data
-               foreach ($the_dbuser in (get-variable "asmuser_$sqlsid").value) {
-                    $counter = $counter + 1
-                    switch ($counter) {
-                         1 { $the_user = $the_dbuser }
-                         2 { $the_password = $the_dbuser }
-                         3 { $the_sysdba = $the_dbuser }
-                         4 { $the_host = $the_dbuser }
-                         5 { $the_port = $the_dbuser }
-                         default { "Error handling Oracle database connection with config for ASMUSER_SID." }
+                    else {
+                        $stripped_res = '$sql_sid|FAILURE|' + $res | Select-String -Pattern 'ERROR'
+                        '<<<oracle_instance:sep(124)>>>' | Set-Content $path
+                        $stripped_res | Add-Content $path
                     }
-               }
-               if ($the_sysdba ) {
-                    $assysdbaconnect = " as $the_sysdba"
-               }
-               else {
-                    $assysdbaconnect = ""
-               }
-               # $TNSALIAS="$the_host`:$the_port/$the_service"
-               $TNSALIAS = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$the_host)(PORT=$the_port))(CONNECT_DATA=(SID=$UPPER_SID)))"
-               # we presume we can use an EZconnect
-               $SQL_CONNECT = "$the_user/$the_password@$TNSALIAS$assysdbaconnect"
-               debug_echo "value of sql_connect in asmuser_sid = $SQL_CONNECT"
-          }
-          # now we set our action on error back to our normal value
-          $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
-     }
-     else {
-          if ($DBUSER) {
-               # The DBUSER variable is set in the config file , so we will use that for the connection
-               $counter = 0
-               # set default values for the connection variables
-               $the_user = ""
-               $the_password = ""
-               $the_sysdba = ""
-               $the_host = "localhost"
-               $the_port = "1521"
+                }
 
-               # cycle through the $DBUSER variable, to get our connection data
-               foreach ($the_dbuser in $DBUSER) {
-                    $counter = $counter + 1
-                    switch ($counter) {
-                         1 { $the_user = $the_dbuser }
-                         2 { $the_password = $the_dbuser }
-                         3 { $the_sysdba = $the_dbuser }
-                         4 { $the_host = $the_dbuser }
-                         5 { $the_port = $the_dbuser }
-                         default { "Error handling Oracle database connection with config for DBUSER." }
-                    }
-               }
-               if ($the_sysdba ) {
-                    $assysdbaconnect = " as $the_sysdba"
-               }
-               else {
-                    $assysdbaconnect = ""
-               }
-               $UPPER_SID = $sqlsid.toupper()
-
-               # use oracle wallet if requested in cfg file
-               if ($the_user -like "/" ) {
-                    $SQL_CONNECT = "/@$UPPER_SID$assysdbaconnect"
-               }
-               else {
-                    $TNSALIAS = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$the_host)(PORT=$the_port))(CONNECT_DATA=(SID=$UPPER_SID)))"
-                    # we presume we can use an EZconnect
-                    $SQL_CONNECT = "$the_user/$the_password@$TNSALIAS$assysdbaconnect"
-               }
-               debug_echo "value of sql_connect in dbuser = $SQL_CONNECT"
-          }
-          else {
-               debug_echo "DBUSER is not defined"
-          }
-
-          # if $dbuser_$sqlsid is not used, then we will get an error here
-          # Powershell cannot really use dynamic variables, as a workaround we silently continue
-          # for this section of code
-          $ErrorActionPreference = "SilentlyContinue"
-
-          if ((get-variable "dbuser_$sqlsid").value -ne $null) {
-               # The DBUSER_SID variable is set in the config file, so we will use that for the connection
-               $counter = 0
-               # set default values for the connection variables
-               $the_user = ""
-               $the_password = ""
-               $the_sysdba = ""
-               $the_host = "localhost"
-               $the_port = "1521"
-
-               # cycle through the "$DBUSER$inst_name" variable, to get our connection data
-               foreach ($the_dbuser in (get-variable "dbuser_$sqlsid").value) {
-                    $counter = $counter + 1
-                    switch ($counter) {
-                         1 { $the_user = $the_dbuser }
-                         2 { $the_password = $the_dbuser }
-                         3 { $the_sysdba = $the_dbuser }
-                         4 { $the_host = $the_dbuser }
-                         5 { $the_port = $the_dbuser }
-                         default { "Error handling Oracle database connection with config for DBUSER_SID." }
-                    }
-               }
-               if ($the_sysdba ) {
-                    $assysdbaconnect = " as $the_sysdba"
-               }
-               else {
-                    $assysdbaconnect = ""
-               }
-               # $TNSALIAS="$the_host`:$the_port/$the_service"
-               $TNSALIAS = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$the_host)(PORT=$the_port))(CONNECT_DATA=(SID=$UPPER_SID)))"
-               # we presume we can use an EZconnect
-               $SQL_CONNECT = "$the_user/$the_password@$TNSALIAS$assysdbaconnect"
-               debug_echo "value of sql_connect in dbuser_sid = $SQL_CONNECT"
-          }
-          # now we set our action on error back to our normal value
-          $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
-     }
-
-
-
-
-     # set the environment variable %ORACLE_SID% for the time this script is run
-     $env:ORACLE_SID = "$sqlsid"
-     # add the standard SQL (linesize, on error quit, etc.) to this SQL
-     $THE_SQL = $SQL_START + $sqltext
-
-     # The temporary file to store the output of the SQL
-     # currently default path is used here. change this @TBR?
-     $fullpath = $MK_TEMPDIR + "\" + "$sql_message.$sqlsid.txt"
-
-     if ($run_async -eq 0) {
-          $SKIP_DOUBLE_ERROR = 0
-          try {
-               $res = ( $THE_SQL | sqlplus -L -s "$SQL_CONNECT")
-               if ($LastExitCode -eq 0) {
-                    # we only show the output if there was no error...
-                    $res | Set-Content $fullpath
-                    cat $fullpath
-               }
-               else {
-                    $SKIP_DOUBLE_ERROR = 1
-                    # an error occurred
-                    # add the SID and "FAILURE" to the output
-                    $res = "$sqlsid|FAILURE|" + $res | select-string -pattern "ERROR"
-                    # write the output to the file
-                    $res = "<<<oracle_instance:sep(124)>>>" + "`n" + $res
-                    $res | Set-Content $fullpath
-                    # show the contents of the file
-                    cat $fullpath
-               }
-          }
-
-          catch {
-               if ($SKIP_DOUBLE_ERROR -eq 0) {
-                    $SKIP_DOUBLE_ERROR = 1
-                    # an error occurred
-                    # add the SID and "FAILURE" to the output
-                    $res = "$sqlsid|FAILURE|" + $res | select-string -pattern "ERROR"
-                    # write the output to the file
-                    $res = "<<<oracle_instance:sep(124)>>>" + "`n" + $res
-                    $res | Set-Content $fullpath
-                    # show the contents of the file
-                    cat $fullpath
-               }
-
-          }
-
-     }
-     else {
-          [bool]$need_async_process = $false
-          # We first check if the file exists, otherwise we cannot show the old SQL output
-          if (Test-Path -path "$fullPath") {
-               cat $fullpath
-               # the file exists, so now we can check how old it is
-               debug_echo "file found $run_async"
-               $lastWrite = (get-item $fullPath).LastWriteTime
-               # How old may the SQL Output files be, before new ones are generated?
-               $timespan = new-timespan -days 0 -hours 0 -minutes ($CACHE_MAXAGE / 60)
-               if (((get-date) - $lastWrite) -gt $timespan) {
-                    # the file is too old - so start a new process
-                    $need_async_process = $true
-               }
-          }
-          else {
-               # file not found, so we need to run it
-               $need_async_process = $true
-          }
-
-          if ($need_async_process) {
-               #####################################################
-               # now we ensure that the async SQL Calls have up-to-date SQL outputs, running this job asynchronously...
-               #####################################################
-               debug_echo "about to call bg task $sql_message"
-               if (-not(is_async_running($fullPath))) {
-
-                    $command = {
-                         param([string]$sql_connect, [string]$sql, [string]$path, [string]$sql_sid)
-                         $res = ("$sql" | sqlplus -s -L $sql_connect)
-                         if ($LastExitCode -eq 0) {
-                              $res | Set-Content $path
-                         }
-                         else {
-                              $stripped_res = '$sql_sid|FAILURE|' + $res | select-string -pattern 'ERROR'
-                              '<<<oracle_instance:sep(124)>>>' | Set-Content $path
-                              $stripped_res | Add-Content $path
-                         }
-                    }
-
-                    # This escaping is needed as it seems the here string attribute gets lost or has no effect when passing the
-                    # variable to the script block
-                    $escaped_sql = $THE_SQL.replace("'", "''")
-                    $async_proc = Start-Process -PassThru powershell -windowstyle hidden -ArgumentList "-command invoke-command -scriptblock {$command} -argumentlist '$SQL_CONNECT', '$escaped_sql', '$fullpath', '$sqlsid'"
-                    $async_proc.id | set-content $ASYNC_PROC_PATH
-                    debug_echo "should be run here $run_async"
-               }
-          }
-     }
-     # normally we would simply return with a 1 or 0, but in powershell if I return from the function
-     # with a value, then nothing else is shown on the screen. Hence the following less elegant solution...
-     if ($SKIP_DOUBLE_ERROR -gt 0) {
-          $global:ERROR_FOUND = 1
-     }
+                # This escaping is needed as it seems the here string attribute gets lost or has no effect when passing the
+                # variable to the script block
+                $escaped_sql = $THE_SQL.replace("'", "''")
+                $async_proc = Start-Process -PassThru powershell -WindowStyle hidden -ArgumentList "-command invoke-command -scriptblock {$command} -argumentlist '$SQL_CONNECT', '$escaped_sql', '$fullpath', '$sqlsid'"
+                $async_proc.id | Set-Content $ASYNC_PROC_PATH
+                debug_echo "should be run here $run_async"
+            }
+        }
+    }
+    # normally we would simply return with a 1 or 0, but in powershell if I return from the function
+    # with a value, then nothing else is shown on the screen. Hence the following less elegant solution...
+    if ($SKIP_DOUBLE_ERROR -gt 0) {
+        $global:ERROR_FOUND = 1
+    }
 }
 
 
@@ -719,9 +719,9 @@ Function sqlcall {
 ################################################################################
 # SQL for Performance information
 ################################################################################
-Function sql_performance {
-     if ($DBVERSION -gt 121000) {
-          $query_performance = @'
+function sql_performance {
+    if ($DBVERSION -gt 121000) {
+        $query_performance = @'
           PROMPT <<<oracle_performance:sep(124)>>>;
           select upper(i.INSTANCE_NAME)
                ||'|'|| 'sys_time_model'
@@ -769,10 +769,10 @@ Function sql_performance {
           from v$instance i, v$librarycache b;
 
 '@
-          echo $query_performance
-     }
-     elseif ($DBVERSION -gt 101000) {
-          $query_performance = @'
+        echo $query_performance
+    }
+    elseif ($DBVERSION -gt 101000) {
+        $query_performance = @'
           prompt <<<oracle_performance:sep(124)>>>;
           select upper(i.INSTANCE_NAME)
                ||'|'|| 'sys_time_model'
@@ -810,17 +810,17 @@ Function sql_performance {
           from v$instance i, V$librarycache b;
 
 '@
-          echo $query_performance
-     }
+        echo $query_performance
+    }
 }
 
 
 ################################################################################
 # SQL for Tablespace information
 ################################################################################
-Function sql_tablespaces {
-     if ($DBVERSION -gt 121000) {
-          $query_tablespace = @'
+function sql_tablespaces {
+    if ($DBVERSION -gt 121000) {
+        $query_tablespace = @'
           prompt <<<oracle_tablespaces:sep(124)>>>;
           SET SERVEROUTPUT ON feedback off
           DECLARE
@@ -963,10 +963,10 @@ Function sql_tablespaces {
               set serverout off
 
 '@
-          echo $query_tablespace
-     }
-     elseif ($DBVERSION -gt 102000) {
-          $query_tablespace = @'
+        echo $query_tablespace
+    }
+    elseif ($DBVERSION -gt 102000) {
+        $query_tablespace = @'
           prompt <<<oracle_tablespaces:sep(124)>>>;
           SET SERVEROUTPUT ON feedback off
           DECLARE
@@ -1086,10 +1086,10 @@ Function sql_tablespaces {
           set serverout off
 
 '@
-          echo $query_tablespace
-     }
-     elseif ($DBVERSION -gt 92000) {
-          $query_tablespace = @'
+        echo $query_tablespace
+    }
+    elseif ($DBVERSION -gt 92000) {
+        $query_tablespace = @'
           prompt <<<oracle_tablespaces:sep(124)>>>;
           select upper(d.NAME)
                || '|' || file_name
@@ -1171,8 +1171,8 @@ Function sql_tablespaces {
 
 '@
 
-          echo $query_tablespace
-     }
+        echo $query_tablespace
+    }
 
 }
 
@@ -1183,9 +1183,9 @@ Function sql_tablespaces {
 ################################################################################
 # SQL for Dataguard Statistics
 ################################################################################
-Function sql_dataguard_stats {
-     if ($DBVERSION -gt 102000) {
-          $query_dataguard_stats = @'
+function sql_dataguard_stats {
+    if ($DBVERSION -gt 102000) {
+        $query_dataguard_stats = @'
           prompt <<<oracle_dataguard_stats:sep(124)>>>;
           SELECT upper(i.instance_name)
                  ||'|'|| upper(d.DB_UNIQUE_NAME)
@@ -1212,17 +1212,17 @@ Function sql_dataguard_stats {
           ORDER BY 1;
 
 '@
-          echo $query_dataguard_stats
-     }
+        echo $query_dataguard_stats
+    }
 }
 
 
 ################################################################################
 # SQL for Recovery status
 ################################################################################
-Function sql_recovery_status {
-     if ($DBVERSION -gt 121000) {
-          $query_recovery_status = @'
+function sql_recovery_status {
+    if ($DBVERSION -gt 121000) {
+        $query_recovery_status = @'
           prompt <<<oracle_recovery_status:sep(124)>>>;
           SELECT upper(i.instance_name)
                  ||'|'|| d.DB_UNIQUE_NAME
@@ -1245,11 +1245,11 @@ Function sql_recovery_status {
           ORDER BY dh.file#;
 
 '@
-          echo $query_recovery_status
-     }
+        echo $query_recovery_status
+    }
 
-     elseif ($DBVERSION -gt 101000) {
-          $query_recovery_status = @'
+    elseif ($DBVERSION -gt 101000) {
+        $query_recovery_status = @'
           prompt <<<oracle_recovery_status:sep(124)>>>;
           SELECT upper(d.NAME)
                      ||'|'|| d.DB_UNIQUE_NAME
@@ -1266,10 +1266,10 @@ Function sql_recovery_status {
               ORDER BY dh.file#;
 
 '@
-          echo $query_recovery_status
-     }
-     elseif ($DBVERSION -gt 92000) {
-          $query_recovery_status = @'
+        echo $query_recovery_status
+    }
+    elseif ($DBVERSION -gt 92000) {
+        $query_recovery_status = @'
           prompt <<<oracle_recovery_status:sep(124)>>>;
           SELECT upper(d.NAME)
                      ||'|'|| d.NAME
@@ -1287,17 +1287,17 @@ Function sql_recovery_status {
 
 '@
 
-          echo $query_recovery_status
-     }
+        echo $query_recovery_status
+    }
 }
 
 
 ################################################################################
 # SQL for RMAN Backup information
 ################################################################################
-Function sql_rman {
-     if ($DBVERSION -gt 121000) {
-          $query_rman = @'
+function sql_rman {
+    if ($DBVERSION -gt 121000) {
+        $query_rman = @'
           prompt <<<oracle_rman:sep(124)>>>;
           select /* check_mk rman1 */ upper(name)
                || '|'|| 'COMPLETED'
@@ -1372,10 +1372,10 @@ Function sql_rman {
           );
 
 '@
-          echo $query_rman
-     }
-     elseif ($DBVERSION -gt 102000) {
-          $query_rman = @'
+        echo $query_rman
+    }
+    elseif ($DBVERSION -gt 102000) {
+        $query_rman = @'
           prompt <<<oracle_rman:sep(124)>>>;
           select /* check_mk rman1 */ upper(name)
                || '|'|| 'COMPLETED'
@@ -1449,10 +1449,10 @@ Function sql_rman {
           );
 
 '@
-          echo $query_rman
-     }
-     elseif ($DBVERSION -gt 92000) {
-          $query_rman = @'
+        echo $query_rman
+    }
+    elseif ($DBVERSION -gt 92000) {
+        $query_rman = @'
           prompt <<<oracle_rman:sep(124)>>>;
           SELECT upper(d.NAME)
                ||'|'|| a.STATUS
@@ -1491,8 +1491,8 @@ Function sql_rman {
           );
 
 '@
-          echo $query_rman
-     }
+        echo $query_rman
+    }
 }
 
 
@@ -1500,9 +1500,9 @@ Function sql_rman {
 ################################################################################
 # SQL for Flash Recovery Area information
 ################################################################################
-Function sql_recovery_area {
-     if ($DBVERSION -gt 102000) {
-          $query_recovery_area = @'
+function sql_recovery_area {
+    if ($DBVERSION -gt 102000) {
+        $query_recovery_area = @'
           prompt <<<oracle_recovery_area:sep(124)>>>;
           select upper(i.instance_name)
                  ||'|'|| round((SPACE_USED-SPACE_RECLAIMABLE)/
@@ -1515,8 +1515,8 @@ Function sql_recovery_area {
 
 '@
 
-          echo $query_recovery_area
-     }
+        echo $query_recovery_area
+    }
 }
 
 
@@ -1525,9 +1525,9 @@ Function sql_recovery_area {
 ################################################################################
 # SQL for UNDO information
 ################################################################################
-Function sql_undostat {
-     if ($DBVERSION -gt 121000) {
-          $query_undostat = @'
+function sql_undostat {
+    if ($DBVERSION -gt 121000) {
+        $query_undostat = @'
           prompt <<<oracle_undostat:sep(124)>>>;
           select decode(vp.con_id, null, upper(i.INSTANCE_NAME)
                            ,upper(i.INSTANCE_NAME || '.' || vp.name))
@@ -1546,10 +1546,10 @@ Function sql_undostat {
           left outer join v$pdbs vp on vp.con_id = u.con_id;
 
 '@
-          echo $query_undostat
-     }
-     elseif ($DBVERSION -gt 102000) {
-          $query_undostat = @'
+        echo $query_undostat
+    }
+    elseif ($DBVERSION -gt 102000) {
+        $query_undostat = @'
           prompt <<<oracle_undostat:sep(124)>>>;
           select upper(i.INSTANCE_NAME)
                      ||'|'|| ACTIVEBLKS
@@ -1566,12 +1566,12 @@ Function sql_undostat {
                   );
 
 '@
-          echo $query_undostat
-     }
-     elseif ($DBVERSION -gt 92000) {
-          # TUNED_UNDORETENTION and ACTIVEBLKS are not available in Oracle <=9.2!
-          # we set a -1 for filtering in check_undostat
-          $query_undostat = @'
+        echo $query_undostat
+    }
+    elseif ($DBVERSION -gt 92000) {
+        # TUNED_UNDORETENTION and ACTIVEBLKS are not available in Oracle <=9.2!
+        # we set a -1 for filtering in check_undostat
+        $query_undostat = @'
           prompt <<<oracle_undostat:sep(124)>>>;
           select upper(i.INSTANCE_NAME)
                      ||'|-1'
@@ -1587,8 +1587,8 @@ Function sql_undostat {
                   );
 
 '@
-          echo $query_undostat
-     }
+        echo $query_undostat
+    }
 }
 
 
@@ -1597,8 +1597,8 @@ Function sql_undostat {
 ################################################################################
 # SQL for resumable information
 ################################################################################
-Function sql_resumable {
-     $query_resumable = @'
+function sql_resumable {
+    $query_resumable = @'
           prompt <<<oracle_resumable:sep(124)>>>;
           SET SERVEROUTPUT ON feedback off
           DECLARE
@@ -1642,16 +1642,16 @@ Function sql_resumable {
           set serverout off
 
 '@
-     echo $query_resumable
+    echo $query_resumable
 }
 
 
 ################################################################################
 # SQL for scheduler_jobs information
 ################################################################################
-Function sql_jobs {
-     if ($DBVERSION -gt 121000) {
-          $query_scheduler_jobs = @'
+function sql_jobs {
+    if ($DBVERSION -gt 121000) {
+        $query_scheduler_jobs = @'
           prompt <<<oracle_jobs:sep(124)>>>;
           SET SERVEROUTPUT ON feedback off
           DECLARE
@@ -1713,10 +1713,10 @@ Function sql_jobs {
           set serverout off
 
 '@
-          echo $query_scheduler_jobs
-     }
-     elseif ($DBVERSION -gt 102000) {
-          $query_scheduler_jobs = @'
+        echo $query_scheduler_jobs
+    }
+    elseif ($DBVERSION -gt 102000) {
+        $query_scheduler_jobs = @'
           prompt <<<oracle_jobs:sep(124)>>>;
           SET SERVEROUTPUT ON feedback off
                DECLARE
@@ -1768,16 +1768,16 @@ Function sql_jobs {
           set serverout off
 
 '@
-          echo $query_scheduler_jobs
-     }
+        echo $query_scheduler_jobs
+    }
 }
 
 
 ################################################################################
 # SQL for Tablespace quotas information
 ################################################################################
-Function sql_ts_quotas {
-     $query_ts_quotas = @'
+function sql_ts_quotas {
+    $query_ts_quotas = @'
      prompt <<<oracle_ts_quotas:sep(124)>>>;
      select upper(d.NAME)
           ||'|'|| Q.USERNAME
@@ -1793,7 +1793,7 @@ Function sql_ts_quotas {
      order by 1;
 
 '@
-     echo $query_ts_quotas
+    echo $query_ts_quotas
 }
 
 
@@ -1801,8 +1801,8 @@ Function sql_ts_quotas {
 ################################################################################
 # SQL for Oracle Version information
 ################################################################################
-Function sql_version {
-     $query_version = @'
+function sql_version {
+    $query_version = @'
      prompt <<<oracle_version:sep(124)>>>;
      select upper(i.INSTANCE_NAME)
 	     || '|' || banner
@@ -1810,7 +1810,7 @@ Function sql_version {
 	where banner like 'Oracle%';
 
 '@
-     echo $query_version
+    echo $query_version
 }
 
 
@@ -1818,8 +1818,8 @@ Function sql_version {
 ################################################################################
 # SQL for Oracle system parameters
 ################################################################################
-Function sql_systemparameter {
-     $query_systemparameter = @'
+function sql_systemparameter {
+    $query_systemparameter = @'
      prompt <<<oracle_systemparameter:sep(124)>>>;
      select upper(i.instance_name)
              || '|' || NAME
@@ -1828,7 +1828,7 @@ Function sql_systemparameter {
         from v$system_parameter, v$instance i
         where name not like '!_%' ESCAPE '!';
 '@
-     echo $query_systemparameter
+    echo $query_systemparameter
 }
 
 
@@ -1836,9 +1836,9 @@ Function sql_systemparameter {
 ################################################################################
 # SQL for sql_instance information
 ################################################################################
-Function sql_instance {
-     if ($ORACLE_SID.substring(0, 1) -eq "+") {
-          $query_instance = @'
+function sql_instance {
+    if ($ORACLE_SID.substring(0, 1) -eq "+") {
+        $query_instance = @'
           prompt <<<oracle_instance:sep(124)>>>;
           select upper(i.instance_name)
                || '|' || i.VERSION
@@ -1855,10 +1855,10 @@ Function sql_instance {
           from v$instance i;
 
 '@
-     }
-     else {
-          if ($DBVERSION -gt 121010) {
-               $query_instance = @'
+    }
+    else {
+        if ($DBVERSION -gt 121010) {
+            $query_instance = @'
                prompt <<<oracle_instance:sep(124)>>>;
                select upper(instance_name)
                     || '|' || version
@@ -1910,9 +1910,9 @@ Function sql_instance {
                );
 
 '@
-          }
-          else {
-               $query_instance = @'
+        }
+        else {
+            $query_instance = @'
               prompt <<<oracle_instance:sep(124)>>>;
               select upper(i.instance_name)
                          || '|' || i.VERSION
@@ -1930,9 +1930,9 @@ Function sql_instance {
                     from v$instance i, v$database d;
 
 '@
-          }
-     }
-     echo $query_instance
+        }
+    }
+    echo $query_instance
 }
 
 
@@ -1941,9 +1941,9 @@ Function sql_instance {
 ################################################################################
 # SQL for sql_sessions information
 ################################################################################
-Function sql_sessions {
-     if ($DBVERSION -gt 121000) {
-          $query_sessions = @'
+function sql_sessions {
+    if ($DBVERSION -gt 121000) {
+        $query_sessions = @'
           prompt <<<oracle_sessions:sep(124)>>>;
           SELECT upper(vp.name)
                || '|' || ltrim(COUNT(1))
@@ -1965,10 +1965,10 @@ Function sql_sessions {
           ORDER BY 1;
 
 '@
-          echo $query_sessions
-     }
-     else {
-          $query_sessions = @'
+        echo $query_sessions
+    }
+    else {
+        $query_sessions = @'
           prompt <<<oracle_sessions:sep(124)>>>;
           select upper(i.instance_name)
                || '|' || CURRENT_UTILIZATION
@@ -1978,8 +1978,8 @@ Function sql_sessions {
           where RESOURCE_NAME = 'sessions';
 
 '@
-          echo $query_sessions
-     }
+        echo $query_sessions
+    }
 }
 
 
@@ -1987,8 +1987,8 @@ Function sql_sessions {
 ################################################################################
 # SQL for sql_processes information
 ################################################################################
-Function sql_processes {
-     $query_processes = @'
+function sql_processes {
+    $query_processes = @'
      prompt <<<oracle_processes:sep(124)>>>;
      select upper(i.instance_name)
           || '|' || CURRENT_UTILIZATION
@@ -1997,7 +1997,7 @@ Function sql_processes {
      where RESOURCE_NAME = 'processes';
 
 '@
-     echo $query_processes
+    echo $query_processes
 }
 
 
@@ -2005,8 +2005,8 @@ Function sql_processes {
 ################################################################################
 # SQL for sql_logswitches information
 ################################################################################
-Function sql_logswitches {
-     $query_logswitches = @'
+function sql_logswitches {
+    $query_logswitches = @'
      prompt <<<oracle_logswitches:sep(124)>>>;
      select upper(i.instance_name)
           || '|' || logswitches
@@ -2017,16 +2017,16 @@ Function sql_logswitches {
            and h.thread# = i.instance_number);
 
 '@
-     echo $query_logswitches
+    echo $query_logswitches
 }
 
 
 ################################################################################
 # SQL for database lock information
 ################################################################################
-Function sql_locks {
-     if ($DBVERSION -gt 121000) {
-          $query_locks = @'
+function sql_locks {
+    if ($DBVERSION -gt 121000) {
+        $query_locks = @'
           prompt <<<oracle_locks:sep(124)>>>;
           select upper(vp.name)
                || '|' || b.sid
@@ -2073,10 +2073,10 @@ Function sql_locks {
           FROM v$instance i;
 
 '@
-          echo $query_locks
-     }
-     elseif ($DBVERSION -gt 102000) {
-          $query_locks = @'
+        echo $query_locks
+    }
+    elseif ($DBVERSION -gt 102000) {
+        $query_locks = @'
           select upper(i.instance_name)
                || '|' || b.sid
                || '|' || b.serial#
@@ -2105,13 +2105,13 @@ Function sql_locks {
           from v$instance i;
 
 '@
-          echo $query_locks
-     }
+        echo $query_locks
+    }
 }
 
-Function sql_locks_old {
-     if ($DBVERSION -gt 101000) {
-          $query_locks = @'
+function sql_locks_old {
+    if ($DBVERSION -gt 101000) {
+        $query_locks = @'
           prompt <<<oracle_locks:sep(124)>>>;
           SET SERVEROUTPUT ON feedback off
           DECLARE
@@ -2160,8 +2160,8 @@ Function sql_locks_old {
           set serverout off
 
 '@
-          echo $query_locks
-     }
+        echo $query_locks
+    }
 }
 
 
@@ -2170,9 +2170,9 @@ Function sql_locks_old {
 ################################################################################
 # SQL for long active session information
 ################################################################################
-Function sql_longactivesessions {
-     if ($DBVERSION -gt 121000) {
-          $query_longactivesessions = @'
+function sql_longactivesessions {
+    if ($DBVERSION -gt 121000) {
+        $query_longactivesessions = @'
           prompt <<<oracle_longactivesessions:sep(124)>>>;
           select upper(vp.name)
                || '|' || s.sid
@@ -2212,10 +2212,10 @@ Function sql_longactivesessions {
           FROM v$instance i;
 
 '@
-          echo $query_longactivesessions
-     }
-     elseif ($DBVERSION -gt 101000) {
-          $query_longactivesessions = @'
+        echo $query_longactivesessions
+    }
+    elseif ($DBVERSION -gt 101000) {
+        $query_longactivesessions = @'
           prompt <<<oracle_longactivesessions:sep(124)>>>;
           select upper(i.instance_name)
                || '|' || s.sid
@@ -2238,8 +2238,8 @@ Function sql_longactivesessions {
           from v$instance i;
 
 '@
-          echo $query_longactivesessions
-     }
+        echo $query_longactivesessions
+    }
 }
 
 
@@ -2249,9 +2249,9 @@ Function sql_longactivesessions {
 ################################################################################
 # SQL for sql_logswitches information
 ################################################################################
-Function sql_asm_diskgroup {
-     if ($DBVERSION -gt 112000) {
-          $query_asm_diskgroup = @'
+function sql_asm_diskgroup {
+    if ($DBVERSION -gt 112000) {
+        $query_asm_diskgroup = @'
           prompt <<<oracle_asm_diskgroup:sep(124)>>>;
           select STATE
                || '|' || g.type
@@ -2285,9 +2285,9 @@ Function sql_asm_diskgroup {
           ORDER BY g.name, d.failgroup;
 
 '@
-     }
-     elseif ($DBVERSION -gt 101000) {
-          $query_asm_diskgroup = @'
+    }
+    elseif ($DBVERSION -gt 101000) {
+        $query_asm_diskgroup = @'
           prompt <<<oracle_asm_diskgroup:sep(124)>>>;
           select STATE
                      || '|' || TYPE
@@ -2305,8 +2305,8 @@ Function sql_asm_diskgroup {
                 from v$asm_diskgroup;
 
 '@
-     }
-     echo $query_asm_diskgroup
+    }
+    echo $query_asm_diskgroup
 }
 
 
@@ -2341,176 +2341,176 @@ $NO_SID = "NO_SID"
 
 
 if ( $SYNC_SECTIONS.count -gt 0) {
-     foreach ($section in $SYNC_SECTIONS) {
-          echo "<<<oracle_${section}>>>"
-     }
+    foreach ($section in $SYNC_SECTIONS) {
+        echo "<<<oracle_${section}>>>"
+    }
 }
 if ( $ASYNC_SECTIONS.count -gt 0) {
-     foreach ($section in $ASYNC_SECTIONS) {
-          echo "<<<oracle_${section}>>>"
-     }
+    foreach ($section in $ASYNC_SECTIONS) {
+        echo "<<<oracle_${section}>>>"
+    }
 }
 if ( $SYNC_ASM_SECTIONS.count -gt 0) {
-     foreach ($section in $SYNC_ASM_SECTIONS) {
-          echo "<<<oracle_${section}>>>"
-     }
+    foreach ($section in $SYNC_ASM_SECTIONS) {
+        echo "<<<oracle_${section}>>>"
+    }
 }
 if ( $ASYNC_ASM_SECTIONS.count -gt 0) {
-     foreach ($section in $ASYNC_ASM_SECTIONS) {
-          echo "<<<oracle_${section}>>>"
-     }
+    foreach ($section in $ASYNC_ASM_SECTIONS) {
+        echo "<<<oracle_${section}>>>"
+    }
 }
 
 $ORIG_SYNC_SECTIONS = $SYNC_SECTIONS
 $ORIG_ASYNC_SECTIONS = $ASYNC_SECTIONS
 
 # get a count of running instances to avoid next code if no instances are running
-$the_count = ($list_inst | measure-object).count
+$the_count = ($list_inst | Measure-Object).count
 # we only continue if an Oracle instance is running
 if ($the_count -gt 0) {
-     # loop through each instance
-     ForEach ($inst in $list_inst) {
-          # get the real instance name
-          $inst.name = $inst.name.replace("OracleService", "")
-          $inst_name = $inst.name.replace("OracleASMService", "")
-          $ORACLE_SID = $inst_name
+    # loop through each instance
+    foreach ($inst in $list_inst) {
+        # get the real instance name
+        $inst.name = $inst.name.replace("OracleService", "")
+        $inst_name = $inst.name.replace("OracleASMService", "")
+        $ORACLE_SID = $inst_name
 
-          # in some environments HKLM:\SYSTEM\CurrentControlSet\services\OracleService{ORACLE_SID}
-          # wasn't present, see SUP-10065
-          try {
-               $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleService' + $ORACLE_SID
-               $val = (Get-ItemProperty -Path $key).ImagePath
-          }
-          catch {
-               $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleASMService' + $ORACLE_SID
-               $val = (Get-ItemProperty -Path $key).ImagePath
-          }
-          #  $val may contain c:\path\to\file or "c:\path\to\file" or "c:\path\to\file" PARAM
-          $ORACLE_HOME = $val.SubString(0, $val.LastIndexOf('\') - 4).Trim('"')
+        # in some environments HKLM:\SYSTEM\CurrentControlSet\services\OracleService{ORACLE_SID}
+        # wasn't present, see SUP-10065
+        try {
+            $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleService' + $ORACLE_SID
+            $val = (Get-ItemProperty -Path $key).ImagePath
+        }
+        catch {
+            $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleASMService' + $ORACLE_SID
+            $val = (Get-ItemProperty -Path $key).ImagePath
+        }
+        #  $val may contain c:\path\to\file or "c:\path\to\file" or "c:\path\to\file" PARAM
+        $ORACLE_HOME = $val.SubString(0, $val.LastIndexOf('\') - 4).Trim('"')
 
-          if ($is_admin -and ($SKIP_ORACLE_SECURITY_CHECK -ne 1)) {
-               # administrators should use only safe binary
-               $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\sqlplus.exe")
-               if ($Null -eq $result) {
-                    $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\tnsping.exe")
-               }
-               if ($Null -eq $result) {
-                    $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\crsctl.exe")
-               }
-               if ($Null -ne $result) {
-                    Write-Output "<<<oracle_instance:sep(124)>>>"
-                    Write-Output "$ORACLE_SID|FAILURE|$result - Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the the file by non-admin users. Alternatively, you can try to adjust the settings in 'ORACLE databases (Linux, Solaris, AIX, Windows)'."
-                    continue
-               }
-          }
-          # reset errors found for this instance to zero
-          $ERROR_FOUND = 0
+        if ($is_admin -and ($SKIP_ORACLE_SECURITY_CHECK -ne 1)) {
+            # administrators should use only safe binary
+            $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\sqlplus.exe")
+            if ($Null -eq $result) {
+                $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\tnsping.exe")
+            }
+            if ($Null -eq $result) {
+                $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\crsctl.exe")
+            }
+            if ($Null -ne $result) {
+                Write-Output "<<<oracle_instance:sep(124)>>>"
+                Write-Output "$ORACLE_SID|FAILURE|$result - Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the the file by non-admin users. Alternatively, you can try to adjust the settings in 'ORACLE databases (Linux, Solaris, AIX, Windows)'."
+                continue
+            }
+        }
+        # reset errors found for this instance to zero
+        $ERROR_FOUND = 0
 
-          $DBVERSION = get_dbversion_database($ORACLE_HOME)
-          debug_echo "value of inst_name= ${inst_name}"
-          debug_echo "value of ORACLE_HOME= ${ORACLE_HOME}"
-          debug_echo "value of DBVERSION database= ${DBVERSION}"
-          # if this is an ASM instance, then switch sections to ASM
-          $ASM_FIRST_CHAR = "+"
-          $CHECK_FIRST_CHAR = $inst_name.Substring(0, 1)
-          if ( $CHECK_FIRST_CHAR.compareTo($ASM_FIRST_CHAR) -eq 0 ) {
-               $SYNC_SECTIONS = $SYNC_ASM_SECTIONS
-               $ASYNC_SECTIONS = $ASYNC_ASM_SECTIONS
-          }
-          else {
-               $SYNC_SECTIONS = $ORIG_SYNC_SECTIONS
-               $ASYNC_SECTIONS = $ORIG_ASYNC_SECTIONS
-          }
+        $DBVERSION = get_dbversion_database($ORACLE_HOME)
+        debug_echo "value of inst_name= ${inst_name}"
+        debug_echo "value of ORACLE_HOME= ${ORACLE_HOME}"
+        debug_echo "value of DBVERSION database= ${DBVERSION}"
+        # if this is an ASM instance, then switch sections to ASM
+        $ASM_FIRST_CHAR = "+"
+        $CHECK_FIRST_CHAR = $inst_name.Substring(0, 1)
+        if ( $CHECK_FIRST_CHAR.compareTo($ASM_FIRST_CHAR) -eq 0 ) {
+            $SYNC_SECTIONS = $SYNC_ASM_SECTIONS
+            $ASYNC_SECTIONS = $ASYNC_ASM_SECTIONS
+        }
+        else {
+            $SYNC_SECTIONS = $ORIG_SYNC_SECTIONS
+            $ASYNC_SECTIONS = $ORIG_ASYNC_SECTIONS
+        }
 
-          # we presume we do not want to skip this instance
-          $SKIP_INSTANCE = 0
-          # check if $ONLY_SIDS is used
-          if ( $ONLY_SIDS -ne $null) {
-               # if used, then we presume we want to skip this instance
-               $SKIP_INSTANCE = 1
-               # if this SID is in our ONLY_SIDS then it will not be skipped
-               if ($ONLY_SIDS -contains $inst_name) {
-                    $SKIP_INSTANCE = 0
-               }
-          }
-          if ($SKIP_INSTANCE -eq 0) {
-               $THE_SQL = ""
-               $THE_NEW_SQL = ""
-               # call all function as defined in the $SYNC_SECTIONS, running synchronously
-               if ( $SYNC_SECTIONS.count -gt 0) {
-                    foreach ($section in $SYNC_SECTIONS) {
-                         $the_section = "sql_" + $section
-                         # we presume we do not want to skip this section
-                         $SKIP_SECTION = 0
+        # we presume we do not want to skip this instance
+        $SKIP_INSTANCE = 0
+        # check if $ONLY_SIDS is used
+        if ( $ONLY_SIDS -ne $null) {
+            # if used, then we presume we want to skip this instance
+            $SKIP_INSTANCE = 1
+            # if this SID is in our ONLY_SIDS then it will not be skipped
+            if ($ONLY_SIDS -contains $inst_name) {
+                $SKIP_INSTANCE = 0
+            }
+        }
+        if ($SKIP_INSTANCE -eq 0) {
+            $THE_SQL = ""
+            $THE_NEW_SQL = ""
+            # call all function as defined in the $SYNC_SECTIONS, running synchronously
+            if ( $SYNC_SECTIONS.count -gt 0) {
+                foreach ($section in $SYNC_SECTIONS) {
+                    $the_section = "sql_" + $section
+                    # we presume we do not want to skip this section
+                    $SKIP_SECTION = 0
 
 
-                         # if $EXCLUDE_SID is not used, then we will get an error here
-                         # Powershell cannot really use dynamic variables, as a workaround we silently continue
-                         # for this section of code
-                         $ErrorActionPreference = "SilentlyContinue"
-                         # check if $EXCLUDE_SID is used
-                         if ("$EXCLUDE_$inst_name" -ne $null) {
-                              # if used, then we at first presume that we do not want to skip this section
-                              # if this SECTION is in our ONLY_SIDS then it will be skipped
-                              $instance_exclude = (get-variable "EXCLUDE_$inst_name").value
-                              $SKIP_SECTION = should_exclude $instance_exclude $section
-                         }
-                         # now we set our action on error back to our normal value
-                         $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
-                         debug_echo "value of the_section = ${the_section}"
-                         if (-Not ($SKIP_SECTION)) {
-                              $THE_NEW_SQL = invoke-expression "${the_section}"
-                              $THE_SQL = $THE_SQL + $THE_NEW_SQL
-                         }
+                    # if $EXCLUDE_SID is not used, then we will get an error here
+                    # Powershell cannot really use dynamic variables, as a workaround we silently continue
+                    # for this section of code
+                    $ErrorActionPreference = "SilentlyContinue"
+                    # check if $EXCLUDE_SID is used
+                    if ("$EXCLUDE_$inst_name" -ne $null) {
+                        # if used, then we at first presume that we do not want to skip this section
+                        # if this SECTION is in our ONLY_SIDS then it will be skipped
+                        $instance_exclude = (Get-Variable "EXCLUDE_$inst_name").value
+                        $SKIP_SECTION = should_exclude $instance_exclude $section
                     }
-                    debug_echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX now calling multiple SQL"
-                    $ERROR_FOUND = 0
-                    if ($THE_SQL) {
-                         sqlcall -sql_message "sync_SQLs" -sqltext "$THE_SQL" -run_async 0 -sqlsid $inst_name
+                    # now we set our action on error back to our normal value
+                    $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
+                    debug_echo "value of the_section = ${the_section}"
+                    if (-not ($SKIP_SECTION)) {
+                        $THE_NEW_SQL = Invoke-Expression "${the_section}"
+                        $THE_SQL = $THE_SQL + $THE_NEW_SQL
                     }
-               }
+                }
+                debug_echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX now calling multiple SQL"
+                $ERROR_FOUND = 0
+                if ($THE_SQL) {
+                    sqlcall -sql_message "sync_SQLs" -sqltext "$THE_SQL" -run_async 0 -sqlsid $inst_name
+                }
+            }
 
-               if ($ERROR_FOUND -eq 0) {
-                    # call all function as defined in the $ASYNC_SECTIONS, running asynchronously
-                    $THE_SQL = " "
-                    $THE_NEW_SQL = ""
-                    if ( $ASYNC_SECTIONS.count -gt 0) {
-                         foreach ($section in $ASYNC_SECTIONS) {
-                              $the_section = "sql_" + $section
-                              # we presume we do not want to skip this section
-                              $SKIP_SECTION = 0
-                              # if $EXCLUDE_SID is not used, then we will get an error here
-                              # Powershell cannot really use dynamic variables, as a workaround we silently continue
-                              # for this section of code
-                              $ErrorActionPreference = "SilentlyContinue"
-                              # check if $EXCLUDE_SID is used
-                              if ("$EXCLUDE_$inst_name" -ne $null) {
-                                   # if used, then we at first presume that we do not want to skip this section
-                                   # if this SECTION is in our ONLY_SIDS then it will be skipped
-                                   # "dynamic variables" are not supported in powershell. For example, $inst_name holds the value of the oracle_sid, let's say "ORCL"
-                                   # in powershell, I need to find the value of the variable EXCLUDE_ORCL, I cannot use "EXCLUDE_$inst_name" to reference that
-                                   # and so I built the following workaround...
-                                   $instance_exclude = (get-variable "EXCLUDE_$inst_name").value
-                                   $SKIP_SECTION = should_exclude $instance_exclude $section
-                              }
-                              # now we set our action on error back to our normal value
-                              $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
-                              if (-Not ($SKIP_SECTION)) {
-                                   $THE_NEW_SQL = invoke-expression "$the_section"
-                                   $THE_SQL = $THE_SQL + $THE_NEW_SQL
-                              }
-                         }
-                         debug_echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX now calling multiple asyn SQL"
-                         if ("$THE_SQL") {
-                              sqlcall -sql_message "async_SQLs" -sqltext "$THE_SQL" -run_async 1 -sqlsid $inst_name
-                         }
+            if ($ERROR_FOUND -eq 0) {
+                # call all function as defined in the $ASYNC_SECTIONS, running asynchronously
+                $THE_SQL = " "
+                $THE_NEW_SQL = ""
+                if ( $ASYNC_SECTIONS.count -gt 0) {
+                    foreach ($section in $ASYNC_SECTIONS) {
+                        $the_section = "sql_" + $section
+                        # we presume we do not want to skip this section
+                        $SKIP_SECTION = 0
+                        # if $EXCLUDE_SID is not used, then we will get an error here
+                        # Powershell cannot really use dynamic variables, as a workaround we silently continue
+                        # for this section of code
+                        $ErrorActionPreference = "SilentlyContinue"
+                        # check if $EXCLUDE_SID is used
+                        if ("$EXCLUDE_$inst_name" -ne $null) {
+                            # if used, then we at first presume that we do not want to skip this section
+                            # if this SECTION is in our ONLY_SIDS then it will be skipped
+                            # "dynamic variables" are not supported in powershell. For example, $inst_name holds the value of the oracle_sid, let's say "ORCL"
+                            # in powershell, I need to find the value of the variable EXCLUDE_ORCL, I cannot use "EXCLUDE_$inst_name" to reference that
+                            # and so I built the following workaround...
+                            $instance_exclude = (Get-Variable "EXCLUDE_$inst_name").value
+                            $SKIP_SECTION = should_exclude $instance_exclude $section
+                        }
+                        # now we set our action on error back to our normal value
+                        $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
+                        if (-not ($SKIP_SECTION)) {
+                            $THE_NEW_SQL = Invoke-Expression "$the_section"
+                            $THE_SQL = $THE_SQL + $THE_NEW_SQL
+                        }
                     }
-               }
-          }
-     }
-     # We need an line break after last output from sections
-     # otherwise the agent adds <<<local>>> as parameter to the last line of plugin
-     echo ""
+                    debug_echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX now calling multiple asyn SQL"
+                    if ("$THE_SQL") {
+                        sqlcall -sql_message "async_SQLs" -sqltext "$THE_SQL" -run_async 1 -sqlsid $inst_name
+                    }
+                }
+            }
+        }
+    }
+    # We need an line break after last output from sections
+    # otherwise the agent adds <<<local>>> as parameter to the last line of plugin
+    echo ""
 
 }
 debug_echo "got to the end"

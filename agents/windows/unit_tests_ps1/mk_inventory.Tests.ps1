@@ -214,14 +214,14 @@ Context "mk_inventory.ps1 Tests" {
             Mock Get-NetIPAddress {
                 @(
                     [PSCustomObject]@{
-                        IPAddress     = "192.168.1.100"
-                        PrefixOrigin  = "Dhcp1"
-                        SuffixOrigin  = "Dhcp2"
+                        IPAddress    = "192.168.1.100"
+                        PrefixOrigin = "Dhcp1"
+                        SuffixOrigin = "Dhcp2"
                     },
                     [PSCustomObject]@{
-                        IPAddress     = "::1"
-                        PrefixOrigin  = "WellKnown1"
-                        SuffixOrigin  = "WellKnown2"
+                        IPAddress    = "::1"
+                        PrefixOrigin = "WellKnown1"
+                        SuffixOrigin = "WellKnown2"
                     }
                 )
             }
@@ -428,9 +428,9 @@ Context "mk_inventory.ps1 Tests" {
             $output = & { RecurseFolderForExecs "C:\Test" }
 
             $output | Should -Not -Be $null
-        ($output | Where-Object { $_ -eq "C:\Test\app.exe|6/1/2024 12:00:00|123456||1.2.3.4|" }) | Should -Not -BeNullOrEmpty
-        ($output | Where-Object { $_ -eq "C:\Test\Sub\tool.exe|6/1/2024 13:00:00|654321||1.2.3.4|" }) | Should -Not -BeNullOrEmpty
-        ($output | Where-Object { $_ -eq "C:\Test\readme.txt|6/1/2024 11:00:00|100||1.2.3.4|" }) | Should -BeNullOrEmpty
+            ($output | Where-Object { $_ -eq "C:\Test\app.exe|6/1/2024 12:00:00|123456||1.2.3.4|" }) | Should -Not -BeNullOrEmpty
+            ($output | Where-Object { $_ -eq "C:\Test\Sub\tool.exe|6/1/2024 13:00:00|654321||1.2.3.4|" }) | Should -Not -BeNullOrEmpty
+            ($output | Where-Object { $_ -eq "C:\Test\readme.txt|6/1/2024 11:00:00|100||1.2.3.4|" }) | Should -BeNullOrEmpty
         }
     }
 

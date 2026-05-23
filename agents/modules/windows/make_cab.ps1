@@ -3,8 +3,7 @@
 #
 param([string] $the_file, [string] $the_dir)
 
-function compress-directory([string]$dir, [string]$output)
-{
+function compress-directory([string]$dir, [string]$output) {
     $ddf = ".OPTION EXPLICIT
 .Set CabinetNameTemplate=$output
 .Set DiskDirectory1=
@@ -18,8 +17,8 @@ function compress-directory([string]$dir, [string]$output)
 .Set MaxDiskFileCount=0
 .Set MaxDiskSize=0
 "
-    $dirfullname = (get-item $dir).fullname
-    $ddfpath = ($env:TEMP+"\puthon_compress_$PID.ddf")
+    $dirfullname = (Get-Item $dir).fullname
+    $ddfpath = ($env:TEMP + "\puthon_compress_$PID.ddf")
     $base_path = '.' + $dirfullname |  Split-Path -NoQualifier
     $base_path = [regex]::escape($base_path)
     $ddf += (ls -recurse $dir | where { !$_.PSIsContainer } | select -ExpandProperty FullName | foreach { '"' + $_ + '" "' + (($_ | Split-Path -NoQualifier) -replace "$base_path", '') + '"' }) -join "`r`n"

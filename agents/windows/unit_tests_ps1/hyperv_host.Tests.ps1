@@ -281,7 +281,7 @@ Context "Hyper-V Host Plugin Tests" {
                     VhdType   = "Differencing"
                     Size      = 2147483648 # 2GB in bytes
                     FileSize  = 1073741824 # 1GB in bytes
-                    Path               = "C:\VMs\Disk1.vhdx"
+                    Path      = "C:\VMs\Disk1.vhdx"
                 }
 
                 Mock Get-VMHardDiskDrive { $vmHDDs }

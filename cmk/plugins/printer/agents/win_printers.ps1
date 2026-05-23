@@ -7,7 +7,7 @@ $CMK_VERSION = "3.0.0b1"
 # Printer Stockholm                     0                   3                   0
 # WH1_BC_O3_UPS                         0                   3                   0
 
-$pshost = get-host
+$pshost = Get-Host
 $pswindow = $pshost.ui.rawui
 
 $newsize = $pswindow.buffersize
@@ -17,13 +17,14 @@ $newsize.width = [Math]::Max($pswindow.windowsize.width, 150)
 
 try {
     $pswindow.buffersize = $newsize
-} catch {
+}
+catch {
     # Ignore errors if the buffer size is invalid
 }
 
 Write-Host "<<<win_printers>>>"
-$Data_Set1 = Get-CimInstance -ClassName Win32_PerfFormattedData_Spooler_PrintQueue | Select Name, Jobs | Sort Name
-$Data_Set2 = Get-CimInstance -ClassName Win32_Printer | ?{$_.PortName -notmatch '^TS'} | Select Name, @{name = "Jobs"; exp = {$null}}, PrinterStatus, DetectedErrorState | Sort Name
+$Data_Set1 = Get-CimInstance -ClassName Win32_PerfFormattedData_Spooler_PrintQueue | select Name, Jobs | Sort Name
+$Data_Set2 = Get-CimInstance -ClassName Win32_Printer | ? { $_.PortName -notmatch '^TS' } | select Name, @{name = "Jobs"; exp = { $null } }, PrinterStatus, DetectedErrorState | Sort Name
 
 #
 #  Merge the Job counts from Data_Set1 into Data_set2
@@ -35,25 +36,25 @@ $i = 0
 $d1 = $data_set1[0]
 
 foreach ($d2 in $Data_Set2) {
-  #
-  #  iterate through data_set1 elements until their "Name" >= the current data_set2 element's "Name"
-  #
-  while ($d1 -ne $null -and $d1.Name -lt $d2.Name) {
-    $d1 = $data_set1[++$i]
-  }
-  #
-  #  if we have a match, store the "Jobs" value from data_set1 in data_set2,
-  #  and move on to the next data_set1 element
-  #
-  #  if we don't have a match, data_set1 element's "Name" > data_set2 element's "Name",
-  #  so keep the data_set1 element and go on to the next data_set2 element
-  #
-  if ($d1.name -eq $d2.Name) {
-    $d2.Jobs = $d1.Jobs
-    $d1 = $data_set1[++$i]
-  }
+    #
+    #  iterate through data_set1 elements until their "Name" >= the current data_set2 element's "Name"
+    #
+    while ($d1 -ne $null -and $d1.Name -lt $d2.Name) {
+        $d1 = $data_set1[++$i]
+    }
+    #
+    #  if we have a match, store the "Jobs" value from data_set1 in data_set2,
+    #  and move on to the next data_set1 element
+    #
+    #  if we don't have a match, data_set1 element's "Name" > data_set2 element's "Name",
+    #  so keep the data_set1 element and go on to the next data_set2 element
+    #
+    if ($d1.name -eq $d2.Name) {
+        $d2.Jobs = $d1.Jobs
+        $d1 = $data_set1[++$i]
+    }
 }
 #
 #  If the "Jobs" element is Null, the printer was found in data_set2 but not in data_set1, so ignore it
 #
-$Data_Set2 | where { $_.Jobs -ne $null } | format-table -HideTableHeaders
+$Data_Set2 | where { $_.Jobs -ne $null } | Format-Table -HideTableHeaders

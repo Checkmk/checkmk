@@ -17,6 +17,15 @@ exports_files(
     visibility = ["//visibility:public"],
 )
 
+# Opts the linter's own PowerShell wrapper into PSScriptAnalyzer so we eat our
+# own dog food. Also satisfies scripts/in_bazel.sh's "every .ps1 in a filegroup"
+# requirement.
+filegroup(
+    name = "powershell_scripts",
+    srcs = ["ps_script_analyzer_wrapper.ps1"],
+    tags = ["lint-with-psscriptanalyzer"],
+)
+
 npm_link_all_packages(name = "node_modules")
 
 eslint_bin.eslint_binary(

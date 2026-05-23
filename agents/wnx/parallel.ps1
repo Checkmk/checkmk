@@ -14,9 +14,9 @@ if ( "$make_exe" -eq "" ) {
 $msbuild_exe = $Env:msbuild_exe
 if ( "$msbuild_exe" -eq "" ) {
     $msbuild_exe = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
-                     -latest `
-                     -requires Microsoft.Component.MSBuild `
-                     -find MSBuild\**\Bin\MSBuild.exe
+        -latest `
+        -requires Microsoft.Component.MSBuild `
+        -find MSBuild\**\Bin\MSBuild.exe
 }
 
 $sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'repo\check_mk\agents\wnx\wamain.sln'
@@ -28,7 +28,7 @@ $cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\..\packages\host\cmk-
 
 $platforms = @("Configuration=Release,Platform=x64")
 $err = 0
-$env:StartTime = "$(get-date)"
+$env:StartTime = "$(Get-Date)"
 
 function RunningCount($j_all) {
     $running_count = 0
@@ -43,9 +43,9 @@ function RunningCount($j_all) {
         return 0
     }
     $t1 = [datetime]$env:StartTime
-    $t2 = [datetime]$(get-date)
+    $t2 = [datetime]$(Get-Date)
     $elapsedTime = [int]($t2 - $t1).TotalSeconds
-    Write-Host -NoNewLine "`r Still running " $running_count " seconds elapsed: " $elapsedTime "....."-foreground Cyan
+    Write-Host -NoNewline "`r Still running " $running_count " seconds elapsed: " $elapsedTime "....."-foreground Cyan
     return $running_count
 }
 
@@ -62,7 +62,7 @@ function RcvJob($j, $name) {
         $script:err = 1
     }
     else {
-        Write-Host "On " $name ": Success" -ForegroundColor Green 
+        Write-Host "On " $name ": Success" -ForegroundColor Green
     }
     return
 }
@@ -70,7 +70,7 @@ function RcvJob($j, $name) {
 # Bases
 $msb = {
     & Set-Location $using:host_dir
-    & "$Env:msbuild_exe" $args 
+    & "$Env:msbuild_exe" $args
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Error: " $LASTEXITCODE -foreground Red
         throw "Failed"
@@ -81,7 +81,7 @@ $msb = {
 }
 
 $mk = {
-    & "$Env:make_exe" $args 
+    & "$Env:make_exe" $args
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Error: " $LASTEXITCODE -foreground Red
         throw "Failed make"
@@ -118,7 +118,7 @@ $j_s = @()
 $target = "engine"
 foreach ($p in $platforms) {
     Write-Host "Starting Job $target - $p" -foreground Blue
-    $j_s += start-job -scriptblock $msb -argumentlist $sln, "/m:4", "/t:$target", "/p:$p"
+    $j_s += Start-Job -ScriptBlock $msb -ArgumentList $sln, "/m:4", "/t:$target", "/p:$p"
     # for sequential execution
     # & $Env:msbuild_exe $sln "/m:4" "/t:$target" "/p:$p"
 }
@@ -144,13 +144,13 @@ $target = "check_mk_service"
 foreach ($p in $platforms) {
     Write-Host "Starting Job $target - $p" -foreground Blue
     $n = "$target" + "_" + $pid.ToString() + "_""$p"
-    $j_w += start-job -Name $n -scriptblock $msb -argumentlist $sln, "/m:4", "/t:$target", "/p:$p"
+    $j_w += Start-Job -Name $n -ScriptBlock $msb -ArgumentList $sln, "/m:4", "/t:$target", "/p:$p"
 }
 $target = "watest"
 foreach ($p in $platforms) {
     Write-Host "Starting Job $target - $p" -foreground Blue
     $n = "$target" + "_" + $pid.ToString() + "_""$p"
-    $j_w += start-job -Name $n -scriptblock $msb -argumentlist $sln, "/m:4", "/t:$target", "/p:$p"
+    $j_w += Start-Job -Name $n -ScriptBlock $msb -ArgumentList $sln, "/m:4", "/t:$target", "/p:$p"
 }
 Write-Host "Jobs waiting... This may take few minutes" -foreground White
 do {

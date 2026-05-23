@@ -4,6 +4,15 @@ load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 
+# Opts the formatter's own PowerShell wrapper into PSScriptAnalyzer so we eat
+# our own dog food. Also satisfies scripts/in_bazel.sh's "every .ps1 in a
+# filegroup" requirement.
+filegroup(
+    name = "powershell_scripts",
+    srcs = ["pwsh_format.ps1"],
+    tags = ["lint-with-psscriptanalyzer"],
+)
+
 prettier_bin.prettier_binary(
     name = "prettier",
     data = ["//bazel/tools:prettierrc"],
@@ -63,6 +72,18 @@ sh_expand_template(
     visibility = ["//visibility:public"],
 )
 
+sh_binary(
+    name = "pwsh-format",
+    srcs = ["pwsh_format_runner.sh"],
+    data = [
+        "pwsh_format.ps1",
+        "@psscriptanalyzer//:files",
+        "@pwsh",
+    ],
+    visibility = ["//visibility:public"],
+    deps = ["@bazel_tools//tools/bash/runfiles"],
+)
+
 format_multirun(
     name = "format",
     c = "@clang-linux-x86_64//:bin/clang-format",
@@ -76,6 +97,7 @@ format_multirun(
     # See https://github.com/keith/rules_multirun/issues/82
     jobs = 0,
     markdown = ":prettier",
+    powershell = ":pwsh-format",
     python = "@multitool_hub//tools/ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
     shell = ":shfmt",

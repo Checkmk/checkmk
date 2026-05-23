@@ -35,7 +35,8 @@ function ReadFromRegistry {
         $value = Get-ItemProperty -Path $RegistryKey -ErrorAction Stop | Select-Object -ExpandProperty "(default)"
         Write-Verbose "Registry key found: $value"
         return $value
-    } catch {
+    }
+    catch {
         Write-Verbose "Failed to read registry key: $RegistryKey. Using default value: $Default"
         return $Default
     }
@@ -65,7 +66,8 @@ function ProcessSearchResult {
         if ($Update.AutoSelectOnWebSites) {
             $ImportantUpdates += $Update.Title
             $NumImp++
-        } else {
+        }
+        else {
             $OptionalUpdates += $Update.Title
             $NumOpt++
         }

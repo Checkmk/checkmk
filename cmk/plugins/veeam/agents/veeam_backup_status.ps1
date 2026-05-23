@@ -9,7 +9,7 @@ $CMK_VERSION = "3.0.0b1"
 ## directory given in veeam_backup_status.bat and the .bat file needs to be
 ## started by the check_mk agent instead.
 
-$pshost = get-host
+$pshost = Get-Host
 $pswindow = $pshost.ui.rawui
 
 $newsize = $pswindow.buffersize
@@ -20,13 +20,13 @@ $pswindow.buffersize = $newsize
 ## -- start of the code which may switch powershell --
 ## Code below may been tested separately
 if ($Debug) {
-    $DebugPreference='Continue'
+    $DebugPreference = 'Continue'
 }
 
 $borderVersion = 13
 try {
     # works only if process is running, normally it's ok
-    $veeamVersion = [int](Get-Process | Where {$_.Name -like "*Veeam.Backup.Service*"}).ProductVersion.Substring(0,2)
+    $veeamVersion = [int](Get-Process | where { $_.Name -like "*Veeam.Backup.Service*" }).ProductVersion.Substring(0, 2)
 }
 catch {
     Write-Debug "Could not determine Veeam version, assuming v13"
@@ -84,29 +84,29 @@ catch {
         if ($Debug) {
             Write-Host "No Veeam powershell modules could be loaded"
         }
-        Exit 1
+        exit 1
     }
 }
 
 
 try {
     $tapeJobs = Get-VBRTapeJob
-    write-host "<<<veeam_tapejobs:sep(124)>>>"
-    write-host "JobName|JobID|LastResult|LastState"
+    Write-Host "<<<veeam_tapejobs:sep(124)>>>"
+    Write-Host "JobName|JobID|LastResult|LastState"
     foreach ($tapeJob in $tapeJobs) {
         $jobName = $tapeJob.Name
         $jobID = $tapeJob.Id
         $lastResult = $tapeJob.LastResult
         $lastState = $tapeJob.LastState
-        write-host "$jobName|$jobID|$lastResult|$lastState"
+        Write-Host "$jobName|$jobID|$lastResult|$lastState"
     }
 
 
     try {
-        $cdpjobs = Get-VBRCDPPolicy | select-Object Name, NextRun, PolicyState
+        $cdpjobs = Get-VBRCDPPolicy | Select-Object Name, NextRun, PolicyState
     }
     catch {
-        write-host "CDP jobs not supported"
+        Write-Host "CDP jobs not supported"
         $cdpjobs = $false
     }
 
@@ -118,7 +118,7 @@ try {
 
             $MyCdpJobsNextRun = $mycdpjobs.NextRun
             if ($MyCdpJobsNextRun -ne $null) {
-                $MyCdpJobsNextRun = get-date -date $MyCdpJobsNextRun -Uformat %s
+                $MyCdpJobsNextRun = Get-Date -Date $MyCdpJobsNextRun -UFormat %s
             }
             else {
                 $MyCdpJobsNextRun = "null"
@@ -129,7 +129,7 @@ try {
             $myCdpJobsText = "$myCdpJobsText" + "$MyCdpJobsName" + "|" + "$MyCdpJobsNextRun" + "|" + "$MyCdpJobsPolicyState" + "`n"
         }
 
-        write-host $myCdpJobsText
+        Write-Host $myCdpJobsText
     }
 
     $myJobsText = "<<<veeam_jobs:sep(9)>>>`n"
@@ -148,9 +148,9 @@ try {
 
         $myJobLastSession = $myJob.FindLastSession()
 
-        $myJobCreationTime = $myJobLastSession.CreationTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
+        $myJobCreationTime = $myJobLastSession.CreationTime |  Get-Date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
 
-        $myJobEndTime = $myJobLastSession.EndTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
+        $myJobEndTime = $myJobLastSession.EndTime |  Get-Date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
 
         $myJobsText = "$myJobsText" + "$myJobName" + "`t" + "$myJobType" + "`t" + "$myJobLastState" + "`t" + "$myJobLastResult" + "`t" + "$myJobCreationTime" + "`t" + "$myJobEndTime" + "`n"
 
@@ -158,7 +158,7 @@ try {
         # because we are interested in the status of the original backup but
         # for replicas the overall job state is all we need.
         # Monitor also jobs with the EpAgentBackup job type.
-        if ($myJob.IsBackup -eq $false -And $myJob.JobType -ne "EpAgentBackup") {
+        if ($myJob.IsBackup -eq $false -and $myJob.JobType -ne "EpAgentBackup") {
             continue
         }
 
@@ -199,10 +199,10 @@ try {
             $myTaskText = "$myTaskText" + "TransferedSizeByte" + "`t" + "$myTaskTransferedSize" + "`n"
 
             # Starting from Version 9.5U3 StartTime is not supported anymore
-            If ($myTask.Progress.StartTime -eq $Null) {
+            if ($myTask.Progress.StartTime -eq $Null) {
                 $myTaskStartTime = $myTask.Progress.StartTimeLocal
             }
-            Else {
+            else {
                 $myTaskStartTime = $myTask.Progress.StartTime
             }
             $myTaskStartTime = $myTaskStartTime | Get-Date -Format "dd.MM.yyyy HH\:mm\:ss" -ErrorAction SilentlyContinue
@@ -210,10 +210,10 @@ try {
             $myTaskText = "$myTaskText" + "StartTime" + "`t" + "$myTaskStartTime" + "`n"
 
             # Starting from Version 9.5U3 StopTime is not supported anymore
-            If ($myTask.Progress.StopTime -eq $Null) {
+            if ($myTask.Progress.StopTime -eq $Null) {
                 $myTaskStopTime = $myTask.Progress.StopTimeLocal
             }
-            Else {
+            else {
                 $myTaskStopTime = $myTask.Progress.StopTime
             }
             $lastBackupAge = New-TimeSpan -Start $myTaskStopTime -End (Get-Date) -ErrorAction SilentlyContinue
@@ -243,13 +243,13 @@ try {
 
     }
 
-    write-host $myJobsText
-    write-host $myTaskText
+    Write-Host $myJobsText
+    Write-Host $myTaskText
 }
 
 catch {
     $errMsg = $_.Exception.Message
     $errItem = $_.Exception.ItemName
     Write-Error "Totally unexpected and unhandled error occured:`n Item: $errItem`n Error Message: $errMsg"
-    Break
+    break
 }

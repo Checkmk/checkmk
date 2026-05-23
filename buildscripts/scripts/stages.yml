@@ -114,6 +114,52 @@ STAGES:
               --path "packages" \
               --path "non-free/packages" \
               >> ${RESULTS}/results.txt || make_rc=$?
+          # Every .ps1 file must be declared in a filegroup. The existing strays
+          # are accepted as --known-offender exceptions and should be drained
+          # into proper filegroups incrementally. Being in a filegroup is
+          # necessary but not sufficient for the PSScriptAnalyzer aspect to
+          # discover the script — the filegroup must also carry the
+          # lint-with-psscriptanalyzer tag (separate follow-up).
+          ./scripts/in_bazel.sh ".ps1" "filegroup" \
+              `# CMK-35750` \
+              --known-offender agents/modules/windows/make_cab.ps1 \
+              --known-offender agents/windows/unit_tests_ps1/hyperv_host.Tests.ps1 \
+              --known-offender agents/windows/unit_tests_ps1/kaspersky_av_client.Tests.ps1 \
+              --known-offender agents/windows/unit_tests_ps1/mk_inventory.Tests.ps1 \
+              --known-offender agents/windows/unit_tests_ps1/windows_updates.Tests.ps1 \
+              --known-offender agents/wnx/install/resources/configure_and_exec.ps1 \
+              --known-offender agents/wnx/parallel.ps1 \
+              --known-offender agents/wnx/run.ps1 \
+              --known-offender agents/wnx/run_tests.ps1 \
+              --known-offender agents/wnx/scripts/tools/findagentmsi.ps1 \
+              --known-offender agents/wnx/test_files/tools/v/run.ps1 \
+              --known-offender agents/wnx/tests/files/regression/windows_if.ps1 \
+              --known-offender cmk/plugins/collection/agents/iis_app_pool_state.ps1 \
+              --known-offender cmk/plugins/hyperv/agents/hyperv_vms.ps1 \
+              --known-offender cmk/plugins/hyperv/agents/hyperv_vms_guestinfos.ps1 \
+              --known-offender cmk/plugins/msexch/agents/msexch_dag.ps1 \
+              --known-offender cmk/plugins/msexch/agents/msexch_database.ps1 \
+              --known-offender cmk/plugins/windows/agents/windows_multipath.ps1 \
+              --known-offender cmk/plugins/windows/agents/windows_tasks.ps1 \
+              --known-offender cmk/plugins/windows/agents/windows_updates.ps1 \
+              `# CMK-35751` \
+              --known-offender packages/mk-oracle/references/mk_oracle.ps1 \
+              --known-offender packages/mk-oracle/run.ps1 \
+              --known-offender packages/mk-oracle/tests/files/ci-scripts/manage-test-registry-set.ps1 \
+              `# CMK-35752` \
+              --known-offender packages/mk-sql/run.ps1 \
+              --known-offender packages/mk-sql/tests/files/ci-scripts/manage-test-registry-set.ps1 \
+              `# CMK-35753` \
+              --known-offender packages/cmk-agent-ctl/run.ps1 \
+              `# CMK-35754` \
+              --known-offender agents/windows/unit_tests_ps1/mk_mysql.Tests.ps1 \
+              `# CMK-35755` \
+              --known-offender cmk/plugins/nvidia/agents/nvidia_smi.ps1 \
+              `# CMK-35756` \
+              --known-offender cmk/plugins/printer/agents/win_printers.ps1 \
+              `# CMK-35757` \
+              --known-offender cmk/plugins/veeam/agents/veeam_backup_status.ps1 \
+              >> ${RESULTS}/results.txt || make_rc=$?
           ./tests/agent-plugin-unit/bootstrap.sh --check-sources >> ${RESULTS}/results.txt || make_rc=$?
           exit $make_rc
       RESULT_CHECK_FILE_PATTERN: "results/results.txt"

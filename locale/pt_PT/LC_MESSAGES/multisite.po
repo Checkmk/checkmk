@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-21 17:53+0000\n"
+"PO-Revision-Date: 2026-05-22 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -72461,8 +72461,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Esta opção faz com que a checkmk use a descrição da interface, alias ou "
 "número da porta como item."
@@ -81846,6 +81846,10 @@ msgstr "Use o mais crítico dos seus níveis e do dispositivo"
 msgid "Use mount point"
 msgstr "Use o ponto de montagem"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Nome do usuário"
+
 msgid "Use narrow rendering for this number"
 msgstr "Utilizar uma renderização estreita para este número"
 
@@ -85183,8 +85187,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Ao listar os membros do grupo na saída do serviço de monitoramento do grupo, "
 "esta opção faz com que a checkmk use ou a descrição da interface, alias ou "
@@ -93367,10 +93371,6 @@ msgid "Engineering scientific"
 msgstr ""
 
 #, fuzzy
-msgid "Symbol is required"
-msgstr "é necessário"
-
-#, fuzzy
 msgid "Digits must be a non-negative number"
 msgstr "A data deve ser um valor numérico"
 
@@ -94584,7 +94584,7 @@ msgstr "Adicionar nova configuração de usuário"
 msgid "An unexpected error occurred. Please try again."
 msgstr "Ocorreu uma excepção: %s"
 
-msgid "Basic auth (user: %{user}, password: %{password})"
+msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
 
 #, fuzzy
@@ -95752,6 +95752,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Symbol is required"
+#~ msgstr "é necessário"
 
 #, fuzzy
 #~ msgid ""
@@ -98563,9 +98567,6 @@ msgstr ""
 
 #~ msgid "User Agent"
 #~ msgstr "Agente do usuário"
-
-#~ msgid "User name"
-#~ msgstr "Nome do usuário"
 
 #, fuzzy
 #~ msgid "Windows time service peers"

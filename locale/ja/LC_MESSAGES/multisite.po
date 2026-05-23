@@ -67326,9 +67326,10 @@ msgstr ""
 "このオプションにより、Checkmkはポート番号の代わりにポート名を項目として使用す"
 "ることができます。説明がない場合、ポート番号が使用されます。"
 
+#, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "このオプションにより、Checkmk はインターフェースの説明、エイリアス、または"
 "ポート番号のいずれかをアイテムとして使用します。"
@@ -75771,6 +75772,10 @@ msgstr "あなたとデバイスのレベルの中で最も重要なものを使
 msgid "Use mount point"
 msgstr "マウントポイントを使用する"
 
+#, fuzzy
+msgid "Use name"
+msgstr "ユーザー名"
+
 msgid "Use narrow rendering for this number"
 msgstr "この数値にはナローレンダリングを使用する"
 
@@ -78785,10 +78790,11 @@ msgstr ""
 "グループでこれらのアイテムより少ないアイテムが見つかった場合、サービスはグ"
 "ループ化されて表示されません。"
 
+#, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "グループを監視するサービスの出力にグループメンバーをリストアップするとき、こ"
 "のオプションはcheckmkにインターフェイスの説明、エイリアス、またはポート番号の"
@@ -86420,10 +86426,6 @@ msgid "Engineering scientific"
 msgstr "科学的エンジニアリング"
 
 #, fuzzy
-msgid "Symbol is required"
-msgstr "必須"
-
-#, fuzzy
 msgid "Digits must be a non-negative number"
 msgstr "非負の整数でなければなりません。"
 
@@ -87752,7 +87754,7 @@ msgstr "OpenTelemetryの設定を管理する"
 msgid "An unexpected error occurred. Please try again."
 msgstr "予期せぬエラーが発生しました"
 
-msgid "Basic auth (user: %{user}, password: %{password})"
+msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
 
 #, fuzzy
@@ -89074,6 +89076,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#, fuzzy
+#~ msgid "Symbol is required"
+#~ msgstr "必須"
 
 #~ msgid ""
 #~ "By default the users are synchronized automatically in the interval "
@@ -92042,9 +92048,6 @@ msgstr ""
 
 #~ msgid "User Agent"
 #~ msgstr "ユーザーエージェント"
-
-#~ msgid "User name"
-#~ msgstr "ユーザー名"
 
 #, fuzzy
 #~ msgid "Windows time service peers"

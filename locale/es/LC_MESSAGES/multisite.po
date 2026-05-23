@@ -73108,8 +73108,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Esta opción hace que checkmk utilice la descripción de la interfaz, el alias "
 "o el número de puerto como elemento."
@@ -82560,6 +82560,10 @@ msgstr "Utiliza los niveles más críticos de tu y del dispositivo"
 msgid "Use mount point"
 msgstr "Utilizar el punto de montaje"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Nombre de usuario"
+
 msgid "Use narrow rendering for this number"
 msgstr "Utilice una representación estrecha para este número"
 
@@ -85930,8 +85934,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Cuando se enumeran los miembros del grupo en la salida del servicio que "
 "supervisa el grupo, esta opción hace que checkmk utilice la descripción de "
@@ -94184,10 +94188,6 @@ msgid "Engineering scientific"
 msgstr ""
 
 #, fuzzy
-msgid "Symbol is required"
-msgstr "es necesario"
-
-#, fuzzy
 msgid "Digits must be a non-negative number"
 msgstr "La fecha debe ser un valor numérico"
 
@@ -95408,7 +95408,7 @@ msgstr "Añadir una nueva configuración de usuario"
 msgid "An unexpected error occurred. Please try again."
 msgstr "Se ha producido una excepción: %s"
 
-msgid "Basic auth (user: %{user}, password: %{password})"
+msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
 
 #, fuzzy
@@ -96575,6 +96575,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Symbol is required"
+#~ msgstr "es necesario"
 
 #, fuzzy
 #~ msgid ""
@@ -99417,9 +99421,6 @@ msgstr ""
 
 #~ msgid "User Agent"
 #~ msgstr "Agente del usuario"
-
-#~ msgid "User name"
-#~ msgstr "Nombre de usuario"
 
 #, fuzzy
 #~ msgid "Windows time service peers"

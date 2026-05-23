@@ -72653,8 +72653,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Această opțiune face ca checkmk să utilizeze fie descrierea interfeței, fie "
 "aliasul sau numărul portului ca element."
@@ -82012,6 +82012,10 @@ msgstr ""
 msgid "Use mount point"
 msgstr "Utilizați punctul de montare"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Numele utilizatorului"
+
 msgid "Use narrow rendering for this number"
 msgstr "Utilizați o redare îngustă pentru acest număr"
 
@@ -85372,8 +85376,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Atunci când enumeră membrii grupului în rezultatul serviciului care "
 "monitorizează grupul, această opțiune face ca checkmk să utilizeze fie "
@@ -93610,10 +93614,6 @@ msgid "Engineering scientific"
 msgstr ""
 
 #, fuzzy
-msgid "Symbol is required"
-msgstr "este necesară"
-
-#, fuzzy
 msgid "Digits must be a non-negative number"
 msgstr "Data trebuie să fie o valoare numerică"
 
@@ -94839,7 +94839,7 @@ msgstr "Adaugp o noua configurație de utilizator"
 msgid "An unexpected error occurred. Please try again."
 msgstr "S-a produs o excepție: %s"
 
-msgid "Basic auth (user: %{user}, password: %{password})"
+msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
 
 #, fuzzy
@@ -96012,6 +96012,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Symbol is required"
+#~ msgstr "este necesară"
 
 #, fuzzy
 #~ msgid ""
@@ -98887,9 +98891,6 @@ msgstr ""
 
 #~ msgid "User Agent"
 #~ msgstr "Agent utilizator"
-
-#~ msgid "User name"
-#~ msgstr "Numele utilizatorului"
 
 #, fuzzy
 #~ msgid "Windows time service peers"

@@ -411,17 +411,28 @@ def extract_raw_expressions_from_graph_title(title: str) -> list[str]:
 
 class _GraphTitleExpression(BaseModel, frozen=True):
     metric: str
-    scalar: Literal["warn", "crit", "min", "max"]
+    scalar: Literal["warn", "crit", "warn_lower", "crit_lower", "min", "max"]
 
 
 def _parse_graph_title_expression(
     expression: _GraphTitleExpression,
-) -> metrics_v1.WarningOf | metrics_v1.CriticalOf | metrics_v1.MinimumOf | metrics_v1.MaximumOf:
+) -> (
+    metrics_v1.WarningOf
+    | metrics_v1.CriticalOf
+    | metrics_v2_unstable.LowerWarningOf
+    | metrics_v2_unstable.LowerCriticalOf
+    | metrics_v1.MinimumOf
+    | metrics_v1.MaximumOf
+):
     match expression.scalar:
         case "warn":
             return metrics_v1.WarningOf(expression.metric)
         case "crit":
             return metrics_v1.CriticalOf(expression.metric)
+        case "warn_lower":
+            return metrics_v2_unstable.LowerWarningOf(expression.metric)
+        case "crit_lower":
+            return metrics_v2_unstable.LowerCriticalOf(expression.metric)
         case "min":
             return metrics_v1.MinimumOf(expression.metric, color=metrics_v1.Color.BLACK)
         case "max":

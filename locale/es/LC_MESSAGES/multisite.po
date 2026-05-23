@@ -77213,8 +77213,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Esta opción hace que checkmk utilice la descripción de la interfaz, el alias "
 "o el número de puerto como elemento."
@@ -87114,6 +87114,10 @@ msgstr "Utiliza los niveles más críticos de tu y del dispositivo"
 msgid "Use mount point"
 msgstr "Utilizar el punto de montaje"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Nombre de usuario"
+
 msgid "Use narrow rendering for this number"
 msgstr "Utilice una representación estrecha para este número"
 
@@ -90580,8 +90584,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Cuando se enumeran los miembros del grupo en la salida del servicio que "
 "supervisa el grupo, esta opción hace que checkmk utilice la descripción de "
@@ -100087,7 +100091,7 @@ msgstr "Añadir, editar y eliminar conexiones InfluxDB."
 msgid "An unexpected error occurred. Please try again."
 msgstr "Usuario o contraseña incorrectos. Por favor, inténtelo de nuevo."
 
-msgid "Basic auth (user: %{user}, password: %{password})"
+msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
 
 #, fuzzy
@@ -103162,9 +103166,6 @@ msgstr ""
 
 #~ msgid "User manual"
 #~ msgstr "Manual del usuario"
-
-#~ msgid "User name"
-#~ msgstr "Nombre de usuario"
 
 #, fuzzy
 #~ msgid "Value of attribute"

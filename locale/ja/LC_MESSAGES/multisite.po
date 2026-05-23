@@ -72869,8 +72869,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "このオプションにより、checkmkはインターフェースの説明、エイリアス、またはポー"
 "ト番号のいずれかをアイテムとして使用します。"
@@ -81877,6 +81877,10 @@ msgstr "あなたとデバイスのレベルの中で最も重要なものを使
 msgid "Use mount point"
 msgstr "マウントポイントを使用する"
 
+#, fuzzy
+msgid "Use name"
+msgstr "ユーザー名"
+
 msgid "Use narrow rendering for this number"
 msgstr "この数値にはナローレンダリングを使用する"
 
@@ -85035,8 +85039,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "グループを監視するサービスの出力にグループメンバーをリストアップするとき、こ"
 "のオプションはcheckmkにインターフェイスの説明、エイリアス、またはポート番号の"
@@ -94232,7 +94236,7 @@ msgstr "OpenTelemetry 設定の追加、編集、削除。"
 msgid "An unexpected error occurred. Please try again."
 msgstr "ユーザー名またはパスワードが間違っています。もう一度お試しください。"
 
-msgid "Basic auth (user: %{user}, password: %{password})"
+msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
 
 #, fuzzy
@@ -97506,9 +97510,6 @@ msgstr ""
 
 #~ msgid "User manual"
 #~ msgstr "ユーザーマニュアル"
-
-#~ msgid "User name"
-#~ msgstr "ユーザー名"
 
 #~ msgid "Value of attribute"
 #~ msgstr "アトリビュートの値"

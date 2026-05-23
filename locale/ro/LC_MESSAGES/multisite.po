@@ -76912,8 +76912,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Această opțiune face ca checkmk să utilizeze fie descrierea interfeței, fie "
 "aliasul sau numărul portului ca element."
@@ -86739,6 +86739,10 @@ msgstr ""
 msgid "Use mount point"
 msgstr "Utilizați punctul de montare"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Numele utilizatorului"
+
 msgid "Use narrow rendering for this number"
 msgstr "Utilizați o redare îngustă pentru acest număr"
 
@@ -90193,8 +90197,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Atunci când enumeră membrii grupului în rezultatul serviciului care "
 "monitorizează grupul, această opțiune face ca checkmk să utilizeze fie "
@@ -99696,7 +99700,7 @@ msgid "An unexpected error occurred. Please try again."
 msgstr ""
 "Nume de utilizator sau parolă incorectă. Vă rugăm să încercați din nou."
 
-msgid "Basic auth (user: %{user}, password: %{password})"
+msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
 
 #, fuzzy
@@ -102787,9 +102791,6 @@ msgstr ""
 
 #~ msgid "User manual"
 #~ msgstr "Manual de utilizare"
-
-#~ msgid "User name"
-#~ msgstr "Numele utilizatorului"
 
 #, fuzzy
 #~ msgid "Value of attribute"

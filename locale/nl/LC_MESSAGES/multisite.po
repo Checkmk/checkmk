@@ -76628,8 +76628,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Deze optie zorgt ervoor dat checkmk ofwel de interface beschrijving, alias "
 "of poortnummer gebruikt als item."
@@ -86460,6 +86460,10 @@ msgstr "Gebruik de meest kritische van uw en apparaat niveaus"
 msgid "Use mount point"
 msgstr "Gebruik mountpoint"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Naam gebruiker"
+
 msgid "Use narrow rendering for this number"
 msgstr "Gebruik smalle weergave voor dit nummer"
 
@@ -89898,8 +89902,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Bij het opsommen van de groepsleden in de uitvoer van de dienst die de groep "
 "bewaakt, zorgt deze optie ervoor dat checkmk ofwel de interfacebeschrijving, "
@@ -99372,7 +99376,7 @@ msgstr "InfluxDB verbindingen toevoegen, bewerken en verwijderen."
 msgid "An unexpected error occurred. Please try again."
 msgstr "Er is een uitzondering opgetreden: %s"
 
-msgid "Basic auth (user: %{user}, password: %{password})"
+msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
 
 #, fuzzy
@@ -102427,9 +102431,6 @@ msgstr ""
 
 #~ msgid "User manual"
 #~ msgstr "Gebruikershandleiding"
-
-#~ msgid "User name"
-#~ msgstr "Naam gebruiker"
 
 #, fuzzy
 #~ msgid "Value of attribute"

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-21 17:53+0000\n"
+"PO-Revision-Date: 2026-05-22 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -76569,8 +76569,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Esta opção faz com que a checkmk use a descrição da interface, alias ou "
 "número da porta como item."
@@ -86398,6 +86398,10 @@ msgstr "Use o mais crítico dos seus níveis e do dispositivo"
 msgid "Use mount point"
 msgstr "Use o ponto de montagem"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Nome do usuário"
+
 msgid "Use narrow rendering for this number"
 msgstr "Utilizar uma renderização estreita para este número"
 
@@ -89829,8 +89833,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Ao listar os membros do grupo na saída do serviço de monitoramento do grupo, "
 "esta opção faz com que a checkmk use ou a descrição da interface, alias ou "
@@ -99265,7 +99269,7 @@ msgid "An unexpected error occurred. Please try again."
 msgstr ""
 "Nome de utilizador ou palavra-passe incorrectos. Por favor, tente novamente."
 
-msgid "Basic auth (user: %{user}, password: %{password})"
+msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
 
 #, fuzzy
@@ -102355,9 +102359,6 @@ msgstr ""
 
 #~ msgid "User manual"
 #~ msgstr "Manual do utilizador"
-
-#~ msgid "User name"
-#~ msgstr "Nome do usuário"
 
 #, fuzzy
 #~ msgid "Value of attribute"

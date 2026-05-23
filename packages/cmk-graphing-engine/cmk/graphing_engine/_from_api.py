@@ -6,9 +6,9 @@
 from collections.abc import Callable
 from typing import assert_never
 
-from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
-from cmk.graphing.v2_unstable import metrics as metrics_v2_api
+from cmk.graphing.v1 import graphs as graphs_v1
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 
 from ._objects import (
     AutoPrecision,
@@ -44,80 +44,80 @@ from ._objects import (
 
 type _ApiQuantity = (
     str
-    | metrics_api.Constant
-    | metrics_api.WarningOf
-    | metrics_api.CriticalOf
-    | metrics_api.MinimumOf
-    | metrics_api.MaximumOf
-    | metrics_api.Sum
-    | metrics_api.Product
-    | metrics_api.Difference
-    | metrics_api.Fraction
+    | metrics_v1.Constant
+    | metrics_v1.WarningOf
+    | metrics_v1.CriticalOf
+    | metrics_v1.MinimumOf
+    | metrics_v1.MaximumOf
+    | metrics_v1.Sum
+    | metrics_v1.Product
+    | metrics_v1.Difference
+    | metrics_v1.Fraction
 )
 
-_COLORS: dict[metrics_api.Color, str] = {
-    metrics_api.Color.LIGHT_RED: "#f37c7c",
-    metrics_api.Color.RED: "#ed3b3b",
-    metrics_api.Color.DARK_RED: "#a82a2a",
-    metrics_api.Color.LIGHT_ORANGE: "#ffad54",
-    metrics_api.Color.ORANGE: "#ff8400",
-    metrics_api.Color.DARK_ORANGE: "#b55e00",
-    metrics_api.Color.LIGHT_YELLOW: "#ffe456",
-    metrics_api.Color.YELLOW: "#ffd703",
-    metrics_api.Color.DARK_YELLOW: "#ac7c02",
-    metrics_api.Color.LIGHT_GREEN: "#62e0bf",
-    metrics_api.Color.GREEN: "#15d1a0",
-    metrics_api.Color.DARK_GREEN: "#0f9472",
-    metrics_api.Color.LIGHT_BLUE: "#6fc1f7",
-    metrics_api.Color.BLUE: "#28a2f3",
-    metrics_api.Color.DARK_BLUE: "#1c73ad",
-    metrics_api.Color.LIGHT_CYAN: "#68eeee",
-    metrics_api.Color.CYAN: "#1ee6e6",
-    metrics_api.Color.DARK_CYAN: "#17b5b5",
-    metrics_api.Color.LIGHT_PURPLE: "#acaaff",
-    metrics_api.Color.PURPLE: "#8380ff",
-    metrics_api.Color.DARK_PURPLE: "#5d5bb5",
-    metrics_api.Color.LIGHT_PINK: "#f9a8e2",
-    metrics_api.Color.PINK: "#ec48b6",
-    metrics_api.Color.DARK_PINK: "#be187a",
-    metrics_api.Color.LIGHT_BROWN: "#d4ad84",
-    metrics_api.Color.BROWN: "#bf8548",
-    metrics_api.Color.DARK_BROWN: "#885e33",
-    metrics_api.Color.LIGHT_GRAY: "#acacac",
-    metrics_api.Color.GRAY: "#8c8c8c",
-    metrics_api.Color.DARK_GRAY: "#5d5d5d",
-    metrics_api.Color.BLACK: "#1e262e",
-    metrics_api.Color.WHITE: "#ffffff",
+_COLORS: dict[metrics_v1.Color, str] = {
+    metrics_v1.Color.LIGHT_RED: "#f37c7c",
+    metrics_v1.Color.RED: "#ed3b3b",
+    metrics_v1.Color.DARK_RED: "#a82a2a",
+    metrics_v1.Color.LIGHT_ORANGE: "#ffad54",
+    metrics_v1.Color.ORANGE: "#ff8400",
+    metrics_v1.Color.DARK_ORANGE: "#b55e00",
+    metrics_v1.Color.LIGHT_YELLOW: "#ffe456",
+    metrics_v1.Color.YELLOW: "#ffd703",
+    metrics_v1.Color.DARK_YELLOW: "#ac7c02",
+    metrics_v1.Color.LIGHT_GREEN: "#62e0bf",
+    metrics_v1.Color.GREEN: "#15d1a0",
+    metrics_v1.Color.DARK_GREEN: "#0f9472",
+    metrics_v1.Color.LIGHT_BLUE: "#6fc1f7",
+    metrics_v1.Color.BLUE: "#28a2f3",
+    metrics_v1.Color.DARK_BLUE: "#1c73ad",
+    metrics_v1.Color.LIGHT_CYAN: "#68eeee",
+    metrics_v1.Color.CYAN: "#1ee6e6",
+    metrics_v1.Color.DARK_CYAN: "#17b5b5",
+    metrics_v1.Color.LIGHT_PURPLE: "#acaaff",
+    metrics_v1.Color.PURPLE: "#8380ff",
+    metrics_v1.Color.DARK_PURPLE: "#5d5bb5",
+    metrics_v1.Color.LIGHT_PINK: "#f9a8e2",
+    metrics_v1.Color.PINK: "#ec48b6",
+    metrics_v1.Color.DARK_PINK: "#be187a",
+    metrics_v1.Color.LIGHT_BROWN: "#d4ad84",
+    metrics_v1.Color.BROWN: "#bf8548",
+    metrics_v1.Color.DARK_BROWN: "#885e33",
+    metrics_v1.Color.LIGHT_GRAY: "#acacac",
+    metrics_v1.Color.GRAY: "#8c8c8c",
+    metrics_v1.Color.DARK_GRAY: "#5d5d5d",
+    metrics_v1.Color.BLACK: "#1e262e",
+    metrics_v1.Color.WHITE: "#ffffff",
 }
 
 
-def _parse_color(color: metrics_api.Color) -> str:
+def _parse_color(color: metrics_v1.Color) -> str:
     return _COLORS[color]
 
 
-def _parse_unit(unit: metrics_api.Unit) -> Unit:
+def _parse_unit(unit: metrics_v1.Unit) -> Unit:
     notation: Notation
     match unit.notation:
-        case metrics_api.DecimalNotation(symbol):
+        case metrics_v1.DecimalNotation(symbol):
             notation = DecimalNotation(symbol)
-        case metrics_api.SINotation(symbol):
+        case metrics_v1.SINotation(symbol):
             notation = SINotation(symbol)
-        case metrics_api.IECNotation(symbol):
+        case metrics_v1.IECNotation(symbol):
             notation = IECNotation(symbol)
-        case metrics_api.StandardScientificNotation(symbol):
+        case metrics_v1.StandardScientificNotation(symbol):
             notation = StandardScientificNotation(symbol)
-        case metrics_api.EngineeringScientificNotation(symbol):
+        case metrics_v1.EngineeringScientificNotation(symbol):
             notation = EngineeringScientificNotation(symbol)
-        case metrics_api.TimeNotation():
+        case metrics_v1.TimeNotation():
             notation = TimeNotation()
         case _:
             assert_never(unit.notation)
 
     precision: Precision
     match unit.precision:
-        case metrics_api.AutoPrecision(digits):
+        case metrics_v1.AutoPrecision(digits):
             precision = AutoPrecision(digits)
-        case metrics_api.StrictPrecision(digits):
+        case metrics_v1.StrictPrecision(digits):
             precision = StrictPrecision(digits)
         case _:
             assert_never(unit.precision)
@@ -132,52 +132,52 @@ def _parse_quantity(
     match quantity:
         case str():
             return MetricName(quantity)
-        case metrics_api.Constant():
+        case metrics_v1.Constant():
             return Constant(
                 title=quantity.title.localize(localizer),
                 unit=_parse_unit(quantity.unit),
                 color=_parse_color(quantity.color),
                 value=quantity.value,
             )
-        case metrics_v2_api.LowerWarningOf():
+        case metrics_v2_unstable.LowerWarningOf():
             return LowerWarningOf(metric_name=MetricName(quantity.metric_name))
-        case metrics_v2_api.LowerCriticalOf():
+        case metrics_v2_unstable.LowerCriticalOf():
             return LowerCriticalOf(metric_name=MetricName(quantity.metric_name))
-        case metrics_api.WarningOf():
+        case metrics_v1.WarningOf():
             return WarningOf(metric_name=MetricName(quantity.metric_name))
-        case metrics_api.CriticalOf():
+        case metrics_v1.CriticalOf():
             return CriticalOf(metric_name=MetricName(quantity.metric_name))
-        case metrics_api.MinimumOf():
+        case metrics_v1.MinimumOf():
             return MinimumOf(
                 metric_name=MetricName(quantity.metric_name),
                 color=_parse_color(quantity.color),
             )
-        case metrics_api.MaximumOf():
+        case metrics_v1.MaximumOf():
             return MaximumOf(
                 metric_name=MetricName(quantity.metric_name),
                 color=_parse_color(quantity.color),
             )
-        case metrics_api.Sum():
+        case metrics_v1.Sum():
             return Sum(
                 title=quantity.title.localize(localizer),
                 color=_parse_color(quantity.color),
                 summands=[_parse_quantity(s, localizer) for s in quantity.summands],
             )
-        case metrics_api.Product():
+        case metrics_v1.Product():
             return Product(
                 title=quantity.title.localize(localizer),
                 unit=_parse_unit(quantity.unit),
                 color=_parse_color(quantity.color),
                 factors=[_parse_quantity(f, localizer) for f in quantity.factors],
             )
-        case metrics_api.Difference():
+        case metrics_v1.Difference():
             return Difference(
                 title=quantity.title.localize(localizer),
                 color=_parse_color(quantity.color),
                 minuend=_parse_quantity(quantity.minuend, localizer),
                 subtrahend=_parse_quantity(quantity.subtrahend, localizer),
             )
-        case metrics_api.Fraction():
+        case metrics_v1.Fraction():
             return Fraction(
                 title=quantity.title.localize(localizer),
                 unit=_parse_unit(quantity.unit),
@@ -199,7 +199,7 @@ def _parse_bound(
 
 
 def _parse_minimal_range(
-    minimal_range: graphs_api.MinimalRange,
+    minimal_range: graphs_v1.MinimalRange,
     localizer: Callable[[str], str],
 ) -> MinimalRange:
     return MinimalRange(
@@ -208,7 +208,7 @@ def _parse_minimal_range(
     )
 
 
-def _parse_graph(graph: graphs_api.Graph, localizer: Callable[[str], str]) -> Graph:
+def _parse_graph(graph: graphs_v1.Graph, localizer: Callable[[str], str]) -> Graph:
     return Graph(
         name=graph.name,
         title=graph.title.localize(localizer),
@@ -229,13 +229,13 @@ def _parse_graph(graph: graphs_api.Graph, localizer: Callable[[str], str]) -> Gr
 
 
 def parse_graph_from_api(
-    graph: graphs_api.Graph | graphs_api.Bidirectional,
+    graph: graphs_v1.Graph | graphs_v1.Bidirectional,
     localizer: Callable[[str], str],
 ) -> Graph | Bidirectional:
     match graph:
-        case graphs_api.Graph():
+        case graphs_v1.Graph():
             return _parse_graph(graph, localizer)
-        case graphs_api.Bidirectional():
+        case graphs_v1.Bidirectional():
             return Bidirectional(
                 name=graph.name,
                 title=graph.title.localize(localizer),

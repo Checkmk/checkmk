@@ -31,7 +31,6 @@ from livestatus import (
 
 import cmk.gui.sites
 import cmk.gui.watolib.audit_log as _audit_log
-import cmk.gui.watolib.changes as _changes
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.ccc.regex import REGEX_ID
@@ -143,6 +142,8 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
     index_update_change_hook,
     PendingChanges,
     PendingChangesStore,
@@ -1121,7 +1122,12 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_logout(
                 SiteId(logout_id),
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config.sites,
+                    use_git=config.wato_use_git,
+                    local_site=omd_site(),
+                    user_id=user.id,
+                ),
             )
 
         login_id = request.get_ascii_input("_login")
@@ -1258,7 +1264,7 @@ class ModeDistributedMonitoring(WatoMode):
         return redirect(mode_url("sites"))
 
     def _action_logout(
-        self, logout_id: SiteId, *, pprint_value: bool, use_git: bool
+        self, logout_id: SiteId, *, pprint_value: bool, pending_changes: PendingChanges
     ) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
         site = configured_sites[logout_id]
@@ -1269,13 +1275,13 @@ class ModeDistributedMonitoring(WatoMode):
             activate=True,
             pprint_value=pprint_value,
         )
-        _changes.add_change(
-            action_name="edit-site",
-            text=_("Logged out of remote site %s") % HTMLWriter.render_tt(site["alias"]),
-            user_id=user.id,
-            domains=[ConfigDomainGUI()],
-            sites=[omd_site()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="edit-site",
+                text=_("Logged out of remote site %s") % HTMLWriter.render_tt(site["alias"]),
+                domains=[ConfigDomainGUI().ident()],
+            ),
+            ChangeScope.local_site(),
         )
         flash(_("Logged out."))
         return redirect(mode_url("sites"))
@@ -1912,14 +1918,19 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         if self._site_id == omd_site():
             save_site_global_settings(self._current_settings)
 
-        _changes.add_change(
-            action_name="edit-configvar",
-            text=msg,
-            user_id=user.id,
-            sites=[self._site_id],
-            domains=list(config_variable.all_domains()),
-            need_restart=config_variable.need_restart(),
+        _pending_changes(
+            config.sites,
             use_git=config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ).add(
+            Change(
+                action_name="edit-configvar",
+                text=msg,
+                domains=[d.ident() for d in config_variable.all_domains()],
+                force_restart=config_variable.need_restart() or None,
+            ),
+            ChangeScope.sites([self._site_id]),
         )
 
         if action == "_reset":
@@ -2107,14 +2118,20 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
         trusted_cas.append(cert_str)
 
-        _changes.add_change(
-            action_name="edit-configvar",
-            text=_("Added CA with fingerprint %s to trusted certificate authorities")
-            % digest_sha256,
-            user_id=user.id,
-            domains=[config_variable.primary_domain()],
-            need_restart=config_variable.need_restart(),
+        _pending_changes(
+            config.sites,
             use_git=config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ).add(
+            Change(
+                action_name="edit-configvar",
+                text=_("Added CA with fingerprint %s to trusted certificate authorities")
+                % digest_sha256,
+                domains=[config_variable.primary_domain().ident()],
+                force_restart=config_variable.need_restart() or None,
+            ),
+            ChangeScope.all_activation_sites(),
         )
         save_global_settings(
             {

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.config import active_config
@@ -15,8 +16,19 @@ from cmk.gui.user_connection_config_types import (
     LDAPUserConnectionConfig,
 )
 from cmk.gui.userdb import get_user_attributes, UserConnectionConfigFile
+from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.watolib.users import create_user, default_sites
 from tests.testlib.rest_api_client import ClientRegistry
+
+
+def _test_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=active_config.sites,
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=PendingChangesStore(),
+        hooks=(),
+    )
 
 
 def test_edit_ldap_user_with_locked_attributes(clients: ClientRegistry) -> None:
@@ -109,6 +121,7 @@ def test_edit_ldap_user_with_locked_attributes(clients: ClientRegistry) -> None:
         default_sites,
         get_user_attributes([]),
         user_connections=[ldap_config],
+        pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
     )

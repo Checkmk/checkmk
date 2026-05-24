@@ -29,9 +29,7 @@ from cmk.gui.userdb.userdata import UserAlreadyExistsError, UserData, UserDB, Us
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue
 from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import CORE
-from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
@@ -77,6 +75,7 @@ def delete_users(
     sites: _UserAssociatedSitesFn,
     user_attributes: Sequence[tuple[str, UserAttribute]],
     *,
+    pending_changes: PendingChanges,
     use_git: bool,
     acting_user: LoggedInUser,
 ) -> tuple[list[UserId], dict[UserId, list[EventRule]]]:
@@ -121,13 +120,15 @@ def delete_users(
                 use_git=use_git,
                 object_ref=make_user_object_ref(user_id),
             )
-        add_change(
-            action_name="edit-users",
-            text=_l("Deleted user: %s") % ", ".join(deleted_users),
-            user_id=acting_user.id,
-            sites=None if affected_sites == "all" else list(affected_sites),
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="edit-users",
+                text=_l("Deleted user: %s") % ", ".join(deleted_users),
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites()
+            if affected_sites == "all"
+            else ChangeScope.sites(list(affected_sites)),
         )
         userdb.save_users(
             all_users,
@@ -152,6 +153,7 @@ def edit_user(
     sites: _UserAssociatedSitesFn,
     user_attributes: Sequence[tuple[str, UserAttribute]],
     *,
+    pending_changes: PendingChanges,
     use_git: bool,
     acting_user: LoggedInUser,
 ) -> None:
@@ -196,13 +198,15 @@ def edit_user(
     except UserNotFoundError:
         raise MKUserError(None, _("The user you are trying to edit does not exist."))
 
-    add_change(
-        action_name="edit-users",
-        text=_l("Modified user: %s") % user_id,
-        user_id=acting_user.id,
-        sites=None if affected_sites == "all" else list(affected_sites),
-        domains=[ConfigDomainCore()],
-        use_git=use_git,
+    pending_changes.add(
+        Change(
+            action_name="edit-users",
+            text=_l("Modified user: %s") % user_id,
+            domains=[CORE],
+        ),
+        ChangeScope.all_activation_sites()
+        if affected_sites == "all"
+        else ChangeScope.sites(list(affected_sites)),
     )
 
 
@@ -212,6 +216,7 @@ def create_user(
     sites: _UserAssociatedSitesFn,
     user_attributes: Sequence[tuple[str, UserAttribute]],
     *,
+    pending_changes: PendingChanges,
     use_git: bool,
     acting_user: LoggedInUser,
     # TODO: Make this a mandatory parameter in the next commit
@@ -255,13 +260,15 @@ def create_user(
     )
 
     affected_sites = _update_affected_sites(set(), sites(new_user))
-    add_change(
-        action_name="edit-users",
-        text=_l("Created new user: %s") % user_id,
-        user_id=acting_user.id,
-        sites=None if affected_sites == "all" else list(affected_sites),
-        domains=[ConfigDomainCore()],
-        use_git=use_git,
+    pending_changes.add(
+        Change(
+            action_name="edit-users",
+            text=_l("Created new user: %s") % user_id,
+            domains=[CORE],
+        ),
+        ChangeScope.all_activation_sites()
+        if affected_sites == "all"
+        else ChangeScope.sites(list(affected_sites)),
     )
 
 

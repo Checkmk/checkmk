@@ -14,9 +14,10 @@ import time
 from collections.abc import Mapping
 from typing import Any, Literal, NotRequired, TypedDict
 
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password, PasswordPolicy
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import Username
 from cmk.gui.http import Response
@@ -37,6 +38,7 @@ from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import (
     ConnectorType,
     get_user_attributes,
@@ -46,7 +48,13 @@ from cmk.gui.userdb import (
     locked_attributes,
 )
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.users import create_user as wato_create_user
 from cmk.gui.watolib.users import (
     delete_users,
@@ -170,6 +178,9 @@ def create_user(params: Mapping[str, Any]) -> Response:
         internal_attrs,
         user_features_registry.features().sites,
         get_user_attributes(active_config.wato_user_attrs),
+        pending_changes=_pending_changes(
+            config=active_config, local_site=omd_site(), acting_user=user.id
+        ),
         use_git=active_config.wato_use_git,
         acting_user=user,
     )
@@ -191,6 +202,9 @@ def delete_user(params: Mapping[str, Any]) -> Response:
         [username],
         user_features_registry.features().sites,
         user_attributes=get_user_attributes(active_config.wato_user_attrs),
+        pending_changes=_pending_changes(
+            config=active_config, local_site=omd_site(), acting_user=user.id
+        ),
         use_git=active_config.wato_use_git,
         acting_user=user,
     )
@@ -260,6 +274,9 @@ def edit_user(params: Mapping[str, Any]) -> Response:
         internal_attrs,
         user_features_registry.features().sites,
         user_attributes,
+        pending_changes=_pending_changes(
+            config=active_config, local_site=omd_site(), acting_user=user.id
+        ),
         use_git=active_config.wato_use_git,
         acting_user=user,
     )
@@ -883,3 +900,21 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(delete_user)
     endpoint_registry.register(edit_user)
     endpoint_registry.register(dismiss_user_warning)
+
+
+def _pending_changes(
+    *,
+    config: Config,
+    local_site: SiteId,
+    acting_user: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=acting_user,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            index_update_change_hook,
+        ),
+    )

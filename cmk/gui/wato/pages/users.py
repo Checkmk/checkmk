@@ -14,7 +14,7 @@ import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from typing import cast, Literal, NamedTuple, overload, TypedDict
 
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.crypto.password import Password, PasswordPolicy
@@ -57,7 +57,7 @@ from cmk.gui.type_defs import (
     UserSpec,
 )
 from cmk.gui.user_connection_config_types import UserConnectionConfig
-from cmk.gui.user_sites import get_configured_site_choices
+from cmk.gui.user_sites import activation_sites, get_configured_site_choices
 from cmk.gui.userdb import (
     active_connections,
     ConnectorType,
@@ -92,11 +92,18 @@ from cmk.gui.valuespec import (
     TextInput,
     UserID,
 )
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.config_sync import get_site_globals
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.sites import ldap_connections_are_configurable
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.gui.watolib.user_scripts import load_notification_scripts
@@ -331,6 +338,9 @@ class ModeUsers(WatoMode):
                 [delete_user],
                 user_features_registry.features().sites,
                 get_user_attributes(config.wato_user_attrs),
+                pending_changes=_pending_changes(
+                    config=config, local_site=omd_site(), acting_user=user.id
+                ),
                 use_git=config.wato_use_git,
                 acting_user=user,
             )
@@ -377,6 +387,9 @@ class ModeUsers(WatoMode):
         if self._can_create_and_delete_users and request.var("_bulk_delete_users"):
             self._bulk_delete_users_after_confirm(
                 get_user_attributes(config.wato_user_attrs),
+                pending_changes=_pending_changes(
+                    config=config, local_site=omd_site(), acting_user=user.id
+                ),
                 use_git=config.wato_use_git,
             )
             return redirect(self.mode_url())
@@ -391,7 +404,11 @@ class ModeUsers(WatoMode):
         return None
 
     def _bulk_delete_users_after_confirm(
-        self, user_attributes: Sequence[tuple[str, UserAttribute]], *, use_git: bool
+        self,
+        user_attributes: Sequence[tuple[str, UserAttribute]],
+        *,
+        pending_changes: PendingChanges,
+        use_git: bool,
     ) -> None:
         selected_users = []
         users = userdb.load_users()
@@ -408,6 +425,7 @@ class ModeUsers(WatoMode):
                 selected_users,
                 user_features_registry.features().sites,
                 user_attributes,
+                pending_changes=pending_changes,
                 use_git=use_git,
                 acting_user=user,
             )
@@ -997,6 +1015,9 @@ class ModeEditUser(WatoMode):
                 user_attrs,
                 user_features_registry.features().sites,
                 user_attributes,
+                pending_changes=_pending_changes(
+                    config=config, local_site=omd_site(), acting_user=user.id
+                ),
                 use_git=config.wato_use_git,
                 acting_user=user,
             )
@@ -1006,6 +1027,9 @@ class ModeEditUser(WatoMode):
                 user_attrs,
                 user_features_registry.features().sites,
                 user_attributes,
+                pending_changes=_pending_changes(
+                    config=config, local_site=omd_site(), acting_user=user.id
+                ),
                 use_git=config.wato_use_git,
                 acting_user=user,
             )
@@ -1660,4 +1684,23 @@ def _sync_possible(user_connections: Sequence[UserConnectionConfig]) -> bool:
     return any(
         connection.type() == ConnectorType.LDAP
         for _connection_id, connection in active_connections(user_connections)
+    )
+
+
+def _pending_changes(
+    *,
+    config: Config,
+    local_site: SiteId,
+    acting_user: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=acting_user,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
     )

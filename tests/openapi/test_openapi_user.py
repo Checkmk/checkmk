@@ -22,6 +22,7 @@ from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
 from cmk.ccc import version
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__
 from cmk.crypto.password import PasswordPolicy
@@ -38,11 +39,23 @@ from cmk.gui.openapi.endpoints.utils import complement_customer
 from cmk.gui.type_defs import CustomUserAttrSpec, Users, UserSpec
 from cmk.gui.userdb import ConnectorType, get_user_attributes, UserRole
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
+from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import create_user, default_sites, edit_user
 from cmk.utils import paths
 from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.rest_api_client import ClientRegistry
+
+
+def _test_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=active_config.sites,
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=PendingChangesStore(),
+        hooks=(),
+    )
+
 
 MOCK_SAML_CONNECTOR_NAME = "saml_connector"
 
@@ -105,6 +118,7 @@ def test_openapi_user_minimal_settings(
             user_object,
             default_sites,
             get_user_attributes([]),
+            pending_changes=_test_pending_changes(),
             use_git=False,
             acting_user=LoggedInSuperUser(),
         )
@@ -270,6 +284,7 @@ def test_openapi_user_internal_with_notifications(
         user_object,
         default_sites,
         get_user_attributes([]),
+        pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
     )
@@ -479,6 +494,7 @@ def test_openapi_user_internal_auth_handling(
             user_object,
             default_sites,
             get_user_attributes([]),
+            pending_changes=_test_pending_changes(),
             use_git=False,
             acting_user=LoggedInSuperUser(),
         )
@@ -508,6 +524,7 @@ def test_openapi_user_internal_auth_handling(
             updated_internal_attributes,
             default_sites,
             get_user_attributes([]),
+            pending_changes=_test_pending_changes(),
             use_git=False,
             acting_user=LoggedInSuperUser(),
         )
@@ -535,6 +552,7 @@ def test_openapi_user_internal_auth_handling(
             updated_internal_attributes,
             default_sites,
             get_user_attributes([]),
+            pending_changes=_test_pending_changes(),
             use_git=False,
             acting_user=LoggedInSuperUser(),
         )
@@ -615,6 +633,7 @@ def test_managed_idle_internal(
         user_object,
         default_sites,
         get_user_attributes([]),
+        pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
     )

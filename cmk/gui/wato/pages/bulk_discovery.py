@@ -14,6 +14,7 @@ from typing import cast, override
 from livestatus import SiteConfigurations
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import omd_site
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.gui import forms, sites
 from cmk.gui.breadcrumb import Breadcrumb
@@ -26,6 +27,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.transaction_manager import transactions
@@ -148,6 +150,9 @@ class ModeBulkDiscovery(WatoMode):
                     pprint_value=config.wato_pprint_config,
                     debug=config.debug,
                     use_git=config.wato_use_git,
+                    activation_site_configs=activation_sites(config.sites),
+                    local_site=omd_site(),
+                    acting_user=user.id,
                 )
             ).is_error():
                 raise result.error

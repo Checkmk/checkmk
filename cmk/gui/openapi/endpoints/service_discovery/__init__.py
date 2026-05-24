@@ -17,6 +17,7 @@ from typing import Any, assert_never
 from urllib.parse import urlparse
 
 from cmk import fields
+from cmk.ccc.site import omd_site
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job.job import BackgroundStatusSnapshot
@@ -35,6 +36,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import EXT, problem, ProblemException, serve_json
 from cmk.gui.site_config import site_is_local
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.automations import (
@@ -798,6 +800,9 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
             pprint_value=active_config.wato_pprint_config,
             debug=active_config.debug,
             use_git=active_config.wato_use_git,
+            activation_site_configs=activation_sites(active_config.sites),
+            local_site=omd_site(),
+            acting_user=user.id,
         )
     ).is_error():
         raise result.error

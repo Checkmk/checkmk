@@ -22,6 +22,7 @@ from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscover
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.checkengine.discovery import (
     DiscoveryReport,
     DiscoverySettingFlags,
@@ -40,8 +41,8 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import StartupError
-from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
+from cmk.gui.type_defs import AnnotatedUserId
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
@@ -55,19 +56,25 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     make_automation_config,
 )
-from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
-from cmk.gui.watolib.config_domain_name import (
-    config_domain_registry,
-    generate_hosts_to_update_settings,
-)
 from cmk.gui.watolib.config_domain_name import (
     CORE as CORE_DOMAIN,
 )
+from cmk.gui.watolib.config_domain_name import (
+    generate_hosts_to_update_settings,
+)
 from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.paths import configuration_lockfile, tmp_run_dir
 
@@ -274,6 +281,9 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         pprint_value: bool,
         debug: bool,
         use_git: bool,
+        activation_site_configs: SiteConfigurations,
+        local_site: SiteId,
+        acting_user: UserId | None,
     ) -> None:
         if not tasks:
             job_interface.send_result_message(
@@ -297,6 +307,9 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 pprint_value=pprint_value,
                 debug=debug,
                 use_git=use_git,
+                activation_site_configs=activation_site_configs,
+                local_site=local_site,
+                acting_user=acting_user,
             )
 
     def _do_execute(
@@ -310,6 +323,9 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         pprint_value: bool,
         debug: bool,
         use_git: bool,
+        activation_site_configs: SiteConfigurations,
+        local_site: SiteId,
+        acting_user: UserId | None,
     ) -> None:
         self._initialize_statistics(
             num_hosts_total=sum(len(task.host_names) for task in tasks),
@@ -320,10 +336,21 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         for task in tasks:
             tasks_by_site.setdefault(task.site_id, []).append(task)
 
+        pending_changes = PendingChanges(
+            activation_sites=activation_site_configs,
+            local_site=local_site,
+            acting_user=acting_user,
+            store=PendingChangesStore(),
+            hooks=(
+                make_audit_log_change_hook(use_git=use_git),
+                index_update_change_hook,
+            ),
+        )
+
         result_queue: mp.Queue[_DiscoveryTaskResult | None] = mp.Queue()
         result_processing_thread = threading.Thread(
             target=copy_request_context(self._process_discovery_results),
-            args=(result_queue, len(tasks_by_site), job_interface, pprint_value, use_git),
+            args=(result_queue, len(tasks_by_site), job_interface, pprint_value, pending_changes),
         )
 
         def run(site_tasks: list[DiscoveryTask]) -> None:
@@ -449,7 +476,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         n_task_threads: int,
         job_interface: BackgroundProcessInterface,
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         remaining_threads = n_task_threads
         while True:
@@ -470,7 +497,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                         result.result,
                         job_interface,
                         pprint_value=pprint_value,
-                        use_git=use_git,
+                        pending_changes=pending_changes,
                     )
                 except Exception as exc:
                     self._process_discovery_error(
@@ -486,7 +513,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         job_interface: BackgroundProcessInterface,
         *,
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         # The following code updates the host config. The progress from loading the Setup folder
         # until it has been saved needs to be locked.
@@ -501,7 +528,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                     hosts[hostname],
                     response.hosts[hostname],
                     pprint_value=pprint_value,
-                    use_git=use_git,
+                    pending_changes=pending_changes,
                 )
                 job_interface.send_progress_update(
                     f"[{count}/{self._num_hosts_total}] {hostname}: {msg}"
@@ -512,7 +539,12 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_host_labels += result.host_labels
 
     def _process_discovery_result_for_host(
-        self, host: Host, result: DiscoveryReport, *, pprint_value: bool, use_git: bool
+        self,
+        host: Host,
+        result: DiscoveryReport,
+        *,
+        pprint_value: bool,
+        pending_changes: PendingChanges,
     ) -> str:
         if result.error_text == "":
             self._num_hosts_skipped += 1
@@ -526,32 +558,32 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
         self._num_hosts_succeeded += 1
 
-        add_service_change(
-            action_name="bulk-discovery",
-            text=_(
-                "Discovery on host %s: %d services (%d added, %d changed, %d removed, %d kept)"
-                "and %d host labels (%d added, %d changed, %d removed, %d kept)"
-            )
-            % (
-                host.name(),
-                result.services.total,
-                result.services.new,
-                result.services.changed,
-                result.services.removed,
-                result.services.kept,
-                result.host_labels.total,
-                result.host_labels.new,
-                result.host_labels.changed,
-                result.host_labels.removed,
-                result.host_labels.kept,
+        pending_changes.add(
+            Change(
+                action_name="bulk-discovery",
+                text=_(
+                    "Discovery on host %s: %d services (%d added, %d changed, %d removed, %d kept)"
+                    "and %d host labels (%d added, %d changed, %d removed, %d kept)"
+                )
+                % (
+                    host.name(),
+                    result.services.total,
+                    result.services.new,
+                    result.services.changed,
+                    result.services.removed,
+                    result.services.kept,
+                    result.host_labels.total,
+                    result.host_labels.new,
+                    result.host_labels.changed,
+                    result.host_labels.removed,
+                    result.host_labels.kept,
+                ),
+                object_ref=host.object_ref(),
+                diff_text=result.diff_text,
+                domains=[CORE_DOMAIN],
+                domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
             ),
-            user_id=user.id,
-            object_ref=host.object_ref(),
-            domains=[config_domain_registry[CORE_DOMAIN]],
-            domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
-            site_id=host.site_id(),
-            diff_text=result.diff_text,
-            use_git=use_git,
+            ChangeScope.sites([host.site_id()]),
         )
 
         if not host.locked():
@@ -592,6 +624,9 @@ def start_bulk_discovery(
     pprint_value: bool,
     debug: bool,
     use_git: bool,
+    activation_site_configs: SiteConfigurations,
+    local_site: SiteId,
+    acting_user: UserId | None,
 ) -> result.Result[None, AlreadyRunningError | StartupError]:
     """Start a bulk discovery job with the given options
 
@@ -632,13 +667,16 @@ def start_bulk_discovery(
                 pprint_value=pprint_value,
                 debug=debug,
                 use_git=use_git,
+                activation_site_configs=activation_site_configs,
+                local_site=local_site,
+                acting_user=acting_user,
             ),
         ),
         InitialStatusArgs(
             title=job.gui_title(),
             lock_wato=False,
             stoppable=False,
-            user=str(user.id) if user.id else None,
+            user=str(acting_user) if acting_user else None,
         ),
     )
 
@@ -652,6 +690,9 @@ class BulkDiscoveryJobArgs(BaseModel, frozen=True):
     pprint_value: bool
     debug: bool
     use_git: bool
+    activation_site_configs: SiteConfigurations
+    local_site: SiteId
+    acting_user: AnnotatedUserId | None
 
 
 def bulk_discovery_job_entry_point(
@@ -667,6 +708,9 @@ def bulk_discovery_job_entry_point(
         pprint_value=args.pprint_value,
         debug=args.debug,
         use_git=args.use_git,
+        activation_site_configs=args.activation_site_configs,
+        local_site=args.local_site,
+        acting_user=args.acting_user,
     )
 
 

@@ -6,9 +6,18 @@
 from collections.abc import Sequence
 from logging import Logger
 
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import active_config
+from cmk.gui.logged_in import user
+from cmk.gui.user_sites import activation_sites
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.post_rename_site.internal import (
     Name,
     RenameAction,
@@ -24,6 +33,17 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
     - Explicitly configured `site` attributes are updated
     - `site` host_tags entries in the hosts.mk files are updated
     """
+    pending_changes = PendingChanges(
+        activation_sites=activation_sites(active_config.sites),
+        local_site=omd_site(),
+        acting_user=user.id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=active_config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )
     for folder in folder_tree().all_folders().values():
         # 1. Update explicitly set site in folders
         if folder.attributes.get("site") == old_site_id:
@@ -42,7 +62,7 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
                 host.update_attributes(
                     {"locked_by": locked_by},
                     pprint_value=active_config.wato_pprint_config,
-                    use_git=active_config.wato_use_git,
+                    pending_changes=pending_changes,
                 )
 
         # Always rewrite the host config: The host_tags need to be updated, even in case there is no

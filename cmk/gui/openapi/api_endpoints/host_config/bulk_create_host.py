@@ -30,7 +30,11 @@ from cmk.gui.watolib import bakery
 from cmk.gui.watolib.hosts_and_folders import Folder, Host
 from cmk.licensing.basics.options import OptionName
 
-from ._utils import bulk_host_action_response, PERMISSIONS_CREATE
+from ._utils import (
+    bulk_host_action_response,
+    make_pending_changes,
+    PERMISSIONS_CREATE,
+)
 from .create_host import CreateHostModel
 from .models.response_models import BulkHostActionWithFailedHostsModel, HostConfigCollectionModel
 
@@ -98,7 +102,7 @@ def bulk_create_host_v1(
         folder.create_validated_hosts(
             validated_entries,
             pprint_value=api_context.config.wato_pprint_config,
-            use_git=api_context.config.wato_use_git,
+            pending_changes=make_pending_changes(api_context),
         )
         succeeded_hosts.extend(entry[0] for entry in validated_entries)
 

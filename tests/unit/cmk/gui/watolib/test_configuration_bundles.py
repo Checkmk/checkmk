@@ -8,11 +8,13 @@ from collections.abc import Iterable
 
 import pytest
 
+from livestatus import SiteConfigurations
+
 import cmk.gui.watolib.check_mk_automations
 from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import login
 from cmk.gui.config import active_config, Config
@@ -35,6 +37,7 @@ from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
+    NoopPendingChangesStore,
     PendingChanges,
     PendingChangesStore,
 )
@@ -61,6 +64,16 @@ def _pending_changes(user_id: UserId | None) -> PendingChanges:
             sidebar_reload_change_hook,
             index_update_change_hook,
         ),
+    )
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
     )
 
 
@@ -163,7 +176,9 @@ def test_delete_config_bundle_unknown_id() -> None:
 )
 def fixture_other_folder(request_context: None, with_admin_login: UserId) -> str:
     path = "subfolder"
-    folder_tree().create_missing_folders(path, pprint_value=False, use_git=False)
+    folder_tree().create_missing_folders(
+        path, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
     return path
 
 
@@ -193,7 +208,7 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
                 title=other_folder,
                 attributes={},
                 pprint_value=False,
-                use_git=False,
+                pending_changes=_noop_pending_changes(),
             ),
             name=HostName("test-host-2"),
             attributes={},

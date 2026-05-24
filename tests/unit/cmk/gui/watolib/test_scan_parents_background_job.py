@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from livestatus import SiteConfiguration
+from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.automations.results import Gateway, GatewayResult, ScanParentsResult
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -23,6 +23,17 @@ from cmk.gui.watolib.parent_scan import (
     ParentScanSettings,
     start_parent_scan,
 )
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 @pytest.fixture(name="host")
@@ -34,7 +45,9 @@ def _host(with_admin_login: UserId, load_config: None) -> Iterator[Host]:
     hostname = HostName("host1")
     root = folder_tree().root_folder()
     root.create_hosts(
-        [(hostname, {"site": SiteId("NO_SITE")}, None)], pprint_value=False, use_git=False
+        [(hostname, {"site": SiteId("NO_SITE")}, None)],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
     )
     host = root.host(hostname)
     assert host, "Test setup failed, host not created"

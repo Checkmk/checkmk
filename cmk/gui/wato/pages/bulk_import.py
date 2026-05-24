@@ -23,6 +23,7 @@ import cmk.gui.pages
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import omd_site
 from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -48,6 +49,7 @@ from cmk.gui.type_defs import (
     PermissionName,
     StaticIcon,
 )
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
@@ -64,6 +66,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib import bakery
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attributes, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
@@ -71,6 +74,12 @@ from cmk.gui.watolib.hosts_and_folders import (
     strip_hostname_whitespace_chars,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.utils.tags import TagGroup
 
 ImportTuple = tuple[HostName, HostAttributes, None]
@@ -444,7 +453,17 @@ class ModeBulkImport(WatoMode):
                     ),
                     debug=config.debug,
                     pprint_value=config.wato_pprint_config,
-                    use_git=config.wato_use_git,
+                    pending_changes=PendingChanges(
+                        activation_sites=activation_sites(config.sites),
+                        local_site=omd_site(),
+                        acting_user=user.id,
+                        store=PendingChangesStore(),
+                        hooks=(
+                            make_audit_log_change_hook(use_git=config.wato_use_git),
+                            sidebar_reload_change_hook,
+                            index_update_change_hook,
+                        ),
+                    ),
                 )
         return None
 
@@ -512,7 +531,7 @@ class ModeBulkImport(WatoMode):
         *,
         debug: bool,
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> ActionResult:
         # The attribute names will come as request variables stored at attribute_0...attribute_n
         # where n is, in theory, the row length - 1. And, in theory, they should always exist, even
@@ -534,7 +553,7 @@ class ModeBulkImport(WatoMode):
             folder=folder,
             batch_size=100,
             pprint_value=pprint_value,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
 
         bakery.try_bake_agents_for_hosts(imported_hosts, debug=debug)
@@ -584,7 +603,7 @@ class ModeBulkImport(WatoMode):
         folder: Folder,
         batch_size: int = 100,
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> tuple[list[HostName], list[HostName], list[str]]:
         imported_hosts: list[HostName] = []
         failed_hosts: list[HostName] = []
@@ -597,7 +616,9 @@ class ModeBulkImport(WatoMode):
                 # NOTE
                 # Folder.create_hosts will either import all of them, or no host at all. The
                 # caught exceptions below will only trigger during the verification phase.
-                folder.create_hosts(batch, pprint_value=pprint_value, use_git=use_git)
+                folder.create_hosts(
+                    batch, pprint_value=pprint_value, pending_changes=pending_changes
+                )
                 index += len(batch)
                 # First column is host_name. Add all of them.
                 imported_hosts.extend(map(operator.itemgetter(0), batch))
@@ -605,7 +626,9 @@ class ModeBulkImport(WatoMode):
                 # We fall back to individual imports to determine the precise location of the error
                 for entry in batch:
                     try:
-                        folder.create_hosts([entry], pprint_value=pprint_value, use_git=use_git)
+                        folder.create_hosts(
+                            [entry], pprint_value=pprint_value, pending_changes=pending_changes
+                        )
                         index += 1
                         imported_hosts.append(entry[0])
                     except (MKAuthException, MKUserError, MKGeneralException) as exc:

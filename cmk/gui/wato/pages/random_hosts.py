@@ -11,20 +11,30 @@ import random
 from collections.abc import Collection
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.site import omd_site
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -66,7 +76,17 @@ class ModeRandomHosts(WatoMode):
             folders,
             levels,
             pprint_value=config.wato_pprint_config,
-            use_git=config.wato_use_git,
+            pending_changes=PendingChanges(
+                activation_sites=activation_sites(config.sites),
+                local_site=omd_site(),
+                acting_user=user.id,
+                store=PendingChangesStore(),
+                hooks=(
+                    make_audit_log_change_hook(use_git=config.wato_use_git),
+                    sidebar_reload_change_hook,
+                    index_update_change_hook,
+                ),
+            ),
         )
         flash(_("Added %d random hosts.") % created)
         return redirect(mode_url("folder", folder=folder.path()))
@@ -96,7 +116,7 @@ class ModeRandomHosts(WatoMode):
         levels: int,
         *,
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> int:
         if levels == 0:
             hosts_to_create: list[tuple[HostName, HostAttributes, None]] = []
@@ -105,7 +125,9 @@ class ModeRandomHosts(WatoMode):
                 hosts_to_create.append(
                     (HostName(host_name), {"ipaddress": HostAddress("127.0.0.1")}, None)
                 )
-            folder.create_hosts(hosts_to_create, pprint_value=pprint_value, use_git=use_git)
+            folder.create_hosts(
+                hosts_to_create, pprint_value=pprint_value, pending_changes=pending_changes
+            )
             return count
 
         total_created = 0
@@ -120,9 +142,18 @@ class ModeRandomHosts(WatoMode):
                 i += 1
 
             subfolder = folder.create_subfolder(
-                folder_name, "Subfolder %02d" % i, {}, pprint_value=pprint_value, use_git=use_git
+                folder_name,
+                "Subfolder %02d" % i,
+                {},
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
             )
             total_created += self._create_random_hosts(
-                subfolder, count, folders, levels - 1, pprint_value=pprint_value, use_git=use_git
+                subfolder,
+                count,
+                folders,
+                levels - 1,
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
             )
         return total_created

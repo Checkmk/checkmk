@@ -28,6 +28,16 @@ from cmk.livestatus_client import (
 from cmk.utils.redis import disable_redis
 
 
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
+
+
 @pytest.fixture(autouse=True)
 def test_env(
     monkeypatch: MonkeyPatch, with_admin_login: UserId, load_config: None
@@ -124,12 +134,18 @@ def test_rename_host(
             folder_tree()
             .root_folder()
             .create_subfolder(
-                "some_subfolder", "Some Subfolder", {}, pprint_value=False, use_git=False
+                "some_subfolder",
+                "Some Subfolder",
+                {},
+                pprint_value=False,
+                pending_changes=_noop_pending_changes(),
             )
         )
     else:
         folder = folder_tree().root_folder()
-    folder.create_hosts(hosts_to_create, pprint_value=False, use_git=False)
+    folder.create_hosts(
+        hosts_to_create, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
 
     # WHEN
     perform_rename_hosts(

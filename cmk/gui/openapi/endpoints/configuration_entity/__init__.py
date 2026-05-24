@@ -138,7 +138,6 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
             folder_tree(),
             user=user,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
             pending_changes=pending_changes,
         )
     except FormSpecValidationError as exc:

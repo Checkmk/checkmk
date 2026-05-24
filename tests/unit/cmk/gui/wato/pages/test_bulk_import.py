@@ -10,7 +10,10 @@ from unittest import mock
 
 import pytest
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.hostaddress import HostAddress
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -28,7 +31,18 @@ from cmk.gui.wato.pages.bulk_import import (
 )
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.utils.tags import TagGroup
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 def attr_choices_with_tag_groups_and_host_attrs(tag_groups: Sequence[TagGroup]) -> Choices:
@@ -188,7 +202,11 @@ def test_bulk_import_csv_parsing(
     # Mock here is pretty unavoidable because of the use of nested function definitions
     with mock.patch("cmk.gui.wato.pages.bulk_import.ModeBulkImport._delete_csv_file"):
         mode_bulk_import._import(
-            csv_bulk_import, host_attributes, debug=False, pprint_value=False, use_git=False
+            csv_bulk_import,
+            host_attributes,
+            debug=False,
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
         )
 
     hosts = folder_tree().root_folder().hosts()

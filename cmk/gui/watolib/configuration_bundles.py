@@ -294,7 +294,10 @@ def _validate_and_prepare_create_calls(
     if entities.hosts:
         create_functions.append(
             _prepare_create_hosts(
-                bundle_ident, entities.hosts, pprint_value=pprint_value, use_git=use_git
+                bundle_ident,
+                entities.hosts,
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
             )
         )
     if entities.rules:
@@ -488,7 +491,12 @@ def delete_config_bundle_objects(
     if references.rules:
         _delete_rules(references.rules, pprint_value=pprint_value, debug=debug, use_git=use_git)
     if references.hosts:
-        _delete_hosts(references.hosts, pprint_value=pprint_value, debug=debug, use_git=use_git)
+        _delete_hosts(
+            references.hosts,
+            pprint_value=pprint_value,
+            debug=debug,
+            pending_changes=pending_changes,
+        )
     if references.passwords:
         _delete_passwords(
             references.passwords,
@@ -500,7 +508,6 @@ def delete_config_bundle_objects(
             references.dcd_connections,
             pprint_value=pprint_value,
             debug=debug,
-            use_git=use_git,
             pending_changes=pending_changes,
         )
     if references.otel_configs:
@@ -536,7 +543,11 @@ def _get_host_attributes(bundle_ident: GlobalIdent, params: CreateHost) -> HostA
 
 
 def _prepare_create_hosts(
-    bundle_ident: GlobalIdent, hosts: Iterable[CreateHost], *, pprint_value: bool, use_git: bool
+    bundle_ident: GlobalIdent,
+    hosts: Iterable[CreateHost],
+    *,
+    pprint_value: bool,
+    pending_changes: PendingChanges,
 ) -> CreateFunction:
     folder_getter = itemgetter("folder")
     hosts_sorted_by_folder: list[CreateHost] = sorted(hosts, key=folder_getter)
@@ -561,7 +572,9 @@ def _prepare_create_hosts(
 
     def create() -> None:
         for f, validated_hosts in folder_and_valid_hosts:
-            f.create_validated_hosts(validated_hosts, pprint_value=pprint_value, use_git=use_git)
+            f.create_validated_hosts(
+                validated_hosts, pprint_value=pprint_value, pending_changes=pending_changes
+            )
 
     return create
 
@@ -580,7 +593,13 @@ def _user_may_delete_hosts(hosts: Iterable[Host]) -> None:
         )
 
 
-def _delete_hosts(hosts: Iterable[Host], *, pprint_value: bool, debug: bool, use_git: bool) -> None:
+def _delete_hosts(
+    hosts: Iterable[Host],
+    *,
+    pprint_value: bool,
+    debug: bool,
+    pending_changes: PendingChanges,
+) -> None:
     folder_getter = itemgetter(0)
     folders_and_hosts = sorted(
         ((host.folder(), host) for host in hosts),
@@ -594,7 +613,7 @@ def _delete_hosts(hosts: Iterable[Host], *, pprint_value: bool, debug: bool, use
             allow_locked_deletion=True,
             pprint_value=pprint_value,
             debug=debug,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
 
 
@@ -774,7 +793,6 @@ def _delete_dcd_connections(
     *,
     pprint_value: bool,
     debug: bool,
-    use_git: bool,
     pending_changes: PendingChanges,
 ) -> None:
     for dcd_connection_id, _spec in dcd_connections:
@@ -790,7 +808,7 @@ def _delete_dcd_connections(
         ),
         pprint_value=pprint_value,
         debug=debug,
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
 
 

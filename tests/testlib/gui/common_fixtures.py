@@ -17,17 +17,21 @@ import pytest
 from flask import Flask
 from pytest_mock import MockerFixture
 
+from livestatus import SiteConfigurations
+
 import cmk.gui.config as config_module
 import cmk.gui.watolib.password_store
 import cmk.utils.log
 from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import hooks, http, main_modules
 from cmk.gui.config import active_config, Config
 from cmk.gui.script_helpers import session_wsgi_app
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 
 from .web_test_app import WebTestAppForCMK
 
@@ -225,11 +229,23 @@ def suppress_remote_automation_calls_patches(mocker: MockerFixture) -> RemoteAut
     )
 
 
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
+
+
 def create_test_hosts() -> Iterator[list[HostName]]:
     hostnames = [HostName("heute"), HostName("example.com")]
     root_folder = folder_tree().root_folder()
     root_folder.create_hosts(
-        [(hostname, {}, None) for hostname in hostnames], pprint_value=False, use_git=False
+        [(hostname, {}, None) for hostname in hostnames],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
     )
     yield hostnames
     root_folder.delete_hosts(
@@ -237,7 +253,7 @@ def create_test_hosts() -> Iterator[list[HostName]]:
         automation=lambda *args, **kwargs: DeleteHostsResult(),
         pprint_value=False,
         debug=False,
-        use_git=False,
+        pending_changes=_noop_pending_changes(),
     )
 
 

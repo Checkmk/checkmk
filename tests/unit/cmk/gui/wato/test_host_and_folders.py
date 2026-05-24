@@ -9,9 +9,22 @@ from collections.abc import Generator
 
 import pytest
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, FolderSiteStats
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 @pytest.mark.usefixtures("request_context", "with_admin_login")
@@ -34,15 +47,35 @@ class TestFolderSiteStats:
         assert values == expected
 
     def _setup_fs(self, folder: Folder) -> None:
-        folder.create_hosts([(HostName("main_host"), {}, None)], pprint_value=False, use_git=False)
+        folder.create_hosts(
+            [(HostName("main_host"), {}, None)],
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
+        )
         sub = folder.create_subfolder(
-            name="sub", title="", attributes={}, pprint_value=False, use_git=False
+            name="sub",
+            title="",
+            attributes={},
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
         )
-        sub.create_hosts([(HostName("sub_host"), {}, None)], pprint_value=False, use_git=False)
+        sub.create_hosts(
+            [(HostName("sub_host"), {}, None)],
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
+        )
         nest = sub.create_subfolder(
-            name="sub/nested", title="", attributes={}, pprint_value=False, use_git=False
+            name="sub/nested",
+            title="",
+            attributes={},
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
         )
-        nest.create_hosts([(HostName("nested_host"), {}, None)], pprint_value=False, use_git=False)
+        nest.create_hosts(
+            [(HostName("nested_host"), {}, None)],
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
+        )
 
     def _cleanup_fs(self, root_folder: Folder) -> None:
         shutil.rmtree(root_folder.filesystem_path(), ignore_errors=True)

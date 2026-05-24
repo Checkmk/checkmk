@@ -16,6 +16,7 @@ from cmk.gui.form_specs.unstable import Catalog, Topic, TopicElement
 from cmk.gui.form_specs.unstable.validators import not_empty
 from cmk.gui.watolib.form_spec_generators import create_full_path_folder_choice
 from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, FolderTree
+from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import String
 from cmk.rulesets.v1.form_specs.validators import ValidationError
@@ -94,7 +95,7 @@ def _append_full_parent_title(title: str, parent_folder: Folder | None) -> str:
 
 
 def save_folder_from_slidein_schema(
-    tree: FolderTree, data: RawFrontendData, *, pprint_value: bool, use_git: bool
+    tree: FolderTree, data: RawFrontendData, *, pprint_value: bool, pending_changes: PendingChanges
 ) -> FolderDescription:
     """Save a folder from data returned from folder slide in.
 
@@ -117,7 +118,7 @@ def save_folder_from_slidein_schema(
         title=parsed_data.title,
         attributes={},
         pprint_value=pprint_value,
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
     full_title = _append_full_parent_title(folder.title(), parent_folder)
 

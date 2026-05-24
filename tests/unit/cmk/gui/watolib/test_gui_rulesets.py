@@ -18,6 +18,8 @@ from unittest.mock import patch
 
 import pytest
 
+from livestatus import SiteConfigurations
+
 from cmk.automations.results import ABCAutomationResult
 from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_effectiveness,
@@ -26,16 +28,28 @@ from cmk.base.automations.check_mk import (
 from cmk.base.community_app import make_app
 from cmk.base.config import LoadingResult
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.watolib import password_store, rulesets
 from cmk.gui.watolib import rulesets as gui_rulesets_module
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.rulesets import Rule, Ruleset
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName, RuleSpec
 from tests.testlib.unit.base_configuration_scenario import Scenario
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
@@ -251,7 +265,9 @@ def test_matches_search_with_rules(
     folder_name: str,
     expected_result: bool,
 ) -> None:
-    folder_tree().create_missing_folders(folder_name, pprint_value=False, use_git=False)
+    folder_tree().create_missing_folders(
+        folder_name, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
     folder = folder_tree().folder(folder_name)
     ruleset = _ruleset("host_contactgroups")
     rule = rulesets.Rule.from_config(folder, ruleset, rule_config)

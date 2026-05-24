@@ -25,6 +25,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributes,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.post_rename_site.logger import logger
 from cmk.post_rename_site.plugins.actions.hosts_and_folders import (
     _update_locked_by,
@@ -36,6 +37,16 @@ from cmk.utils.global_ident_type import (
 from cmk.utils.tags import TagGroupID
 
 CreateHost = tuple[HostName, HostAttributes, Sequence[HostName] | None]
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 def _write_folder_attributes(folder_attributes: dict) -> Path:
@@ -259,7 +270,9 @@ def test_updating_site_name_for_dcd(monkeypatch: pytest.MonkeyPatch) -> None:
 
     ## Let's prepare the initial state of the hosts.
     root = folder_tree().root_folder()
-    root.create_hosts([host_info_1, host_info_2], pprint_value=False, use_git=False)
+    root.create_hosts(
+        [host_info_1, host_info_2], pprint_value=False, pending_changes=_noop_pending_changes()
+    )
 
     ## Check the initial state of the hosts.
     host_1 = root.load_host(HostName("host-1"))
@@ -367,7 +380,9 @@ def test_updating_site_name_without_dcd(monkeypatch: pytest.MonkeyPatch) -> None
     root = folder_tree().root_folder()
     with monkeypatch.context() as m:
         extend_site_context(m)
-        root.create_hosts([host_info_1, host_info_2], pprint_value=False, use_git=False)
+        root.create_hosts(
+            [host_info_1, host_info_2], pprint_value=False, pending_changes=_noop_pending_changes()
+        )
 
     ## Check the initial state of the hosts.
     host_1 = root.load_host(HostName("host-1"))

@@ -95,7 +95,9 @@ class DCDHook:
     ] = lambda *_args: []
 
 
-def sanitize_folder_path(folder_path: str, *, pprint_value: bool, use_git: bool) -> Folder:
+def sanitize_folder_path(
+    folder_path: str, *, pprint_value: bool, pending_changes: PendingChanges
+) -> Folder:
     """Attempt to get the folder from the folder path. If the folder does not exist, create it.
     Returns the folder object."""
     sanitized_folder_path = normalize_folder_path_str(folder_path)
@@ -113,7 +115,7 @@ def sanitize_folder_path(folder_path: str, *, pprint_value: bool, use_git: bool)
                 title=title,
                 attributes={},
                 pprint_value=pprint_value,
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
         )
     return folder
@@ -312,15 +314,6 @@ def _create_and_save_special_agent_bundle(
     else:
         password_entities = None
 
-    # TODO: The sanitize function is likely to change once we have a folder FormSpec.
-    folder = sanitize_folder_path(
-        host_path, pprint_value=active_config.wato_pprint_config, use_git=active_config.wato_use_git
-    )
-    validated_host_name = HostName(host_name)
-    progress_logger.log_new_progress_step(
-        "create_config_bundle", "Create underlying configurations"
-    )
-    user_permissions = UserPermissions.from_config(active_config, permission_registry)
     pending_changes = PendingChanges(
         activation_sites=activation_sites(active_config.sites),
         local_site=omd_site(),
@@ -332,6 +325,17 @@ def _create_and_save_special_agent_bundle(
             index_update_change_hook,
         ),
     )
+    # TODO: The sanitize function is likely to change once we have a folder FormSpec.
+    folder = sanitize_folder_path(
+        host_path,
+        pprint_value=active_config.wato_pprint_config,
+        pending_changes=pending_changes,
+    )
+    validated_host_name = HostName(host_name)
+    progress_logger.log_new_progress_step(
+        "create_config_bundle", "Create underlying configurations"
+    )
+    user_permissions = UserPermissions.from_config(active_config, permission_registry)
     create_config_bundle(
         bundle_id=bundle_id,
         bundle=ConfigBundle(

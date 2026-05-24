@@ -7,9 +7,10 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import get_type_hints
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import omd_site
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostViewAttributeModel
 from cmk.gui.openapi.endpoints.utils import folder_slug
-from cmk.gui.openapi.framework import ETag
+from cmk.gui.openapi.framework import ApiContext, ETag
 from cmk.gui.openapi.framework.model import (
     ApiOmitted,
     json_dump_without_omitted,
@@ -18,10 +19,17 @@ from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.restful_objects import constructors
 from cmk.gui.openapi.utils import EXT, ProblemException
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 
 from .models.request_models import UpdateHost
 from .models.response_models import (
@@ -33,6 +41,19 @@ from .models.response_models import (
 
 class AgentLinkHook:
     create_links: Callable[[HostName], list[LinkModel]] = lambda h: []
+
+
+def make_pending_changes(api_context: ApiContext) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(api_context.config.sites),
+        local_site=omd_site(),
+        acting_user=api_context.user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=api_context.config.wato_use_git),
+            index_update_change_hook,
+        ),
+    )
 
 
 _PERMISSIONS_RW_UNDOCUMENTED = permissions.Undocumented(

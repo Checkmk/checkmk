@@ -8,6 +8,8 @@ from collections.abc import Iterator
 import pytest
 from pytest_mock import MockerFixture
 
+from livestatus import SiteConfigurations
+
 import cmk.utils.paths
 from cmk.automations.results import GetAgentOutputResult
 from cmk.ccc.hostaddress import HostName
@@ -21,8 +23,19 @@ from cmk.gui.wato.pages.fetch_agent_output import (
     start_fetch_agent_job,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.utils.automation_config import LocalAutomationConfig
 from tests.testlib.common.repo import repo_path
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 @pytest.fixture(name="icon_dir")
@@ -41,7 +54,9 @@ def fixture_host(with_admin_login: UserId, load_config: None) -> Iterator[Host]:
     hostname = HostName("host1")
     root = folder_tree().root_folder()
     root.create_hosts(
-        [(hostname, {"site": SiteId("NO_SITE")}, None)], pprint_value=False, use_git=False
+        [(hostname, {"site": SiteId("NO_SITE")}, None)],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
     )
     host = root.host(hostname)
     assert host, "Test setup failed, host not created"

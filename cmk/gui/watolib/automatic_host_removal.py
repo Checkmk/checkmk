@@ -23,13 +23,16 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.session_context import SuperUserContext
 from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
     sites_ready_for_remote_automation,
 )
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.activate_changes import ActivateChangesManager, STATE_SUCCESS
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
@@ -38,6 +41,11 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.gui.watolib.check_mk_automations import analyze_host_rule_matches, delete_hosts
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.paths import log_dir
@@ -102,7 +110,16 @@ def execute_host_removal_job(config: Config) -> None:
                     automation=delete_hosts,
                     pprint_value=config.wato_pprint_config,
                     debug=config.debug,
-                    use_git=config.wato_use_git,
+                    pending_changes=PendingChanges(
+                        activation_sites=activation_sites(config.sites),
+                        local_site=omd_site(),
+                        acting_user=user.id,
+                        store=PendingChangesStore(),
+                        hooks=(
+                            make_audit_log_change_hook(use_git=config.wato_use_git),
+                            index_update_change_hook,
+                        ),
+                    ),
                 )
 
         _LOGGER.info("Hosts removed, starting activation of changes")

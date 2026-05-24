@@ -12,6 +12,8 @@ from collections.abc import Collection, Mapping, Sequence
 from hashlib import sha256
 from typing import override
 
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -21,10 +23,12 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     all_host_attributes,
@@ -38,6 +42,12 @@ from cmk.gui.watolib.hosts_and_folders import (
     SearchFolder,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 
 from ._bulk_actions import get_hostnames_from_checkboxes, get_hosts_from_checkboxes
 from ._host_attributes import configure_attributes
@@ -103,7 +113,9 @@ class ModeBulkEdit(WatoMode):
             host.update_attributes(
                 changed_attributes,
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config=config, local_site=omd_site(), acting_user=user.id
+                ),
             )
             # call_hook_hosts_changed() is called too often.
             # Either offer API in class Host for bulk change or
@@ -231,7 +243,11 @@ class ModeBulkCleanup(WatoMode):
 
         for host in hosts:
             host.clean_attributes(
-                to_clean, pprint_value=config.wato_pprint_config, use_git=config.wato_use_git
+                to_clean,
+                pprint_value=config.wato_pprint_config,
+                pending_changes=_pending_changes(
+                    config=config, local_site=omd_site(), acting_user=user.id
+                ),
             )
 
         return redirect(self._folder.url())
@@ -326,3 +342,22 @@ class ModeBulkCleanup(WatoMode):
 
             attributes.append((attr, is_inherited, num_haveit))
         return attributes
+
+
+def _pending_changes(
+    *,
+    config: Config,
+    local_site: SiteId,
+    acting_user: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=acting_user,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

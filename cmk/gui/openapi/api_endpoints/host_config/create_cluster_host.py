@@ -29,7 +29,12 @@ from cmk.gui.watolib import bakery
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.licensing.basics.options import OptionName
 
-from ._utils import host_etag, PERMISSIONS_CREATE, serialize_host
+from ._utils import (
+    host_etag,
+    make_pending_changes,
+    PERMISSIONS_CREATE,
+    serialize_host,
+)
 from .models.response_models import HostConfigModel
 
 
@@ -82,7 +87,7 @@ def create_cluster_host_v1(
     body.folder.create_hosts(
         [(host_name, body.attributes.to_internal(), body.nodes)],
         pprint_value=api_context.config.wato_pprint_config,
-        use_git=api_context.config.wato_use_git,
+        pending_changes=make_pending_changes(api_context),
     )
     if not isinstance(bake_agent, ApiOmitted) and bake_agent:
         bakery.try_bake_agents_for_hosts([host_name], debug=api_context.config.debug)

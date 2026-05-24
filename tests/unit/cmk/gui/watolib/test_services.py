@@ -33,7 +33,7 @@ from cmk.gui.utils import transaction_manager
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
-from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.services import (
     Discovery,
     DiscoveryAction,
@@ -54,7 +54,7 @@ _TEST_PENDING_CHANGES: PendingChanges = PendingChanges(
     activation_sites=SiteConfigurations({}),
     local_site=SiteId("NO_SITE"),
     acting_user=None,
-    store=PendingChangesStore(),
+    store=NoopPendingChangesStore(),
     hooks=(make_audit_log_change_hook(use_git=False),),
 )
 
@@ -157,7 +157,9 @@ def fixture_sample_host(
 ) -> Generator[Host]:
     hostname = sample_host_name
     root_folder = folder_tree().root_folder()
-    root_folder.create_hosts([(hostname, {}, None)], pprint_value=False, use_git=False)
+    root_folder.create_hosts(
+        [(hostname, {}, None)], pprint_value=False, pending_changes=_TEST_PENDING_CHANGES
+    )
     host = root_folder.host(hostname)
     assert host is not None
     yield host
@@ -166,7 +168,7 @@ def fixture_sample_host(
         automation=lambda *args, **kwargs: DeleteHostsResult(),
         pprint_value=False,
         debug=False,
-        use_git=False,
+        pending_changes=_TEST_PENDING_CHANGES,
     )
 
 

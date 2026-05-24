@@ -25,6 +25,7 @@ from cmk.gui.watolib.hosts_and_folders import Host
 
 from ._utils import (
     host_etag,
+    make_pending_changes,
     PERMISSIONS_UPDATE,
     serialize_host,
     validate_host_attributes_for_quick_setup,
@@ -64,14 +65,14 @@ def update_host_v1(
             new_attributes,
             host.cluster_nodes(),
             pprint_value=api_context.config.wato_pprint_config,
-            use_git=api_context.config.wato_use_git,
+            pending_changes=make_pending_changes(api_context),
         )
 
     if body.update_attributes:
         host.update_attributes(
             body.update_attributes.to_internal(),
             pprint_value=api_context.config.wato_pprint_config,
-            use_git=api_context.config.wato_use_git,
+            pending_changes=make_pending_changes(api_context),
         )
 
     if body.remove_attributes:
@@ -83,7 +84,7 @@ def update_host_v1(
         host.clean_attributes(  # silently ignores missing attributes
             body.remove_attributes,
             pprint_value=api_context.config.wato_pprint_config,
-            use_git=api_context.config.wato_use_git,
+            pending_changes=make_pending_changes(api_context),
         )
 
         if faulty_attributes:

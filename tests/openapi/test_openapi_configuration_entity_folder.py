@@ -8,7 +8,11 @@ from collections.abc import Iterator
 
 import pytest
 
+from livestatus import SiteConfigurations
+
+from cmk.ccc.site import SiteId
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.rest_api_client import ClientRegistry
@@ -17,6 +21,16 @@ SUB_FOLDER = "sub-folder"
 SUB_FOLDER_TITLE = "Sub Folder"
 PROTECTED_FOLDER = "protected-folder"
 PROTECTED_FOLDER_TITLE = "Protected Folder"
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -31,7 +45,7 @@ def create_folder_test_environment(
         title=SUB_FOLDER_TITLE,
         attributes={},
         pprint_value=False,
-        use_git=False,
+        pending_changes=_noop_pending_changes(),
     )
 
     clients.ContactGroup.create(
@@ -52,7 +66,7 @@ def create_folder_test_environment(
             }
         },
         pprint_value=False,
-        use_git=False,
+        pending_changes=_noop_pending_changes(),
     )
 
     yield

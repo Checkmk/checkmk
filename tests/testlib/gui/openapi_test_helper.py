@@ -74,7 +74,7 @@ def create_sample_host_context() -> Iterator[str]:
         root_folder.create_hosts(
             [(HostName(host_name), HostAttributes(contactgroups=contact_groups), None)],
             pprint_value=False,
-            use_git=False,
+            pending_changes=_pending_changes(),
         )
     try:
         yield host_name
@@ -85,7 +85,7 @@ def create_sample_host_context() -> Iterator[str]:
                 automation=lambda _automation_config, _hosts, _debug: DeleteHostsResult(),
                 pprint_value=False,
                 debug=False,
-                use_git=False,
+                pending_changes=_pending_changes(),
             )
 
 

@@ -26,7 +26,11 @@ from cmk.gui.openapi.restful_objects.constructors import object_property_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.watolib.hosts_and_folders import Host
 
-from ._utils import host_etag, PERMISSIONS_UPDATE
+from ._utils import (
+    host_etag,
+    make_pending_changes,
+    PERMISSIONS_UPDATE,
+)
 
 
 @api_model
@@ -69,7 +73,7 @@ def update_cluster_nodes_v1(
         host.attributes,
         body.nodes,
         pprint_value=api_context.config.wato_pprint_config,
-        use_git=api_context.config.wato_use_git,
+        pending_changes=make_pending_changes(api_context),
     )
 
     if nodes := host.cluster_nodes():

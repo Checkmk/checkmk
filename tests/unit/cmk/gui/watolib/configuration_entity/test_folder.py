@@ -8,16 +8,30 @@ from collections.abc import Iterator
 
 import pytest
 
+from livestatus import SiteConfigurations
+
+from cmk.ccc.site import SiteId
 from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,
     save_folder_from_slidein_schema,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 
 MAIN_FOLDER = ""
 SUB_FOLDER = "sub-folder"
 SUB_FOLDER_TITLE = "Sub Folder"
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 @pytest.fixture()
@@ -28,7 +42,11 @@ def create_folder_test_environment(
     tree.invalidate_caches()
 
     tree.root_folder().create_subfolder(
-        name=SUB_FOLDER, title=SUB_FOLDER_TITLE, attributes={}, pprint_value=False, use_git=False
+        name=SUB_FOLDER,
+        title=SUB_FOLDER_TITLE,
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
     )
 
     yield tree
@@ -50,7 +68,7 @@ def test_folder_save_returns_full_title(create_folder_test_environment: FolderTr
 
     # WHEN
     description = save_folder_from_slidein_schema(
-        tree, RawFrontendData(data), pprint_value=False, use_git=False
+        tree, RawFrontendData(data), pprint_value=False, pending_changes=_noop_pending_changes()
     )
 
     # THEN
@@ -75,7 +93,9 @@ def test_folder_save_roundtrip(
     )
 
     # WHEN
-    save_folder_from_slidein_schema(tree, RawFrontendData(data), pprint_value=False, use_git=False)
+    save_folder_from_slidein_schema(
+        tree, RawFrontendData(data), pprint_value=False, pending_changes=_noop_pending_changes()
+    )
 
     # THEN
     parent = folder_tree().all_folders()[parent_folder]

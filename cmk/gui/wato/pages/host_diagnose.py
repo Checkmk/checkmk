@@ -14,6 +14,7 @@ from typing import NotRequired, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.site import omd_site
 from cmk.checkengine.snmplib import SNMPCredentials  # astrein: disable=cmk-module-layer-violation
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -32,6 +33,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
@@ -40,12 +42,19 @@ from cmk.gui.valuespec import Dictionary, FixedValue, Float, Integer, Password
 from cmk.gui.valuespec import HostAddress as VSHostAddress
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.attributes import SNMPCredentials as VSSNMPCredentials
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import diag_host
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link, Host
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 
 SNMPv3NoAuthNoPriv = tuple[str, str]
 SNMPv3AuthNoPriv = tuple[str, str, str, str]
@@ -190,7 +199,19 @@ class ModeDiagHost(WatoMode):
                 attributes["snmp_community"] = new["snmp_community"]
 
             self._host.update_attributes(
-                attributes, pprint_value=config.wato_pprint_config, use_git=config.wato_use_git
+                attributes,
+                pprint_value=config.wato_pprint_config,
+                pending_changes=PendingChanges(
+                    activation_sites=activation_sites(config.sites),
+                    local_site=omd_site(),
+                    acting_user=user.id,
+                    store=PendingChangesStore(),
+                    hooks=(
+                        make_audit_log_change_hook(use_git=config.wato_use_git),
+                        sidebar_reload_change_hook,
+                        index_update_change_hook,
+                    ),
+                ),
             )
 
             flash(_("Updated attributes: ") + ", ".join(return_message))

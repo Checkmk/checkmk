@@ -30,6 +30,7 @@ from cmk.automations.results import (
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import get_agent_receiver_port, omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, omd_version
 from cmk.gui import forms, user_sites
 from cmk.gui.agent_commands import (
@@ -59,6 +60,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.loading_transition import LoadingTransition
@@ -80,6 +82,7 @@ from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.attributes import SNMPCredentials as SNMPCredentialsVS
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automations import (
     do_remote_automation,
@@ -114,6 +117,12 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_all_hosts,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.shared_typing.mode_host import (
     AgentInstallCmds,
     AgentRegistrationCmds,
@@ -665,7 +674,9 @@ class ModeEditHost(ABCHostMode):
                 automation=delete_hosts,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config=config, local_site=omd_site(), acting_user=user.id
+                ),
             )
             return redirect(mode_url("folder", folder=folder.path()))
 
@@ -695,7 +706,9 @@ class ModeEditHost(ABCHostMode):
             attributes,
             self._get_cluster_nodes(attributes),
             pprint_value=config.wato_pprint_config,
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes(
+                config=config, local_site=omd_site(), acting_user=user.id
+            ),
         )
         self._host = folder.load_host(self._host.name())
 
@@ -983,7 +996,9 @@ class CreateHostMode(ABCHostMode):
             folder.create_hosts(
                 [(hostname, attributes, cluster_nodes)],
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config=config, local_site=omd_site(), acting_user=user.id
+                ),
             )
 
         self._host = folder.load_host(hostname)
@@ -1292,3 +1307,22 @@ class PageAjaxAgentReceiverPort(AjaxPage):
                 exc_info=True,
             )
             return {"port": get_agent_receiver_port(omd_root), "is_default": True}
+
+
+def _pending_changes(
+    *,
+    config: Config,
+    local_site: SiteId,
+    acting_user: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=acting_user,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

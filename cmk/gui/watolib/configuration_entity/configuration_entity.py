@@ -74,7 +74,6 @@ def save_configuration_entity(
     tree: FolderTree,
     user: LoggedInUser,
     pprint_value: bool,
-    use_git: bool,
     pending_changes: PendingChanges,
 ) -> ConfigurationEntityDescription:
     """Save a configuration entity.
@@ -97,7 +96,10 @@ def save_configuration_entity(
             )
         case ConfigEntityType.folder:
             folder = save_folder_from_slidein_schema(
-                tree, RawFrontendData(data), pprint_value=pprint_value, use_git=use_git
+                tree,
+                RawFrontendData(data),
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(folder.path),

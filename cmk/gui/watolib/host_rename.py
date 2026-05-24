@@ -133,7 +133,7 @@ def perform_rename_hosts(
                 oldname,
                 newname,
                 pprint_value=pprint_value,
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
         except MKAuthException as e:
             auth_problems.append((oldname, e))
@@ -153,12 +153,14 @@ def perform_rename_hosts(
                     oldname,
                     newname,
                     pprint_value=pprint_value,
-                    use_git=use_git,
+                    pending_changes=pending_changes,
                 )
             )
             update_interface(_("Renaming host(s) in parents..."))
             this_host_actions.extend(
-                _rename_parents(oldname, newname, pprint_value=pprint_value, use_git=use_git)
+                _rename_parents(
+                    oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes
+                )
             )
             update_interface(_("Renaming host(s) in rule sets..."))
             this_host_actions.extend(
@@ -226,9 +228,9 @@ def _rename_host_in_folder(
     newname: HostName,
     *,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> list[str]:
-    folder.rename_host(oldname, newname, pprint_value=pprint_value, use_git=use_git)
+    folder.rename_host(oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes)
     folder_tree().invalidate_caches()
     return ["folder"]
 
@@ -239,12 +241,12 @@ def _rename_host_as_cluster_node(
     newname: HostName,
     *,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> list[str]:
     renamed_cluster_nodes = 0
     for cluster_host in cluster_hosts:
         if cluster_host.rename_cluster_node(
-            oldname, newname, pprint_value=pprint_value, use_git=use_git
+            oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes
         ):
             renamed_cluster_nodes += 1
     return ["cluster_nodes"] * renamed_cluster_nodes
@@ -255,12 +257,12 @@ def _rename_parents(
     newname: HostName,
     *,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> list[str]:
     parent_renamed: list[str]
     folder_parent_renamed: list[Folder]
     parent_renamed, folder_parent_renamed = _rename_host_in_parents(
-        oldname, newname, pprint_value=pprint_value, use_git=use_git
+        oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes
     )
     # Needed because hosts.mk in folders with parent as effective attribute
     # would not be updated
@@ -275,7 +277,7 @@ def _rename_host_in_parents(
     newname: HostName,
     *,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> tuple[list[str], list[Folder]]:
     folder_parent_renamed: list[Folder] = []
     parents, folder_parent_renamed = _rename_host_as_parent(
@@ -284,7 +286,7 @@ def _rename_host_in_parents(
         folder_parent_renamed,
         folder_tree().root_folder(),
         pprint_value=pprint_value,
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
     return ["parents"] * len(parents), folder_parent_renamed
 
@@ -482,16 +484,20 @@ def _rename_host_as_parent(
     in_folder: Folder,
     *,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> tuple[list[HostName | str], list[Folder]]:
     parents: list[HostName | str] = []
     for somehost in in_folder.hosts().values():
         if "parents" in somehost.attributes:
-            if somehost.rename_parent(oldname, newname, pprint_value=pprint_value, use_git=use_git):
+            if somehost.rename_parent(
+                oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes
+            ):
                 parents.append(somehost.name())
 
     if "parents" in in_folder.attributes:
-        if in_folder.rename_parent(oldname, newname, pprint_value=pprint_value, use_git=use_git):
+        if in_folder.rename_parent(
+            oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes
+        ):
             if in_folder not in folder_parent_renamed:
                 folder_parent_renamed.append(in_folder)
             parents.append(in_folder.name())
@@ -503,7 +509,7 @@ def _rename_host_as_parent(
             folder_parent_renamed,
             subfolder,
             pprint_value=pprint_value,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
         parents += subfolder_parents
 

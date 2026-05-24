@@ -24,12 +24,23 @@ from cmk.ccc.site import SiteId
 from cmk.gui.config import Config
 from cmk.gui.watolib import automatic_host_removal
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
-from cmk.livestatus_client import SiteConfiguration
+from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from tests.testlib.unit.base_configuration_scenario import Scenario
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 def default_site_config() -> SiteConfiguration:
@@ -85,7 +96,9 @@ TEST_HOSTS = [
 @pytest.fixture(name="setup_hosts")
 def fixture_setup_hosts() -> None:
     folder_tree().root_folder().create_hosts(
-        [(hostname, {}, None) for hostname in TEST_HOSTS], pprint_value=False, use_git=False
+        [(hostname, {}, None) for hostname in TEST_HOSTS],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
     )
 
 

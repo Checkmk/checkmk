@@ -15,6 +15,8 @@ from typing import override, TypeVar
 
 import cmk.gui.view_utils
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms, sites
 from cmk.gui.autocompleters import autocompleter_registry
@@ -53,6 +55,7 @@ from cmk.gui.type_defs import (
     PermissionName,
     StaticIcon,
 )
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
@@ -83,6 +86,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato._main_module_topics import MainModuleTopicHosts
 from cmk.gui.watolib.agent_registration import remove_tls_registration
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import delete_hosts
@@ -108,6 +112,12 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.utils.labels import Labels
@@ -628,7 +638,10 @@ class ModeFolder(WatoMode):
                 raise MKUserError(None, _("This action cannot be performed on search results"))
             if transactions.check_transaction():
                 self._folder.delete_subfolder(
-                    request.get_ascii_input_mandatory("_delete_folder"), use_git=config.wato_use_git
+                    request.get_ascii_input_mandatory("_delete_folder"),
+                    pending_changes=_pending_changes(
+                        config=config, local_site=omd_site(), acting_user=user.id
+                    ),
                 )
             return redirect(folder_url)
 
@@ -646,7 +659,9 @@ class ModeFolder(WatoMode):
                     what_folder,
                     target_folder,
                     pprint_value=config.wato_pprint_config,
-                    use_git=config.wato_use_git,
+                    pending_changes=_pending_changes(
+                        config=config, local_site=omd_site(), acting_user=user.id
+                    ),
                 )
             return redirect(folder_url)
 
@@ -679,7 +694,9 @@ class ModeFolder(WatoMode):
                 automation=delete_hosts,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config=config, local_site=omd_site(), acting_user=user.id
+                ),
             )
             return redirect(folder_url)
 
@@ -691,7 +708,9 @@ class ModeFolder(WatoMode):
                     [hostname],
                     folder_tree().folder(target_folder_str),
                     pprint_value=config.wato_pprint_config,
-                    use_git=config.wato_use_git,
+                    pending_changes=_pending_changes(
+                        config=config, local_site=omd_site(), acting_user=user.id
+                    ),
                 )
                 return redirect(folder_url)
 
@@ -720,7 +739,9 @@ class ModeFolder(WatoMode):
                 selected_host_names,
                 target_folder,
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config=config, local_site=omd_site(), acting_user=user.id
+                ),
             )
             flash(_("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title()))
             return redirect(folder_url)
@@ -731,7 +752,9 @@ class ModeFolder(WatoMode):
                 selected_host_names,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config=config, local_site=omd_site(), acting_user=user.id
+                ),
             )
 
         search_text = request.get_str_input_mandatory("search", "")
@@ -1347,14 +1370,14 @@ class ModeFolder(WatoMode):
         host_names: Sequence[HostName],
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> ActionResult:
         self._folder.delete_hosts(
             host_names,
             automation=delete_hosts,
             pprint_value=pprint_value,
             debug=debug,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
         flash(_("Successfully deleted %d hosts") % len(host_names))
         return redirect(self._folder.url())
@@ -1456,7 +1479,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         *,
         pprint_value: bool,
         show_file_names: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         raise NotImplementedError()
 
@@ -1511,7 +1534,9 @@ class ABCFolderMode(WatoMode, abc.ABC):
             attributes,
             pprint_value=config.wato_pprint_config,
             show_file_names=not config.wato_hide_filenames,
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes(
+                config=config, local_site=omd_site(), acting_user=user.id
+            ),
         )
 
         return redirect(mode_url("folder", folder=folder.path()))
@@ -1610,9 +1635,11 @@ class ModeEditFolder(ABCFolderMode):
         *,
         pprint_value: bool,
         show_file_names: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
-        self._folder.edit(title, attributes, pprint_value=pprint_value, use_git=use_git)
+        self._folder.edit(
+            title, attributes, pprint_value=pprint_value, pending_changes=pending_changes
+        )
 
 
 class ModeCreateFolder(ABCFolderMode):
@@ -1645,7 +1672,7 @@ class ModeCreateFolder(ABCFolderMode):
         *,
         pprint_value: bool,
         show_file_names: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         parent_folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if show_file_names:
@@ -1655,7 +1682,7 @@ class ModeCreateFolder(ABCFolderMode):
             name = find_available_folder_name(title, parent_folder)
 
         parent_folder.create_subfolder(
-            name, title, attributes, pprint_value=pprint_value, use_git=use_git
+            name, title, attributes, pprint_value=pprint_value, pending_changes=pending_changes
         )
 
 
@@ -1667,3 +1694,22 @@ class PageAjaxSetFoldertree(AjaxPage):
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))
 
         return None
+
+
+def _pending_changes(
+    *,
+    config: Config,
+    local_site: SiteId,
+    acting_user: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=acting_user,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

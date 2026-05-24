@@ -21,8 +21,10 @@ from collections.abc import Mapping
 
 import pytest
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
@@ -36,6 +38,7 @@ from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBu
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
+    NoopPendingChangesStore,
     PendingChanges,
     PendingChangesStore,
 )
@@ -44,6 +47,16 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RulesetName, RuleSpec
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
@@ -448,7 +461,9 @@ def test_ruleset_to_config_sub_folder(
 ) -> None:
     ruleset = rulesets.Ruleset(RuleGroup.CheckgroupParameters("local"))
 
-    folder_tree().create_missing_folders("abc", pprint_value=False, use_git=False)
+    folder_tree().create_missing_folders(
+        "abc", pprint_value=False, pending_changes=_noop_pending_changes()
+    )
     folder = folder_tree().folder("abc")
 
     ruleset.replace_folder_config(

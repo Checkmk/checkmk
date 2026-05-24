@@ -16,7 +16,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.resulttype import Result
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.background_job.job import (
     AlreadyRunningError,
     BackgroundJob,
@@ -31,8 +31,10 @@ from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib import bakery
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     AnnotatedHostName,
     make_automation_config,
@@ -46,6 +48,11 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_tree,
     FolderTree,
     Host,
+)
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
 )
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.paths import configuration_lockfile
@@ -102,7 +109,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         *,
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         with job_interface.gui_context(
             UserPermissions.from_serialized_config(user_permission_config, permission_registry)
@@ -113,7 +120,12 @@ class ParentScanBackgroundJob(BackgroundJob):
             tree = folder_tree()
             for task in tasks:
                 self._process_task(
-                    task, settings, tree, pprint_value=pprint_value, debug=debug, use_git=use_git
+                    task,
+                    settings,
+                    tree,
+                    pprint_value=pprint_value,
+                    debug=debug,
+                    pending_changes=pending_changes,
                 )
 
             self._logger.info("Summary:")
@@ -149,7 +161,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         *,
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         self._num_hosts_total += 1
 
@@ -161,7 +173,7 @@ class ParentScanBackgroundJob(BackgroundJob):
                 self._execute_parent_scan(task, settings, debug=debug),
                 pprint_value=pprint_value,
                 debug=debug,
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
         except Exception as e:
             self._num_errors += 1
@@ -197,7 +209,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         *,
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         for result in results:
             if result.state in ["direct", "root", "gateway"]:
@@ -211,7 +223,7 @@ class ParentScanBackgroundJob(BackgroundJob):
                         result.gateway,
                         pprint_value=pprint_value,
                         debug=debug,
-                        use_git=use_git,
+                        pending_changes=pending_changes,
                     )
             else:
                 self._logger.error(result.message)
@@ -239,7 +251,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         *,
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         tree.invalidate_caches()
         host_folder = tree.folder(task.host_folder_path)
@@ -255,7 +267,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             gateway_folder,
             pprint_value=pprint_value,
             debug=debug,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
 
         if (host := host_folder.host(task.host_name)) is None:
@@ -273,10 +285,14 @@ class ParentScanBackgroundJob(BackgroundJob):
             settings.force_explicit
             or host.folder().effective_attributes().get("parents") != parents
         ):
-            host.update_attributes({"parents": parents}, pprint_value=pprint_value, use_git=use_git)
+            host.update_attributes(
+                {"parents": parents}, pprint_value=pprint_value, pending_changes=pending_changes
+            )
         elif "parents" in host.attributes:
             # Check which parents the host would have inherited
-            host.clean_attributes(["parents"], pprint_value=pprint_value, use_git=use_git)
+            host.clean_attributes(
+                ["parents"], pprint_value=pprint_value, pending_changes=pending_changes
+            )
 
         if parents:
             self._logger.info("Set parents to %s", ",".join(parents))
@@ -295,7 +311,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         *,
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> list[HostName]:
         """Ensure there is a gateway host in the Checkmk configuration (or raise an exception)
 
@@ -312,12 +328,18 @@ class ParentScanBackgroundJob(BackgroundJob):
             raise MKUserError(None, _("Need parent %s, but not allowed to create one") % gateway.ip)
 
         gw_folder = self._determine_gateway_folder(
-            settings.where, host_folder, gateway_folder, pprint_value=pprint_value, use_git=use_git
+            settings.where,
+            host_folder,
+            gateway_folder,
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
         )
         gw_host_name = self._determine_gateway_host_name(task, gateway)
         gw_host_attributes = self._determine_gateway_attributes(task, settings, gateway, gw_folder)
         gw_folder.create_hosts(
-            [(gw_host_name, gw_host_attributes, None)], pprint_value=pprint_value, use_git=use_git
+            [(gw_host_name, gw_host_attributes, None)],
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
         )
         bakery.try_bake_agents_for_hosts([gw_host_name], debug=debug)
         self._num_gateway_hosts_created += 1
@@ -331,7 +353,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         gateway_folder: Folder | None,
         *,
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> Folder:
         if where == "here":  # directly in current folder
             return disk_or_search_base_folder_from_request(
@@ -351,7 +373,11 @@ class ParentScanBackgroundJob(BackgroundJob):
                 return parents_folder
             # Create new gateway folder
             return current.create_subfolder(
-                "parents", _("Parents"), {}, pprint_value=pprint_value, use_git=use_git
+                "parents",
+                _("Parents"),
+                {},
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
             )
 
         if where == "there":  # In same folder as host
@@ -455,5 +481,14 @@ def parent_scan_job_entry_point(
         user_permission_config=args.user_permission_config,
         pprint_value=args.pprint_value,
         debug=args.debug,
-        use_git=args.use_git,
+        pending_changes=PendingChanges(
+            activation_sites=activation_sites(active_config.sites),
+            local_site=omd_site(),
+            acting_user=user.id,
+            store=PendingChangesStore(),
+            hooks=(
+                make_audit_log_change_hook(use_git=args.use_git),
+                index_update_change_hook,
+            ),
+        ),
     )

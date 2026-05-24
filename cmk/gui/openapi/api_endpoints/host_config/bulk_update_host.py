@@ -26,6 +26,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder, Host
 
 from ._utils import (
     bulk_host_action_response,
+    make_pending_changes,
     PERMISSIONS_UPDATE,
     validate_host_attributes_for_quick_setup,
 )
@@ -111,7 +112,7 @@ def bulk_update_hosts_v1(
             folder.save_hosts(pprint_value=api_context.config.wato_pprint_config)
             for host, diff, affected_sites in pending_changes:
                 host.add_edit_host_change(
-                    diff, affected_sites, use_git=api_context.config.wato_use_git
+                    diff, affected_sites, pending_changes=make_pending_changes(api_context)
                 )
 
     return bulk_host_action_response(failed_hosts, succeeded_hosts)

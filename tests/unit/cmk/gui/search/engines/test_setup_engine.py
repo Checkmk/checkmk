@@ -17,8 +17,11 @@ from pytest_mock import MockerFixture
 from redis import Redis
 from werkzeug.test import create_environ
 
+from livestatus import SiteConfigurations
+
 from cmk.automations.results import GetConfigurationResult
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.gui.config import Config
 from cmk.gui.http import Request
@@ -45,7 +48,18 @@ from cmk.gui.wato._omd_configuration import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 @pytest.fixture(scope="function")
@@ -343,7 +357,11 @@ class TestPermissionHandler:
     @pytest.fixture(name="created_host_url")
     def fixture_created_host_url(self) -> str:
         folder = folder_tree().root_folder()
-        folder.create_hosts([(HostName("host"), {}, [])], pprint_value=False, use_git=False)
+        folder.create_hosts(
+            [(HostName("host"), {}, [])],
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
+        )
         return "wato.py?folder=&host=host&mode=edit_host"
 
     @pytest.mark.usefixtures("with_admin_login")

@@ -17,10 +17,11 @@ from marshmallow import ValidationError
 
 from cmk import fields
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job.job import InitialStatusArgs, JobTarget
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.fields_filter import FieldsFilter, make_filter
 from cmk.gui.fields.utils import BaseSchema
@@ -50,10 +51,12 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.utils import EXT, problem, serve_json
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.activate_changes import ActivateChanges
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -67,6 +70,11 @@ from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_tree,
     Host,
+)
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
 )
 from cmk.licensing.basics.options import OptionName
 from cmk.licensing.registry import is_option_enabled
@@ -243,7 +251,9 @@ def create_host(params: Mapping[str, Any]) -> Response:
     folder.create_hosts(
         [(host_name, body["attributes"], None)],
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            config=active_config, local_site=omd_site(), acting_user=user.id
+        ),
     )
     if params[BAKE_AGENT_PARAM_NAME]:
         bakery.try_bake_agents_for_hosts([host_name], debug=active_config.debug)
@@ -279,7 +289,9 @@ def create_cluster_host(params: Mapping[str, Any]) -> Response:
     folder.create_hosts(
         [(host_name, body["attributes"], body["nodes"])],
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            config=active_config, local_site=omd_site(), acting_user=user.id
+        ),
     )
     if params[BAKE_AGENT_PARAM_NAME]:
         bakery.try_bake_agents_for_hosts([host_name], debug=active_config.debug)
@@ -363,7 +375,9 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
         folder.create_validated_hosts(
             validated_entries,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                config=active_config, local_site=omd_site(), acting_user=user.id
+            ),
         )
         succeeded_hosts.extend(entry[0] for entry in validated_entries)
 
@@ -548,7 +562,9 @@ def update_nodes(params: Mapping[str, Any]) -> Response:
         host.attributes,
         nodes,
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            config=active_config, local_site=omd_site(), acting_user=user.id
+        ),
     )
 
     return serve_json(
@@ -626,14 +642,18 @@ def update_host(params: Mapping[str, Any]) -> Response:
             new_attributes,
             host.cluster_nodes(),
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                config=active_config, local_site=omd_site(), acting_user=user.id
+            ),
         )
 
     if update_attributes := body.get("update_attributes"):
         host.update_attributes(
             update_attributes,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                config=active_config, local_site=omd_site(), acting_user=user.id
+            ),
         )
 
     if remove_attributes := body.get("remove_attributes"):
@@ -645,7 +665,9 @@ def update_host(params: Mapping[str, Any]) -> Response:
         host.clean_attributes(
             remove_attributes,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                config=active_config, local_site=omd_site(), acting_user=user.id
+            ),
         )  # silently ignores missing attributes
 
         if faulty_attributes:
@@ -732,7 +754,13 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
         if pending_changes:
             folder.save_hosts(pprint_value=active_config.wato_pprint_config)
             for host, diff, affected_sites in pending_changes:
-                host.add_edit_host_change(diff, affected_sites, use_git=active_config.wato_use_git)
+                host.add_edit_host_change(
+                    diff,
+                    affected_sites,
+                    pending_changes=_pending_changes(
+                        config=active_config, local_site=omd_site(), acting_user=user.id
+                    ),
+                )
 
     return _bulk_host_action_response(failed_hosts, succeeded_hosts)
 
@@ -921,7 +949,9 @@ def move(params: Mapping[str, Any]) -> Response:
             [host_name],
             target_folder,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                config=active_config, local_site=omd_site(), acting_user=user.id
+            ),
         )
     except MKAuthException:
         return problem(
@@ -953,7 +983,9 @@ def delete(params: Mapping[str, Any]) -> Response:
         automation=delete_hosts,
         pprint_value=active_config.wato_pprint_config,
         debug=active_config.debug,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            config=active_config, local_site=omd_site(), acting_user=user.id
+        ),
     )
     return Response(status=204)
 
@@ -992,7 +1024,9 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
             automation=delete_hosts,
             pprint_value=active_config.wato_pprint_config,
             debug=active_config.debug,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                config=active_config, local_site=omd_site(), acting_user=user.id
+            ),
         )
 
     return Response(status=204)
@@ -1112,3 +1146,21 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(delete)
     endpoint_registry.register(bulk_delete)
     endpoint_registry.register(show_host)
+
+
+def _pending_changes(
+    *,
+    config: Config,
+    local_site: SiteId,
+    acting_user: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=acting_user,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            index_update_change_hook,
+        ),
+    )

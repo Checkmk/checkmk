@@ -26,6 +26,8 @@ import pytest
 import time_machine
 from pytest import MonkeyPatch
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
@@ -38,11 +40,22 @@ from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.search import MatchItem
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import hosts_and_folders
-from cmk.gui.watolib.audit_log import AuditLogStore
+from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
 from cmk.gui.watolib.hosts_and_folders import EffectiveAttributes, Folder, folder_tree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.utils.redis import disable_redis
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(make_audit_log_change_hook(use_git=False),),
+    )
 
 
 def test_effective_attributes() -> None:
@@ -204,7 +217,9 @@ def test_write_and_read_host_attributes(attributes: HostAttributes) -> None:
 
     # Write data
     write_data_folder.create_hosts(
-        [(HostName("testhost"), attributes, [])], pprint_value=False, use_git=False
+        [(HostName("testhost"), attributes, [])],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
     )
     write_folder_hosts = write_data_folder.hosts()
     assert len(write_folder_hosts) == 1
@@ -222,11 +237,15 @@ def test_write_and_read_host_attributes(attributes: HostAttributes) -> None:
 def test_create_multiple_hosts() -> None:
     root = folder_tree().root_folder()
     subfolder = root.create_subfolder(
-        "subfolder", "subfolder", {}, pprint_value=False, use_git=False
+        "subfolder", "subfolder", {}, pprint_value=False, pending_changes=_noop_pending_changes()
     )
 
-    root.create_hosts([(HostName("host-1"), {}, [])], pprint_value=False, use_git=False)
-    subfolder.create_hosts([(HostName("host-2"), {}, [])], pprint_value=False, use_git=False)
+    root.create_hosts(
+        [(HostName("host-1"), {}, [])], pprint_value=False, pending_changes=_noop_pending_changes()
+    )
+    subfolder.create_hosts(
+        [(HostName("host-2"), {}, [])], pprint_value=False, pending_changes=_noop_pending_changes()
+    )
 
     all_hosts = root.all_hosts_recursively()
     # to ensure that new folder instances contain the new hosts
@@ -305,7 +324,7 @@ def test_mgmt_inherit_credentials_explicit_host_snmp() -> None:
             )
         ],
         pprint_value=False,
-        use_git=False,
+        pending_changes=_noop_pending_changes(),
     )
 
     data = folder._load_hosts_file()
@@ -341,7 +360,7 @@ def test_mgmt_inherit_credentials_explicit_host_ipmi() -> None:
             )
         ],
         pprint_value=False,
-        use_git=False,
+        pending_changes=_noop_pending_changes(),
     )
 
     data = folder._load_hosts_file()
@@ -371,7 +390,7 @@ def test_mgmt_inherit_credentials_snmp() -> None:
             )
         ],
         pprint_value=False,
-        use_git=False,
+        pending_changes=_noop_pending_changes(),
     )
 
     data = folder._load_hosts_file()
@@ -401,7 +420,7 @@ def test_mgmt_inherit_credentials_ipmi() -> None:
             )
         ],
         pprint_value=False,
-        use_git=False,
+        pending_changes=_noop_pending_changes(),
     )
 
     data = folder._load_hosts_file()
@@ -433,7 +452,7 @@ def test_mgmt_inherit_protocol_explicit_host_snmp() -> None:
             )
         ],
         pprint_value=False,
-        use_git=False,
+        pending_changes=_noop_pending_changes(),
     )
 
     data = folder._load_hosts_file()
@@ -468,7 +487,7 @@ def test_mgmt_inherit_protocol_explicit_host_ipmi() -> None:
             )
         ],
         pprint_value=False,
-        use_git=False,
+        pending_changes=_noop_pending_changes(),
     )
 
     data = folder._load_hosts_file()
@@ -504,13 +523,25 @@ def only_root() -> hosts_and_folders.Folder:
 def three_levels() -> hosts_and_folders.Folder:
     main = folder_tree().root_folder()
 
-    a = main.create_subfolder("a", title="A", attributes={}, pprint_value=False, use_git=False)
-    a.create_subfolder("c", title="C", attributes={}, pprint_value=False, use_git=False)
-    a.create_subfolder("d", title="D", attributes={}, pprint_value=False, use_git=False)
+    a = main.create_subfolder(
+        "a", title="A", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
+    a.create_subfolder(
+        "c", title="C", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
+    a.create_subfolder(
+        "d", title="D", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
 
-    b = main.create_subfolder("b", title="B", attributes={}, pprint_value=False, use_git=False)
-    e = b.create_subfolder("e", title="E", attributes={}, pprint_value=False, use_git=False)
-    e.create_subfolder("f", title="F", attributes={}, pprint_value=False, use_git=False)
+    b = main.create_subfolder(
+        "b", title="B", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
+    e = b.create_subfolder(
+        "e", title="E", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
+    e.create_subfolder(
+        "f", title="F", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
 
     return main
 
@@ -521,17 +552,29 @@ def three_levels_leaf_permissions() -> hosts_and_folders.Folder:
     # Attribute only used for testing
     main.permissions._may_see = False  # type: ignore[attr-defined]
 
-    a = main.create_subfolder("a", title="A", attributes={}, pprint_value=False, use_git=False)
+    a = main.create_subfolder(
+        "a", title="A", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
     a.permissions._may_see = False  # type: ignore[attr-defined]
-    c = a.create_subfolder("c", title="C", attributes={}, pprint_value=False, use_git=False)
+    c = a.create_subfolder(
+        "c", title="C", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
     c.permissions._may_see = False  # type: ignore[attr-defined]
-    a.create_subfolder("d", title="D", attributes={}, pprint_value=False, use_git=False)
+    a.create_subfolder(
+        "d", title="D", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
 
-    b = main.create_subfolder("b", title="B", attributes={}, pprint_value=False, use_git=False)
+    b = main.create_subfolder(
+        "b", title="B", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
     b.permissions._may_see = False  # type: ignore[attr-defined]
-    e = b.create_subfolder("e", title="E", attributes={}, pprint_value=False, use_git=False)
+    e = b.create_subfolder(
+        "e", title="E", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
     e.permissions._may_see = False  # type: ignore[attr-defined]
-    e.create_subfolder("f", title="F", attributes={}, pprint_value=False, use_git=False)
+    e.create_subfolder(
+        "f", title="F", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
 
     return main
 
@@ -591,7 +634,9 @@ def test_recursive_subfolder_choices_function_calls(
 
 def test_subfolder_creation() -> None:
     folder = folder_tree().root_folder()
-    folder.create_subfolder("foo", "Foo Folder", {}, pprint_value=False, use_git=False)
+    folder.create_subfolder(
+        "foo", "Foo Folder", {}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
 
     # Upon instantiation, all the subfolders should be already known.
     folder = folder_tree().root_folder()
@@ -1055,8 +1100,10 @@ def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch) -> None:
 def test_folder_exists() -> None:
     tree = folder_tree()
     tree.root_folder().create_subfolder(
-        "foo", "foo", {}, pprint_value=False, use_git=False
-    ).create_subfolder("bar", "bar", {}, pprint_value=False, use_git=False)
+        "foo", "foo", {}, pprint_value=False, pending_changes=_noop_pending_changes()
+    ).create_subfolder(
+        "bar", "bar", {}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
     assert tree.folder_exists("foo")
     assert tree.folder_exists("foo/bar")
     assert not tree.folder_exists("bar")
@@ -1068,8 +1115,10 @@ def test_folder_exists() -> None:
 def test_folder_access() -> None:
     tree = folder_tree()
     tree.root_folder().create_subfolder(
-        "foo", "foo", {}, pprint_value=False, use_git=False
-    ).create_subfolder("bar", "bar", {}, pprint_value=False, use_git=False)
+        "foo", "foo", {}, pprint_value=False, pending_changes=_noop_pending_changes()
+    ).create_subfolder(
+        "bar", "bar", {}, pprint_value=False, pending_changes=_noop_pending_changes()
+    )
     assert isinstance(tree.folder("foo/bar"), hosts_and_folders.Folder)
     assert isinstance(tree.folder(""), hosts_and_folders.Folder)
     with pytest.raises(MKGeneralException):
@@ -1196,7 +1245,11 @@ def test_subfolder_attributes_are_cached() -> None:
     # GIVEN folder with cached attributes
     root = folder_tree().root_folder()
     subfolder = root.create_subfolder(
-        "sub1", "sub1", {"alias": "sub1"}, pprint_value=False, use_git=False
+        "sub1",
+        "sub1",
+        {"alias": "sub1"},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
     )
     subfolder.effective_attributes()
 
@@ -1212,7 +1265,13 @@ def test_subfolder_cache_invalidated() -> None:
     subfolder = (
         folder_tree()
         .root_folder()
-        .create_subfolder("sub1", "sub1", {"alias": "sub1"}, pprint_value=False, use_git=False)
+        .create_subfolder(
+            "sub1",
+            "sub1",
+            {"alias": "sub1"},
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
+        )
     )
     subfolder.effective_attributes()
 

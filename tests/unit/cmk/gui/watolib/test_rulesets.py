@@ -11,6 +11,8 @@ from io import StringIO
 
 import pytest
 
+from livestatus import SiteConfigurations
+
 from cmk.automations.results import ABCAutomationResult
 from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_matches,
@@ -18,14 +20,26 @@ from cmk.base.automations.check_mk import (
 )
 from cmk.base.community_app import make_app
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.watolib import rulesets
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, HostsAndFoldersConfig
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 from cmk.utils.labels import Labels
 from cmk.utils.paths import default_config_dir
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from tests.testlib.unit.base_configuration_scenario import Scenario
+
+
+def _noop_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=SiteConfigurations({}),
+        local_site=SiteId("NO_SITE"),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
 
 
 @pytest.fixture(name="mock_analyze_host_rule_matches_automation")
@@ -93,7 +107,7 @@ def _test_hosts(folder: Folder) -> None:
             (HostName("dong"), {}, None),
         ],
         pprint_value=False,
-        use_git=False,
+        pending_changes=_noop_pending_changes(),
     )
 
 

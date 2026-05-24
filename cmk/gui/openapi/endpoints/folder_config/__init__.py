@@ -40,8 +40,10 @@ from typing import Any
 from werkzeug.datastructures import ETags
 
 from cmk import fields
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.gui import fields as gui_fields
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -68,8 +70,15 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import CollectionObject, DomainObject
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, folder_tree
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 
 PATH_FOLDER_FIELD = {
     "folder": gui_fields.FolderField(
@@ -136,7 +145,9 @@ def create(params: Mapping[str, Any]) -> Response:
         title,
         attributes,
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            config=active_config, local_site=omd_site(), acting_user=user.id
+        ),
     )
 
     return _serve_folder(folder)
@@ -213,7 +224,9 @@ def update(params: Mapping[str, Any]) -> Response:
         folder.title() if "title" not in post_body else post_body["title"],
         attributes,
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            config=active_config, local_site=omd_site(), acting_user=user.id
+        ),
     )
 
     return _serve_folder(folder)
@@ -270,7 +283,9 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
             title,
             attributes,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                config=active_config, local_site=omd_site(), acting_user=user.id
+            ),
         )
         folders.append(folder)
 
@@ -313,7 +328,12 @@ def delete(params: Mapping[str, Any]) -> Response:
             status=409,
         )
 
-    parent.delete_subfolder(folder.name(), use_git=active_config.wato_use_git)
+    parent.delete_subfolder(
+        folder.name(),
+        pending_changes=_pending_changes(
+            config=active_config, local_site=omd_site(), acting_user=user.id
+        ),
+    )
 
     return Response(status=204)
 
@@ -352,7 +372,9 @@ def move(params: Mapping[str, Any]) -> Response:
             folder,
             dest_folder,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                config=active_config, local_site=omd_site(), acting_user=user.id
+            ),
         )
     except MKUserError as exc:
         raise ProblemException(
@@ -549,3 +571,21 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(move)
     endpoint_registry.register(list_folders)
     endpoint_registry.register(show_folder)
+
+
+def _pending_changes(
+    *,
+    config: Config,
+    local_site: SiteId,
+    acting_user: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=acting_user,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            index_update_change_hook,
+        ),
+    )

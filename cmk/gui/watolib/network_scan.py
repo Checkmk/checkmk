@@ -17,6 +17,7 @@ from typing import Literal, NamedTuple, override, TypeGuard
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.site import omd_site
 from cmk.ccc.translations import translate, TranslationOptions
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
@@ -25,10 +26,18 @@ from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.session_context import UserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.utils.paths import configuration_lockfile
 
 from . import bakery, builtin_attributes
@@ -105,7 +114,16 @@ def execute_network_scan_job(config: Config) -> None:
                 run_as,
                 pprint_value=config.wato_pprint_config,
                 debug=config.debug,
-                use_git=config.wato_use_git,
+                pending_changes=PendingChanges(
+                    activation_sites=activation_sites(config.sites),
+                    local_site=omd_site(),
+                    acting_user=user.id,
+                    store=PendingChangesStore(),
+                    hooks=(
+                        make_audit_log_change_hook(use_git=config.wato_use_git),
+                        index_update_change_hook,
+                    ),
+                ),
             )
 
             result.update(
@@ -149,7 +167,7 @@ def _add_scanned_hosts_to_folder(
     *,
     pprint_value: bool,
     debug: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     if (network_scan_properties := folder.attributes.get("network_scan")) is None:
         return
@@ -181,7 +199,7 @@ def _add_scanned_hosts_to_folder(
             entries.append((host_name, attrs, None))
 
     with store.lock_checkmk_configuration(configuration_lockfile):
-        folder.create_hosts(entries, pprint_value=pprint_value, use_git=use_git)
+        folder.create_hosts(entries, pprint_value=pprint_value, pending_changes=pending_changes)
         folder.save_folder_attributes()
         tree.invalidate_caches()
 

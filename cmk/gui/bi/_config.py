@@ -11,6 +11,8 @@ import json
 from collections.abc import Collection, Iterable
 from typing import Any, overload, override, TypedDict
 
+from livestatus import SiteConfigurations
+
 import cmk.ccc.version as cmk_version
 from cmk.bi.actions import BICallARuleAction
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
@@ -20,6 +22,8 @@ from cmk.bi.packs import BIAggregationPack, BIPackConfig
 from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.type_defs import AggrConfigDict
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -47,7 +51,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.site_config import wato_site_ids
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import (
     ActionResult,
@@ -59,6 +62,7 @@ from cmk.gui.type_defs import (
     PermissionName,
     StaticIcon,
 )
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
@@ -96,9 +100,8 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 from cmk.gui.wato import ContactGroupSelection, TileMenuRenderer
-from cmk.gui.watolib import changes as changes_
-from cmk.gui.watolib.audit_log import LogMessage
-from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
+from cmk.gui.watolib.config_domain_name import GUI
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,
@@ -108,6 +111,14 @@ from cmk.gui.watolib.main_menu import (
     MenuItem,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -232,16 +243,6 @@ class ABCBIMode(WatoMode):
     def title_for_pack(self, bi_pack: BIAggregationPack) -> str:
         return escaping.escape_attribute(bi_pack.title)
 
-    def _add_change(self, action_name: str, text: LogMessage) -> None:
-        changes_.add_change(
-            action_name=action_name,
-            text=text,
-            user_id=user.id,
-            domains=[ConfigDomainGUI()],
-            sites=wato_site_ids(active_config.sites),
-            use_git=active_config.wato_use_git,
-        )
-
     def url_to_pack(self, addvars: HTTPVariables, bi_pack: BIAggregationPack) -> str:
         return makeuri_contextless(request, addvars + [("pack", bi_pack.id)])
 
@@ -339,16 +340,33 @@ class ModeBIEditPack(ABCBIMode):
         if transactions.check_transaction():
             vs_config = self._vs_pack().from_html_vars("bi_pack")
             self._vs_pack().validate_value(vs_config, "bi_pack")
+            pending_changes = _pending_changes(
+                config.sites, use_git=config.wato_use_git, local_site=omd_site(), user_id=user.id
+            )
             if self._bi_pack:
                 self.bi_pack.title = vs_config["title"]
                 self.bi_pack.comment = vs_config["comment"]
                 self.bi_pack.contact_groups = vs_config["contact_groups"]
                 self.bi_pack.public = vs_config["public"]
-                self._add_change("bi-edit-pack", _("Modified BI pack %s") % self.bi_pack.id)
+                pending_changes.add(
+                    Change(
+                        action_name="bi-edit-pack",
+                        text=_("Modified BI pack %s") % self.bi_pack.id,
+                        domains=[GUI],
+                    ),
+                    ChangeScope.all_activation_sites(),
+                )
             else:
                 if self._bi_packs.pack_exists(vs_config["id"]):
                     raise MKUserError("pack_id", _("A BI pack with this ID already exists."))
-                self._add_change("bi-new-pack", _("Added new BI pack %s") % vs_config["id"])
+                pending_changes.add(
+                    Change(
+                        action_name="bi-new-pack",
+                        text=_("Added new BI pack %s") % vs_config["id"],
+                        domains=[GUI],
+                    ),
+                    ChangeScope.all_activation_sites(),
+                )
                 vs_config["rules"] = {}
                 vs_config["aggregations"] = {}
                 self._bi_packs.add_pack(
@@ -556,7 +574,19 @@ class ModeBIPacks(ABCBIMode):
                 _("You cannot delete this pack. It contains <b>%d</b> rules.") % pack.num_rules(),
             )
 
-        self._add_change("delete-bi-pack", _("Deleted BI pack %s") % pack_id)
+        _pending_changes(
+            config.sites,
+            use_git=config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ).add(
+            Change(
+                action_name="delete-bi-pack",
+                text=_("Deleted BI pack %s") % pack_id,
+                domains=[GUI],
+            ),
+            ChangeScope.all_activation_sites(),
+        )
         self._bi_packs.delete_pack(pack_id)
         self._bi_packs.save_config()
         return redirect(self.mode_url())
@@ -795,28 +825,38 @@ class ModeBIRules(ABCBIMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url(pack=self.bi_pack.id))
 
+        pending_changes = _pending_changes(
+            config.sites, use_git=config.wato_use_git, local_site=omd_site(), user_id=user.id
+        )
         if request.var("_del_rule"):
-            self._delete_after_confirm()
+            self._delete_after_confirm(pending_changes)
 
         elif request.var("_bulk_delete_bi_rules"):
-            self._bulk_delete_after_confirm()
+            self._bulk_delete_after_confirm(pending_changes)
 
         elif request.var("_bulk_move_bi_rules"):
-            self._bulk_move_after_confirm()
+            self._bulk_move_after_confirm(pending_changes)
 
         else:
             return None
 
         return redirect(self.mode_url(pack=self.bi_pack.id))
 
-    def _delete_after_confirm(self) -> None:
+    def _delete_after_confirm(self, pending_changes: PendingChanges) -> None:
         rule_id = request.get_str_input_mandatory("_del_rule")
         self._check_delete_rule_id_permission(rule_id)
         self._bi_packs.delete_rule(rule_id)
-        self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
+        pending_changes.add(
+            Change(
+                action_name="bi-delete-rule",
+                text=_("Deleted BI rule with ID %s") % rule_id,
+                domains=[GUI],
+            ),
+            ChangeScope.all_activation_sites(),
+        )
         self._bi_packs.save_config()
 
-    def _bulk_delete_after_confirm(self) -> None:
+    def _bulk_delete_after_confirm(self, pending_changes: PendingChanges) -> None:
         selection = self._get_selection("rule")
         for rule_id in selection:
             self._check_delete_rule_id_permission(rule_id)
@@ -826,7 +866,14 @@ class ModeBIRules(ABCBIMode):
 
         for rule_id in selection:
             self._bi_packs.delete_rule(rule_id)
-            self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
+            pending_changes.add(
+                Change(
+                    action_name="bi-delete-rule",
+                    text=_("Deleted BI rule with ID %s") % rule_id,
+                    domains=[GUI],
+                ),
+                ChangeScope.all_activation_sites(),
+            )
         self._bi_packs.save_config()
 
     def _check_delete_rule_id_permission(self, rule_id: str) -> None:
@@ -840,7 +887,7 @@ class ModeBIRules(ABCBIMode):
                 None, _("You cannot delete this rule: it is still used by other rules.")
             )
 
-    def _bulk_move_after_confirm(self) -> None:
+    def _bulk_move_after_confirm(self, pending_changes: PendingChanges) -> None:
         target_pack_id = None
         if request.has_var("bulk_moveto"):
             target_pack_id = request.get_str_input_mandatory("bulk_moveto", "")
@@ -863,9 +910,13 @@ class ModeBIRules(ABCBIMode):
             bi_rule = self.bi_pack.get_rule_mandatory(rule_id)
             target_pack.add_rule(bi_rule)
             self.bi_pack.delete_rule(bi_rule.id)
-            self._add_change(
-                "bi-move-rule",
-                _("Moved BI rule with ID %s to BI pack %s") % (rule_id, target_pack_id),
+            pending_changes.add(
+                Change(
+                    action_name="bi-move-rule",
+                    text=_("Moved BI rule with ID %s to BI pack %s") % (rule_id, target_pack_id),
+                    domains=[GUI],
+                ),
+                ChangeScope.all_activation_sites(),
             )
         self._bi_packs.save_config()
 
@@ -1181,7 +1232,12 @@ class ModeBIEditRule(ABCBIMode):
         schema_validated_config = schema_inst.load(schema_inst.dump(vs_rule_config))
         self._validate_rule_id(schema_validated_config["id"])
         new_bi_rule = BIRule(schema_validated_config)
-        self._action_modify_rule(new_bi_rule)
+        self._action_modify_rule(
+            _pending_changes(
+                config.sites, use_git=config.wato_use_git, local_site=omd_site(), user_id=user.id
+            ),
+            new_bi_rule,
+        )
         return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
     def _validate_rule_id(self, new_rule_id: str) -> None:
@@ -1198,7 +1254,7 @@ class ModeBIEditRule(ABCBIMode):
                 % (new_rule_id, existing_bi_pack.title, existing_bi_rule.title),
             )
 
-    def _action_modify_rule(self, new_bi_rule: BIRule) -> None:
+    def _action_modify_rule(self, pending_changes: PendingChanges, new_bi_rule: BIRule) -> None:
         if self._new:
             self._rule_id = new_bi_rule.id
 
@@ -1209,9 +1265,23 @@ class ModeBIEditRule(ABCBIMode):
             raise MKUserError(None, str(e))
 
         if self._new:
-            self._add_change("bi-new-rule", _("Add BI rule %s") % new_bi_rule.id)
+            pending_changes.add(
+                Change(
+                    action_name="bi-new-rule",
+                    text=_("Add BI rule %s") % new_bi_rule.id,
+                    domains=[GUI],
+                ),
+                ChangeScope.all_activation_sites(),
+            )
         else:
-            self._add_change("bi-edit-rule", _("Modified BI rule %s") % new_bi_rule.id)
+            pending_changes.add(
+                Change(
+                    action_name="bi-edit-rule",
+                    text=_("Modified BI rule %s") % new_bi_rule.id,
+                    domains=[GUI],
+                ),
+                ChangeScope.all_activation_sites(),
+            )
 
     def _get_forbidden_packs_using_rule(self) -> set[str]:
         forbidden_packs = set()
@@ -1789,13 +1859,26 @@ class BIModeEditAggregation(ABCBIMode):
         if had_previous_aggregations != (self._bi_packs.get_num_enabled_aggregations() > 0):
             redirect_kwargs["reload_page"] = "1"
 
+        pending_changes = _pending_changes(
+            config.sites, use_git=config.wato_use_git, local_site=omd_site(), user_id=user.id
+        )
         if self._new:
-            self._add_change(
-                "bi-new-aggregation", _("Add new BI aggregation %s") % new_bi_aggregation.id
+            pending_changes.add(
+                Change(
+                    action_name="bi-new-aggregation",
+                    text=_("Add new BI aggregation %s") % new_bi_aggregation.id,
+                    domains=[GUI],
+                ),
+                ChangeScope.all_activation_sites(),
             )
         else:
-            self._add_change(
-                "bi-edit-aggregation", _("Modified BI aggregation %s") % (new_bi_aggregation.id)
+            pending_changes.add(
+                Change(
+                    action_name="bi-edit-aggregation",
+                    text=_("Modified BI aggregation %s") % (new_bi_aggregation.id),
+                    domains=[GUI],
+                ),
+                ChangeScope.all_activation_sites(),
             )
 
         return redirect(mode_url("bi_aggregations", **redirect_kwargs))
@@ -2071,39 +2154,54 @@ class BIModeAggregations(ABCBIMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url(pack=self.bi_pack.id))
 
+        pending_changes = _pending_changes(
+            config.sites, use_git=config.wato_use_git, local_site=omd_site(), user_id=user.id
+        )
         if request.var("_del_aggr"):
-            self._delete_after_confirm()
+            self._delete_after_confirm(pending_changes)
 
         elif request.var("_bulk_delete_bi_aggregations"):
-            self._bulk_delete_after_confirm()
+            self._bulk_delete_after_confirm(pending_changes)
 
         elif request.var("_bulk_move_bi_aggregations"):
-            self._bulk_move_after_confirm()
+            self._bulk_move_after_confirm(pending_changes)
 
         else:
             return None
 
         return redirect(self.mode_url(pack=self.bi_pack.id))
 
-    def _delete_after_confirm(self) -> None:
+    def _delete_after_confirm(self, pending_changes: PendingChanges) -> None:
         aggregation_id = request.get_str_input_mandatory("_del_aggr")
         self._bi_packs.delete_aggregation(aggregation_id)
-        self._add_change("bi-delete-aggregation", _("Deleted BI aggregation %s") % (aggregation_id))
+        pending_changes.add(
+            Change(
+                action_name="bi-delete-aggregation",
+                text=_("Deleted BI aggregation %s") % (aggregation_id),
+                domains=[GUI],
+            ),
+            ChangeScope.all_activation_sites(),
+        )
         self._bi_packs.save_config()
 
-    def _bulk_delete_after_confirm(self) -> None:
+    def _bulk_delete_after_confirm(self, pending_changes: PendingChanges) -> None:
         selection = sorted(map(str, self._get_selection("aggregation")))
         if not selection:
             return
 
         for aggregation_id in selection[::-1]:
             self._bi_packs.delete_aggregation(aggregation_id)
-            self._add_change(
-                "bi-delete-aggregation", _("Deleted BI aggregation with ID %s") % (aggregation_id)
+            pending_changes.add(
+                Change(
+                    action_name="bi-delete-aggregation",
+                    text=_("Deleted BI aggregation with ID %s") % (aggregation_id),
+                    domains=[GUI],
+                ),
+                ChangeScope.all_activation_sites(),
             )
         self._bi_packs.save_config()
 
-    def _bulk_move_after_confirm(self) -> None:
+    def _bulk_move_after_confirm(self, pending_changes: PendingChanges) -> None:
         target = None
         if request.has_var("bulk_moveto"):
             target = request.var("bulk_moveto", "")
@@ -2123,9 +2221,14 @@ class BIModeAggregations(ABCBIMode):
             bi_aggregation = self.bi_pack.get_aggregation_mandatory(aggregation_id)
             self._bi_packs.delete_aggregation(aggregation_id)
             target_pack.add_aggregation(bi_aggregation)
-            self._add_change(
-                "bi-move-aggregation",
-                _("Moved BI aggregation with ID %s to BI pack %s") % (aggregation_id, target),
+            pending_changes.add(
+                Change(
+                    action_name="bi-move-aggregation",
+                    text=_("Moved BI aggregation with ID %s to BI pack %s")
+                    % (aggregation_id, target),
+                    domains=[GUI],
+                ),
+                ChangeScope.all_activation_sites(),
             )
         self._bi_packs.save_config()
 
@@ -2424,3 +2527,23 @@ class ModeBIRuleTree(ABCBIMode):
                 table.row()
                 table.cell(_("Rule Tree"), css=["bi_rule_tree"])
                 self.render_rule_tree(self._rule_id, self._rule_id)
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

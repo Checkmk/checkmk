@@ -62,6 +62,7 @@ from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, Pag
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import HTTPVariables, IconNames, PermissionName, StaticIcon
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.html import HTML
@@ -74,6 +75,7 @@ from cmk.gui.utils.urls import DocReference, makeuri_contextless
 from cmk.gui.view_utils import format_plugin_output, LabelRenderType, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import (
@@ -89,6 +91,11 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.rulesets import may_edit_ruleset
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.services import (
@@ -109,6 +116,7 @@ from cmk.gui.watolib.services import (
     ServiceDiscoveryBackgroundJob,
     UpdateType,
 )
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.utils import mk_repr
 from cmk.shared_typing.setup import (
     AgentDownload,
@@ -412,6 +420,17 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             pprint_value=ctx.config.wato_pprint_config,
             debug=ctx.config.debug,
             use_git=ctx.config.wato_use_git,
+            pending_changes=PendingChanges(
+                activation_sites=activation_sites(ctx.config.sites),
+                local_site=omd_site(),
+                acting_user=user.id,
+                store=PendingChangesStore(),
+                hooks=(
+                    make_audit_log_change_hook(use_git=ctx.config.wato_use_git),
+                    sidebar_reload_change_hook,
+                    index_update_change_hook,
+                ),
+            ),
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
@@ -522,6 +541,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         pprint_value: bool,
         debug: bool,
         use_git: bool,
+        pending_changes: PendingChanges,
     ) -> DiscoveryResult:
         if action == DiscoveryAction.NONE or not transactions.check_transaction():
             return initial_discovery_result(
@@ -533,6 +553,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 raise_errors=raise_errors,
                 debug=debug,
                 use_git=use_git,
+                pending_changes=pending_changes,
             )
 
         if action in (
@@ -548,6 +569,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 raise_errors=raise_errors,
                 debug=debug,
                 use_git=use_git,
+                pending_changes=pending_changes,
             )
 
         discovery_result = initial_discovery_result(
@@ -559,6 +581,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             raise_errors=raise_errors,
             debug=debug,
             use_git=use_git,
+            pending_changes=pending_changes,
         )
 
         match action:
@@ -572,6 +595,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     pprint_value=pprint_value,
                     debug=debug,
                     use_git=use_git,
+                    pending_changes=pending_changes,
                 )
             case DiscoveryAction.UPDATE_HOST_LABELS:
                 discovery_result = perform_host_label_discovery(
@@ -584,6 +608,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     pprint_value=pprint_value,
                     debug=debug,
                     use_git=use_git,
+                    pending_changes=pending_changes,
                 )
             case (
                 DiscoveryAction.SINGLE_UPDATE
@@ -606,6 +631,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     pprint_value=pprint_value,
                     debug=debug,
                     use_git=use_git,
+                    pending_changes=pending_changes,
                 )
             case DiscoveryAction.UPDATE_SERVICES:
                 discovery_result = perform_service_discovery(
@@ -621,6 +647,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     pprint_value=pprint_value,
                     debug=debug,
                     use_git=use_git,
+                    pending_changes=pending_changes,
                 )
             case _:
                 raise MKUserError("discovery", f"Unknown discovery action: {action}")

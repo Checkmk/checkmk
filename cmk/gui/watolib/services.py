@@ -30,7 +30,6 @@ from typing import assert_never, Final, Literal, NamedTuple
 
 from pydantic import BaseModel
 
-import cmk.gui.watolib.changes as _changes
 from cmk import trace
 from cmk.automations.results import (
     SerializedResult,
@@ -66,13 +65,17 @@ from cmk.gui.watolib.check_mk_automations import (
     update_host_labels,
 )
 from cmk.gui.watolib.config_domain_name import (
-    config_domain_registry,
-    generate_hosts_to_update_settings,
-)
-from cmk.gui.watolib.config_domain_name import (
     CORE as CORE_DOMAIN,
 )
+from cmk.gui.watolib.config_domain_name import (
+    generate_hosts_to_update_settings,
+)
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    PendingChanges,
+)
 from cmk.gui.watolib.rulesets import EnabledDisabledServicesEditor, may_edit_ruleset
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.labels import HostLabel, HostLabelValueDict
@@ -285,6 +288,7 @@ class Discovery:
         pprint_value: bool,
         debug: bool,
         use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         if (
             transition := self.compute_discovery_transition(discovery_result, target_host_name)
@@ -310,7 +314,7 @@ class Discovery:
                 need_sync=transition.need_sync,
                 automation_config=automation_config,
                 debug=debug,
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
 
     def compute_discovery_transition(
@@ -488,14 +492,18 @@ class Discovery:
         need_sync: bool,
         automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         debug: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         message = _("Saved check configuration of host '%s' with %d services") % (
             affected_host_name,
             len(autochecks_table.target_services),
         )
         self._add_service_change(
-            message, need_sync, old_autochecks, autochecks_table, use_git=use_git
+            message,
+            need_sync,
+            old_autochecks,
+            autochecks_table,
+            pending_changes=pending_changes,
         )
         set_autochecks_v2(automation_config, autochecks_table, debug=debug)
 
@@ -506,22 +514,24 @@ class Discovery:
         old_autochecks: SetAutochecksInput,
         autochecks_table: SetAutochecksInput,
         *,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
-        _changes.add_service_change(
-            action_name="set-autochecks",
-            text=message,
-            user_id=user.id,
-            object_ref=self._host.object_ref(),
-            domains=[config_domain_registry[CORE_DOMAIN]],
-            domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([self._host.name()])},
-            site_id=self._host.site_id(),
-            need_sync=need_sync,
-            diff_text=make_diff_text(
-                _make_host_audit_log_object(old_autochecks),
-                _make_host_audit_log_object(autochecks_table),
+        pending_changes.add(
+            Change(
+                action_name="set-autochecks",
+                text=message,
+                object_ref=self._host.object_ref(),
+                diff_text=make_diff_text(
+                    _make_host_audit_log_object(old_autochecks),
+                    _make_host_audit_log_object(autochecks_table),
+                ),
+                domains=[CORE_DOMAIN],
+                domain_settings={
+                    CORE_DOMAIN: generate_hosts_to_update_settings([self._host.name()])
+                },
+                force_sync=need_sync,
             ),
-            use_git=use_git,
+            ChangeScope.sites([self._host.site_id()]),
         )
 
     def _get_table_target(self, entry: CheckPreviewEntry) -> str:
@@ -630,6 +640,7 @@ def perform_fix_all(
     pprint_value: bool,
     debug: bool,
     use_git: bool,
+    pending_changes: PendingChanges,
 ) -> DiscoveryResult:
     """
     Handle fix all ('Accept All' on UI) discovery action
@@ -640,7 +651,7 @@ def perform_fix_all(
                 discovery_result.labels_by_host,
                 automation_config=automation_config,
                 debug=debug,
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
             Discovery(
                 host,
@@ -656,6 +667,7 @@ def perform_fix_all(
                 pprint_value=pprint_value,
                 debug=debug,
                 use_git=use_git,
+                pending_changes=pending_changes,
             )
             discovery_result = get_check_table(
                 host,
@@ -665,6 +677,7 @@ def perform_fix_all(
                 raise_errors=raise_errors,
                 debug=debug,
                 use_git=use_git,
+                pending_changes=pending_changes,
             )
     return discovery_result
 
@@ -680,6 +693,7 @@ def perform_host_label_discovery(
     pprint_value: bool,
     debug: bool,
     use_git: bool,
+    pending_changes: PendingChanges,
 ) -> DiscoveryResult:
     """Handle update host labels discovery action"""
     with _service_discovery_context(host, pprint_value=pprint_value):
@@ -687,7 +701,7 @@ def perform_host_label_discovery(
             discovery_result.labels_by_host,
             automation_config=automation_config,
             debug=debug,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
         discovery_result = get_check_table(
             host,
@@ -697,6 +711,7 @@ def perform_host_label_discovery(
             raise_errors=raise_errors,
             debug=debug,
             use_git=use_git,
+            pending_changes=pending_changes,
         )
     return discovery_result
 
@@ -715,6 +730,7 @@ def perform_service_discovery(
     pprint_value: bool,
     debug: bool,
     use_git: bool,
+    pending_changes: PendingChanges,
 ) -> DiscoveryResult:
     """
     Handle discovery action for Update Services, Single Update & Bulk Update
@@ -734,6 +750,7 @@ def perform_service_discovery(
             pprint_value=pprint_value,
             debug=debug,
             use_git=use_git,
+            pending_changes=pending_changes,
         )
         discovery_result = get_check_table(
             host,
@@ -743,6 +760,7 @@ def perform_service_discovery(
             raise_errors=raise_errors,
             debug=debug,
             use_git=use_git,
+            pending_changes=pending_changes,
         )
     return discovery_result
 
@@ -821,6 +839,7 @@ def initial_discovery_result(
     raise_errors: bool,
     debug: bool,
     use_git: bool,
+    pending_changes: PendingChanges,
 ) -> DiscoveryResult:
     return (
         get_check_table(
@@ -831,6 +850,7 @@ def initial_discovery_result(
             raise_errors=raise_errors,
             debug=debug,
             use_git=use_git,
+            pending_changes=pending_changes,
         )
         if previous_discovery_result is None or previous_discovery_result.is_active()
         else previous_discovery_result
@@ -842,7 +862,7 @@ def _perform_update_host_labels(
     *,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     debug: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     for host_name, host_labels in labels_by_nodes.items():
         if (host := Host.host(host_name)) is None:
@@ -852,15 +872,15 @@ def _perform_update_host_labels(
             host_name,
             len(host_labels),
         )
-        _changes.add_service_change(
-            action_name="update-host-labels",
-            text=message,
-            user_id=user.id,
-            object_ref=host.object_ref(),
-            domains=[config_domain_registry[CORE_DOMAIN]],
-            domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
-            site_id=host.site_id(),
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="update-host-labels",
+                text=message,
+                object_ref=host.object_ref(),
+                domains=[CORE_DOMAIN],
+                domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
+            ),
+            ChangeScope.sites([host.site_id()]),
         )
         update_host_labels(automation_config, host.name(), host_labels, debug=debug)
 
@@ -1131,6 +1151,7 @@ def get_check_table(
     raise_errors: bool,
     debug: bool,
     use_git: bool,
+    pending_changes: PendingChanges,
 ) -> DiscoveryResult:
     """Gathers the check table using a background job
 
@@ -1155,15 +1176,15 @@ def get_check_table(
     get_check_table()
     """
     if action == DiscoveryAction.TABULA_RASA:
-        _changes.add_service_change(
-            action_name="refresh-autochecks",
-            text=_("Refreshed check configuration of host '%s'") % host.name(),
-            user_id=user.id,
-            object_ref=host.object_ref(),
-            domains=[config_domain_registry[CORE_DOMAIN]],
-            domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
-            site_id=host.site_id(),
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="refresh-autochecks",
+                text=_("Refreshed check configuration of host '%s'") % host.name(),
+                object_ref=host.object_ref(),
+                domains=[CORE_DOMAIN],
+                domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
+            ),
+            ChangeScope.sites([host.site_id()]),
         )
 
     if isinstance(automation_config, LocalAutomationConfig):

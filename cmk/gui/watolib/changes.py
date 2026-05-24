@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Free functions for recording pending configuration changes.
 
-``add_change`` and ``add_service_change`` build a request-scoped
-:class:`PendingChanges` on every call and delegate to it. New code should
-construct a :class:`PendingChanges` once at the request boundary and pass it
-down explicitly.
+``add_change`` builds a request-scoped :class:`PendingChanges` on every call
+and delegates to it. New code should construct a :class:`PendingChanges` once
+at the request boundary and pass it down explicitly.
 """
 
 from collections.abc import Iterator, Sequence
@@ -94,33 +93,6 @@ def add_change(
             prevent_discard_changes=prevent_discard_changes,
         ),
         _scope_from_sites(sites),
-    )
-
-
-def add_service_change(
-    *,
-    action_name: str,
-    text: str,
-    user_id: UserId | None,
-    object_ref: ObjectRef,
-    domains: Sequence[ABCConfigDomain],
-    domain_settings: DomainSettings,
-    site_id: SiteId,
-    use_git: bool,
-    diff_text: str | None = None,
-    need_sync: bool = False,
-) -> None:
-    add_change(
-        action_name=action_name,
-        text=text,
-        user_id=user_id,
-        object_ref=object_ref,
-        sites=[site_id],
-        diff_text=diff_text,
-        need_sync=need_sync,
-        domains=domains,
-        domain_settings=domain_settings,
-        use_git=use_git,
     )
 
 

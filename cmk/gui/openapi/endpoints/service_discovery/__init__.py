@@ -17,11 +17,12 @@ from typing import Any, assert_never
 from urllib.parse import urlparse
 
 from cmk import fields
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.gui import fields as gui_fields
 from cmk.gui.background_job.job import BackgroundStatusSnapshot
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
@@ -39,6 +40,7 @@ from cmk.gui.site_config import site_is_local
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
     make_automation_config,
@@ -51,6 +53,11 @@ from cmk.gui.watolib.bulk_discovery import (
     start_bulk_discovery,
 )
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.services import (
     Discovery,
     DiscoveryAction,
@@ -67,6 +74,25 @@ from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationC
 from cmk.utils.everythingtype import EVERYTHING
 
 from ._response_schemas import ServiceDiscoveryResultSchema, ServiceDiscoveryRunSchema
+
+
+def _pending_changes(
+    *,
+    config: Config,
+    local_site: SiteId,
+    acting_user: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=acting_user,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            index_update_change_hook,
+        ),
+    )
+
 
 DISCOVERY_PERMISSIONS = permissions.AllPerm(
     [
@@ -204,6 +230,9 @@ def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
             raise_errors=False,
             debug=active_config.debug,
             use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                config=active_config, local_site=omd_site(), acting_user=user.id
+            ),
         )
     except MKAutomationException:
         pass
@@ -309,6 +338,9 @@ def update_service_phase(params: Mapping[str, Any]) -> Response:
         pprint_value=active_config.wato_pprint_config,
         debug=active_config.debug,
         use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            config=active_config, local_site=omd_site(), acting_user=user.id
+        ),
     )
     return Response(status=204)
 
@@ -324,6 +356,7 @@ def _update_single_service_phase(
     pprint_value: bool,
     debug: bool,
     use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     action = DiscoveryAction.SINGLE_UPDATE
     Discovery(
@@ -341,12 +374,14 @@ def _update_single_service_phase(
             raise_errors=False,
             debug=debug,
             use_git=use_git,
+            pending_changes=pending_changes,
         ),
         host.name(),
         automation_config=automation_config,
         pprint_value=pprint_value,
         debug=debug,
         use_git=use_git,
+        pending_changes=pending_changes,
     )
 
 
@@ -466,6 +501,9 @@ def execute_service_discovery(params: Mapping[str, Any]) -> Response:
         pprint_value=active_config.wato_pprint_config,
         debug=active_config.debug,
         use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            config=active_config, local_site=omd_site(), acting_user=user.id
+        ),
     )
 
 
@@ -478,6 +516,7 @@ def _execute_service_discovery(
     pprint_value: bool,
     debug: bool,
     use_git: bool,
+    pending_changes: PendingChanges,
 ) -> Response:
     job_snapshot = _job_snapshot(host)
     if job_snapshot.is_active:
@@ -502,6 +541,7 @@ def _execute_service_discovery(
         raise_errors=False,
         debug=debug,
         use_git=use_git,
+        pending_changes=pending_changes,
     )
     match api_discovery_action:
         case APIDiscoveryAction.new:
@@ -518,6 +558,7 @@ def _execute_service_discovery(
                 pprint_value=pprint_value,
                 debug=debug,
                 use_git=use_git,
+                pending_changes=pending_changes,
             )
         case APIDiscoveryAction.remove:
             discovery_result = perform_service_discovery(
@@ -533,6 +574,7 @@ def _execute_service_discovery(
                 pprint_value=pprint_value,
                 debug=debug,
                 use_git=use_git,
+                pending_changes=pending_changes,
             )
         case APIDiscoveryAction.fix_all:
             discovery_result = perform_fix_all(
@@ -544,6 +586,7 @@ def _execute_service_discovery(
                 pprint_value=pprint_value,
                 debug=debug,
                 use_git=use_git,
+                pending_changes=pending_changes,
             )
         case APIDiscoveryAction.refresh | APIDiscoveryAction.tabula_rasa:
             discovery_run = _discovery_wait_for_completion_link(host.name())
@@ -561,6 +604,7 @@ def _execute_service_discovery(
                 pprint_value=pprint_value,
                 debug=debug,
                 use_git=use_git,
+                pending_changes=pending_changes,
             )
         case APIDiscoveryAction.only_service_labels:
             discovery_result = perform_service_discovery(
@@ -576,6 +620,7 @@ def _execute_service_discovery(
                 pprint_value=pprint_value,
                 debug=debug,
                 use_git=use_git,
+                pending_changes=pending_changes,
             )
 
         case _:

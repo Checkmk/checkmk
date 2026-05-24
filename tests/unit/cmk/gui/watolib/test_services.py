@@ -13,6 +13,8 @@ from unittest.mock import call, MagicMock, patch
 import pytest
 from pytest_mock import MockerFixture
 
+from livestatus import SiteConfigurations
+
 from cmk.automations.results import (
     AnalyzeServiceRuleMatchesResult,
     DeleteHostsResult,
@@ -22,14 +24,16 @@ from cmk.automations.results import (
     SetAutochecksV2Result,
 )
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.checkengine.checkresults import MetricTuple
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, SectionName
 from cmk.gui.utils import transaction_manager
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
-from cmk.gui.watolib.audit_log import AuditLogStore
+from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.watolib.services import (
     Discovery,
     DiscoveryAction,
@@ -45,6 +49,14 @@ from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.labels import HostLabel
 from cmk.utils.servicename import ServiceName
+
+_TEST_PENDING_CHANGES: PendingChanges = PendingChanges(
+    activation_sites=SiteConfigurations({}),
+    local_site=SiteId("NO_SITE"),
+    acting_user=None,
+    store=PendingChangesStore(),
+    hooks=(make_audit_log_change_hook(use_git=False),),
+)
 
 MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
     check_table=[
@@ -188,6 +200,7 @@ def test_perform_discovery_none_action(
         raise_errors=True,
         debug=False,
         use_git=False,
+        pending_changes=_TEST_PENDING_CHANGES,
     )
     mock_discovery_preview.assert_called_once()
     assert discovery_result.check_table == MOCK_DISCOVERY_RESULT.check_table
@@ -208,6 +221,7 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
         raise_errors=True,
         debug=False,
         use_git=False,
+        pending_changes=_TEST_PENDING_CHANGES,
     )
 
     mock_discovery.assert_called_once()
@@ -236,6 +250,7 @@ def test_perform_discovery_tabula_rasa_removes_vanished_services(
         raise_errors=True,
         debug=False,
         use_git=False,
+        pending_changes=_TEST_PENDING_CHANGES,
     )
 
     mock_discovery.assert_called_once()
@@ -392,6 +407,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             raise_errors=True,
             debug=False,
             use_git=False,
+            pending_changes=_TEST_PENDING_CHANGES,
         ),
         host=sample_host,
         automation_config=LocalAutomationConfig(),
@@ -400,6 +416,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         pprint_value=False,
         debug=False,
         use_git=False,
+        pending_changes=_TEST_PENDING_CHANGES,
     )
     sample_autochecks: Mapping[ServiceName, AutocheckEntry] = {
         "Temperature Zone 1": AutocheckEntry(CheckPluginName("lnx_thermal"), "Zone 1", {}, {}),
@@ -533,6 +550,7 @@ def test_perform_discovery_fix_all_removes_vanished_service(
             raise_errors=True,
             debug=False,
             use_git=False,
+            pending_changes=_TEST_PENDING_CHANGES,
         ),
         host=sample_host,
         automation_config=LocalAutomationConfig(),
@@ -541,6 +559,7 @@ def test_perform_discovery_fix_all_removes_vanished_service(
         use_git=False,
         raise_errors=True,
         user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+        pending_changes=_TEST_PENDING_CHANGES,
     )
 
     mock_discovery_preview.assert_called_once()
@@ -666,6 +685,7 @@ def test_perform_fix_all_clears_host_labels_without_service_changes(
             raise_errors=True,
             debug=False,
             use_git=False,
+            pending_changes=_TEST_PENDING_CHANGES,
         ),
         host=sample_host,
         automation_config=LocalAutomationConfig(),
@@ -674,6 +694,7 @@ def test_perform_fix_all_clears_host_labels_without_service_changes(
         use_git=False,
         raise_errors=True,
         user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+        pending_changes=_TEST_PENDING_CHANGES,
     )
 
     mock_discovery_preview.assert_called_once()
@@ -801,6 +822,7 @@ def test_perform_fix_all_does_not_write_ignored_services_to_autochecks(
             raise_errors=True,
             debug=False,
             use_git=False,
+            pending_changes=_TEST_PENDING_CHANGES,
         ),
         host=sample_host,
         automation_config=LocalAutomationConfig(),
@@ -809,6 +831,7 @@ def test_perform_fix_all_does_not_write_ignored_services_to_autochecks(
         use_git=False,
         raise_errors=True,
         user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+        pending_changes=_TEST_PENDING_CHANGES,
     )
 
     saved_input = mock_set_autochecks.call_args.args[1]
@@ -1046,6 +1069,7 @@ def test_perform_discovery_single_update(
             raise_errors=True,
             debug=False,
             use_git=False,
+            pending_changes=_TEST_PENDING_CHANGES,
         ),
         selected_services=(("mem_linux", None),),
         update_source="new",
@@ -1057,6 +1081,7 @@ def test_perform_discovery_single_update(
         pprint_value=False,
         debug=False,
         use_git=False,
+        pending_changes=_TEST_PENDING_CHANGES,
     )
     sample_autochecks: Mapping[ServiceName, AutocheckEntry] = {
         "Check_MK Agent": AutocheckEntry(CheckPluginName("checkmk_agent"), None, {}, {}),
@@ -1260,6 +1285,7 @@ def test_perform_discovery_single_update__ignore(
         pprint_value=False,
         debug=False,
         use_git=False,
+        pending_changes=_TEST_PENDING_CHANGES,
     )
     mock_save_function.assert_called_once()
     remove_disabled_rule, add_disabled_rule, *_ = mock_save_function.call_args_list[0][0]
@@ -1399,6 +1425,7 @@ class TestPerformDiscoverySingleUpdate:
             pprint_value=False,
             debug=False,
             use_git=False,
+            pending_changes=_TEST_PENDING_CHANGES,
         )
 
         mock_save_function.assert_called_once()
@@ -1552,6 +1579,7 @@ class TestPerformDiscoverySingleUpdate:
             use_git=False,
             raise_errors=True,
             user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+            pending_changes=_TEST_PENDING_CHANGES,
         )
 
         mock_save_function.assert_called_once()
@@ -1744,6 +1772,7 @@ def test_perform_discovery_action_update_services(
             raise_errors=True,
             debug=False,
             use_git=False,
+            pending_changes=_TEST_PENDING_CHANGES,
         ),
         selected_services=EVERYTHING,
         update_source=None,
@@ -1755,6 +1784,7 @@ def test_perform_discovery_action_update_services(
         pprint_value=False,
         debug=False,
         use_git=False,
+        pending_changes=_TEST_PENDING_CHANGES,
     )
     sample_autochecks: Mapping[ServiceName, AutocheckEntry] = {
         "Filesystem /opt/omd/sites/heute/tmp": AutocheckEntry(
@@ -1870,6 +1900,7 @@ def test_perform_discovery_action_update_host_labels(
             raise_errors=True,
             debug=False,
             use_git=False,
+            pending_changes=_TEST_PENDING_CHANGES,
         ),
         host=sample_host,
         raise_errors=True,
@@ -1878,6 +1909,7 @@ def test_perform_discovery_action_update_host_labels(
         pprint_value=False,
         debug=False,
         use_git=False,
+        pending_changes=_TEST_PENDING_CHANGES,
     )
 
     mock_update_host_labels.assert_called_once_with(
@@ -2210,6 +2242,7 @@ def test_perform_discovery_bulk_update__ignored_service_set_to_undecided(
         use_git=False,
         raise_errors=True,
         user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+        pending_changes=_TEST_PENDING_CHANGES,
     )
 
     mock_save_function.assert_called_once()

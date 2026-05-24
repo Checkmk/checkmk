@@ -27,7 +27,6 @@ from livestatus import (
 import cmk.ccc.version as cmk_version
 import cmk.gui.sites
 import cmk.gui.watolib.activate_changes
-import cmk.gui.watolib.changes
 import cmk.gui.watolib.sidebar_reload
 from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry

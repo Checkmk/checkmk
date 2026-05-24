@@ -388,6 +388,7 @@ def _create_and_save_special_agent_bundle(
                 pprint_value=active_config.wato_pprint_config,
                 debug=active_config.debug,
                 use_git=active_config.wato_use_git,
+                pending_changes=pending_changes,
             )
         except Exception as e:
             progress_logger.update_progress_step_status("service_discovery", StepStatus.ERROR)
@@ -457,6 +458,7 @@ def _get_service_discovery_result(
     site_id: SiteId,
     use_git: bool,
     user_permission_config: UserPermissionSerializableConfig,
+    pending_changes: PendingChanges,
 ) -> DiscoveryResult:
     if isinstance(automation_config, LocalAutomationConfig):
         job = ServiceDiscoveryBackgroundJob(HostName(host_name))
@@ -486,6 +488,7 @@ def _get_service_discovery_result(
         raise_errors=False,
         debug=debug,
         use_git=use_git,
+        pending_changes=pending_changes,
     )
 
 
@@ -498,6 +501,7 @@ def _run_service_discovery(
     pprint_value: bool,
     debug: bool,
     use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     host: Host = Host.load_host(HostName(host_name))
     # For remote sites this also implicitly syncs the pending changes to run the discovery
@@ -509,10 +513,18 @@ def _run_service_discovery(
         raise_errors=False,
         debug=debug,
         use_git=use_git,
+        pending_changes=pending_changes,
     )
     perform_fix_all(
         discovery_result=_get_service_discovery_result(
-            automation_config, debug, host, host_name, site_id, use_git, user_permission_config
+            automation_config,
+            debug,
+            host,
+            host_name,
+            site_id,
+            use_git,
+            user_permission_config,
+            pending_changes,
         ),
         host=host,
         raise_errors=False,
@@ -521,4 +533,5 @@ def _run_service_discovery(
         pprint_value=pprint_value,
         debug=debug,
         use_git=use_git,
+        pending_changes=pending_changes,
     )

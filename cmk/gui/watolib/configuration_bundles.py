@@ -7,7 +7,7 @@ from collections.abc import Callable, Collection, Container, Iterable, Mapping, 
 from dataclasses import dataclass
 from itertools import groupby
 from operator import itemgetter
-from typing import Any, get_args, Literal, NotRequired, TypedDict
+from typing import Any, get_args, Literal, NotRequired, Protocol, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -136,10 +136,20 @@ def _otel_unsupported(*_args: Any, **_kwargs: Any) -> None:
     raise MKGeneralException("OTel collector not supported")
 
 
+class _CreateDCDConnection(Protocol):
+    def __call__(
+        self, name: str, dcd: DCDConnectionSpec, *, pending_changes: PendingChanges
+    ) -> None: ...
+
+
+class _DeleteDCDConnection(Protocol):
+    def __call__(self, name: str, *, pending_changes: PendingChanges) -> None: ...
+
+
 class DCDConnectionHook:
     load_dcd_connections: Callable[[], DCDConnectionDict] = lambda: {}
-    create_dcd_connection: Callable[[str, DCDConnectionSpec], None] = _dcd_unsupported
-    delete_dcd_connection: Callable[[str], None] = _dcd_unsupported
+    create_dcd_connection: _CreateDCDConnection = _dcd_unsupported
+    delete_dcd_connection: _DeleteDCDConnection = _dcd_unsupported
     stamp_dcd_locked_by: Callable[[str, GlobalIdent], None] = _dcd_unsupported
     domain_definition: DomainDefinition | None = None
 
@@ -303,6 +313,7 @@ def _validate_and_prepare_create_calls(
                 bundle_ident,
                 entities.dcd_connections,
                 DCDConnectionHook.load_dcd_connections(),
+                pending_changes=pending_changes,
             )
         )
     return create_functions
@@ -486,7 +497,11 @@ def delete_config_bundle_objects(
         )
     if references.dcd_connections:
         _delete_dcd_connections(
-            references.dcd_connections, pprint_value=pprint_value, debug=debug, use_git=use_git
+            references.dcd_connections,
+            pprint_value=pprint_value,
+            debug=debug,
+            use_git=use_git,
+            pending_changes=pending_changes,
         )
     if references.otel_configs:
         _delete_otel_configs(references.otel_configs)
@@ -735,6 +750,8 @@ def _prepare_create_dcd_connections(
     bundle_ident: GlobalIdent,
     new_connections: Collection[CreateDCDConnection],
     current_connections: DCDConnectionDict,
+    *,
+    pending_changes: PendingChanges,
 ) -> CreateFunction:
     for connection in new_connections:
         if connection["id"] in current_connections:
@@ -744,7 +761,9 @@ def _prepare_create_dcd_connections(
         for dcd_connection in new_connections:
             spec = dcd_connection["spec"]
             DCDConnectionHook.create_dcd_connection(
-                dcd_connection["id"], {**spec, "locked_by": bundle_ident}
+                dcd_connection["id"],
+                {**spec, "locked_by": bundle_ident},
+                pending_changes=pending_changes,
             )
 
     return create
@@ -756,9 +775,10 @@ def _delete_dcd_connections(
     pprint_value: bool,
     debug: bool,
     use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     for dcd_connection_id, _spec in dcd_connections:
-        DCDConnectionHook.delete_dcd_connection(dcd_connection_id)
+        DCDConnectionHook.delete_dcd_connection(dcd_connection_id, pending_changes=pending_changes)
 
     _delete_hosts(
         (

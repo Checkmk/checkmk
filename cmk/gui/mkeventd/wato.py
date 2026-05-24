@@ -33,7 +33,6 @@ import cmk.ccc.translations
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
-import cmk.gui.watolib.changes as _changes
 import cmk.mkp_tool
 import cmk.utils.paths
 import cmk.utils.render
@@ -42,6 +41,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import RegexFutureWarning
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.gui import forms, hooks, log, sites, watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -84,7 +84,7 @@ from cmk.gui.type_defs import (
     PermissionName,
     StaticIcon,
 )
-from cmk.gui.user_sites import get_event_console_site_choices
+from cmk.gui.user_sites import activation_sites, get_event_console_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -137,7 +137,7 @@ from cmk.gui.wato.pages.global_settings import (
     MatchItemGeneratorSettings,
 )
 from cmk.gui.watolib.attributes import SNMPCredentials
-from cmk.gui.watolib.audit_log import log_audit
+from cmk.gui.watolib.audit_log import log_audit, make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_domain_registry,
@@ -175,6 +175,13 @@ from cmk.gui.watolib.notification_parameter import (
     NotificationParameter,
     NotificationParameterRegistry,
 )
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupHostsMonitoringRulesVarious,
     RulespecGroupMonitoringConfigurationVarious,
@@ -186,6 +193,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecRegistry,
     ServiceRulespec,
 )
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.livestatus_client import ECCreate, ECResetCounters, ECSwitchMode, LivestatusClient
@@ -1621,17 +1629,15 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         text: str,
         *,
         domains: Iterable[ABCConfigDomain] | None = None,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
-        _changes.add_change(
-            action_name=action_name,
-            text=text,
-            user_id=user.id,
-            domains=[
-                *(domains or [self._config_domain]),
-            ],
-            sites=_get_event_console_sync_sites(),
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name=action_name,
+                text=text,
+                domains=[d.ident() for d in (domains or [self._config_domain])],
+            ),
+            ChangeScope.sites(_get_event_console_sync_sites()),
         )
 
     def _get_rule_pack_to_mkp_map(self) -> dict[str, Any]:
@@ -1839,6 +1845,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         if self._event_simulation_action():
             return None
 
+        pending_changes = _pending_changes_for_ec(config=config, acting_user=user.id)
+
         # Deletion of rule packs
         if request.has_var("_delete"):
             nr = request.get_integer_input_mandatory("_delete")
@@ -1846,7 +1854,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._add_change(
                 action_name="delete-rule-pack",
                 text=_("Deleted rule pack %s") % rule_pack["id"],
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
             del self._rule_packs[nr]
             self._save_rules(config)
@@ -1858,7 +1866,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._add_change(
                 action_name="counter-reset",
                 text=_("Reset all rule hit counters to zero"),
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
 
         # Copy rules from master
@@ -1870,7 +1878,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._add_change(
                 action_name="copy-rules-from-master",
                 text=_("Copied the event rules from the central site into the local configuration"),
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
             flash(_("Copied rules from central site"))
             return redirect(self.mode_url())
@@ -1886,7 +1894,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._add_change(
                 action_name="move-rule-pack",
                 text=_("Changed position of rule pack %s") % rule_pack["id"],
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
 
         # Export rule pack
@@ -1903,7 +1911,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._add_change(
                 action_name="export-rule-pack",
                 text=_("Made rule pack %s available for MKP export") % rule_pack["id"],
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
 
         # Make rule pack non-exportable
@@ -1921,7 +1929,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._add_change(
                 action_name="dissolve-rule-pack",
                 text=_("Removed rule_pack %s from MKP export") % self._rule_packs[nr]["id"],
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
 
         # Reset to rule pack provided via MKP
@@ -1936,7 +1944,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._add_change(
                 action_name="reset-rule-pack",
                 text=_("Reset the rules of rule pack %s to the ones provided via MKP") % rp.id_,
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
 
         # Synchronize modified rule pack with MKP
@@ -1952,7 +1960,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             self._add_change(
                 action_name="synchronize-rule-pack",
                 text=_("Synchronized MKP with the modified rule pack %s") % rp.id_,
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
 
         # Update data structure after actions
@@ -2361,6 +2369,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
+        pending_changes = _pending_changes_for_ec(config=config, acting_user=user.id)
 
         if request.var("_move_to"):
             for move_nr, rule in enumerate(self._rule_pack["rules"]):
@@ -2392,7 +2401,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     self._add_change(
                         action_name="move-rule-to-pack",
                         text=_("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]),
-                        use_git=config.wato_use_git,
+                        pending_changes=pending_changes,
                     )
                     flash(_("Moved rule %s to pack %s") % (rule["id"], other_pack["title"]))
                     return None
@@ -2411,7 +2420,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             self._add_change(
                 action_name="delete-rule",
                 text=_("Deleted rule %s") % rules[nr]["id"],
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
             del rules[nr]
 
@@ -2445,7 +2454,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             self._add_change(
                 action_name="move-rule",
                 text=_("Changed position of rule %s") % rule["id"],
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
         return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
@@ -2703,7 +2712,7 @@ def _add_change_for_sites(
     text: str,
     rule_or_rulepack: DictionaryModel | ec.ECRulePackSpec,
     config_domain: ConfigDomainEventConsole,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     """In case of Ultimate with multi-tenancy, add the changes only for the customer's sites if customer is configured"""
     customer_id: str | None = rule_or_rulepack.get("customer")
@@ -2712,13 +2721,13 @@ def _add_change_for_sites(
     else:
         sites_ = _get_event_console_sync_sites()
 
-    _changes.add_change(
-        action_name=action_name,
-        text=text,
-        user_id=user.id,
-        domains=[config_domain],
-        sites=sites_,
-        use_git=use_git,
+    pending_changes.add(
+        Change(
+            action_name=action_name,
+            text=text,
+            domains=[config_domain.ident()],
+        ),
+        ChangeScope.sites(sites_),
     )
 
 
@@ -2821,13 +2830,14 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
 
         self._save_rules(config)
 
+        pending_changes = _pending_changes_for_ec(config=config, acting_user=user.id)
         if self._new:
             _add_change_for_sites(
                 action_name="new-rule-pack",
                 text=_("Created new rule pack with id %s") % self._rule_pack["id"],
                 rule_or_rulepack=self._rule_pack,
                 config_domain=self._config_domain,
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
         else:
             _add_change_for_sites(
@@ -2835,7 +2845,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
                 text=_("Modified rule pack %s") % self._rule_pack["id"],
                 rule_or_rulepack=self._rule_pack,
                 config_domain=self._config_domain,
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
         return redirect(mode_url("mkeventd_rule_packs"))
 
@@ -3031,13 +3041,14 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             self._export_mkp_rule_pack(self._rule_pack, config)
         self._save_rules(config)
 
+        pending_changes = _pending_changes_for_ec(config=config, acting_user=user.id)
         if self._new:
             _add_change_for_sites(
                 action_name="new-rule",
                 text=("Created new event correlation rule with id %s") % rule["id"],
                 rule_or_rulepack=rule,
                 config_domain=self._config_domain,
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
         else:
             _add_change_for_sites(
@@ -3045,7 +3056,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                 text=("Modified event correlation rule %s") % rule["id"],
                 rule_or_rulepack=rule,
                 config_domain=self._config_domain,
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
             # Reset hit counters of this rule
             LivestatusClient(sites.live()).command(ECResetCounters(rule["id"]), omd_site())
@@ -3269,7 +3280,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             action_name="edit-configvar",
             text=msg,
             domains=config_variable.all_domains(),
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes_for_ec(config=config, acting_user=user.id),
         )
 
         if action == "_reset":
@@ -3340,6 +3351,20 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
 def _get_event_console_sync_sites() -> list[SiteId]:
     """Returns a list of site ids which gets the Event Console configuration replicated"""
     return [s[0] for s in get_event_console_site_choices()]
+
+
+def _pending_changes_for_ec(*, config: Config, acting_user: UserId | None) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=omd_site(),
+        acting_user=acting_user,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )
 
 
 @dataclass
@@ -3428,15 +3453,16 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
+        pending_changes = _pending_changes_for_ec(config=config, acting_user=user.id)
         if filename := request.var("_delete"):
             if info := self._load_snmp_mibs(self._paths.local_mibs_dir.value).get(filename):
-                self._delete_mib(filename, info.name, use_git=config.wato_use_git)
+                self._delete_mib(filename, info.name, pending_changes=pending_changes)
         elif request.var("_bulk_delete_custom_mibs"):
-            self._bulk_delete_custom_mibs_after_confirm(use_git=config.wato_use_git)
+            self._bulk_delete_custom_mibs_after_confirm(pending_changes=pending_changes)
 
         return redirect(self.mode_url())
 
-    def _bulk_delete_custom_mibs_after_confirm(self, *, use_git: bool) -> None:
+    def _bulk_delete_custom_mibs_after_confirm(self, *, pending_changes: PendingChanges) -> None:
         custom_mibs = self._load_snmp_mibs(self._paths.local_mibs_dir.value)
         selected_custom_mibs: list[str] = []
         for varname, _value in request.itervars(prefix="_c_mib_"):
@@ -3446,13 +3472,13 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                     selected_custom_mibs.append(filename)
 
         for filename in selected_custom_mibs:
-            self._delete_mib(filename, custom_mibs[filename].name, use_git=use_git)
+            self._delete_mib(filename, custom_mibs[filename].name, pending_changes=pending_changes)
 
-    def _delete_mib(self, filename: str, mib_name: str, *, use_git: bool) -> None:
+    def _delete_mib(self, filename: str, mib_name: str, *, pending_changes: PendingChanges) -> None:
         self._add_change(
             action_name="delete-mib",
             text=_("Deleted MIB %s") % filename,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
         pyc_suffix = f".cpython-{sys.version_info.major}{sys.version_info.minor}.pyc"
         compiled_mibs_dir = self._paths.compiled_mibs_dir.value
@@ -3599,7 +3625,11 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             try:
                 flash(
                     self._upload_mib(
-                        filename, mimetype, content, use_git=config.wato_use_git, debug=config.debug
+                        filename,
+                        mimetype,
+                        content,
+                        pending_changes=_pending_changes_for_ec(config=config, acting_user=user.id),
+                        debug=config.debug,
                     )
                 )
                 return None
@@ -3610,12 +3640,20 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         return None
 
     def _upload_mib(
-        self, filename: str, mimetype: str, content: bytes, *, use_git: bool, debug: bool
+        self,
+        filename: str,
+        mimetype: str,
+        content: bytes,
+        *,
+        pending_changes: PendingChanges,
+        debug: bool,
     ) -> str:
         self._validate_mib_file_name(filename)
 
         if self._is_zipfile(io.BytesIO(content)):
-            msg = self._process_uploaded_zip_file(filename, content, use_git=use_git, debug=debug)
+            msg = self._process_uploaded_zip_file(
+                filename, content, pending_changes=pending_changes, debug=debug
+            )
         else:
             if (
                 mimetype == "application/tar"
@@ -3624,7 +3662,9 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             ):
                 raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
 
-            msg = self._process_uploaded_mib_file(filename, content, use_git=use_git, debug=debug)
+            msg = self._process_uploaded_mib_file(
+                filename, content, pending_changes=pending_changes, debug=debug
+            )
 
         return msg
 
@@ -3640,7 +3680,12 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             return False
 
     def _process_uploaded_zip_file(
-        self, filename: str, content: bytes, *, use_git: bool, debug: bool
+        self,
+        filename: str,
+        content: bytes,
+        *,
+        pending_changes: PendingChanges,
+        debug: bool,
     ) -> str:
         with zipfile.ZipFile(io.BytesIO(content)) as zip_obj:
             messages = []
@@ -3654,7 +3699,10 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                     with zip_obj.open(mib_file_name) as mib_obj:
                         messages.append(
                             self._process_uploaded_mib_file(
-                                mib_file_name, mib_obj.read(), use_git=use_git, debug=debug
+                                mib_file_name,
+                                mib_obj.read(),
+                                pending_changes=pending_changes,
+                                debug=debug,
                             )
                         )
                     success += 1
@@ -3667,7 +3715,12 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         ) + "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
 
     def _process_uploaded_mib_file(
-        self, filename: str, content_bytes: bytes, *, use_git: bool, debug: bool
+        self,
+        filename: str,
+        content_bytes: bytes,
+        *,
+        pending_changes: PendingChanges,
+        debug: bool,
     ) -> str:
         mibname = filename.split(".", maxsplit=1)[0] if "." in filename else filename
 
@@ -3685,7 +3738,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         self._add_change(
             action_name="uploaded-mib",
             text=_("MIB %s: %s") % (filename, msg),
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
         return msg
 

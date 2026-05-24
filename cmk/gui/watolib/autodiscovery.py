@@ -5,8 +5,11 @@
 
 from pydantic import BaseModel
 
+from livestatus import SiteConfigurations
+
 import cmk.utils.paths
 from cmk.ccc.site import omd_site
+from cmk.ccc.user import UserId
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
 from cmk.gui.background_job.job import (
     BackgroundJob,
@@ -19,18 +22,25 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
+from cmk.gui.type_defs import AnnotatedUserId
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
-from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.changes import add_service_change
+from cmk.gui.watolib.audit_log import log_audit, make_audit_log_change_hook
 from cmk.gui.watolib.check_mk_automations import autodiscovery
-from cmk.gui.watolib.config_domain_name import (
-    config_domain_registry,
-    generate_hosts_to_update_settings,
-)
 from cmk.gui.watolib.config_domain_name import (
     CORE as CORE_DOMAIN,
 )
+from cmk.gui.watolib.config_domain_name import (
+    generate_hosts_to_update_settings,
+)
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.utils.auto_queue import AutoQueue
 
 
@@ -67,13 +77,30 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
         )
 
     def execute(
-        self, job_interface: BackgroundProcessInterface, *, debug: bool, use_git: bool
+        self,
+        job_interface: BackgroundProcessInterface,
+        *,
+        debug: bool,
+        use_git: bool,
+        activation_site_configs: SiteConfigurations,
+        acting_user: UserId | None,
     ) -> None:
         result = autodiscovery(debug=debug)
 
         if not result.hosts:
             job_interface.send_result_message(_("No hosts to be discovered"))
             return
+
+        pending_changes = PendingChanges(
+            activation_sites=activation_site_configs,
+            local_site=self.site_id,
+            acting_user=acting_user,
+            store=PendingChangesStore(),
+            hooks=(
+                make_audit_log_change_hook(use_git=use_git),
+                index_update_change_hook,
+            ),
+        )
 
         for hostname, discovery_result in result.hosts.items():
             host = Host.host(hostname)
@@ -87,28 +114,30 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
                     action="autodiscovery",
                     message=message,
                     object_ref=host.object_ref(),
-                    user_id=user.id,
+                    user_id=acting_user,
                     diff_text=discovery_result.diff_text,
                     use_git=use_git,
                 )
             else:
-                add_service_change(
-                    action_name="autodiscovery",
-                    text=message,
-                    user_id=user.id,
-                    object_ref=host.object_ref(),
-                    domains=[config_domain_registry[CORE_DOMAIN]],
-                    domain_settings={CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])},
-                    site_id=self.site_id,
-                    diff_text=discovery_result.diff_text,
-                    use_git=use_git,
+                pending_changes.add(
+                    Change(
+                        action_name="autodiscovery",
+                        text=message,
+                        object_ref=host.object_ref(),
+                        diff_text=discovery_result.diff_text,
+                        domains=[CORE_DOMAIN],
+                        domain_settings={
+                            CORE_DOMAIN: generate_hosts_to_update_settings([host.name()])
+                        },
+                    ),
+                    ChangeScope.sites([self.site_id]),
                 )
 
         if result.changes_activated:
             log_audit(
                 action="activate-changes",
                 message="Started activation of site %s" % self.site_id,
-                user_id=user.id,
+                user_id=acting_user,
                 use_git=use_git,
             )
 
@@ -135,6 +164,8 @@ def execute_autodiscovery(config: Config) -> None:
                     ),
                     debug=config.debug,
                     use_git=config.wato_use_git,
+                    activation_site_configs=activation_sites(config.sites),
+                    acting_user=user.id,
                 ),
             ),
             InitialStatusArgs(
@@ -152,6 +183,8 @@ class AutoDiscoveryJobArgs(BaseModel, frozen=True):
     user_permission_config: UserPermissionSerializableConfig
     debug: bool
     use_git: bool
+    activation_site_configs: SiteConfigurations
+    acting_user: AnnotatedUserId | None
 
 
 def autodiscovery_job_entry_point(
@@ -164,4 +197,6 @@ def autodiscovery_job_entry_point(
             job_interface,
             debug=args.debug,
             use_git=args.use_git,
+            activation_site_configs=args.activation_site_configs,
+            acting_user=args.acting_user,
         )

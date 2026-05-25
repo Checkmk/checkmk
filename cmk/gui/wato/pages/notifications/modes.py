@@ -1223,11 +1223,13 @@ class ModeNotifications(ABCNotificationsMode):
             default_value="mail",
         )
 
-    def _show_resulting_notifications(self, result: NotifyAnalysisInfo) -> None:
+    def _show_resulting_notifications(
+        self, result: NotifyAnalysisInfo, *, table_row_limit: int
+    ) -> None:
         with table_element(
             table_id="plugins",
             title=_("Predicted notifications"),
-            limit=active_config.table_row_limit,
+            limit=table_row_limit,
         ) as table:
             for contact, plugin, parameters, bulk in result[1]:
                 table.row()
@@ -1579,10 +1581,15 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
     def page(self, config: Config) -> None:
         result = self._get_result_from_request(debug=config.debug)
-        self._show_bulk_notifications(debug=config.debug)
-        self._show_notification_backlog(escape_plugin_output=config.escape_plugin_output)
+        self._show_bulk_notifications(debug=config.debug, table_row_limit=config.table_row_limit)
+        self._show_notification_backlog(
+            escape_plugin_output=config.escape_plugin_output,
+            table_row_limit=config.table_row_limit,
+        )
         if request.var("analyse") and result:
-            self._show_resulting_notifications(result=result)
+            self._show_resulting_notifications(
+                result=result, table_row_limit=config.table_row_limit
+            )
         self._show_rules(result, config)
 
     def _get_result_from_request(self, *, debug: bool) -> NotifyAnalysisInfo | None:
@@ -1592,16 +1599,18 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
         return None
 
-    def _show_bulk_notifications(self, *, debug: bool) -> None:
+    def _show_bulk_notifications(self, *, debug: bool, table_row_limit: int) -> None:
         if self._show_bulks:
             # Warn if there are unsent bulk notifications
-            if not self._render_bulks(only_ripe=False, debug=debug):
+            if not self._render_bulks(
+                only_ripe=False, debug=debug, table_row_limit=table_row_limit
+            ):
                 html.show_message(_("Currently there are no unsent bulk notifications pending."))
         else:
             # Warn if there are unsent bulk notifications
-            self._render_bulks(only_ripe=True, debug=debug)
+            self._render_bulks(only_ripe=True, debug=debug, table_row_limit=table_row_limit)
 
-    def _render_bulks(self, *, only_ripe: bool, debug: bool) -> bool:
+    def _render_bulks(self, *, only_ripe: bool, debug: bool, table_row_limit: int) -> bool:
         try:
             bulks = notification_get_bulks(only_ripe=only_ripe, debug=debug).result
         except Exception as exc:
@@ -1611,7 +1620,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
             return False
 
         title = _("Overdue bulk notifications!") if only_ripe else _("Open bulk notifications")
-        with table_element(title=title, limit=active_config.table_row_limit) as table:
+        with table_element(title=title, limit=table_row_limit) as table:
             for directory, age, interval, timeperiod, maxcount, uuids in bulks:
                 dirparts = directory.split("/")
                 contact = dirparts[-3]
@@ -1638,7 +1647,9 @@ class ModeAnalyzeNotifications(ModeNotifications):
                     )
         return True
 
-    def _show_notification_backlog(self, escape_plugin_output: bool) -> None:
+    def _show_notification_backlog(
+        self, escape_plugin_output: bool, *, table_row_limit: int
+    ) -> None:
         """Show recent notifications. We can use them for rule analysis"""
         backlog = store.load_object_from_file(
             cmk.utils.paths.var_dir / "notify/backlog.mk",
@@ -1650,7 +1661,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
         with table_element(
             table_id="backlog",
             title=_("Analysis: Recent notifications"),
-            limit=active_config.table_row_limit,
+            limit=table_row_limit,
         ) as table:
             for nr, context in enumerate(backlog):
                 table.row()
@@ -1966,10 +1977,15 @@ class ModeTestNotifications(ModeNotifications):
             )
             self._show_notification_test_overview(context, analyse)
             self._show_notification_test_details(
-                context, analyse, escape_plugin_output=config.escape_plugin_output
+                context,
+                analyse,
+                escape_plugin_output=config.escape_plugin_output,
+                table_row_limit=config.table_row_limit,
             )
             if request.var("test_notification") and analyse:
-                self._show_resulting_notifications(result=analyse)
+                self._show_resulting_notifications(
+                    result=analyse, table_row_limit=config.table_row_limit
+                )
         self._show_rules(analyse, config)
 
     def _result_from_request(
@@ -2118,6 +2134,7 @@ class ModeTestNotifications(ModeNotifications):
         analyse: NotifyAnalysisInfo | None,
         *,
         escape_plugin_output: bool,
+        table_row_limit: int,
     ) -> None:
         if not context:
             return
@@ -2125,7 +2142,7 @@ class ModeTestNotifications(ModeNotifications):
         with table_element(
             table_id="notification_test",
             title=_("Analysis: Test notifications"),
-            limit=active_config.table_row_limit,
+            limit=table_row_limit,
         ) as table:
             table.row()
             table.cell("&nbsp;", css=["buttons"])

@@ -25,7 +25,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -623,7 +623,7 @@ class ModeBulkImport(WatoMode):
         if not request.has_var("file_id"):
             self._upload_form()
         else:
-            self._preview(config.tags.tag_groups)
+            self._preview(config.tags.tag_groups, table_row_limit=config.table_row_limit)
 
     def _upload_form(self) -> None:
         with html.form_context("upload", method="POST"):
@@ -663,7 +663,7 @@ class ModeBulkImport(WatoMode):
             optional_keys=[],
         )
 
-    def _preview(self, tag_groups: Sequence[TagGroup]) -> None:
+    def _preview(self, tag_groups: Sequence[TagGroup], *, table_row_limit: int) -> None:
         with html.form_context("preview", method="POST"):
             self._preview_form()
 
@@ -715,7 +715,7 @@ class ModeBulkImport(WatoMode):
                 sortable=False,
                 searchable=False,
                 omit_headers=not csv_bulk_import.has_title_line,
-                limit=active_config.table_row_limit,
+                limit=table_row_limit,
             ) as table:
                 # Render attribute selection fields
                 table.row()

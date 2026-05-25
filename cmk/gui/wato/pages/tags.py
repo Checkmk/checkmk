@@ -23,7 +23,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -361,8 +361,8 @@ class ModeTags(ABCTagMode):
 
         self._show_customized_builtin_warning()
 
-        self._render_tag_group_list(config.wato_host_attrs)
-        self._render_aux_tag_list()
+        self._render_tag_group_list(config.wato_host_attrs, table_row_limit=config.table_row_limit)
+        self._render_aux_tag_list(table_row_limit=config.table_row_limit)
 
     def _show_customized_builtin_warning(self) -> None:
         customized = [
@@ -389,6 +389,8 @@ class ModeTags(ABCTagMode):
     def _render_tag_group_list(
         self,
         host_attribute_specs: Sequence[CustomHostAttrSpec],
+        *,
+        table_row_limit: int,
     ) -> None:
         with table_element(
             "tags",
@@ -405,7 +407,7 @@ class ModeTags(ABCTagMode):
             ),
             empty_text=_("You haven't defined any tag groups yet."),
             searchable=False,
-            limit=active_config.table_row_limit,
+            limit=table_row_limit,
         ) as table:
             host_attributes = all_host_attributes(
                 host_attribute_specs, self._effective_config.get_tag_groups_by_topic()
@@ -451,7 +453,7 @@ class ModeTags(ABCTagMode):
         )
         html.icon_button(delete_url, _("Delete this tag group"), StaticIcon(IconNames.delete))
 
-    def _render_aux_tag_list(self) -> None:
+    def _render_aux_tag_list(self, *, table_row_limit: int) -> None:
         with table_element(
             "auxtags",
             _("Auxiliary tags"),
@@ -463,7 +465,7 @@ class ModeTags(ABCTagMode):
             ),
             empty_text=_("You haven't defined any auxiliary tags."),
             searchable=True,
-            limit=active_config.table_row_limit,
+            limit=table_row_limit,
         ) as table:
             for aux_tag in self._effective_config.aux_tag_list.get_tags():
                 table.row()
@@ -584,14 +586,22 @@ class ModeTagUsage(ABCTagMode):
 
     def page(self, config: Config) -> None:
         self._show_tag_list(
-            pprint_value=config.wato_pprint_config, debug=config.debug, use_git=config.wato_use_git
+            pprint_value=config.wato_pprint_config,
+            debug=config.debug,
+            use_git=config.wato_use_git,
+            table_row_limit=config.table_row_limit,
         )
         self._show_aux_tag_list(
-            pprint_value=config.wato_pprint_config, debug=config.debug, use_git=config.wato_use_git
+            pprint_value=config.wato_pprint_config,
+            debug=config.debug,
+            use_git=config.wato_use_git,
+            table_row_limit=config.table_row_limit,
         )
 
-    def _show_tag_list(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
-        with table_element("tag_usage", _("Tags"), limit=active_config.table_row_limit) as table:
+    def _show_tag_list(
+        self, *, pprint_value: bool, debug: bool, use_git: bool, table_row_limit: int
+    ) -> None:
+        with table_element("tag_usage", _("Tags"), limit=table_row_limit) as table:
             for tag_group in self._effective_config.tag_groups:
                 for tag in tag_group.tags:
                     self._show_tag_row(
@@ -661,10 +671,10 @@ class ModeTagUsage(ABCTagMode):
         edit_url = folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
         html.icon_button(edit_url, _("Edit this tag group"), StaticIcon(IconNames.edit))
 
-    def _show_aux_tag_list(self, *, pprint_value: bool, debug: bool, use_git: bool) -> None:
-        with table_element(
-            "aux_tag_usage", _("Auxiliary tags"), limit=active_config.table_row_limit
-        ) as table:
+    def _show_aux_tag_list(
+        self, *, pprint_value: bool, debug: bool, use_git: bool, table_row_limit: int
+    ) -> None:
+        with table_element("aux_tag_usage", _("Auxiliary tags"), limit=table_row_limit) as table:
             for aux_tag in self._effective_config.aux_tag_list.get_tags():
                 self._show_aux_tag_row(
                     table, aux_tag, pprint_value=pprint_value, debug=debug, use_git=use_git

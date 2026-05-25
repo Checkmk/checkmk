@@ -18,7 +18,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -580,7 +580,7 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
             html.div(_("No custom attributes are defined yet."), class_="info")
             return
 
-        with table_element(self._type + "attrs", limit=active_config.table_row_limit) as table:
+        with table_element(self._type + "attrs", limit=config.table_row_limit) as table:
             for nr, custom_attr in enumerate(sorted(self._attrs, key=lambda x: x["title"])):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])

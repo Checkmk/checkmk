@@ -80,17 +80,26 @@ def page_show(ctx: PageContext) -> None:
         pass  # host_name log dir does not exist
 
     if not host_name:
-        show_log_list(ctx.request, debug=ctx.config.debug)
+        show_log_list(
+            ctx.request, debug=ctx.config.debug, table_row_limit=ctx.config.table_row_limit
+        )
         return
 
     user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
     if file_name:
         show_file(ctx.request, site, host_name, file_name, user_permissions, debug=ctx.config.debug)
     else:
-        show_host_log_list(ctx.request, site, host_name, user_permissions, debug=ctx.config.debug)
+        show_host_log_list(
+            ctx.request,
+            site,
+            host_name,
+            user_permissions,
+            debug=ctx.config.debug,
+            table_row_limit=ctx.config.table_row_limit,
+        )
 
 
-def show_log_list(request: Request, *, debug: bool) -> None:
+def show_log_list(request: Request, *, debug: bool, table_row_limit: int) -> None:
     """Shows a list of all problematic logfiles grouped by host"""
     title = _("All problematic log files")
     breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_monitoring(), title)
@@ -136,7 +145,7 @@ def show_log_list(request: Request, *, debug: bool) -> None:
             ),
             class_="table",
         )
-        list_logs(request, site, host_name, logs, debug=debug)
+        list_logs(request, site, host_name, logs, debug=debug, table_row_limit=table_row_limit)
     html.footer()
 
 
@@ -211,6 +220,7 @@ def show_host_log_list(
     user_permissions: UserPermissions,
     *,
     debug: bool,
+    table_row_limit: int,
 ) -> None:
     """Shows all problematic logfiles of a host"""
     title = _("Log files of host %s") % host_name
@@ -236,7 +246,14 @@ def show_host_log_list(
         return
 
     html.open_table(class_=["data"])
-    list_logs(request, site, host_name, logfiles_of_host(site, host_name), debug=debug)
+    list_logs(
+        request,
+        site,
+        host_name,
+        logfiles_of_host(site, host_name),
+        debug=debug,
+        table_row_limit=table_row_limit,
+    )
     html.close_table()
 
     html.footer()
@@ -318,10 +335,11 @@ def list_logs(
     logfile_names: Sequence[str],
     *,
     debug: bool,
+    table_row_limit: int,
 ) -> None:
     """Displays a table of logfiles"""
     with table_element(
-        empty_text=_("No logs found for this host."), limit=active_config.table_row_limit
+        empty_text=_("No logs found for this host."), limit=table_row_limit
     ) as table:
         for file_name in logfile_names:
             table.row()

@@ -205,11 +205,21 @@ class ClearFailedNotificationPage(Page):
             return
 
         failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())
-        self._show_page(ctx.request, acktime, failed_notifications)
+        self._show_page(
+            ctx.request,
+            acktime,
+            failed_notifications,
+            table_row_limit=ctx.config.table_row_limit,
+        )
 
     # TODO: We should really recode this to use the view and a normal view command / action
     def _show_page(
-        self, request: Request, acktime: float, failed_notifications: LivestatusResponse
+        self,
+        request: Request,
+        acktime: float,
+        failed_notifications: LivestatusResponse,
+        *,
+        table_row_limit: int,
     ) -> None:
         title = _("Confirm failed notifications")
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_monitoring(), title)
@@ -232,12 +242,14 @@ class ClearFailedNotificationPage(Page):
             user_role_ids=user.role_ids,
         )
 
-        self._show_notification_table(failed_notifications)
+        self._show_notification_table(failed_notifications, table_row_limit=table_row_limit)
 
         html.footer()
 
-    def _show_notification_table(self, failed_notifications: LivestatusResponse) -> None:
-        with table_element(limit=active_config.table_row_limit) as table:
+    def _show_notification_table(
+        self, failed_notifications: LivestatusResponse, *, table_row_limit: int
+    ) -> None:
+        with table_element(limit=table_row_limit) as table:
             header = {name: idx for idx, name in enumerate(g_columns)}
             for row in failed_notifications:
                 table.row()

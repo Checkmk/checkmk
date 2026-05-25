@@ -15,23 +15,31 @@ from cmk.gui.availability import (
     AVOptions,
     AVRowCells,
 )
-from cmk.gui.config import active_config
 from cmk.gui.http import ContentDispositionType, response
 from cmk.gui.i18n import _
 from cmk.gui.table import Table, table_element
 
 
-def _output_csv(what: AVObjectType, av_mode: AVMode, av_data: AVData, avoptions: AVOptions) -> None:
+def _output_csv(
+    what: AVObjectType,
+    av_mode: AVMode,
+    av_data: AVData,
+    avoptions: AVOptions,
+    *,
+    table_row_limit: int,
+) -> None:
     if av_mode == "availability":
-        _output_availability_csv(what, av_data, avoptions)
+        _output_availability_csv(what, av_data, avoptions, table_row_limit=table_row_limit)
     elif av_mode == "timeline":
-        _output_availability_timelines_csv(what, av_data, avoptions)
+        _output_availability_timelines_csv(
+            what, av_data, avoptions, table_row_limit=table_row_limit
+        )
     else:
         raise NotImplementedError("Unhandled availability mode: %r" % av_mode)
 
 
 def _output_availability_timelines_csv(
-    what: AVObjectType, av_data: AVData, avoptions: AVOptions
+    what: AVObjectType, av_data: AVData, avoptions: AVOptions, *, table_row_limit: int
 ) -> None:
     _av_output_set_content_disposition("Checkmk-Availability-Timeline")
 
@@ -39,7 +47,7 @@ def _output_availability_timelines_csv(
         "av_timeline",
         "",
         output_format="csv",
-        limit=active_config.table_row_limit,
+        limit=table_row_limit,
     ) as table:
         for av_entry in av_data:
             _output_availability_timeline_csv(table, what, av_entry, avoptions)
@@ -80,7 +88,9 @@ def _output_availability_timeline_csv(
             table.cell("long_log_output", row.get("long_log_output", ""))
 
 
-def _output_availability_csv(what: AVObjectType, av_data: AVData, avoptions: AVOptions) -> None:
+def _output_availability_csv(
+    what: AVObjectType, av_data: AVData, avoptions: AVOptions, *, table_row_limit: int
+) -> None:
     def cells_from_row(
         table: Table,
         group_titles: list[str],
@@ -101,9 +111,7 @@ def _output_availability_csv(what: AVObjectType, av_data: AVData, avoptions: AVO
 
     _av_output_set_content_disposition("Checkmk-Availability")
     availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
-    with table_element(
-        "av_items", output_format="csv", limit=active_config.table_row_limit
-    ) as table:
+    with table_element("av_items", output_format="csv", limit=table_row_limit) as table:
         for group_title, availability_table in availability_tables:
             av_table = availability.layout_availability_table(
                 what, group_title, availability_table, avoptions

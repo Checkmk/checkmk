@@ -135,10 +135,15 @@ def _connections_by_gui_index(
 
 
 def render_connections_page(
-    edition: Edition, connection_type: str, edit_mode_path: str, config_mode_path: str
+    edition: Edition,
+    connection_type: str,
+    edit_mode_path: str,
+    config_mode_path: str,
+    *,
+    table_row_limit: int,
 ) -> None:
     customer = customer_api()
-    with table_element(limit=active_config.table_row_limit) as table:
+    with table_element(limit=table_row_limit) as table:
         for display_index, (real_index, connection) in _connections_by_gui_index(
             connection_type, load_connection_config(lock=False)
         ).items():

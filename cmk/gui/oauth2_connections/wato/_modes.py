@@ -479,7 +479,8 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
         self._show_table(
             self._filter_for_connector_type(
                 self._store.filter_editable_entries(self._store.load_for_reading())
-            )
+            ),
+            table_row_limit=config.table_row_limit,
         )
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:

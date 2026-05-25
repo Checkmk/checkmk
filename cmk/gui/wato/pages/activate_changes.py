@@ -561,7 +561,10 @@ class ModeActivateChanges(WatoMode):
 
         self._show_license_validity()
 
-        self._activation_status(activation_site_configs := activation_sites(config.sites))
+        self._activation_status(
+            activation_site_configs := activation_sites(config.sites),
+            table_row_limit=config.table_row_limit,
+        )
 
         if self._changes.has_pending_changes():
             _change_table(
@@ -701,7 +704,9 @@ class ModeActivateChanges(WatoMode):
                     ActivationState.WARNING,
                 )
 
-    def _activation_status(self, activation_sites: SiteConfigurations) -> None:
+    def _activation_status(
+        self, activation_sites: SiteConfigurations, *, table_row_limit: int
+    ) -> None:
         with table_element(
             "site-status",
             title=_("Activation status"),
@@ -709,7 +714,7 @@ class ModeActivateChanges(WatoMode):
             sortable=False,
             css="activation",
             foldable=Foldable.FOLDABLE_STATELESS,
-            limit=active_config.table_row_limit,
+            limit=table_row_limit,
         ) as table:
             for site_id, site in sort_sites(activation_sites):
                 table.row()

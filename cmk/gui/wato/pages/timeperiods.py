@@ -29,7 +29,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms, watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -313,7 +313,7 @@ class ModeTimeperiods(WatoMode):
         with table_element(
             "timeperiods",
             empty_text=_("There are no time periods defined yet."),
-            limit=active_config.table_row_limit,
+            limit=config.table_row_limit,
         ) as table:
             for name, timeperiod in sorted(self._timeperiods.items()):
                 table.row()

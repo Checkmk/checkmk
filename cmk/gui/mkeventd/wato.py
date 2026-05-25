@@ -3471,15 +3471,21 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         for mib_path, title, deletable in self._mib_dirs():
             if deletable:
                 with html.form_context("bulk_delete_form", method="POST"):
-                    self._show_mib_table(mib_path, title, deletable)
+                    self._show_mib_table(
+                        mib_path, title, deletable, table_row_limit=config.table_row_limit
+                    )
                     html.hidden_fields()
                     html.end_form()
             else:
-                self._show_mib_table(mib_path, title, deletable)
+                self._show_mib_table(
+                    mib_path, title, deletable, table_row_limit=config.table_row_limit
+                )
 
-    def _show_mib_table(self, path: Path, title: str, deletable: bool) -> None:
+    def _show_mib_table(
+        self, path: Path, title: str, deletable: bool, *, table_row_limit: int
+    ) -> None:
         with table_element(
-            "mibs_%s" % path, title, searchable=False, limit=active_config.table_row_limit
+            "mibs_%s" % path, title, searchable=False, limit=table_row_limit
         ) as table:
             for filename, mib in sorted(self._load_snmp_mibs(path).items()):
                 table.row()

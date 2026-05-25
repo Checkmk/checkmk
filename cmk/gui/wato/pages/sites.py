@@ -40,7 +40,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.form_specs import (
     create_validation_error_for_mk_user_error,
@@ -1368,7 +1368,7 @@ class ModeDistributedMonitoring(WatoMode):
                 "sites, please do not forget to add your local monitoring site also, if "
                 "you want to display its data."
             ),
-            limit=active_config.table_row_limit,
+            limit=config.table_row_limit,
         ) as table:
             for site_id, site in sites:
                 table.row()
@@ -1388,7 +1388,7 @@ class ModeDistributedMonitoring(WatoMode):
                 "brokers_connections",
                 _("Peer-to-peer message broker connections"),
                 empty_text=_("You have not configured any peer-to-peer connections."),
-                limit=active_config.table_row_limit,
+                limit=config.table_row_limit,
             ) as table:
                 for conn_id, connection in connections.items():
                     table.row()
@@ -2146,7 +2146,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         html.close_table()
 
         with table_element(
-            "certificate_chain", _("Certificate chain"), limit=active_config.table_row_limit
+            "certificate_chain", _("Certificate chain"), limit=config.table_row_limit
         ) as table:
             for cert_detail in reversed(cert_details[1:]):
                 table.row()

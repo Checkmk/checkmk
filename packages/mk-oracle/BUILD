@@ -147,7 +147,11 @@ rust_test_suite(
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
         "tests/files/endpoints.txt",
-    ],
+    ] + glob([
+        "tests/files/orasql_abs/**/*.sql",
+        "tests/files/orasql_runtime/**/*.sql",
+        "tests/files/orasql_config/**/*.sql",
+    ]),
     crate_features = ["build_system_bazel"],
     env_inherit = [
         "CI_ORA2_DB_TEST",

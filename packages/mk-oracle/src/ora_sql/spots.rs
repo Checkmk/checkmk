@@ -16,7 +16,6 @@
 
 use crate::config::ora_sql::CustomInstance;
 use crate::ora_sql::backend::{ClosedSpot, OpenedSpot};
-use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
 use crate::types::{InstanceName, SqlBindParam, SqlQuery};
@@ -168,7 +167,7 @@ fn _make_closed_ok(
                         return None;
                     }
                     section
-                        .find_queries(get_sql_dir(), info.0, info.1, params)
+                        .find_queries(info.0, info.1, params)
                         .map(|q| QueryBlock {
                             queries: q,
                             title: section.to_work_header_for(service),

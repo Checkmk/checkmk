@@ -14,16 +14,40 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::constants::CONFIG_DIR;
+use crate::constants::{CONFIG_DIR, RUNTIME_DIR};
 use std::path::PathBuf;
 
 pub const ORA_SQL_CUSTOM_SQL_SUB_DIR: &str = "orasql";
 
-pub fn get_sql_dir() -> Option<PathBuf> {
+/// Main config root with orasql for relative `path:` resolution.
+pub fn get_config_sql_dir() -> Option<PathBuf> {
     let path = CONFIG_DIR.join(ORA_SQL_CUSTOM_SQL_SUB_DIR);
     if path.is_dir() {
         Some(path)
     } else {
         None
     }
+}
+
+/// Runtime directory with orasql for relative `path:` resolution.
+pub fn get_runtime_sql_dir() -> Option<PathBuf> {
+    let path = RUNTIME_DIR.join(ORA_SQL_CUSTOM_SQL_SUB_DIR);
+    if path.is_dir() {
+        Some(path)
+    } else {
+        None
+    }
+}
+
+/// Search roots for resolving a relative `path:` value, runtime directory first so it
+/// wins on collisions with the config directory.
+pub fn get_sql_search_dirs() -> Vec<PathBuf> {
+    let mut dirs = Vec::with_capacity(2);
+    if let Some(runtime) = get_runtime_sql_dir() {
+        dirs.push(runtime);
+    }
+    if let Some(config) = get_config_sql_dir() {
+        dirs.push(config);
+    }
+    dirs
 }

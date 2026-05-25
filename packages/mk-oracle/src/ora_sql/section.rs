@@ -16,6 +16,7 @@
 
 use crate::config::{self, section, section::names};
 use crate::emit::{header, signaling_header};
+use crate::ora_sql::custom;
 use crate::ora_sql::sqls;
 use crate::types::{InstanceName, InstanceNumVersion, ItemValue, SectionName, Tenant};
 use crate::types::{SectionAffinity, SqlBindParam, SqlQuery};
@@ -174,15 +175,36 @@ impl Section {
 
     pub fn find_queries(
         &self,
-        sql_dir: Option<PathBuf>,
         instance_version: InstanceNumVersion,
         tenant: Tenant,
         params: &[SqlBindParam],
     ) -> Option<Vec<SqlQuery>> {
+        self.find_queries_with_search_dirs(
+            instance_version,
+            tenant,
+            params,
+            &custom::get_sql_search_dirs(),
+        )
+    }
+
+    /// Same as [`Section::find_queries`], but with explicit search roots for
+    /// relative `path:` resolution instead of the environment-derived
+    /// [`custom::get_sql_search_dirs`].
+    ///
+    /// This is the seam used by the component tests: they inject fixture
+    /// directories directly, so the `path:` resolver can be exercised without
+    /// mutating `MK_CONFDIR` / `MK_LIBDIR` (and the `LazyLock`-backed globals
+    /// derived from them).
+    pub fn find_queries_with_search_dirs(
+        &self,
+        instance_version: InstanceNumVersion,
+        tenant: Tenant,
+        params: &[SqlBindParam],
+        search_dirs: &[PathBuf],
+    ) -> Option<Vec<SqlQuery>> {
         Some(
-            self.inline_sql
-                .clone()
-                .or_else(|| self.find_custom_query(sql_dir, instance_version))
+            self.resolve_path_query(instance_version, search_dirs)
+                .or_else(|| self.inline_sql.clone())
                 .or_else(|| {
                     get_sql_id(&self.header_name)
                         .and_then(|s| Self::find_known_query(s, instance_version, tenant))
@@ -201,23 +223,86 @@ impl Section {
         )
     }
 
-    pub fn find_custom_query(
+    /// Resolve the SQL body when the section has a user-supplied `path:`.
+    ///
+    /// * Absolute paths use the path as the only search root.
+    /// * Relative paths are joined under each entry of `search_dirs` (in
+    ///   production: runtime directory first, config directory second), so the
+    ///   first matching root wins on collisions.
+    ///
+    /// Each candidate may be either a file or a directory;
+    /// in the directory case the lookup stem is the custom-metric item name
+    /// (or the section header name for predefined sections). Version variants
+    /// follow the `<name>@<min_version>.sql` convention.
+    fn resolve_path_query(
         &self,
-        sql_dir: Option<PathBuf>,
         instance_version: InstanceNumVersion,
+        search_dirs: &[PathBuf],
     ) -> Option<String> {
-        let dir = sql_dir?;
-        let versioned_files = find_sql_files(&dir, &self.header_name).ok()?;
-        versioned_files
-            .into_iter()
-            .find(|(min_version, _)| instance_version >= InstanceNumVersion::from(*min_version))
-            .and_then(|(_, sql_file)| {
-                read_to_string(&sql_file)
-                    .inspect_err(|e| {
-                        log::error!("Can't read file {:?} {}", &sql_file, &e);
-                    })
-                    .ok()
-            })
+        let path = self.path.as_deref()?;
+        let candidates: Vec<PathBuf> = if path.is_absolute() {
+            vec![path.to_path_buf()]
+        } else {
+            search_dirs.iter().map(|root| root.join(path)).collect()
+        };
+
+        match candidates
+            .iter()
+            .find_map(|candidate| self.resolve_candidate(candidate, instance_version))
+        {
+            Some((sql_file, contents)) => {
+                log::info!(
+                    "Resolved `path:` {:?} for section '{}' to SQL file {:?}",
+                    path,
+                    self.item_value
+                        .as_ref()
+                        .map(|iv| iv.as_str())
+                        .unwrap_or(&self.header_name),
+                    &sql_file
+                );
+                Some(contents)
+            }
+            None => {
+                log::info!(
+                    "Could not find a SQL file for section '{}' at the provided `path:` \
+                    {:?}; tried candidates {:?}",
+                    self.item_value
+                        .as_ref()
+                        .map(|iv| iv.as_str())
+                        .unwrap_or(&self.header_name),
+                    path,
+                    &candidates
+                );
+                None
+            }
+        }
+    }
+
+    fn resolve_candidate(
+        &self,
+        candidate: &Path,
+        instance_version: InstanceNumVersion,
+    ) -> Option<(PathBuf, String)> {
+        let (dir, stem): (PathBuf, String) = if candidate.is_dir() {
+            (
+                candidate.to_path_buf(),
+                self.directory_lookup_stem().to_owned(),
+            )
+        } else {
+            let parent = candidate.parent()?.to_path_buf();
+            let stem = candidate.file_stem()?.to_str()?.to_owned();
+            (parent, stem)
+        };
+        read_versioned_query(&dir, &stem, instance_version)
+    }
+
+    /// Stem used when `path:` resolves to a directory: the custom-metric item
+    /// name for custom metrics, the section header name otherwise.
+    fn directory_lookup_stem(&self) -> &str {
+        self.item_value
+            .as_ref()
+            .map(|iv| iv.as_str())
+            .unwrap_or(&self.header_name)
     }
 
     fn find_known_query(
@@ -232,6 +317,28 @@ impl Section {
             })
             .ok()
     }
+}
+
+/// Look up a SQL file in `dir` whose name matches `stem` (optionally with a
+/// `@<min_version>` suffix) and return the highest-version contents that fit
+/// `instance_version`.
+fn read_versioned_query(
+    dir: &Path,
+    stem: &str,
+    instance_version: InstanceNumVersion,
+) -> Option<(PathBuf, String)> {
+    let versioned_files = find_sql_files(dir, stem).ok()?;
+    versioned_files
+        .into_iter()
+        .find(|(min_version, _)| instance_version >= InstanceNumVersion::from(*min_version))
+        .and_then(|(_, sql_file)| {
+            read_to_string(&sql_file)
+                .inspect_err(|e| {
+                    log::error!("Can't read file {:?} {}", &sql_file, &e);
+                })
+                .ok()
+                .map(|contents| (sql_file, contents))
+        })
 }
 
 fn find_sql_files(dir: &Path, section_name: &str) -> Result<Vec<(u32, PathBuf)>> {
@@ -404,12 +511,7 @@ mod tests {
             .build();
         let runtime = Section::new(&section_config, 0);
         let queries = runtime
-            .find_queries(
-                None, // no sql_dir -> file lookup is a no-op
-                InstanceNumVersion::from(0),
-                Tenant::All,
-                &[],
-            )
+            .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
             .expect("inline sql should yield queries");
         assert_eq!(queries.len(), 1);
         assert_eq!(queries[0].as_str(), "select 'details:inline' from dual");

@@ -216,7 +216,7 @@ def main() {
         build(
             job: "${branch_base_folder}/trigger-fips-chain",
             parameters: [
-                stringParam(name: "EDITION", value: "pro"),
+                stringParam(name: "EDITION", value: "enterprise"),
                 stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
                 stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: ""),
                 stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),

@@ -41,6 +41,7 @@ pub struct Section {
     section_affinity: SectionAffinity,
     item_value: Option<ItemValue>,
     inline_sql: Option<String>,
+    path: Option<PathBuf>,
 }
 
 impl Section {
@@ -63,6 +64,7 @@ impl Section {
             section_affinity: section.affinity().clone(),
             item_value: section.item_value().cloned(),
             inline_sql: section.sql().map(str::to_owned),
+            path: section.path().map(Path::to_path_buf),
         }
     }
 
@@ -136,6 +138,10 @@ impl Section {
 
     pub fn inline_sql(&self) -> Option<&str> {
         self.inline_sql.as_deref()
+    }
+
+    pub fn path(&self) -> Option<&Path> {
+        self.path.as_deref()
     }
 
     pub fn name(&self) -> &SectionName {
@@ -392,11 +398,11 @@ mod tests {
 
     #[test]
     fn test_inline_sql_takes_precedence_over_file_lookup() {
-        let cfg_section = section::SectionBuilder::new("product_price")
+        let section_config = section::SectionBuilder::new("product_price")
             .sql("select 'details:inline' from dual")
             .set_item_value(ItemValue::from("product_price".to_string()))
             .build();
-        let runtime = Section::new(&cfg_section, 0);
+        let runtime = Section::new(&section_config, 0);
         let queries = runtime
             .find_queries(
                 None, // no sql_dir -> file lookup is a no-op
@@ -407,5 +413,44 @@ mod tests {
             .expect("inline sql should yield queries");
         assert_eq!(queries.len(), 1);
         assert_eq!(queries[0].as_str(), "select 'details:inline' from dual");
+    }
+
+    #[test]
+    fn test_custom_metric_path_propagated_to_runtime_section() {
+        let section_config = section::SectionBuilder::new("product_price")
+            .path("queries/product_price.sql")
+            .set_item_value(ItemValue::from("product_price".to_string()))
+            .build();
+        let runtime = Section::new(&section_config, 0);
+        assert_eq!(runtime.path(), Some(Path::new("queries/product_price.sql")));
+        assert!(runtime.path().is_some_and(|p| p.is_relative()));
+        assert!(runtime.inline_sql().is_none());
+    }
+
+    #[test]
+    fn test_predefined_section_path_propagated_to_runtime_section() {
+        let section_config = section::SectionBuilder::new("instance")
+            .path("/opt/checkmk/sql/instance.sql")
+            .build();
+        let runtime = Section::new(&section_config, 0);
+        assert_eq!(
+            runtime.path(),
+            Some(Path::new("/opt/checkmk/sql/instance.sql"))
+        );
+    }
+
+    #[test]
+    fn test_section_path_and_inline_sql_both_propagated() {
+        let section_config = section::SectionBuilder::new("mixed")
+            .path("queries/mixed.sql")
+            .sql("select 'details:fallback' from dual")
+            .set_item_value(ItemValue::from("mixed".to_string()))
+            .build();
+        let runtime = Section::new(&section_config, 0);
+        assert_eq!(runtime.path(), Some(Path::new("queries/mixed.sql")));
+        assert_eq!(
+            runtime.inline_sql(),
+            Some("select 'details:fallback' from dual")
+        );
     }
 }

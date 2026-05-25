@@ -49,6 +49,7 @@ pub mod keys {
     pub const SECTIONS: &str = "sections";
     pub const CUSTOM_METRICS: &str = "custom_metrics";
     pub const SQL: &str = "sql";
+    pub const PATH: &str = "path";
     pub const CACHE_AGE: &str = "cache_age";
     pub const CUSTOM_METRICS_CACHE_AGE: &str = "custom_metrics_cache_age";
     pub const IS_ASYNC: &str = "is_async";

@@ -20,6 +20,7 @@ use crate::types::{ItemValue, SectionAffinity, SectionFilter, SectionName};
 use anyhow::Result;
 use log;
 use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
 // "tablespaces", "rman", "jobs", "ts_quotas", "resumable", "locks"
@@ -131,6 +132,7 @@ pub struct SectionBuilder {
     is_async: bool,
     is_disabled: bool,
     sql: Option<String>,
+    path: Option<PathBuf>,
     affinity: SectionAffinity,
     item_value: Option<ItemValue>, // [PROD|locks]
 }
@@ -145,6 +147,7 @@ impl SectionBuilder {
             is_async,
             is_disabled: false,
             sql: None,
+            path: None,
             affinity: DEFAULT_AFFINITY_MAP
                 .get(name.as_str())
                 .cloned()
@@ -184,6 +187,11 @@ impl SectionBuilder {
         self
     }
 
+    pub fn path<P: Into<PathBuf>>(mut self, path: P) -> Self {
+        self.path = Some(path.into());
+        self
+    }
+
     pub fn build(self) -> Section {
         let (name, sep) = if self.item_value.is_some() {
             (
@@ -204,6 +212,7 @@ impl SectionBuilder {
                 SectionKind::Sync
             },
             sql: self.sql,
+            path: self.path,
             affinity: self.affinity,
             item_value: self.item_value,
         }
@@ -216,6 +225,7 @@ pub struct Section {
     sep: char,
     kind: SectionKind,
     sql: Option<String>,
+    path: Option<PathBuf>,
     affinity: SectionAffinity,
     item_value: Option<ItemValue>, // part of [SID|item_value]
 }
@@ -243,6 +253,10 @@ impl Section {
 
     pub fn sql(&self) -> Option<&str> {
         self.sql.as_deref()
+    }
+
+    pub fn path(&self) -> Option<&Path> {
+        self.path.as_deref()
     }
 
     pub fn affinity(&self) -> &SectionAffinity {
@@ -324,6 +338,9 @@ impl Section {
         let mut builder = SectionBuilder::new(name).sep(c);
         if let Some(sql_text) = yaml.get_string(keys::SQL) {
             builder = builder.sql(sql_text);
+        }
+        if let Some(path_text) = yaml.get_string(keys::PATH) {
+            builder = builder.path(path_text);
         }
 
         let affinity = yaml
@@ -617,5 +634,97 @@ sections:
         assert_eq!(sections[2].item_value().unwrap().as_str(), "last_sessions");
         assert_eq!(sections[2].kind(), SectionKind::Async);
         assert_eq!(sections[2].sep(), defaults::CUSTOM_METRIC_SEPARATOR);
+    }
+
+    #[test]
+    fn test_custom_metric_path_parsed_relative() {
+        const SOURCE: &str = r#"
+custom_metrics:
+  - product_price:
+      path: "queries/product_price.sql"
+"#;
+        let s = Sections::from_yaml(&create_yaml(SOURCE), &Sections::default()).unwrap();
+        let custom: Vec<&Section> = s
+            .sections()
+            .iter()
+            .filter(|sec| sec.is_custom_metric())
+            .collect();
+        assert_eq!(custom.len(), 1);
+        assert_eq!(
+            custom[0].path(),
+            Some(Path::new("queries/product_price.sql"))
+        );
+        assert!(custom[0].path().is_some_and(|p| p.is_relative()));
+        assert_eq!(custom[0].sql(), None);
+        assert_eq!(custom[0].item_value().unwrap().as_str(), "product_price");
+    }
+
+    #[test]
+    fn test_custom_metric_path_parsed_absolute() {
+        const SOURCE: &str = r#"
+custom_metrics:
+  - heavy_query:
+      path: "/opt/checkmk/sql/heavy_query.sql"
+"#;
+        let s = Sections::from_yaml(&create_yaml(SOURCE), &Sections::default()).unwrap();
+        let custom: Vec<&Section> = s
+            .sections()
+            .iter()
+            .filter(|sec| sec.is_custom_metric())
+            .collect();
+        assert_eq!(custom.len(), 1);
+        assert_eq!(
+            custom[0].path(),
+            Some(Path::new("/opt/checkmk/sql/heavy_query.sql"))
+        );
+        assert!(custom[0].path().is_some_and(|p| p.is_absolute()));
+    }
+
+    #[test]
+    fn test_custom_metric_sql_and_path_both_parsed() {
+        const SOURCE: &str = r#"
+custom_metrics:
+  - mixed:
+      path: "queries/mixed.sql"
+      sql: "select 'details:fallback' from dual"
+"#;
+        let s = Sections::from_yaml(&create_yaml(SOURCE), &Sections::default()).unwrap();
+        let custom: Vec<&Section> = s
+            .sections()
+            .iter()
+            .filter(|sec| sec.is_custom_metric())
+            .collect();
+        assert_eq!(custom.len(), 1);
+        assert_eq!(custom[0].path(), Some(Path::new("queries/mixed.sql")));
+        assert_eq!(custom[0].sql(), Some("select 'details:fallback' from dual"));
+    }
+
+    #[test]
+    fn test_predefined_section_path_parsed() {
+        const SOURCE: &str = r#"
+sections:
+  - instance:
+      path: "/opt/checkmk/sql/instance.sql"
+  - sessions:
+      path: "queries/sessions"
+"#;
+        let s = Sections::from_yaml(&create_yaml(SOURCE), &Sections::default()).unwrap();
+        let find_path = |name: &str| -> Option<&Path> {
+            s.sections()
+                .iter()
+                .find(|sec| sec.name().as_str() == name)
+                .and_then(|sec| sec.path())
+        };
+        assert_eq!(
+            find_path("instance"),
+            Some(Path::new("/opt/checkmk/sql/instance.sql"))
+        );
+        assert_eq!(find_path("sessions"), Some(Path::new("queries/sessions")));
+    }
+
+    #[test]
+    fn test_section_builder_path_setter() {
+        let section = SectionBuilder::new("foo").path("queries/foo.sql").build();
+        assert_eq!(section.path(), Some(Path::new("queries/foo.sql")));
     }
 }

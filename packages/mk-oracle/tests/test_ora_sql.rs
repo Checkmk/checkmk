@@ -1348,6 +1348,42 @@ fn test_performance_old() {
 }
 
 #[test]
+fn test_pdbs_discovery() {
+    use mk_oracle::ora_sql::pdbs::Pdbs;
+    add_runtime_to_path();
+    for endpoint in WORKING_ENDPOINTS.iter() {
+        println!("endpoint.host = {}", &endpoint.host);
+        let config = make_mini_config(endpoint);
+
+        let spot = backend::make_spot(&config.endpoint()).unwrap();
+        let conn = spot
+            .connect(None)
+            .expect("Connect failed, check environment variables");
+
+        let pdbs = Pdbs::discover(&conn).expect("PDB discovery failed");
+
+        // The test database has a single user PDB. We don't care about its
+        // name — just that exactly one survives after CDB$ROOT and PDB$SEED
+        // have been filtered out.
+        assert_eq!(
+            pdbs.len(),
+            1,
+            "Expected exactly one PDB after filtering, got {:?}",
+            pdbs.names(),
+        );
+
+        // Sanity-check the filter behaviour without caring what the real
+        // PDB name is.
+        for name in pdbs.names() {
+            let upper = name.as_ref().to_uppercase();
+            assert_ne!(upper, "CDB$ROOT", "filter let CDB$ROOT through");
+            assert_ne!(upper, "PDB$SEED", "filter let PDB$SEED through");
+            assert!(!upper.is_empty(), "PDB name is empty");
+        }
+    }
+}
+
+#[test]
 fn test_detection_registry() {
     let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL);
     if r.is_err() {

@@ -277,6 +277,13 @@ SELECT
         on i.con_id = d.con_id";
         pub const INSTANCE_APPROXIMATE_VERSION: &str =
             r"SELECT BANNER_FULL FROM v$version WHERE banner LIKE 'Oracle%'";
+        /// Lists PDBs of the connected CDB. The root container (CDB$ROOT) is
+        /// not in V$PDBS, but we exclude it defensively. PDB$SEED is the
+        /// read-only template and must always be filtered out.
+        pub const PDB_DISCOVERY_SQL: &str = r"
+SELECT NAME
+    FROM V$PDBS
+    WHERE NAME NOT IN ('CDB$ROOT', 'PDB$SEED')";
     }
 }
 

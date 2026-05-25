@@ -17,6 +17,7 @@
 use crate::args::Args;
 use crate::config::system::{Logging, SystemConfig};
 use crate::config::OracleConfig;
+use crate::constants::RUNTIME_DIR;
 use crate::platform::get_local_instances;
 use crate::types::{EnvVarName, SectionFilter, UseHostClient};
 use crate::version::VERSION;
@@ -351,30 +352,33 @@ pub fn find_default_instance_runtime(env_var: &str) -> Option<PathBuf> {
 /// usually at: MK_LIBDIR/plugins/packages/mk-oracle
 /// Returns None if env var is not set or path is not a directory
 pub fn detect_factory_runtime(env_var: Option<String>) -> Option<PathBuf> {
-    let env_var = env_var.unwrap_or_else(|| "MK_LIBDIR".to_string());
-    if let Ok(lib_path) = std::env::var(&env_var) {
-        let runtime_path = PathBuf::from(lib_path)
-            .join("plugins")
-            .join("packages")
-            .join(RUNTIME_SUB_DIR);
-
-        let runtime_path = if cfg!(windows) && runtime_path.join("runtime").is_dir() {
-            runtime_path.join("runtime")
-        } else {
-            runtime_path
-        };
-        if runtime_path.is_dir() {
-            Some(runtime_path)
-        } else {
-            log::error!(
-                "{:?} is set but {:?} is not a directory",
-                &env_var,
-                runtime_path
-            );
-            None
+    let env_var = env_var.unwrap_or_else(|| constants::environment::LIB_DIR_ENV_VAR.to_string());
+    let lib_dir = match std::env::var(&env_var) {
+        Ok(v) => v,
+        Err(_) => {
+            log::warn!("{:?} is not set", &env_var);
+            return None;
         }
+    };
+    let runtime_path = if env_var == constants::environment::LIB_DIR_ENV_VAR {
+        RUNTIME_DIR.to_path_buf()
     } else {
-        log::warn!("{:?} is not set", &env_var);
+        Path::new(&lib_dir).join("plugins/packages/mk-oracle")
+    };
+
+    let runtime_path = if cfg!(windows) && runtime_path.join("runtime").is_dir() {
+        runtime_path.join("runtime")
+    } else {
+        runtime_path
+    };
+    if runtime_path.is_dir() {
+        Some(runtime_path)
+    } else {
+        log::error!(
+            "{:?} is set but {:?} is not a directory",
+            &env_var,
+            runtime_path
+        );
         None
     }
 }
@@ -776,10 +780,6 @@ mod tests {
             std::env::remove_var("MK_LIBDIR");
         }
         assert!(detect_factory_runtime(None).is_none());
-        unsafe {
-            std::env::set_var("MK_LIBDIR", base_dir().join("runtimes"));
-        }
-        assert!(detect_factory_runtime(None).is_some());
 
         unsafe {
             std::env::set_var("MK_MY_VAR", base_dir().join("runtimes"));

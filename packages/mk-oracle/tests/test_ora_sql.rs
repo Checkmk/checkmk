@@ -1443,7 +1443,8 @@ fn test_detect_host_runtime() {
     let local_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok() {
         SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
     } else {
-        std::env::var("ORACLE_HOME").is_ok_and(|v| !v.is_empty())
+        std::env::var("ORACLE_HOME")
+            .is_ok_and(|v| !v.is_empty() && std::path::Path::new(&v).join("lib").is_dir())
     };
     if local_exists {
         assert!(
@@ -1478,7 +1479,8 @@ fn test_detect_runtime_with_runtime() {
     let local_exists = if std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok() {
         SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
     } else {
-        std::env::var("ORACLE_HOME").is_ok_and(|v| !v.is_empty())
+        std::env::var("ORACLE_HOME")
+            .is_ok_and(|v| !v.is_empty() && std::path::Path::new(&v).join("lib").is_dir())
     };
 
     // Never
@@ -1543,7 +1545,8 @@ fn test_detect_runtime_without_runtime() {
     let lib_dir_var: Option<String> = Some(LIBDIR_VAR.to_string());
     let local_installation = std::env::var(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok()
         && SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL).is_ok();
-    let oracle_home_set = { std::env::var("ORACLE_HOME").is_ok_and(|v| !v.is_empty()) };
+    let oracle_home_set = std::env::var("ORACLE_HOME")
+        .is_ok_and(|v| !v.is_empty() && std::path::Path::new(&v).join("lib").is_dir());
 
     // Never
     assert!(detect_runtime(&UseHostClient::Never, lib_dir_var.clone()).is_none());
@@ -1627,7 +1630,9 @@ fn test_add_runtime_to_path() {
     {
         println!("ORA_DB_ENDPOINT_LOCAL is set");
         true
-    } else if std::env::var("ORACLE_HOME").is_ok_and(|v| !v.is_empty()) {
+    } else if std::env::var("ORACLE_HOME")
+        .is_ok_and(|v| !v.is_empty() && std::path::Path::new(&v).join("lib").is_dir())
+    {
         println!("ORACLE_HOME is set");
         true
     } else if !get_local_instances().unwrap_or_default().is_empty() {
@@ -2059,5 +2064,309 @@ mod permissions {
         set_mode(&sub, 0o755);
         set_mode(&file, 0o666);
         assert!(!is_tree_only_root_modifiable(tmp.path()));
+    }
+}
+
+/// Component tests for the `path:` key of section / custom-metric YAML config.
+/// Tests for resolving a custom-metric's SQL from the YAML `path:` key.
+///
+/// `path:` can point at an absolute file, an absolute directory, or a path
+/// relative to a set of search roots. These tests pin down exactly which file
+/// gets read in each case, including version-variant selection and the
+/// precedence between `path:` and an inline `sql:`.
+///
+/// # Fixture files (tests/files/, embedded via `include_str!`)
+///
+/// Each `.sql` file contains a single trivial query whose payload encodes its
+/// own origin, e.g. `select 'details:abs' from dual`, so a test can assert
+/// which file was resolved purely from the returned query text.
+mod custom_path_tests {
+    use mk_oracle::config::ora_sql::Config;
+    use mk_oracle::ora_sql::section::Section;
+    use mk_oracle::types::{InstanceNumVersion, Tenant};
+    use std::path::{Path, PathBuf};
+    use tempfile::TempDir;
+
+    // SQL fixture bodies committed under tests/files/, embedded at compile time,
+    // the `'details:...'` payload identifies which file was resolved.
+    const ABS_SQL: &str = include_str!("files/orasql_abs/abs.sql");
+    const DIR_METRIC_SQL: &str = include_str!("files/orasql_abs/dir_metric.sql");
+    const WINNER_SQL: &str = include_str!("files/orasql_abs/winner.sql");
+    const VER_V0_SQL: &str = include_str!("files/orasql_abs/ver_metric.sql");
+    const VER_V12_SQL: &str = include_str!("files/orasql_abs/ver_metric@12010000.sql");
+    const VER_V19_SQL: &str = include_str!("files/orasql_abs/ver_metric@19000000.sql");
+    const RUNTIME_BOTH_SQL: &str = include_str!("files/orasql_runtime/both.sql");
+    const CONFIG_BOTH_SQL: &str = include_str!("files/orasql_config/both.sql");
+    const CONFIG_MAIN_ONLY_SQL: &str = include_str!("files/orasql_config/main_only.sql");
+
+    struct Fixtures {
+        _root: TempDir,
+        abs_dir: PathBuf,
+        /// Injected relative-`path:` search roots: runtime first (so it wins on
+        /// collisions), config second — mirroring production order.
+        search_dirs: Vec<PathBuf>,
+    }
+
+    fn write(dir: &Path, name: &str, body: &str) {
+        std::fs::write(dir.join(name), body).expect("write fixture");
+    }
+
+    /// Materialise the embedded fixtures into a temp dir:
+    /// `orasql_abs/` for absolute-path tests, plus
+    /// `orasql_runtime/` and `orasql_config/` as the two relative search roots
+    /// (note `both.sql` lives in both, to exercise collision precedence).
+    fn fixtures() -> Fixtures {
+        let root = tempfile::tempdir().expect("tempdir");
+        let abs_dir = root.path().join("orasql_abs");
+        let runtime_dir = root.path().join("orasql_runtime");
+        let config_dir = root.path().join("orasql_config");
+        for d in [&abs_dir, &runtime_dir, &config_dir] {
+            std::fs::create_dir_all(d).expect("create fixture dir");
+        }
+
+        // Absolute-path test files.
+        write(&abs_dir, "abs.sql", ABS_SQL);
+        write(&abs_dir, "dir_metric.sql", DIR_METRIC_SQL);
+        write(&abs_dir, "winner.sql", WINNER_SQL);
+        // Version-variant set: bare stem + two @<version> variants.
+        write(&abs_dir, "ver_metric.sql", VER_V0_SQL);
+        write(&abs_dir, "ver_metric@12010000.sql", VER_V12_SQL);
+        write(&abs_dir, "ver_metric@19000000.sql", VER_V19_SQL);
+
+        // Relative-path search roots. `both.sql` is intentionally present in
+        // both roots so a test can prove the runtime root shadows the config one.
+        write(&runtime_dir, "both.sql", RUNTIME_BOTH_SQL);
+        write(&config_dir, "both.sql", CONFIG_BOTH_SQL);
+        write(&config_dir, "main_only.sql", CONFIG_MAIN_ONLY_SQL);
+
+        Fixtures {
+            _root: root,
+            abs_dir,
+            search_dirs: vec![runtime_dir, config_dir],
+        }
+    }
+
+    fn section_from_yaml(yaml: &str, item_or_name: &str) -> Section {
+        let config = Config::from_string(yaml)
+            .expect("config parses")
+            .expect("config present");
+        let cfg = config
+            .all_sections()
+            .iter()
+            .find(|s| {
+                s.item_value()
+                    .map(|iv| iv.as_str() == item_or_name)
+                    .unwrap_or(false)
+                    || s.name().as_str() == item_or_name
+            })
+            .expect("section not found in config");
+        Section::new(cfg, 0)
+    }
+
+    /// First resolved query body for `section` at `version`, using `search_dirs`
+    /// as the relative-`path:` search roots (irrelevant for absolute paths).
+    fn first_query(section: &Section, version: u32, search_dirs: &[PathBuf]) -> Option<String> {
+        section
+            .find_queries_with_search_dirs(
+                InstanceNumVersion::from(version),
+                Tenant::All,
+                &[],
+                search_dirs,
+            )
+            .map(|queries| queries[0].as_str().to_owned())
+    }
+
+    #[test]
+    fn test_path_absolute_file_reads_file_contents() {
+        // `path:` points straight at orasql_abs/abs.sql. An absolute *file* path
+        // is read; the item name ("whatever_name") is ignored. Expect
+        // the body of abs.sql -> 'details:abs'.
+        let fx = fixtures();
+        let yaml = format!(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    custom_metrics:
+      - whatever_name:
+          path: "{}"
+"#,
+            fx.abs_dir.join("abs.sql").display()
+        );
+        let section = section_from_yaml(&yaml, "whatever_name");
+        assert_eq!(
+            first_query(&section, 0, &[]).as_deref(),
+            Some("select 'details:abs' from dual")
+        );
+    }
+
+    #[test]
+    fn test_path_absolute_directory_uses_item_name_as_stem() {
+        // `path:` points at the orasql_abs/ *directory*, not a file. The file
+        // stem is then derived from the custom-metric item name, so item
+        // "dir_metric" resolves to orasql_abs/dir_metric.sql -> 'details:dir'.
+        let fx = fixtures();
+        let yaml = format!(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    custom_metrics:
+      - dir_metric:
+          path: "{}"
+"#,
+            fx.abs_dir.display()
+        );
+        let section = section_from_yaml(&yaml, "dir_metric");
+        assert_eq!(
+            first_query(&section, 0, &[]).as_deref(),
+            Some("select 'details:dir' from dual")
+        );
+    }
+
+    #[test]
+    fn test_path_version_variant_selected_by_instance_version() {
+        // Item "ver_metric" against the orasql_abs/ directory, which holds three
+        // variants for the same stem:
+        //   ver_metric.sql           -> 'details:v0'  (bare, no version floor)
+        //   ver_metric@12010000.sql  -> 'details:v12' (applies for version >= 12.1)
+        //   ver_metric@19000000.sql  -> 'details:v19' (applies for version >= 19)
+        // The highest @<version> floor that the instance version satisfies wins,
+        // falling back to the bare stem below the lowest floor. Asserted below
+        // for instance versions 10.0, 14.0 and 23.0.
+        let fx = fixtures();
+        let yaml = format!(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    custom_metrics:
+      - ver_metric:
+          path: "{}"
+"#,
+            fx.abs_dir.display()
+        );
+        let section = section_from_yaml(&yaml, "ver_metric");
+        assert_eq!(
+            first_query(&section, 10_00_00_00, &[]).as_deref(),
+            Some("select 'details:v0' from dual"),
+            "below the lowest @-variant falls back to the bare stem"
+        );
+        assert_eq!(
+            first_query(&section, 14_00_00_00, &[]).as_deref(),
+            Some("select 'details:v12' from dual"),
+            "between the 12.1 and 19 variants selects the 12.1 one"
+        );
+        assert_eq!(
+            first_query(&section, 23_00_00_00, &[]).as_deref(),
+            Some("select 'details:v19' from dual"),
+            "at/above the 19 variant selects it"
+        );
+    }
+
+    #[test]
+    fn test_path_relative_resolved_via_injected_search_dirs() {
+        // A *relative* `path:` is looked up against the injected search roots, in
+        // order: orasql_runtime/ first, then orasql_config/. Covers two cases:
+        // a collision (file in both roots) and a file present only in the second.
+        let fx = fixtures();
+        let dirs = &fx.search_dirs;
+
+        // `both.sql` exists in *both* roots (runtime -> 'details:runtime',
+        // config -> 'details:config'); the first (runtime) root must win.
+        let collision_yaml = r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    custom_metrics:
+      - both_metric:
+          path: "both.sql"
+"#;
+        let section = section_from_yaml(collision_yaml, "both_metric");
+        assert_eq!(
+            first_query(&section, 0, dirs).as_deref(),
+            Some("select 'details:runtime' from dual"),
+            "runtime search dir must win over config on collision"
+        );
+
+        // `main_only.sql` exists only in the second (config) root, so lookup must
+        // fall through past orasql_runtime/ to orasql_config/ -> 'details:config-only'.
+        let config_only_yaml = r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    custom_metrics:
+      - config_metric:
+          path: "main_only.sql"
+"#;
+        let section = section_from_yaml(config_only_yaml, "config_metric");
+        assert_eq!(
+            first_query(&section, 0, dirs).as_deref(),
+            Some("select 'details:config-only' from dual"),
+            "must fall through to the config search dir"
+        );
+    }
+
+    #[test]
+    fn test_path_wins_over_inline_sql_but_falls_back_when_missing() {
+        // A custom metric may carry both `path:` and an inline `sql:`. This test
+        // pins the precedence: a resolvable `path:` wins, a missing one falls
+        // back to the inline `sql:`.
+        let fx = fixtures();
+        // File resolves (orasql_abs/winner.sql -> 'details:file'), so `path:`
+        // takes precedence over the inline `sql:` ('details:inline').
+        let present_yaml = format!(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    custom_metrics:
+      - winner:
+          path: "{}"
+          sql: "select 'details:inline' from dual"
+"#,
+            fx.abs_dir.join("winner.sql").display()
+        );
+        let section = section_from_yaml(&present_yaml, "winner");
+        assert_eq!(
+            first_query(&section, 0, &[]).as_deref(),
+            Some("select 'details:file' from dual"),
+            "resolved path: must win over inline sql:"
+        );
+
+        // File is missing (does_not_exist.sql), so resolution falls back to the
+        // inline `sql:` -> 'details:inline'.
+        let missing_yaml = format!(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    custom_metrics:
+      - fallback:
+          path: "{}"
+          sql: "select 'details:inline' from dual"
+"#,
+            fx.abs_dir.join("does_not_exist.sql").display()
+        );
+        let section = section_from_yaml(&missing_yaml, "fallback");
+        assert_eq!(
+            first_query(&section, 0, &[]).as_deref(),
+            Some("select 'details:inline' from dual"),
+            "missing path: must fall back to inline sql:"
+        );
     }
 }

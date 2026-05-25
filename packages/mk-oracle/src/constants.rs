@@ -34,6 +34,7 @@ pub mod environment {
     pub const TEMP_DIR_ENV_VAR: &str = "MK_TEMPDIR";
     pub const STATE_DIR_ENV_VAR: &str = "MK_STATEDIR";
     pub const VAR_DIR_ENV_VAR: &str = "MK_VARDIR";
+    pub const LIB_DIR_ENV_VAR: &str = "MK_LIBDIR";
 }
 
 pub const ODBC_CONNECTION_TIMEOUT: u32 = 2;
@@ -44,6 +45,8 @@ pub static DEFAULT_CONFIG_FILE: LazyLock<PathBuf> = LazyLock::new(|| {
     Path::new(&get_env_value(environment::CONFIG_DIR_ENV_VAR, ".")).join(environment::CONFIG_NAME)
 });
 pub static CONFIG_DIR: LazyLock<PathBuf> = LazyLock::new(|| Path::new(&get_conf_dir()).to_owned());
+pub static RUNTIME_DIR: LazyLock<PathBuf> =
+    LazyLock::new(|| Path::new(&get_runtime_dir()).to_owned());
 pub static ENV_LOG_DIR: LazyLock<Option<PathBuf>> = LazyLock::new(|| {
     std::env::var(environment::LOG_DIR_ENV_VAR)
         .ok()
@@ -67,6 +70,12 @@ pub static ENV_VAR_DIR: LazyLock<Option<PathBuf>> = LazyLock::new(|| {
 
 fn get_conf_dir() -> PathBuf {
     Path::new(&get_env_value(environment::CONFIG_DIR_ENV_VAR, ".")).to_owned()
+}
+
+fn get_runtime_dir() -> PathBuf {
+    Path::new(&get_env_value(environment::LIB_DIR_ENV_VAR, "."))
+        .join("plugins/packages/mk-oracle")
+        .to_owned()
 }
 
 pub fn get_env_value(var: &str, on_lack: &str) -> String {

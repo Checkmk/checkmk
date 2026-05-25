@@ -410,6 +410,7 @@ Each section can optionally specify:
 
 - `affinity`: determines which database types the section applies to (`"db"`, `"asm"`, or `"all"`).
 - `is_async`: when `yes`, the section runs asynchronously and its results are cached (controlled by `cache_age`).
+- `path`: load the SQL body from an external file instead of the bundled query. See [External SQL files (`path:`)](#external-sql-files-path) under custom metrics — the same rules apply to predefined sections.
 
 ```yaml
 sections:
@@ -484,6 +485,52 @@ details:per-instance
 - A given instance executes the union of global and its own per-instance metrics.
 - If a global and a per-instance entry share the same item name, the per-instance one wins.
 
+#### External SQL files (`path:`)
+
+Instead of embedding SQL inline via `sql:`, an entry can point at an external `.sql` file via `path:`. This applies both to `custom_metrics` entries and to predefined `sections` (where it overrides the bundled query for that section).
+
+```yaml
+custom_metrics:
+  # 1. Absolute path to a file.
+  - heavy_query:
+      path: '/opt/checkmk/sql/heavy_query.sql'
+
+  # 2. Relative file path — searched in MK_LIBDIR/plugins/packages/mk-oracle/orasql/ first,
+  #    then in MK_CONFDIR/orasql/.
+  - product_price:
+      path: 'queries/product_price.sql'
+
+  # 3. Directory path — the file name is derived from the item name
+  #    ("sessions_stats.sql" in this case).
+  - sessions_stats:
+      path: 'queries/'
+
+  # 4. File with inline fallback. If the file cannot be resolved, the
+  #    inline `sql:` is used instead.
+  - last_resort:
+      path: 'queries/last_resort.sql'
+      sql: "SELECT 'details:fallback' FROM dual"
+```
+
+Resolution rules:
+
+- **Absolute vs. relative.** Absolute paths are used as-is. Relative paths are searched first in **`MK_LIBDIR/plugins/packages/mk-oracle/orasql/`** and then in **`MK_CONFDIR/orasql/`**. When the same relative path resolves in both, the **`MK_LIBDIR/plugins/packages/mk-oracle/orasql/`** copy wins.
+- **File vs. directory.** A `path:` may point at a file (with or without the `.sql` extension) or at a directory. In the directory case the file name is derived from the **item name** for `custom_metrics`, or from the **section name** for predefined `sections`.
+- **Version variants.** Alongside the base `<stem>.sql`, you may provide Oracle-version-specific variants named `<stem>@<min_version>.sql` (e.g. `sessions@12010000.sql`). The plugin picks the file with the highest `min_version` that is still less than or equal to the connected instance's version. The version is the 8-digit numeric form `MMmmRRSSSS` (major / minor / release / patch), e.g. `12.1.0.2` → `12010002`.
+- **Fallback chain.** Resolution order for a section is: `path:` → inline `sql:` → bundled (for predefined sections only). If `path:` is set but no file matches the instance version and no inline `sql:` is provided, the section yields no output.
+
+Example layout on Linux:
+
+```
+$MK_CONFDIR/orasql/
+├── product_price.sql
+├── product_price@12010000.sql       # picked for Oracle >= 12.1.0.0
+└── product_price@19000000.sql       # picked for Oracle >= 19.0.0.0
+
+$MK_LIBDIR/plugins/packages/mk-oracle/orasql/
+└── product_price.sql                    # overrides the MK_CONFDIR copy
+```
+
 #### SQL contract
 
 Each SQL must produce rows with a single string column whose value starts with one of the recognised prefixes:
@@ -504,7 +551,7 @@ Each row returned by the SQL is emitted **as-is**: the plugin does not reinterpr
 Custom SQL metrics in this plugin replace the legacy `SQLS_*` configuration variables and `SQLS_SECTIONS` shell-function-based sections. Key differences:
 
 - **No SQL\*Plus directives.** Statements run through the Oracle OCI driver, not `sqlplus`, so `PROMPT`, `SET …`, `SPOOL`, `WHENEVER SQLERROR`, and similar `SQL*Plus`-only commands are not available. Use plain SQL.
-- **Inline SQL only.** Define the query inline via `sql: "..."`. The legacy `SQLS_DIR` / `SQLS_SQL` file-based form is not supported in this iteration.
+- **Inline SQL or external `.sql` file.** Define the query inline via `sql: "..."` or load it from an external file via `path:` (see [External SQL files](#external-sql-files-path)). The legacy `SQLS_DIR` / `SQLS_SQL` lookup semantics are replaced by the rules under `path:`.
 - **Item name is the YAML key.** Equivalent to the legacy `SQLS_ITEM_NAME` (replaces `SQLS_SECTIONS` shell functions).
 - **Cache marker location.** For cached (async) sections, the legacy `cached(<since>,<age>)` marker is emitted on the **subsection** header `[[[<SID>|<item>|cached(...)]]]`, not on the section header. The section header is always plain `<<<oracle_sql:sep(58)>>>`.
 - **Separator is fixed at `:` (ASCII 58).** The output is always emitted under `oracle_sql:sep(58)` so the existing server-side `oracle_sql` check plugin processes it unchanged.

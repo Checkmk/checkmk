@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::ora_sql::backend::OpenedSpot;
+use crate::ora_sql::pdbs::Pdbs;
 use crate::ora_sql::sqls;
 use crate::types::{InstanceName, InstanceNumVersion, InstanceVersion, SqlQuery, Tenant};
 use anyhow::Result;
@@ -22,15 +23,40 @@ use std::collections::HashMap;
 
 type _InstanceEntries = HashMap<InstanceName, (InstanceVersion, Tenant)>;
 #[derive(Debug)]
-pub struct WorkInstances(_InstanceEntries);
+pub struct WorkInstances {
+    instances: _InstanceEntries,
+    /// PDBs of the connected CDB. A single connection sees one set of PDBs
+    /// shared by every instance entry above (relevant for RAC). Empty until
+    /// `discover_pdbs` is called.
+    pdbs: Pdbs,
+}
 
 impl WorkInstances {
     pub fn new(spot: &OpenedSpot, custom_query: Option<&str>) -> Result<Self> {
-        let hashmap = _get_instances(spot, custom_query)?;
-        Ok(WorkInstances(hashmap))
+        let instances = _get_instances(spot, custom_query)?;
+        Ok(WorkInstances {
+            instances,
+            pdbs: Pdbs::default(),
+        })
     }
+
+    /// Run PDB discovery on the open connection and store the result.
+    /// On failure, the existing PDB list is left unchanged and the error is
+    /// returned for the caller to log.
+    pub fn discover_pdbs(&mut self, spot: &OpenedSpot) -> Result<()> {
+        self.pdbs = Pdbs::discover(spot)?;
+        Ok(())
+    }
+
+    pub fn pdbs(&self) -> &Pdbs {
+        &self.pdbs
+    }
+
     pub fn get_full_version(&self, instance: &InstanceName) -> Option<InstanceVersion> {
-        self.0.get(instance).cloned().map(|(version, _)| version)
+        self.instances
+            .get(instance)
+            .cloned()
+            .map(|(version, _)| version)
     }
 
     /// Returns the version of the given instance as a number.
@@ -39,13 +65,13 @@ impl WorkInstances {
     ///
     /// If the instance is not found, it returns `None`.
     pub fn get_info(&self, instance: &InstanceName) -> Option<(InstanceNumVersion, Tenant)> {
-        self.0
+        self.instances
             .get(instance)
             .map(|(v, c)| (convert_to_num_version(v).unwrap_or_default(), *c))
     }
 
     pub fn all(&self) -> &_InstanceEntries {
-        &self.0
+        &self.instances
     }
 }
 

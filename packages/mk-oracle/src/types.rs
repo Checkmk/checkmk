@@ -131,6 +131,27 @@ impl AsRef<str> for Sid {
     }
 }
 
+#[derive(PartialEq, From, Debug, Display, Clone, Default, Into, Hash, Eq)]
+pub struct PdbName(String);
+
+impl From<&str> for PdbName {
+    fn from(s: &str) -> Self {
+        Self(s.to_string().to_uppercase())
+    }
+}
+
+impl From<&String> for PdbName {
+    fn from(s: &String) -> Self {
+        Self(s.clone().to_uppercase())
+    }
+}
+
+impl AsRef<str> for PdbName {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
 #[derive(PartialEq, From, Debug, Display, Clone, Into, Hash, Eq)]
 pub struct DescriptorSid(String);
 

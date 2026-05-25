@@ -19,6 +19,7 @@ pub mod custom;
 pub mod defaults;
 pub mod detect;
 pub mod instance;
+pub mod pdbs;
 pub mod perf;
 pub mod section;
 mod spots;

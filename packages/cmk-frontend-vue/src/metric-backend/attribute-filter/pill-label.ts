@@ -8,6 +8,12 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import type { AttributeCondition, AttributeType, Operator } from './types'
 
+export const ATTRIBUTE_TYPE_LABELS: Record<Exclude<AttributeType, null>, string> = {
+  resource: 'Resource',
+  scope: 'Scope',
+  datapoint: 'Data point'
+}
+
 function attributeTypePrefixes(): Record<Exclude<AttributeType, null>, TranslatedString> {
   const { _t } = usei18n()
   return {

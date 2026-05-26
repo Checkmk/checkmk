@@ -87,6 +87,7 @@ from cmk.utils import man_pages
 from cmk.utils.labels import Labels
 from cmk.utils.render import approx_age
 from cmk.utils.statename import short_host_state_name, short_service_state_name
+from cmk.utils.tags import TagConfig
 
 from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
 from .base import Cell, Painter
@@ -99,6 +100,7 @@ from .helpers import (
     render_cache_info,
     RenderLink,
     replace_action_url_macros,
+    tag_choices_for_group,
 )
 from .registry import PainterRegistry
 
@@ -5267,21 +5269,26 @@ class ABCPainterTagsWithTitles(Painter, abc.ABC):
 
     def _get_entries(self, row: Row) -> list[tuple[str, str]]:
         entries = []
+        aux_titles = _aux_tag_titles(self.config.tags)
         for tag_group_id, tag_id in get_tag_groups(row, self.object_type).items():
             tag_group = self.config.tags.get_tag_group(tag_group_id)
             if tag_group:
-                entries.append(
-                    (tag_group.title, dict(tag_group.get_tag_choices()).get(tag_id, tag_id))
-                )
+                choices = tag_choices_for_group(tag_group)
+                entries.append((tag_group.title, choices.get(tag_id, tag_id)))
                 continue
 
-            aux_tag_title = dict(self.config.tags.aux_tag_list.get_choices()).get(tag_group_id)
+            aux_tag_title = aux_titles.get(tag_group_id)
             if aux_tag_title:
                 entries.append((aux_tag_title, aux_tag_title))
                 continue
 
             entries.append((tag_group_id, tag_id))
         return entries
+
+
+@request_memoize()
+def _aux_tag_titles(tag_config: TagConfig) -> dict[str, str]:
+    return dict(tag_config.aux_tag_list.get_choices())
 
 
 class PainterHostTagsWithTitles(ABCPainterTagsWithTitles):

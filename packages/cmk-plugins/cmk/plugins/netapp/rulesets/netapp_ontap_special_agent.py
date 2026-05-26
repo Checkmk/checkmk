@@ -32,6 +32,7 @@ DEFAULT_RESOURCES = [
     "alerts",
     "vs_traffic",
     "psu",
+    "ntp_time_sync",
     "environment",
     "qtree_quota",
     "snapvault",
@@ -125,6 +126,7 @@ def _formspec_netapp_ontap() -> Dictionary:
                         ),  # NVRAM Battery, Info
                         MultipleChoiceElement(name="vs_status", title=Title("SVM Status")),
                         MultipleChoiceElement(name="vs_traffic", title=Title("Traffic SVM")),
+                        MultipleChoiceElement(name="ntp_time_sync", title=Title("NTP Time Sync")),
                         MultipleChoiceElement(name="fan", title=Title("Fans")),
                         MultipleChoiceElement(name="temp", title=Title("Temperature Sensors")),
                         MultipleChoiceElement(name="psu", title=Title("Power Supplies")),

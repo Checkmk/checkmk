@@ -594,6 +594,17 @@ class AlertModel(BaseModel):
     suppressor: str = ""
 
 
+class NtpPeerStatusModel(BaseModel):
+    server: str
+    offset: float | None = None
+    is_peer_selected: bool | None = None
+
+
+class NtpStatusModel(BaseModel):
+    node: str
+    peers: list[NtpPeerStatusModel]
+
+
 class SvmTrafficCountersModel(BaseModel):
     """
     cfr: https://docs.netapp.com/us-en/ontap-pcmap-9141/

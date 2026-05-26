@@ -10,6 +10,7 @@ Checkmk special agent to monitor Netapp via ONTAP REST API.
 import argparse
 import logging
 import sys
+from collections import defaultdict
 from collections.abc import Collection, Iterable, Sequence
 from enum import Enum
 from typing import Final
@@ -62,6 +63,7 @@ class FetchedResource(Enum):
     ports = "ports"
     interfaces = "interfaces"
     node = "node"
+    ntp_time_sync = "ntp_time_sync"
     fan = "fan"
     temp = "temp"
     alerts = "alerts"
@@ -80,6 +82,7 @@ RESOURCES_NEEDING_NODES_INFO = {
     FetchedResource.node.value,
     FetchedResource.fan.value,
     FetchedResource.temp.value,
+    FetchedResource.ntp_time_sync.value,
 }
 
 
@@ -660,6 +663,39 @@ def fetch_temperatures(
             )
 
 
+def fetch_ntp_status(
+    connection: HostConnection,
+    args: argparse.Namespace,
+    nodes: Sequence[models.NodeModel],
+) -> Iterable[models.NtpStatusModel]:
+    response = connection.session.get(
+        url=f"{connection.origin}/api/private/cli/cluster/time-service/ntp/status",
+        params={
+            "fields": "node,offset,server,is-peer-selected",
+        },
+        timeout=args.timeout,
+    )
+    records = response.json().get("records", [])
+
+    peers_by_node: dict[str, list[models.NtpPeerStatusModel]] = defaultdict(list)
+    for record in records:
+        if not (node_name := record.get("node")):
+            continue
+        peers_by_node[node_name].append(
+            models.NtpPeerStatusModel(
+                server=record["server"],
+                offset=record.get("offset"),
+                is_peer_selected=record.get("is_peer_selected"),
+            )
+        )
+
+    for node in nodes:
+        yield models.NtpStatusModel(
+            node=node.name,
+            peers=peers_by_node.get(node.name, []),
+        )
+
+
 def fetch_alerts(
     connection: HostConnection, args: argparse.Namespace
 ) -> Iterable[models.AlertModel]:
@@ -1084,6 +1120,15 @@ def write_sections(
     if FetchedResource.psu.value in fetched_resources:
         safe_write_section("psu", fetch_psu(connection), logger)
 
+    if FetchedResource.ntp_time_sync.value in fetched_resources:
+        if nodes is not None:
+            safe_write_section("time", fetch_ntp_status(connection, args, nodes), logger)
+        else:
+            _write_error(
+                "time",
+                "Node information could not be retrieved. Node information is required for NTP time sync monitoring.",
+            )
+
     if FetchedResource.environment.value in fetched_resources:
         safe_write_section("environment", fetch_environment(connection), logger)
 
@@ -1160,6 +1205,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
             FetchedResource.qtree_quota,
             FetchedResource.snapvault,
             FetchedResource.fc_interfaces,
+            FetchedResource.ntp_time_sync,
         ],
         help="The NetApp objects which are supposed to be fetched. Available resources: "
         + ", ".join([obj.value for obj in FetchedResource]),

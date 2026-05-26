@@ -18,7 +18,9 @@ class GraphRequest:
     graph: Graph | Bidirectional
 
 
-def _data_for_request(request: GraphRequest, rrd: FetchRRD) -> Mapping[MetricName, TimeSeries]:
+def _fetch_time_series_per_request(
+    request: GraphRequest, rrd: FetchRRD
+) -> Mapping[MetricName, TimeSeries]:
     rrd_keys = [
         RRDKey(service=request.service, metric_name=name, scale=1.0)
         for name in request.graph.metric_names()
@@ -31,9 +33,9 @@ def _data_for_request(request: GraphRequest, rrd: FetchRRD) -> Mapping[MetricNam
     return {key.metric_name: time_series for key, time_series in time_series_by_key.items()}
 
 
-def update_graph_data(
+def fetch_time_series(
     requests: Sequence[GraphRequest],
     *,
     rrd: FetchRRD,
 ) -> Sequence[Mapping[MetricName, TimeSeries]]:
-    return [_data_for_request(request, rrd) for request in requests]
+    return [_fetch_time_series_per_request(request, rrd) for request in requests]

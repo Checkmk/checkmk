@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from cmk.graphing_engine import (
     CommonOptions,
     ConsolidationFunction,
+    fetch_time_series,
     Graph,
     GraphRequest,
     MetricName,
@@ -17,7 +18,6 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
     TranslatedMetric,
-    update_graph_data,
 )
 
 
@@ -72,7 +72,7 @@ class _FakeFetchRRD:
 
 def test_empty_requests_returns_empty_list() -> None:
     rrd = _FakeFetchRRD()
-    assert update_graph_data([], rrd=rrd) == []
+    assert fetch_time_series([], rrd=rrd) == []
     assert rrd.time_series_calls == []
 
 
@@ -93,7 +93,7 @@ def test_returns_one_data_mapping_per_request_keyed_by_metric_name() -> None:
         }
     )
 
-    [data] = update_graph_data([request], rrd=rrd)
+    [data] = fetch_time_series([request], rrd=rrd)
 
     assert data == {cpu_user: cpu_user_series, cpu_system: cpu_system_series}
     [(keys_arg, time_range, consolidation_function)] = rrd.time_series_calls
@@ -116,6 +116,6 @@ def test_multiple_requests_yield_one_mapping_each_in_order() -> None:
     request_y = GraphRequest(graph=graph_y, common=_common(), service=service)
     rrd = _FakeFetchRRD(time_series_response={x_key: x_series, y_key: y_series})
 
-    results = update_graph_data([request_x, request_y], rrd=rrd)
+    results = fetch_time_series([request_x, request_y], rrd=rrd)
 
     assert results == [{x: x_series}, {y: y_series}]

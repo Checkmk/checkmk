@@ -56,7 +56,7 @@ from ._template import (
     TemplateDiscoveryOptions,
     TemplateOptions,
 )
-from ._update import GraphRequest, update_graph_data
+from ._time_series import fetch_time_series, GraphRequest
 
 __all__ = [
     "AutoPrecision",
@@ -108,6 +108,6 @@ __all__ = [
     "WarningOf",
     "discover_explicit_graphs",
     "discover_template_graphs",
+    "fetch_time_series",
     "parse_graph_from_api",
-    "update_graph_data",
 ]

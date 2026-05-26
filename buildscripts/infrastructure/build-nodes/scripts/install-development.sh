@@ -80,6 +80,44 @@ copy_files_around() {
     print_green "Necessary file copying done"
 }
 
+configure_firejail_profiles() {
+    print_green "Configuring firejail profiles ..."
+    local target_user="${SUDO_USER:-${USER}}"
+    local target_home
+    target_home=$(getent passwd "${target_user}" | cut -d: -f6)
+    local user_firejail_dir="${target_home}/.config/firejail"
+    local user_profile="${user_firejail_dir}/claude.profile"
+    local user_local="${user_firejail_dir}/claude.local"
+
+    if [[ $DRY_RUN -gt 0 ]]; then
+        print_blue "This is a dry run"
+        print_blue "Would copy .claude/firejail.profile to ${user_profile}"
+        print_blue "Would create ${user_local} (if not exists) for user ${target_user}"
+    else
+        mkdir -p "${user_firejail_dir}"
+        chown "${target_user}:${target_user}" "${user_firejail_dir}"
+        cp ".claude/firejail.profile" "${user_profile}"
+        chown "${target_user}:${target_user}" "${user_profile}"
+        print_green "Copied .claude/firejail.profile to ${user_profile}"
+
+        if [[ ! -f "${user_local}" ]]; then
+            touch "${user_local}"
+            chown "${target_user}:${target_user}" "${user_local}"
+            print_green "Created ${user_local}"
+        else
+            print_blue "${user_local} already exists, skipping"
+        fi
+    fi
+    print_green "Firejail profile configuration done"
+}
+
+install_for_aisandbox() {
+    print_green "Installing AI sandbox (firejail) ..."
+    install_packages firejail
+    configure_firejail_profiles
+    print_green "AI sandbox installation done"
+}
+
 perform_cleanup() {
     print_green "Cleanup ..."
     rm -f "${INSTALL_PATH}"/UBUNTU_"$VERSION_NUMBER".mk
@@ -416,6 +454,7 @@ INSTALL_FOR_PYTHON=0
 INSTALL_FOR_CPP=0
 INSTALL_FOR_LOCALIZE=0
 INSTALL_FOR_BAZEL=0
+INSTALL_FOR_AISANDBOX=0
 INSTALLED_BY_PYENV=0
 # strip only once, if "all" or multiple profiles selected, do it at the end
 STRIP_LATER=0
@@ -427,6 +466,7 @@ for PROFILE in "${PROFILE_ARGS[@]}"; do
             INSTALL_FOR_CPP=1
             INSTALL_FOR_LOCALIZE=1
             INSTALL_FOR_BAZEL=1
+            INSTALL_FOR_AISANDBOX=1
             ((STRIP_LATER += 5))
             ;;
         python)
@@ -446,9 +486,12 @@ for PROFILE in "${PROFILE_ARGS[@]}"; do
             ((REQUIRES_NEXUS += 1))
             INSTALL_FOR_BAZEL=1
             ;;
+        aisandbox)
+            INSTALL_FOR_AISANDBOX=1
+            ;;
         *)
             print_red "Unknown installation profile $INSTALL_PROFILE"
-            print_debug "Choose from 'all', 'python', 'cpp', 'localize', 'bazel'"
+            print_debug "Choose from 'all', 'python', 'cpp', 'localize', 'bazel', 'aisandbox'"
             exit 1
             ;;
     esac
@@ -457,6 +500,7 @@ print_debug "INSTALL_FOR_PYTHON   = ${INSTALL_FOR_PYTHON}"
 print_debug "INSTALL_FOR_CPP      = ${INSTALL_FOR_CPP}"
 print_debug "INSTALL_FOR_LOCALIZE = ${INSTALL_FOR_LOCALIZE}"
 print_debug "INSTALL_FOR_BAZEL    = ${INSTALL_FOR_BAZEL}"
+print_debug "INSTALL_FOR_AISANDBOX = ${INSTALL_FOR_AISANDBOX}"
 print_debug "REQUIRES_NEXUS       = ${REQUIRES_NEXUS}"
 print_debug "STRIP_LATER          = ${STRIP_LATER}"
 
@@ -490,6 +534,9 @@ if [[ $INSTALL_FOR_PYTHON -eq 1 ]]; then
 fi
 if [[ $INSTALL_FOR_LOCALIZE -eq 1 ]]; then
     install_for_localize_dev
+fi
+if [[ $INSTALL_FOR_AISANDBOX -eq 1 ]]; then
+    install_for_aisandbox
 fi
 
 if [[ $STRIP_LATER -gt 1 ]]; then

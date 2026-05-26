@@ -70,9 +70,7 @@ def test_check_graylog_sources(
     monkeypatch: pytest.MonkeyPatch,
     section: StringTable,
     item: str,
-    expected_check_result: Sequence[
-        tuple[int, str, list[tuple[str, float, float | None, float | None]]]
-    ],
+    expected_check_result: Sequence[object],  # fixed upon migration
 ) -> None:
     monkeypatch.setattr(
         graylog, "get_value_store", lambda: {"graylog_msgs_avg.rate": (1670328674.09963, 457)}

@@ -27,7 +27,7 @@ def check_graylog_messages(_no_item, params, parsed):
     if messages is None:
         return None
 
-    return handle_graylog_messages(messages, params)
+    return handle_graylog_messages(messages, params, include_diff=True)
 
 
 check_info["graylog_messages"] = LegacyCheckDefinition(

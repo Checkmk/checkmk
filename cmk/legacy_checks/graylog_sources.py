@@ -61,29 +61,31 @@ def parse_graylog_sources(string_table: StringTable) -> SourceInfoSection:
     return parsed
 
 
-def _handle_graylog_sources_messages(item_data: SourceInfo, params: Mapping[str, Any]) -> Iterable:
-    total_messages, average_messages, total_new_messages = handle_graylog_messages(
-        item_data.num_messages, params
+def _handle_graylog_sources_messages(
+    item_data: SourceInfo, params: Mapping[str, Any]
+) -> Iterable[
+    tuple[int, str, list[tuple[str, float, float | None, float | None, float | None, float | None]]]
+]:
+    yield from handle_graylog_messages(
+        item_data.num_messages, params, include_diff=not item_data.has_since_argument
     )
 
-    if not item_data.has_since_argument:
-        yield from (total_messages, average_messages, total_new_messages)
-        return
-
-    yield total_messages
-    yield average_messages
-    yield check_levels(
-        item_data.num_messages_in_timespan,
-        "graylog_diff",
-        params.get("msgs_diff_upper", (None, None)) + params.get("msgs_diff_lower", (None, None)),
-        infoname=f"Total number of messages in the last {render.timespan(item_data.timespan)}",
-        human_readable_func=int,
-    )
+    if item_data.has_since_argument:
+        yield check_levels(
+            item_data.num_messages_in_timespan,
+            "graylog_diff",
+            params.get("msgs_diff_upper", (None, None))
+            + params.get("msgs_diff_lower", (None, None)),
+            infoname=f"Total number of messages in the last {render.timespan(item_data.timespan)}",
+            human_readable_func=int,
+        )
 
 
 def check_graylog_sources(
     item: str, params: Mapping[str, Any], section: SourceInfoSection
-) -> Iterable:
+) -> Iterable[
+    tuple[int, str, list[tuple[str, float, float | None, float | None, float | None, float | None]]]
+]:
     if (item_data := section.get(item)) is None:
         return
 

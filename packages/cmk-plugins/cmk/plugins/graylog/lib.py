@@ -42,7 +42,7 @@ def handle_iso_utc_to_localtimestamp(iso_8601_time: str) -> int:
 
 
 def handle_graylog_messages(
-    messages: int | float, params: Mapping[str, Any]
+    messages: int | float, params: Mapping[str, Any], *, include_diff: bool
 ) -> Generator[
     tuple[int, str, list[tuple[str, float, float | None, float | None, float | None, float | None]]]
 ]:
@@ -76,6 +76,9 @@ def handle_graylog_messages(
         msgs_avg_levels_upper + msgs_avg_levels_lower,
         infoname="Average number of messages (%s)" % render.timespan(avg * 60),
     )
+
+    if not include_diff:
+        return
 
     diff_key = "msgs_diff"
     timespan = params.get(diff_key, 1800)

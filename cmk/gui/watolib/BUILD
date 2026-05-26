@@ -61,6 +61,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [

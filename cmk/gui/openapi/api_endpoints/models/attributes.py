@@ -38,6 +38,7 @@ from cmk.gui.openapi.framework.model.converter import (
     UserConverter,
 )
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
+from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.watolib.host_attributes import (
     ExcludeIPRange,
     HostContactGroupSpec,
@@ -88,7 +89,10 @@ class HostContactGroupModel:
 @api_model
 class SNMPCommunityModel:
     type: Literal["v1_v2_community"] = api_field(description="SNMP v1 or v2 with community")
-    community: str = api_field(description="SNMP community (SNMP Versions 1 and 2c)")
+    community: str | ApiOmitted = api_field(
+        description="SNMP community (SNMP Versions 1 and 2c)",
+        default_factory=ApiOmitted,
+    )
 
 
 @api_model
@@ -116,8 +120,9 @@ class SNMPv3AuthNoPrivacyModel:
     )
     auth_protocol: AuthProtocolType = api_field(description="Authentication protocol.")
     security_name: str = api_field(description="Security name")
-    auth_password: Annotated[str, MinLen(8)] = api_field(
+    auth_password: Annotated[str, MinLen(8)] | ApiOmitted = api_field(
         description="Authentication pass phrase.",
+        default_factory=ApiOmitted,
     )
 
     @classmethod
@@ -126,10 +131,16 @@ class SNMPv3AuthNoPrivacyModel:
             type=value[0],
             auth_protocol=AuthProtocolConverter.from_checkmk(value[1]),
             security_name=value[2],
-            auth_password=value[3],
+            auth_password=ApiOmitted(),
         )
 
     def to_internal(self) -> tuple[Literal["authNoPriv"], str, str, str]:
+        if isinstance(self.auth_password, ApiOmitted):
+            raise ProblemException(
+                status=400,
+                title="Missing SNMPv3 authentication pass phrase.",
+                detail="The 'auth_password' field is required for SNMPv3 authNoPriv credentials.",
+            )
         return (
             self.type,
             AuthProtocolConverter.to_checkmk(self.auth_protocol),
@@ -143,14 +154,16 @@ class SNMPv3AuthPrivacyModel:
     type: Literal["authPriv"] = api_field(description="SNMPv3 with authentication and privacy")
     auth_protocol: AuthProtocolType = api_field(description="Authentication protocol.")
     security_name: str = api_field(description="Security name")
-    auth_password: Annotated[str, MinLen(8)] = api_field(
+    auth_password: Annotated[str, MinLen(8)] | ApiOmitted = api_field(
         description="Authentication pass phrase.",
+        default_factory=ApiOmitted,
     )
     privacy_protocol: PrivacyProtocolType = api_field(
         description="The privacy protocol. The only supported values in the Community Edition are CBC-DES and AES-128. If selected, privacy_password needs to be supplied as well."
     )
-    privacy_password: Annotated[str, MinLen(8)] = api_field(
+    privacy_password: Annotated[str, MinLen(8)] | ApiOmitted = api_field(
         description="Privacy pass phrase. If filled, privacy_protocol needs to be selected as well.",
+        default_factory=ApiOmitted,
     )
 
     @classmethod
@@ -159,12 +172,28 @@ class SNMPv3AuthPrivacyModel:
             type=value[0],
             auth_protocol=AuthProtocolConverter.from_checkmk(value[1]),
             security_name=value[2],
-            auth_password=value[3],
+            auth_password=ApiOmitted(),
             privacy_protocol=PrivacyProtocolConverter.from_checkmk(value[4]),
-            privacy_password=value[5],
+            privacy_password=ApiOmitted(),
         )
 
     def to_internal(self) -> tuple[Literal["authPriv"], str, str, str, str, str]:
+        if isinstance(self.auth_password, ApiOmitted) or isinstance(
+            self.privacy_password, ApiOmitted
+        ):
+            missing = [
+                name
+                for name, value in (
+                    ("auth_password", self.auth_password),
+                    ("privacy_password", self.privacy_password),
+                )
+                if isinstance(value, ApiOmitted)
+            ]
+            raise ProblemException(
+                status=400,
+                title="Missing SNMPv3 pass phrase(s).",
+                detail=f"The following field(s) are required for SNMPv3 authPriv credentials: {', '.join(missing)}.",
+            )
         return (
             self.type,
             AuthProtocolConverter.to_checkmk(self.auth_protocol),
@@ -189,7 +218,7 @@ class SNMPCredentialsConverter:
         if isinstance(value, str):
             return SNMPCommunityModel(
                 type="v1_v2_community",
-                community=value,
+                community=ApiOmitted(),
             )
 
         match value[0]:
@@ -206,6 +235,12 @@ class SNMPCredentialsConverter:
     def to_internal(field: SNMPCredentialsModel) -> str | tuple:
         match field:
             case SNMPCommunityModel():
+                if isinstance(field.community, ApiOmitted):
+                    raise ProblemException(
+                        status=400,
+                        title="Missing SNMP community.",
+                        detail="The 'community' field is required for SNMP v1/v2 credentials.",
+                    )
                 return field.community
             case SNMPv3NoAuthNoPrivacyModel():
                 return field.to_internal()
@@ -599,7 +634,7 @@ class IPMIParametersModel:  # TODO: this is dumb (or at least the IPMICredential
     def from_internal(cls, value: IPMICredentials) -> "IPMIParametersModel":
         return cls(
             username=value.get("username", ApiOmitted()),
-            password=value.get("password", ApiOmitted()),
+            password=ApiOmitted(),
         )
 
     def to_internal(self) -> IPMICredentials:

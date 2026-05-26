@@ -353,7 +353,11 @@ def test_openapi_hosts(
     )
 
     got_attributes = resp.json["extensions"]["attributes"]
-    assert list(attributes.items()) <= list(got_attributes.items())
+    assert got_attributes["ipaddress"] == "127.0.0.1"
+    # SNMP community is redacted on GET responses: the type round-trips but the
+    # secret value must never appear in the response body.
+    assert got_attributes["snmp_community"] == {"type": "v1_v2_community"}
+    assert "community" not in got_attributes["snmp_community"]
 
     resp = clients.HostConfig.follow_link(
         resp.json,
@@ -1190,6 +1194,176 @@ def test_openapi_host_config_ipmi_credentials_empty(
     resp.assert_status_code(200)
     assert resp.json["extensions"]["attributes"]["management_ipmi_credentials"] is None
     assert resp.json["extensions"]["attributes"]["management_snmp_community"] is None
+
+
+def test_openapi_host_config_snmp_v1_v2_community_redacted_on_get(
+    clients: ClientRegistry,
+) -> None:
+    """The stored SNMP v1/v2 community must never be returned on GET responses."""
+    clients.HostConfig.create(
+        folder="/",
+        host_name="heute",
+        attributes={
+            "snmp_community": {"type": "v1_v2_community", "community": "super-secret"},
+        },
+    ).assert_status_code(200)
+
+    resp = clients.HostConfig.get("heute").assert_status_code(200)
+    snmp = resp.json["extensions"]["attributes"]["snmp_community"]
+    assert snmp == {"type": "v1_v2_community"}
+    assert "community" not in snmp
+
+
+def test_openapi_host_config_snmpv3_auth_no_priv_password_redacted_on_get(
+    clients: ClientRegistry,
+) -> None:
+    """The stored SNMPv3 authNoPriv pass phrase must never be returned on GET responses."""
+    clients.HostConfig.create(
+        folder="/",
+        host_name="heute",
+        attributes={
+            "snmp_community": {
+                "type": "v3_auth_no_privacy",
+                "auth_protocol": "SHA-2-256",
+                "security_name": "alice",
+                "auth_password": "auth-secret-1",
+            },
+        },
+    ).assert_status_code(200)
+
+    resp = clients.HostConfig.get("heute").assert_status_code(200)
+    snmp = resp.json["extensions"]["attributes"]["snmp_community"]
+    assert snmp == {
+        "type": "v3_auth_no_privacy",
+        "auth_protocol": "SHA-2-256",
+        "security_name": "alice",
+    }
+    assert "auth_password" not in snmp
+
+
+def test_openapi_host_config_snmpv3_auth_priv_passwords_redacted_on_get(
+    clients: ClientRegistry,
+) -> None:
+    """Both SNMPv3 authPriv pass phrases must never be returned on GET responses."""
+    clients.HostConfig.create(
+        folder="/",
+        host_name="heute",
+        attributes={
+            "snmp_community": {
+                "type": "v3_auth_privacy",
+                "auth_protocol": "SHA-2-256",
+                "security_name": "bob",
+                "auth_password": "auth-secret-1",
+                "privacy_protocol": "AES-128",
+                "privacy_password": "priv-secret-1",
+            },
+        },
+    ).assert_status_code(200)
+
+    resp = clients.HostConfig.get("heute").assert_status_code(200)
+    snmp = resp.json["extensions"]["attributes"]["snmp_community"]
+    assert snmp == {
+        "type": "v3_auth_privacy",
+        "auth_protocol": "SHA-2-256",
+        "security_name": "bob",
+        "privacy_protocol": "AES-128",
+    }
+    assert "auth_password" not in snmp
+    assert "privacy_password" not in snmp
+
+
+def test_openapi_host_config_ipmi_password_redacted_on_get(
+    clients: ClientRegistry,
+) -> None:
+    """The stored IPMI password must never be returned on GET responses."""
+    clients.HostConfig.create(
+        folder="/",
+        host_name="heute",
+        attributes={
+            "management_protocol": "ipmi",
+            "management_address": "127.0.0.1",
+            "management_ipmi_credentials": {
+                "username": "ipmi-user",
+                "password": "ipmi-secret",
+            },
+        },
+    ).assert_status_code(200)
+
+    resp = clients.HostConfig.get("heute").assert_status_code(200)
+    ipmi = resp.json["extensions"]["attributes"]["management_ipmi_credentials"]
+    assert ipmi == {"username": "ipmi-user"}
+    assert "password" not in ipmi
+
+
+def test_openapi_host_config_management_snmp_community_redacted_on_get(
+    clients: ClientRegistry,
+) -> None:
+    """Management-board SNMP credentials must redact secrets on GET responses."""
+    clients.HostConfig.create(
+        folder="/",
+        host_name="heute",
+        attributes={
+            "management_protocol": "snmp",
+            "management_address": "127.0.0.1",
+            "management_snmp_community": {
+                "type": "v1_v2_community",
+                "community": "mgmt-secret",
+            },
+        },
+    ).assert_status_code(200)
+
+    resp = clients.HostConfig.get("heute").assert_status_code(200)
+    snmp = resp.json["extensions"]["attributes"]["management_snmp_community"]
+    assert snmp == {"type": "v1_v2_community"}
+    assert "community" not in snmp
+
+
+def test_openapi_host_config_redacted_snmp_credentials_roundtrip_no_500(
+    clients: ClientRegistry,
+) -> None:
+    """GET then PUT of redacted SNMPv3 authPriv credentials must not 500.
+
+    The `to_internal` methods in cmk/gui/openapi/api_endpoints/models/attributes.py
+    assert that the secret fields are not `ApiOmitted` (e.g. line 137). After
+    redaction those fields *are* ApiOmitted, so a plain GET-then-PUT fires the
+    asserts and currently returns a 500; the converters should raise
+    `ProblemException` (-> 400) instead.
+    """
+    clients.HostConfig.create(
+        folder="/",
+        host_name="heute",
+        attributes={
+            "snmp_community": {
+                "type": "authPriv",
+                "auth_protocol": "SHA-2-256",
+                "security_name": "bob",
+                "auth_password": "auth-secret-1",
+                "privacy_protocol": "AES-128",
+                "privacy_password": "priv-secret-1",
+            },
+        },
+        api_version=APIVersion.UNSTABLE,
+    ).assert_status_code(200)
+
+    get_resp = clients.HostConfig.request(
+        "get",
+        url="/objects/host_config/heute",
+        api_version=APIVersion.UNSTABLE,
+    )
+    get_resp.assert_status_code(200)
+    redacted_snmp = get_resp.json["extensions"]["attributes"]["snmp_community"]
+
+    edit_resp = clients.HostConfig.request(
+        "put",
+        url="/objects/host_config/heute",
+        body={"update_attributes": {"snmp_community": redacted_snmp}},
+        headers={"If-Match": "*", "Accept": "application/json"},
+        api_version=APIVersion.UNSTABLE,
+        expect_ok=False,
+    )
+    assert edit_resp.status_code != 500, (
+        f"Round-tripping redacted snmp_community returned 500: {edit_resp.json}"
+    )
 
 
 @pytest.mark.usefixtures("with_host")

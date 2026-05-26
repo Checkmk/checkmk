@@ -6,15 +6,20 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyDiscoveryResult,
-    LegacyResult,
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import get_value_store, render, StringTable
-from cmk.legacy_includes.temperature import check_temperature, TempParamType
-
-check_info = {}
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 # <<<siemens_plc>>>
 # PFT01 temp Gesamt 279183569715
@@ -41,8 +46,9 @@ def parse_siemens_plc(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["siemens_plc"] = LegacyCheckDefinition(
-    name="siemens_plc", parse_function=parse_siemens_plc
+agent_section_siemens_plc = AgentSection(
+    name="siemens_plc",
+    parse_function=parse_siemens_plc,
 )
 
 
@@ -59,21 +65,26 @@ check_info["siemens_plc"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_temp(info: StringTable) -> LegacyDiscoveryResult:
-    return [(l[0] + " " + l[2], {}) for l in info if l[1] == "temp"]
+def discover_siemens_plc_temp(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if line[1] == "temp":
+            yield Service(item=f"{line[0]} {line[2]}")
 
 
-def check_siemens_plc_temp(
-    item: str, params: TempParamType, info: StringTable
-) -> LegacyResult | None:
-    for line in info:
-        if line[1] == "temp" and line[0] + " " + line[2] == item:
+def check_siemens_plc_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:
+    for line in section:
+        if line[1] == "temp" and f"{line[0]} {line[2]}" == item:
             temp = float(line[-1])
-            return check_temperature(temp, params, "siemens_plc_%s" % item)
-    return None
+            yield from check_temperature(
+                temp,
+                params,
+                unique_name=f"siemens_plc_{item}",
+                value_store=get_value_store(),
+            )
+            return
 
 
-check_info["siemens_plc.temp"] = LegacyCheckDefinition(
+check_plugin_siemens_plc_temp = CheckPlugin(
     name="siemens_plc_temp",
     service_name="Temperature %s",
     sections=["siemens_plc"],
@@ -99,27 +110,34 @@ check_info["siemens_plc.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_flag(info: StringTable) -> LegacyDiscoveryResult:
-    return [(l[0] + " " + l[2], {}) for l in info if l[1] == "flag"]
+def discover_siemens_plc_flag(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if line[1] == "flag":
+            yield Service(item=f"{line[0]} {line[2]}")
 
 
 def check_siemens_plc_flag(
-    item: str, params: Mapping[str, Any], info: StringTable
-) -> LegacyResult | None:
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
     expected_state = params["expected_state"]
-    for line in info:
-        if line[1] == "flag" and line[0] + " " + line[2] == item:
+    for line in section:
+        if line[1] == "flag" and f"{line[0]} {line[2]}" == item:
             flag_state = line[-1] == "True"
             if flag_state:
-                state = 0 if expected_state else 2
-                return state, "On"
+                yield Result(
+                    state=State.OK if expected_state else State.CRIT,
+                    summary="On",
+                )
+                return
 
-            state = 2 if expected_state else 0
-            return state, "Off"
-    return None
+            yield Result(
+                state=State.CRIT if expected_state else State.OK,
+                summary="Off",
+            )
+            return
 
 
-check_info["siemens_plc.flag"] = LegacyCheckDefinition(
+check_plugin_siemens_plc_flag = CheckPlugin(
     name="siemens_plc_flag",
     service_name="Flag %s",
     sections=["siemens_plc"],
@@ -142,58 +160,57 @@ check_info["siemens_plc.flag"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_duration(info: StringTable) -> LegacyDiscoveryResult:
-    return [
-        (l[0] + " " + l[2], {})
-        for l in info
-        if l[1].startswith("hours") or l[1].startswith("seconds")
-    ]
+def discover_siemens_plc_duration(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if line[1].startswith("hours") or line[1].startswith("seconds"):
+            yield Service(item=f"{line[0]} {line[2]}")
 
 
 def check_siemens_plc_duration(
-    item: str, params: Mapping[str, Any], info: StringTable
-) -> LegacyResult | None:
-    for line in info:
-        if (line[1].startswith("hours") or line[1].startswith("seconds")) and line[0] + " " + line[
-            2
-        ] == item:
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
+    for line in section:
+        if (
+            line[1].startswith("hours") or line[1].startswith("seconds")
+        ) and f"{line[0]} {line[2]}" == item:
             value_store = get_value_store()
             if line[1].startswith("hours"):
                 seconds = float(line[-1]) * 3600
             else:
                 seconds = float(line[-1])
 
-            perfdata = [(line[1], seconds)]
-
-            key = "siemens_plc.duration.%s" % item
+            key = f"siemens_plc.duration.{item}"
             old_seconds = value_store.get(key)
             if old_seconds is not None and old_seconds > seconds:
-                return (
-                    2,
-                    f"Reduced from {render.time_offset(old_seconds)} to {render.time_offset(seconds)}",
-                    perfdata,
+                yield Result(
+                    state=State.CRIT,
+                    summary=f"Reduced from {render.time_offset(old_seconds)} to {render.time_offset(seconds)}",
                 )
+                yield Metric(line[1], seconds)
+                return
 
             value_store[key] = seconds
 
-            state = 0
+            state = State.OK
             warn, crit = params.get("duration", (None, None))
             if crit is not None and seconds >= crit:
-                state = 2
+                state = State.CRIT
             elif warn is not None and seconds >= warn:
-                state = 1
+                state = State.WARN
 
-            return state, render.time_offset(seconds), perfdata
-    return None
+            yield Result(state=state, summary=render.time_offset(seconds))
+            yield Metric(line[1], seconds)
+            return
 
 
-check_info["siemens_plc.duration"] = LegacyCheckDefinition(
+check_plugin_siemens_plc_duration = CheckPlugin(
     name="siemens_plc_duration",
     service_name="Duration %s",
     sections=["siemens_plc"],
     discovery_function=discover_siemens_plc_duration,
     check_function=check_siemens_plc_duration,
     check_ruleset_name="siemens_plc_duration",
+    check_default_parameters={},
 )
 
 # .
@@ -209,43 +226,48 @@ check_info["siemens_plc.duration"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_counter(info: StringTable) -> LegacyDiscoveryResult:
-    return [(l[0] + " " + l[2], {}) for l in info if l[1].startswith("counter")]
+def discover_siemens_plc_counter(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if line[1].startswith("counter"):
+            yield Service(item=f"{line[0]} {line[2]}")
 
 
 def check_siemens_plc_counter(
-    item: str, params: Mapping[str, Any], info: StringTable
-) -> LegacyResult | None:
-    for line in info:
-        if line[1].startswith("counter") and line[0] + " " + line[2] == item:
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
+    for line in section:
+        if line[1].startswith("counter") and f"{line[0]} {line[2]}" == item:
             value_store = get_value_store()
             value = int(line[-1])
-            perfdata = [(line[1], float(value))]
 
-            key = "siemens_plc.counter.%s" % item
+            key = f"siemens_plc.counter.{item}"
             old_value = value_store.get(key)
             if old_value is not None and old_value > value:
-                return 2, f"Reduced from {old_value} to {value}", perfdata
+                yield Result(state=State.CRIT, summary=f"Reduced from {old_value} to {value}")
+                yield Metric(line[1], float(value))
+                return
             value_store[key] = value
 
-            state = 0
+            state = State.OK
             warn, crit = params.get("levels", (None, None))
             if crit is not None and value >= crit:
-                state = 2
+                state = State.CRIT
             elif warn is not None and value >= warn:
-                state = 1
+                state = State.WARN
 
-            return state, "%d" % value, perfdata
-    return None
+            yield Result(state=state, summary=str(value))
+            yield Metric(line[1], float(value))
+            return
 
 
-check_info["siemens_plc.counter"] = LegacyCheckDefinition(
+check_plugin_siemens_plc_counter = CheckPlugin(
     name="siemens_plc_counter",
     service_name="Counter %s",
     sections=["siemens_plc"],
     discovery_function=discover_siemens_plc_counter,
     check_function=check_siemens_plc_counter,
     check_ruleset_name="siemens_plc_counter",
+    check_default_parameters={},
 )
 
 # .
@@ -261,20 +283,20 @@ check_info["siemens_plc.counter"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_info(info: StringTable) -> LegacyDiscoveryResult:
-    return [(l[0] + " " + l[2], {}) for l in info if l[1] == "text"]
+def discover_siemens_plc_info(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if line[1] == "text":
+            yield Service(item=f"{line[0]} {line[2]}")
 
 
-def check_siemens_plc_info(
-    item: str, _no_params: Mapping[str, Any], info: StringTable
-) -> LegacyResult | None:
-    for line in info:
-        if line[1] == "text" and line[0] + " " + line[2] == item:
-            return 0, line[-1]
-    return None
+def check_siemens_plc_info(item: str, section: StringTable) -> CheckResult:
+    for line in section:
+        if line[1] == "text" and f"{line[0]} {line[2]}" == item:
+            yield Result(state=State.OK, summary=line[-1])
+            return
 
 
-check_info["siemens_plc.info"] = LegacyCheckDefinition(
+check_plugin_siemens_plc_info = CheckPlugin(
     name="siemens_plc_info",
     service_name="Info %s",
     sections=["siemens_plc"],
@@ -295,32 +317,37 @@ check_info["siemens_plc.info"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_siemens_plc_cpu_state(info: StringTable) -> LegacyDiscoveryResult:
-    return [(None, {})]
+def discover_siemens_plc_cpu_state(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def check_siemens_plc_cpu_state(
-    _no_item: str | None, _no_params: Mapping[str, Any], info: StringTable
-) -> LegacyResult | None:
+def check_siemens_plc_cpu_state(section: StringTable) -> CheckResult:
     try:
-        state = info[0][0]
+        state = section[0][0]
     except IndexError:
-        return None
+        return
 
     if state == "S7CpuStatusRun":
-        return 0, "CPU is running"
+        yield Result(state=State.OK, summary="CPU is running")
+        return
     if state == "S7CpuStatusStop":
-        return 2, "CPU is stopped"
-    return 3, "CPU is in unknown state"
+        yield Result(state=State.CRIT, summary="CPU is stopped")
+        return
+    yield Result(state=State.UNKNOWN, summary="CPU is in unknown state")
 
 
 def parse_siemens_plc_cpu_state(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["siemens_plc_cpu_state"] = LegacyCheckDefinition(
+agent_section_siemens_plc_cpu_state = AgentSection(
     name="siemens_plc_cpu_state",
     parse_function=parse_siemens_plc_cpu_state,
+)
+
+
+check_plugin_siemens_plc_cpu_state = CheckPlugin(
+    name="siemens_plc_cpu_state",
     service_name="CPU state",
     discovery_function=discover_siemens_plc_cpu_state,
     check_function=check_siemens_plc_cpu_state,

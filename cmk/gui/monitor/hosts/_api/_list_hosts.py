@@ -2,12 +2,12 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Annotated, Literal, Self
+from typing import Annotated, Self
 
 from cmk.gui import sites
 from cmk.gui.logged_in import user
 from cmk.gui.monitor.hosts._impl import LiveStatusHostRepository
-from cmk.gui.monitor.hosts._models import Host
+from cmk.gui.monitor.hosts._models import Host, StateLabel
 from cmk.gui.monitor.hosts._repositories import HostRepository
 from cmk.gui.openapi.framework import QueryParam
 from cmk.gui.openapi.framework.api_config import APIVersion
@@ -27,7 +27,7 @@ from ._family import MONITOR_HOSTS_FAMILY
 @api_model
 class HostEntry:
     name: str = api_field(description="Host name", example="web-server-01")
-    state: Literal["UP", "DOWN", "UNREACHABLE"] = api_field(description="Host state", example="UP")
+    state: StateLabel = api_field(description="Host state", example="UP")
     ip: str = api_field(description="Primary IP address", example="10.0.0.1")
     alias: str = api_field(description="Host alias", example="Web Server")
     site_id: str = api_field(description="Site ID", example="local")

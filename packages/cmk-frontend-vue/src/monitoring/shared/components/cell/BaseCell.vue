@@ -13,9 +13,15 @@ import {
   resolveBreakpoint
 } from '../MonitoringTableContext'
 
+export interface CellLink {
+  href: string
+  target: '_self' | '_blank' | string | undefined
+}
+
 const props = defineProps<{
   breakpoints?: CellBreakpoints | undefined
   hideBelow?: BreakpointValue | undefined
+  linkedTo?: CellLink | undefined
 }>()
 
 const slots = useSlots()
@@ -45,7 +51,10 @@ const activeSlot = computed<string>(() => {
 
 <template>
   <td v-if="visible" class="monitoring-base-cell">
-    <slot :name="activeSlot" />
+    <a v-if="linkedTo" :href="linkedTo.href" :target="linkedTo.target">
+      <slot :name="activeSlot" />
+    </a>
+    <slot v-else :name="activeSlot" />
   </td>
 </template>
 

@@ -19,3 +19,4 @@ item:
 
 discovery:
  One service is created for each virtual disk.
+ If the configured disk name is an empty string, the disk will not be discovered (see werk 20027).

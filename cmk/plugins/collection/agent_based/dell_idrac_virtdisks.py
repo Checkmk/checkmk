@@ -31,7 +31,12 @@ from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
 
 
 def inventory_dell_idrac_virtdisks(section: StringTable) -> DiscoveryResult:
-    yield from [Service(item=line[0]) for line in section]
+    for line in section:
+        # FYI: The disk name in line[0] is allowed to be empty, but the item argument of Service is not.
+        # Instead of backporting a refactor, problematic entries are skipped.
+        if not line[0]:
+            continue
+        yield Service(item=line[0])
 
 
 def check_dell_idrac_virtdisks(item: str, section: StringTable) -> CheckResult:

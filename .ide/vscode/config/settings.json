@@ -147,8 +147,8 @@
       "less.validate": false,
       "eslint.useFlatConfig": true,
       "eslint.validate": ["javascript", "typescript", "vue"],
-      "stylelint.configFile": "",
       "stylelint.enable": true,
+      "stylelint.validate": ["css", "scss", "vue"],
       "prettier.useEditorConfig": false,
       "prettier.configPath": "bazel/tools/prettier.config.cjs",
       "vue.complete.casing.tags": "pascal",
@@ -162,7 +162,7 @@
       "stylelint.enable": false,
       "prettier.enable": false
     },
-    "unsetFolder": ["prettier.prettierPath"],
+    "unsetFolder": ["prettier.prettierPath", "stylelint.configFile"],
     "unsetWorkspace": ["prettier.prettierPath"]
   },
   "rust": {

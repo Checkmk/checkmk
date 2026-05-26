@@ -26,7 +26,7 @@ from cmk.gui.graphing._graph_specification import (
     GraphRanges,
     GraphRecipe,
 )
-from cmk.gui.graphing._legacy import CheckMetricEntry
+from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
 from cmk.gui.graphing._rrd import (
     _metric_props_by_service,
     _reverse_translate_into_all_potentially_relevant_metrics,
@@ -503,7 +503,9 @@ def test_reverse_translate_into_all_potentially_relevant_metrics(
     )
 
 
-def test_make_graph_row_applies_pnp_suffix_check_command_to_translation() -> None:
+def test_make_graph_row_applies_pnp_suffix_check_command_to_translation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Regression test for CMK-33772.
 
     When perfdata carries a PNP-style ``[check_command]`` suffix,
@@ -514,6 +516,17 @@ def test_make_graph_row_applies_pnp_suffix_check_command_to_translation() -> Non
     Previously the graph path passed the outer (un-normalized) check_command,
     so the lookup failed and the default unit was used.
     """
+    # The `check_ping` translation is normally registered by a production
+    # graphing plug-in. Stub it here so the test does not depend on any
+    # plug-in being on the runfiles path.
+    monkeypatch.setitem(
+        check_metrics,
+        "check_ping",
+        {
+            MetricName("rta"): {"scale": 0.001},
+            MetricName("pl"): {},
+        },
+    )
     row = make_graph_row(
         site=SiteId("NO_SITE"),
         host_name=HostName("my-host"),

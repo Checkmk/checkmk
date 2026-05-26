@@ -172,6 +172,12 @@ const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
 const comboboxButtonRef =
   useTemplateRef<InstanceType<typeof CmkDropdownButton>>('comboboxButtonRef')
 
+defineExpose({
+  focus: () => {
+    comboboxButtonRef.value?.focus()
+  }
+})
+
 function showSuggestions(): void {
   if (!disabled && canOpenDropdown.value) {
     suggestionsShown.value = !suggestionsShown.value

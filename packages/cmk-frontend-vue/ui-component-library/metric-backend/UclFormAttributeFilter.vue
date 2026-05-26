@@ -32,16 +32,7 @@ import type {
 
 defineProps<{ screenshotMode: boolean }>()
 
-const filters = ref<AttributeFilterModel>([
-  {
-    id: crypto.randomUUID(),
-    attributeType: 'resource',
-    key: 'service.name',
-    operator: 'eq',
-    value: 'frontend',
-    connector: null
-  }
-])
+const filters = ref<AttributeFilterModel>([])
 
 interface TypedSection extends Section {
   attributeType: Exclude<AttributeType, null>

@@ -82,7 +82,7 @@ def main() {
                 // see global-defaults.yml, needs to run in minimal container
                 use_upstream_build: true,
                 force_build: force_build,
-                relative_job_name: "${branch_base_folder}/heavy/test-xss-k8s",
+                relative_job_name: "${branch_base_folder}/heavy/test-xss-crawl-node",
                 build_params: [
                     CUSTOM_GIT_REF: effective_git_ref,
                 ],

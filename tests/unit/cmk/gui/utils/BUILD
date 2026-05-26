@@ -39,6 +39,7 @@ py_test(
         "//cmk/gui/utils:output_funnel",
         "//cmk/gui/utils:rendering",
         "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:security_log_events",
         "//cmk/gui/utils:selection_id",
         "//cmk/gui/utils:speaklater",
         "//cmk/gui/utils:transaction_manager",

@@ -25,7 +25,7 @@ echo run: %0 %1 %2 %3 %4 %5 %6 %7
 :: Increase the value in file BUILD_NUM to rebuild master
 set /p BUILD_NUM=<BUILD_NUM
 
-powershell Write-Host "Starting cached build with BUILD_NUM=%BUILD_NUM%..." -foreground Cyan
+powershell Write-Host "Starting cached build with BUILD_NUM=%BUILD_NUM%..." -Foreground Cyan
 where curl.exe > nul 2>&1 ||  powershell Write-Host "[-] curl not found"  -Foreground red && exit /B 10
 powershell Write-Host "[+] curl found" -Foreground green
 
@@ -55,7 +55,7 @@ set fname=python-%version%.%subversion%-%platform%_%git_hash%_%BUILD_NUM%.cab
 set artifact_name=%arti_dir%\python-3.cab
 echo Used artifact: %artifact_name%
 powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan
-powershell Write-Host "To be executed: curl -sSf --user %creds% -o %fname%  %url%/%fname%" -foreground white
+powershell Write-Host "To be executed: curl -sSf --user %creds% -o %fname% %url%/%fname%" -Foreground White
 curl -sSf --user %creds% -o %fname%  %url%/%fname%
 IF /I "!ERRORLEVEL!" NEQ "0"  (
     powershell Write-Host "%fname% not found on %url%, building python %version%.%subversion% ..." -Foreground cyan
@@ -85,7 +85,7 @@ powershell Write-Host "Build successful" -Foreground green
 
 :: Checking existance on the Nexus Cache. No need to upload, if it already exists.
 echo Checking if %artifact_name% exists on cache
-powershell Write-Host "To be executed: curl -sSf --head --fail --user %creds% %url%"/%fname% -foreground white
+powershell Write-Host "To be executed: curl -sSf --head --fail --user %creds% %url%/%fname%" -Foreground White
 curl -sSf --head --fail --user %creds% %url%/%fname%
 IF /I "!ERRORLEVEL!" EQU "0" (
   powershell Write-Host "[+] File already on remote host - not uploading" -Foreground green
@@ -96,7 +96,7 @@ IF /I "!ERRORLEVEL!" EQU "0" (
 echo Uploading to cache %artifact_name% ... %fname% ...
 copy %artifact_name% %fname%
 
-powershell Write-Host "To be executed: curl -sSf --user creds --upload-file %fname% %url%"/%fname% -foreground white
+powershell Write-Host "To be executed: curl -sSf --user creds --upload-file %fname% %url%/%fname%" -Foreground White
 curl -sSf --user %creds% --upload-file %fname% %url%/%fname%
 IF /I "!ERRORLEVEL!" NEQ "0" (
   del %fname% > nul

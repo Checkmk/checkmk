@@ -48,7 +48,10 @@ void main() {
                                 ),
                             ]) {
                                 sh("""
-                                    checkout_dir=${checkout_dir} REMOTE_USER=jenkins packages/mk-oracle/ssh-run-ci ${distro} -bu
+                                    checkout_dir=${checkout_dir} \
+                                    REMOTE_USER=jenkins \
+                                    CMK_VERSION=${cmk_version} \
+                                    packages/mk-oracle/ssh-run-ci ${distro} -bu
                                 """)
                             }
                         }

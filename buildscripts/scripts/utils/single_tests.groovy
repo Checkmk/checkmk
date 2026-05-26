@@ -115,8 +115,8 @@ void withAugmentedTimeout(Map args = [:], Closure body) {
         if (exc.causes.any { it.toString().contains("Timeout") }) {
             println("Timeout detected");
             raise("${defaultDict.message}. Timeout is ${defaultDict.timeout}min");
-        }
     }
+}
 }
 
 void run_make_target(Map args) {

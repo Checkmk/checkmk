@@ -165,7 +165,7 @@ void main() {
                             ];
                             break;
                         case "Package cmk-agent-receiver":  // Tries to start docker containers, CMK-29585
-                            relative_job_name = "${branch_base_folder}/cv/test-gerrit-single-node";
+                            relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
                             break;
                         default:
                             break;

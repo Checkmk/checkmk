@@ -5,6 +5,7 @@
 
 import abc
 import enum
+import logging
 import os
 import sys
 from contextlib import nullcontext, redirect_stdout, suppress
@@ -15,7 +16,6 @@ from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 
 from cmk.utils import log, paths
-from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
 from cmk.utils.timeout import Timeout
 
@@ -26,6 +26,7 @@ from cmk.base import config, profiling
 from cmk import trace
 
 tracer = trace.get_tracer()
+_logger = logging.getLogger("cmk.base.automations")
 
 
 class MKAutomationError(MKGeneralException):
@@ -127,7 +128,7 @@ class Automations:
                 result = automation.execute(args, called_from_automation_helper)
 
         except (MKGeneralException, MKTimeout) as e:
-            console.error(f"{e}", file=sys.stderr)
+            _logger.error(str(e))
             if cmk.ccc.debug.enabled():
                 raise
             return AutomationError.KNOWN_ERROR
@@ -135,7 +136,7 @@ class Automations:
         except Exception as e:
             if cmk.ccc.debug.enabled():
                 raise
-            console.error(f"{e}", file=sys.stderr)
+            _logger.error(str(e))
             return AutomationError.UNKNOWN_ERROR
 
         return result

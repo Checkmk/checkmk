@@ -4,15 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-import sys
+import logging
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKTimeout, OnError
 
-from cmk.utils import tty
 from cmk.utils.hostaddress import HostName
-from cmk.utils.log import console
 
 from cmk.checkengine.checking import CheckPluginName, ServiceID
 from cmk.checkengine.fetcher import HostKey, SourceType
@@ -22,6 +20,8 @@ from cmk.checkengine.sectionparserutils import get_section_kwargs
 from ._autochecks import AutocheckEntry
 from ._discovery import DiscoveryPlugin
 from ._utils import QualifiedDiscovery
+
+_logger = logging.getLogger("cmk.base.discovery")
 
 __all__ = ["analyse_services", "discover_services", "find_plugins"]
 
@@ -149,7 +149,7 @@ def discover_services(
             if on_error is OnError.RAISE:
                 raise
             if on_error is OnError.WARN:
-                console.error(f"Discovery of '{check_plugin_name}' failed: {e}", file=sys.stderr)
+                _logger.warning("Discovery of '%s' failed: %s", check_plugin_name, e)
 
     # TODO: Building a dict to discard its keys isn't efficient.
     # (this currently deduplicates items. Could be done on a per-plugin basis.)
@@ -167,7 +167,7 @@ def _discover_plugins_services(
     try:
         plugin = plugins[check_plugin_name]
     except KeyError:
-        console.warning(tty.format_warning(f"  Missing check plug-in: '{check_plugin_name}'\n"))
+        _logger.warning("Missing check plug-in: '%s'", check_plugin_name)
         return
 
     try:
@@ -176,7 +176,7 @@ def _discover_plugins_services(
         if cmk.ccc.debug.enabled() or on_error is OnError.RAISE:
             raise
         if on_error is OnError.WARN:
-            console.warning(tty.format_warning(f"  Exception while parsing agent section: {exc}\n"))
+            _logger.warning("Exception while parsing agent section: %s", exc)
         return
 
     if not kwargs:
@@ -192,10 +192,8 @@ def _discover_plugins_services(
         if on_error is OnError.RAISE:
             raise
         if on_error is OnError.WARN:
-            console.warning(
-                tty.format_warning(
-                    f"  Exception in discovery function of check plug-in '{check_plugin_name}': {e}"
-                )
+            _logger.warning(
+                "Exception in discovery function of check plug-in '%s': %s", check_plugin_name, e
             )
 
 

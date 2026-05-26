@@ -65,6 +65,7 @@ configure_make(
         "libssl.a",
         "libcrypto.a",
     ],
+    set_file_prefix_map = True,
     targets = [
         "build_programs",
         "install_sw",

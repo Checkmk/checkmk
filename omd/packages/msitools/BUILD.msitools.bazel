@@ -53,6 +53,7 @@ configure_make(
         patchelf --set-rpath "\\$$ORIGIN/../lib" $${INSTALLDIR}/bin/msiinfo $${INSTALLDIR}/bin/msibuild
         install -m 755 $${BUILD_TMPDIR}/libmsi/.libs/libmsi.so* $${INSTALLDIR}/lib
     """,
+    set_file_prefix_map = True,
     targets = [
         "-C libmsi",
         "msibuild",

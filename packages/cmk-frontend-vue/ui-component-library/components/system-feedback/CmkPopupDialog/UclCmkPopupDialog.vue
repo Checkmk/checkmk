@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { allIconOptions } from '@ucl/_ucl/lib/icon'
 
 import { type SimpleIcons } from '@/components/CmkIcon'
 
@@ -41,12 +42,9 @@ export const panelConfig = {
   icon: {
     type: 'list' as const,
     title: 'Icon',
-    options: [
-      { title: 'None', name: 'none' },
-      { title: 'Info Circle', name: 'info-circle' },
-      { title: 'Alert Critical', name: 'alert-crit' },
-      { title: 'Checkmark', name: 'check' }
-    ] satisfies Options<SimpleIcons | 'none'>[],
+    options: [{ title: 'None', name: 'none' }, ...allIconOptions] satisfies Options<
+      SimpleIcons | 'none'
+    >[],
     initialState: 'alert-crit' as SimpleIcons | 'none'
   },
   okButtonText: { type: 'string' as const, title: 'OK Button Text', initialState: 'Close' },

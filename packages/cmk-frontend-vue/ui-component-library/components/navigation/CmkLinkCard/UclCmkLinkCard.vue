@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { allIconOptions } from '@ucl/_ucl/lib/icon'
 
 import { type SimpleIcons } from '@/components/CmkIcon'
 import {
@@ -58,12 +59,7 @@ export const panelConfig = {
   iconName: {
     type: 'list' as const,
     title: 'Icon',
-    options: [
-      { title: 'None', name: 'none' },
-      { title: 'Checkmk Logo', name: 'checkmk-logo-min' },
-      { title: 'Help', name: 'main-help' },
-      { title: 'Info', name: 'about-checkmk' }
-    ],
+    options: allIconOptions,
     initialState: 'checkmk-logo-min'
   },
   openInNewTab: { type: 'boolean' as const, title: 'Open in New Tab', initialState: true },

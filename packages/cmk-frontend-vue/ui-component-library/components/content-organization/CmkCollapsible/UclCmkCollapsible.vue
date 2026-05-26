@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { allIconOptions } from '@ucl/_ucl/lib/icon'
 import type { DynamicIcon } from 'cmk-shared-typing/typescript/icon'
 
 import codeExample from './UclCmkCollapsibleCodeExample.vue?raw'
@@ -32,11 +33,7 @@ export const panelConfig = {
   icon: {
     type: 'list' as const,
     title: 'Icon',
-    options: [
-      { title: 'None', name: 'none' },
-      { title: 'Alert Critical', name: 'alert-crit' },
-      { title: 'Checkmark', name: 'check' }
-    ],
+    options: allIconOptions,
     initialState: 'none'
   },
   disabled: { type: 'boolean' as const, title: 'Disabled', initialState: false },

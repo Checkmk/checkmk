@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { allIconOptions } from '@ucl/_ucl/lib/icon'
 
 import { type SimpleIcons } from '@/components/CmkIcon'
 
@@ -28,10 +29,11 @@ export const a11yData = [
 
 export const panelConfig = {
   icon: {
-    type: 'string' as const,
+    type: 'list' as const,
     title: 'Icon',
     initialState: 'plus',
-    help: 'Name of the icon to display. Defaults to "plus" if not set.'
+    help: 'Name of the icon to display. Defaults to "plus" if not set.',
+    options: allIconOptions
   },
   disabled: {
     type: 'boolean' as const,

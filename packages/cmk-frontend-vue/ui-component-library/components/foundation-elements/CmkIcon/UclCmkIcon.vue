@@ -5,13 +5,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { allIconOptions } from '@ucl/_ucl/lib/icon'
 
 import type { CmkIconVariants, IconSizeNames, SimpleIcons } from '@/components/CmkIcon'
 
 import codeExample from './UclCmkIconCodeExample.vue?raw'
 
 export const panelConfig = {
-  name: { type: 'string' as const, title: 'Icon Name', initialState: 'main-help' },
+  name: {
+    type: 'list' as const,
+    title: 'Icon Name',
+    initialState: 'main-help',
+    options: allIconOptions
+  },
   variant: {
     type: 'list' as const,
     title: 'Variant',

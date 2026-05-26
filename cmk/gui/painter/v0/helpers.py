@@ -12,6 +12,7 @@ from cmk.ccc.site import SiteId
 from cmk.gui import http
 from cmk.gui.config import active_config
 from cmk.gui.display_options import DisplayOptions
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.tag_rendering import HTMLTagAttributeValue
 from cmk.gui.http import Request
@@ -24,7 +25,7 @@ from cmk.gui.utils.urls import makeuri_contextless, urlencode
 from cmk.gui.view_utils import CellSpec, get_host_list_links
 from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
 
 def transform_action_url(url_spec: tuple[str, str] | str) -> tuple[str, str | None]:
@@ -105,6 +106,12 @@ def get_tag_groups(row: Row, what: str) -> Mapping[TagGroupID, TagID]:
     groups = row.get("%s_tags" % what, {}) or {}
     assert isinstance(groups, dict)
     return groups
+
+
+@request_memoize()
+def tag_choices_for_group(tag_group: TagGroup) -> dict[TagID | None, str]:
+    """Tag choices (id -> title) for a tag group, cached per request."""
+    return dict(tag_group.get_tag_choices())
 
 
 def get_label_sources(row: Row, what: str) -> LabelSources:

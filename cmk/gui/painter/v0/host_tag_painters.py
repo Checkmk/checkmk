@@ -10,10 +10,10 @@ from collections.abc import Sequence
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0 import Painter
-from cmk.gui.painter.v0.helpers import get_tag_groups
+from cmk.gui.painter.v0.helpers import get_tag_groups, tag_choices_for_group
 from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
-from cmk.utils.tags import TagGroup, TagGroupID
+from cmk.utils.tags import TagGroup
 
 
 class HashableTagGroups:
@@ -50,18 +50,17 @@ def host_tag_config_based_painters(
                     "short": tag_group.title,
                     "columns": ["host_tags"],
                 },
-                "_tag_group_id": tag_group.id,
                 "ident": property(lambda self: self._ident),
                 "title": lambda self, cell: self._spec["title"],
                 "short_title": lambda self, cell: self._spec["short"],
                 "columns": property(lambda self: self._spec["columns"]),
                 "render": lambda self, row, cell, user, tag_group=tag_group: _paint_host_tag(
-                    row, self._tag_group_id, tag_group=tag_group
+                    row, tag_group=tag_group
                 ),
                 # Use title of the tag value for grouping, not the complete
                 # dictionary of custom variables!
                 "group_by": lambda self, row, _cell, tag_group=tag_group: _paint_host_tag(
-                    row, self._tag_group_id, tag_group=tag_group
+                    row, tag_group=tag_group
                 )[1],
             },
         )
@@ -69,12 +68,6 @@ def host_tag_config_based_painters(
     }
 
 
-def _paint_host_tag(row: Row, tgid: TagGroupID, *, tag_group: TagGroup) -> CellSpec:
-    return "", _get_tag_group_value(row, "host", tgid, tag_group=tag_group)
-
-
-def _get_tag_group_value(
-    row: Row, what: str, tag_group_id: TagGroupID, *, tag_group: TagGroup
-) -> str:
-    tag_id = get_tag_groups(row, what).get(tag_group_id)
-    return dict(tag_group.get_tag_choices()).get(tag_id, _("N/A"))
+def _paint_host_tag(row: Row, *, tag_group: TagGroup) -> CellSpec:
+    tag_id = get_tag_groups(row, "host").get(tag_group.id)
+    return "", tag_choices_for_group(tag_group).get(tag_id, _("N/A"))

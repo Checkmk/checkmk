@@ -4798,10 +4798,6 @@ msgid "Address name"
 msgstr "Adresa Numele"
 
 #, fuzzy
-msgid "Address pool name"
-msgstr "Adresă Nume bazin"
-
-#, fuzzy
 msgid "Address type"
 msgstr "Tipul de adresă"
 
@@ -5932,6 +5928,10 @@ msgstr "Toate timpii de scădere a gazdelor și a serviciilor (inclusiv id-uri)"
 
 msgid "All hosts"
 msgstr "Toate gazdele"
+
+#, fuzzy
+msgid "All hosts (experimental)"
+msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid ""
@@ -7117,14 +7117,6 @@ msgstr "Cheie de aplicație"
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Echilibrarea încărcării aplicațiilor și a rețelei (ELBv2)"
 
-#, fuzzy
-msgid "Application gateway"
-msgstr "Poarta de aplicații"
-
-#, fuzzy
-msgid "Application gateways"
-msgstr "Porți de aplicații"
-
 msgid "Application load balancer certificates"
 msgstr "Certificatele de echilibrare a încărcăturii aplicației"
 
@@ -7456,6 +7448,10 @@ msgstr "Agent Checkmk"
 msgid "Ask for an optional comment"
 msgstr "Cereți un comentariu opțional"
 
+#, fuzzy
+msgid "Assertion Consumer Service URL"
+msgstr "Punct final al serviciului de consum al afirmațiilor"
+
 msgid "Assertion Consumer Service endpoint"
 msgstr "Punct final al serviciului de consum al afirmațiilor"
 
@@ -7503,10 +7499,6 @@ msgstr "Alocarea la gazda care face interogarea"
 
 msgid "Assign via regular expressions"
 msgstr "Atribuirea prin expresii regulate"
-
-#, fuzzy
-msgid "Assigned to host"
-msgstr "Atribuiți grupului"
 
 #, fuzzy
 msgid "Assignment mode"
@@ -7769,6 +7761,10 @@ msgstr "Autentificare (specifică instanței)"
 
 msgid "Authentication Expiration"
 msgstr "Expirarea autentificării"
+
+#, fuzzy
+msgid "Authentication connections"
+msgstr "Metoda de autentificare"
 
 #, fuzzy
 msgid "Authentication context class reference"
@@ -9419,10 +9415,6 @@ msgstr "Grupuri Backend"
 msgid "Back-end port"
 msgstr "Port backend"
 
-#, fuzzy
-msgid "Back-ends"
-msgstr "Backends"
-
 msgid "Background job acknowledged"
 msgstr "Recunoașterea muncii de fond"
 
@@ -9618,7 +9610,7 @@ msgid "Base URL for Docker API engine"
 msgstr "URL de bază pentru motorul API docker"
 
 #, fuzzy
-msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
+msgid "Base directory for plug-ins and local"
 msgstr "Director de bază pentru <tt>plugins</tt> și <tt>local</tt>."
 
 msgid "Base directory for variable data (caches, state files)"
@@ -9907,10 +9899,6 @@ msgstr ""
 
 msgid "Bottom"
 msgstr "Partea de jos"
-
-#, fuzzy
-msgid "Bottom level suite"
-msgstr "doua nivele"
 
 msgid "Bounce buffers"
 msgstr "Tampoane de ricoșeu"
@@ -10543,30 +10531,6 @@ msgstr ""
 "vCenter. Utilizatorii care rulează o gazdă ESX pe cont propriu sau care nu "
 "includ vCenter-ul lor în monitorizare pot alege să afișeze rezumatul "
 "instantaneelor pe gazda ESX însăși."
-
-#, fuzzy
-msgid ""
-"By default the users are synchronized automatically in the interval "
-"configured in the connection. For example the LDAP connector synchronizes "
-"the users every five minutes by default. The interval can be changed for "
-"each connection individually in the <a href=\"wato.py?"
-"mode=ldap_config\">connection settings</a>. Please note that the "
-"synchronization is only performed on the central site in distributed setups "
-"by default.<br>The remote sites don't perform automatic user "
-"synchronizations with the configured connections. But you can configure each "
-"site to either synchronize the users with all configured connections or a "
-"specific list of connections."
-msgstr ""
-"În mod implicit, utilizatorii sunt sincronizați automat în intervalul "
-"configurat în conexiune. De exemplu, conectorul LDAP sincronizează "
-"utilizatorii la fiecare cinci minute în mod implicit. Intervalul poate fi "
-"modificat pentru fiecare conexiune în parte în <a href=\"wato.py?"
-"mode=ldap_config\">connection settings</a>. Vă rugăm să rețineți că "
-"sincronizarea se efectuează în mod implicit numai pe site-ul principal în "
-"configurațiile distribuite.<br>Site-urile la distanță nu'efectuează "
-"sincronizări automate ale utilizatorilor cu conexiunile configurate. Dar "
-"puteți configura fiecare site pentru a sincroniza utilizatorii fie cu toate "
-"conexiunile configurate, fie cu o listă specifică de conexiuni."
 
 #, python-brace-format
 msgid ""
@@ -13138,7 +13102,8 @@ msgstr "Serverele Checkmk"
 msgid "Checkmk servers"
 msgstr "Serverele Checkmk"
 
-msgid "Checkmk service provider metadata (generated automatically)"
+#, fuzzy
+msgid "Checkmk service provider metadata"
 msgstr "Metadatele furnizorului de servicii Checkmk (generate automat)"
 
 #, fuzzy
@@ -14004,9 +13969,6 @@ msgstr "Parametrii impliciți"
 msgid "Cleanup strategy"
 msgstr "Mesaje de curățare"
 
-msgid "Clear & Delete"
-msgstr "Ștergeți & Ștergeți"
-
 msgid "Clear log"
 msgstr "Ștergeți jurnalul"
 
@@ -14019,6 +13981,11 @@ msgstr "Ștergeți jurnalele prin ștergerea tuturor mesajelor stocate"
 #, fuzzy
 msgid "Cleared"
 msgstr "Starea \"Liber"
+
+msgid ""
+"Clearing the log acknowledges and removes the stored messages. Log files on "
+"the host stay unchanged."
+msgstr ""
 
 msgid ""
 "Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
@@ -17510,6 +17477,10 @@ msgstr "MBeani personalizați"
 msgid "Custom MIBs"
 msgstr "MIB-uri personalizate"
 
+#, fuzzy
+msgid "Custom Metrics cache age"
+msgstr "Numele serviciului personalizat"
+
 msgid "Custom SQL"
 msgstr "SQL personalizat"
 
@@ -19099,6 +19070,10 @@ msgstr "Ștergeți comentariile"
 msgid "Delete configuration %s"
 msgstr "Configurație implicită"
 
+#, fuzzy, python-format
+msgid "Delete configuration '%s'"
+msgstr "Configurație implicită"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "Ștergeți conexiunea #%d"
@@ -19268,10 +19243,6 @@ msgid "Delete this MIB"
 msgstr "Ștergeți această MIB"
 
 #, fuzzy
-msgid "Delete this Prometheus configuration"
-msgstr "Ștergeți această conexiune"
-
-#, fuzzy
 msgid "Delete this Relay"
 msgstr "Ștergeți această cheie"
 
@@ -19406,6 +19377,14 @@ msgstr "Regulă BI ștearsă cu ID-ul %s"
 msgid "Deleted MIB %s"
 msgstr "MIB șters %s"
 
+#, fuzzy, python-format
+msgid "Deleted OTel QuickSetup configuration bundle: '%s'"
+msgstr "Configurație implicită"
+
+#, fuzzy, python-format
+msgid "Deleted Prometheus QuickSetup configuration bundle: '%s'"
+msgstr "Configurația stilului selectat"
+
 #, python-brace-format
 msgid "Deleted Quick Setup {bundle_id}"
 msgstr ""
@@ -19480,9 +19459,6 @@ msgstr "Șterge"
 #, fuzzy, python-format
 msgid "Deleting %s..."
 msgstr "Fetching '%s'..."
-
-msgid "Deleting will be available soon"
-msgstr ""
 
 msgid "Delimiter for file grouping"
 msgstr "Delimitator pentru gruparea fișierelor"
@@ -20262,7 +20238,7 @@ msgid "Disable automatic host removal"
 msgstr "Dezactivați eliminarea automată a gazdei"
 
 #, fuzzy
-msgid "Disable automatic user synchronization (use central site users)"
+msgid "Disable automatic user attribute synchronization"
 msgstr ""
 "Dezactivați sincronizarea automată a utilizatorilor (utilizați utilizatorii "
 "site-ului principal)"
@@ -22672,6 +22648,14 @@ msgid "Edited %d hosts"
 msgstr "Editat %d gazde"
 
 #, fuzzy, python-format
+msgid "Edited OTel QuickSetup configuration bundle: '%s'"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy, python-format
+msgid "Edited Prometheus QuickSetup configuration bundle: '%s'"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy, python-format
 msgid "Edited Relay '%s'"
 msgstr "Editați regula '%s'"
 
@@ -22690,18 +22674,6 @@ msgstr "Regulă editată în setul de reguli \"%s\" în folderul \"%s\""
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr "A fost editat %s \"%s"
-
-#, fuzzy, python-format
-msgid "Edited the OpenTelemetry collector configuration: '%s'"
-msgstr "Configurația stilului selectat"
-
-#, fuzzy, python-format
-msgid "Edited the Prometheus configuration '%s'"
-msgstr "Configurația stilului selectat"
-
-#, fuzzy, python-format
-msgid "Edited the connection '%s'"
-msgstr "A fost adăugată conexiunea '%s'"
 
 #, python-format
 msgid "Edited user profile for user %s"
@@ -23479,6 +23451,12 @@ msgstr "Punct final"
 msgid "Endpoint URL (optional)"
 msgstr "Comentariu (opțional)"
 
+msgid ""
+"Endpoint where Checkmk receives the SAML response with the user's assertion "
+"from the identity provider. This value is auto-generated from the Checkmk "
+"server URL (<tt>{Checkmk server URL}/saml_acs.py?acs</tt>)."
+msgstr ""
+
 msgid "Endpoints to monitor"
 msgstr "Puncte finale de monitorizat"
 
@@ -23799,10 +23777,6 @@ msgstr "Intrări pe rând"
 
 msgid "Entry"
 msgstr "Intrare"
-
-#, fuzzy
-msgid "Env creation"
-msgstr "Creație"
 
 #, fuzzy
 msgid "Environment Metrics"
@@ -31675,7 +31649,12 @@ msgstr ""
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr "Câte zile din trecut Checkmk trebuie să evalueze datele de măsurare"
 
-msgid "How old (in minutes) the cache file is allowed to be."
+msgid ""
+"How old (in seconds) the cache file for builtin sections is allowed to be."
+msgstr ""
+
+msgid ""
+"How old (in seconds) the cache file for custom metrics is allowed to be."
 msgstr ""
 
 msgid ""
@@ -32476,11 +32455,6 @@ msgstr ""
 "selectate.</i> atunci nu toate gazdele selectate au aceeași setare pentru "
 "acest atribut. Dacă păstrați această selecție, toate gazdele își vor păstra "
 "setările individuale."
-
-msgid ""
-"If a service's current state differs from its requested state, the state of "
-"the Service will be set to this value."
-msgstr ""
 
 msgid ""
 "If a source host does not send data for its piggybacked hosts at all or for "
@@ -35191,6 +35165,10 @@ msgstr ""
 msgid "Inherited from "
 msgstr "Moștenit din "
 
+#, fuzzy
+msgid "Inherited from central site"
+msgstr "Copierea regulilor de pe site-ul central"
+
 msgid "Init duration"
 msgstr "Durata de init"
 
@@ -35369,7 +35347,7 @@ msgid "Installation directories"
 msgstr "Checkmk Audit de instalare a agentului Checkmk"
 
 #, fuzzy
-msgid "Installation paths for agent files (Linux, Unix) (deprecated)"
+msgid "Installation paths for agent files (Linux, Unix)"
 msgstr "Căi de instalare pentru fișierele agent (Linux, UNIX)"
 
 msgid "Installed RAM"
@@ -36906,6 +36884,12 @@ msgid "Keep comment after acknowledgment expires (persistent comment)"
 msgstr ""
 "Păstrați comentariul după expirarea confirmării (comentariu persistent)"
 
+msgid "Keep containers exited with non-zero exit code"
+msgstr ""
+
+msgid "Keep containers exited with non-zero exit code in monitoring"
+msgstr ""
+
 msgid "Keep existing connections"
 msgstr "Păstrați conexiunile existente"
 
@@ -37171,6 +37155,10 @@ msgstr "Atributul LDAP de sincronizat"
 
 msgid "LDAP base, e.g. ou=Development, o=Checkmk GmbH, c=de"
 msgstr "Baza LDAP, de exemplu ou=Development, o=Checkmk GmbH, c=de"
+
+#, fuzzy
+msgid "LDAP connection"
+msgstr "Conexiuni LDAP"
 
 #, python-format
 msgid ""
@@ -37586,6 +37574,9 @@ msgstr ""
 
 msgid "Learning Checkmk"
 msgstr "Învățare Checkmk"
+
+msgid "Leave empty to auto-generate from Checkmk server URL"
+msgstr ""
 
 msgid "Left"
 msgstr "Stânga"
@@ -38857,12 +38848,6 @@ msgstr "Ascultați mesajele primite prin"
 
 msgid "Listen for spans on this local IP address"
 msgstr ""
-
-msgid "Listener"
-msgstr "Ascultător"
-
-msgid "Listeners"
-msgstr "Ascultători"
 
 msgid "Listeners per load balancer"
 msgstr "Ascultători pe load balancer"
@@ -41426,10 +41411,6 @@ msgid "Maximum number of access points"
 msgstr "Numărul maxim de puncte de acces"
 
 #, fuzzy
-msgid "Maximum number of attempts"
-msgstr "Numărul maxim de încercări de livrare"
-
-#, fuzzy
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
 "notification plug-in may report that a retry is pointless in which case no "
@@ -42096,6 +42077,10 @@ msgid "Metadata"
 msgstr "Metadate"
 
 msgid "Metadata endpoint"
+msgstr "Punct final de metadate"
+
+#, fuzzy
+msgid "Metadata endpoint URL"
 msgstr "Punct final de metadate"
 
 msgid ""
@@ -44715,12 +44700,20 @@ msgid "No Levels"
 msgstr "Nu există niveluri"
 
 #, fuzzy
+msgid "No OTel configuration found for this bundle."
+msgstr "Nu există opțiuni suplimentare de configurare pentru această metodă."
+
+#, fuzzy
 msgid "No OpenTelemetry configuration yet"
 msgstr "Configurație gazdă"
 
 #, fuzzy
 msgid "No PNP templates using the deprecated API"
 msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
+msgid "No Prometheus configuration found for this bundle."
+msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid "No Prometheus configuration yet"
@@ -47826,6 +47819,14 @@ msgstr "Configurația stilului selectat"
 msgid "OpenTelemetry Quick Setup"
 msgstr "Configurația stilului selectat"
 
+#, fuzzy
+msgid ""
+"OpenTelemetry configuration bundles are managed via the OpenTelemetry or "
+"Prometheus Quick Setup pages."
+msgstr ""
+"Precizați unul, mai multe sau toate site-urile pe care trebuie să "
+"funcționeze această conexiune."
+
 msgid "OpenVMS processes"
 msgstr "Procesele OpenVMS"
 
@@ -50859,6 +50860,13 @@ msgstr "Notificări periodice în timpul problemelor de serviciu"
 msgid "Periodic service discovery"
 msgstr "Descoperirea periodică a serviciilor"
 
+msgid ""
+"Periodic user attribute synchronization keeps user attributes (alias, email, "
+"roles, contact groups) up to date on this site. This is primarily relevant "
+"for LDAP connections. SAML connections update attributes only when a user "
+"logs in, so they do not need to be listed here."
+msgstr ""
+
 #, fuzzy
 msgid "Permanent generation memory"
 msgstr "Memorie de generație permanentă"
@@ -51173,12 +51181,6 @@ msgstr "Comunicarea în text simplu"
 msgid "Plain text communication is enabled for %s"
 msgstr "Comunicarea în text simplu este activată pentru %s."
 
-msgid "Plan ID"
-msgstr ""
-
-msgid "Plans"
-msgstr ""
-
 #, fuzzy
 msgid "Platform firmware level"
 msgstr "Platforma Nivelul firmware-ului"
@@ -51425,6 +51427,12 @@ msgid "Please enter a valid Webhook URL"
 msgstr "Vă rugăm să introduceți un număr valid"
 
 msgid "Please enter a valid absolut pathname with / as a path separator."
+msgstr ""
+"Vă rugăm să introduceți un nume de cale absolut valid cu / ca separator de "
+"cale."
+
+#, fuzzy
+msgid "Please enter a valid absolute pathname with / as a path separator."
 msgstr ""
 "Vă rugăm să introduceți un nume de cale absolut valid cu / ca separator de "
 "cale."
@@ -53874,6 +53882,11 @@ msgstr "Mod de numai citire"
 msgid "Read-only mode for configuration"
 msgstr "Configurație la distanță"
 
+msgid ""
+"Read-only summary of the connections inherited from the central site. "
+"Refreshed each time this dialog is opened."
+msgstr ""
+
 msgid "Reading connections"
 msgstr "Conexiuni de lectură"
 
@@ -56193,9 +56206,6 @@ msgstr "Unități Rittal CMC-III: Curent"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Unități Rittal CMC-III: Temperaturi"
 
-msgid "Robot"
-msgstr ""
-
 msgid "Role"
 msgstr "Rol"
 
@@ -56742,6 +56752,10 @@ msgstr "Certificat de router SAP"
 #, fuzzy
 msgid "SAML built-in signing certificate"
 msgstr "Certificat de router SAP"
+
+#, fuzzy
+msgid "SAML connection"
+msgstr "Conexiuni SAML"
 
 msgid "SAML connections"
 msgstr "Conexiuni SAML"
@@ -57513,16 +57527,8 @@ msgid "Scheduler"
 msgstr "Programator"
 
 #, fuzzy
-msgid "Scheduler interval"
-msgstr "Intervalul de cache"
-
-#, fuzzy
 msgid "Scheduler job name"
 msgstr "Numele lucrării Scheduler"
-
-#, fuzzy
-msgid "Scheduler plan configs"
-msgstr "Programați o perioadă de pauză?"
 
 #, python-format
 msgid "Scheduling report in background failed: %s"
@@ -58175,6 +58181,16 @@ msgid ""
 "LDAP) negotiate encryption after connecting in plain text using the "
 "respective protocol. Proxy connections allow to connect via a proxy server, "
 "only global and manual proxy configurations are supported."
+msgstr ""
+
+msgid ""
+"Select the connections that are available for login on this site. Choose "
+"<i>Use the same connections as the central site</i> to inherit the central "
+"site's selection (changes made on the central site take effect after the "
+"next configuration sync), or <i>Use the following connections</i> to pick "
+"specific LDAP and SAML connections. Each SAML entry may optionally override "
+"the SP entity ID, which is useful when multiple sites share the same SAML "
+"connection but need to be registered separately at the IdP."
 msgstr ""
 
 #, fuzzy
@@ -59117,7 +59133,7 @@ msgid "Service state age"
 msgstr "Vârsta statului de serviciu"
 
 #, fuzzy
-msgid "Service state for Differing Service States"
+msgid "Service state for differing VM/LXC states"
 msgstr "Procentul de stare de serviciu"
 
 #, fuzzy
@@ -63679,6 +63695,9 @@ msgstr "Nivelurile epocii de stare și media"
 msgid "Status flapping"
 msgstr "Stare de fluturare"
 
+msgid "Status host"
+msgstr "Stare gazdă"
+
 msgid "Status notification period"
 msgstr "Perioada de notificare a statutului"
 
@@ -64186,10 +64205,6 @@ msgstr "Îmbunătățiri de performanță"
 msgid "Suggested tutorial videos"
 msgstr "Videoclipuri tutorial sugerate"
 
-#, fuzzy
-msgid "Suite name"
-msgstr "Numele sitului"
-
 msgid "Sum"
 msgstr "Suma"
 
@@ -64403,6 +64418,14 @@ msgstr "Cozi Symantec Brightmail"
 msgid "Symmetric encryption (Linux, Solaris, Windows)"
 msgstr "Criptare simetrică (Linux, Windows)"
 
+#, fuzzy
+msgid "Sync attributes for all LDAP connections"
+msgstr "Sincronizare cu următoarele conexiuni LDAP"
+
+#, fuzzy
+msgid "Sync attributes only for the following connections"
+msgstr "Sincronizare cu următoarele conexiuni LDAP"
+
 msgid "Sync disabled"
 msgstr "Sincronizare dezactivată"
 
@@ -64420,15 +64443,6 @@ msgstr "Latență de sincronizare"
 
 msgid "Sync losses"
 msgstr "Pierderi de sincronizare"
-
-msgid "Sync users with all connections"
-msgstr "Sincronizarea utilizatorilor cu toate conexiunile"
-
-msgid "Sync with LDAP connections"
-msgstr "Sincronizare cu conexiuni LDAP"
-
-msgid "Sync with the following LDAP connections"
-msgstr "Sincronizare cu următoarele conexiuni LDAP"
 
 #, fuzzy
 msgid "Sync-plug-in: Roles"
@@ -65413,10 +65427,6 @@ msgstr "Testare"
 msgid "Testing notifications"
 msgstr "Notificări de testare"
 
-#, fuzzy
-msgid "Tests"
-msgstr "Test"
-
 msgid "Text"
 msgstr "Text"
 
@@ -66185,10 +66195,6 @@ msgstr ""
 "cardului PCI Express IOutilizarea unităților rack ca componente ale unui "
 "server rack ca dispozitiv) în ultimul interval de verificare. Intervalul "
 "posibil este de la 0% la 100%."
-
-#, fuzzy
-msgid "The Prometheus configuration has been saved."
-msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid ""
@@ -69930,6 +69936,11 @@ msgstr ""
 "pentru zilele 1-28 ale unei luni."
 
 msgid ""
+"The state of the Proxmox VE HA Manager Watcher service will be set to this "
+"value if the current state of a VM/LXC differs from its requested state"
+msgstr ""
+
+msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
 "is based on the assumption that you want to be informed when there is new "
 "information. However, there are also use cases where new incoming messages "
@@ -71239,10 +71250,6 @@ msgstr ""
 "foarte multe nuclee. În prezent, acest lucru este suportat numai pe agenții "
 "Linux și Windows, precum și pe dispozitivele monitorizate prin intermediul "
 "mib host-resource mib"
-
-#, python-format
-msgid "This affects %s"
-msgstr "Acest lucru afectează %s."
 
 msgid "This affects all rule packs."
 msgstr "Acest lucru afectează toate pachetele de reguli."
@@ -72646,8 +72653,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Această opțiune face ca checkmk să utilizeze fie descrierea interfeței, fie "
 "aliasul sau numărul portului ca element."
@@ -75236,6 +75243,10 @@ msgid "This variable is configured in <a href=\"%s\">Global settings</a>."
 msgstr ""
 "Această variabilă este configurată în <a href=\"%s\">setări globale</a>."
 
+#, fuzzy
+msgid "This view"
+msgstr "Această vizualizare ca PDF"
+
 msgid "This view as PDF"
 msgstr "Această vizualizare ca PDF"
 
@@ -75535,6 +75546,13 @@ msgstr "Acest lucru va suprima toate notificările"
 
 msgid "This year"
 msgstr "În acest an"
+
+#, python-brace-format
+msgid ""
+"This {type_name} is part of the {config_name} {product} configuration.<br>To "
+"access further parts of the {product} configuration, go to the related "
+"{product} configuration."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -76069,6 +76087,11 @@ msgstr ""
 "Timpul de așteptare pentru deschiderea unei conexiuni la o instanță înainte "
 "de a continua cu următoarea instanță. Dacă nu este setată, se utilizează "
 "valoarea implicită de la ADO."
+
+#, fuzzy
+msgid "Time until alert, if ALLCONTAINERSRESTARTING condition is true"
+msgstr ""
+"Timpul până la alertă, în cazul în care condiția CONTAINERSREADY este falsă"
 
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "Timpul până la alertă, dacă condiția DISPONIBIL este falsă"
@@ -76607,10 +76630,6 @@ msgstr "Traficul aplicațiilor de top: vizualizare în ultima zi"
 
 msgid "Top application traffic: last hour view"
 msgstr "Traficul aplicațiilor de top: vizualizarea ultimei ore"
-
-#, fuzzy
-msgid "Top level suite"
-msgstr "Numele suitei de nivel superior (%s)"
 
 msgid "Top list"
 msgstr "Lista de top"
@@ -79870,6 +79889,19 @@ msgstr ""
 "actualizare pentru o gazdă în mod automat la înregistrarea sau actualizarea "
 "agentului."
 
+msgid ""
+"URL where this site receives SAML responses from the IdP for this "
+"connection. Register this URL with the IdP's client configuration. The URL "
+"is only shown after saving the site configuration and reopening this dialog."
+msgstr ""
+
+msgid ""
+"URL where this site serves the SAML Service Provider metadata for this "
+"connection. Derived from the site's <i>Server URL for SAML ACS callback</i> "
+"and the connection ID. The URL is only shown after saving the site "
+"configuration and reopening this dialog."
+msgstr ""
+
 msgid "URL:"
 msgstr "URL:"
 
@@ -80324,6 +80356,13 @@ msgstr ""
 #, fuzzy
 msgid "Unique host name template"
 msgstr "Șablon de nume de gazdă"
+
+msgid ""
+"Unique identifier for this Checkmk Service Provider, used by the identity "
+"provider to recognize requests originating from Checkmk. Leave empty to auto-"
+"generate the value from the Checkmk server URL (<tt>{Checkmk server URL}/"
+"saml_metadata.py</tt>) or specify an arbitrary value."
+msgstr ""
 
 msgid "Unit"
 msgstr "Unitatea"
@@ -81973,6 +82012,10 @@ msgstr ""
 msgid "Use mount point"
 msgstr "Utilizați punctul de montare"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Numele utilizatorului"
+
 msgid "Use narrow rendering for this number"
 msgstr "Utilizați o redare îngustă pentru acest număr"
 
@@ -82138,6 +82181,10 @@ msgid ""
 "configuration:"
 msgstr ""
 
+#, fuzzy
+msgid "Use the following connections"
+msgstr "Utilizați următoarea culoare"
+
 msgid "Use the following credentials"
 msgstr "Utilizați următoarele acreditări"
 
@@ -82197,6 +82244,10 @@ msgstr ""
 
 msgid "Use the remote SID"
 msgstr "Utilizați SID-ul la distanță"
+
+#, fuzzy
+msgid "Use the same connections as the central site"
+msgstr "Timpul de așteptare a conexiunii TCP pentru conectarea la master"
 
 #, fuzzy
 msgid "Use the status of the Check_MK Service"
@@ -82730,6 +82781,10 @@ msgstr "Utilizator și parolă"
 msgid "User asserts"
 msgstr "%s Afirmă"
 
+#, fuzzy
+msgid "User attribute synchronization"
+msgstr "Sincronizarea utilizatorilor"
+
 msgid "User base DN"
 msgstr "Baza de utilizatori DN"
 
@@ -82739,6 +82794,10 @@ msgstr "Autentificare bazată pe utilizator"
 #, fuzzy
 msgid "User certificate path"
 msgstr "Verificarea certificatelor"
+
+#, fuzzy
+msgid "User configuration"
+msgstr "configurare"
 
 #, fuzzy
 msgid "User creation options"
@@ -83825,9 +83884,6 @@ msgstr "Variabilă"
 
 msgid "Variables set in the site user's environment"
 msgstr "Variabilele setate în mediul utilizatorului site-ului"
-
-msgid "Variant"
-msgstr "Varianta"
 
 msgid "Various"
 msgstr "Diverse"
@@ -85153,6 +85209,15 @@ msgstr ""
 "monitorizare."
 
 msgid ""
+"When enabled (default), containers that have exited with a non-zero exit "
+"code will continue to be monitored individually. When disabled, they are "
+"removed from individual monitoring. Note: containers exited with exit code 0 "
+"are always removed from individual monitoring regardless of this setting. "
+"All exited containers are still counted in the container count service on "
+"the Podman host."
+msgstr ""
+
+msgid ""
 "When enabled all exceptions occuring during the helper execution will raise "
 "through and directly result in termination of the helper process."
 msgstr ""
@@ -85311,8 +85376,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Atunci când enumeră membrii grupului în rezultatul serviciului care "
 "monitorizează grupul, această opțiune face ca checkmk să utilizeze fie "
@@ -93549,10 +93614,6 @@ msgid "Engineering scientific"
 msgstr ""
 
 #, fuzzy
-msgid "Symbol is required"
-msgstr "este necesară"
-
-#, fuzzy
 msgid "Digits must be a non-negative number"
 msgstr "Data trebuie să fie o valoare numerică"
 
@@ -94778,15 +94839,7 @@ msgstr "Adaugp o noua configurație de utilizator"
 msgid "An unexpected error occurred. Please try again."
 msgstr "S-a produs o excepție: %s"
 
-#, fuzzy
-msgid "newly created"
-msgstr "Fișier creat"
-
-#, fuzzy
-msgid "existing"
-msgstr "Testare"
-
-msgid "Basic auth (user: %{user}, password: %{password})"
+msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
 
 #, fuzzy
@@ -94798,20 +94851,18 @@ msgid "No encryption"
 msgstr "Criptare"
 
 #, fuzzy
-msgid "Event Console resource attribute"
+msgid "Enabled (Resource attribute: %{attribute})"
 msgstr "Resetarea atributelor"
 
 #, fuzzy
 msgid "The hosts will be created in the \"Telemetry\" folder."
 msgstr "Configurația stilului selectat"
 
-#, fuzzy
-msgid "gRPC protocol"
-msgstr "Protocol"
+msgid "gRPC-based OTLP receiver:"
+msgstr ""
 
-#, fuzzy
-msgid "HTTP protocol"
-msgstr "Protocol"
+msgid "HTTP-based OTLP receiver:"
+msgstr ""
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -94882,6 +94933,10 @@ msgstr "Fișiere de configurare"
 #, fuzzy
 msgid "Could not create the configuration bundle"
 msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+msgid "Prometheus scraper:"
+msgstr "Alertmanager"
 
 msgid ""
 "Insecure connection detected (HTTP). For better security, we recommend "
@@ -95958,6 +96013,144 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Symbol is required"
+#~ msgstr "este necesară"
+
+#, fuzzy
+#~ msgid ""
+#~ "By default the users are synchronized automatically in the interval "
+#~ "configured in the connection. For example the LDAP connector synchronizes "
+#~ "the users every five minutes by default. The interval can be changed for "
+#~ "each connection individually in the <a href=\"wato.py?"
+#~ "mode=ldap_config\">connection settings</a>. Please note that the "
+#~ "synchronization is only performed on the central site in distributed "
+#~ "setups by default.<br>The remote sites don't perform automatic user "
+#~ "synchronizations with the configured connections. But you can configure "
+#~ "each site to either synchronize the users with all configured connections "
+#~ "or a specific list of connections."
+#~ msgstr ""
+#~ "În mod implicit, utilizatorii sunt sincronizați automat în intervalul "
+#~ "configurat în conexiune. De exemplu, conectorul LDAP sincronizează "
+#~ "utilizatorii la fiecare cinci minute în mod implicit. Intervalul poate fi "
+#~ "modificat pentru fiecare conexiune în parte în <a href=\"wato.py?"
+#~ "mode=ldap_config\">connection settings</a>. Vă rugăm să rețineți că "
+#~ "sincronizarea se efectuează în mod implicit numai pe site-ul principal în "
+#~ "configurațiile distribuite.<br>Site-urile la distanță nu'efectuează "
+#~ "sincronizări automate ale utilizatorilor cu conexiunile configurate. Dar "
+#~ "puteți configura fiecare site pentru a sincroniza utilizatorii fie cu "
+#~ "toate conexiunile configurate, fie cu o listă specifică de conexiuni."
+
+#~ msgid "Sync users with all connections"
+#~ msgstr "Sincronizarea utilizatorilor cu toate conexiunile"
+
+#~ msgid "Sync with LDAP connections"
+#~ msgstr "Sincronizare cu conexiuni LDAP"
+
+#, fuzzy
+#~ msgid "newly created"
+#~ msgstr "Fișier creat"
+
+#, fuzzy
+#~ msgid "existing"
+#~ msgstr "Testare"
+
+#, fuzzy
+#~ msgid "Event Console resource attribute"
+#~ msgstr "Resetarea atributelor"
+
+#, fuzzy
+#~ msgid "gRPC protocol"
+#~ msgstr "Protocol"
+
+#, fuzzy
+#~ msgid "HTTP protocol"
+#~ msgstr "Protocol"
+
+#, fuzzy
+#~ msgid "Address pool name"
+#~ msgstr "Adresă Nume bazin"
+
+#, fuzzy
+#~ msgid "Application gateway"
+#~ msgstr "Poarta de aplicații"
+
+#, fuzzy
+#~ msgid "Application gateways"
+#~ msgstr "Porți de aplicații"
+
+#, fuzzy
+#~ msgid "Assigned to host"
+#~ msgstr "Atribuiți grupului"
+
+#, fuzzy
+#~ msgid "Back-ends"
+#~ msgstr "Backends"
+
+#, fuzzy
+#~ msgid "Bottom level suite"
+#~ msgstr "doua nivele"
+
+#, fuzzy
+#~ msgid "Env creation"
+#~ msgstr "Creație"
+
+#~ msgid "Listener"
+#~ msgstr "Ascultător"
+
+#~ msgid "Listeners"
+#~ msgstr "Ascultători"
+
+#, fuzzy
+#~ msgid "Maximum number of attempts"
+#~ msgstr "Numărul maxim de încercări de livrare"
+
+#, fuzzy
+#~ msgid "Scheduler interval"
+#~ msgstr "Intervalul de cache"
+
+#, fuzzy
+#~ msgid "Scheduler plan configs"
+#~ msgstr "Programați o perioadă de pauză?"
+
+#, fuzzy
+#~ msgid "Suite name"
+#~ msgstr "Numele sitului"
+
+#, fuzzy
+#~ msgid "Tests"
+#~ msgstr "Test"
+
+#, fuzzy
+#~ msgid "Top level suite"
+#~ msgstr "Numele suitei de nivel superior (%s)"
+
+#~ msgid "Variant"
+#~ msgstr "Varianta"
+
+#~ msgid "Clear & Delete"
+#~ msgstr "Ștergeți & Ștergeți"
+
+#, fuzzy
+#~ msgid "Delete this Prometheus configuration"
+#~ msgstr "Ștergeți această conexiune"
+
+#, fuzzy, python-format
+#~ msgid "Edited the OpenTelemetry collector configuration: '%s'"
+#~ msgstr "Configurația stilului selectat"
+
+#, fuzzy, python-format
+#~ msgid "Edited the connection '%s'"
+#~ msgstr "A fost adăugată conexiunea '%s'"
+
+#, fuzzy
+#~ msgid "The Prometheus configuration has been saved."
+#~ msgstr "Configurația stilului selectat"
+
+#, python-format
+#~ msgid "This affects %s"
+#~ msgstr "Acest lucru afectează %s."
+
 #~ msgid "Do not validate server certificate during port query"
 #~ msgstr "Nu validați certificatul serverului în timpul interogării portului"
 
@@ -95981,9 +96174,6 @@ msgstr ""
 
 #~ msgid "Ports to open"
 #~ msgstr "Porturi de deschis"
-
-#~ msgid "Status host"
-#~ msgstr "Stare gazdă"
 
 #, fuzzy
 #~ msgid "Deploy IBM MQ plug-in"
@@ -96080,14 +96270,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add new target"
 #~ msgstr "Adăugați o nouă etichetă"
-
-#, fuzzy
-#~ msgid ""
-#~ "All related configuration of the integrated OpenTelemetry Collector "
-#~ "Prometheus scraping."
-#~ msgstr ""
-#~ "Precizați unul, mai multe sau toate site-urile pe care trebuie să "
-#~ "funcționeze această conexiune."
 
 #, fuzzy
 #~ msgid ""
@@ -98709,9 +98891,6 @@ msgstr ""
 
 #~ msgid "User Agent"
 #~ msgstr "Agent utilizator"
-
-#~ msgid "User name"
-#~ msgstr "Numele utilizatorului"
 
 #, fuzzy
 #~ msgid "Windows time service peers"
@@ -102112,10 +102291,6 @@ msgstr ""
 #~ msgstr "Gestionarea instantaneelor"
 
 #, fuzzy
-#~ msgid "OpenTelemetry (experimental)"
-#~ msgstr "Configurația stilului selectat"
-
-#, fuzzy
 #~ msgid "OpenTelemetry Collector (Experimental)"
 #~ msgstr "Configurația stilului selectat"
 
@@ -102327,10 +102502,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Data point attribute filters"
 #~ msgstr "Atributele timpilor morți:"
-
-#, fuzzy
-#~ msgid "Resource attribute filters"
-#~ msgstr "Resetarea atributelor"
 
 #, fuzzy
 #~ msgid "Scope attribute filters"

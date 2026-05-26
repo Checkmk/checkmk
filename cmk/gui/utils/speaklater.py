@@ -5,3 +5,4 @@
 
 # Re-export for backward compatibility. LazyString now lives in cmk.web.utils.speaklater.
 from cmk.web.utils.speaklater import LazyString as LazyString
+from cmk.web.utils.speaklater import LazyText as LazyText

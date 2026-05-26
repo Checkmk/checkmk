@@ -12,6 +12,8 @@
   --cmk-yellow: #e5a00d;
   --cmk-yellow-dim: #e5a00d22;
   --cmk-red: #e05050;
+  --cmk-blue: #5b9bd5;
+  --cmk-blue-dim: #5b9bd522;
   --radius: 4px;
   --gap: 6px;
 }
@@ -442,4 +444,41 @@ body {
   padding: 8px;
   font-size: 0.9em;
   color: var(--vscode-descriptionForeground);
+}
+
+/* ── Compact density mode ── */
+
+body.cmk-density-compact {
+  --gap: 3px;
+  padding: 4px 8px;
+}
+
+body.cmk-density-compact .card {
+  padding: 3px 6px;
+}
+
+body.cmk-density-compact .status-row {
+  padding: 2px 8px;
+  margin-bottom: 2px;
+}
+
+body.cmk-density-compact .env-row {
+  padding: 2px 6px;
+}
+
+body.cmk-density-compact .build-row {
+  padding: 1px 6px;
+  font-size: 0.78em;
+}
+
+body.cmk-density-compact .ext-family-header {
+  padding: 2px 6px;
+}
+
+body.cmk-density-compact .section-label {
+  margin: 6px 0 3px;
+}
+
+body.cmk-density-compact .ext-family.open .ext-family-body {
+  max-height: 800px;
 }

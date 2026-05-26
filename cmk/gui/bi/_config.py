@@ -563,7 +563,7 @@ class ModeBIPacks(ABCBIMode):
 
     def page(self, config: Config) -> None:
         with table_element(
-            "bi_packs", title=_("BI Configuration Packs"), limit=active_config.table_row_limit
+            "bi_packs", title=_("BI Configuration Packs"), limit=config.table_row_limit
         ) as table:
             for nr, pack in enumerate(sorted(self._bi_packs.packs.values(), key=lambda x: x.id)):
                 if not may_use_rules_in_pack(pack):
@@ -893,9 +893,15 @@ class ModeBIRules(ABCBIMode):
             method="POST",
         ):
             if self._view_type == "list":
-                self.render_rules(_("Rules"), only_unused=False)
+                self.render_rules(
+                    _("Rules"), only_unused=False, table_row_limit=config.table_row_limit
+                )
             else:
-                self.render_rules(_("Unused BI Rules"), only_unused=True)
+                self.render_rules(
+                    _("Unused BI Rules"),
+                    only_unused=True,
+                    table_row_limit=config.table_row_limit,
+                )
 
             html.hidden_field("selection_id", SelectionId.from_request(request))
             html.hidden_fields()
@@ -935,7 +941,7 @@ class ModeBIRules(ABCBIMode):
             if pack_id is not self.bi_pack.id and is_contact_for_pack(bi_pack)
         ]
 
-    def render_rules(self, title: str, only_unused: bool) -> None:
+    def render_rules(self, title: str, only_unused: bool, *, table_row_limit: int) -> None:
         aggregations_that_use_rule = self._find_aggregation_rule_usages()
 
         rules = self.bi_pack.get_rules().items()
@@ -946,7 +952,7 @@ class ModeBIRules(ABCBIMode):
         ]
         rules_refs.sort(key=lambda x: (x[1].properties.title, x[2][2]))
 
-        with table_element("bi_rules", title, limit=active_config.table_row_limit) as table:
+        with table_element("bi_rules", title, limit=table_row_limit) as table:
             for nr, (rule_id, bi_rule, (aggr_refs, rule_refs, level)) in enumerate(rules_refs):
                 refs = aggr_refs + rule_refs
                 if not only_unused or refs == 0:
@@ -2192,7 +2198,7 @@ class BIModeAggregations(ABCBIMode):
             "bulk_action_form",
             method="POST",
         ):
-            self._render_aggregations()
+            self._render_aggregations(table_row_limit=config.table_row_limit)
             html.hidden_field("selection_id", SelectionId.from_request(request))
             html.hidden_fields()
         init_rowselect(self.name())
@@ -2230,11 +2236,9 @@ class BIModeAggregations(ABCBIMode):
             if pack_id is not self.bi_pack.id and is_contact_for_pack(bi_pack)
         ]
 
-    def _render_aggregations(self) -> None:
+    def _render_aggregations(self, *, table_row_limit: int) -> None:
         customer = customer_api()
-        with table_element(
-            "bi_aggr", _("Aggregations"), limit=active_config.table_row_limit
-        ) as table:
+        with table_element("bi_aggr", _("Aggregations"), limit=table_row_limit) as table:
             for nr, (aggregation_id, bi_aggregation) in enumerate(
                 self.bi_pack.get_aggregations().items()
             ):
@@ -2396,7 +2400,7 @@ class ModeBIRuleTree(ABCBIMode):
         _aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(self._rule_id)
         if rule_refs == 0:
             with table_element(
-                sortable=False, searchable=False, limit=active_config.table_row_limit
+                sortable=False, searchable=False, limit=config.table_row_limit
             ) as table:
                 table.row()
                 table.cell(_("Rule Tree"), css=["bi_rule_tree"])

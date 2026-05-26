@@ -161,6 +161,7 @@ def test_registered_pages() -> None:
         "ajax_graph_images",
         "gui_timings",
         "download_product_usage",
+        "monitor_all_hosts",
     ]
 
     # TODO: Depending on how we call the test (single test or whole package) we

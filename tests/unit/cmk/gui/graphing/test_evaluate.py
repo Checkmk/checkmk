@@ -7,10 +7,10 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.graphing.v1 import metrics as metrics_api
-from cmk.graphing.v1 import perfometers as perfometers_api
-from cmk.graphing.v1 import Title
-from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable_api
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import perfometers as perfometers_v1
+from cmk.graphing.v1 import Title as TitleV1
+from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.gui.graphing._evaluations_from_api import evaluate_quantity
 from cmk.gui.graphing._perfometer import _perfometer_plugin_matches
 from cmk.gui.graphing._translated_metrics import (
@@ -21,48 +21,48 @@ from cmk.gui.graphing._translated_metrics import (
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.unit_formatter import AutoPrecision
 
-UNIT = metrics_api.Unit(metrics_api.DecimalNotation(""))
+UNIT = metrics_v1.Unit(metrics_v1.DecimalNotation(""))
 
 
-def _make_perfometer(name: str, start_idx: int) -> perfometers_api.Perfometer:
-    return perfometers_api.Perfometer(
+def _make_perfometer(name: str, start_idx: int) -> perfometers_v1.Perfometer:
+    return perfometers_v1.Perfometer(
         name=name,
-        focus_range=perfometers_api.FocusRange(
-            perfometers_api.Closed(f"metric-name{start_idx + 1}"),
-            perfometers_api.Closed(f"metric-name{start_idx + 2}"),
+        focus_range=perfometers_v1.FocusRange(
+            perfometers_v1.Closed(f"metric-name{start_idx + 1}"),
+            perfometers_v1.Closed(f"metric-name{start_idx + 2}"),
         ),
         segments=[
-            metrics_api.WarningOf(f"metric-name{start_idx + 3}"),
-            metrics_api.CriticalOf(f"metric-name{start_idx + 4}"),
-            metrics_api.MinimumOf(f"metric-name{start_idx + 5}", metrics_api.Color.BLUE),
-            metrics_api.MaximumOf(f"metric-name{start_idx + 6}", metrics_api.Color.BLUE),
-            metrics_api.Sum(
-                Title("Title"),
-                metrics_api.Color.BLUE,
+            metrics_v1.WarningOf(f"metric-name{start_idx + 3}"),
+            metrics_v1.CriticalOf(f"metric-name{start_idx + 4}"),
+            metrics_v1.MinimumOf(f"metric-name{start_idx + 5}", metrics_v1.Color.BLUE),
+            metrics_v1.MaximumOf(f"metric-name{start_idx + 6}", metrics_v1.Color.BLUE),
+            metrics_v1.Sum(
+                TitleV1("Title"),
+                metrics_v1.Color.BLUE,
                 [
                     f"metric-name{start_idx + 7}",
                     f"metric-name{start_idx + 8}",
                 ],
             ),
-            metrics_api.Product(
-                Title("Title"),
+            metrics_v1.Product(
+                TitleV1("Title"),
                 UNIT,
-                metrics_api.Color.BLUE,
+                metrics_v1.Color.BLUE,
                 [
                     f"metric-name{start_idx + 9}",
                     f"metric-name{start_idx + 10}",
                 ],
             ),
-            metrics_api.Difference(
-                Title("Title"),
-                metrics_api.Color.BLUE,
+            metrics_v1.Difference(
+                TitleV1("Title"),
+                metrics_v1.Color.BLUE,
                 minuend=f"metric-name{start_idx + 11}",
                 subtrahend=f"metric-name{start_idx + 12}",
             ),
-            metrics_api.Fraction(
-                Title("Title"),
+            metrics_v1.Fraction(
+                TitleV1("Title"),
                 UNIT,
-                metrics_api.Color.BLUE,
+                metrics_v1.Color.BLUE,
                 dividend=f"metric-name{start_idx + 13}",
                 divisor=f"metric-name{start_idx + 14}",
             ),
@@ -166,7 +166,7 @@ def test__perfometer_plugin_matches_no_translated_metrics() -> None:
             id="perfometer-does-not-match-shifted-metric-names",
         ),
         pytest.param(
-            perfometers_api.Bidirectional(
+            perfometers_v1.Bidirectional(
                 name="bidirectional",
                 left=_make_perfometer("left", 0),
                 right=_make_perfometer("right", 14),
@@ -208,7 +208,7 @@ def test__perfometer_plugin_matches_no_translated_metrics() -> None:
             id="bidirectional-matches",
         ),
         pytest.param(
-            perfometers_api.Stacked(
+            perfometers_v1.Stacked(
                 name="stacked",
                 lower=_make_perfometer("lower", 0),
                 upper=_make_perfometer("upper", 14),
@@ -253,7 +253,7 @@ def test__perfometer_plugin_matches_no_translated_metrics() -> None:
 )
 def test__perfometer_plugin_matches(
     perfometer_plugin: (
-        perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+        perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked
     ),
     translated_metrics: Mapping[str, TranslatedMetric],
     result: bool,
@@ -284,10 +284,10 @@ def test__perfometer_plugin_matches(
             id="metric-name",
         ),
         pytest.param(
-            metrics_api.Constant(
-                Title("Title"),
+            metrics_v1.Constant(
+                TitleV1("Title"),
                 UNIT,
-                metrics_api.Color.BLUE,
+                metrics_v1.Color.BLUE,
                 5.0,
             ),
             {
@@ -305,10 +305,10 @@ def test__perfometer_plugin_matches(
                 ),
             },
             5.0,
-            id="metrics_api.Constant",
+            id="metrics_v1.Constant",
         ),
         pytest.param(
-            metrics_api.WarningOf("name"),
+            metrics_v1.WarningOf("name"),
             {
                 "name": TranslatedMetric(
                     originals=[Original("name", 1.0)],
@@ -324,10 +324,10 @@ def test__perfometer_plugin_matches(
                 ),
             },
             5.0,
-            id="metrics_api.WarningOf",
+            id="metrics_v1.WarningOf",
         ),
         pytest.param(
-            metrics_api.CriticalOf("name"),
+            metrics_v1.CriticalOf("name"),
             {
                 "name": TranslatedMetric(
                     originals=[Original("name", 1.0)],
@@ -343,10 +343,10 @@ def test__perfometer_plugin_matches(
                 ),
             },
             5.0,
-            id="metrics_api.CriticalOf",
+            id="metrics_v1.CriticalOf",
         ),
         pytest.param(
-            metrics_api.MinimumOf("name", metrics_api.Color.BLUE),
+            metrics_v1.MinimumOf("name", metrics_v1.Color.BLUE),
             {
                 "name": TranslatedMetric(
                     originals=[Original("name", 1.0)],
@@ -362,10 +362,10 @@ def test__perfometer_plugin_matches(
                 ),
             },
             5.0,
-            id="metrics_api.MinimumOf",
+            id="metrics_v1.MinimumOf",
         ),
         pytest.param(
-            metrics_api.MaximumOf("name", metrics_api.Color.BLUE),
+            metrics_v1.MaximumOf("name", metrics_v1.Color.BLUE),
             {
                 "name": TranslatedMetric(
                     originals=[Original("name", 1.0)],
@@ -381,12 +381,12 @@ def test__perfometer_plugin_matches(
                 ),
             },
             5.0,
-            id="metrics_api.MaximumOf",
+            id="metrics_v1.MaximumOf",
         ),
         pytest.param(
-            metrics_api.Sum(
-                Title("Title"),
-                metrics_api.Color.BLUE,
+            metrics_v1.Sum(
+                TitleV1("Title"),
+                metrics_v1.Color.BLUE,
                 ["name1", "name2"],
             ),
             {
@@ -416,13 +416,13 @@ def test__perfometer_plugin_matches(
                 ),
             },
             15.0,
-            id="metrics_api.Sum",
+            id="metrics_v1.Sum",
         ),
         pytest.param(
-            metrics_api.Product(
-                Title("Title"),
+            metrics_v1.Product(
+                TitleV1("Title"),
                 UNIT,
-                metrics_api.Color.BLUE,
+                metrics_v1.Color.BLUE,
                 ["name1", "name2"],
             ),
             {
@@ -452,12 +452,12 @@ def test__perfometer_plugin_matches(
                 ),
             },
             50.0,
-            id="metrics_api.Product",
+            id="metrics_v1.Product",
         ),
         pytest.param(
-            metrics_api.Difference(
-                Title("Title"),
-                metrics_api.Color.BLUE,
+            metrics_v1.Difference(
+                TitleV1("Title"),
+                metrics_v1.Color.BLUE,
                 minuend="name1",
                 subtrahend="name2",
             ),
@@ -488,13 +488,13 @@ def test__perfometer_plugin_matches(
                 ),
             },
             7.0,
-            id="metrics_api.Fraction",
+            id="metrics_v1.Fraction",
         ),
         pytest.param(
-            metrics_api.Fraction(
-                Title("Title"),
+            metrics_v1.Fraction(
+                TitleV1("Title"),
                 UNIT,
-                metrics_api.Color.BLUE,
+                metrics_v1.Color.BLUE,
                 dividend="name1",
                 divisor="name2",
             ),
@@ -525,40 +525,40 @@ def test__perfometer_plugin_matches(
                 ),
             },
             2.0,
-            id="metrics_api.Fraction",
+            id="metrics_v1.Fraction",
         ),
         pytest.param(
-            metrics_v2_unstable_api.LowerWarningOf("name"),
+            metrics_v2_unstable.LowerWarningOf("name"),
             {
                 "name": _make_translated_metric("name", ScalarBounds(warn=99.0, warn_lower=3.0)),
             },
             3.0,
-            id="metrics_v2_unstable_api.LowerWarningOf",
+            id="metrics_v2_unstable.LowerWarningOf",
         ),
         pytest.param(
-            metrics_v2_unstable_api.LowerCriticalOf("name"),
+            metrics_v2_unstable.LowerCriticalOf("name"),
             {
                 "name": _make_translated_metric("name", ScalarBounds(crit=99.0, crit_lower=2.0)),
             },
             2.0,
-            id="metrics_v2_unstable_api.LowerCriticalOf",
+            id="metrics_v2_unstable.LowerCriticalOf",
         ),
     ],
 )
 def test_evaluate_quantity(
     quantity: (
         str
-        | metrics_api.Constant
-        | metrics_api.WarningOf
-        | metrics_api.CriticalOf
-        | metrics_api.MinimumOf
-        | metrics_api.MaximumOf
-        | metrics_api.Sum
-        | metrics_api.Product
-        | metrics_api.Difference
-        | metrics_api.Fraction
-        | metrics_v2_unstable_api.LowerWarningOf
-        | metrics_v2_unstable_api.LowerCriticalOf
+        | metrics_v1.Constant
+        | metrics_v1.WarningOf
+        | metrics_v1.CriticalOf
+        | metrics_v1.MinimumOf
+        | metrics_v1.MaximumOf
+        | metrics_v1.Sum
+        | metrics_v1.Product
+        | metrics_v1.Difference
+        | metrics_v1.Fraction
+        | metrics_v2_unstable.LowerWarningOf
+        | metrics_v2_unstable.LowerCriticalOf
     ),
     translated_metrics: Mapping[str, TranslatedMetric],
     expected_value: float,

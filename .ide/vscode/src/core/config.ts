@@ -7,8 +7,6 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { shellExec } from './shell'
-
 // ── Config types ──
 
 export interface CommandConfig {
@@ -66,17 +64,66 @@ export function shellEscape(s: string): string {
   return "'" + String(s).replace(/'/g, "'\\''") + "'"
 }
 
+interface ConfigCacheEntry {
+  path: string
+  mtimeMs: number
+  parsed: unknown
+}
+const _configCache = new Map<string, ConfigCacheEntry>()
+
+function readConfigCached(filePath: string): unknown {
+  let mtimeMs: number
+  try {
+    mtimeMs = fs.statSync(filePath).mtimeMs
+  } catch {
+    throw new Error(`config not found: ${filePath}`)
+  }
+  const cached = _configCache.get(filePath)
+  if (cached && cached.mtimeMs === mtimeMs) return cached.parsed
+  const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'))
+  _configCache.set(filePath, { path: filePath, mtimeMs, parsed })
+  return parsed
+}
+
 export function loadConfig<T = unknown>(name: string): T {
   // Prefer workspace config (branch-aware, always fresh)
   const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
   if (wsPath) {
     const wsConfig = path.join(wsPath, '.ide', 'vscode', 'config', `${name}.json`)
-    if (fs.existsSync(wsConfig)) {
-      return JSON.parse(fs.readFileSync(wsConfig, 'utf8'))
-    }
+    if (fs.existsSync(wsConfig)) return readConfigCached(wsConfig) as T
   }
   // Fallback to bundled config in installed VSIX
-  return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'config', `${name}.json`), 'utf8'))
+  return readConfigCached(path.join(__dirname, '..', 'config', `${name}.json`)) as T
+}
+
+/**
+ * Pure-JS `which`: walks $PATH with `fs.existsSync` instead of spawning a
+ * subprocess. Sub-millisecond and never stalls the extension host event
+ * loop. Results cached for the session — PATH doesn't change at runtime.
+ */
+const _whichCache = new Map<string, string>()
+function whichSync(bin: string): string {
+  if (_whichCache.has(bin)) return _whichCache.get(bin) || ''
+  const PATH = process.env.PATH || ''
+  const exts = process.platform === 'win32' ? (process.env.PATHEXT || '.EXE').split(';') : ['']
+  let resolved = ''
+  for (const dir of PATH.split(path.delimiter)) {
+    if (!dir) continue
+    for (const ext of exts) {
+      const candidate = path.join(dir, bin + ext)
+      try {
+        if (fs.existsSync(candidate)) {
+          resolved = candidate
+          break
+        }
+      } catch {
+        // ignore
+      }
+    }
+    if (resolved) break
+  }
+  _whichCache.set(bin, resolved)
+  return resolved
 }
 
 export function resolveVariables(value: SettingValue): SettingValue {
@@ -85,7 +132,7 @@ export function resolveVariables(value: SettingValue): SettingValue {
   if (typeof value === 'string') {
     return value
       .replace(/\$\{cmk-ext:workspaceFolder\}/g, wsPath)
-      .replace(/\$\{which:([^}]+)\}/g, (_m, bin) => shellExec(`which ${bin}`))
+      .replace(/\$\{which:([^}]+)\}/g, (_m, bin) => whichSync(bin))
   }
   if (Array.isArray(value)) {
     return value.map((v) => resolveVariables(v))

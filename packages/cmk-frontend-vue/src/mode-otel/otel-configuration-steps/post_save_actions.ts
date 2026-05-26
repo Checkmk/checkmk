@@ -50,6 +50,11 @@ export interface PostSaveAction {
   label: () => string
   /** Executes the action against the Checkmk REST API. */
   execute: (ctx: PostSaveContext) => Promise<PostSaveResult>
+  /**
+   * When true the action still runs in sequence with the others but is not
+   * shown as a checklist row. Errors still surface via the alert box.
+   */
+  hidden?: boolean
 }
 
 function errorFromUnknown(err: unknown, fallbackTitle: string): PostSaveResult {
@@ -489,6 +494,7 @@ export function createOTelBundleAction(input: OTelBundleInput): PostSaveAction {
   return {
     key: 'createOTelBundle',
     label: () => _t('Configuration bundle setup'),
+    hidden: true,
     execute: async () => {
       try {
         const response = await fetchRestAPI(OTEL_BUNDLES_COLLECTION, 'POST', {

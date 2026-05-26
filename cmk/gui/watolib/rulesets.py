@@ -131,6 +131,7 @@ from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_K
 
 from .changes import add_change
 from .check_mk_automations import get_services_labels, update_merged_password_file
+from .config_domains import ConfigDomainCore
 from .hosts_and_folders import (
     Folder,
     folder_preserving_link,
@@ -832,6 +833,7 @@ class Ruleset:
             sites=rule.folder.all_site_ids(),
             diff_text=self.diff_rules(None, rule),
             object_ref=rule.object_ref(),
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
 
@@ -869,6 +871,7 @@ class Ruleset:
             user_id=user.id,
             sites=list(affected_sites),
             object_ref=rule.object_ref(),
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
         self._on_change()
@@ -894,6 +897,7 @@ class Ruleset:
             sites=folder.all_site_ids(),
             diff_text=self.diff_rules(None, rule),
             object_ref=rule.object_ref(),
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
 
@@ -1082,6 +1086,7 @@ class Ruleset:
             sites=rule.folder.all_site_ids(),
             diff_text=self.diff_rules(orig_rule, rule),
             object_ref=rule.object_ref(),
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
         self._on_change()
@@ -1101,6 +1106,7 @@ class Ruleset:
                 user_id=user.id,
                 sites=rule.folder.all_site_ids(),
                 object_ref=rule.object_ref(),
+                domains=[ConfigDomainCore()],
                 use_git=use_git,
             )
         self._on_change()
@@ -1121,6 +1127,7 @@ class Ruleset:
             user_id=user.id,
             sites=rule.folder.all_site_ids(),
             object_ref=self.object_ref(),
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
         return index

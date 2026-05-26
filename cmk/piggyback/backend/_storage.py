@@ -46,6 +46,9 @@ class PiggybackMetaData:
             last_contact=None if (i := raw["last_contact"]) is None else int(i),
         )
 
+    def is_outdated(self, now: int, max_age: int) -> bool:
+        return now - self.last_update > max_age
+
 
 @dataclass(frozen=True)
 class PiggybackMessage:

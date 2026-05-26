@@ -23,7 +23,7 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
-from cmk.gui.session import SuperUserContext
+from cmk.gui.session_context import SuperUserContext
 from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
     sites_ready_for_remote_automation,

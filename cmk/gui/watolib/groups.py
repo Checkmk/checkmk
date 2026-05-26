@@ -26,7 +26,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
-from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.groups_io import (
     contact_group_usage_finder_registry,
@@ -41,6 +41,7 @@ from cmk.gui.watolib.host_attributes import (
     HostContactGroupSpec,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.utils import paths
@@ -56,7 +57,7 @@ def add_group(
     extra_info: GroupSpec,
     *,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     check_modify_group_permissions(group_type)
     all_groups = load_group_information()
@@ -80,7 +81,7 @@ def add_group(
         extra_info,
         "edit-%sgroups" % group_type,
         _l("Create new %s group %s") % (group_type, name),
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
 
 
@@ -90,7 +91,7 @@ def edit_group(
     extra_info: GroupSpec,
     *,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     check_modify_group_permissions(group_type)
     all_groups = load_group_information()
@@ -116,7 +117,7 @@ def edit_group(
                     name,
                     customer.get_customer_name_by_id(old_customer),
                 ),
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
             _add_group_change(
                 extra_info,
@@ -127,21 +128,21 @@ def edit_group(
                     name,
                     customer.get_customer_name_by_id(new_customer),
                 ),
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
         else:
             _add_group_change(
                 old_group_backup,
                 "edit-%sgroups" % group_type,
                 _l("Updated properties of %sgroup %s") % (group_type, name),
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
     else:
         _add_group_change(
             extra_info,
             "edit-%sgroups" % group_type,
             _l("Updated properties of %s group %s") % (group_type, name),
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
 
 
@@ -152,7 +153,11 @@ class GroupInUseException(Exception): ...
 
 
 def delete_group(
-    name: GroupName, group_type: GroupType, *, pprint_value: bool, use_git: bool
+    name: GroupName,
+    group_type: GroupType,
+    *,
+    pprint_value: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     check_modify_group_permissions(group_type)
     # Check if group exists
@@ -180,19 +185,26 @@ def delete_group(
         group,
         "edit-%sgroups" % group_type,
         _l("Deleted %s group %s") % (group_type, name),
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
 
 
 def _add_group_change(
-    group: GroupSpec, action_name: str, text: LazyString, *, use_git: bool
+    group: GroupSpec,
+    action_name: str,
+    text: LazyString,
+    *,
+    pending_changes: PendingChanges,
 ) -> None:
-    add_change(
-        action_name=action_name,
-        text=text,
-        user_id=user.id,
-        sites=customer_api().customer_group_sites(group),
-        use_git=use_git,
+    sites = customer_api().customer_group_sites(group)
+    scope = ChangeScope.all_activation_sites() if sites is None else ChangeScope.sites(sites)
+    pending_changes.add(
+        Change(
+            action_name=action_name,
+            text=text,
+            domains=[CORE],
+        ),
+        scope,
     )
 
 

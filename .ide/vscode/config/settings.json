@@ -88,6 +88,7 @@
     }
   },
   "frontend": {
+    "_note_master_only_": "MASTER-ONLY (do not backport to 2.5): prettier.prettierPath is forced to <unset> because the pnpm-workspace reorg (Oct 2025) removed the workspace-root node_modules/prettier symlink that the old value pointed at. Per-package node_modules is what prettier-vscode now auto-resolves.",
     "folder": {
       "[vue]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -146,8 +147,7 @@
       "stylelint.configFile": "",
       "stylelint.enable": true,
       "prettier.useEditorConfig": false,
-      "prettier.configPath": "bazel/tools/prettier.config.cjs",
-      "prettier.prettierPath": "./node_modules/prettier"
+      "prettier.configPath": "bazel/tools/prettier.config.cjs"
     },
     "workspace": {
       "js/ts.tsdk.path": "packages/cmk-frontend-vue/node_modules/typescript/lib"
@@ -156,7 +156,9 @@
       "eslint.enable": false,
       "stylelint.enable": false,
       "prettier.enable": false
-    }
+    },
+    "unsetFolder": ["prettier.prettierPath"],
+    "unsetWorkspace": ["prettier.prettierPath"]
   },
   "rust": {
     "folder": {

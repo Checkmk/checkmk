@@ -33,9 +33,7 @@ const { _t } = usei18n()
 
 const CONTENT_TYPE = 'custom_graph'
 export interface UseCustomGraph
-  extends UseValidate,
-    UseGraphRenderOptions,
-    UseWidgetVisualizationOptions {
+  extends UseValidate, UseGraphRenderOptions, UseWidgetVisualizationOptions {
   customGraph: Ref<string | null>
   customGraphValidationErrors: Ref<string[]>
   timeRange: Ref<GraphTimerange>

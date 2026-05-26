@@ -24,19 +24,13 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-citrix_sessions_default_levels: dict[str, tuple[int, int]] = {
-    "total": (60, 65),
-    "active": (60, 65),
-    "inactive": (10, 15),
-}
-
 
 def parse_citrix_sessions(string_table: StringTable) -> StringTable:
     return string_table
 
 
 def discover_citrix_sessions(section: StringTable) -> DiscoveryResult:
-    yield Service(parameters=citrix_sessions_default_levels)
+    yield Service()
 
 
 def check_citrix_sessions(params: Mapping[str, Any], section: StringTable) -> CheckResult:
@@ -79,5 +73,9 @@ check_plugin_citrix_sessions = CheckPlugin(
     discovery_function=discover_citrix_sessions,
     check_function=check_citrix_sessions,
     check_ruleset_name="citrix_sessions",
-    check_default_parameters=citrix_sessions_default_levels,
+    check_default_parameters={
+        "total": (60, 65),
+        "active": (60, 65),
+        "inactive": (10, 15),
+    },
 )

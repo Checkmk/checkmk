@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from tests.testlib.common.utils import wait_until
-from tests.testlib.common.utils2 import is_containerized, run
+from tests.testlib.common.utils2 import run
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
 
@@ -659,7 +659,7 @@ def test_run_omd_diff_empty_on_fresh_site() -> None:
             site.rm()
 
 
-@pytest.mark.skipif(not is_containerized(), reason="Test might affect installed Checkmk packages")
+@pytest.mark.skip_if_not_containerized  # "Test might affect installed Checkmk packages"
 def test_run_omd_cleanup_no_orphaned_versions(site: Site, _orphan_version_guard: None) -> None:
     """Test 'omd cleanup' when all installed versions are in use.
 
@@ -677,7 +677,7 @@ def test_run_omd_cleanup_no_orphaned_versions(site: Site, _orphan_version_guard:
     )
 
 
-@pytest.mark.skipif(not is_containerized(), reason="Test might affect installed Checkmk packages")
+@pytest.mark.skip_if_not_containerized  # "Test might affect installed Checkmk packages"
 @pytest.mark.skipif(shutil.which("dpkg") is None, reason="DEB-only: requires dpkg and dpkg-deb")
 def test_run_omd_cleanup_removes_orphaned_version(
     site: Site, _orphan_version_guard: None, tmp_path: Path

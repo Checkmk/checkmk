@@ -20,8 +20,7 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
-        "//cmk/gui:type_defs",
-        "//cmk/gui:unit_formatter",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/graphing",
         "//cmk/gui/utils:roles",
         "//cmk/gui/utils:temperate_unit",

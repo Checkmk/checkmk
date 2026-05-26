@@ -6,10 +6,10 @@ distribution: check_mk
 description:
  A Pod's status depends on an array of PodConditions through which the
  Pod has or has not yet passed. This check monitors the status of each
- condition (scheduled, initialized, containersready and ready, along with
- resizepending and resizeinprogress as of Kubernetes v1.33) and the
- duration of the condition if it is in an abnormal state. This check does not
- monitor custom conditions.
+ condition (scheduled, initialized, containersready, ready, resizepending,
+ resizeinprogress, as well as allcontainersrestarting as of Kubernetes 1.34)
+ and the duration of the condition if it is in an abnormal state. This check
+ does not monitor custom conditions.
 
  Upper levels for WARN/CRIT can be defined to determine how much time must pass
  before an alert is triggered when a condition is in an abnormal state for an

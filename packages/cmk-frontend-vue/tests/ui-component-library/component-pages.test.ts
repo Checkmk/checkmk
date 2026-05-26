@@ -168,7 +168,7 @@ test('CmkTimeSpan page renders its component', () => {
 
 test('CmkBadge page renders its component', () => {
   render(UclCmkBadge, { props: { screenshotMode: false } })
-  within(componentPreview()).getByText('99')
+  within(componentPreview()).getByText('99999')
 })
 
 test('CmkButton page renders its component', () => {

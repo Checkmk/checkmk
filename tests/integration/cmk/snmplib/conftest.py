@@ -59,24 +59,24 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
     log.logger.setLevel(logging.DEBUG)
     debug.enable()
 
-    with_sudo = os.geteuid() == 0
+    # Run the SNMP simulator as site user.
+    # Don't run it as this user when running inside Kubernetes.
+    as_user = None if is_containerized() else site.id
 
     # In the CI the tests are started as root and snmpsimd needs to be started as
     # "testuser" user. We need to provide a tmp path which is writable by that user.
     with TemporaryDirectory(prefix="snmpsim_") as d:
-        if with_sudo:
-            shutil.chown(d, "testuser", "testuser")
+        if as_user:
+            shutil.chown(d, as_user, as_user)
 
         process_definitions = [
-            _define_process(idx, auth, Path(d), snmp_data_dir, with_sudo)
+            _define_process(idx, auth, Path(d), snmp_data_dir, as_user)
             for idx, auth in enumerate(_create_auth_list())
         ]
 
         try:
             for process_def in process_definitions:
-                wait_until(
-                    _create_listening_condition(process_def), timeout=TIMEOUT_AFTER, interval=1
-                )
+                wait_until(lambda: _is_listening(process_def), timeout=TIMEOUT_AFTER, interval=1)
 
             yield
         finally:
@@ -92,25 +92,31 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
             logger.debug("Stopped snmpsimd.")
 
 
-def _define_process(index, auth, tmp_path, snmp_data_dir, with_sudo):
+def _define_process(index, auth, tmp_path, snmp_data_dir, as_user: None | str) -> ProcessDef:
     port = 1337 + index
-
-    # The tests are executed as root user in the containerized environment, which snmpsimd does not
-    # like. Switch the user context to 'testuser' to execute the daemon.
-    # When executed on a dev system, we run as lower privileged user and don't have to switch the
-    # context.
-    sudo = ["sudo", "-u", "testuser"] if with_sudo else []
 
     proc_tmp_path = tmp_path / f"snmpsim{index}"
     proc_tmp_path.mkdir(parents=True, exist_ok=True)
-    if with_sudo:
-        shutil.chown(proc_tmp_path, "testuser", "testuser")
+
+    command_prefix = []
+    if as_user:
+        command_prefix = ["sudo", "-u", as_user]
+        shutil.chown(proc_tmp_path, as_user, as_user)
+
+    env_override = None
+    if os.geteuid() == 0:
+        # As a root user we have to pass a special flag to snmpsim in order to be able to run it as root.
+        # Hint: the SNMP Simulator changelog mentions the flag SNMP_ALLOW_ROOT, but the code actually checks for SNMPSIM_ALLOW_ROOT
+        env_override = {"SNMPSIM_ALLOW_ROOT": "true"}
+        # Extend the environment with variables required by snmpsim
+        env_override.update({key: os.environ[key] for key in ("HOME",)})
+        logger.debug(f"overriding snmpsim-command-responder process env with: {env_override!r}")
 
     return ProcessDef(
-        with_sudo=with_sudo,
+        with_sudo=bool(as_user),
         port=port,
         process=subprocess.Popen(
-            sudo
+            command_prefix
             + [
                 f"{repo_path()}/.venv/bin/snmpsim-command-responder",
                 "--log-level=error",
@@ -134,6 +140,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir, with_sudo):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            env=env_override,
         ),
     )
 
@@ -186,13 +193,6 @@ def _create_auth_list():
     ]
 
 
-# This function is needed because Pylint raises these two error if
-# you create a function depending on a loop variable inside the loop:
-# W0631 (undefined-loop-variable), W0640 (cell-var-from-loop)
-def _create_listening_condition(process_def):
-    return lambda: _is_listening(process_def)
-
-
 def _is_listening(process_def: ProcessDef) -> bool:
     p = process_def.process
     port = process_def.port
@@ -200,8 +200,15 @@ def _is_listening(process_def: ProcessDef) -> bool:
     snmpsimd_died = exitcode is not None
     if snmpsimd_died:
         logger.error(
-            "=============================================snmpsimd dead from the beginning"
+            "============================================="
+            " snmpsimd dead from the beginning (exit code %d)",
+            exitcode,
         )
+
+        # stderr is piped to stdout, so we can rely on only showing stdout
+        for line in p.stdout or []:
+            logger.error(line)
+
     process = _snmpsimd_process(process_def)
     snmpsimd_proc_found = process is not None
 
@@ -213,35 +220,40 @@ def _is_listening(process_def: ProcessDef) -> bool:
 
     if not snmpsimd_died:
         pid = process.pid  # type: ignore[union-attr]
+        logger.debug("============================================= %d", pid)
         # Wait for snmpsimd to initialize the UDP sockets
         try:
-            logger.debug("============================================= %d", pid)
             os.system("ls -al /proc/%d/fd" % pid)
             os.system("ps -ef | grep %d" % pid)
-            for e in os.listdir("/proc/%d/fd" % pid):
+            socket_dir = Path("/proc/%d/fd" % pid)
+            for filename in os.listdir(socket_dir):
+                filepath = socket_dir / filename
                 try:
-                    if os.readlink("/proc/%d/fd/%s" % (pid, e)).startswith("socket:"):
+                    if os.readlink(filepath).startswith("socket:"):
                         num_sockets += 1
-                except OSError:
-                    pass
-        except OSError as e:
+                except OSError as socket_read_error:
+                    logger.debug("Failed to read %s: %s", filepath, socket_read_error)
+        except OSError as oserr:
             exitcode = p.poll()
             if exitcode is None:
                 raise
             snmpsimd_died = True
             logger.error(
-                "====================================snmpsimd dead OSError try-except %s", e
+                "====================================snmpsimd dead OSError try-except %s", oserr
             )
 
     if snmpsimd_died:
         # assert p.stdout is not None
         # output = p.stdout.read()
         output = "foobar"
-        raise Exception(f"snmpsimd died. Exit code: {exitcode}; output: {output}")
+        raise RuntimeError(f"snmpsimd died. Exit code: {exitcode}; output: {output}")
 
     logger.debug("snmpsimd is running")
 
-    if num_sockets < 2:
+    if (not is_containerized()) and num_sockets < 2:
+        # For Kubernetes the socket check might fail due to missing permissions.
+        # We assume the responder is up and running with the correct amount of sockets there.
+        logger.debug("not enough open sockets")
         return False
 
     logger.debug("snmpsimd has opened it's sockets")
@@ -295,8 +307,13 @@ def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
         if process_def.with_sudo:
             proc = psutil.Process(process_def.process.pid)
             for child in (children := proc.children(recursive=True)):
-                if child.name().startswith("snmpsim-command"):
+                if "snmpsim-command" in child.name():
                     return child
+
+                for cmdline_part in child.cmdline():
+                    if "snmpsim-command" in cmdline_part:
+                        return child
+
             logger.debug("Did not find snmpsim-command in children %r", children)
             return None
         return psutil.Process(process_def.process.pid)

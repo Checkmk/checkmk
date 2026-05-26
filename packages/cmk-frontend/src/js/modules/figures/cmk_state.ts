@@ -28,8 +28,10 @@ interface StateFigureDataPlotDefinition {
   status_display: Record<string, string | null>
 }
 
-interface StateFigureData
-  extends TextFigureData<StateFigureDataData, StateFigureDataPlotDefinition> {
+interface StateFigureData extends TextFigureData<
+  StateFigureDataData,
+  StateFigureDataPlotDefinition
+> {
   data: StateFigureDataData[]
 }
 
@@ -130,8 +132,10 @@ type StateHostFigureDataPlotDefinition = StateFigureDataPlotDefinition
 
 //This type is not used for now, because this causes other errors related to figure data.
 //But it should be used in the future to specify the Data type of StateHostFigure
-interface _StateHostFigureData
-  extends TextFigureData<StateHostFigureDataData, StateHostFigureDataPlotDefinition> {
+interface _StateHostFigureData extends TextFigureData<
+  StateHostFigureDataData,
+  StateHostFigureDataPlotDefinition
+> {
   data: StateHostFigureDataData[]
 }
 

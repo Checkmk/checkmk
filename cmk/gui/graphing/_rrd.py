@@ -132,7 +132,7 @@ def make_graph_row(
     translated = compute_translated_metrics(
         perf_data,
         metrics,
-        check_command,
+        normalized_check_command,
         registered_metrics,
         explicit_color,
         debug=debug,

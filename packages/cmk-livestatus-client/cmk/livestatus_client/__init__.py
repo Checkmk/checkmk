@@ -78,6 +78,7 @@ from ._api.commands import (
     StopExecutingServiceChecks,
 )
 from ._connection import (
+    AuthenticationConnectionEntry,
     BrokerConnection,
     BrokerConnections,
     BrokerSite,
@@ -120,6 +121,7 @@ from ._connection import (
     QuerySpecification,
     quote_dict,
     RRDResponse,
+    SAMLAuthenticationEntry,
     sanitize_site_configuration,
     SingleSiteConnection,
     site_local_ca_path,
@@ -208,6 +210,7 @@ __all__ = [
     "StopExecutingHostChecks",
     "StopExecutingServiceChecks",
     # Connection
+    "AuthenticationConnectionEntry",
     "BrokerConnection",
     "BrokerConnections",
     "BrokerSite",
@@ -250,6 +253,7 @@ __all__ = [
     "QuerySpecification",
     "quote_dict",
     "RRDResponse",
+    "SAMLAuthenticationEntry",
     "sanitize_site_configuration",
     "SingleSiteConnection",
     "SiteConfiguration",

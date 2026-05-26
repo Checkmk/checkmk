@@ -9,16 +9,30 @@
   pointer-events: none;
 }
 
-.card.profile.issues {
+.card.profile.sev-warning {
   border-color: var(--cmk-yellow);
   background: var(--cmk-yellow-dim);
 }
 
-.card.profile.issues .card-icon {
+.card.profile.sev-warning .card-icon {
   color: var(--cmk-yellow);
 }
 
-.card.profile.issues .card-badge {
+.card.profile.sev-warning .card-badge {
   background: var(--cmk-yellow);
   color: #000;
+}
+
+.card.profile.sev-critical {
+  border-color: var(--cmk-red);
+  background: rgb(224 80 80 / 14%);
+}
+
+.card.profile.sev-critical .card-icon {
+  color: var(--cmk-red);
+}
+
+.card.profile.sev-critical .card-badge {
+  background: var(--cmk-red);
+  color: #fff;
 }

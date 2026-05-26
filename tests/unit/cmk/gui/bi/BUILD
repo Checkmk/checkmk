@@ -21,7 +21,7 @@ py_test(
     deps = [
         ":__test__",
         "//cmk/bi",
-        "//cmk/gui:exceptions",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/bi",
         "//packages/cmk-ccc:hostaddress",
         "//tests/unit:conftest",

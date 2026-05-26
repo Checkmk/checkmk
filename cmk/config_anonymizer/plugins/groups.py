@@ -5,11 +5,14 @@
 
 import logging
 
+from cmk.base.config import LoadingResult
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui.config import Config
 from cmk.gui.groups import AllGroupSpecs
 from cmk.gui.watolib.groups_io import GroupAliasConfigFile, GroupsConfigFile, load_group_information
+from cmk.utils.labels import Labels
 from cmk.utils.paths import default_config_dir
 
 
@@ -85,8 +88,15 @@ def _anonymize_groups(
 
 class GroupsStep(AnonymizeStep):
     def run(
-        self, anon_interface: AnonInterface, active_config: Config, logger: logging.Logger
+        self,
+        anon_interface: AnonInterface,
+        active_config: Config,
+        loaded_config_result: LoadingResult,
+        all_plugins: AgentBasedPlugins,
+        builtin_host_labels: Labels,
+        logger: logging.Logger,
     ) -> None:
+        logger.warning("Process groups")
         all_groups_spec = load_group_information()
 
         anon_all_groups_spec = _anonymize_groups(all_groups_spec, anon_interface)

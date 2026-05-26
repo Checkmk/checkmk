@@ -140,8 +140,6 @@ pkg_mkdirs(
     name = "empty_dirs",
     dirs = [
         "lib/nagios/plugins",
-        "lib/python3/cmk/gui/plugins/userdb",
-        "lib/python3/cmk/gui/plugins/watolib",
         "skel/local/lib/nagios/plugins",
         "skel/local/lib/python3/cmk/gui/plugins/dashboard",
         "skel/local/lib/python3/cmk/gui/plugins/views",
@@ -246,9 +244,8 @@ py_library(
         "post-create/01_create-sample-config.py",
     ],
     deps = [
-        "//cmk/gui:main_modules",
-        "//cmk/gui:script_helpers",
-        "//cmk/gui:session",
+        "//cmk/gui:app",
+        "//cmk/gui:session_context",
         "//cmk/gui/watolib",
         "//cmk/utils",
     ],

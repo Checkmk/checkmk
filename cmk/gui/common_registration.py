@@ -47,6 +47,7 @@ from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.form_specs import registration as vue_registration
 from cmk.gui.main_menu import MainMenuRegistry
+from cmk.gui.monitor.hosts import registration as monitor_hosts_registration
 from cmk.gui.nodevis import nodevis
 from cmk.gui.oauth2_connections.registration import register as register_oauth2_connections
 from cmk.gui.openapi import registration as openapi_registration
@@ -229,6 +230,11 @@ def register(
         autocompleter_registry,
         endpoint_family_registry,
         versioned_endpoint_registry,
+    )
+    monitor_hosts_registration.register(
+        endpoint_family_registry,
+        versioned_endpoint_registry,
+        page_registry,
     )
     crash_reporting.register(
         page_registry,

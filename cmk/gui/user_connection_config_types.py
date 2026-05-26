@@ -213,7 +213,6 @@ class SAMLUserConnectionConfig(TypedDict, total=True):
     contactgroups_mapping: ContactGroupMappingSpec
     role_membership_mapping: ROLE_MAPPING
     version: Literal["1.0.0"]
-    owned_by_site: str
     customer: NotRequired[str]
 
 

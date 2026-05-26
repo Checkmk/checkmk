@@ -312,6 +312,7 @@ def _discover_wheel_specs(
                     "package_target": label,
                     "source_prefix": "",
                     "source_subdirs": [],
+                    "strip_prefix": "",
                     "wheel_targets": [],
                 }
             )
@@ -982,7 +983,10 @@ def _query_wheel_source_subdirs(
 
     Returns:
         Dict mapping full py_wheel label (e.g. ``"//packages/cmk-ccc:wheel"``)
-        to ``{"distribution_name": str, "source_subdirs": list[str]}``.
+        to ``{"distribution_name": str, "source_subdirs": list[str],
+        "has_generated_sources": bool, "strip_prefix": str}``.  The
+        ``strip_prefix`` mirrors the rule's ``strip_path_prefixes[0]`` (empty
+        when the rule does not strip) and lets the deployer resolve repo paths.
     """
     # 1. Collect all full py_wheel labels
     all_labels: list[str] = []
@@ -1036,12 +1040,17 @@ def _query_wheel_source_subdirs(
 
         distribution = _parse_string(rule_elem, "distribution")
         strip_prefixes = _parse_string_list(rule_elem, "strip_path_prefixes")
-
         pkg_path = label.lstrip("/").split(":")[0]
-        if not strip_prefixes and pkg_path:
-            strip_prefixes = [pkg_path]
 
-        # Filter global srcs to this wheel's package using strip_prefixes
+        # ``pkg_path`` filters srcs to this wheel; ``strip_prefixes`` (if set
+        # on the BUILD rule) determines the in-wheel layout.  Previously this
+        # defaulted strip to ``[pkg_path]`` which is wrong for monolithic
+        # wheels like ``//cmk:whl`` that have no explicit ``strip_path_prefixes``:
+        # ``py_wheel`` leaves their files at the full Bazel path, so the wheel
+        # really contains ``cmk/<...>`` and the manifest must reflect that to
+        # stay site-relative.
+        filter_prefix = pkg_path + "/" if pkg_path else ""
+
         stripped_paths: list[str] = []
         for src_label in all_src_labels:
             path = src_label[2:]  # strip //
@@ -1052,17 +1061,15 @@ def _query_wheel_source_subdirs(
             if not path.endswith(".py"):
                 continue
 
+            if filter_prefix and not path.startswith(filter_prefix):
+                continue
+
             stripped = path
-            was_stripped = False
             for prefix in strip_prefixes:
                 prefix_with_slash = prefix if prefix.endswith("/") else prefix + "/"
                 if path.startswith(prefix_with_slash):
                     stripped = path[len(prefix_with_slash) :]
-                    was_stripped = True
                     break
-
-            if not was_stripped and strip_prefixes:
-                continue
 
             stripped_paths.append(stripped)
 
@@ -1072,10 +1079,17 @@ def _query_wheel_source_subdirs(
         gen_prefix = f"//{pkg_path}:"
         has_generated_sources = any(g.startswith(gen_prefix) for g in all_gen_labels)
 
+        # Repo-side strip prefix: empty when ``py_wheel`` does not strip
+        # (monolithic case), otherwise the rule's ``strip_path_prefixes[0]``.
+        # The deployer uses this to resolve repo paths uniformly:
+        # ``source = repo_root / strip_prefix / subdir``.
+        strip_prefix = strip_prefixes[0] if strip_prefixes else ""
+
         result[label] = {
             "distribution_name": distribution,
             "source_subdirs": sorted(source_subdirs),
             "has_generated_sources": has_generated_sources,
+            "strip_prefix": strip_prefix,
         }
 
     return result
@@ -1183,6 +1197,7 @@ def _enrich_wheel_specs(
             if info:
                 spec["source_subdirs"] = info["source_subdirs"]
                 spec["distribution_name"] = info["distribution_name"]
+                spec["strip_prefix"] = info["strip_prefix"]
                 # Reclassify to "generated" if Bazel reports all .py sources
                 # are generated (e.g. cmk-shared-typing from JSON schemas)
                 if info.get("has_generated_sources"):
@@ -1206,6 +1221,7 @@ def _enrich_wheel_specs(
             if info:
                 spec["source_subdirs"] = info["source_subdirs"]
                 spec["distribution_name"] = info["distribution_name"]
+                spec["strip_prefix"] = info["strip_prefix"]
                 if info.get("has_generated_sources"):
                     logger.debug(
                         "Reclassifying %s as 'generated' (Bazel reports generated sources)",
@@ -1213,11 +1229,13 @@ def _enrich_wheel_specs(
                     )
                     spec["deploy_mode"] = "generated"
         elif len(whl_targets) > 1:
-            # Multiple wheel targets for this source_prefix (e.g. cmk-plugins)
-            # Union all source_subdirs
+            # Multiple wheel targets for this source_prefix (e.g. cmk-plugins).
+            # All wheels in one package share strip_path_prefixes, so taking
+            # the first non-empty value is sufficient.
             all_subdirs: set[str] = set()
             dist_names: list[str] = []
             any_generated = False
+            strip_prefix_value = ""
             for tname in whl_targets:
                 label = (
                     f"//{source_prefix}{tname}"
@@ -1229,9 +1247,12 @@ def _enrich_wheel_specs(
                     all_subdirs.update(info["source_subdirs"])
                     if info["distribution_name"]:
                         dist_names.append(info["distribution_name"])
+                    if not strip_prefix_value:
+                        strip_prefix_value = info.get("strip_prefix", "")
                     if info.get("has_generated_sources"):
                         any_generated = True
             spec["source_subdirs"] = sorted(all_subdirs)
+            spec["strip_prefix"] = strip_prefix_value
             if dist_names:
                 spec["distribution_name"] = dist_names[0]
             # Only reclassify if ALL wheel targets have generated sources

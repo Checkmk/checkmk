@@ -187,6 +187,7 @@ py_library(
         "omdlib/args_site_user.py",
         "omdlib/backup.py",
         "omdlib/buffer.py",
+        "omdlib/config_api.py",
         "omdlib/config_choices.py",
         "omdlib/config_hooks.py",
         "omdlib/console.py",
@@ -194,14 +195,18 @@ py_library(
         "omdlib/crash_reporting.py",
         "omdlib/dialog.py",
         "omdlib/finalize.py",
+        "omdlib/flock.py",
         "omdlib/global_options.py",
         "omdlib/init_scripts.py",
         "omdlib/instance_id.py",
+        "omdlib/jaeger.py",
+        "omdlib/livestatus.py",
         "omdlib/main.py",
         "omdlib/main_site_user.py",
         "omdlib/options.py",
         "omdlib/options_legacy.py",
         "omdlib/package_manager.py",
+        "omdlib/rabbitmq.py",
         "omdlib/restore.py",
         "omdlib/scripts.py",
         "omdlib/site_name.py",
@@ -264,7 +269,7 @@ py_binary(
 pkg_files(
     name = "omdlib_pkg",
     srcs = [":omdlib"],
-    prefix = "lib/python3/omdlib",
+    prefix = "lib/python3.13/site-packages/omdlib",
 )
 
 pkg_files(

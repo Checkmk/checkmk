@@ -848,6 +848,8 @@ class LayoutMatrix(Layout):
         group_cells: Sequence[Cell],
         cells: Sequence[Cell],
         user_permissions: UserPermissions,
+        *,
+        table_row_limit: int,
     ) -> None:
         filename = "{}-{}.csv".format(
             view["name"],
@@ -863,7 +865,7 @@ class LayoutMatrix(Layout):
 
         painter_options = PainterOptions.get_instance()
         link_renderer = make_link_renderer(request, user_permissions)
-        with table_element(output_format="csv", limit=active_config.table_row_limit) as table:
+        with table_element(output_format="csv", limit=table_row_limit) as table:
             for cell_nr, cell in enumerate(group_cells):
                 table.row()
                 table.cell("", cell.title(use_short=False))

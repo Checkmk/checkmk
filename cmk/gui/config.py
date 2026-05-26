@@ -28,7 +28,6 @@ from cmk.gui.general_config import GeneralConfig
 from cmk.gui.i18n import _
 from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.type_defs import RoleName
-from cmk.utils.experimental_config import load_experimental_config
 from cmk.utils.keypair_store import KeypairStore
 
 tracer = trace.get_tracer()
@@ -157,9 +156,6 @@ def load_config() -> Config:
     """
     # Set default values for all user-changable configuration settings
     raw_config = get_default_config()
-
-    # Load assorted experimental parameters if any
-    raw_config.update(load_experimental_config(cmk.utils.paths.default_config_dir))
 
     # First load main file
     _load_config_file_to(str(cmk.utils.paths.default_config_dir / "multisite.mk"), raw_config)

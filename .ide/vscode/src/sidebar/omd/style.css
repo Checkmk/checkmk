@@ -9,6 +9,12 @@
   margin-bottom: 4px;
 }
 
+.omd-empty {
+  padding: 6px 8px;
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+}
+
 .omd-site-header {
   display: flex;
   place-items: center;

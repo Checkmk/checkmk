@@ -17,7 +17,7 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/mkeventd",
         "//cmk/gui/search",
         "//cmk/gui/utils:roles",

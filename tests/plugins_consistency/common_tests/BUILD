@@ -7,7 +7,7 @@ py_library(
     visibility = ["//tests/plugins_consistency:__subpackages__"],
     deps = [
         "//cmk/checkengine",
-        "//cmk/gui:graphing_main",
+        "//cmk/gui:general_pages",
         "//cmk/gui/dashboard",
         "//cmk/gui/graphing",
         "//cmk/legacy_checks",

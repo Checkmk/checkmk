@@ -16,9 +16,8 @@ void main() {
     def distro_medium_chain = "ubuntu-24.04";
 
     def job_names = [
-        "test-composition-single-f12less-k8s",
-        // TODO: Switch to -k8s version
-        "test-integration-single-f12less",
+        "test-composition-${edition_medium_chain}",
+        "test-integration-${edition_medium_chain}",
     ];
 
     print(
@@ -71,14 +70,20 @@ void main() {
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
                     force_build: force_build,
-                    relative_job_name: "${branch_base_folder}/builders/${job_name}",
+                    relative_job_name: "${branch_base_folder}/cv/${job_name}",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,
                         EDITION: edition_medium_chain,
                         DISTRO: distro_medium_chain,
                         DISABLE_CACHE: params.DISABLE_CACHE,
                         FAKE_ARTIFACTS: true,
-                        TEST_FILTER: "-m medium_test_chain",
+                        // if there is a test filter specified on make target level, the last one in the list of pytest arguments will
+                        // overwrite all previous ones. Place all required test filters in one place and connect them with "and"
+                        // "TEST_FILTER" is prepended to the pytest call and thereby always the first source of settings and so it is
+                        // overruled if there is an additional test filter set later in the list of pytest args
+                        // Remember to quote a chain of filters to prevent word splitting
+                        // Setting "-m medium_test_chain" will cause special handling in "test-integration-single.groovy"
+                        TEST_FILTER: '-m medium_test_chain',
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

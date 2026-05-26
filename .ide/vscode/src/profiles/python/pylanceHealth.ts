@@ -12,6 +12,10 @@ import { safeExecAsync } from '../../core/shell'
 const POLL_MS = 60_000
 const WARN_SETTING = 'cmk.python.pylanceMemoryWarnMiB'
 const WARN_DEFAULT = 2048
+/** Grace period during which "no process" / "inactive" warnings are suppressed.
+ *  Pylance can take 20–30 s to spin up on cold start, especially with a large
+ *  Python workspace. */
+const STARTUP_GRACE_MS = 30_000
 
 export interface PylanceHealthSnapshot {
   pid: number | null
@@ -23,15 +27,20 @@ export interface PylanceHealthSnapshot {
    *  profile active). The sidebar shows the Pylance row whenever this is
    *  true; pid===null is rendered as "starting…". */
   monitored: boolean
+  inStartupGrace: boolean
 }
 
+/** Timestamp when the extension first became active (or the watcher started,
+ *  if extension was already active). Resets on extension restart. */
+let extensionActivatedAt: number | null = null
 let latest: PylanceHealthSnapshot = {
   pid: null,
   rssMiB: null,
   thresholdMiB: WARN_DEFAULT,
   overThreshold: false,
   extensionActive: false,
-  monitored: false
+  monitored: false,
+  inStartupGrace: true
 }
 let notifiedThisSession = false
 
@@ -83,18 +92,29 @@ async function poll(onRefresh?: () => void): Promise<void> {
   const over = rss !== null && rss > threshold
   const extensionActive =
     vscode.extensions.getExtension('ms-python.vscode-pylance')?.isActive ?? false
+  // Reset the grace clock the first time the extension is observed active
+  // (covers cold start and explicit "Restart Pylance" reactivations).
+  if (extensionActive && !latest.extensionActive) {
+    extensionActivatedAt = Date.now()
+  } else if (extensionActive && extensionActivatedAt === null) {
+    extensionActivatedAt = Date.now()
+  }
+  const inStartupGrace =
+    extensionActivatedAt !== null && Date.now() - extensionActivatedAt < STARTUP_GRACE_MS
   const next: PylanceHealthSnapshot = {
     pid,
     rssMiB: rss,
     thresholdMiB: threshold,
     overThreshold: over,
     extensionActive,
-    monitored: true
+    monitored: true,
+    inStartupGrace
   }
   const visibilityChanged =
     next.extensionActive !== latest.extensionActive ||
     (next.pid !== null) !== (latest.pid !== null) ||
-    next.overThreshold !== latest.overThreshold
+    next.overThreshold !== latest.overThreshold ||
+    next.inStartupGrace !== latest.inStartupGrace
   latest = next
   if (rss !== null && pid !== null) {
     log(`Pylance (pid ${pid}) RSS = ${rss} MiB (threshold ${threshold})`)
@@ -111,18 +131,26 @@ async function poll(onRefresh?: () => void): Promise<void> {
  *  (default 2048 MiB). */
 export function registerPylanceHealth(onRefresh?: () => void): vscode.Disposable[] {
   if (process.platform !== 'linux') return []
-  latest = { ...latest, monitored: true }
+  // Start the startup-grace clock at watcher registration so even the very
+  // first poll (before extensionActivated has been observed true) suppresses
+  // the spurious "no process" / "inactive" warning.
+  extensionActivatedAt = Date.now()
+  latest = { ...latest, monitored: true, inStartupGrace: true }
   onRefresh?.()
   const tick = (): void => {
     poll(onRefresh).catch((err) => error(`pylanceHealth poll failed: ${(err as Error).message}`))
   }
   tick()
   const earlyPoll = setTimeout(tick, 15_000)
+  // Re-poll right after the grace window closes so the cockpit unsuppresses
+  // promptly if Pylance never came up.
+  const postGracePoll = setTimeout(tick, STARTUP_GRACE_MS + 1_000)
   const interval = setInterval(tick, POLL_MS)
   return [
     {
       dispose: () => {
         clearTimeout(earlyPoll)
+        clearTimeout(postGracePoll)
         clearInterval(interval)
         latest = { ...latest, monitored: false, pid: null, rssMiB: null }
         onRefresh?.()

@@ -35,7 +35,7 @@ from cmk.gui.logged_in import (
 from cmk.gui.logged_in import user as global_user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.role_types import CustomUserRole
-from cmk.gui.session import SuperUserContext, UserContext
+from cmk.gui.session_context import SuperUserContext, UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.rulesets import may_edit_ruleset
 from cmk.utils.rulesets.definition import RuleGroup
@@ -181,7 +181,7 @@ def test_unauthenticated_users_authorized_sites(user: LoggedInUser) -> None:
                         timeout=5,
                         user_login=True,
                         proxy=None,
-                        user_sync="all",
+                        user_attribute_sync_connections="all",
                         status_host=None,
                         message_broker_port=5672,
                         is_trusted=False,
@@ -206,7 +206,7 @@ def test_unauthenticated_users_authorized_sites(user: LoggedInUser) -> None:
             timeout=5,
             user_login=True,
             proxy=None,
-            user_sync="all",
+            user_attribute_sync_connections="all",
             status_host=None,
             message_broker_port=5672,
             is_trusted=False,
@@ -228,7 +228,7 @@ def test_unauthenticated_users_authorized_sites(user: LoggedInUser) -> None:
         timeout=5,
         user_login=True,
         proxy=None,
-        user_sync="all",
+        user_attribute_sync_connections="all",
         status_host=None,
         message_broker_port=5672,
         is_trusted=False,

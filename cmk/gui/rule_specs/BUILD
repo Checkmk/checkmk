@@ -43,9 +43,8 @@ py_library(
     deps = [
         ":compatibility",
         ":types",
-        "//cmk/gui:agent_bakery",
-        "//cmk/gui:exceptions",
-        "//cmk/gui:i18n",
+        "//cmk/gui:agent",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/form_specs",
         "//cmk/gui/graphing",
         "//cmk/gui/inventory",
@@ -89,9 +88,8 @@ py_library(
     deps = [
         ":legacy_converter",
         ":loader",
-        "//cmk/gui:i18n",
-        "//cmk/gui:legacy_plugins",
-        "//cmk/gui:log",
+        "//cmk/gui:config",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/watolib",
         "//packages/cmk-ccc:debug",
     ],

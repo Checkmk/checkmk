@@ -4788,10 +4788,6 @@ msgid "Address name"
 msgstr "Adres Naam"
 
 #, fuzzy
-msgid "Address pool name"
-msgstr "Adres Pool Naam"
-
-#, fuzzy
 msgid "Address type"
 msgstr "Adres Type"
 
@@ -5924,6 +5920,10 @@ msgstr "Alle host- en service-downtimes (inclusief ids)"
 
 msgid "All hosts"
 msgstr "Alle gastheren"
+
+#, fuzzy
+msgid "All hosts (experimental)"
+msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
 msgid ""
@@ -7102,14 +7102,6 @@ msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Toepassing en netwerkbelasting balancering (ELBv2)"
 
 #, fuzzy
-msgid "Application gateway"
-msgstr "Toepassing Gateway"
-
-#, fuzzy
-msgid "Application gateways"
-msgstr "Toepassingsgateways"
-
-#, fuzzy
 msgid "Application load balancer certificates"
 msgstr "Application Load Balancer Certificaten"
 
@@ -7444,6 +7436,10 @@ msgstr "Checkmk agent"
 msgid "Ask for an optional comment"
 msgstr "Vraag om een optionele opmerking"
 
+#, fuzzy
+msgid "Assertion Consumer Service URL"
+msgstr "Assertion Consumer Service eindpunt"
+
 msgid "Assertion Consumer Service endpoint"
 msgstr "Assertion Consumer Service eindpunt"
 
@@ -7491,10 +7487,6 @@ msgstr "Toewijzen aan de vragende host"
 
 msgid "Assign via regular expressions"
 msgstr "Toewijzen via reguliere expressies"
-
-#, fuzzy
-msgid "Assigned to host"
-msgstr "Toewijzen aan groep"
 
 #, fuzzy
 msgid "Assignment mode"
@@ -7759,6 +7751,10 @@ msgstr "Authenticatie (instance-specifiek)"
 
 msgid "Authentication Expiration"
 msgstr "Authenticatie Verval"
+
+#, fuzzy
+msgid "Authentication connections"
+msgstr "Authenticatiemethode"
 
 #, fuzzy
 msgid "Authentication context class reference"
@@ -9419,10 +9415,6 @@ msgstr "Backend-pools"
 msgid "Back-end port"
 msgstr "Achterpoort"
 
-#, fuzzy
-msgid "Back-ends"
-msgstr "Backends"
-
 msgid "Background job acknowledged"
 msgstr "Achtergrond baan erkend"
 
@@ -9619,7 +9611,7 @@ msgid "Base URL for Docker API engine"
 msgstr "Basis URL voor docker API engine"
 
 #, fuzzy
-msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
+msgid "Base directory for plug-ins and local"
 msgstr "Basismap voor <tt>plugins</tt> en <tt>local</tt>"
 
 msgid "Base directory for variable data (caches, state files)"
@@ -9909,10 +9901,6 @@ msgstr ""
 
 msgid "Bottom"
 msgstr "Bodem"
-
-#, fuzzy
-msgid "Bottom level suite"
-msgstr "Geen niveaus ingesteld"
 
 msgid "Bounce buffers"
 msgstr "Stuiterbuffers"
@@ -10553,31 +10541,6 @@ msgstr ""
 "Gebruikers die een ESX host alleen beheren of hun vCenter niet in de "
 "monitoring opnemen, kunnen ervoor kiezen om het snapshotoverzicht op de ESX "
 "host zelf weer te geven."
-
-#, fuzzy
-msgid ""
-"By default the users are synchronized automatically in the interval "
-"configured in the connection. For example the LDAP connector synchronizes "
-"the users every five minutes by default. The interval can be changed for "
-"each connection individually in the <a href=\"wato.py?"
-"mode=ldap_config\">connection settings</a>. Please note that the "
-"synchronization is only performed on the central site in distributed setups "
-"by default.<br>The remote sites don't perform automatic user "
-"synchronizations with the configured connections. But you can configure each "
-"site to either synchronize the users with all configured connections or a "
-"specific list of connections."
-msgstr ""
-"Standaard worden de gebruikers automatisch gesynchroniseerd met het interval "
-"dat in de verbinding is geconfigureerd. Bijvoorbeeld de LDAP-connector "
-"synchroniseert de gebruikers standaard om de vijf minuten. Het interval kan "
-"voor elke verbinding afzonderlijk worden gewijzigd in de <a href=\"wato.py?"
-"mode=ldap_config\">verbindingsinstellingen</a>. Merk op dat de "
-"synchronisatie standaard alleen wordt uitgevoerd op de hoofdlocatie in "
-"gedistribueerde opstellingen. <br>De externe locaties voeren geen "
-"automatische gebruikerssynchronisatie uit met de geconfigureerde "
-"verbindingen. Maar u kunt elke site zo instellen dat de gebruikers worden "
-"gesynchroniseerd met alle geconfigureerde verbindingen of met een specifieke "
-"lijst van verbindingen."
 
 #, python-brace-format
 msgid ""
@@ -13133,7 +13096,8 @@ msgstr "Checkmk servers"
 msgid "Checkmk servers"
 msgstr "Checkmk servers"
 
-msgid "Checkmk service provider metadata (generated automatically)"
+#, fuzzy
+msgid "Checkmk service provider metadata"
 msgstr "Checkmk service provider metadata (automatisch gegenereerd)"
 
 #, fuzzy
@@ -13992,9 +13956,6 @@ msgstr "Modelparameters"
 msgid "Cleanup strategy"
 msgstr "Berichten opruimen"
 
-msgid "Clear & Delete"
-msgstr "Wis & Wis"
-
 msgid "Clear log"
 msgstr "Logboek wissen"
 
@@ -14007,6 +13968,11 @@ msgstr "Logboeken wissen door alle opgeslagen berichten te verwijderen"
 #, fuzzy
 msgid "Cleared"
 msgstr "Status 'bevestigd'"
+
+msgid ""
+"Clearing the log acknowledges and removes the stored messages. Log files on "
+"the host stay unchanged."
+msgstr ""
 
 msgid ""
 "Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
@@ -17500,6 +17466,10 @@ msgstr "Aangepaste MBeans"
 msgid "Custom MIBs"
 msgstr "Aangepaste MIB's"
 
+#, fuzzy
+msgid "Custom Metrics cache age"
+msgstr "Naam aangepaste dienst"
+
 msgid "Custom SQL"
 msgstr "Aangepaste SQL"
 
@@ -19085,6 +19055,10 @@ msgstr "Evenement commentaar"
 msgid "Delete configuration %s"
 msgstr "Standaard configuratie"
 
+#, fuzzy, python-format
+msgid "Delete configuration '%s'"
+msgstr "Standaard configuratie"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "Verbinding verwijderen #%d"
@@ -19254,10 +19228,6 @@ msgid "Delete this MIB"
 msgstr "Verwijder deze MIB"
 
 #, fuzzy
-msgid "Delete this Prometheus configuration"
-msgstr "Verwijder deze verbinding"
-
-#, fuzzy
 msgid "Delete this Relay"
 msgstr "Verwijder deze toets"
 
@@ -19392,6 +19362,14 @@ msgstr "Verwijderde BI regel met ID %s"
 msgid "Deleted MIB %s"
 msgstr "Verwijderde MIB %s"
 
+#, fuzzy, python-format
+msgid "Deleted OTel QuickSetup configuration bundle: '%s'"
+msgstr "Standaard configuratie"
+
+#, fuzzy, python-format
+msgid "Deleted Prometheus QuickSetup configuration bundle: '%s'"
+msgstr "Configuratie toestand toevoegen"
+
 #, python-brace-format
 msgid "Deleted Quick Setup {bundle_id}"
 msgstr ""
@@ -19466,9 +19444,6 @@ msgstr "Verwijdert"
 #, fuzzy, python-format
 msgid "Deleting %s..."
 msgstr "Afhalen van '%s'..."
-
-msgid "Deleting will be available soon"
-msgstr ""
 
 msgid "Delimiter for file grouping"
 msgstr "Scheidingsteken voor bestandsgroepering"
@@ -20251,7 +20226,7 @@ msgid "Disable automatic host removal"
 msgstr "Automatische hostverwijdering uitschakelen"
 
 #, fuzzy
-msgid "Disable automatic user synchronization (use central site users)"
+msgid "Disable automatic user attribute synchronization"
 msgstr ""
 "Schakel automatische gebruikerssynchronisatie uit (gebruik master site "
 "gebruikers)"
@@ -22645,6 +22620,14 @@ msgid "Edited %d hosts"
 msgstr "Bewerkte %d hosts"
 
 #, fuzzy, python-format
+msgid "Edited OTel QuickSetup configuration bundle: '%s'"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy, python-format
+msgid "Edited Prometheus QuickSetup configuration bundle: '%s'"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy, python-format
 msgid "Edited Relay '%s'"
 msgstr "Wijzig regel '%s'"
 
@@ -22663,18 +22646,6 @@ msgstr "Bewerkte regel in regelset \"%s\" in map \"%s\""
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr "Bewerkte de %s '%s'"
-
-#, fuzzy, python-format
-msgid "Edited the OpenTelemetry collector configuration: '%s'"
-msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy, python-format
-msgid "Edited the Prometheus configuration '%s'"
-msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy, python-format
-msgid "Edited the connection '%s'"
-msgstr "Verbinding toegevoegd of bewerkt %s"
 
 #, python-format
 msgid "Edited user profile for user %s"
@@ -23442,6 +23413,12 @@ msgstr "Eindpunt"
 msgid "Endpoint URL (optional)"
 msgstr "Commentaar (facultatief)"
 
+msgid ""
+"Endpoint where Checkmk receives the SAML response with the user's assertion "
+"from the identity provider. This value is auto-generated from the Checkmk "
+"server URL (<tt>{Checkmk server URL}/saml_acs.py?acs</tt>)."
+msgstr ""
+
 #, fuzzy
 msgid "Endpoints to monitor"
 msgstr "Te controleren regio's"
@@ -23756,10 +23733,6 @@ msgstr "Inzendingen"
 
 msgid "Entry"
 msgstr "Ingang"
-
-#, fuzzy
-msgid "Env creation"
-msgstr "Schepping"
 
 #, fuzzy
 msgid "Environment Metrics"
@@ -31631,7 +31604,12 @@ msgstr ""
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr ""
 
-msgid "How old (in minutes) the cache file is allowed to be."
+msgid ""
+"How old (in seconds) the cache file for builtin sections is allowed to be."
+msgstr ""
+
+msgid ""
+"How old (in seconds) the cache file for custom metrics is allowed to be."
 msgstr ""
 
 msgid ""
@@ -32436,11 +32414,6 @@ msgstr ""
 "geselecteerde hosts.</i> dan hebben momenteel niet alle geselecteerde hosts "
 "dezelfde instelling voor dit attribuut. Als je die selectie behoudt, "
 "behouden alle hosts hun individuele instellingen."
-
-msgid ""
-"If a service's current state differs from its requested state, the state of "
-"the Service will be set to this value."
-msgstr ""
 
 msgid ""
 "If a source host does not send data for its piggybacked hosts at all or for "
@@ -35101,6 +35074,10 @@ msgstr "Erven van rapportagetijdbereik (alleen rapportage)"
 msgid "Inherited from "
 msgstr "Geërfd van "
 
+#, fuzzy
+msgid "Inherited from central site"
+msgstr "Regels kopiëren van centrale site"
+
 msgid "Init duration"
 msgstr "Init duur"
 
@@ -35280,7 +35257,7 @@ msgid "Installation directories"
 msgstr "Checkmk Agent installatie auditing"
 
 #, fuzzy
-msgid "Installation paths for agent files (Linux, Unix) (deprecated)"
+msgid "Installation paths for agent files (Linux, Unix)"
 msgstr "Installatiepaden voor agentbestanden (Linux, UNIX)"
 
 msgid "Installed RAM"
@@ -36813,6 +36790,12 @@ msgstr "Kaspersky Anti-Virus Tijd Instellingen"
 msgid "Keep comment after acknowledgment expires (persistent comment)"
 msgstr ""
 
+msgid "Keep containers exited with non-zero exit code"
+msgstr ""
+
+msgid "Keep containers exited with non-zero exit code in monitoring"
+msgstr ""
+
 msgid "Keep existing connections"
 msgstr "Bestaande verbindingen behouden"
 
@@ -37081,6 +37064,10 @@ msgstr "LDAP-attribuut om te synchroniseren"
 
 msgid "LDAP base, e.g. ou=Development, o=Checkmk GmbH, c=de"
 msgstr "LDAP basis, bijv. ou=Ontwikkeling, o=Checkmk GmbH, c=de"
+
+#, fuzzy
+msgid "LDAP connection"
+msgstr "LDAP-verbindingen"
 
 #, python-format
 msgid ""
@@ -37497,6 +37484,9 @@ msgstr ""
 
 msgid "Learning Checkmk"
 msgstr "Leren Checkmk"
+
+msgid "Leave empty to auto-generate from Checkmk server URL"
+msgstr ""
 
 msgid "Left"
 msgstr "Links"
@@ -38782,12 +38772,6 @@ msgstr "Luister naar inkomende berichten via"
 
 msgid "Listen for spans on this local IP address"
 msgstr ""
-
-msgid "Listener"
-msgstr "Luisteraar"
-
-msgid "Listeners"
-msgstr "Luisteraars"
 
 msgid "Listeners per load balancer"
 msgstr "Luisteraars per load balancer"
@@ -41355,10 +41339,6 @@ msgid "Maximum number of access points"
 msgstr "Maximum aantal toegangspunten"
 
 #, fuzzy
-msgid "Maximum number of attempts"
-msgstr "Maximum aantal leveringspogingen"
-
-#, fuzzy
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
 "notification plug-in may report that a retry is pointless in which case no "
@@ -42023,6 +42003,10 @@ msgid "Metadata"
 msgstr "Metadata"
 
 msgid "Metadata endpoint"
+msgstr "Metadata eindpunt"
+
+#, fuzzy
+msgid "Metadata endpoint URL"
 msgstr "Metadata eindpunt"
 
 msgid ""
@@ -44635,12 +44619,20 @@ msgid "No Levels"
 msgstr "Geen niveaus"
 
 #, fuzzy
+msgid "No OTel configuration found for this bundle."
+msgstr "Geen logs gevonden voor deze host."
+
+#, fuzzy
 msgid "No OpenTelemetry configuration yet"
 msgstr "Host configuratie"
 
 #, fuzzy
 msgid "No PNP templates using the deprecated API"
 msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+msgid "No Prometheus configuration found for this bundle."
+msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
 msgid "No Prometheus configuration yet"
@@ -47753,6 +47745,13 @@ msgstr "Configuratie toestand toevoegen"
 msgid "OpenTelemetry Quick Setup"
 msgstr "Configuratie toestand toevoegen"
 
+#, fuzzy
+msgid ""
+"OpenTelemetry configuration bundles are managed via the OpenTelemetry or "
+"Prometheus Quick Setup pages."
+msgstr ""
+"Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
+
 msgid "OpenVMS processes"
 msgstr "OpenVMS processen"
 
@@ -50799,6 +50798,13 @@ msgstr "Periodieke meldingen bij problemen met de dienstverlening"
 msgid "Periodic service discovery"
 msgstr "Periodieke dienstontdekking"
 
+msgid ""
+"Periodic user attribute synchronization keeps user attributes (alias, email, "
+"roles, contact groups) up to date on this site. This is primarily relevant "
+"for LDAP connections. SAML connections update attributes only when a user "
+"logs in, so they do not need to be listed here."
+msgstr ""
+
 #, fuzzy
 msgid "Permanent generation memory"
 msgstr "Permanent Generatiegeheugen"
@@ -51114,12 +51120,6 @@ msgstr "Mededeling in gewone tekst"
 msgid "Plain text communication is enabled for %s"
 msgstr "Communicatie via platte tekst is ingeschakeld voor %s"
 
-msgid "Plan ID"
-msgstr ""
-
-msgid "Plans"
-msgstr ""
-
 #, fuzzy
 msgid "Platform firmware level"
 msgstr "Platform Firmware niveau"
@@ -51364,6 +51364,10 @@ msgid "Please enter a valid Webhook URL"
 msgstr "Voer een geldig nummer in"
 
 msgid "Please enter a valid absolut pathname with / as a path separator."
+msgstr "Voer een geldige absolute padnaam in met / als pad scheidingsteken."
+
+#, fuzzy
+msgid "Please enter a valid absolute pathname with / as a path separator."
 msgstr "Voer een geldige absolute padnaam in met / als pad scheidingsteken."
 
 #, fuzzy
@@ -53807,6 +53811,11 @@ msgstr "Alleen lezen"
 msgid "Read-only mode for configuration"
 msgstr "Configuratie op afstand"
 
+msgid ""
+"Read-only summary of the connections inherited from the central site. "
+"Refreshed each time this dialog is opened."
+msgstr ""
+
 msgid "Reading connections"
 msgstr "Aansluitingen lezen"
 
@@ -56123,9 +56132,6 @@ msgstr "Rittal CMC-III units: Actueel"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-III units: Temperaturen"
 
-msgid "Robot"
-msgstr ""
-
 msgid "Role"
 msgstr "Rol"
 
@@ -56665,6 +56671,10 @@ msgstr "SAP-routercertificaat"
 #, fuzzy
 msgid "SAML built-in signing certificate"
 msgstr "SAP-routercertificaat"
+
+#, fuzzy
+msgid "SAML connection"
+msgstr "SAML-verbindingen"
 
 msgid "SAML connections"
 msgstr "SAML-verbindingen"
@@ -57442,16 +57452,8 @@ msgid "Scheduler"
 msgstr "Scheduler"
 
 #, fuzzy
-msgid "Scheduler interval"
-msgstr "Cache-interval"
-
-#, fuzzy
 msgid "Scheduler job name"
 msgstr "Taaknaam planner"
-
-#, fuzzy
-msgid "Scheduler plan configs"
-msgstr "Uitvaltijden plannen"
 
 #, python-format
 msgid "Scheduling report in background failed: %s"
@@ -58101,6 +58103,16 @@ msgid ""
 "LDAP) negotiate encryption after connecting in plain text using the "
 "respective protocol. Proxy connections allow to connect via a proxy server, "
 "only global and manual proxy configurations are supported."
+msgstr ""
+
+msgid ""
+"Select the connections that are available for login on this site. Choose "
+"<i>Use the same connections as the central site</i> to inherit the central "
+"site's selection (changes made on the central site take effect after the "
+"next configuration sync), or <i>Use the following connections</i> to pick "
+"specific LDAP and SAML connections. Each SAML entry may optionally override "
+"the SP entity ID, which is useful when multiple sites share the same SAML "
+"connection but need to be registered separately at the IdP."
 msgstr ""
 
 #, fuzzy
@@ -59026,7 +59038,7 @@ msgid "Service state age"
 msgstr "Leeftijd dienststaat"
 
 #, fuzzy
-msgid "Service state for Differing Service States"
+msgid "Service state for differing VM/LXC states"
 msgstr "Dienststaat percentage"
 
 #, fuzzy
@@ -63560,6 +63572,9 @@ msgstr "Status epoch niveaus en gemiddelde"
 msgid "Status flapping"
 msgstr "Status flapping"
 
+msgid "Status host"
+msgstr "Status gastheer"
+
 msgid "Status notification period"
 msgstr "Statuskennisgevingstermijn"
 
@@ -64068,10 +64083,6 @@ msgstr "Prestatieverbeteringen"
 msgid "Suggested tutorial videos"
 msgstr "Voorgestelde instructievideo's"
 
-#, fuzzy
-msgid "Suite name"
-msgstr "Naam site"
-
 msgid "Sum"
 msgstr "Som"
 
@@ -64286,6 +64297,14 @@ msgid "Symmetric encryption (Linux, Solaris, Windows)"
 msgstr "Symmetrische encryptie (Linux, Windows)"
 
 #, fuzzy
+msgid "Sync attributes for all LDAP connections"
+msgstr "Synchroniseer met de volgende LDAP-verbindingen"
+
+#, fuzzy
+msgid "Sync attributes only for the following connections"
+msgstr "Synchroniseer met de volgende LDAP-verbindingen"
+
+#, fuzzy
 msgid "Sync disabled"
 msgstr "uitgeschakeld"
 
@@ -64304,15 +64323,6 @@ msgstr "Sync latentie"
 
 msgid "Sync losses"
 msgstr "Sync verliezen"
-
-msgid "Sync users with all connections"
-msgstr "Synchroniseer gebruikers met alle verbindingen"
-
-msgid "Sync with LDAP connections"
-msgstr "Synchroniseren met LDAP-verbindingen"
-
-msgid "Sync with the following LDAP connections"
-msgstr "Synchroniseer met de volgende LDAP-verbindingen"
 
 #, fuzzy
 msgid "Sync-plug-in: Roles"
@@ -65312,10 +65322,6 @@ msgstr "Test"
 msgid "Testing notifications"
 msgstr "laatste mededeling"
 
-#, fuzzy
-msgid "Tests"
-msgstr "Test"
-
 msgid "Text"
 msgstr "Tekst"
 
@@ -66084,10 +66090,6 @@ msgstr ""
 "IO-gebruik van de rekeenheden als componenten van een rekserver als "
 "apparaat) in het laatste controle-interval. Het mogelijke bereik is van 0% "
 "tot 100%"
-
-#, fuzzy
-msgid "The Prometheus configuration has been saved."
-msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
 msgid ""
@@ -69814,6 +69816,11 @@ msgstr ""
 "dagen 1-28 van een maand."
 
 msgid ""
+"The state of the Proxmox VE HA Manager Watcher service will be set to this "
+"value if the current state of a VM/LXC differs from its requested state"
+msgstr ""
+
+msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
 "is based on the assumption that you want to be informed when there is new "
 "information. However, there are also use cases where new incoming messages "
@@ -71118,10 +71125,6 @@ msgstr ""
 "onpraktisch kan zijn op apparaten met zeer veel cores. Dit wordt momenteel "
 "alleen ondersteund op Linux en Windows agents en op apparaten die worden "
 "gemonitord via de host-resource mib"
-
-#, python-format
-msgid "This affects %s"
-msgstr "Dit beïnvloedt %s"
 
 msgid "This affects all rule packs."
 msgstr "Dit geldt voor alle regelpakketten."
@@ -72512,8 +72515,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Deze optie zorgt ervoor dat checkmk ofwel de interface beschrijving, alias "
 "of poortnummer gebruikt als item."
@@ -75058,6 +75061,10 @@ msgid "This variable is configured in <a href=\"%s\">Global settings</a>."
 msgstr ""
 "Deze variabele is geconfigureerd in <a href=\"%s\">globale instellingen</a>."
 
+#, fuzzy
+msgid "This view"
+msgstr "Deze weergave als PDF"
+
 msgid "This view as PDF"
 msgstr "Deze weergave als PDF"
 
@@ -75355,6 +75362,13 @@ msgstr "Alle persoonlijke meldingen uitschakelen"
 
 msgid "This year"
 msgstr "Dit jaar"
+
+#, python-brace-format
+msgid ""
+"This {type_name} is part of the {config_name} {product} configuration.<br>To "
+"access further parts of the {product} configuration, go to the related "
+"{product} configuration."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -75902,6 +75916,10 @@ msgstr ""
 "met de volgende instantie wordt begonnen. Indien niet ingesteld, wordt de "
 "standaardwaarde van ADO gebruikt."
 
+#, fuzzy
+msgid "Time until alert, if ALLCONTAINERSRESTARTING condition is true"
+msgstr "Tijd tot waarschuwing, indien CONTAINERSREADY voorwaarde vals is"
+
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "Tijd tot waarschuwing, indien BESCHIKBAAR voorwaarde vals is"
 
@@ -76417,10 +76435,6 @@ msgstr "Top applicatie verkeer: laatste dag weergave"
 
 msgid "Top application traffic: last hour view"
 msgstr "Top applicatieverkeer: weergave laatste uur"
-
-#, fuzzy
-msgid "Top level suite"
-msgstr "Veiligheidsnaam"
 
 #, fuzzy
 msgid "Top list"
@@ -79760,6 +79774,19 @@ msgstr ""
 "check_mk/</tt>. Deze URL wordt gebruikt om de update URL voor een host "
 "automatisch te verstrekken bij agent registratie of update."
 
+msgid ""
+"URL where this site receives SAML responses from the IdP for this "
+"connection. Register this URL with the IdP's client configuration. The URL "
+"is only shown after saving the site configuration and reopening this dialog."
+msgstr ""
+
+msgid ""
+"URL where this site serves the SAML Service Provider metadata for this "
+"connection. Derived from the site's <i>Server URL for SAML ACS callback</i> "
+"and the connection ID. The URL is only shown after saving the site "
+"configuration and reopening this dialog."
+msgstr ""
+
 msgid "URL:"
 msgstr "URL:"
 
@@ -80213,6 +80240,13 @@ msgstr ""
 #, fuzzy
 msgid "Unique host name template"
 msgstr "Sjabloon hostnaam"
+
+msgid ""
+"Unique identifier for this Checkmk Service Provider, used by the identity "
+"provider to recognize requests originating from Checkmk. Leave empty to auto-"
+"generate the value from the Checkmk server URL (<tt>{Checkmk server URL}/"
+"saml_metadata.py</tt>) or specify an arbitrary value."
+msgstr ""
 
 msgid "Unit"
 msgstr "Eenheid"
@@ -81866,6 +81900,10 @@ msgstr "Gebruik de meest kritische van uw en apparaat niveaus"
 msgid "Use mount point"
 msgstr "Gebruik mountpoint"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Naam gebruiker"
+
 msgid "Use narrow rendering for this number"
 msgstr "Gebruik smalle weergave voor dit nummer"
 
@@ -82028,6 +82066,10 @@ msgid ""
 "configuration:"
 msgstr ""
 
+#, fuzzy
+msgid "Use the following connections"
+msgstr "Gebruik de volgende kleur"
+
 msgid "Use the following credentials"
 msgstr "Gebruik de volgende inloggegevens"
 
@@ -82087,6 +82129,10 @@ msgstr ""
 
 msgid "Use the remote SID"
 msgstr "Gebruik de externe SID"
+
+#, fuzzy
+msgid "Use the same connections as the central site"
+msgstr "TCP connect timeout voor verbinding met de master"
 
 #, fuzzy
 msgid "Use the status of the Check_MK Service"
@@ -82611,6 +82657,10 @@ msgstr "Gebruiker en wachtwoord"
 msgid "User asserts"
 msgstr "%s Verklaart"
 
+#, fuzzy
+msgid "User attribute synchronization"
+msgstr "Synchronisatie van gebruikers"
+
 msgid "User base DN"
 msgstr "Gebruikersbasis DN"
 
@@ -82621,6 +82671,10 @@ msgstr "Token authenticatie"
 #, fuzzy
 msgid "User certificate path"
 msgstr "Certificaten verifiëren"
+
+#, fuzzy
+msgid "User configuration"
+msgstr "configuratie"
 
 #, fuzzy
 msgid "User creation options"
@@ -83700,10 +83754,6 @@ msgstr "Variabele"
 
 msgid "Variables set in the site user's environment"
 msgstr "Variabelen ingesteld in de omgeving van de sitegebruiker's"
-
-#, fuzzy
-msgid "Variant"
-msgstr "Variabele"
 
 msgid "Various"
 msgstr "Diverse"
@@ -85033,6 +85083,15 @@ msgstr ""
 "gegeven fysieke toestanden worden toegevoegd aan het monitoring systeem."
 
 msgid ""
+"When enabled (default), containers that have exited with a non-zero exit "
+"code will continue to be monitored individually. When disabled, they are "
+"removed from individual monitoring. Note: containers exited with exit code 0 "
+"are always removed from individual monitoring regardless of this setting. "
+"All exited containers are still counted in the container count service on "
+"the Podman host."
+msgstr ""
+
+msgid ""
 "When enabled all exceptions occuring during the helper execution will raise "
 "through and directly result in termination of the helper process."
 msgstr ""
@@ -85188,8 +85247,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Bij het opsommen van de groepsleden in de uitvoer van de dienst die de groep "
 "bewaakt, zorgt deze optie ervoor dat checkmk ofwel de interfacebeschrijving, "
@@ -93416,10 +93475,6 @@ msgid "Engineering scientific"
 msgstr ""
 
 #, fuzzy
-msgid "Symbol is required"
-msgstr "is vereist"
-
-#, fuzzy
 msgid "Digits must be a non-negative number"
 msgstr "Datum moet een getalswaarde zijn"
 
@@ -94634,15 +94689,7 @@ msgstr "Nieuwe gebruikersconfiguratie toevoegen"
 msgid "An unexpected error occurred. Please try again."
 msgstr "Er is een uitzondering opgetreden: %s"
 
-#, fuzzy
-msgid "newly created"
-msgstr "Bestand aangemaakt"
-
-#, fuzzy
-msgid "existing"
-msgstr "Test"
-
-msgid "Basic auth (user: %{user}, password: %{password})"
+msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
 
 #, fuzzy
@@ -94654,20 +94701,18 @@ msgid "No encryption"
 msgstr "Encryptie"
 
 #, fuzzy
-msgid "Event Console resource attribute"
+msgid "Enabled (Resource attribute: %{attribute})"
 msgstr "Rolkenmerk"
 
 #, fuzzy
 msgid "The hosts will be created in the \"Telemetry\" folder."
 msgstr "Configuratie toestand toevoegen"
 
-#, fuzzy
-msgid "gRPC protocol"
-msgstr "Protocol"
+msgid "gRPC-based OTLP receiver:"
+msgstr ""
 
-#, fuzzy
-msgid "HTTP protocol"
-msgstr "Protocol"
+msgid "HTTP-based OTLP receiver:"
+msgstr ""
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -94738,6 +94783,10 @@ msgstr "Configuratiebestanden"
 #, fuzzy
 msgid "Could not create the configuration bundle"
 msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
+msgid "Prometheus scraper:"
+msgstr "Alertmanager"
 
 msgid ""
 "Insecure connection detected (HTTP). For better security, we recommend "
@@ -95807,6 +95856,146 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Symbol is required"
+#~ msgstr "is vereist"
+
+#, fuzzy
+#~ msgid ""
+#~ "By default the users are synchronized automatically in the interval "
+#~ "configured in the connection. For example the LDAP connector synchronizes "
+#~ "the users every five minutes by default. The interval can be changed for "
+#~ "each connection individually in the <a href=\"wato.py?"
+#~ "mode=ldap_config\">connection settings</a>. Please note that the "
+#~ "synchronization is only performed on the central site in distributed "
+#~ "setups by default.<br>The remote sites don't perform automatic user "
+#~ "synchronizations with the configured connections. But you can configure "
+#~ "each site to either synchronize the users with all configured connections "
+#~ "or a specific list of connections."
+#~ msgstr ""
+#~ "Standaard worden de gebruikers automatisch gesynchroniseerd met het "
+#~ "interval dat in de verbinding is geconfigureerd. Bijvoorbeeld de LDAP-"
+#~ "connector synchroniseert de gebruikers standaard om de vijf minuten. Het "
+#~ "interval kan voor elke verbinding afzonderlijk worden gewijzigd in de <a "
+#~ "href=\"wato.py?mode=ldap_config\">verbindingsinstellingen</a>. Merk op "
+#~ "dat de synchronisatie standaard alleen wordt uitgevoerd op de "
+#~ "hoofdlocatie in gedistribueerde opstellingen. <br>De externe locaties "
+#~ "voeren geen automatische gebruikerssynchronisatie uit met de "
+#~ "geconfigureerde verbindingen. Maar u kunt elke site zo instellen dat de "
+#~ "gebruikers worden gesynchroniseerd met alle geconfigureerde verbindingen "
+#~ "of met een specifieke lijst van verbindingen."
+
+#~ msgid "Sync users with all connections"
+#~ msgstr "Synchroniseer gebruikers met alle verbindingen"
+
+#~ msgid "Sync with LDAP connections"
+#~ msgstr "Synchroniseren met LDAP-verbindingen"
+
+#, fuzzy
+#~ msgid "newly created"
+#~ msgstr "Bestand aangemaakt"
+
+#, fuzzy
+#~ msgid "existing"
+#~ msgstr "Test"
+
+#, fuzzy
+#~ msgid "Event Console resource attribute"
+#~ msgstr "Rolkenmerk"
+
+#, fuzzy
+#~ msgid "gRPC protocol"
+#~ msgstr "Protocol"
+
+#, fuzzy
+#~ msgid "HTTP protocol"
+#~ msgstr "Protocol"
+
+#, fuzzy
+#~ msgid "Address pool name"
+#~ msgstr "Adres Pool Naam"
+
+#, fuzzy
+#~ msgid "Application gateway"
+#~ msgstr "Toepassing Gateway"
+
+#, fuzzy
+#~ msgid "Application gateways"
+#~ msgstr "Toepassingsgateways"
+
+#, fuzzy
+#~ msgid "Assigned to host"
+#~ msgstr "Toewijzen aan groep"
+
+#, fuzzy
+#~ msgid "Back-ends"
+#~ msgstr "Backends"
+
+#, fuzzy
+#~ msgid "Bottom level suite"
+#~ msgstr "Geen niveaus ingesteld"
+
+#, fuzzy
+#~ msgid "Env creation"
+#~ msgstr "Schepping"
+
+#~ msgid "Listener"
+#~ msgstr "Luisteraar"
+
+#~ msgid "Listeners"
+#~ msgstr "Luisteraars"
+
+#, fuzzy
+#~ msgid "Maximum number of attempts"
+#~ msgstr "Maximum aantal leveringspogingen"
+
+#, fuzzy
+#~ msgid "Scheduler interval"
+#~ msgstr "Cache-interval"
+
+#, fuzzy
+#~ msgid "Scheduler plan configs"
+#~ msgstr "Uitvaltijden plannen"
+
+#, fuzzy
+#~ msgid "Suite name"
+#~ msgstr "Naam site"
+
+#, fuzzy
+#~ msgid "Tests"
+#~ msgstr "Test"
+
+#, fuzzy
+#~ msgid "Top level suite"
+#~ msgstr "Veiligheidsnaam"
+
+#, fuzzy
+#~ msgid "Variant"
+#~ msgstr "Variabele"
+
+#~ msgid "Clear & Delete"
+#~ msgstr "Wis & Wis"
+
+#, fuzzy
+#~ msgid "Delete this Prometheus configuration"
+#~ msgstr "Verwijder deze verbinding"
+
+#, fuzzy, python-format
+#~ msgid "Edited the OpenTelemetry collector configuration: '%s'"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy, python-format
+#~ msgid "Edited the connection '%s'"
+#~ msgstr "Verbinding toegevoegd of bewerkt %s"
+
+#, fuzzy
+#~ msgid "The Prometheus configuration has been saved."
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, python-format
+#~ msgid "This affects %s"
+#~ msgstr "Dit beïnvloedt %s"
+
 #~ msgid "Do not validate server certificate during port query"
 #~ msgstr "Servercertificaat niet valideren tijdens poortverzoek"
 
@@ -95830,9 +96019,6 @@ msgstr ""
 
 #~ msgid "Ports to open"
 #~ msgstr "Te openen poorten"
-
-#~ msgid "Status host"
-#~ msgstr "Status gastheer"
 
 #, fuzzy
 #~ msgid "Deploy IBM MQ plug-in"
@@ -95925,13 +96111,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Add new target"
 #~ msgstr "Nieuwe tag toevoegen"
-
-#, fuzzy
-#~ msgid ""
-#~ "All related configuration of the integrated OpenTelemetry Collector "
-#~ "Prometheus scraping."
-#~ msgstr ""
-#~ "Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
 
 #, fuzzy
 #~ msgid ""
@@ -98411,9 +98590,6 @@ msgstr ""
 
 #~ msgid "User Agent"
 #~ msgstr "Gebruiker Agent"
-
-#~ msgid "User name"
-#~ msgstr "Naam gebruiker"
 
 #, fuzzy
 #~ msgid "Windows time service peers"
@@ -101443,10 +101619,6 @@ msgstr ""
 #~ msgstr "Momentopnamen beheren"
 
 #, fuzzy
-#~ msgid "OpenTelemetry (experimental)"
-#~ msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy
 #~ msgid "OpenTelemetry Collector (Experimental)"
 #~ msgstr "Configuratie toestand toevoegen"
 
@@ -101649,10 +101821,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Data point attribute filters"
 #~ msgstr "Gewijzigde attributen"
-
-#, fuzzy
-#~ msgid "Resource attribute filters"
-#~ msgstr "Rolkenmerk"
 
 #, fuzzy
 #~ msgid "Scope attribute filters"

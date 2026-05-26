@@ -61,10 +61,69 @@ class TestPiggybackSummarizer:
             expect_data=True,
         ) == [ActiveCheckResult(state=1, summary="Missing data")]
 
-    @pytest.mark.parametrize("expect_data", [True, False])
-    def test_summarize_outdated_data_regardless_of_is_piggyback_option(
-        self, expect_data: bool
+    @pytest.mark.parametrize(
+        "expect_data, expected_results",
+        [
+            # When the host is not flagged as a piggyback host, keep the lenient
+            # state-0 semantic: no data is treated like no problem.
+            pytest.param(
+                False,
+                [
+                    ActiveCheckResult(
+                        state=0, summary="Piggyback data outdated (age: 0:00:20, allowed: 0:00:10)"
+                    )
+                ],
+                id="expected=False",
+            ),
+            # When the host IS a piggyback host, outdated data is a real issue and
+            # discovery should not act destructively on it -> WARN (state 1).
+            pytest.param(
+                True,
+                [
+                    ActiveCheckResult(
+                        state=0, summary="Piggyback data outdated (age: 0:00:20, allowed: 0:00:10)"
+                    ),
+                    ActiveCheckResult(state=1, summary="All piggyback data sources outdated."),
+                ],
+                id="expected=True",
+            ),
+        ],
+    )
+    def test_summarize_outdated_data_state_depends_on_is_piggyback_option(
+        self, expect_data: bool, expected_results: list[ActiveCheckResult]
     ) -> None:
+        now = int(time.time())
+        assert (
+            summarize_piggyback(
+                host_sections=HostSections(
+                    {
+                        SectionName("piggyback_source_summary"): [
+                            [
+                                PiggybackMetaData(
+                                    source=HostAddress("source"),
+                                    piggybacked=HostName("hostname"),
+                                    last_update=now - 20,
+                                    last_contact=now - 10,
+                                ).serialize()
+                            ]
+                        ],
+                    }
+                ),
+                config=PiggybackConfig(HostName("hostname"), [(None, "max_cache_age", 10)]),
+                expect_data=expect_data,
+                now=now,
+            )
+            == expected_results
+        )
+
+    def test_summarize_outdated_data_with_fresh_source_does_not_add_aggregate_warning(
+        self,
+    ) -> None:
+        # Container/VM moved between source hosts: the old source's piggyback
+        # file is still on disk but stale, while the new source provides
+        # fresh data. The aggregate WARN MUST NOT be added in this case --
+        # discovery has to be able to proceed to transition the host to the
+        # new source rather than wait for the daily piggyback cleanup job.
         now = int(time.time())
         assert summarize_piggyback(
             host_sections=HostSections(
@@ -72,22 +131,32 @@ class TestPiggybackSummarizer:
                     SectionName("piggyback_source_summary"): [
                         [
                             PiggybackMetaData(
-                                source=HostAddress("source"),
+                                source=HostAddress("old_source"),
                                 piggybacked=HostName("hostname"),
                                 last_update=now - 20,
                                 last_contact=now - 10,
                             ).serialize()
-                        ]
+                        ],
+                        [
+                            PiggybackMetaData(
+                                source=HostAddress("new_source"),
+                                piggybacked=HostName("hostname"),
+                                last_update=now,
+                                last_contact=now - 1,
+                            ).serialize()
+                        ],
                     ],
                 }
             ),
             config=PiggybackConfig(HostName("hostname"), [(None, "max_cache_age", 10)]),
-            expect_data=expect_data,
+            expect_data=True,
             now=now,
         ) == [
             ActiveCheckResult(
-                state=0, summary="Piggyback data outdated (age: 0:00:20, allowed: 0:00:10)"
-            )
+                state=0,
+                summary="Piggyback data outdated (age: 0:00:20, allowed: 0:00:10)",
+            ),
+            ActiveCheckResult(state=0, summary="Successfully processed from source 'new_source'"),
         ]
 
     @pytest.mark.parametrize("expect_data", [True, False])

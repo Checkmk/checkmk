@@ -57,7 +57,7 @@ from cmk.agent_based.v2 import (
 
 ServiceLabels = dict[str, str]
 
-_ItemAppearance = Literal["index", "descr", "alias"]
+_ItemAppearance = Literal["index", "descr", "alias", "name"]
 
 
 class ConditionsForLabels(TypedDict, total=False):
@@ -234,7 +234,7 @@ class IPNetworkAdapter:
 
 def _to_item_appearance(value: str) -> _ItemAppearance:
     match value:
-        case "index" | "descr" | "alias":
+        case "index" | "descr" | "alias" | "name":
             return value
     raise ValueError(f"Invalid item appearance: {value}")
 
@@ -287,6 +287,7 @@ class Attributes:
     node: str | None = None
     admin_status: str | None = None
     extra_info: str | None = None
+    name: str = ""
 
     def __post_init__(self) -> None:
         self.finalize()
@@ -301,6 +302,7 @@ class Attributes:
 
         self.descr = _cleanup_if_strings(self.descr)
         self.alias = _cleanup_if_strings(self.alias)
+        self.name = _cleanup_if_strings(self.name)
 
     @property
     def oper_status_up(self) -> str:
@@ -951,6 +953,7 @@ def _matching_interface_for_simple_item[
             )
             or ((appearance == "alias" or use_old_matching) and item == interface.attributes.alias)
             or ((appearance == "descr" or use_old_matching) and item == interface.attributes.descr)
+            or ((appearance == "name" or use_old_matching) and item == interface.attributes.name)
         ),
         None,
     )
@@ -977,6 +980,10 @@ def _matching_interface_for_compound_item[
             or (
                 (appearance == "descr" or use_old_matching)
                 and item == f"{interface.attributes.descr} {interface.attributes.index}"
+            )
+            or (
+                (appearance == "name" or use_old_matching)
+                and item == f"{interface.attributes.name} {interface.attributes.index}"
             )
         ),
         None,
@@ -1160,6 +1167,12 @@ def _compute_item[TInterfaceType: (InterfaceWithCounters, InterfaceWithRates)](
                     used_appearance="alias",
                     item=attributes.alias,
                 )
+        case "name":
+            if attributes.name:
+                return ItemInfo(
+                    used_appearance="name",
+                    item=attributes.name,
+                )
 
     return ItemInfo(
         used_appearance="index",
@@ -1310,11 +1323,13 @@ def discover_interfaces[TInterfaceType: (InterfaceWithCounters, InterfaceWithRat
             DISCOVERY_DEFAULT_PARAMETERS["discovery_single"][1]["pad_portnumbers"],
         )
 
-        for appearance in (
-            ["index", "descr", "alias"]
-            if interface.attributes.descr != interface.attributes.alias
-            else ["index", "descr"]
-        ):
+        attrs = interface.attributes
+        appearances: list[str] = ["index", "descr"]
+        if attrs.alias != attrs.descr:
+            appearances.append("alias")
+        if attrs.name and attrs.name not in (attrs.descr, attrs.alias):
+            appearances.append("name")
+        for appearance in appearances:
             n_times_item_seen[
                 _compute_item(
                     _to_item_appearance(appearance),

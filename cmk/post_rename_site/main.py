@@ -20,7 +20,7 @@ from cmk.discover_plugins import discover_plugins_from_modules, discover_submodu
 # the moment we need to deal with it.
 from cmk.gui import main_modules
 from cmk.gui.script_helpers import gui_context
-from cmk.gui.session import SuperUserContext
+from cmk.gui.session_context import SuperUserContext
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE

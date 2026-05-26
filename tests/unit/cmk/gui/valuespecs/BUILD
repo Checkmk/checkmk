@@ -20,9 +20,7 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
-        "//cmk/gui:exceptions",
-        "//cmk/gui:http",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/graphing",
         "//cmk/gui/utils:encrypter",
         "//cmk/gui/utils:html",

@@ -13,7 +13,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:http",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/utils",
         requirement("docstring-parser"),
@@ -30,7 +30,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:ctx_stack",
+        "//cmk/gui:core_toolkit",
     ],
 )
 
@@ -74,7 +74,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:hooks",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/openapi/framework:api_config",
         "//cmk/gui/openapi/framework:core",
         "//cmk/gui/openapi/restful_objects",

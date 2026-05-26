@@ -26,6 +26,7 @@ def test_mk_podman_files_auto_detection() -> None:
                     "connection_method: api",
                     "socket_detection_method: auto",
                     "piggyback_name_method: nodename_name",
+                    "keep_non_zero_exit_containers: true",
                 ],
                 target=Path("mk_podman.cfg"),
                 include_header=True,
@@ -54,6 +55,7 @@ def test_mk_podman_files_manual_sockets() -> None:
                     "socket_detection_method: manual",
                     "socket_paths: /run/podman/podman.sock,/tmp/podman.sock",
                     "piggyback_name_method: name",
+                    "keep_non_zero_exit_containers: true",
                 ],
                 target=Path("mk_podman.cfg"),
                 include_header=True,
@@ -90,6 +92,7 @@ def test_mk_podman_files_only_root_socket() -> None:
                     "connection_method: api",
                     "socket_detection_method: only_root_socket",
                     "piggyback_name_method: name_id",
+                    "keep_non_zero_exit_containers: true",
                 ],
                 target=Path("mk_podman.cfg"),
                 include_header=True,
@@ -116,6 +119,36 @@ def test_mk_podman_files_only_user_sockets() -> None:
                     "connection_method: api",
                     "socket_detection_method: only_user_sockets",
                     "piggyback_name_method: nodename_name",
+                    "keep_non_zero_exit_containers: true",
+                ],
+                target=Path("mk_podman.cfg"),
+                include_header=True,
+            ),
+        ],
+        key=repr,
+    )
+    assert result == expected
+
+
+def test_mk_podman_files_keep_non_zero_exit_containers_false() -> None:
+    conf = {
+        "deploy": True,
+        "connection_method": ("api", ("auto", None)),
+        "piggyback_name_method": "nodename_name",
+        "keep_non_zero_exit_containers": False,
+    }
+    result = sorted(get_mk_podman_files(conf), key=repr)
+    expected = sorted(
+        [
+            Plugin(base_os=OS.LINUX, source=Path("mk_podman.py")),
+            PluginConfig(
+                base_os=OS.LINUX,
+                lines=[
+                    "[PODMAN]",
+                    "connection_method: api",
+                    "socket_detection_method: auto",
+                    "piggyback_name_method: nodename_name",
+                    "keep_non_zero_exit_containers: false",
                 ],
                 target=Path("mk_podman.cfg"),
                 include_header=True,
@@ -142,6 +175,7 @@ def test_mk_podman_files_cli_connection_method() -> None:
                     "[PODMAN]",
                     "connection_method: cli",
                     "piggyback_name_method: nodename_name",
+                    "keep_non_zero_exit_containers: true",
                 ],
                 target=Path("mk_podman.cfg"),
                 include_header=True,

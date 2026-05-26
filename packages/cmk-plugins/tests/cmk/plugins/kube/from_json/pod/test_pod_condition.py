@@ -5,24 +5,25 @@
 import pytest
 
 from cmk.plugins.kube.from_json.pod.pod_condition import pod_condition, pod_conditions
-from cmk.plugins.kube.schemata.api import ConditionType
+from cmk.plugins.kube.schemata.api import PodConditionType
 
 
 @pytest.mark.parametrize(
     "type_str, expected_type",
     [
-        ("PodScheduled", ConditionType.PODSCHEDULED),
-        ("Initialized", ConditionType.INITIALIZED),
-        ("ContainersReady", ConditionType.CONTAINERSREADY),
-        ("Ready", ConditionType.READY),
-        ("PodHasNetwork", ConditionType.PODHASNETWORK),
-        ("PodReadyToStartContainers", ConditionType.PODREADYTOSTARTCONTAINERS),
-        ("DisruptionTarget", ConditionType.DISRUPTIONTARGET),
-        ("PodResizePending", ConditionType.PODRESIZEPENDING),
-        ("PodResizeInProgress", ConditionType.PODRESIZEINPROGRESS),
+        ("PodScheduled", PodConditionType.PODSCHEDULED),
+        ("Initialized", PodConditionType.INITIALIZED),
+        ("ContainersReady", PodConditionType.CONTAINERSREADY),
+        ("Ready", PodConditionType.READY),
+        ("PodHasNetwork", PodConditionType.PODHASNETWORK),
+        ("PodReadyToStartContainers", PodConditionType.PODREADYTOSTARTCONTAINERS),
+        ("DisruptionTarget", PodConditionType.DISRUPTIONTARGET),
+        ("PodResizePending", PodConditionType.PODRESIZEPENDING),
+        ("PodResizeInProgress", PodConditionType.PODRESIZEINPROGRESS),
+        ("AllContainersRestarting", PodConditionType.ALLCONTAINERSRESTARTING),
     ],
 )
-def test_known_condition_type(type_str: str, expected_type: ConditionType) -> None:
+def test_known_condition_type(type_str: str, expected_type: PodConditionType) -> None:
     result = pod_condition(
         {
             "status": "True",
@@ -84,5 +85,5 @@ def test_pod_conditions_list() -> None:
         ]
     )
     assert len(results) == 2
-    assert results[0].type == ConditionType.READY
-    assert results[1].type == ConditionType.PODSCHEDULED
+    assert results[0].type == PodConditionType.READY
+    assert results[1].type == PodConditionType.PODSCHEDULED

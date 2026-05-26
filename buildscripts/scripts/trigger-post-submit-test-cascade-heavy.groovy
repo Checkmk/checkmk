@@ -13,31 +13,26 @@ void main() {
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     def job_names = [
-        "test-composition-single-f12less-k8s",
-        "test-composition-single-f12less-community-k8s",
-        "test-composition-single-f12less-ultimatemt-k8s",
-        "test-gui-crawl-f12less",
-        "test-gui-e2e-f12less-cloud",
-        "test-gui-e2e-f12less-pro",
-        "test-gui-e2e-f12less-ultimate",
+        "test-composition-pro",
+        "test-composition-community",
+        "test-composition-ultimatemt",
+        "test-gui-crawl",
+        "test-gui-e2e-cloud",
+        "test-gui-e2e-pro",
+        "test-gui-e2e-ultimate",
         "test-integration-agent-plugin",
-        "test-integration-single-f12less",
-        "test-integration-single-f12less-community",
-        "test-integration-single-f12less-redfish",
-        "test-integration-single-f12less-ultimatemt",
-        "test-plugins-k8s",
-        "test-plugins-piggyback-k8s",
-        "test-update-single-f12less-k8s",
-        "test-update-single-f12less-community-pro-k8s",
-        "test-update-single-f12less-pro-ultimate-k8s",
-        "test-update-single-f12less-pro-ultimatemt-k8s",
+        "test-integration-redfish",
+        "test-integration-community",
+        "test-integration-pro",
+        "test-integration-ultimatemt",
+        "test-integration-single-node",
+        "test-plugins",
+        "test-plugins-piggyback",
+        "test-update-pro",
+        "test-update-community-pro",
+        "test-update-pro-ultimate",
+        "test-update-pro-ultimatemt",
     ];
-    job_names += env.USE_K8S_GUI_CRAWL_SYSTEMTESTS == "1" ? ["test-gui-crawl-f12less-k8s"] : [];
-    job_names += env.USE_K8S_GUI_E2E_SYSTEMTESTS == "1" ? [
-        "test-gui-e2e-f12less-cloud-k8s",
-        "test-gui-e2e-f12less-pro-k8s",
-        "test-gui-e2e-f12less-ultimate-k8s",
-    ] : [];
 
     def trigger_xss_crawl = false;
     // The time 2000 has been chosen to not collide with the CI maintenance window
@@ -82,16 +77,16 @@ void main() {
         }]
     }
 
-    stages += [("test-xss-crawl-k8s") : {
+    stages += [("test-xss-crawl") : {
         smart_stage(
-            name: "Trigger test-xss-crawl-k8s",
+            name: "Trigger test-xss-crawl",
             condition: trigger_xss_crawl,
         ) {
             smart_build(
                 // see global-defaults.yml, needs to run in minimal container
                 use_upstream_build: true,
                 force_build: force_build,
-                relative_job_name: "${branch_base_folder}/heavy/test-xss-crawl-k8s",
+                relative_job_name: "${branch_base_folder}/heavy/test-xss-crawl",
                 build_params: [
                     CUSTOM_GIT_REF: effective_git_ref,
                 ],

@@ -187,6 +187,7 @@ def show_availability_page(
     breadcrumb: Breadcrumb,
     filterheaders: FilterHeader,
     debug: bool,
+    table_row_limit: int,
 ) -> None:
     user.need_permission("general.see_availability")
 
@@ -289,7 +290,7 @@ def show_availability_page(
 
     # Do CSV ouput
     if html.output_format == "csv_export" and user.may("general.csv_export"):
-        _output_csv(what, av_mode, av_data, avoptions)
+        _output_csv(what, av_mode, av_data, avoptions, table_row_limit=table_row_limit)
         return
 
     if display_options.enabled(display_options.H):
@@ -361,7 +362,15 @@ def show_availability_page(
                 makeuri(request, [("_unset_logrow_limit", "1"), ("avo_logrow_limit", 0)]),
             )
             html.show_warning(text)
-        do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
+        do_render_availability(
+            what,
+            av_rawdata,
+            av_data,
+            av_mode,
+            av_object,
+            avoptions,
+            table_row_limit=table_row_limit,
+        )
 
     if display_options.enabled(display_options.T):
         html.end_page_content()
@@ -516,15 +525,26 @@ def do_render_availability(
     av_mode: AVMode,
     av_object: AVObjectSpec,
     avoptions: AVOptions,
+    *,
+    table_row_limit: int,
 ) -> None:
     availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
     if av_mode == "timeline":
-        render_availability_timelines(what, availability_tables, avoptions)
+        render_availability_timelines(
+            what, availability_tables, avoptions, table_row_limit=table_row_limit
+        )
     else:
         render_availability_tables(availability_tables, what, avoptions)
 
     annotations = availability.load_annotations()
-    show_annotations(annotations, av_rawdata, what, avoptions, omit_service=av_object is not None)
+    show_annotations(
+        annotations,
+        av_rawdata,
+        what,
+        avoptions,
+        omit_service=av_object is not None,
+        table_row_limit=table_row_limit,
+    )
 
 
 def render_availability_tables(
@@ -559,15 +579,26 @@ def render_availability_tables(
 
 
 def render_availability_timelines(
-    what: AVObjectType, av_groups: AVGroups, avoptions: AVOptions
+    what: AVObjectType,
+    av_groups: AVGroups,
+    avoptions: AVOptions,
+    *,
+    table_row_limit: int,
 ) -> None:
     for group_title, av_data in av_groups:
         for timeline_nr, av_entry in enumerate(av_data):
-            _render_availability_timeline(what, av_entry, avoptions, timeline_nr)
+            _render_availability_timeline(
+                what, av_entry, avoptions, timeline_nr, table_row_limit=table_row_limit
+            )
 
 
 def _render_availability_timeline(
-    what: AVObjectType, av_entry: AVEntry, avoptions: AVOptions, timeline_nr: int
+    what: AVObjectType,
+    av_entry: AVEntry,
+    avoptions: AVOptions,
+    timeline_nr: int,
+    *,
+    table_row_limit: int,
 ) -> None:
     html.h3(_("Timeline of %s") % availability.object_title(what, av_entry))
 
@@ -594,7 +625,7 @@ def _render_availability_timeline(
         css="timelineevents",
         sortable=False,
         searchable=False,
-        limit=active_config.table_row_limit,
+        limit=table_row_limit,
     ) as table:
         for row_nr, row in enumerate(timeline_layout["table"]):
             table.row(
@@ -825,6 +856,7 @@ def show_bi_availability(
     breadcrumb: Breadcrumb,
     aggr_rows: Rows,
     debug: bool,
+    table_row_limit: int,
 ) -> None:
     user.need_permission("general.see_availability")
 
@@ -1055,10 +1087,18 @@ def show_bi_availability(
             html.show_warning(text)
 
         if html.output_format == "csv_export" and user.may("general.csv_export"):
-            _output_csv("bi", av_mode, av_data, avoptions)
+            _output_csv("bi", av_mode, av_data, avoptions, table_row_limit=table_row_limit)
             return
 
         html.write_html(timewarpcode)
-        do_render_availability("bi", av_rawdata, av_data, av_mode, None, avoptions)
+        do_render_availability(
+            "bi",
+            av_rawdata,
+            av_data,
+            av_mode,
+            None,
+            avoptions,
+            table_row_limit=table_row_limit,
+        )
 
     html.body_end()

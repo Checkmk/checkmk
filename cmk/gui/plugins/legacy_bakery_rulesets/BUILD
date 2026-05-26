@@ -9,10 +9,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:agent_bakery",
-        "//cmk/gui:exceptions",
-        "//cmk/gui:i18n",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:agent",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/plugins/wato",
         "//cmk/gui/valuespec",
         "//cmk/gui/wato",

@@ -28,10 +28,9 @@ from livestatus import Query as OldQuery
 
 import cmk.gui.view_utils
 import cmk.gui.watolib.audit_log as _audit_log
-import cmk.gui.watolib.changes as _changes
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms, permissions, sites, userdb
@@ -91,6 +90,7 @@ from cmk.gui.type_defs import (
     StaticIcon,
     Users,
 )
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -142,6 +142,7 @@ from cmk.gui.wato._group_selection import ContactGroupSelection
 from cmk.gui.wato.pages.events import ABCEventsMode
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
 from cmk.gui.wato.pages.users import ModeEditUser
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import (
     do_remote_automation,
@@ -153,6 +154,7 @@ from cmk.gui.watolib.check_mk_automations import (
     notification_replay,
     notification_test,
 )
+from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
@@ -162,6 +164,13 @@ from cmk.gui.watolib.notifications import (
     NotificationParameterConfigFile,
     NotificationRuleConfigFile,
 )
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.sample_config import (
@@ -169,6 +178,7 @@ from cmk.gui.watolib.sample_config import (
     new_notification_parameter_id,
     new_notification_rule_id,
 )
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import (
     declare_notification_plugin_permissions,
@@ -691,14 +701,21 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             return _("Plain email")
 
     def _add_change(
-        self, *, action_name: str, text: str, use_git: bool, site_configs: SiteConfigurations
+        self,
+        *,
+        action_name: str,
+        text: str,
+        pending_changes: PendingChanges,
+        site_configs: SiteConfigurations,
     ) -> None:
-        _changes.add_change(
-            action_name=action_name,
-            text=text,
-            user_id=user.id,
-            need_restart=False,
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name=action_name,
+                text=text,
+                force_restart=False,
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites(),
         )
 
     def _vs_notification_bulkby(self) -> ListChoice:
@@ -1066,7 +1083,7 @@ class ModeNotifications(ABCNotificationsMode):
                 lambda c: NotificationRuleConfigFile().save(
                     c, pprint_value=config.wato_pprint_config
                 ),
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(config, omd_site(), user.id),
                 site_configs=config.sites,
             )
 
@@ -1221,11 +1238,13 @@ class ModeNotifications(ABCNotificationsMode):
             default_value="mail",
         )
 
-    def _show_resulting_notifications(self, result: NotifyAnalysisInfo) -> None:
+    def _show_resulting_notifications(
+        self, result: NotifyAnalysisInfo, *, table_row_limit: int
+    ) -> None:
         with table_element(
             table_id="plugins",
             title=_("Predicted notifications"),
-            limit=active_config.table_row_limit,
+            limit=table_row_limit,
         ) as table:
             for contact, plugin, parameters, bulk in result[1]:
                 table.row()
@@ -1577,10 +1596,15 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
     def page(self, config: Config) -> None:
         result = self._get_result_from_request(debug=config.debug)
-        self._show_bulk_notifications(debug=config.debug)
-        self._show_notification_backlog(escape_plugin_output=config.escape_plugin_output)
+        self._show_bulk_notifications(debug=config.debug, table_row_limit=config.table_row_limit)
+        self._show_notification_backlog(
+            escape_plugin_output=config.escape_plugin_output,
+            table_row_limit=config.table_row_limit,
+        )
         if request.var("analyse") and result:
-            self._show_resulting_notifications(result=result)
+            self._show_resulting_notifications(
+                result=result, table_row_limit=config.table_row_limit
+            )
         self._show_rules(result, config)
 
     def _get_result_from_request(self, *, debug: bool) -> NotifyAnalysisInfo | None:
@@ -1590,16 +1614,18 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
         return None
 
-    def _show_bulk_notifications(self, *, debug: bool) -> None:
+    def _show_bulk_notifications(self, *, debug: bool, table_row_limit: int) -> None:
         if self._show_bulks:
             # Warn if there are unsent bulk notifications
-            if not self._render_bulks(only_ripe=False, debug=debug):
+            if not self._render_bulks(
+                only_ripe=False, debug=debug, table_row_limit=table_row_limit
+            ):
                 html.show_message(_("Currently there are no unsent bulk notifications pending."))
         else:
             # Warn if there are unsent bulk notifications
-            self._render_bulks(only_ripe=True, debug=debug)
+            self._render_bulks(only_ripe=True, debug=debug, table_row_limit=table_row_limit)
 
-    def _render_bulks(self, *, only_ripe: bool, debug: bool) -> bool:
+    def _render_bulks(self, *, only_ripe: bool, debug: bool, table_row_limit: int) -> bool:
         try:
             bulks = notification_get_bulks(only_ripe=only_ripe, debug=debug).result
         except Exception as exc:
@@ -1609,7 +1635,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
             return False
 
         title = _("Overdue bulk notifications!") if only_ripe else _("Open bulk notifications")
-        with table_element(title=title, limit=active_config.table_row_limit) as table:
+        with table_element(title=title, limit=table_row_limit) as table:
             for directory, age, interval, timeperiod, maxcount, uuids in bulks:
                 dirparts = directory.split("/")
                 contact = dirparts[-3]
@@ -1636,7 +1662,9 @@ class ModeAnalyzeNotifications(ModeNotifications):
                     )
         return True
 
-    def _show_notification_backlog(self, escape_plugin_output: bool) -> None:
+    def _show_notification_backlog(
+        self, escape_plugin_output: bool, *, table_row_limit: int
+    ) -> None:
         """Show recent notifications. We can use them for rule analysis"""
         backlog = store.load_object_from_file(
             cmk.utils.paths.var_dir / "notify/backlog.mk",
@@ -1648,7 +1676,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
         with table_element(
             table_id="backlog",
             title=_("Analysis: Recent notifications"),
-            limit=active_config.table_row_limit,
+            limit=table_row_limit,
         ) as table:
             for nr, context in enumerate(backlog):
                 table.row()
@@ -1964,10 +1992,15 @@ class ModeTestNotifications(ModeNotifications):
             )
             self._show_notification_test_overview(context, analyse)
             self._show_notification_test_details(
-                context, analyse, escape_plugin_output=config.escape_plugin_output
+                context,
+                analyse,
+                escape_plugin_output=config.escape_plugin_output,
+                table_row_limit=config.table_row_limit,
             )
             if request.var("test_notification") and analyse:
-                self._show_resulting_notifications(result=analyse)
+                self._show_resulting_notifications(
+                    result=analyse, table_row_limit=config.table_row_limit
+                )
         self._show_rules(analyse, config)
 
     def _result_from_request(
@@ -2116,6 +2149,7 @@ class ModeTestNotifications(ModeNotifications):
         analyse: NotifyAnalysisInfo | None,
         *,
         escape_plugin_output: bool,
+        table_row_limit: int,
     ) -> None:
         if not context:
             return
@@ -2123,7 +2157,7 @@ class ModeTestNotifications(ModeNotifications):
         with table_element(
             table_id="notification_test",
             title=_("Analysis: Test notifications"),
-            limit=active_config.table_row_limit,
+            limit=table_row_limit,
         ) as table:
             table.row()
             table.cell("&nbsp;", css=["buttons"])
@@ -2771,7 +2805,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
             self._add_change(
                 action_name="notification-delete-user-rule",
                 text=_("Deleted notification rule %d of user %s") % (nr, self._user_id()),
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(config, omd_site(), user.id),
                 site_configs=config.sites,
             )
 
@@ -2794,7 +2828,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
                 action_name="notification-move-user-rule",
                 text=_("Changed position of notification rule %d of user %s")
                 % (from_pos, self._user_id()),
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(config, omd_site(), user.id),
                 site_configs=config.sites,
             )
 
@@ -2981,7 +3015,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         *,
         action_name: str,
         text: str,
-        use_git: bool,
+        pending_changes: PendingChanges,
         site_configs: SiteConfigurations,
     ) -> None:
         if has_distributed_setup_remote_sites(site_configs):
@@ -2989,7 +3023,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                 action=action_name,
                 message=text,
                 user_id=user.id,
-                use_git=use_git,
+                use_git=active_config.wato_use_git,
             )
             start_profile_replication_job(
                 back_url=ModePersonalUserNotifications.mode_url(),
@@ -2999,7 +3033,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
             super()._add_change(
                 action_name=action_name,
                 text=text,
-                use_git=use_git,
+                pending_changes=pending_changes,
                 site_configs=site_configs,
             )
 
@@ -3559,7 +3593,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         self._add_change(
             action_name=log_what,
             text=self._log_text(self._edit_nr),
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes(config, omd_site(), user.id),
             site_configs=config.sites,
         )
         flash(
@@ -3744,9 +3778,10 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
 
     def _add_change(
         self,
+        *,
         action_name: str,
         text: str,
-        use_git: bool,
+        pending_changes: PendingChanges,
         site_configs: SiteConfigurations,
     ) -> None:
         if has_distributed_setup_remote_sites(site_configs):
@@ -3754,7 +3789,7 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
                 action=action_name,
                 message=text,
                 user_id=self._user_id(),
-                use_git=use_git,
+                use_git=active_config.wato_use_git,
             )
             start_profile_replication_job(
                 back_url=ModePersonalUserNotifications.mode_url(),
@@ -3764,7 +3799,7 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
             super()._add_change(
                 action_name=action_name,
                 text=text,
-                use_git=use_git,
+                pending_changes=pending_changes,
                 site_configs=site_configs,
             )
 
@@ -3960,14 +3995,21 @@ class ABCNotificationParameterMode(WatoMode):
         NotificationParameterConfigFile().save(parameters, pprint_value=pprint_value)
 
     def _add_change(
-        self, *, action_name: str, text: str, use_git: bool, site_configs: SiteConfigurations
+        self,
+        *,
+        action_name: str,
+        text: str,
+        pending_changes: PendingChanges,
+        site_configs: SiteConfigurations,
     ) -> None:
-        _changes.add_change(
-            action_name=action_name,
-            text=text,
-            user_id=user.id,
-            need_restart=False,
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name=action_name,
+                text=text,
+                force_restart=False,
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites(),
         )
 
     def _log_text(self, edit_nr: int) -> str:
@@ -4076,7 +4118,7 @@ class ABCNotificationParameterMode(WatoMode):
             self._add_change(
                 action_name="notification-delete-notification-parameter",
                 text=_("Deleted notification parameter %d") % parameter_number,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(config, omd_site(), user.id),
                 site_configs=config.sites,
             )
 
@@ -4094,7 +4136,7 @@ class ABCNotificationParameterMode(WatoMode):
             self._add_change(
                 action_name="notification-move-notification-parameter",
                 text=_("Changed position of notification parameter %d") % from_pos,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(config, omd_site(), user.id),
                 site_configs=config.sites,
             )
 
@@ -4299,14 +4341,21 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                     )
 
     def _add_change(
-        self, *, action_name: str, text: str, use_git: bool, site_configs: SiteConfigurations
+        self,
+        *,
+        action_name: str,
+        text: str,
+        pending_changes: PendingChanges,
+        site_configs: SiteConfigurations,
     ) -> None:
-        _changes.add_change(
-            action_name=action_name,
-            user_id=user.id,
-            text=text,
-            need_restart=False,
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name=action_name,
+                text=text,
+                force_restart=False,
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites(),
         )
 
     def _parameter_links(
@@ -4432,7 +4481,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
         self._add_change(
             action_name=log_what,
             text=self._log_text(self._edit_nr),
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes(config, omd_site(), user.id),
             site_configs=config.sites,
         )
 
@@ -4590,3 +4639,17 @@ class MatchItemGeneratorNotificationParameter(ABCMatchItemGenerator):
     @property
     def is_localization_dependent(self) -> bool:
         return True
+
+
+def _pending_changes(config: Config, local_site: SiteId, user_id: UserId | None) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

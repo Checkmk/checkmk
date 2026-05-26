@@ -5,12 +5,15 @@
 import logging
 from typing import override
 
+from cmk.base.config import LoadingResult
 from cmk.ccc import store
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui.config import Config
 from cmk.gui.watolib.tags import load_tag_config_read_only, TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
+from cmk.utils.labels import Labels
 from cmk.utils.tags import (
     AuxTag,
     AuxTagList,
@@ -47,7 +50,13 @@ class AnonymizedTagConfigFile(TagConfigFile):
 
 class HostTagsStep(AnonymizeStep):
     def run(
-        self, anon_interface: AnonInterface, active_config: Config, logger: logging.Logger
+        self,
+        anon_interface: AnonInterface,
+        active_config: Config,
+        loaded_config_result: LoadingResult,
+        all_plugins: AgentBasedPlugins,
+        builtin_host_labels: Labels,
+        logger: logging.Logger,
     ) -> None:
         logger.warning("Process host tags")
 

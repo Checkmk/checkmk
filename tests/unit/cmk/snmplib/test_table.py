@@ -12,6 +12,7 @@ import logging
 import socket
 from collections.abc import Sequence
 from functools import partial
+from pathlib import Path
 from typing import NoReturn
 
 import pytest
@@ -54,6 +55,7 @@ SNMPConfig = SNMPHostConfig(
     snmpv3_contexts=[],
     character_encoding="ascii",
     snmp_backend=SNMPBackendEnum.CLASSIC,
+    stored_walk_path=Path("/tmp/foo"),
 )
 
 

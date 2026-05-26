@@ -13,7 +13,7 @@ from typing import Literal
 from uuid import uuid4
 
 from cmk.ccc.user import UserId
-from cmk.graphing.v1 import graphs as graphs_api
+from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
     compute_html_graph_ranges,
@@ -183,7 +183,7 @@ def _paint_time_graph_cmk(
     row: Row,
     cell: Cell,
     registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
     user_permissions: UserPermissions,
     *,
     debug: bool,

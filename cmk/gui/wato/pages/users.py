@@ -482,7 +482,10 @@ class ModeUsers(WatoMode):
         users = userdb.load_users()
         with html.form_context("bulk_delete_form", method="POST"):
             self._show_user_list(
-                users, config.wato_user_attrs, user_online_maxage=config.user_online_maxage
+                users,
+                config.wato_user_attrs,
+                user_online_maxage=config.user_online_maxage,
+                table_row_limit=config.table_row_limit,
             )
         self._show_user_list_footer(users)
 
@@ -517,6 +520,7 @@ class ModeUsers(WatoMode):
         custom_user_attributes: Sequence[CustomUserAttrSpec],
         *,
         user_online_maxage: int,
+        table_row_limit: int,
     ) -> None:
         user_attributes = get_user_attributes(custom_user_attributes)
         visible_custom_attrs = [
@@ -533,7 +537,7 @@ class ModeUsers(WatoMode):
             "users",
             None,
             empty_text=_("No users are defined yet."),
-            limit=active_config.table_row_limit,
+            limit=table_row_limit,
         ) as table:
             online_threshold = time.time() - user_online_maxage
             for uid, user_spec in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):

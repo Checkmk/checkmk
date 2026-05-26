@@ -16,9 +16,9 @@ from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.graphing import v1 as graphing_api
-from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import graphs as graphs_v1
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import Title as TitleV1
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -60,8 +60,8 @@ class MKGraphNotFound(MKGeneralException): ...
 
 
 def sort_registered_graph_plugins(
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-) -> list[tuple[str, graphs_api.Graph | graphs_api.Bidirectional]]:
+    registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
+) -> list[tuple[str, graphs_v1.Graph | graphs_v1.Bidirectional]]:
     def _by_index(graph_name: str) -> int:
         try:
             return GRAPHS_ORDER.index(graph_name)
@@ -78,7 +78,7 @@ class GraphPluginChoice:
 
 
 def get_graph_plugin_choices(
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
 ) -> list[GraphPluginChoice]:
     return sorted(
         [
@@ -90,18 +90,18 @@ def get_graph_plugin_choices(
 
 
 def get_graph_plugin_from_id(
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
     graph_id: str,
-) -> graphs_api.Graph | graphs_api.Bidirectional:
+) -> graphs_v1.Graph | graphs_v1.Bidirectional:
     if graph_id.startswith("METRIC_"):
         metric_name = graph_id[7:]
-        return graphs_api.Graph(
+        return graphs_v1.Graph(
             name=graph_id,
-            title=graphing_api.Title(""),
+            title=TitleV1(""),
             compound_lines=[metric_name],
             simple_lines=[
-                metrics_api.WarningOf(metric_name),
-                metrics_api.CriticalOf(metric_name),
+                metrics_v1.WarningOf(metric_name),
+                metrics_v1.CriticalOf(metric_name),
             ],
         )
     for name, graph_plugin in sort_registered_graph_plugins(registered_graphs):
@@ -112,7 +112,7 @@ def get_graph_plugin_from_id(
 
 def get_graph_plugin_and_single_metric_choices(
     registered_metrics: Mapping[str, RegisteredMetric],
-    sorted_graph_plugins: Sequence[tuple[str, graphs_api.Graph | graphs_api.Bidirectional]],
+    sorted_graph_plugins: Sequence[tuple[str, graphs_v1.Graph | graphs_v1.Bidirectional]],
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
@@ -222,7 +222,7 @@ def _create_graph_recipe(
 
 def _evaluate_graph_plugins(
     registered_metrics: Mapping[str, RegisteredMetric],
-    sorted_graph_plugins: Sequence[tuple[str, graphs_api.Graph | graphs_api.Bidirectional]],
+    sorted_graph_plugins: Sequence[tuple[str, graphs_v1.Graph | graphs_v1.Bidirectional]],
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,

@@ -93,7 +93,7 @@ describe('FormLabels', () => {
     const labelInput = screen.getByRole('textbox', { name: 'filter' })
     await userEvent.type(labelInput, 'key3:value3')
 
-    await screen.findByText('key3:value3')
+    await screen.findByRole('option', { name: 'key3:value3' })
 
     await userEvent.keyboard('[Enter]')
 
@@ -112,7 +112,7 @@ describe('FormLabels', () => {
     const labelInput = screen.getByRole('textbox', { name: 'filter' })
     await userEvent.type(labelInput, 'net:ip:v4')
 
-    await screen.findByText('net:ip:v4')
+    await screen.findByRole('option', { name: 'net:ip:v4' })
 
     await userEvent.keyboard('[Enter]')
 
@@ -151,7 +151,7 @@ describe('FormLabels', () => {
     const labelInput = screen.getByRole('textbox', { name: 'filter' })
 
     await fireEvent.update(labelInput, `${EXISTING_LABEL_KEY}:`)
-    await screen.findByText(EXISTING_LABEL_CONCAT)
+    await screen.findByRole('option', { name: EXISTING_LABEL_CONCAT })
   })
 
   test.for([
@@ -208,7 +208,7 @@ describe('FormLabels', () => {
     await userEvent.click(dropdown)
     const labelInput = screen.getByRole('textbox', { name: 'filter' })
     await userEvent.type(labelInput, 'key3:value3')
-    await screen.findByText('key3:value3')
+    await screen.findByRole('option', { name: 'key3:value3' })
     await userEvent.keyboard('[Enter]')
     expect(getCurrentData()).toBe('{"key3":"value3"}')
 

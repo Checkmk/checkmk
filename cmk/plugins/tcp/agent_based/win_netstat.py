@@ -47,10 +47,16 @@ win_netstat_states = {
     "SCHLIESSEN_WARTEN": "CLOSE_WAIT",
     "SYN_GESENDET": "SYN_SENT",
     "SYN_EMPFANGEN": "SYN_RECV",
+    "FIN_WARTEN_1": "FIN_WAIT1",
+    "FIN_WARTEN_2": "FIN_WAIT2",
     # Windows netstat uses underscore before digit (FIN_WAIT_1, FIN_WAIT_2),
-    # but ConnectionState enum uses FIN_WAIT1, FIN_WAIT2.
+    # but our internal ConnectionState enum (cmk.plugins.tcp.lib.models) uses FIN_WAIT1, FIN_WAIT2.
     "FIN_WAIT_1": "FIN_WAIT1",
     "FIN_WAIT_2": "FIN_WAIT2",
+    "SYN_RECEIVED": "SYN_RECV",
+    "TIMED_WAIT": "TIME_WAIT",
+    "ESTAB": "ESTABLISHED",
+    "LISTEN": "LISTENING",
     # Add further states in any required language here. Sorry, Windows
     # has no "unset LANG" ;-)
 }
@@ -71,7 +77,9 @@ def parse_win_netstat(string_table: StringTable) -> Section:
                 proto=cast(Protocol, proto),
                 local_address=split_ip_address(local),
                 remote_address=split_ip_address(remote),
-                state=ConnectionState[win_netstat_states.get(connstate, connstate)],
+                state=ConnectionState.__members__.get(
+                    win_netstat_states.get(connstate, connstate), ConnectionState.UNDEFINED
+                ),
             )
         )
     return connections

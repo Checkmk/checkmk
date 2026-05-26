@@ -33,8 +33,10 @@ export interface TimeseriesFigureDataData {
   tooltip: string
 }
 
-export interface TimeseriesFigureData
-  extends FigureData<TimeseriesFigureDataData, TimeseriesFigureDataPlotDefinition> {
+export interface TimeseriesFigureData extends FigureData<
+  TimeseriesFigureDataData,
+  TimeseriesFigureDataPlotDefinition
+> {
   zoom_settings?: { lock_zoom_x: boolean; lock_zoom_x_scale: boolean }
   title: string
   title_url: string

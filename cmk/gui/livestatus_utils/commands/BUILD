@@ -9,8 +9,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:exceptions",
-        "//cmk/gui:logged_in",
+        "//cmk/gui:auth_core",
+        "//cmk/gui:core_toolkit",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:user",

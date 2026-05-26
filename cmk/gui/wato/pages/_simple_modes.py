@@ -19,13 +19,12 @@ import json
 from collections.abc import Mapping
 from typing import Any, cast
 
-import cmk.gui.watolib.changes as _changes
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import (
@@ -58,6 +57,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, IconNames, RenderMode, StaticIcon
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
@@ -75,9 +75,18 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.valuespec import SetupSiteChoice as VSSetupSiteChoice
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.rulesets.internal.form_specs import SingleChoiceExtended
 from cmk.rulesets.v1 import form_specs, Help, Label, Message, Title
@@ -185,18 +194,21 @@ class _SimpleWatoModeBase[T: Mapping[str, Any]](WatoMode):
         *,
         action: str,
         text: str,
-        user_id: UserId | None,
         affected_sites: list[SiteId] | None,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         """Add a Setup change entry for this object type modifications"""
-        _changes.add_change(
-            action_name=f"{action}-{self._mode_type.type_name()}",
-            text=text,
-            user_id=user_id,
-            domains=self._mode_type.affected_config_domains(),
-            sites=affected_sites,
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name=f"{action}-{self._mode_type.type_name()}",
+                text=text,
+                domains=[d.ident() for d in self._mode_type.affected_config_domains()],
+            ),
+            (
+                ChangeScope.all_activation_sites()
+                if affected_sites is None
+                else ChangeScope.sites(affected_sites)
+            ),
         )
 
 
@@ -293,9 +305,8 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         self._add_change(
             action="delete",
             text=_("Removed the %s '%s'") % (self._mode_type.name_singular(), ident),
-            user_id=user.id,
             affected_sites=self._mode_type.affected_sites(entry),
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes(config, omd_site(), user.id),
         )
         self._store.save(entries, pprint_value=config.wato_pprint_config)
 
@@ -312,11 +323,14 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         return ""
 
     def page(self, config: Config) -> None:
-        self._show_table(self._store.filter_editable_entries(self._store.load_for_reading()))
+        self._show_table(
+            self._store.filter_editable_entries(self._store.load_for_reading()),
+            table_row_limit=config.table_row_limit,
+        )
 
-    def _show_table(self, entries: dict[str, T]) -> None:
+    def _show_table(self, entries: dict[str, T], *, table_row_limit: int) -> None:
         with table_element(
-            self._mode_type.type_name(), self._table_title(), limit=active_config.table_row_limit
+            self._mode_type.type_name(), self._table_title(), limit=table_row_limit
         ) as table:
             for nr, (ident, entry) in enumerate(
                 sorted(entries.items(), key=lambda e: e[1]["title"])
@@ -776,14 +790,14 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                 "ident", _("You are not allowed to edit this %s.") % self._mode_type.name_singular()
             )
 
+        pending_changes = _pending_changes(config, omd_site(), user.id)
         if self._new:
             entries[self._ident] = self._entry
             self._add_change(
                 action="add",
                 text=_("Added the %s '%s'") % (self._mode_type.name_singular(), self._ident),
-                user_id=user.id,
                 affected_sites=self._mode_type.affected_sites(self._entry),
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
         else:
             current_sites = self._mode_type.affected_sites(self._entry)
@@ -800,9 +814,8 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
             self._add_change(
                 action="edit",
                 text=_("Edited the %s '%s'") % (self._mode_type.name_singular(), self._ident),
-                user_id=user.id,
                 affected_sites=affected_sites,
-                use_git=config.wato_use_git,
+                pending_changes=pending_changes,
             )
 
         self._save(
@@ -903,3 +916,17 @@ def convert_dict_elements_vs2fs(elements: list[DictionaryEntry]) -> dict[str, Di
             parameter_form=LegacyValueSpec.wrap(element),
         )
     return fs_elements
+
+
+def _pending_changes(config: Config, local_site: SiteId, user_id: UserId | None) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

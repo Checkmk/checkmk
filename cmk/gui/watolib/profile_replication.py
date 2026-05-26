@@ -36,6 +36,7 @@ from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfi
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC, update_activation_time
 from cmk.gui.watolib.automations import remote_automation_config_from_site_config
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 from cmk.utils.automation_config import RemoteAutomationConfig
@@ -131,6 +132,7 @@ def add_profile_replication_change(site_id: SiteId, result: bool | str) -> None:
         user_id=user.id,
         sites=[site_id],
         need_restart=False,
+        domains=[ConfigDomainCore()],
         use_git=active_config.wato_use_git,
     )
 

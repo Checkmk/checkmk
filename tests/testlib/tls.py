@@ -16,7 +16,13 @@ from tests.testlib.https import HTTPSDummy
 class CMKTLSError(RuntimeError): ...
 
 
-def tls_connect(host: str, port: int, ca_path: Path, tls_version: ssl.TLSVersion) -> None:
+def tls_connect(
+    host: str,
+    port: int,
+    ca_path: Path,
+    tls_version: ssl.TLSVersion,
+    might_expect_client_cert: bool = False,
+) -> None:
     """connect to a socket with a specific tls version"""
     if tls_version == ssl.TLSVersion.SSLv3:
         raise CMKTLSError("Not even openssl supports that")
@@ -39,10 +45,10 @@ def tls_connect(host: str, port: int, ca_path: Path, tls_version: ssl.TLSVersion
             with context.wrap_socket(sock, server_hostname=host):
                 pass
         except ssl.SSLError as e:
-            if str(e).startswith(
-                "[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] ssl/tls alert handshake failure"
+            if might_expect_client_cert and e.reason in (
+                "TLSV13_ALERT_CERTIFICATE_REQUIRED",
+                "SSLV3_ALERT_CERTIFICATE_REQUIRED",
             ):
-                # Probably a client cert is required
                 return
             raise CMKTLSError(str(e)) from e
 

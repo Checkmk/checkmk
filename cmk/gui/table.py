@@ -139,7 +139,7 @@ def table_element(
 #   |                                                                      |
 #   | Usage:                                                               |
 #   |                                                                      |
-#   |        with table_element(limit=active_config.table_row_limit) as table:                                |
+#   |        with table_element(limit=config.table_row_limit) as table:                                       |
 #   |            table.row()                                               |
 #   |            table.cell("header", "content")                           |
 #   |                                                                      |

@@ -9,6 +9,7 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkWizard, {
   CmkWizardButton,
   CmkWizardModeToggle,
@@ -51,13 +52,14 @@ const props = defineProps<{
   collector_activation_allowed: boolean
   metric_backend_allowed: boolean
   overview_url: string
+  cloud_grpc_receiver_endpoint?: string | null
 }>()
 
 const { _t } = usei18n()
 const currentMode = ref<'guided' | 'overview'>('guided')
 const currentStep = ref(1)
 
-const configName = ref<string>('')
+const configName = ref<string>('opentelemetry_config_1')
 const siteId = ref<string | null>(null)
 
 const generalPropertiesRef =
@@ -98,6 +100,7 @@ const httpEncryption = ref<boolean>(false)
 const grpcEventConsole = ref<EventConsoleConfig | null>(null)
 const httpEventConsole = ref<EventConsoleConfig | null>(null)
 const pendingPasswords = ref<Map<string, PasswordConfig>>(new Map())
+const availablePasswords = ref<Suggestion[]>([])
 
 // Pending passwords actually referenced by the configured auth methods. The
 // Step 2 slide-in lets users create passwords they may later swap out, and we
@@ -161,9 +164,16 @@ function narrowSocketAddress(endpoint: EndpointConfig): OTelSocketAddressInput |
   }
 }
 
-function isPasswordNew(auth: AuthConfig): boolean {
+function passwordTitle(auth: AuthConfig): string {
   const id = auth.credential?.password
-  return id !== null && id !== undefined && pendingPasswords.value.has(id)
+  if (!id) {
+    return ''
+  }
+  const pending = pendingPasswords.value.get(id)
+  if (pending) {
+    return pending.general_props.title
+  }
+  return availablePasswords.value.find((p) => p.name === id)?.title ?? id
 }
 
 function buildProtocolInput(
@@ -267,7 +277,7 @@ const STEP_FINALIZE = 4
 // but never get saved. The wizard's `locked` binding below also disables
 // Previous / step-badge navigation.
 watch(saveState, (value) => {
-  if (value === 'success') {
+  if (value === 'success' && currentMode.value !== 'overview') {
     currentMode.value = 'guided'
     currentStep.value = STEP_FINALIZE
   }
@@ -302,6 +312,18 @@ async function onSaveClick(): Promise<void> {
     }
     window.location.href = props.overview_url
     return
+  }
+  // In overview mode the per-step Next buttons (which normally carry
+  // validation callbacks) are hidden, so we must validate all steps here
+  // before handing off to the save actions.
+  if (currentMode.value === 'overview') {
+    const [generalValid, collectorValid] = await Promise.all([
+      validateGeneralProperties(),
+      validateCollector()
+    ])
+    if (!generalValid || !collectorValid) {
+      return
+    }
   }
   await finalizeRef.value?.runActions()
 }
@@ -362,6 +384,7 @@ async function onSaveClick(): Promise<void> {
           v-model:grpc-event-console="grpcEventConsole"
           v-model:http-event-console="httpEventConsole"
           v-model:pending-passwords="pendingPasswords"
+          v-model:available-passwords="availablePasswords"
           :no-auth-allowed="no_auth_allowed"
           :endpoint-config-allowed="endpoint_config_allowed"
           :encryption-allowed="encryption_allowed"
@@ -400,6 +423,7 @@ async function onSaveClick(): Promise<void> {
           :http-auth="httpAuth"
           :grpc-event-console="grpcEventConsole"
           :http-event-console="httpEventConsole"
+          :cloud-grpc-endpoint="cloud_grpc_receiver_endpoint ?? null"
         />
       </template>
 
@@ -439,8 +463,8 @@ async function onSaveClick(): Promise<void> {
               :http-encryption="httpEncryption"
               :grpc-event-console="grpcEventConsole"
               :http-event-console="httpEventConsole"
-              :grpc-password-is-new="isPasswordNew(grpcAuth)"
-              :http-password-is-new="isPasswordNew(httpAuth)"
+              :grpc-password-name="passwordTitle(grpcAuth)"
+              :http-password-name="passwordTitle(httpAuth)"
               :endpoint-config-allowed="endpoint_config_allowed"
               :encryption-allowed="encryption_allowed"
               :event-console-allowed="event_console_allowed"

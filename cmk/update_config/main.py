@@ -34,10 +34,11 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.script_helpers import gui_context
-from cmk.gui.session import SuperUserContext
+from cmk.gui.session_context import SuperUserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 from cmk.utils import log, paths
@@ -203,6 +204,11 @@ def _load_plugins(edition: Edition, logger: logging.Logger) -> None:
             if edition in (Edition.ULTIMATE, Edition.ULTIMATEMT)
             else []
         ),
+        (
+            load_plugins_with_exceptions("cmk.update_config.nonfree.cloud.plugins.actions")
+            if edition is Edition.CLOUD
+            else []
+        ),
     ):
         logger.error("Error in action plug-in %s: %s\n", plugin, exc)
         if debug.enabled():
@@ -216,6 +222,16 @@ def _load_pre_plugins(edition: Edition) -> None:
             []
             if edition is Edition.COMMUNITY
             else load_plugins_with_exceptions("cmk.update_config.nonfree.pro.plugins.pre_actions")
+        ),
+        (
+            load_plugins_with_exceptions("cmk.update_config.nonfree.ultimate.plugins.pre_actions")
+            if edition in (Edition.ULTIMATE, Edition.ULTIMATEMT)
+            else []
+        ),
+        (
+            load_plugins_with_exceptions("cmk.update_config.nonfree.cloud.plugins.pre_actions")
+            if edition is Edition.CLOUD
+            else []
         ),
     ):
         sys.stderr.write(f"Error in pre action plug-in {plugin}: {exc}\n")
@@ -276,6 +292,7 @@ def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
                 text="Successfully updated Checkmk configuration",
                 user_id=None,
                 need_sync=True,
+                domains=[ConfigDomainCore()],
                 use_git=False,
             )
 

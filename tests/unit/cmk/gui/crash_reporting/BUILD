@@ -16,8 +16,7 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
-        "//cmk/gui:exceptions",
-        "//cmk/gui:http",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/crash_reporting",
         "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-livestatus-client:py_livestatus",

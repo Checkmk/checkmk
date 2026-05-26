@@ -57,7 +57,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.pages import PageContext
-from cmk.gui.session import session
+from cmk.gui.session_context import get_session_csrf_token
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import (
     Choices,
@@ -107,12 +107,11 @@ from cmk.utils.host_storage import (
     get_all_storage_readers,
     get_host_storage_loaders,
     get_hosts_file_variables,
-    get_storage_format,
     GroupRuleType,
     HostsData,
     HostsStorageData,
     HostsStorageFieldsGenerator,
-    make_experimental_hosts_storage,
+    PickleHostsStorage,
     StandardHostsStorage,
     StorageFormat,
 )
@@ -130,7 +129,6 @@ SearchCriteria = Mapping[str, Any]
 class HostsAndFoldersConfig:
     """Configuration needed by the hosts_and_folders module."""
 
-    config_storage_format: Literal["standard", "pickle", "raw", "anon"]
     wato_hide_folders_without_read_permissions: bool
     wato_host_attrs: Sequence[CustomHostAttrSpec]
     tags: TagConfig
@@ -139,7 +137,6 @@ class HostsAndFoldersConfig:
     @classmethod
     def from_config(cls, config: Config) -> HostsAndFoldersConfig:
         return cls(
-            config_storage_format=config.config_storage_format,
             wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
             wato_host_attrs=config.wato_host_attrs,
             tags=config.tags,
@@ -785,21 +782,13 @@ class _PickleWATOInfoStorage(ABCWATOInfoStorage):
 class _WATOInfoStorageManager:
     """Handles read/write operations for the .wato file"""
 
-    def __init__(self, storage_format: Literal["standard", "pickle", "raw", "anon"]) -> None:
-        self._write_storages = self._get_write_storages(storage_format)
+    def __init__(self) -> None:
+        self._write_storages = [StandardWATOInfoStorage(), _PickleWATOInfoStorage()]
         self._read_storages = list(reversed(self._write_storages))
 
     @property
     def write_storages(self) -> list[ABCWATOInfoStorage]:
         return self._write_storages
-
-    def _get_write_storages(
-        self, storage_format: Literal["standard", "pickle", "raw", "anon"]
-    ) -> list[ABCWATOInfoStorage]:
-        storages: list[ABCWATOInfoStorage] = [StandardWATOInfoStorage()]
-        if get_storage_format(storage_format) == StorageFormat.PICKLE:
-            storages.append(_PickleWATOInfoStorage())
-        return storages
 
     def read(self, store_file: Path) -> WATOFolderInfo:
         for storage in self._read_storages:
@@ -1389,9 +1378,7 @@ class Folder(FolderProtocol):
         variables = get_hosts_file_variables()
         apply_hosts_file_to_object(
             Path(self.hosts_file_path_without_extension()),
-            get_host_storage_loaders(
-                get_storage_format(active_config.config_storage_format),
-            ),
+            get_host_storage_loaders(StorageFormat.PICKLE),
             variables,
         )
         return variables
@@ -1556,12 +1543,10 @@ class Folder(FolderProtocol):
             )
 
     def get_storage_formatters(self) -> list[ABCHostsStorage]:
-        storage_list: list[ABCHostsStorage] = [StandardHostsStorage()]
-        if experimental_storage := make_experimental_hosts_storage(
-            get_storage_format(active_config.config_storage_format)
-        ):
-            storage_list.append(experimental_storage)
-        return storage_list
+        return [
+            StandardHostsStorage(),
+            PickleHostsStorage(),
+        ]
 
     def _folder_attributes_for_base_config(self) -> dict[str, FolderAttributesForBase]:
         # TODO:
@@ -1654,9 +1639,7 @@ class Folder(FolderProtocol):
     @classmethod
     def wato_info_storage_manager(cls) -> _WATOInfoStorageManager:
         if "wato_info_storage_manager" not in g:
-            g.wato_info_storage_manager = _WATOInfoStorageManager(
-                active_config.config_storage_format
-            )
+            g.wato_info_storage_manager = _WATOInfoStorageManager()
         return g.wato_info_storage_manager
 
     def save_folder_attributes(self) -> None:
@@ -2333,6 +2316,7 @@ class Folder(FolderProtocol):
             object_ref=new_subfolder.object_ref(),
             sites=[new_subfolder.site_id()],
             diff_text=diff_attributes({}, None, new_subfolder.attributes, None),
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         hooks.call("folder-created", new_subfolder)
@@ -2360,6 +2344,7 @@ class Folder(FolderProtocol):
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=subfolder.all_site_ids(),
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         del self._subfolders[name]
@@ -2438,6 +2423,7 @@ class Folder(FolderProtocol):
             user_id=user.id,
             object_ref=moved_subfolder.object_ref(),
             sites=affected_sites,
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         need_sidebar_reload()
@@ -2503,6 +2489,7 @@ class Folder(FolderProtocol):
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=diff,
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
 
@@ -2780,6 +2767,7 @@ class Folder(FolderProtocol):
                 user_id=user.id,
                 object_ref=host.object_ref(),
                 sites=affected_sites,
+                domains=[config_domain_registry[CORE_DOMAIN]],
                 use_git=use_git,
             )
 
@@ -2837,6 +2825,7 @@ class Folder(FolderProtocol):
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=self.all_site_ids(),
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         self.save(pprint_value=pprint_value)
@@ -3731,6 +3720,7 @@ class Host:
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=[self.site_id()],
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         self.folder().save_hosts(pprint_value=pprint_value)
@@ -3752,6 +3742,7 @@ class Host:
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=[self.site_id()],
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         self.folder().save_hosts(pprint_value=pprint_value)
@@ -3765,6 +3756,7 @@ class Host:
             object_ref=self.object_ref(),
             sites=[self.site_id(), omd_site()],
             prevent_discard_changes=True,
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         self._name = new_name
@@ -3903,8 +3895,8 @@ def folder_preserving_link(add_vars: HTTPVariables) -> str:
 
 def make_action_link(vars_: HTTPVariables) -> str:
     session_vars: HTTPVariables = [("_transid", transactions.get())]
-    if session and hasattr(session, "session_info"):
-        session_vars.append(("_csrf_token", session.session_info.csrf_token))
+    if (csrf_token := get_session_csrf_token()) is not None:
+        session_vars.append(("_csrf_token", csrf_token))
 
     return folder_preserving_link(vars_ + session_vars)
 

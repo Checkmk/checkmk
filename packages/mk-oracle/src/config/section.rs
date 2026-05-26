@@ -249,16 +249,22 @@ impl Section {
         &self.affinity
     }
 
-    pub fn is_allowed(&self, execution: SectionFilter) -> bool {
-        match self.kind {
-            SectionKind::Sync => {
-                execution == SectionFilter::All || execution == SectionFilter::Sync
+    pub fn is_allowed(&self, filter: SectionFilter) -> bool {
+        match filter {
+            SectionFilter::Sync => self.kind == SectionKind::Sync,
+            SectionFilter::AsyncAll => self.kind == SectionKind::Async,
+            SectionFilter::All => self.kind != SectionKind::Disabled,
+            SectionFilter::AsyncBuiltinSections => {
+                self.kind == SectionKind::Async && !self.is_custom_metric()
             }
-            SectionKind::Async => {
-                execution == SectionFilter::All || execution == SectionFilter::Async
+            SectionFilter::AsyncCustomMetrics => {
+                self.kind == SectionKind::Async && self.is_custom_metric()
             }
-            SectionKind::Disabled => false,
         }
+    }
+
+    pub fn is_custom_metric(&self) -> bool {
+        self.item_value.is_some()
     }
 }
 
@@ -266,6 +272,7 @@ impl Section {
 pub struct Sections {
     sections: Vec<Section>,
     cache_age: u32,
+    custom_metrics_cache_age: u32,
 }
 
 impl Default for Sections {
@@ -273,6 +280,7 @@ impl Default for Sections {
         Self {
             sections: get_predefined_sections(),
             cache_age: defaults::SECTIONS_CACHE_AGE,
+            custom_metrics_cache_age: defaults::CUSTOM_METRICS_CACHE_AGE,
         }
     }
 }
@@ -346,6 +354,12 @@ impl Sections {
             log::debug!("Using default cache age");
             default.cache_age()
         });
+        let custom_metrics_cache_age = yaml
+            .get_int::<u32>(keys::CUSTOM_METRICS_CACHE_AGE)
+            .unwrap_or_else(|| {
+                log::debug!("Using default metrics cache age");
+                default.custom_metrics_cache_age()
+            });
         let mut sections = Sections::get_sections(yaml.get(keys::SECTIONS), None, None)
             .unwrap_or_else(|| {
                 log::debug!("Using default sections");
@@ -362,6 +376,7 @@ impl Sections {
         Ok(Self {
             sections,
             cache_age,
+            custom_metrics_cache_age,
         })
     }
 
@@ -396,6 +411,10 @@ impl Sections {
         self.cache_age
     }
 
+    pub fn custom_metrics_cache_age(&self) -> u32 {
+        self.custom_metrics_cache_age
+    }
+
     pub fn select(&self, kinds: &[SectionKind]) -> Vec<&Section> {
         self.sections()
             .iter()
@@ -411,23 +430,47 @@ mod tests {
     use std::collections::HashSet;
 
     #[test]
-    fn test_section_allowed() {
+    fn test_async_section_allowed() {
         let async_section = SectionBuilder::new("async").set_async(true).build();
         assert!(async_section.is_allowed(SectionFilter::All));
         assert!(!async_section.is_allowed(SectionFilter::Sync));
-        assert!(async_section.is_allowed(SectionFilter::Async));
+        assert!(async_section.is_allowed(SectionFilter::AsyncAll));
+        assert!(async_section.is_allowed(SectionFilter::AsyncBuiltinSections));
+        assert!(!async_section.is_allowed(SectionFilter::AsyncCustomMetrics));
+    }
 
+    #[test]
+    fn test_async_metric_allowed() {
+        let async_section = SectionBuilder::new("async")
+            .set_async(true)
+            .set_item_value(ItemValue::from("AAA".to_string()))
+            .build();
+        assert!(async_section.is_allowed(SectionFilter::All));
+        assert!(!async_section.is_allowed(SectionFilter::Sync));
+        assert!(async_section.is_allowed(SectionFilter::AsyncAll));
+        assert!(!async_section.is_allowed(SectionFilter::AsyncBuiltinSections));
+        assert!(async_section.is_allowed(SectionFilter::AsyncCustomMetrics));
+    }
+
+    #[test]
+    fn test_sync_section_allowed() {
         let sync_section = SectionBuilder::new("sync").set_async(false).build();
         assert!(sync_section.is_allowed(SectionFilter::All));
         assert!(sync_section.is_allowed(SectionFilter::Sync));
-        assert!(!sync_section.is_allowed(SectionFilter::Async));
+        assert!(!sync_section.is_allowed(SectionFilter::AsyncAll));
+        assert!(!sync_section.is_allowed(SectionFilter::AsyncBuiltinSections));
+        assert!(!sync_section.is_allowed(SectionFilter::AsyncCustomMetrics));
+    }
 
+    #[test]
+    fn test_disabled_section_allowed() {
         let disabled = SectionBuilder::new("disabled").set_disabled().build();
         assert!(!disabled.is_allowed(SectionFilter::All));
         assert!(!disabled.is_allowed(SectionFilter::Sync));
-        assert!(!disabled.is_allowed(SectionFilter::Async));
+        assert!(!disabled.is_allowed(SectionFilter::AsyncAll));
+        assert!(!disabled.is_allowed(SectionFilter::AsyncBuiltinSections));
+        assert!(!disabled.is_allowed(SectionFilter::AsyncCustomMetrics));
     }
-
     #[test]
     fn test_section_affinity() {
         assert_eq!(SectionAffinity::from_text("all"), SectionAffinity::All);
@@ -511,6 +554,10 @@ sections:
         assert_eq!(asyncs, PREDEFINED_ASYNC_SECTIONS);
 
         assert_eq!(s.cache_age(), defaults::SECTIONS_CACHE_AGE);
+        assert_eq!(
+            s.custom_metrics_cache_age(),
+            defaults::CUSTOM_METRICS_CACHE_AGE
+        );
 
         assert_eq!(
             Sections::from_yaml(&create_yaml("_sections:\n"), &Sections::default())

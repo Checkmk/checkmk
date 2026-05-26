@@ -11,7 +11,6 @@ def _package_wheel_impl(
         whl,
         excludes,
         additional_files,
-        prefix,
         rpath,
         visibility):
     """Packages a python wheel into our omd site-packages."""
@@ -53,7 +52,7 @@ def _package_wheel_impl(
     pkg_files(
         name = pkg_files_name + "2",
         srcs = [pkg_files_name + "1"],
-        prefix = prefix,
+        prefix = "lib/python%s/site-packages" % PYTHON_MAJOR_DOT_MINOR,
         strip_prefix = pkg_files_src,
     )
 
@@ -70,10 +69,6 @@ package_wheel = macro(
     attrs = {
         "additional_files": attr.label_list(default = [], doc = "List of additional files to put in the tar."),
         "excludes": attr.label_list(default = [], doc = "Optional, exclude files from packaging."),
-        "prefix": attr.string(
-            default = "lib/python%s/site-packages" % PYTHON_MAJOR_DOT_MINOR,
-            doc = "Where will the python packages be deployed.",
-        ),
         "rpath": attr.string(
             default = "",
             doc = "When non-empty, patch all ELF .so files in the wheel with this RUNPATH via set_runpath_tree.",

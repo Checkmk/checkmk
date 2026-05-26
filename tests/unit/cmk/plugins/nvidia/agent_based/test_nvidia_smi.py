@@ -273,12 +273,36 @@ SECTION = nvidia_smi.Section(
 )
 
 
+EMPTY_SECTION = nvidia_smi.Section(
+    timestamp=None,
+    driver_version=None,
+    cuda_version=None,
+    attached_gpus=None,
+    gpus={},
+)
+
+
+# linux_no_devices and windows_nvidia_smi_missing capture verbatim agent
+# outputs that today reach parse_nvidia_smi as non-XML and used to crash it
+# with xml.etree.ElementTree.ParseError:
+#   * linux_no_devices: SUP-28831 — RHEL host with installed nvidia-smi but
+#     no visible GPU returns "No devices were found".
+#   * windows_nvidia_smi_missing: crash group 3616 — Windows agent plugin
+#     emits a "not found in:" error block when nvidia-smi.exe is absent.
 @pytest.mark.parametrize(
     "string_table, expected_result",
     [
-        (
-            STRING_TABLE,
-            SECTION,
+        pytest.param(STRING_TABLE, SECTION, id="valid_xml"),
+        pytest.param([["No devices were found"]], EMPTY_SECTION, id="linux_no_devices"),
+        pytest.param(
+            [
+                ["ERROR: nvidia-smi.exe was not found in:"],
+                ["-  (configured path)"],
+                ["- C:\\Program Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe (default path)"],
+                ["- system PATH"],
+            ],
+            EMPTY_SECTION,
+            id="windows_nvidia_smi_missing",
         ),
     ],
 )

@@ -5,11 +5,14 @@
 from typing import Literal, TypeGuard
 
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.config_domain_name import config_domain_registry, CORE
+from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.passwords import load_passwords, load_passwords_to_modify, save_password
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    PendingChanges,
+)
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_OAUTH
@@ -56,25 +59,30 @@ class OAuth2ConnectionsConfigFile(WatoSimpleConfigFile[OAuth2Connection]):
         return self.filter_by_passwords(entries, load_passwords_to_modify())
 
 
+def _scope_from_affected_sites(affected_sites: list[SiteId] | None) -> ChangeScope:
+    if affected_sites is None:
+        return ChangeScope.all_activation_sites()
+    return ChangeScope.sites(affected_sites)
+
+
 def save_oauth2_connection(
     ident: str,
     details: OAuth2Connection,
     *,
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
     affected_sites: list[SiteId] | None = None,
 ) -> None:
     oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
     entries = oauth2_connections_config_file.load_for_modification()
     entries[ident] = details
-    add_change(
-        action_name="add-oauth2-connection",
-        text=f"Added the OAuth2 connection '{ident}'",
-        user_id=user_id,
-        domains=[config_domain_registry[CORE]],
-        sites=affected_sites,
-        use_git=use_git,
+    pending_changes.add(
+        Change(
+            action_name="add-oauth2-connection",
+            text=f"Added the OAuth2 connection '{ident}'",
+            domains=[CORE],
+        ),
+        _scope_from_affected_sites(affected_sites),
     )
     oauth2_connections_config_file.save(entries, pprint_value)
 
@@ -94,9 +102,8 @@ def update_oauth2_connection(
     ident: str,
     details: OAuth2Connection,
     *,
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
     affected_sites: list[SiteId] | None = None,
 ) -> None:
     oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
@@ -105,13 +112,13 @@ def update_oauth2_connection(
         raise KeyError(f"OAuth2 connection with ident '{ident}' does not exist")
     entries[ident] = details
 
-    add_change(
-        action_name="update-oauth2-connection",
-        text=f"Updated the OAuth2 connection '{ident}'",
-        user_id=user_id,
-        domains=[config_domain_registry[CORE]],
-        sites=affected_sites,
-        use_git=use_git,
+    pending_changes.add(
+        Change(
+            action_name="update-oauth2-connection",
+            text=f"Updated the OAuth2 connection '{ident}'",
+            domains=[CORE],
+        ),
+        _scope_from_affected_sites(affected_sites),
     )
     oauth2_connections_config_file.save(entries, pprint_value)
 
@@ -119,9 +126,8 @@ def update_oauth2_connection(
 def delete_oauth2_connection(
     ident: str,
     *,
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
     affected_sites: list[SiteId] | None = None,
 ) -> None:
     oauth2_connections_config_file = OAuth2ConnectionsConfigFile()
@@ -129,13 +135,13 @@ def delete_oauth2_connection(
     if ident not in entries:
         raise KeyError(f"OAuth2 connection with ident '{ident}' does not exist")
     del entries[ident]
-    add_change(
-        action_name="deleted-oauth2-connection",
-        text=f"Deleted the OAuth2 connection '{ident}'",
-        user_id=user_id,
-        domains=[config_domain_registry[CORE]],
-        sites=affected_sites,
-        use_git=use_git,
+    pending_changes.add(
+        Change(
+            action_name="deleted-oauth2-connection",
+            text=f"Deleted the OAuth2 connection '{ident}'",
+            domains=[CORE],
+        ),
+        _scope_from_affected_sites(affected_sites),
     )
     oauth2_connections_config_file.save(entries, pprint_value)
 
@@ -164,9 +170,8 @@ def save_tokens_to_passwordstore(
     refresh_token: str,
     owned_by: str | None,
     shared_with: list[str],
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     # TODO Think site_id should be in data above
     site_id = omd_site()
@@ -193,9 +198,8 @@ def save_tokens_to_passwordstore(
                 ),
             ),
             new_password=password_ident not in password_entries,
-            user_id=user_id,
             pprint_value=pprint_value,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
 
 
@@ -208,9 +212,8 @@ def update_reference(
     authority: str,
     sites: OAuth2Sites,
     connector_type: OAuth2ConnectorType,
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> tuple[str, OAuth2Connection]:
     details = OAuth2Connection(
         title=title,
@@ -235,9 +238,8 @@ def update_reference(
     update_oauth2_connection(
         ident=ident,
         details=details,
-        user_id=user_id,
         pprint_value=pprint_value,
-        use_git=use_git,
+        pending_changes=pending_changes,
         affected_sites=affected_sites,
     )
     return ident, details
@@ -252,9 +254,8 @@ def save_new_reference_to_config_file(
     authority: str,
     sites: OAuth2Sites,
     connector_type: OAuth2ConnectorType,
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> tuple[str, OAuth2Connection]:
     details = OAuth2Connection(
         title=title,
@@ -279,9 +280,8 @@ def save_new_reference_to_config_file(
     save_oauth2_connection(
         ident=ident,
         details=details,
-        user_id=user_id,
         pprint_value=pprint_value,
-        use_git=use_git,
+        pending_changes=pending_changes,
         affected_sites=affected_sites,
     )
     return ident, details

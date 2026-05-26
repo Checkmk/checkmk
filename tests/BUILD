@@ -23,12 +23,9 @@ py_library(
     deps = [
         "//cmk/base",
         "//cmk/checkengine",
+        "//cmk/gui:app",
         "//cmk/gui:config",
-        "//cmk/gui:hooks",
-        "//cmk/gui:http",
-        "//cmk/gui:main_modules",
-        "//cmk/gui:script_helpers",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/graphing",
         "//cmk/gui/mkeventd",
         "//cmk/gui/nodevis:utils",
@@ -88,8 +85,7 @@ py_library(
     imports = [".."],
     visibility = ["//:__subpackages__"],
     deps = [
-        "//cmk/gui:http",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/graphing",
         "//cmk/gui/openapi:openapi_init",
         "//cmk/gui/openapi/endpoints",
@@ -145,12 +141,9 @@ py_library(
     deps = [
         "//cmk/base",
         "//cmk/checkengine",
+        "//cmk/gui:app",
         "//cmk/gui:config",
-        "//cmk/gui:hooks",
-        "//cmk/gui:http",
-        "//cmk/gui:main_modules",
-        "//cmk/gui:script_helpers",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/graphing",
         "//cmk/gui/mkeventd",
         "//cmk/gui/nodevis:utils",
@@ -295,20 +288,6 @@ py_library(
 )
 
 py_library(
-    name = "extension_compatibility",
-    testonly = True,
-    srcs = glob(
-        include = ["extension_compatibility/**/*.py"],
-    ),
-    imports = [".."],
-    deps = [
-        "//tests/testlib/common:repo",
-        requirement("pytest"),
-        ":testlib",
-    ],
-)
-
-py_library(
     name = "gui_crawl",
     testonly = True,
     srcs = glob(
@@ -393,7 +372,6 @@ py_library(
         requirement("psycopg"),
         requirement("protobuf"),
         requirement("pyopenssl"),
-        ":extension_compatibility",
         ":scripts",
         ":testlib",
         "//cmk/post_rename_site",

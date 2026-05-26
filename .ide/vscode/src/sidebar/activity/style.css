@@ -1,0 +1,116 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+.activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.8em;
+  color: var(--vscode-descriptionForeground);
+}
+
+.activity-header .activity-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.activity-row {
+  display: grid;
+  grid-template-columns: 18px 1fr auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: var(--radius);
+  font-size: 0.82em;
+  cursor: default;
+  transition: background 0.1s;
+}
+
+.activity-copy {
+  opacity: 0;
+  transition: opacity 0.1s;
+  padding: 0 2px;
+}
+
+.activity-row:hover .activity-copy {
+  opacity: 1;
+}
+
+.activity-row:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.activity-row.warn .activity-glyph {
+  color: var(--cmk-yellow);
+}
+
+.activity-row.err .activity-glyph {
+  color: var(--cmk-red);
+}
+
+.activity-row.ok.cat-omd .activity-glyph {
+  color: #5b9bd5;
+}
+
+.activity-row.ok.cat-profile .activity-glyph {
+  color: #c878e0;
+}
+
+.activity-row.ok.cat-benchmark .activity-glyph {
+  color: var(--cmk-green);
+}
+
+.activity-row.ok.cat-gerrit .activity-glyph {
+  color: #9ed05a;
+}
+
+.activity-row.ok.cat-mypy .activity-glyph {
+  color: #5ad0c4;
+}
+
+.activity-row.ok.cat-jemalloc .activity-glyph {
+  color: var(--cmk-green);
+}
+
+.activity-row.ok.cat-command .activity-glyph,
+.activity-row.ok.cat-general .activity-glyph {
+  color: var(--vscode-descriptionForeground);
+}
+
+.activity-glyph .codicon {
+  font-size: 13px;
+}
+
+.activity-msg {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--vscode-editor-font-family);
+}
+
+.activity-time {
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.activity-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9em;
+}

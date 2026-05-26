@@ -20,7 +20,26 @@ __all__ = [
     "unregister_from_system_apache",
     "delete_apache_hook",
     "is_apache_hook_up_to_date",
+    "write_apache_listen_conf",
 ]
+
+_CONF_HEADER = (
+    "# This file is managed by 'omd config set APACHE_TCP_PORT'"
+    " and 'omd config set APACHE_TCP_ADDR'.\n"
+    "# Better do not edit manually\n"
+)
+
+
+def write_apache_listen_conf(omd_root: str, addr: str, port: str) -> None:
+    conf_path = os.path.join(omd_root, "etc", "apache", "listen-port.conf")
+
+    if addr.startswith("["):
+        content = f"{_CONF_HEADER}Listen {addr}:{port}\n"
+    else:
+        content = f"{_CONF_HEADER}ServerName {addr}:{port}\nListen {addr}:{port}\n"
+
+    with open(conf_path, "w") as f:
+        f.write(content)
 
 
 def register_with_system_apache(

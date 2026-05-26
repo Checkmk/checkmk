@@ -5,7 +5,6 @@
 
 import enum
 
-Config = dict[str, str]
 Replacements = dict[str, str]
 
 

@@ -795,6 +795,30 @@
         }
       ]
     },
+    "static_text": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "static_text",
+              "default": "static_text"
+            },
+            "value": {
+              "type": "string"
+            },
+            "multiline": {
+              "type": "boolean"
+            }
+          },
+          "required": ["type", "value", "multiline"]
+        }
+      ]
+    },
     "boolean_choice": {
       "type": "object",
       "allOf": [
@@ -1812,6 +1836,9 @@
         },
         {
           "$ref": "#/$defs/fixed_value"
+        },
+        {
+          "$ref": "#/$defs/static_text"
         },
         {
           "$ref": "#/$defs/boolean_choice"

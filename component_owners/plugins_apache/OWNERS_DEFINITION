@@ -1,6 +1,6 @@
 # consider keeping under same ownership as nginx.
 
-robin.loesch@checkmk.com  # component lead
+bohdan.biloshytskyi@checkmk.com  # component lead
 
 # Find information about code-owners (+ find-owners syntax) here:
 #  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html

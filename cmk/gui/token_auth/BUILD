@@ -10,10 +10,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:exceptions",
-        "//cmk/gui:http",
-        "//cmk/gui:pages",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui:page_toolkit",
         "//cmk/gui/utils:security_log_events",
         "//cmk/utils",
         "//packages/cmk-ccc:hostaddress",

@@ -187,6 +187,52 @@ export function getSettingsMismatches(
     }
   }
 
+  for (const [family, settingsEntry] of Object.entries(settingsSets)) {
+    const displayName = FAMILY_DISPLAY[family] || family
+    const unsetScopes: Array<{
+      keys: readonly string[]
+      label: 'folder' | 'workspace' | 'user'
+      getter: (i: Inspection, key: string) => unknown
+    }> = [
+      {
+        keys: settingsEntry.unsetFolder ?? [],
+        label: 'folder',
+        getter: (i, key) => i?.workspaceFolderValue ?? folderFileSettings[key]
+      },
+      {
+        keys: settingsEntry.unsetWorkspace ?? [],
+        label: 'workspace',
+        getter: (i, key) =>
+          i?.workspaceValue ??
+          (isFolderWorkspace ? (i?.workspaceFolderValue ?? folderFileSettings[key]) : undefined)
+      },
+      {
+        keys: settingsEntry.unsetUser ?? [],
+        label: 'user',
+        getter: (i) => i?.globalValue
+      }
+    ]
+    for (const { keys, label, getter } of unsetScopes) {
+      if (keys.length === 0) continue
+      const resource = label === 'folder' ? wsFolder : undefined
+      const cfg = vscode.workspace.getConfiguration(undefined, resource)
+      for (const key of keys) {
+        const dedupeKey = `${key}@${label}`
+        if (seen.has(dedupeKey)) continue
+        const actual = getter(cfg.inspect(key), key)
+        if (actual === undefined) continue
+        seen.add(dedupeKey)
+        mismatches.push({
+          key,
+          expected: undefined,
+          actual,
+          family: displayName,
+          scope: label
+        })
+      }
+    }
+  }
+
   return suppressAllocatorManagedKeys(mismatches)
 }
 
@@ -428,6 +474,14 @@ export async function handleMessage(
       refreshAll()
       return true
     }
+    case 'toggleBenchmark': {
+      const cfg = vscode.workspace.getConfiguration('cmk')
+      const current = cfg.get<boolean>('benchmarkStartup', false)
+      await cfg.update('benchmarkStartup', !current, vscode.ConfigurationTarget.Workspace)
+      notifyInfo(`CMK: Startup benchmark recording ${!current ? 'enabled' : 'disabled'}.`)
+      refreshAll()
+      return true
+    }
     default:
       return false
   }
@@ -439,7 +493,6 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     pythonEnvsActive,
     extensionHealth,
     settingsMismatches,
-    versionMismatch,
     configInWorkspace,
     mypyTargets,
     allocator,
@@ -449,6 +502,16 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   const installedVersion = vscode.extensions.getExtension('checkmk.cmk-vscode')?.packageJSON
     ?.version as string | undefined
 
+  const benchmarkOn = vscode.workspace
+    .getConfiguration('cmk')
+    .get<boolean>('benchmarkStartup', false)
+  const benchmarkBtn = `<button class="btn btn-small btn-icon ${benchmarkOn ? 'benchmark-on' : ''}" data-action="toggle-benchmark" title="${benchmarkOn ? 'Disable startup benchmark recording' : 'Enable startup benchmark recording'}">
+    <span class="codicon codicon-pulse"></span>
+  </button>
+  <button class="btn btn-small btn-icon" data-action="exec" data-id="cmk.showStartupBenchmarks" title="Show startup benchmark chart">
+    <span class="codicon codicon-graph"></span>
+  </button>`
+
   const versionHtml = installedVersion
     ? `<div class="env-row">
         <span class="env-label">Extension</span>
@@ -456,16 +519,12 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
         <button class="btn btn-small btn-icon" data-action="exec" data-id="cmk.pickChangelog" title="Browse changelog">
           <span class="codicon codicon-history"></span>
         </button>
+        ${benchmarkBtn}
       </div>`
     : ''
 
-  const versionBanner = versionMismatch
-    ? `<div class="banner">
-        <span class="banner-icon">&#9888;</span>
-        <span class="banner-text">Update available: <b>v${esc(versionMismatch.installed)}</b> → <b>v${esc(versionMismatch.workspace)}</b></span>
-        <button class="btn btn-small" data-action="exec" data-id="cmk.rebuildExtension"><span class="codicon codicon-package"></span> Install</button>
-      </div>`
-    : ''
+  // Version-mismatch banner removed: cockpit chip + Issues entry cover this.
+  const versionBanner = ''
 
   const pyEnvsBanner = pythonEnvsActive
     ? `
@@ -492,7 +551,8 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   if (settingsMismatches.length === 0) {
     settingsHtml = renderStatusRow({ level: 'ok', label: 'All settings match' })
   } else {
-    const applyBtn = `<div class="apply-wrapper"><button class="btn" data-action="apply-all-mismatches"><span class="codicon codicon-wrench"></span> Apply All (${settingsMismatches.length})</button></div>`
+    // "Apply All" removed: the cockpit Settings chip handles the bulk action.
+    const applyBtn = ''
     const grouped = new Map<string, SettingsMismatch[]>()
     for (const m of settingsMismatches) {
       const key = m.family

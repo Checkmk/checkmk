@@ -14,7 +14,7 @@ echo "verification of tests/code_quality/test_python_extensions.py and scripts/f
 
 # Run the pytest version
 test_py_output=$(
-    make -C tests test-py-extensions 2>/dev/null | grep "^ -- " | sed 's/.*-- //' | sort
+    tests/run_tests.sh test-py-extensions 2>/dev/null | grep "^ -- " | sed 's/.*-- //' | sort
 )
 
 echo "$test_py_output" >/tmp/out_test_py.txt

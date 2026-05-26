@@ -10,8 +10,13 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import assert_never, Literal, overload, override, TypeGuard
 
+from livestatus import (
+    AuthenticationConnectionEntry,
+    SiteConfiguration,
+)
+
 from cmk.ccc import store
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
@@ -106,6 +111,17 @@ def connection_choices() -> list[tuple[str, str]]:
     )
 
 
+def saml_connection_choices() -> list[tuple[str, str]]:
+    """SAML connections that can be picked for site-level authentication."""
+    return sorted(
+        [
+            (connection_id, f"{connection_id} ({ConnectorType.SAML2})")
+            for connection_id in get_saml_connections()
+        ],
+        key=lambda id_and_description: id_and_description[1],
+    )
+
+
 def _all_connections(
     user_connections: Sequence[UserConnectionConfig],
 ) -> list[tuple[str, UserConnector]]:
@@ -158,6 +174,63 @@ def get_active_saml_connections() -> dict[str, SAMLUserConnectionConfig]:
         for saml_id, saml_connection in get_saml_connections().items()
         if not saml_connection["disabled"]
     }
+
+
+def effective_authentication_connections(
+    site_config: SiteConfiguration,
+) -> list[AuthenticationConnectionEntry]:
+    """Look up the effective `authentication_connections` value for the current site.
+
+    Precedence:
+      1. ``site_config["authentication_connections"]`` if the value is not
+         ``None`` (the explicit per-site override).
+      2. ``active_config.authentication_connections`` (the propagated global;
+         on a remote site this is the value set from ``sitespecific.mk`` by
+         the central's ``get_site_globals()``, since ``sites.mk`` itself is
+         not synchronized).
+
+    Absence of the per-site key means "inherit from the central site"; the
+    central's `get_site_globals()` resolves that before propagation, so the
+    runtime here just falls through to the global. A legacy ``None`` value
+    written before the refactor is treated the same as absence.
+    """
+    value = site_config.get("authentication_connections")
+    if value is None:
+        return active_config.authentication_connections or []
+    return value
+
+
+def _resolve_authentication_connections(
+    auth_connections: list[AuthenticationConnectionEntry],
+    available: dict[str, SAMLUserConnectionConfig],
+) -> dict[str, SAMLUserConnectionConfig]:
+    """Resolve the SAML connections available on the current site.
+
+    Only ``("saml", {connection_id})`` entries contribute SAML connections.
+    """
+    resolved: dict[str, SAMLUserConnectionConfig] = {}
+    for entry in auth_connections:
+        if entry[0] != "saml":
+            continue
+        connection_id = entry[1]["connection_id"]
+        if (cfg := available.get(connection_id)) is None:
+            continue
+        resolved[connection_id] = cfg
+    return resolved
+
+
+def get_saml_connections_for_current_site() -> dict[str, SAMLUserConnectionConfig]:
+    """SAML connections available for login authentication on the current site.
+
+    Returns the connections explicitly listed in the site's
+    `authentication_connections`. On the central site the data lives in
+    `sites.mk`; on a remote site it arrives via the global
+    `authentication_connections` populated by `get_site_globals()`.
+    """
+    return _resolve_authentication_connections(
+        effective_authentication_connections(active_config.sites[omd_site()]),
+        get_active_saml_connections(),
+    )
 
 
 UserConnections = list[ConfigurableUserConnectionSpec] | Sequence[ConfigurableUserConnectionSpec]
@@ -215,7 +288,7 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         connection_id: str,
         connection_type: Literal["ldap", "saml2"],
         sites: list[SiteId],
-        domains: Sequence[ABCConfigDomain] | None,
+        domains: Sequence[ABCConfigDomain],
         pprint_value: bool,
         use_git: bool,
     ) -> None:
@@ -235,7 +308,7 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         cfg: list[ConfigurableUserConnectionSpec],
         connection_type: Literal["ldap", "saml2"],
         sites: list[SiteId],
-        domains: Sequence[ABCConfigDomain] | None,
+        domains: Sequence[ABCConfigDomain],
         pprint_value: bool,
         use_git: bool,
     ) -> None:
@@ -256,7 +329,7 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         connection_id: str,
         connection_type: Literal["ldap", "saml2"],
         sites: list[SiteId],
-        domains: Sequence[ABCConfigDomain] | None,
+        domains: Sequence[ABCConfigDomain],
         pprint_value: bool,
         use_git: bool,
     ) -> None:
@@ -278,7 +351,7 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         connection_type: Literal["ldap", "saml2"],
         to_index: int,
         sites: list[SiteId],
-        domains: Sequence[ABCConfigDomain] | None,
+        domains: Sequence[ABCConfigDomain],
         pprint_value: bool,
         use_git: bool,
     ) -> None:

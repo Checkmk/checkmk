@@ -21,8 +21,12 @@ async fn main() {
     let result = setup::init(std::env::args_os());
     let code = if let Ok((config, environment)) = result {
         if let Some(p) = environment.generate_plugins() {
-            let cache_age = config.ora_sql().unwrap().cache_age();
-            std::process::exit(setup::create_plugins(p, cache_age));
+            let ora_sql = config.ora_sql().unwrap();
+            std::process::exit(setup::create_plugins(
+                p,
+                ora_sql.cache_age(),
+                ora_sql.custom_metrics_cache_age(),
+            ));
         };
 
         if need_execution(args.as_slice()) {

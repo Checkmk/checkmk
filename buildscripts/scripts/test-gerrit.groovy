@@ -145,6 +145,12 @@ void main() {
                                 SECRET_VARS: item.SEC_VAR_LIST ? item.SEC_VAR_LIST.join(" ") : "",
                             ];
                             break;
+                        case "GitHub actions":
+                            relative_job_name = "${branch_base_folder}/cv/test-github-actions";
+                            build_params = [
+                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
+                            ];
+                            break;
                         default:
                             break;
                     }

@@ -74,7 +74,7 @@ def main(raw_args):
 
     logger.info("make_target: %s", args.make_target)
     if args.make_target != "debug" and not command:
-        command = ["make", "-C", "tests", args.make_target.removesuffix("-debug")]
+        command = ["tests/run_tests.sh", args.make_target.removesuffix("-debug")]
     logger.info("command: %s", command)
 
     return execute_tests_in_container(

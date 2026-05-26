@@ -8,7 +8,7 @@ const config = {
   singleQuote: true,
   printWidth: 100,
   trailingComma: 'none',
-  plugins: [require('@trivago/prettier-plugin-sort-imports')],
+  plugins: [require.resolve('@trivago/prettier-plugin-sort-imports')],
   importOrder: [
     '^[a-zA-z1-9@]{2, }$',
     '^@\/lib.*$',

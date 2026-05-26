@@ -163,7 +163,13 @@ class ModeCheckPluginSearch(WatoMode):
         search_form(title="%s: " % _("Search for check plug-ins"), mode="check_plugin_search")
 
         for path, manpages in self._get_manpages_after_search():
-            _render_manpage_list(self._titles, manpages, path, self._titles.get(path, path))
+            _render_manpage_list(
+                self._titles,
+                manpages,
+                path,
+                self._titles.get(path, path),
+                table_row_limit=config.table_row_limit,
+            )
 
     def _get_manpages_after_search(self) -> list[tuple[str, list[CatalogEntry]]]:
         collection: dict[str, list[CatalogEntry]] = {}
@@ -282,7 +288,13 @@ class ModeCheckPluginTopic(WatoMode):
 
     def page(self, config: Config) -> None:
         if isinstance(self._manpages, list):
-            _render_manpage_list(self._titles, self._manpages, self._path[-1], self._topic_title)
+            _render_manpage_list(
+                self._titles,
+                self._manpages,
+                self._path[-1],
+                self._topic_title,
+                table_row_limit=config.table_row_limit,
+            )
             return
 
         if len(self._path) == 1 and self._has_second_level:
@@ -313,7 +325,13 @@ class ModeCheckPluginTopic(WatoMode):
 
             for title, subnode, path_comp in sorted(entries, key=lambda x: x[0].lower()):
                 assert isinstance(subnode, list)
-                _render_manpage_list(self._titles, subnode, path_comp, title)
+                _render_manpage_list(
+                    self._titles,
+                    subnode,
+                    path_comp,
+                    title,
+                    table_row_limit=config.table_row_limit,
+                )
 
     def _get_check_plugin_stats(self, subnode: CatalogTree | Sequence[CatalogEntry]) -> str:
         if isinstance(subnode, list):
@@ -353,14 +371,19 @@ def _add_breadcrumb_topic_items(
 
 
 def _render_manpage_list(
-    titles: Mapping[str, str], manpage_list: Sequence[CatalogEntry], path_comp: str, heading: str
+    titles: Mapping[str, str],
+    manpage_list: Sequence[CatalogEntry],
+    path_comp: str,
+    heading: str,
+    *,
+    table_row_limit: int,
 ) -> None:
     def translate(t: str) -> str:
         return titles.get(t, t)
 
     html.h3(heading)
     with table_element(
-        searchable=False, sortable=False, css="check_catalog", limit=active_config.table_row_limit
+        searchable=False, sortable=False, css="check_catalog", limit=table_row_limit
     ) as table:
         for entry in sorted(manpage_list, key=lambda x: x["title"]):
             if not isinstance(entry, dict):

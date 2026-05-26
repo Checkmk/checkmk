@@ -38,9 +38,10 @@ from cmk.gui.logged_in import (
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.saml2_login import show_saml2_login
-from cmk.gui.session import session, UserContext
+from cmk.gui.session import session
+from cmk.gui.session_context import UserContext
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.userdb import get_active_saml_connections, get_user_attributes
+from cmk.gui.userdb import get_saml_connections_for_current_site, get_user_attributes
 from cmk.gui.userdb.session import auth_cookie_name
 from cmk.gui.utils import roles
 from cmk.gui.utils.html import HTML
@@ -333,11 +334,7 @@ class LoginPage(Page):
             html.hidden_field("_origtarget", origtarget)
 
             saml2_user_error: str | None = None
-            if saml_connections := [
-                c
-                for c in get_active_saml_connections().values()
-                if c["owned_by_site"] == omd_site()
-            ]:
+            if saml_connections := list(get_saml_connections_for_current_site().values()):
                 saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
 
             html.open_table()

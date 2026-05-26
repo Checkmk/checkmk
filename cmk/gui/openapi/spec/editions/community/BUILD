@@ -10,8 +10,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:default_permissions",
-        "//cmk/gui:permissions",
+        "//cmk/gui:config",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/agent_registration",
         "//cmk/gui/availability",
         "//cmk/gui/background_job/wato",
@@ -21,6 +21,7 @@ py_library(
         "//cmk/gui/inventory",
         "//cmk/gui/ldap_integration",
         "//cmk/gui/mkeventd",
+        "//cmk/gui/monitor/hosts",
         "//cmk/gui/openapi:openapi_init",
         "//cmk/gui/openapi:registration",
         "//cmk/gui/openapi/endpoints",
@@ -42,10 +43,12 @@ py_binary(
     visibility = ["//:__subpackages__"],
     deps = [
         ":community",
-        "//cmk/gui:legacy_plugins",
+        "//cmk/gui:config",
         "//cmk/gui/openapi/spec/editions",
-        "//cmk/gui/openapi/spec/spec_generator:_core",
+        "//cmk/gui/openapi/spec/spec_generator",
         "//cmk/gui/plugins/wato/check_parameters:stub",
+        requirement("apispec"),
+        requirement("apispec-oneofschema"),
         requirement("pyyaml"),
     ],
 )

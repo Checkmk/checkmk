@@ -103,7 +103,7 @@ def execute_tests_in_container(
                 Next steps: Start the test of your choice, for example:
 
                 Run all integration tests:
-                    make -C tests test-integration
+                    tests/run_tests.sh test-integration
 
                 Run all integration tests in a module:
                     pytest tests/integration/livestatus/test_livestatus.py

@@ -57,9 +57,14 @@ const httpEventConsole = defineModel<EventConsoleConfig | null>('httpEventConsol
 const pendingPasswords = defineModel<Map<string, PasswordConfig>>('pendingPasswords', {
   required: true
 })
+// All passwords selectable in the auth dropdowns: existing entries from the
+// password store plus locally-pending ones. Lives in the parent so the final
+// summary step can look up the title for the password an auth row references.
+const availablePasswords = defineModel<Suggestion[]>('availablePasswords', {
+  required: true
+})
 
 const activeTab = ref('grpc')
-const availablePasswords = ref<Suggestion[]>([])
 const displayErrors = ref(false)
 const passwordStoreSlideInOpen = ref(false)
 const passwordTargetAuth = ref<'grpc' | 'http'>('grpc')

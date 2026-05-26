@@ -48,7 +48,11 @@ from urllib.parse import urlparse
 from pydantic import BaseModel
 from setproctitle import setthreadtitle
 
-from livestatus import BrokerConnections, SiteConfiguration, SiteConfigurations
+from livestatus import (
+    BrokerConnections,
+    SiteConfiguration,
+    SiteConfigurations,
+)
 
 import cmk.bi.filesystem
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
@@ -94,7 +98,13 @@ from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.type_defs import GlobalSettings, Users
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.userdb import get_user_attributes, load_users, user_sync_default_config, UserAttribute
+from cmk.gui.userdb import (
+    get_user_attributes,
+    load_users,
+    user_sync_default_config,
+    UserAttribute,
+    UserSyncConfig,
+)
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
 from cmk.gui.userdb.store import load_users_uncached, save_users
 from cmk.gui.utils import escaping
@@ -955,7 +965,7 @@ def _set_done_result(
 def _confirm_synchronized_changes(site_id: SiteId) -> None:
     with SiteChanges(site_id).mutable_view() as changes:
         for change in changes:
-            change["need_sync"] = False
+            change["force_sync"] = False
 
 
 def _confirm_activated_changes(
@@ -971,7 +981,7 @@ def _get_domains_needing_activation(
     domain_settings: dict[ConfigDomainName, list[SerializedSettings]] = {}
     omd_domain_setting_changes: list[SerializedSettings] = []
     for change in site_changes_activate_until:
-        if change["need_restart"]:
+        if _needs_restart(change):
             for domain_name in change["domains"]:
                 settings = get_config_domain(domain_name).get_domain_settings(change)
                 # ConfigDomainOMD needs a restart of the apache,
@@ -1147,7 +1157,19 @@ class ActivateChanges:
         self._pending_changes: list[tuple[str, ChangeSpec]] = []
         super().__init__()
 
-    def load(self, sites: Sequence[SiteId]) -> None:
+    def load(
+        self,
+        sites: Sequence[SiteId],
+        site_configs: Mapping[SiteId, SiteConfiguration] | None = None,
+    ) -> None:
+        """Load pending changes for the given sites.
+
+        ``site_configs`` is used to compute each change's
+        ``has_been_activated`` flag against the *current* site configuration.
+        Callers in test or background-job contexts that operate on a custom
+        :class:`SiteConfigurations` should pass it explicitly.
+        """
+        resolved_site_configs = site_configs if site_configs is not None else active_config.sites
         self._changes_by_site = {}
 
         active_changes: dict[str, ChangeSpec] = {}
@@ -1155,15 +1177,29 @@ class ActivateChanges:
 
         for site_id in sites:
             site_changes = SiteChanges(site_id).read()
-            self._changes_by_site[site_id] = site_changes
 
             if not site_changes:
+                self._changes_by_site[site_id] = site_changes
                 continue
 
-            # Assume changes can be recorded multiple times and deduplicate them.
+            site_config = resolved_site_configs[site_id]
+
+            # Annotate each change with its computed ``has_been_activated`` flag
+            # so callers reading ``_changes_by_site`` directly (e.g. for foreign
+            # change detection) see the same value as the deduplicated buckets.
+            annotated_site_changes = []
             for change in site_changes:
+                activated_here = _has_been_activated_for_site(change, site_config)
+                annotated = change.copy()
+                annotated["has_been_activated"] = activated_here
+                annotated_site_changes.append(annotated)
+            self._changes_by_site[site_id] = annotated_site_changes
+
+            # Assume changes can be recorded multiple times and deduplicate them.
+            for change in annotated_site_changes:
                 change_id = change["id"]
-                target_bucket = active_changes if has_been_activated(change) else pending_changes
+                activated_here = change["has_been_activated"]
+                target_bucket = active_changes if activated_here else pending_changes
                 if change_id not in target_bucket:
                     target_bucket[change_id] = change.copy()
 
@@ -1204,8 +1240,9 @@ class ActivateChanges:
         changes_counter = 0
         for site_id in sites:
             changes = SiteChanges(site_id).read()
-            changes_counter += len(
-                list(change for change in changes if not has_been_activated(change))
+            site_config = active_config.sites[site_id]
+            changes_counter += sum(
+                1 for change in changes if not _has_been_activated_for_site(change, site_config)
             )
             if count_limit is not None and changes_counter > count_limit:
                 return changes_counter
@@ -1288,7 +1325,7 @@ class ActivateChanges:
         if site_is_local(site_config):
             return False
 
-        return any(c["need_sync"] for c in changes_to_check)
+        return any(_needs_sync(c) for c in changes_to_check)
 
     def is_sync_needed(self, site_id: SiteId, site_config: SiteConfiguration) -> bool:
         return self._is_sync_needed_specific_changes(
@@ -1296,7 +1333,7 @@ class ActivateChanges:
         )
 
     def _is_activate_needed_specific_changes(self, changes_to_check: Sequence[ChangeSpec]) -> bool:
-        return any(c["need_restart"] for c in changes_to_check)
+        return any(_needs_restart(c) for c in changes_to_check)
 
     def is_activate_needed(self, site_id: SiteId) -> bool:
         return self._is_activate_needed_specific_changes(self.changes_of_site(site_id))
@@ -1383,7 +1420,7 @@ class ActivateChanges:
             An :class:`ActivationChangesSummary` with sites, pending changes,
             and licensing information.
         """
-        self.load(list(activation_sites(sites)))
+        self.load(list(activation_sites(sites)), sites)
 
         def _get_site_version(site_id: SiteId) -> str:
             site_status = get_status_for_site(site_id, sites[site_id])
@@ -1488,7 +1525,7 @@ class ActivateChanges:
                     PendingChangeSummary(
                         changeId=change["id"],
                         changeText=change["text"],
-                        user=change["user_id"],
+                        user=change["user_id"] or "",
                         time=change["time"],
                         foreignChange=is_foreign_change(change),
                         whichSites=["All sites"]
@@ -1509,7 +1546,44 @@ class ActivateChanges:
 
 
 def has_been_activated(change: ChangeSpec) -> bool:
+    """Whether a change has already been fully applied for its site.
+
+    The value returned here is the one populated in-memory by
+    :meth:`ActivateChanges.load` and by :meth:`get_number_of_pending_changes`,
+    computed from the current site config via :func:`_has_been_activated_for_site`.
+    """
     return change.get("has_been_activated", False)
+
+
+def _needs_restart(change: ChangeSpec) -> bool:
+    """Resolve whether activating ``change`` triggers a restart.
+
+    ``force_restart`` is a ``bool | None`` override: ``None`` means "derive
+    from the change's domains" via the config-domain registry.
+    """
+    override = change.get("force_restart")
+    if override is not None:
+        return override
+    return any(get_config_domain(d).needs_activation for d in change["domains"])
+
+
+def _needs_sync(change: ChangeSpec) -> bool:
+    """Resolve whether activating ``change`` triggers a config sync."""
+    override = change.get("force_sync")
+    if override is not None:
+        return override
+    return any(get_config_domain(d).needs_sync for d in change["domains"])
+
+
+def _has_been_activated_for_site(change: ChangeSpec, site_config: SiteConfiguration) -> bool:
+    """Compute the activation state of ``change`` against the current site config."""
+    if not site_is_local(site_config):
+        return False
+    if _needs_restart(change):
+        return False
+    if change.get("force_apache_reload", False):
+        return False
+    return True
 
 
 def prevent_discard_changes(change: ChangeSpec) -> bool:
@@ -1517,7 +1591,7 @@ def prevent_discard_changes(change: ChangeSpec) -> bool:
 
 
 def is_foreign_change(change: ChangeSpec) -> bool:
-    return change["user_id"] and change["user_id"] != user.id
+    return bool(change["user_id"]) and change["user_id"] != user.id
 
 
 def affects_all_sites(sites: Sequence[SiteId], change: ChangeSpec) -> bool:
@@ -1908,11 +1982,11 @@ class ActivateChangesManager:
                 self._persisted_changes.append(
                     asdict(
                         ActivationChange(
-                            **{
-                                k: v
-                                for k, v in change.items()
-                                if k in ("id", "action_name", "text", "user_id", "time")
-                            }
+                            id=change["id"],
+                            action_name=change["action_name"],
+                            text=change["text"],
+                            user_id=change["user_id"],
+                            time=change["time"],
                         )
                     )
                 )
@@ -3244,7 +3318,7 @@ def verify_remote_site_config(sites: Mapping[SiteId, SiteConfiguration], site_id
 
     # Make sure there are no local changes we would lose!
     changes = cmk.gui.watolib.activate_changes.ActivateChanges()
-    changes.load(list(sites))
+    changes.load(list(sites), sites)
     pending = list(reversed(changes.grouped_changes()))
     if pending:
         message = _(
@@ -3703,14 +3777,14 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
         base_dir = cmk.utils.paths.omd_root
         base_folder_path = str(cmk.utils.paths.check_mk_config_dir / "wato")
 
-        default_sync_config = user_sync_default_config(site_config, site_id)
-        current_users = {}
-        keep_local_users = False
-        active_connectors = []
-        if isinstance(default_sync_config, tuple) and default_sync_config[0] == "list":
-            keep_local_users = True
+        active_connectors = _active_connectors_for_user_preservation(
+            site_config,
+            user_sync_default_config(site_config, site_id),
+        )
+        current_users: Users = {}
+        keep_local_users = bool(active_connectors)
+        if keep_local_users:
             current_users = load_users()
-            active_connectors = default_sync_config[1]
 
         try:
             # to_delete should not include any files mentioned in the sync_archive
@@ -3738,6 +3812,60 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
         finally:
             if keep_local_users:
                 _reintegrate_site_local_users(current_users, active_connectors, user_attributes)
+
+
+def _active_connectors_for_user_preservation(
+    site_config: SiteConfiguration,
+    default_sync_config: UserSyncConfig,
+) -> list[str]:
+    """The set of connector IDs whose users on a remote site must survive a config push.
+
+    Returned as the union of two contributions:
+
+    **Attribute-sync contribution** — resolved as follows:
+        1. ``site_config["user_attribute_sync_connections"]`` if the key is
+           present; otherwise ``active_config.user_attribute_sync_connections``
+           (the global, propagated to a remote via ``get_site_globals()``
+           since ``sites.mk`` is not synchronized).
+        2. Only an explicit ``list[str]`` of connection IDs contributes
+           here: ``"all"`` is intentionally not expanded because for
+           periodic attribute sync the central site is authoritative and
+           those users arrive via the snapshot anyway. Falls through to
+           ``default_sync_config`` when neither produces a list.
+
+    **Authentication contribution** — resolved with this precedence:
+        1. ``site_config["authentication_connections"]`` if the key is
+           present (the explicit per-site override).
+        2. ``active_config.authentication_connections`` (the global,
+           propagated on a remote via ``get_site_globals()``).
+
+       Each entry contributes one ID: ``("ldap", conn_id)`` and
+       ``("saml", {connection_id: ...})`` are flattened.
+    """
+    result: set[str] = set()
+
+    # Treat a legacy `None` value the same as an absent key: fall through
+    # to the propagated global. The new types disallow `None`, but
+    # `sitespecific.mk` files written before the refactor may still carry
+    # it.
+    attr_sync_cfg = site_config.get("user_attribute_sync_connections")
+    if attr_sync_cfg is None:
+        attr_sync_cfg = active_config.user_attribute_sync_connections
+    if isinstance(attr_sync_cfg, list):
+        result.update(attr_sync_cfg)
+    elif isinstance(default_sync_config, tuple) and default_sync_config[0] == "list":
+        result.update(default_sync_config[1])
+
+    auth_cfg = site_config.get("authentication_connections")
+    if auth_cfg is None:
+        auth_cfg = active_config.authentication_connections or []
+    for entry in auth_cfg:
+        if entry[0] == "ldap":
+            result.add(entry[1])
+        else:
+            result.add(entry[1]["connection_id"])
+
+    return list(result)
 
 
 def _reintegrate_site_local_users(
@@ -3784,7 +3912,7 @@ def _reintegrate_site_local_users(
 @dataclass
 class ActivationChange:
     id: str
-    user_id: UserId
+    user_id: UserId | None
     action_name: str
     text: str
     time: float

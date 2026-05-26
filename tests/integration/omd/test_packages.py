@@ -343,7 +343,8 @@ def test_unixcat(site: Site) -> None:
 )
 def test_mk_oracle_exotic_distros(distro: str, expectation: str, site: Site) -> None:
     process = site.run(
-        ["file", f"lib/python3/cmk/plugins/oracle/agents/mk-oracle.{distro}"], check=False
+        ["file", f"lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.{distro}"],
+        check=False,
     )
     assert expectation in process.stdout, process.stdout
 

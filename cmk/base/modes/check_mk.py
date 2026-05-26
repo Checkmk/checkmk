@@ -1236,9 +1236,7 @@ def _mode_snmpwalk(app: CheckmkBaseApp, options: dict, hostnames: list[str]) -> 
         )
         _do_snmpwalk(
             options,
-            backend=make_backend(
-                snmp_config, log.logger, stored_walk_path=cmk.utils.paths.snmpwalks_dir
-            ),
+            backend=make_backend(snmp_config, log.logger),
         )
 
 
@@ -1337,9 +1335,7 @@ def _mode_snmpget(app: CheckmkBaseApp, options: Mapping[str, object], args: Sequ
             SourceType.HOST,
             backend_override=snmp_backend_override,
         )
-        backend = make_backend(
-            snmp_config, log.logger, stored_walk_path=cmk.utils.paths.snmpwalks_dir
-        )
+        backend = make_backend(snmp_config, log.logger)
         value = get_single_oid(oid, single_oid_cache={}, backend=backend, log=log.logger.debug)
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
 

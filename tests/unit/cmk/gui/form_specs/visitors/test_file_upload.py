@@ -14,7 +14,7 @@ from cmk.gui.form_specs.visitors.file_upload import (
     FileUploadVisitor,
 )
 from cmk.gui.http import request
-from cmk.gui.session import UserContext
+from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (

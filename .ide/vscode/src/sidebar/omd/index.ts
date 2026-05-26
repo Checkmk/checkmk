@@ -8,6 +8,7 @@ import * as vscode from 'vscode'
 
 import { shellEscape } from '../../core/config'
 import { log } from '../../core/log'
+import { deployToSite } from '../../omd/devDeployTools'
 import { hasLogsForService, showServiceLogs, showSiteLogs } from '../../omd/logs'
 import { createSite, omdServiceCommand } from '../../omd/omd'
 import { KNOWN_SOCKETS, promptAndStartProxy, promptSocketProxy, stopProxy } from '../../omd/proxy'
@@ -86,6 +87,10 @@ export async function handleMessage(
       refreshOmd()
       return true
     }
+    case 'omdDeploy': {
+      await deployToSite(msg.site as string)
+      return true
+    }
     case 'omdDeleteSite': {
       log(`OMD delete site: ${msg.site}`)
       const confirm = await vscode.window.showWarningMessage(
@@ -123,9 +128,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     return wrap(
       nonce,
       sectionCss,
-      devSiteBanner +
-        `<div class="card"><span class="card-label">No OMD sites found</span></div>` +
-        createBtn,
+      devSiteBanner + `<div class="omd-empty">No OMD sites found</div>` + createBtn,
       codiconUri,
       cspSource
     )
@@ -189,6 +192,9 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
       const proxyBtn = isRunning
         ? `<button class="btn btn-small btn-icon" data-action="omd-proxy-site" data-site="${esc(site.name)}" title="Socket proxy"><span class="codicon codicon-debug-disconnect"></span></button>`
         : ''
+      const deployBtn = isRunning
+        ? `<button class="btn btn-small btn-icon" data-action="omd-deploy" data-site="${esc(site.name)}" title="Deploy local changes (cmk-dev-deploy)"><span class="codicon codicon-rocket"></span></button>`
+        : ''
       const consoleBtn = `<button class="btn btn-small btn-icon" data-action="omd-console" data-site="${esc(site.name)}" title="Open site console"><span class="codicon codicon-terminal"></span></button>`
       const logsBtn = `<button class="btn btn-small btn-icon" data-action="omd-logs" data-site="${esc(site.name)}" title="View logs"><span class="codicon codicon-file-text"></span></button>`
       const deleteBtn = `<button class="btn btn-small btn-icon btn-danger" data-action="omd-delete-site" data-site="${esc(site.name)}" title="Delete site"><span class="codicon codicon-trash"></span></button>`
@@ -229,6 +235,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
         ${detail}
         ${badge}
         ${toggleBtn}
+        ${deployBtn}
         ${proxyBtn}
         ${logsBtn}
         ${consoleBtn}

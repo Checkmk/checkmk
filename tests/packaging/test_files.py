@@ -754,7 +754,8 @@ FILES_UNSIGNED = [
     re.compile(r".*/share/doc/check_mk/treasures/.*\.(exe|dll)$"),
     # -- exe files --
     # python files not built by us
-    re.compile(r".*/lib/python3\.\d+/site-packages/.*\.exe$"),
+    re.compile(r".*/lib/python\d\.\d+/site-packages/pip/.*\.exe$"),
+    re.compile(r".*/lib/python\d\.\d+/site-packages/setuptools/.*\.exe$"),
     # todo: add code signing and verification for robotmk, then remove from this list CMK-26814
     re.compile(r".*/share/check_mk/agents/windows/plugins/robotmk_agent_plugin.exe$"),
     re.compile(r".*/share/check_mk/agents/windows/robotmk_ext.exe$"),
@@ -824,7 +825,7 @@ def _verify_signature(file_path: Path, file_name: str) -> None | str:
             "share/check_mk/agents/windows",
             [
                 "share/check_mk/agents/windows/mk-sql.exe",
-                "lib/python3/cmk/plugins/oracle/agents/mk-oracle.exe",
+                "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.exe",
             ],
         ),
         (
@@ -1017,14 +1018,14 @@ EXECUTABLE_EXCEPTIONS = {
     ".html.jinja",
 }
 PLUGINS_EXECUTABLE_EXCEPTIONS = {
-    "lib/python3/cmk/plugins/oracle/agents/mk-oracle",
-    "lib/python3/cmk/plugins/oracle/agents/mk-oracle.aix",
-    "lib/python3/cmk/plugins/oracle/agents/mk-oracle.exe",
-    "lib/python3/cmk/plugins/oracle/agents/mk-oracle.solaris",
-    "lib/python3/cmk/plugins/oracle/agents/mk-oracle.faked",
-    "lib/python3/cmk/plugins/oracle/agents/mk-oracle.aix.faked",
-    "lib/python3/cmk/plugins/oracle/agents/mk-oracle.exe.faked",
-    "lib/python3/cmk/plugins/oracle/agents/mk-oracle.solaris.faked",
+    "cmk/plugins/oracle/agents/mk-oracle",
+    "cmk/plugins/oracle/agents/mk-oracle.aix",
+    "cmk/plugins/oracle/agents/mk-oracle.exe",
+    "cmk/plugins/oracle/agents/mk-oracle.solaris",
+    "cmk/plugins/oracle/agents/mk-oracle.faked",
+    "cmk/plugins/oracle/agents/mk-oracle.aix.faked",
+    "cmk/plugins/oracle/agents/mk-oracle.exe.faked",
+    "cmk/plugins/oracle/agents/mk-oracle.solaris.faked",
 }
 
 
@@ -1058,7 +1059,8 @@ def test_permissions(package_path: str) -> None:
 
     plugins_files = _filter_files(
         paths,
-        rf"opt/omd/versions/{omd_version}/lib/python3.*cmk/plugins/",
+        # Yes, until everything is unified, the plugins live at *two* locations... :-/
+        rf"opt/omd/versions/{omd_version}/python\d+(\.\d+/site-packages)?/cmk/plugins/",
         exceptions=PLUGINS_EXECUTABLE_EXCEPTIONS,
     )
     violations += [

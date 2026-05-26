@@ -29,8 +29,10 @@ export interface CollectorSnippets {
 export interface ExporterConfig {
   endpoint: EndpointConfig
   tlsEnabled: boolean
+  tlsSimple?: boolean
   auth: AuthConfig
   eventConsole: boolean
+  overrideEndpoint?: string
 }
 
 function buildAuthExtension(auth: AuthConfig, name: string): string | null {
@@ -51,10 +53,21 @@ export function buildExporter(
   siteName: string
 ): string {
   const defaultPort = protocol === 'http' ? HTTP_DEFAULT_PORT : GRPC_DEFAULT_PORT
-  const resolved = resolveEndpoint(config.endpoint, defaultPort)
-  const address = resolved?.address ?? '<host>'
-  const port = resolved?.port ?? defaultPort
   const authenticatorName = protocol === 'http' ? 'basicauth/http' : 'basicauth/grpc'
+
+  let endpointStr: string
+  if (config.overrideEndpoint !== undefined) {
+    endpointStr = config.overrideEndpoint
+  } else {
+    const resolved = resolveEndpoint(config.endpoint, defaultPort)
+    const isDefaultSocket =
+      config.endpoint.socketAddressType === 'default_ipv4' ||
+      config.endpoint.socketAddressType === 'default_ipv6'
+    const address = isDefaultSocket ? '<REPLACE_ME>' : (resolved?.address ?? '<host>')
+    const port = resolved?.port ?? defaultPort
+    const endpointComment = isDefaultSocket ? " # address of the Checkmk site's server" : ''
+    endpointStr = `${address}:${port}${endpointComment}`
+  }
 
   const authBlock =
     config.auth.method === 'basicauth'
@@ -63,8 +76,14 @@ export function buildExporter(
       authenticator: ${authenticatorName}`
       : ''
 
-  const tlsBlock = config.tlsEnabled
-    ? `
+  let tlsBlock: string
+  if (config.tlsSimple) {
+    tlsBlock = `
+    tls:
+      insecure: ${config.tlsEnabled ? 'false' : 'true'}`
+  } else {
+    tlsBlock = config.tlsEnabled
+      ? `
     tls:
       insecure: false
       server_name_override: "${siteName}"
@@ -73,12 +92,13 @@ export function buildExporter(
       YOUR SITE CA # Public part of ~/etc/ssl/ca.pem
       ----END CERTIFICATE-----
       `
-    : `
+      : `
     tls:
       insecure: true`
+  }
 
   return `otlp${protocol === 'http' ? 'http' : ''}/checkmk:
-    endpoint: ${address}:${port}${authBlock}${tlsBlock}
+    endpoint: ${endpointStr}${authBlock}${tlsBlock}
 `
 }
 

@@ -10,7 +10,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from livestatus import BrokerConnections, SiteConfigurations
+from livestatus import (
+    AuthenticationConnectionEntry,
+    BrokerConnections,
+    SiteConfigurations,
+)
 
 from cmk.ccc.version import Edition, edition
 from cmk.checkengine.discovery import DiscoverySettingFlags
@@ -428,6 +432,16 @@ class GeneralConfig:
     # in previous versions and is set on remote sites during Setup synchronization.
     userdb_automatic_sync: str | None = "master"
 
+    # Per-site connector settings, propagated from the central site's
+    # `SiteConfiguration` via `get_site_globals()`. Read on the remote site as the
+    # source of truth, since `sites.mk` is not synchronized to remotes.
+    #
+    # The form-layer "inherit from central" discriminator is resolved before
+    # propagation, so these globals always carry a concrete list / explicit
+    # value. The form's ``("central_site", _)`` shape never appears here.
+    authentication_connections: list[AuthenticationConnectionEntry] = field(default_factory=list)
+    user_attribute_sync_connections: Literal["all"] | list[str] = "all"
+
     # Permission to login to the web gui of a site (can be changed in sites
     # configuration)
     user_login: bool = True
@@ -695,9 +709,6 @@ class GeneralConfig:
     bi_precompile_on_demand: bool = False
     bi_use_legacy_compilation: bool = False
     wato_hide_help_in_lists: bool = True
-
-    # new in 2.1
-    config_storage_format: Literal["standard", "raw", "pickle", "anon"] = "pickle"
 
     # Development tools
 

@@ -10,7 +10,7 @@ py_library(
     visibility = [":__subpackages__"],
     deps = [
         "//cmk/gui:config",
-        "//cmk/gui:http",
+        "//cmk/gui:core_toolkit",
         "//cmk/plugins",
         "//packages/cmk-ccc:user",
         "//tests/testlib/unit",

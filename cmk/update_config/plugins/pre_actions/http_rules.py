@@ -9,7 +9,7 @@ from cmk.ccc import tty
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.script_helpers import gui_context
-from cmk.gui.session import SuperUserContext
+from cmk.gui.session_context import SuperUserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars

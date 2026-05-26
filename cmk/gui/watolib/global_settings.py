@@ -7,19 +7,18 @@ from collections.abc import Callable, Sequence
 from typing import Any
 
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.gui.global_config import get_global_config, GlobalConfig
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import LogMessage
-from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
     ConfigVariable,
     UNREGISTERED_SETTINGS,
 )
+from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.utils import paths
 
 STATIC_PERMISSIONS_GLOBAL_SETTINGS = ["global"]
@@ -95,22 +94,21 @@ def save_site_global_settings(
 def add_global_settings_change(
     config_variable: ConfigVariable,
     *,
-    user_id: UserId | None,
     text: LogMessage,
     sites: Sequence[SiteId] | None,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
-    add_change(
-        action_name="edit-configvar",
-        text=text,
-        user_id=user_id,
-        use_git=use_git,
-        need_restart=config_variable.need_restart(),
-        need_apache_reload=config_variable.need_apache_reload(),
-        domains=list(config_variable.all_domains()),
-        sites=sites,
-        domain_settings={
-            domain.ident(): {"need_apache_reload": config_variable.need_apache_reload()}
-            for domain in config_variable.all_domains()
-        },
+    pending_changes.add(
+        Change(
+            action_name="edit-configvar",
+            text=text,
+            force_restart=config_variable.need_restart(),
+            force_apache_reload=config_variable.need_apache_reload(),
+            domains=[d.ident() for d in config_variable.all_domains()],
+            domain_settings={
+                d.ident(): {"need_apache_reload": config_variable.need_apache_reload()}
+                for d in config_variable.all_domains()
+            },
+        ),
+        ChangeScope.all_activation_sites() if sites is None else ChangeScope.sites(sites),
     )

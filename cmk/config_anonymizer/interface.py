@@ -6,6 +6,7 @@ import enum
 import logging
 import random
 import string
+from collections.abc import Mapping
 from logging import Logger
 from pathlib import Path
 from typing import Literal
@@ -13,6 +14,10 @@ from urllib.parse import urlparse
 
 from cmk.ccc.site import omd_site
 from cmk.utils.paths import omd_root, var_dir
+
+
+class AnonymizationError(Exception):
+    pass
 
 
 class ANONTYPE(enum.Enum):
@@ -49,15 +54,19 @@ class ANONTYPE(enum.Enum):
     LDAP_CONNECTION = "ldap_connection"
     UNIX_SOCKET = "unix_socket"
     TAG_TOPIC = "tag_topic"
+    RULE_COMMENT = "comment"
 
 
 CustomAnon = str
 
 
 class AnonInterface:
-    def __init__(self, target_dirname: Path, logger: logging.Logger):
+    def __init__(
+        self, target_dirname: Path, rule_defaults: Mapping[str, object], logger: logging.Logger
+    ):
         self._site_id = omd_site()
         self._target_dir = var_dir / "anonymized" / target_dirname
+        self._rule_defaults = rule_defaults
         self._logger = logger
 
     _anon_mapping: dict[str, dict[str, str]] = {}
@@ -124,6 +133,9 @@ class AnonInterface:
 
     def get_item(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.ITEM)
+
+    def get_rule_comment(self, original: str) -> str:
+        return "Rule has been anonymized and uses an example value"
 
     def get_generic_mapping(self, original: str, namespace: CustomAnon) -> str:
         if namespace in ANONTYPE:
@@ -254,3 +266,45 @@ class AnonInterface:
 
     def get_contact_group_alias(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.CONTACT_GROUP_ALIAS)
+
+    def get_ruleset_value(self, ruleset_name: str, original: object) -> object:
+        for host_or_service_ruleset, anonymizer_callable in (
+            ("clustered_services_mapping", self.get_host),
+            ("host_contactgroups", self.get_contact_group),
+            ("service_contactgroups", self.get_contact_group),
+            ("host_groups", self.get_host_group),
+            ("service_groups", self.get_service_group),
+        ):
+            if ruleset_name == host_or_service_ruleset:
+                assert isinstance(original, str)
+                return anonymizer_callable(original)
+
+        # these rulesets do not contain any information to be anonymized and the values are
+        # important enough to keep
+        if ruleset_name in (
+            "ignored_checks",
+            "ignored_services",
+            "extra_service_conf:max_check_attempts",
+            "extra_service_conf:check_interval",
+            "extra_service_conf:retry_interval",
+            "extra_host_conf:max_check_attempts",
+            "extra_host_conf:check_interval",
+            "extra_host_conf:retry_interval",
+            "periodic_discovery",
+            "snmp_check_interval",
+            "cmc_service_rrd_config",
+            "cmc_host_rrd_config",
+        ):
+            return original
+
+        group, _, name = ruleset_name.partition(":")
+        try:
+            rule_default_values = self._rule_defaults[group]
+            if not name:
+                assert isinstance(rule_default_values, list)
+                return rule_default_values[0]["value"]
+
+            assert isinstance(rule_default_values, dict)
+            return rule_default_values[name][0]["value"]
+        except (IndexError, KeyError):
+            raise AnonymizationError(f"No default value for rule {ruleset_name} found")

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import typing
 from collections.abc import Iterator
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from flask import Flask
@@ -24,10 +24,9 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import http, login
 from cmk.gui.config import Config
-from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
-from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.livestatus_client.testing import mock_livestatus_communication, MockLiveStatusConnection
 from tests.testlib.gui.common_fixtures import (
     create_aut_user_auth_wsgi_app,
     create_flask_app,
@@ -92,7 +91,13 @@ def request_context(flask_app: Flask) -> Iterator[None]:
 @pytest.fixture(name="mock_livestatus")
 def fixture_mock_livestatus() -> Iterator[MockLiveStatusConnection]:
     """UI specific override of the global mock_livestatus fixture"""
-    with mock_livestatus() as mock_live:
+    with (
+        mock_livestatus_communication() as mock_live,
+        patch(
+            "cmk.gui.sites._get_enabled_and_disabled_sites",
+            new=mock_live.enabled_and_disabled_sites,
+        ),
+    ):
         yield mock_live
 
 

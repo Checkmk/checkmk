@@ -818,10 +818,62 @@ expected_yaml_lines_custom_metrics_cache_age = [
 ]
 
 
+custom_metrics_files: list[Plugin] = [
+    Plugin(
+        base_os=OS.LINUX,
+        source=Path("oracle_unified_async_custom_metrics"),
+        target=Path("oracle_unified_async_custom_metrics"),
+        interval=120,
+    ),
+    Plugin(
+        base_os=OS.WINDOWS,
+        source=Path("oracle_unified_async_custom_metrics.ps1"),
+        target=Path("oracle_unified_async_custom_metrics.ps1"),
+        interval=120,
+    ),
+    Plugin(
+        base_os=OS.AIX,
+        source=Path("oracle_unified_async_custom_metrics.aix"),
+        target=Path("oracle_unified_async_custom_metrics.aix"),
+        interval=120,
+    ),
+    Plugin(
+        base_os=OS.SOLARIS,
+        source=Path("oracle_unified_async_custom_metrics.solaris"),
+        target=Path("oracle_unified_async_custom_metrics.solaris"),
+        interval=120,
+    ),
+]
+
+
 def test_custom_metrics_cache_age_in_yaml() -> None:
     assert _process(oracle_config_custom_metrics_cache_age) == _combine(
-        files_base, expected_yaml_lines_custom_metrics_cache_age
+        files_base + custom_metrics_files, expected_yaml_lines_custom_metrics_cache_age
     )
+
+
+def test_no_custom_metrics_files_when_cache_ages_equal() -> None:
+    config = GuiConfig(
+        deploy=(DEPLOY, None),
+        main=GuiMainConf(
+            auth=GuiAuthConf(
+                auth_type=(
+                    OracleAuthType.STANDARD,
+                    GuiAuthUserPasswordData(username="cmk", password=Secret("pw", "", "")),
+                ),
+                role=None,
+            ),
+            connection=GuiConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
+            cache_age=300,
+            custom_metrics_cache_age=300,
+        ),
+        instances=None,
+    )
+    result = _process(config)
+    custom_metrics_sources = [
+        p for p in result if isinstance(p, Plugin) and "custom_metrics" in str(p.source)
+    ]
+    assert custom_metrics_sources == []
 
 
 @pytest.mark.parametrize(

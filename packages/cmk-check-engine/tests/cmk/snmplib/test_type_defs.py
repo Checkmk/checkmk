@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
 
@@ -41,6 +42,7 @@ class TestSNMPHostConfig:
             snmpv3_contexts=[],
             character_encoding=None,
             snmp_backend=SNMPBackendEnum.STORED_WALK,
+            stored_walk_path=Path("/tmp/foo"),
         )
         assert conf.deserialize(conf.serialize()) == conf
 
@@ -75,6 +77,7 @@ class TestSNMPHostConfig:
             ],
             character_encoding=None,
             snmp_backend=SNMPBackendEnum.STORED_WALK,
+            stored_walk_path=Path("/tmp/foo"),
         )
 
         ctx = conf.snmpv3_contexts_of(section_name=section_name)

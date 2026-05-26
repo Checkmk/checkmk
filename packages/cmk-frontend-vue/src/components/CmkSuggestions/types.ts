@@ -3,18 +3,34 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { TranslatedString } from '@/lib/i18nString'
+
 import type { ErrorResponse, Response, Suggestion, WarningResponse } from './suggestions'
+
+export type Section = {
+  title: TranslatedString
+  suggestions: Array<Suggestion>
+}
+
+export function isSectioned(input: Array<Suggestion> | Array<Section>): input is Array<Section> {
+  const first = input[0]
+  return first !== undefined && 'suggestions' in first
+}
+
+export function flattenSuggestions(input: Array<Suggestion> | Array<Section>): Array<Suggestion> {
+  return isSectioned(input) ? input.flatMap((s) => s.suggestions) : input
+}
 
 export type Suggestions = SuggestionsFixed | SuggestionsFiltered | SuggestionsCallbackFiltered
 
 type SuggestionsFixed = {
   type: 'fixed'
-  suggestions: Array<Suggestion>
+  suggestions: Array<Suggestion> | Array<Section>
 }
 
 type SuggestionsFiltered = {
   type: 'filtered'
-  suggestions: Array<Suggestion>
+  suggestions: Array<Suggestion> | Array<Section>
 }
 
 type SuggestionsCallbackFiltered = {

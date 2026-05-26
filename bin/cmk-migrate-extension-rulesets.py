@@ -24,7 +24,7 @@ from cmk.gui.rule_specs.loader import (  # astrein: disable=cmk-module-layer-vio
 from cmk.gui.rule_specs.types import RuleSpec  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.rulespec import register_plugins  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.script_helpers import gui_context  # astrein: disable=cmk-module-layer-violation
-from cmk.gui.session import SuperUserContext  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.session_context import SuperUserContext  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.watolib.notification_parameter import (  # astrein: disable=cmk-module-layer-violation
     notification_parameter_registry,
 )

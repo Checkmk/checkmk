@@ -19,7 +19,7 @@ from cmk.ccc.version import Edition
 from cmk.gui import forms, sites
 from cmk.gui.autocompleters import autocompleter_registry
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpecs
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -1047,7 +1047,7 @@ class ModeFolder(WatoMode):
                 "hosts",
                 title=_("Hosts"),
                 omit_empty_columns=True,
-                limit=active_config.table_row_limit,
+                limit=config.table_row_limit,
             ) as table:
                 # Compute colspan for bulk actions
                 colspan = 6

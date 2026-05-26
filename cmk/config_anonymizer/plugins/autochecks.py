@@ -6,13 +6,15 @@ import logging
 from collections.abc import Iterable
 
 import cmk.utils.paths
+from cmk.base.config import LoadingResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import ObjectStore
 from cmk.checkengine.discovery._autochecks import AutochecksSerializer, AutochecksStore
-from cmk.checkengine.plugins import AutocheckEntry
+from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui.config import Config
+from cmk.utils.labels import Labels
 
 
 def _autocheck_hosts() -> Iterable[HostName]:
@@ -36,7 +38,13 @@ def _anonymize_auto_check(anon_interface: AnonInterface, check: AutocheckEntry) 
 
 class AutochecksSteps(AnonymizeStep):
     def run(
-        self, anon_interface: AnonInterface, active_config: Config, logger: logging.Logger
+        self,
+        anon_interface: AnonInterface,
+        active_config: Config,
+        loaded_config_result: LoadingResult,
+        all_plugins: AgentBasedPlugins,
+        builtin_host_labels: Labels,
+        logger: logging.Logger,
     ) -> None:
         logger.warning("Process autochecks")
 

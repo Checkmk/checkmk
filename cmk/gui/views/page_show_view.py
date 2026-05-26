@@ -209,7 +209,12 @@ def _process_regular_view(
     )
 
     if html.output_format != "html":
-        _export_view(view_renderer.view, rows, user_permissions)
+        _export_view(
+            view_renderer.view,
+            rows,
+            user_permissions,
+            table_row_limit=config.table_row_limit,
+        )
         return
 
     _show_view(view_renderer, unfiltered_amount_of_rows, rows, user_permissions, config=config)
@@ -255,7 +260,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -
         )
 
     with CPUTracker(log.logger.debug) as view_render_tracker:
-        show_view_func(debug=config.debug)
+        show_view_func(debug=config.debug, table_row_limit=config.table_row_limit)
     view.process_tracking.duration_view_render = view_render_tracker.duration
 
 
@@ -422,11 +427,20 @@ def get_all_active_filters(view: View) -> list[Filter]:
     return use_filters
 
 
-def _export_view(view: View, rows: Rows, user_permissions: UserPermissions) -> None:
+def _export_view(
+    view: View, rows: Rows, user_permissions: UserPermissions, *, table_row_limit: int
+) -> None:
     """Shows the views data in one of the supported machine readable formats"""
     layout = view.layout
     if html.output_format == "csv" and layout.has_individual_csv_export:
-        layout.csv_export(rows, view.spec, view.group_cells, view.row_cells, user_permissions)
+        layout.csv_export(
+            rows,
+            view.spec,
+            view.group_cells,
+            view.row_cells,
+            user_permissions,
+            table_row_limit=table_row_limit,
+        )
         return
 
     exporter = exporter_registry.get(html.output_format)

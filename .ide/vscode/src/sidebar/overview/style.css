@@ -1,0 +1,303 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+/* stylelint-disable no-descending-specificity */
+/* stylelint-disable custom-property-pattern */
+/* stylelint-disable selector-class-pattern */
+/* stylelint-disable alpha-value-notation */
+.cockpit {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cockpit-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cockpit-row {
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  overflow: hidden;
+  transition: border-color 0.1s;
+}
+
+.cockpit-row:hover {
+  border-color: var(--vscode-editorWidget-border, transparent);
+}
+
+.cockpit-row.sev-warning {
+  background: var(--cmk-yellow-dim);
+}
+
+.cockpit-row.sev-critical {
+  background: rgb(224 80 80 / 0.14);
+}
+
+.cockpit-row.sev-info {
+  background: var(--cmk-blue-dim);
+}
+
+.cockpit-row-header {
+  display: grid;
+  grid-template-columns: 18px 70px 1fr auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  font-size: 0.9em;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cockpit-glyph {
+  font-size: 14px;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.cockpit-row.sev-ok .cockpit-glyph {
+  color: var(--cmk-green);
+}
+
+.cockpit-row.sev-warning .cockpit-glyph {
+  color: var(--cmk-yellow);
+}
+
+.cockpit-row.sev-critical .cockpit-glyph {
+  color: var(--cmk-red);
+}
+
+.cockpit-row.sev-info .cockpit-glyph {
+  color: var(--cmk-blue);
+}
+
+.cockpit-title {
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.cockpit-badge {
+  flex: 1;
+  min-width: 0;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cockpit-row.sev-critical .cockpit-badge {
+  color: var(--cmk-red);
+}
+
+.cockpit-row.sev-warning .cockpit-badge {
+  color: var(--cmk-yellow);
+}
+
+.cockpit-row.sev-info .cockpit-badge {
+  color: var(--cmk-blue);
+}
+
+.cockpit-action {
+  padding: 2px 8px;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.cockpit-chevron {
+  cursor: pointer;
+  transition: transform 0.15s;
+  color: var(--vscode-descriptionForeground);
+  font-size: 13px;
+  user-select: none;
+}
+
+.cockpit-row.open .cockpit-chevron {
+  transform: rotate(90deg);
+}
+
+.cockpit-chevron-placeholder {
+  display: inline-block;
+  width: 13px;
+}
+
+.cockpit-items {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+  padding-left: 28px;
+}
+
+.cockpit-row.open .cockpit-items {
+  max-height: 600px;
+}
+
+.cockpit-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px 3px 0;
+  font-size: 0.83em;
+  border-top: 1px solid var(--vscode-editorWidget-border, transparent);
+}
+
+.cockpit-item-label {
+  flex: 0 1 auto;
+  font-family: var(--vscode-editor-font-family);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cockpit-item-detail {
+  flex: 1;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cockpit-item-action {
+  padding: 1px 8px;
+  font-size: 0.85em;
+  border: 1px solid var(--vscode-editorWidget-border, #555);
+  white-space: nowrap;
+}
+
+.cockpit-item.sev-critical {
+  border-left: 3px solid var(--cmk-red);
+  padding-left: 6px;
+}
+
+.cockpit-item.sev-warning {
+  border-left: 3px solid var(--cmk-yellow);
+  padding-left: 6px;
+}
+
+.cockpit-item.sev-info {
+  border-left: 3px solid var(--cmk-blue);
+  padding-left: 6px;
+  opacity: 0.8;
+}
+
+.cockpit-family-tag {
+  display: inline-block;
+  font-size: 0.78em;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.cockpit-family-tag.sev-critical {
+  background: rgb(224 80 80 / 0.18);
+  color: var(--cmk-red);
+}
+
+.cockpit-family-tag.sev-warning {
+  background: var(--cmk-yellow-dim);
+  color: var(--cmk-yellow);
+}
+
+.cockpit-item.more {
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+}
+
+.cockpit-item.more .link {
+  color: var(--vscode-textLink-foreground);
+  cursor: pointer;
+}
+
+.cockpit-row.no-items .cockpit-row-header {
+  cursor: default;
+}
+
+.cockpit-open {
+  opacity: 0.6;
+}
+
+.cockpit-open:hover {
+  opacity: 1;
+}
+
+/* Onboarding banner — Getting Started wizard. */
+.onboarding-banner {
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--cmk-green, #13d389);
+  border-radius: var(--radius, 4px);
+  padding: 8px;
+  margin-bottom: 8px;
+}
+
+.onboarding-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.onboarding-title {
+  flex: 1;
+  font-weight: 700;
+  font-size: 0.9em;
+}
+
+.onboarding-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.onboarding-step.done {
+  opacity: 0.5;
+}
+
+.step-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75em;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-icon.done {
+  background: var(--cmk-green-dim, #13d38922);
+  color: var(--cmk-green, #13d389);
+}
+
+.step-icon.current {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.step-icon.pending {
+  background: var(--vscode-editorWidget-border, #333);
+  color: var(--vscode-descriptionForeground);
+}
+
+.step-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-label {
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.step-desc {
+  font-size: 0.8em;
+  color: var(--vscode-descriptionForeground);
+  margin: 2px 0 4px 0;
+}

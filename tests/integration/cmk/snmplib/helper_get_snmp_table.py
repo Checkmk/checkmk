@@ -7,7 +7,6 @@ import ast
 import logging
 import sys
 from collections.abc import Callable, Mapping
-from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -48,9 +47,7 @@ match backend_type:
     case SNMPBackendEnum.CLASSIC:
         backend = ClassicSNMPBackend
     case SNMPBackendEnum.STORED_WALK:
-        backend = partial(
-            StoredWalkSNMPBackend, path=cmk.utils.paths.snmpwalks_dir / config.hostname
-        )
+        backend = StoredWalkSNMPBackend
     case _:
         raise ValueError(backend_type)
 

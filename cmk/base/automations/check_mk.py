@@ -24,8 +24,8 @@ import subprocess
 import sys
 import time
 import uuid
-from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
-from contextlib import nullcontext, redirect_stderr, redirect_stdout, suppress
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
@@ -226,7 +226,6 @@ from cmk.utils import config_warnings, ip_lookup, log, man_pages
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import make_lookup_mgmt_board_ip_address
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, LabelManager, Labels
 from cmk.utils.log import console
@@ -1188,13 +1187,6 @@ def _execute_autodiscovery(
         return {}, False
 
     console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:")
-    try:
-        response = livestatus.LocalConnection().query("GET hosts\nColumns: name state")
-        process_hosts: Container[HostName] = {
-            HostName(name) for name, state in response if state == 0
-        }
-    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
-        process_hosts = EVERYTHING
 
     activation_required = False
     rediscovery_reference_time = time.time()
@@ -1211,9 +1203,6 @@ def _execute_autodiscovery(
             for host_name in autodiscovery_queue:
                 if time.monotonic() > start + limit:
                     raise TimeoutError(message)
-
-                if host_name not in process_hosts:
-                    continue
 
                 def section_error_handling(
                     section_name: SectionName,
@@ -1295,76 +1284,72 @@ def _execute_autodiscovery(
         env.config_cache,
         env.plugins,
     )
-    with nullcontext():  # TODO(igor): remove the nullcontext added for easier review
-        try:
-            cache_manager.clear_all()
-            env.config_cache.initialize(app.get_builtin_host_labels)
-            hosts_config = config.make_hosts_config(env.loaded_config)
-            bake_on_restart = app.make_bake_on_restart(env.loading_result, hosts_config.hosts)
-            notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
 
-            if env.loaded_config.monitoring_core == "cmc":
-                do_reload(
-                    env.config_cache,
-                    hosts_config,
-                    env.final_service_name_config,
-                    env.passive_service_name_config,
-                    env.enforced_services_table,
-                    env.ip_lookup_config.ip_stack_config,
-                    env.ip_lookup_config.default_address_family,
-                    ip_address_of,
-                    ip_address_of_mgmt,
-                    core,
-                    env.plugins,
-                    locking_mode=env.loaded_config.restart_locking,
-                    discovery_rules=env.loaded_config.discovery_parameters,
-                    hosts_to_update=None,
-                    service_depends_on=config.ServiceDependsOn(
-                        tag_list=env.config_cache.host_tags.tag_list,
-                        service_dependencies=env.loaded_config.service_dependencies,
+    try:
+        cache_manager.clear_all()
+        env.config_cache.initialize(app.get_builtin_host_labels)
+        hosts_config = config.make_hosts_config(env.loaded_config)
+        bake_on_restart = app.make_bake_on_restart(env.loading_result, hosts_config.hosts)
+        notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
+
+        if env.loaded_config.monitoring_core == "cmc":
+            do_reload(
+                env.config_cache,
+                hosts_config,
+                env.final_service_name_config,
+                env.passive_service_name_config,
+                env.enforced_services_table,
+                env.ip_lookup_config.ip_stack_config,
+                env.ip_lookup_config.default_address_family,
+                ip_address_of,
+                ip_address_of_mgmt,
+                core,
+                env.plugins,
+                locking_mode=env.loaded_config.restart_locking,
+                discovery_rules=env.loaded_config.discovery_parameters,
+                hosts_to_update=None,
+                service_depends_on=config.ServiceDependsOn(
+                    tag_list=env.config_cache.host_tags.tag_list,
+                    service_dependencies=env.loaded_config.service_dependencies,
+                ),
+                duplicates=sorted(
+                    hosts_config.duplicates(
+                        lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
                     ),
-                    duplicates=sorted(
-                        hosts_config.duplicates(
-                            lambda hn: (
-                                env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
-                            )
-                        ),
+                ),
+                bake_on_restart=bake_on_restart,
+                notify_relay=notify_relay,
+            )
+        else:
+            do_restart(
+                env.config_cache,
+                hosts_config,
+                env.final_service_name_config,
+                env.passive_service_name_config,
+                env.enforced_services_table,
+                env.ip_lookup_config.ip_stack_config,
+                env.ip_lookup_config.default_address_family,
+                ip_address_of,
+                ip_address_of_mgmt,
+                core,
+                env.plugins,
+                service_depends_on=config.ServiceDependsOn(
+                    tag_list=env.config_cache.host_tags.tag_list,
+                    service_dependencies=env.loaded_config.service_dependencies,
+                ),
+                locking_mode=env.loaded_config.restart_locking,
+                discovery_rules=env.loaded_config.discovery_parameters,
+                duplicates=sorted(
+                    hosts_config.duplicates(
+                        lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
                     ),
-                    bake_on_restart=bake_on_restart,
-                    notify_relay=notify_relay,
-                )
-            else:
-                do_restart(
-                    env.config_cache,
-                    hosts_config,
-                    env.final_service_name_config,
-                    env.passive_service_name_config,
-                    env.enforced_services_table,
-                    env.ip_lookup_config.ip_stack_config,
-                    env.ip_lookup_config.default_address_family,
-                    ip_address_of,
-                    ip_address_of_mgmt,
-                    core,
-                    env.plugins,
-                    service_depends_on=config.ServiceDependsOn(
-                        tag_list=env.config_cache.host_tags.tag_list,
-                        service_dependencies=env.loaded_config.service_dependencies,
-                    ),
-                    locking_mode=env.loaded_config.restart_locking,
-                    discovery_rules=env.loaded_config.discovery_parameters,
-                    duplicates=sorted(
-                        hosts_config.duplicates(
-                            lambda hn: (
-                                env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
-                            )
-                        ),
-                    ),
-                    bake_on_restart=bake_on_restart,
-                    notify_relay=notify_relay,
-                )
-        finally:
-            cache_manager.clear_all()
-            env.config_cache.initialize(app.get_builtin_host_labels)
+                ),
+                bake_on_restart=bake_on_restart,
+                notify_relay=notify_relay,
+            )
+    finally:
+        cache_manager.clear_all()
+        env.config_cache.initialize(app.get_builtin_host_labels)
 
     return discovery_results, True
 
@@ -3126,6 +3111,7 @@ def _automation_diag_snmp(
         snmpv3_contexts=[],
         character_encoding=None,
         snmp_backend=SNMPBackendEnum.INLINE,
+        stored_walk_path=cmk.utils.paths.snmpwalks_dir,
     )
 
     # Clear cached SNMP sessions so that changed port/version/timing are respected.
@@ -3140,9 +3126,7 @@ def _automation_diag_snmp(
                 oids=[BackendOIDSpec(c, "string", False) for c in "1456"],
             ),
             walk_cache={},
-            backend=make_snmp_backend(
-                snmp_config, log.logger, stored_walk_path=cmk.utils.paths.snmpwalks_dir
-            ),
+            backend=make_snmp_backend(snmp_config, log.logger),
             log=log.logger.debug,
         )
     except Exception as e:
@@ -3629,6 +3613,7 @@ class AutomationDiagHost:
             snmpv3_contexts=snmp_config.snmpv3_contexts,
             character_encoding=snmp_config.character_encoding,
             snmp_backend=snmp_config.snmp_backend,
+            stored_walk_path=cmk.utils.paths.snmpwalks_dir,
         )
 
         data = get_snmp_table(
@@ -3638,9 +3623,7 @@ class AutomationDiagHost:
                 oids=[BackendOIDSpec(c, "string", False) for c in "1456"],
             ),
             walk_cache={},
-            backend=make_snmp_backend(
-                snmp_config, log.logger, stored_walk_path=cmk.utils.paths.snmpwalks_dir
-            ),
+            backend=make_snmp_backend(snmp_config, log.logger),
             log=log.logger.debug,
         )
 
@@ -4088,12 +4071,7 @@ def _automation_get_agent_output(
             snmp_config = env.config_cache.make_snmp_config(
                 hostname, ip_family, ipaddress, SourceType.HOST, backend_override=None
             )
-            backend = make_snmp_backend(
-                snmp_config,
-                log.logger,
-                use_cache=False,
-                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-            )
+            backend = make_snmp_backend(snmp_config, log.logger, use_cache=False)
 
             info, walk_errors = _execute_snmp_walk(snmp_config, backend)
             if walk_errors:

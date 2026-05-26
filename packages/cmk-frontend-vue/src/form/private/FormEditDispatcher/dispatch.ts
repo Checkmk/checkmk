@@ -38,6 +38,7 @@ import FormRegex from '@/form/private/forms/FormRegex/FormRegex.vue'
 import FormSimplePassword from '@/form/private/forms/FormSimplePassword.vue'
 import FormSingleChoice from '@/form/private/forms/FormSingleChoice.vue'
 import FormSingleChoiceEditable from '@/form/private/forms/FormSingleChoiceEditable/FormSingleChoiceEditable.vue'
+import FormStaticText from '@/form/private/forms/FormStaticText.vue'
 import FormString from '@/form/private/forms/FormString.vue'
 import FormTimePicker from '@/form/private/forms/FormTimePicker.vue'
 import FormTimeSpan from '@/form/private/forms/FormTimeSpan/FormTimeSpan.vue'
@@ -80,6 +81,7 @@ const components: Record<Components['type'], Component> = {
   simple_password: FormSimplePassword,
   single_choice_editable: FormSingleChoiceEditable,
   single_choice: FormSingleChoice,
+  static_text: FormStaticText,
   string: FormString,
   time_span: FormTimeSpan,
   time_specific: FormTimeSpecific,

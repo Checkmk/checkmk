@@ -78,7 +78,6 @@ def fake_paths() -> None:
         # these start with /opt and will not be changed in the code below
         "rrd_multiple_dir",
         "rrd_single_dir",
-        "mkbackup_lock_dir",
     }
 
     # patch `cmk.utils.paths` before `cmk.ccc.versions`
@@ -127,7 +126,6 @@ def fake_paths() -> None:
             {
                 "uap_url": "https://test.example.com",
                 "bug_tracker_url": "https://test.example.com",
-                "download_agent_user": "test",
                 "tenant_id": "test-tenant",
                 "otel_collector_receiver_activation_script_path": "/dev/null",
                 "enable_ai": False,
@@ -248,7 +246,7 @@ sites.update(%r)
                         "timeout": 5,
                         "user_login": True,
                         "proxy": None,
-                        "user_sync": "all",
+                        "user_attribute_sync_connections": "all",
                         "status_host": None,
                         "message_broker_port": 5672,
                         "is_trusted": True,

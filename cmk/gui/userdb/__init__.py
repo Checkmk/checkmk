@@ -18,13 +18,16 @@ from ._connections import (
     clear_user_connection_cache,
     connection_choices,
     connections_by_type,
+    effective_authentication_connections,
     get_active_saml_connections,
     get_connection,
     get_connection_uncached,
     get_ldap_connections,
     get_saml_connections,
+    get_saml_connections_for_current_site,
     load_connection_config,
     register_config_file,
+    saml_connection_choices,
     save_snapshot_user_connection_config,
     UserConnectionConfigFile,
 )
@@ -61,7 +64,7 @@ from ._user_attribute import (
 )
 from ._user_selection import UserSelection
 from ._user_spec import add_internal_attributes, new_user_template
-from ._user_sync_config import user_sync_config, user_sync_default_config
+from ._user_sync_config import user_sync_config, user_sync_default_config, UserSyncConfig
 from .session import is_valid_user_session, load_session_infos
 from .store import (
     contactgroups_of_user,
@@ -107,6 +110,7 @@ __all__ = [
     "user_sync_config",
     "user_sync_default_config",
     "disable_two_factor_authentication",
+    "effective_authentication_connections",
     "find_timeperiod_usage_in_notification_rule",
     "general_userdb_job",
     "get_active_saml_connections",
@@ -117,6 +121,7 @@ __all__ = [
     "get_ldap_connections",
     "get_online_user_ids",
     "get_saml_connections",
+    "get_saml_connections_for_current_site",
     "get_user_attributes",
     "get_user_attributes_by_topic",
     "is_customer_user_allowed_to_login",
@@ -143,6 +148,7 @@ __all__ = [
     "release_users_lock",
     "remove_custom_attr",
     "rewrite_users",
+    "saml_connection_choices",
     "save_custom_attr",
     "save_snapshot_user_connection_config",
     "save_two_factor_credentials",
@@ -159,6 +165,7 @@ __all__ = [
     "UserAttributeRegistry",
     "UserConnectionConfig",
     "UserData",
+    "UserSyncConfig",
     "UserRole",
     "UserRolesConfigFile",
     "UserConnector",

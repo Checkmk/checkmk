@@ -90,3 +90,16 @@ def test_check_postfix_mailq_status(
     section: Mapping[str, PostfixError | PostfixPid], item: str, expected_output: Sequence[object]
 ) -> None:
     assert list(check_postfix_mailq_status(item, section)) == expected_output
+
+
+def test_discovery_postfix_mailq_status_empty_queuename() -> None:
+    # Some agents emit a line with an empty first column.  Without filtering,
+    # Service(item='') raises TypeError during discovery.  The parser must
+    # drop such lines so discovery yields nothing instead of crashing.
+    section = parse_postfix_mailq_status(
+        [
+            ["", " the Postfix mail system is running", " PID", " 12910"],
+        ]
+    )
+    assert section == {}
+    assert list(discovery_postfix_mailq_status(section)) == []

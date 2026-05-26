@@ -19,6 +19,7 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -51,6 +52,7 @@ from cmk.gui.search import (
 )
 from cmk.gui.site_config import has_distributed_setup_remote_sites
 from cmk.gui.type_defs import ActionResult, GlobalSettings, IconNames, PermissionName, StaticIcon
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -60,6 +62,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform, ValueSpec
 from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_group_registry,
@@ -81,7 +84,13 @@ from cmk.gui.watolib.global_settings import (
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.utils.paths import log_dir, var_dir
 
@@ -430,10 +439,14 @@ class ABCEditGlobalSettingMode(WatoMode):
 
         add_global_settings_change(
             self._config_variable,
-            user_id=user.id,
             text=msg,
             sites=self._affected_sites(),
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes(
+                config.sites,
+                use_git=config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
 
         if (
@@ -635,10 +648,14 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
         add_global_settings_change(
             config_variable,
-            user_id=user.id,
             text=msg,
             sites=None,
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes(
+                config.sites,
+                use_git=config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
 
         if action == "_reset":
@@ -767,4 +784,24 @@ def make_global_settings_context(
         site_neutral_var_dir=site_neutral_path(var_dir),
         configured_sites=config.sites,
         configured_graph_timeranges=config.graph_timeranges,
+    )
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
     )

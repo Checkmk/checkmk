@@ -21,9 +21,8 @@ py_test(
     deps = [
         ":__test__",
         "//cmk/gui:config",
-        "//cmk/gui:hooks",
-        "//cmk/gui:http",
-        "//cmk/gui:pages",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui:page_toolkit",
         "//cmk/gui/wsgi",
         "//tests/testlib/gui",
         "//tests/unit:conftest",

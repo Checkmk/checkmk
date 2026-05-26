@@ -37,6 +37,7 @@ import omdlib
 import omdlib.backup
 from omdlib.args_site_user import args_to_command_line, Copy, Move, Restore
 from omdlib.buffer import BufferWithCopy
+from omdlib.config_api import Config
 from omdlib.config_choices import ConfigChoiceHasError
 from omdlib.config_hooks import (
     config_set_all,
@@ -107,7 +108,7 @@ from omdlib.tmpfs import (
     unmount_tmpfs,
     unmount_tmpfs_as_root,
 )
-from omdlib.type_defs import Config, Replacements, Skeleton
+from omdlib.type_defs import Replacements, Skeleton
 from omdlib.update import get_conflict_mode_update, get_edition, ManageUpdate, PreFlight
 from omdlib.update_check import check_update_possible, prepare_conflict_resolution
 from omdlib.user_processes import (
@@ -332,9 +333,12 @@ def walk_skel(
 ) -> Iterable[str]:
     # Files that should not be managed by the update process (anymore).
     ignored_files = [
+        # auth.secret is managed dynamical at runtime.
+        # Removed from skel to avoid it from showing up in omd diff.
+        "etc/auth.secret",
+        "etc/diskspace.conf",
         # We have removed the unused htpasswd skel file, but we don't want to ask users if they wish
         # to delete their existing htpasswd.
-        "etc/diskspace.conf",
         "etc/htpasswd",
         "etc/mk-livestatus/xinetd.conf",
         "local/lib/check_mk",

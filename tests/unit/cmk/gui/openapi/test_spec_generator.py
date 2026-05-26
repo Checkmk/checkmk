@@ -4,12 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import get_args
 
-import pytest
-
-from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.openapi.restful_objects.type_defs import TagGroup
-from cmk.gui.openapi.spec.spec_generator._core import _redoc_spec
-from cmk.gui.openapi.spec.spec_generator._core import main as generate_spec
+from cmk.gui.openapi.spec.spec_generator.generate_api_spec import _redoc_spec
 
 
 def test_redoc_spec_tag_group_completness() -> None:
@@ -22,10 +18,3 @@ def test_redoc_spec_tag_group_completness() -> None:
     spec = _redoc_spec()
     spec_tag_groups = {el["name"] for el in spec["x-tagGroups"]}
     assert spec_tag_groups == set(get_args(TagGroup))
-
-
-@pytest.mark.skip(reason="CMK-26220")
-@pytest.mark.parametrize("version", APIVersion)
-def test_generate_openapi_spec(version: APIVersion) -> None:
-    """Test that the openapi spec can be generated without errors."""
-    generate_spec(version)

@@ -20,6 +20,7 @@ from cmk.gui.script_helpers import gui_context
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.audit_log import AuditLogStore, log_audit
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.utils.object_diff import make_diff_text
@@ -145,17 +146,23 @@ class TestSiteChanges:
 
     @pytest.fixture(name="entry")
     def fixture_entry(self) -> ChangeSpec:
-        return {
-            "id": "d60ca3d4-7201-4a89-b66f-2f156192cad2",
-            "action_name": "create-host",
-            "text": "Created new host node1.",
-            "object": ObjectRef(ObjectRefType.Host, "node1"),
-            "user_id": "cmkadmin",
-            "domains": ["check_mk"],
-            "time": 1605461248.786142,
-            "need_sync": True,
-            "need_restart": True,
-        }
+        return ChangeSpec(
+            {
+                "id": "d60ca3d4-7201-4a89-b66f-2f156192cad2",
+                "action_name": "create-host",
+                "text": "Created new host node1.",
+                "object": ObjectRef(ObjectRefType.Host, "node1"),
+                "user_id": UserId("cmkadmin"),
+                "domains": ["check_mk"],
+                "time": 1605461248.786142,
+                "force_sync": True,
+                "force_restart": True,
+                "force_apache_reload": False,
+                "domain_settings": {},
+                "prevent_discard_changes": False,
+                "diff_text": None,
+            }
+        )
 
     def test_read_not_existing(self, store: SiteChanges) -> None:
         assert not store.exists()
@@ -169,7 +176,7 @@ class TestSiteChanges:
         store.append(entry)
         assert list(store.read()) == [entry]
 
-        entry2 = {**entry, "id": "1"}
+        entry2: ChangeSpec = {**entry, "id": "1"}
         with store.mutable_view() as mv:
             mv[:] = [entry2]
 
@@ -243,7 +250,7 @@ def test_log_audit_with_html_message() -> None:
 
 
 def test_disable_activate_changes_writer(mocker: MockerFixture) -> None:
-    add_to_site_mock = mocker.patch.object(ActivateChangesWriter, "_add_change_to_site")
+    append_mock = mocker.patch("cmk.gui.watolib.pending_changes.PendingChangesStore.append")
 
     with gui_context():
         add_change(
@@ -251,10 +258,11 @@ def test_disable_activate_changes_writer(mocker: MockerFixture) -> None:
             text="dong",
             user_id=UserId("calvin"),
             sites=[SiteId("a")],
+            domains=[ConfigDomainCore()],
             use_git=False,
         )
-        add_to_site_mock.assert_called_once()
-        add_to_site_mock.reset_mock()
+        append_mock.assert_called_once()
+        append_mock.reset_mock()
 
         with ActivateChangesWriter.disable():
             add_change(
@@ -262,16 +270,18 @@ def test_disable_activate_changes_writer(mocker: MockerFixture) -> None:
                 text="dong",
                 user_id=UserId("calvin"),
                 sites=[SiteId("a")],
+                domains=[ConfigDomainCore()],
                 use_git=False,
             )
-        add_to_site_mock.assert_not_called()
-        add_to_site_mock.reset_mock()
+        append_mock.assert_not_called()
+        append_mock.reset_mock()
 
         add_change(
             action_name="ding",
             text="dong",
             user_id=UserId("calvin"),
             sites=[SiteId("a")],
+            domains=[ConfigDomainCore()],
             use_git=False,
         )
-        add_to_site_mock.assert_called_once()
+        append_mock.assert_called_once()

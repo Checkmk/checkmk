@@ -33,20 +33,22 @@ const props = defineProps<{
   httpEncryption: boolean
   grpcEventConsole: EventConsoleConfig | null
   httpEventConsole: EventConsoleConfig | null
-  grpcPasswordIsNew: boolean
-  httpPasswordIsNew: boolean
+  grpcPasswordName: string
+  httpPasswordName: string
   endpointConfigAllowed: boolean
   encryptionAllowed: boolean
   eventConsoleAllowed: boolean
 }>()
 
-function describeAuth(auth: AuthConfig, passwordIsNew: boolean): string {
+function describeAuth(auth: AuthConfig, passwordName: string): string {
   if (auth.method === 'none') {
     return _t('No authentication')
   }
   const user = auth.credential?.username ?? ''
-  const password = passwordIsNew ? _t('newly created') : _t('existing')
-  return _t('Basic auth (user: %{user}, password: %{password})', { user, password })
+  return _t('Basic auth (user: %{user}, password title: %{password})', {
+    user,
+    password: passwordName
+  })
 }
 
 function formatEndpoint(endpoint: EndpointConfig, defaultPort: number): string | null {
@@ -64,7 +66,7 @@ function buildProtocolEntries(
   defaultPort: number,
   encryption: boolean,
   eventConsole: EventConsoleConfig | null,
-  passwordIsNew: boolean
+  passwordName: string
 ): SummaryEntry[] {
   const entries: SummaryEntry[] = [{ kind: 'section', title: sectionTitle }]
   if (props.endpointConfigAllowed) {
@@ -76,7 +78,7 @@ function buildProtocolEntries(
   entries.push({
     kind: 'row',
     label: _t('Authentication'),
-    value: describeAuth(auth, passwordIsNew)
+    value: describeAuth(auth, passwordName)
   })
   if (props.encryptionAllowed) {
     entries.push({
@@ -88,8 +90,10 @@ function buildProtocolEntries(
   if (props.eventConsoleAllowed && eventConsole !== null) {
     entries.push({
       kind: 'row',
-      label: _t('Event Console resource attribute'),
-      value: eventConsole.resourceAttribute
+      label: _t('Send log messages to event console'),
+      value: _t('Enabled (Resource attribute: %{attribute})', {
+        attribute: eventConsole.resourceAttribute
+      })
     })
   }
   return entries
@@ -105,26 +109,26 @@ const entries = computed<SummaryEntry[]>(() => {
   if (props.grpcEnabled) {
     result.push(
       ...buildProtocolEntries(
-        _t('gRPC protocol'),
+        _t('gRPC-based OTLP receiver:'),
         props.grpcAuth,
         props.grpcEndpoint,
         GRPC_DEFAULT_PORT,
         props.grpcEncryption,
         props.grpcEventConsole,
-        props.grpcPasswordIsNew
+        props.grpcPasswordName
       )
     )
   }
   if (props.httpEnabled) {
     result.push(
       ...buildProtocolEntries(
-        _t('HTTP protocol'),
+        _t('HTTP-based OTLP receiver:'),
         props.httpAuth,
         props.httpEndpoint,
         HTTP_DEFAULT_PORT,
         props.httpEncryption,
         props.httpEventConsole,
-        props.httpPasswordIsNew
+        props.httpPasswordName
       )
     )
   }

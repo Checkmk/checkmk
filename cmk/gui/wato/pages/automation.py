@@ -39,7 +39,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.session import SuperUserContext
+from cmk.gui.session_context import SuperUserContext
 from cmk.gui.type_defs import CustomUserAttrSpec
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand

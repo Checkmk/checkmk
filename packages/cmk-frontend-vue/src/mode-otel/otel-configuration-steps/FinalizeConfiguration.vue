@@ -12,6 +12,7 @@ export interface ActionItemStatus {
   key: string
   label: string
   state: ItemState
+  hidden: boolean
   error?: { title: string; detail: string }
 }
 </script>
@@ -67,7 +68,12 @@ watch(
     if (state.value === 'running') {
       return
     }
-    items.value = next.map((a) => ({ key: a.key, label: a.label(), state: 'pending' }))
+    items.value = next.map((a) => ({
+      key: a.key,
+      label: a.label(),
+      state: 'pending',
+      hidden: a.hidden ?? false
+    }))
   },
   { immediate: true }
 )
@@ -108,7 +114,8 @@ async function runActions(): Promise<boolean> {
   items.value = props.actions.map((a) => ({
     key: a.key,
     label: a.label(),
-    state: 'pending'
+    state: 'pending',
+    hidden: a.hidden ?? false
   }))
 
   for (let i = 0; i < props.actions.length; i++) {
@@ -158,6 +165,7 @@ defineExpose({ runActions })
     >
       <li
         v-for="item in items"
+        v-show="!item.hidden"
         :key="item.key"
         class="mode-otel-finalize-configuration__item"
         :class="`mode-otel-finalize-configuration__item--${item.state}`"

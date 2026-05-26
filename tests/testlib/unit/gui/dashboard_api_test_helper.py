@@ -289,29 +289,6 @@ class TestInventoryContent:
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
         assert resp.json["value"]["filter_context"]["uses_infos"] == ["host"]
 
-    def test_compute_widget_titles(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.compute_widget_titles(
-            {
-                "id": {
-                    "general_settings": {
-                        "title": {
-                            "text": "$DEFAULT_TITLE$: custom",
-                            "render_mode": "with_background",
-                        },
-                        "render_background": True,
-                    },
-                    "content": {
-                        "type": "inventory",
-                        "path": "hardware.cpu.cores",
-                    },
-                    "filters": {},
-                },
-            }
-        )
-        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
-        titles = resp.json["extensions"]["titles"]
-        assert titles["id"] == "Processor \u27a4 #Cores: custom"
-
 
 class TestAlertOverviewContent:
     def test_create(self, clients: ClientRegistry) -> None:

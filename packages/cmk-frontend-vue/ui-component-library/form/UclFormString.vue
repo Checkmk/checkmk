@@ -4,10 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { useMswWorker } from '@ucl/_ucl/composables/useMswWorker'
 import type { String } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { HttpResponse, http, passthrough } from 'msw'
-import { setupWorker } from 'msw/browser'
-import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
+import { ref } from 'vue'
 
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
@@ -50,26 +50,13 @@ async function interceptor({ request }: { request: Request }) {
     severity: 'success'
   })
 }
-const worker = setupWorker(
+const { mockLoaded } = useMswWorker([
   http.post(
     new RegExp(`${location.protocol}//${location.host}/ajax_vs_autocomplete.py`),
     interceptor
   ),
-  http.get(/.+/, () => {
-    return passthrough()
-  })
-)
-
-onBeforeMount(async () => {
-  await worker.start()
-  mockLoaded.value = true
-})
-
-onBeforeUnmount(() => {
-  worker.stop()
-})
-
-const mockLoaded = ref<boolean>(false)
+  http.get(/.+/, () => passthrough())
+])
 
 defineProps<{ screenshotMode: boolean }>()
 

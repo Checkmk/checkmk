@@ -194,6 +194,7 @@ def lookup_components(
         skipped_non_utf8,
     )
     head_results: dict[str, str | None] = dict.fromkeys(queryable)
+    answered: set[str] = set()
     for batch_start in range(0, len(queryable), batch_size):
         batch = queryable[batch_start : batch_start + batch_size]
         proc = subprocess.run(
@@ -218,7 +219,21 @@ def lookup_components(
             ) from e
         for path, component in batch_results.items():
             if path in head_results:
+                answered.add(path)
                 head_results[path] = component
+
+    # rc=0 is not by itself a guarantee that every queried path was answered:
+    # cmk-components has been observed to silently omit lines for some paths
+    # mid-batch (e.g. an internal exception swallowed by the script driver).
+    # Treat that the same way as a non-zero exit -- fail loudly rather than
+    # let invisible NULLs land in postgres.
+    unanswered = sorted(set(head_results) - answered)
+    if unanswered:
+        raise RuntimeError(
+            f"cmk-components returned no line for {len(unanswered)} of "
+            f"{len(head_results)} queried paths (rc=0). Refusing to push "
+            f"partial data. First examples: {unanswered[:3]}"
+        )
 
     for orig, head in head_name_per_orig.items():
         result[orig] = None if head is None else head_results.get(head)

@@ -67,11 +67,11 @@ import {
   UclDetailPageLayout,
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
+import { useMswWorker } from '@ucl/_ucl/composables/useMswWorker'
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import type { String as FormSpecString } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { HttpResponse, http } from 'msw'
-import { setupWorker } from 'msw/browser'
-import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
+import { ref } from 'vue'
 
 import CmkConfigurationEntityDropdown from '@/components/user-input/CmkConfigurationEntityDropdown'
 
@@ -114,11 +114,8 @@ const minimalSchema: FormSpecString = {
 
 // ----- MSW setup -----
 
-let worker: ReturnType<typeof setupWorker> | null = null
-const mockLoaded = ref(false)
-
-onBeforeMount(async () => {
-  worker = setupWorker(
+const { mockLoaded } = useMswWorker(
+  [
     // Get schema: /domain-types/form_spec/collections/{entityType}
     http.get(new RegExp('/domain-types/form_spec/collections/'), () => {
       return HttpResponse.json({
@@ -163,14 +160,9 @@ onBeforeMount(async () => {
         return HttpResponse.json({ id: body?.entity_id, title: newTitle })
       }
     )
-  )
-  await worker.start({ onUnhandledRequest: 'bypass' })
-  mockLoaded.value = true
-})
-
-onBeforeUnmount(() => {
-  worker?.stop()
-})
+  ],
+  { onUnhandledRequest: 'bypass' }
+)
 </script>
 
 <template>

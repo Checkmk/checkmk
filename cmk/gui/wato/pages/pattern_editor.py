@@ -57,6 +57,18 @@ from cmk.gui.watolib.utils import mk_repr
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 
 
+def _level_state(level: str) -> int:
+    return {"W": 1, "C": 2, "O": 0}.get(level, 0)
+
+
+def _level_name(level: str) -> str:
+    return {"W": "WARN", "C": "CRIT", "O": "OK"}.get(level, "OK")
+
+
+def _logwatch_level_name(level: str) -> str:
+    return {"O": "OK", "W": "WARN", "C": "CRIT", "I": "IGNORE"}[level]
+
+
 def register(
     mode_registry: ModeRegistry,
     match_item_generator_registry: MatchItemGeneratorRegistry,
@@ -207,8 +219,6 @@ class ModePatternEditor(WatoMode):
     def _show_patterns(
         self, *, site_configs: Mapping[SiteId, SiteConfiguration], debug: bool
     ) -> None:
-        from cmk.gui import logwatch
-
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively("logwatch_rules").get(
             "logwatch_rules"
         )
@@ -326,19 +336,19 @@ class ModePatternEditor(WatoMode):
                         html.static_icon(match_img, title=match_title)
 
                         cls = (
-                            ["state%d" % logwatch.level_state(state), "fillbackground"]
+                            ["state%d" % _level_state(state), "fillbackground"]
                             if match_class == "match first"
                             else []
                         )
 
                         table.cell(
                             _("Checkmk state"),
-                            HTMLWriter.render_span(logwatch.level_name(state)),
+                            HTMLWriter.render_span(_level_name(state)),
                             css=cls,
                         )
                         table.cell(
                             _("Logwatch state"),
-                            HTMLWriter.render_span(logwatch.logwatch_level_name(state)),
+                            HTMLWriter.render_span(_logwatch_level_name(state)),
                             css=cls,
                         )
                         table.cell(_("Pattern"), HTMLWriter.render_tt(pattern))

@@ -17,9 +17,11 @@
 // @callback: A groovy function callback to call after a may specified cmd
 //
 // Credentials specific patterns
-// @credentialsLocation: Target location of a credential as file
-// @credentialsFileId: Name of a Jenkins file credential to use, together with credentialsLocation
-// @credentialsUsernameId: Name of a Jenkins username/password credential to use, together with credentialsLocation
+// @creds_files: List of Maps, each map has to contain the keys location and credentialsId
+// @creds_usernames: List of Maps, each map has to contain the keys location and credentialsId
+// @location: Target location of a credential as file
+// @credentialsId: Name of a Jenkins username/password or file credential ID to use, together with location
+// @creds_env: List of credential bindings, each has to contain the variable name and credentialsId
 //
 void execute_test(Map config = [:]) {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
@@ -39,6 +41,9 @@ void execute_test(Map config = [:]) {
         output_file: "",
         container_name: "minimal-ubuntu-checkmk-${container_safe_branch_name}",
         disable_hot_cache: false,
+        creds_env: [],
+        creds_files: [],
+        creds_usernames: [],
     ] << config;
 
     stage("Run ${defaultDict.name}") {
@@ -50,7 +55,13 @@ void execute_test(Map config = [:]) {
             }
 
             if (kubernetes_inherit_from == "UNSET") {
-                run_this(defaultDict);
+                withCredentialFileAtLocation(creds: defaultDict.creds_files) {
+                    withCredentialUsernamePasswordAtLocation(creds: defaultDict.creds_usernames) {
+                        withCredentialEnv(creds: defaultDict.creds_env) {
+                            run_this(defaultDict);
+                        }
+                    }
+                }
             } else {
                 container(defaultDict.container_name) {
                     println("'execute_test' is using k8s container '${defaultDict.container_name}'");
@@ -69,22 +80,12 @@ void execute_test(Map config = [:]) {
                         ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
                         disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER == "0" || defaultDict.disable_hot_cache,
                     ]) {
-                        if (defaultDict.credentialsFileId) {
-                            withCredentialFileAtLocation(
-                                credentialsId: defaultDict.credentialsFileId,
-                                location: defaultDict.credentialsLocation,
-                            ) {
-                                run_this(defaultDict);
+                        withCredentialFileAtLocation(creds: defaultDict.creds_files) {
+                            withCredentialUsernamePasswordAtLocation(creds: defaultDict.creds_usernames) {
+                                withCredentialEnv(creds: defaultDict.creds_env) {
+                                    run_this(defaultDict);
+                                }
                             }
-                        } else if (defaultDict.credentialsUsernameId) {
-                            withCredentialUsernamePasswordAtLocation(
-                                credentialsId: defaultDict.credentialsUsernameId,
-                                location: defaultDict.credentialsLocation,
-                            ) {
-                                run_this(defaultDict);
-                            }
-                        } else {
-                            run_this(defaultDict);
                         }
                     }
                 }
@@ -98,7 +99,7 @@ void execute_test(Map config = [:]) {
 // of the result of the executed command or callback.
 void run_this(Map args) {
     try {
-        // do not change this order, see test-gui-e2e-f12less-k8s.groovy
+        // do not change this order, see test-gui-e2e-single.groovy
         if (args.cmd) {
             run_sh_command(args.cmd);
         }

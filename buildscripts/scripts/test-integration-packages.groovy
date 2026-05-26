@@ -14,10 +14,6 @@ void main() {
         "FAKE_ARTIFACTS",
     ]);
 
-    check_environment_variables([
-        "BRANCH",
-    ]);
-
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
@@ -75,7 +71,7 @@ void main() {
         |===================================================
         """.stripMargin());
 
-    def relative_job_name = "${branch_base_folder}/builders/test-integration-single-f12less";
+    def relative_job_name = "${branch_base_folder}/builders/test-integration-single";
 
     /// avoid failures due to leftover artifacts from prior runs
     /// and create folder before entering containers to not delete the folder after leaving the container

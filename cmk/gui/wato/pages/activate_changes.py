@@ -74,6 +74,7 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, D
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils import paths, render
@@ -285,7 +286,7 @@ class ModeRevertChanges(WatoMode):
 
 
 def _change_table(
-    activation_site_ids: Sequence[SiteId], changes: list[tuple[str, dict]], title: str
+    activation_site_ids: Sequence[SiteId], changes: list[tuple[str, ChangeSpec]], title: str
 ) -> None:
     with table_element(
         "changes",
@@ -560,7 +561,10 @@ class ModeActivateChanges(WatoMode):
 
         self._show_license_validity()
 
-        self._activation_status(activation_site_configs := activation_sites(config.sites))
+        self._activation_status(
+            activation_site_configs := activation_sites(config.sites),
+            table_row_limit=config.table_row_limit,
+        )
 
         if self._changes.has_pending_changes():
             _change_table(
@@ -700,7 +704,9 @@ class ModeActivateChanges(WatoMode):
                     ActivationState.WARNING,
                 )
 
-    def _activation_status(self, activation_sites: SiteConfigurations) -> None:
+    def _activation_status(
+        self, activation_sites: SiteConfigurations, *, table_row_limit: int
+    ) -> None:
         with table_element(
             "site-status",
             title=_("Activation status"),
@@ -708,7 +714,7 @@ class ModeActivateChanges(WatoMode):
             sortable=False,
             css="activation",
             foldable=Foldable.FOLDABLE_STATELESS,
-            limit=active_config.table_row_limit,
+            limit=table_row_limit,
         ) as table:
             for site_id, site in sort_sites(activation_sites):
                 table.row()

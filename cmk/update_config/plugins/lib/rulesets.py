@@ -89,7 +89,7 @@ def load_and_transform(
         all_rulesets,
         RULESETS_LOOSING_THEIR_ITEM,
     )
-    _transform_replaced_wato_rulesets(
+    transform_replaced_wato_rulesets(
         logger,
         all_rulesets,
         REPLACED_RULESETS,
@@ -171,7 +171,7 @@ def _force_old_http_service_description(all_rulesets: RulesetCollection) -> None
         rule.value["name"] = f"^HTTP {rule.value['name']}"
 
 
-def _transform_replaced_wato_rulesets(
+def transform_replaced_wato_rulesets(
     logger: Logger,
     all_rulesets: RulesetCollection,
     replaced_rulesets: Mapping[RulesetName, RulesetName],

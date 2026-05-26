@@ -17,6 +17,7 @@ from omdlib.system_apache import (
     is_apache_hook_up_to_date,
     register_with_system_apache,
     unregister_from_system_apache,
+    write_apache_listen_conf,
 )
 from omdlib.version_info import VersionInfo
 
@@ -125,3 +126,19 @@ def test_create_apache_hook_world_readable(tmp_path: Path) -> None:
     apache_config.parent.mkdir(parents=True)
     create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", 0)
     assert apache_config.stat().st_mode & stat.S_IROTH
+
+
+def test_write_apache_listen_conf_ipv4(tmp_path: Path) -> None:
+    (tmp_path / "etc/apache").mkdir(parents=True)
+    write_apache_listen_conf(str(tmp_path), "127.0.0.1", "5000")
+    content = (tmp_path / "etc/apache/listen-port.conf").read_text()
+    assert "ServerName 127.0.0.1:5000" in content
+    assert "Listen 127.0.0.1:5000" in content
+
+
+def test_write_apache_listen_conf_ipv6(tmp_path: Path) -> None:
+    (tmp_path / "etc/apache").mkdir(parents=True)
+    write_apache_listen_conf(str(tmp_path), "[::1]", "5000")
+    content = (tmp_path / "etc/apache/listen-port.conf").read_text()
+    assert "Listen [::1]:5000" in content
+    assert "ServerName" not in content

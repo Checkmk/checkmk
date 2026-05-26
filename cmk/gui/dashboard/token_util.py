@@ -24,7 +24,7 @@ from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
-from cmk.gui.session import UserContext
+from cmk.gui.session_context import UserContext
 from cmk.gui.token_auth import (
     AuthToken,
     DashboardToken,

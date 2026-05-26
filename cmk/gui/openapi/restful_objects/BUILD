@@ -11,7 +11,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:http",
+        "//cmk/gui:core_toolkit",
         requirement("marshmallow"),
     ],
 )
@@ -33,9 +33,7 @@ py_library(
     deps = [
         ":type_defs",
         "//cmk/gui:config",
-        "//cmk/gui:exceptions",
-        "//cmk/gui:hooks",
-        "//cmk/gui:http",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/fields",
         "//cmk/gui/fields:base",
         "//cmk/gui/livestatus_utils/commands",

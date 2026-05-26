@@ -6,9 +6,9 @@
 # Prerequisites:
 # - Local: bazel and rsync must be in PATH
 # - Remote: python3 must be available
-# - install: 'deploy' user needs passwordless sudo for useradd, chown, chmod, tee, and systemctl
+# - install: 'root' user needs passwordless sudo for useradd, chown, chmod, tee, and systemctl
 # - install: /etc/cmk-werk-ids/secret must exist on the remote before running
-# - deploy: 'deploy' user needs passwordless sudo for systemctl
+# - root: 'root' user needs passwordless sudo for systemctl
 
 import argparse
 import subprocess
@@ -16,14 +16,14 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-_REMOTE = "deploy@werk-ids.lan.checkmk.net"
+_REMOTE = "root@werk-ids.lan.checkmk.net"
 _SERVICE_NAME = "cmk-werk-ids"
 _WHEEL_DIR = "/opt/cmk-werk-ids/wheels"
 _VENV = "/opt/cmk-werk-ids/venv"
 _SECRET_FILE = "/etc/cmk-werk-ids/secret"
 _SOCKET_FILE = f"/etc/systemd/system/{_SERVICE_NAME}.socket"
 _SERVICE_FILE = f"/etc/systemd/system/{_SERVICE_NAME}.service"
-_SOCKET_PATH = f"/run/{_SERVICE_NAME}/gunicorn.sock"
+_SOCKET_PATH = "/run/gunicorn.sock"
 
 _SOCKET_UNIT = f"""\
 [Unit]
@@ -32,7 +32,7 @@ Description=Checkmk werk IDs socket
 [Socket]
 ListenStream={_SOCKET_PATH}
 SocketUser={_SERVICE_NAME}
-SocketGroup={_SERVICE_NAME}
+SocketGroup=www-data
 SocketMode=0660
 
 [Install]
@@ -93,8 +93,9 @@ def _build_wheel(runner: Runner) -> Path:
         capture_output=True,
         text=True,
     )
+    workspace = subprocess.check_output(["bazel", "info", "workspace"], text=True).strip()
     wheel_rel = next(p for p in result.stdout.splitlines() if p.endswith(".whl"))
-    return Path(wheel_rel).resolve()
+    return Path(workspace, wheel_rel).resolve()
 
 
 def _sync_wheel(remote: str, wheel: Path, runner: Runner) -> None:
@@ -108,7 +109,7 @@ def _pip_install(remote: str, wheel: Path, runner: Runner) -> None:
         remote,
         f"set -euo pipefail; "
         f"'{_VENV}/bin/pip' install --quiet --upgrade pip; "
-        f"'{_VENV}/bin/pip' install --quiet --upgrade '{_WHEEL_DIR}/{wheel.name}'",
+        f"'{_VENV}/bin/pip' install --quiet --upgrade --force-reinstall '{_WHEEL_DIR}/{wheel.name}'",
     )
 
 
@@ -126,14 +127,23 @@ def _install(remote: str, runner: Runner) -> None:
     sys.stderr.write(f"--- Creating system user {_SERVICE_NAME}\n")
     runner.ssh(
         remote,
+        f"set -euo pipefail; "
         f"id -u '{_SERVICE_NAME}' &>/dev/null || "
-        f"sudo useradd --system --no-create-home --shell /usr/sbin/nologin '{_SERVICE_NAME}'; "
+        f"sudo useradd --system --no-create-home "
+        f"--shell /usr/sbin/nologin '{_SERVICE_NAME}'; "
         f"sudo chown '{_SERVICE_NAME}:{_SERVICE_NAME}' '{_SECRET_FILE}'; "
         f"sudo chmod 640 '{_SECRET_FILE}'",
     )
 
     sys.stderr.write(f"--- Installing package into {_VENV}\n")
-    runner.ssh(remote, f"mkdir -p '{Path(_VENV).parent}'; python3 -m venv '{_VENV}'")
+    runner.ssh(
+        remote,
+        f"set -euo pipefail; "
+        f"sudo apt-get install -y python3.12-venv python3-pip; "
+        f"mkdir -p '{Path(_VENV).parent}'; "
+        f"rm -rf '{_VENV}'; "
+        f"python3 -m venv '{_VENV}'",
+    )
     _pip_install(remote, wheel, runner)
 
     sys.stderr.write("--- Installing systemd socket and service\n")
@@ -141,6 +151,7 @@ def _install(remote: str, runner: Runner) -> None:
     runner.ssh(remote, f"sudo tee '{_SERVICE_FILE}' > /dev/null", stdin=_SERVICE_UNIT)
     runner.ssh(
         remote,
+        f"set -euo pipefail; "
         f"sudo systemctl daemon-reload; "
         f"sudo systemctl enable --now '{_SERVICE_NAME}.socket'; "
         f"sudo systemctl enable '{_SERVICE_NAME}'",

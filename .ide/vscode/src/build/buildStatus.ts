@@ -36,7 +36,8 @@ export function checkBuildStatus(wsPath: string): BuildStatus {
   }
 
   const venvCfg = path.join(wsPath, '.venv', 'pyvenv.cfg')
-  status.venv.ok = fs.existsSync(venvCfg)
+  const requiredBins = ['python', 'dmypy', 'ruff'].map((b) => path.join(wsPath, '.venv', 'bin', b))
+  status.venv.ok = fs.existsSync(venvCfg) && requiredBins.every((p) => fs.existsSync(p))
 
   const sharedTypingLink = path.join(
     wsPath,
@@ -161,7 +162,7 @@ export function createStatusBar(
   context.subscriptions.push(
     vscode.tasks.onDidEndTaskProcess((e) => {
       if (e.execution.task.source === 'CMK') {
-        setTimeout(() => (onBuildComplete ? onBuildComplete() : refreshStatus()), 1000)
+        setTimeout(() => (onBuildComplete ? onBuildComplete() : refreshStatus()), 200)
       }
     })
   )
@@ -188,13 +189,14 @@ export function createStatusBar(
       const watcher = vscode.workspace.createFileSystemWatcher(
         new vscode.RelativePattern(wsPath, pattern)
       )
+      const refresh = (): void => (onBuildComplete ? onBuildComplete() : refreshStatus())
       const handler = delay
         ? () =>
             setTimeout(() => {
-              refreshStatus()
+              refresh()
               if (branchSwitch) void notifyBranchSwitch()
             }, delay)
-        : () => refreshStatus()
+        : () => refresh()
       if (events.includes('change')) watcher.onDidChange(handler)
       if (events.includes('create')) watcher.onDidCreate(handler)
       if (events.includes('delete')) watcher.onDidDelete(handler)

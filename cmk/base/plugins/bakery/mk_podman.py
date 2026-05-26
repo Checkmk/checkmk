@@ -28,6 +28,7 @@ class PodmanConfig(BaseModel, frozen=True):
     deploy: bool
     connection_method: PodmanConnectionMethod = ("api", ("auto", None))
     piggyback_name_method: PodmanPiggybackNameMethod = "nodename_name"
+    keep_non_zero_exit_containers: bool = True
 
 
 def get_mk_podman_files(
@@ -61,6 +62,7 @@ def _get_mk_podman_config(conf: PodmanConfig) -> Iterable[str]:
             yield f"socket_paths: {','.join(socket_list)}"
 
     yield f"piggyback_name_method: {conf.piggyback_name_method}"
+    yield f"keep_non_zero_exit_containers: {'true' if conf.keep_non_zero_exit_containers else 'false'}"
 
 
 register.bakery_plugin(

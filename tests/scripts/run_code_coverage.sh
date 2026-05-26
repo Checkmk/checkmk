@@ -85,7 +85,7 @@ if ! date -d "${COMMIT_TIME}" >/dev/null 2>&1; then
 fi
 
 # Run the code coverage update script
-BAZEL_COVERAGE_ARGS='--flaky_test_attempts=3 --instrumentation_filter="//(cmk|packages|agents)[/:@]"' make -C tests "${TARGET}"
+BAZEL_COVERAGE_ARGS='--flaky_test_attempts=3 --instrumentation_filter="//(cmk|packages|agents)[/:@]"' tests/run_tests.sh "${TARGET}"
 
 # Check if coverage data file exists
 COVERAGE_DATA_FILE="$(bazel info bazel-testlogs)"/tests/unit/repo/coverage.dat

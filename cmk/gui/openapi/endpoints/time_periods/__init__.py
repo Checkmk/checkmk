@@ -16,6 +16,10 @@ import http.client
 from collections.abc import Mapping
 from typing import Any, cast
 
+from livestatus import SiteConfigurations
+
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -32,7 +36,14 @@ from cmk.gui.openapi.restful_objects.parameters import TIMEPERIOD_NAME_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import FIELDS, problem, ProblemException, serve_json
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.timeperiods import create_timeperiod as do_create_timeperiod
 from cmk.gui.watolib.timeperiods import (
     delete_timeperiod,
@@ -104,9 +115,13 @@ def create_timeperiod(params: Mapping[str, Any]) -> Response:
     do_create_timeperiod(
         name,
         time_period,
-        user_id=user.id,
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            active_config.sites,
+            use_git=active_config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ),
     )
     return _serve_time_period(_get_time_period_domain_object(name, time_period))
 
@@ -159,9 +174,13 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
     modify_timeperiod(
         name,
         updated_time_period,
-        user_id=user.id,
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
+        pending_changes=_pending_changes(
+            active_config.sites,
+            use_git=active_config.wato_use_git,
+            local_site=omd_site(),
+            user_id=user.id,
+        ),
     )
     return _serve_time_period(_get_time_period_domain_object(name, updated_time_period))
 
@@ -184,9 +203,13 @@ def delete(params: Mapping[str, Any]) -> Response:
     try:
         delete_timeperiod(
             name,
-            user_id=user.id,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                active_config.sites,
+                use_git=active_config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
     except TimePeriodNotFoundError:
         return time_period_not_found_problem(name)
@@ -460,3 +483,22 @@ def register(
     endpoint_registry.register(delete)
     endpoint_registry.register(show_time_period)
     endpoint_registry.register(list_time_periods)
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            index_update_change_hook,
+        ),
+    )

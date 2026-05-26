@@ -14,7 +14,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.session import UserContext
+from cmk.gui.session_context import UserContext
 from cmk.gui.token_auth import AgentRegistrationToken, AuthToken, get_token_store, TokenStore
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.hosts_and_folders import Host

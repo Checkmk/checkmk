@@ -40,7 +40,7 @@ def test_get_single_oid_ipv6(site: Site, backend_type: SNMPBackendEnum) -> None:
         pytest.skip("Not relevant")
 
     config = dataclasses.replace(
-        default_config(backend_type),
+        default_config(site, backend_type),
         is_ipv6_primary=True,
         ipaddress=HostAddress("::1"),
     )
@@ -54,7 +54,7 @@ def test_get_single_oid_snmpv3(site: Site, backend_type: SNMPBackendEnum) -> Non
         pytest.skip("Not relevant")
 
     config = dataclasses.replace(
-        default_config(backend_type),
+        default_config(site, backend_type),
         credentials=(
             "authNoPriv",
             "md5",
@@ -79,7 +79,7 @@ def test_get_single_oid_snmpv3_higher_encryption(
         pytest.skip("Not relevant")
 
     config = dataclasses.replace(
-        default_config(backend_type),
+        default_config(site, backend_type),
         credentials=(
             "authPriv",
             "SHA-512",
@@ -106,7 +106,7 @@ def test_get_single_oid_wrong_credentials(site: Site, backend_type: SNMPBackendE
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = dataclasses.replace(default_config(backend_type), credentials="dingdong")
+    config = dataclasses.replace(default_config(site, backend_type), credentials="dingdong")
 
     result, _ = get_single_oid(site, ".1.3.6.1.2.1.1.1.0", backend_type, config)
     assert result is None
@@ -114,7 +114,7 @@ def test_get_single_oid_wrong_credentials(site: Site, backend_type: SNMPBackendE
 
 def test_get_single_oid(site: Site, backend_type: SNMPBackendEnum) -> None:
     result, _ = get_single_oid(
-        site, ".1.3.6.1.2.1.1.1.0", backend_type, default_config(backend_type)
+        site, ".1.3.6.1.2.1.1.1.0", backend_type, default_config(site, backend_type)
     )
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
     assert isinstance(result, str)
@@ -124,7 +124,7 @@ def test_get_single_oid_cache(site: Site, backend_type: SNMPBackendEnum) -> None
     oid = ".1.3.6.1.2.1.1.1.0"
     expected_value = "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
-    value, cache = get_single_oid(site, oid, backend_type, default_config(backend_type))
+    value, cache = get_single_oid(site, oid, backend_type, default_config(site, backend_type))
     assert value == expected_value
     assert oid in cache
     cached_oid = cache[oid]
@@ -134,13 +134,15 @@ def test_get_single_oid_cache(site: Site, backend_type: SNMPBackendEnum) -> None
 
 def test_get_single_non_prefixed_oid(site: Site, backend_type: SNMPBackendEnum) -> None:
     with pytest.raises(CalledProcessError) as e:
-        get_single_oid(site, "1.3.6.1.2.1.1.1.0", backend_type, default_config(backend_type))
+        get_single_oid(site, "1.3.6.1.2.1.1.1.0", backend_type, default_config(site, backend_type))
     assert "does not begin with" in e.value.stderr
 
 
 def test_get_single_oid_next(site: Site, backend_type: SNMPBackendEnum) -> None:
     assert (
-        get_single_oid(site, ".1.3.6.1.2.1.1.9.1.*", backend_type, default_config(backend_type))[0]
+        get_single_oid(
+            site, ".1.3.6.1.2.1.1.9.1.*", backend_type, default_config(site, backend_type)
+        )[0]
         == ".1.3.6.1.6.3.10.3.1.1"
     )
 
@@ -152,16 +154,18 @@ def test_get_single_oid_next(site: Site, backend_type: SNMPBackendEnum) -> None:
 
 def test_get_single_oid_value(site: Site, backend_type: SNMPBackendEnum) -> None:
     assert (
-        get_single_oid(site, ".1.3.6.1.2.1.1.9.1.2.1", backend_type, default_config(backend_type))[
-            0
-        ]
+        get_single_oid(
+            site, ".1.3.6.1.2.1.1.9.1.2.1", backend_type, default_config(site, backend_type)
+        )[0]
         == ".1.3.6.1.6.3.10.3.1.1"
     )
 
 
 def test_get_single_oid_not_existing(site: Site, backend_type: SNMPBackendEnum) -> None:
     assert (
-        get_single_oid(site, ".1.3.100.200.300.400", backend_type, default_config(backend_type))[0]
+        get_single_oid(
+            site, ".1.3.100.200.300.400", backend_type, default_config(site, backend_type)
+        )[0]
         is None
     )
 
@@ -171,7 +175,7 @@ def test_get_single_oid_not_resolvable(site: Site, backend_type: SNMPBackendEnum
         pytest.skip("Not relevant")
 
     config = dataclasses.replace(
-        default_config(backend_type), ipaddress=HostAddress("unknown_host.internal.")
+        default_config(site, backend_type), ipaddress=HostAddress("unknown_host.internal.")
     )
 
     assert get_single_oid(site, ".1.3.6.1.2.1.1.7.0", backend_type, config)[0] is None
@@ -239,7 +243,7 @@ def test_walk_for_export(
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    table = walk_for_export(site, oid, backend_type, default_config(backend_type))
+    table = walk_for_export(site, oid, backend_type, default_config(site, backend_type))
     assert table == expected_table
 
 

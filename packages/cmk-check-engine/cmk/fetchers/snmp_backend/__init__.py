@@ -5,13 +5,11 @@
 """Home of our open source SNMP backends."""
 
 import logging
-from pathlib import Path
 from types import ModuleType
 
+from cmk.snmp_backends.classic import ClassicSNMPBackend as ClassicSNMPBackend
+from cmk.snmp_backends.stored_walk import StoredWalkSNMPBackend as StoredWalkSNMPBackend
 from cmk.snmplib import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
-
-from .classic import ClassicSNMPBackend as ClassicSNMPBackend
-from .stored_walk import StoredWalkSNMPBackend as StoredWalkSNMPBackend
 
 inline: ModuleType | None = None
 try:
@@ -25,12 +23,9 @@ def make_backend(
     logger: logging.Logger,
     *,
     use_cache: bool = False,
-    stored_walk_path: Path,
 ) -> SNMPBackend:
     if use_cache or snmp_config.snmp_backend is SNMPBackendEnum.STORED_WALK:
-        return StoredWalkSNMPBackend(
-            snmp_config, logger, path=stored_walk_path / snmp_config.hostname
-        )
+        return StoredWalkSNMPBackend(snmp_config, logger)
 
     if inline and snmp_config.snmp_backend is SNMPBackendEnum.INLINE:
         return inline.InlineSNMPBackend(snmp_config, logger)  # type: ignore[no-any-return]  # TODO: CMK-32980

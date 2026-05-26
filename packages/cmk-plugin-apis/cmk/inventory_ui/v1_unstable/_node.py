@@ -136,6 +136,9 @@ type OrderedColumns = Mapping[
 @dataclass(frozen=True, kw_only=True)
 class View:
     """
+    With this object, a view is automatically created from the table, which is
+    then accessible via the link 'Open this table for filtering / sorting.'
+
     Args:
         name: A unique name
         title: A title

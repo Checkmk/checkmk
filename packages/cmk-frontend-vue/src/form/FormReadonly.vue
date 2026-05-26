@@ -36,6 +36,7 @@ import type {
   Password,
   SingleChoice,
   SingleChoiceElement,
+  StaticText,
   TimeSpan,
   TimeSpanTimeMagnitude,
   TimeSpecific,
@@ -128,6 +129,8 @@ function _renderForm(
       return renderLegacyValuespec(formSpec as LegacyValuespec, value, backendValidation)
     case 'fixed_value':
       return renderFixedValue(formSpec as FixedValue)
+    case 'static_text':
+      return renderStaticText(formSpec as StaticText, value as string)
     case 'boolean_choice':
       return renderBooleanChoice(formSpec as BooleanChoice, value as boolean)
     case 'multiline_text':
@@ -410,6 +413,14 @@ function renderFixedValue(formSpec: FixedValue): VNode {
     shownValue = formSpec.label
   }
   return h('div', shownValue as string)
+}
+
+function renderStaticText(formSpec: StaticText, value: string): VNode {
+  const text = typeof value === 'string' ? value : ''
+  if (formSpec.multiline) {
+    return h('pre', { class: 'vs_fixed_value' }, text)
+  }
+  return h('div', text)
 }
 
 function renderIntegerUnit(formSpec: Integer, value: number): VNode {

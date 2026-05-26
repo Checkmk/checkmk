@@ -499,6 +499,7 @@ allows = [
   "cmk.gui.log",
   "cmk.gui.main_modules",
   "cmk.gui.session",
+  "cmk.gui.session_context",
   "cmk.gui.site_config",
   "cmk.gui.script_helpers",
   "cmk.gui.watolib.attributes",
@@ -634,6 +635,8 @@ allows = [
   "@relay_protocols",
   "cmk.helper_interface",
   "cmk.inline_snmp",
+  "cmk.snmp_backends.classic",
+  "cmk.snmp_backends.stored_walk",
   "cmk.snmplib",
 ]
 
@@ -642,6 +645,9 @@ allows = ["@ccc"]
 
 [components."cmk.graphing"]
 allows = []
+
+[components."cmk.graphing_engine"]
+allows = ["cmk.graphing.v1", "cmk.graphing.v2_unstable"]
 
 [components."cmk.gui.main_modules"]
 allows = [
@@ -1020,6 +1026,9 @@ allows = []
 
 [components."cmk.special_agents"]
 allows = ["@ccc", "@plugin_apis", "cmk.utils.password_store", "cmk.utils.paths"]
+
+[components."cmk.snmp_backends"]
+allows = ["@ccc", "cmk.helper_interface", "cmk.snmplib"]
 
 [components."cmk.snmplib"]
 allows = ["@ccc", "cmk.agent_based.v1"]

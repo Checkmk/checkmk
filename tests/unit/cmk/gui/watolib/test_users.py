@@ -20,7 +20,7 @@ from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser
-from cmk.gui.session import _UserContext, SuperUserContext
+from cmk.gui.session_context import _UserContext, SuperUserContext
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.watolib.paths import wato_var_dir
@@ -75,7 +75,7 @@ def setup_site_changes(monkeypatch: pytest.MonkeyPatch) -> Generator[list[SiteId
                         timeout=5,
                         user_login=True,
                         proxy=None,
-                        user_sync="all",
+                        user_attribute_sync_connections="all",
                         status_host=None,
                         message_broker_port=5672,
                         is_trusted=False,

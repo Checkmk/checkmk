@@ -42,8 +42,7 @@ py_library(
     deps = [
         ":base",
         "//cmk/gui:config",
-        "//cmk/gui:sites",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/graphing",
         "//cmk/gui/userdb",
         "//cmk/gui/watolib",

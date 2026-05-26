@@ -23,6 +23,7 @@ from .metric import MetricExtended
 from .optional_choice import OptionalChoice
 from .passwordstore_password import PasswordStorePassword
 from .single_choice_editable import SingleChoiceEditable
+from .static_text import StaticText
 from .time_picker import TimePicker
 from .time_specific import TimeSpecific
 from .two_column_dictionary import TwoColumnDictionary
@@ -48,6 +49,7 @@ __all__ = [
     "PasswordStorePassword",
     "SingleChoiceEditable",
     "Source",
+    "StaticText",
     "TimePicker",
     "TimeSpecific",
     "Topic",

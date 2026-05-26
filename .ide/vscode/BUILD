@@ -97,6 +97,11 @@ vsce_bin.vsce(
         # node_modules layout. The extension source is public anyway.
         "--allow-package-all-secrets",
         "--allow-package-env-file",
+        # vsce ignores repository.directory when rewriting <img> srcs from
+        # relative paths, so it drops the .ide/vscode prefix and produces
+        # 404ing URLs. Force the correct base for relative image references.
+        "--baseImagesUrl",
+        "https://github.com/Checkmk/checkmk/raw/HEAD/.ide/vscode/",
         "-o",
         "../cmk-vscode.vsix",
     ],

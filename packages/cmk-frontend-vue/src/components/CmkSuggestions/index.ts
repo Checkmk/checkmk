@@ -8,8 +8,10 @@ import CmkSuggestions from './CmkSuggestions.vue'
 export default CmkSuggestions
 export { ErrorResponse, Response, WarningResponse, type Suggestion } from './suggestions'
 export {
+  type Section,
   type Suggestions,
   type SuggestionValue,
+  flattenSuggestions,
   NoSelection,
   Selection,
   SelectionWithTitle

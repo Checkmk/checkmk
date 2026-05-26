@@ -17,8 +17,8 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
-        "//cmk/gui:http",
-        "//cmk/gui:session",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui:session_context",
         "//cmk/gui/form_specs",
         "//cmk/gui/utils:encrypter",
         "//cmk/gui/utils:roles",

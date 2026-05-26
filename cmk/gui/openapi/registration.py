@@ -33,7 +33,7 @@ from cmk.gui.openapi.endpoints import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
-from .api_endpoints import agent_download, host, icon, site_management
+from .api_endpoints import agent_download, custom_host_attributes, host, icon, site_management
 from .api_endpoints import background_job as api_background_job
 from .api_endpoints import downtime as api_downtime
 from .api_endpoints import host_config as api_host_config
@@ -116,6 +116,10 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     api_downtime.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
+    custom_host_attributes.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

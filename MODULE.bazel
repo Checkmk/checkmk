@@ -376,10 +376,10 @@ http_archive(
 
 http_file(
     name = "jaeger",
-    sha256 = "7120929235daf1a0a79c7ffb0c2835d119ec83c5f8b3df99c8a57ccdd25b0184",
+    sha256 = "1d810bf04f7e08dac796ad532fc68f1a8fceb0333d2524ae767d88533e69ed75",
     urls = [
-        "https://github.com/jaegertracing/jaeger/releases/download/v1.66.0/jaeger-2.3.0-linux-amd64.tar.gz",
-        UPSTREAM_MIRROR_URL + "jaeger-2.3.0-linux-amd64.tar.gz",
+        "https://github.com/jaegertracing/jaeger/releases/download/v2.18.0/jaeger-2.18.0-linux-amd64.tar.gz",
+        UPSTREAM_MIRROR_URL + "jaeger-2.18.0-linux-amd64.tar.gz",
     ],
 )
 
@@ -562,9 +562,9 @@ http_archive(
 http_archive(
     name = "robotmk",
     build_file = "//omd/packages/robotmk:BUILD.robotmk.bazel",
-    sha256 = "4163dbf8fe7c858d3d1eb0a959e3f87a537f2167f1a3d7ec277da023aca67503",
+    sha256 = "613f14429ef7a76ad307d2913d3013ac24143062b700d9e84c0606798dd9d4bb",
     urls = [
-        "https://github.com/elabit/robotmk/releases/download/v5.0.0-alpha-1/all_executables.zip",
+        "https://github.com/elabit/robotmk/releases/download/v4.1.0-alpha-1/all_executables.zip",
     ],
 )
 
@@ -670,11 +670,11 @@ http_archive(
         "//omd/packages/nagvis/patches:0001-global.php.dif",
         "//omd/packages/nagvis/patches:0002-cmkadmin.dif",
     ],
-    sha256 = "ffcdb944783fd03fbeb5c6cad6c3085671364d0a9b2a83a5cc11bf298e24e36f",
-    strip_prefix = "nagvis-1.10.3",
+    sha256 = "a66a798cc54c51eea8ab38244bf1dce38a396191cb648dac693632f5a28910d5",
+    strip_prefix = "nagvis-1.10.4",
     urls = [
-        UPSTREAM_MIRROR_URL + "nagvis-1.10.3.tar.gz",
-        "https://github.com/NagVis/nagvis/releases/download/nagvis-1.10.3/nagvis-1.10.3.tar.gz",
+        UPSTREAM_MIRROR_URL + "nagvis-1.10.4.tar.gz",
+        "https://github.com/NagVis/nagvis/releases/download/nagvis-1.10.4/nagvis-1.10.4.tar.gz",
     ],
 )
 

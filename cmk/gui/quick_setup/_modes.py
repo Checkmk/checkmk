@@ -11,6 +11,7 @@ from collections.abc import Collection, Iterable, Mapping, Sequence
 from typing import override, Protocol
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import omd_site
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import Config
@@ -41,6 +42,7 @@ from cmk.gui.type_defs import (
     PermissionName,
     StaticIcon,
 )
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
@@ -49,7 +51,8 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
 from cmk.gui.valuespec import Dictionary, DictionaryEntry, FixedValue, RuleComment, TextInput
 from cmk.gui.wato import TileMenuRenderer
-from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
+from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.configuration_bundle_store import (
     BundleId,
     ConfigBundle,
@@ -74,7 +77,15 @@ from cmk.gui.watolib.main_menu import (
     MenuItem,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 
 
@@ -290,6 +301,7 @@ class ModeEditConfigurationBundles(WatoMode):
         pprint_value: bool,
         use_git: bool,
         debug: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             # revert changes does not work correctly when a config sync to another site occurred
@@ -301,17 +313,19 @@ class ModeEditConfigurationBundles(WatoMode):
         delete_config_bundle(
             bundle_id,
             user_permissions=user_permissions,
-            user_id=user.id,
             pprint_value=pprint_value,
             use_git=use_git,
             debug=debug,
+            pending_changes=pending_changes,
         )
-        add_change(
-            action_name="delete-quick-setup",
-            text=_("Deleted Quick Setup {bundle_id}").format(bundle_id=bundle_id),
-            user_id=user.id,
-            prevent_discard_changes=prevent_discard_changes,
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="delete-quick-setup",
+                text=_("Deleted Quick Setup {bundle_id}").format(bundle_id=bundle_id),
+                prevent_discard_changes=prevent_discard_changes,
+                domains=[CORE],
+            ),
+            ChangeScope.all_activation_sites(),
         )
 
     def _bundles_listing(self, group_name: str) -> None:
@@ -374,6 +388,17 @@ class ModeEditConfigurationBundles(WatoMode):
                 pprint_value=config.wato_pprint_config,
                 use_git=config.wato_use_git,
                 debug=config.debug,
+                pending_changes=PendingChanges(
+                    activation_sites=activation_sites(config.sites),
+                    local_site=omd_site(),
+                    acting_user=user.id,
+                    store=PendingChangesStore(),
+                    hooks=(
+                        make_audit_log_change_hook(use_git=config.wato_use_git),
+                        sidebar_reload_change_hook,
+                        index_update_change_hook,
+                    ),
+                ),
             )
 
         return redirect(self.mode_url(**{"mode": self.name(), self.VAR_NAME: self._name}))
@@ -904,10 +929,20 @@ class ModeConfigurationBundle(WatoMode):
             references = identify_bundle_references(None, {self._bundle_id})[self._bundle_id]
             delete_config_bundle_objects(
                 references,
-                user_id=user.id,
                 pprint_value=config.wato_pprint_config,
                 use_git=config.wato_use_git,
                 debug=config.debug,
+                pending_changes=PendingChanges(
+                    activation_sites=activation_sites(config.sites),
+                    local_site=omd_site(),
+                    acting_user=user.id,
+                    store=PendingChangesStore(),
+                    hooks=(
+                        make_audit_log_change_hook(use_git=config.wato_use_git),
+                        sidebar_reload_change_hook,
+                        index_update_change_hook,
+                    ),
+                ),
             )
             return redirect(mode_url("changelog"))
 

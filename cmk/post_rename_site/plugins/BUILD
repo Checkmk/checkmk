@@ -9,10 +9,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/gui:auth_core",
         "//cmk/gui:config",
-        "//cmk/gui:logged_in",
-        "//cmk/gui:site_config",
-        "//cmk/gui:user_sites",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/post_rename_site:internal",

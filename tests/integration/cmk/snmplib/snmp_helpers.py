@@ -22,7 +22,7 @@ from cmk.snmplib import (
 from tests.testlib.site import Site
 
 
-def default_config(backend_type: SNMPBackendEnum) -> SNMPHostConfig:
+def default_config(site: Site, backend_type: SNMPBackendEnum) -> SNMPHostConfig:
     return SNMPHostConfig(
         is_ipv6_primary=False,
         ipaddress=HostAddress("127.0.0.1"),
@@ -38,24 +38,29 @@ def default_config(backend_type: SNMPBackendEnum) -> SNMPHostConfig:
         snmpv3_contexts=[],
         character_encoding=None,
         snmp_backend=backend_type,
+        stored_walk_path=site.path("cmk-walk"),
     )
 
 
 def get_snmp_table(
     site: Site, tree: BackendSNMPTree, backend_type: SNMPBackendEnum, config: SNMPHostConfig
 ) -> tuple[Sequence[SNMPTable], MutableMapping[tuple[str, str, bool], list[tuple[str, bytes]]]]:
-    return ast.literal_eval(
-        site.python_helper("helper_get_snmp_table.py").check_output(
-            input_=repr(
-                (
-                    tree.to_json(),
-                    backend_type.serialize(),
-                    config.serialize(),
-                    str(Path(__file__).parent.resolve() / "snmp_data" / "cmk-walk"),
+    with site.copy_file(
+        str(Path(__file__).parent.resolve() / "snmp_data" / "cmk-walk" / "localhost"),
+        site.path("cmk-walk/localhost"),
+    ):
+        return ast.literal_eval(
+            site.python_helper("helper_get_snmp_table.py").check_output(
+                input_=repr(
+                    (
+                        tree.to_json(),
+                        backend_type.serialize(),
+                        config.serialize(),
+                        site.path("cmk-walk").as_posix(),
+                    )
                 )
             )
         )
-    )
 
 
 def get_single_oid(

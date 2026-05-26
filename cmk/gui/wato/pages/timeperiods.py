@@ -22,10 +22,14 @@ import recurring_ical_events
 from icalendar import Calendar, Event
 from icalendar.prop import vDDDTypes
 
+from livestatus import SiteConfigurations
+
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms, watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -43,6 +47,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link
@@ -62,9 +67,16 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib import groups
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.utils import dateutils
 from cmk.utils.timeperiod import (
@@ -272,9 +284,13 @@ class ModeTimeperiods(WatoMode):
         try:
             watolib.timeperiods.delete_timeperiod(
                 TimeperiodName(delname),
-                user_id=user.id,
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config.sites,
+                    use_git=config.wato_use_git,
+                    local_site=omd_site(),
+                    user_id=user.id,
+                ),
             )
             self._timeperiods = load_timeperiods()
 
@@ -297,7 +313,7 @@ class ModeTimeperiods(WatoMode):
         with table_element(
             "timeperiods",
             empty_text=_("There are no time periods defined yet."),
-            limit=active_config.table_row_limit,
+            limit=config.table_row_limit,
         ) as table:
             for name, timeperiod in sorted(self._timeperiods.items()):
                 table.row()
@@ -753,17 +769,25 @@ class ModeEditTimeperiod(WatoMode):
             watolib.timeperiods.create_timeperiod(
                 self._name,
                 self._timeperiod,
-                user_id=user.id,
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config.sites,
+                    use_git=config.wato_use_git,
+                    local_site=omd_site(),
+                    user_id=user.id,
+                ),
             )
         else:
             watolib.timeperiods.modify_timeperiod(
                 self._name,
                 self._timeperiod,
-                user_id=user.id,
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config.sites,
+                    use_git=config.wato_use_git,
+                    local_site=omd_site(),
+                    user_id=user.id,
+                ),
             )
 
         self._timeperiods = load_timeperiods()
@@ -905,3 +929,23 @@ class ModeEditTimeperiod(WatoMode):
     def _format_valuespec_time(self, value: tuple[int, int]) -> str:
         """Convert a time specification from valuespec format"""
         return "%02d:%02d" % value
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.site import omd_site
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.password.endpoint_family import PASSWORD_FAMILY
 from cmk.gui.openapi.api_endpoints.password.models.request_models import CreatePassword
@@ -24,7 +25,15 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
+from cmk.gui.user_sites import activation_sites
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.passwords import load_password, save_password
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 
 
 def create_password_v1(
@@ -38,9 +47,18 @@ def create_password_v1(
         ident,
         body.to_internal(),
         new_password=True,
-        user_id=user.id,
         pprint_value=api_context.config.wato_pprint_config,
-        use_git=api_context.config.wato_use_git,
+        pending_changes=PendingChanges(
+            activation_sites=activation_sites(api_context.config.sites),
+            local_site=omd_site(),
+            acting_user=user.id,
+            store=PendingChangesStore(),
+            hooks=(
+                make_audit_log_change_hook(use_git=api_context.config.wato_use_git),
+                sidebar_reload_change_hook,
+                index_update_change_hook,
+            ),
+        ),
     )
     password = load_password(ident)
     return ApiResponse(

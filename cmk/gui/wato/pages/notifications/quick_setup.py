@@ -6,9 +6,9 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import assert_never, cast, Final, get_args, Literal
 
-from livestatus import SiteConfiguration
+from livestatus import SiteConfiguration, SiteConfigurations
 
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui.config import active_config
@@ -42,6 +42,7 @@ from cmk.gui.form_specs.unstable.list_unique_selection import (
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities
 from cmk.gui.quick_setup.private.widgets import (
     ConditionalNotificationDialogWidget,
@@ -72,7 +73,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecWrapper,
     Widget,
 )
-from cmk.gui.user_sites import get_activation_site_choices
+from cmk.gui.user_sites import activation_sites, get_activation_site_choices
 from cmk.gui.userdb import load_users
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
 from cmk.gui.wato.pages.notifications.migrate import (
@@ -84,6 +85,7 @@ from cmk.gui.wato.pages.notifications.migrate import (
 from cmk.gui.wato.pages.notifications.quick_setup_types import (
     NotificationQuickSetupSpec,
 )
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.groups_io import (
     load_host_group_information,
     load_service_group_information,
@@ -91,6 +93,12 @@ from cmk.gui.watolib.groups_io import (
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import mode_url
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.gui.watolib.user_scripts import load_notification_scripts, NotificationUserScripts
 from cmk.gui.watolib.users import notification_script_choices
@@ -1969,7 +1977,17 @@ def save_and_test_action(
     pprint_value: bool,
 ) -> str:
     result_msg = _save_or_edit(
-        all_stages_form_data, mode, _progress_logger, object_id, use_git, pprint_value
+        all_stages_form_data,
+        mode,
+        _progress_logger,
+        object_id,
+        pprint_value=pprint_value,
+        pending_changes=_pending_changes(
+            active_config.sites,
+            use_git=use_git,
+            local_site=omd_site(),
+            user_id=logged_in_user.id,
+        ),
     )
     # We don't forward the search parameter, so that we don't hide notifications
     # when testing them in the "Test notifications" mode.
@@ -1985,7 +2003,17 @@ def save_and_new_action(
     pprint_value: bool,
 ) -> str:
     result_msg = _save_or_edit(
-        all_stages_form_data, mode, _progress_logger, object_id, use_git, pprint_value
+        all_stages_form_data,
+        mode,
+        _progress_logger,
+        object_id,
+        pprint_value=pprint_value,
+        pending_changes=_pending_changes(
+            active_config.sites,
+            use_git=use_git,
+            local_site=omd_site(),
+            user_id=logged_in_user.id,
+        ),
     )
     search = request.get_str_input("search", "")
     return mode_url(
@@ -2002,7 +2030,17 @@ def save_and_view_action(
     pprint_value: bool,
 ) -> str:
     result_msg = _save_or_edit(
-        all_stages_form_data, mode, _progress_logger, object_id, use_git, pprint_value
+        all_stages_form_data,
+        mode,
+        _progress_logger,
+        object_id,
+        pprint_value=pprint_value,
+        pending_changes=_pending_changes(
+            active_config.sites,
+            use_git=use_git,
+            local_site=omd_site(),
+            user_id=logged_in_user.id,
+        ),
     )
     search = request.get_str_input("search", "")
     return mode_url("notifications", result=result_msg, **({"search": search} if search else {}))
@@ -2013,16 +2051,22 @@ def _save_or_edit(
     mode: QuickSetupActionMode,
     _progress_logger: ProgressLogger,
     object_id: str | None,
-    use_git: bool,
+    *,
     pprint_value: bool,
+    pending_changes: PendingChanges,
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:
-            _save(all_stages_form_data, use_git=use_git, pprint_value=pprint_value)
+            _save(all_stages_form_data, pprint_value=pprint_value, pending_changes=pending_changes)
             result_msg = _("New notification rule successfully created!")
         case QuickSetupActionMode.EDIT:
             assert object_id is not None
-            _edit(all_stages_form_data, object_id, use_git=use_git, pprint_value=pprint_value)
+            _edit(
+                all_stages_form_data,
+                object_id,
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
+            )
             result_msg = _("Notification rule successfully edited!")
         case _:
             raise ValueError(f"Unknown mode {mode}")
@@ -2033,7 +2077,12 @@ def register(edition: Edition, quick_setup_registry: QuickSetupRegistry) -> None
     quick_setup_registry.register(quick_setup_notifications(edition))
 
 
-def _save(all_stages_form_data: ParsedFormData, *, use_git: bool, pprint_value: bool) -> None:
+def _save(
+    all_stages_form_data: ParsedFormData,
+    *,
+    pprint_value: bool,
+    pending_changes: PendingChanges,
+) -> None:
     config_file = NotificationRuleConfigFile()
     notifications_rules = list(config_file.load_for_modification())
     notifications_rules += [
@@ -2042,12 +2091,16 @@ def _save(all_stages_form_data: ParsedFormData, *, use_git: bool, pprint_value: 
     config_file.rule_created(
         notifications_rules,
         pprint_value=pprint_value,
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
 
 
 def _edit(
-    all_stages_form_data: ParsedFormData, object_id: str, *, use_git: bool, pprint_value: bool
+    all_stages_form_data: ParsedFormData,
+    object_id: str,
+    *,
+    pprint_value: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     config_file = NotificationRuleConfigFile()
     notification_rules = list(config_file.load_for_modification())
@@ -2061,7 +2114,10 @@ def _edit(
             break
 
     config_file.rule_updated(
-        rules=notification_rules, rule_number=rule_nr, pprint_value=pprint_value, use_git=use_git
+        rules=notification_rules,
+        rule_number=rule_nr,
+        pprint_value=pprint_value,
+        pending_changes=pending_changes,
     )
 
 
@@ -2107,4 +2163,24 @@ def quick_setup_notifications(edition: Edition) -> QuickSetup:
             ),
         ],
         load_data=load_notifications,
+    )
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
     )

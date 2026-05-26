@@ -4,10 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { useMswWorker } from '@ucl/_ucl/composables/useMswWorker'
 import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { HttpResponse, bypass, http, passthrough } from 'msw'
-import { setupWorker } from 'msw/browser'
-import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
+import { ref } from 'vue'
 
 import { configEntityAPI } from '@/components/user-input/CmkConfigurationEntityDropdown'
 
@@ -121,21 +121,9 @@ const handlers = [
     return passthrough()
   })
 ]
-const worker = setupWorker(...handlers)
-
-onBeforeMount(async () => {
-  await worker.start()
-  await loadSpec()
-  mockLoaded.value = true
-})
-
-onBeforeUnmount(() => {
-  worker.stop()
-})
+const { mockLoaded } = useMswWorker(handlers, { afterStart: loadSpec })
 
 const data = ref<string | null>(null)
-
-const mockLoaded = ref<boolean>(false)
 const username = ref<string>('cmkadmin')
 const password = ref<string>('cmk')
 const site = ref<string>('heute')

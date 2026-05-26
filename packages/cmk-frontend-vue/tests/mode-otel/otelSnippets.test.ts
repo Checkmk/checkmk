@@ -281,7 +281,7 @@ describe('buildCollectorSnippets', () => {
       eventConsole: false
     }
 
-    it('renders 0.0.0.0:4318 for an http exporter in default_ipv4 mode', () => {
+    it('renders <REPLACE_ME>:4318 for an http exporter in default_ipv4 mode', () => {
       const { exporters } = buildCollectorSnippets({
         ...baseState,
         httpInfo: {
@@ -290,10 +290,13 @@ describe('buildCollectorSnippets', () => {
         },
         grpcInfo: null
       })
-      expect(exporters).toContain('endpoint: 0.0.0.0:4318')
+      expect(exporters).toContain(
+        "endpoint: <REPLACE_ME>:4318 # address of the Checkmk site's server"
+      )
+      expect(exporters).not.toContain('0.0.0.0')
     })
 
-    it('renders [::]:4318 for an http exporter in default_ipv6 mode', () => {
+    it('renders <REPLACE_ME>:4318 for an http exporter in default_ipv6 mode', () => {
       const { exporters } = buildCollectorSnippets({
         ...baseState,
         httpInfo: {
@@ -302,10 +305,13 @@ describe('buildCollectorSnippets', () => {
         },
         grpcInfo: null
       })
-      expect(exporters).toContain('endpoint: [::]:4318')
+      expect(exporters).toContain(
+        "endpoint: <REPLACE_ME>:4318 # address of the Checkmk site's server"
+      )
+      expect(exporters).not.toContain('[::]')
     })
 
-    it('renders the gRPC default port 4317 for a grpc exporter in default mode', () => {
+    it('renders <REPLACE_ME>:4317 for a grpc exporter in default_ipv4 mode', () => {
       const { exporters } = buildCollectorSnippets({
         ...baseState,
         httpInfo: null,
@@ -314,7 +320,10 @@ describe('buildCollectorSnippets', () => {
           endpoint: { socketAddressType: 'default_ipv4', address: '', port: undefined }
         }
       })
-      expect(exporters).toContain('endpoint: 0.0.0.0:4317')
+      expect(exporters).toContain(
+        "endpoint: <REPLACE_ME>:4317 # address of the Checkmk site's server"
+      )
+      expect(exporters).not.toContain('0.0.0.0')
       expect(exporters).not.toContain(':4318')
     })
 
@@ -328,6 +337,53 @@ describe('buildCollectorSnippets', () => {
         grpcInfo: null
       })
       expect(service).toContain('exporters: [..., otlphttp/checkmk]')
+    })
+  })
+
+  describe('cloud endpoint override', () => {
+    const baseExporter: Omit<ExporterConfig, 'endpoint'> = {
+      tlsEnabled: false,
+      auth: authOn,
+      eventConsole: false
+    }
+    const cloudGrpcConfig: ExporterConfig = {
+      ...baseExporter,
+      endpoint: { socketAddressType: 'default_ipv4', address: '', port: undefined },
+      overrideEndpoint: 'my-tenant.otel.example.com:4317',
+      tlsEnabled: true,
+      tlsSimple: true
+    }
+
+    it('uses overrideEndpoint verbatim instead of resolving from EndpointConfig', () => {
+      const { exporters } = buildCollectorSnippets({
+        ...baseState,
+        httpInfo: null,
+        grpcInfo: cloudGrpcConfig
+      })
+      expect(exporters).toContain('endpoint: my-tenant.otel.example.com:4317')
+      expect(exporters).not.toContain('0.0.0.0')
+      expect(exporters).not.toContain('<REPLACE_ME>')
+    })
+
+    it('renders insecure: false without server_name_override when tlsSimple is true', () => {
+      const { exporters } = buildCollectorSnippets({
+        ...baseState,
+        httpInfo: null,
+        grpcInfo: cloudGrpcConfig
+      })
+      expect(exporters).toContain('insecure: false')
+      expect(exporters).not.toContain('server_name_override')
+      expect(exporters).not.toContain('ca_pem')
+    })
+
+    it('renders insecure: true when tlsSimple is true but tlsEnabled is false', () => {
+      const { exporters } = buildCollectorSnippets({
+        ...baseState,
+        httpInfo: null,
+        grpcInfo: { ...cloudGrpcConfig, tlsEnabled: false }
+      })
+      expect(exporters).toContain('insecure: true')
+      expect(exporters).not.toContain('server_name_override')
     })
   })
 

@@ -38,6 +38,7 @@ from cmk.gui.watolib.automations import (
     remote_automation_config_from_site_config,
 )
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.utils.automation_config import RemoteAutomationConfig
 
 # Callback for dashboard migration — injected at startup from
@@ -139,6 +140,7 @@ def _synchronize_profiles_to_sites(
                     user_id=None,
                     sites=[result.site_id],
                     need_restart=False,
+                    domains=[ConfigDomainCore()],
                     use_git=use_git,
                 )
 
@@ -211,6 +213,7 @@ def handle_ldap_sync_finished(
             action_name="edit-users",
             text="<br>".join(changes),
             user_id=None,
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
 

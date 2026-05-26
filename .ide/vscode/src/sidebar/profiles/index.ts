@@ -6,6 +6,7 @@
 import { log } from '../../core/log'
 import * as profileManager from '../../profiles/profileManager'
 import { getNonce, wrap } from '../html'
+import { getProfileSeverity } from '../overview/domainSummary'
 import type { SectionContext, StateCache, WebviewMessage } from '../types'
 import sectionCss from './style.css'
 
@@ -39,9 +40,31 @@ export function render(state: StateCache): string {
         <span class="card-badge">…</span>
       </div>`
       }
-      const cls = p.active && p.hasIssues ? 'active issues' : p.active ? 'active' : 'inactive'
-      const icon = p.active && p.hasIssues ? '&#9888;' : p.active ? '&#10003;' : '&#9675;'
-      const badge = p.active && p.hasIssues ? 'STALE' : p.active ? 'ON' : 'OFF'
+      // Severity from the cockpit's view: builds + settings drift attributable to this profile.
+      const sev = getProfileSeverity(state, p.name)
+      const active = p.active
+      const sevClass = sev === 'critical' ? 'sev-critical' : sev === 'warning' ? 'sev-warning' : ''
+      const cls = `${active ? 'active' : 'inactive'} ${sevClass}`.trim()
+      const icon =
+        sev === 'critical'
+          ? '&#10007;'
+          : sev === 'warning'
+            ? '&#9888;'
+            : active
+              ? '&#10003;'
+              : '&#9675;'
+      const badge =
+        sev === 'critical'
+          ? active
+            ? 'CRIT'
+            : 'CRIT · OFF'
+          : sev === 'warning'
+            ? active
+              ? 'WARN'
+              : 'WARN · OFF'
+            : active
+              ? 'ON'
+              : 'OFF'
       return `<div class="card profile ${cls}" data-action="toggle-profile" data-id="${p.name}">
       <span class="card-icon">${icon}</span>
       <span class="card-label">${p.label} <i>(${p.fullName})</i></span>

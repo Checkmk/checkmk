@@ -38,19 +38,26 @@ from cmk.gui.page_menu import (
 from cmk.gui.site_config import site_is_local
 from cmk.gui.table import Table
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
-from cmk.gui.user_sites import get_configured_site_choices
+from cmk.gui.user_sites import activation_sites, get_configured_site_choices
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.wato import SimpleEditMode, SimpleListMode, SimpleModeType
 from cmk.gui.wato._group_selection import sorted_contact_group_choices
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.passwords import load_passwords, remove_password
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.livestatus_client import SiteConfiguration
 from cmk.rulesets.internal.form_specs import (
     MultipleChoiceElementExtended,
@@ -472,7 +479,8 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
         self._show_table(
             self._filter_for_connector_type(
                 self._store.filter_editable_entries(self._store.load_for_reading())
-            )
+            ),
+            table_row_limit=config.table_row_limit,
         )
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
@@ -601,34 +609,34 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
                 % (entries[ident]["title"], html.render_ul(content)),
             )
 
-        self._delete_passwords(entries[ident], config)
+        pending_changes = PendingChanges(
+            activation_sites=activation_sites(config.sites),
+            local_site=omd_site(),
+            acting_user=user.id,
+            store=PendingChangesStore(),
+            hooks=(
+                make_audit_log_change_hook(use_git=config.wato_use_git),
+                sidebar_reload_change_hook,
+                index_update_change_hook,
+            ),
+        )
+        self._delete_passwords(entries[ident], config, pending_changes)
         delete_oauth2_connection(
             ident,
-            user_id=user.id,
             pprint_value=config.wato_pprint_config,
-            use_git=config.wato_use_git,
+            pending_changes=pending_changes,
         )
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
-    def _delete_passwords(self, entry: OAuth2Connection, config: Config) -> None:
-        remove_password(
-            entry["client_secret"][2][0],
-            user_id=user.id,
-            pprint_value=config.wato_pprint_config,
-            use_git=config.wato_use_git,
-        )
-        remove_password(
-            entry["access_token"][2][0],
-            user_id=user.id,
-            pprint_value=config.wato_pprint_config,
-            use_git=config.wato_use_git,
-        )
-        remove_password(
-            entry["refresh_token"][2][0],
-            user_id=user.id,
-            pprint_value=config.wato_pprint_config,
-            use_git=config.wato_use_git,
-        )
+    def _delete_passwords(
+        self, entry: OAuth2Connection, config: Config, pending_changes: PendingChanges
+    ) -> None:
+        for key in ("client_secret", "access_token", "refresh_token"):
+            remove_password(
+                entry[key][2][0],
+                pprint_value=config.wato_pprint_config,
+                pending_changes=pending_changes,
+            )
 
 
 class ModeMicrosoftEntraIdConnections(ModeOAuth2Connections):

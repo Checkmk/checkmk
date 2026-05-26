@@ -98,30 +98,6 @@ class MoveToSpecificRule(_BaseMoveTo):
 
 
 class MoveRuleTo(OneOfSchema):
-    """
-
-    Examples:
-
-        >>> from cmk.gui.script_helpers import application_and_request_context
-
-        >>> schema = MoveRuleTo()
-        >>> from cmk.gui.livestatus_utils.testing import mock_site
-        >>> with mock_site(), application_and_request_context():
-        ...     schema.load({"position": "top_of_folder", "folder": "/"})
-        {'position': 'top_of_folder', 'folder': Folder('', 'Main')}
-
-        >>> schema.load({"position": "after_specific_rule",
-        ...              "rule_id": "f8b74720-a454-4242-99c4-62994ef0f2bf"})
-        {'position': 'after_specific_rule', 'rule_id': 'f8b74720-a454-4242-99c4-62994ef0f2bf'}
-
-        >>> schema.load({"position": "foo"})
-        Traceback (most recent call last):
-        ...
-        marshmallow.exceptions.ValidationError: {'position': ['Unsupported value: foo']}
-
-
-    """
-
     type_field = "position"
     type_field_remove = False
     type_schemas = {
@@ -805,41 +781,7 @@ class InputConditions(Conditions):
 
 
 class RuleExtensions(base.BaseSchema):
-    """Serializes the 'extensions' part of the Rule Domain Object.
-
-        Examples:
-
-            >>> ext = RuleExtensions()
-            >>> from cmk.gui.script_helpers import application_and_request_context
-            >>> from cmk.gui.livestatus_utils.testing import mock_site
-            >>> with mock_site(), application_and_request_context():
-            ...     ext.load({
-            ...        'folder': '/',
-            ...     })
-            {'folder': Folder('', 'Main')}
-
-            >>> with mock_site(), application_and_request_context():
-            ...     rv = ext.load({
-            ...        'folder': '/',
-            ...        'conditions': {
-            ...            'service_description': {'match_on': ['foo'],
-            ...                                               'operator': 'none_of',},
-            ...            'host_tags': [{'key': 'criticality', 'operator': 'is', 'value': 'prod'}],
-            ...        }
-            ...     })
-            ...     rv
-            {'folder': Folder('', 'Main'), \
-'conditions': {\
-'host_tags': {'criticality': 'prod'},\
- 'service_description': {'$nor': [{'$regex': 'foo'}]}\
-}}
-
-            >>> ext.dump(rv)
-            {'folder': '/', 'conditions': {\
-'host_tags': [{'key': 'criticality', 'operator': 'is', 'value': 'prod'}], \
-'service_description': {'match_on': ['foo'], 'operator': 'none_of'}}}
-
-        """
+    """Serializes the 'extensions' part of the Rule Domain Object."""
 
     cast_to_dict = True
 
@@ -893,48 +835,7 @@ class RuleCollection(response_schemas.DomainObjectCollection):
 
 
 class UpdateRuleObject(base.BaseSchema):
-    """A schema to validate the values coming from the API clients.
-
-    Examples:
-
-        >>> s = UpdateRuleObject()
-        >>> from cmk.gui.script_helpers import application_and_request_context
-        >>> from cmk.gui.livestatus_utils.testing import mock_site
-        >>> with mock_site(), application_and_request_context():
-        ...     rv = s.load({
-        ...         'properties': {'disabled': False},
-        ...         'conditions': {
-        ...              'host_name': {
-        ...                  'match_on': ['example.com', 'heute'],
-        ...                  'operator': 'one_of',
-        ...              },
-        ...              'host_label_groups': [
-        ...                   {"operator": "and", "label_group": [{"operator": "and", "label": "os:windows"}]},
-        ...              ],
-        ...              'host_tags': [
-        ...                  {'key': 'criticality', 'operator': 'is_not', 'value': 'prod'},
-        ...                  {'key': 'foo', 'operator': 'is_not', 'value': 'testing'},
-        ...              ],
-        ...         },
-        ...         'value_raw': '''{"ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"], "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"]}''',
-        ...     })
-        >>> rv
-        {'properties': {'disabled': False}, \
-'value_raw': {'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}, \
-'conditions': {\
-'host_name': ['example.com', 'heute'], \
-'host_tags': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
-'host_label_groups': [{'operator': 'and', 'label_group': [{'operator': 'and', 'label': 'os:windows'}]}]}}
-
-        >>> s.dump(rv)
-        {'properties': {'disabled': False}, \
-'value_raw': "{'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}", \
-'conditions': {\
-'host_name': {'match_on': ['example.com', 'heute'], 'operator': 'one_of'}, \
-'host_tags': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
-'host_label_groups': [{'operator': 'and', 'label_group': [{'operator': 'and', 'label': 'os:windows'}]}]}}
-
-    """
+    """A schema to validate the values coming from the API clients."""
 
     cast_to_dict = True
 
@@ -978,54 +879,7 @@ class UpdateRuleObject(base.BaseSchema):
 
 
 class InputRuleObject(UpdateRuleObject):
-    """A schema to validate the values coming from the API clients.
-
-    Examples:
-
-        >>> s = InputRuleObject()
-        >>> from cmk.gui.script_helpers import application_and_request_context
-        >>> from cmk.gui.livestatus_utils.testing import mock_site
-        >>> with mock_site(), application_and_request_context():
-        ...     rv = s.load({
-        ...         'folder': '~',
-        ...         'ruleset': 'host',
-        ...         'properties': {'disabled': False},
-        ...         'conditions': {
-        ...              'host_name': {
-        ...                  'match_on': ['example.com', 'heute'],
-        ...                  'operator': 'one_of',
-        ...              },
-        ...              'host_label_groups': [
-        ...                   {"operator": "and", "label_group": [{"operator": "not", "label": "foo:bar"}]},
-        ...              ],
-        ...              'host_tags': [
-        ...                  {'key': 'criticality', 'operator': 'is_not', 'value': 'prod'},
-        ...                  {'key': 'foo', 'operator': 'is_not', 'value': 'testing'},
-        ...              ],
-        ...         },
-        ...         'value_raw': '''{"ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"], "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"]}''',
-        ...     })
-        >>> rv
-        {'properties': {'disabled': False}, \
-'value_raw': {'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}, \
-'conditions': {\
-'host_name': ['example.com', 'heute'], \
-'host_tags': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
-'host_label_groups': [{'operator': 'and', 'label_group': [{'operator': 'not', 'label': 'foo:bar'}]}]}, \
-'ruleset': 'host', 'folder': Folder('', 'Main')}
-        >>> rv['folder'].path()
-        ''
-
-        >>> s.dump(rv)
-        {'properties': {'disabled': False}, \
-'value_raw': "{'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}", \
-'conditions': {\
-'host_name': {'match_on': ['example.com', 'heute'], 'operator': 'one_of'}, \
-'host_tags': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
-'host_label_groups': [{'operator': 'and', 'label_group': [{'operator': 'not', 'label': 'foo:bar'}]}]}, \
-'ruleset': 'host', 'folder': '/'}
-
-    """
+    """A schema to validate the values coming from the API clients."""
 
     cast_to_dict = True
 

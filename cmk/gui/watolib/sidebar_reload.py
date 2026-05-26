@@ -16,3 +16,7 @@ def need_sidebar_reload() -> None:
 
 def is_sidebar_reload_needed() -> bool:
     return "need_sidebar_reload" in g and g.need_sidebar_reload
+
+
+def sidebar_reload_change_hook(_event: object) -> None:
+    need_sidebar_reload()

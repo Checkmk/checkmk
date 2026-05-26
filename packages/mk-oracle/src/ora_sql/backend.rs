@@ -202,6 +202,7 @@ impl OraDbEngine for JdbcEngine {
         Box::new(self.clone())
     }
 }
+
 #[derive(Debug)]
 enum EngineType {
     Std,

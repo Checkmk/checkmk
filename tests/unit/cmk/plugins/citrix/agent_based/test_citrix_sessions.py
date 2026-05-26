@@ -23,7 +23,7 @@ from cmk.plugins.citrix.agent_based.citrix_sessions import (
     [
         (
             [["sessions", "1"], ["active_sessions", "1"], ["inactive_sessions", "0"]],
-            [Service(parameters={"total": (60, 65), "active": (60, 65), "inactive": (10, 15)})],
+            [Service()],
         ),
     ],
 )

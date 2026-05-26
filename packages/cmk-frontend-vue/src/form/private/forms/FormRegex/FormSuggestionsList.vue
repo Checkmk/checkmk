@@ -15,6 +15,7 @@ import { immediateWatch } from '@/lib/watch'
 import CmkHtml from '@/components/CmkHtml.vue'
 import type { Response } from '@/components/CmkSuggestions/suggestions'
 import { ErrorResponse, type Suggestion } from '@/components/CmkSuggestions/suggestions'
+import { flattenSuggestions } from '@/components/CmkSuggestions/types'
 
 type SuggestionsCallbackFiltered = {
   type: 'callback-filtered'
@@ -126,7 +127,7 @@ immediateWatch(
       error.value = result.error
     } else {
       error.value = ''
-      filteredSuggestions.value = result.choices
+      filteredSuggestions.value = flattenSuggestions(result.choices)
       highlightedOption.value = null
       selectSiblingElement(0)
     }

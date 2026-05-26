@@ -134,7 +134,6 @@ def get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
             customer="provider",
             url_prefix="/unit_remote_1/",
             status_host=None,
-            user_sync=None,
             socket=(
                 "tcp",
                 NetworkSocketDetails(
@@ -164,7 +163,6 @@ def get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
             customer="provider",
             url_prefix="/unit_remote_1/",
             status_host=None,
-            user_sync=None,
             socket=(
                 "tcp",
                 NetworkSocketDetails(
@@ -224,7 +222,6 @@ def get_activation_manager(
                     timeout=10,
                     user_login=True,
                     proxy=None,
-                    user_sync=None,
                     is_trusted=False,
                 ),
                 remote_site: get_site_configuration(remote_site),

@@ -7,8 +7,9 @@ mod common;
 
 #[cfg(feature = "build_system_bazel")]
 extern crate common;
-
 use mk_sql::config::ms_sql::Discovery;
+#[cfg(windows)]
+use mk_sql::config::ms_sql::{Authentication, Connection};
 use mk_sql::ms_sql::client::ManageEdition;
 use mk_sql::platform;
 #[cfg(windows)]
@@ -1617,6 +1618,21 @@ fn test_get_instances() {
 }
 
 #[cfg(windows)]
+fn make_endpoint(trust_server_certificate: bool) -> Endpoint {
+    let conn_str = format!(
+        "connection:\n  trust_server_certificate: {} ",
+        if trust_server_certificate {
+            "yes"
+        } else {
+            "no"
+        }
+    );
+    let y = YamlLoader::load_from_str(&conn_str).expect("fix test string!")[0].clone();
+    let conn = Connection::from_yaml(&y, None).unwrap_or_default().unwrap();
+    Endpoint::new(&Authentication::default(), &conn)
+}
+
+#[cfg(windows)]
 #[test]
 fn test_odbc() {
     use mk_sql::types::HostName;
@@ -1627,7 +1643,7 @@ fn test_odbc() {
         &InstanceName::from("SQLEXPRESS_NAME"),
         Some("master"),
         None,
-        true,
+        &make_endpoint(true),
     );
     let r = odbc::execute(
         &s,
@@ -1659,7 +1675,7 @@ fn test_odbc_timeout() {
         &InstanceName::from("SQLEXPRESS_XX"),
         Some("master"),
         None,
-        true,
+        &make_endpoint(true),
     );
     let start = std::time::Instant::now();
     let r = odbc::execute(
@@ -1691,9 +1707,14 @@ async fn test_odbc_high_level() {
         )
         .unwrap()
         .unwrap();
-        create_odbc_client(&c, None, &instance_name, None)
-            .await
-            .unwrap()
+        create_odbc_client(
+            &Endpoint::new(&Authentication::default(), &c),
+            None,
+            &instance_name,
+            None,
+        )
+        .await
+        .unwrap()
     }
 
     async fn get_props(name: &str, trust: bool) -> Option<SqlInstanceProperties> {

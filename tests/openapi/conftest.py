@@ -13,7 +13,7 @@ import logging
 import os
 import queue
 from collections.abc import Generator, Iterator
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -37,7 +37,6 @@ import cmk.gui.watolib.password_store  # noqa: E402
 from cmk.ccc.user import UserId  # noqa: E402
 from cmk.gui import login  # noqa: E402
 from cmk.gui.config import Config  # noqa: E402
-from cmk.gui.livestatus_utils.testing import mock_livestatus  # noqa: E402
 from cmk.gui.permissions import permission_registry  # noqa: E402
 from cmk.gui.utils.roles import UserPermissions  # noqa: E402
 from cmk.licensing.handler import (  # noqa: E402
@@ -46,7 +45,10 @@ from cmk.licensing.handler import (  # noqa: E402
     NotificationHandler,
     UserEffect,
 )
-from cmk.livestatus_client.testing import MockLiveStatusConnection  # noqa: E402
+from cmk.livestatus_client.testing import (  # noqa: E402
+    mock_livestatus_communication,
+    MockLiveStatusConnection,
+)
 from tests.testlib.gui.common_fixtures import (  # noqa: E402
     create_aut_user_auth_wsgi_app,
     create_flask_app,
@@ -280,7 +282,13 @@ def request_context(flask_app: Flask) -> Iterator[None]:
 @pytest.fixture(name="mock_livestatus")
 def fixture_mock_livestatus() -> Iterator[MockLiveStatusConnection]:
     """UI specific mock_livestatus fixture (overrides the Layer-1 generic one)."""
-    with mock_livestatus() as mock_live:
+    with (
+        mock_livestatus_communication() as mock_live,
+        patch(
+            "cmk.gui.sites._get_enabled_and_disabled_sites",
+            new=mock_live.enabled_and_disabled_sites,
+        ),
+    ):
         yield mock_live
 
 

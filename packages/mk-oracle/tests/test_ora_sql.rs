@@ -1410,7 +1410,11 @@ fn test_detect_host_runtime() {
         std::env::var("ORACLE_HOME").is_ok_and(|v| !v.is_empty())
     };
     if local_exists {
-        assert!(detect_host_runtime().is_some());
+        assert!(
+            detect_host_runtime().is_some(),
+            "{:?}",
+            SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL)
+        );
     } else {
         assert!(detect_host_runtime().is_none());
     }
@@ -1696,7 +1700,7 @@ fn validate_permissions(_file: &std::path::Path, _mode: u32) {}
 fn test_create_plugin_sync() {
     let plugin = tempfile::tempdir().unwrap();
     let plugin_dir = plugin.path();
-    let ret = create_plugin("a", plugin_dir, None);
+    let ret = create_plugin("a", plugin_dir, None, "--filter sync");
     assert!(plugin_dir.join("a").is_file());
     validate_permissions(&plugin_dir.join("a"), 0o755);
     let content = std::fs::read_to_string(plugin_dir.join("a")).unwrap();
@@ -1706,13 +1710,25 @@ fn test_create_plugin_sync() {
 
 #[cfg(unix)]
 #[test]
+fn test_create_plugin_async_custom_metrics() {
+    let lib_dir = tempfile::tempdir().unwrap();
+    let plugin_dir = lib_dir.path().join("plugins").to_owned();
+    std::fs::create_dir_all(&plugin_dir).unwrap();
+    let ret = create_plugin("a", &plugin_dir, Some(300), "--filter async-custom-metrics");
+    assert!(ret);
+    let content = std::fs::read_to_string(plugin_dir.join("300").join("a")).unwrap();
+    assert!(content.ends_with(" --filter async-custom-metrics\n"));
+}
+
+#[cfg(unix)]
+#[test]
 fn test_create_plugin_async() {
     let lib_dir = tempfile::tempdir().unwrap();
     let plugin_dir = lib_dir.path().join("plugins").to_owned();
-    let ret = create_plugin("a", &plugin_dir, Some(100));
+    let ret = create_plugin("a", &plugin_dir, Some(100), "--filter async");
     assert!(!ret); // no plugins, no creation
     std::fs::create_dir_all(&plugin_dir).unwrap();
-    let ret = create_plugin("a", &plugin_dir, Some(100));
+    let ret = create_plugin("a", &plugin_dir, Some(100), "--filter async");
     assert!(ret);
 
     let async_plugin_dir_100 = plugin_dir.join("100");
@@ -1722,7 +1738,7 @@ fn test_create_plugin_async() {
     assert!(content.ends_with(" --filter async\n"));
     validate_permissions(&plugin_100_path, 0o755);
 
-    let ret = create_plugin("a", &plugin_dir, Some(200));
+    let ret = create_plugin("a", &plugin_dir, Some(200), "--filter async");
     assert!(ret);
 
     let async_plugin_dir_200 = plugin_dir.join("200");
@@ -1737,16 +1753,16 @@ fn test_create_plugin_async() {
 fn test_create_plugin_async() {
     let lib_dir = tempfile::tempdir().unwrap();
     let plugin_dir = lib_dir.path().join("plugins").to_owned();
-    let ret = create_plugin("a", &plugin_dir, Some(100));
+    let ret = create_plugin("a", &plugin_dir, Some(100), "--filter async");
     assert!(!ret); // no plugins dir no success
 
     std::fs::create_dir_all(&plugin_dir).unwrap();
-    let ret = create_plugin("a", &plugin_dir, Some(100));
+    let ret = create_plugin("a", &plugin_dir, Some(100), "--filter async");
     assert!(!ret); // no bakery dir no success
 
     let bakery_dir = lib_dir.path().join("bakery").to_owned();
     std::fs::create_dir_all(&bakery_dir).unwrap();
-    let ret = create_plugin("a", &plugin_dir, Some(100));
+    let ret = create_plugin("a", &plugin_dir, Some(100), "--filter async");
     assert!(ret);
 
     assert!(plugin_dir.join("a").is_file());

@@ -18,8 +18,6 @@ from typing import Literal
 
 import cmk.utils.paths
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.version import edition
-from cmk.gui import main_modules
 from cmk.utils.certs import (
     agent_root_ca_path,
     cert_dir,
@@ -27,6 +25,12 @@ from cmk.utils.certs import (
     initialize_site_ca,
     initialize_site_certificate,
     SiteCA,
+)
+
+from .cmkcert_rotate import (
+    finalize_rotate_site_ca_certificate,
+    rotate_site_certificate,
+    start_rotate_site_ca_certificate,
 )
 
 CertificateType = Literal["site", "site-ca", "agent-ca"]
@@ -160,10 +164,6 @@ def _run_rotate(
     expiry: int | None,
     finalize: bool,
 ) -> None:
-    # we import the expensive GUI module only if we really need it
-    main_modules.register(edition(omd_root))
-
-    import cmk.gui.cmkcert.cmkcert_rotate as rotate
 
     if (
         site_id == omd_site()
@@ -174,21 +174,21 @@ def _run_rotate(
     match target_certificate:
         case "site-ca":
             if finalize:
-                rotate.finalize_rotate_site_ca_certificate(
+                finalize_rotate_site_ca_certificate(
                     omd_root=omd_root,
                     site_id=site_id,
                     expiry=expiry,
                     key_size=4096,
                 )
             else:
-                rotate.start_rotate_site_ca_certificate(
+                start_rotate_site_ca_certificate(
                     omd_root=omd_root,
                     site_id=site_id,
                     expiry=expiry,
                     key_size=4096,
                 )
         case "site":
-            rotate.rotate_site_certificate(
+            rotate_site_certificate(
                 omd_root=omd_root,
                 site_id=site_id,
                 expiry=expiry,

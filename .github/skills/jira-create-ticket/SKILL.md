@@ -131,7 +131,17 @@ Evaluate the results:
 - If no epic is a good match, or the ticket is clearly standalone component work (small bug fix, minor maintenance, tech debt), recommend no epic link.
 - When in doubt, lean towards no link — it's easier to add a link later than to remove a wrong one.
 
-### 5. MANDATORY: Verify with the user before creating
+### 5. MANDATORY FOR BUG TICKETS: ask how the bug was detected
+
+This step applies only when the issue type is **Bug**; skip it otherwise.
+
+The `Bug detection` field records where the bug was caught. Use `AskUserQuestion` to ask the user, offering the options listed in bug_detection.md as bullet points.
+
+Any selected value other than "None" is later passed to the create script via `--bug-detection`.
+
+Always ask the user. Do not pick a default unless the user has explicitly told you which option to use.
+
+### 6. MANDATORY: Verify with the user before creating
 
 Present a summary of ALL fields to the user using AskUserQuestion and ask for confirmation. The user MUST approve the ticket content before creation. Show:
 
@@ -142,12 +152,13 @@ Present a summary of ALL fields to the user using AskUserQuestion and ask for co
 - Component (note if auto-guessed)
 - Developer Team (note if auto-guessed)
 - Epic link (show the epic key + summary if suggested, or "None — standalone component work" if no link)
+- Bug detection (Bug tickets only)
 - Priority (if set)
 - Parent (if set)
 
 If the user wants changes, incorporate them and verify again.
 
-### 6. Create the ticket
+### 7. Create the ticket
 
 Once confirmed, run:
 
@@ -160,6 +171,7 @@ Once confirmed, run:
   [--component "<component>"] \
   [--developer-team "<team>"] \
   [--link-epic "<epic key>"] \
+  [--bug-detection "<value>"] \
   [--priority "<priority>"] \
   [--parent "<parent>"]
 ```

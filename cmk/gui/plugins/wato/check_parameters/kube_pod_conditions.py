@@ -55,6 +55,12 @@ def _parameter_valuespec() -> Dictionary:
                 "resizeinprogress",
                 age_levels_dropdown(_("Time until alert, if RESIZEINPROGRESS condition is true")),
             ),
+            (
+                "allcontainersrestarting",
+                age_levels_dropdown(
+                    _("Time until alert, if ALLCONTAINERSRESTARTING condition is true")
+                ),
+            ),
         ],
         optional_keys=[
             "initialized",
@@ -63,6 +69,7 @@ def _parameter_valuespec() -> Dictionary:
             "ready",
             "resizepending",
             "resizeinprogress",
+            "allcontainersrestarting",
         ],
     )
 

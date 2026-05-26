@@ -214,9 +214,8 @@ describe('CloneDashboardWizard', () => {
 
   describe('Dashboard naming based on owner type', () => {
     it('should call useDashboardGeneralSettings with original id for BUILT_IN dashboards', async () => {
-      const { useDashboardGeneralSettings } = await import(
-        '@/dashboard/components/Wizard/components/DashboardSettings/composables/useDashboardGeneralSettings'
-      )
+      const { useDashboardGeneralSettings } =
+        await import('@/dashboard/components/Wizard/components/DashboardSettings/composables/useDashboardGeneralSettings')
       await renderWizard({
         referenceDashboardId: 'built_in_dash',
         referenceDashboardType: DashboardOwnerType.BUILT_IN
@@ -230,9 +229,8 @@ describe('CloneDashboardWizard', () => {
     })
 
     it('should call useDashboardGeneralSettings with _clone suffix id for CUSTOM dashboards', async () => {
-      const { useDashboardGeneralSettings } = await import(
-        '@/dashboard/components/Wizard/components/DashboardSettings/composables/useDashboardGeneralSettings'
-      )
+      const { useDashboardGeneralSettings } =
+        await import('@/dashboard/components/Wizard/components/DashboardSettings/composables/useDashboardGeneralSettings')
       await renderWizard({
         referenceDashboardId: 'custom_dash',
         referenceDashboardType: DashboardOwnerType.CUSTOM

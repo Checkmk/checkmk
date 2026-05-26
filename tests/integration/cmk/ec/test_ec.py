@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from cmk.ccc.user import UserId
 from cmk.ec.config import (  # astrein: disable=cmk-module-layer-violation
     ECRulePackSpec,
     EventLimit,
@@ -101,19 +102,21 @@ def _get_ec_rule_packs(
 def _get_replication_change() -> ChangeSpec:
     """Replication change to inject in the test-site"""
     return ChangeSpec(
-        id="",
-        action_name="edit-rule-pack",
-        text="Modified rule pack test",
-        object=None,
-        user_id="cmkadmin",
-        domains=["ec"],
-        time=0,
-        need_sync=True,
-        need_restart=True,
-        domain_settings={},
-        prevent_discard_changes=False,
-        diff_text=None,
-        has_been_activated=False,
+        {
+            "id": "",
+            "action_name": "edit-rule-pack",
+            "text": "Modified rule pack test",
+            "object": None,
+            "user_id": UserId("cmkadmin"),
+            "domains": ["ec"],
+            "time": 0,
+            "force_sync": True,
+            "force_restart": True,
+            "force_apache_reload": False,
+            "domain_settings": {},
+            "prevent_discard_changes": False,
+            "diff_text": None,
+        }
     )
 
 

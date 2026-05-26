@@ -11,7 +11,7 @@ import copy
 import json
 import re
 import time
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any, NamedTuple, TypedDict
 
@@ -23,6 +23,8 @@ from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.watolib.appendstore import ABCAppendStore
 from cmk.gui.watolib.objref import ObjectRef
 from cmk.gui.watolib.paths import wato_var_dir
+
+from .pending_changes import ChangeEvent
 
 LogMessage = str | HTML | LazyString
 
@@ -198,6 +200,20 @@ def _log_entry(
         diff_text=diff_text,
     )
     AuditLogStore().append(entry)
+
+
+def make_audit_log_change_hook(*, use_git: bool) -> Callable[[ChangeEvent], None]:
+    def hook(event: ChangeEvent) -> None:
+        log_audit(
+            action=event.request.action_name,
+            message=event.request.text,
+            object_ref=event.request.object_ref,
+            user_id=event.user_id,
+            use_git=use_git,
+            diff_text=event.request.diff_text,
+        )
+
+    return hook
 
 
 def build_audit_log_filter(options: AuditLogFilterRaw) -> AuditLogFilter:

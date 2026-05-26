@@ -10,6 +10,10 @@ py_library(
         "authenticate.py",
         "fetch_crash_data.py",
     ],
+    visibility = [
+        "//.claude/skills/crash_owner_rollup:__pkg__",
+        "//.github/skills/crash_owner_rollup:__pkg__",
+    ],
 )
 
 py_binary(

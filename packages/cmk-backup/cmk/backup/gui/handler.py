@@ -598,14 +598,12 @@ class ModeBackup(WatoMode[object]):
                     ],
                 },
             )
-        self._show_job_list(backup_jobs)
+        self._show_job_list(backup_jobs, table_row_limit=config.table_row_limit)
 
-    def _show_job_list(self, backup_jobs: Sequence[Job]) -> None:
+    def _show_job_list(self, backup_jobs: Sequence[Job], *, table_row_limit: int) -> None:
         html.h3(_("Jobs"))
 
-        with table_element(
-            sortable=False, searchable=False, limit=active_config.table_row_limit
-        ) as table:
+        with table_element(sortable=False, searchable=False, limit=table_row_limit) as table:
             for nr, job in enumerate(backup_jobs):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
@@ -1707,13 +1705,17 @@ class Target:
         return self._target_type().title()
 
 
-def _show_site_and_system_targets(backup_config: BackupConfig) -> None:
-    _show_target_list(backup_config.site_targets.values(), False)
+def _show_site_and_system_targets(backup_config: BackupConfig, *, table_row_limit: int) -> None:
+    _show_target_list(backup_config.site_targets.values(), False, table_row_limit=table_row_limit)
     if cmk_version.is_cma():
-        _show_target_list(backup_config.cma_system_targets.values(), True)
+        _show_target_list(
+            backup_config.cma_system_targets.values(), True, table_row_limit=table_row_limit
+        )
 
 
-def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
+def _show_target_list(
+    targets: Iterable[Target], targets_are_cma: bool, *, table_row_limit: int
+) -> None:
     html.h2(_("System global targets") if targets_are_cma else _("Targets"))
     if targets_are_cma:
         html.p(
@@ -1722,9 +1724,7 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
             )
         )
 
-    with table_element(
-        sortable=False, searchable=False, limit=active_config.table_row_limit
-    ) as table:
+    with table_element(sortable=False, searchable=False, limit=table_row_limit) as table:
         for nr, target in enumerate(sorted(targets, key=lambda t: t.ident)):
             table.row()
             table.cell("#", css=["narrow nowrap"])
@@ -1835,7 +1835,7 @@ class ModeBackupTargets(WatoMode[object]):
             )
 
     def page(self, config: Config) -> None:
-        _show_site_and_system_targets(BackupConfig.load())
+        _show_site_and_system_targets(BackupConfig.load(), table_row_limit=config.table_row_limit)
 
 
 class ModeEditBackupTarget(WatoMode[object]):
@@ -2422,16 +2422,16 @@ class ModeBackupRestore(WatoMode[object]):
             self._show_restore_progress(config)
 
         elif self._target:
-            self._show_backup_list()
+            self._show_backup_list(table_row_limit=config.table_row_limit)
 
         else:
-            self._show_target_list()
+            self._show_target_list(table_row_limit=config.table_row_limit)
 
-    def _show_target_list(self) -> None:
+    def _show_target_list(self, *, table_row_limit: int) -> None:
         html.p(_("Please choose a target to perform the restore from."))
-        _show_site_and_system_targets(BackupConfig.load())
+        _show_site_and_system_targets(BackupConfig.load(), table_row_limit=table_row_limit)
 
-    def _show_backup_list(self) -> None:
+    def _show_backup_list(self, *, table_row_limit: int) -> None:
         assert self._target is not None
         if self._backups.timed_out:
             html.show_warning(
@@ -2442,9 +2442,7 @@ class ModeBackupRestore(WatoMode[object]):
                 "backups are listed, remove unneeded files "
                 "at the remote target."
             )
-        with table_element(
-            sortable=False, searchable=False, limit=active_config.table_row_limit
-        ) as table:
+        with table_element(sortable=False, searchable=False, limit=table_row_limit) as table:
             for backup_ident, info in sorted(self._backups.backups.items()):
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])

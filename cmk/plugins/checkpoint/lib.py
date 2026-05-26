@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import all_of, any_of, matches, startswith
+from collections.abc import Mapping
+
+from cmk.agent_based.v2 import all_of, any_of, matches, startswith, State
 
 DETECT = all_of(
     any_of(
@@ -17,3 +19,9 @@ DETECT = all_of(
         matches(".1.3.6.1.4.1.2620.1.6.5.1.0", "Gaia"),
     ),
 )
+
+SENSOR_STATUS_TO_CMK_STATUS: Mapping[str, tuple[State, str]] = {
+    "0": (State.OK, "sensor in range"),
+    "1": (State.CRIT, "sensor out of range"),
+    "2": (State.UNKNOWN, "reading error"),
+}

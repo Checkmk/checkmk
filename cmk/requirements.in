@@ -62,7 +62,6 @@ roman
 setproctitle
 setuptools
 setuptools-scm
-snmpsim
 starlette
 urllib3
 uvicorn

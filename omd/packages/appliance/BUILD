@@ -34,7 +34,7 @@ pkg_files(
     attributes = pkg_attributes(
         mode = "0644",
     ),
-    prefix = "lib/python3/cmk/gui/plugins/sidebar",
+    prefix = "lib/python3.13/site-packages/cmk/gui/plugins/sidebar",
     tags = ["manual"],
 )
 
@@ -87,9 +87,8 @@ py_library(
     ],
     deps = [
         "//cmk/gui:config",
-        "//cmk/gui:i18n",
-        "//cmk/gui/htmllib:html",
-        "//cmk/gui/htmllib:tag_rendering",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui:html_toolkit",
         "//cmk/gui/sidebar",
         "//packages/cmk-ccc:version",
     ],

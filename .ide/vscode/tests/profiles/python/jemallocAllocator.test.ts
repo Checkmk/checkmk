@@ -27,11 +27,14 @@ describe('buildWrapperScript', () => {
       '/ws/.venv/bin/dmypy'
     )
     expect(script).toMatch(/^#!\/usr\/bin\/env bash\n/)
+    expect(script).toContain('DMYPY="/ws/.venv/bin/dmypy"')
+    expect(script).toContain('if [ ! -x "$DMYPY" ]; then')
+    expect(script).toContain('dmypy not found')
     expect(script).toContain(
       'export LD_PRELOAD="${LD_PRELOAD:+$LD_PRELOAD:}/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"'
     )
     expect(script).toContain('export PYTHONMALLOC=malloc')
-    expect(script).toContain('exec "/ws/.venv/bin/dmypy" "$@"')
+    expect(script).toContain('exec "$DMYPY" "$@"')
     expect(script).not.toContain('DYLD_INSERT_LIBRARIES')
   })
 
@@ -52,7 +55,8 @@ describe('buildWrapperScript', () => {
     vi.resetModules()
     const { buildWrapperScript } = await import('../../../src/profiles/python/jemallocAllocator')
     const script = buildWrapperScript('/lib/libjemalloc.so.2', '/ws/"quirky"/dmypy')
-    expect(script).toContain('exec "/ws/\\"quirky\\"/dmypy" "$@"')
+    expect(script).toContain('DMYPY="/ws/\\"quirky\\"/dmypy"')
+    expect(script).toContain('exec "$DMYPY" "$@"')
   })
 })
 
@@ -68,18 +72,16 @@ describe('detectJemallocPathAsync', () => {
 
   it('returns null on unsupported platforms', async () => {
     setPlatform('win32')
-    const { detectJemallocPathAsync } = await import(
-      '../../../src/profiles/python/jemallocAllocator'
-    )
+    const { detectJemallocPathAsync } =
+      await import('../../../src/profiles/python/jemallocAllocator')
     expect(await detectJemallocPathAsync()).toBeNull()
   })
 
   it('returns null on Linux when ldconfig yields no match', async () => {
     setPlatform('linux')
     vi.doMock('../../../src/core/shell', () => ({ safeExecAsync: async () => '' }))
-    const { detectJemallocPathAsync } = await import(
-      '../../../src/profiles/python/jemallocAllocator'
-    )
+    const { detectJemallocPathAsync } =
+      await import('../../../src/profiles/python/jemallocAllocator')
     expect(await detectJemallocPathAsync()).toBeNull()
   })
 
@@ -89,9 +91,8 @@ describe('detectJemallocPathAsync', () => {
       safeExecAsync: async () => '/usr/lib/x86_64-linux-gnu/libjemalloc.so.2'
     }))
     vi.doMock('fs', () => ({ existsSync: () => true }))
-    const { detectJemallocPathAsync } = await import(
-      '../../../src/profiles/python/jemallocAllocator'
-    )
+    const { detectJemallocPathAsync } =
+      await import('../../../src/profiles/python/jemallocAllocator')
     expect(await detectJemallocPathAsync()).toBe('/usr/lib/x86_64-linux-gnu/libjemalloc.so.2')
   })
 
@@ -101,18 +102,16 @@ describe('detectJemallocPathAsync', () => {
       safeExecAsync: async () => '/nonexistent/libjemalloc.so.2'
     }))
     vi.doMock('fs', () => ({ existsSync: () => false }))
-    const { detectJemallocPathAsync } = await import(
-      '../../../src/profiles/python/jemallocAllocator'
-    )
+    const { detectJemallocPathAsync } =
+      await import('../../../src/profiles/python/jemallocAllocator')
     expect(await detectJemallocPathAsync()).toBeNull()
   })
 
   it('returns null on macOS when brew has no jemalloc prefix', async () => {
     setPlatform('darwin')
     vi.doMock('../../../src/core/shell', () => ({ safeExecAsync: async () => '' }))
-    const { detectJemallocPathAsync } = await import(
-      '../../../src/profiles/python/jemallocAllocator'
-    )
+    const { detectJemallocPathAsync } =
+      await import('../../../src/profiles/python/jemallocAllocator')
     expect(await detectJemallocPathAsync()).toBeNull()
   })
 
@@ -122,9 +121,8 @@ describe('detectJemallocPathAsync', () => {
       safeExecAsync: async () => '/opt/homebrew/Cellar/jemalloc/5.3.0'
     }))
     vi.doMock('fs', () => ({ existsSync: () => true }))
-    const { detectJemallocPathAsync } = await import(
-      '../../../src/profiles/python/jemallocAllocator'
-    )
+    const { detectJemallocPathAsync } =
+      await import('../../../src/profiles/python/jemallocAllocator')
     expect(await detectJemallocPathAsync()).toBe(
       '/opt/homebrew/Cellar/jemalloc/5.3.0/lib/libjemalloc.dylib'
     )
@@ -182,9 +180,8 @@ describe('installCommandForPlatformAsync', () => {
     vi.doMock('../../../src/core/shell', () => ({
       safeExecAsync: async (cmd: string) => (cmd.includes('apt-get') ? '/usr/bin/apt-get' : '')
     }))
-    const { installCommandForPlatformAsync } = await import(
-      '../../../src/profiles/python/jemallocAllocator'
-    )
+    const { installCommandForPlatformAsync } =
+      await import('../../../src/profiles/python/jemallocAllocator')
     const cmd = await installCommandForPlatformAsync()
     expect(cmd?.label).toBe('apt')
     expect(cmd?.command).toBe('sudo apt install -y libjemalloc2')
@@ -195,26 +192,23 @@ describe('installCommandForPlatformAsync', () => {
     vi.doMock('../../../src/core/shell', () => ({
       safeExecAsync: async (cmd: string) => (cmd.includes('dnf') ? '/usr/bin/dnf' : '')
     }))
-    const { installCommandForPlatformAsync } = await import(
-      '../../../src/profiles/python/jemallocAllocator'
-    )
+    const { installCommandForPlatformAsync } =
+      await import('../../../src/profiles/python/jemallocAllocator')
     expect((await installCommandForPlatformAsync())?.label).toBe('dnf')
   })
 
   it('returns brew command on macOS', async () => {
     setPlatform('darwin')
-    const { installCommandForPlatformAsync } = await import(
-      '../../../src/profiles/python/jemallocAllocator'
-    )
+    const { installCommandForPlatformAsync } =
+      await import('../../../src/profiles/python/jemallocAllocator')
     expect((await installCommandForPlatformAsync())?.command).toBe('brew install jemalloc')
   })
 
   it('returns null on Linux with no supported package manager', async () => {
     setPlatform('linux')
     vi.doMock('../../../src/core/shell', () => ({ safeExecAsync: async () => '' }))
-    const { installCommandForPlatformAsync } = await import(
-      '../../../src/profiles/python/jemallocAllocator'
-    )
+    const { installCommandForPlatformAsync } =
+      await import('../../../src/profiles/python/jemallocAllocator')
     expect(await installCommandForPlatformAsync()).toBeNull()
   })
 })

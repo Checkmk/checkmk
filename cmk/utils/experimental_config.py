@@ -14,7 +14,7 @@ def load_experimental_config(config_dir: Path) -> Mapping[str, object]:
     """Returns file with experimental settings to be used.
     Used to enable features that are "in development" and not good enough to be enabled by default.
     Example of experimental.mk:
-    {"config_storage_format": "raw"}
+    {"my_key": "my_value"}
     """
     try:
         raw = (config_dir / _BASE_NAME).read_text()

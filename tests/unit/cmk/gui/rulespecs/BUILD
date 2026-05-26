@@ -17,8 +17,7 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
-        "//cmk/gui:exceptions",
-        "//cmk/gui:i18n",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/form_specs",
         "//cmk/gui/graphing",
         "//cmk/gui/inventory",

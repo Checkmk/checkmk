@@ -624,7 +624,7 @@ pkg_files(
     name = "cmk_libexec",
     srcs = ["//cmk/plugins:libexec"],
     attributes = pkg_attributes(mode = "0755"),
-    prefix = "lib/python3/cmk/plugins",
+    prefix = "lib/python3.13/site-packages/cmk/plugins",
     strip_prefix = strip_prefix.from_pkg(""),
 )
 

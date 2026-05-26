@@ -6,6 +6,7 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
+from cmk.ccc.site import omd_site
 from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.watolib.store import is_locked_by_oauth2_connection
 from cmk.gui.openapi.framework import (
@@ -22,8 +23,16 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.converter import PasswordConverter
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
+from cmk.gui.user_sites import activation_sites
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.passwords import load_password_to_modify, remove_password
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 
 from .endpoint_family import PASSWORD_FAMILY
 from .utils import password_etag, RW_PERMISSIONS
@@ -63,9 +72,18 @@ def delete_password_v1(
 
     remove_password(
         name,
-        user_id=user.id,
         pprint_value=api_context.config.wato_pprint_config,
-        use_git=api_context.config.wato_use_git,
+        pending_changes=PendingChanges(
+            activation_sites=activation_sites(api_context.config.sites),
+            local_site=omd_site(),
+            acting_user=user.id,
+            store=PendingChangesStore(),
+            hooks=(
+                make_audit_log_change_hook(use_git=api_context.config.wato_use_git),
+                sidebar_reload_change_hook,
+                index_update_change_hook,
+            ),
+        ),
     )
 
 

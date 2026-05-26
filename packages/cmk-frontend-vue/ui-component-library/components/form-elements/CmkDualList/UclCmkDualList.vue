@@ -81,7 +81,11 @@ const elements: DualListElement[] = [
   { name: 'network_admin', title: 'Network Administrator' },
   { name: 'db_admin', title: 'Database Administrator' },
   { name: 'security_auditor', title: 'Security Auditor' },
-  { name: 'guest', title: 'Guest User' }
+  { name: 'guest', title: 'Guest User' },
+  {
+    name: 'infra_ops',
+    title: 'Infrastructure Operations Admin with read/write access to hosts and services'
+  }
 ]
 
 const propState = new PanelStateCreator<

@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-from typing import Literal
 
+from cmk.base.config import LoadingResult
 from cmk.ccc.site import SiteId
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui.config import Config
@@ -30,6 +31,7 @@ from cmk.livestatus_client import (
     UnixSocketDetails,
     UnixSocketInfo,
 )
+from cmk.utils.labels import Labels
 from cmk.utils.paths import omd_root
 
 
@@ -85,24 +87,6 @@ def _anonymize_status_host(
     return SiteId(anon_interface.get_site(site_id)), anon_interface.get_host(host_name)
 
 
-def _anonymize_user_sync(
-    anon_interface: AnonInterface,
-    user_sync: Literal["all"] | tuple[Literal["list"], list[str]] | None,
-) -> Literal["all"] | tuple[Literal["list"], list[str]] | None:
-    match user_sync:
-        case None:
-            return None
-        case "all":
-            return "all"
-        case ("list", ldap_connections):
-            return "list", [
-                anon_interface.get_ldap_connection(ldap_connection)
-                for ldap_connection in ldap_connections
-            ]
-        case _:
-            raise ValueError(f"Invalid user_sync format: {user_sync}")
-
-
 def _anonymize_tls(anon_interface: AnonInterface, tls_info: TLSInfo) -> TLSInfo:
     match tls_info:
         case ("encrypted", tls_params):
@@ -153,7 +137,13 @@ def _anonymize_socket(
 
 class SitesSteps(AnonymizeStep):
     def run(
-        self, anon_interface: AnonInterface, active_config: Config, logger: logging.Logger
+        self,
+        anon_interface: AnonInterface,
+        active_config: Config,
+        loaded_config_result: LoadingResult,
+        all_plugins: AgentBasedPlugins,
+        builtin_host_labels: Labels,
+        logger: logging.Logger,
     ) -> None:
         logger.warning("Process sites")
 
@@ -184,7 +174,6 @@ class SitesSteps(AnonymizeStep):
                 timeout=site_config["timeout"],
                 url_prefix=f"{anon_interface.get_url(site_config['url_prefix'])}/",
                 user_login=site_config["user_login"],
-                user_sync=_anonymize_user_sync(anon_interface, site_config["user_sync"]),
                 is_trusted=site_config["is_trusted"],
                 proxy=_anonymize_proxy_config(anon_interface, site_config["proxy"]),
                 socket=_anonymize_socket(anon_interface, site_config["socket"]),
@@ -201,8 +190,7 @@ class SitesSteps(AnonymizeStep):
             if (tls := site_config.get("tls")) is not None:
                 anon_site_config["tls"] = _anonymize_tls(anon_interface, tls)
 
-            # TODO for the future globals omitted on purpose here.
-            #  we will select important global settings in a separate step
+            # site-specific globals are omitted on purpose here since we cannot use them later on
             anon_sites_config[SiteId(anon_interface.get_site(site_id))] = anon_site_config
 
             _create_distributed_wato_file_for_base(

@@ -237,11 +237,9 @@ py_library(
     srcs = ["cmk-migrate-extension-rulesets.py"],
     imports = ["."],
     deps = [
+        "//cmk/gui:app",
         "//cmk/gui:config",
-        "//cmk/gui:main_modules",
-        "//cmk/gui:rulespec",
-        "//cmk/gui:script_helpers",
-        "//cmk/gui:session",
+        "//cmk/gui:session_context",
         "//cmk/gui/rule_specs:loader",
         "//cmk/gui/rule_specs:types",
         "//cmk/gui/watolib",
@@ -287,7 +285,10 @@ py_library(
     name = "cmk_cert_py",
     srcs = ["cmk-cert.py"],
     imports = ["."],
-    deps = ["//cmk/gui:cmkcert"],
+    deps = [
+        "//cmk/gui:app",
+        "//cmk/gui/cmkcert",
+    ],
 )
 
 py_library(

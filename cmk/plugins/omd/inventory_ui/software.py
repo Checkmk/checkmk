@@ -101,3 +101,23 @@ node_software_applications_check_mk_versions = Node(
         },
     ),
 )
+
+node_software_applications_check_mk_cluster = Node(
+    name="software_applications_check_mk_cluster",
+    path=["software", "applications", "check_mk", "cluster"],
+    title=Title("Cluster"),
+    attributes={
+        "is_cluster": BoolField(Title("Cluster host")),
+    },
+)
+
+node_software_applications_check_mk_cluster_nodes = Node(
+    name="software_applications_check_mk_cluster_nodes",
+    path=["software", "applications", "check_mk", "cluster", "nodes"],
+    title=Title("Nodes"),
+    table=Table(
+        columns={
+            "name": TextField(Title("Node name")),
+        },
+    ),
+)

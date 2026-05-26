@@ -1465,6 +1465,100 @@ class HostTagGroupClient(RestApiClient):
         )
 
 
+class CustomHostAttrClient(RestApiClient):
+    domain: DomainType = "custom_host_attribute"
+
+    def create(
+        self,
+        name: str,
+        title: str,
+        topic: str | None = None,
+        help_text: str | None = None,
+        show_in_table: bool | None = None,
+        add_custom_macro: bool | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {"name": name, "title": title}
+        if topic is not None:
+            body["topic"] = topic
+        if help_text is not None:
+            body["help"] = help_text
+        if show_in_table is not None:
+            body["show_in_table"] = show_in_table
+        if add_custom_macro is not None:
+            body["add_custom_macro"] = add_custom_macro
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def get(self, name: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{name}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self,
+        name: str,
+        title: str | None = None,
+        topic: str | None = None,
+        help_text: str | None = None,
+        show_in_table: bool | None = None,
+        add_custom_macro: bool | None = None,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        body: dict[str, Any] = {}
+        if title is not None:
+            body["title"] = title
+        if topic is not None:
+            body["topic"] = topic
+        if help_text is not None:
+            body["help"] = help_text
+        if show_in_table is not None:
+            body["show_in_table"] = show_in_table
+        if add_custom_macro is not None:
+            body["add_custom_macro"] = add_custom_macro
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{name}",
+            body=body,
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(name, etag),
+        )
+
+    def delete(
+        self,
+        name: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{name}",
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(name, etag),
+        )
+
+    def _set_etag_header(
+        self, name: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(name).headers["ETag"]}
+        return set_if_match_header(etag)
+
+
 class PasswordClient(RestApiClient):
     domain: DomainType = "password"
 
@@ -4027,7 +4121,6 @@ class HistoricalEventConsole(RestApiClient):
         query: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
-
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
@@ -4176,6 +4269,7 @@ class ClientRegistry:
     Rule: RuleClient
     Ruleset: RulesetClient
     HostTagGroup: HostTagGroupClient
+    CustomHostAttr: CustomHostAttrClient
     Password: PasswordClient
     Customer: CustomerClient
     Agent: AgentClient
@@ -4238,6 +4332,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Rule=RuleClient(request_handler, url_prefix),
         Ruleset=RulesetClient(request_handler, url_prefix),
         HostTagGroup=HostTagGroupClient(request_handler, url_prefix),
+        CustomHostAttr=CustomHostAttrClient(request_handler, url_prefix),
         Password=PasswordClient(request_handler, url_prefix),
         Customer=CustomerClient(request_handler, url_prefix),
         Agent=AgentClient(request_handler, url_prefix),

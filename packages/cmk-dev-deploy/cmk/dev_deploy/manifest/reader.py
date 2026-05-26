@@ -115,6 +115,7 @@ def _parse_wheel_spec(raw: dict[str, Any]) -> WheelDeploySpec:
         deploy_mode=WheelDeployMode(raw.get("deploy_mode", "direct")),
         source_subdirs=tuple(raw.get("source_subdirs", [])),
         distribution_name=raw.get("distribution_name", ""),
+        strip_prefix=raw.get("strip_prefix", ""),
         edition_filter=raw.get("edition_filter", False),
     )
 

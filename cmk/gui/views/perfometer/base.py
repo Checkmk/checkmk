@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.graphing.v1 import perfometers as perfometers_api
+from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
     get_first_matching_perfometer,
@@ -29,7 +29,7 @@ class Perfometer:
         registered_metrics: Mapping[str, RegisteredMetric],
         registered_perfometers: Mapping[
             str,
-            perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked,
+            perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked,
         ],
     ) -> None:
         self._row = row

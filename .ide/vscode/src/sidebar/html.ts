@@ -4,8 +4,18 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import * as crypto from 'crypto'
+import * as vscode from 'vscode'
 
 import baseCss from './base.css'
+
+function getDensityClass(): string {
+  try {
+    const v = vscode.workspace.getConfiguration().get<string>('cmk.sidebar.density', 'compact')
+    return v === 'comfortable' ? '' : 'cmk-density-compact'
+  } catch {
+    return 'cmk-density-compact'
+  }
+}
 
 export function esc(s: unknown): string {
   return String(s)
@@ -24,7 +34,8 @@ export function wrap(
   css: string,
   body: string,
   codiconUri?: unknown,
-  cspSource?: string
+  cspSource?: string,
+  densityClass?: string
 ): string {
   const fontSrc = codiconUri ? `font-src ${cspSource || codiconUri};` : ''
   const codiconCss = codiconUri
@@ -73,7 +84,19 @@ export function wrap(
   .codicon-list-selection::before { content: "\\eb85"; }
   .codicon-new-collection::before { content: "\\ec58"; }
   .codicon-check::before { content: "\\eab2"; }
-  .codicon-close::before { content: "\\ea76"; }`
+  .codicon-close::before { content: "\\ea76"; }
+  .codicon-pulse::before { content: "\\eb31"; }
+  .codicon-graph::before { content: "\\eb03"; }
+  .codicon-list-flat::before { content: "\\eb84"; }
+  .codicon-list-tree::before { content: "\\eb86"; }
+  .codicon-server-environment::before { content: "\\eba3"; }
+  .codicon-cloud-upload::before { content: "\\eac3"; }
+  .codicon-diff-added::before { content: "\\eadc"; }
+  .codicon-warning::before { content: "\\ea6c"; }
+  .codicon-extensions::before { content: "\\eae6"; }
+  .codicon-git-commit::before { content: "\\eafc"; }
+  .codicon-source-control::before { content: "\\ea68"; }
+  .codicon-rocket::before { content: "\\eb44"; }`
     : ''
   return `<!DOCTYPE html>
 <html lang="en">
@@ -86,7 +109,7 @@ export function wrap(
   ${css}
 </style>
 </head>
-<body>
+<body class="${densityClass ?? getDensityClass()}">
 ${body}
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();
@@ -100,10 +123,13 @@ ${body}
       'omd-site-action',
       'omd-service-action',
       'omd-install-devsite',
+      'omd-deploy',
       'apply-setting',
       'apply-family-mismatches',
       'apply-all-mismatches',
       'toggle-profile',
+      'overview-row-action',
+      'overview-item-action',
     ]);
     if (ASYNC_ACTIONS.has(action) || el.dataset.async === 'true') {
       el.setAttribute('disabled', 'true');
@@ -152,6 +178,7 @@ ${body}
       case 'omd-proxy-start': vscode.postMessage({ type: 'omdProxyStart', site: el.dataset.site, service: el.dataset.service }); break;
       case 'omd-proxy-stop': vscode.postMessage({ type: 'omdProxyStop', site: el.dataset.site, service: el.dataset.service }); break;
       case 'omd-proxy-site': vscode.postMessage({ type: 'omdProxySite', site: el.dataset.site }); break;
+      case 'omd-deploy': vscode.postMessage({ type: 'omdDeploy', site: el.dataset.site }); break;
       case 'copy-setting': {
         const text = el.dataset.value;
         navigator.clipboard.writeText(text);
@@ -176,6 +203,43 @@ ${body}
       case 'mypy-allocator-disable': vscode.postMessage({ type: 'mypyAllocatorDisable' }); break;
       case 'mypy-allocator-dismiss': vscode.postMessage({ type: 'mypyAllocatorDismiss' }); break;
       case 'mypy-allocator-reapply': vscode.postMessage({ type: 'mypyAllocatorReapply' }); break;
+      case 'toggle-benchmark': vscode.postMessage({ type: 'toggleBenchmark' }); break;
+      case 'activity-clear': vscode.postMessage({ type: 'activityClear' }); break;
+      case 'activity-open-output': vscode.postMessage({ type: 'activityOpenOutput' }); break;
+      case 'activity-toggle': /* future: expand inline detail */ break;
+      case 'overview-row-toggle': {
+        const row = el.closest('.cockpit-row');
+        if (row) {
+          row.classList.toggle('open');
+          const state = vscode.getState() || {};
+          const open = state.cockpitOpen || {};
+          const titleEl = row.querySelector('.cockpit-title');
+          if (titleEl) {
+            open[titleEl.textContent.trim()] = row.classList.contains('open');
+            vscode.setState({ ...state, cockpitOpen: open });
+          }
+        }
+        break;
+      }
+      case 'overview-row-action': {
+        let args; try { args = JSON.parse(el.dataset.commandArgs || '[]'); } catch { args = []; }
+        vscode.postMessage({
+          type: 'overviewRowAction',
+          domain: el.dataset.domain,
+          command: el.dataset.command,
+          commandArgs: args
+        });
+        break;
+      }
+      case 'overview-item-action': {
+        let args; try { args = JSON.parse(el.dataset.commandArgs || '[]'); } catch { args = []; }
+        vscode.postMessage({
+          type: 'overviewItemAction',
+          command: el.dataset.command,
+          commandArgs: args
+        });
+        break;
+      }
     }
   });
   // Restore accordion open/close state
@@ -185,6 +249,17 @@ ${body}
       const nameEl = el.querySelector('.ext-family-name,.omd-site-name');
       if (nameEl && saved.openAccordions[nameEl.textContent.trim()]) {
         el.classList.add('open');
+      }
+    });
+  }
+  if (saved && saved.cockpitOpen) {
+    document.querySelectorAll('.cockpit-row').forEach(el => {
+      const t = el.querySelector('.cockpit-title');
+      if (!t) return;
+      const key = t.textContent.trim();
+      if (key in saved.cockpitOpen) {
+        if (saved.cockpitOpen[key]) el.classList.add('open');
+        else el.classList.remove('open');
       }
     });
   }

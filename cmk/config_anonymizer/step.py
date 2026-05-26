@@ -5,13 +5,22 @@
 import abc
 import logging
 
+from cmk.base.config import LoadingResult
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.gui.config import Config
+from cmk.utils.labels import Labels
 
 
 class AnonymizeStep(abc.ABC):
     @abc.abstractmethod
     def run(
-        self, anon_interface: AnonInterface, active_config: Config, logger: logging.Logger
+        self,
+        anon_interface: AnonInterface,
+        active_config: Config,
+        loaded_config_result: LoadingResult,
+        all_plugins: AgentBasedPlugins,
+        builtin_host_labels: Labels,
+        logger: logging.Logger,
     ) -> None:
         pass

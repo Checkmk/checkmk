@@ -50,6 +50,7 @@ requirements-parser # used to parse requirements.txt file for testing
 responses  # used for unit tests
 ruff
 semver
+snmpsim
 sphinx  # used for the plugin API documentation
 sphinx-autoapi  # used for automatically generating plugin API documentation
 sphinx-autodoc-typehints  # used for the plugin API documentation

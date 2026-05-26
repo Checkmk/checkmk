@@ -3,19 +3,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import json
 import subprocess
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
+from typing import Self
 
 import pytest
 
-from tests.extension_compatibility.test_extension_compatibility import ImportErrors
 from tests.testlib.site import Site
 
 from .lib import disable_extension, enable_extension
 
 MKP_TO_TEST: Iterable[str] = ()
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ImportErrors:
+    base_errors: set[str] = dataclasses.field(default_factory=set)
+    gui_errors: set[str] = dataclasses.field(default_factory=set)
+
+    @classmethod
+    def collect_from_site(cls, site: Site) -> Self:
+        return cls(
+            base_errors=set(
+                json.loads(site.python_helper("_helper_failed_base_plugins.py").check_output())
+            ),
+            gui_errors=set(
+                json.loads(site.python_helper("_helper_failed_gui_plugins.py").check_output())
+            ),
+        )
 
 
 @pytest.mark.parametrize("package_name", MKP_TO_TEST)

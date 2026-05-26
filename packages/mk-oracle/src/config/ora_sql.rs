@@ -184,6 +184,10 @@ impl Config {
         self.sections.cache_age()
     }
 
+    pub fn custom_metrics_cache_age(&self) -> u32 {
+        self.sections.custom_metrics_cache_age()
+    }
+
     pub fn piggyback_host(&self) -> Option<&str> {
         self.piggyback_host.as_deref()
     }
@@ -597,6 +601,7 @@ oracle:
       - tablespaces_xxxz1222:
           is_async: yes
     cache_age: 501 # optional(default:600)
+    custom_metrics_cache_age: 701 # optional(default:600)
     piggyback_host: "some_pb_host"
     discovery: # optional
       detect: false # optional(default:yes)
@@ -760,6 +765,7 @@ piggyback:
 
         let product = c.product();
         assert_eq!(product.cache_age(), 501);
+        assert_eq!(product.custom_metrics_cache_age(), 701);
         assert_eq!(product.sections().len(), 22);
         assert_eq!(c.piggyback_host(), Some("some_pb_host"));
         assert!(!c.discovery().detect);

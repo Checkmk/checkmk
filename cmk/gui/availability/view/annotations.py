@@ -54,15 +54,15 @@ def show_annotations(
     what: AVObjectType,
     avoptions: AVOptions,
     omit_service: bool,
+    *,
+    table_row_limit: int,
 ) -> None:
     annos_to_render = availability.get_relevant_annotations(
         annotations, av_rawdata, what, avoptions
     )
     render_date = availability.get_annotation_date_render_function(annos_to_render, avoptions)
 
-    with table_element(
-        title=_("Annotations"), omit_if_empty=True, limit=active_config.table_row_limit
-    ) as table:
+    with table_element(title=_("Annotations"), omit_if_empty=True, limit=table_row_limit) as table:
         for nr, ((site_id, host, service), annotation) in enumerate(annos_to_render):
             table.row()
             table.cell("#", css=["narrow nowrap"])

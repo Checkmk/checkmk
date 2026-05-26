@@ -128,6 +128,7 @@ void run_make_target(Map args) {
         docker.withRegistry(DOCKER_REGISTRY, "nexus") {
             def faked_artifacts = args.faked_artifacts ? "--package-contains-faked-artifacts" : "";
             def mk_oracle_binary_path_arg = args.mk_oracle_binary_path ? "MK_ORACLE_BINARY_PATH='${args.mk_oracle_binary_path}'" : "";
+
             // no inline bash comments are allowed in this sh call
             sh("""
                 RESULT_PATH='${args.result_path}' \
@@ -146,7 +147,7 @@ void run_make_target(Map args) {
                 OTEL_SDK_DISABLED='${env.OTEL_SDK_DISABLED}' \
                 OTEL_EXPORTER_OTLP_ENDPOINT='${env.OTEL_EXPORTER_OTLP_ENDPOINT}' \
                 ${mk_oracle_binary_path_arg} \
-                make ${args.make_target}
+                tests/run_tests.sh ${args.make_target}
             """);
         }
     }
@@ -197,7 +198,7 @@ void run_make_target_k8s(Map args) {
                 OTEL_SDK_DISABLED='${env.OTEL_SDK_DISABLED}' \
                 OTEL_EXPORTER_OTLP_ENDPOINT='${env.OTEL_EXPORTER_OTLP_ENDPOINT}' \
                 ${mk_oracle_binary_path_arg} \
-                make ${args.make_target}
+                tests/run_tests.sh ${args.make_target}
             """);
         } finally {
             // these lines are mandatory to prevent a broken archiveArtifacts step

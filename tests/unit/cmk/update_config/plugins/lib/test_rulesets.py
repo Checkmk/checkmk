@@ -158,7 +158,7 @@ def test_transform_replaced_wato_rulesets_and_params(
         }
     )
 
-    rulesets_updater._transform_replaced_wato_rulesets(
+    rulesets_updater.transform_replaced_wato_rulesets(
         getLogger(),
         all_rulesets,
         {replaced_rulespec.name: rulespec_with_migration.name},

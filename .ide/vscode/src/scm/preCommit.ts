@@ -19,10 +19,20 @@ function hookPaths(repo: string): { active: string; disabled: string } {
   }
 }
 
-function isSkipping(repo: string): boolean {
+export function isPreCommitSkipping(repo: string): boolean {
   const { active, disabled } = hookPaths(repo)
   return !fs.existsSync(active) && fs.existsSync(disabled)
 }
+
+/** True when neither `pre-commit` nor the cmk-disabled stash exists —
+ *  i.e. the user has never run `pre-commit install` in this clone. */
+export function isPreCommitMissing(repo: string): boolean {
+  const { active, disabled } = hookPaths(repo)
+  return !fs.existsSync(active) && !fs.existsSync(disabled)
+}
+
+// internal alias for the rest of this module
+const isSkipping = isPreCommitSkipping
 
 export function registerScm(context: vscode.ExtensionContext): void {
   const statusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1001)

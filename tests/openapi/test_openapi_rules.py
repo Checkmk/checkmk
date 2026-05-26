@@ -13,11 +13,21 @@ from typing import Any
 
 import pytest
 
+from cmk.ccc.site import omd_site
 from cmk.ccc.store import load_mk_file, save_mk_file, save_to_mk_file
+from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
 from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.rulesets.definition import RuleGroup
@@ -531,10 +541,20 @@ def fixture_locked_rule_id() -> Iterable[str]:
         },
         entities=CreateBundleEntities(),
         user_permissions=UserPermissions({}, {}, {}, []),
-        user_id=user.id,
         pprint_value=False,
         use_git=False,
         debug=False,
+        pending_changes=PendingChanges(
+            activation_sites=activation_sites(active_config.sites),
+            local_site=omd_site(),
+            acting_user=user.id,
+            store=PendingChangesStore(),
+            hooks=(
+                make_audit_log_change_hook(use_git=False),
+                sidebar_reload_change_hook,
+                index_update_change_hook,
+            ),
+        ),
     )
 
     rules_mk = paths.omd_root / "etc/check_mk/conf.d/wato/rules.mk"

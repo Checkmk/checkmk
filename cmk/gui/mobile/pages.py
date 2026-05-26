@@ -6,7 +6,6 @@ from collections.abc import Sequence
 from typing import override
 
 import cmk.gui.view_utils
-from cmk.ccc.site import omd_site
 from cmk.gui import visuals
 from cmk.gui.config import Config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
@@ -27,7 +26,7 @@ from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
 from cmk.gui.saml2_login import show_saml2_login
 from cmk.gui.type_defs import Rows, VisualContext
-from cmk.gui.userdb import get_active_saml_connections
+from cmk.gui.userdb import get_saml_connections_for_current_site
 from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.escaping import escape_text
@@ -202,9 +201,7 @@ def _page_login(config: Config) -> None:
         html.hidden_field("_origtarget", escaping.escape_attribute(origtarget))
 
         saml2_user_error: str | None = None
-        if saml_connections := [
-            c for c in get_active_saml_connections().values() if c["owned_by_site"] == omd_site()
-        ]:
+        if saml_connections := list(get_saml_connections_for_current_site().values()):
             saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
 
         html.text_input(

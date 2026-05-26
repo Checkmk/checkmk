@@ -31,7 +31,9 @@ from cmk.gui.graphing._rrd import (
     _metric_props_by_service,
     _reverse_translate_into_all_potentially_relevant_metrics,
     _rrd_columns,
+    make_graph_row,
     MetricProperties,
+    ServiceGraphRow,
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._time_series import TimeSeries
@@ -499,3 +501,52 @@ def test_reverse_translate_into_all_potentially_relevant_metrics(
         )
         == expected_result
     )
+
+
+def test_make_graph_row_applies_pnp_suffix_check_command_to_translation() -> None:
+    """Regression test for CMK-33772.
+
+    When perfdata carries a PNP-style ``[check_command]`` suffix,
+    the suffix-derived check_command must be used for the
+    translation lookup that feeds the graph, not the outer service
+    check_command, which has no translation entry.
+
+    Previously the graph path passed the outer (un-normalized) check_command,
+    so the lookup failed and the default unit was used.
+    """
+    row = make_graph_row(
+        site=SiteId("NO_SITE"),
+        host_name=HostName("my-host"),
+        service_name=ServiceName("Fake_Ping"),
+        perf_data_string="rta=6.8;300;500;0; pl=0;1;1;0;100 [check_ping]",
+        metrics=[MetricName("rta"), MetricName("pl")],
+        check_command="check_mk-mrpe",
+        registered_metrics={
+            "rta": RegisteredMetric(
+                name="rta",
+                title_localizer=lambda _localizer: "Round trip average",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol="s"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="",
+            ),
+            "pl": RegisteredMetric(
+                name="pl",
+                title_localizer=lambda _localizer: "Packet loss",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol="%"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="",
+            ),
+        },
+        debug=False,
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
+    assert isinstance(row, ServiceGraphRow)
+    assert row.check_command == "check_ping"
+    rta = row.translated_metrics["rta"]
+    assert rta.value == pytest.approx(0.0068)
+    assert rta.scalar.warn == pytest.approx(0.3)
+    assert rta.scalar.crit == pytest.approx(0.5)

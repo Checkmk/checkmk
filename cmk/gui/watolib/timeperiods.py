@@ -6,7 +6,6 @@
 from collections.abc import Callable
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.user import UserId
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -24,7 +23,8 @@ from cmk.utils.timeperiod import (
     TimeperiodSpecs,
 )
 
-from . import changes as _changes
+from .config_domain_name import CORE
+from .pending_changes import Change, ChangeScope, PendingChanges
 
 TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]+\Z"
 TimeperiodUsage = tuple[str, str]
@@ -107,9 +107,8 @@ def load_timeperiod(name: TimeperiodName) -> TimeperiodSpec:
 def delete_timeperiod(
     name: TimeperiodName,
     *,
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     if is_builtin_timeperiod(name):
         raise TimePeriodBuiltInError()
@@ -120,11 +119,13 @@ def delete_timeperiod(
         raise TimePeriodInUseError(usages=usages)
     del time_periods[name]
     save_timeperiods(time_periods, pprint_value)
-    _changes.add_change(
-        action_name="edit-timeperiods",
-        text=_("Deleted time period %s") % name,
-        user_id=user_id,
-        use_git=use_git,
+    pending_changes.add(
+        Change(
+            action_name="edit-timeperiods",
+            text=_("Deleted time period %s") % name,
+            domains=[CORE],
+        ),
+        ChangeScope.all_activation_sites(),
     )
 
 
@@ -132,9 +133,8 @@ def modify_timeperiod(
     name: TimeperiodName,
     timeperiod: TimeperiodSpec,
     *,
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     if is_builtin_timeperiod(name):
         raise TimePeriodBuiltInError()
@@ -145,11 +145,13 @@ def modify_timeperiod(
 
     existing_timeperiods[name] = timeperiod
     save_timeperiods(existing_timeperiods, pprint_value)
-    _changes.add_change(
-        action_name="edit-timeperiods",
-        text=_("Modified time period %s") % name,
-        user_id=user_id,
-        use_git=use_git,
+    pending_changes.add(
+        Change(
+            action_name="edit-timeperiods",
+            text=_("Modified time period %s") % name,
+            domains=[CORE],
+        ),
+        ChangeScope.all_activation_sites(),
     )
 
 
@@ -157,9 +159,8 @@ def create_timeperiod(
     name: TimeperiodName,
     timeperiod: TimeperiodSpec,
     *,
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     if is_builtin_timeperiod(name):
         raise TimePeriodBuiltInError()
@@ -170,11 +171,13 @@ def create_timeperiod(
 
     existing_timeperiods[name] = timeperiod
     save_timeperiods(existing_timeperiods, pprint_value)
-    _changes.add_change(
-        action_name="edit-timeperiods",
-        text=_("Created new time period %s") % name,
-        user_id=user_id,
-        use_git=use_git,
+    pending_changes.add(
+        Change(
+            action_name="edit-timeperiods",
+            text=_("Created new time period %s") % name,
+            domains=[CORE],
+        ),
+        ChangeScope.all_activation_sites(),
     )
 
 

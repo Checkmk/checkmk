@@ -734,6 +734,7 @@ class ModeLDAPConfig(WatoMode):
             connection_type=self.type,
             edit_mode_path="edit_ldap_connection",
             config_mode_path="ldap_config",
+            table_row_limit=config.table_row_limit,
         )
 
 
@@ -927,9 +928,7 @@ class ModeEditLDAPConnection(WatoMode):
 
             for address in connection.servers():
                 html.h3("{}: {}".format(_("Server"), address))
-                with table_element(
-                    "test", searchable=False, limit=active_config.table_row_limit
-                ) as table:
+                with table_element("test", searchable=False, limit=config.table_row_limit) as table:
                     for title, test_func in self._tests():
                         table.row()
                         try:

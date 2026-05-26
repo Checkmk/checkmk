@@ -50,7 +50,7 @@ pub struct Env {
     find_runtime: bool,
 
     /// filtering sections for sync/async, possible values are "sync", "async", "all"
-    execution: SectionFilter,
+    filter: SectionFilter,
 
     /// generate plugins and stop
     generate_plugins: Option<PathBuf>,
@@ -71,7 +71,7 @@ impl Env {
             disable_caching: args.no_spool,
             detect_sids: args.detect_sids,
             find_runtime: args.find_runtime,
-            execution: args.filter.clone().unwrap_or_default(),
+            filter: args.filter.unwrap_or_default(),
             generate_plugins: args.generate_plugins.clone(),
         }
     }
@@ -104,8 +104,8 @@ impl Env {
         self.generate_plugins.as_deref()
     }
 
-    pub fn execution(&self) -> SectionFilter {
-        self.execution.clone()
+    pub fn filter(&self) -> SectionFilter {
+        self.filter
     }
 
     fn build_dir(dir: &Option<PathBuf>, fallback: &Option<&Path>) -> Option<PathBuf> {
@@ -587,7 +587,7 @@ fn set_file_permissions(_path: &Path, _mode: u32) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn create_plugin(name: &str, dir: &Path, cache_age: Option<u32>) -> bool {
+pub fn create_plugin(name: &str, dir: &Path, cache_age: Option<u32>, cmd_line: &str) -> bool {
     if !dir.is_dir() {
         log::info!("Plugin dir {:?} doesn't exist", dir);
         return false;
@@ -617,11 +617,6 @@ pub fn create_plugin(name: &str, dir: &Path, cache_age: Option<u32>) -> bool {
             Some(dir.to_owned())
         }
         .map(|plugin_dir| {
-            let cmd_line = if cache_age.is_some() {
-                "--filter async"
-            } else {
-                "--filter sync"
-            };
             let the_file = plugin_dir.join(name);
             fs::write(
                 &the_file,
@@ -651,19 +646,37 @@ fn make_cached_subdir(dir: &Path, cache_age: u32) -> Option<PathBuf> {
         })
 }
 
-pub fn create_plugins(p: &Path, cache_age: u32) -> i32 {
+fn build_plugin_list(
+    cache_age: u32,
+    custom_metrics_cache_age: u32,
+) -> Vec<(String, Option<u32>, &'static str)> {
+    let ext = if cfg!(windows) { ".ps1" } else { "" };
+    let mut plugins = vec![
+        ("oracle_unified_sync", None, "--filter sync"),
+        ("oracle_unified_async", Some(cache_age), "--filter async"),
+    ];
+    if cache_age != custom_metrics_cache_age {
+        plugins.push((
+            "oracle_unified_async_custom_metrics",
+            Some(custom_metrics_cache_age),
+            "--filter async-custom-metrics",
+        ));
+    }
+    plugins
+        .into_iter()
+        .map(|(base, age, filter)| (format!("{base}{ext}"), age, filter))
+        .collect()
+}
+
+pub fn create_plugins(p: &Path, cache_age: u32, custom_metrics_cache_age: u32) -> i32 {
     log::info!("PLUGINS GENERATED for path {p:?}");
     if !p.is_dir() {
         return 1;
     }
     log::info!("PLUGINS DIR={}", p.display());
 
-    if cfg!(windows) {
-        setup::create_plugin("oracle_unified_sync.ps1", p, None);
-        setup::create_plugin("oracle_unified_async.ps1", p, Some(cache_age));
-    } else {
-        setup::create_plugin("oracle_unified_sync", p, None);
-        setup::create_plugin("oracle_unified_async", p, Some(cache_age));
+    for (name, age, filter) in build_plugin_list(cache_age, custom_metrics_cache_age) {
+        setup::create_plugin(&name, p, age, filter);
     }
 
     0
@@ -772,5 +785,31 @@ mod tests {
             std::env::set_var("MK_MY_VAR", base_dir().join("runtimes"));
         }
         assert!(detect_factory_runtime(Some("MK_MY_VAR".to_string())).is_some());
+    }
+
+    #[test]
+    fn test_build_plugin_list_same_cache_age() {
+        let plugins = build_plugin_list(600, 600);
+        assert_eq!(plugins.len(), 2);
+        assert_eq!(plugins[0].2, "--filter sync");
+        assert_eq!(plugins[1].2, "--filter async");
+        assert_eq!(plugins[1].1, Some(600));
+    }
+
+    #[test]
+    fn test_build_plugin_list_different_cache_age() {
+        let plugins = build_plugin_list(600, 900);
+        assert_eq!(plugins.len(), 3);
+        assert_eq!(plugins[2].2, "--filter async-custom-metrics");
+        assert_eq!(plugins[2].1, Some(900));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_build_plugin_list_names_unix() {
+        let plugins = build_plugin_list(100, 200);
+        assert_eq!(plugins[0].0, "oracle_unified_sync");
+        assert_eq!(plugins[1].0, "oracle_unified_async");
+        assert_eq!(plugins[2].0, "oracle_unified_async_custom_metrics");
     }
 }

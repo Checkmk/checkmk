@@ -380,11 +380,11 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     config.addinivalue_line(
         "markers",
-        "skip_on_code_coverage: skip the tests when code-coverage measurement is active",
+        "skip_if_faked_artifacts: skip test when --package-contains-faked-artifacts is set",
     )
     config.addinivalue_line(
         "markers",
-        "skip_if_faked_artifacts: skip test when --package-contains-faked-artifacts is set",
+        "requires_non_root_user: Tests that require a non-root user to be executed.",
     )
 
 

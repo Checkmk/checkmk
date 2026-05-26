@@ -40,7 +40,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.form_specs import (
     create_validation_error_for_mk_user_error,
@@ -50,10 +50,11 @@ from cmk.gui.form_specs import (
     read_data_from_frontend,
     render_form_spec,
 )
-from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
 from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
-from cmk.gui.form_specs.unstable import LegacyValueSpec
-from cmk.gui.form_specs.unstable.legacy_converter import Tuple
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import render_end_tag
@@ -81,6 +82,7 @@ from cmk.gui.site_config import (
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.compatibility import make_site_version_info
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -94,7 +96,6 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import MonitoredHostname
 from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
@@ -103,6 +104,7 @@ from cmk.gui.wato.pages.global_settings import (
 )
 from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.activate_changes import get_free_message
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
     do_site_login,
@@ -121,6 +123,10 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainGUI,
     finalize_all_settings_per_site,
 )
+from cmk.gui.watolib.config_sync import (
+    central_site_inherited_summary,
+    populate_saml_site_endpoint_urls,
+)
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     load_site_global_settings,
@@ -136,14 +142,21 @@ from cmk.gui.watolib.hosts_and_folders import (
     make_action_link,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.piggyback_hub import (
     validate_piggyback_hub_config,
 )
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.site_management import (
     add_changes_after_editing_broker_connection,
     add_changes_after_editing_site_connection,
 )
 from cmk.gui.watolib.sites import (
+    DropKeySentinel,
     is_livestatus_encrypted,
     ldap_connections_are_configurable,
     PingResult,
@@ -171,6 +184,7 @@ from cmk.rulesets.v1.form_specs import (
     FieldSize,
     FixedValue,
     Integer,
+    MonitoredHost,
     String,
     validators,
 )
@@ -186,6 +200,26 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeEditSiteGlobals)
     mode_registry.register(ModeEditSiteGlobalSetting)
     mode_registry.register(ModeSiteLivestatusEncryption)
+
+
+def _status_host_from_disk(value: object) -> tuple[str, object]:
+    """Translate the on-disk ``tuple[SiteId, str] | None`` into the cascading
+    choice tuple the form spec expects.
+    """
+    if value is None:
+        return "disabled", None
+    assert isinstance(value, tuple) and len(value) == 2
+    return "enabled", value
+
+
+def _status_host_to_disk(value: object) -> object:
+    """Translate the cascading choice tuple back to the on-disk shape."""
+    assert isinstance(value, tuple) and len(value) == 2
+    choice, payload = value
+    if choice == "disabled":
+        return None
+    assert choice == "enabled"
+    return payload
 
 
 class ModeEditSite(WatoMode):
@@ -245,7 +279,8 @@ class ModeEditSite(WatoMode):
                 persist=False,
                 proxy={},
                 message_broker_port=5672,
-                user_sync="all",
+                authentication_connections=[],
+                user_attribute_sync_connections="all",
                 status_host=None,
                 replicate_mkps=True,
                 replicate_ec=True,
@@ -300,6 +335,12 @@ class ModeEditSite(WatoMode):
         raw_site_spec = parse_data_from_field_id(flat_catalog, "_edit_site_id")
         assert isinstance(raw_site_spec, dict)
 
+        # `authentication_connections` / `user_attribute_sync_connections`
+        # may carry a `DropKeySentinel` value to mark "inherit from central"
+        # / "disabled". Leave the sentinel in place here so the
+        # `setdefault` loop in `save_site_changes` treats the key as
+        # present and does not reinstate the previous on-disk value; the
+        # sentinel is stripped after that loop.
         site_spec = cast(SiteConfiguration, raw_site_spec)
         if self._new:
             self._site_id = site_spec["id"]
@@ -312,7 +353,7 @@ class ModeEditSite(WatoMode):
         configured_sites: SiteConfigurations,
         *,
         pprint_value: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("sites"))
@@ -325,6 +366,13 @@ class ModeEditSite(WatoMode):
         for key, value in configured_sites.get(self._site_id, {}).items():
             # We need to review whether or not we still want to allow setting arbritrary keys
             site_spec.setdefault(key, value)  # type: ignore[misc]
+
+        # Strip the `DropKeySentinel` markers that survived `setdefault`
+        # (they blocked the old on-disk value from leaking back in, but
+        # must not reach `save_sites`).
+        for drop_key in ("authentication_connections", "user_attribute_sync_connections"):
+            if isinstance(site_spec.get(drop_key), DropKeySentinel):
+                site_spec.pop(drop_key)  # type: ignore[misc]
 
         self._site_mgmt.validate_configuration(self._site_id, site_spec, configured_sites)
 
@@ -349,7 +397,7 @@ class ModeEditSite(WatoMode):
             replication_enabled=is_replication_enabled(site_spec),
             is_local_site=site_is_local(site_spec),
             connected_sites=sites_to_update,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
 
         flash(msg)
@@ -361,7 +409,12 @@ class ModeEditSite(WatoMode):
             site_spec,
             self._configured_sites,
             pprint_value=config.wato_pprint_config,
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes(
+                config.sites,
+                use_git=config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
 
     def page(self, config: Config) -> None:
@@ -377,22 +430,58 @@ class ModeEditSite(WatoMode):
                     do_validate=True,
                 )
             else:
+                self._site.pop("secret", None)
+                self._site.pop("globals", None)
                 render_form_spec(
-                    flat_catalog, "_edit_site_id", RawDiskData(dict(self._site)), do_validate=False
+                    flat_catalog,
+                    "_edit_site_id",
+                    # Inject computed SAML SP endpoint URLs for the read-only
+                    # display fields, and the "inherit from central" summary
+                    # text for the central_site form choice.
+                    RawDiskData(self._form_data_for_render()),
+                    do_validate=False,
                 )
             forms.end()
             html.hidden_fields()
+
+    def _form_data_for_render(self) -> dict:
+        """Build the form-input dict for the site-edit dialog.
+
+        Translates the on-disk shape of `authentication_connections`
+        (absent ↔ inherit from central, present ↔ explicit list) into the
+        cascading-choice tuple the form spec expects, and fills SAML
+        endpoint URLs / the central-site inherited summary so the read-only
+        display widgets show meaningful values.
+        """
+        populated = populate_saml_site_endpoint_urls(self._site)
+        data: dict = dict(populated)
+        callback_url = populated.get("multisiteurl", "")
+        if "authentication_connections" in data:
+            data["authentication_connections"] = ("list", data["authentication_connections"])
+        else:
+            data["authentication_connections"] = (
+                "central_site",
+                central_site_inherited_summary(callback_url),
+            )
+        if "user_attribute_sync_connections" in data:
+            value = data["user_attribute_sync_connections"]
+            if isinstance(value, list):
+                data["user_attribute_sync_connections"] = ("list", value)
+        return data
 
     def _flat_catalog(self, config: Config):  # type: ignore[no-untyped-def]
         basic = self._basic_elements(config)
         livestatus = self._livestatus_elements()
         replication = self._replication_elements()
-        spec = Dictionary(elements={**basic, **livestatus, **replication})
+        user_config = self._user_config_elements()
+        spec = Dictionary(elements={**basic, **livestatus, **replication, **user_config})
         headers = [
             (_("Basic settings"), list(basic.keys())),
             (_("Status connection"), list(livestatus.keys())),
             (_("Configuration connection"), list(replication.keys())),
         ]
+        if user_config:
+            headers.append((_("User configuration"), list(user_config.keys())))
         return create_flat_catalog_from_dictionary(spec, headers=headers)
 
     def _basic_elements(self, config: Config) -> dict[str, DictElement]:
@@ -533,18 +622,19 @@ class ModeEditSite(WatoMode):
                 ),
             ),
             "status_host": DictElement(
-                parameter_form=enable_deprecated_alternative(
+                parameter_form=TransformDataForLegacyFormatOrRecomposeFunction(
                     wrapped_form_spec=CascadingSingleChoice(
+                        title=Title("Status host"),
                         elements=[
                             CascadingSingleChoiceElement(
-                                name="alternative_0",
+                                name="disabled",
                                 title=Title("No status host"),
                                 parameter_form=FixedValue(
                                     value=None, title=Title("No status host"), label=Label("")
                                 ),
                             ),
                             CascadingSingleChoiceElement(
-                                name="alternative_1",
+                                name="enabled",
                                 title=Title("Use the following status host"),
                                 parameter_form=Tuple(
                                     title=Title("Use the following status host"),
@@ -554,7 +644,7 @@ class ModeEditSite(WatoMode):
                                             title=Title("Site:"),
                                             elements=site_elements,
                                         ),
-                                        LegacyValueSpec.wrap(MonitoredHostname(title=_("Host:"))),
+                                        MonitoredHost(),
                                     ],
                                 ),
                             ),
@@ -569,7 +659,9 @@ class ModeEditSite(WatoMode):
                             )
                             % status_host_docu_url
                         ),
-                    )
+                    ),
+                    from_disk=_status_host_from_disk,
+                    to_disk=_status_host_to_disk,
                 ),
             ),
             "disabled": DictElement(
@@ -675,11 +767,6 @@ class ModeEditSite(WatoMode):
             ),
         }
 
-        if ldap_connections_are_configurable():
-            elements["user_sync"] = DictElement(
-                parameter_form=self._site_mgmt.user_sync_form_spec(self._site_id, self._site)
-            )
-
         elements["replicate_ec"] = DictElement(
             parameter_form=BooleanChoice(
                 title=Title("Replicate Event Console config"),
@@ -705,6 +792,20 @@ class ModeEditSite(WatoMode):
             ),
         )
         return elements
+
+    def _user_config_elements(self) -> dict[str, DictElement]:
+        if not ldap_connections_are_configurable():
+            return {}
+        return {
+            "authentication_connections": DictElement(
+                required=True,
+                parameter_form=self._site_mgmt.authentication_connections_form_spec(self._site),
+            ),
+            "user_attribute_sync_connections": DictElement(
+                required=True,
+                parameter_form=self._site_mgmt.user_attribute_sync_connections_form_spec(),
+            ),
+        }
 
 
 class ModeEditBrokerConnection(WatoMode):
@@ -819,7 +920,12 @@ class ModeEditBrokerConnection(WatoMode):
             connection_id=raw_site_spec["unique_id"],
             is_new_broker_connection=self._is_new,
             sites=[source_site, dest_site],
-            use_git=config.wato_use_git,
+            pending_changes=_pending_changes(
+                config.sites,
+                use_git=config.wato_use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
 
         flash(msg)
@@ -997,7 +1103,12 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_delete_broker_connection(
                 ConnectionId(delete_connection_id),
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
+                pending_changes=_pending_changes(
+                    config.sites,
+                    use_git=config.wato_use_git,
+                    local_site=omd_site(),
+                    user_id=user.id,
+                ),
             )
 
         logout_id = request.get_ascii_input("_logout")
@@ -1124,7 +1235,11 @@ class ModeDistributedMonitoring(WatoMode):
         return redirect(mode_url("sites"))
 
     def _action_delete_broker_connection(
-        self, delete_connection_id: ConnectionId, *, pprint_value: bool, use_git: bool
+        self,
+        delete_connection_id: ConnectionId,
+        *,
+        pprint_value: bool,
+        pending_changes: PendingChanges,
     ) -> ActionResult:
         source_site, dest_site = self._site_mgmt.delete_broker_connection(
             delete_connection_id, pprint_value=pprint_value
@@ -1133,7 +1248,7 @@ class ModeDistributedMonitoring(WatoMode):
             connection_id=delete_connection_id,
             is_new_broker_connection=False,
             sites=[source_site, dest_site],
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
         return redirect(mode_url("sites"))
 
@@ -1280,7 +1395,7 @@ class ModeDistributedMonitoring(WatoMode):
                 "sites, please do not forget to add your local monitoring site also, if "
                 "you want to display its data."
             ),
-            limit=active_config.table_row_limit,
+            limit=config.table_row_limit,
         ) as table:
             for site_id, site in sites:
                 table.row()
@@ -1300,7 +1415,7 @@ class ModeDistributedMonitoring(WatoMode):
                 "brokers_connections",
                 _("Peer-to-peer message broker connections"),
                 empty_text=_("You have not configured any peer-to-peer connections."),
-                limit=active_config.table_row_limit,
+                limit=config.table_row_limit,
             ) as table:
                 for conn_id, connection in connections.items():
                     table.row()
@@ -2058,7 +2173,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         html.close_table()
 
         with table_element(
-            "certificate_chain", _("Certificate chain"), limit=active_config.table_row_limit
+            "certificate_chain", _("Certificate chain"), limit=config.table_row_limit
         ) as table:
             for cert_detail in reversed(cert_details[1:]):
                 table.row()
@@ -2167,5 +2282,25 @@ def sort_sites(sites: SiteConfigurations) -> list[tuple[SiteId, SiteConfiguratio
             is_replication_enabled(sid_s[1]),
             sid_s[1]["alias"],
             sid_s[0],
+        ),
+    )
+
+
+def _pending_changes(
+    sites: SiteConfigurations,
+    *,
+    use_git: bool,
+    local_site: SiteId,
+    user_id: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(sites),
+        local_site=local_site,
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
         ),
     )

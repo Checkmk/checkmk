@@ -759,7 +759,7 @@ class ContainerStatus(BaseModel):
     restart_count: int
 
 
-class ConditionType(enum.StrEnum):
+class PodConditionType(enum.StrEnum):
     """
     DISRUPTIONTARGET
         * condition is only present if the pod is actually disrupted by one of listed
@@ -778,6 +778,7 @@ class ConditionType(enum.StrEnum):
     DISRUPTIONTARGET = "disruptiontarget"
     PODRESIZEPENDING = "resizepending"
     PODRESIZEINPROGRESS = "resizeinprogress"
+    ALLCONTAINERSRESTARTING = "allcontainersrestarting"
 
     @classmethod
     def from_kube_api(cls, condition: str) -> Self | None:
@@ -800,6 +801,8 @@ class ConditionType(enum.StrEnum):
                 return cls.PODRESIZEPENDING
             case "PodResizeInProgress":
                 return cls.PODRESIZEINPROGRESS
+            case "AllContainersRestarting":
+                return cls.ALLCONTAINERSRESTARTING
             case _:
                 return None
 
@@ -812,7 +815,7 @@ class PodCondition(BaseModel):
     """
 
     status: ConditionStatus
-    type: ConditionType | None = None
+    type: PodConditionType | None = None
     custom_type: str | None = None
     reason: str | None = None
     detail: str | None = None

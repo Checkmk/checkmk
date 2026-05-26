@@ -20,11 +20,11 @@ import cmk.gui.pages
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
-from cmk.graphing.v1 import entry_point_prefixes
-from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
-from cmk.graphing.v1 import perfometers as perfometers_api
-from cmk.graphing.v1 import translations as translations_api
+from cmk.graphing.v1 import entry_point_prefixes as entry_point_prefixes_v1
+from cmk.graphing.v1 import graphs as graphs_v1
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import perfometers as perfometers_v1
+from cmk.graphing.v1 import translations as translations_v1
 from cmk.gui.graphing import (
     check_metrics,
     CheckMetricEntry,
@@ -59,25 +59,25 @@ from cmk.utils.servicename import ServiceName
 
 
 def _load_graphing_plugins() -> DiscoveredPlugins[
-    metrics_api.Metric
-    | perfometers_api.Perfometer
-    | perfometers_api.Bidirectional
-    | perfometers_api.Stacked
-    | graphs_api.Graph
-    | graphs_api.Bidirectional
-    | translations_api.Translation
+    metrics_v1.Metric
+    | perfometers_v1.Perfometer
+    | perfometers_v1.Bidirectional
+    | perfometers_v1.Stacked
+    | graphs_v1.Graph
+    | graphs_v1.Bidirectional
+    | translations_v1.Translation
 ]:
     discovered_plugins: DiscoveredPlugins[
-        metrics_api.Metric
-        | perfometers_api.Perfometer
-        | perfometers_api.Bidirectional
-        | perfometers_api.Stacked
-        | graphs_api.Graph
-        | graphs_api.Bidirectional
-        | translations_api.Translation
+        metrics_v1.Metric
+        | perfometers_v1.Perfometer
+        | perfometers_v1.Bidirectional
+        | perfometers_v1.Stacked
+        | graphs_v1.Graph
+        | graphs_v1.Bidirectional
+        | translations_v1.Translation
     ] = discover_all_plugins(
         PluginGroup.GRAPHING,
-        entry_point_prefixes(),
+        entry_point_prefixes_v1(),
         skip_wrong_types=False,
         raise_errors=cmk.ccc.debug.enabled(),
     )
@@ -88,32 +88,32 @@ def _load_graphing_plugins() -> DiscoveredPlugins[
 
 def _parse_check_command_from_api(
     check_command: (
-        translations_api.PassiveCheck
-        | translations_api.ActiveCheck
-        | translations_api.HostCheckCommand
-        | translations_api.NagiosPlugin
+        translations_v1.PassiveCheck
+        | translations_v1.ActiveCheck
+        | translations_v1.HostCheckCommand
+        | translations_v1.NagiosPlugin
     ),
 ) -> str:
     match check_command:
-        case translations_api.PassiveCheck():
+        case translations_v1.PassiveCheck():
             return (
                 check_command.name
                 if check_command.name.startswith("check_mk-")
                 else f"check_mk-{check_command.name}"
             )
-        case translations_api.ActiveCheck():
+        case translations_v1.ActiveCheck():
             return (
                 check_command.name
                 if check_command.name.startswith("check_mk_active-")
                 else f"check_mk_active-{check_command.name}"
             )
-        case translations_api.HostCheckCommand():
+        case translations_v1.HostCheckCommand():
             return (
                 check_command.name
                 if check_command.name.startswith("check-mk-")
                 else f"check-mk-{check_command.name}"
             )
-        case translations_api.NagiosPlugin():
+        case translations_v1.NagiosPlugin():
             name = (
                 check_command.name
                 if check_command.name.startswith("check_")
@@ -128,34 +128,34 @@ def _parse_check_command_from_api(
 
 def _parse_translation(
     translation: (
-        translations_api.RenameTo | translations_api.ScaleBy | translations_api.RenameToAndScaleBy
+        translations_v1.RenameTo | translations_v1.ScaleBy | translations_v1.RenameToAndScaleBy
     ),
 ) -> CheckMetricEntry:
     match translation:
-        case translations_api.RenameTo():
+        case translations_v1.RenameTo():
             return {"name": translation.metric_name}
-        case translations_api.ScaleBy():
+        case translations_v1.ScaleBy():
             return {"scale": translation.factor}
-        case translations_api.RenameToAndScaleBy():
+        case translations_v1.RenameToAndScaleBy():
             return {"name": translation.metric_name, "scale": translation.factor}
 
 
 def _add_graphing_plugins(
     plugins: DiscoveredPlugins[
-        metrics_api.Metric
-        | perfometers_api.Perfometer
-        | perfometers_api.Bidirectional
-        | perfometers_api.Stacked
-        | graphs_api.Graph
-        | graphs_api.Bidirectional
-        | translations_api.Translation
+        metrics_v1.Metric
+        | perfometers_v1.Perfometer
+        | perfometers_v1.Bidirectional
+        | perfometers_v1.Stacked
+        | graphs_v1.Graph
+        | graphs_v1.Bidirectional
+        | translations_v1.Translation
     ],
 ) -> None:
     for plugin in plugins.plugins.values():
-        if isinstance(plugin, metrics_api.Metric):
+        if isinstance(plugin, metrics_v1.Metric):
             metrics_from_api.register(parse_metric_from_api(plugin))
 
-        elif isinstance(plugin, translations_api.Translation):
+        elif isinstance(plugin, translations_v1.Translation):
             for check_command in plugin.check_commands:
                 check_metrics[_parse_check_command_from_api(check_command)] = {
                     MetricName(old_name): _parse_translation(translation)
@@ -164,11 +164,11 @@ def _add_graphing_plugins(
 
         elif isinstance(
             plugin,
-            perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked,
+            perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked,
         ):
             perfometers_from_api.register(plugin)
 
-        elif isinstance(plugin, graphs_api.Graph | graphs_api.Bidirectional):
+        elif isinstance(plugin, graphs_v1.Graph | graphs_v1.Bidirectional):
             graphs_from_api.register(plugin)
 
 

@@ -14,5 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// This file is ignored by bazel where the version is set with a build flag.
-pub const VERSION: &str = "2.6.0b1";
+// Bazel replaces this file entirely via file_from_flag.
+// Cargo uses this as-is: CMK_VERSION env overrides the fallback at compile time.
+pub const VERSION: &str = match option_env!("CMK_VERSION") {
+    Some(v) => v,
+    None => "2.6.0b1",
+};

@@ -85,6 +85,12 @@ ssh -o "UserKnownHostsFile=${KNOWN_HOSTS_FILE}" -i "${KEYFILE}" "${REMOTE_USER}@
         export CI_ORA2_DB_TEST
     }
 
+    # CMK_VERSION is expanded locally (unquoted heredoc), but the remote shell
+    # needs an explicit export so child processes (cargo/build.rs or make, for example) can read it.
+    [ -n "${CMK_VERSION}" ] && {
+        export CMK_VERSION="${CMK_VERSION}"
+    }
+
     "${checkmk_path}/packages/mk-oracle/run" "${RUN_CMD}"
 EOF
 

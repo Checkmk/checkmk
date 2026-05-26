@@ -38,12 +38,14 @@ void main() {
                 variable:"CI_ORA_TEST_PASSWORD"),
         ]) {
             // The windows.build function will create stages.
-            windows.build(
-                TARGET: 'agent_with_sign',
-                PASSWORD: WIN_SIGN_PASSWORD,
-                CREDS: NEXUS_USERNAME + ':' + NEXUS_PASSWORD,
-                CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
-            );
+            withEnv(["CMK_VERSION=${cmk_version}"]) {
+                windows.build(
+                    TARGET: 'agent_with_sign',
+                    PASSWORD: WIN_SIGN_PASSWORD,
+                    CREDS: NEXUS_USERNAME + ':' + NEXUS_PASSWORD,
+                    CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
+                );
+            }
         }
 
         stage("detach") {

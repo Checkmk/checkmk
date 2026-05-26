@@ -46,7 +46,7 @@ void main() {
     );
     def cmd_status = 1; // be sure to fail, in case of other failures
 
-    def do_use_node = currentBuild.fullProjectName.endsWith("/test-gerrit-single") ||
+    def do_use_node = currentBuild.fullProjectName.endsWith("/test-gerrit-single-node") ||
         (kubernetes_inherit_from == "UNSET" && env.USE_K8S_GERRIT == "0");
     def do_use_k8s = (kubernetes_inherit_from != "UNSET" && env.USE_K8S_GERRIT == "1");
     def ensure_integrity = !(do_use_node ^ do_use_k8s);

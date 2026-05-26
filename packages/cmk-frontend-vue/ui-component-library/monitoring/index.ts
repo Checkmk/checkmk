@@ -9,12 +9,14 @@ import UclTableCellBreakpoints from './UclTableCellBreakpoints.vue'
 import UclBaseCell from './cell/UclBaseCell.vue'
 import UclCheckboxCell from './cell/UclCheckboxCell.vue'
 import UclNumberCell from './cell/UclNumberCell.vue'
+import UclStringCell from './cell/UclStringCell.vue'
 
 export const pages: Array<Folder | Page> = [
   new Folder('Cell types', [
     new Page('BaseCell', UclBaseCell),
     new Page('CheckboxCell', UclCheckboxCell),
-    new Page('NumberCell', UclNumberCell)
+    new Page('NumberCell', UclNumberCell),
+    new Page('StringCell', UclStringCell)
   ]),
   new Page('Table Cell breakpoints', UclTableCellBreakpoints)
 ]

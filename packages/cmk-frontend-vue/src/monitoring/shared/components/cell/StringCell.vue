@@ -1,0 +1,60 @@
+<!--
+Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+
+<script setup lang="ts">
+import { computed } from 'vue'
+
+import BaseCell, { type CellLink } from './BaseCell.vue'
+
+const props = withDefaults(
+  defineProps<{
+    value: string
+    hardBreakEvery?: number
+    linkedTo?: CellLink | undefined
+  }>(),
+  { hardBreakEvery: 15, linkedTo: undefined }
+)
+
+const SOFT_BREAK_CHARS = /([ \-_.])/g
+const ZWSP = '​'
+
+const display = computed(() => {
+  const hardBreak = new RegExp(`([^\\s\\-_.]{${props.hardBreakEvery}})`, 'g')
+  return props.value.replace(SOFT_BREAK_CHARS, `$1${ZWSP}`).replace(hardBreak, `$1${ZWSP}`)
+})
+</script>
+
+<template>
+  <BaseCell class="monitoring-string-cell" :linked-to="linkedTo">
+    <template #default>
+      <span :title="value" class="monitoring-string-cell__text">{{ display }}</span>
+    </template>
+  </BaseCell>
+</template>
+
+<style scoped>
+.monitoring-string-cell__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+/* The highlight wrapper must fill the cell so the clamped text wraps within the
+   available width (minus the wrapper padding and the trailing link icon). */
+/* stylelint-disable selector-pseudo-class-no-unknown */
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.monitoring-string-cell :deep(.monitoring-highlight-wrapper) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+</style>

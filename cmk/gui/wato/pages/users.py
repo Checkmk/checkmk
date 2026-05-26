@@ -1053,19 +1053,6 @@ class ModeEditUser(WatoMode):
             elif "authorized_sites" in user_attrs:
                 del user_attrs["authorized_sites"]
 
-        # ntopng
-        if ntop_connection().is_available():
-            for ntop_conn in _iter_ntop_connections():
-                # ntop_username_attribute will be the name of the custom attribute or false
-                # see corresponding Setup rule
-                ntop_username_attribute = ntop_conn.get("use_custom_attribute_as_ntop_username")
-                if ntop_username_attribute:
-                    # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
-                    user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[literal-required]
-                        ntop_username_attribute
-                    )
-                    return
-
     def _increment_auth_serial(self, user_attrs: UserSpec) -> None:
         user_attrs["serial"] = user_attrs.get("serial", 0) + 1
 
@@ -1370,24 +1357,18 @@ class ModeEditUser(WatoMode):
             html.write_text_permissive(vs_sites.value_to_html(authorized_sites))
         html.help(vs_sites.help())
 
-        self._show_custom_user_attributes(custom_user_attr_topics.get("ident", []))
+        ident_attrs = custom_user_attr_topics.get("ident", [])
+        # ntop_alias is rendered conditionally below; split it out to avoid showing
+        # it unconditionally alongside the other identity attributes.
+        ntop_ident_attrs = [(n, a) for n, a in ident_attrs if n == "ntop_alias"]
+        self._show_custom_user_attributes([(n, a) for n, a in ident_attrs if n != "ntop_alias"])
 
-        # ntopng
+        # ntopng — show the ntop_alias field only when the global setting is enabled
         if ntop_connection().is_available():
-            # ntop_username_attribute will be the name of the custom attribute or false
-            # see corresponding Setup rule
             for ntop_conn in _iter_ntop_connections():
                 ntop_username_attribute = ntop_conn.get("use_custom_attribute_as_ntop_username")
-                if ntop_username_attribute:
-                    forms.section(_("ntopng username"))
-                    self._lockable_input(ntop_username_attribute, "")
-                    html.help(
-                        _(
-                            "The corresponding username in ntopng of the current Checkmk user. "
-                            "It is used, in case the user mapping to ntopng is configured to use this "
-                            "custom attribute"
-                        )
-                    )
+                if ntop_username_attribute == "ntop_alias" and ntop_ident_attrs:
+                    self._show_custom_user_attributes(ntop_ident_attrs)
                     return
 
     def _render_security(

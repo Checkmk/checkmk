@@ -43,6 +43,15 @@ export const panelConfig = {
     ],
     initialState: '_self'
   },
+  linkVariant: {
+    type: 'list' as const,
+    title: '↳ variant',
+    options: [
+      { title: 'inline', name: 'inline' },
+      { title: 'icon', name: 'icon' }
+    ],
+    initialState: 'inline'
+  },
   highlightEnabled: {
     type: 'boolean' as const,
     title: 'highlight',
@@ -100,7 +109,11 @@ const propState = ref(
 
 const linkedTo = computed<CellLink | undefined>(() =>
   propState.value.linkEnabled
-    ? { href: propState.value.linkHref, target: propState.value.linkTarget }
+    ? {
+        href: propState.value.linkHref,
+        target: propState.value.linkTarget,
+        variant: propState.value.linkVariant as CellLink['variant']
+      }
     : undefined
 )
 
@@ -113,7 +126,7 @@ const highlight = computed<CellHighlight | undefined>(() =>
     : undefined
 )
 
-const LINK_SUB_KEYS = ['linkHref', 'linkTarget'] as const
+const LINK_SUB_KEYS = ['linkHref', 'linkTarget', 'linkVariant'] as const
 const HIGHLIGHT_SUB_KEYS = ['highlightType', 'highlightColor'] as const
 
 const visibleConfig = computed(() =>
@@ -177,6 +190,7 @@ const visibleConfig = computed(() =>
 
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-linkHref'])),
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-linkTarget'])),
+.ucl-base-cell__panel :deep(div:has(> div > label[for$='-linkVariant'])),
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-highlightType'])),
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-highlightColor'])),
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-highlightOutline'])) {

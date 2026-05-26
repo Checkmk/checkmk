@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, inject, ref, useSlots } from 'vue'
 
+import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
+
 import {
   type BreakpointValue,
   type CellBreakpoints,
@@ -17,6 +19,7 @@ import HighlightWrapper, { type CellHighlight } from './base/HighlightWrapper.vu
 export interface CellLink {
   href: string
   target: '_self' | '_blank' | string | undefined
+  variant?: 'inline' | 'icon' | undefined
 }
 
 const props = defineProps<{
@@ -53,14 +56,27 @@ const activeSlot = computed<string>(() => {
 
 <template>
   <td v-if="visible" class="monitoring-base-cell">
-    <a v-if="linkedTo" :href="linkedTo.href" :target="linkedTo.target">
+    <a
+      v-if="linkedTo && linkedTo.variant !== 'icon'"
+      :href="linkedTo.href"
+      :target="linkedTo.target"
+    >
       <HighlightWrapper :highlight="highlight" :is-linked="true">
         <slot :name="activeSlot" />
       </HighlightWrapper>
     </a>
-    <HighlightWrapper v-else :highlight="highlight">
-      <slot :name="activeSlot" />
-    </HighlightWrapper>
+    <div v-else class="monitoring-base-cell__wrapper">
+      <HighlightWrapper :highlight="highlight">
+        <slot :name="activeSlot" />
+      </HighlightWrapper>
+      <a
+        v-if="linkedTo && linkedTo.variant === 'icon'"
+        :href="linkedTo.href"
+        :target="linkedTo.target"
+      >
+        <CmkIcon class="monitoring-base-cell__link-icon" name="external" size="small" />
+      </a>
+    </div>
   </td>
 </template>
 
@@ -68,6 +84,17 @@ const activeSlot = computed<string>(() => {
 .monitoring-base-cell {
   a {
     text-decoration: underline;
+  }
+
+  .monitoring-base-cell__wrapper {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+
+    .monitoring-base-cell__link-icon {
+      flex: 0 0 auto;
+      margin: 0 var(--dimension-3) 0 var(--dimension-2);
+    }
   }
 }
 </style>

@@ -8,6 +8,10 @@ per-file notify.py=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file notify.py=set noparent
 per-file notify_types.py=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file notify_types.py=set noparent
+per-file certs.py=file:/component_owners/security/OWNERS_DEFINITION
+per-file certs.py=set noparent
+per-file security_event.py=file:/component_owners/security/OWNERS_DEFINITION
+per-file security_event.py=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

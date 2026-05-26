@@ -6,11 +6,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Ref, computed } from 'vue'
 
+import usei18n from '@/lib/i18n'
+
 import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import { type IFrameContent } from '@/dashboard/types/widget.ts'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
+
+const { _t } = usei18n()
 
 interface DashboardContentIFrameProps extends ContentProps<IFrameContent> {
   contentCenter?: boolean
@@ -26,7 +30,7 @@ const isPublicDashboard = useInjectIsPublicDashboard()
 
 const isValidUrl: Ref<boolean> = computed(() => {
   try {
-    return ['https:', 'http:'].includes(new URL(content.url).protocol)
+    return ['https:', 'http:'].includes(new URL(content.url, window.location.origin).protocol)
   } catch {
     return false
   }
@@ -47,11 +51,13 @@ const isValidUrl: Ref<boolean> = computed(() => {
       }"
     >
       <iframe
+        v-if="isValidUrl"
         :key="content.url"
         class="db-content-i-frame__iframe"
         allowtransparency="true"
         :src="content.url"
       />
+      <div v-else class="db-content-i-frame__invalid-url">{{ _t('Invalid URL') }}</div>
       <div
         v-if="isPublicDashboard && !disableClickShield"
         class="db-content-i-frame__click-shield"
@@ -85,5 +91,13 @@ const isValidUrl: Ref<boolean> = computed(() => {
 .db-content-i-frame__preview .db-content-i-frame__iframe {
   width: 100vw;
   height: 100vh;
+}
+
+.db-content-i-frame__invalid-url {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--default-font-color);
 }
 </style>

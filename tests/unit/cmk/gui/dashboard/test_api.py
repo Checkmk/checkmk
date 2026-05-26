@@ -372,6 +372,50 @@ class TestURLContent:
             },
         )
 
+    @pytest.mark.parametrize(
+        "url,should_fail",
+        [
+            pytest.param("javascript:alert(1)", True, id="javascript scheme blocked"),
+            pytest.param(
+                "data:text/html,<script>alert(1)</script>", True, id="data scheme blocked"
+            ),
+            pytest.param("vbscript:msgbox(1)", True, id="vbscript scheme blocked"),
+            pytest.param("file:///etc/passwd", True, id="file scheme blocked"),
+            pytest.param("http://example.com", False, id="http allowed"),
+            pytest.param("https://example.com", False, id="https allowed"),
+            pytest.param(
+                "view.py?view_name=allhosts", False, id="relative URL allowed (no scheme)"
+            ),
+        ],
+    )
+    def test_url_scheme_validation(
+        self, clients: ClientRegistry, url: str, should_fail: bool
+    ) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "url",
+                            "url": url,
+                        }
+                    )
+                },
+            ),
+            expect_ok=not should_fail,
+        )
+        if should_fail:
+            assert resp.status_code == 400, f"Expected 400 for {url}, got {resp.status_code}"
+            field_error = resp.json["fields"]["body.widgets.test_widget.content.url.url"]
+            assert "invalid url" in field_error["msg"].lower(), (
+                f"Expected error message to mention 'Invalid URL' for {url}, got: {field_error['msg']}"
+            )
+        else:
+            assert resp.status_code == 201, (
+                f"Expected 201 for {url}, got {resp.status_code} {resp.body!r}"
+            )
+
 
 class TestStaticTextContent:
     def test_create(self, clients: ClientRegistry) -> None:

@@ -25,6 +25,7 @@ void main() {
         "test-integration-community",
         "test-integration-pro",
         "test-integration-ultimatemt",
+        "test-integration-single-node",
         "test-plugins",
         "test-plugins-piggyback",
         "test-update-pro",

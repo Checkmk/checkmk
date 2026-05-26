@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
+import logging
 import os
 import sys
 from collections.abc import Callable, Iterable, Sequence
@@ -28,11 +29,11 @@ from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.helper_interface import AgentRawData
 from cmk.utils import log, paths
 from cmk.utils.labels import LabelManager, Labels
-from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 tracer = trace.get_tracer()
+_logger = logging.getLogger("cmk.base.automations")
 
 
 class MKAutomationError(MKGeneralException):
@@ -167,7 +168,7 @@ class Automations:
                 result = automation.handler(ctx, args, plugins, loading_result)
 
         except (MKGeneralException, MKTimeout) as e:
-            console.error(f"{e}", file=sys.stderr)
+            _logger.error(str(e))
             if cmk.ccc.debug.enabled():
                 raise
             return AutomationError.KNOWN_ERROR
@@ -175,7 +176,7 @@ class Automations:
         except Exception as e:
             if cmk.ccc.debug.enabled():
                 raise
-            console.error(f"{e}", file=sys.stderr)
+            _logger.error(str(e))
             return AutomationError.UNKNOWN_ERROR
 
         return result

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import dataclasses
 import itertools
+import logging
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from typing import assert_never, Generic, Literal, TypeVar
@@ -32,7 +33,7 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, merge_cluster_labels
-from cmk.utils.log import console, section
+from cmk.utils.log import section
 from cmk.utils.paths import omd_root
 from cmk.utils.servicename import ServiceName
 
@@ -49,6 +50,8 @@ from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import discover_host_labels, HostLabelPlugin
 from ._services import analyse_services, discover_services, find_plugins
 from ._utils import DiscoveredItem, DiscoverySettings, QualifiedDiscovery
+
+_logger = logging.getLogger("cmk.base.discovery")
 
 __all__ = ["get_host_services_by_host_name", "discovery_by_host"]
 
@@ -151,7 +154,7 @@ def automation_discovery(
     on_error: OnError,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
 ) -> DiscoveryReport:
-    console.verbose(f"  Doing discovery with '{settings!r}'...")
+    _logger.debug(f"  Doing discovery with '{settings!r}'...")
     results = {
         host_name: DiscoveryReport(),
         **{node: DiscoveryReport() for node in cluster_nodes},
@@ -175,7 +178,7 @@ def automation_discovery(
 
         host_sections_by_host = group_by_host(
             ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
-            console.debug,
+            _logger.debug,
         )
         store_piggybacked_sections(host_sections_by_host, omd_root)
         providers = make_providers(
@@ -490,7 +493,7 @@ def autodiscovery(
         oldest_queued=oldest_queued,
     )
     if reason:
-        console.verbose(f"  skipped: {reason}")
+        _logger.debug(f"autodiscovery: {host_name}  skipped: {reason}")
         return AutodiscoveryResult(discovery_result=None, activate=False, skipped=True, error=False)
 
     result = automation_discovery(
@@ -518,7 +521,9 @@ def autodiscovery(
     if result.error_text is not None:
         # for offline hosts the error message is empty. This is to remain
         # compatible with the automation code
-        console.verbose(f"  failed: {result.error_text or 'host is offline'}")
+        _logger.warning(
+            f"autodiscovery: {host_name} failed: {result.error_text or 'host is offline'}"
+        )
         return AutodiscoveryResult(discovery_result=None, activate=False, skipped=False, error=True)
 
     something_changed = (
@@ -529,10 +534,11 @@ def autodiscovery(
     )
 
     if not something_changed:
-        console.verbose("  nothing changed.")
+        _logger.debug(f"autodiscovery: {host_name}: nothing changed.")
         activation_required = False
     else:
-        console.verbose_no_lf(
+        _logger.info(
+            f"autodiscovery: {host_name}:"
             f"{result.services.total} services ({result.services.new} added, {result.services.changed} changed, "
             f"{result.services.removed} removed, {result.services.kept} kept, {result.clustered_new} clustered new, "
             f"{result.clustered_vanished}  clustered vanished) "
@@ -680,7 +686,7 @@ def discovery_by_host(  # should go to a different file, I think.
     )
 
     section.section_step("Executing discovery plugins (%d)" % len(candidates))
-    console.debug(f"  Trying discovery with: {', '.join(str(n) for n in candidates)}")
+    _logger.debug(f"  Trying discovery with: {', '.join(str(n) for n in candidates)}")
 
     try:
         discovered_services = {

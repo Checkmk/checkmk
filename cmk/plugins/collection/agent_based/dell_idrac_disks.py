@@ -37,6 +37,10 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 def discover_dell_idrac_disks(section: StringTable) -> DiscoveryResult:
     inventory = []
     for line in section:
+        # FYI: The disk name in line[0] is allowed to be empty, but the item argument of Service is not.
+        # Instead of backporting a refactor, problematic entries are skipped.
+        if not line[0]:
+            continue
         inventory.append((line[0], None))
     yield from [Service(item=item, parameters=parameters) for (item, parameters) in inventory]
 

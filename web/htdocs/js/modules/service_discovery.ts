@@ -366,7 +366,7 @@ function handle_execute_active_check(oDiv: HTMLElement, response_json: string) {
         output = response.result.output;
     }
 
-    oDiv.innerHTML = output;
+    oDiv.textContent = output;
 
     // Change name and class of status columns
     const oTr = oDiv.parentNode!.parentNode as HTMLElement;
@@ -379,6 +379,6 @@ function handle_execute_active_check(oDiv: HTMLElement, response_json: string) {
 
     const span = document.createElement("span");
     utils.add_class(span, "state_rounded_fill");
-    span.innerHTML = statename;
+    span.textContent = statename;
     oTdState.replaceChild(span, oTdState.firstChild!);
 }

@@ -3,19 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # iso.3.6.1.4.1.231.7.2.9.1.1.0 = INTEGER: 1
 # The actual error state of the Octopus E PABX. Contains the highest severity level of the recent error events. This object is updated automatically, but it can also be modified manually.
 
 # { normal(1), warning(2), minor(3), major(4), critical(5) }
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.sni_octopuse.lib import DETECT_SNI_OCTOPUSE
 
-check_info = {}
+_OCTOPUS_STATES_MAP = {
+    1: (State.OK, "normal"),
+    2: (State.WARN, "warning"),
+    3: (State.WARN, "minor"),
+    4: (State.CRIT, "major"),
+    5: (State.CRIT, "critical"),
+}
 
 
 def discover_octopus_status(section: StringTable) -> DiscoveryResult:
@@ -23,37 +36,33 @@ def discover_octopus_status(section: StringTable) -> DiscoveryResult:
         yield Service()
 
 
-def check_octopus_status(_no_item, _no_params_info, info):
-    octopus_states_map = {
-        1: (0, "normal"),
-        2: (1, "warning"),
-        3: (1, "minor"),
-        4: (2, "major"),
-        5: (2, "critical"),
-    }
+def check_octopus_status(section: StringTable) -> CheckResult:
+    octopus_state = int(section[0][0])
+    state, desc = _OCTOPUS_STATES_MAP[octopus_state]
 
-    octopus_state = int(info[0][0])
-    state = octopus_states_map[octopus_state][0]
-    desc = octopus_states_map[octopus_state][1]
-
-    msg = "PBX system state is %s" % desc
+    msg = f"PBX system state is {desc}"
     if octopus_state >= 3:
         msg += " error"
-    return (state, msg)
+    yield Result(state=state, summary=msg)
 
 
 def parse_sni_octopuse_status(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-check_info["sni_octopuse_status"] = LegacyCheckDefinition(
+snmp_section_sni_octopuse_status = SimpleSNMPSection(
     name="sni_octopuse_status",
-    parse_function=parse_sni_octopuse_status,
     detect=DETECT_SNI_OCTOPUSE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.7.2.9.1.1",
         oids=["0"],
     ),
+    parse_function=parse_sni_octopuse_status,
+)
+
+
+check_plugin_sni_octopuse_status = CheckPlugin(
+    name="sni_octopuse_status",
     service_name="Global status",
     discovery_function=discover_octopus_status,
     check_function=check_octopus_status,

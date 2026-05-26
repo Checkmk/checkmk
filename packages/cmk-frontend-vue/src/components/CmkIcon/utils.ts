@@ -17,7 +17,7 @@ export function iconSizeNametoNumber(sizeName: IconSizeNames | undefined) {
 }
 
 export function getIconPath(name: SimpleIcons, theme: string): string {
-  let internalTheme = 'dark'
+  let internalTheme: 'light' | 'dark' = 'dark'
   if (theme === 'facelift') {
     internalTheme = 'light'
   }

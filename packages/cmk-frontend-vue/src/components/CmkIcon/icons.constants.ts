@@ -1387,7 +1387,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   zoom: lightIconZoomPng
 }
 
-export const themedIcons: Record<string, Partial<Record<IconNames, string>>> = {
+export const themedIcons: Record<'light' | 'dark', Partial<Record<IconNames, string>>> = {
   light: {
     'add-rule': lightIconAddRuleSvg,
     'agent-registration': lightIconAgentRegistrationSvg,

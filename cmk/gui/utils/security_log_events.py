@@ -33,15 +33,18 @@ class AuthenticationFailureEvent(SecurityEvent):
         auth_method: AuthType | Literal["token"],
         username: UserId | None,
         remote_ip: str | None,
+        extra_details: dict[str, str] | None = None,
     ) -> None:
+        details = {
+            **(extra_details or {}),
+            "user_error": user_error,  # Note: may be localized
+            "method": auth_method,
+            "user": str(username or "Unknown user"),
+            "remote_ip": remote_ip,
+        }
         super().__init__(
             "authentication failed",
-            {
-                "user_error": user_error,  # Note: may be localized
-                "method": auth_method,
-                "user": str(username or "Unknown user"),
-                "remote_ip": remote_ip,
-            },
+            details,
             SecurityEvent.Domain.auth,
         )
 
@@ -51,15 +54,22 @@ class AuthenticationSuccessEvent(SecurityEvent):
     """Indicates a successful authentication"""
 
     def __init__(
-        self, *, auth_method: AuthType, username: UserId | None, remote_ip: str | None
+        self,
+        *,
+        auth_method: AuthType,
+        username: UserId | None,
+        remote_ip: str | None,
+        extra_details: dict[str, str] | None = None,
     ) -> None:
+        details = {
+            **(extra_details or {}),
+            "method": auth_method,
+            "user": str(username or "Unknown user"),
+            "remote_ip": remote_ip,
+        }
         super().__init__(
             "authentication succeeded",
-            {
-                "method": auth_method,
-                "user": str(username or "Unknown user"),
-                "remote_ip": remote_ip,
-            },
+            details,
             SecurityEvent.Domain.auth,
         )
 
@@ -73,14 +83,17 @@ class AuthenticationInitiatedEvent(SecurityEvent):
         *,
         auth_method: AuthType | Literal["token"],
         remote_ip: str | None,
+        extra_details: dict[str, str] | None = None,
     ) -> None:
+        details = {
+            **(extra_details or {}),
+            "method": auth_method,
+            "user": "Unknown user",
+            "remote_ip": remote_ip,
+        }
         super().__init__(
             "authentication initiated",
-            {
-                "method": auth_method,
-                "user": "Unknown user",
-                "remote_ip": remote_ip,
-            },
+            details,
             SecurityEvent.Domain.auth,
         )
 

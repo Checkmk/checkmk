@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.urls import is_allowed_url
+
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet
 from cmk.gui.dashboard.type_defs import DashletConfig, DashletSize
+from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DictionaryEntry, TextInput
 
@@ -43,6 +46,18 @@ class URLDashlet(IFrameDashlet[URLDashletConfig]):
 
     def update(self) -> None:
         pass  # Not called at all. This dashlet always opens configured pages (see below)
+
+    def show(self) -> None:
+        if not is_allowed_url(
+            self._dashlet_spec["url"], cross_domain=True, schemes=["http", "https"]
+        ):
+            html.open_div(class_="nodata")
+            html.open_div(class_="msg")
+            html.write_text_permissive(_("Invalid URL"))
+            html.close_div()
+            html.close_div()
+            return
+        super().show()
 
     def _get_iframe_url(self) -> str:
         # override so we don't add context vars

@@ -1,23 +1,23 @@
-title: NetApp Filer: System time offset
+title: NetApp Filer: NTP time offset
 agents: netapp
 catalog: hw/storagehw/netapp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the system time of the NetApp node. It computes the
- difference between the time measured on the monitored node and the time
- of the Checkmk server when the data is processed. The resulting difference
- is referred to as "time_offset" here (this is also the metrics name).
+ This check monitors the NTP time synchronization of each NetApp node.
 
- Returns {WARN}/{CRIT} if the absolute system time offset is above the
+ It evaluates the time offset reported by the currently selected NTP server
+ for the monitored node.
+
+ This check relies on the private CLI passthrough endpoint ({/api/private/cli/cluster/time-service/ntp/status})
+ to fetch the NTP status, as no public REST API is available. To enable this, ensure the monitoring user is
+ assigned an ONTAP REST role with read access to this endpoint.
+
+ Returns {CRIT} if no NTP server is available for the node, if no NTP server
+ is currently selected, or if the selected NTP server provides no offset.
+
+ Returns {WARN}/{CRIT} if the absolute NTP time offset is above the
  given levels.
-
- By default, the check uses warning level of 30 seconds and critical level
- of 60 seconds. These levels may be configured with WATO rule group
- {Netapp system time offset}.
-
- As the offset includes the systematic time delay between querying the host
- and querying the reference time, it is never expected to be zero.
 
  Please note: You need the Special Agent "NetApp via ONTAP REST Api" to
  retrieve the monitoring data from the device. The Special Agent itself can

@@ -201,7 +201,22 @@ class WheelDeploySpec:
     """Deploy strategy: DIRECT (direct source copy) or GENERATED (bazel build + zipfile)."""
 
     source_subdirs: tuple[str, ...]
+    """Site-relative subdirs (= wheel-internal layout, e.g. ``cmk/ccc/``).
+
+    Used directly as the deploy destination under ``site_packages/``.  The repo
+    source for each subdir is ``repo_root / strip_prefix / subdir``.
+    """
+
     distribution_name: str
+
+    strip_prefix: str = ""
+    """Repo-side prefix the wheel rule strips when packaging.
+
+    Mirrors ``py_wheel.strip_path_prefixes[0]`` -- empty when the rule does not
+    strip (monolithic wheels such as ``//cmk:whl``), otherwise the package dir
+    (e.g. ``packages/cmk-ccc``).  The deployer uses this to map a
+    ``source_subdir`` back to its repo location.
+    """
 
     edition_filter: bool = False
     """When True, run post-deploy edition directory pruning (cmk/ tree)."""

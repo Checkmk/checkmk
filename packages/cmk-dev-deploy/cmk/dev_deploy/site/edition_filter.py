@@ -106,7 +106,7 @@ def filter_editions(deploy_root: Path, site_edition: Edition) -> list[Path]:
 
     Args:
         deploy_root: Root of the deployed Python tree
-            (e.g. ``<site>/lib/python3/cmk``).
+            (e.g. ``<site>/lib/python3.13/site-packages/cmk``).
         site_edition: The edition of the target OMD site.
 
     Returns:

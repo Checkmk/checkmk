@@ -55,8 +55,15 @@ def _make_wheel_spec(
     deploy_mode: WheelDeployMode = WheelDeployMode.DIRECT,
     source_subdirs: tuple[str, ...] = ("cmk/ccc/",),
     distribution_name: str = "",
+    strip_prefix: str | None = None,
 ) -> WheelDeploySpec:
-    """Create a WheelDeploySpec with sensible defaults for testing."""
+    """Create a WheelDeploySpec with sensible defaults for testing.
+
+    ``strip_prefix`` defaults to ``package`` to match the common case where
+    the wheel rule strips its own package dir (e.g. cmk-ccc).  Tests that
+    cover the monolithic ``//cmk:whl`` shape (no strip) should pass
+    ``strip_prefix=""`` explicitly.
+    """
     return WheelDeploySpec(
         package=package,
         wheel_targets=wheel_targets,
@@ -64,6 +71,7 @@ def _make_wheel_spec(
         deploy_mode=deploy_mode,
         source_subdirs=source_subdirs,
         distribution_name=distribution_name,
+        strip_prefix=package if strip_prefix is None else strip_prefix,
     )
 
 
@@ -434,8 +442,6 @@ class TestPathAwareSkipIntegration:
             _sp: Any,
             _site: Any,
             _shared: Any = frozenset(),
-            _file_root: Any = None,
-            _dist_info_root: Any = None,
             _protected_children: Any = frozenset(),
         ) -> tuple[list[Path], float]:
             return [], 0.0
@@ -812,8 +818,6 @@ class TestParallelDeployment:
             _sp: Any,
             _site: Any,
             _shared: Any = frozenset(),
-            _file_root: Any = None,
-            _dist_info_root: Any = None,
             _protected_children: Any = frozenset(),
         ) -> tuple[list[Path], float]:
             submitted_specs.append(spec.package)
@@ -880,8 +884,6 @@ class TestParallelDeployment:
             _sp: Any,
             _site: Any,
             _shared: Any = frozenset(),
-            _file_root: Any = None,
-            _dist_info_root: Any = None,
             _protected_children: Any = frozenset(),
         ) -> tuple[list[Path], float]:
             return [], 0.0
@@ -961,8 +963,6 @@ class TestParallelDeployment:
             _sp: Any,
             _site: Any,
             _shared: Any = frozenset(),
-            _file_root: Any = None,
-            _dist_info_root: Any = None,
             _protected_children: Any = frozenset(),
         ) -> tuple[list[Path], float]:
             return [], 0.0
@@ -1203,7 +1203,7 @@ class TestRemoveDeletedFiles:
         files from the version package survive the next deploy.
         """
         site = _make_site(tmp_path)
-        site_packages = site.root / "lib" / "python3"
+        site_packages = site.root / "lib" / "python3.13" / "site-packages"
         stale = site_packages / "cmk" / "plugins" / "collection" / "agent_based" / "prtconf.py"
         stale.parent.mkdir(parents=True)
         stale.write_text("# stale from version package")
@@ -1211,18 +1211,18 @@ class TestRemoveDeletedFiles:
         pyc.parent.mkdir()
         pyc.write_text("# stale bytecode")
 
-        # source_subdirs no longer mentions plugins/collection/agent_based/
+        # source_subdirs no longer mentions cmk/plugins/collection/agent_based/
         # because the directory is empty in the current source tree.
         spec = _make_wheel_spec(
             package="cmk",
-            source_subdirs=("plugins/aix/agent_based/",),
+            strip_prefix="",
+            source_subdirs=("cmk/plugins/aix/agent_based/",),
         )
 
         _remove_deleted_files(
             ("cmk/plugins/collection/agent_based/prtconf.py",),
             [spec],
             site_packages,
-            site,
         )
 
         assert not stale.exists()
@@ -1231,18 +1231,17 @@ class TestRemoveDeletedFiles:
     def test_skips_deletions_outside_package_prefix(self, tmp_path: Path) -> None:
         """A deletion outside the spec's package prefix is ignored."""
         site = _make_site(tmp_path)
-        site_packages = site.root / "lib" / "python3"
+        site_packages = site.root / "lib" / "python3.13" / "site-packages"
         unrelated = site_packages / "other_pkg" / "file.py"
         unrelated.parent.mkdir(parents=True)
         unrelated.write_text("# untouched")
 
-        spec = _make_wheel_spec(package="cmk", source_subdirs=("base/",))
+        spec = _make_wheel_spec(package="cmk", strip_prefix="", source_subdirs=("cmk/base/",))
 
         _remove_deleted_files(
             ("other_pkg/file.py",),
             [spec],
             site_packages,
-            site,
         )
 
         assert unrelated.exists()
@@ -1250,14 +1249,13 @@ class TestRemoveDeletedFiles:
     def test_no_op_when_target_already_gone(self, tmp_path: Path) -> None:
         """A deletion whose target is missing in the site is silently skipped."""
         site = _make_site(tmp_path)
-        site_packages = site.root / "lib" / "python3"
+        site_packages = site.root / "lib" / "python3.13" / "site-packages"
         site_packages.mkdir(parents=True)
 
-        spec = _make_wheel_spec(package="cmk", source_subdirs=("base/",))
+        spec = _make_wheel_spec(package="cmk", strip_prefix="", source_subdirs=("cmk/base/",))
 
         _remove_deleted_files(
             ("cmk/base/never_deployed.py",),
             [spec],
             site_packages,
-            site,
         )

@@ -57,27 +57,6 @@ from cmk.dev_deploy.types import (
     WheelDeploySpec,
 )
 
-# The main ``cmk`` wheel (``//cmk:whl``) is special: its files live at
-# ``lib/python3/cmk/`` in the OMD site tree, NOT in ``site-packages/``.
-# Sub-packages (cmk-ccc, cmk-trace, …) deploy to ``site-packages/``
-# normally because their ``source_subdirs`` already contain the full
-# namespace path (e.g. ``cmk/ccc/``).  The monolithic cmk wheel's
-# subdirs are relative to the ``cmk/`` package dir (e.g. ``gui/wsgi/``)
-# so the deployer must map them to ``lib/python3/cmk/gui/wsgi/``.
-_CMK_WHEEL_PACKAGE = "cmk"
-_CMK_WHEEL_SITE_SUBDIR = Path("lib") / "python3"
-
-
-def _get_deploy_roots(
-    spec: WheelDeploySpec, site: SiteInfo, site_packages: Path
-) -> tuple[Path, Path]:
-    """Return ``(file_root, dist_info_root)`` for a wheel spec."""
-    if spec.package == _CMK_WHEEL_PACKAGE:
-        cmk_root = site.root / _CMK_WHEEL_SITE_SUBDIR
-        return (cmk_root / _CMK_WHEEL_PACKAGE, cmk_root)
-    return (site_packages, site_packages)
-
-
 if TYPE_CHECKING:
     from cmk.dev_deploy.state.deploy_state import DeployerState, DeployState
 
@@ -493,7 +472,7 @@ def _collect_installed_files(base: Path) -> list[Path]:
 
 
 def _leaf_subdirs(
-    subdirs: tuple[str, ...], repo_root: Path | None = None, package_dir: str = ""
+    subdirs: tuple[str, ...], repo_root: Path | None = None, strip_prefix: str = ""
 ) -> tuple[str, ...]:
     """Filter out namespace-only parent dirs that have children in the list.
 
@@ -508,8 +487,8 @@ def _leaf_subdirs(
             result.append(s)
             continue
         # Parent with children: keep only if it has direct files in source
-        if repo_root is not None and package_dir:
-            source = repo_root / package_dir / s.rstrip("/")
+        if repo_root is not None:
+            source = repo_root / strip_prefix / s.rstrip("/")
             if source.is_dir() and any(f.is_file() for f in source.iterdir()):
                 result.append(s)
                 continue
@@ -520,15 +499,19 @@ def _leaf_subdirs(
 def _deploy_single_distribution(
     dist_info: _DistributionInfo,
     repo_root: Path,
-    package_dir: str,
-    file_root: Path,
+    strip_prefix: str,
+    site_packages: Path,
     *,
-    dist_info_root: Path | None = None,
     shared_subdirs: frozenset[str] = frozenset(),
     protected_children: frozenset[str] = frozenset(),
 ) -> list[Path]:
-    """Deploy a single distribution: clean -> copy -> .dist-info."""
-    effective_dist_info_root = dist_info_root if dist_info_root is not None else file_root
+    """Deploy a single distribution: clean -> copy -> .dist-info.
+
+    ``source_subdirs`` are site-relative (= wheel-internal layout).  Repo
+    sources are resolved via ``repo_root / strip_prefix / subdir`` and deploy
+    targets via ``site_packages / subdir``.  ``strip_prefix`` is empty for the
+    monolithic ``//cmk:whl`` (its repo layout already mirrors site-packages).
+    """
     normalized = dist_info.distribution_name.replace("-", "_")
     dist_info_glob = f"{normalized}-*.dist-info"
 
@@ -536,50 +519,40 @@ def _deploy_single_distribution(
     # contain both a parent namespace (e.g. ``cmk/plugins/``) and a child
     # package (e.g. ``cmk/plugins/metric_backend_omd/``), cleaning/copying
     # the parent with --delete would destroy other packages' content.
-    leaf_subdirs = _leaf_subdirs(dist_info.source_subdirs, repo_root, package_dir)
+    leaf_subdirs = _leaf_subdirs(dist_info.source_subdirs, repo_root, strip_prefix)
 
-    # Clean target subdirs and stale .dist-info
     _clean_package(
-        file_root,
+        site_packages,
         list(leaf_subdirs),
         dist_info_glob,
         shared_subdirs=shared_subdirs,
         protected_children=protected_children,
     )
-    # Also clean dist-info from its actual root when it differs from file_root
-    if dist_info_root is not None:
-        for di in effective_dist_info_root.glob(dist_info_glob):
-            if di.is_dir():
-                shutil.rmtree(di)
 
-    # Copy each source subdir
     deployed_paths: list[Path] = []
     all_installed_files: list[Path] = []
 
     for subdir in leaf_subdirs:
-        source = repo_root / package_dir / subdir.rstrip("/")
-        dest = file_root / subdir.rstrip("/")
+        source = repo_root / strip_prefix / subdir.rstrip("/")
+        dest = site_packages / subdir.rstrip("/")
 
         if not source.exists():
             output.warn(f"Source not found: {source} (stale manifest?) — skipping")
             continue
 
         if subdir.endswith(".py"):
-            # Flat file case: copy single file
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, dest)
             all_installed_files.append(dest)
             deployed_paths.append(dest)
         else:
-            # Directory case: copytree
             dest.mkdir(parents=True, exist_ok=True)
             _copy_package_tree(source, dest)
             all_installed_files.extend(_collect_installed_files(dest))
             deployed_paths.append(dest)
 
-    # Generate .dist-info
     _generate_dist_info(
-        effective_dist_info_root,
+        site_packages,
         dist_info.distribution_name,
         _DIST_INFO_VERSION,
         list(dist_info.top_level_packages),
@@ -694,8 +667,6 @@ def _deploy_package_group(
     site_packages: Path,
     site: SiteInfo,
     *,
-    file_root: Path | None = None,
-    dist_info_root: Path | None = None,
     shared_subdirs: frozenset[str] = frozenset(),
     protected_children: frozenset[str] = frozenset(),
 ) -> list[Path]:
@@ -704,7 +675,6 @@ def _deploy_package_group(
     Dispatches to direct copy or bazel+extract based on deploy_mode.
     Applies edition directory pruning when ``spec.edition_filter`` is True.
     """
-    effective_file_root = file_root if file_root is not None else site_packages
     all_deployed: list[Path] = []
 
     for dist in pkg_info.distributions:
@@ -726,7 +696,6 @@ def _deploy_package_group(
                 site_packages,
             )
 
-            # Generate .dist-info for the extracted files
             _generate_dist_info(
                 site_packages,
                 dist.distribution_name,
@@ -735,7 +704,6 @@ def _deploy_package_group(
                 extracted,
             )
 
-            # Collect unique parent directories for compileall
             seen_dirs: set[Path] = set()
             for f in extracted:
                 parent = f.parent
@@ -747,9 +715,8 @@ def _deploy_package_group(
             deployed = _deploy_single_distribution(
                 dist,
                 repo_root,
-                spec.package,
-                effective_file_root,
-                dist_info_root=dist_info_root,
+                spec.strip_prefix,
+                site_packages,
                 shared_subdirs=shared_subdirs,
                 protected_children=protected_children,
             )
@@ -799,7 +766,6 @@ def _remove_deleted_files(
     deleted_files: tuple[str, ...],
     specs: list[WheelDeploySpec],
     site_packages: Path,
-    site: SiteInfo,
 ) -> None:
     """Remove files from deploy targets that were deleted between commits.
 
@@ -813,13 +779,13 @@ def _remove_deleted_files(
     """
     removed = 0
     for spec in specs:
-        file_root, _di_root = _get_deploy_roots(spec, site, site_packages)
         prefix = spec.package + "/"
+        strip = spec.strip_prefix + "/" if spec.strip_prefix else ""
         for deleted in deleted_files:
             if not deleted.startswith(prefix):
                 continue
-            rel = deleted[len(prefix) :]
-            target = file_root / rel
+            rel = deleted[len(strip) :]
+            target = site_packages / rel
             if target.is_file():
                 target.unlink()
                 removed += 1
@@ -1004,17 +970,17 @@ def deploy_wheels(
         if changes is None or spec.deploy_mode != WheelDeployMode.DIRECT:
             continue
 
-        prefix = spec.package + "/"
-
-        file_root, _di_root = _get_deploy_roots(spec, site, site_packages)
-        dest_base = file_root
+        # ``strip`` maps a repo-relative path to its site-relative tail.
+        # Empty for the cmk monolith (its repo layout already mirrors
+        # site-packages), otherwise ``<package_dir>/``.
+        strip = spec.strip_prefix + "/" if spec.strip_prefix else ""
 
         # Filter the full changeset (build_commit..working tree) to only
         # .py files within this package's deployed source_subdirs.
         classify_reason = ""
-        deployed_dir_prefixes = tuple(prefix + sd for sd in spec.source_subdirs if sd.endswith("/"))
+        deployed_dir_prefixes = tuple(strip + sd for sd in spec.source_subdirs if sd.endswith("/"))
         deployed_file_entries = frozenset(
-            prefix + sd for sd in spec.source_subdirs if sd.endswith(".py")
+            strip + sd for sd in spec.source_subdirs if sd.endswith(".py")
         )
         pkg_modified = []
         for f in changes.files:
@@ -1029,13 +995,13 @@ def deploy_wheels(
                 classify_reason = f"non-Python change in deployed path: {f}"
                 break
 
-        eligible, _reason = _can_use_targeted(pkg_modified, classify_reason, dest_base, prefix)
+        eligible, _reason = _can_use_targeted(pkg_modified, classify_reason, site_packages, strip)
         if eligible:
             # Skip if another spec for the same package was already targeted
             if spec.package in targeted_packages:
                 continue
             timings = _deploy_targeted(
-                pkg_modified, repo_root / spec.package, dest_base, site, prefix
+                pkg_modified, repo_root / spec.strip_prefix, site_packages, site, strip
             )
             if timings is not None:
                 targeted_packages.add(spec.package)
@@ -1083,7 +1049,6 @@ def deploy_wheels(
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
             futures = {}
             for spec, pkg_info, extra_specs in to_deploy_merged:
-                fr, dir_ = _get_deploy_roots(spec, site, site_packages)
                 futures[
                     pool.submit(
                         _deploy_and_report,
@@ -1093,8 +1058,6 @@ def deploy_wheels(
                         site_packages,
                         site,
                         shared_subdirs,
-                        fr,
-                        dir_,
                         all_protected.get(spec.package, frozenset()),
                     )
                 ] = (spec, extra_specs)
@@ -1134,7 +1097,7 @@ def deploy_wheels(
     # Only touches files within known wheel subdirs to avoid removing
     # site config or user data.
     if changes is not None and changes.deleted_files:
-        _remove_deleted_files(changes.deleted_files, list(get_wheel_specs()), site_packages, site)
+        _remove_deleted_files(changes.deleted_files, list(get_wheel_specs()), site_packages)
 
     # 5. Run compileall ONCE on all deployed dirs
     if all_compiled_dirs:
@@ -1171,8 +1134,6 @@ def _deploy_and_report(
     site_packages: Path,
     site: SiteInfo,
     shared_subdirs: frozenset[str] = frozenset(),
-    file_root: Path | None = None,
-    dist_info_root: Path | None = None,
     protected_children: frozenset[str] = frozenset(),
 ) -> tuple[list[Path], float]:
     """Thread-safe wrapper around _deploy_package_group with timing."""
@@ -1185,8 +1146,6 @@ def _deploy_and_report(
             repo_root,
             site_packages,
             site,
-            file_root=file_root,
-            dist_info_root=dist_info_root,
             shared_subdirs=shared_subdirs,
             protected_children=protected_children,
         )

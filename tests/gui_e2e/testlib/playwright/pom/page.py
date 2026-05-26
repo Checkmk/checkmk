@@ -217,7 +217,12 @@ class MainMenu(LocatorHelper):
             _loc.click()
 
             if show_more:
-                self.locator().get_by_role(role="link", name="show more", exact=True)
+                show_more_locator = self.locator().get_by_role(
+                    role="link", name="show more", exact=True
+                )
+                # only try to press if it hasn't already been pressed before
+                if show_more_locator.count():
+                    show_more_locator.click()
             _loc = self.locator().get_by_role(role="link", name=sub_menu, exact=exact)
         self._unique_web_element(_loc)
         return _loc

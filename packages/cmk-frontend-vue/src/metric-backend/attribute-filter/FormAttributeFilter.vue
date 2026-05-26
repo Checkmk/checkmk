@@ -5,13 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import { ref } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import type { QuerySuggestionsFn } from '@/components/CmkSuggestions/types'
 
 import AttributeFilterPill from './AttributeFilterPill.vue'
-import { operatorTakesValue } from './types'
+import { isConditionValid, operatorTakesValue } from './types'
 import type {
   AttributeCondition,
   AttributeFilterModel,
@@ -37,7 +39,32 @@ const props = withDefaults(
 
 const model = defineModel<AttributeFilterModel>({ default: () => [] })
 
+const editingId = ref<string | null>(null)
+const pillRefs = new Map<string, InstanceType<typeof AttributeFilterPill>>()
+
+// Cache one setter per pill id so :ref does not see a new function every render
+// and re-run the setter on every model mutation.
+const pillRefSetters = new Map<string, (el: unknown) => void>()
+function pillRefSetter(id: string): (el: unknown) => void {
+  let fn = pillRefSetters.get(id)
+  if (!fn) {
+    fn = (el: unknown) => {
+      if (el) {
+        pillRefs.set(id, el as InstanceType<typeof AttributeFilterPill>)
+      } else {
+        pillRefs.delete(id)
+        pillRefSetters.delete(id)
+      }
+    }
+    pillRefSetters.set(id, fn)
+  }
+  return fn
+}
+
 function removeCondition(target: ConnectedCondition): void {
+  if (editingId.value === target.id) {
+    editingId.value = null
+  }
   const idx = model.value.findIndex((c) => c.id === target.id)
   if (idx < 0) {
     return
@@ -85,7 +112,26 @@ function addConditionLabel(entry: ConnectedCondition): string {
     : _t('Add condition after previous condition')
 }
 
+function tryChangeFocus(): boolean {
+  const id = editingId.value
+  if (id === null) {
+    return true
+  }
+  const cond = model.value.find((c) => c.id === id)
+  if (!cond) {
+    return true
+  }
+  if (isConditionValid(cond)) {
+    return true
+  }
+  pillRefs.get(id)?.revealValidationErrors()
+  return false
+}
+
 function addCondition(index: number): void {
+  if (!tryChangeFocus()) {
+    return
+  }
   const fresh: ConnectedCondition = {
     id: crypto.randomUUID(),
     attributeType: null,
@@ -95,6 +141,20 @@ function addCondition(index: number): void {
     connector: index === 0 ? null : 'OR'
   }
   model.value = [...model.value.slice(0, index), fresh, ...model.value.slice(index)]
+  editingId.value = fresh.id
+}
+
+function startEditing(id: string): void {
+  if (!tryChangeFocus()) {
+    return
+  }
+  editingId.value = id
+}
+
+function onEditDone(id: string): void {
+  if (editingId.value === id) {
+    editingId.value = null
+  }
 }
 </script>
 
@@ -116,11 +176,15 @@ function addCondition(index: number): void {
     />
     <template v-for="(entry, index) in model" :key="entry.id">
       <AttributeFilterPill
+        :ref="pillRefSetter(entry.id)"
         :condition="entry"
         :query-suggestions="querySuggestions"
         :query-value-suggestions="queryValueSuggestions"
         removable
+        :editing="entry.id === editingId"
         @remove="removeCondition(entry)"
+        @edit="startEditing(entry.id)"
+        @done="onEditDone(entry.id)"
         @update:key="(value) => updateKey(entry, value)"
         @update:attribute-type="(value) => updateAttributeType(entry, value)"
         @update:operator="(value) => updateOperator(entry, value)"

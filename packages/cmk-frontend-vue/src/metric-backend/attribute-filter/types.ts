@@ -45,6 +45,15 @@ export interface AttributeCondition {
   value: string
 }
 
+export function isConditionValid(c: AttributeCondition): boolean {
+  return (
+    c.key !== '' &&
+    c.key !== null &&
+    c.attributeType !== null &&
+    !(operatorTakesValue(c.operator) && c.value === '')
+  )
+}
+
 export type Connector = 'AND' | 'OR'
 
 export interface ConnectedCondition extends AttributeCondition {

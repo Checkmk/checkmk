@@ -6,6 +6,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
+export const a11yData = [
+  {
+    keys: ['Click'],
+    description: 'Opens the read-only pill for editing. Only one pill is editable at a time.'
+  },
+  {
+    keys: ['Click outside'],
+    description:
+      'Closes the open pill back to its read-only chip. A pill with any required field empty stays open so an unfinished condition is not lost.'
+  }
+]
+
 export const panelConfig = {} satisfies PanelConfigFor<
   typeof FormAttributeFilter,
   'modelValue' | 'querySuggestions' | 'queryValueSuggestions' | 'resolveAttributeType' | 'ariaLabel'
@@ -14,6 +26,7 @@ export const panelConfig = {} satisfies PanelConfigFor<
 
 <script setup lang="ts">
 import {
+  UclDetailPageAccessibility,
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout
@@ -135,5 +148,7 @@ async function queryValueSuggestions(
         :resolve-attribute-type="resolveAttributeType"
       />
     </UclDetailPageComponent>
+
+    <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>

@@ -34,7 +34,9 @@ test('renders the title and message', () => {
 
   expect(screen.getByText('Feature temporarily unavailable')).toBeInTheDocument()
   expect(
-    screen.getByText('We are currently experiencing high load. Please try again later.')
+    screen.getByText(
+      'Daily AI usage limit reached. Your quota refills over time. Try again in a little while.'
+    )
   ).toBeInTheDocument()
 })
 

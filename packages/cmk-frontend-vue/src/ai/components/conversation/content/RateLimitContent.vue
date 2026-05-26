@@ -33,7 +33,11 @@ onMounted(() => {
     <CmkIcon name="unavailable" size="xxxlarge" />
     <h3 class="ai-rate-limit-content__title">{{ _t('Feature temporarily unavailable') }}</h3>
     <p class="ai-rate-limit-content__message">
-      {{ _t('We are currently experiencing high load. Please try again later.') }}
+      {{
+        _t(
+          'Daily AI usage limit reached. Your quota refills over time. Try again in a little while.'
+        )
+      }}
     </p>
     <CmkButton variant="primary" @click="emit('close')">{{ _t('Close') }}</CmkButton>
   </div>

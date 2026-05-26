@@ -61,7 +61,6 @@ def _vs_item_appearance(title, help_txt):
             ("index", _("Use index")),
             ("descr", _("Use description")),
             ("alias", _("Use alias")),
-            ("name", _("Use name")),
         ],
         default_value="index",
         help=help_txt
@@ -131,7 +130,7 @@ def _vs_single_discovery():
                                 _("Appearance of network interface"),
                                 _(
                                     "This option makes Checkmk use either the interface description, "
-                                    "alias, name or port number as item."
+                                    "alias or port number as item."
                                 ),
                             ),
                         ),
@@ -224,7 +223,7 @@ def _vs_grouping():
                                                 _(
                                                     "When listing the group members in the output of the service "
                                                     "monitoring the group, this option makes Checkmk use either "
-                                                    "the interface description, alias, name or port number."
+                                                    "the interface description, alias or port number."
                                                 ),
                                             ),
                                         ),

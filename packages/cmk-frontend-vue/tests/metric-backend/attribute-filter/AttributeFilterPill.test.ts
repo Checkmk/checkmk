@@ -47,6 +47,7 @@ function renderPill(initialOperator: Operator = 'eq', value = 'GET') {
     template: `
       <AttributeFilterPill
         :condition="condition"
+        editing
         :query-suggestions="querySuggestions"
         :query-value-suggestions="queryValueSuggestions"
         @update:operator="onUpdateOperator"

@@ -98,7 +98,15 @@ function pillsInOrder(): HTMLElement[] {
   return within(outerGroup).getAllByRole('group')
 }
 
+async function enterEditMode(pill: HTMLElement): Promise<void> {
+  const editButton = within(pill).queryByRole('button', { name: /^Edit condition:/ })
+  if (editButton) {
+    await userEvent.click(editButton)
+  }
+}
+
 async function pickKey(pill: HTMLElement, name: string): Promise<void> {
+  await enterEditMode(pill)
   const keyCombobox = within(pill).getByRole('combobox', { name: 'Attribute key' })
   await userEvent.click(keyCombobox)
   const filter = screen.getByRole('textbox', { name: 'filter' })
@@ -110,9 +118,17 @@ async function pickKey(pill: HTMLElement, name: string): Promise<void> {
 }
 
 async function pickOperator(pill: HTMLElement, phrase: string): Promise<void> {
+  await enterEditMode(pill)
   const operatorCombobox = within(pill).getByRole('combobox', { name: 'Attribute operator' })
   await userEvent.click(operatorCombobox)
   await userEvent.click(await screen.findByRole('option', { name: phrase }))
+}
+
+async function pickAttributeType(pill: HTMLElement, label: string): Promise<void> {
+  await enterEditMode(pill)
+  const typeCombobox = within(pill).getByRole('combobox', { name: 'Attribute type' })
+  await userEvent.click(typeCombobox)
+  await userEvent.click(await screen.findByRole('option', { name: label }))
 }
 
 test('picking a known key applies key and inferred attributeType in one mutation', async () => {
@@ -152,9 +168,7 @@ test('picking a key without a resolver hit preserves the existing attributeType'
 
 test('manual attributeType change persists on the targeted row', async () => {
   const { model } = renderForm(makeModel())
-  const typeCombobox = within(pillsInOrder()[1]!).getByRole('combobox', { name: 'Attribute type' })
-  await userEvent.click(typeCombobox)
-  await userEvent.click(await screen.findByRole('option', { name: 'Data point' }))
+  await pickAttributeType(pillsInOrder()[1]!, 'Data point')
 
   expect(model.value![1]!.attributeType).toBe('datapoint')
   expect(model.value![0]!.attributeType).toBe(null)
@@ -304,40 +318,218 @@ function field(pill: HTMLElement, label: string): HTMLElement {
 }
 
 describe('pill required-field validation', () => {
-  test('a pristine pill suppresses formValidation on every visible field', () => {
+  test('an unedited pill shows no validation errors', async () => {
     renderForm(makeModel())
     const pill = pillsInOrder()[0]!
+    await enterEditMode(pill)
     for (const label of FIELD_LABELS) {
       expect(field(pill, label)).not.toHaveClass(ERROR_CLASS)
     }
   })
 
-  test('the disabled type dropdown drops its required hint', () => {
+  test('the disabled type dropdown drops its required hint', async () => {
     renderForm(makeModel())
     const pill = pillsInOrder()[0]!
+    await enterEditMode(pill)
     expect(field(pill, 'Attribute type')).not.toHaveTextContent('(required)')
   })
 
-  test('a partly-filled pill flags only its empty fields as invalid', () => {
+  test('a partly-filled but uncommitted pill flags nothing', async () => {
     renderForm(makeModel())
     const pill = pillsInOrder()[1]!
-    for (const label of ['Attribute type', 'Attribute key', 'Attribute operator']) {
+    await enterEditMode(pill)
+    for (const label of FIELD_LABELS) {
       expect(field(pill, label)).not.toHaveClass(ERROR_CLASS)
+      expect(field(pill, label)).not.toHaveTextContent('(required)')
     }
-    const value = field(pill, 'Attribute value')
-    expect(value).toHaveClass(ERROR_CLASS)
-    expect(value).toHaveTextContent('(required)')
   })
 
-  test('filling in the key lifts the pill out of pristine and exposes the still-empty type', async () => {
+  test('picking a key does not reveal validation on the still-empty type', async () => {
     const { model } = renderForm(makeModel(), () => null)
     await pickKey(pillsInOrder()[0]!, 'http.method')
 
     expect(model.value![0]!.key).toBe('http.method')
     const pill = pillsInOrder()[0]!
-    expect(field(pill, 'Attribute key')).not.toHaveClass(ERROR_CLASS)
-    const type = field(pill, 'Attribute type')
-    expect(type).toHaveClass(ERROR_CLASS)
-    expect(type).toHaveTextContent('(required)')
+    for (const label of ['Attribute type', 'Attribute key']) {
+      expect(field(pill, label)).not.toHaveClass(ERROR_CLASS)
+      expect(field(pill, label)).not.toHaveTextContent('(required)')
+    }
   })
+})
+
+test('preloaded pills start in read-only mode', () => {
+  renderForm(makeModel())
+  expect(screen.getAllByRole('button', { name: /^Edit condition:/ })).toHaveLength(2)
+  expect(screen.queryByRole('combobox', { name: 'Attribute operator' })).toBeNull()
+})
+
+test('clicking a read-only pill opens it for editing', async () => {
+  renderForm(makeModel())
+  const pillB = pillsInOrder()[1]!
+  await enterEditMode(pillB)
+
+  expect(within(pillB).getByRole('combobox', { name: 'Attribute operator' })).toBeInTheDocument()
+  const pillA = pillsInOrder()[0]!
+  expect(within(pillA).queryByRole('button', { name: /^Edit condition:/ })).not.toBeNull()
+})
+
+test('opening a second pill closes the previously open one', async () => {
+  renderForm([
+    {
+      id: 'pill-a',
+      attributeType: 'resource',
+      key: 'service.name',
+      operator: 'eq',
+      value: 'foo',
+      connector: null
+    },
+    {
+      id: 'pill-b',
+      attributeType: 'scope',
+      key: 'otel.library.name',
+      operator: 'eq',
+      value: 'bar',
+      connector: 'OR'
+    }
+  ])
+  await enterEditMode(pillsInOrder()[0]!)
+  expect(
+    within(pillsInOrder()[0]!).getByRole('combobox', { name: 'Attribute operator' })
+  ).toBeInTheDocument()
+
+  await enterEditMode(pillsInOrder()[1]!)
+  expect(
+    within(pillsInOrder()[1]!).getByRole('combobox', { name: 'Attribute operator' })
+  ).toBeInTheDocument()
+  expect(
+    within(pillsInOrder()[0]!).queryByRole('combobox', { name: 'Attribute operator' })
+  ).toBeNull()
+})
+
+test('removing the editing pill clears the editing state', async () => {
+  const { model } = renderForm(makeModel())
+  const pillA = pillsInOrder()[0]!
+  await enterEditMode(pillA)
+  await userEvent.click(within(pillA).getByRole('button', { name: 'Remove condition' }))
+
+  expect(model.value).toHaveLength(1)
+  const remaining = pillsInOrder()
+  expect(remaining).toHaveLength(1)
+  expect(within(remaining[0]!).queryByRole('button', { name: /^Edit condition:/ })).not.toBeNull()
+  expect(within(remaining[0]!).queryByRole('combobox', { name: 'Attribute operator' })).toBeNull()
+})
+
+function dispatchOutsideClick(): void {
+  document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+}
+
+test('click outside closes a fully-valid edit pill back to read-only', async () => {
+  renderForm([
+    {
+      id: 'pill-a',
+      attributeType: 'scope',
+      key: 'otel.library.name',
+      operator: 'eq',
+      value: 'foo',
+      connector: null
+    }
+  ])
+  const pillA = pillsInOrder()[0]!
+  await enterEditMode(pillA)
+  expect(within(pillA).getByRole('combobox', { name: 'Attribute operator' })).toBeInTheDocument()
+
+  dispatchOutsideClick()
+  await waitFor(() => {
+    expect(within(pillA).queryByRole('combobox', { name: 'Attribute operator' })).toBeNull()
+  })
+})
+
+test('click outside on a partly-filled invalid pill keeps it open and reveals errors', async () => {
+  renderForm(singlePill({ key: 'service.name', value: '' }))
+  const pillA = pillsInOrder()[0]!
+  await enterEditMode(pillA)
+  // Before the commit attempt, no field is flagged.
+  expect(field(pillA, 'Attribute value')).not.toHaveClass(ERROR_CLASS)
+
+  dispatchOutsideClick()
+  expect(within(pillA).getByRole('combobox', { name: 'Attribute operator' })).toBeInTheDocument()
+  await waitFor(() => {
+    expect(field(pillA, 'Attribute value')).toHaveClass(ERROR_CLASS)
+  })
+})
+
+test('click outside on a pristine invalid pill keeps it open and reveals errors', async () => {
+  renderForm(makeModel())
+  const pillA = pillsInOrder()[0]!
+  await enterEditMode(pillA)
+
+  dispatchOutsideClick()
+  expect(within(pillA).getByRole('combobox', { name: 'Attribute operator' })).toBeInTheDocument()
+  await waitFor(() => {
+    expect(field(pillA, 'Attribute key')).toHaveClass(ERROR_CLASS)
+  })
+  expect(field(pillA, 'Attribute value')).toHaveClass(ERROR_CLASS)
+})
+
+test("clicking another pill's chip while the editing pill is invalid is a no-op and reveals errors", async () => {
+  renderForm(makeModel())
+  const pillA = pillsInOrder()[0]!
+  const pillB = pillsInOrder()[1]!
+  await enterEditMode(pillA)
+
+  const pillBEditButton = within(pillB).getByRole('button', { name: /^Edit condition:/ })
+  await userEvent.click(pillBEditButton)
+
+  expect(within(pillA).getByRole('combobox', { name: 'Attribute operator' })).toBeInTheDocument()
+  expect(field(pillA, 'Attribute key')).toHaveClass(ERROR_CLASS)
+  expect(field(pillA, 'Attribute value')).toHaveClass(ERROR_CLASS)
+  expect(within(pillB).queryByRole('combobox', { name: 'Attribute operator' })).toBeNull()
+  expect(within(pillB).queryByRole('button', { name: /^Edit condition:/ })).not.toBeNull()
+})
+
+test("newly added pill via '+' starts in edit mode", async () => {
+  const { model } = renderForm(makeModel())
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Add condition after previous condition' })
+  )
+
+  expect(model.value).toHaveLength(3)
+  const pills = pillsInOrder()
+  expect(pills).toHaveLength(3)
+  expect(within(pills[0]!).queryByRole('button', { name: /^Edit condition:/ })).not.toBeNull()
+  expect(
+    within(pills[1]!).getByRole('combobox', { name: 'Attribute operator' })
+  ).toBeInTheDocument()
+  expect(within(pills[2]!).queryByRole('button', { name: /^Edit condition:/ })).not.toBeNull()
+})
+
+test("a freshly added pill via '+' does not display validation errors", async () => {
+  renderForm(makeModel())
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Add condition after previous condition' })
+  )
+
+  const freshPill = pillsInOrder()[1]!
+  for (const label of ['Attribute key', 'Attribute operator', 'Attribute value']) {
+    expect(field(freshPill, label)).not.toHaveClass(ERROR_CLASS)
+    expect(field(freshPill, label)).not.toHaveTextContent('(required)')
+  }
+})
+
+test('opening a sibling dropdown closes the previously-open one within the same pill', async () => {
+  renderForm(singlePill({ key: 'service.name', value: 'foo' }))
+  const pill = pillsInOrder()[0]!
+  await enterEditMode(pill)
+
+  const keyCombobox = within(pill).getByRole('combobox', { name: 'Attribute key' })
+  const operatorCombobox = within(pill).getByRole('combobox', { name: 'Attribute operator' })
+
+  await userEvent.click(keyCombobox)
+  expect(keyCombobox).toHaveAttribute('aria-expanded', 'true')
+
+  await userEvent.click(operatorCombobox)
+  await waitFor(() => {
+    expect(keyCombobox).toHaveAttribute('aria-expanded', 'false')
+  })
+  expect(operatorCombobox).toHaveAttribute('aria-expanded', 'true')
 })

@@ -5,19 +5,28 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import useClickOutside from '@/lib/useClickOutside'
 
 import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import type { QuerySuggestionsFn } from '@/components/CmkSuggestions/types'
 
-import { ATTRIBUTE_TYPE_LABELS, operatorPhrase, pillLabel } from './pill-label'
-import { EXISTENCE_OPERATORS, STRING_OPERATORS, isOperator, operatorTakesValue } from './types'
+import { ATTRIBUTE_TYPE_LABELS, attributeTypePrefix, operatorPhrase, pillLabel } from './pill-label'
+import {
+  EXISTENCE_OPERATORS,
+  STRING_OPERATORS,
+  isConditionValid,
+  isOperator,
+  operatorTakesValue
+} from './types'
 import type { AttributeCondition, AttributeType, Operator } from './types'
 
 const { _t } = usei18n()
+
+const vClickOutside = useClickOutside()
 
 const props = withDefaults(
   defineProps<{
@@ -29,12 +38,15 @@ const props = withDefaults(
     ) => ReturnType<QuerySuggestionsFn>
     ariaLabel?: string | undefined
     removable?: boolean
+    editing?: boolean
   }>(),
-  { removable: false }
+  { removable: false, editing: false }
 )
 
 const emit = defineEmits<{
   (e: 'remove'): void
+  (e: 'edit'): void
+  (e: 'done'): void
   (e: 'update:key', value: string): void
   (e: 'update:attributeType', value: AttributeType): void
   (e: 'update:operator', value: Operator): void
@@ -53,14 +65,46 @@ const attributeTypeEmpty = computed(() => props.condition.attributeType === null
 const keyEmpty = computed(() => !props.condition.key)
 const valueEmpty = computed(() => props.condition.value === '')
 
-// A pristine pill (fresh + click) should not pre-emptively flag empties as invalid.
-const isPristine = computed(
-  () =>
-    props.condition.attributeType === null && !props.condition.key && props.condition.value === ''
-)
-
 const valueDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('valueDropdownRef')
 const pendingValueOpen = ref(false)
+
+const showValidationErrors = ref(false)
+
+const validationVisible = computed(() => showValidationErrors.value)
+
+// The click that creates a pill in edit mode keeps bubbling after Vue mounts
+// the new edit branch. Defer arming the outside-click handler by one task so
+// that tail bubble does not turn into the pill's own first commit attempt.
+let outsideArmed = false
+let armTimer: ReturnType<typeof setTimeout> | null = null
+function armOutsideNextTask(): void {
+  if (armTimer !== null) {
+    clearTimeout(armTimer)
+  }
+  armTimer = setTimeout(() => {
+    outsideArmed = true
+    armTimer = null
+  }, 0)
+}
+watch(
+  () => props.editing,
+  (now) => {
+    if (now) {
+      armOutsideNextTask()
+    } else {
+      outsideArmed = false
+      if (armTimer !== null) {
+        clearTimeout(armTimer)
+        armTimer = null
+      }
+      showValidationErrors.value = false
+    }
+  },
+  { immediate: true }
+)
+
+const attributeTypeText = computed(() => attributeTypePrefix(props.condition.attributeType).trim())
+const operatorText = computed(() => operatorPhrase(props.condition.operator))
 
 function onKeyUpdate(value: string | null): void {
   emit('update:key', value ?? '')
@@ -161,6 +205,45 @@ const operatorOptions = computed(() => ({
     }
   ]
 }))
+
+const hasValidationErrors = computed(() => !isConditionValid(props.condition))
+
+const editPaneRef = useTemplateRef<HTMLElement>('editPaneRef')
+
+// Prevent a click inside the edit pane from counting as outside and commiting the pill.
+let mousedownInside = false
+function onBodyMousedown(event: MouseEvent): void {
+  const target = event.target
+  mousedownInside =
+    editPaneRef.value !== null && target instanceof Node && editPaneRef.value.contains(target)
+}
+onMounted(() => {
+  document.addEventListener('mousedown', onBodyMousedown, true)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('mousedown', onBodyMousedown, true)
+})
+
+function onOutside(): void {
+  if (mousedownInside) {
+    mousedownInside = false
+    return
+  }
+  if (!outsideArmed) {
+    return
+  }
+  if (hasValidationErrors.value) {
+    showValidationErrors.value = true
+    return
+  }
+  emit('done')
+}
+
+defineExpose({
+  revealValidationErrors: () => {
+    showValidationErrors.value = true
+  }
+})
 </script>
 
 <template>
@@ -169,7 +252,13 @@ const operatorOptions = computed(() => ({
     :aria-label="ariaLabel ?? fullLabel"
     role="group"
   >
-    <span class="metric-backend-attribute-filter-pill__segment" :title="fullLabel">
+    <span
+      v-if="editing"
+      ref="editPaneRef"
+      v-click-outside="onOutside"
+      class="metric-backend-attribute-filter-pill__edit"
+      :title="fullLabel"
+    >
       <span
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--attribute-type"
       >
@@ -180,8 +269,8 @@ const operatorOptions = computed(() => ({
           :disabled="!condition.key"
           :input-hint="_t('Attribute type')"
           :label="_t('Attribute type')"
-          :required="!!condition.key"
-          :form-validation="!!condition.key && !isPristine && attributeTypeEmpty"
+          :required="!!condition.key && validationVisible"
+          :form-validation="!!condition.key && validationVisible && attributeTypeEmpty"
         />
       </span>
       <span
@@ -192,8 +281,8 @@ const operatorOptions = computed(() => ({
           :options="{ type: 'callback-filtered', querySuggestions }"
           :label="_t('Attribute key')"
           :input-hint="_t('Attribute key')"
-          required
-          :form-validation="!isPristine && keyEmpty"
+          :required="validationVisible"
+          :form-validation="validationVisible && keyEmpty"
           @update:selected-option="onKeyUpdate"
         />
       </span>
@@ -217,12 +306,40 @@ const operatorOptions = computed(() => ({
           :options="valueOptions"
           :label="_t('Attribute value')"
           :input-hint="_t('Attribute value')"
-          required
-          :form-validation="!isPristine && valueEmpty"
+          :required="validationVisible"
+          :form-validation="validationVisible && valueEmpty"
           @update:selected-option="onValueUpdate"
         />
       </span>
     </span>
+    <button
+      v-else
+      type="button"
+      class="metric-backend-attribute-filter-pill__main"
+      :title="fullLabel"
+      :aria-label="`${_t('Edit condition')}: ${fullLabel}`"
+      @mousedown.prevent
+      @click.stop="emit('edit')"
+    >
+      <span
+        v-if="attributeTypeText !== ''"
+        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--attribute-type"
+        >{{ attributeTypeText }}</span
+      >
+      <span
+        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--key"
+        >{{ condition.key }}</span
+      >
+      <span
+        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator"
+        >{{ operatorText }}</span
+      >
+      <span
+        v-if="showValue"
+        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--value"
+        >{{ condition.value }}</span
+      >
+    </button>
     <CmkIconButton
       v-if="removable"
       class="metric-backend-attribute-filter-pill__remove"
@@ -246,8 +363,41 @@ const operatorOptions = computed(() => ({
   white-space: nowrap;
 }
 
+.metric-backend-attribute-filter-pill__edit {
+  display: inline-flex;
+}
+
+.metric-backend-attribute-filter-pill__main {
+  display: inline-flex;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.metric-backend-attribute-filter-pill__main:hover {
+  background: var(--ux-theme-4);
+}
+
+.metric-backend-attribute-filter-pill__main:focus-visible {
+  outline: revert;
+}
+
 .metric-backend-attribute-filter-pill__segment {
   padding: var(--dimension-2) var(--dimension-3);
+  display: inline-flex;
+  align-items: center;
+}
+
+.metric-backend-attribute-filter-pill__main
+  .metric-backend-attribute-filter-pill__segment--attribute-type,
+.metric-backend-attribute-filter-pill__main
+  .metric-backend-attribute-filter-pill__segment--operator {
+  color: var(--font-color-dimmed);
+  font-style: italic;
 }
 
 .metric-backend-attribute-filter-pill__remove {

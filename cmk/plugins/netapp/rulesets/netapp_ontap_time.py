@@ -3,46 +3,49 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
     LevelDirection,
     SimpleLevels,
-    SimpleLevelsConfigModel,
     TimeMagnitude,
     TimeSpan,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _netapp_system_time_offset() -> Dictionary:
+def _netapp_ontap_ntp_time() -> Dictionary:
     return Dictionary(
         elements={
-            "upper_levels": DictElement[SimpleLevelsConfigModel[float]](
-                required=True,
+            "offset": DictElement(
+                required=False,
                 parameter_form=SimpleLevels(
-                    title=Title("Levels on absolute time offset"),
+                    title=Title("NTP time offset"),
+                    help_text=Help(
+                        "When the NTP offset reported by the selected peer was worse "
+                        "(in either direction) than the specified parameters, "
+                        "go into WARN or CRIT status."
+                    ),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=[
-                            TimeMagnitude.HOUR,
-                            TimeMagnitude.MINUTE,
                             TimeMagnitude.SECOND,
+                            TimeMagnitude.MILLISECOND,
                         ],
                     ),
-                    prefill_fixed_levels=DefaultValue((30, 60)),
+                    prefill_fixed_levels=DefaultValue((0.2, 0.5)),
                 ),
-            )
+            ),
         }
     )
 
 
-rule_spec_netapp_system_time_offset = CheckParameters(
-    name="netapp_system_time_offset",
-    title=Title("Netapp system time offset"),
+rule_spec_netapp_ontap_time = CheckParameters(
+    name="netapp_ontap_time",
+    title=Title("NetApp NTP time offset"),
     topic=Topic.STORAGE,
-    parameter_form=_netapp_system_time_offset,
+    parameter_form=_netapp_ontap_ntp_time,
     condition=HostAndItemCondition(item_title=Title("Node")),
 )

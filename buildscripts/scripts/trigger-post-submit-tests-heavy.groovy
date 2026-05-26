@@ -23,6 +23,7 @@ void main() {
         "test-integration-community",
         "test-integration-redfish",
         "test-integration-ultimatemt",
+        "test-integration-single-node",
         "test-plugins",
         "test-plugins-piggyback",
         "test-update-community",

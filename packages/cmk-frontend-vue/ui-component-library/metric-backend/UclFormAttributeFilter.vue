@@ -8,7 +8,7 @@ import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 export const panelConfig = {} satisfies PanelConfigFor<
   typeof FormAttributeFilter,
-  'modelValue' | 'querySuggestions' | 'ariaLabel'
+  'modelValue' | 'querySuggestions' | 'resolveAttributeType' | 'ariaLabel'
 >
 </script>
 
@@ -24,7 +24,7 @@ import { Response } from '@/components/CmkSuggestions/suggestions'
 import type { Section } from '@/components/CmkSuggestions/types'
 
 import FormAttributeFilter from '@/metric-backend/attribute-filter/FormAttributeFilter.vue'
-import type { AttributeFilterModel } from '@/metric-backend/attribute-filter/types'
+import type { AttributeFilterModel, AttributeType } from '@/metric-backend/attribute-filter/types'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -39,8 +39,13 @@ const filters = ref<AttributeFilterModel>([
   }
 ])
 
-const dummyKeySections: Section[] = [
+interface TypedSection extends Section {
+  attributeType: Exclude<AttributeType, null>
+}
+
+const dummyKeySections: TypedSection[] = [
   {
+    attributeType: 'resource',
     title: 'Resource',
     suggestions: [
       { name: 'service.name', title: 'service.name' },
@@ -50,6 +55,7 @@ const dummyKeySections: Section[] = [
     ]
   },
   {
+    attributeType: 'scope',
     title: 'Scope',
     suggestions: [
       { name: 'otel.library.name', title: 'otel.library.name' },
@@ -57,6 +63,7 @@ const dummyKeySections: Section[] = [
     ]
   },
   {
+    attributeType: 'datapoint',
     title: 'Data point',
     suggestions: [
       { name: 'http.method', title: 'http.method' },
@@ -70,7 +77,7 @@ async function querySuggestions(query: string): Promise<Response> {
   const needle = query.toLowerCase()
   const filtered = dummyKeySections
     .map((section) => ({
-      ...section,
+      title: section.title,
       suggestions: section.suggestions.filter(
         (s) =>
           (s.name ?? '').toLowerCase().includes(needle) || s.title.toLowerCase().includes(needle)
@@ -92,6 +99,11 @@ async function querySuggestions(query: string): Promise<Response> {
     ...filtered
   ])
 }
+
+function resolveAttributeType(key: string): AttributeType {
+  const section = dummyKeySections.find((s) => s.suggestions.some((sug) => sug.name === key))
+  return section?.attributeType ?? null
+}
 </script>
 
 <template>
@@ -99,7 +111,11 @@ async function querySuggestions(query: string): Promise<Response> {
     <UclDetailPageHeader>FormAttributeFilter</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <FormAttributeFilter v-model="filters" :query-suggestions="querySuggestions" />
+      <FormAttributeFilter
+        v-model="filters"
+        :query-suggestions="querySuggestions"
+        :resolve-attribute-type="resolveAttributeType"
+      />
     </UclDetailPageComponent>
   </UclDetailPageLayout>
 </template>

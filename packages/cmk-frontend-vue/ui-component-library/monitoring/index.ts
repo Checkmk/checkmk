@@ -7,11 +7,13 @@ import { Folder, Page } from '@ucl/_ucl/types/page'
 
 import UclTableCellBreakpoints from './UclTableCellBreakpoints.vue'
 import UclBaseCell from './cell/UclBaseCell.vue'
+import UclCheckboxCell from './cell/UclCheckboxCell.vue'
 import UclNumberCell from './cell/UclNumberCell.vue'
 
 export const pages: Array<Folder | Page> = [
   new Folder('Cell types', [
     new Page('BaseCell', UclBaseCell),
+    new Page('CheckboxCell', UclCheckboxCell),
     new Page('NumberCell', UclNumberCell)
   ]),
   new Page('Table Cell breakpoints', UclTableCellBreakpoints)

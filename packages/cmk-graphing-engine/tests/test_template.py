@@ -14,6 +14,7 @@ from cmk.graphing_engine import (
     RRDKey,
     Scalars,
     ServiceRef,
+    StackGroup,
     TemperatureUnit,
     TemplateDiscoveryOptions,
     TemplateOptions,
@@ -95,7 +96,9 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
-    assert discovered.graph == Graph(name=cpu_user, title=cpu_user, simple_lines=[cpu_user])
+    assert discovered.graph == Graph(
+        name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[cpu_user])]
+    )
     assert discovered.options == TemplateOptions(common=_common(), service=service)
     assert discovered.scalars == {cpu_user: cpu_user_bounds}
 
@@ -142,7 +145,9 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
     [matched, fallback] = discover_template_graphs(options, rrd=rrd)
 
     assert matched.graph is plugin
-    assert fallback.graph == Graph(name=extra, title=extra, simple_lines=[extra])
+    assert fallback.graph == Graph(
+        name=extra, title=extra, stack_groups=[StackGroup(members=[extra])]
+    )
 
 
 def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() -> None:
@@ -157,7 +162,9 @@ def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() 
 
     [fallback] = discover_template_graphs(options, rrd=rrd)
 
-    assert fallback.graph == Graph(name=cpu_user, title=cpu_user, simple_lines=[cpu_user])
+    assert fallback.graph == Graph(
+        name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[cpu_user])]
+    )
 
 
 def test_discover_template_graphs_optional_missing_metric_still_matches() -> None:

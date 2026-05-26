@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from ._discovery import DiscoveredGraph
 from ._fetch import FetchRRD
-from ._objects import Bidirectional, Graph, MetricName
+from ._objects import Bidirectional, Graph, MetricName, StackGroup
 from ._options import CommonOptions, ServiceRef
 
 
@@ -94,7 +94,11 @@ def discover_template_graphs(
             continue
         discovered.append(
             DiscoveredGraph(
-                graph=Graph(name=name, title=name, simple_lines=[name]),
+                graph=Graph(
+                    name=name,
+                    title=name,
+                    stack_groups=[StackGroup(members=[name])],
+                ),
                 options=post_options,
                 scalars={name: metric.bounds} if metric.bounds else {},
             )

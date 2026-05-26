@@ -172,9 +172,21 @@ const suggestionsRef = ref<InstanceType<typeof CmkSuggestions> | null>(null)
 const comboboxButtonRef =
   useTemplateRef<InstanceType<typeof CmkDropdownButton>>('comboboxButtonRef')
 
+// Swallow the click-outside fired by the in-flight bubble when open() is
+// called synchronously from a sibling's click handler.
+const suppressNextClickOutside = ref(false)
+
 defineExpose({
-  focus: () => {
-    comboboxButtonRef.value?.focus()
+  open: () => {
+    if (suggestionsShown.value) {
+      return
+    }
+    suppressNextClickOutside.value = true
+    showSuggestions()
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    nextTick(() => {
+      suppressNextClickOutside.value = false
+    })
   }
 })
 
@@ -202,6 +214,15 @@ function showSuggestions(): void {
 function hideSuggestions(): void {
   suggestionsShown.value = false
   comboboxButtonRef.value?.focus()
+}
+
+function onClickOutside(): void {
+  if (suppressNextClickOutside.value) {
+    return
+  }
+  if (suggestionsShown.value) {
+    suggestionsShown.value = false
+  }
 }
 
 function handleUpdate(selected: Suggestion | null): void {
@@ -234,11 +255,7 @@ const group = computed<ButtonVariants['group']>(() => {
 
 <template>
   <div
-    v-click-outside="
-      () => {
-        if (suggestionsShown) suggestionsShown = false
-      }
-    "
+    v-click-outside="onClickOutside"
     class="cmk-dropdown"
     :class="{ 'cmk-dropdown__fill': width === 'fill' }"
   >

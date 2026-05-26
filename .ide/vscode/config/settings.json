@@ -92,6 +92,7 @@
       "[vue]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.codeActionsOnSave": {
+          "source.removeUnusedImports": "explicit",
           "source.organizeImports": "explicit",
           "source.fixAll.eslint": "explicit",
           "source.fixAll.stylelint": "explicit"
@@ -102,6 +103,7 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
+          "source.removeUnusedImports": "explicit",
           "source.organizeImports": "explicit",
           "source.fixAll.eslint": "explicit"
         }
@@ -110,6 +112,7 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
+          "source.removeUnusedImports": "explicit",
           "source.organizeImports": "explicit",
           "source.fixAll.eslint": "explicit"
         }
@@ -143,11 +146,13 @@
       "less.validate": false,
       "eslint.useFlatConfig": true,
       "eslint.validate": ["javascript", "typescript", "vue"],
-      "stylelint.configFile": "",
       "stylelint.enable": true,
+      "stylelint.validate": ["css", "scss", "vue"],
       "prettier.useEditorConfig": false,
       "prettier.configPath": "bazel/tools/prettier.config.cjs",
-      "prettier.prettierPath": "./node_modules/prettier"
+      "prettier.prettierPath": "./node_modules/prettier",
+      "vue.complete.casing.tags": "pascal",
+      "vue.complete.casing.props": "camel"
     },
     "workspace": {
       "js/ts.tsdk.path": "packages/cmk-frontend-vue/node_modules/typescript/lib"
@@ -156,7 +161,8 @@
       "eslint.enable": false,
       "stylelint.enable": false,
       "prettier.enable": false
-    }
+    },
+    "unsetFolder": ["stylelint.configFile"]
   },
   "rust": {
     "folder": {

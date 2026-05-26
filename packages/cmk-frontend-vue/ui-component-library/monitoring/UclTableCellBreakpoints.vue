@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import codeExample from './UclMonitoringTableCellCodeExample.vue?raw'
+import codeExample from './UclTableCellBreakpoints.vue?raw'
 
 export const a11yData = [
   {
@@ -94,11 +94,11 @@ import {
 import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { computed, provide, ref } from 'vue'
 
-import MonitoringTableCell from '@/monitoring/shared/components/MonitoringTableCell.vue'
 import {
   type CellBreakpoints,
   MONITORING_TABLE_WIDTH
 } from '@/monitoring/shared/components/MonitoringTableContext'
+import BaseCell from '@/monitoring/shared/components/cell/BaseCell.vue'
 
 type TokenName = 's' | 'm' | 'l' | 'xl'
 
@@ -196,33 +196,33 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
 
 <template>
   <UclDetailPageLayout>
-    <UclDetailPageHeader>MonitoringTableCell</UclDetailPageHeader>
+    <UclDetailPageHeader>Table Cell breakpoints</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <div class="ucl-monitoring-table-cell__stack">
-        <div class="ucl-monitoring-table-cell__slider-controls">
-          <div class="ucl-monitoring-table-cell__slider-header">
-            <span class="ucl-monitoring-table-cell__slider-label">Container width</span>
-            <span class="ucl-monitoring-table-cell__current-width">
+      <div class="ucl-table-cell-breakpoints__stack">
+        <div class="ucl-table-cell-breakpoints__slider-controls">
+          <div class="ucl-table-cell-breakpoints__slider-header">
+            <span class="ucl-table-cell-breakpoints__slider-label">Container width</span>
+            <span class="ucl-table-cell-breakpoints__current-width">
               <strong>{{ currentWidth }}</strong>
               → <code>{{ activeBandName }}</code> slot
             </span>
           </div>
-          <div class="ucl-monitoring-table-cell__track-scroll">
+          <div class="ucl-table-cell-breakpoints__track-scroll">
             <input
               v-model.number="sliderValue"
               type="range"
               :min="SLIDER_MIN"
               :max="sliderMax"
               :style="{ width: `${trackWidth}px`, background: sliderTrackBackground }"
-              class="ucl-monitoring-table-cell__slider"
+              class="ucl-table-cell-breakpoints__slider"
             />
-            <div class="ucl-monitoring-table-cell__bands" :style="{ width: `${trackWidth}px` }">
+            <div class="ucl-table-cell-breakpoints__bands" :style="{ width: `${trackWidth}px` }">
               <div
                 v-for="band in bands"
                 :key="band.name"
-                class="ucl-monitoring-table-cell__band"
-                :class="{ 'ucl-monitoring-table-cell__band--active': band.isActive }"
+                class="ucl-table-cell-breakpoints__band"
+                :class="{ 'ucl-table-cell-breakpoints__band--active': band.isActive }"
                 :style="{ width: `${Math.max(band.end - band.start, 0)}px` }"
                 :title="`${band.start}–${band.end} px`"
               >
@@ -233,25 +233,25 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
         </div>
 
         <div
-          class="ucl-monitoring-table-cell__container"
+          class="ucl-table-cell-breakpoints__container"
           :style="{ width: `calc(${sliderValue}px + 2 * var(--dimension-4))` }"
         >
-          <table class="ucl-monitoring-table-cell__container-table">
+          <table class="ucl-table-cell-breakpoints__container-table">
             <tbody>
               <tr>
-                <MonitoringTableCell :breakpoints="breakpoints" :hide-below="hideBelow">
+                <BaseCell :breakpoints="breakpoints" :hide-below="hideBelow">
                   <template #XL>{{ propState.xlContent }}</template>
                   <template #L>{{ propState.lContent }}</template>
                   <template #M>{{ propState.mContent }}</template>
                   <template #S>{{ propState.sContent }}</template>
                   <template #default>{{ propState.defaultContent }}</template>
-                </MonitoringTableCell>
+                </BaseCell>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <p class="ucl-monitoring-table-cell__hint">
+        <p class="ucl-table-cell-breakpoints__hint">
           Drag the slider to change the container width. The coloured bands beneath the track show
           which slot the cell selects at any given width; the active band is highlighted.
         </p>
@@ -269,7 +269,7 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
 </template>
 
 <style scoped>
-.ucl-monitoring-table-cell__stack {
+.ucl-table-cell-breakpoints__stack {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -277,11 +277,11 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
   width: 100%;
 }
 
-.ucl-monitoring-table-cell__slider-controls {
+.ucl-table-cell-breakpoints__slider-controls {
   width: 100%;
 }
 
-.ucl-monitoring-table-cell__slider-header {
+.ucl-table-cell-breakpoints__slider-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -289,21 +289,21 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
   margin-bottom: var(--dimension-2);
 }
 
-.ucl-monitoring-table-cell__slider-label {
+.ucl-table-cell-breakpoints__slider-label {
   font-weight: var(--font-weight-bold);
 }
 
-.ucl-monitoring-table-cell__current-width {
+.ucl-table-cell-breakpoints__current-width {
   font-style: italic;
   opacity: 0.7;
 }
 
-.ucl-monitoring-table-cell__track-scroll {
+.ucl-table-cell-breakpoints__track-scroll {
   overflow-x: auto;
   padding: var(--dimension-6) 0 var(--dimension-4);
 }
 
-.ucl-monitoring-table-cell__slider {
+.ucl-table-cell-breakpoints__slider {
   appearance: none;
   display: block;
   height: 6px;
@@ -314,7 +314,7 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
   cursor: pointer;
 }
 
-.ucl-monitoring-table-cell__slider::-webkit-slider-thumb {
+.ucl-table-cell-breakpoints__slider::-webkit-slider-thumb {
   appearance: none;
   width: 16px;
   height: 16px;
@@ -324,7 +324,7 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
   cursor: pointer;
 }
 
-.ucl-monitoring-table-cell__slider::-moz-range-thumb {
+.ucl-table-cell-breakpoints__slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -333,7 +333,7 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
   cursor: pointer;
 }
 
-.ucl-monitoring-table-cell__bands {
+.ucl-table-cell-breakpoints__bands {
   display: flex;
   border: 1px solid var(--ux-theme-6);
   border-radius: 4px;
@@ -341,7 +341,7 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
   height: 22px;
 }
 
-.ucl-monitoring-table-cell__band {
+.ucl-table-cell-breakpoints__band {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -356,17 +356,17 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
   background: transparent;
 }
 
-.ucl-monitoring-table-cell__band:last-child {
+.ucl-table-cell-breakpoints__band:last-child {
   border-right: none;
 }
 
-.ucl-monitoring-table-cell__band--active {
+.ucl-table-cell-breakpoints__band--active {
   background: var(--ux-theme-4);
   opacity: 1;
   font-weight: var(--font-weight-bold);
 }
 
-.ucl-monitoring-table-cell__container {
+.ucl-table-cell-breakpoints__container {
   border: 1px dashed var(--ux-theme-6);
   border-radius: 4px;
   padding: var(--dimension-4);
@@ -376,20 +376,20 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
   overflow: hidden;
 }
 
-.ucl-monitoring-table-cell__container-table {
+.ucl-table-cell-breakpoints__container-table {
   border-collapse: collapse;
   width: 100%;
   table-layout: fixed;
 }
 
 /* stylelint-disable selector-pseudo-class-no-unknown */
-.ucl-monitoring-table-cell__container-table :deep(td) {
+.ucl-table-cell-breakpoints__container-table :deep(td) {
   padding: var(--dimension-2) var(--dimension-4);
   border: 1px solid var(--ux-theme-6);
 }
 /* stylelint-enable selector-pseudo-class-no-unknown */
 
-.ucl-monitoring-table-cell__hint {
+.ucl-table-cell-breakpoints__hint {
   margin: 0;
   font-style: italic;
   opacity: 0.7;

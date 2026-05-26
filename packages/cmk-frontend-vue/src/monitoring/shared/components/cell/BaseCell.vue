@@ -11,7 +11,7 @@ import {
   type CellBreakpoints,
   MONITORING_TABLE_WIDTH,
   resolveBreakpoint
-} from './MonitoringTableContext'
+} from '../MonitoringTableContext'
 
 const props = defineProps<{
   breakpoints?: CellBreakpoints | undefined

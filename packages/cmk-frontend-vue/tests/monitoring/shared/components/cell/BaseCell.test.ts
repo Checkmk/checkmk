@@ -6,12 +6,12 @@
 import { render } from '@testing-library/vue'
 import { type Ref, defineComponent, h, provide, ref } from 'vue'
 
-import MonitoringTableCell from '@/monitoring/shared/components/MonitoringTableCell.vue'
 import {
   type BreakpointValue,
   type CellBreakpoints,
   MONITORING_TABLE_WIDTH
 } from '@/monitoring/shared/components/MonitoringTableContext'
+import BaseCell from '@/monitoring/shared/components/cell/BaseCell.vue'
 
 type CellProps = {
   hideBelow?: BreakpointValue
@@ -25,7 +25,7 @@ function mountCell(
   const slots = options.slots ?? { default: () => 'cell content' }
   return render(
     defineComponent({
-      components: { MonitoringTableCell },
+      components: { BaseCell },
       setup() {
         if (options.containerWidth !== undefined) {
           const width: Ref<number> = ref(options.containerWidth)
@@ -33,7 +33,7 @@ function mountCell(
         }
       },
       render() {
-        return h('table', [h('tbody', [h('tr', [h(MonitoringTableCell, props, slots)])])])
+        return h('table', [h('tbody', [h('tr', [h(BaseCell, props, slots)])])])
       }
     })
   )

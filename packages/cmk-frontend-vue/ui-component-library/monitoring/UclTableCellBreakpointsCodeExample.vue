@@ -4,20 +4,20 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import MonitoringTableCell from '@/monitoring/shared/components/MonitoringTableCell.vue'
+import BaseCell from '@/monitoring/shared/components/cell/BaseCell.vue'
 </script>
 
 <template>
   <table>
     <tbody>
       <tr>
-        <MonitoringTableCell :breakpoints="{ S: 50, M: 100, L: 200, XL: 400 }">
+        <BaseCell :breakpoints="{ S: 50, M: 100, L: 200, XL: 400 }">
           <template #XL>host-01.example.com — Linux web server</template>
           <template #L>host-01.example.com (web)</template>
           <template #M>host-01.example.com</template>
           <template #S>host-01</template>
           <template #default>01</template>
-        </MonitoringTableCell>
+        </BaseCell>
       </tr>
     </tbody>
   </table>

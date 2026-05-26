@@ -44,7 +44,13 @@ const activeSlot = computed<string>(() => {
 </script>
 
 <template>
-  <td v-if="visible">
+  <td v-if="visible" class="monitoring-base-cell">
     <slot :name="activeSlot" />
   </td>
 </template>
+
+<style scoped>
+.monitoring-base-cell {
+  padding: var(--dimension-2);
+}
+</style>

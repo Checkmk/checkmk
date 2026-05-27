@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -16,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.enterasys_powersupply import (
     check_enterasys_powersupply,
     discover_enterasys_powersupply,
@@ -29,17 +28,16 @@ from cmk.legacy_checks.enterasys_powersupply import (
     [
         (
             [["101", "3", "1", "1"], ["102", "", "", "1"]],
-            [("101", {})],  # Only PSU 101 has state "3" (installed and operating)
+            [Service(item="101")],  # Only PSU 101 has state "3" (installed and operating)
         ),
     ],
 )
 def test_discover_enterasys_powersupply_regression(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for enterasys_powersupply regression test."""
     parsed = parse_enterasys_powersupply(string_table)
-    result = list(discover_enterasys_powersupply(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert list(discover_enterasys_powersupply(parsed)) == list(expected_discoveries)
 
 
 @pytest.mark.parametrize(
@@ -58,14 +56,12 @@ def test_check_enterasys_powersupply_regression(
 ) -> None:
     """Test check function for enterasys_powersupply regression test."""
     parsed = parse_enterasys_powersupply(string_table)
-    result = check_enterasys_powersupply(item, params, parsed)
+    results = list(check_enterasys_powersupply(item, params, parsed))
 
-    # Check that we get a valid result tuple
-    assert result is not None
-    assert len(result) >= 2
-
-    state, message = result[0], result[1]
-
-    # Check that the state is OK (0) and message contains expected status
-    assert state == 0, f"Expected state 0 (OK), got {state}"
-    assert expected_status in message, f"Expected '{expected_status}' in message '{message}'"
+    assert results, "Expected at least one result"
+    first = results[0]
+    assert isinstance(first, Result)
+    assert first.state is State.OK, f"Expected state OK, got {first.state}"
+    assert expected_status in first.summary, (
+        f"Expected '{expected_status}' in summary '{first.summary}'"
+    )

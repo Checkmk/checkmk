@@ -353,7 +353,7 @@ class ModeEditSite(WatoMode):
         configured_sites: SiteConfigurations,
         *,
         pprint_value: bool,
-        pending_changes: PendingChanges,
+        use_git: bool,
     ) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("sites"))
@@ -397,7 +397,12 @@ class ModeEditSite(WatoMode):
             replication_enabled=is_replication_enabled(site_spec),
             is_local_site=site_is_local(site_spec),
             connected_sites=sites_to_update,
-            pending_changes=pending_changes,
+            pending_changes=_pending_changes(
+                configured_sites,
+                use_git=use_git,
+                local_site=omd_site(),
+                user_id=user.id,
+            ),
         )
 
         flash(msg)
@@ -409,12 +414,7 @@ class ModeEditSite(WatoMode):
             site_spec,
             self._configured_sites,
             pprint_value=config.wato_pprint_config,
-            pending_changes=_pending_changes(
-                config.sites,
-                use_git=config.wato_use_git,
-                local_site=omd_site(),
-                user_id=user.id,
-            ),
+            use_git=config.wato_use_git,
         )
 
     def page(self, config: Config) -> None:

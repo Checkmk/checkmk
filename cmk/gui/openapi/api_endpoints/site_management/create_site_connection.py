@@ -46,15 +46,16 @@ def create_site_connection_v1(
     site_id = body.site_config.basic_settings.site_id
     new_site_config_spec = body.site_config.to_internal()
 
+    sites_api_mgr = SitesApiMgr()
     try:
-        sites_to_update = SitesApiMgr().get_connected_sites_to_update(
+        sites_to_update = sites_api_mgr.get_connected_sites_to_update(
             new_or_deleted_connection=True,
             modified_site=site_id,
             current_site_config=new_site_config_spec,
             old_site_config=None,
-            site_configs=SitesApiMgr().get_all_sites(),
+            site_configs=sites_api_mgr.get_all_sites(),
         )
-        SitesApiMgr().validate_and_save_site(
+        sites_api_mgr.validate_and_save_site(
             site_id,
             new_site_config_spec,
             pprint_value=api_context.config.wato_pprint_config,
@@ -73,7 +74,7 @@ def create_site_connection_v1(
         is_local_site=site_is_local(new_site_config_spec),
         connected_sites=sites_to_update,
         pending_changes=PendingChanges(
-            activation_sites=activation_sites(api_context.config.sites),
+            activation_sites=activation_sites(sites_api_mgr.get_all_sites()),
             local_site=omd_site(),
             acting_user=api_context.user_id,
             store=PendingChangesStore(),

@@ -55,19 +55,20 @@ def edit_site_connection_v1(
     site_config_spec_from_request = body.site_config.to_internal()
     body.site_config.basic_settings.site_id = site_id
 
-    if (secret := SitesApiMgr().get_a_site(site_id).get("secret")) is not None:
+    sites_api_mgr = SitesApiMgr()
+    if (secret := sites_api_mgr.get_a_site(site_id).get("secret")) is not None:
         site_config_spec_from_request["secret"] = secret
 
     try:
-        sites_to_update = SitesApiMgr().get_connected_sites_to_update(
+        sites_to_update = sites_api_mgr.get_connected_sites_to_update(
             new_or_deleted_connection=False,
             modified_site=site_id,
             current_site_config=site_config_spec_from_request,
-            old_site_config=SitesApiMgr().get_a_site(site_id),
-            site_configs=SitesApiMgr().get_all_sites(),
+            old_site_config=sites_api_mgr.get_a_site(site_id),
+            site_configs=sites_api_mgr.get_all_sites(),
         )
 
-        SitesApiMgr().validate_and_save_site(
+        sites_api_mgr.validate_and_save_site(
             site_id,
             site_config_spec_from_request,
             pprint_value=api_context.config.wato_pprint_config,
@@ -79,6 +80,10 @@ def edit_site_connection_v1(
             detail=str(exc),
         )
 
+    # Read activation sites from the post-save state. ``api_context.config.sites`` is a
+    # request-start snapshot, so changes to ``replication`` made by this edit (e.g. enabling
+    # replication on a previously non-replicated site) would otherwise not be reflected in
+    # ``activation_sites`` and ``PendingChanges._resolve_scope`` could drop the change.
     add_changes_after_editing_site_connection(
         site_id=site_id,
         is_new_connection=False,
@@ -86,7 +91,7 @@ def edit_site_connection_v1(
         is_local_site=site_is_local(site_config_spec_from_request),
         connected_sites=sites_to_update,
         pending_changes=PendingChanges(
-            activation_sites=activation_sites(api_context.config.sites),
+            activation_sites=activation_sites(sites_api_mgr.get_all_sites()),
             local_site=omd_site(),
             acting_user=api_context.user_id,
             store=PendingChangesStore(),
@@ -97,7 +102,7 @@ def edit_site_connection_v1(
         ),
     )
 
-    return SiteConnectionModel.from_internal(SitesApiMgr().get_a_site(site_id))
+    return SiteConnectionModel.from_internal(sites_api_mgr.get_a_site(site_id))
 
 
 ENDPOINT_EDIT_SITE_CONNECTION = VersionedEndpoint(

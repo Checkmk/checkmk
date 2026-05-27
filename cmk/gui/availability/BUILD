@@ -12,6 +12,7 @@ py_library(
         "//cmk/bi",
         "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",
+        "//cmk/gui:main_navigation",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/bi:bi_manager",
         "//cmk/gui/bi:foldable_tree_renderer",

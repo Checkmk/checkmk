@@ -18,6 +18,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.ntop import ntop_connection
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
@@ -105,15 +106,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
             },
         }
 
-    html.body_start(
-        title,
-        lang=user.language,
-        inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-        load_frontend_vue=ctx.config.load_frontend_vue,
-        custom_style_sheet=ctx.config.custom_style_sheet,
-        screenshotmode=ctx.config.screenshotmode,
-        inline_help_as_text=user.inline_help_as_text,
-    )
+    MainNavigation.render(ctx.config, title)
     html.begin_page_content(enable_scrollbar=True)
 
     _may_show_license_messages(ctx.request)

@@ -675,6 +675,7 @@ py_library(
         ":config",
         ":core_toolkit",
         ":html_toolkit",
+        ":main_navigation",
         ":page_toolkit",
         ":painter_options",
         ":visual_link",

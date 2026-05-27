@@ -37,6 +37,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.page_menu import (
     make_external_link,
     make_simple_link,
@@ -293,17 +294,13 @@ def show_availability_page(
         _output_csv(what, av_mode, av_data, avoptions, table_row_limit=table_row_limit)
         return
 
+    # Show/hide the header with page title, MK logo, etc. — matches the
+    # regular view renderer so the availability view also gets the main
+    # navigation + sidebar. ``main_navigation.render`` emits html_head,
+    # opens <body>, the nav + sidebar, and the #content_area wrapper that
+    # ``html.body_end`` later closes.
     if display_options.enabled(display_options.H):
-        html.body_start(
-            title,
-            force=True,
-            lang=user.language,
-            inject_js_profiling_code=active_config.inject_js_profiling_code,
-            load_frontend_vue=active_config.load_frontend_vue,
-            custom_style_sheet=active_config.custom_style_sheet,
-            screenshotmode=active_config.screenshotmode,
-            inline_help_as_text=user.inline_help_as_text,
-        )
+        MainNavigation.render(active_config, title)
 
     if display_options.enabled(display_options.T):
         top_heading(
@@ -873,15 +870,8 @@ def show_bi_availability(
         title = _("Availability of") + " " + title
 
     if html.output_format != "csv_export":
-        html.body_start(
-            title,
-            lang=user.language,
-            inject_js_profiling_code=active_config.inject_js_profiling_code,
-            load_frontend_vue=active_config.load_frontend_vue,
-            custom_style_sheet=active_config.custom_style_sheet,
-            screenshotmode=active_config.screenshotmode,
-            inline_help_as_text=user.inline_help_as_text,
-        )
+        # Emit main navigation + sidebar (matches the regular view renderer).
+        MainNavigation.render(active_config, title)
 
         assert breadcrumb[-1].url is not None
         breadcrumb.append(

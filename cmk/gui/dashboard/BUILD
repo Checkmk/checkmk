@@ -53,6 +53,7 @@ py_library(
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
+        "//cmk/gui:main_navigation",
         "//cmk/gui:ntop",
         "//cmk/gui:page_toolkit",
         "//cmk/gui:painter_options",

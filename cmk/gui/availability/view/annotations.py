@@ -24,6 +24,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.table import table_element
 from cmk.gui.top_heading import top_heading
@@ -203,15 +204,7 @@ def _edit_annotation(breadcrumb: Breadcrumb, *, debug: bool) -> bool:
     if service:
         title += "/" + service
 
-    html.body_start(
-        title,
-        lang=user.language,
-        inject_js_profiling_code=active_config.inject_js_profiling_code,
-        load_frontend_vue=active_config.load_frontend_vue,
-        custom_style_sheet=active_config.custom_style_sheet,
-        screenshotmode=active_config.screenshotmode,
-        inline_help_as_text=user.inline_help_as_text,
-    )
+    MainNavigation.render(active_config, title)
 
     breadcrumb = _edit_annotation_breadcrumb(breadcrumb, title)
     top_heading(

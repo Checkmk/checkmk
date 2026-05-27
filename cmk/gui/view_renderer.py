@@ -16,6 +16,7 @@ import cmk.utils.paths
 from cmk.gui import sites, visuals, weblib
 from cmk.gui.alarm import play_alarm_sounds
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
@@ -24,6 +25,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
     make_display_options_dropdown,
@@ -158,17 +160,13 @@ class GUIViewRenderer(ABCViewRenderer):
             if self.view.checkboxes_displayed:
                 SelectionId.from_request(request)
 
-        # Show/hide the header with page title, MK logo, etc.
+        # Show/hide the header with page title, MK logo, etc. — replaces the
+        # bare ``html.body_start`` so views render the main navigation +
+        # sidebar like every other page. ``main_navigation.render`` emits
+        # html_head, opens <body>, the nav + sidebar, and the #content_area
+        # wrapper that ``html.footer`` later closes via ``body_end``.
         if display_options.enabled(display_options.H):
-            html.body_start(
-                view_title(view_spec, self.view.context),
-                lang=user.language,
-                inject_js_profiling_code=inject_js_profiling_code,
-                load_frontend_vue=load_frontend_vue,
-                custom_style_sheet=custom_style_sheet,
-                screenshotmode=screenshotmode,
-                inline_help_as_text=user.inline_help_as_text,
-            )
+            MainNavigation.render(active_config, view_title(view_spec, self.view.context))
 
         if display_options.enabled(display_options.T):
             breadcrumb = view_breadcrumb(self.view)

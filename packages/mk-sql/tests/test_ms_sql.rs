@@ -311,6 +311,7 @@ async fn test_find_all_instances_remote() {
 }
 
 /// Todo(sk): split this test on per section basis.
+#[ignore = "CMK-35217: validate_blocked_sessions races with other tests"]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {

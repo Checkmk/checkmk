@@ -49,6 +49,16 @@ const valueOptions = computed(() => ({
   querySuggestions: (query: string) => props.queryValueSuggestions(props.condition, query)
 }))
 
+const attributeTypeEmpty = computed(() => props.condition.attributeType === null)
+const keyEmpty = computed(() => !props.condition.key)
+const valueEmpty = computed(() => props.condition.value === '')
+
+// A pristine pill (fresh + click) should not pre-emptively flag empties as invalid.
+const isPristine = computed(
+  () =>
+    props.condition.attributeType === null && !props.condition.key && props.condition.value === ''
+)
+
 const valueDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('valueDropdownRef')
 const pendingValueOpen = ref(false)
 
@@ -170,6 +180,8 @@ const operatorOptions = computed(() => ({
           :disabled="!condition.key"
           :input-hint="_t('Attribute type')"
           :label="_t('Attribute type')"
+          :required="!!condition.key"
+          :form-validation="!!condition.key && !isPristine && attributeTypeEmpty"
         />
       </span>
       <span
@@ -180,6 +192,8 @@ const operatorOptions = computed(() => ({
           :options="{ type: 'callback-filtered', querySuggestions }"
           :label="_t('Attribute key')"
           :input-hint="_t('Attribute key')"
+          required
+          :form-validation="!isPristine && keyEmpty"
           @update:selected-option="onKeyUpdate"
         />
       </span>
@@ -203,6 +217,8 @@ const operatorOptions = computed(() => ({
           :options="valueOptions"
           :label="_t('Attribute value')"
           :input-hint="_t('Attribute value')"
+          required
+          :form-validation="!isPristine && valueEmpty"
           @update:selected-option="onValueUpdate"
         />
       </span>

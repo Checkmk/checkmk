@@ -101,6 +101,7 @@ class Params(TypedDict, total=False):
     limit: Param
     cluster: Param
     node: Param
+    swap: Param
 
 
 DEFAULT_PARAMS = Params(
@@ -110,6 +111,11 @@ DEFAULT_PARAMS = Params(
     limit="no_levels",
     cluster="no_levels",
     node="no_levels",
+)
+
+MEMORY_DEFAULT_PARAMS = Params(
+    **DEFAULT_PARAMS,
+    swap="no_levels",
 )
 
 

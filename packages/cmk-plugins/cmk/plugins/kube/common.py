@@ -111,6 +111,7 @@ class Selector(Generic[T_co]):  # noqa: UP046 # TODO: Fix the interesting varian
 def create_sections(
     cpu_selector: Selector[IdentifiableSample],
     memory_selector: Selector[IdentifiableSample],
+    swap_selector: Selector[IdentifiableSample],
     pods_to_host: PodsToHost,
 ) -> Iterator[WriteableSection]:
     for piggyback in pods_to_host.piggybacks:
@@ -121,6 +122,10 @@ def create_sections(
         yield from cpu_selector.get_section(
             piggyback,
             SectionName("kube_performance_cpu_v1"),
+        )
+        yield from swap_selector.get_section(
+            piggyback,
+            SectionName("kube_performance_memory_swap_v1"),
         )
 
     for piggyback in pods_to_host.namespace_piggies:

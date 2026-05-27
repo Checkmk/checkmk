@@ -31,6 +31,7 @@ ContainerName = NewType("ContainerName", str)
 class UsedMetric(enum.StrEnum):
     container_memory_working_set_bytes = "container_memory_working_set_bytes"
     container_cpu_usage_seconds_total = "container_cpu_usage_seconds_total"
+    container_memory_swap = "container_memory_swap"
 
 
 class PerformanceSample(common.IdentifiableSample):
@@ -70,6 +71,10 @@ class CPUSample(PerformanceSample):
     metric_name: Literal[UsedMetric.container_cpu_usage_seconds_total]
 
 
+class SwapSample(PerformanceSample):
+    metric_name: Literal[UsedMetric.container_memory_swap]
+
+
 class UnusedSample(BaseModel):
     pass
 
@@ -86,9 +91,10 @@ class ContainersStore(BaseModel):
 class Samples:
     cpu: Sequence[CPUSample]
     memory: Sequence[MemorySample]
+    swap: Sequence[SwapSample]
 
 
-_AllSamples = MemorySample | CPUSample | UnusedSample
+_AllSamples = MemorySample | CPUSample | SwapSample | UnusedSample
 
 
 def parse_performance_metrics(cluster_collector_metrics: bytes) -> Sequence[_AllSamples]:
@@ -102,7 +108,9 @@ def parse_performance_metrics(cluster_collector_metrics: bytes) -> Sequence[_All
 
 def create_selectors(
     cluster_name: str, container_metrics: Sequence[_AllSamples]
-) -> tuple[common.Selector[CPURateSample], common.Selector[MemorySample]]:
+) -> tuple[
+    common.Selector[CPURateSample], common.Selector[MemorySample], common.Selector[SwapSample]
+]:
     """Converts parsed metrics into Selectors."""
 
     metrics = _group_metric_types(container_metrics)
@@ -113,13 +121,16 @@ def create_selectors(
     return (
         common.Selector(cpu_rate_metrics, aggregator=_aggregate_cpu_metrics),
         common.Selector(metrics.memory, aggregator=_aggregate_memory_metrics),
+        common.Selector(metrics.swap, aggregator=_aggregate_memory_metrics),
     )
 
 
 T = TypeVar("T", bound=common.IdentifiableSample)
 
 
-def _aggregate_memory_metrics(metrics: Iterable[MemorySample]) -> section.PerformanceUsage:
+def _aggregate_memory_metrics(
+    metrics: Iterable[MemorySample | SwapSample],
+) -> section.PerformanceUsage:
     return section.PerformanceUsage(
         resource=section.Memory(usage=sum((m.value() for m in metrics), start=0.0))
     )
@@ -134,16 +145,19 @@ def _aggregate_cpu_metrics(metrics: Iterable[CPURateSample]) -> section.Performa
 def _group_metric_types(metrics: Sequence[_AllSamples]) -> Samples:
     cpu_metrics = []
     memory_metrics = []
+    swap_metrics = []
     for metric in metrics:
         if isinstance(metric, MemorySample):
             memory_metrics.append(metric)
         elif isinstance(metric, CPUSample):
             cpu_metrics.append(metric)
+        elif isinstance(metric, SwapSample):
+            swap_metrics.append(metric)
         elif isinstance(metric, UnusedSample):
             continue
         else:
             raise NotImplementedError()
-    return Samples(memory=memory_metrics, cpu=cpu_metrics)
+    return Samples(memory=memory_metrics, cpu=cpu_metrics, swap=swap_metrics)
 
 
 def create_cpu_rate_metrics(

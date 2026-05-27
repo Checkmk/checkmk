@@ -31,7 +31,7 @@ def test_discovery() -> None:
         count_pods_pod_level_request=0,
         count_pods_pod_level_limit=0,
     )
-    assert list(discovery_kube_memory(None, resources, None))
+    assert list(discovery_kube_memory(None, resources, None, None))
 
 
 @pytest.mark.parametrize(
@@ -286,6 +286,7 @@ def test_check_kube_memory(
             section_kube_performance_memory,
             section_kube_memory_resources,
             section_kube_memory_allocatable_resource,
+            None,
         )
     )
 
@@ -316,6 +317,7 @@ def test_no_results_if_no_resources(
             section_kube_performance_memory,
             None,
             AllocatableResource(context="node", value=35917989.0),
+            None,
         )
     )
     assert result == []
@@ -412,6 +414,93 @@ def test_count_overview_pod_level(
     expected: str,
 ) -> None:
     assert count_overview(resources, requirement) == expected
+
+
+@pytest.mark.parametrize(
+    "swap_usage,swap_param,expected_result",
+    [
+        pytest.param(
+            None,
+            "no_levels",
+            (
+                Result(state=State.OK, summary="Requests: 0 B (0/1 containers with requests)"),
+                Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Limits: 0 B (0/1 containers with limits)"),
+                Metric("kube_memory_limit", 0.0, boundaries=(0.0, None)),
+            ),
+            id="No swap section",
+        ),
+        pytest.param(
+            PerformanceUsage(resource=Memory(usage=12288.0)),
+            "no_levels",
+            (
+                Result(state=State.OK, summary="Requests: 0 B (0/1 containers with requests)"),
+                Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Limits: 0 B (0/1 containers with limits)"),
+                Metric("kube_memory_limit", 0.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Swap: 12.0 KiB"),
+                Metric("swap_used", 12288.0, boundaries=(0.0, None)),
+            ),
+            id="Swap present, no levels",
+        ),
+        pytest.param(
+            PerformanceUsage(resource=Memory(usage=12288.0)),
+            ("levels", (10000.0, 20000.0)),
+            (
+                Result(state=State.OK, summary="Requests: 0 B (0/1 containers with requests)"),
+                Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Limits: 0 B (0/1 containers with limits)"),
+                Metric("kube_memory_limit", 0.0, boundaries=(0.0, None)),
+                Result(
+                    state=State.WARN,
+                    summary="Swap: 12.0 KiB (warn/crit at 9.77 KiB/19.5 KiB)",
+                ),
+                Metric("swap_used", 12288.0, levels=(10000.0, 20000.0), boundaries=(0.0, None)),
+            ),
+            id="Swap above warn",
+        ),
+        pytest.param(
+            PerformanceUsage(resource=Memory(usage=12288.0)),
+            ("levels", (1.0, 10000.0)),
+            (
+                Result(state=State.OK, summary="Requests: 0 B (0/1 containers with requests)"),
+                Metric("kube_memory_request", 0.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Limits: 0 B (0/1 containers with limits)"),
+                Metric("kube_memory_limit", 0.0, boundaries=(0.0, None)),
+                Result(
+                    state=State.CRIT,
+                    summary="Swap: 12.0 KiB (warn/crit at 1 B/9.77 KiB)",
+                ),
+                Metric("swap_used", 12288.0, levels=(1.0, 10000.0), boundaries=(0.0, None)),
+            ),
+            id="Swap above crit",
+        ),
+    ],
+)
+def test_check_kube_memory_swap(
+    swap_usage: PerformanceUsage | None,
+    swap_param: Literal["no_levels"] | tuple[Literal["levels"], tuple[float, float]],
+    expected_result: tuple[Result | Metric, ...],
+) -> None:
+    assert expected_result == tuple(
+        check_kube_memory(
+            Params(swap=swap_param),
+            None,
+            Resources(
+                request=0.0,
+                limit=0.0,
+                count_unspecified_requests=1,
+                count_total_requests=1,
+                count_pods_pod_level_request=0,
+                count_unspecified_limits=0,
+                count_zeroed_limits=1,
+                count_total_limits=1,
+                count_pods_pod_level_limit=0,
+            ),
+            None,
+            swap_usage,
+        )
+    )
 
 
 def test_parse_resources_legacy_v1_format() -> None:

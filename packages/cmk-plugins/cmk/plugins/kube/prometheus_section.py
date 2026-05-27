@@ -56,9 +56,15 @@ def _substitute_if_error(response: query.HTTPResult) -> Sequence[prometheus_api.
 def create_selectors(
     cpu_response: query.HTTPResult,
     memory_response: query.HTTPResult,
-) -> tuple[common.Selector[CPUMeasurement], common.Selector[MemoryMeasurement]]:
+    swap_response: query.HTTPResult,
+) -> tuple[
+    common.Selector[CPUMeasurement],
+    common.Selector[MemoryMeasurement],
+    common.Selector[MemoryMeasurement],
+]:
     cpu_samples = _substitute_if_error(cpu_response)
     memory_samples = _substitute_if_error(memory_response)
+    swap_samples = _substitute_if_error(swap_response)
     return (
         common.Selector(
             [CPUMeasurement.from_sample(s) for s in _filter_fully_labeled(cpu_samples)],
@@ -66,6 +72,10 @@ def create_selectors(
         ),
         common.Selector(
             [MemoryMeasurement.from_sample(s) for s in _filter_fully_labeled(memory_samples)],
+            _aggregate_memory_metrics,
+        ),
+        common.Selector(
+            [MemoryMeasurement.from_sample(s) for s in _filter_fully_labeled(swap_samples)],
             _aggregate_memory_metrics,
         ),
     )

@@ -45,6 +45,7 @@ class Query(enum.StrEnum):
     sum_container_memory_working_set_bytes = (
         'sum(container_memory_working_set_bytes{container=""}) BY (pod, namespace)'
     )
+    sum_container_memory_swap = 'sum(container_memory_swap{container=""}) BY (pod, namespace)'
 
 
 HTTPResponse = tuple[Query, HTTPResult]

@@ -73,6 +73,7 @@ def test_kube_create_sections() -> None:
         create_sections(
             one_metric_per_pod_selector,
             one_metric_per_pod_selector,
+            one_metric_per_pod_selector,
             PodsToHost(
                 piggybacks=piggyback_to_pod_names,
                 namespace_piggies=[],
@@ -85,6 +86,7 @@ def test_kube_create_sections() -> None:
     assert {s.section_name for s in sections} == {
         SectionName("kube_performance_memory_v1"),
         SectionName("kube_performance_cpu_v1"),
+        SectionName("kube_performance_memory_swap_v1"),
     }
 
 
@@ -100,6 +102,7 @@ def test_kube_create_resource_quota_sections() -> None:
     # Act
     sections = list(
         create_sections(
+            one_metric_per_pod_selector,
             one_metric_per_pod_selector,
             one_metric_per_pod_selector,
             PodsToHost(

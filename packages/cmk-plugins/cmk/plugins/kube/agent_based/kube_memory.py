@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -14,7 +15,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.kube.kube_resources import (
     check_resource,
-    DEFAULT_PARAMS,
+    MEMORY_DEFAULT_PARAMS,
     Params,
     parse_allocatable_resource,
     parse_performance_usage,
@@ -42,11 +43,18 @@ agent_section_kube_allocatable_memory_resource_v1 = AgentSection(
     parse_function=parse_allocatable_resource,
 )
 
+agent_section_kube_performance_memory_swap_v1 = AgentSection(
+    name="kube_performance_memory_swap_v1",
+    parse_function=parse_performance_usage,
+    parsed_section_name="kube_performance_memory_swap",
+)
+
 
 def discovery_kube_memory(
     section_kube_performance_memory: PerformanceUsage | None,
     section_kube_memory_resources: Resources | None,
     section_kube_allocatable_memory_resource: AllocatableResource | None,
+    section_kube_performance_memory_swap: PerformanceUsage | None,
 ) -> DiscoveryResult:
     yield Service()
 
@@ -56,6 +64,7 @@ def check_kube_memory(
     section_kube_performance_memory: PerformanceUsage | None,
     section_kube_memory_resources: Resources | None,
     section_kube_allocatable_memory_resource: AllocatableResource | None,
+    section_kube_performance_memory_swap: PerformanceUsage | None,
 ) -> CheckResult:
     if section_kube_memory_resources is None:
         return
@@ -69,6 +78,17 @@ def check_kube_memory(
         render.bytes,
     )
 
+    if section_kube_performance_memory_swap is not None:
+        swap_param = params.get("swap", "no_levels")
+        yield from check_levels_v1(
+            section_kube_performance_memory_swap.resource.usage,
+            label="Swap",
+            levels_upper=swap_param[1] if swap_param != "no_levels" else None,
+            metric_name="swap_used",
+            render_func=render.bytes,
+            boundaries=(0.0, None),
+        )
+
 
 check_plugin_kube_memory = CheckPlugin(
     name="kube_memory",
@@ -77,9 +97,10 @@ check_plugin_kube_memory = CheckPlugin(
         "kube_performance_memory",
         "kube_memory_resources",
         "kube_allocatable_memory_resource",
+        "kube_performance_memory_swap",
     ],
     discovery_function=discovery_kube_memory,
     check_function=check_kube_memory,
     check_ruleset_name="kube_memory",
-    check_default_parameters=DEFAULT_PARAMS,
+    check_default_parameters=MEMORY_DEFAULT_PARAMS,
 )

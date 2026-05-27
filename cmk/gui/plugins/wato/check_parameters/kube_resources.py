@@ -30,8 +30,11 @@ def valuespec_percentual(title: str, maxvalue: None | float = 101.0) -> Cascadin
 
 def _parameter_valuespec_memory(
     valuespec_help: str,
-    options: Sequence[Literal["usage", "request", "request_lower", "limit", "cluster", "node"]] = (
+    options: Sequence[
+        Literal["usage", "swap", "request", "request_lower", "limit", "cluster", "node"]
+    ] = (
         "usage",
+        "swap",
         "request",
         "request_lower",
         "limit",
@@ -46,6 +49,15 @@ def _parameter_valuespec_memory(
                 "usage",
                 wrap_with_no_levels_dropdown(
                     title=_("Upper levels for usage"), value_spec=UsedSize()
+                ),
+            )
+        )
+    if "swap" in options:
+        elements.append(
+            (
+                "swap",
+                wrap_with_no_levels_dropdown(
+                    title=_("Upper levels for swap usage"), value_spec=UsedSize()
                 ),
             )
         )

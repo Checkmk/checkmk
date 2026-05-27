@@ -1139,8 +1139,14 @@ def _create_sections_based_on_container_metrics(
             ) from e
 
         try:
+            cpu_selector, memory_selector, swap_selector = collector_selectors
             common.write_sections(
-                common.create_sections(*collector_selectors, pods_to_host=pods_to_host)
+                common.create_sections(
+                    cpu_selector,
+                    memory_selector,
+                    swap_selector,
+                    pods_to_host,
+                )
             )
 
         except Exception as e:
@@ -1278,12 +1284,13 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
     )
 
     if isinstance(usage_config, query.PrometheusSessionConfig):
-        cpu, memory = query.send_requests(
+        cpu, memory, swap = query.send_requests(
             token,
             usage_config,
             [
                 query.Query.sum_rate_container_cpu_usage_seconds_total,
                 query.Query.sum_container_memory_working_set_bytes,
+                query.Query.sum_container_memory_swap,
             ],
             logger=LOGGER,
         )
@@ -1296,9 +1303,11 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
             LOGGER.debug("Prometheus queries failed. Skipping generation of 'machine_sections'")
             return 0
 
-        prometheus_selectors = prometheus_section.create_selectors(cpu[1], memory[1])
+        cpu_selector, memory_selector, swap_selector = prometheus_section.create_selectors(
+            cpu[1], memory[1], swap[1]
+        )
         common.write_sections(
-            common.create_sections(*prometheus_selectors, pods_to_host=pods_to_host)
+            common.create_sections(cpu_selector, memory_selector, swap_selector, pods_to_host)
         )
         write_machine_sections(
             composed_entities,

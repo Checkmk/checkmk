@@ -149,6 +149,7 @@ CLOUD_WHEELS = [p for p in PRO_WHEELS + [
     "//non-free/packages/cmk-cloud:wheel",
     "//non-free/packages/cmk-metric-backend:wheel",
     "//non-free/packages/cmk-otel-collector:wheel",
+    "//non-free/packages/cmk-plugins-nonfree:wheel-gcp_extended",
     "//non-free/packages/cmk-telemetry:wheel",
 ] if p != "//packages/cmk-backup:wheel"]  # Urks... Need some other structure here.
 

@@ -338,16 +338,41 @@ def fetch_luns(connection: HostConnection) -> Iterable[models.LunModel]:
         )
 
 
-def _aggregates_ids(connection: HostConnection, args: Args) -> Collection:
-    # wee need to retrieve the uuid of the aggregates via the CLI passthrough
-    # because the REST API does not return, per design, the uuid of the root aggregates
-    response = connection.session.get(
-        url=f"{connection.origin}/api/private/cli/aggr?fields=uuid",
-        timeout=args.timeout,
-    )
+def _root_aggregate_ids(connection: HostConnection, args: Args) -> set[str]:
+    """
+    The standard REST API does not return root aggregates by design, so we use the CLI
+    passthrough to enumerate their UUIDs (see Werk #18010).
+    """
+    try:
+        response = connection.session.get(
+            url=f"{connection.origin}/api/private/cli/aggr?fields=uuid",
+            timeout=args.timeout,
+        )
+        records = response.json().get("records", [])
+    except (NetAppRestError, OSError, ValueError):
+        # ASA r2 systems do not support
+        # the "uuid" field on this passthrough (the request fails)
+        return set()
+    return {record["uuid"] for record in records if "uuid" in record}
 
-    records = response.json().get("records", [])
-    return {record["uuid"] for record in records}
+
+def _aggregates_ids(connection: HostConnection, args: Args) -> Collection[str]:
+    """
+    The standard collection endpoint returns every non-root aggregate. On classic ONTAP
+    systems this excludes root aggregates, which we additionally retrieve via the CLI
+    passthrough (`_root_aggregate_ids`).
+
+    But, on ASA r2 systems it returns the data Storage Availability Zone
+    aggregates ("dataFA...") while the CLI passthrough is unavailable, so the union below
+    yields exactly those.
+    """
+    uuids = {
+        aggregate.to_dict()["uuid"]
+        for aggregate in NetAppResource.Aggregate.get_collection(
+            connection=connection, fields="uuid"
+        )
+    }
+    return uuids | _root_aggregate_ids(connection, args)
 
 
 def fetch_aggr(connection: HostConnection, args: Args) -> Iterable[models.AggregateModel]:

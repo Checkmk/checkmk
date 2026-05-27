@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import argparse
+from collections.abc import Iterator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -12,6 +14,7 @@ from netapp_ontap.error import NetAppRestError
 from cmk.plugins.netapp import models
 from cmk.special_agents.agent_netapp_ontap import (
     agent_netapp_main,
+    fetch_aggr,
     get_nodes,
     parse_arguments,
 )
@@ -164,3 +167,93 @@ def test_get_nodes_returns_nodes_and_oldest_version() -> None:
     assert nodes == [node_old, node_new]
     assert version == _NODE_VERSION_OLD
     mock_cluster.assert_not_called()
+
+
+def _connection_with_cli_response(response_json: dict[str, object] | Exception) -> MagicMock:
+    """Fake HostConnection whose CLI passthrough returns ``response_json`` (or raises it).
+
+    HostConnection is a third-party network boundary, so it is stubbed rather than faked.
+    """
+    connection = MagicMock()
+    connection.origin = "https://myhost"
+    if isinstance(response_json, Exception):
+        connection.session.get.side_effect = response_json
+    else:
+        connection.session.get.return_value.json.return_value = response_json
+    return connection
+
+
+class _FakeAggregate:
+    _collection_uuids: tuple[str, ...] = ()
+
+    def __init__(self, uuid: str) -> None:
+        self._uuid = uuid
+
+    @classmethod
+    def get_collection(cls, *, connection: object, fields: str) -> "Iterator[_FakeAggregate]":
+        return (cls(uuid) for uuid in cls._collection_uuids)
+
+    def get(self, fields: str) -> None:
+        """No remote fetch in the test double; the resource is already populated."""
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "uuid": self._uuid,
+            "name": self._uuid,
+            "space": {"block_storage": {"available": 1000, "size": 2000}},
+        }
+
+
+def test_fetch_aggr_classic_ontap_discovers_data_and_root_aggregates() -> None:
+    """
+    Classic ONTAP: the standard collection yields the non-root aggregates and the CLI
+    passthrough adds the root aggregates, so every aggregate is monitored.
+    """
+    connection = _connection_with_cli_response(
+        {"records": [{"uuid": "data-1"}, {"uuid": "data-2"}, {"uuid": "root-1"}]}
+    )
+    args = argparse.Namespace(timeout=30)
+
+    with (
+        patch.object(NetAppResource, "Aggregate", _FakeAggregate),
+        patch.object(_FakeAggregate, "_collection_uuids", ("data-1", "data-2")),
+    ):
+        discovered = list(fetch_aggr(connection, args))
+
+    assert {aggregate.name for aggregate in discovered} == {"data-1", "data-2", "root-1"}
+
+
+def test_fetch_aggr_asa_r2_discovers_data_aggregates() -> None:
+    """
+    ASA r2: the CLI passthrough rejects the 'uuid' field and returns no records, so the
+    data aggregates from the standard collection are monitored (previously none were).
+    """
+    connection = _connection_with_cli_response(
+        {"error": {"message": 'The value "uuid" is invalid for field "fields"', "code": "262197"}}
+    )
+    args = argparse.Namespace(timeout=30)
+
+    with (
+        patch.object(NetAppResource, "Aggregate", _FakeAggregate),
+        patch.object(_FakeAggregate, "_collection_uuids", ("dataFA-1", "dataFA-2")),
+    ):
+        discovered = list(fetch_aggr(connection, args))
+
+    assert {aggregate.name for aggregate in discovered} == {"dataFA-1", "dataFA-2"}
+
+
+def test_fetch_aggr_continues_when_cli_passthrough_fails() -> None:
+    """
+    If the CLI passthrough request itself fails, the data aggregates from the standard
+    collection are still monitored instead of the whole aggregate fetch failing.
+    """
+    connection = _connection_with_cli_response(OSError("connection reset"))
+    args = argparse.Namespace(timeout=30)
+
+    with (
+        patch.object(NetAppResource, "Aggregate", _FakeAggregate),
+        patch.object(_FakeAggregate, "_collection_uuids", ("dataFA-1",)),
+    ):
+        discovered = list(fetch_aggr(connection, args))
+
+    assert {aggregate.name for aggregate in discovered} == {"dataFA-1"}

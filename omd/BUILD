@@ -49,6 +49,8 @@ edition_deps = select({
         "//omd/non-free/packages/cmk-licensing-nonfree:pkg_tar",
         "//omd/non-free/packages/cmk-liveproxyd:pkg_tar",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-gcp_extended",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-azure_deprecated_extended",
+        "//non-free/packages/cmk-plugins-nonfree:pkg_tar-azure_v2_extended",
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-kube_extended",
         "//omd/non-free/packages/cmk-robotmk:pkg_tar",
         "//omd/non-free/packages/legal-docs:ultimate_pkg_tar",

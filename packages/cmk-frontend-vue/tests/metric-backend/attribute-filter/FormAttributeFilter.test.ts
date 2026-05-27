@@ -294,3 +294,50 @@ test('same-family swap with an empty value auto-opens the value dropdown', async
     'true'
   )
 })
+
+const ERROR_CLASS = 'cmk-dropdown__validation-error'
+
+const FIELD_LABELS = ['Attribute type', 'Attribute key', 'Attribute operator', 'Attribute value']
+
+function field(pill: HTMLElement, label: string): HTMLElement {
+  return within(pill).getByRole('combobox', { name: label })
+}
+
+describe('pill required-field validation', () => {
+  test('a pristine pill suppresses formValidation on every visible field', () => {
+    renderForm(makeModel())
+    const pill = pillsInOrder()[0]!
+    for (const label of FIELD_LABELS) {
+      expect(field(pill, label)).not.toHaveClass(ERROR_CLASS)
+    }
+  })
+
+  test('the disabled type dropdown drops its required hint', () => {
+    renderForm(makeModel())
+    const pill = pillsInOrder()[0]!
+    expect(field(pill, 'Attribute type')).not.toHaveTextContent('(required)')
+  })
+
+  test('a partly-filled pill flags only its empty fields as invalid', () => {
+    renderForm(makeModel())
+    const pill = pillsInOrder()[1]!
+    for (const label of ['Attribute type', 'Attribute key', 'Attribute operator']) {
+      expect(field(pill, label)).not.toHaveClass(ERROR_CLASS)
+    }
+    const value = field(pill, 'Attribute value')
+    expect(value).toHaveClass(ERROR_CLASS)
+    expect(value).toHaveTextContent('(required)')
+  })
+
+  test('filling in the key lifts the pill out of pristine and exposes the still-empty type', async () => {
+    const { model } = renderForm(makeModel(), () => null)
+    await pickKey(pillsInOrder()[0]!, 'http.method')
+
+    expect(model.value![0]!.key).toBe('http.method')
+    const pill = pillsInOrder()[0]!
+    expect(field(pill, 'Attribute key')).not.toHaveClass(ERROR_CLASS)
+    const type = field(pill, 'Attribute type')
+    expect(type).toHaveClass(ERROR_CLASS)
+    expect(type).toHaveTextContent('(required)')
+  })
+})

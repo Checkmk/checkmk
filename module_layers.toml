@@ -408,6 +408,7 @@ allows = [
   "cmk.fetcher_helper",
   "cmk.fetchers",
   "cmk.helper_interface",
+  "cmk.licensing.basics.options",
   "cmk.licensing.nonfree",
   "cmk.multi_tenancy.shared",
   "cmk.server_side_calls_backend",

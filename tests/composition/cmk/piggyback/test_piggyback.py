@@ -363,14 +363,20 @@ def test_piggyback_services_remote_remote(
         ),
         _setup_piggyback_host(central_site, remote_site_2.id, _HOSTNAME_PIGGYBACKED),
     ):
-        remote_site.schedule_check(_HOSTNAME_SOURCE_REMOTE, "Check_MK")
+        # Wait for the data from remote_1 to actually arrive to remote_2 before running
+        # discovery.
+        # This also isolates a propagation failure (this assert) from a
+        # discovery failure (the assert below).
+        assert piggybacked_data_gets_updated(
+            remote_site, remote_site_2, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
+        ), "Piggybacked data did not get updated on remote_site_2"
+
         central_site.openapi.service_discovery.run_discovery_and_wait_for_completion(
             _HOSTNAME_PIGGYBACKED
         )
-
         assert piggybacked_service_discovered(
             central_site, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
-        )
+        ), "Piggybacked service was not discovered on remote_site2 for the host piggybacked from remote_site1"
 
 
 @contextmanager

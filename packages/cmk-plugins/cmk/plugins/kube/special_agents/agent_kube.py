@@ -82,7 +82,7 @@ from cmk.plugins.kube.prometheus_api import ResponseSuccess
 from cmk.plugins.kube.schemata import api, section
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
-__version__ = "2.5.0p5"
+__version__ = "2.5.0p6"
 
 AGENT_NAME = "kube"
 

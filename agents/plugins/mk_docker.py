@@ -25,7 +25,7 @@ Installation options:
 This plugin it will be called by the agent without any arguments.
 """
 
-__version__ = "2.5.0p5"
+__version__ = "2.5.0p6"
 
 # NOTE: docker is available for python versions from 2.6 / 3.3
 

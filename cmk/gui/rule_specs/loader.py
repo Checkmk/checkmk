@@ -63,6 +63,7 @@ def load_api_v1_rule_specs(
     edition: Edition,
     agent_bakery_enabled: bool,
     otel_collector_enabled: bool,
+    aws_extended_enabled: bool,
 ) -> tuple[Sequence[Exception], Sequence[LoadedRuleSpec]]:
     used_entry_points = (
         {
@@ -88,6 +89,17 @@ def load_api_v1_rule_specs(
                 location: plugin
                 for location, plugin in discovered_plugins.plugins.items()
                 if not location.module.startswith("cmk.plugins.otel.")
+            },
+        )
+
+    if not aws_extended_enabled:
+        discovered_plugins = DiscoveredPlugins(
+            discovered_plugins.errors,
+            {
+                location: plugin
+                for location, plugin in discovered_plugins.plugins.items()
+                if location.module
+                != "cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.aws_cce"
             },
         )
 

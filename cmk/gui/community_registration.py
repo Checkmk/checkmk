@@ -139,6 +139,7 @@ def register(
     features = ctx.features
     agent_bakery_enabled = features.bakery.enabled
     otel_collector_enabled = features.otel_collector.enabled
+    aws_extended_enabled = features.aws_extended.enabled
     sample_config_generator_registry.register(SampleConfigGeneratorGroups)
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
     nagvis.register(permission_section_registry, permission_registry, snapin_registry)
@@ -200,6 +201,7 @@ def register(
         builtin_pagetype_topic_registry,
         agent_bakery_enabled,
         otel_collector_enabled,
+        aws_extended_enabled,
     )
 
     ldap_registration(

@@ -3891,6 +3891,17 @@ class ABCNotificationParameterMode(WatoMode):
     def _back_mode(self) -> ActionResult:
         raise NotImplementedError()
 
+    def _search_vars(self) -> HTTPVariables:
+        if search := request.get_str_input("search"):
+            return [("search", search)]
+        return []
+
+    def _preserved_vars(self) -> dict[str, str]:
+        preserved_vars: dict[str, str] = {"method": self._method()}
+        if search := request.get_str_input("search"):
+            preserved_vars["search"] = search
+        return preserved_vars
+
     def _load_parameters(self) -> NotificationParameterSpecs:
         if transactions.is_transaction():
             return NotificationParameterConfigFile().load_for_modification()
@@ -3992,7 +4003,7 @@ class ABCNotificationParameterMode(WatoMode):
 
         self._parameters = self._load_parameters()
         if (method_parameters := self._parameters.get(self._method())) is None:
-            return redirect(mode_url("notification_parameters", method=self._method()))
+            return redirect(mode_url("notification_parameters", **self._preserved_vars()))
 
         method_parameter_list = list(method_parameters.items())
         if request.has_var("_delete"):
@@ -4005,8 +4016,8 @@ class ABCNotificationParameterMode(WatoMode):
                 return redirect(
                     mode_url(
                         "notification_parameters",
-                        method=self._method(),
                         _parameter_id_with_related_rules=parameter_id,
+                        **self._preserved_vars(),
                     )
                 )
 
@@ -4043,9 +4054,9 @@ class ABCNotificationParameterMode(WatoMode):
             )
 
         if back_mode := request.var("back_mode"):
-            return redirect(mode_url(back_mode, method=self._method()))
+            return redirect(mode_url(back_mode, **self._preserved_vars()))
 
-        return redirect(mode_url("notification_parameters", method=self._method()))
+        return redirect(mode_url("notification_parameters", **self._preserved_vars()))
 
     def _vue_field_id(self) -> str:
         return "_vue_edit_notification_parameter"
@@ -4114,6 +4125,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
                                                 ("mode", "edit_notification_parameter"),
                                                 ("method", self._method()),
                                             ]
+                                            + self._search_vars()
                                         )
                                     ),
                                     is_shortcut=True,
@@ -4266,6 +4278,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
             ("back_mode", "notification_parameters"),
             ("method", self._method()),
         ]
+        additional_vars += self._search_vars()
 
         delete_url = make_confirm_delete_link(
             url=make_action_link(
@@ -4327,7 +4340,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
             return super().breadcrumb()
 
     def _back_mode(self) -> ActionResult:
-        return redirect(mode_url("notification_parameters", method=self._method()))
+        return redirect(mode_url("notification_parameters", **self._preserved_vars()))
 
     def title(self) -> str:
         if self._new:
@@ -4381,7 +4394,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
         )
 
         if back_mode := request.var("back_mode"):
-            return redirect(mode_url(back_mode, method=self._method()))
+            return redirect(mode_url(back_mode, **self._preserved_vars()))
 
         return self._back_mode()
 

@@ -158,8 +158,10 @@ def test_login_with_cookies(
     )
     index_page = response.location
     assert index_page.endswith("index.py")  # Relative redirect to "index.py" :-( !!!
+    # index.py now redirects to the user's start URL (dashboard.py by default)
+    # rather than rendering the historic frameset / iframe page.
     response = wsgi_app.get("/NO_SITE/check_mk/index.py")
-    assert response.status_code == 200
+    assert response.status_code == 302
 
     test_environ = create_environ("/NO_SITE/", method="GET")
     wsgi_app._add_cookies_to_wsgi(test_environ)

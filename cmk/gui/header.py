@@ -24,7 +24,7 @@ def make_header(
     show_top_heading: bool = True,
     enable_main_page_scrollbar: bool = True,
     *,
-    show_main_navigation: bool = False,
+    show_main_navigation: bool = True,
     debug: bool,
     lang: str,
     inject_js_profiling_code: bool,
@@ -41,9 +41,9 @@ def make_header(
     if writer._header_sent:
         return
 
-    # Opt-in path for callers that want the main navigation + sidebar
-    # rendered as part of make_header. Default is off; the iframe is still
-    # in place, so make_header callers keep getting ``html.body_start``.
+    # Navigation is auto-built per request when ``show_main_navigation`` is
+    # true (the default). The unauthenticated login page passes
+    # ``show_main_navigation=False`` so it just gets ``html.body_start``.
     # ``show_body_start=False`` callers are rendering partial output and
     # opt out of both the body and the navigation chrome.
     if show_body_start:

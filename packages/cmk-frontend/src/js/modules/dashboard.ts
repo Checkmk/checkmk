@@ -461,13 +461,20 @@ export function calculate_dashboard() {
 
   g_dashboard_top = dashboard_rect.top
   g_dashboard_left = dashboard_rect.left
-  // For Firefox we need to substitute the container's padding-right from the dashboard width to
-  // prevent unnecessary scroll bars
-  g_dashboard_width = (page_width() || 0) - g_dashboard_left - container_padding_right
+  // The visual width is driven by the parent layout (``#content_area``), which
+  // already subtracts the sidebar / main-navigation strip. Apply ``width: 100 %``
+  // first, force a layout reflow, then read back the actual rendered
+  // ``clientWidth`` so the dashlet positioning math (size_dashlets /
+  // align_to_grid) is calibrated against the same width the user sees —
+  // including the current sidebar fold/unfold state.
+  oDash.style.width = '100%'
+  // Force layout flush so clientWidth reflects the new ``width: 100 %`` style.
+  void oDash.offsetWidth
+  g_dashboard_width =
+    oDash.clientWidth || (page_width() || 0) - g_dashboard_left - container_padding_right
   // For some reason a cache removing reload on Firefox breaks this height caluclation by 1px.
   // Thus the '- 1' hack here, so the dashboard does not overflow and no scrollbar is needed.
   g_dashboard_height = (page_height() || 0) - g_dashboard_top - 1
-  oDash.style.width = g_dashboard_width + 'px'
   oDash.style.height = g_dashboard_height + 'px'
 
   size_dashlets()

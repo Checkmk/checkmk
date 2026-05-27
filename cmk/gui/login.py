@@ -274,6 +274,7 @@ class LoginPage(Page):
             html,
             get_page_heading(config, omd_site()),
             Breadcrumb(),
+            show_main_navigation=False,
             debug=active_config.debug,
             lang=user.language,
             inject_js_profiling_code=active_config.inject_js_profiling_code,

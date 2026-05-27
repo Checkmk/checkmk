@@ -82,8 +82,19 @@ def is_truthy_query_value(value: str | None) -> bool:
 
 
 def is_kiosk_request(request: Request) -> bool:
-    """Whether the request opted into chromeless 'kiosk' mode via a truthy ?kiosk=<value>."""
-    return is_truthy_query_value(request.var("kiosk"))
+    """Whether the request should render in chromeless 'kiosk' mode.
+
+    Triggers when:
+      * a truthy ``?kiosk=<value>`` was supplied, or
+      * the requested page is a dashboard widget iframe endpoint
+        (``widget_iframe_*``). These endpoints are always embedded inside a
+        dashboard that already renders the main navigation; rendering it
+        again inside each iframe would duplicate the chrome.
+    """
+    if is_truthy_query_value(request.var("kiosk")):
+        return True
+    file_name = requested_file_name(request)
+    return file_name.startswith("widget_iframe_")
 
 
 def add_kiosk_to_url(url: str) -> str:

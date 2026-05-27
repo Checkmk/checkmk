@@ -16,7 +16,8 @@ def test_hooks(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     end_func = MagicMock()
     hooks.register("request-start", start_func)
     hooks.register("request-end", end_func)
-    logged_in_wsgi_app.get("/NO_SITE/check_mk/", status=200)
+    # Site root resolves to index.py, which now redirects to the user's start URL.
+    logged_in_wsgi_app.get("/NO_SITE/check_mk/", status=302)
 
     start_func.assert_called_once()
     end_func.assert_called_once()

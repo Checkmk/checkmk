@@ -60,7 +60,7 @@ function navElClick(e: MouseEvent) {
 
 <template>
   <nav :class="{ 'mm-app--small': props.hide_item_title }" @click="navElClick">
-    <a id="home" :href="props.start.url || '/'" :title="props.start.title" target="main">
+    <a id="home" :href="props.start.url || '/'" :title="props.start.title" target="_self">
       <img
         :src="
           props.start.icon_path || props.hide_item_title

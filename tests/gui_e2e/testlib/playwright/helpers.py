@@ -48,8 +48,8 @@ class LocatorHelper(ABC):
         return kwargs
 
     @property
-    def _iframe_locator(self) -> FrameLocator:
-        return self.page.frame_locator("iframe[name='main']")
+    def _iframe_locator(self) -> Page:
+        return self.page
 
     @abstractmethod
     def locator(

@@ -200,6 +200,7 @@ py_library(
         ":config",
         ":core_toolkit",
         ":html_toolkit",
+        ":main_navigation",
         "//cmk/gui/utils:escaping",
         "//cmk/gui/utils:html",
         "//cmk/gui/utils:json",

@@ -7,7 +7,9 @@
 from collections.abc import Sequence
 
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import HTMLGenerator
+from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.top_heading import top_heading
 
@@ -22,6 +24,7 @@ def make_header(
     show_top_heading: bool = True,
     enable_main_page_scrollbar: bool = True,
     *,
+    show_main_navigation: bool = False,
     debug: bool,
     lang: str,
     inject_js_profiling_code: bool,
@@ -38,17 +41,25 @@ def make_header(
     if writer._header_sent:
         return
 
+    # Opt-in path for callers that want the main navigation + sidebar
+    # rendered as part of make_header. Default is off; the iframe is still
+    # in place, so make_header callers keep getting ``html.body_start``.
+    # ``show_body_start=False`` callers are rendering partial output and
+    # opt out of both the body and the navigation chrome.
     if show_body_start:
-        writer.body_start(
-            title,
-            force=force,
-            lang=lang,
-            inject_js_profiling_code=inject_js_profiling_code,
-            load_frontend_vue=load_frontend_vue,
-            custom_style_sheet=custom_style_sheet,
-            screenshotmode=screenshotmode,
-            inline_help_as_text=inline_help_as_text,
-        )
+        if show_main_navigation:
+            MainNavigation.render(active_config, title)
+        else:
+            writer.body_start(
+                title,
+                force=force,
+                lang=lang,
+                inject_js_profiling_code=inject_js_profiling_code,
+                load_frontend_vue=load_frontend_vue,
+                custom_style_sheet=custom_style_sheet,
+                screenshotmode=screenshotmode,
+                inline_help_as_text=inline_help_as_text,
+            )
 
     writer._header_sent = True
 

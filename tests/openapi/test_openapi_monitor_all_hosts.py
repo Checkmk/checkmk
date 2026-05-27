@@ -30,6 +30,16 @@ class TestMonitorHostsAuth:
         assert "permission" in resp.json["detail"]
 
 
+class TestMonitorHostsQueryParamValidation:
+    def test_limit_lower_bound(self, clients: ClientRegistry) -> None:
+        resp = clients.MonitorHosts.list_all(limit=-1, expect_ok=False)
+        assert resp.status_code == 400
+
+    def test_limit_upper_bound(self, clients: ClientRegistry) -> None:
+        resp = clients.MonitorHosts.list_all(limit=1_000_000, expect_ok=False)
+        assert resp.status_code == 400
+
+
 class TestMonitorHostsResponse:
     @property
     def limit(self) -> int:

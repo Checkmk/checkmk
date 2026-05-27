@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Annotated, Self
 
+from annotated_types import Interval
+
 from cmk.gui import sites
 from cmk.gui.logged_in import user
 from cmk.gui.monitor.hosts._impl import LiveStatusHostRepository
@@ -22,6 +24,11 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
 from cmk.gui.utils import permission_verification as permissions
 
 from ._family import MONITOR_HOSTS_FAMILY
+
+# NOTE: currently hardcoding these constraints. It's to be determined where these should come from,
+# e.g. global settings.
+_MIN_NUMBER_OF_HOSTS = 0
+_MAX_NUMBER_OF_HOSTS = 5_000
 
 
 @api_model
@@ -73,7 +80,11 @@ class HostsResponse:
     meta: HostsPageMeta = api_field(description="Page metadata")
 
 
-type Limit = Annotated[int, QueryParam(description="Number of hosts to return", example="1000")]
+type Limit = Annotated[
+    int,
+    Interval(ge=_MIN_NUMBER_OF_HOSTS, le=_MAX_NUMBER_OF_HOSTS),
+    QueryParam(description="Number of hosts to return", example="1000"),
+]
 
 
 def list_hosts(limit: Limit = 1000) -> HostsResponse:

@@ -39,6 +39,7 @@ nogroups
 # Start with a restrictive base
 noblacklist ${HOME}/.gitconfig
 noblacklist ${HOME}/.config/git
+noblacklist ${HOME}/.netrc        # needed for jira/artifacts if user allows
 noblacklist ${HOME}/.ssh          # needed for known_hosts whitelist to work
 noblacklist /usr/bin/ssh          # needed if you want git over SSH
 include disable-common.inc

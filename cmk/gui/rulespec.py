@@ -21,15 +21,11 @@ def register(
     rulespec_registry: RulespecRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
     agent_bakery_enabled: bool,
-    otel_collector_enabled: bool,
-    aws_extended_enabled: bool,
 ) -> None:
     errors, loaded_rule_specs = load_api_v1_rule_specs(
         raise_errors=debug_enabled(),
         edition=edition,
         agent_bakery_enabled=agent_bakery_enabled,
-        otel_collector_enabled=otel_collector_enabled,
-        aws_extended_enabled=aws_extended_enabled,
     )
     if errors:
         logger.error("Error loading rulespecs: %s", errors)

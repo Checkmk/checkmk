@@ -62,8 +62,6 @@ def load_api_v1_rule_specs(
     raise_errors: bool,
     edition: Edition,
     agent_bakery_enabled: bool,
-    otel_collector_enabled: bool,
-    aws_extended_enabled: bool,
 ) -> tuple[Sequence[Exception], Sequence[LoadedRuleSpec]]:
     used_entry_points = (
         {
@@ -81,27 +79,6 @@ def load_api_v1_rule_specs(
         skip_wrong_types=True,
         raise_errors=raise_errors,
     )
-
-    if not otel_collector_enabled:
-        discovered_plugins = DiscoveredPlugins(
-            discovered_plugins.errors,
-            {
-                location: plugin
-                for location, plugin in discovered_plugins.plugins.items()
-                if not location.module.startswith("cmk.plugins.otel.")
-            },
-        )
-
-    if not aws_extended_enabled:
-        discovered_plugins = DiscoveredPlugins(
-            discovered_plugins.errors,
-            {
-                location: plugin
-                for location, plugin in discovered_plugins.plugins.items()
-                if location.module
-                != "cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.aws_cce"
-            },
-        )
 
     # HACK for migrating plugins: also search in certain modules that are not yet moved.
     # This is for convenience of the reviewer of a plugin migration only:

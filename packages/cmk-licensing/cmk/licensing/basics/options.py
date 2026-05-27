@@ -23,6 +23,7 @@ class OptionName(StrEnum):
     TELEMETRY = auto()
     OTEL_COLLECTOR = auto()
     AWS_EXTENDED = auto()
+    GCP_EXTENDED = auto()
 
 
 @dataclass(frozen=True)
@@ -31,6 +32,7 @@ class LicenseOptions:
     telemetry: LicenseFlag
     otel_collector: LicenseFlag
     aws_extended: LicenseFlag
+    gcp_extended: LicenseFlag
 
     def get_flag(self, name: OptionName) -> LicenseFlag:
         match name:
@@ -42,6 +44,8 @@ class LicenseOptions:
                 return self.otel_collector
             case OptionName.AWS_EXTENDED:
                 return self.aws_extended
+            case OptionName.GCP_EXTENDED:
+                return self.gcp_extended
 
     def disabled(self) -> set[str]:
         return {f.name for f in fields(self) if not getattr(self, f.name).enabled}
@@ -57,6 +61,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 telemetry=LicenseFlag(enabled=False),
                 otel_collector=LicenseFlag(enabled=False),
                 aws_extended=LicenseFlag(enabled=False),
+                gcp_extended=LicenseFlag(enabled=False),
             )
 
         case Edition.PRO:
@@ -72,6 +77,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 telemetry=LicenseFlag(enabled=True),
                 otel_collector=LicenseFlag(enabled=True),
                 aws_extended=LicenseFlag(enabled=True),
+                gcp_extended=LicenseFlag(enabled=True),
             )
 
         case Edition.ULTIMATEMT:
@@ -80,6 +86,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 telemetry=LicenseFlag(enabled=True),
                 otel_collector=LicenseFlag(enabled=True),
                 aws_extended=LicenseFlag(enabled=True),
+                gcp_extended=LicenseFlag(enabled=True),
             )
 
         case Edition.CLOUD:
@@ -88,6 +95,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 telemetry=LicenseFlag(enabled=True),
                 otel_collector=LicenseFlag(enabled=True),
                 aws_extended=LicenseFlag(enabled=True),
+                gcp_extended=LicenseFlag(enabled=True),
             )
 
 
@@ -97,4 +105,5 @@ def _make_pro_options() -> LicenseOptions:
         telemetry=LicenseFlag(enabled=False),
         otel_collector=LicenseFlag(enabled=False),
         aws_extended=LicenseFlag(enabled=False),
+        gcp_extended=LicenseFlag(enabled=False),
     )

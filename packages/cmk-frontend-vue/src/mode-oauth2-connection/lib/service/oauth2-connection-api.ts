@@ -6,11 +6,11 @@
 import { Api } from '@/lib/api-client'
 import type { SetDataResult } from '@/lib/configuration_entity_types'
 
-import { type EntityDescription, type Payload, configEntityAPI } from '@/form/configuration_entity'
+import { type EntityDescription, configEntityAPI } from '@/form/configuration_entity'
 
 export type PasswordValue = [string, string, string, boolean]
 
-export interface OAuth2FormData {
+export type OAuth2FormData = {
   ident: string
   title: string
   authority: string
@@ -66,7 +66,7 @@ export class Oauth2ConnectionApi extends Api {
     return await configEntityAPI.createEntity(
       'oauth2_connection',
       entityTypeSpecifier,
-      requestObject as unknown as Payload
+      requestObject
     )
   }
 
@@ -79,7 +79,7 @@ export class Oauth2ConnectionApi extends Api {
       'oauth2_connection',
       entityTypeSpecifier,
       ident,
-      requestObject as unknown as Payload
+      requestObject
     )
   }
 }

@@ -473,7 +473,7 @@ async function saveReceiverPasswords(
       const result = await configEntityAPI.createEntity(
         'passwordstore_password',
         'passwordstore_password',
-        config as unknown as Record<string, unknown>
+        config
       )
       if (result.type === 'error') {
         await deletePasswords(createdIds)

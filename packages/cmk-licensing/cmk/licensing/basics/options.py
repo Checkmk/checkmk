@@ -22,6 +22,7 @@ class OptionName(StrEnum):
     BAKERY = auto()
     TELEMETRY = auto()
     OTEL_COLLECTOR = auto()
+    AWS_EXTENDED = auto()
 
 
 @dataclass(frozen=True)
@@ -29,6 +30,7 @@ class LicenseOptions:
     bakery: LicenseFlag
     telemetry: LicenseFlag
     otel_collector: LicenseFlag
+    aws_extended: LicenseFlag
 
     def get_flag(self, name: OptionName) -> LicenseFlag:
         match name:
@@ -38,6 +40,8 @@ class LicenseOptions:
                 return self.telemetry
             case OptionName.OTEL_COLLECTOR:
                 return self.otel_collector
+            case OptionName.AWS_EXTENDED:
+                return self.aws_extended
 
     def disabled(self) -> set[str]:
         return {f.name for f in fields(self) if not getattr(self, f.name).enabled}
@@ -52,6 +56,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 bakery=LicenseFlag(enabled=False),
                 telemetry=LicenseFlag(enabled=False),
                 otel_collector=LicenseFlag(enabled=False),
+                aws_extended=LicenseFlag(enabled=False),
             )
 
         case Edition.PRO:
@@ -66,6 +71,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 bakery=LicenseFlag(enabled=True),
                 telemetry=LicenseFlag(enabled=True),
                 otel_collector=LicenseFlag(enabled=True),
+                aws_extended=LicenseFlag(enabled=True),
             )
 
         case Edition.ULTIMATEMT:
@@ -73,6 +79,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 bakery=LicenseFlag(enabled=True),
                 telemetry=LicenseFlag(enabled=True),
                 otel_collector=LicenseFlag(enabled=True),
+                aws_extended=LicenseFlag(enabled=True),
             )
 
         case Edition.CLOUD:
@@ -80,6 +87,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 bakery=LicenseFlag(enabled=True),
                 telemetry=LicenseFlag(enabled=True),
                 otel_collector=LicenseFlag(enabled=True),
+                aws_extended=LicenseFlag(enabled=True),
             )
 
 
@@ -88,4 +96,5 @@ def _make_pro_options() -> LicenseOptions:
         bakery=LicenseFlag(enabled=True),
         telemetry=LicenseFlag(enabled=False),
         otel_collector=LicenseFlag(enabled=False),
+        aws_extended=LicenseFlag(enabled=False),
     )

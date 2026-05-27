@@ -16,6 +16,7 @@ def test_community() -> None:
         bakery=LicenseFlag(enabled=False),
         telemetry=LicenseFlag(enabled=False),
         otel_collector=LicenseFlag(enabled=False),
+        aws_extended=LicenseFlag(enabled=False),
     )
 
 
@@ -24,6 +25,7 @@ def test_pro() -> None:
         bakery=LicenseFlag(enabled=True),
         telemetry=LicenseFlag(enabled=False),
         otel_collector=LicenseFlag(enabled=False),
+        aws_extended=LicenseFlag(enabled=False),
     )
 
 
@@ -36,4 +38,5 @@ def test_commercial(edition: Edition) -> None:
         bakery=LicenseFlag(enabled=True),
         telemetry=LicenseFlag(enabled=True),
         otel_collector=LicenseFlag(enabled=True),
+        aws_extended=LicenseFlag(enabled=True),
     )

@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.enterasys_powersupply import (
+from cmk.plugins.enterasys.agent_based.enterasys_powersupply import (
     check_enterasys_powersupply,
     discover_enterasys_powersupply,
     parse_enterasys_powersupply,

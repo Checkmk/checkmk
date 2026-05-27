@@ -1710,7 +1710,6 @@ jira==3.10.5 \
     --hash=sha256:2d09ae3bf4741a2787dd889dfea5926a5d509aac3b28ab3b98c098709e6ee72d \
     --hash=sha256:d4da1385c924ee693d6cc9838e56a34e31d74f0d6899934ef35bbd0d2d33997f
     # via
-    #   -r .github/skills/dev-requirements.in
     #   -r cmk/requirements.in
     #   -r tests/dev-requirements.in
 jmespath==1.1.0 \

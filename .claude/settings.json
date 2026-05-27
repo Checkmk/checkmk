@@ -97,8 +97,6 @@
       "Bash(mkdir /tmp/jenkins-artifacts)",
       "Bash(tar -xf /tmp/jenkins-artifacts/*)",
       "Read(//tmp/jenkins-artifacts/**)",
-      "Bash(.venv/bin/python .github/skills/jira-read-ticket/read_ticket.py *)",
-      "Bash(PYTHONPATH=.github/skills .venv/bin/python -m crash_report*)",
       "WebFetch(domain:*.tribe29.com)",
       "WebFetch(domain:*.checkmk.net)",
       "mcp__cmk-frontend-vue--ui-component-library__get_component",

@@ -1,1 +1,0 @@
-../../.github/agents/architecture-doc.agent.md

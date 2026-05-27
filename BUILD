@@ -177,7 +177,6 @@ compile_requirements_in(
     requirements = [
         "//agents/plugins:dev-requirements.in",
         "//cmk:requirements.in",
-        "//.github/skills:dev-requirements.in",
         "//tests:dev-requirements.in",
         "//omd:dev-requirements.in",
         "//packages:python_requirements",

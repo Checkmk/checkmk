@@ -34,6 +34,16 @@ The codebase supports five editions: `community`, `pro`, `ultimate`,
 `ultimatemt`, `cloud`. The active edition controls which `cmk` targets and
 Python modules are available; pass `--cmk_edition=<edition>` to Bazel.
 
+## Skills & Agents
+
+Reusable AI workflows for this repo (code review, werk authoring,
+Gerrit/Jenkins/Jira/crash-report helpers, backports, etc.) are maintained as
+Claude Code plugins in the internal marketplace repository:
+https://github.com/Checkmk/checkmk-claude-marketplace
+
+Do not add skills or agents under `.claude/` or `.github/` in this repo —
+contribute them to the marketplace instead.
+
 ## Commit rules
 
 Before a commit do a sanity check of your changes and run the linters and formatters.

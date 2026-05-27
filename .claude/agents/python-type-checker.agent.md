@@ -1,1 +1,0 @@
-../../.github/agents/python-type-checker.agent.md

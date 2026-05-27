@@ -32,7 +32,6 @@ py_test(
     ],
     data = [
         "//:constraints.txt",
-        "//.github/skills:dev-requirements.in",
         "//:requirements.txt",
         "//:runtime-requirements.txt",
         "//agents/plugins:dev-requirements.in",

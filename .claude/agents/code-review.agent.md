@@ -1,1 +1,0 @@
-../../.github/agents/code-review.agent.md

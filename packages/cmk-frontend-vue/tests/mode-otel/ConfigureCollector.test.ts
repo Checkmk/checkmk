@@ -37,7 +37,8 @@ function renderComponent(
   grpcDefaultPort = 4317,
   httpDefaultPort = 4318,
   initialGrpcEnabled = true,
-  initialHttpEnabled = false
+  initialHttpEnabled = false,
+  mayCreatePassword = true
 ) {
   const grpcEnabled = ref<boolean>(initialGrpcEnabled)
   const httpEnabled = ref<boolean>(initialHttpEnabled)
@@ -89,9 +90,10 @@ function renderComponent(
         encryptionAllowed,
         eventConsoleAllowed,
         grpcDefaultPort,
-        httpDefaultPort
+        httpDefaultPort,
+        mayCreatePassword
       }),
-      template: `<ConfigureCollector ref="compRef" :no-auth-allowed="noAuthAllowed" :endpoint-config-allowed="endpointConfigAllowed" :encryption-allowed="encryptionAllowed" :event-console-allowed="eventConsoleAllowed" :grpc-default-port="grpcDefaultPort" :http-default-port="httpDefaultPort" v-model:grpc-enabled="grpcEnabled" v-model:http-enabled="httpEnabled" v-model:grpc-auth="grpcAuth" v-model:http-auth="httpAuth" v-model:grpc-endpoint="grpcEndpoint" v-model:http-endpoint="httpEndpoint" v-model:grpc-encryption="grpcEncryption" v-model:http-encryption="httpEncryption" v-model:grpc-event-console="grpcEventConsole" v-model:http-event-console="httpEventConsole" v-model:pending-passwords="pendingPasswords" v-model:available-passwords="availablePasswords" />`
+      template: `<ConfigureCollector ref="compRef" :no-auth-allowed="noAuthAllowed" :endpoint-config-allowed="endpointConfigAllowed" :encryption-allowed="encryptionAllowed" :event-console-allowed="eventConsoleAllowed" :may-create-password="mayCreatePassword" :grpc-default-port="grpcDefaultPort" :http-default-port="httpDefaultPort" v-model:grpc-enabled="grpcEnabled" v-model:http-enabled="httpEnabled" v-model:grpc-auth="grpcAuth" v-model:http-auth="httpAuth" v-model:grpc-endpoint="grpcEndpoint" v-model:http-endpoint="httpEndpoint" v-model:grpc-encryption="grpcEncryption" v-model:http-encryption="httpEncryption" v-model:grpc-event-console="grpcEventConsole" v-model:http-event-console="httpEventConsole" v-model:pending-passwords="pendingPasswords" v-model:available-passwords="availablePasswords" />`
     })
   )
 
@@ -761,6 +763,29 @@ describe('ConfigureCollector', () => {
 
       expect(grpcAuth.value.credential!.password).toBe('pw-new')
       expect(httpAuth.value.credential!.password).toBe('existing-pw')
+    })
+  })
+
+  describe('password creation permission', () => {
+    test('Create button is enabled and no hint is shown when password creation is allowed', async () => {
+      mockPasswordsResponse()
+      // noAuthAllowed=false makes basicauth the default, so the Create button is rendered
+      renderComponent(false, true, true, true, 4317, 4318, true, false, true)
+
+      const createButton = await screen.findByRole('button', { name: 'Create' })
+      expect(createButton).toBeEnabled()
+      expect(
+        screen.queryByLabelText('Why is creating a password unavailable?')
+      ).not.toBeInTheDocument()
+    })
+
+    test('Create button is disabled and a hint is shown when password creation is not allowed', async () => {
+      mockPasswordsResponse()
+      renderComponent(false, true, true, true, 4317, 4318, true, false, false)
+
+      const createButton = await screen.findByRole('button', { name: 'Create' })
+      expect(createButton).toBeDisabled()
+      expect(screen.getByLabelText('Why is creating a password unavailable?')).toBeInTheDocument()
     })
   })
 

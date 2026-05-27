@@ -51,6 +51,7 @@ const props = defineProps<{
   event_console_allowed: boolean
   collector_activation_allowed: boolean
   metric_backend_allowed: boolean
+  may_create_password: boolean
   overview_url: string
   cloud_grpc_receiver_endpoint?: string | null
 }>()
@@ -389,6 +390,7 @@ async function onSaveClick(): Promise<void> {
           :endpoint-config-allowed="endpoint_config_allowed"
           :encryption-allowed="encryption_allowed"
           :event-console-allowed="event_console_allowed"
+          :may-create-password="may_create_password"
           :grpc-default-port="GRPC_DEFAULT_PORT"
           :http-default-port="HTTP_DEFAULT_PORT"
         />

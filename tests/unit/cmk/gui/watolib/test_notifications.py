@@ -4,11 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from pathlib import Path
+from typing import cast
+
 import pytest
 
-from cmk.ccc import version
-from cmk.gui.watolib.notifications import ContactSelection, NotificationRule
-from cmk.utils.notify_types import EventRule, NotificationRuleID
+from cmk.ccc import store, version
+from cmk.gui.watolib.notifications import (
+    ContactSelection,
+    NotificationParameterConfigFile,
+    NotificationRule,
+)
+from cmk.utils.notify_types import (
+    EventRule,
+    NotificationParameterGeneralInfos,
+    NotificationParameterID,
+    NotificationParameterItem,
+    NotificationParameterSpecs,
+    NotificationRuleID,
+    NotifyPluginParamsDict,
+)
 
 
 def _create_base_event_rule() -> EventRule:
@@ -265,3 +280,31 @@ def test_notification_rule_roundtrip_preserves_explicit_email_addresses_handling
 
     assert mk_format_cloud["contact_users"] == ["user1"]
     assert mk_format_cloud["contact_emails"] == ["cloud@example.com"]
+
+
+@pytest.mark.parametrize("pprint_value", [True, False])
+def test_notification_parameter_config_file_preserves_parameter_order(
+    tmp_path: Path,
+    pprint_value: bool,
+) -> None:
+    # IDs whose alphabetically sorted order differs from the insertion order below.
+    ids = [NotificationParameterID(i) for i in ("f9", "a1", "c3", "02", "7d")]
+    parameters: NotificationParameterSpecs = {
+        "mail": {
+            id_: NotificationParameterItem(
+                general=NotificationParameterGeneralInfos(
+                    description=f"param-{nr}", comment="", docu_url=""
+                ),
+                parameter_properties=cast(NotifyPluginParamsDict, {}),
+            )
+            for nr, id_ in enumerate(ids)
+        }
+    }
+
+    target_path = tmp_path / "notification_parameter.mk"
+    NotificationParameterConfigFile()._save_to_path(target_path, parameters, pprint_value)
+
+    loaded: NotificationParameterSpecs = store.load_from_mk_file(
+        target_path, key="notification_parameter", default={}, lock=False
+    )
+    assert list(loaded["mail"].keys()) == ids

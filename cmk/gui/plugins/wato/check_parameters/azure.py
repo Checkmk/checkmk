@@ -117,59 +117,6 @@ rulespec_registry.register(
 )
 
 
-def _item_spec_webserver() -> TextInput:
-    return TextInput(title=_("Name of the service"))
-
-
-def _parameter_valuespec_webserver() -> Dictionary:
-    return Dictionary(
-        elements=[
-            (
-                "avg_response_time_levels",
-                Tuple(
-                    title=_("Upper levels for average response time"),
-                    elements=[
-                        Float(title=_("Warning at"), default_value=1.00, unit="s"),
-                        Float(title=_("Critical at"), default_value=10.0, unit="s"),
-                    ],
-                ),
-            ),
-            (
-                "error_rate_levels",
-                Tuple(
-                    title=_("Upper levels for rate of server errors"),
-                    elements=[
-                        Float(title=_("Warning at"), default_value=0.01, unit="1/s"),
-                        Float(title=_("Critical at"), default_value=0.04, unit="1/s"),
-                    ],
-                ),
-            ),
-            (
-                "cpu_time_percent_levels",
-                Tuple(
-                    title=_("Upper levels for CPU time"),
-                    elements=[
-                        Float(title=_("Warning at"), default_value=85.0, unit="%"),
-                        Float(title=_("Critical at"), default_value=95.0, unit="%"),
-                    ],
-                ),
-            ),
-        ],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="webserver",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_webserver,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_webserver,
-        title=lambda: _("Azure web servers (IIS) (deprecated)"),
-    )
-)
-
-
 def _item_spec_azure_storageaccounts() -> TextInput:
     return TextInput(
         title=_("Storage account name"),

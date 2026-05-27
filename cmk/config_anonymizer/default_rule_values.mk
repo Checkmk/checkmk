@@ -11767,7 +11767,7 @@ static_checks['vpn_tunnel'] = [
 static_checks.setdefault('webserver', [])
 
 static_checks['webserver'] = [
-{'id': 'be154804-a464-47f0-a5f2-dbf1f086d949', 'value': ('azure_sites', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'be154804-a464-47f0-a5f2-dbf1f086d949', 'value': ('azure_sites', 'item_name', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['webserver']
 
 

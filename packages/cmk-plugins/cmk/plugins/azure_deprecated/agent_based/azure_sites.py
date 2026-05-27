@@ -1,30 +1,38 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# mypy: disable-error-code="no-untyped-def"
-
+"""
+This check and the associated special agent (agent_azure) are deprecated.
+Please use the new special agent configured via the "Microsoft Azure" ruleset.
+"""
 
 import time
 from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition, LegacyResult
 from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    FixedLevelsT,
     get_rate,
     get_value_store,
     IgnoreResultsError,
     render,
+    Result,
     Service,
+    State,
 )
-from cmk.plugins.azure.lib import (
+from cmk.plugins.azure_deprecated.agent_based.lib import (
     get_service_labels_from_resource_tags,
     iter_resource_attributes,
     parse_resources,
     Resource,
 )
 
-check_info = {}
+Section = Mapping[str, Resource]
 
 _AZURE_SITES_METRICS = (  # metric_key, cmk_key, display_name, use_rate_flag
     ("total_CpuTime", "cpu_time_percent", "CPU time", True),
@@ -43,24 +51,17 @@ _AZURE_METRIC_FMT = {
 }
 
 
-def _get_data_or_go_stale[D](item: str, section: Mapping[str, D]) -> D:
-    if resource := section.get(item):
-        return resource
-    raise IgnoreResultsError("Data not present at the moment")
-
-
 def _check_azure_metric(
     resource: Resource,
     metric_key: str,
     cmk_key: str,
     display_name: str,
-    levels: tuple[float, float] | None = None,
-    levels_lower: tuple[float, float] | None = None,
+    levels_upper: FixedLevelsT[float] | None = None,
     use_rate: bool = False,
-) -> None | LegacyResult:
+) -> CheckResult:
     metric = resource.metrics.get(metric_key)
     if metric is None:
-        return None
+        return
 
     if use_rate:
         countername = f"{resource.id}.{metric_key}"
@@ -74,7 +75,8 @@ def _check_azure_metric(
 
     # not sure if we can trust the types here.
     if value is None:  # type: ignore[comparison-overlap]
-        return 3, "Metric %s is 'None'" % display_name, []  # type: ignore[unreachable]
+        yield Result(state=State.CRIT, summary="Metric %s is 'None'" % display_name)  # type: ignore[unreachable]
+        return
 
     # convert to SI-unit
     if unit in ("milli_seconds", "milliseconds"):
@@ -86,49 +88,60 @@ def _check_azure_metric(
         value *= 100.0
         unit = "percent"
 
-    return check_levels(
+    yield from check_levels(
         value,
-        cmk_key,
-        (levels or (None, None)) + (levels_lower or (None, None)),
-        infoname=display_name,
-        human_readable_func=_AZURE_METRIC_FMT.get(unit, lambda x: f"{x}"),
+        levels_upper=levels_upper,
+        metric_name=cmk_key,
+        label=display_name,
+        render_func=_AZURE_METRIC_FMT.get(unit, str),
         boundaries=(0, None),
     )
 
 
-def check_azure_sites(item, params, section):
-    resource = _get_data_or_go_stale(item, section)
+def check_azure_sites(
+    item: str, params: Mapping[str, FixedLevelsT[float]], section: Section
+) -> CheckResult:
+    if not (resource := section.get(item)):
+        raise IgnoreResultsError("Data not present at the moment")
+
     for key, cmk_key, displ, use_rate in _AZURE_SITES_METRICS:
-        levels = params.get("%s_levels" % cmk_key, (None, None))
-        mcheck = _check_azure_metric(
-            resource, key, cmk_key, displ, levels=levels, use_rate=use_rate
+        yield from _check_azure_metric(
+            resource,
+            key,
+            cmk_key,
+            displ,
+            levels_upper=params.get("%s_levels" % cmk_key),
+            use_rate=use_rate,
         )
-        if mcheck:
-            yield mcheck
 
-    for kv_pair in iter_resource_attributes(resource):
-        yield 0, "%s: %s" % kv_pair
+    for key, value in iter_resource_attributes(resource):
+        yield Result(state=State.OK, summary=f"{key}: {value}")
 
 
-def discover_azure_sites(section):
+def discover_azure_sites(section: Section) -> DiscoveryResult:
     yield from (
         Service(item=item, labels=get_service_labels_from_resource_tags(resource.tags))
         for item, resource in section.items()
     )
 
 
-check_info["azure_sites"] = LegacyCheckDefinition(
+agent_section_azure_sites = AgentSection(
     name="azure_sites",
     parse_function=parse_resources,
+)
+
+check_plugin_azure_sites = CheckPlugin(
+    name="azure_sites",
+    sections=["azure_sites"],
     service_name="Site %s",
     discovery_function=discover_azure_sites,
     check_function=check_azure_sites,
     check_ruleset_name="webserver",
     check_default_parameters={
         # https://www.nngroup.com/articles/response-times-3-important-limits/
-        "avg_response_time_levels": (1.0, 10.0),
+        "avg_response_time_levels": ("fixed", (1.0, 10.0)),
         # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
-        "error_rate_levels": (0.01, 0.04),
-        "cpu_time_percent_levels": (85.0, 95.0),
+        "error_rate_levels": ("fixed", (0.01, 0.04)),
+        "cpu_time_percent_levels": ("fixed", (85.0, 95.0)),
     },
 )

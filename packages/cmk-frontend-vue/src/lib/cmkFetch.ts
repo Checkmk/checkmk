@@ -121,13 +121,19 @@ export async function cmkFetch(
   return new CmkFetchResponse(response, options)
 }
 
-export async function fetchRestAPI<Payload>(url: string, method: string, body?: Payload) {
+export async function fetchRestAPI<Payload>(
+  url: string,
+  method: string,
+  body?: Payload,
+  headers?: Record<string, string>
+) {
   const params: RequestInit = {
     method,
     credentials: 'include',
     headers: {
       Accept: 'application/json',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      ...headers
     }
   }
   if (body) {

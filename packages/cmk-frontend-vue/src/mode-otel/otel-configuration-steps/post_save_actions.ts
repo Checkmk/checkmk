@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fetchRestAPI } from '@/lib/cmkFetch.ts'
+import { CmkFetchError, fetchRestAPI } from '@/lib/cmkFetch.ts'
 import usei18n from '@/lib/i18n'
 
 import { configEntityAPI } from '@/components/user-input/CmkConfigurationEntityDropdown'
@@ -12,6 +12,15 @@ import type { EventConsoleConfig } from './otelTypes'
 import type { PasswordConfig } from './password_store_password.types.ts'
 
 const { _t } = usei18n()
+
+/**
+ * Standard REST API object endpoints (password, folder) enforce ETag locking:
+ * a DELETE without an `If-Match` header is rejected with 428 Precondition
+ * Required. Since rollbacks delete objects this run just created, there is no
+ * concurrent-modification concern — send the star tag to satisfy the
+ * precondition without a preceding GET. (Internal otel endpoints ignore it.)
+ */
+const IF_MATCH_ANY = { 'If-Match': '*' }
 
 const OTEL_RECEIVERS_COLLECTION =
   'api/internal/domain-types/otel_collector_config_receivers/collections/all'
@@ -40,6 +49,9 @@ export type PostSaveResult =
   | { ok: true; rollback?: () => Promise<void> }
   | { ok: false; error: { title: string; detail: string } }
 
+/** The failure variant of {@link PostSaveResult}. */
+type PostSaveError = Extract<PostSaveResult, { ok: false }>
+
 /**
  * A single verify-and-add-change step executed when the user finishes the
  * OpenTelemetry QuickSetup. New post-save steps are added by appending an
@@ -62,23 +74,17 @@ export interface PostSaveAction {
   hidden?: boolean
 }
 
-function errorFromUnknown(err: unknown, fallbackTitle: string): PostSaveResult {
-  // REST API errors (CmkFetchError) surface a well-formed `{ title, detail }`
-  // in the JSON body; generic network errors don't.
-  if (err instanceof Error) {
-    const msg = err.message || fallbackTitle
-    // `${title}: ${detail}` is the shape CmkFetchError builds — split it back
-    // so the UI can render title and detail separately.
-    const colonIndex = msg.indexOf(': ')
-    if (colonIndex > 0) {
-      return {
-        ok: false,
-        error: { title: msg.slice(0, colonIndex), detail: msg.slice(colonIndex + 2) }
-      }
-    }
-    return { ok: false, error: { title: fallbackTitle, detail: msg } }
+export function errorFromUnknown(err: unknown, fallbackTitle: string): PostSaveError {
+  // Only CmkFetchError carries a useful server-side detail; every other
+  // failure (network error, JS throw, …) shows the title alone.
+  if (err instanceof CmkFetchError) {
+    // CmkFetchError.message is `"${httpStatusPhrase}: ${apiDetail}"` — strip
+    // the HTTP phrase and keep only the REST API detail sentence.
+    const colonIndex = err.message.indexOf(': ')
+    const detail = colonIndex > 0 ? err.message.slice(colonIndex + 2) : err.message
+    return { ok: false, error: { title: fallbackTitle, detail } }
   }
-  return { ok: false, error: { title: fallbackTitle, detail: String(err) } }
+  return { ok: false, error: { title: fallbackTitle, detail: '' } }
 }
 
 /**
@@ -119,6 +125,15 @@ async function isMetricBackendEnabled(siteId: string): Promise<boolean> {
  */
 
 async function createTelemetryFolderAction(): Promise<PostSaveResult> {
+  const deleteFolder = async () => {
+    // The folder_config DELETE endpoint enforces ETag locking — see IF_MATCH_ANY.
+    await fetchRestAPI(
+      'api/1.0/objects/folder_config/~telemetry',
+      'DELETE',
+      undefined,
+      IF_MATCH_ANY
+    )
+  }
   try {
     const response = await fetchRestAPI(
       'api/1.0/domain-types/folder_config/collections/all',
@@ -126,15 +141,16 @@ async function createTelemetryFolderAction(): Promise<PostSaveResult> {
       { title: 'Telemetry', parent: '/', name: 'telemetry' }
     )
     if (response.status >= 200 && response.status <= 299) {
-      return { ok: true }
+      return { ok: true, rollback: deleteFolder }
     }
-    // POST didn't succeed — maybe the folder already exists, maybe something else went wrong.
-    // Check the actual state instead of parsing the error body.
+    // POST failed — the folder may already exist. Check the actual state
+    // instead of parsing the error body.
     const check = await fetchRestAPI('api/1.0/objects/folder_config/~telemetry', 'GET')
     if (check.status === 200) {
+      // Pre-existing folder: succeed, but without a rollback so we never delete
+      // a folder this run did not create.
       return { ok: true }
     }
-    // Folder really isn't there — the POST error is the real failure.
     await response.raiseForStatus()
     return { ok: true }
   } catch (err) {
@@ -193,7 +209,27 @@ export const createDCDConnectorAction: PostSaveAction = {
     if (!folderResult.ok) {
       return folderResult
     }
-    return await createDCDConnector(ctx)
+    const dcdResult = await createDCDConnector(ctx)
+    if (!dcdResult.ok) {
+      // DCD failed after the folder was created — roll the folder back immediately
+      // since the state machine only calls rollbacks for actions that succeeded.
+      await folderResult.rollback?.()
+      return dcdResult
+    }
+    // Both succeeded — combine into one rollback: DCD first (it references the
+    // folder), folder second.
+    const { rollback: rollbackDcd } = dcdResult
+    const { rollback: rollbackFolder } = folderResult
+    if (!rollbackDcd && !rollbackFolder) {
+      return { ok: true }
+    }
+    return {
+      ok: true,
+      rollback: async () => {
+        await rollbackDcd?.()
+        await rollbackFolder?.()
+      }
+    }
   }
 }
 
@@ -280,35 +316,6 @@ export const enableMetricBackendAction: PostSaveAction = {
 }
 
 /**
- * Persists each pending password via the slide-in schema and stops on the
- * first server rejection so the caller sees exactly which password failed.
- * Returned as a `PostSaveResult` so it can short-circuit the surrounding
- * receiver-config action without surfacing a separate checklist item.
- */
-async function savePendingPasswords(passwords: readonly PasswordConfig[]): Promise<PostSaveResult> {
-  for (const config of passwords) {
-    const result = await configEntityAPI.createEntity(
-      'passwordstore_password',
-      'passwordstore_password',
-      config as unknown as Record<string, unknown>
-    )
-    if (result.type === 'error') {
-      const firstMessage = result.validationMessages[0]
-      return {
-        ok: false,
-        error: {
-          title: _t('Could not save password "%{title}"', {
-            title: config.general_props.title
-          }),
-          detail: firstMessage?.message ?? _t('The password was rejected by the server.')
-        }
-      }
-    }
-  }
-  return { ok: true }
-}
-
-/**
  * REST body shape for the `otel_collector_config_receivers` POST. The same URL
  * serves both the ultimate and cloud editions — the server picks the right
  * handler by edition, and only the body shape differs (cloud has no
@@ -382,12 +389,7 @@ export interface OTelReceiverConfigInput {
   siteId: string
   grpc: OTelReceiverProtocolInput | null
   http: OTelReceiverProtocolInput | null
-  /**
-   * Password-store entries referenced by the auth payload that must be
-   * persisted before the receiver POST — the server rejects unknown IDs in
-   * `{ type: 'store', value: <id> }`. Saved silently as a prerequisite of
-   * this action so the user does not see a separate "Save passwords" step.
-   */
+  /** Password-store entries referenced by the auth payload. Saved and rolled back together with the receiver config. */
   passwords: readonly PasswordConfig[]
 }
 
@@ -435,6 +437,87 @@ function buildProtocolBody(input: OTelReceiverProtocolInput): OTelProtocolConfig
 }
 
 /**
+ * Deletes password-store entries created during this QuickSetup run. The
+ * password DELETE endpoint enforces ETag locking, so the star tag satisfies
+ * the precondition (see IF_MATCH_ANY).
+ */
+function deletePasswords(ids: readonly string[]): Promise<unknown> {
+  return Promise.all(
+    ids.map((id) =>
+      fetchRestAPI(
+        `api/1.0/objects/password/${encodeURIComponent(id)}`,
+        'DELETE',
+        undefined,
+        IF_MATCH_ANY
+      )
+    )
+  )
+}
+
+/**
+ * Persists the password-store entries referenced by the receiver auth payload;
+ * they must exist before the receiver POST embeds their IDs as
+ * `{ type: 'store', value: <id> }`, which the server rejects if unknown.
+ *
+ * Returns the created IDs so the caller can delete them on rollback. On the
+ * first failure the entries created so far are removed first. `createEntity`
+ * reports only HTTP 422 as a structured error; any other failure throws and is
+ * converted via errorFromUnknown.
+ */
+async function saveReceiverPasswords(
+  passwords: readonly PasswordConfig[]
+): Promise<{ ok: true; createdIds: string[] } | PostSaveError> {
+  const createdIds: string[] = []
+  for (const config of passwords) {
+    try {
+      const result = await configEntityAPI.createEntity(
+        'passwordstore_password',
+        'passwordstore_password',
+        config as unknown as Record<string, unknown>
+      )
+      if (result.type === 'error') {
+        await deletePasswords(createdIds)
+        const firstMessage = result.validationMessages[0]
+        return {
+          ok: false,
+          error: {
+            title: _t('Could not save password "%{title}"', {
+              title: config.general_props.title
+            }),
+            detail: firstMessage?.message ?? _t('The password was rejected by the server.')
+          }
+        }
+      }
+      createdIds.push(config.general_props.id)
+    } catch (err) {
+      await deletePasswords(createdIds)
+      return errorFromUnknown(err, _t('Could not save the referenced passwords'))
+    }
+  }
+  return { ok: true, createdIds }
+}
+
+/**
+ * Builds the `otel_collector_config_receivers` POST body. The wizard's single
+ * configuration name doubles as both the id and the Overview display title.
+ */
+function buildReceiverBody(input: OTelReceiverConfigInput): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    id: input.id,
+    title: input.id,
+    disabled: false,
+    site: [input.siteId]
+  }
+  if (input.grpc) {
+    body['receiver_protocol_grpc'] = buildProtocolBody(input.grpc)
+  }
+  if (input.http) {
+    body['receiver_protocol_http'] = buildProtocolBody(input.http)
+  }
+  return body
+}
+
+/**
  * Factory: builds the create-OTel-receiver action for a single QuickSetup run.
  * Captures the user-entered config in a closure so `POST_SAVE_ACTIONS` can
  * stay a static list while this per-run action lives alongside.
@@ -450,34 +533,17 @@ export function createOTelReceiverConfigAction(input: OTelReceiverConfigInput): 
     key: 'createOTelReceiverConfig',
     label: () => _t('Collector configuration'),
     execute: async () => {
-      // Passwords must land in the store before the receiver POST embeds
-      // their IDs as `{ type: 'store', value: <id> }` references — the
-      // server rejects unknown IDs. A failure here aborts the action with a
-      // password-specific error so the user can fix the offending entry.
-      const passwordResult = await savePendingPasswords(input.passwords)
-      if (!passwordResult.ok) {
-        return passwordResult
+      const saved = await saveReceiverPasswords(input.passwords)
+      if (!saved.ok) {
+        return saved
       }
+      const { createdIds } = saved
       try {
-        const body: Record<string, unknown> = {
-          id: input.id,
-          // The wizard collects a single "configuration name" that serves as
-          // both the identifier and the display title in the Overview list.
-          title: input.id,
-          disabled: false,
-          site: [input.siteId]
-        }
-        // Body building can throw (e.g. `buildSocketAddressBody` rejects a
-        // custom socket address without a port); keep it inside the try so
-        // the failure surfaces as a structured `PostSaveResult` instead of
-        // an unhandled rejection.
-        if (input.grpc) {
-          body['receiver_protocol_grpc'] = buildProtocolBody(input.grpc)
-        }
-        if (input.http) {
-          body['receiver_protocol_http'] = buildProtocolBody(input.http)
-        }
-        const response = await fetchRestAPI(OTEL_RECEIVERS_COLLECTION, 'POST', body)
+        const response = await fetchRestAPI(
+          OTEL_RECEIVERS_COLLECTION,
+          'POST',
+          buildReceiverBody(input)
+        )
         await response.raiseForStatus()
         return {
           ok: true,
@@ -486,9 +552,12 @@ export function createOTelReceiverConfigAction(input: OTelReceiverConfigInput): 
               `api/internal/objects/otel_collector_config_receivers/${encodeURIComponent(input.id)}`,
               'DELETE'
             )
+            await deletePasswords(createdIds)
           }
         }
       } catch (err) {
+        // Passwords were created but the receiver POST failed — undo them.
+        await deletePasswords(createdIds)
         return errorFromUnknown(
           err,
           _t('Could not create the OpenTelemetry Collector configuration')

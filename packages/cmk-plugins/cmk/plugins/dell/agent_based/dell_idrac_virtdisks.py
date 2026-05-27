@@ -103,33 +103,31 @@ class VirtualDisk:
     component_state: ComponentState  # 20
     remaining_redundancy: int  # 34
 
+    @property
+    def item(self) -> str:
+        return self.name if self.name else f"noname-{self.index}"
+
 
 def discover_dell_idrac_virtdisks(section: Sequence[VirtualDisk]) -> DiscoveryResult:
-    for line in section:
-        # FYI: The disk name is allowed to be empty, but the item argument of Service is not.
-        # Instead of backporting a refactor, problematic entries are skipped.
-        if not line.name:
-            continue
-        yield Service(item=line.name)
+    for disk in section:
+        yield Service(item=disk.item)
 
 
 def check_dell_idrac_virtdisks(item: str, section: Sequence[VirtualDisk]) -> CheckResult:
     for disk in section:
-        if item == disk.name:
-            yield Result(state=State.OK, summary=f"Raid level: {disk.raid_type.label}")
-
-            yield Result(
-                state=disk.disk_state.state, summary=f"Disk status: {disk.disk_state.label}"
-            )
-            yield Result(
-                state=disk.component_state.state,
-                summary=f"Component status: {disk.component_state.label}",
-            )
-
-            yield Result(
-                state=State.OK,
-                summary="Remaining redundancy: %s physical disk(s)" % disk.remaining_redundancy,
-            )
+        if item != disk.item:
+            continue
+        yield Result(state=State.OK, summary=f"Raid level: {disk.raid_type.label}")
+        yield Result(state=disk.disk_state.state, summary=f"Disk status: {disk.disk_state.label}")
+        yield Result(
+            state=disk.component_state.state,
+            summary=f"Component status: {disk.component_state.label}",
+        )
+        yield Result(
+            state=State.OK,
+            summary=f"Remaining redundancy: {disk.remaining_redundancy} physical disk(s)",
+        )
+        return
 
 
 def parse_dell_idrac_virtdisks(string_table: StringTable) -> Sequence[VirtualDisk]:

@@ -18,8 +18,9 @@ from cmk.plugins.dell.agent_based.dell_idrac_virtdisks import (
     VirtualDisk,
 )
 
-# Row layout: (virtualDiskName, virtualDiskState, virtualDiskLayout/raidLevel,
-#              virtualDiskComponentStatus, virtualDiskRemainingRedundancy)
+# Row layout: (virtualDiskNumber, virtualDiskName, virtualDiskState,
+#              virtualDiskLayout/raidLevel, virtualDiskComponentStatus,
+#              virtualDiskRemainingRedundancy)
 _STRING_TABLE: StringTable = [
     ["1", "System", "2", "4", "3", "1"],
     ["2", "Backup", "3", "5", "5", "0"],
@@ -40,13 +41,11 @@ def test_parse_dell_idrac_virtdisks() -> None:
     [
         (
             _STRING_TABLE,
-            {"System", "Backup"},
+            {"System", "Backup", "noname-3"},
         ),
         (
             [["1", "System", "2", "4", "3", "1"]],
-            {
-                "System",
-            },
+            {"System"},
         ),
     ],
 )
@@ -59,31 +58,34 @@ def test_discover_dell_idrac_virtdisks(
     } == expected_discoveries
 
 
+_SYSTEM_RESULTS = [
+    Result(state=State.OK, summary="Raid level: Raid-5"),
+    Result(state=State.OK, summary="Disk status: online"),
+    Result(state=State.OK, summary="Component status: ok"),
+    Result(state=State.OK, summary="Remaining redundancy: 1 physical disk(s)"),
+]
+_BACKUP_RESULTS = [
+    Result(state=State.OK, summary="Raid level: Raid-6"),
+    Result(state=State.CRIT, summary="Disk status: failed"),
+    Result(state=State.CRIT, summary="Component status: critical"),
+    Result(state=State.OK, summary="Remaining redundancy: 0 physical disk(s)"),
+]
+_EMPTY_RESULTS = [
+    Result(state=State.OK, summary="Raid level: Raid-5"),
+    Result(state=State.OK, summary="Disk status: online"),
+    Result(state=State.OK, summary="Component status: ok"),
+    Result(state=State.OK, summary="Remaining redundancy: 1 physical disk(s)"),
+]
+
+
 @pytest.mark.parametrize(
     "item, expected_results",
     [
-        (
-            "System",
-            [
-                Result(state=State.OK, summary="Raid level: Raid-5"),
-                Result(state=State.OK, summary="Disk status: online"),
-                Result(state=State.OK, summary="Component status: ok"),
-                Result(state=State.OK, summary="Remaining redundancy: 1 physical disk(s)"),
-            ],
-        ),
-        (
-            "Backup",
-            [
-                Result(state=State.OK, summary="Raid level: Raid-6"),
-                Result(state=State.CRIT, summary="Disk status: failed"),
-                Result(state=State.CRIT, summary="Component status: critical"),
-                Result(state=State.OK, summary="Remaining redundancy: 0 physical disk(s)"),
-            ],
-        ),
-        (
-            "Unknown",
-            [],
-        ),
+        ("System", _SYSTEM_RESULTS),
+        ("Backup", _BACKUP_RESULTS),
+        ("noname-3", _EMPTY_RESULTS),
+        ("Unknown", []),
+        ("999", []),
     ],
 )
 def test_check_dell_idrac_virtdisks(item: str, expected_results: Sequence[Result]) -> None:

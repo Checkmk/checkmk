@@ -131,40 +131,37 @@ class Disk:
     operation_state: OperationState  # .50
     display_name: str  # .55
 
+    @property
+    def item(self) -> str:
+        return self.name if self.name else f"noname-{self.index}"
+
 
 def discover_dell_idrac_disks(section: Sequence[Disk]) -> DiscoveryResult:
-    for line in section:
-        # FYI: The disk name in line[0] is allowed to be empty, but the item argument of Service is not.
-        # Instead of backporting a refactor, problematic entries are skipped.
-        if not line.name:
-            continue
-        yield Service(item=line.name)
+    for disk in section:
+        yield Service(item=disk.item)
 
 
 def check_dell_idrac_disks(item: str, section: Sequence[Disk]) -> CheckResult:
     for disk in section:
-        if disk.name == item:
-            yield Result(
-                state=State.OK,
-                summary=f"[{disk.display_name}] Size: {render.disksize(disk.capacity_MB * 1024 * 1024)}",
-            )
-
-            yield Result(
-                state=disk.disk_state.state, summary=f"Disk state: {disk.disk_state.label}"
-            )
-            yield Result(
-                state=disk.component_state.state,
-                summary=f"Component state: {disk.component_state.label}",
-            )
-
-            if disk.smart_alert:
-                yield Result(state=State.CRIT, summary="Smart alert on disk")
-
-            yield Result(state=State.OK, summary=f"Spare state: {disk.spare_state.label}")
-            yield Result(
-                state=disk.operation_state.state,
-                summary=f"Operation state: {disk.operation_state.label}",
-            )
+        if item != disk.item:
+            continue
+        yield Result(
+            state=State.OK,
+            summary=f"[{disk.display_name}] Size: {render.disksize(disk.capacity_MB * 1024 * 1024)}",
+        )
+        yield Result(state=disk.disk_state.state, summary=f"Disk state: {disk.disk_state.label}")
+        yield Result(
+            state=disk.component_state.state,
+            summary=f"Component state: {disk.component_state.label}",
+        )
+        if disk.smart_alert:
+            yield Result(state=State.CRIT, summary="Smart alert on disk")
+        yield Result(state=State.OK, summary=f"Spare state: {disk.spare_state.label}")
+        yield Result(
+            state=disk.operation_state.state,
+            summary=f"Operation state: {disk.operation_state.label}",
+        )
+        return
 
 
 def parse_dell_idrac_disks(string_table: StringTable) -> Sequence[Disk]:

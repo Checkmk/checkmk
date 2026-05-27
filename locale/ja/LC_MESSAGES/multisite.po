@@ -7223,15 +7223,6 @@ msgstr "ページの中央に"
 msgid "At the end of every month on day"
 msgstr "毎月末日"
 
-msgid ""
-"At the time the report was created not all Checkmk sites were reachable. So "
-"some of the report's data is probably missing. The following sites had "
-"problems: "
-msgstr ""
-"レポートが作成された時点では、すべてのCheckmkサイトにアクセスできるわけではあ"
-"りませんでした。したがって、レポートのデータの一部が欠落している可能性があり"
-"ます。次のサイトに問題がありました。 "
-
 msgid "Att."
 msgstr "Att."
 
@@ -8468,6 +8459,10 @@ msgstr "Azure Traffic Managerプローブの状態（非推奨）"
 msgid "Azure Usage Details (Costs)"
 msgstr "Azureの使用量の詳細(コスト)"
 
+#, fuzzy
+msgid "Azure Usage Details (Costs) (deprecated)"
+msgstr "Azureの使用量の詳細(コスト)（非推奨）"
+
 msgid "Azure VM Disk"
 msgstr "Azure VMディスク"
 
@@ -8539,9 +8534,6 @@ msgstr "Azure サブスクリプション情報"
 
 msgid "Azure subscription name"
 msgstr "Azure サブスクリプション名"
-
-msgid "Azure usage details (costs) (deprecated)"
-msgstr "Azureの使用量の詳細(コスト)（非推奨）"
 
 msgid "Azure virtual machines"
 msgstr "Azure 仮想マシン"
@@ -17485,6 +17477,10 @@ msgstr "ホスト割り当ての定義"
 msgid "Define levels for pending pods"
 msgstr "保留中のPodレベルを定義する"
 
+#, fuzzy
+msgid "Define levels for pod count per phase"
+msgstr "保留中のPodレベルを定義する"
+
 #, python-format
 msgid "Define levels on the %s detection rate."
 msgstr "%s 検出率でレベルを定義する。"
@@ -25287,6 +25283,10 @@ msgstr "From: %s"
 msgid "From: email address"
 msgstr "差出人:メールアドレス"
 
+#, fuzzy
+msgid "Front matter template"
+msgstr "これはフロントマターテンプレートです"
+
 msgid "Front-end port"
 msgstr "フロントエンド ポート"
 
@@ -32584,6 +32584,10 @@ msgstr "Ingressパケットドロップ"
 msgid "Inherit from report time range (reporting only)"
 msgstr "レポートの時間範囲から継承(レポートのみ)"
 
+#, fuzzy
+msgid "Inherit settings from"
+msgstr "から継承 "
+
 msgid "Inherited from "
 msgstr "から継承 "
 
@@ -35402,9 +35406,6 @@ msgstr "IO待ち時間のレベル(UNIXのみ)"
 msgid "Levels on Web ACL requests"
 msgstr "WebACL要求のレベル"
 
-msgid "Levels on absolute time offset"
-msgstr "絶対時間オフセットに基づくレベル"
-
 msgid "Levels on age of oldest message"
 msgstr "最も古いメッセージの経過時間"
 
@@ -35745,9 +35746,6 @@ msgstr "システムのハングを回避するために、クエリの実行時
 msgid "Limit the number of rows"
 msgstr "行数を制限する"
 
-msgid "Limit the number of rows in View tables"
-msgstr "ビューテーブルの行数を制限する"
-
 msgid "Limit the number of rows shown in tables"
 msgstr "表に表示される行数を制限する"
 
@@ -35943,11 +35941,12 @@ msgstr "Linuxインターフェース"
 msgid "Linux quota check"
 msgstr "Linuxクォータチェック"
 
+#, fuzzy
+msgid "Linux user"
+msgstr "Linux-ユーザー:"
+
 msgid "Linux user to run handlers"
 msgstr "ハンドラーを実行するLinuxユーザー"
-
-msgid "Linux user:"
-msgstr "Linux-ユーザー:"
 
 msgid "Linux, Solaris, AIX files"
 msgstr "Linux、Solaris、AIXファイル"
@@ -40500,11 +40499,18 @@ msgstr "NTLSクライアント"
 msgid "NTLS Links"
 msgstr "NTLSリンク"
 
+msgid "NTP Time Sync"
+msgstr ""
+
 msgid "NTP discovery"
 msgstr "NTPディスカバリー"
 
 msgid "NTP or timesyncd time synchronization"
 msgstr "NTPまたはtimesyncdによる時刻同期"
+
+#, fuzzy
+msgid "NTP time offset"
+msgstr "タイムオフセット"
 
 msgid "NTP time synchronization"
 msgstr "NTP時刻同期"
@@ -40970,6 +40976,10 @@ msgstr ""
 msgid "NetApp LUNs"
 msgstr "NetApp LUN"
 
+#, fuzzy
+msgid "NetApp NTP time offset"
+msgstr "NetAppシステム時刻のオフセット"
+
 msgid "NetApp Qtree discovery"
 msgstr "NetApp Qtreeの検出"
 
@@ -41005,9 +41015,6 @@ msgstr "Netappポートの検出"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Netapp電源ユニットの発見"
-
-msgid "Netapp system time offset"
-msgstr "NetAppシステム時刻のオフセット"
 
 msgid "Netmask"
 msgstr "ネットマスク"
@@ -42159,10 +42166,6 @@ msgstr "数ではありません"
 
 msgid "Not a valid URL (only HTTP and HTTPS URLs are allowed)."
 msgstr "無効なURLです（HTTPおよびHTTPSのURLのみが許可されています）。"
-
-msgid "Not all sites have been queried. Some information is missing."
-msgstr ""
-"すべてのサイトが照会されたわけではありません。一部の情報が欠落しています。"
 
 msgid "Not an active member of the stack"
 msgstr "スタックのアクティブなメンバーではありません"
@@ -51953,6 +51956,10 @@ msgstr "ルート"
 msgid "Row limit"
 msgstr "行数制限"
 
+#, fuzzy
+msgid "Row limit in view tables"
+msgstr "ユーザーテーブルに表示"
+
 msgid "Rows"
 msgstr "行"
 
@@ -56195,6 +56202,10 @@ msgstr "メトリック設定"
 msgid "Site connection"
 msgstr "サイト接続"
 
+#, fuzzy
+msgid "Site connection errors"
+msgstr "サイト接続"
+
 msgid "Site connectivity"
 msgstr "サイト接続性"
 
@@ -56215,6 +56226,10 @@ msgstr "サイトがありません"
 
 msgid "Site is not running"
 msgstr "サイトが実行されていません"
+
+#, fuzzy
+msgid "Site is unreachable. No data from this site could be retrieved."
+msgstr "このサイトのステータスはまだ決定されていません。"
 
 msgid "Site is using HTTPS"
 msgstr "サイトはHTTPSを使用しています"
@@ -61985,10 +62000,10 @@ msgstr "コンテンツ要素 \"%s, %s\" はレンダリングできません: %
 msgid "The content of this file %s could not be processed successfully: %s"
 msgstr "このファイル%s の内容は正常に処理できませんでした：%s"
 
+#, fuzzy
 msgid ""
-"The corresponding username in ntopng of the current Checkmk user. It is "
-"used, in case the user mapping to ntopng is configured to use this custom "
-"attribute"
+"The corresponding username in ntopng of the current Checkmk user. It is used "
+"when the ntopng user mapping is configured to use this attribute."
 msgstr ""
 "現在のcheckmkユーザーのntopng内の対応するユーザー名。ユーザーのマッピングが、"
 "ntopngでこのカスタム属性を使用するように設定されている場合に使用されます"
@@ -66706,9 +66721,6 @@ msgstr ""
 "この間隔は、すぐにスケジュールされたチェックの数を超える、Checkmk以外のすべて"
 "の新しいアクティブチェックに適用されます。注意：最大遅延は、通常のチェック間"
 "隔の5倍です"
-
-msgid "This is a front matter Template"
-msgstr "これはフロントマターテンプレートです"
 
 msgid "This is a notification test"
 msgstr "これは通知テストです"
@@ -75028,6 +75040,10 @@ msgstr "発生した警告の上位レベル"
 msgid "Upper levels for errors"
 msgstr "エラーの上位レベル"
 
+#, fuzzy
+msgid "Upper levels for failed pod count"
+msgstr "1秒あたりの\"フェッチに失敗しました\"の上位レベル"
+
 msgid "Upper levels for first output item"
 msgstr "最初の出力項目の上位レベル"
 
@@ -75092,6 +75108,10 @@ msgid "Upper levels for open network sockets"
 msgstr "オープンネットワークソケットの上位レベル"
 
 msgid "Upper levels for pending activations"
+msgstr "保留中のアクティベーションの上位レベル"
+
+#, fuzzy
+msgid "Upper levels for pending pod count"
 msgstr "保留中のアクティベーションの上位レベル"
 
 msgid ""
@@ -75831,9 +75851,6 @@ msgstr "プロセス環境からのプロキシ設定を使用する。デフォ
 
 msgid "Use sensor description"
 msgstr "センサーの説明を使用する"
-
-msgid "Use settings and page layout from"
-msgstr "設定とページレイアウトを使用する"
 
 msgid "Use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
 msgstr ""
@@ -78993,6 +79010,14 @@ msgstr ""
 "トに関する情報を取得するためにイベントデーモンのソケットに接続すると、その接"
 "続要求は処理される前にキューに入れられる場合があります。この設定は、新しい接"
 "続を拒否する前にキューに入れられる、受け入れられない接続の数を定義します。"
+
+#, fuzzy
+msgid ""
+"When the NTP offset reported by the selected peer was worse (in either "
+"direction) than the specified parameters, go into WARN or CRIT status."
+msgstr ""
+"前回の同期における時刻オフセットが、指定されたパラメータよりも（いずれの方向"
+"でも）悪化した場合、WARN または CRIT 状態に移行する。"
 
 msgid ""
 "When the Setup module of the Event Console saves rules to the file "
@@ -87751,8 +87776,15 @@ msgid "Could not save the OpenTelemetry configuration"
 msgstr "OpenTelemetryの設定を管理する"
 
 #, fuzzy
+msgid "Rolling back saved changes..."
+msgstr "何も変更されていません。"
+
+#, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "予期せぬエラーが発生しました"
+
+msgid "Any changes that were already saved have been reverted."
+msgstr ""
 
 msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
@@ -89076,6 +89108,28 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid ""
+#~ "At the time the report was created not all Checkmk sites were reachable. "
+#~ "So some of the report's data is probably missing. The following sites had "
+#~ "problems: "
+#~ msgstr ""
+#~ "レポートが作成された時点では、すべてのCheckmkサイトにアクセスできるわけで"
+#~ "はありませんでした。したがって、レポートのデータの一部が欠落している可能性"
+#~ "があります。次のサイトに問題がありました。 "
+
+#~ msgid "Levels on absolute time offset"
+#~ msgstr "絶対時間オフセットに基づくレベル"
+
+#~ msgid "Limit the number of rows in View tables"
+#~ msgstr "ビューテーブルの行数を制限する"
+
+#~ msgid "Not all sites have been queried. Some information is missing."
+#~ msgstr ""
+#~ "すべてのサイトが照会されたわけではありません。一部の情報が欠落しています。"
+
+#~ msgid "Use settings and page layout from"
+#~ msgstr "設定とページレイアウトを使用する"
 
 #, fuzzy
 #~ msgid "Symbol is required"

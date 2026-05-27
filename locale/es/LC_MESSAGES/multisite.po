@@ -7698,15 +7698,6 @@ msgstr "En el centro de la página"
 msgid "At the end of every month on day"
 msgstr "Al final de cada mes en el día"
 
-msgid ""
-"At the time the report was created not all Checkmk sites were reachable. So "
-"some of the report's data is probably missing. The following sites had "
-"problems: "
-msgstr ""
-"En el momento en que se creó el informe no se podía acceder a todos los "
-"sitios de Checkmk. Por lo tanto, es probable que falten algunos de los datos "
-"del informe. Los siguientes sitios tuvieron problemas: "
-
 msgid "Att."
 msgstr "Att."
 
@@ -9174,6 +9165,10 @@ msgid "Azure Usage Details (Costs)"
 msgstr "Detalles del uso de Azure (costes)"
 
 #, fuzzy
+msgid "Azure Usage Details (Costs) (deprecated)"
+msgstr "Detalles del uso de Azure (costes)"
+
+#, fuzzy
 msgid "Azure VM Disk"
 msgstr "Instancias VM de Azure"
 
@@ -9265,10 +9260,6 @@ msgstr "Suscripción a eventos"
 #, fuzzy
 msgid "Azure subscription name"
 msgstr "Suscripción"
-
-#, fuzzy
-msgid "Azure usage details (costs) (deprecated)"
-msgstr "Detalles del uso de Azure (costes)"
 
 #, fuzzy
 msgid "Azure virtual machines"
@@ -18891,6 +18882,10 @@ msgstr "Definir la asignación de host"
 msgid "Define levels for pending pods"
 msgstr "Definir los niveles de las vainas pendientes"
 
+#, fuzzy
+msgid "Define levels for pod count per phase"
+msgstr "Definir los niveles de las vainas pendientes"
+
 #, python-format
 msgid "Define levels on the %s detection rate."
 msgstr "Definir niveles en la tasa de detección de %s."
@@ -27285,6 +27280,10 @@ msgid "From: email address"
 msgstr "De: dirección de correo electrónico"
 
 #, fuzzy
+msgid "Front matter template"
+msgstr "Esta es una plantilla de portada"
+
+#, fuzzy
 msgid "Front-end port"
 msgstr "Puerto Frontend"
 
@@ -35341,6 +35340,10 @@ msgstr "Caída de paquetes de entrada"
 msgid "Inherit from report time range (reporting only)"
 msgstr "Heredar del rango de tiempo del informe (sólo para informes)"
 
+#, fuzzy
+msgid "Inherit settings from"
+msgstr "Heredado de "
+
 msgid "Inherited from "
 msgstr "Heredado de "
 
@@ -38375,10 +38378,6 @@ msgid "Levels on Web ACL requests"
 msgstr "Niveles en las solicitudes de ACL de la web"
 
 #, fuzzy
-msgid "Levels on absolute time offset"
-msgstr "Niveles en la compensación de tiempo"
-
-#, fuzzy
 msgid "Levels on age of oldest message"
 msgstr "Edad del mensaje más antiguo"
 
@@ -38763,9 +38762,6 @@ msgstr ""
 msgid "Limit the number of rows"
 msgstr "Limitar el número de filas"
 
-msgid "Limit the number of rows in View tables"
-msgstr "Limitar el número de filas en las tablas de visualización"
-
 msgid "Limit the number of rows shown in tables"
 msgstr "Limitar el número de filas mostradas en las tablas"
 
@@ -38972,12 +38968,12 @@ msgstr "Interfaces de Linux"
 msgid "Linux quota check"
 msgstr "Comprobación de cuotas en Linux"
 
+#, fuzzy
+msgid "Linux user"
+msgstr "Usuario de Linux:"
+
 msgid "Linux user to run handlers"
 msgstr "Usuario de Linux para ejecutar los manipuladores"
-
-#, fuzzy
-msgid "Linux user:"
-msgstr "Usuario de Linux:"
 
 msgid "Linux, Solaris, AIX files"
 msgstr "Archivos de Linux, Solaris y AIX"
@@ -43990,12 +43986,19 @@ msgstr "Clientes del NTLS"
 msgid "NTLS Links"
 msgstr "Enlaces NTLS"
 
+msgid "NTP Time Sync"
+msgstr ""
+
 msgid "NTP discovery"
 msgstr "Descubrimiento NTP"
 
 #, fuzzy
 msgid "NTP or timesyncd time synchronization"
 msgstr "Sincronización horaria NTP o timesyncd"
+
+#, fuzzy
+msgid "NTP time offset"
+msgstr "Desplazamiento de tiempo"
 
 #, fuzzy
 msgid "NTP time synchronization"
@@ -44512,6 +44515,10 @@ msgstr ""
 msgid "NetApp LUNs"
 msgstr "LUNs de NetApp"
 
+#, fuzzy
+msgid "NetApp NTP time offset"
+msgstr "Netapp systemtime"
+
 msgid "NetApp Qtree discovery"
 msgstr "Descubrimiento de Qtree de NetApp"
 
@@ -44549,10 +44556,6 @@ msgstr "Descubrimiento de puertos de Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Descubrimiento de la fuente de alimentación de Netapp"
-
-#, fuzzy
-msgid "Netapp system time offset"
-msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Máscara de red"
@@ -45832,9 +45835,6 @@ msgstr "Número de puerto"
 #, fuzzy
 msgid "Not a valid URL (only HTTP and HTTPS URLs are allowed)."
 msgstr "No es una URL válida (Sólo se permiten URLs http y https)."
-
-msgid "Not all sites have been queried. Some information is missing."
-msgstr "No se han consultado todos los sitios. Falta alguna información."
 
 msgid "Not an active member of the stack"
 msgstr "No es un miembro activo del stack"
@@ -56677,6 +56677,10 @@ msgstr "Rutas"
 msgid "Row limit"
 msgstr "límite inferior"
 
+#, fuzzy
+msgid "Row limit in view tables"
+msgstr "Mostrar en la tabla de usuarios"
+
 msgid "Rows"
 msgstr "Filas"
 
@@ -61288,6 +61292,10 @@ msgstr "Configuración de host"
 msgid "Site connection"
 msgstr "Conexión al sitio"
 
+#, fuzzy
+msgid "Site connection errors"
+msgstr "Conexión al sitio"
+
 msgid "Site connectivity"
 msgstr "Conectividad del sitio"
 
@@ -61309,6 +61317,10 @@ msgstr "Falta el sitio"
 
 msgid "Site is not running"
 msgstr "El sitio no funciona"
+
+#, fuzzy
+msgid "Site is unreachable. No data from this site could be retrieved."
+msgstr "Todavía no se ha determinado la situación de este lugar."
 
 msgid "Site is using HTTPS"
 msgstr "El sitio utiliza HTTPS"
@@ -67530,9 +67542,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The corresponding username in ntopng of the current Checkmk user. It is "
-"used, in case the user mapping to ntopng is configured to use this custom "
-"attribute"
+"The corresponding username in ntopng of the current Checkmk user. It is used "
+"when the ntopng user mapping is configured to use this attribute."
 msgstr ""
 "El nombre de usuario correspondiente en ntopng del usuario actual de "
 "checkmk. Se utiliza, en caso de que el mapeo de usuarios a ntopng esté "
@@ -72437,9 +72448,6 @@ msgstr ""
 "Este intervalo se aplica a todas las nuevas comprobaciones activas no-"
 "Check_MK que superan el número de comprobaciones programadas inmediatamente. "
 "Nota: el retraso máximo es cinco veces el intervalo de comprobación normal"
-
-msgid "This is a front matter Template"
-msgstr "Esta es una plantilla de portada"
 
 #, fuzzy
 msgid "This is a notification test"
@@ -81742,6 +81750,10 @@ msgstr "Niveles superiores para los avisos encontrados"
 msgid "Upper levels for errors"
 msgstr "Niveles superiores de error"
 
+#, fuzzy
+msgid "Upper levels for failed pod count"
+msgstr "Niveles superiores de \"fetch failed\" por segundo"
+
 msgid "Upper levels for first output item"
 msgstr "Niveles superiores para el primer elemento de salida"
 
@@ -81813,6 +81825,10 @@ msgid "Upper levels for open network sockets"
 msgstr "Niveles superiores para las tomas de red abiertas"
 
 msgid "Upper levels for pending activations"
+msgstr "Niveles superiores para las activaciones pendientes"
+
+#, fuzzy
+msgid "Upper levels for pending pod count"
 msgstr "Niveles superiores para las activaciones pendientes"
 
 msgid ""
@@ -82628,9 +82644,6 @@ msgstr ""
 
 msgid "Use sensor description"
 msgstr "Utilizar la descripción del sensor"
-
-msgid "Use settings and page layout from"
-msgstr "Utilice los ajustes y el diseño de la página desde"
 
 msgid "Use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
 msgstr ""
@@ -86154,6 +86167,11 @@ msgstr ""
 "conexión puede ponerse en cola antes de ser procesada. Este ajuste define el "
 "número de conexiones no aceptadas que se pondrán en cola antes de rechazar "
 "nuevas conexiones."
+
+msgid ""
+"When the NTP offset reported by the selected peer was worse (in either "
+"direction) than the specified parameters, go into WARN or CRIT status."
+msgstr ""
 
 msgid ""
 "When the Setup module of the Event Console saves rules to the file "
@@ -95405,8 +95423,15 @@ msgid "Could not save the OpenTelemetry configuration"
 msgstr "Añadir una nueva configuración de usuario"
 
 #, fuzzy
+msgid "Rolling back saved changes..."
+msgstr "No se ha cambiado nada."
+
+#, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "Se ha producido una excepción: %s"
+
+msgid "Any changes that were already saved have been reverted."
+msgstr ""
 
 msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
@@ -96575,6 +96600,28 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "At the time the report was created not all Checkmk sites were reachable. "
+#~ "So some of the report's data is probably missing. The following sites had "
+#~ "problems: "
+#~ msgstr ""
+#~ "En el momento en que se creó el informe no se podía acceder a todos los "
+#~ "sitios de Checkmk. Por lo tanto, es probable que falten algunos de los "
+#~ "datos del informe. Los siguientes sitios tuvieron problemas: "
+
+#, fuzzy
+#~ msgid "Levels on absolute time offset"
+#~ msgstr "Niveles en la compensación de tiempo"
+
+#~ msgid "Limit the number of rows in View tables"
+#~ msgstr "Limitar el número de filas en las tablas de visualización"
+
+#~ msgid "Not all sites have been queried. Some information is missing."
+#~ msgstr "No se han consultado todos los sitios. Falta alguna información."
+
+#~ msgid "Use settings and page layout from"
+#~ msgstr "Utilice los ajustes y el diseño de la página desde"
 
 #, fuzzy
 #~ msgid "Symbol is required"

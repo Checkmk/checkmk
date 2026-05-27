@@ -7643,15 +7643,6 @@ msgstr "În centrul paginii"
 msgid "At the end of every month on day"
 msgstr "La sfârșitul fiecărei luni, în ziua"
 
-msgid ""
-"At the time the report was created not all Checkmk sites were reachable. So "
-"some of the report's data is probably missing. The following sites had "
-"problems: "
-msgstr ""
-"La momentul creării raportului, nu toate site-urile Checkmk erau accesibile. "
-"Prin urmare, este posibil ca unele dintre datele din raport să lipsească. "
-"Următoarele site-uri au avut probleme: "
-
 msgid "Att."
 msgstr "Att."
 
@@ -9100,6 +9091,10 @@ msgid "Azure Usage Details (Costs)"
 msgstr "Detalii privind utilizarea Azure (costuri)"
 
 #, fuzzy
+msgid "Azure Usage Details (Costs) (deprecated)"
+msgstr "Detalii privind utilizarea Azure (costuri)"
+
+#, fuzzy
 msgid "Azure VM Disk"
 msgstr "Instanțe Azure VM"
 
@@ -9191,10 +9186,6 @@ msgstr "Abonamente curente"
 #, fuzzy
 msgid "Azure subscription name"
 msgstr "Abonament"
-
-#, fuzzy
-msgid "Azure usage details (costs) (deprecated)"
-msgstr "Detalii privind utilizarea Azure (costuri)"
 
 #, fuzzy
 msgid "Azure virtual machines"
@@ -18767,6 +18758,10 @@ msgstr "Definiți atribuirea gazdei"
 msgid "Define levels for pending pods"
 msgstr "Definirea nivelurilor pentru podurile în așteptare"
 
+#, fuzzy
+msgid "Define levels for pod count per phase"
+msgstr "Definirea nivelurilor pentru podurile în așteptare"
+
 #, python-format
 msgid "Define levels on the %s detection rate."
 msgstr "Definiți nivelurile privind rata de detectare %s."
@@ -27122,6 +27117,10 @@ msgid "From: email address"
 msgstr "De la: adresa de e-mail"
 
 #, fuzzy
+msgid "Front matter template"
+msgstr "Acesta este un șablon de față"
+
+#, fuzzy
 msgid "Front-end port"
 msgstr "Portul Frontend"
 
@@ -35162,6 +35161,10 @@ msgid "Inherit from report time range (reporting only)"
 msgstr ""
 "Moștenire din intervalul de timp al raportului (numai pentru raportare)"
 
+#, fuzzy
+msgid "Inherit settings from"
+msgstr "Moștenit din "
+
 msgid "Inherited from "
 msgstr "Moștenit din "
 
@@ -38178,10 +38181,6 @@ msgid "Levels on Web ACL requests"
 msgstr "Niveluri privind solicitările Web ACL"
 
 #, fuzzy
-msgid "Levels on absolute time offset"
-msgstr "Niveluri pe decalaj de timp"
-
-#, fuzzy
 msgid "Levels on age of oldest message"
 msgstr "Vârsta celui mai vechi mesaj"
 
@@ -38556,9 +38555,6 @@ msgstr ""
 msgid "Limit the number of rows"
 msgstr "Limitarea numărului de rânduri"
 
-msgid "Limit the number of rows in View tables"
-msgstr "Limitarea numărului de rânduri în tabelele Vizualizare"
-
 msgid "Limit the number of rows shown in tables"
 msgstr "Limitarea numărului de rânduri afișate în tabele"
 
@@ -38764,12 +38760,12 @@ msgstr "Interfețe Linux"
 msgid "Linux quota check"
 msgstr "Verificarea cotelor Linux"
 
+#, fuzzy
+msgid "Linux user"
+msgstr "Utilizator Linux:"
+
 msgid "Linux user to run handlers"
 msgstr "Utilizator Linux pentru a rula gestionari"
-
-#, fuzzy
-msgid "Linux user:"
-msgstr "Utilizator Linux:"
 
 msgid "Linux, Solaris, AIX files"
 msgstr "Fișiere Linux, Solaris, AIX"
@@ -43731,12 +43727,19 @@ msgstr "Clienți NTLS"
 msgid "NTLS Links"
 msgstr "Legături NTLS"
 
+msgid "NTP Time Sync"
+msgstr ""
+
 msgid "NTP discovery"
 msgstr "Descoperirea NTP"
 
 #, fuzzy
 msgid "NTP or timesyncd time synchronization"
 msgstr "Sincronizarea timpului NTP sau timesyncd"
+
+#, fuzzy
+msgid "NTP time offset"
+msgstr "Decalaj de timp"
 
 #, fuzzy
 msgid "NTP time synchronization"
@@ -44251,6 +44254,10 @@ msgstr ""
 msgid "NetApp LUNs"
 msgstr "LUN-uri NetApp"
 
+#, fuzzy
+msgid "NetApp NTP time offset"
+msgstr "Netapp systemtime"
+
 msgid "NetApp Qtree discovery"
 msgstr "Descoperirea Qtree de la NetApp"
 
@@ -44287,10 +44294,6 @@ msgstr "Descoperirea portului Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Descoperirea unității de alimentare Netapp"
-
-#, fuzzy
-msgid "Netapp system time offset"
-msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Masca de rețea"
@@ -45555,9 +45558,6 @@ msgstr "Numărul portului"
 msgid "Not a valid URL (only HTTP and HTTPS URLs are allowed)."
 msgstr ""
 "Nu este o adresă URL validă (sunt permise doar adresele URL http și https)."
-
-msgid "Not all sites have been queried. Some information is missing."
-msgstr "Nu toate siturile au fost interogate. Unele informații lipsesc."
 
 msgid "Not an active member of the stack"
 msgstr "Nu este un membru activ al stivei"
@@ -56284,6 +56284,10 @@ msgstr "Rute"
 msgid "Row limit"
 msgstr "limita inferioară"
 
+#, fuzzy
+msgid "Row limit in view tables"
+msgstr "Afișați în tabelul de utilizator"
+
 msgid "Rows"
 msgstr "Rânduri"
 
@@ -60869,6 +60873,10 @@ msgstr "Configurație gazdă"
 msgid "Site connection"
 msgstr "Conexiune la site"
 
+#, fuzzy
+msgid "Site connection errors"
+msgstr "Conexiune la site"
+
 msgid "Site connectivity"
 msgstr "Conectivitatea site-ului"
 
@@ -60890,6 +60898,10 @@ msgstr "Site-ul lipsește"
 
 msgid "Site is not running"
 msgstr "Site-ul nu funcționează"
+
+#, fuzzy
+msgid "Site is unreachable. No data from this site could be retrieved."
+msgstr "Statutul acestui sit nu a fost încă stabilit."
 
 msgid "Site is using HTTPS"
 msgstr "Site-ul folosește HTTPS"
@@ -67070,9 +67082,8 @@ msgstr "Conținutul acestui fișier nu a putut fi procesat cu succes: %s"
 
 #, fuzzy
 msgid ""
-"The corresponding username in ntopng of the current Checkmk user. It is "
-"used, in case the user mapping to ntopng is configured to use this custom "
-"attribute"
+"The corresponding username in ntopng of the current Checkmk user. It is used "
+"when the ntopng user mapping is configured to use this attribute."
 msgstr ""
 "Numele de utilizator corespunzător în ntopng al utilizatorului checkmk "
 "curent. Se utilizează în cazul în care maparea utilizatorului în ntopng este "
@@ -71976,9 +71987,6 @@ msgstr ""
 "Acest interval se aplică tuturor noilor controale active non-Check_MK care "
 "depășesc numărul de controale imediat programate. Notă: întârzierea maximă "
 "este de cinci ori mai mare decât intervalul normal de verificare"
-
-msgid "This is a front matter Template"
-msgstr "Acesta este un șablon de față"
 
 msgid "This is a notification test"
 msgstr "Acesta este un test de notificare"
@@ -81209,6 +81217,10 @@ msgstr "Nivelurile superioare pentru avertismentele întâlnite"
 msgid "Upper levels for errors"
 msgstr "Niveluri superioare pentru erori"
 
+#, fuzzy
+msgid "Upper levels for failed pod count"
+msgstr "Niveluri superioare pentru \"fetch failed\" pe secundă"
+
 msgid "Upper levels for first output item"
 msgstr "Nivelurile superioare pentru primul element de ieșire"
 
@@ -81280,6 +81292,10 @@ msgid "Upper levels for open network sockets"
 msgstr "Niveluri superioare pentru prize de rețea deschise"
 
 msgid "Upper levels for pending activations"
+msgstr "Niveluri superioare pentru activările în așteptare"
+
+#, fuzzy
+msgid "Upper levels for pending pod count"
 msgstr "Niveluri superioare pentru activările în așteptare"
 
 msgid ""
@@ -82079,9 +82095,6 @@ msgstr ""
 
 msgid "Use sensor description"
 msgstr "Utilizați descrierea senzorului"
-
-msgid "Use settings and page layout from"
-msgstr "Utilizați setările și aspectul paginii din"
 
 msgid "Use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
 msgstr ""
@@ -85595,6 +85608,11 @@ msgstr ""
 "cererea de conectare să fie pusă în coadă înainte de a fi procesată. Această "
 "setare definește numărul de conexiuni neacceptate care trebuie să fie puse "
 "în coadă înainte de a refuza noi conexiuni."
+
+msgid ""
+"When the NTP offset reported by the selected peer was worse (in either "
+"direction) than the specified parameters, go into WARN or CRIT status."
+msgstr ""
 
 msgid ""
 "When the Setup module of the Event Console saves rules to the file "
@@ -94836,8 +94854,15 @@ msgid "Could not save the OpenTelemetry configuration"
 msgstr "Adaugp o noua configurație de utilizator"
 
 #, fuzzy
+msgid "Rolling back saved changes..."
+msgstr "Nu s-a schimbat nimic."
+
+#, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "S-a produs o excepție: %s"
+
+msgid "Any changes that were already saved have been reverted."
+msgstr ""
 
 msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
@@ -96012,6 +96037,28 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "At the time the report was created not all Checkmk sites were reachable. "
+#~ "So some of the report's data is probably missing. The following sites had "
+#~ "problems: "
+#~ msgstr ""
+#~ "La momentul creării raportului, nu toate site-urile Checkmk erau "
+#~ "accesibile. Prin urmare, este posibil ca unele dintre datele din raport "
+#~ "să lipsească. Următoarele site-uri au avut probleme: "
+
+#, fuzzy
+#~ msgid "Levels on absolute time offset"
+#~ msgstr "Niveluri pe decalaj de timp"
+
+#~ msgid "Limit the number of rows in View tables"
+#~ msgstr "Limitarea numărului de rânduri în tabelele Vizualizare"
+
+#~ msgid "Not all sites have been queried. Some information is missing."
+#~ msgstr "Nu toate siturile au fost interogate. Unele informații lipsesc."
+
+#~ msgid "Use settings and page layout from"
+#~ msgstr "Utilizați setările și aspectul paginii din"
 
 #, fuzzy
 #~ msgid "Symbol is required"

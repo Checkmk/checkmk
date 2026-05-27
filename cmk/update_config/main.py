@@ -214,6 +214,11 @@ def _load_plugins(edition: Edition, logger: logging.Logger) -> None:
             if edition in (Edition.ULTIMATE, Edition.ULTIMATEMT)
             else []
         ),
+        (
+            load_plugins_with_exceptions("cmk.update_config.nonfree.cloud.plugins.actions")
+            if edition is Edition.CLOUD
+            else []
+        ),
     ):
         logger.error("Error in action plug-in %s: %s\n", plugin, exc)
         if debug.enabled():
@@ -227,6 +232,16 @@ def _load_pre_plugins(edition: Edition) -> None:
             []
             if edition is Edition.COMMUNITY
             else load_plugins_with_exceptions("cmk.update_config.nonfree.pro.plugins.pre_actions")
+        ),
+        (
+            load_plugins_with_exceptions("cmk.update_config.nonfree.ultimate.plugins.pre_actions")
+            if edition in (Edition.ULTIMATE, Edition.ULTIMATEMT)
+            else []
+        ),
+        (
+            load_plugins_with_exceptions("cmk.update_config.nonfree.cloud.plugins.pre_actions")
+            if edition is Edition.CLOUD
+            else []
         ),
     ):
         sys.stderr.write(f"Error in pre action plug-in {plugin}: {exc}\n")

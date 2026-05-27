@@ -93,6 +93,7 @@ class HTMLGenerator(HTMLWriter):
         self._logger = log.logger.getChild("html")
         self._header_sent = False
         self._body_classes = ["main"]
+        self._main_navigation_open = False
         self.have_help = False
 
         # Forms
@@ -444,6 +445,9 @@ class HTMLGenerator(HTMLWriter):
             enable_page_menu_entry(self, "inline_help")
         self.write_final_javascript()
         self.javascript("cmk.visibility_detection.initialize();")
+        if self._main_navigation_open:
+            self.close_div()  # #content_area
+            self._main_navigation_open = False
         self.close_body()
         self.close_html()
 

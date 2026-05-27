@@ -698,6 +698,19 @@ try {
     Clear-Artifacts
     Clear-All
 
+    # Delete stale PCH files if compiler version changed (MSVC error C1853).
+    # PCH embeds compiler version; version mismatch after VS update causes build failure.
+    $cl_version_marker = "$build_dir\.cl_version"
+    $cl_output = (& "$msbuild_exe" -version 2>&1 | Select-Object -Last 1).ToString().Trim()
+    $stored_version = if (Test-Path $cl_version_marker) { Get-Content $cl_version_marker } else { "" }
+    if ($cl_output -ne $stored_version) {
+        Write-Host "Compiler version changed ($stored_version -> $cl_output), cleaning stale PCH files" -ForegroundColor Yellow
+        Get-ChildItem -Path "$build_dir" -Filter "*.pch" -Recurse -ErrorAction SilentlyContinue |
+            Remove-Item -Force
+        New-Item -ItemType Directory -Path "$build_dir" -Force -ErrorAction SilentlyContinue | Out-Null
+        Set-Content $cl_version_marker $cl_output
+    }
+
     # BUILDING
     Build-Agent
     if ($argBuildOnly){

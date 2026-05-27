@@ -29,7 +29,7 @@ from cmk.server_side_programs.v1_unstable import (
     vcrtrace,
 )
 
-__version__ = "2.5.0p4"
+__version__ = "2.5.0p5"
 
 AGENT = "netapp-ontap"
 

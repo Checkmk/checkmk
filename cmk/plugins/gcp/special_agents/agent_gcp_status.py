@@ -18,7 +18,7 @@ import requests
 
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
-__version__ = "2.5.0p4"
+__version__ = "2.5.0p5"
 
 AGENT = "gcp_status"
 

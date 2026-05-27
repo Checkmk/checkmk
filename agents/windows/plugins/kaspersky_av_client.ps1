@@ -20,7 +20,7 @@ Regardless of the system's date/time settings
 .\kaspersky_av_client.ps1
 #>
 
-$CMK_VERSION = "2.5.0p4"
+$CMK_VERSION = "2.5.0p5"
 $g_AVStateRegKey = "HKLM:\SOFTWARE\Wow6432Node\KasperskyLab\Components\34\1103\1.0.0.0\Statistics\AVState"
 
 function StrDateTimeToCheckmkFormat {

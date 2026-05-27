@@ -9,18 +9,7 @@ filegroup(
 )
 
 # these, ladies and gentleman, are the "args"
-ARGS = [
-    "-j6",
-    # Force the suid root plugins (check_dhcp, check_icmp -- see patch
-    # 0013-link-root-plugins-statically.diff) to statically link against
-    # the libcrypto.a from @openssl//:openssl_static, which is built with
-    # stable absolute --openssldir/--libdir paths so that its baked-in
-    # OPENSSLDIR/ENGINESDIR/MODULESDIR .rodata strings are deterministic
-    # FHS paths rather than per-build bazel sandbox paths.  Using the
-    # libcrypto.a from the regular @openssl target instead would leak
-    # the bazel sandbox path into the shipped suid binaries.
-    "STATIC_LIBCRYPTO=$$EXT_BUILD_DEPS$$/openssl_static/lib/libcrypto.a",
-]
+ARGS = ["-j6"]
 
 # In contrast to "sources", @build_data is a list of files we need
 # to build stuff, lol
@@ -37,22 +26,6 @@ CONFIGURE_OPTIONS = [
     # That way we can use cached builds in multiple checkmk versions.
     "--with-snmpget-command=/bin/snmpget",
     "--with-snmpgetnext-command=/bin/snmpgetnext",
-    # The two paths below get baked into the binaries' .rodata via
-    # autoconf substitution of @datadir@/@localstatedir@ in the C
-    # sources (e.g. LOCALEDIR = $(datadir)/locale).  We deliberately
-    # use stable FHS paths rather than the bazel sandbox path
-    # (which is what would otherwise be substituted) so that:
-    #   1. The path is stable across builds and version-free, allowing
-    #      one binary to be reused across many OMD versions installed
-    #      at /omd/versions/<VER>/.
-    #   2. Bazel's per-build sandbox path does not leak into the
-    #      shipped binaries -- a security/audit concern and a hash
-    #      stability concern.
-    # These defaults are effectively dead strings under normal
-    # operation: monitoring-plugins binaries do not ship translations
-    # (LOCALEDIR is unused) and do not write to localstatedir.
-    "--datadir=/usr/share",
-    "--localstatedir=/var/lib/nagios-plugins",
 ]
 
 COPTS = [
@@ -130,11 +103,7 @@ configure_make(
     out_data_dirs = OUT_DATA_DIRS,
     out_headers_only = OUT_HEADERS_ONLY,
     postfix_script = POSTFIX_SCRIPT,
-    set_file_prefix_map = True,
     targets = TARGETS,
     visibility = VISIBILITY,
-    deps = [
-        "@openssl",
-        "@openssl//:openssl_static",
-    ],
+    deps = ["@openssl"],
 )

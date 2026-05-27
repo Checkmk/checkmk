@@ -6,8 +6,8 @@
  # the actual targets
 -check_dhcp_LDADD = @LTLIBINTL@ $(NETLIBS) $(LIB_CRYPTO)
 -check_icmp_LDADD = @LTLIBINTL@ $(NETLIBS) $(SOCKETLIBS) $(LIB_CRYPTO)
-+check_dhcp_LDADD = @LTLIBINTL@ $(NETLIBS) $(STATIC_LIBCRYPTO)
-+check_icmp_LDADD = @LTLIBINTL@ $(NETLIBS) $(SOCKETLIBS) $(STATIC_LIBCRYPTO)
++check_dhcp_LDADD = @LTLIBINTL@ $(NETLIBS) "-l:libcrypto.a"
++check_icmp_LDADD = @LTLIBINTL@ $(NETLIBS) $(SOCKETLIBS) "-l:libcrypto.a"
 
  # -m64 needed at compiler and linker phase
  pst3_CFLAGS = @PST3CFLAGS@
@@ -19,8 +19,8 @@
  # the actual targets
 -check_dhcp_LDADD = @LTLIBINTL@ $(NETLIBS) $(LIB_CRYPTO)
 -check_icmp_LDADD = @LTLIBINTL@ $(NETLIBS) $(SOCKETLIBS) $(LIB_CRYPTO)
-+check_dhcp_LDADD = @LTLIBINTL@ $(NETLIBS) $(STATIC_LIBCRYPTO)
-+check_icmp_LDADD = @LTLIBINTL@ $(NETLIBS) $(SOCKETLIBS) $(STATIC_LIBCRYPTO)
++check_dhcp_LDADD = @LTLIBINTL@ $(NETLIBS) "-l:libcrypto.a"
++check_icmp_LDADD = @LTLIBINTL@ $(NETLIBS) $(SOCKETLIBS) "-l:libcrypto.a"
 
  # -m64 needed at compiler and linker phase
  pst3_CFLAGS = @PST3CFLAGS@

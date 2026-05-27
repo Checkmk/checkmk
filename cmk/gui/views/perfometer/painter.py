@@ -47,6 +47,17 @@ class PainterPerfometer(Painter):
     def printable(self):
         return "perfometer"
 
+    def _compute_data(self, row: Row, cell: Cell) -> str:
+        """Used for CSV/JSON/Python exports."""
+        try:
+            title, _h = Perfometer(row).render()
+        except Exception:
+            logger.exception("error rendering perfometer")
+            if self.config.debug:
+                raise
+            return ""
+        return title or ""
+
     def render(self, row: Row, cell: Cell) -> CellSpec:
         classes = ["perfometer"]
         if is_stale(row, config=self.config):

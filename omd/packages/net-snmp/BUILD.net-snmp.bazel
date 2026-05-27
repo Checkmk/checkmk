@@ -17,19 +17,7 @@ filegroup(
 
 configure_make(
     name = "net-snmp",
-    # Pass DESTDIR to make so `make install` writes into a throwaway
-    # staging directory inside $INSTALLDIR rather than to the literal
-    # /usr/{bin,lib/omd/net-snmp,...} paths we baked into the binary
-    # via configure_options below.  The baked paths still appear in
-    # libnetsnmp.so's .rodata (and thus in any binary that links it)
-    # -- that is the whole point of the relocatable-binary scheme --
-    # but the actual install layout is controlled here, and the bits
-    # we want are cherry-picked into the bin/lib/share layout by
-    # postfix_script before the staging tree is deleted.
-    args = [
-        "-j4",
-        "DESTDIR=$$INSTALLDIR$$/staging",
-    ],
+    args = ["-j4"],
     build_data = [
         "@@//omd/packages/perl-modules:perl-modules.tar",
         "@@//omd/packages/python3-modules:compiled_setuptools.tar",
@@ -43,35 +31,6 @@ configure_make(
         "--disable-snmptrapd-subagent",
         "--with-defaults",
         "--disable-scripts",
-        # The paths below get baked into libnetsnmp.so's .rodata via
-        # autoconf substitution of SNMPLIBPATH / SNMPSHAREPATH /
-        # SNMPCONFPATH (== $libdir/snmp etc) in net-snmp-config.h.
-        # We deliberately use omd-namespaced FHS paths rather than
-        # the bazel sandbox path (the rules_foreign_cc default) or
-        # the final OMD install path because:
-        #   1. The path must be stable across builds and version-free
-        #      so one binary can be reused across many OMD versions
-        #      installed at /omd/version/<VER>/.
-        #   2. FHS directories are conventionally root-owned, so the
-        #      (theoretically unreachable) compile-time defaults
-        #      can't be poisoned by a non-root attacker.
-        #   3. The omd/ infix prevents collision with a hypothetical
-        #      distro-packaged net-snmp on the same host, which would
-        #      use /usr/lib/snmp, /usr/share/snmp, /etc/snmp.
-        # These defaults are dead strings under correct operation:
-        # --disable-agent removes snmpd (the sole consumer of
-        # SNMPLIBPATH/SNMPDLMODPATH), --with-mibdirs below overrides
-        # NETSNMP_DEFAULT_MIBDIRS away from SNMPSHAREPATH, and client
-        # tools find snmp.conf via $HOME-derived paths in OMD sites.
-        # NETSNMP_PERSISTENT_DIRECTORY is not derived from
-        # $localstatedir -- net-snmp's configure hardcodes its default
-        # to /var/net-snmp -- so we override it explicitly via
-        # --with-persistent-directory to keep the namespace consistent.
-        "--prefix=/usr",
-        "--libdir=/usr/lib/omd/net-snmp",
-        "--datadir=/usr/share/omd/net-snmp",
-        "--sysconfdir=/etc/omd/net-snmp",
-        "--with-persistent-directory=/var/lib/omd/net-snmp",
         r'--with-mibdirs="\\$$\\HOME/local/share/snmp/mibs:\\$$\\HOME/share/snmp/mibs:/usr/share/snmp/mibs"',
         "--with-openssl=$$EXT_BUILD_DEPS/openssl",
     ],
@@ -132,30 +91,7 @@ configure_make(
         "libnetsnmp.a",
     ],
     postfix_script = """
-        set -ex
-        # `make install DESTDIR=...` (see `args`) laid files out under
-        # the baked-in FHS prefix at
-        # INSTALLDIR/staging/usr/{bin,lib/omd/net-snmp,share/omd/net-snmp,share/man}.
-        # Relocate the bits we want into the bin/lib/share layout that
-        # out_binaries, out_shared_libs, out_static_libs and
-        # out_data_dirs expect.  The baked-in paths inside the binary
-        # are unaffected -- libnetsnmp.so still reads
-        # /usr/lib/omd/net-snmp/snmp etc., which is deliberate and
-        # load-bearing for the relocatability scheme (see
-        # configure_options).
-        STAGE=$${INSTALLDIR}/staging
-        mkdir -p $${INSTALLDIR}/bin $${INSTALLDIR}/lib $${INSTALLDIR}/share/snmp
-        cp -a $${STAGE}/usr/bin/. $${INSTALLDIR}/bin/
-        cp -a $${STAGE}/usr/lib/omd/net-snmp/. $${INSTALLDIR}/lib/
-        # MIBs land at datadir/snmp/mibs == /usr/share/omd/net-snmp/snmp/mibs.
-        cp -a $${STAGE}/usr/share/omd/net-snmp/snmp/. $${INSTALLDIR}/share/snmp/
-        # Man pages go to prefix/share/man == /usr/share/man.
-        if [ -d $${STAGE}/usr/share/man ]; then
-            mkdir -p $${INSTALLDIR}/share/man
-            cp -a $${STAGE}/usr/share/man/. $${INSTALLDIR}/share/man/
-        fi
-        rm -rf $${STAGE}
-
+        set -x
         tar xf $${PERL_MODULES_TAR} -C $$(dirname $${PERL_MODULES_TAR});
         tar xf $${SETUPTOOLS_TAR} --strip-components 1 -C $$(dirname $${SETUPTOOLS_TAR});
         mkdir -p lib/python
@@ -178,13 +114,12 @@ configure_make(
         chmod u+w -R $${INSTALLDIR}
         chmod 644 $${INSTALLDIR}/share/snmp/mibs/*
     """,
-    set_file_prefix_map = True,
     targets = [
         "",
-        "-C snmplib installlibs",
-        "-C apps installbin",
-        "-C man install",
-        "-C mibs mibsinstall",
+        "-C snmplib DESTDIR='/' installlibs",
+        "-C apps DESTDIR='/' installbin",
+        "-C man DESTDIR='/' install",
+        "-C mibs DESTDIR='/' mibsinstall",
     ],
     visibility = ["//visibility:public"],
     deps = [

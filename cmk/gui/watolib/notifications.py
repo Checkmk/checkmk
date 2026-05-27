@@ -25,9 +25,11 @@ obj = NotificationRule.from_api_request(APINotificationRule)
 
 from __future__ import annotations
 
+import pprint
 import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, cast, NotRequired, override, TypedDict
 
 from cmk.ccc import store, version
@@ -848,4 +850,17 @@ class NotificationParameterConfigFile(WatoSimpleConfigFile[NotificationParameter
             config_file_path=wato_root_dir() / "notification_parameter.mk",
             config_variable="notification_parameter",
             spec_class=NotificationParameterSpec,
+        )
+
+    @override
+    def _save_to_path(
+        self, target_path: Path, cfg: dict[str, NotificationParameterSpec], pprint_value: bool
+    ) -> None:
+        # Unlike the base implementation we must not sort the dict keys so that the
+        # user-defined order of the notification parameters is preserved on disk.
+        target_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        formatted = pprint.pformat(cfg, sort_dicts=False) if pprint_value else repr(cfg)
+        store.save_mk_file(
+            target_path,
+            f"{self._config_variable}.update({formatted})",
         )

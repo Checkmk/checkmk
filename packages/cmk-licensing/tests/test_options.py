@@ -18,6 +18,7 @@ def test_community() -> None:
         otel_collector=LicenseFlag(enabled=False),
         aws_extended=LicenseFlag(enabled=False),
         gcp_extended=LicenseFlag(enabled=False),
+        azure_extended=LicenseFlag(enabled=False),
     )
 
 
@@ -28,6 +29,7 @@ def test_pro() -> None:
         otel_collector=LicenseFlag(enabled=False),
         aws_extended=LicenseFlag(enabled=False),
         gcp_extended=LicenseFlag(enabled=False),
+        azure_extended=LicenseFlag(enabled=False),
     )
 
 
@@ -42,4 +44,5 @@ def test_commercial(edition: Edition) -> None:
         otel_collector=LicenseFlag(enabled=True),
         aws_extended=LicenseFlag(enabled=True),
         gcp_extended=LicenseFlag(enabled=True),
+        azure_extended=LicenseFlag(enabled=True),
     )

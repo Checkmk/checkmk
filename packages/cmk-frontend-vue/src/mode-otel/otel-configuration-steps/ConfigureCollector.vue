@@ -33,6 +33,7 @@ const props = defineProps<{
   endpointConfigAllowed: boolean
   encryptionAllowed: boolean
   eventConsoleAllowed: boolean
+  mayCreatePassword: boolean
   grpcDefaultPort: number
   httpDefaultPort: number
 }>()
@@ -279,6 +280,7 @@ defineExpose({ validate, onPasswordCreated })
               :no-auth-allowed="noAuthAllowed"
               :available-passwords="availablePasswords"
               :show-errors="displayErrors"
+              :may-create-password="mayCreatePassword"
               @create-password="openPasswordSlideIn('grpc')"
             />
             <CollectorConnectionOptions
@@ -318,6 +320,7 @@ defineExpose({ validate, onPasswordCreated })
               :no-auth-allowed="noAuthAllowed"
               :available-passwords="availablePasswords"
               :show-errors="displayErrors"
+              :may-create-password="mayCreatePassword"
               @create-password="openPasswordSlideIn('http')"
             />
             <CollectorConnectionOptions

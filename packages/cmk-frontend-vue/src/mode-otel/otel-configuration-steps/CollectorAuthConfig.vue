@@ -9,6 +9,7 @@ import { computed, watch } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
@@ -26,6 +27,7 @@ const props = defineProps<{
   noAuthAllowed: boolean
   availablePasswords: Suggestion[]
   showErrors: boolean
+  mayCreatePassword: boolean
 }>()
 
 const emit = defineEmits<{ createPassword: [] }>()
@@ -121,7 +123,24 @@ const passwordErrors = computed<string[]>(() => {
           :form-validation="passwordErrors.length > 0"
           :no-elements-text="_t('No passwords available')"
         />
-        <FormButton @click="emit('createPassword')">{{ _t('Create') }}</FormButton>
+        <FormButton :disabled="!mayCreatePassword" @click="emit('createPassword')">{{
+          _t('Create')
+        }}</FormButton>
+        <CmkHelpText
+          v-if="!mayCreatePassword"
+          :help="
+            _t(
+              'Creating a new password is not available for your account. ' +
+                'All of the following are required:' +
+                '<ul>' +
+                '<li>The permission \'Make changes, perform actions\'.</li>' +
+                '<li>The permission \'Password management\'.</li>' +
+                '<li>Either the permission \'Write access to all passwords\', ' +
+                'or membership in a contact group that could own the new password.</li>' +
+                '</ul>'
+            )
+          "
+        />
       </div>
       <CmkInlineValidation v-if="passwordErrors.length" :validation="passwordErrors" />
     </div>

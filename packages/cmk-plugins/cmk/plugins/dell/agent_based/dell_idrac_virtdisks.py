@@ -2,6 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
+from dataclasses import dataclass
+from enum import Enum
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -30,58 +33,117 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 # .1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1.34.3 1 --> IDRAC-MIB::virtualDiskRemainingRedundancy.3
 
 
-def discover_dell_idrac_virtdisks(section: StringTable) -> DiscoveryResult:
+class DiskState(Enum):
+    UNKNOWN = "1"
+    ONLINE = "2"
+    FAILED = "3"
+    DEGRADED = "4"
+
+    @property
+    def label(self) -> str:
+        return self.name.lower()
+
+    @property
+    def state(self) -> State:
+        match self:
+            case DiskState.UNKNOWN:
+                return State.WARN
+            case DiskState.ONLINE:
+                return State.OK
+            case _:
+                return State.CRIT
+
+
+class RaidType(Enum):
+    NONE = "1"
+    RAID_0 = "2"
+    RAID_1 = "3"
+    RAID_5 = "4"
+    RAID_6 = "5"
+    RAID_10 = "6"
+    RAID_50 = "7"
+    RAID_60 = "8"
+    CONCATENATED_RAID_1 = "9"
+
+    @property
+    def label(self) -> str:
+        return self.name.title().replace("_", "-")
+
+
+class ComponentState(Enum):
+    OTHER = "1"
+    UNKNOWN = "2"
+    OK = "3"
+    NON_CRITICAL = "4"
+    CRITICAL = "5"
+    NON_RECOVERABLE = "6"
+
+    @property
+    def label(self) -> str:
+        return self.name.lower().replace("_", "-")
+
+    @property
+    def state(self) -> State:
+        match self:
+            case ComponentState.OTHER | ComponentState.OK:
+                return State.OK
+            case ComponentState.UNKNOWN | ComponentState.NON_CRITICAL:
+                return State.WARN
+            case _:
+                return State.CRIT
+
+
+@dataclass
+class VirtualDisk:
+    # base OID:      .1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1
+    index: int  # 1
+    name: str  # 2
+    disk_state: DiskState  # 4
+    raid_type: RaidType  # 13
+    component_state: ComponentState  # 20
+    remaining_redundancy: int  # 34
+
+
+def discover_dell_idrac_virtdisks(section: Sequence[VirtualDisk]) -> DiscoveryResult:
     for line in section:
-        # FYI: The disk name in line[0] is allowed to be empty, but the item argument of Service is not.
+        # FYI: The disk name is allowed to be empty, but the item argument of Service is not.
         # Instead of backporting a refactor, problematic entries are skipped.
-        if not line[0]:
+        if not line.name:
             continue
-        yield Service(item=line[0])
+        yield Service(item=line.name)
 
 
-def check_dell_idrac_virtdisks(item: str, section: StringTable) -> CheckResult:
-    map_states = {
-        "disk": {
-            "1": (State.WARN, "unknown"),
-            "2": (State.OK, "online"),
-            "3": (State.CRIT, "failed"),
-            "4": (State.CRIT, "degraded"),
-        },
-        "component": {
-            "1": (State.OK, "other"),
-            "2": (State.WARN, "unknown"),
-            "3": (State.OK, "OK"),
-            "4": (State.WARN, "non-critical"),
-            "5": (State.CRIT, "critical"),
-            "6": (State.CRIT, "non-recoverable"),
-        },
-    }
-    map_raidlevel = {
-        "1": "none",
-        "2": "Raid-0",
-        "3": "Raid-1",
-        "4": "Raid-5",
-        "5": "Raid-6",
-        "6": "Raid-10",
-        "7": "Raid-50",
-        "8": "Raid-60",
-    }
-
-    for name, disk_state, raid_level, component_state, redundancy in section:
-        if item == name:
-            yield Result(state=State.OK, summary="Raid level: %s" % map_raidlevel[raid_level])
-
-            for what, what_key in [(disk_state, "Disk"), (component_state, "Component")]:
-                state, state_readable = map_states[what_key.lower()][what]
-                yield Result(state=state, summary=f"{what_key} status: {state_readable}")
+def check_dell_idrac_virtdisks(item: str, section: Sequence[VirtualDisk]) -> CheckResult:
+    for disk in section:
+        if item == disk.name:
+            yield Result(state=State.OK, summary=f"Raid level: {disk.raid_type.label}")
 
             yield Result(
-                state=State.OK, summary="Remaining redundancy: %s physical disk(s)" % redundancy
+                state=disk.disk_state.state, summary=f"Disk status: {disk.disk_state.label}"
+            )
+            yield Result(
+                state=disk.component_state.state,
+                summary=f"Component status: {disk.component_state.label}",
+            )
+
+            yield Result(
+                state=State.OK,
+                summary="Remaining redundancy: %s physical disk(s)" % disk.remaining_redundancy,
             )
 
 
-def parse_dell_idrac_virtdisks(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_dell_idrac_virtdisks(string_table: StringTable) -> Sequence[VirtualDisk]:
+    return [
+        VirtualDisk(
+            index=int(row[0]),
+            name=row[1],
+            disk_state=DiskState(row[2]),
+            raid_type=RaidType(row[3]),
+            component_state=ComponentState(row[4]),
+            remaining_redundancy=int(row[5]),
+        )
+        for row in string_table
+    ]
 
 
 snmp_section_dell_idrac_virtdisks = SimpleSNMPSection(
@@ -89,7 +151,7 @@ snmp_section_dell_idrac_virtdisks = SimpleSNMPSection(
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1",
-        oids=["2", "4", "13", "20", "34"],
+        oids=["1", "2", "4", "13", "20", "34"],
     ),
     parse_function=parse_dell_idrac_virtdisks,
 )

@@ -10,21 +10,29 @@ import pytest
 from cmk.agent_based.v2 import Result, State, StringTable
 from cmk.plugins.dell.agent_based.dell_idrac_virtdisks import (
     check_dell_idrac_virtdisks,
+    ComponentState,
     discover_dell_idrac_virtdisks,
+    DiskState,
     parse_dell_idrac_virtdisks,
+    RaidType,
+    VirtualDisk,
 )
 
 # Row layout: (virtualDiskName, virtualDiskState, virtualDiskLayout/raidLevel,
 #              virtualDiskComponentStatus, virtualDiskRemainingRedundancy)
 _STRING_TABLE: StringTable = [
-    ["System", "2", "4", "3", "1"],
-    ["Backup", "3", "5", "5", "0"],
-    ["", "2", "4", "3", "1"],
+    ["1", "System", "2", "4", "3", "1"],
+    ["2", "Backup", "3", "5", "5", "0"],
+    ["3", "", "2", "4", "3", "1"],
 ]
 
 
 def test_parse_dell_idrac_virtdisks() -> None:
-    assert parse_dell_idrac_virtdisks(_STRING_TABLE) == _STRING_TABLE
+    assert parse_dell_idrac_virtdisks(_STRING_TABLE) == [
+        VirtualDisk(1, "System", DiskState("2"), RaidType("4"), ComponentState("3"), 1),
+        VirtualDisk(2, "Backup", DiskState("3"), RaidType("5"), ComponentState("5"), 0),
+        VirtualDisk(3, "", DiskState("2"), RaidType("4"), ComponentState("3"), 1),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -35,7 +43,7 @@ def test_parse_dell_idrac_virtdisks() -> None:
             {"System", "Backup"},
         ),
         (
-            [["System", "2", "4", "3", "1"]],
+            [["1", "System", "2", "4", "3", "1"]],
             {
                 "System",
             },
@@ -59,7 +67,7 @@ def test_discover_dell_idrac_virtdisks(
             [
                 Result(state=State.OK, summary="Raid level: Raid-5"),
                 Result(state=State.OK, summary="Disk status: online"),
-                Result(state=State.OK, summary="Component status: OK"),
+                Result(state=State.OK, summary="Component status: ok"),
                 Result(state=State.OK, summary="Remaining redundancy: 1 physical disk(s)"),
             ],
         ),

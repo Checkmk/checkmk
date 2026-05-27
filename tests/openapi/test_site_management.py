@@ -10,6 +10,7 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.ccc import version
+from cmk.ccc.site import SiteId
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
     default_config_example as _default_config,
@@ -21,6 +22,7 @@ from cmk.gui.rest_api_types.site_connection import (
     SiteConfig,
     StatusHost,
 )
+from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.utils import paths
 from tests.testlib.rest_api_client import ClientRegistry
 
@@ -224,6 +226,19 @@ def test_delete_site_connection_problem(
 
 def test_create_site_connection(clients: ClientRegistry) -> None:
     clients.SiteManagement.create(site_config=_default_config())
+
+
+def test_create_site_connection_records_pending_change_for_new_site(
+    clients: ClientRegistry,
+) -> None:
+    config, new_site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+
+    recorded = [entry["action_name"] for entry in SiteChanges(SiteId(new_site_id)).read()]
+    assert "edit-sites" in recorded, (
+        f"Expected an 'edit-sites' pending change for the newly created site "
+        f"{new_site_id!r}, but only found: {recorded}"
+    )
 
 
 def test_create_site_connection_that_already_exists(

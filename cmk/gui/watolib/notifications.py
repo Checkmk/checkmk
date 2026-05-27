@@ -24,11 +24,12 @@ obj = NotificationRule.from_api_request(APINotificationRule)
 from __future__ import annotations
 
 import logging
+import pprint
 import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast, NotRequired, TypedDict
+from typing import Any, cast, NotRequired, override, TypedDict
 
 from cmk.ccc import store
 
@@ -47,6 +48,7 @@ from cmk.utils.notify_types import (
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.rest_api_types.notifications_rule_types import (
     APIConditions,
@@ -784,4 +786,16 @@ class NotificationParameterConfigFile(WatoSimpleConfigFile[NotificationParameter
             config_file_path=Path(wato_root_dir() + "notification_parameter.mk"),
             config_variable="notification_parameter",
             spec_class=NotificationParameterSpec,
+        )
+
+    @override
+    def _save_to_path(self, target_path: Path, cfg: dict[str, NotificationParameterSpec]) -> None:
+        # Unlike the base implementation we must not sort the dict keys so that the
+        # user-defined order of the notification parameters is preserved on disk.
+        target_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        pprint_value = active_config.wato_pprint_config
+        formatted = pprint.pformat(cfg, sort_dicts=False) if pprint_value else repr(cfg)
+        store.save_mk_file(
+            target_path,
+            f"{self._config_variable}.update({formatted})",
         )

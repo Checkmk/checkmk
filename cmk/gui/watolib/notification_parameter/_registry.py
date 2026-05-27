@@ -98,7 +98,7 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter] | Notif
                         help_text=Help(
                             "The given parameters are available in scripts as NOTIFY_PARAMETER_1, NOTIFY_PARAMETER_2, etc."
                         ),
-                        string_spec=String(),
+                        string_spec=String(field_size=FieldSize.LARGE),
                     ),
                 )
             },

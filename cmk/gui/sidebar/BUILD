@@ -19,6 +19,7 @@ py_library(
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
+        "//cmk/gui:main_navigation",
         "//cmk/gui:messaging",
         "//cmk/gui:page_toolkit",
         "//cmk/gui:werks",

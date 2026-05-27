@@ -35,6 +35,7 @@ from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
+from cmk.gui.main_navigation import MainNavigation
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
@@ -436,39 +437,36 @@ class SidebarRenderer:
         sidebar_update_interval: float,
         kiosk: bool,
     ) -> None:
-        self.render_chrome_open(
+        self.render_main_navigation_with_open_content_area(
             title=title,
-            config=config,
-            user_permissions=user_permissions,
-            sidebar_config=sidebar_config,
-            start_url=start_url,
-            screenshot_mode=screenshot_mode,
-            sidebar_notify_interval=sidebar_notify_interval,
-            show_scrollbar=show_scrollbar,
-            sidebar_update_interval=sidebar_update_interval,
-            kiosk=kiosk,
+            nav=MainNavigation(
+                config=config,
+                user_permissions=user_permissions,
+                sidebar_config=sidebar_config,
+                start_url=start_url,
+                screenshot_mode=screenshot_mode,
+                sidebar_notify_interval=sidebar_notify_interval,
+                show_scrollbar=show_scrollbar,
+                sidebar_update_interval=sidebar_update_interval,
+                kiosk=kiosk,
+            ),
         )
-        self._show_page_content(content)
-        self.render_chrome_close()
+        if content is not None:
+            html.write_html(content)
+        self.render_main_navigation_close()
 
-    def render_chrome_open(
+    def render_main_navigation_with_open_content_area(
         self,
         *,
         title: str | None,
-        config: Config,
-        user_permissions: UserPermissions,
-        sidebar_config: Sequence[tuple[str, str]],
-        start_url: str,
-        screenshot_mode: bool,
-        sidebar_notify_interval: int | None,
-        show_scrollbar: bool,
-        sidebar_update_interval: float,
-        kiosk: bool,
+        nav: MainNavigation,
     ) -> None:
-        """Render html_head, body open, and the navigation + sidebar chrome.
+        """Render html_head, body open, and the main navigation + sidebar.
 
-        Stops before opening the content area. The caller renders content and
-        then calls :meth:`render_chrome_close`.
+        Opens an empty ``#content_area`` div for the page body to render
+        into. The caller renders content and then calls
+        :meth:`render_main_navigation_close`, which closes ``#content_area``
+        and the document.
         """
         html.html_head(
             title or _("Checkmk Sidebar"),
@@ -480,34 +478,45 @@ class SidebarRenderer:
         )
 
         self._show_body_start(
-            screenshot_mode=screenshot_mode,
-            sidebar_notify_interval=sidebar_notify_interval,
-            kiosk=kiosk,
+            screenshot_mode=nav.screenshot_mode,
+            sidebar_notify_interval=nav.sidebar_notify_interval,
+            kiosk=nav.kiosk,
         )
-        if not kiosk:
+        if not nav.kiosk:
             self._show_sidebar(
-                config,
-                user_permissions,
-                sidebar_config,
-                start_url,
-                show_scrollbar=show_scrollbar,
-                sidebar_update_interval=sidebar_update_interval,
+                nav.config,
+                nav.user_permissions,
+                nav.sidebar_config,
+                nav.start_url,
+                show_scrollbar=nav.show_scrollbar,
+                sidebar_update_interval=nav.sidebar_update_interval,
             )
+        html.open_div(id_="content_area")
+        html._main_navigation_open = True
 
-    def render_chrome_close(self) -> None:
-        """Close the page started by :meth:`render_chrome_open`."""
+    def render_main_navigation_close(self) -> None:
+        """Close the page started by :meth:`render_main_navigation_open`.
+
+        ``#content_area`` is closed by :meth:`HTMLGenerator.body_end` based
+        on the ``_main_navigation_open`` flag, so pages that just call
+        :func:`html.footer` still produce balanced markup without knowing
+        the navigation is there.
+        """
         html.body_end()
 
     def _show_body_start(
         self, *, screenshot_mode: bool, sidebar_notify_interval: int | None, kiosk: bool
     ) -> None:
-        body_classes = ["side"]
+        # Chrome-bearing pages get the sidebar's ``body.side`` styling, kiosk
+        # pages (widget iframes, snapin previews embedded elsewhere) get the
+        # default ``body.main``. Both paths preserve extra body classes that
+        # the page registered via ``html.add_body_css_class`` (e.g.
+        # ``view``, ``dashlet``, ``inline``).
+        body_classes = list(html._body_classes) if kiosk else ["side", *html._body_classes[1:]]
         if screenshot_mode:
             body_classes.append("screenshotmode")
-        if kiosk:
-            body_classes.append("kiosk")
 
-        if not user.may("general.see_sidebar"):
+        if kiosk or not user.may("general.see_sidebar"):
             html.open_body(class_=body_classes, data_theme=theme.get())
             return
 
@@ -757,12 +766,6 @@ class SidebarRenderer:
             html.open_style()
             html.write_text_permissive(styles)
             html.close_style()
-
-    def _show_page_content(self, content: HTML | None) -> None:
-        html.open_div(id_="content_area")
-        if content is not None:
-            html.write_html(content)
-        html.close_div()
 
     def _show_main_menu(self, start_url: str, user_permissions: UserPermissions) -> None:
         html.vue_component(

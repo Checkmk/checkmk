@@ -232,7 +232,7 @@ function Build-MSI {
     Write-Host "Building MSI..." -ForegroundColor White
     Remove-Item "$build_dir/install/Release/check_mk_service.msi" -Force -ErrorAction SilentlyContinue
 
-    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x86" "/p:EncryptedPluginsFolder=..\..\windows\plugins"
+    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x86"
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Error building MSI, error code is $LASTEXITCODE" -ErrorAction Stop
     }
@@ -500,6 +500,7 @@ function Start-BazelSigning {
         $env:BAZELISK_BASE_URL = "https://github.com/aspect-build/aspect-cli/releases/download"
         $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
         $signed_dir = (bazel info bazel-bin 2>$null).Trim()                                                                       
+        $env:SignedPluginsFolder = $signed_dir 
         Write-Host "dir with files is $signed_dir"
         &bazel build //agents/windows/plugins:all
         if ($LASTEXITCODE -eq 0) {
@@ -690,6 +691,7 @@ $argAttached = $false
 $result = 1
 try {
     # SETTING UP
+    $env:SignedPluginsFolder = "..\..\windows\plugins" 
     $mainStartTime = Get-Date
     Invoke-Detach $argDetach
     Update-ArtefactDirs

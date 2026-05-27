@@ -36,12 +36,13 @@ function makeFetchResponse(status: number, body: unknown = null): cmkFetch.CmkFe
       if (status >= 200 && status <= 299) {
         return
       }
-      const err = new Error(
+      // Mirror production: a non-2xx response raises a CmkFetchError whose
+      // message is `"${httpStatusPhrase}: ${apiDetail}"`.
+      const message =
         typeof body === 'object' && body !== null && 'title' in body && 'detail' in body
           ? `${(body as { title: string }).title}: ${(body as { detail: string }).detail}`
           : `HTTP ${status}`
-      )
-      throw err
+      throw new cmkFetch.CmkFetchError(message, null, '', status)
     }),
     json: vi.fn().mockResolvedValue(body)
   } as unknown as cmkFetch.CmkFetchResponse
@@ -127,7 +128,8 @@ describe('POST_SAVE_ACTIONS', () => {
 
       expect(result.ok).toBe(false)
       if (!result.ok) {
-        expect(result.error.title).toBe('Bad request')
+        // The action-specific fallback is the headline; only the REST detail is kept.
+        expect(result.error.title).toBe('Could not enable the OpenTelemetry Collector')
         expect(result.error.detail).toBe('Site does not exist')
       }
     })
@@ -140,8 +142,9 @@ describe('POST_SAVE_ACTIONS', () => {
 
       expect(result.ok).toBe(false)
       if (!result.ok) {
+        // Non-CmkFetchError (network throw) surfaces no noisy detail.
         expect(result.error.title).toBe('Could not enable the OpenTelemetry Collector')
-        expect(result.error.detail).toBe('Network down')
+        expect(result.error.detail).toBe('')
       }
     })
   })
@@ -210,7 +213,7 @@ describe('POST_SAVE_ACTIONS', () => {
 
       expect(result.ok).toBe(false)
       if (!result.ok) {
-        expect(result.error.title).toBe('Bad request')
+        expect(result.error.title).toBe('Could not enable the metric backend')
         expect(result.error.detail).toBe('Site does not exist')
       }
     })
@@ -224,7 +227,7 @@ describe('POST_SAVE_ACTIONS', () => {
       expect(result.ok).toBe(false)
       if (!result.ok) {
         expect(result.error.title).toBe('Could not enable the metric backend')
-        expect(result.error.detail).toBe('Network down')
+        expect(result.error.detail).toBe('')
       }
     })
   })
@@ -439,7 +442,7 @@ describe('createOTelReceiverConfigAction', () => {
 
     expect(result.ok).toBe(false)
     if (!result.ok) {
-      expect(result.error.title).toBe('Object already exists')
+      expect(result.error.title).toBe('Could not create the OpenTelemetry Collector configuration')
       expect(result.error.detail).toBe('ID cfg1 in use')
     }
   })
@@ -459,7 +462,7 @@ describe('createOTelReceiverConfigAction', () => {
     expect(result.ok).toBe(false)
     if (!result.ok) {
       expect(result.error.title).toBe('Could not create the OpenTelemetry Collector configuration')
-      expect(result.error.detail).toBe('Network down')
+      expect(result.error.detail).toBe('')
     }
   })
 
@@ -486,6 +489,37 @@ describe('createOTelReceiverConfigAction', () => {
         'api/internal/objects/otel_collector_config_receivers/cfg1',
         'DELETE'
       )
+    }
+  })
+
+  test('rollback deletes created passwords with an If-Match header when a later action fails', async () => {
+    // Simulates the user's scenario: the receiver config (incl. passwords)
+    // succeeds, then a later step (e.g. the DCD connector) fails and the
+    // FinalizeConfiguration state machine invokes this action's rollback.
+    const spy = vi.spyOn(cmkFetch, 'fetchRestAPI').mockResolvedValue(makeFetchResponse(204))
+    vi.spyOn(configEntityAPI, 'createEntity').mockResolvedValue({
+      type: 'success',
+      entity: { ident: 'pw_id_a', description: 'My password', hide_edit: false }
+    })
+
+    const action = createOTelReceiverConfigAction({
+      id: 'cfg1',
+      siteId: 'prod',
+      grpc: { auth: { method: 'basicauth', username: 'alice', passwordId: 'pw_id_a' } },
+      http: null,
+      passwords: [makePasswordConfig('pw_id_a', 'My password')]
+    })
+    const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.rollback).toBeDefined()
+      await result.rollback!()
+      // The password DELETE must carry If-Match — the endpoint enforces ETag
+      // locking and silently rejects the delete otherwise.
+      expect(spy).toHaveBeenCalledWith('api/1.0/objects/password/pw_id_a', 'DELETE', undefined, {
+        'If-Match': '*'
+      })
     }
   })
 
@@ -555,6 +589,46 @@ describe('createOTelReceiverConfigAction', () => {
         expect(result.error.detail).toBe('Too short')
       }
       expect(fetchSpy).not.toHaveBeenCalled()
+    })
+
+    test('rolls back already-created passwords and returns an error when a later password throws', async () => {
+      const fetchSpy = vi
+        .spyOn(cmkFetch, 'fetchRestAPI')
+        .mockResolvedValue(makeFetchResponse(200, {}))
+      // First password saves; the second throws (e.g. network / 5xx, which
+      // `createEntity` surfaces as a throw rather than a `type: 'error'`).
+      vi.spyOn(configEntityAPI, 'createEntity')
+        .mockResolvedValueOnce({
+          type: 'success',
+          entity: { ident: 'pw_id_a', description: 'first', hide_edit: false }
+        })
+        .mockRejectedValueOnce(new Error('Network down'))
+
+      const action = createOTelReceiverConfigAction({
+        id: 'cfg1',
+        siteId: 'prod',
+        grpc: { auth: { method: 'basicauth', username: 'alice', passwordId: 'pw_id_a' } },
+        http: null,
+        passwords: [makePasswordConfig('pw_id_a', 'first'), makePasswordConfig('pw_id_b', 'second')]
+      })
+      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+
+      expect(result.ok).toBe(false)
+      // The first password was deleted with an If-Match header (the password
+      // endpoint enforces ETag locking); the receiver POST never ran.
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'api/1.0/objects/password/pw_id_a',
+        'DELETE',
+        undefined,
+        {
+          'If-Match': '*'
+        }
+      )
+      expect(fetchSpy).not.toHaveBeenCalledWith(
+        'api/internal/domain-types/otel_collector_config_receivers/collections/all',
+        'POST',
+        expect.anything()
+      )
     })
 
     test('runs the receiver POST normally when there are no pending passwords', async () => {
@@ -649,7 +723,7 @@ describe('createPrometheusScrapeConfigAction', () => {
 
     expect(result.ok).toBe(false)
     if (!result.ok) {
-      expect(result.error.title).toBe('Site conflict')
+      expect(result.error.title).toBe('Could not create the Prometheus scraper configuration')
       expect(result.error.detail).toBe('already configured')
     }
   })
@@ -671,7 +745,7 @@ describe('createPrometheusScrapeConfigAction', () => {
     expect(result.ok).toBe(false)
     if (!result.ok) {
       expect(result.error.title).toBe('Could not create the Prometheus scraper configuration')
-      expect(result.error.detail).toBe('Network down')
+      expect(result.error.detail).toBe('')
     }
   })
 })

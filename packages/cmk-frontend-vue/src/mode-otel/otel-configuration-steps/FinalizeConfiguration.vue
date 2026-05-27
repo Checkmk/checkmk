@@ -26,7 +26,8 @@ import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkLoading from '@/components/CmkLoading.vue'
 
-import type { PostSaveAction, PostSaveContext } from './post_save_actions.ts'
+import { errorFromUnknown } from './post_save_actions.ts'
+import type { PostSaveAction, PostSaveContext, PostSaveResult } from './post_save_actions.ts'
 
 const props = defineProps<{
   siteId: string | null
@@ -127,7 +128,14 @@ async function runActions(): Promise<boolean> {
   for (let i = 0; i < props.actions.length; i++) {
     const action = props.actions[i]!
     items.value[i]!.state = 'running'
-    const result = await action.execute(ctx)
+    // A thrown action must not bypass the rollback chain below — normalize it
+    // into an error result so the same revert logic runs.
+    let result: PostSaveResult
+    try {
+      result = await action.execute(ctx)
+    } catch (e) {
+      result = errorFromUnknown(e, action.label())
+    }
     if (result.ok) {
       if (result.rollback) {
         rollbacks.push({ fn: result.rollback, itemIndex: i })

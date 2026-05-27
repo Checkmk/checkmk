@@ -78,8 +78,8 @@ class ABCConfigDomain(abc.ABC):
     always_activate:
         this attribute is used to determine if a config domain needs to be
         activated regardless of the change type.
-        Use :func:`~cmk.gui.watolib.changes.add_change(domains=[])` to have more granular
-        control
+        Pass ``domains=[]`` to :meth:`PendingChanges.add` to have more granular
+        control.
     """
 
     needs_sync = True

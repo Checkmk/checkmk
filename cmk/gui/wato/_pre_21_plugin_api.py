@@ -7,7 +7,6 @@ import cmk.gui.plugins.wato as api_module  # astrein: disable=cmk-module-layer-v
 import cmk.gui.plugins.wato.utils as wato_utils  # astrein: disable=cmk-module-layer-violation
 import cmk.gui.valuespec
 import cmk.gui.watolib.attributes
-import cmk.gui.watolib.changes
 import cmk.gui.watolib.config_hostname
 import cmk.gui.watolib.host_attributes
 import cmk.gui.watolib.hosts_and_folders
@@ -181,8 +180,6 @@ def register() -> None:
         "SNMPCredentials",
     ):
         api_module.__dict__[name] = cmk.gui.watolib.attributes.__dict__[name]
-    for name in ("add_change",):
-        api_module.__dict__[name] = cmk.gui.watolib.changes.__dict__[name]
     for name in ("ConfigHostname",):
         api_module.__dict__[name] = cmk.gui.watolib.config_hostname.__dict__[name]
     for name in (

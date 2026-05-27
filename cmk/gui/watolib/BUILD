@@ -6,7 +6,6 @@ py_library(
     srcs = [
         "appendstore.py",
         "audit_log.py",
-        "changes.py",
         "config_domain_name.py",
         "git.py",
         "objref.py",
@@ -182,7 +181,6 @@ py_library(
             # Already in :config_infra
             "appendstore.py",
             "audit_log.py",
-            "changes.py",
             "config_domain_name.py",
             "git.py",
             "objref.py",

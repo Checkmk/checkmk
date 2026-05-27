@@ -144,7 +144,6 @@ allows = [
   "cmk.gui.config",
   "cmk.gui.user_sites",
   "cmk.gui.watolib.audit_log",
-  "cmk.gui.watolib.changes",
   "cmk.gui.watolib.pending_changes",
   "cmk.otel_collector.gui",
   "cmk.post_rename_site.internal",

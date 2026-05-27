@@ -16,7 +16,6 @@ backend business and persistence logic, which is also shared with the REST API.
 import cmk.gui.valuespec
 import cmk.gui.view_utils
 import cmk.gui.watolib.attributes
-import cmk.gui.watolib.changes
 import cmk.gui.watolib.config_domain_name
 import cmk.gui.watolib.config_domains
 import cmk.gui.watolib.config_hostname

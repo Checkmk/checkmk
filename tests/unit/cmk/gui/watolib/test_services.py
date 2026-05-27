@@ -132,11 +132,6 @@ def fixture_mock_set_autochecks(mocker: MockerFixture) -> MagicMock:
     )
 
 
-@pytest.fixture(name="mock_add_service_change")
-def mock_add_service_change(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch("cmk.gui.watolib.changes.add_service_change", return_value=None)
-
-
 @pytest.fixture(name="mock_check_transaction")
 def fixture_check_transaction() -> object:
     return patch.object(

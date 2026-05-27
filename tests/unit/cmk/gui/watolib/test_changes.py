@@ -12,15 +12,11 @@ from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
-from pytest_mock import MockerFixture
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.script_helpers import gui_context
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.audit_log import AuditLogStore, log_audit
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.utils.object_diff import make_diff_text
@@ -247,18 +243,3 @@ def test_log_audit_with_html_message() -> None:
             diff_text=None,
         ),
     ]
-
-
-def test_add_change_writes_to_store(mocker: MockerFixture) -> None:
-    append_mock = mocker.patch("cmk.gui.watolib.pending_changes.PendingChangesStore.append")
-
-    with gui_context():
-        add_change(
-            action_name="ding",
-            text="dong",
-            user_id=UserId("calvin"),
-            sites=[SiteId("a")],
-            domains=[ConfigDomainCore()],
-            use_git=False,
-        )
-        append_mock.assert_called_once()

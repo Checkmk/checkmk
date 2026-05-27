@@ -70,7 +70,13 @@ from cmk.gui.watolib.check_mk_automations import (
     analyze_host_rule_matches,
     analyze_service_rule_matches,
 )
+from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    PendingChanges,
+)
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.rulesets.internal.form_specs import (
     ListOfStrings as ListOfStringsAPI,
@@ -129,9 +135,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
 from cmk.utils.tags import AuxTag, TagGroup, TagGroupID, TagID
 from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
 
-from .changes import add_change
 from .check_mk_automations import get_services_labels, update_merged_password_file
-from .config_domains import ConfigDomainCore
 from .hosts_and_folders import (
     Folder,
     folder_preserving_link,
@@ -819,26 +823,31 @@ class Ruleset:
         self._rules_by_id[rule.id] = rule
         self._on_change()
 
-    def clone_rule(self, orig_rule: Rule, rule: Rule, *, use_git: bool) -> None:
+    def clone_rule(self, orig_rule: Rule, rule: Rule, *, pending_changes: PendingChanges) -> None:
         if rule.folder == orig_rule.folder:
             self.insert_rule_after(rule, orig_rule)
         else:
             self.append_rule(rule.folder, rule)
 
-        add_change(
-            action_name="new-rule",
-            text=_l('Cloned rule from rule %s in rule set "%s" in folder "%s"')
-            % (orig_rule.id, self.title(), rule.folder.alias_path()),
-            user_id=user.id,
-            sites=rule.folder.all_site_ids(),
-            diff_text=self.diff_rules(None, rule),
-            object_ref=rule.object_ref(),
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="new-rule",
+                text=_l('Cloned rule from rule %s in rule set "%s" in folder "%s"')
+                % (orig_rule.id, self.title(), rule.folder.alias_path()),
+                object_ref=rule.object_ref(),
+                diff_text=self.diff_rules(None, rule),
+                domains=[CORE],
+            ),
+            ChangeScope.sites(rule.folder.all_site_ids()),
         )
 
     def move_to_folder(
-        self, rule: Rule, folder: Folder, index: int = BOTTOM, *, use_git: bool
+        self,
+        rule: Rule,
+        folder: Folder,
+        index: int = BOTTOM,
+        *,
+        pending_changes: PendingChanges,
     ) -> None:
         source_folder = rule.folder
         if source_folder == folder:
@@ -846,7 +855,7 @@ class Ruleset:
             # BOTTOM is a sentinel (-1) that get_index_for_move doesn't handle, so resolve it here
             if index == Ruleset.BOTTOM:
                 index = len(self._rules.get(folder.path(), [])) - 1
-            self.move_rule_to(rule, index=index, use_git=use_git)
+            self.move_rule_to(rule, index=index, pending_changes=pending_changes)
             return
 
         source_rules = self._rules[source_folder.path()]
@@ -865,17 +874,17 @@ class Ruleset:
         affected_sites = set(source_folder.all_site_ids())
         affected_sites.update(folder.all_site_ids())
 
-        add_change(
-            action_name="edit-rule",
-            text=_l(
-                'Moved rule %s of rule set "%s" from folder "%s" to position #%d in folder "%s"'
-            )
-            % (rule.id, self.title(), source_folder.title(), index, folder.title()),
-            user_id=user.id,
-            sites=list(affected_sites),
-            object_ref=rule.object_ref(),
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="edit-rule",
+                text=_l(
+                    'Moved rule %s of rule set "%s" from folder "%s" to position #%d in folder "%s"'
+                )
+                % (rule.id, self.title(), source_folder.title(), index, folder.title()),
+                object_ref=rule.object_ref(),
+                domains=[CORE],
+            ),
+            ChangeScope.sites(list(affected_sites)),
         )
         self._on_change()
 
@@ -891,17 +900,19 @@ class Ruleset:
         self._on_change()
         return index
 
-    def add_new_rule_change(self, index: int, folder: Folder, rule: Rule, *, use_git: bool) -> None:
-        add_change(
-            action_name="new-rule",
-            text=_('Created new rule #%d in rule set "%s" in folder "%s"')
-            % (index, self.title(), folder.alias_path()),
-            user_id=user.id,
-            sites=folder.all_site_ids(),
-            diff_text=self.diff_rules(None, rule),
-            object_ref=rule.object_ref(),
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+    def add_new_rule_change(
+        self, index: int, folder: Folder, rule: Rule, *, pending_changes: PendingChanges
+    ) -> None:
+        pending_changes.add(
+            Change(
+                action_name="new-rule",
+                text=_('Created new rule #%d in rule set "%s" in folder "%s"')
+                % (index, self.title(), folder.alias_path()),
+                object_ref=rule.object_ref(),
+                diff_text=self.diff_rules(None, rule),
+                domains=[CORE],
+            ),
+            ChangeScope.sites(folder.all_site_ids()),
         )
 
     def insert_rule_after(self, rule: Rule, after: Rule) -> None:
@@ -1075,26 +1086,28 @@ class Ruleset:
             return make_diff_text({}, new.to_log())
         return old.diff_to(new)
 
-    def edit_rule(self, orig_rule: Rule, rule: Rule, *, use_git: bool) -> None:
+    def edit_rule(self, orig_rule: Rule, rule: Rule, *, pending_changes: PendingChanges) -> None:
         folder_rules = self._rules[orig_rule.folder.path()]
         index = folder_rules.index(orig_rule)
 
         folder_rules[index] = rule
 
-        add_change(
-            action_name="edit-rule",
-            text=_l('Changed properties of rule #%d in rule set "%s" in folder "%s"')
-            % (index, self.title(), rule.folder.alias_path()),
-            user_id=user.id,
-            sites=rule.folder.all_site_ids(),
-            diff_text=self.diff_rules(orig_rule, rule),
-            object_ref=rule.object_ref(),
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="edit-rule",
+                text=_l('Changed properties of rule #%d in rule set "%s" in folder "%s"')
+                % (index, self.title(), rule.folder.alias_path()),
+                object_ref=rule.object_ref(),
+                diff_text=self.diff_rules(orig_rule, rule),
+                domains=[CORE],
+            ),
+            ChangeScope.sites(rule.folder.all_site_ids()),
         )
         self._on_change()
 
-    def delete_rule(self, rule: Rule, *, create_change: bool, use_git: bool) -> None:
+    def delete_rule(
+        self, rule: Rule, *, create_change: bool, pending_changes: PendingChanges
+    ) -> None:
         folder_rules = self._rules[rule.folder.path()]
         index = folder_rules.index(rule)
 
@@ -1102,19 +1115,19 @@ class Ruleset:
         del self._rules_by_id[rule.id]
 
         if create_change:
-            add_change(
-                action_name="edit-rule",
-                text=_l('Deleted rule #%d in rule set "%s" in folder "%s"')
-                % (index, self.title(), rule.folder.alias_path()),
-                user_id=user.id,
-                sites=rule.folder.all_site_ids(),
-                object_ref=rule.object_ref(),
-                domains=[ConfigDomainCore()],
-                use_git=use_git,
+            pending_changes.add(
+                Change(
+                    action_name="edit-rule",
+                    text=_l('Deleted rule #%d in rule set "%s" in folder "%s"')
+                    % (index, self.title(), rule.folder.alias_path()),
+                    object_ref=rule.object_ref(),
+                    domains=[CORE],
+                ),
+                ChangeScope.sites(rule.folder.all_site_ids()),
             )
         self._on_change()
 
-    def move_rule_to(self, rule: Rule, *, index: int, use_git: bool) -> int:
+    def move_rule_to(self, rule: Rule, *, index: int, pending_changes: PendingChanges) -> int:
         rules = self._rules[rule.folder.path()]
         old_index = rules.index(rule)
         index = self.get_index_for_move(rule.folder, rule, index)
@@ -1123,15 +1136,15 @@ class Ruleset:
 
         rules.remove(rule)
         rules.insert(index, rule)
-        add_change(
-            action_name="edit-ruleset",
-            text=_l('Moved rule %s from position #%d to #%d in rule set "%s" in folder "%s"')
-            % (rule.id, old_index, index, self.title(), rule.folder.alias_path()),
-            user_id=user.id,
-            sites=rule.folder.all_site_ids(),
-            object_ref=self.object_ref(),
-            domains=[ConfigDomainCore()],
-            use_git=use_git,
+        pending_changes.add(
+            Change(
+                action_name="edit-ruleset",
+                text=_l('Moved rule %s from position #%d to #%d in rule set "%s" in folder "%s"')
+                % (rule.id, old_index, index, self.title(), rule.folder.alias_path()),
+                object_ref=self.object_ref(),
+                domains=[CORE],
+            ),
+            ChangeScope.sites(rule.folder.all_site_ids()),
         )
         return index
 
@@ -1784,7 +1797,7 @@ class EnabledDisabledServicesEditor:
         automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         self._save_service_enable_disable_rules(
             to_enable,
@@ -1792,7 +1805,7 @@ class EnabledDisabledServicesEditor:
             automation_config=automation_config,
             pprint_value=pprint_value,
             debug=debug,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
         self._save_service_enable_disable_rules(
             to_disable,
@@ -1800,7 +1813,7 @@ class EnabledDisabledServicesEditor:
             automation_config=automation_config,
             pprint_value=pprint_value,
             debug=debug,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
 
     def _save_service_enable_disable_rules(
@@ -1811,7 +1824,7 @@ class EnabledDisabledServicesEditor:
         automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         """
         Load all disabled services rules from the folder, then check whether or not there is a
@@ -1837,7 +1850,7 @@ class EnabledDisabledServicesEditor:
 
         service_patterns = [service_description_to_condition(s) for s in services]
         modified_folders += self._remove_from_rule_of_host(
-            ruleset, service_patterns, value=not value, use_git=use_git
+            ruleset, service_patterns, value=not value, pending_changes=pending_changes
         )
 
         # Check whether or not the service still needs a host specific setting after removing
@@ -1872,7 +1885,7 @@ class EnabledDisabledServicesEditor:
         service_patterns: Sequence[HostOrServiceConditionRegex],
         value: Any,
         *,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> list[Folder]:
         other_rule = self._get_rule_of_host(ruleset, value)
         if other_rule and isinstance(other_rule.conditions.service_description, list):
@@ -1881,7 +1894,7 @@ class EnabledDisabledServicesEditor:
                     other_rule.conditions.service_description.remove(service_condition)
 
             if not other_rule.conditions.service_description:
-                ruleset.delete_rule(other_rule, create_change=True, use_git=use_git)
+                ruleset.delete_rule(other_rule, create_change=True, pending_changes=pending_changes)
 
             return [other_rule.folder]
 

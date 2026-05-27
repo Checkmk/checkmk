@@ -36,6 +36,7 @@ from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionSpec, PredefinedConditionStore
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, RuleConditions, UseHostFolder
 from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
@@ -300,7 +301,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
         *,
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         # In case it already existed before, remember the previous path
         old_entries = self._store.load_for_reading()
@@ -308,7 +309,9 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
         if self._ident in old_entries:
             old_path = self._store.load_for_reading()[self._ident]["conditions"]["host_folder"]
 
-        super()._save(entries, pprint_value=pprint_value, debug=debug, use_git=use_git)
+        super()._save(
+            entries, pprint_value=pprint_value, debug=debug, pending_changes=pending_changes
+        )
 
         assert self._ident is not None
         conditions = RuleConditions.from_config("", entries[self._ident]["conditions"])
@@ -316,7 +319,11 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
         # Update rules of source folder in case the folder was changed
         if old_path is not None and old_path != conditions.host_folder:
             self._move_rules_for_conditions(
-                conditions, old_path, pprint_value=pprint_value, debug=debug, use_git=use_git
+                conditions,
+                old_path,
+                pprint_value=pprint_value,
+                debug=debug,
+                pending_changes=pending_changes,
             )
 
         self._rewrite_rules_for(conditions, pprint_value=pprint_value, debug=debug)
@@ -328,7 +335,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
         *,
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         """Apply changed folder of predefined condition to rules"""
         tree = folder_tree()
@@ -341,7 +348,9 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
         for old_ruleset in old_rulesets.get_rulesets().values():
             for rule in old_ruleset.get_folder_rules(old_folder):
                 if rule.predefined_condition_id() == self._ident:
-                    old_ruleset.delete_rule(rule, create_change=True, use_git=use_git)
+                    old_ruleset.delete_rule(
+                        rule, create_change=True, pending_changes=pending_changes
+                    )
 
                     new_ruleset = new_rulesets.get(old_ruleset.name)
                     new_ruleset.append_rule(new_folder, rule)

@@ -130,7 +130,11 @@ def save_configuration_entity(
             )
         case ConfigEntityType.rule_form_spec:
             rule_form_spec_descr = save_rule_form_spec_from_slidein_schema(
-                entity_type_specifier, RawFrontendData(data), tree, user
+                entity_type_specifier,
+                RawFrontendData(data),
+                tree,
+                user,
+                pending_changes=pending_changes,
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(rule_form_spec_descr.ident),

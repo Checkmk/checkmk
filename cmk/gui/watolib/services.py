@@ -303,7 +303,7 @@ class Discovery:
                     automation_config=automation_config,
                     pprint_value=pprint_value,
                     debug=debug,
-                    use_git=use_git,
+                    pending_changes=pending_changes,
                 )
 
         with tracer.span("save_services"):
@@ -411,7 +411,7 @@ class Discovery:
         automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         pprint_value: bool,
         debug: bool,
-        use_git: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         EnabledDisabledServicesEditor(self._host).save_host_service_enable_disable_rules(
             remove_disabled_rule,
@@ -419,7 +419,7 @@ class Discovery:
             automation_config=automation_config,
             pprint_value=pprint_value,
             debug=debug,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
 
     def _verify_permissions(self, table_target: str, entry: CheckPreviewEntry) -> None:

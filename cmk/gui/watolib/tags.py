@@ -17,6 +17,7 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, RuleConditions, Ruleset
 from cmk.gui.watolib.tag_config_file import (
     load_all_tag_config_read_only as load_all_tag_config_read_only,
@@ -115,7 +116,7 @@ def edit_tag_group(
     allow_repair: bool,
     pprint_value: bool,
     debug: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     """Update attributes of a tag group & update the relevant positions which used the relevant tag group
 
@@ -139,7 +140,11 @@ def edit_tag_group(
     tag_config.validate_config()
     operation = OperationReplaceGroupedTags(ident, tag_ids_to_remove, tag_ids_to_replace)
     affected = change_host_tags(
-        operation, TagCleanupMode.CHECK, pprint_value=pprint_value, debug=debug, use_git=use_git
+        operation,
+        TagCleanupMode.CHECK,
+        pprint_value=pprint_value,
+        debug=debug,
+        pending_changes=pending_changes,
     )
     if any(affected):
         if not allow_repair:
@@ -149,7 +154,7 @@ def edit_tag_group(
             TagCleanupMode("repair"),
             pprint_value=pprint_value,
             debug=debug,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
     update_tag_config(tag_config, pprint_value)
 
@@ -260,7 +265,7 @@ def change_host_tags(
     *,
     pprint_value: bool,
     debug: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> tuple[list[Folder], list[Host], list[Ruleset]]:
     affected_folder, affected_hosts = _change_host_tags_in_folders(
         operation, mode, folder_tree().root_folder(), pprint_value=pprint_value
@@ -271,7 +276,7 @@ def change_host_tags(
         mode,
         pprint_value=pprint_value,
         debug=debug,
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
     return affected_folder, affected_hosts, affected_rulesets
 
@@ -287,14 +292,16 @@ def _change_host_tags_in_rulesets(
     *,
     pprint_value: bool,
     debug: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> list[Ruleset]:
     affected_rulesets = set()
     all_rulesets = _get_all_rulesets()
     for ruleset in all_rulesets.get_rulesets().values():
         for _folder, _rulenr, rule in ruleset.get_rules():
             affected_rulesets.update(
-                _change_host_tags_in_rule(operation, mode, ruleset, rule, use_git=use_git)
+                _change_host_tags_in_rule(
+                    operation, mode, ruleset, rule, pending_changes=pending_changes
+                )
             )
 
     if mode != TagCleanupMode.CHECK:
@@ -412,7 +419,7 @@ def _change_host_tags_in_rule(
     ruleset: Ruleset,
     rule: Rule,
     *,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> set[Ruleset]:
     affected_rulesets: set[Ruleset] = set()
     if operation.tag_group_id not in rule.conditions.host_tags:
@@ -432,7 +439,7 @@ def _change_host_tags_in_rule(
             ) is not None and list(condition)[0] in ["$ne", "$nor"]:
                 _remove_tag_group_condition(rule, operation.tag_group_id)
             else:
-                ruleset.delete_rule(rule, create_change=True, use_git=use_git)
+                ruleset.delete_rule(rule, create_change=True, pending_changes=pending_changes)
         elif mode == TagCleanupMode.REMOVE:
             _remove_tag_group_condition(rule, operation.tag_group_id)
 
@@ -488,7 +495,7 @@ def _change_host_tags_in_rule(
         elif mode == TagCleanupMode.DELETE and (
             not isinstance(current_value, dict) and list(current_value)[0] not in ["$ne", "$nor"]
         ):
-            ruleset.delete_rule(rule, create_change=True, use_git=use_git)
+            ruleset.delete_rule(rule, create_change=True, pending_changes=pending_changes)
 
     return affected_rulesets
 

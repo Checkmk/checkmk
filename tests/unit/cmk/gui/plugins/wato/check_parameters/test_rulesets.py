@@ -506,7 +506,6 @@ def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Fol
         entities=CreateBundleEntities(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
-        use_git=False,
         debug=False,
         pending_changes=PendingChanges(
             activation_sites=activation_sites(active_config.sites),
@@ -635,7 +634,7 @@ def test_ruleset_ordering_move_to(
 ) -> None:
     ruleset, folder, rule = _setup_rules(rule_a_locked, rule_b_locked)
     ruleset.append_rule(folder, rule)
-    ruleset.move_rule_to(rule, index=0, use_git=False)
+    ruleset.move_rule_to(rule, index=0, pending_changes=_noop_pending_changes())
     assert ruleset.get_folder_rules(folder)[expected_index] == rule
 
 

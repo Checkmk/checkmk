@@ -12,6 +12,7 @@ import dataclasses
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.ccc.site import omd_site
 from cmk.gui import exceptions, http
 from cmk.gui.config import active_config
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
@@ -35,11 +36,18 @@ from cmk.gui.openapi.utils import (
     RestAPIRequestDataValidationException,
     serve_json,
 )
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.utils.misc import gen_id
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
     FolderRulesets,
@@ -174,7 +182,7 @@ def move_rule_to(param: Mapping[str, Any]) -> http.Response:
 
     dest_folder.permissions.need_permission("write")
     source_entry.ruleset.move_to_folder(
-        source_entry.rule, dest_folder, index, use_git=active_config.wato_use_git
+        source_entry.rule, dest_folder, index, pending_changes=_pending_changes()
     )
     all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 
@@ -219,7 +227,7 @@ def create_rule(param):
 
     index = ruleset.append_rule(folder, rule)
     rulesets.save_folder(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
-    ruleset.add_new_rule_change(index, folder, rule, use_git=active_config.wato_use_git)
+    ruleset.add_new_rule_change(index, folder, rule, pending_changes=_pending_changes())
     rule_entry = _get_rule_by_id(rule.id)
     return serve_json(_serialize_rule(rule_entry))
 
@@ -339,7 +347,7 @@ def delete_rule(param):
                         title="Rule is managed by Quick setup",
                         detail="Rules managed by Quick setup cannot be deleted.",
                     )
-                ruleset.delete_rule(rule, create_change=True, use_git=active_config.wato_use_git)
+                ruleset.delete_rule(rule, create_change=True, pending_changes=_pending_changes())
                 all_rulesets.save(
                     pprint_value=active_config.wato_pprint_config, debug=active_config.debug
                 )
@@ -405,7 +413,7 @@ def edit_rule(param):
             detail="Conditions cannot be modified for rules managed by Quick setup.",
         )
 
-    ruleset.edit_rule(current_rule, new_rule, use_git=active_config.wato_use_git)
+    ruleset.edit_rule(current_rule, new_rule, pending_changes=_pending_changes())
     rulesets.save_folder(
         folder, pprint_value=active_config.wato_pprint_config, debug=active_config.debug
     )
@@ -585,6 +593,19 @@ def _serialize_rule(rule_entry: RuleEntry) -> DomainObject:
                 }
             ),
         },
+    )
+
+
+def _pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(active_config.sites),
+        local_site=omd_site(),
+        acting_user=user.id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=active_config.wato_use_git),
+            index_update_change_hook,
+        ),
     )
 
 

@@ -830,13 +830,18 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
             entries,
             pprint_value=config.wato_pprint_config,
             debug=config.debug,
-            use_git=config.wato_use_git,
+            pending_changes=pending_changes,
         )
 
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
     def _save(
-        self, entries: dict[str, T], *, pprint_value: bool, debug: bool, use_git: bool
+        self,
+        entries: dict[str, T],
+        *,
+        pprint_value: bool,
+        debug: bool,
+        pending_changes: PendingChanges,
     ) -> None:
         self._store.save(entries, pprint_value=pprint_value)
 

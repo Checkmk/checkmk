@@ -97,7 +97,6 @@ def test_create_config_bundle_empty(with_admin_login: UserId) -> None:
         CreateBundleEntities(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
-        use_git=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
@@ -117,7 +116,6 @@ def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
         CreateBundleEntities(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
-        use_git=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
@@ -129,7 +127,6 @@ def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
             CreateBundleEntities(),
             user_permissions=UserPermissions({}, {}, {}, []),
             pprint_value=False,
-            use_git=False,
             debug=False,
             pending_changes=_pending_changes(with_admin_login),
         )
@@ -144,7 +141,6 @@ def test_delete_config_bundle_empty(with_admin_login: UserId) -> None:
         CreateBundleEntities(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
-        use_git=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
@@ -152,7 +148,6 @@ def test_delete_config_bundle_empty(with_admin_login: UserId) -> None:
         bundle_id,
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
-        use_git=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
@@ -165,7 +160,6 @@ def test_delete_config_bundle_unknown_id() -> None:
             BundleId("unknown"),
             user_permissions=UserPermissions({}, {}, {}, []),
             pprint_value=False,
-            use_git=False,
             debug=False,
             pending_changes=_pending_changes(UserId("harry")),
         )
@@ -221,7 +215,6 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
         CreateBundleEntities(hosts=hosts),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
-        use_git=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
@@ -236,7 +229,6 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
         bundle_id,
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
-        use_git=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
@@ -269,7 +261,6 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
         CreateBundleEntities(passwords=passwords),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
-        use_git=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
@@ -283,7 +274,6 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
         bundle_id,
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
-        use_git=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
@@ -375,7 +365,6 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
                 ),
                 user_permissions=user_permissions,
                 pprint_value=False,
-                use_git=False,
                 debug=False,
                 pending_changes=_pending_changes(user_id),
             )
@@ -394,7 +383,6 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
                 bundle_id,
                 user_permissions=user_permissions,
                 pprint_value=False,
-                use_git=False,
                 debug=False,
                 pending_changes=_pending_changes(user_id),
             )
@@ -448,7 +436,6 @@ def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_log
         CreateBundleEntities(rules=rules),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
-        use_git=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )
@@ -462,7 +449,6 @@ def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_log
         bundle_id,
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
-        use_git=False,
         debug=False,
         pending_changes=_pending_changes(with_admin_login),
     )

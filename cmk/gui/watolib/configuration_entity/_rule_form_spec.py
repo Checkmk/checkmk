@@ -21,6 +21,7 @@ from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.watolib.hosts_and_folders import FolderTree
+from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.rulesets import (
     create_rule_catalog,
     FolderRulesets,
@@ -90,7 +91,12 @@ class RuleFormSpecDescription:
 
 
 def save_rule_form_spec_from_slidein_schema(
-    name: str, data: RawFrontendData, tree: FolderTree, user: LoggedInUser
+    name: str,
+    data: RawFrontendData,
+    tree: FolderTree,
+    user: LoggedInUser,
+    *,
+    pending_changes: PendingChanges,
 ) -> RuleFormSpecDescription:
     _check_edit_permissions(name, user)
 
@@ -139,7 +145,7 @@ def save_rule_form_spec_from_slidein_schema(
         pprint_value=active_config.wato_pprint_config,
         debug=active_config.debug,
     )
-    ruleset.add_new_rule_change(index, folder, rule, use_git=active_config.wato_use_git)
+    ruleset.add_new_rule_change(index, folder, rule, pending_changes=pending_changes)
 
     return RuleFormSpecDescription(ident=name, description=rule_spec.title or "")
 

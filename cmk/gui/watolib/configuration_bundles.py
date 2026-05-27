@@ -276,7 +276,6 @@ def _validate_and_prepare_create_calls(
     entities: CreateBundleEntities,
     *,
     pprint_value: bool,
-    use_git: bool,
     debug: bool,
     pending_changes: PendingChanges,
 ) -> list[CreateFunction]:
@@ -307,7 +306,7 @@ def _validate_and_prepare_create_calls(
                 entities.rules,
                 pprint_value=pprint_value,
                 debug=debug,
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
         )
     if entities.dcd_connections:
@@ -329,7 +328,6 @@ def create_config_bundle(
     *,
     user_permissions: UserPermissions,
     pprint_value: bool,
-    use_git: bool,
     debug: bool,
     pending_changes: PendingChanges,
 ) -> None:
@@ -346,7 +344,6 @@ def create_config_bundle(
             bundle_ident,
             entities,
             pprint_value=pprint_value,
-            use_git=use_git,
             debug=debug,
             pending_changes=pending_changes,
         )
@@ -365,7 +362,6 @@ def create_config_bundle(
             bundle_id,
             user_permissions=user_permissions,
             pprint_value=pprint_value,
-            use_git=use_git,
             debug=debug,
             pending_changes=pending_changes,
         )
@@ -411,7 +407,6 @@ def delete_config_bundle(
     *,
     user_permissions: UserPermissions,
     pprint_value: bool,
-    use_git: bool,
     debug: bool,
     pending_changes: PendingChanges,
 ) -> None:
@@ -430,7 +425,6 @@ def delete_config_bundle(
     delete_config_bundle_objects(
         references,
         pprint_value=pprint_value,
-        use_git=use_git,
         debug=debug,
         pending_changes=pending_changes,
     )
@@ -483,13 +477,17 @@ def delete_config_bundle_objects(
     references: BundleReferences,
     *,
     pprint_value: bool,
-    use_git: bool,
     debug: bool,
     pending_changes: PendingChanges,
 ) -> None:
     # delete resources in inverse order to create, as rules may reference hosts for example
     if references.rules:
-        _delete_rules(references.rules, pprint_value=pprint_value, debug=debug, use_git=use_git)
+        _delete_rules(
+            references.rules,
+            pprint_value=pprint_value,
+            debug=debug,
+            pending_changes=pending_changes,
+        )
     if references.hosts:
         _delete_hosts(
             references.hosts,
@@ -705,7 +703,7 @@ def _prepare_create_rules(
     *,
     pprint_value: bool,
     debug: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> CreateFunction:
     validated_data = []
     # sort by folder, then ruleset
@@ -734,14 +732,20 @@ def _prepare_create_rules(
         for f, rulesets, new_rules in validated_data:
             for rule in new_rules:
                 index = rule.ruleset.append_rule(f, rule)
-                rule.ruleset.add_new_rule_change(index, f, rule, use_git=use_git)
+                rule.ruleset.add_new_rule_change(index, f, rule, pending_changes=pending_changes)
 
             rulesets.save_folder(pprint_value=pprint_value, debug=debug)
 
     return create
 
 
-def _delete_rules(rules: Iterable[Rule], *, pprint_value: bool, debug: bool, use_git: bool) -> None:
+def _delete_rules(
+    rules: Iterable[Rule],
+    *,
+    pprint_value: bool,
+    debug: bool,
+    pending_changes: PendingChanges,
+) -> None:
     folder_getter = itemgetter(0)
     sorted_rules = sorted(((rule.folder, rule) for rule in rules), key=folder_getter)
     for folder, rule_iter in groupby(sorted_rules, key=folder_getter):  # type: Folder, Iterable[tuple[Folder, Rule]]
@@ -751,7 +755,7 @@ def _delete_rules(rules: Iterable[Rule], *, pprint_value: bool, debug: bool, use
             ruleset = rulesets.get(rule.ruleset.name)
             actual_rule = ruleset.get_rule_by_id(rule.id)
             rulesets.get(rule.ruleset.name).delete_rule(
-                actual_rule, create_change=True, use_git=use_git
+                actual_rule, create_change=True, pending_changes=pending_changes
             )
 
         rulesets.save_folder(pprint_value=pprint_value, debug=debug)

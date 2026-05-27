@@ -559,7 +559,6 @@ def fixture_locked_rule_id() -> Iterable[str]:
         entities=CreateBundleEntities(),
         user_permissions=UserPermissions({}, {}, {}, []),
         pprint_value=False,
-        use_git=False,
         debug=False,
         pending_changes=PendingChanges(
             activation_sites=activation_sites(active_config.sites),

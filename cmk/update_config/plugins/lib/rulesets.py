@@ -14,6 +14,7 @@ from typing import Final
 from cmk.ccc import debug
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
     FolderPath,
@@ -67,7 +68,7 @@ SKIP_PREACTION: Final = SKIP_ACTION | {
 def load_and_transform(
     logger: Logger,
     *,
-    use_git: bool,
+    pending_changes: PendingChanges,
     use_new_descriptions_for: Mapping[str, bool],
 ) -> AllRulesets:
     all_rulesets = AllRulesets.load_all_rulesets()
@@ -104,7 +105,7 @@ def load_and_transform(
         logger,
         all_rulesets,
         raise_errors=debug.enabled(),
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
     return all_rulesets
 
@@ -309,7 +310,7 @@ def transform_remove_null_host_tag_conditions_from_rulesets(
     all_rulesets: RulesetCollection,
     *,
     raise_errors: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> Collection[RulesetName]:
     migrated_rulesets = set()
     for ruleset in all_rulesets.get_rulesets().values():
@@ -334,7 +335,7 @@ def transform_remove_null_host_tag_conditions_from_rulesets(
                 new_rule = old_rule.clone(preserve_id=True)
                 new_rule.update_conditions(new_rule_conditions)
 
-                ruleset.edit_rule(old_rule, new_rule, use_git=use_git)
+                ruleset.edit_rule(old_rule, new_rule, pending_changes=pending_changes)
                 migrated_rulesets.add(ruleset.name)
             except Exception as e:
                 if raise_errors:

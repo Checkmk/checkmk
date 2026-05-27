@@ -9,14 +9,23 @@ from typing import override
 import cmk.utils.paths as utils_paths
 from cmk.base import config as base_config
 from cmk.base.app import make_app
+from cmk.ccc.site import omd_site
 from cmk.ccc.version import edition
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.user_sites import activation_sites
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.update_config.lib import ExpiryVersion, format_warning
 from cmk.update_config.plugins.lib.rulesets import load_and_transform, SKIP_ACTION
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -30,9 +39,20 @@ class UpdateRulesets(UpdateAction):
             get_builtin_host_labels=make_app(omd_edition).get_builtin_host_labels,
             edition=omd_edition,
         )
+        pending_changes = PendingChanges(
+            activation_sites=activation_sites(active_config.sites),
+            local_site=omd_site(),
+            acting_user=None,
+            store=PendingChangesStore(),
+            hooks=(
+                make_audit_log_change_hook(use_git=active_config.wato_use_git),
+                sidebar_reload_change_hook,
+                index_update_change_hook,
+            ),
+        )
         all_rulesets = load_and_transform(
             logger,
-            use_git=active_config.wato_use_git,
+            pending_changes=pending_changes,
             use_new_descriptions_for=loading_result.loaded_config.use_new_descriptions_for,
         )
         validate_rule_values(logger, all_rulesets)

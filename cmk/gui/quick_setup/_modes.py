@@ -314,7 +314,6 @@ class ModeEditConfigurationBundles(WatoMode):
             bundle_id,
             user_permissions=user_permissions,
             pprint_value=pprint_value,
-            use_git=use_git,
             debug=debug,
             pending_changes=pending_changes,
         )
@@ -930,7 +929,6 @@ class ModeConfigurationBundle(WatoMode):
             delete_config_bundle_objects(
                 references,
                 pprint_value=config.wato_pprint_config,
-                use_git=config.wato_use_git,
                 debug=config.debug,
                 pending_changes=PendingChanges(
                     activation_sites=activation_sites(config.sites),

@@ -368,7 +368,6 @@ def _create_and_save_special_agent_bundle(
         ),
         user_permissions=user_permissions,
         pprint_value=active_config.wato_pprint_config,
-        use_git=active_config.wato_use_git,
         debug=active_config.debug,
         pending_changes=pending_changes,
     )
@@ -402,7 +401,6 @@ def _create_and_save_special_agent_bundle(
                 BundleId(bundle_id),
                 user_permissions=user_permissions,
                 pprint_value=active_config.wato_pprint_config,
-                use_git=active_config.wato_use_git,
                 debug=active_config.debug,
                 pending_changes=pending_changes,
             )

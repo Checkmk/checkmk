@@ -11,6 +11,8 @@ from collections.abc import Iterator
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -23,7 +25,6 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.livestatus_client import (
     SiteConfiguration,
-    SiteConfigurations,
 )
 from cmk.utils.redis import disable_redis
 
@@ -175,13 +176,7 @@ def test_rename_host(
                 is_trusted=False,
             )
         },
-        pending_changes=PendingChanges(
-            activation_sites=SiteConfigurations({}),
-            local_site=SiteId("NO_SITE"),
-            acting_user=None,
-            store=NoopPendingChangesStore(),
-            hooks=(),
-        ),
+        pending_changes=_noop_pending_changes(),
         pprint_value=False,
         use_git=False,
         debug=False,

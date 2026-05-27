@@ -20,7 +20,9 @@ from typing import Any
 
 from cmk import fields
 from cmk.ccc.regex import REGEX_ID
-from cmk.gui.config import active_config
+from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.user import UserId
+from cmk.gui.config import active_config, Config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.host_tag_group.request_schemas import (
@@ -36,7 +38,14 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.tags import (
     change_host_tags,
     edit_tag_group,
@@ -190,7 +199,9 @@ def update_host_tag_group(params: Mapping[str, Any]) -> Response:
             allow_repair=body["repair"],
             pprint_value=active_config.wato_pprint_config,
             debug=active_config.debug,
-            use_git=active_config.wato_use_git,
+            pending_changes=_pending_changes(
+                config=active_config, local_site=omd_site(), acting_user=user.id
+            ),
         )
     except RepairError:
         return problem(
@@ -232,12 +243,15 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
             detail=f"The built-in host tag group {ident} cannot be deleted",
         )
 
+    pending_changes = _pending_changes(
+        config=active_config, local_site=omd_site(), acting_user=user.id
+    )
     affected = change_host_tags(
         OperationRemoveTagGroup(ident),
         TagCleanupMode.CHECK,
         pprint_value=active_config.wato_pprint_config,
         debug=active_config.debug,
-        use_git=active_config.wato_use_git,
+        pending_changes=pending_changes,
     )
     if any(affected):
         mode = TagCleanupMode(params["mode"] or ("delete" if params["repair"] else "abort"))
@@ -271,7 +285,7 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
             mode,
             pprint_value=active_config.wato_pprint_config,
             debug=active_config.debug,
-            use_git=active_config.wato_use_git,
+            pending_changes=pending_changes,
         )
 
     tag_config = load_tag_config()
@@ -317,6 +331,24 @@ def serialize_host_tag_group(details: TagGroupSpec) -> DomainObject:
             )
         },
         extensions=extensions,
+    )
+
+
+def _pending_changes(
+    *,
+    config: Config,
+    local_site: SiteId,
+    acting_user: UserId | None,
+) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(config.sites),
+        local_site=local_site,
+        acting_user=acting_user,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=config.wato_use_git),
+            index_update_change_hook,
+        ),
     )
 
 

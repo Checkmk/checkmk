@@ -10,8 +10,13 @@ from typing import Any
 
 import pytest
 
+from livestatus import SiteConfigurations
+
+from cmk.ccc.site import omd_site
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.valuespec import Dictionary, Float, Migrate
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.rulesets import Rule, RuleConditions, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import Rulespec
@@ -207,8 +212,15 @@ def test_transform_remove_null_host_tag_conditions_from_rulesets(
     expected_keys_before = {"a", "b", "c", "d", "e", "f", "g", "h"}
     expected_keys_after = {"a", "b", "c", "d"}
 
+    pending_changes = PendingChanges(
+        activation_sites=activation_sites(SiteConfigurations({})),
+        local_site=omd_site(),
+        acting_user=None,
+        store=NoopPendingChangesStore(),
+        hooks=(),
+    )
     assert ruleset.get_rules()[0][2].get_rule_conditions().host_tags.keys() == expected_keys_before
     rulesets_updater.transform_remove_null_host_tag_conditions_from_rulesets(
-        getLogger(), rulesets, raise_errors=False, use_git=False
+        getLogger(), rulesets, raise_errors=False, pending_changes=pending_changes
     )
     assert ruleset.get_rules()[0][2].get_rule_conditions().host_tags.keys() == expected_keys_after

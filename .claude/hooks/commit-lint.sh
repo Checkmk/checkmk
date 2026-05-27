@@ -78,7 +78,7 @@ if [[ ${#PY_FILES[@]} -gt 0 ]]; then
     done
     mapfile -t PKG_LABELS < <(printf '%s\n' "${PKG_LABELS[@]}" | sort -u)
     joined=$(
-        IFS=" + "
+        IFS="+"
         echo "${PKG_LABELS[*]}"
     )
     ALL_SRCS=$(bazel query "labels(srcs, ${joined})" 2>/dev/null || true)

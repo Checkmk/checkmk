@@ -19995,6 +19995,10 @@ msgstr "Definiți atribuirea gazdei"
 msgid "Define levels for pending pods"
 msgstr "Definirea nivelurilor pentru podurile în așteptare"
 
+#, fuzzy
+msgid "Define levels for pod count per phase"
+msgstr "Definirea nivelurilor pentru podurile în așteptare"
+
 #, python-format
 msgid "Define levels on the %s detection rate."
 msgstr "Definiți nivelurile privind rata de detectare %s."
@@ -28919,6 +28923,10 @@ msgid "From: email address"
 msgstr "De la: adresa de e-mail"
 
 #, fuzzy
+msgid "Front matter template"
+msgstr "Acesta este un șablon de față"
+
+#, fuzzy
 msgid "Front-end port"
 msgstr "Portul Frontend"
 
@@ -37247,6 +37255,10 @@ msgid "Inherit from report time range (reporting only)"
 msgstr ""
 "Moștenire din intervalul de timp al raportului (numai pentru raportare)"
 
+#, fuzzy
+msgid "Inherit settings from"
+msgstr "Moștenit din "
+
 msgid "Inherited from "
 msgstr "Moștenit din "
 
@@ -40427,10 +40439,6 @@ msgid "Levels on Web ACL requests"
 msgstr "Niveluri privind solicitările Web ACL"
 
 #, fuzzy
-msgid "Levels on absolute time offset"
-msgstr "Niveluri pe decalaj de timp"
-
-#, fuzzy
 msgid "Levels on age of oldest message"
 msgstr "Vârsta celui mai vechi mesaj"
 
@@ -40858,9 +40866,6 @@ msgstr ""
 
 msgid "Limit the number of rows"
 msgstr "Limitarea numărului de rânduri"
-
-msgid "Limit the number of rows in View tables"
-msgstr "Limitarea numărului de rânduri în tabelele Vizualizare"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "Limitarea numărului de rânduri afișate în tabele"
@@ -46345,12 +46350,19 @@ msgstr "Clienți NTLS"
 msgid "NTLS Links"
 msgstr "Legături NTLS"
 
+msgid "NTP Time Sync"
+msgstr ""
+
 msgid "NTP discovery"
 msgstr "Descoperirea NTP"
 
 #, fuzzy
 msgid "NTP or timesyncd time synchronization"
 msgstr "Sincronizarea timpului NTP sau timesyncd"
+
+#, fuzzy
+msgid "NTP time offset"
+msgstr "Decalaj de timp"
 
 #, fuzzy
 msgid "NTP time synchronization"
@@ -46893,6 +46905,10 @@ msgstr ""
 msgid "NetApp LUNs"
 msgstr "LUN-uri NetApp"
 
+#, fuzzy
+msgid "NetApp NTP time offset"
+msgstr "Netapp systemtime"
+
 msgid "NetApp Qtree discovery"
 msgstr "Descoperirea Qtree de la NetApp"
 
@@ -46929,10 +46945,6 @@ msgstr "Descoperirea portului Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Descoperirea unității de alimentare Netapp"
-
-#, fuzzy
-msgid "Netapp system time offset"
-msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Masca de rețea"
@@ -59574,6 +59586,10 @@ msgstr "Router care trebuie sau nu trebuie utilizat"
 
 msgid "Routes"
 msgstr "Rute"
+
+#, fuzzy
+msgid "Row limit in view tables"
+msgstr "Afișați în tabelul de utilizator"
 
 msgid "Rows"
 msgstr "Rânduri"
@@ -76203,9 +76219,6 @@ msgstr ""
 "depășesc numărul de controale imediat programate. Notă: întârzierea maximă "
 "este de cinci ori mai mare decât intervalul normal de verificare"
 
-msgid "This is a front matter Template"
-msgstr "Acesta este un șablon de față"
-
 msgid "This is a notification test"
 msgstr "Acesta este un test de notificare"
 
@@ -76912,8 +76925,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias, name "
-"or port number as item."
+"This option makes Checkmk use either the interface description, alias or "
+"port number as item."
 msgstr ""
 "Această opțiune face ca checkmk să utilizeze fie descrierea interfeței, fie "
 "aliasul sau numărul portului ca element."
@@ -85928,6 +85941,10 @@ msgstr "Nivelurile superioare pentru avertismentele întâlnite"
 msgid "Upper levels for errors"
 msgstr "Niveluri superioare pentru erori"
 
+#, fuzzy
+msgid "Upper levels for failed pod count"
+msgstr "Niveluri superioare pentru \"fetch failed\" pe secundă"
+
 msgid "Upper levels for first output item"
 msgstr "Nivelurile superioare pentru primul element de ieșire"
 
@@ -85999,6 +86016,10 @@ msgid "Upper levels for open network sockets"
 msgstr "Niveluri superioare pentru prize de rețea deschise"
 
 msgid "Upper levels for pending activations"
+msgstr "Niveluri superioare pentru activările în așteptare"
+
+#, fuzzy
+msgid "Upper levels for pending pod count"
 msgstr "Niveluri superioare pentru activările în așteptare"
 
 msgid ""
@@ -86739,10 +86760,6 @@ msgstr ""
 msgid "Use mount point"
 msgstr "Utilizați punctul de montare"
 
-#, fuzzy
-msgid "Use name"
-msgstr "Numele utilizatorului"
-
 msgid "Use narrow rendering for this number"
 msgstr "Utilizați o redare îngustă pentru acest număr"
 
@@ -86815,9 +86832,6 @@ msgstr ""
 
 msgid "Use sensor description"
 msgstr "Utilizați descrierea senzorului"
-
-msgid "Use settings and page layout from"
-msgstr "Utilizați setările și aspectul paginii din"
 
 msgid "Use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
 msgstr ""
@@ -90197,8 +90211,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, "
-"alias, name or port number."
+"group, this option makes Checkmk use either the interface description, alias "
+"or port number."
 msgstr ""
 "Atunci când enumeră membrii grupului în rezultatul serviciului care "
 "monitorizează grupul, această opțiune face ca checkmk să utilizeze fie "
@@ -90416,6 +90430,11 @@ msgstr ""
 "cererea de conectare să fie pusă în coadă înainte de a fi procesată. Această "
 "setare definește numărul de conexiuni neacceptate care trebuie să fie puse "
 "în coadă înainte de a refuza noi conexiuni."
+
+msgid ""
+"When the NTP offset reported by the selected peer was worse (in either "
+"direction) than the specified parameters, go into WARN or CRIT status."
+msgstr ""
 
 msgid ""
 "When the Setup module of the Event Console saves rules to the file "
@@ -98598,10 +98617,6 @@ msgid "Engineering scientific"
 msgstr ""
 
 #, fuzzy
-msgid "Symbol is required"
-msgstr "este necesară"
-
-#, fuzzy
 msgid "Digits must be a non-negative number"
 msgstr "Data trebuie să fie o valoare numerică"
 
@@ -99696,9 +99711,16 @@ msgid "Could not save the OpenTelemetry configuration"
 msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
 
 #, fuzzy
+msgid "Rolling back saved changes..."
+msgstr "Nu s-a schimbat nimic."
+
+#, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 "Nume de utilizator sau parolă incorectă. Vă rugăm să încercați din nou."
+
+msgid "Any changes that were already saved have been reverted."
+msgstr ""
 
 msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
@@ -100840,6 +100862,24 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Levels on absolute time offset"
+#~ msgstr "Niveluri pe decalaj de timp"
+
+#~ msgid "Limit the number of rows in View tables"
+#~ msgstr "Limitarea numărului de rânduri în tabelele Vizualizare"
+
+#, fuzzy
+#~ msgid "Use name"
+#~ msgstr "Numele utilizatorului"
+
+#~ msgid "Use settings and page layout from"
+#~ msgstr "Utilizați setările și aspectul paginii din"
+
+#, fuzzy
+#~ msgid "Symbol is required"
+#~ msgstr "este necesară"
 
 #, fuzzy
 #~ msgid "newly created"

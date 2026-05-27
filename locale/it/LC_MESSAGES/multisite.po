@@ -19715,6 +19715,10 @@ msgstr "Definire l'assegnazione dell'host"
 msgid "Define levels for pending pods"
 msgstr "Definire i livelli per i pod in attesa"
 
+#, fuzzy
+msgid "Define levels for pod count per phase"
+msgstr "Definire i livelli per i pod in attesa"
+
 #, python-format
 msgid "Define levels on the %s detection rate."
 msgstr "Definire i livelli sul tasso di rilevamento %s."
@@ -28608,6 +28612,10 @@ msgid "From: email address"
 msgstr "Da: indirizzo e-mail"
 
 #, fuzzy
+msgid "Front matter template"
+msgstr "Questo è un modello frontale"
+
+#, fuzzy
 msgid "Front-end port"
 msgstr "Porta di front-end"
 
@@ -36910,6 +36918,10 @@ msgstr "Caduta dei pacchetti in ingresso"
 msgid "Inherit from report time range (reporting only)"
 msgstr "Eredita dall'intervallo di tempo del rapporto (solo per i rapporti)"
 
+#, fuzzy
+msgid "Inherit settings from"
+msgstr "Ereditato da "
+
 msgid "Inherited from "
 msgstr "Ereditato da "
 
@@ -40077,10 +40089,6 @@ msgid "Levels on Web ACL requests"
 msgstr "Livelli su richieste Web ACL"
 
 #, fuzzy
-msgid "Levels on absolute time offset"
-msgstr "Livelli a tempo compensato"
-
-#, fuzzy
 msgid "Levels on age of oldest message"
 msgstr "Età del messaggio più vecchio"
 
@@ -40508,9 +40516,6 @@ msgstr ""
 
 msgid "Limit the number of rows"
 msgstr "Limitare il numero di righe"
-
-msgid "Limit the number of rows in View tables"
-msgstr "Limitare il numero di righe nelle tabelle View"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "Limitare il numero di righe mostrate nelle tabelle"
@@ -45985,12 +45990,19 @@ msgstr "Clienti NTLS"
 msgid "NTLS Links"
 msgstr "Link NTLS"
 
+msgid "NTP Time Sync"
+msgstr ""
+
 msgid "NTP discovery"
 msgstr "Scoperta NTP"
 
 #, fuzzy
 msgid "NTP or timesyncd time synchronization"
 msgstr "Sincronizzazione temporale NTP o timesyncd"
+
+#, fuzzy
+msgid "NTP time offset"
+msgstr "Sfasamento temporale"
 
 #, fuzzy
 msgid "NTP time synchronization"
@@ -46528,6 +46540,10 @@ msgstr ""
 msgid "NetApp LUNs"
 msgstr "LUN di NetApp"
 
+#, fuzzy
+msgid "NetApp NTP time offset"
+msgstr "Netapp systemtime"
+
 msgid "NetApp Qtree discovery"
 msgstr "Scoperta di NetApp Qtree"
 
@@ -46564,10 +46580,6 @@ msgstr "Scoperta della porta Netapp"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Scoperta dell'alimentatore Netapp"
-
-#, fuzzy
-msgid "Netapp system time offset"
-msgstr "Netapp systemtime"
 
 msgid "Netmask"
 msgstr "Netmask"
@@ -59172,6 +59184,10 @@ msgstr "Router che deve o non deve essere usato"
 
 msgid "Routes"
 msgstr "Rotte"
+
+#, fuzzy
+msgid "Row limit in view tables"
+msgstr "Mostra nella tabella degli utenti"
 
 msgid "Rows"
 msgstr "Righe"
@@ -75726,9 +75742,6 @@ msgstr ""
 "Check_MK che vanno oltre il numero di controlli immediatamente programmati. "
 "Nota: il ritardo massimo è cinque volte l'intervallo di controllo normale."
 
-msgid "This is a front matter Template"
-msgstr "Questo è un modello frontale"
-
 msgid "This is a notification test"
 msgstr "Si tratta di un test di notifica"
 
@@ -76412,8 +76425,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias, name "
-"or port number as item."
+"This option makes Checkmk use either the interface description, alias or "
+"port number as item."
 msgstr ""
 "Questa opzione fa sì che checkmk usi la descrizione dell'interfaccia, "
 "l'alias o il numero di porta come elemento."
@@ -85404,6 +85417,10 @@ msgstr "Livelli superiori per gli avvisi incontrati"
 msgid "Upper levels for errors"
 msgstr "Livelli superiori per gli errori"
 
+#, fuzzy
+msgid "Upper levels for failed pod count"
+msgstr "Livelli superiori per \"fetch fallito\" al secondo"
+
 msgid "Upper levels for first output item"
 msgstr "Livelli superiori per il primo elemento di uscita"
 
@@ -85472,6 +85489,10 @@ msgid "Upper levels for open network sockets"
 msgstr "Livelli superiori per le prese di rete aperte"
 
 msgid "Upper levels for pending activations"
+msgstr "Livelli superiori per le attivazioni in sospeso"
+
+#, fuzzy
+msgid "Upper levels for pending pod count"
 msgstr "Livelli superiori per le attivazioni in sospeso"
 
 msgid ""
@@ -86202,10 +86223,6 @@ msgstr "Utilizzare i livelli più critici del tuo e del dispositivo"
 msgid "Use mount point"
 msgstr "Utilizzare il punto di montaggio"
 
-#, fuzzy
-msgid "Use name"
-msgstr "Nome utente"
-
 msgid "Use narrow rendering for this number"
 msgstr "Utilizzare un rendering stretto per questo numero"
 
@@ -86278,9 +86295,6 @@ msgstr ""
 
 msgid "Use sensor description"
 msgstr "Utilizzare la descrizione del sensore"
-
-msgid "Use settings and page layout from"
-msgstr "Utilizzare le impostazioni e il layout di pagina da"
 
 msgid "Use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
 msgstr ""
@@ -89647,8 +89661,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, "
-"alias, name or port number."
+"group, this option makes Checkmk use either the interface description, alias "
+"or port number."
 msgstr ""
 "Quando si elencano i membri del gruppo nell'output del servizio che "
 "controlla il gruppo, questa opzione fa sì che checkmk usi la descrizione "
@@ -89864,6 +89878,11 @@ msgstr ""
 "prima di essere elaborata. Questa impostazione definisce il numero di "
 "connessioni non accettate da mettere in coda prima di rifiutare nuove "
 "connessioni."
+
+msgid ""
+"When the NTP offset reported by the selected peer was worse (in either "
+"direction) than the specified parameters, go into WARN or CRIT status."
+msgstr ""
 
 msgid ""
 "When the Setup module of the Event Console saves rules to the file "
@@ -98037,10 +98056,6 @@ msgid "Engineering scientific"
 msgstr ""
 
 #, fuzzy
-msgid "Symbol is required"
-msgstr "è necessario"
-
-#, fuzzy
 msgid "Digits must be a non-negative number"
 msgstr "La data deve essere un valore numerico"
 
@@ -99130,8 +99145,15 @@ msgid "Could not save the OpenTelemetry configuration"
 msgstr "Aggiungere, modificare ed eliminare configurazioni OpenTelemetry."
 
 #, fuzzy
+msgid "Rolling back saved changes..."
+msgstr "Non è stato cambiato nulla."
+
+#, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "Credenziali errate. Ritenta per favore."
+
+msgid "Any changes that were already saved have been reverted."
+msgstr ""
 
 msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
@@ -100270,6 +100292,24 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Levels on absolute time offset"
+#~ msgstr "Livelli a tempo compensato"
+
+#~ msgid "Limit the number of rows in View tables"
+#~ msgstr "Limitare il numero di righe nelle tabelle View"
+
+#, fuzzy
+#~ msgid "Use name"
+#~ msgstr "Nome utente"
+
+#~ msgid "Use settings and page layout from"
+#~ msgstr "Utilizzare le impostazioni e il layout di pagina da"
+
+#, fuzzy
+#~ msgid "Symbol is required"
+#~ msgstr "è necessario"
 
 #, fuzzy
 #~ msgid "newly created"

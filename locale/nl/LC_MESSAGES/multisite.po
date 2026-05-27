@@ -19956,6 +19956,10 @@ msgstr "Host toewijzing definiëren"
 msgid "Define levels for pending pods"
 msgstr "Definieer niveaus voor in afwachting van pods"
 
+#, fuzzy
+msgid "Define levels for pod count per phase"
+msgstr "Definieer niveaus voor in afwachting van pods"
+
 #, python-format
 msgid "Define levels on the %s detection rate."
 msgstr "Definieer niveaus op de %s detectiegraad."
@@ -28828,6 +28832,10 @@ msgid "From: email address"
 msgstr "Van: e-mail adres"
 
 #, fuzzy
+msgid "Front matter template"
+msgstr "Dit is een voorpagina Template"
+
+#, fuzzy
 msgid "Front-end port"
 msgstr "Frontend poort"
 
@@ -37111,6 +37119,10 @@ msgstr "Daling van het binnenkomende pakket"
 msgid "Inherit from report time range (reporting only)"
 msgstr "Erven van rapportagetijdbereik (alleen rapportage)"
 
+#, fuzzy
+msgid "Inherit settings from"
+msgstr "Geërfd van "
+
 msgid "Inherited from "
 msgstr "Geërfd van "
 
@@ -40307,10 +40319,6 @@ msgid "Levels on Web ACL requests"
 msgstr "Niveaus op Web ACL verzoeken"
 
 #, fuzzy
-msgid "Levels on absolute time offset"
-msgstr "Niveaus op tijdsverschil"
-
-#, fuzzy
 msgid "Levels on age of oldest message"
 msgstr "Leeftijd van oudste bericht"
 
@@ -40743,9 +40751,6 @@ msgstr ""
 
 msgid "Limit the number of rows"
 msgstr "Beperk het aantal rijen"
-
-msgid "Limit the number of rows in View tables"
-msgstr "Het aantal rijen in View-tabellen beperken"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "Het aantal rijen in tabellen beperken"
@@ -46217,12 +46222,19 @@ msgstr "NTLS-cliënten"
 msgid "NTLS Links"
 msgstr "NTLS Links"
 
+msgid "NTP Time Sync"
+msgstr ""
+
 msgid "NTP discovery"
 msgstr "NTP ontdekking"
 
 #, fuzzy
 msgid "NTP or timesyncd time synchronization"
 msgstr "NTP of timesyncd tijdsynchronisatie"
+
+#, fuzzy
+msgid "NTP time offset"
+msgstr "Tijd offset"
 
 #, fuzzy
 msgid "NTP time synchronization"
@@ -46756,6 +46768,10 @@ msgstr "NetApp Filers: Gebruikte ruimte in bestandssysteem met 32-bits tellers"
 msgid "NetApp LUNs"
 msgstr "NetApp LUN's"
 
+#, fuzzy
+msgid "NetApp NTP time offset"
+msgstr "Netapp systeemtijd"
+
 msgid "NetApp Qtree discovery"
 msgstr "NetApp Qtree ontdekking"
 
@@ -46793,10 +46809,6 @@ msgstr "Netapp poort ontdekking"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Netapp voedingseenheid ontdekking"
-
-#, fuzzy
-msgid "Netapp system time offset"
-msgstr "Netapp systeemtijd"
 
 msgid "Netmask"
 msgstr "Netmask"
@@ -59438,6 +59450,10 @@ msgstr "Router die wel of niet gebruikt moet worden"
 
 msgid "Routes"
 msgstr "Routes"
+
+#, fuzzy
+msgid "Row limit in view tables"
+msgstr "Toon in gebruikerstabel"
 
 msgid "Rows"
 msgstr "Rijen"
@@ -75935,9 +75951,6 @@ msgstr ""
 "die verder gaan dan het aantal onmiddellijk geplande controles. Opmerking: "
 "de maximale vertraging is vijf keer het normale controle-interval"
 
-msgid "This is a front matter Template"
-msgstr "Dit is een voorpagina Template"
-
 #, fuzzy
 msgid "This is a notification test"
 msgstr "Definitieve kennisgeving resultaat"
@@ -76628,8 +76641,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias, name "
-"or port number as item."
+"This option makes Checkmk use either the interface description, alias or "
+"port number as item."
 msgstr ""
 "Deze optie zorgt ervoor dat checkmk ofwel de interface beschrijving, alias "
 "of poortnummer gebruikt als item."
@@ -85650,6 +85663,10 @@ msgstr "Bovenste niveaus voor aangetroffen waarschuwingen"
 msgid "Upper levels for errors"
 msgstr "Bovenste niveaus voor fouten"
 
+#, fuzzy
+msgid "Upper levels for failed pod count"
+msgstr "Bovenste niveaus voor \"fetch mislukt\" per seconde"
+
 msgid "Upper levels for first output item"
 msgstr "Bovenste niveaus voor eerste uitgangsitem"
 
@@ -85720,6 +85737,10 @@ msgid "Upper levels for open network sockets"
 msgstr "Bovenste niveaus voor open netwerk sockets"
 
 msgid "Upper levels for pending activations"
+msgstr "Bovenste niveaus voor hangende activeringen"
+
+#, fuzzy
+msgid "Upper levels for pending pod count"
 msgstr "Bovenste niveaus voor hangende activeringen"
 
 msgid ""
@@ -86460,10 +86481,6 @@ msgstr "Gebruik de meest kritische van uw en apparaat niveaus"
 msgid "Use mount point"
 msgstr "Gebruik mountpoint"
 
-#, fuzzy
-msgid "Use name"
-msgstr "Naam gebruiker"
-
 msgid "Use narrow rendering for this number"
 msgstr "Gebruik smalle weergave voor dit nummer"
 
@@ -86535,9 +86552,6 @@ msgstr ""
 
 msgid "Use sensor description"
 msgstr "Gebruik sensorbeschrijving"
-
-msgid "Use settings and page layout from"
-msgstr "Gebruik de instellingen en paginaopmaak van"
 
 msgid "Use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
 msgstr ""
@@ -89902,8 +89916,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, "
-"alias, name or port number."
+"group, this option makes Checkmk use either the interface description, alias "
+"or port number."
 msgstr ""
 "Bij het opsommen van de groepsleden in de uitvoer van de dienst die de groep "
 "bewaakt, zorgt deze optie ervoor dat checkmk ofwel de interfacebeschrijving, "
@@ -90122,6 +90136,11 @@ msgstr ""
 "wordt geplaatst voordat het wordt verwerkt. Deze instelling bepaalt het "
 "aantal niet-geaccepteerde verbindingen dat in de wachtrij wordt geplaatst "
 "voordat nieuwe verbindingen worden geweigerd."
+
+msgid ""
+"When the NTP offset reported by the selected peer was worse (in either "
+"direction) than the specified parameters, go into WARN or CRIT status."
+msgstr ""
 
 msgid ""
 "When the Setup module of the Event Console saves rules to the file "
@@ -98280,10 +98299,6 @@ msgid "Engineering scientific"
 msgstr ""
 
 #, fuzzy
-msgid "Symbol is required"
-msgstr "is vereist"
-
-#, fuzzy
 msgid "Digits must be a non-negative number"
 msgstr "Datum moet een getalswaarde zijn"
 
@@ -99373,8 +99388,15 @@ msgid "Could not save the OpenTelemetry configuration"
 msgstr "InfluxDB verbindingen toevoegen, bewerken en verwijderen."
 
 #, fuzzy
+msgid "Rolling back saved changes..."
+msgstr "Er is niets veranderd."
+
+#, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "Er is een uitzondering opgetreden: %s"
+
+msgid "Any changes that were already saved have been reverted."
+msgstr ""
 
 msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
@@ -100509,6 +100531,24 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Levels on absolute time offset"
+#~ msgstr "Niveaus op tijdsverschil"
+
+#~ msgid "Limit the number of rows in View tables"
+#~ msgstr "Het aantal rijen in View-tabellen beperken"
+
+#, fuzzy
+#~ msgid "Use name"
+#~ msgstr "Naam gebruiker"
+
+#~ msgid "Use settings and page layout from"
+#~ msgstr "Gebruik de instellingen en paginaopmaak van"
+
+#, fuzzy
+#~ msgid "Symbol is required"
+#~ msgstr "is vereist"
 
 #, fuzzy
 #~ msgid "newly created"

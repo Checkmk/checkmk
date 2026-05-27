@@ -19066,6 +19066,10 @@ msgstr "ホスト割り当ての定義"
 msgid "Define levels for pending pods"
 msgstr "保留中のPodレベルを定義する"
 
+#, fuzzy
+msgid "Define levels for pod count per phase"
+msgstr "保留中のPodレベルを定義する"
+
 #, python-format
 msgid "Define levels on the %s detection rate."
 msgstr "%s 検出率でレベルを定義する。"
@@ -27521,6 +27525,10 @@ msgid "From: email address"
 msgstr "差出人:メールアドレス"
 
 #, fuzzy
+msgid "Front matter template"
+msgstr "これはフロントマターテンプレートです"
+
+#, fuzzy
 msgid "Front-end port"
 msgstr "フロントエンド ポート"
 
@@ -35244,6 +35252,10 @@ msgstr "Ingressパケットドロップ"
 msgid "Inherit from report time range (reporting only)"
 msgstr "レポートの時間範囲から継承(レポートのみ)"
 
+#, fuzzy
+msgid "Inherit settings from"
+msgstr "から継承 "
+
 msgid "Inherited from "
 msgstr "から継承 "
 
@@ -38269,9 +38281,6 @@ msgstr "IO待ち時間のレベル(UNIXのみ)"
 msgid "Levels on Web ACL requests"
 msgstr "WebACL要求のレベル"
 
-msgid "Levels on absolute time offset"
-msgstr "絶対時間オフセットに基づくレベル"
-
 #, fuzzy
 msgid "Levels on age of oldest message"
 msgstr "最も古いメッセージの経過時間"
@@ -38684,9 +38693,6 @@ msgstr ""
 
 msgid "Limit the number of rows"
 msgstr "行数を制限する"
-
-msgid "Limit the number of rows in View tables"
-msgstr "ビューテーブルの行数を制限する"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "表に表示される行数を制限する"
@@ -43930,12 +43936,19 @@ msgstr "NTLSクライアント"
 msgid "NTLS Links"
 msgstr "NTLSリンク"
 
+msgid "NTP Time Sync"
+msgstr ""
+
 msgid "NTP discovery"
 msgstr "NTPディスカバリー"
 
 #, fuzzy
 msgid "NTP or timesyncd time synchronization"
 msgstr "NTPまたはtimesyncd時刻同期"
+
+#, fuzzy
+msgid "NTP time offset"
+msgstr "タイムオフセット"
 
 msgid "NTP time synchronization"
 msgstr "NTP時刻同期"
@@ -44458,6 +44471,10 @@ msgstr ""
 msgid "NetApp LUNs"
 msgstr "NetApp LUN"
 
+#, fuzzy
+msgid "NetApp NTP time offset"
+msgstr "NetAppシステム時刻のオフセット"
+
 msgid "NetApp Qtree discovery"
 msgstr "NetApp Qtreeの検出"
 
@@ -44493,9 +44510,6 @@ msgstr "Netappポートの検出"
 
 msgid "Netapp power supply unit discovery"
 msgstr "Netapp電源ユニットの発見"
-
-msgid "Netapp system time offset"
-msgstr "NetAppシステム時刻のオフセット"
 
 msgid "Netmask"
 msgstr "ネットマスク"
@@ -56357,6 +56371,10 @@ msgstr "使用する必要がある、または使用してはならないルー
 
 msgid "Routes"
 msgstr "ルート"
+
+#, fuzzy
+msgid "Row limit in view tables"
+msgstr "ユーザーテーブルに表示"
 
 msgid "Rows"
 msgstr "行"
@@ -72207,9 +72225,6 @@ msgstr ""
 "の新しいアクティブチェックに適用されます。注意：最大遅延は、通常のチェック間"
 "隔の5倍です"
 
-msgid "This is a front matter Template"
-msgstr "これはフロントマターテンプレートです"
-
 msgid "This is a notification test"
 msgstr "これは通知テストです"
 
@@ -72869,8 +72884,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias, name "
-"or port number as item."
+"This option makes Checkmk use either the interface description, alias or "
+"port number as item."
 msgstr ""
 "このオプションにより、checkmkはインターフェースの説明、エイリアス、またはポー"
 "ト番号のいずれかをアイテムとして使用します。"
@@ -81120,6 +81135,10 @@ msgstr "発生した警告の上位レベル"
 msgid "Upper levels for errors"
 msgstr "エラーの上位レベル"
 
+#, fuzzy
+msgid "Upper levels for failed pod count"
+msgstr "1秒あたりの\"フェッチに失敗しました\"の上位レベル"
+
 msgid "Upper levels for first output item"
 msgstr "最初の出力項目の上位レベル"
 
@@ -81184,6 +81203,10 @@ msgid "Upper levels for open network sockets"
 msgstr "オープンネットワークソケットの上位レベル"
 
 msgid "Upper levels for pending activations"
+msgstr "保留中のアクティベーションの上位レベル"
+
+#, fuzzy
+msgid "Upper levels for pending pod count"
 msgstr "保留中のアクティベーションの上位レベル"
 
 msgid ""
@@ -81877,10 +81900,6 @@ msgstr "あなたとデバイスのレベルの中で最も重要なものを使
 msgid "Use mount point"
 msgstr "マウントポイントを使用する"
 
-#, fuzzy
-msgid "Use name"
-msgstr "ユーザー名"
-
 msgid "Use narrow rendering for this number"
 msgstr "この数値にはナローレンダリングを使用する"
 
@@ -81945,9 +81964,6 @@ msgstr "プロセス環境からのプロキシ設定を使用する。デフォ
 
 msgid "Use sensor description"
 msgstr "センサーの説明を使用する"
-
-msgid "Use settings and page layout from"
-msgstr "設定とページレイアウトを使用する"
 
 msgid "Use short interface names (i.e. Gi0/0 for GigabitEthernet0/0)"
 msgstr ""
@@ -85039,8 +85055,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, "
-"alias, name or port number."
+"group, this option makes Checkmk use either the interface description, alias "
+"or port number."
 msgstr ""
 "グループを監視するサービスの出力にグループメンバーをリストアップするとき、こ"
 "のオプションはcheckmkにインターフェイスの説明、エイリアス、またはポート番号の"
@@ -85239,6 +85255,11 @@ msgstr ""
 "トに関する情報を取得するためにイベントデーモンのソケットに接続すると、その接"
 "続要求は処理される前にキューに入れられる場合があります。この設定は、新しい接"
 "続を拒否する前にキューに入れられる、受け入れられない接続の数を定義します。"
+
+msgid ""
+"When the NTP offset reported by the selected peer was worse (in either "
+"direction) than the specified parameters, go into WARN or CRIT status."
+msgstr ""
 
 msgid ""
 "When the Setup module of the Event Console saves rules to the file "
@@ -93145,10 +93166,6 @@ msgid "Engineering scientific"
 msgstr "科学的エンジニアリング"
 
 #, fuzzy
-msgid "Symbol is required"
-msgstr "必須"
-
-#, fuzzy
 msgid "Digits must be a non-negative number"
 msgstr "日付は数値である必要があります"
 
@@ -94233,8 +94250,15 @@ msgid "Could not save the OpenTelemetry configuration"
 msgstr "OpenTelemetry 設定の追加、編集、削除。"
 
 #, fuzzy
+msgid "Rolling back saved changes..."
+msgstr "何も変更されていません。"
+
+#, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "ユーザー名またはパスワードが間違っています。もう一度お試しください。"
+
+msgid "Any changes that were already saved have been reverted."
+msgstr ""
 
 msgid "Basic auth (user: %{user}, password title: %{password})"
 msgstr ""
@@ -95390,6 +95414,23 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Levels on absolute time offset"
+#~ msgstr "絶対時間オフセットに基づくレベル"
+
+#~ msgid "Limit the number of rows in View tables"
+#~ msgstr "ビューテーブルの行数を制限する"
+
+#, fuzzy
+#~ msgid "Use name"
+#~ msgstr "ユーザー名"
+
+#~ msgid "Use settings and page layout from"
+#~ msgstr "設定とページレイアウトを使用する"
+
+#, fuzzy
+#~ msgid "Symbol is required"
+#~ msgstr "必須"
 
 #, fuzzy
 #~ msgid "newly created"

@@ -2,7 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+from collections.abc import Sequence
+from dataclasses import dataclass
+from enum import Enum
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -34,86 +36,152 @@ from cmk.plugins.dell.lib import DETECT_IDRAC_POWEREDGE
 # .1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1.55.2 Disk 1 in Backplane 1 of Integrated RAID Controller 1 --> IDRAC-MIB::physicalDiskDisplayName.2
 
 
-def discover_dell_idrac_disks(section: StringTable) -> DiscoveryResult:
+class DiskState(Enum):
+    UNKNOWN = "1"
+    READY = "2"
+    ONLINE = "3"
+    FOREIGN = "4"
+    OFFLINE = "5"
+    BLOCKED = "6"
+    FAILED = "7"
+    NON_RAID = "8"
+    REMOVED = "9"
+    READ_ONLY = "10"
+
+    @property
+    def label(self) -> str:
+        return self.name.lower().replace("_", "-")
+
+    @property
+    def state(self) -> State:
+        match self:
+            case (
+                DiskState.READY
+                | DiskState.ONLINE
+                | DiskState.NON_RAID
+                | DiskState.REMOVED
+                | DiskState.READ_ONLY
+            ):
+                return State.OK
+            case DiskState.UNKNOWN | DiskState.FOREIGN:
+                return State.WARN
+            case _:
+                return State.CRIT
+
+
+class SpareState(Enum):
+    NOT_A_SPARE = "1"
+    DEDICATED_HOT_SPARE = "2"
+    GLOBAL_HOT_SPARE = "3"
+
+    @property
+    def label(self) -> str:
+        return self.name.lower().replace("_", " ")
+
+
+class ComponentState(Enum):
+    OTHER = "1"
+    UNKNOWN = "2"
+    OK = "3"
+    NON_CRITICAL = "4"
+    CRITICAL = "5"
+    NON_RECOVERABLE = "6"
+
+    @property
+    def label(self) -> str:
+        return self.name.lower().replace("_", "-")
+
+    @property
+    def state(self) -> State:
+        match self:
+            case ComponentState.OTHER | ComponentState.OK | ComponentState.NON_CRITICAL:
+                return State.OK
+            case ComponentState.UNKNOWN | ComponentState.NON_RECOVERABLE:
+                return State.WARN
+            case _:
+                return State.CRIT
+
+
+class OperationState(Enum):
+    NOT_APPLICABLE = "1"
+    REBUILD = "2"
+    CLEAR = "3"
+    COPYBACK = "4"
+
+    @property
+    def label(self) -> str:
+        return self.name.lower().replace("_", "-")
+
+    @property
+    def state(self) -> State:
+        if self is OperationState.NOT_APPLICABLE:
+            return State.OK
+        return State.WARN
+
+
+@dataclass
+class Disk:
+    index: int  # .1
+    name: str  # .2
+    disk_state: DiskState  # .4
+    capacity_MB: int  # .11
+    spare_state: SpareState  # .22
+    component_state: ComponentState  # .24
+    smart_alert: bool  # .31
+    operation_state: OperationState  # .50
+    display_name: str  # .55
+
+
+def discover_dell_idrac_disks(section: Sequence[Disk]) -> DiscoveryResult:
     for line in section:
         # FYI: The disk name in line[0] is allowed to be empty, but the item argument of Service is not.
         # Instead of backporting a refactor, problematic entries are skipped.
-        if not line[0]:
+        if not line.name:
             continue
-        yield Service(item=line[0])
+        yield Service(item=line.name)
 
 
-def check_dell_idrac_disks(item: str, section: StringTable) -> CheckResult:
-    map_states = {
-        "disk_states": {
-            "1": (State.WARN, "unknown"),
-            "2": (State.OK, "ready"),
-            "3": (State.OK, "online"),
-            "4": (State.WARN, "foreign"),
-            "5": (State.CRIT, "offline"),
-            "6": (State.CRIT, "blocked"),
-            "7": (State.CRIT, "failed"),
-            "8": (State.OK, "non-raid"),
-            "9": (State.OK, "removed"),
-        },
-        "component_states": {
-            "1": (State.OK, "other"),
-            "2": (State.WARN, "unknown"),
-            "3": (State.OK, "OK"),
-            "4": (State.OK, "non-critical"),
-            "5": (State.CRIT, "critical"),
-            "6": (State.WARN, "non-recoverable"),
-        },
-        "diskpower_states": {
-            "1": (State.OK, "no-operation"),
-            "2": (State.WARN, "REBUILDING"),
-            "3": (State.WARN, "data-erased"),
-            "4": (State.WARN, "COPY-BACK"),
-        },
-    }
-
-    map_spare_state_info = {
-        "1": "not a spare",
-        "2": "dedicated hotspare",
-        "3": "global hotspare",
-    }
-
-    for (
-        disk_name,
-        disk_state,
-        capacity_MB,
-        spare_state,
-        component_state,
-        smart_alert,
-        diskpower_state,
-        display_name,
-    ) in section:
-        if disk_name == item:
+def check_dell_idrac_disks(item: str, section: Sequence[Disk]) -> CheckResult:
+    for disk in section:
+        if disk.name == item:
             yield Result(
                 state=State.OK,
-                summary=f"[{display_name}] Size: {render.disksize(int(capacity_MB) * 1024 * 1024)}",
+                summary=f"[{disk.display_name}] Size: {render.disksize(disk.capacity_MB * 1024 * 1024)}",
             )
 
-            for what, what_key, what_text in [
-                (disk_state, "disk_states", "Disk state"),
-                (component_state, "component_states", "Component state"),
-            ]:
-                state, state_readable = map_states[what_key][what]
-                yield Result(state=state, summary=f"{what_text}: {state_readable}")
+            yield Result(
+                state=disk.disk_state.state, summary=f"Disk state: {disk.disk_state.label}"
+            )
+            yield Result(
+                state=disk.component_state.state,
+                summary=f"Component state: {disk.component_state.label}",
+            )
 
-            if smart_alert != "0":
+            if disk.smart_alert:
                 yield Result(state=State.CRIT, summary="Smart alert on disk")
 
-            if spare_state != "1":
-                yield Result(state=State.OK, summary=map_spare_state_info[spare_state])
+            yield Result(state=State.OK, summary=f"Spare state: {disk.spare_state.label}")
+            yield Result(
+                state=disk.operation_state.state,
+                summary=f"Operation state: {disk.operation_state.label}",
+            )
 
-            if diskpower_state != "1":
-                state, state_readable = map_states["diskpower_states"][diskpower_state]
-                yield Result(state=state, summary="%s" % (state_readable))
 
-
-def parse_dell_idrac_disks(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_dell_idrac_disks(string_table: StringTable) -> Sequence[Disk]:
+    return [
+        Disk(
+            index=int(row[0]),
+            name=row[1],
+            disk_state=DiskState(row[2]),
+            capacity_MB=int(row[3]),
+            spare_state=SpareState(row[4]),
+            component_state=ComponentState(row[5]),
+            smart_alert=row[6] == "1",
+            operation_state=OperationState(row[7]),
+            display_name=row[8],
+        )
+        for row in string_table
+    ]
 
 
 snmp_section_dell_idrac_disks = SimpleSNMPSection(
@@ -121,7 +189,7 @@ snmp_section_dell_idrac_disks = SimpleSNMPSection(
     detect=DETECT_IDRAC_POWEREDGE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1",
-        oids=["2", "4", "11", "22", "24", "31", "50", "55"],
+        oids=["1", "2", "4", "11", "22", "24", "31", "50", "55"],
     ),
     parse_function=parse_dell_idrac_disks,
 )

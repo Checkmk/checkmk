@@ -10,24 +10,63 @@ import pytest
 from cmk.agent_based.v2 import render, Result, State, StringTable
 from cmk.plugins.dell.agent_based.dell_idrac_disks import (
     check_dell_idrac_disks,
+    ComponentState,
     discover_dell_idrac_disks,
+    Disk,
+    DiskState,
+    OperationState,
     parse_dell_idrac_disks,
+    SpareState,
 )
 
-# Row layout: (physicalDiskName, physicalDiskState, physicalDiskCapacityInMB,
+# Row layout: (physicalDiskNumber, physicalDiskName, physicalDiskState, physicalDiskCapacityInMB,
 #              physicalDiskSpareState, physicalDiskComponentStatus,
 #              physicalDiskSmartAlertIndication, physicalDiskPowerState,
 #              physicalDiskDisplayName)
 _STRING_TABLE: StringTable = [
-    ["Disk0", "3", "1024", "1", "3", "0", "1", "Disk 0 in slot"],
-    ["Disk1", "7", "1024", "2", "5", "1", "2", "Disk 1 in slot"],
-    ["", "3", "1024", "1", "3", "0", "1", "Empty disk"],
+    ["1", "Disk0", "3", "1024", "1", "3", "0", "1", "Disk 0 in slot"],
+    ["2", "Disk1", "7", "1024", "2", "5", "1", "2", "Disk 1 in slot"],
+    ["3", "", "3", "1024", "1", "3", "0", "1", "Empty disk"],
 ]
 _SIZE_1024_MB = render.disksize(1024 * 1024 * 1024)
 
 
 def test_parse_dell_idrac_disks() -> None:
-    assert parse_dell_idrac_disks(_STRING_TABLE) == _STRING_TABLE
+    assert parse_dell_idrac_disks(_STRING_TABLE) == [
+        Disk(
+            1,
+            "Disk0",
+            DiskState("3"),
+            capacity_MB=1024,
+            spare_state=SpareState("1"),
+            component_state=ComponentState("3"),
+            smart_alert=False,
+            operation_state=OperationState("1"),
+            display_name="Disk 0 in slot",
+        ),
+        Disk(
+            2,
+            "Disk1",
+            DiskState("7"),
+            capacity_MB=1024,
+            spare_state=SpareState("2"),
+            component_state=ComponentState("5"),
+            smart_alert=True,
+            operation_state=OperationState("2"),
+            display_name="Disk 1 in slot",
+        ),
+        Disk(
+            3,
+            "",
+            DiskState("3"),
+            capacity_MB=1024,
+            spare_state=SpareState("1"),
+            component_state=ComponentState("3"),
+            smart_alert=False,
+            operation_state=OperationState("1"),
+            display_name="Empty disk",
+        ),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -38,7 +77,7 @@ def test_parse_dell_idrac_disks() -> None:
             {"Disk0", "Disk1"},
         ),
         (
-            [["Disk0", "3", "1024", "1", "3", "0", "1", "Disk 0 in slot"]],
+            [["1", "Disk0", "3", "1024", "1", "3", "0", "1", "Disk 0 in slot"]],
             {
                 "Disk0",
             },
@@ -60,7 +99,9 @@ def test_discover_dell_idrac_disks(
             [
                 Result(state=State.OK, summary=f"[Disk 0 in slot] Size: {_SIZE_1024_MB}"),
                 Result(state=State.OK, summary="Disk state: online"),
-                Result(state=State.OK, summary="Component state: OK"),
+                Result(state=State.OK, summary="Component state: ok"),
+                Result(state=State.OK, summary="Spare state: not a spare"),
+                Result(state=State.OK, summary="Operation state: not-applicable"),
             ],
         ),
         (
@@ -70,8 +111,8 @@ def test_discover_dell_idrac_disks(
                 Result(state=State.CRIT, summary="Disk state: failed"),
                 Result(state=State.CRIT, summary="Component state: critical"),
                 Result(state=State.CRIT, summary="Smart alert on disk"),
-                Result(state=State.OK, summary="dedicated hotspare"),
-                Result(state=State.WARN, summary="REBUILDING"),
+                Result(state=State.OK, summary="Spare state: dedicated hot spare"),
+                Result(state=State.WARN, summary="Operation state: rebuild"),
             ],
         ),
         (

@@ -476,6 +476,26 @@ py_library(
 )
 
 py_library(
+    name = "main_navigation",
+    srcs = ["main_navigation.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":auth_core",
+        ":config",
+        ":core_toolkit",
+        ":html_toolkit",
+        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:urls",
+        "//packages/cmk-ccc:plugin-registry",
+    ],
+)
+
+py_library(
     name = "session_context",
     srcs = ["session_context.py"],
     imports = ["../.."],

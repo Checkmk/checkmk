@@ -15,7 +15,7 @@ import os
 import subprocess
 import sys
 import traceback
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Callable, Generator, Iterator, Sequence
 from contextlib import contextmanager
 from itertools import chain
 from typing import Literal
@@ -27,7 +27,7 @@ from typing import Literal
 from cmk.base import config as base_config
 from cmk.base.app import make_app
 from cmk.ccc import debug, tty
-from cmk.ccc.site import omd_site
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import Edition
 from cmk.ccc.version import edition as cmk_edition
 from cmk.gui import main_modules
@@ -40,7 +40,6 @@ from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
-from cmk.gui.watolib.changes import ActivateChangesWriter
 from cmk.gui.watolib.config_domain_name import CORE
 from cmk.gui.watolib.pending_changes import (
     Change,
@@ -49,6 +48,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChanges,
     PendingChangesStore,
 )
+from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 from cmk.utils import log, paths
@@ -284,16 +284,20 @@ def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
 
         logger.info("Updating Checkmk configuration...")
 
-        for num, action in enumerate(actions, start=1):
-            logger.info(f" {tty.yellow}{num:02d}/{total:02d}{tty.normal} {action.title}...")
-            try:
-                with ActivateChangesWriter.disable():
+        with _forbid_pending_change_writes():
+            for num, action in enumerate(actions, start=1):
+                logger.info(f" {tty.yellow}{num:02d}/{total:02d}{tty.normal} {action.title}...")
+                try:
                     action(logger)
-            except Exception:
-                has_errors = True
-                logger.error(f' + "{action.title}" failed', exc_info=True)
-                if not action.continue_on_failure or debug.enabled():
+                except ForbiddenPendingChangeWriteError:
+                    # A forbidden pending change write is always a programming error in an update
+                    # action. It must fail hard regardless of continue_on_failure / debug mode.
                     raise
+                except Exception:
+                    has_errors = True
+                    logger.error(f' + "{action.title}" failed', exc_info=True)
+                    if not action.continue_on_failure or debug.enabled():
+                        raise
 
         if not has_errors and not is_distributed_setup_remote_site(active_config.sites):
             # Force synchronization of the config after a successful configuration update
@@ -346,3 +350,23 @@ def _force_automations_cli_interface() -> Generator[None]:
         yield
     finally:
         os.environ.pop(ENV_VARIABLE_FORCE_CLI_INTERFACE, None)
+
+
+class ForbiddenPendingChangeWriteError(RuntimeError):
+    pass
+
+
+@contextmanager
+def _forbid_pending_change_writes() -> Iterator[None]:
+    original_append = PendingChangesStore.append
+
+    def _raise(self: PendingChangesStore, site_id: SiteId, entry: ChangeSpec) -> None:
+        raise ForbiddenPendingChangeWriteError(
+            "Update config actions must use a NoopPendingChangesStore to not record any change."
+        )
+
+    PendingChangesStore.append = _raise  # type: ignore[method-assign]
+    try:
+        yield
+    finally:
+        PendingChangesStore.append = original_append  # type: ignore[method-assign]

@@ -347,9 +347,9 @@ def _change_table(
                 else HTML.empty()
             )
 
-            # Text is already escaped (see ActivateChangesWriter._add_change_to_site). We have
-            # to handle this in a special way because of the SiteChanges file format. Would be
-            # cleaner to transport the text type (like AuditLogStore is doing it).
+            # Text is already escaped (see PendingChanges.add). We have to handle this in a
+            # special way because of the SiteChanges file format. Would be cleaner to
+            # transport the text type (like AuditLogStore is doing it).
             table.cell(_("Change"), icon_code + HTML.without_escaping(change["text"]))
 
             table.cell(_("Affected sites"), css=["affected_sites"])

@@ -9,8 +9,7 @@ and delegates to it. New code should construct a :class:`PendingChanges` once
 at the request boundary and pass it down explicitly.
 """
 
-from collections.abc import Iterator, Sequence
-from contextlib import contextmanager
+from collections.abc import Sequence
 
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
@@ -25,13 +24,10 @@ from .pending_changes import (
     ChangeHook,
     ChangeScope,
     index_update_change_hook,
-    NoopPendingChangesStore,
     PendingChanges,
     PendingChangesStore,
 )
 from .sidebar_reload import sidebar_reload_change_hook
-
-_RECORDING_ENABLED = True
 
 
 def _default_hooks(*, use_git: bool) -> tuple[ChangeHook, ...]:
@@ -69,14 +65,11 @@ def add_change(
     Builds a :class:`PendingChanges` from the current ``active_config``,
     ``omd_site()``, and ``use_git`` flag, then delegates.
     """
-    store: PendingChangesStore = (
-        PendingChangesStore() if _RECORDING_ENABLED else NoopPendingChangesStore()
-    )
     pending_changes = PendingChanges(
         activation_sites=activation_sites(active_config.sites),
         local_site=omd_site(),
         acting_user=user_id,
-        store=store,
+        store=PendingChangesStore(),
         hooks=_default_hooks(use_git=use_git),
     )
     pending_changes.add(
@@ -94,17 +87,3 @@ def add_change(
         ),
         _scope_from_sites(sites),
     )
-
-
-class ActivateChangesWriter:
-    """Provides a ``disable()`` context manager that suppresses :func:`add_change` writes."""
-
-    @classmethod
-    @contextmanager
-    def disable(cls) -> Iterator[None]:
-        global _RECORDING_ENABLED
-        _RECORDING_ENABLED = False
-        try:
-            yield
-        finally:
-            _RECORDING_ENABLED = True

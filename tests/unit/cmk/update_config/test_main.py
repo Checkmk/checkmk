@@ -13,7 +13,10 @@ import pytest
 from pytest_mock import MockerFixture
 
 import cmk.utils.paths
+from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
+from cmk.gui.watolib.pending_changes import PendingChangesStore
+from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.update_config import main, registry
 from cmk.update_config.lib import ExpiryVersion
 
@@ -112,3 +115,54 @@ def test_config_updater_executes_plugins(
 def test_load_plugins(test_edition: Edition) -> None:
     main._load_plugins(test_edition, logging.getLogger())
     assert registry.update_action_registry
+
+
+class _WritesPendingChange(registry.UpdateAction):
+    @override
+    def __call__(self, logger: logging.Logger) -> None:
+        PendingChangesStore().append(
+            SiteId("NO_SITE"),
+            ChangeSpec(
+                {
+                    "id": "test-id",
+                    "action_name": "leaks-into-pending-changes",
+                    "text": "",
+                    "object": None,
+                    "user_id": None,
+                    "domains": [],
+                    "time": 0.0,
+                    "force_sync": None,
+                    "force_restart": None,
+                    "force_apache_reload": False,
+                    "domain_settings": {},
+                    "prevent_discard_changes": False,
+                    "diff_text": None,
+                }
+            ),
+        )
+
+
+def test_forbid_pending_change_writes_raises_on_accidental_write(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Actions that record pending changes must fail loudly."""
+    packages_dir = cmk.utils.paths.var_dir / "packages"
+    packages_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(cmk.utils.paths, "installed_packages_dir", packages_dir)
+    reg = registry.UpdateActionRegistry()
+    reg.register(
+        _WritesPendingChange(
+            name="leaky",
+            title="Leaky action",
+            sort_index=4,
+            expiry_version=ExpiryVersion.NEVER,
+        )
+    )
+    monkeypatch.setattr(main, "pre_update_action_registry", registry.PreUpdateActionRegistry())
+    monkeypatch.setattr(main, "update_action_registry", reg)
+    monkeypatch.setattr(main, "_initialize_base_environment", lambda x: None)
+
+    # The leaky action defaults to continue_on_failure=True, so without a hard failure the write
+    # would only be logged and swallowed. It must fail hard even without --debug.
+    with pytest.raises(main.ForbiddenPendingChangeWriteError, match="NoopPendingChangesStore"):
+        main.main(["-v"], ensure_site_is_stopped_callback=lambda _: None)

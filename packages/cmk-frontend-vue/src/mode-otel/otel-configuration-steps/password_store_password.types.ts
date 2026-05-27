@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-export interface PasswordConfig {
+export type PasswordConfig = {
   general_props: {
     id: string
     title: string

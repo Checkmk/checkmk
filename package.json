@@ -24,11 +24,13 @@
   "pnpm": {
     "overrides": {
       "glob": "^11.1.0",
+      "uuid": "^14.0.0",
       "js-yaml": "^4.1.0"
     }
   },
   "// pnpm overrides": {
     "glob": "CMK-28102",
+    "uuid": "CMK-34957",
     "js-yaml": "CMK-28103"
   }
 }

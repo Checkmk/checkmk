@@ -97,14 +97,14 @@ def main() -> int:
         plugins = load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
 
         app = make_app(cmk_version.edition(omd_root))
-        raw_config = config.load_packed_config(
-            active_config_path,
-            # Note: CONFIG.ip{,v6}addresses is populated not only with the values
-            # that would be loaded here anyway, but additionally with some looked
-            # up addresses.
-            ipaddresses_override=CONFIG.ipaddresses,
-            ipv6addresses_override=CONFIG.ipv6addresses,
-        )
+        raw_config = config.load_packed_config(active_config_path)
+        # The precompiled host check resolves the addresses dynamically at
+        # config-generation time (potentially via DNS) and ships them in the
+        # template. CONFIG.ip{,v6}addresses is populated not only with the
+        # values that would be loaded here anyway, but additionally with some
+        # looked up addresses.
+        raw_config["ipaddresses"] = CONFIG.ipaddresses
+        raw_config["ipv6addresses"] = CONFIG.ipv6addresses
         loading_result = config.perform_post_config_loading_actions(
             raw_config,
             get_builtin_host_labels=app.get_builtin_host_labels,

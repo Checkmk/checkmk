@@ -590,11 +590,7 @@ def load(
     return loading_result
 
 
-def load_packed_config(
-    config_path: Path,
-    ipaddresses_override: Mapping[HostName, HostAddress] | None = None,
-    ipv6addresses_override: Mapping[HostName, HostAddress] | None = None,
-) -> dict[str, Any]:
+def load_packed_config(config_path: Path) -> dict[str, Any]:
     """Load the configuration for the CMK helpers of CMC
 
     These files are written by PackedConfig().
@@ -608,19 +604,10 @@ def load_packed_config(
         cmk.base.core.nagios._dump_precompiled_hostcheck()
 
     """
-    raw_config = {
+    return {
         **get_default_config(),
         **PackedConfigStore.from_serial(config_path).read(),
     }
-
-    # Used by the precompiled host check, which resolves the addresses dynamically
-    # at config-generation time (potentially via DNS) and ships them in the template.
-    if ipaddresses_override is not None:
-        raw_config["ipaddresses"] = ipaddresses_override
-    if ipv6addresses_override is not None:
-        raw_config["ipv6addresses"] = ipv6addresses_override
-
-    return raw_config
 
 
 def perform_post_config_loading_actions(

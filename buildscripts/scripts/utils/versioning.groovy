@@ -91,7 +91,17 @@ def branch_name() {
 def safe_branch_name() {
     // "+" can't be part of a docker tag, therefore we remove this.
     // We remove the complete "+security" to only have a regular version as part of our image tag
-    return branch_name().replaceAll("/", "-").replaceAll("\\+security", "");
+    def really_safe_name = branch_name().replaceAll("/", "-").replaceAll("\\+security", "");
+    if (really_safe_name.startsWith("sec-release")) {
+        if (branch_name_is_branch_version("${checkout_dir}")) {
+            // this is only required as "master" is called "stable branch + 0.1.0"
+            // e.g. 2.5.0 (stable) + 0.1.0 = 2.6.0
+            really_safe_name = get_branch_version("${checkout_dir}").replaceAll("/", "-").replaceAll("\\+security", "");
+        } else {
+            really_safe_name = "master";
+        }
+    }
+    return really_safe_name;
 }
 
 /* groovylint-disable DuplicateListLiteral */

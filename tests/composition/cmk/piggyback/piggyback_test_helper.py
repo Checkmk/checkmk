@@ -91,11 +91,21 @@ class PBTimeoutError(TimeoutError):
 
 
 @contextmanager
-def _timeout(seconds: int, exc: PBTimeoutError) -> Iterator[None]:
-    """Context manager to raise an exception after a timeout"""
+def _timeout(seconds: int, error_msg: str) -> Iterator[None]:
+    """Context manager to raise an exception after a timeout.
+
+    Uses `signal.SIGALRM` to monitor the time passed.
+
+    Args:
+        seconds (int): time in seconds to wait before raising `PBTimeoutError`
+        error_msg (str): custom error message passed to `PBTimeoutError`
+
+    Raises:
+        PBTimeoutError: when `seconds` amount of time has passed.
+    """
 
     def _raise_timeout(signum, frame):
-        raise exc
+        raise PBTimeoutError(error_msg)
 
     alarm_handler = signal.signal(signal.SIGALRM, _raise_timeout)
     try:
@@ -110,7 +120,7 @@ def _wait_for_piggyback_track_ready(stdout: IO[str]) -> None:
     """Wait for the cmk-broker-test to be ready"""
     with _timeout(
         CMK_TRACK_TIMEOUT,
-        PBTimeoutError(f"`cmk-piggyback track` did not start within {CMK_TRACK_TIMEOUT} secs"),
+        f"`cmk-piggyback track` did not start within {CMK_TRACK_TIMEOUT} secs",
     ):
         while line := stdout.readline():
             if "Tracking incoming messages" in line:
@@ -123,18 +133,22 @@ def piggybacked_data_gets_updated(
     """Track incoming piggybacked data on the target site"""
 
     try:
-        track = target_site.execute(["cmk-piggyback", "track"], stdout=subprocess.PIPE, text=True)
-        assert track.stdout
-        _wait_for_piggyback_track_ready(track.stdout)
+        with target_site.execute(["cmk-piggyback", "track"], stdout=subprocess.PIPE) as track:
+            if track.stdout is None:
+                raise NotImplementedError(
+                    "The method expects STDOUT to be present, "
+                    "consider initializing `stdout=subprocess.PIPE`!"
+                )
+            _wait_for_piggyback_track_ready(track.stdout)
 
-        source_site.schedule_check(hostname_source, "Check_MK")
-        with _timeout(
-            CMK_TRACK_TIMEOUT,
-            PBTimeoutError(f"`cmk-piggyback track` timed out after {CMK_TRACK_TIMEOUT} secs"),
-        ):
-            while line := track.stdout.readline():
-                if f"{hostname_source} -> {hostname_piggybacked}" in line:
-                    return True
+            source_site.schedule_check(hostname_source, "Check_MK")
+            with _timeout(
+                CMK_TRACK_TIMEOUT,
+                f"`cmk-piggyback track` timed out after {CMK_TRACK_TIMEOUT} secs",
+            ):
+                while line := track.stdout.readline():
+                    if f"{hostname_source} -> {hostname_piggybacked}" in line:
+                        return True
     except PBTimeoutError:
         pass
 

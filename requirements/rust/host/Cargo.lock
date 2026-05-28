@@ -472,6 +472,7 @@ dependencies = [
  "toml",
  "uuid",
  "winapi",
+ "winreg",
  "x509-parser",
 ]
 

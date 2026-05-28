@@ -12,7 +12,7 @@ filegroup(
 )
 
 configure_make(
-    name = "build",
+    name = "pnp4nagios",
     args = ["-j4"],
     configure_in_place = True,
     configure_options = [

@@ -8,10 +8,6 @@ load("//omd/packages/crypt-ssleay:cryptssl_http.bzl", "crypt_ssleay_workspace")
 
 crypt_ssleay_workspace()
 
-load("//omd/packages/pnp4nagios:pnp4nagios_http.bzl", "pnp4nagios_workspace")
-
-pnp4nagios_workspace()
-
 load("//omd/packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid_workspace")
 
 mod_fcgid_workspace()

@@ -228,7 +228,7 @@ function Build-MSI {
     Write-Host "Building MSI..." -ForegroundColor White
     Remove-Item "$build_dir/install/Release/check_mk_service.msi" -Force -ErrorAction SilentlyContinue
 
-    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x86"
+    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x86" "/p:EncryptedPluginsFolder=..\..\windows\plugins"
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Error building MSI, error code is $LASTEXITCODE" -ErrorAction Stop
     }
@@ -450,12 +450,12 @@ function Start-BazelSigning {
     try {
         $env:BAZELISK_BASE_URL = "https://github.com/aspect-build/aspect-cli/releases/download"
         $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
-        $signed_dir = (bazel info bazel-bin 2>$null).Trim()                                                                       
-        $env:SignedPluginsFolder = $signed_dir 
+        # $signed_dir = (bazel info bazel-bin 2>$null).Trim() - not reliable when bazel is not configured properly
         Write-Host "dir with files is $signed_dir"
         &bazel build //agents/windows/plugins:all
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "Signed files are located in $signed_dir"
+        if ($LASTEXITCODE -eq 0) { 
+            $env:SignedPluginsFolder = Join-Path (Get-Item -Force ..\..\bazel-bin).Target "\agents\windows\plugins\signed"
+            Write-Host "Signed files are located in $env:SignedPluginsFolder"
         }
         else {
             Write-Host "Error during signing $LASTEXITCODE"
@@ -695,6 +695,16 @@ try {
     }
     Start-BinarySigning
     Start-BazelSigning
+    Write-Host "$env:SignedPluginsFolder is used to store the signed files" 
+    $stamp_file = "install\obj\Release\.epf_stamp"
+    $current_val = $env:SignedPluginsFolder ?? ""
+    $previous_val = if (Test-Path $stamp_file) { Get-Content $stamp_file } else { "" }
+
+    if ($current_val -ne $previous_val) {
+        Remove-Item "install\obj\Release" -Recurse -Force -ErrorAction SilentlyContinue
+        New-Item -Path (Split-Path $stamp_file) -ItemType Directory -Force | Out-Null
+        Set-Content $stamp_file $current_val
+    }
     Build-MSI
     Set-Msi-Version
     Start-ArtifactUploading

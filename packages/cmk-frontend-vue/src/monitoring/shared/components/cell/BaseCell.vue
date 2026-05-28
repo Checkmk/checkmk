@@ -12,6 +12,7 @@ import {
   MONITORING_TABLE_WIDTH,
   resolveBreakpoint
 } from '../MonitoringTableContext'
+import HighlightWrapper, { type CellHighlight } from './base/HighlightWrapper.vue'
 
 export interface CellLink {
   href: string
@@ -22,6 +23,7 @@ const props = defineProps<{
   breakpoints?: CellBreakpoints | undefined
   hideBelow?: BreakpointValue | undefined
   linkedTo?: CellLink | undefined
+  highlight?: CellHighlight | undefined
 }>()
 
 const slots = useSlots()
@@ -52,14 +54,20 @@ const activeSlot = computed<string>(() => {
 <template>
   <td v-if="visible" class="monitoring-base-cell">
     <a v-if="linkedTo" :href="linkedTo.href" :target="linkedTo.target">
-      <slot :name="activeSlot" />
+      <HighlightWrapper :highlight="highlight" :is-linked="true">
+        <slot :name="activeSlot" />
+      </HighlightWrapper>
     </a>
-    <slot v-else :name="activeSlot" />
+    <HighlightWrapper v-else :highlight="highlight">
+      <slot :name="activeSlot" />
+    </HighlightWrapper>
   </td>
 </template>
 
 <style scoped>
 .monitoring-base-cell {
-  padding: var(--dimension-2);
+  a {
+    text-decoration: underline;
+  }
 }
 </style>

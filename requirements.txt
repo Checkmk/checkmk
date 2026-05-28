@@ -2954,6 +2954,7 @@ numpy==2.3.5 \
     #   -c constraints.txt
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-metric-backend/dev-requirements.in
+    #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   contourpy
     #   matplotlib
 oauthlib==3.3.1 \

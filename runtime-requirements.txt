@@ -2001,6 +2001,7 @@ numpy==2.4.2 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-metric-backend/requirements.in
 oauthlib==3.3.1 \
     --hash=sha256:0f0f8aa759826a193cf66c12ea1af1637f87b9b4622d46e866952bb022e538c9 \
     --hash=sha256:88119c938d2b8fb88561af5f6ee0eec8cc8d552b7bb1f712743136eb7523b7a1

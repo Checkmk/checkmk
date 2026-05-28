@@ -2944,6 +2944,7 @@ numpy==2.4.2 \
     # via
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-metric-backend/dev-requirements.in
+    #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r non-free/packages/cmk-robotmk/dev-requirements.in
     #   contourpy
     #   matplotlib

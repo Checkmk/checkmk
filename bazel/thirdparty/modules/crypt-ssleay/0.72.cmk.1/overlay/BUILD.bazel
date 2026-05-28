@@ -1,0 +1,18 @@
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+pkg_files(
+    name = "Crypt-SSLeay-0.72-files",
+    srcs = glob(["**/*"]),
+    strip_prefix = strip_prefix.from_pkg(""),
+)
+
+pkg_tar(
+    name = "Crypt-SSLeay-0.72",
+    srcs = [":Crypt-SSLeay-0.72-files"],
+    extension = "tar.gz",
+    mtime = 1767744000,
+    package_dir = "Crypt-SSLeay-0.72",
+    portable_mtime = False,
+    visibility = ["//visibility:public"],
+)

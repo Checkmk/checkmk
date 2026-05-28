@@ -1639,8 +1639,7 @@ private:
     // generates short info about agent(version, build, environment)
     // required to correctly identify client in log
     static std::string makeAgentInfoString() {
-        constexpr std::string_view build_bits =
-            tgt::Is64bit() ? "64bit" : "32bit";
+        constexpr std::string_view build_bits = "64bit";
         constexpr std::string_view debug = tgt::IsDebug() ? "debug" : "release";
         constexpr std::string_view version = CHECK_MK_VERSION;
         constexpr std::string_view build_date = __DATE__;

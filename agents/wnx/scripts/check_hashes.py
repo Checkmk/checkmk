@@ -11,8 +11,7 @@
 # cmk-agent-ctl.exe AC3A70412218B6C97345E152D71CB03B11666A03CD7D8221AC63FAE5F8030972
 # OpenHardwareMonitorCLI.exe 652A088B5FA4D90C8B4FB4D68E649A80421552D3341B1E194C38D71825D87B43
 # OpenHardwareMonitorLib.dll 30A6C1ABDA911CE64315C5E6C94E6F0689B567E0346F73697D60FA09EA8F913C
-# check_mk_service32.exe 295ED26953165FEBC07174277572BC0E5BA7C2A3C6414B689C3A6DB69DF2D876
-# check_mk_service64.exe 2BED103B091822BEF9940E62C5AF34C1EA5B3B07466379CA5E44CB1810EFAFAF
+# check_mk_service.exe 2BED103B091822BEF9940E62C5AF34C1EA5B3B07466379CA5E44CB1810EFAFAF
 
 import sys
 
@@ -20,8 +19,7 @@ expected_files = {
     "mk-oracle.exe",
     "mk-sql.exe",
     "check_mk_agent.msi",
-    "check_mk_service32.exe",
-    "check_mk_service64.exe",
+    "check_mk_service.exe",
     "cmk-agent-ctl.exe",
     "OpenHardwareMonitorCLI.exe",
     "OpenHardwareMonitorLib.dll",

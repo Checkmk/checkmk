@@ -26,14 +26,6 @@ constexpr bool IsDebug() {
 #endif
 }
 
-constexpr bool Is64bit() {
-#if defined(_WIN64)
-    return true;
-#else
-    return false;
-#endif
-}
-
 constexpr bool IsRelease() { return !IsDebug(); }
 
 constexpr bool IsWindows() {

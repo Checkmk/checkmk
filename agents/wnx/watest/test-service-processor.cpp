@@ -374,11 +374,11 @@ TEST(ServiceProcessorTest, DirectCallWmi) {
 TEST(ServiceProcessorTest, FindWinPerfDefault) {
     const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
-    tst::CreateTextFile(temp_fs->root() / "check-mk-service32.exe", "");
+    tst::CreateTextFile(temp_fs->root() / "check-mk-service.exe", "");
     EXPECT_TRUE(FindWinPerfExe("agent").empty());
-    tst::CreateTextFile(temp_fs->root() / "check_mk_service32.exe", "");
+    tst::CreateTextFile(temp_fs->root() / "check_mk_service.exe", "");
     EXPECT_EQ(FindWinPerfExe("agent"),
-              temp_fs->root() / "check_mk_service32.exe");
+              temp_fs->root() / "check_mk_service.exe");
     tst::CreateTextFile(temp_fs->root() / "check_mk_agent.exe", "");
     EXPECT_EQ(FindWinPerfExe("agent"), temp_fs->root() / "check_mk_agent.exe");
 }

@@ -169,7 +169,6 @@ void provide_agent_binaries(Map args) {
                     mk-oracle.exe \
                     ${checkout_dir}/omd/packages/mk-oracle/
                 cp \
-                    check_mk_agent-64.exe \
                     check_mk_agent.exe \
                     check_mk_agent.msi \
                     check_mk_agent_unsigned.msi \

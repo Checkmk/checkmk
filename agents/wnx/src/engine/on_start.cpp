@@ -88,7 +88,7 @@ bool FindAndPrepareWorkingFolders(AppType app_type) {
     switch (app_type) {
         case AppType::exe:
             [[fallthrough]];
-        case AppType::test: {  // watest32
+        case AppType::test: {  // watest
             auto [r, d] = FindAlternateDirs(app_type);
             GetCfg().initFolders(L"", r.wstring(), d.wstring());
             break;

@@ -83,7 +83,7 @@ std::string MakeInfo() {
         {"BuildDate", {__DATE__}},
         {"AgentOS", {"windows"}},
         {"Hostname", {cfg::GetHostName()}},
-        {"Architecture", {tgt::Is64bit() ? "64bit" : "32bit"}},
+        {"Architecture", {"64bit"}},
         {"OSName", os.has_value() ? std::optional{wtools::ToUtf8(os->name)}
                                   : std::nullopt},
         {"OSVersion", os.has_value()

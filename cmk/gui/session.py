@@ -194,13 +194,22 @@ class CheckmkFileBasedSession(dict, SessionMixin):
     def check_and_update_session_state(
         self,
     ) -> SessionState:
-        """
-        This method is designed to check if a user's state can be moved from credentials needed to either:
+        """Advance the user's session state machine toward "logged_in", to one of:
             - second_factor_auth_needed
             - second_factor_setup_needed
             - password_change_needed
             - logged_in
+
+        It assumes the preconditions to leave the current state are fulfilled (e.g.
+        credentials have been provided, 2FA has been completed, ...).
+
+        For automation users this always sets the state to "logged_in" as they authenticate
+        non-interactively and cannot manage their own profile.
         """
+        if self.user.automation_user:
+            self.session_info.session_state = "logged_in"
+            return self.session_info.session_state
+
         ssm = SessionStateMachine(self.session_info.session_state)
 
         def is_two_fa_auth_needed() -> bool:

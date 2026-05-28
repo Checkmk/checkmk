@@ -21,7 +21,6 @@ from cmk.gui.openapi.endpoints import (
     host_tag_group,
     notification_rules,
     parent_scan,
-    quick_setup,
     rule,
     ruleset,
     service,
@@ -38,6 +37,7 @@ from .api_endpoints import background_job as api_background_job
 from .api_endpoints import downtime as api_downtime
 from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
+from .api_endpoints import quick_setup as api_quick_setup
 from .api_endpoints.graph_timerange import registration as api_graph_timerange
 from .api_endpoints.password import registration as api_password
 from .api_endpoints.user_role import registration as api_user_role
@@ -81,7 +81,6 @@ def register(
     time_periods.register(endpoint_registry)
     user_config.register(endpoint_registry)
     version.register(endpoint_registry)
-    quick_setup.register(endpoint_registry)
     broker_connection.register(endpoint_registry)
 
     agent_download.register(versioned_endpoint_registry)
@@ -120,6 +119,10 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     custom_host_attributes.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
+    api_quick_setup.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

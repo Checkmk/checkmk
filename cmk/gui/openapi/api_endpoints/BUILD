@@ -27,6 +27,7 @@ py_library(
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/gui/openapi/shared_endpoint_families",
         "//cmk/gui/openapi/spec:utils",
+        "//cmk/gui/quick_setup",
         "//cmk/gui/rest_api_types:notifications",
         "//cmk/gui/token_auth",
         "//cmk/gui/userdb",

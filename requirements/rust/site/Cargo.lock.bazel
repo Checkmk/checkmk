@@ -1,5 +1,5 @@
 {
-  "checksum": "4183d72380d7d5772b29b4a3d242dc26d3e65a3c4c219cd67b2553f35cad61e8",
+  "checksum": "6762240aaf16c8a4b79e08315f3afdccef9a4d318f288d9e212b1d7e5e6ae886",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -12159,7 +12159,6 @@
             "mio",
             "net",
             "rt",
-            "rt-multi-thread",
             "socket2",
             "sync",
             "time",

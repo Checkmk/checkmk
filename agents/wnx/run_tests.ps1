@@ -128,7 +128,7 @@ function Create_UnitTestDir([String]$prefix) {
     if ($wnx_test_dir -eq "") {
         Write-Error "Failed to create temporary directory" -ErrorAction Stop
     }
-    Copy-Item -Path ".\build\watest\Win32\Release\watest32.exe" -Destination "$wnx_test_dir\watest32.exe" -Force
+    Copy-Item -Path ".\build\watest\x64\Release\watest.exe" -Destination "$wnx_test_dir\watest.exe" -Force
     $root = "$wnx_test_dir\test\root"
     $data = "$wnx_test_dir\test\data"
     $user_dir = $data
@@ -149,7 +149,7 @@ function Create_UnitTestDir([String]$prefix) {
     & xcopy ".\test_files\unit_test\*.state"   "$user_dir" "/D" "/Y" > nul
     & xcopy ".\test_files\config\*.yml"        "$user_dir" "/D" "/Y" > nul
 
-    return $wnx_test_dir, "$wnx_test_dir\watest32.exe"
+    return $wnx_test_dir, "$wnx_test_dir\watest.exe"
 }
 
 function Invoke-UnitTest([bool]$run, [String]$name, [String]$cmdline) {
@@ -202,7 +202,7 @@ function Create_RegressionTestDir([String]$dir_prefix) {
     $data_dir = "$regression_dir\test\data"
     New-Item -ItemType Directory -Path "$plugins_dir" -ErrorAction Stop > nul
     New-Item -ItemType Directory -Path "$data_dir" -ErrorAction Stop > nul
-    Copy-Item .\build\check_mk_service\Win32\Release\check_mk_service32.exe $root_dir\check_mk_agent.exe -ErrorAction Stop > nul
+    Copy-Item .\build\check_mk_service\x64\Release\check_mk_service.exe $root_dir\check_mk_agent.exe -ErrorAction Stop > nul
     Copy-Item .\install\resources\check_mk.yml $root_dir\check_mk.yml  -ErrorAction Stop > nul
     &  xcopy "..\windows\plugins\*.*" "$plugins_dir" "/D" "/Y" > nul
     return $regression_dir, "$root_dir\check_mk_agent.exe"
@@ -274,8 +274,8 @@ function Create_IntegrationTestDir([String]$dir_prefix) {
     New-Item -ItemType Directory -Path "$data_dir\install\modules" -ErrorAction Stop > nul  # need for cab to understand that python is installed
     New-Item -ItemType Directory -Path "$root_dir\plugins" -ErrorAction Stop > nul
     Write-Host "Copy exe..." -Foreground White
-    Copy-Item .\build\check_mk_service\Win32\Release\check_mk_service32.exe $root_dir\check_mk_agent.exe > nul
-    Copy-Item $repo_root\requirements\rust\host\target\i686-pc-windows-msvc\release\cmk-agent-ctl.exe $root_dir\cmk-agent-ctl.exe > nul
+    Copy-Item .\build\check_mk_service\x64\Release\check_mk_service.exe $root_dir\check_mk_agent.exe > nul
+    Copy-Item $repo_root\target\x86_64-pc-windows-msvc\release\cmk-agent-ctl.exe $root_dir\cmk-agent-ctl.exe > nul
 
     Write-Host "Copy cab..." -Foreground White
     Copy-Item "$results_dir\python-3.cab"  "$root_dir" -Force -ErrorAction Stop > nul        		# unpack

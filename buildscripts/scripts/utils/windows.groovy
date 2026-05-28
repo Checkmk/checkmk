@@ -31,14 +31,12 @@ void build(Map args) {
                 "call run.cmd --all --skip-sql-test --sign deprecated_unused_param1 deprecated_unused_param2",
                 [
                     "cmk-agent-ctl.exe",
-                    "check_mk_agent-64.exe",
                     "check_mk_agent.exe",
                     "check_mk_agent.msi",
                     "check_mk_agent_unsigned.msi",
                     "check_mk.user.yml",
                     "check_mk.yml",
-                    "watest32.exe",
-                    "watest64.exe",
+                    "watest.exe",
                     "unit_tests_results.zip",
                     "robotmk_ext.exe",
                     "mk-oracle.exe",
@@ -50,13 +48,11 @@ void build(Map args) {
                 "call run.cmd --all",
                 [
                     "cmk-agent-ctl.exe",
-                    "check_mk_agent-64.exe",
                     "check_mk_agent.exe",
                     "check_mk_agent.msi",
                     "check_mk.user.yml",
                     "check_mk.yml",
-                    "watest32.exe",
-                    "watest64.exe",
+                    "watest.exe",
                 ].join(",")] :
             (args.TARGET == "cmk_agent_ctl_no_sign") ? [
                 "packages/cmk-agent-ctl",

@@ -3,7 +3,7 @@
 SETLOCAL EnableDelayedExpansion
 set f="%ProgramFiles(x86)%\checkmk\service\check_mk_agent.exe"
 
-fc /b ..\..\artefacts\check_mk_agent-64.exe %f% >nul && powershell Write-Host "Installation is old, will not be installed" -foreground red && exit /b 5
+fc /b ..\..\artefacts\check_mk_agent.exe %f% >nul && powershell Write-Host "Installation is old, will not be installed" -foreground red && exit /b 5
 powershell Write-Host "Installation is new, starting..." -foreground cyan
 
 set the_msi=..\..\artefacts\check_mk_agent.msi
@@ -35,7 +35,7 @@ exit /b 0
 
 :check_exe
 for /l %%x in (1, 1, 30 ) do (
-  rem fc /b ..\..\artefacts\check_mk_agent-64.exe %f% >nul && powershell Write-Host "`nInstallation finished good" -foreground green && exit /b 0
+  rem fc /b ..\..\artefacts\check_mk_agent.exe %f% >nul && powershell Write-Host "`nInstallation finished good" -foreground green && exit /b 0
   call is_installed.cmd ..\..\artefacts\check_mk_agent.msi && powershell Write-Host "`nInstallation finished good" -foreground green && exit /b 0
   powershell Write-Host "." -nonewline -foreground cyan
   powershell Start-Sleep 1

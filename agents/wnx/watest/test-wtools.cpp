@@ -218,8 +218,7 @@ protected:
 
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             names.emplace_back(ToUtf8(entry.szExeFile));
-            if (names.back() == "watest32.exe" ||
-                names.back() == "watest64.exe") {
+            if (names.back() == "watest.exe") {
                 XLOG::l.w(
                     "Suspicious '{}' pid: [{}] parent pid: [{}] current pid [{}]",
                     names.back(), entry.th32ProcessID,
@@ -233,10 +232,7 @@ protected:
         }
 
         // check that we do not have own process
-        EXPECT_TRUE(std::ranges::find(names, tgt::Is64bit()
-                                                 ? "watest64.exe"s
-                                                 : "watest32.exe"s) ==
-                    names.end());
+        EXPECT_TRUE(std::ranges::find(names, "watest.exe"s) == names.end());
         EXPECT_TRUE(std::ranges::find(names, std::string("svchost.exe")) !=
                     names.end());
     }

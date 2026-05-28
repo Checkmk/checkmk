@@ -12,9 +12,6 @@ cd /d %VCPKG_ROOT%\..
 git clone https://github.com/microsoft/vcpkg
 call .\vcpkg\bootstrap-vcpkg.bat
 call .\vcpkg\vcpkg install protobuf:x64-windows
-call .\vcpkg\vcpkg install protobuf:x86-windows
-del /Q /S %VCPKG_ROOT%\buildtrees\protobuf\x64-windows-dbg > nul 
+del /Q /S %VCPKG_ROOT%\buildtrees\protobuf\x64-windows-dbg > nul
 del /Q /S %VCPKG_ROOT%\buildtrees\protobuf\x64-windows-rel > nul
-del /Q /S %VCPKG_ROOT%\buildtrees\protobuf\x86-windows-dbg > nul
-del /Q /S %VCPKG_ROOT%\buildtrees\protobuf\x86-windows-rel > nul
 

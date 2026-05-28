@@ -259,7 +259,7 @@ TEST_F(SectionProviderCheckMkFixture, AdvancedFields) {
     EXPECT_EQ(get_val(result[0]), CHECK_MK_VERSION);
     EXPECT_EQ(get_val(result[2]), "windows");
     EXPECT_EQ(get_val(result[3]), cfg::GetHostName());
-    EXPECT_EQ(get_val(result[4]), tgt::Is64bit() ? "64bit" : "32bit");
+    EXPECT_EQ(get_val(result[4]), "64bit");
     EXPECT_EQ(result[result.size() - 1] + "\n",
               section::MakeHeader(section::kCheckMkCtlStatus));
     tst::CreateTextFile(fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile,

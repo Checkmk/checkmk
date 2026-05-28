@@ -10,8 +10,11 @@
 //! - Validate RPATH/RUNPATH settings for proper dependency resolution
 //! - Generate reports on dependency status
 
+pub mod inputs;
 pub mod package;
 pub mod report;
+mod resolution;
+mod validators;
 
 // Re-export key types for convenience
 pub use package::{Elf, ElfType, Package, PackageFile};

@@ -19,7 +19,7 @@ use tempfile::TempDir;
 
 use cma::CmaExtractor;
 use deb::DebExtractor;
-pub use elf::{Elf, ElfType};
+pub use elf::{Elf, ElfError, ElfType};
 use extractor::PackageExtractor;
 use extractor::{PackageError, PackageResult};
 pub use files::PackageFile;

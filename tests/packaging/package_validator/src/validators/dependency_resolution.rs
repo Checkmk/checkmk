@@ -10,10 +10,11 @@ use serde::{Deserialize, Serialize, Serializer};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use crate::inputs::system_dependencies::SystemDependencies;
 use crate::package::{Elf, Package, PackageElfs};
-use crate::report::symlink_resolver::{SymlinkResolutionResult, SymlinkResolver};
-use crate::report::system_dependencies::SystemDependencies;
+use crate::report::finding::Finding;
 use crate::report::ReportDependencies;
+use crate::resolution::symlinks::{SymlinkResolutionResult, SymlinkResolver};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub(crate) enum DependencyStatus {
@@ -246,4 +247,40 @@ impl<'a, 'b, 'c> DependencyResolver<'a, 'b, 'c> {
             )
         }
     }
+}
+
+/// Convert the `Missing`/`Error` statuses in the resolved dependency map into
+/// findings, aggregated to one finding per ELF (never one per dependency) so the
+/// finding count matches the per-file console rows. `Found` entries don't produce
+/// findings, and an ELF can yield both a `MissingDependency` and a
+/// `DependencyResolutionError` finding if it has both kinds of failure.
+pub(crate) fn scan_findings<'a>(deps: &ReportDependencies<'a>) -> Vec<Finding<'a>> {
+    deps.iter()
+        .flat_map(|(path, deps)| {
+            let mut missing: Vec<&'a str> = Vec::new();
+            let mut errors: Vec<(&'a str, String)> = Vec::new();
+            for (dependency, result) in deps {
+                match &result.status {
+                    DependencyStatus::Error(message) => errors.push((dependency, message.clone())),
+                    DependencyStatus::Missing => missing.push(dependency),
+                    DependencyStatus::Found => {}
+                }
+            }
+            // Deterministic order: the map is a HashMap keyed by dependency name.
+            missing.sort_unstable();
+            errors.sort_by(|(a, _), (b, _)| a.cmp(b));
+
+            let mut findings: Vec<Finding<'a>> = Vec::new();
+            if !missing.is_empty() {
+                findings.push(Finding::MissingDependency {
+                    path,
+                    dependencies: missing,
+                });
+            }
+            if !errors.is_empty() {
+                findings.push(Finding::DependencyResolutionError { path, errors });
+            }
+            findings
+        })
+        .collect()
 }

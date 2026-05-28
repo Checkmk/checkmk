@@ -3274,6 +3274,82 @@ def test_dictionary_groups_validate(
         converted.validate_value(value_to_validate, "")
 
 
+def _ms_only_timespan_levels_spec(
+    migrate: object = None,
+) -> api_v1.form_specs.SimpleLevels[float]:
+    return api_v1.form_specs.SimpleLevels[float](
+        title=api_v1.Title("Response time"),
+        level_direction=api_v1.form_specs.LevelDirection.UPPER,
+        form_spec_template=api_v1.form_specs.TimeSpan(
+            displayed_magnitudes=(api_v1.form_specs.TimeMagnitude.MILLISECOND,)
+        ),
+        prefill_fixed_levels=api_v1.form_specs.DefaultValue((0.1, 0.2)),
+        migrate=migrate,  # type: ignore[arg-type]
+    )
+
+
+def test_simple_levels_migrate_applied_in_legacy_converter() -> None:
+    """Regression: SimpleLevels.migrate must be applied in the legacy converter path.
+
+    Old rules store response_time as a raw (warn_ms, crit_ms) tuple.  Without the fix,
+    _transform_levels_forth raised ValueError for any value that didn't match the
+    ("fixed"|"no_levels"|...) pattern, so old rules couldn't be loaded at all."""
+    spec = api_v1.form_specs.SimpleLevels[float](
+        title=api_v1.Title("Response time"),
+        level_direction=api_v1.form_specs.LevelDirection.UPPER,
+        form_spec_template=api_v1.form_specs.Float(),
+        prefill_fixed_levels=api_v1.form_specs.DefaultValue((0.1, 0.2)),
+        migrate=lambda v: api_v1.form_specs.migrate_to_float_simple_levels(v, 0.001),
+    )
+    legacy = convert_to_legacy_valuespec(spec, translate_to_current_language)
+    # Old 2.3 format: raw (warn_ms, crit_ms) tuple — migrate scales by 0.001 → seconds
+    assert legacy.transform_value((1000.0, 2000.0)) == ("fixed", (1.0, 2.0))
+
+
+def test_simple_levels_migrate_not_reapplied_in_legacy_converter() -> None:
+    """Regression: already-converted values must not be re-scaled by migrate.
+
+    A 2.4 rule stores ("fixed", (1.0, 2.0)) in seconds.  On re-edit the legacy
+    converter must pass it through unchanged, not re-apply the 0.001 factor."""
+    spec = api_v1.form_specs.SimpleLevels[float](
+        title=api_v1.Title("Response time"),
+        level_direction=api_v1.form_specs.LevelDirection.UPPER,
+        form_spec_template=api_v1.form_specs.Float(),
+        prefill_fixed_levels=api_v1.form_specs.DefaultValue((0.1, 0.2)),
+        migrate=lambda v: api_v1.form_specs.migrate_to_float_simple_levels(v, 0.001),
+    )
+    legacy = convert_to_legacy_valuespec(spec, translate_to_current_language)
+    # Already in 2.4 format — must come through unchanged
+    assert legacy.transform_value(("fixed", (1.0, 2.0))) == ("fixed", (1.0, 2.0))
+
+
+def test_simple_levels_timespan_ms_only_display_not_corrupted() -> None:
+    """Regression: transform_value must not corrupt stored seconds values.
+
+    The legacy converter adds SECOND to the displayed_magnitudes so the cascade resets before
+    reaching the ms field.  This means transform_value is a pure pass-through for already
+    correct 2.4 values."""
+    legacy = convert_to_legacy_valuespec(
+        _ms_only_timespan_levels_spec(), translate_to_current_language
+    )
+    # Already in 2.4 format (seconds) — must come through unchanged
+    assert legacy.transform_value(("fixed", (1.0, 2.0))) == ("fixed", (1.0, 2.0))
+
+
+def test_simple_levels_timespan_ms_only_migrate_then_no_extra_scale() -> None:
+    """Regression: old ms format is migrated to seconds, not re-inflated by a display scale.
+
+    Old 2.3 value (1000.0, 2000.0) ms → migrate(×0.001) → ("fixed", (1.0, 2.0)) s.
+    No additional scaling must happen after migrate."""
+    legacy = convert_to_legacy_valuespec(
+        _ms_only_timespan_levels_spec(
+            migrate=lambda v: api_v1.form_specs.migrate_to_float_simple_levels(v, 0.001)
+        ),
+        translate_to_current_language,
+    )
+    assert legacy.transform_value((1000.0, 2000.0)) == ("fixed", (1.0, 2.0))
+
+
 def test_agent_config_rule_spec_transformations_work_with_previous_non_dict_values() -> None:
     legacy_rulespec = convert_to_legacy_rulespec(
         api_v1.rule_specs.AgentConfig(

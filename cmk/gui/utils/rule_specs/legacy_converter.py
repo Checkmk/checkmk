@@ -2019,18 +2019,48 @@ LevelsConfigModel = (
 )
 
 
-def _transform_levels_forth(value: object) -> LevelsConfigLegacyModel:
-    match value:
-        case "no_levels", None:
-            return "no_levels", None
-        case "fixed", tuple(fixed_levels):
-            return "fixed", fixed_levels
-        case "predictive", dict(predictive_levels):  # format released in 2.3.0b3
-            return "predictive", predictive_levels
-        case "cmk_postprocessed", "predictive_levels", predictive_levels:
-            return "predictive", predictive_levels
+def _make_transform_levels_forth(
+    migrate: Callable[[object], object] | None,
+) -> Callable[[object], LevelsConfigLegacyModel]:
+    def _transform_levels_forth(value: object) -> LevelsConfigLegacyModel:
+        match value:
+            case "no_levels", None:
+                return "no_levels", None
+            case "fixed", tuple(fixed_levels):
+                return "fixed", fixed_levels
+            case "predictive", dict(predictive_levels):  # format released in 2.3.0b3
+                return "predictive", predictive_levels
+            case "cmk_postprocessed", "predictive_levels", predictive_levels:
+                return "predictive", predictive_levels
+        if migrate is not None:
+            migrated = migrate(value)
+            if migrated == value:
+                raise ValueError(value)
+            return _transform_levels_forth(migrated)
+        raise ValueError(value)
 
-    raise ValueError(value)
+    return _transform_levels_forth
+
+
+def _ensure_seconds_in_display(
+    form_spec: ruleset_api_v1.form_specs.FormSpec[Any],
+) -> ruleset_api_v1.form_specs.FormSpec[Any]:
+    """Ensure SECOND is present in TimeSpan displayed_magnitudes when MILLISECOND is shown alone.
+
+    The legacy TimeSpan.render_input has a cascade bug: when SECOND is not displayed, the
+    whole-seconds value cascades to the milliseconds field with a factor of 1 instead of 1000,
+    so 1.0 s is rendered as 1 ms.  Adding SECOND forces the cascade to reset before ms, so ms
+    only receives the sub-second fractional part — which is computed correctly."""
+    if not isinstance(form_spec, ruleset_api_v1.form_specs.TimeSpan):
+        return form_spec
+    magnitudes = list(form_spec.displayed_magnitudes or ())
+    if (
+        ruleset_api_v1.form_specs.TimeMagnitude.MILLISECOND in magnitudes
+        and ruleset_api_v1.form_specs.TimeMagnitude.SECOND not in magnitudes
+    ):
+        magnitudes.append(ruleset_api_v1.form_specs.TimeMagnitude.SECOND)
+        return dataclasses.replace(form_spec, displayed_magnitudes=magnitudes)
+    return form_spec
 
 
 def _transform_levels_back(
@@ -2070,7 +2100,7 @@ def _convert_to_legacy_levels(
             _LevelDynamicChoice.FIXED.value,
             ruleset_api_v1.Title("Fixed levels").localize(localizer),
             _get_fixed_levels_choice_element(
-                to_convert.form_spec_template,
+                _ensure_seconds_in_display(to_convert.form_spec_template),
                 to_convert.prefill_fixed_levels,
                 to_convert.level_direction,
                 localizer,
@@ -2122,7 +2152,7 @@ def _convert_to_legacy_levels(
             validate=validate,  # type: ignore[arg-type]
         ),
         back=_transform_levels_back,
-        forth=_transform_levels_forth,
+        forth=_make_transform_levels_forth(to_convert.migrate),
     )
 
 

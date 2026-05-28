@@ -266,7 +266,7 @@ mod tests {
                 async_collect(&AgentChannel::from("ms/xxxx"), addr())
             )
             .await
-            .unwrap_or_else(|_| Ok(EMPTY_DATA)) // this is semi-OK: timeout
+            .unwrap_or(Ok(EMPTY_DATA)) // this is semi-OK: timeout
             .unwrap(),
             EMPTY_DATA
         );

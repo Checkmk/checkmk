@@ -61,6 +61,7 @@ x509-parser.workspace = true
 is_elevated.workspace = true
 mail_slot.workspace = true
 winapi = { workspace = true, features = ["processthreadsapi", "winsock2"] }
+winreg.workspace = true
 
 [dev-dependencies]
 assert_cmd.workspace = true

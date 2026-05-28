@@ -15,6 +15,10 @@ use log::{error, info, warn};
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
+#[cfg(windows)]
+use winreg::enums::{HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_64KEY};
+#[cfg(windows)]
+use winreg::RegKey;
 
 trait TrustEstablishing {
     fn prompt_server_certificate(&self, server: &str, port: &u16) -> AnyhowResult<()>;
@@ -711,7 +715,7 @@ fn maybe_register_updater(
     };
 
     if matches!(updater_registration, UpdaterRegistration::Keep) {
-        let cmk_update_agent_path = match _get_cmk_update_agent_path(CMK_UPDATE_AGENT_CMD) {
+        let agent_updater_executable = match get_agent_updater_executable() {
             Ok(path) => path,
             Err(e) => {
                 warn!(
@@ -724,7 +728,7 @@ fn maybe_register_updater(
             }
         };
 
-        if is_updater_registered(&cmk_update_agent_path) {
+        if is_updater_registered(&agent_updater_executable) {
             println!(
                 "Agent updater already registered for site {}. Skipping re-registration.",
                 connection_config.site_id
@@ -765,7 +769,8 @@ fn _prepare_register_updater_cmd(
     Ok(cmd)
 }
 
-fn _get_cmk_update_agent_path(cmk_update_agent_cmd: &str) -> AnyhowResult<String> {
+#[cfg(unix)]
+fn find_file_relatively(cmk_update_agent_cmd: &str) -> AnyhowResult<String> {
     let current_exe = std::env::current_exe().context("Failed to get current executable path")?;
 
     let agent_bin_dir = current_exe
@@ -781,15 +786,7 @@ fn _get_cmk_update_agent_path(cmk_update_agent_cmd: &str) -> AnyhowResult<String
         return Ok(local_path.to_string_lossy().to_string());
     }
 
-    if cfg!(windows) {
-        // On Windows, cmk-update-agent must be in the same directory
-        bail!(
-            "{} not found in the same directory as cmk-agent-ctl",
-            cmk_update_agent_cmd
-        );
-    };
-
-    // On Linux, fallback to checking PATH
+    // Fallback
     info!("Checking PATH for {}", cmk_update_agent_cmd);
     if !Command::new("which")
         .arg(cmk_update_agent_cmd)
@@ -808,11 +805,33 @@ fn _get_cmk_update_agent_path(cmk_update_agent_cmd: &str) -> AnyhowResult<String
     Ok(cmk_update_agent_cmd.to_string())
 }
 
+fn get_agent_updater_executable() -> AnyhowResult<String> {
+    #[cfg(unix)]
+    return find_file_relatively(CMK_UPDATE_AGENT_CMD);
+    #[cfg(windows)]
+    // On Windows, the agent updater is invoked with `check_mk_agent.exe updater`,
+    // so the executable we need is the windows agent
+    return get_windows_agent_executable();
+}
+
+#[cfg(windows)]
+fn get_windows_agent_executable() -> AnyhowResult<String> {
+    // Windows agent controller is invoked either from install dir (manual calls),
+    // or runtime dir (Windows agent subprocess),
+    // so we can't retrieve the windows agent exe relatively.
+    let key = RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey_with_flags(
+        r"SYSTEM\CurrentControlSet\Services\CheckmkService",
+        KEY_READ | KEY_WOW64_64KEY,
+    )?;
+    let raw: String = key.get_value("ImagePath")?;
+    Ok(raw.trim().trim_matches('"').to_string())
+}
+
 pub fn register_updater_subprocess(
     updater_registration_config: &UpdaterRegistrationInput,
     registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
-    let cmk_update_agent_path = match _get_cmk_update_agent_path(CMK_UPDATE_AGENT_CMD) {
+    let agent_updater_executable = match get_agent_updater_executable() {
         Ok(path) => path,
         Err(e) => {
             warn!(
@@ -840,7 +859,7 @@ pub fn register_updater_subprocess(
     let result = (|| {
         let mut cmd = match _prepare_register_updater_cmd(
             updater_registration_config,
-            &cmk_update_agent_path,
+            &agent_updater_executable,
             &password_file_path,
         ) {
             Ok(cmd) => cmd,

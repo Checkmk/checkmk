@@ -582,6 +582,7 @@ dependencies = [
  "tracing",
  "uuid",
  "winapi",
+ "winreg",
  "x509-parser",
 ]
 

@@ -116,11 +116,18 @@ def _timeout(seconds: int, error_msg: str) -> Iterator[None]:
         signal.signal(signal.SIGALRM, alarm_handler)
 
 
-def _wait_for_piggyback_track_ready(stdout: IO[str]) -> None:
-    """Wait for the cmk-broker-test to be ready"""
+def _wait_for_piggyback_track_ready(stdout: IO[str], timeout: int) -> None:
+    """Wait for the cmk-broker-test to be ready
+
+    Returns:
+        None: on successful execution within `timeout` seconds.
+
+    Raises:
+        PBTimeoutError: raised after `timeout` seconds.
+    """
     with _timeout(
-        CMK_TRACK_TIMEOUT,
-        f"`cmk-piggyback track` did not start within {CMK_TRACK_TIMEOUT} secs",
+        timeout,
+        f"`cmk-piggyback track` did not start within {timeout} secs",
     ):
         while line := stdout.readline():
             if "Tracking incoming messages" in line:
@@ -128,28 +135,41 @@ def _wait_for_piggyback_track_ready(stdout: IO[str]) -> None:
 
 
 def piggybacked_data_gets_updated(
-    source_site: Site, target_site: Site, hostname_source: str, hostname_piggybacked: str
+    source_site: Site,
+    target_site: Site,
+    hostname_source: str,
+    hostname_piggybacked: str,
+    timeout: int = CMK_TRACK_TIMEOUT,
 ) -> bool:
-    """Track incoming piggybacked data on the target site"""
+    """Track incoming piggybacked data on the target site.
 
-    try:
-        with target_site.execute(["cmk-piggyback", "track"], stdout=subprocess.PIPE) as track:
+    Use `timeout` to provide thresholds on how long it takes for
+    + `cmk-piggyback track` to be ready.
+    + desired data to be present in STDOUT of `cmk-piggyback track`.
+
+    Returns:
+        True: desired changes to piggyback data is reflected in incoming data.
+        False: desired changes to piggyback data is not reflected in incoming data,
+
+    Raises:
+        PBTimeoutError: raised when `timeout` thresholds are crossed.
+    """
+
+    with target_site.execute(["cmk-piggyback", "track"], stdout=subprocess.PIPE) as track:
+        try:
             if track.stdout is None:
-                raise NotImplementedError(
-                    "The method expects STDOUT to be present, "
-                    "consider initializing `stdout=subprocess.PIPE`!"
+                raise RuntimeError(
+                    "The method expects STDOUT to be available, "
+                    "consider initializing `execute(..., stdout=subprocess.PIPE)`!"
                 )
-            _wait_for_piggyback_track_ready(track.stdout)
+            _wait_for_piggyback_track_ready(track.stdout, timeout)
 
             source_site.schedule_check(hostname_source, "Check_MK")
-            with _timeout(
-                CMK_TRACK_TIMEOUT,
-                f"`cmk-piggyback track` timed out after {CMK_TRACK_TIMEOUT} secs",
-            ):
+            with _timeout(timeout, f"`cmk-piggyback track` timed out after {timeout} secs"):
                 while line := track.stdout.readline():
                     if f"{hostname_source} -> {hostname_piggybacked}" in line:
                         return True
-    except PBTimeoutError:
-        pass
-
-    return False
+                return False
+        except (PBTimeoutError, RuntimeError):
+            track.terminate()
+            raise

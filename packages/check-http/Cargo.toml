@@ -32,7 +32,7 @@ reqwest = { workspace = true, features = [
   "socks",
 ] }
 scrypt = { workspace = true, features = ["std"] }
-tokio = { workspace = true, features = ["rt", "macros", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["rt", "macros"] }
 tracing.workspace = true
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 x509-parser.workspace = true

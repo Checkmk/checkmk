@@ -564,7 +564,7 @@ def load(
 ) -> LoadingResult:
     raw_config = _load_config(get_default_config(), StorageFormat.PICKLE, with_conf_d=with_conf_d)
 
-    loading_result = _perform_post_config_loading_actions(
+    loading_result = perform_post_config_loading_actions(
         raw_config,
         get_builtin_host_labels,
         edition=edition,
@@ -592,19 +592,17 @@ def load(
 
 def load_packed_config(
     config_path: Path,
-    get_builtin_host_labels: Callable[[SiteId], Labels],
-    edition: cmk_version.Edition,
     ipaddresses_override: Mapping[HostName, HostAddress] | None = None,
     ipv6addresses_override: Mapping[HostName, HostAddress] | None = None,
-) -> LoadingResult:
+) -> dict[str, Any]:
     """Load the configuration for the CMK helpers of CMC
 
     These files are written by PackedConfig().
 
-    Should have a result similar to the load() above. With the exception that the
-    check helpers would only need check related config variables.
-
-    The validations which are performed during load() also don't need to be performed.
+    Returns the merged raw config dict; callers must invoke
+    `perform_post_config_loading_actions` to build a `LoadingResult`.
+    Compared to `load()`, the validations performed there don't need to be
+    performed for the check helpers.
 
     See Also:
         cmk.base.core.nagios._dump_precompiled_hostcheck()
@@ -622,14 +620,10 @@ def load_packed_config(
     if ipv6addresses_override is not None:
         raw_config["ipv6addresses"] = ipv6addresses_override
 
-    return _perform_post_config_loading_actions(
-        raw_config,
-        get_builtin_host_labels,
-        edition=edition,
-    )
+    return raw_config
 
 
-def _perform_post_config_loading_actions(
+def perform_post_config_loading_actions(
     loaded_context: dict[str, Any],
     get_builtin_host_labels: Callable[[SiteId], Labels],
     *,

@@ -97,15 +97,18 @@ def main() -> int:
         plugins = load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
 
         app = make_app(cmk_version.edition(omd_root))
-        loading_result = config.load_packed_config(
+        raw_config = config.load_packed_config(
             active_config_path,
-            get_builtin_host_labels=app.get_builtin_host_labels,
-            edition=app.edition,
             # Note: CONFIG.ip{,v6}addresses is populated not only with the values
             # that would be loaded here anyway, but additionally with some looked
             # up addresses.
             ipaddresses_override=CONFIG.ipaddresses,
             ipv6addresses_override=CONFIG.ipv6addresses,
+        )
+        loading_result = config.perform_post_config_loading_actions(
+            raw_config,
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            edition=app.edition,
         )
 
         secrets = load_secrets_file(

@@ -1,5 +1,5 @@
---- nagios.b/html/main.php	2013-03-15 12:14:02.000000000 +0100
-+++ nagios.a/html/main.php	2013-03-24 13:53:29.000000000 +0100
+--- nagios-base/html/main.php	2013-08-30 19:46:14.000000000 +0200
++++ nagios-step/html/main.php	2026-04-25 18:01:19.086258665 +0200
 @@ -86,13 +86,6 @@
  			<li><a href="http://go.nagios.com/nagioscore/certification" target="_blank">Get certified</a></li>
  			</ul>

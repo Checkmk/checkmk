@@ -1,5 +1,5 @@
---- nagios-3.5.0/include/downtime.h	2013-02-10 00:55:47.000000000 +0100
-+++ /tmp/downtime.h	2013-04-04 17:05:14.000000000 +0200
+--- nagios-base/include/downtime.h	2013-08-30 19:46:14.000000000 +0200
++++ nagios-step/include/downtime.h	2026-04-25 18:01:19.100584921 +0200
 @@ -39,24 +39,26 @@
  	char *service_description;
  	time_t entry_time;

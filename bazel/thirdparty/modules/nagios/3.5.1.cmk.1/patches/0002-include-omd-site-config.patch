@@ -1,6 +1,5 @@
-diff -ur nagios-3.2.1/html/includes/utils.inc.php nagios-3.2.1.new/html/includes/utils.inc.php
---- nagios-3.2.1/html/includes/utils.inc.php	2009-03-10 21:05:43.000000000 +0100
-+++ nagios-3.2.1.new/html/includes/utils.inc.php	2010-07-03 20:14:37.000000000 +0200
+--- nagios-base/html/includes/utils.inc.php	2013-08-30 19:46:14.000000000 +0200
++++ nagios-step/html/includes/utils.inc.php	2026-04-25 18:01:19.083424746 +0200
 @@ -1,7 +1,13 @@
  <?php
  // HELPER UTILITIES

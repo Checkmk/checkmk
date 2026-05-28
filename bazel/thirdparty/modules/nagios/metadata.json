@@ -1,0 +1,7 @@
+{
+  "homepage": "https://www.nagios.org/",
+  "maintainers": [],
+  "repository": ["https://github.com/NagiosEnterprises/nagioscore"],
+  "versions": ["3.5.1.cmk.1"],
+  "yanked_versions": {}
+}

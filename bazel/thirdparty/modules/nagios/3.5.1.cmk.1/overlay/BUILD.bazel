@@ -1,4 +1,4 @@
-load("@//bazel/rules:dependency_info.bzl", "dependency_info")
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 dependency_info(
@@ -9,7 +9,7 @@ dependency_info(
     license_text = "LICENSE",
     purl_namespace = None,
     purl_type = "generic",
-    version = "3.5.1",
+    version = module_version(),
 )
 
 filegroup(

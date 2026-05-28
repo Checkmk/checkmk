@@ -16,10 +16,6 @@ load("//omd/packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid_workspace")
 
 mod_fcgid_workspace()
 
-load("//omd/packages/nagios:nagios_http.bzl", "nagios_workspace")
-
-nagios_workspace()
-
 load("//omd/packages/mod_wsgi:mod_wsgi_http.bzl", "mod_wsgi_workspace")
 
 mod_wsgi_workspace()

@@ -1,5 +1,5 @@
---- nagios.a/html/main.php	2013-03-24 13:53:29.000000000 +0100
-+++ nagios.b/html/main.php	2013-03-24 13:55:49.000000000 +0100
+--- nagios-base/html/main.php	2026-04-25 18:01:19.088940286 +0200
++++ nagios-step/html/main.php	2026-04-25 18:01:19.090022395 +0200
 @@ -40,38 +40,10 @@
  <div class="product">Nagios<sup><span style="font-size: small;">&reg;</span></sup> Core<sup><span style="font-size: small;">&trade;</span></sup></div>
  <div class="version">Version 3.5.1</div>

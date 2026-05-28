@@ -1,6 +1,5 @@
-diff -ru nagios-3.4.4.orig/base/nebmods.c nagios-3.4.4/base/nebmods.c
---- nagios-3.4.4.orig/base/nebmods.c	2012-06-21 12:58:41.000000000 +0200
-+++ nagios-3.4.4/base/nebmods.c	2013-01-27 11:18:35.278430012 +0100
+--- nagios-base/base/nebmods.c	2013-08-30 19:46:14.000000000 +0200
++++ nagios-step/base/nebmods.c	2026-04-25 18:01:19.080596225 +0200
 @@ -197,25 +197,13 @@
  	   So... the trick is to (1) copy the module to a temp file, (2) dlopen() the temp file, and (3) immediately delete the temp file.
  	************/

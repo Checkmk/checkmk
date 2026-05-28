@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from copy import deepcopy
 
 import pytest
@@ -492,3 +493,54 @@ def test_check_w32time_status_no_win32time() -> None:
         list(w32time_status.check_plugin_w32time_status.check_function(DEFAULT_PARAMS, qs))
         == expected
     )
+
+
+@pytest.mark.parametrize(
+    "states, expected",
+    [
+        pytest.param(
+            {"never_synced": State.CRIT},
+            State(w32time_status.DEFAULT_PARAMS["states"]["stale_data"]),
+            id="only_unrelated_param_specified",
+        ),
+        pytest.param(
+            w32time_status.DEFAULT_PARAMS["states"],
+            State(w32time_status.DEFAULT_PARAMS["states"]["stale_data"]),
+            id="all_params_specified",
+        ),
+        pytest.param({"stale_data": State.WARN}, State.WARN, id="default_overridden"),
+    ],
+)
+def test_check_w32time_status_incomplete_states(
+    states: Mapping[str, State], expected: State
+) -> None:
+    """
+    Default parameters do not merge recursively.
+    If someone specifies some states but not all, we can KeyError if the
+    defaults never get added in.
+
+    Regression test against CMK-35262.
+    """
+    params = deepcopy(w32time_status.DEFAULT_PARAMS)
+    params["states"] = states  # type: ignore[typeddict-item]
+    qs = w32time_status.QueryStatus(
+        leap_indicator=0,
+        stratum=3,
+        precision=-23,
+        root_delay=0.0336332,
+        root_dispersion=0.1054265,
+        reference_id=2892536502,
+        last_successful_sync_time="15.09.2025 13:12:56",
+        source="de.pool.ntp.org",
+        poll_interval=8192,
+        phase_offset=-0.0003717,
+        clock_rate=0.0156249,
+        state_machine=2,
+        time_source_flags=0,
+        server_role=0,
+        last_sync_error=2,  # stale_data
+        seconds_since_last_good_sync=4812.7981071,
+    )
+    result = list(w32time_status.check_plugin_w32time_status.check_function(params, qs))
+    assert isinstance(result[-1], Result)  # mypy
+    assert result[-1].state == expected

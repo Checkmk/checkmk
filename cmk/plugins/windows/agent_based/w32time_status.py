@@ -209,9 +209,12 @@ def check_w32time_status(params: Params, section: QueryStatus | ErrorStatus) -> 
         yield Result(state=State.WARN, summary=section.error)
         return
 
+    # Parameter merging is not a deep merge, so merge states against defaults.
+    states = DEFAULT_PARAMS["states"] | params.get("states", {})
+
     if section.state_machine == 0 and section.reference_id == 0:
         yield Result(
-            state=State(params["states"]["never_synced"]),
+            state=State(states["never_synced"]),
             summary="Never synchronized (w32tm reported reference ID and state machine both 0)",
         )
         return
@@ -264,7 +267,7 @@ def check_w32time_status(params: Params, section: QueryStatus | ErrorStatus) -> 
         render_func=str,
     )
 
-    yield from _sync_result_to_check_result(params["states"], section.last_sync_error)
+    yield from _sync_result_to_check_result(states, section.last_sync_error)
 
 
 check_plugin_w32time_status = CheckPlugin(

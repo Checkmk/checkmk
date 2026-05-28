@@ -33,12 +33,10 @@ _FILTER_GROUP_TITLES: Mapping[FilterGroup, str] = {
     FilterGroup.INVENTORY: "Inventory",
     FilterGroup.FOLDER: "Folder",
     FilterGroup.HOST_HAS: "Host has",
-    FilterGroup.HOST_ADDRESS: "Host address",
     FilterGroup.HOST_CHECK_COMMAND: "Host check command",
     FilterGroup.HOST_CONTACT: "Host contact",
     FilterGroup.HOST_IN: "Host in",
-    FilterGroup.HOST_IS: "Host is",
-    FilterGroup.HOST_NAME: "Host name",
+    FilterGroup.HOST_PROPERTIES: "Host properties",
     FilterGroup.HOST_STATE: "Host state",
     FilterGroup.KUBERNETES: "Kubernetes",
     FilterGroup.SITE: "Site",
@@ -49,6 +47,10 @@ _FILTER_GROUP_TITLES: Mapping[FilterGroup, str] = {
     FilterGroup.SERVICE_IN: "Service in",
     FilterGroup.SERVICE_IS: "Service is",
     FilterGroup.SERVICE_STATE: "Service state",
+    FilterGroup.AGENT: "Agent",
+    FilterGroup.CLOUD: "Cloud",
+    FilterGroup.NOTIFICATIONS: "Notifications",
+    FilterGroup.OTHER: "Other",
 }
 
 

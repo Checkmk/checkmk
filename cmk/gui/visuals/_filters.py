@@ -151,7 +151,6 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 negateable=True,
             ),
             description=_l("Search field allowing regular expressions and partial matches"),
-            group=FilterGroup.HOST_NAME,
         )
     )
 
@@ -169,7 +168,6 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             ),
             description=_l("Exact match, used for linking"),
             is_show_more=True,
-            group=FilterGroup.HOST_NAME,
         )
     )
 
@@ -234,6 +232,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 op="~~",
             ),
             is_show_more=True,
+            group=FilterGroup.SERVICE_NAME,
         )
     )
 
@@ -259,7 +258,6 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             info="host",
             description=_l("Search field allowing regular expressions and partial matches"),
             query_filter=query_filters.HostnameOrAliasQuery(),
-            group=FilterGroup.HOST_NAME,
         )
     )
 
@@ -377,7 +375,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
                 what="primary",
             ),
             is_show_more=True,
-            group=FilterGroup.HOST_ADDRESS,
+            group=FilterGroup.HOST_PROPERTIES,
         )
     )
 
@@ -390,7 +388,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
                 ident="host_ipv4_address",
                 what="ipv4",
             ),
-            group=FilterGroup.HOST_ADDRESS,
+            group=FilterGroup.HOST_PROPERTIES,
         )
     )
 
@@ -403,7 +401,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
                 ident="host_ipv6_address",
                 what="ipv6",
             ),
-            group=FilterGroup.HOST_ADDRESS,
+            group=FilterGroup.HOST_PROPERTIES,
         )
     )
 
@@ -418,7 +416,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
                 filter_code=query_filters.address_family,
             ),
             is_show_more=True,
-            group=FilterGroup.HOST_ADDRESS,
+            group=FilterGroup.HOST_PROPERTIES,
         )
     )
 
@@ -433,7 +431,7 @@ def register_host_address_filters(filter_registry: FilterRegistry) -> None:
                 filter_code=query_filters.address_families,
             ),
             is_show_more=True,
-            group=FilterGroup.HOST_ADDRESS,
+            group=FilterGroup.HOST_PROPERTIES,
         )
     )
 
@@ -449,6 +447,7 @@ def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> 
                 ident="hostgroups", column="host_groups", op=">=", negateable=True
             ),
             options=all_groups,  # type: ignore[arg-type]
+            group=FilterGroup.HOST_PROPERTIES,
         )
     )
 
@@ -462,6 +461,7 @@ def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> 
                 ident="servicegroups", column="service_groups", op=">=", negateable=True
             ),
             options=all_groups,  # type: ignore[arg-type]
+            group=FilterGroup.SERVICE_IN,
         )
     )
     filter_registry.register(
@@ -478,7 +478,7 @@ def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> 
                 negateable=True,
             ),
             group_type="host",
-            group=FilterGroup.HOST_IS,
+            group=FilterGroup.HOST_PROPERTIES,
         )
     )
 
@@ -752,6 +752,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
                 options=query_filters.svc_state_options("hd"),
                 livestatus_query=partial(query_filters.service_state_filter, "hd"),
             ),
+            group=FilterGroup.SERVICE_STATE,
         )
     )
 
@@ -779,6 +780,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
                 options=query_filters.svc_problems_options("hosts_having_services_"),
                 livestatus_query=query_filters.host_having_svc_problems_filter,
             ),
+            group=FilterGroup.HOST_STATE,
         )
     )
 
@@ -809,6 +811,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
                 ident="has_performance_data", filter_code=query_filters.service_perfdata_toggle
             ),
             is_show_more=True,
+            group=FilterGroup.OTHER,
         )
     )
 
@@ -820,6 +823,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
             query_filter=query_filters.TristateQuery(
                 ident="in_downtime", filter_code=query_filters.host_service_perfdata_toggle
             ),
+            group=FilterGroup.SERVICE_IN,
         )
     )
 
@@ -835,7 +839,7 @@ def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> 
                 ),
             ),
             is_show_more=True,
-            group=FilterGroup.HOST_IS,
+            group=FilterGroup.HOST_STATE,
         )
     )
 
@@ -913,6 +917,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         sort_index=250,
         info="service",
         is_show_more=True,
+        group=FilterGroup.OTHER,
     )
 
     filter_nagios_flag_with_register(
@@ -939,6 +944,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         title=_l("Host problem has been acknowledged"),
         sort_index=131,
         info="host",
+        group=FilterGroup.HOST_IN,
     )
 
     filter_nagios_flag_with_register(
@@ -948,6 +954,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         sort_index=132,
         info="host",
         is_show_more=True,
+        group=FilterGroup.HOST_CHECK_COMMAND,
     )
 
     filter_nagios_flag_with_register(
@@ -956,6 +963,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         title=_l("Host notifications enabled"),
         sort_index=133,
         info="host",
+        group=FilterGroup.NOTIFICATIONS,
     )
 
     filter_nagios_flag_with_register(
@@ -964,6 +972,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         title=_l("Problem acknowledged"),
         sort_index=230,
         info="service",
+        group=FilterGroup.SERVICE_IN,
     )
 
     filter_nagios_flag_with_register(
@@ -991,6 +1000,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         sort_index=233,
         info="service",
         is_show_more=True,
+        group=FilterGroup.SERVICE_CHECK_COMMAND,
     )
 
     filter_nagios_flag_with_register(
@@ -999,6 +1009,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         title=_l("Notifications enabled"),
         sort_index=234,
         info="service",
+        group=FilterGroup.NOTIFICATIONS,
     )
 
     filter_nagios_flag_with_register(
@@ -1008,6 +1019,7 @@ def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> N
         sort_index=236,
         info="service",
         is_show_more=True,
+        group=FilterGroup.SERVICE_IN,
     )
 
     filter_nagios_flag_with_register(
@@ -1038,6 +1050,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
             query_filter=query_filters.NumberRangeQuery(
                 ident="host_notif_number", column="current_notification_number"
             ),
+            group=FilterGroup.NOTIFICATIONS,
         )
     )
 
@@ -1049,6 +1062,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
             query_filter=query_filters.NumberRangeQuery(
                 ident="svc_notif_number", column="current_notification_number"
             ),
+            group=FilterGroup.NOTIFICATIONS,
         )
     )
 
@@ -1060,6 +1074,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
             query_filter=query_filters.NumberRangeQuery(
                 ident="host_num_services", column="num_services"
             ),
+            group=FilterGroup.OTHER,
         )
     )
 
@@ -1071,6 +1086,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
             query_filter=query_filters.TimeQuery(
                 ident="svc_last_state_change", column="service_last_state_change"
             ),
+            group=FilterGroup.SERVICE_STATE,
         )
     )
 
@@ -1082,6 +1098,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
             query_filter=query_filters.TimeQuery(
                 ident="svc_last_check", column="service_last_check"
             ),
+            group=FilterGroup.SERVICE_STATE,
         )
     )
 
@@ -1091,6 +1108,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
             sort_index=250,
             info="host",
             query_filter=query_filters.TimeQuery(ident="host_last_state_change"),
+            group=FilterGroup.HOST_STATE,
         )
     )
 
@@ -1100,6 +1118,7 @@ def register_host_and_service_detail_filters(filter_registry: FilterRegistry) ->
             sort_index=251,
             info="host",
             query_filter=query_filters.TimeQuery(ident="host_last_check"),
+            group=FilterGroup.HOST_STATE,
         )
     )
 
@@ -1634,6 +1653,7 @@ def register_custom_attribute_filters(filter_registry: FilterRegistry) -> None:
             title=_l("Service custom attribute (regex)"),
             info="service",
             choice_func=_service_attribute_choices,
+            group=FilterGroup.SERVICE_IS,
         )
     )
 
@@ -1643,6 +1663,7 @@ def register_custom_attribute_filters(filter_registry: FilterRegistry) -> None:
             title=_l("Host custom attribute (regex)"),
             info="host",
             choice_func=_host_attribute_choices,
+            group=FilterGroup.HOST_PROPERTIES,
         )
     )
 
@@ -1854,5 +1875,6 @@ def register_site_statistics_by_core_filter(filter_registry: FilterRegistry) -> 
             info="service",
             htmlvars=[FilterCMKSiteStatisticsByCorePIDs.ID],
             link_columns=[],
+            group=FilterGroup.SERVICE_CHECK_COMMAND,
         )
     )

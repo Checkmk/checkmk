@@ -158,6 +158,7 @@ ULTIMATE_WHEELS = PRO_WHEELS + [
     "//non-free/packages/cmk-otel-collector:wheel",
     "//non-free/packages/cmk-plugins-nonfree:wheel-aws_extended",
     "//non-free/packages/cmk-plugins-nonfree:wheel-azure_v2_extended",
+    "//non-free/packages/cmk-plugins-nonfree:wheel-gcp_extended",
     "//non-free/packages/cmk-telemetry:wheel",
 ]
 

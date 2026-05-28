@@ -4,10 +4,6 @@ load("//omd/packages/perl-modules:perl-modules_http.bzl", "perl_modules")
 
 perl_modules()
 
-load("//omd/packages/crypt-ssleay:cryptssl_http.bzl", "crypt_ssleay_workspace")
-
-crypt_ssleay_workspace()
-
 load("//omd/packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid_workspace")
 
 mod_fcgid_workspace()

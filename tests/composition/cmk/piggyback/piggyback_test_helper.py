@@ -71,12 +71,23 @@ def get_piggybacked_service_time(
 
 def piggybacked_service_discovered(
     central_site: Site, source_hostname: str, piggybacked_hostname: str
-) -> bool:
+) -> None:
+    """Validate that a desired service has been discovered on host 'piggybacked_hostname'.
+
+    Raises:
+        AssertionError: when expected service is not discovered within the provided host.
+        TypeError: when REST-API response to `service_discovery.get_discovery_result` changes.
+    """
     services = central_site.openapi.service_discovery.get_discovery_result(piggybacked_hostname)[
         "extensions"
     ]
     if isinstance(services, dict) and isinstance((check_table := services["check_table"]), dict):
-        return f"local-Local service piggybacked from {source_hostname}" in check_table
+        expected_service = f"local-Local service piggybacked from {source_hostname}"
+        assert expected_service in check_table, (
+            f"Missing service '{expected_service}' on host '{piggybacked_hostname}'. "
+            f"List of discovered services:\n{sorted(check_table)}"
+        )
+        return
     raise TypeError("Expected 'extensions' and its nested fields to be a dictionary")
 
 
@@ -149,7 +160,7 @@ def piggybacked_data_gets_updated(
 
     Returns:
         True: desired changes to piggyback data is reflected in incoming data.
-        False: desired changes to piggyback data is not reflected in incoming data,
+        False: desired changes to piggyback data is not reflected in incoming data.
 
     Raises:
         PBTimeoutError: raised when `timeout` thresholds are crossed.

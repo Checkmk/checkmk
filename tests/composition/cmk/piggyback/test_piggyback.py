@@ -133,7 +133,7 @@ def test_piggyback_services_source_remote(piggyback_env_two_site_setup: tuple[Si
     _HOSTNAME_PIGGYBACKED = "piggybacked_host_source_remote"
     with _setup_piggyback_host_and_check(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED):
         _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
-        assert piggybacked_service_discovered(
+        piggybacked_service_discovered(
             central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
 
@@ -372,11 +372,7 @@ def test_piggyback_services_remote_remote(
         central_site.openapi.service_discovery.run_discovery_and_wait_for_completion(
             _HOSTNAME_PIGGYBACKED
         )
-        assert piggybacked_service_discovered(
-            central_site, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
-        ), (
-            "Piggybacked service was not discovered on remote_site2 for the host piggybacked from remote_site1"
-        )
+        piggybacked_service_discovered(central_site, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED)
 
 
 @contextmanager
@@ -465,7 +461,7 @@ def test_piggyback_rename_host(piggyback_env_two_site_setup: tuple[Site, Site]) 
         _create_and_rename_host(central_site, remote_site.id, _HOSTNAME_PIGGYBACKED),
     ):
         _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
-        assert piggybacked_service_discovered(
+        piggybacked_service_discovered(
             central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
 
@@ -594,7 +590,7 @@ def test_piggyback_services_move_host(
         assert piggybacked_data_gets_updated(
             central_site, remote_site_2, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
-        assert piggybacked_service_discovered(
+        piggybacked_service_discovered(
             central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
 
@@ -615,7 +611,7 @@ def test_piggyback_host_removal(
         assert piggybacked_data_gets_updated(
             central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
-        assert piggybacked_service_discovered(
+        piggybacked_service_discovered(
             central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
         )
 

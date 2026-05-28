@@ -61,10 +61,6 @@ configure_make(
         "libcrypto.so",
         "libcrypto.so.3",
     ],
-    out_static_libs = [
-        "libssl.a",
-        "libcrypto.a",
-    ],
     set_file_prefix_map = True,
     targets = [
         "build_programs",
@@ -100,19 +96,89 @@ cc_export_shared_library(
 
 cc_export_static_library(
     name = "libssl.a",
-    srcs = [":openssl"],
+    srcs = [":openssl_static"],
     static_library = "libssl.a",
 )
 
 cc_export_static_library(
     name = "libcrypto.a",
-    srcs = [":openssl"],
+    srcs = [":openssl_static"],
     static_library = "libcrypto.a",
 )
 
 filegroup(
     name = "gen_dir",
     srcs = [":openssl"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)
+
+configure_make(
+    name = "openssl_static",
+    # Pass DESTDIR to make so `make install_dev` writes into a
+    # throwaway staging directory inside $INSTALLDIR rather than to
+    # the literal absolute paths (--prefix=/usr, --libdir=/usr/lib,
+    # --openssldir=/etc/ssl) we bake into the libraries via
+    # configure_options below.  The baked paths still appear in
+    # libcrypto.a's .rodata as OPENSSLDIR/ENGINESDIR/MODULESDIR --
+    # that is the whole point: consumers that statically link
+    # libcrypto.a (e.g. monitoring-plugins/check_dhcp,
+    # monitoring-plugins/check_icmp) inherit those strings, and we
+    # need them to be deterministic FHS paths rather than per-build
+    # bazel sandbox paths.  postfix_script then relocates the .a
+    # files and headers from the staging tree into the lib/include
+    # layout rules_foreign_cc expects.
+    args = [
+        "-j6",
+        "DESTDIR=$$INSTALLDIR$$/staging",
+    ],
+    configure_command = "config",
+    configure_in_place = True,
+    configure_options = [
+        # See the args note above: these absolute paths bake stable
+        # OPENSSLDIR/LIBDIR/ENGINESDIR/MODULESDIR strings into
+        # libcrypto.a so the bazel sandbox path does not leak into
+        # binaries that statically link this archive.  The strings
+        # are dead under correct operation -- the only consumers of
+        # this static archive (monitoring-plugins root plugins,
+        # Rust openssl-sys for host_crates) do not load openssl
+        # config files and do not dlopen engines or providers.
+        "--prefix=/usr",
+        "--libdir=/usr/lib",
+        "--openssldir=/etc/ssl",
+        "enable-md2",
+        "no-module",
+        "no-shared",
+        "no-tests",
+        "-fPIC",
+        "-O2",
+    ],
+    lib_name = "openssl_static",
+    lib_source = ":all_srcs",
+    out_lib_dir = "lib",
+    out_static_libs = [
+        "libssl.a",
+        "libcrypto.a",
+    ],
+    postfix_script = """
+        set -e
+        mkdir -p $${INSTALLDIR}/lib $${INSTALLDIR}/include
+        cp -P $${INSTALLDIR}/staging/usr/lib/libcrypto.a $${INSTALLDIR}/lib/
+        cp -P $${INSTALLDIR}/staging/usr/lib/libssl.a $${INSTALLDIR}/lib/
+        cp -r $${INSTALLDIR}/staging/usr/include/* $${INSTALLDIR}/include/
+        rm -rf $${INSTALLDIR}/staging
+    """,
+    set_file_prefix_map = True,
+    targets = [
+        "build_libs",
+        "install_dev",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "gen_static_dir",
+    srcs = [":openssl_static"],
     output_group = "gen_dir",
     visibility = ["//visibility:public"],
 )
@@ -127,14 +193,5 @@ cc_library(
         ":libssl.so.3",
         ":libcrypto.so",
         ":libcrypto.so.3",
-    ],
-)
-
-cc_library(
-    name = "openssl_static",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":libcrypto.a",
-        ":libssl.a",
     ],
 )

@@ -1718,7 +1718,7 @@
   "pkg:npm/unplugin-utils@0.3.1": "MIT",
   "pkg:npm/unplugin@3.0.0": "MIT",
   "pkg:npm/util-deprecate@1.0.2": "MIT",
-  "pkg:npm/uuid@13.0.0": "MIT",
+  "pkg:npm/uuid@14.0.0": "MIT",
   "pkg:npm/vue-component-type-helpers@3.1.0": "MIT",
   "pkg:npm/vue-component-type-helpers@3.2.6": "MIT",
   "pkg:npm/vue-component-type-helpers@3.2.7": "MIT",

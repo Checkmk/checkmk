@@ -25,7 +25,7 @@ $package_name = Split-Path -Path (Get-Location) -Leaf
 $exe_name = "$package_name.exe"
 $work_dir = "$pwd"
 $cargo_toolchain = "1.90.0" # to be in sync with rust toolchain/bazel/etc
-$cargo_target = "i686-pc-windows-msvc"
+$cargo_target = "x86_64-pc-windows-msvc"
 
 $packBuild = $false
 $packClippy = $false

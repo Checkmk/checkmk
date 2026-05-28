@@ -5,172 +5,261 @@
 //! Formats and prints report summaries to the console.
 
 use comfy_table::{Cell, Table};
+use std::io::IsTerminal;
 use std::path::Path;
 
+use super::finding::Finding;
 use super::utils::find_common_prefix;
-use super::{DependencyStatus, Report};
+use super::Report;
+
+/// A path-keyed section sourced from `report.findings`: extract the path and a
+/// pre-rendered right-hand value for the findings of one variant, or `None` for
+/// findings of other variants.
+type FindingRow<'a> = Option<(&'a Path, String)>;
+
+/// A single path-keyed finding section: its column headers, its summary label,
+/// and a matcher that turns a single finding into a [`FindingRow`].
+type FindingSection = (
+    (&'static str, &'static str),
+    &'static str,
+    for<'a> fn(&Finding<'a>) -> FindingRow<'a>,
+);
+
+/// The path-keyed finding sections, in display order. Each entry is its column
+/// headers, its summary label, and a matcher that turns a single finding into a
+/// table row (or `None` if the finding belongs to a different section). Adding a
+/// section is one entry here, not a new hand-written block in `summarize_report`.
+///
+/// Every variant is one finding per ELF, so each matcher yields at most one row
+/// per file and the "Total: N ELF file(s)" labels are accurate counts of files.
+///
+/// `SystemDependencyFoundInPackage` is absent on purpose: it is keyed by
+/// dependency name rather than a path, so it gets its own table below. The
+/// `every_finding_is_rendered` guard keeps this list exhaustive.
+const FINDING_SECTIONS: &[FindingSection] = &[
+    (
+        ("ELF File", "Missing Dependencies"),
+        "ELF file(s) with missing dependencies",
+        |f| match f {
+            Finding::MissingDependency { path, dependencies } => {
+                Some((*path, dependencies.join(", ")))
+            }
+            _ => None,
+        },
+    ),
+    (
+        ("ELF File", "Invalid Entries"),
+        "ELF file(s) with invalid RPATH/RUNPATH entries",
+        |f| match f {
+            Finding::RpathShape { path, paths } => Some((*path, paths.join("\n"))),
+            _ => None,
+        },
+    ),
+    (
+        ("ELF File", "Parse Error"),
+        "ELF file(s) that could not be parsed",
+        |f| match f {
+            Finding::UnreadableElf { path, message } => Some((*path, (*message).to_string())),
+            _ => None,
+        },
+    ),
+    (
+        ("ELF File", "Dependency Errors"),
+        "ELF file(s) with dependency resolution errors",
+        |f| match f {
+            Finding::DependencyResolutionError { path, errors } => Some((
+                *path,
+                errors
+                    .iter()
+                    .map(|(dependency, message)| format!("{dependency}: {message}"))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            )),
+            _ => None,
+        },
+    ),
+];
+
+/// Compile-time guard that every `Finding` variant is rendered by this module.
+/// Adding a variant breaks this exhaustive match until it is wired up — either as
+/// a [`FINDING_SECTIONS`] entry (path-keyed) or its own table like the
+/// dependency-name-keyed `SystemDependencyFoundInPackage`. Never called.
+#[allow(dead_code)]
+fn every_finding_is_rendered(f: &Finding<'_>) {
+    match f {
+        // Rendered via FINDING_SECTIONS.
+        Finding::MissingDependency { .. }
+        | Finding::RpathShape { .. }
+        | Finding::UnreadableElf { .. }
+        | Finding::DependencyResolutionError { .. } => {}
+        // Rendered via its own dependency-name-keyed table below.
+        Finding::SystemDependencyFoundInPackage { .. } => {}
+    }
+}
 
 /// Summarize the report to the console.
 ///
 /// Prints the summary of the report including package info, ELF statistics,
-/// dependency statistics, and any missing dependencies.
+/// dependency statistics, any missing dependencies, and any validation errors.
 pub fn summarize_report(report: &Report<'_>) {
-    // Print summary section
     println!("Package: {}", report.package);
     println!("Total files: {}\n", report.totals.files);
 
-    println!("{}\n", elf_table(report));
-    println!("{}\n", dependency_type_table(report));
-    println!("{}\n", dependency_status_table(report));
+    let elfs = &report.totals.elfs;
+    println!(
+        "{}\n",
+        counts_table(
+            ("ELF Type", "Count"),
+            &[
+                ("Binaries", elfs.binaries),
+                ("Shared libraries", elfs.shared_libraries),
+                ("Relocatable", elfs.relocatable),
+                ("Core", elfs.core),
+                ("None", elfs.none),
+            ],
+            elfs.total,
+        )
+    );
 
-    // Collect ELF files with missing dependencies
-    let missing_deps = missing_dependencies(report);
+    let deps = &report.totals.dependencies;
+    println!(
+        "{}\n",
+        counts_table(
+            ("Dependency Type", "Count"),
+            &[
+                ("System", deps.system),
+                ("Package", deps.package),
+                ("Unknown", deps.unknown),
+            ],
+            deps.total,
+        )
+    );
+    println!(
+        "{}\n",
+        counts_table(
+            ("Dependency Status", "Count"),
+            &[
+                ("Missing", deps.missing),
+                ("Found", deps.found),
+                ("Error", deps.error),
+            ],
+            deps.total,
+        )
+    );
 
-    // Display table of missing dependencies
-    if !missing_deps.is_empty() {
-        let table = missing_dependencies_table(&missing_deps);
-        println!("{table}");
-        println!(
-            "\nTotal: {} ELF file(s) with missing dependencies",
-            missing_deps.len()
-        );
+    for &(headers, label, extract) in FINDING_SECTIONS {
+        let rows = sorted_by_path(report.findings.iter().filter_map(|f| extract(f)));
+        print_section(&rows, |rows| path_keyed_table(rows, headers), label);
     }
+
+    // System dependencies are keyed by dependency name rather than a path, so
+    // they get a bespoke table (see `system_dependency_errors_table`).
+    let mut sys_errors: Vec<(&str, &[&Path])> = report
+        .findings
+        .iter()
+        .filter_map(|e| match e {
+            Finding::SystemDependencyFoundInPackage { dependency, paths } => {
+                Some((*dependency, paths.as_slice()))
+            }
+            _ => None,
+        })
+        .collect();
+    sys_errors.sort_by_key(|(dep, _)| *dep);
+    print_section(
+        &sys_errors,
+        system_dependency_errors_table,
+        "system dependency/dependencies found in package",
+    );
+}
+
+/// Sort an iterator of `(&Path, _)` tuples by path, collecting into a Vec.
+fn sorted_by_path<'a, T>(iter: impl Iterator<Item = (&'a Path, T)>) -> Vec<(&'a Path, T)> {
+    let mut rows: Vec<(&'a Path, T)> = iter.collect();
+    rows.sort_by_key(|(path, _)| *path);
+    rows
+}
+
+/// Print a section: the rendered table followed by a "Total: N <label>" line.
+/// No output if `rows` is empty.
+fn print_section<T>(rows: &[T], render: impl FnOnce(&[T]) -> Table, label: &str) {
+    if rows.is_empty() {
+        return;
+    }
+    println!("{}\n", render(rows));
+    println!("Total: {} {}\n", rows.len(), label);
 }
 
 /// Create a table with the default preset styling.
+///
+/// Uses Unicode box-drawing characters when stdout is a TTY (e.g. `bazel run`
+/// or direct invocation), and plain ASCII otherwise (e.g. `bazel test`, CI).
 fn default_table_preset() -> Table {
     let mut table = Table::new();
-    table
-        .load_preset(comfy_table::presets::UTF8_FULL_CONDENSED)
-        .apply_modifier(comfy_table::modifiers::UTF8_ROUND_CORNERS)
-        .set_content_arrangement(comfy_table::ContentArrangement::Dynamic);
+    if std::io::stdout().is_terminal() {
+        table
+            .load_preset(comfy_table::presets::UTF8_FULL_CONDENSED)
+            .apply_modifier(comfy_table::modifiers::UTF8_ROUND_CORNERS);
+    } else {
+        table.load_preset(comfy_table::presets::ASCII_FULL_CONDENSED);
+    }
+    table.set_content_arrangement(comfy_table::ContentArrangement::Dynamic);
     table
 }
 
-/// Create a table showing ELF file type statistics.
-fn elf_table(report: &Report) -> Table {
+fn bold_header(headers: (&str, &str)) -> Vec<Cell> {
+    vec![
+        Cell::new(headers.0).add_attribute(comfy_table::Attribute::Bold),
+        Cell::new(headers.1).add_attribute(comfy_table::Attribute::Bold),
+    ]
+}
+
+/// Build a 2-column "label / count" table with a trailing bold **Total** row.
+fn counts_table(headers: (&str, &str), rows: &[(&str, usize)], total: usize) -> Table {
     let mut table = default_table_preset();
-    table
-        .set_header(vec![
-            Cell::new("ELF Type").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Count").add_attribute(comfy_table::Attribute::Bold),
-        ])
-        .add_row(vec![
-            Cell::new("Binaries"),
-            Cell::new(report.totals.elfs.binaries),
-        ])
-        .add_row(vec![
-            Cell::new("Shared libraries"),
-            Cell::new(report.totals.elfs.shared_libraries),
-        ])
-        .add_row(vec![
-            Cell::new("Relocatable"),
-            Cell::new(report.totals.elfs.relocatable),
-        ])
-        .add_row(vec![Cell::new("Core"), Cell::new(report.totals.elfs.core)])
-        .add_row(vec![Cell::new("None"), Cell::new(report.totals.elfs.none)])
-        .add_row(vec![
-            Cell::new("Total").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new(report.totals.elfs.total).add_attribute(comfy_table::Attribute::Bold),
-        ]);
+    table.set_header(bold_header(headers));
+    for (label, count) in rows {
+        table.add_row(vec![Cell::new(*label), Cell::new(count)]);
+    }
+    table.add_row(vec![
+        Cell::new("Total").add_attribute(comfy_table::Attribute::Bold),
+        Cell::new(total).add_attribute(comfy_table::Attribute::Bold),
+    ]);
     table
 }
 
-/// Create a table showing dependency type statistics.
-fn dependency_type_table(report: &Report) -> Table {
-    let mut table = default_table_preset();
-    table
-        .set_header(vec![
-            Cell::new("Dependency Type").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Count").add_attribute(comfy_table::Attribute::Bold),
-        ])
-        .add_row(vec![
-            Cell::new("System"),
-            Cell::new(report.totals.dependencies.system),
-        ])
-        .add_row(vec![
-            Cell::new("Package"),
-            Cell::new(report.totals.dependencies.package),
-        ])
-        .add_row(vec![
-            Cell::new("Unknown"),
-            Cell::new(report.totals.dependencies.unknown),
-        ])
-        .add_row(vec![
-            Cell::new("Total").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new(report.totals.dependencies.total).add_attribute(comfy_table::Attribute::Bold),
-        ]);
-    table
-}
-
-/// Create a table showing dependency status statistics.
-fn dependency_status_table(report: &Report) -> Table {
-    let mut table = default_table_preset();
-    table
-        .set_header(vec![
-            Cell::new("Dependency Status").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new("Count").add_attribute(comfy_table::Attribute::Bold),
-        ])
-        .add_row(vec![
-            Cell::new("Missing"),
-            Cell::new(report.totals.dependencies.missing),
-        ])
-        .add_row(vec![
-            Cell::new("Found"),
-            Cell::new(report.totals.dependencies.found),
-        ])
-        .add_row(vec![
-            Cell::new("Error"),
-            Cell::new(report.totals.dependencies.error),
-        ])
-        .add_row(vec![
-            Cell::new("Total").add_attribute(comfy_table::Attribute::Bold),
-            Cell::new(report.totals.dependencies.total).add_attribute(comfy_table::Attribute::Bold),
-        ]);
-    table
-}
-
-/// Collect ELF files with missing dependencies from the report.
-fn missing_dependencies<'a>(report: &Report<'a>) -> Vec<(&'a Path, Vec<&'a str>)> {
-    let mut result: Vec<(&'a Path, Vec<&'a str>)> = report
-        .dependencies
-        .iter()
-        .filter_map(|(elf_path, deps_map)| {
-            let missing: Vec<&str> = deps_map
-                .iter()
-                .filter(|(_, result)| matches!(result.status, DependencyStatus::Missing))
-                .map(|(dep_name, _)| *dep_name)
-                .collect();
-
-            (!missing.is_empty()).then_some((*elf_path, missing))
-        })
-        .collect();
-    result.sort_by_key(|(path, _)| *path);
-    result
-}
-
-/// Create a table showing missing dependencies for each ELF file.
-fn missing_dependencies_table(missing_dependencies: &[(&Path, Vec<&str>)]) -> Table {
-    // Find common prefix to strip for cleaner display
-    let paths: Vec<&Path> = missing_dependencies.iter().map(|(p, _)| *p).collect();
+/// Build a 2-column table whose left column is a path (with the common prefix
+/// stripped for readability) and whose right column is a pre-rendered value.
+fn path_keyed_table(rows: &[(&Path, String)], headers: (&str, &str)) -> Table {
+    let paths: Vec<&Path> = rows.iter().map(|(p, _)| *p).collect();
     let common_prefix = find_common_prefix(&paths);
 
     let mut table = default_table_preset();
-    table.set_header(vec![
-        Cell::new("ELF File").add_attribute(comfy_table::Attribute::Bold),
-        Cell::new("Missing Dependencies").add_attribute(comfy_table::Attribute::Bold),
-    ]);
+    table.set_header(bold_header(headers));
+    for (path, value) in rows {
+        let display_path = common_prefix
+            .as_deref()
+            .and_then(|prefix| path.strip_prefix(prefix).ok())
+            .unwrap_or(path);
+        table.add_row(vec![
+            Cell::new(display_path.to_string_lossy().as_ref()),
+            Cell::new(value),
+        ]);
+    }
+    table
+}
 
-    // Add rows
-    for (path, deps) in missing_dependencies {
-        let display_path = if let Some(prefix) = &common_prefix {
-            path.strip_prefix(prefix).unwrap_or(path)
-        } else {
-            path
-        };
-        let path_str = display_path.to_string_lossy();
-        let deps_str = deps.join(", ");
-        table.add_row(vec![Cell::new(path_str.as_ref()), Cell::new(deps_str)]);
+/// Create a table showing system dependencies found bundled inside the package.
+/// The key is the dependency name, not a path, so this can't use `path_keyed_table`.
+fn system_dependency_errors_table(rows: &[(&str, &[&Path])]) -> Table {
+    let mut table = default_table_preset();
+    table.set_header(bold_header(("Dependency", "Found at Path(s)")));
+    for (dependency, paths) in rows {
+        let paths_str = paths
+            .iter()
+            .map(|p| p.to_string_lossy())
+            .collect::<Vec<_>>()
+            .join(", ");
+        table.add_row(vec![Cell::new(*dependency), Cell::new(paths_str)]);
     }
     table
 }

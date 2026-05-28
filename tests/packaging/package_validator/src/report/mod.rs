@@ -5,20 +5,15 @@
 //! Report struct and public API for generating validation results.
 
 mod console;
-mod dependency_resolver;
-mod errors;
-mod ignored_files;
-mod symlink_resolver;
-mod system_dependencies;
+pub(crate) mod finding;
 mod totals;
 mod utils;
 mod validate;
 
 pub use console::summarize_report;
-pub(crate) use dependency_resolver::DependencyStatus;
-pub use ignored_files::IgnoredFiles;
-pub use system_dependencies::SystemDependencies;
 pub use validate::validate_report;
+
+pub use crate::inputs::{IgnoredFiles, SystemDependencies};
 
 use anyhow::Result;
 use serde::Serialize;
@@ -26,21 +21,22 @@ use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
 
 use crate::package::{Elf, Package, PackageElfs};
-use dependency_resolver::{DependencyResolver, DependencyResolverResult};
-use errors::{scan_for_errors, SystemDependencyResolutionErrors};
-use symlink_resolver::SymlinkResolver;
+use crate::resolution::symlinks::SymlinkResolver;
+use crate::validators::dependency_resolution::{DependencyResolver, DependencyResolverResult};
+use finding::Finding;
 use totals::ReportTotals;
 
 // Use BTreeMap to ensure alphabetical order of files when serializing to JSON.
-type ReportDependencies<'a> = BTreeMap<&'a Path, HashMap<&'a str, DependencyResolverResult>>;
+pub(crate) type ReportDependencies<'a> =
+    BTreeMap<&'a Path, HashMap<&'a str, DependencyResolverResult>>;
 type ReportFiles<'a> = BTreeMap<&'a Path, &'a Elf>;
 
 #[derive(Debug, Serialize)]
 pub struct Report<'a> {
     package: String,
     totals: ReportTotals,
-    pub(super) errors: SystemDependencyResolutionErrors<'a>,
-    dependencies: ReportDependencies<'a>,
+    pub(crate) findings: Vec<Finding<'a>>,
+    pub(crate) dependencies: ReportDependencies<'a>,
     files: ReportFiles<'a>,
 }
 
@@ -71,6 +67,11 @@ impl<'a> Report<'a> {
             resolver.dependencies(&active_elfs)
         };
         let totals = ReportTotals::new(package.files(), &active_elfs, &dependencies);
+        let mut findings: Vec<Finding<'a>> =
+            crate::validators::run_all(package, &symlink_resolver, system_dependencies);
+        findings.extend(crate::validators::dependency_resolution::scan_findings(
+            &dependencies,
+        ));
 
         Ok(Self {
             package: package
@@ -80,7 +81,7 @@ impl<'a> Report<'a> {
                 .to_string_lossy()
                 .to_string(),
             totals,
-            errors: scan_for_errors(package, &symlink_resolver, system_dependencies),
+            findings,
             dependencies,
             // Only interested in the non-ignored ELF files for the report.
             // Using sequential iteration here since parallel collection into BTreeMap

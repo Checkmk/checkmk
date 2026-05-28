@@ -45,7 +45,7 @@ pkg_files(
 
 filegroup(
     name = "bin_filegroup",
-    srcs = ["@pnp4nagios//:build"],
+    srcs = ["@pnp4nagios"],
     output_group = "npcd",
     tags = ["manual"],
 )
@@ -60,7 +60,7 @@ pkg_files(
 
 filegroup(
     name = "gen_dir_filegroup",
-    srcs = ["@pnp4nagios//:build"],
+    srcs = ["@pnp4nagios"],
     output_group = "gen_dir",
     tags = ["manual"],
 )

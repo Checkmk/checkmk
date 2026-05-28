@@ -1,4 +1,4 @@
-load("@//bazel/rules:dependency_info.bzl", "dependency_info")
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 dependency_info(
@@ -9,7 +9,7 @@ dependency_info(
     license_text = "COPYING",
     purl_namespace = None,
     purl_type = "generic",
-    version = "0.6.26",
+    version = module_version(),
 )
 
 filegroup(
@@ -25,7 +25,7 @@ filegroup(
 )
 
 configure_make(
-    name = "build",
+    name = "pnp4nagios",
     args = ["-j4"],
     configure_in_place = True,
     configure_options = [

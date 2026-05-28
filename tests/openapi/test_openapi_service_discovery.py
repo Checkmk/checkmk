@@ -1681,7 +1681,7 @@ def test_openapi_discovery_on_invalid_mode(
         headers={"Accept": "application/json"},
         status=400,
     )
-    assert resp.json["detail"] == "These fields have problems: mode"
+    assert resp.json["detail"] == "These fields have problems: body.mode"
     mock_discovery_preview.assert_not_called()
     mock_set_autochecks.assert_not_called()
 
@@ -1703,7 +1703,7 @@ def test_openapi_discovery_refresh_services(
     )
     assert (
         resp.location
-        == "/NO_SITE/check_mk/api/1.0/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke"
+        == "/NO_SITE/check_mk/api/v1/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke"
     )
     assert mock_discovery_preview.mock_calls == [
         call("example.com", prevent_fetching=False, raise_errors=False, debug=False),

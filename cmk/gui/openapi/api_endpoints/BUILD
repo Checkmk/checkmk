@@ -14,6 +14,7 @@ py_library(
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui/agent_registration",
+        "//cmk/gui/background_job/job",
         "//cmk/gui/fields",
         "//cmk/gui/fields:base",
         "//cmk/gui/livestatus_utils/commands",

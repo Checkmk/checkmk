@@ -24,7 +24,6 @@ from cmk.gui.openapi.endpoints import (
     rule,
     ruleset,
     service,
-    service_discovery,
     service_group_config,
     time_periods,
     user_config,
@@ -38,6 +37,7 @@ from .api_endpoints import downtime as api_downtime
 from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
 from .api_endpoints import quick_setup as api_quick_setup
+from .api_endpoints import service_discovery as api_service_discovery
 from .api_endpoints.graph_timerange import registration as api_graph_timerange
 from .api_endpoints.password import registration as api_password
 from .api_endpoints.user_role import registration as api_user_role
@@ -76,7 +76,6 @@ def register(
     rule.register(endpoint_registry)
     ruleset.register(endpoint_registry)
     service.register(endpoint_registry)
-    service_discovery.register(endpoint_registry)
     service_group_config.register(endpoint_registry)
     time_periods.register(endpoint_registry)
     user_config.register(endpoint_registry)
@@ -94,6 +93,10 @@ def register(
     )
     api_host_config.register(versioned_endpoint_registry)
     api_host_config_internal.register(versioned_endpoint_registry)
+    api_service_discovery.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
     api_user_role.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,

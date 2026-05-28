@@ -8022,15 +8022,6 @@ msgstr "În centrul paginii"
 msgid "At the end of every month on day"
 msgstr "La sfârșitul fiecărei luni, în ziua"
 
-msgid ""
-"At the time the report was created not all Checkmk sites were reachable. So "
-"some of the report's data is probably missing. The following sites had "
-"problems: "
-msgstr ""
-"La momentul creării raportului, nu toate site-urile Checkmk erau accesibile. "
-"Prin urmare, este posibil ca unele dintre datele din raport să lipsească. "
-"Următoarele site-uri au avut probleme: "
-
 msgid "Att."
 msgstr "Att."
 
@@ -48272,9 +48263,6 @@ msgid "Not a valid URL (only HTTP and HTTPS URLs are allowed)."
 msgstr ""
 "Nu este o adresă URL validă (sunt permise doar adresele URL http și https)."
 
-msgid "Not all sites have been queried. Some information is missing."
-msgstr "Nu toate siturile au fost interogate. Unele informații lipsesc."
-
 msgid "Not an active member of the stack"
 msgstr "Nu este un membru activ al stivei"
 
@@ -64475,6 +64463,10 @@ msgstr "Valabilitatea certificatului site-ului"
 msgid "Site connection"
 msgstr "Conexiune la site"
 
+#, fuzzy
+msgid "Site connection errors"
+msgstr "Conexiune la site"
+
 msgid "Site connectivity"
 msgstr "Conectivitatea site-ului"
 
@@ -64499,6 +64491,10 @@ msgstr "Site-ul lipsește"
 
 msgid "Site is not running"
 msgstr "Site-ul nu funcționează"
+
+#, fuzzy
+msgid "Site is unreachable. No data from this site could be retrieved."
+msgstr "Statutul acestui sit nu a fost încă stabilit."
 
 msgid "Site is using HTTPS"
 msgstr "Site-ul folosește HTTPS"
@@ -96704,9 +96700,10 @@ msgstr "Timpii de răspuns la hopuri"
 msgid "Feature temporarily unavailable"
 msgstr "Memorie SGA liberă disponibilă"
 
-#, fuzzy
-msgid "We are currently experiencing high load. Please try again later."
-msgstr "În curs de indexare, vă rugăm să încercați din nou în scurt timp."
+msgid ""
+"Daily AI usage limit reached. Your quota refills over time. Try again in a "
+"little while."
+msgstr ""
 
 #, fuzzy
 msgid "Close"
@@ -100862,6 +100859,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "At the time the report was created not all Checkmk sites were reachable. "
+#~ "So some of the report's data is probably missing. The following sites had "
+#~ "problems: "
+#~ msgstr ""
+#~ "La momentul creării raportului, nu toate site-urile Checkmk erau "
+#~ "accesibile. Prin urmare, este posibil ca unele dintre datele din raport "
+#~ "să lipsească. Următoarele site-uri au avut probleme: "
+
+#~ msgid "Not all sites have been queried. Some information is missing."
+#~ msgstr "Nu toate siturile au fost interogate. Unele informații lipsesc."
+
+#, fuzzy
+#~ msgid "We are currently experiencing high load. Please try again later."
+#~ msgstr "În curs de indexare, vă rugăm să încercați din nou în scurt timp."
 
 #, fuzzy
 #~ msgid "Levels on absolute time offset"

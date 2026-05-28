@@ -7676,15 +7676,6 @@ msgstr "ページの中央に"
 msgid "At the end of every month on day"
 msgstr "毎月末日"
 
-msgid ""
-"At the time the report was created not all Checkmk sites were reachable. So "
-"some of the report's data is probably missing. The following sites had "
-"problems: "
-msgstr ""
-"レポートが作成された時点では、すべてのCheckmkサイトにアクセスできるわけではあ"
-"りませんでした。したがって、レポートのデータの一部が欠落している可能性があり"
-"ます。次のサイトに問題がありました。 "
-
 msgid "Att."
 msgstr "Att."
 
@@ -45750,10 +45741,6 @@ msgstr "数ではありません"
 msgid "Not a valid URL (only HTTP and HTTPS URLs are allowed)."
 msgstr "有効なURLでない（httpとhttpsのURLのみ使用可能）。"
 
-msgid "Not all sites have been queried. Some information is missing."
-msgstr ""
-"すべてのサイトが照会されたわけではありません。一部の情報が欠落しています。"
-
 msgid "Not an active member of the stack"
 msgstr "スタックのアクティブなメンバーではありません"
 
@@ -60973,6 +60960,10 @@ msgstr "サイト証明書の有効性"
 msgid "Site connection"
 msgstr "サイト接続"
 
+#, fuzzy
+msgid "Site connection errors"
+msgstr "サイト接続"
+
 msgid "Site connectivity"
 msgstr "サイト接続性"
 
@@ -60997,6 +60988,10 @@ msgstr "サイトがありません"
 
 msgid "Site is not running"
 msgstr "サイトが実行されていません"
+
+#, fuzzy
+msgid "Site is unreachable. No data from this site could be retrieved."
+msgstr "このサイトのステータスはまだ決定されていません。"
 
 msgid "Site is using HTTPS"
 msgstr "サイトはHTTPSを使用しています"
@@ -91291,10 +91286,10 @@ msgstr "ホップの応答時間"
 msgid "Feature temporarily unavailable"
 msgstr "利用可能な空きSGAメモリ"
 
-#, fuzzy
-msgid "We are currently experiencing high load. Please try again later."
+msgid ""
+"Daily AI usage limit reached. Your quota refills over time. Try again in a "
+"little while."
 msgstr ""
-"現在インデックスを作成しています しばらくしてからもう一度お試しください。"
 
 #, fuzzy
 msgid "Close"
@@ -95414,6 +95409,24 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "At the time the report was created not all Checkmk sites were reachable. "
+#~ "So some of the report's data is probably missing. The following sites had "
+#~ "problems: "
+#~ msgstr ""
+#~ "レポートが作成された時点では、すべてのCheckmkサイトにアクセスできるわけで"
+#~ "はありませんでした。したがって、レポートのデータの一部が欠落している可能性"
+#~ "があります。次のサイトに問題がありました。 "
+
+#~ msgid "Not all sites have been queried. Some information is missing."
+#~ msgstr ""
+#~ "すべてのサイトが照会されたわけではありません。一部の情報が欠落しています。"
+
+#, fuzzy
+#~ msgid "We are currently experiencing high load. Please try again later."
+#~ msgstr ""
+#~ "現在インデックスを作成しています しばらくしてからもう一度お試しください。"
 
 #~ msgid "Levels on absolute time offset"
 #~ msgstr "絶対時間オフセットに基づくレベル"

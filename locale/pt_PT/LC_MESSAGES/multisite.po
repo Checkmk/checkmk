@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-26 17:53+0000\n"
+"PO-Revision-Date: 2026-05-27 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -8021,15 +8021,6 @@ msgstr "No centro da página"
 #, fuzzy
 msgid "At the end of every month on day"
 msgstr "No final de cada mês no dia"
-
-msgid ""
-"At the time the report was created not all Checkmk sites were reachable. So "
-"some of the report's data is probably missing. The following sites had "
-"problems: "
-msgstr ""
-"No momento da criação do relatório, nem todos os sites Checkmk estavam "
-"acessíveis. Por isso, alguns dos dados do relatório provavelmente estão em "
-"falta. Os seguintes sites tiveram problemas: "
 
 msgid "Att."
 msgstr "Atenção."
@@ -48138,9 +48129,6 @@ msgstr "Número da porta"
 msgid "Not a valid URL (only HTTP and HTTPS URLs are allowed)."
 msgstr "Não é um URL válido (só são permitidos URLs http e https)."
 
-msgid "Not all sites have been queried. Some information is missing."
-msgstr "Nem todos os sites foram consultados. Falta alguma informação."
-
 msgid "Not an active member of the stack"
 msgstr "Não é um membro activo da pilha"
 
@@ -64265,6 +64253,10 @@ msgstr "Validade do certificado do local"
 msgid "Site connection"
 msgstr "Ligação ao local"
 
+#, fuzzy
+msgid "Site connection errors"
+msgstr "Ligação ao local"
+
 msgid "Site connectivity"
 msgstr "Conectividade do site"
 
@@ -64289,6 +64281,10 @@ msgstr "Falta o local"
 
 msgid "Site is not running"
 msgstr "O site não está a funcionar"
+
+#, fuzzy
+msgid "Site is unreachable. No data from this site could be retrieved."
+msgstr "O status deste site ainda não foi determinado."
 
 msgid "Site is using HTTPS"
 msgstr "O site está usando HTTPS"
@@ -96289,9 +96285,10 @@ msgstr "Tempos de resposta do lúpulo"
 msgid "Feature temporarily unavailable"
 msgstr "Memória SGA gratuita disponível"
 
-#, fuzzy
-msgid "We are currently experiencing high load. Please try again later."
-msgstr "Actualmente a indexar, por favor tente novamente em breve."
+msgid ""
+"Daily AI usage limit reached. Your quota refills over time. Try again in a "
+"little while."
+msgstr ""
 
 #, fuzzy
 msgid "Close"
@@ -100426,6 +100423,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "At the time the report was created not all Checkmk sites were reachable. "
+#~ "So some of the report's data is probably missing. The following sites had "
+#~ "problems: "
+#~ msgstr ""
+#~ "No momento da criação do relatório, nem todos os sites Checkmk estavam "
+#~ "acessíveis. Por isso, alguns dos dados do relatório provavelmente estão "
+#~ "em falta. Os seguintes sites tiveram problemas: "
+
+#~ msgid "Not all sites have been queried. Some information is missing."
+#~ msgstr "Nem todos os sites foram consultados. Falta alguma informação."
+
+#, fuzzy
+#~ msgid "We are currently experiencing high load. Please try again later."
+#~ msgstr "Actualmente a indexar, por favor tente novamente em breve."
 
 #, fuzzy
 #~ msgid "Levels on absolute time offset"

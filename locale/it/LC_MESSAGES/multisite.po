@@ -7833,15 +7833,6 @@ msgstr "Al centro della pagina"
 msgid "At the end of every month on day"
 msgstr "Alla fine di ogni mese, il giorno"
 
-msgid ""
-"At the time the report was created not all Checkmk sites were reachable. So "
-"some of the report's data is probably missing. The following sites had "
-"problems: "
-msgstr ""
-"Al momento della creazione del rapporto non tutti i siti Checkmk erano "
-"raggiungibili. Quindi alcuni dei dati del rapporto sono probabilmente "
-"mancanti. I seguenti siti hanno avuto problemi: "
-
 msgid "Att."
 msgstr "Att."
 
@@ -47895,9 +47886,6 @@ msgstr "Numero di porta"
 msgid "Not a valid URL (only HTTP and HTTPS URLs are allowed)."
 msgstr "Non è un URL valido (sono ammessi solo URL http e https)."
 
-msgid "Not all sites have been queried. Some information is missing."
-msgstr "Non tutti i siti sono stati interrogati. Mancano alcune informazioni."
-
 msgid "Not an active member of the stack"
 msgstr "Non è un membro attivo della pila"
 
@@ -64005,6 +63993,10 @@ msgstr "Validità del certificato del sito"
 msgid "Site connection"
 msgstr "Collegamento al sito"
 
+#, fuzzy
+msgid "Site connection errors"
+msgstr "Collegamento al sito"
+
 msgid "Site connectivity"
 msgstr "Connettività del sito"
 
@@ -64029,6 +64021,10 @@ msgstr "Manca il sito"
 
 msgid "Site is not running"
 msgstr "Il sito non funziona"
+
+#, fuzzy
+msgid "Site is unreachable. No data from this site could be retrieved."
+msgstr "Lo stato di questo sito non è ancora stato determinato."
 
 msgid "Site is using HTTPS"
 msgstr "Il sito sta usando HTTPS"
@@ -96156,9 +96152,10 @@ msgstr "Tempi di risposta del luppolo"
 msgid "Feature temporarily unavailable"
 msgstr "Memoria SGA libera disponibile"
 
-#, fuzzy
-msgid "We are currently experiencing high load. Please try again later."
-msgstr "Attualmente in fase di indicizzazione, si prega di riprovare a breve."
+msgid ""
+"Daily AI usage limit reached. Your quota refills over time. Try again in a "
+"little while."
+msgstr ""
 
 #, fuzzy
 msgid "Close"
@@ -100292,6 +100289,24 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "At the time the report was created not all Checkmk sites were reachable. "
+#~ "So some of the report's data is probably missing. The following sites had "
+#~ "problems: "
+#~ msgstr ""
+#~ "Al momento della creazione del rapporto non tutti i siti Checkmk erano "
+#~ "raggiungibili. Quindi alcuni dei dati del rapporto sono probabilmente "
+#~ "mancanti. I seguenti siti hanno avuto problemi: "
+
+#~ msgid "Not all sites have been queried. Some information is missing."
+#~ msgstr ""
+#~ "Non tutti i siti sono stati interrogati. Mancano alcune informazioni."
+
+#, fuzzy
+#~ msgid "We are currently experiencing high load. Please try again later."
+#~ msgstr ""
+#~ "Attualmente in fase di indicizzazione, si prega di riprovare a breve."
 
 #, fuzzy
 #~ msgid "Levels on absolute time offset"

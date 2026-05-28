@@ -10,10 +10,10 @@ use check_http::output::Output;
 use check_http::runner::collect_checks;
 use reqwest::{Method, Url};
 
-use std::io::{Read, Write};
-use std::net::TcpListener;
 use std::sync::atomic;
 use std::time::Duration;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpListener;
 
 const START_PORT: u16 = 8888;
 const MAX_PORTS: u16 = 100;
@@ -21,7 +21,7 @@ const LOCALHOST_DNS: &str = "localhost";
 
 static PORT_INDEX: atomic::AtomicU16 = atomic::AtomicU16::new(0);
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test]
 async fn test_basic_get() -> AnyhowResult<()> {
     check_http_output(
         "HTTP/1.1 200 OK\nConnection: close\n\n",
@@ -32,7 +32,7 @@ async fn test_basic_get() -> AnyhowResult<()> {
     .await
 }
 
-#[tokio::test(flavor = "multi_thread")]
+#[tokio::test]
 async fn test_status_4xx() -> AnyhowResult<()> {
     check_http_output(
         "HTTP/1.1 401 nope\nConnection: close\n\n",
@@ -49,7 +49,7 @@ async fn check_http_output(
     expected_state: State,
     expected_summary_start: &str,
 ) -> AnyhowResult<()> {
-    let (port, listener) = tcp_listener("0.0.0.0");
+    let (port, listener) = tcp_listener("0.0.0.0").await;
     let url = Url::parse(&format!("http://{}:{}", LOCALHOST_DNS, port)).unwrap();
     let (client_cfg, request_cfg, request_information, check_params) =
         make_standard_configs(url.clone());
@@ -61,7 +61,7 @@ async fn check_http_output(
         check_params,
     ));
 
-    let check_http_payload = process_http(listener, http_response)?;
+    let check_http_payload = process_http(listener, http_response).await?;
 
     let output = Output::from_check_results(check_http_thread.await?);
 
@@ -135,12 +135,12 @@ fn make_standard_configs(
     )
 }
 
-fn process_http(listener: TcpListener, send_response: &str) -> AnyhowResult<String> {
-    let (mut stream, _addr) = listener.accept()?;
+async fn process_http(listener: TcpListener, send_response: &str) -> AnyhowResult<String> {
+    let (mut stream, _addr) = listener.accept().await?;
     let mut buffer: [u8; 1024] = [0; 1024];
-    let len = stream.read(&mut buffer)?;
-    stream.write_all(send_response.as_bytes())?;
-    stream.shutdown(std::net::Shutdown::Both)?;
+    let len = stream.read(&mut buffer).await?;
+    stream.write_all(send_response.as_bytes()).await?;
+    stream.shutdown().await?;
 
     Ok(String::from_utf8(buffer[..len].into())?)
 }
@@ -153,10 +153,10 @@ fn next_port_index() -> u16 {
     next_port
 }
 
-fn tcp_listener(addr: &str) -> (u16, TcpListener) {
+async fn tcp_listener(addr: &str) -> (u16, TcpListener) {
     loop {
         let port = START_PORT + next_port_index();
-        if let Ok(listener) = TcpListener::bind(format!("{}:{}", addr, port)) {
+        if let Ok(listener) = TcpListener::bind(format!("{}:{}", addr, port)).await {
             return (port, listener);
         };
     }

@@ -1,5 +1,5 @@
 {
-  "checksum": "488da907898c3ba255bd0f7ac3a1a0810c150225d3b1c90df9531f3aaa4427bb",
+  "checksum": "0b04be17b625f317a9a067e5099d69f71a8218282aa2148b2ffd63037ae256e8",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -15617,7 +15617,6 @@
             "default",
             "macros",
             "rt",
-            "rt-multi-thread",
             "tokio-macros"
           ],
           "selects": {

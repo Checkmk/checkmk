@@ -23,7 +23,7 @@ mod version;
 
 const DEFAULT_USER_AGENT: &str = "checkmk-active-httpv2/2.4.0";
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn main() {
     let args = Cli::parse();
 

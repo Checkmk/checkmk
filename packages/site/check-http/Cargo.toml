@@ -32,7 +32,7 @@ reqwest = { version = "*", features = [
   "socks",
 ] }
 scrypt = { version = "*", default-features = false, features = ["std"] }
-tokio = { version = "*", features = ["rt", "macros", "rt-multi-thread"] }
+tokio = { version = "*", features = ["rt", "macros"] }
 tracing = { version = "*" }
 tracing-subscriber = { version = "*", features = ["env-filter"] }
 x509-parser = { version = "*" }

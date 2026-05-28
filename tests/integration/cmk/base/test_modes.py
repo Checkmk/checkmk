@@ -88,7 +88,7 @@ class CommandOutput(NamedTuple):
     stderr: str
 
 
-def on_failure(p: CommandOutput) -> str:
+def on_failure(p: CommandOutput | subprocess.CompletedProcess[str]) -> str:
     return f"Command failed ({p.stdout!r}, {p.stderr!r})"
 
 
@@ -628,3 +628,19 @@ def test_update_dns_cache(execute: Execute) -> None:
     for hostname in ["modes-test-host", "modes-test-host2", "modes-test-host3"]:
         assert hostname in p.stdout
     assert "lookup failed" not in p.stdout
+
+
+@pytest.mark.parametrize("opt", ["--nagios-config", "-N"])
+def test_nagios_config(test_cfg: None, site: Site, opt: str) -> None:
+    _ = test_cfg
+    p = site.run(["cmk", opt])
+    assert p.returncode == 0, on_failure(p)
+    assert p.stderr == ""
+
+
+@pytest.mark.parametrize("opt", ["--nagios-config", "-N"])
+def test_nagios_config_for_host(test_cfg: None, site: Site, opt: str) -> None:
+    _ = test_cfg
+    p = site.run(["cmk", opt, "modes-test-host"])
+    assert p.returncode == 0, on_failure(p)
+    assert p.stderr == ""

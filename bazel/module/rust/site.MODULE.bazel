@@ -25,6 +25,11 @@ site_crates.annotation(
     crate = "openssl-sys",
     repositories = ["site_crates"],
 )
+site_crates.annotation(
+    crate = "mk-oracle",
+    gen_build_script = "off",
+    repositories = ["site_crates"],
+)
 site_crates.splicing_config(
     repositories = ["site_crates"],
     resolver_version = "2",

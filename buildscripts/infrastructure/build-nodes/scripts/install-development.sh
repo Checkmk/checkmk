@@ -535,7 +535,7 @@ fi
 if [[ $INSTALL_FOR_LOCALIZE -eq 1 ]]; then
     install_for_localize_dev
 fi
-if [[ $INSTALL_FOR_AISANDBOX -eq 1 ]]; then
+if [[ $INSTALL_FOR_AISANDBOX -eq 1 && -z ${CI} ]]; then
     install_for_aisandbox
 fi
 

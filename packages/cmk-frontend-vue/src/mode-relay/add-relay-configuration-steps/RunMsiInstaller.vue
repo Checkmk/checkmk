@@ -33,16 +33,16 @@ const props = defineProps<
 const ott = ref<string | null | Error>(null)
 const hasValidToken = async () => ott.value !== null && !(ott.value instanceof Error)
 
-// TODO: Verify this command is correct once the actual MSI installer is ready.
 const installCommand = computed(() => {
   const token = ott.value instanceof Error ? '' : (ott.value ?? '')
   return [
-    `msiexec /i checkmk-relay.msi ^`,
-    `  RELAY_NAME="${props.relayAlias}" ^`,
-    `  INITIAL_TAG_VERSION=${props.siteVersion} ^`,
-    `  TARGET_SERVER=${props.domain}:${props.agentReceiverPort} ^`,
-    `  TARGET_SITE_NAME=${props.siteName} ^`,
-    `  TOKEN=${token}`
+    `msiexec /i checkmk-relay.msi /quiet /norestart \``,
+    `  RELAY_NAME="${props.relayAlias}" \``,
+    `  INITIAL_TAG_VERSION=${props.siteVersion} \``,
+    `  TARGET_SERVER=${props.domain}:${props.agentReceiverPort} \``,
+    `  TARGET_SITE_NAME=${props.siteName} \``,
+    `  AUTH_METHOD=TOKEN \``,
+    `  AUTH_TOKEN="${token}"`
   ].join('\n')
 })
 </script>
@@ -58,7 +58,7 @@ const installCommand = computed(() => {
         {{
           _t(
             'On the Windows machine on which the Relay will be running, run the command below in an ' +
-              'elevated Command Prompt to install and register the Relay.'
+              'elevated PowerShell prompt to install and register the Relay.'
           )
         }}
       </CmkParagraph>

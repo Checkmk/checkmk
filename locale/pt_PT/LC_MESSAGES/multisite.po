@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-23 17:53+0000\n"
+"PO-Revision-Date: 2026-05-27 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -91369,10 +91369,10 @@ msgstr "Tempos de resposta do lúpulo"
 msgid "Feature temporarily unavailable"
 msgstr "Memória SGA gratuita disponível"
 
-#, fuzzy
-msgid "We are currently experiencing high load. Please try again later."
+msgid ""
+"Daily AI usage limit reached. Your quota refills over time. Try again in a "
+"little while."
 msgstr ""
-"Não encontrei filas correspondentes. Por favor, tente outro termo de busca."
 
 #, fuzzy
 msgid "Close"
@@ -95777,6 +95777,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "We are currently experiencing high load. Please try again later."
+#~ msgstr ""
+#~ "Não encontrei filas correspondentes. Por favor, tente outro termo de "
+#~ "busca."
 
 #~ msgid ""
 #~ "At the time the report was created not all Checkmk sites were reachable. "

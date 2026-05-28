@@ -92298,10 +92298,10 @@ msgstr "Temps de réponse des hop"
 msgid "Feature temporarily unavailable"
 msgstr "Mémoire SGA libre disponible"
 
-#, fuzzy
-msgid "We are currently experiencing high load. Please try again later."
+msgid ""
+"Daily AI usage limit reached. Your quota refills over time. Try again in a "
+"little while."
 msgstr ""
-"Aucune ligne ne correspond. Veuillez essayer un autre terme de recherche."
 
 #, fuzzy
 msgid "Close"
@@ -96723,6 +96723,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "We are currently experiencing high load. Please try again later."
+#~ msgstr ""
+#~ "Aucune ligne ne correspond. Veuillez essayer un autre terme de recherche."
 
 #~ msgid ""
 #~ "At the time the report was created not all Checkmk sites were reachable. "

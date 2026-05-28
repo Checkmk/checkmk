@@ -91473,9 +91473,10 @@ msgstr "Hop responstijden"
 msgid "Feature temporarily unavailable"
 msgstr "Vrij SGA-geheugen beschikbaar"
 
-#, fuzzy
-msgid "We are currently experiencing high load. Please try again later."
-msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
+msgid ""
+"Daily AI usage limit reached. Your quota refills over time. Try again in a "
+"little while."
+msgstr ""
 
 #, fuzzy
 msgid "Close"
@@ -95880,6 +95881,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "We are currently experiencing high load. Please try again later."
+#~ msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
 
 #~ msgid ""
 #~ "At the time the report was created not all Checkmk sites were reachable. "

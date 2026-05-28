@@ -91602,11 +91602,10 @@ msgstr "Timpii de răspuns la hopuri"
 msgid "Feature temporarily unavailable"
 msgstr "Memorie SGA liberă disponibilă"
 
-#, fuzzy
-msgid "We are currently experiencing high load. Please try again later."
+msgid ""
+"Daily AI usage limit reached. Your quota refills over time. Try again in a "
+"little while."
 msgstr ""
-"Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt termen "
-"de căutare."
 
 #, fuzzy
 msgid "Close"
@@ -96037,6 +96036,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "We are currently experiencing high load. Please try again later."
+#~ msgstr ""
+#~ "Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt "
+#~ "termen de căutare."
 
 #~ msgid ""
 #~ "At the time the report was created not all Checkmk sites were reachable. "

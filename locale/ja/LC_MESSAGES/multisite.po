@@ -84665,9 +84665,10 @@ msgstr "応答をコピー"
 msgid "Feature temporarily unavailable"
 msgstr "この機能は現在ご利用いただけません"
 
-msgid "We are currently experiencing high load. Please try again later."
+msgid ""
+"Daily AI usage limit reached. Your quota refills over time. Try again in a "
+"little while."
 msgstr ""
-"現在、サーバーに負荷がかかっています。しばらくしてから再度お試しください。"
 
 msgid "Close"
 msgstr "クローズ"
@@ -89108,6 +89109,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "We are currently experiencing high load. Please try again later."
+#~ msgstr ""
+#~ "現在、サーバーに負荷がかかっています。しばらくしてから再度お試しください。"
 
 #~ msgid ""
 #~ "At the time the report was created not all Checkmk sites were reachable. "

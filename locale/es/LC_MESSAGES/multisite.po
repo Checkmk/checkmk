@@ -92178,11 +92178,10 @@ msgstr "Tiempos de respuesta de los saltos"
 msgid "Feature temporarily unavailable"
 msgstr "Memoria SGA libre disponible"
 
-#, fuzzy
-msgid "We are currently experiencing high load. Please try again later."
+msgid ""
+"Daily AI usage limit reached. Your quota refills over time. Try again in a "
+"little while."
 msgstr ""
-"No se han encontrado filas coincidentes. Por favor, intente con otro término "
-"de búsqueda."
 
 #, fuzzy
 msgid "Close"
@@ -96600,6 +96599,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "We are currently experiencing high load. Please try again later."
+#~ msgstr ""
+#~ "No se han encontrado filas coincidentes. Por favor, intente con otro "
+#~ "término de búsqueda."
 
 #~ msgid ""
 #~ "At the time the report was created not all Checkmk sites were reachable. "

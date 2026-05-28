@@ -2166,7 +2166,8 @@ ConfigVariableRequireTwoFactorAllUsers = ConfigVariable(
         title=_("Enforce two-factor authentication"),
         help=_(
             "Enabling this option will enforce two-factor authentication for all users. "
-            "Enabling this setting will override role based two-factor enforcement."
+            "Enabling this setting will override role based two-factor enforcement. "
+            "Automation users are exempt, as they cannot use two-factor authentication."
         ),
         label=_("Enforce for all users"),
     ),

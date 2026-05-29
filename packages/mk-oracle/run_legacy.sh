@@ -20,9 +20,10 @@ export TNS_ADMIN="${MK_CONFDIR}"
 
 export DB_USER="system"
 export DB_PASSWORD="${CI_ORA_TEST_PASSWORD}"
-export DB_HOST="oracle-rocky-ci.lan.checkmk.net"
-export DB_SERVICE_NAME="dbtest23"
-export DB_SID="SID23"
+export DB_HOST="${DB_HOST:-oracle-rocky-ci.lan.checkmk.net}"
+export DB_PORT="${DB_PORT:-1521}"
+export DB_SERVICE_NAME="${DB_SERVICE_NAME:-dbtest23}"
+export DB_SID="${DB_SID:-SID23}"
 export DB_SECTION="${DB_SECTION:-instance}"
 if [[ "${DB_SECTION}" == "all" ]]; then
     export INDIVIDUAL_SECTIONS="#SYNC_SECTIONS"

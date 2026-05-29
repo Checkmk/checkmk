@@ -112,6 +112,17 @@ const api: API<string, PasswordConfig> = {
       })
     }
 
+    const ownedBy = data.password_props.owned_by
+    if (Array.isArray(ownedBy) && ownedBy[0] === 'contact_group' && !ownedBy[1]) {
+      validationMessages.push({
+        location: ['password_props', 'owned_by'],
+        message: _t(
+          'You need to be member of at least one contact group to be able to create a password.'
+        ),
+        replacement_value: ownedBy
+      })
+    }
+
     if (data.general_props.id) {
       const existing = await configEntityAPI.listEntities(
         'passwordstore_password',

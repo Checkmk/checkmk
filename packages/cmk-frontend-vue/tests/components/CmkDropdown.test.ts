@@ -1045,7 +1045,7 @@ test('dropdown with filtered options does not prefill filter input', async () =>
   })
 })
 
-test.fails('open() suppresses trailing click-outside across microtask checkpoint', async () => {
+test('open() suppresses trailing click-outside across microtask checkpoint', async () => {
   // When open() is called from a sibling element's click handler, the click
   // keeps bubbling up to document.body, where useClickOutside fires. The HTML
   // spec performs a microtask checkpoint between event-listener invocations on

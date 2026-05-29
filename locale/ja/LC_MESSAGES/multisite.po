@@ -49790,6 +49790,10 @@ msgstr ""
 "ライセンス・サーバ (%s) から無効な応答を受け取りました。後で再試行してくださ"
 "い。このエラーが続く場合は、Checkmk サポートにお問い合わせください。"
 
+#, fuzzy
+msgid "Received bandwidth"
+msgstr "サイト間の帯域幅"
+
 msgid "Received messages"
 msgstr "受信したメッセージ"
 
@@ -73403,6 +73407,10 @@ msgstr "送信されたフレーム"
 msgid "Transmitted Words"
 msgstr "送信された単語"
 
+#, fuzzy
+msgid "Transmitted bandwidth"
+msgstr "送信された単語"
+
 msgid "Transport Lag"
 msgstr "輸送ラグ"
 
@@ -86669,6 +86677,54 @@ msgstr "重要なヒント"
 msgid "Ctrl + Alt"
 msgstr "Ctrl + Alt"
 
+#, fuzzy
+msgid "Remove condition"
+msgstr "タグ条件を削除します"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "属性フィルター"
+
+#, fuzzy
+msgid "[Resource]"
+msgstr "ソース"
+
+#, fuzzy
+msgid "[Scope]"
+msgstr "スコープ"
+
+#, fuzzy
+msgid "[Data point]"
+msgstr "データポイント"
+
+#, fuzzy
+msgid "contains"
+msgstr "コンテナ"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "コンテナの名前"
+
+#, fuzzy
+msgid "starts with"
+msgstr "警告の開始"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "で始まらない "
+
+#, fuzzy
+msgid "ends with"
+msgstr "で始まる "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "\"%s\"で終わることはできません"
+
+#, fuzzy
+msgid "does not exist"
+msgstr "存在しない"
+
 msgid "Attribute key"
 msgstr "属性キー"
 
@@ -89926,9 +89982,6 @@ msgstr ""
 
 #~ msgid "(This module is not yet implemented)"
 #~ msgstr "(このモジュールはまだ実装されていません)"
-
-#~ msgid "Attribute filters"
-#~ msgstr "属性フィルター"
 
 #~ msgid ""
 #~ "If you enable the OpenTelemetry data, the data collected from the "
@@ -100235,9 +100288,6 @@ msgstr ""
 
 #~ msgid "This rule allows you to override netapp warnings"
 #~ msgstr "このルールを使用すると、netappの警告を上書きできます"
-
-#~ msgid "Warning starts with"
-#~ msgstr "警告の開始"
 
 #~ msgid ""
 #~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"

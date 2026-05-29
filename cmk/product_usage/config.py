@@ -35,6 +35,20 @@ class ProductUsageConfig:
     proxy_config: http_proxy_config.HTTPProxyConfig
 
 
+def load_state(logger: logging.Logger) -> Literal["not_decided", "enabled", "disabled"]:
+    """Read only the analytics decision state from the config file.
+
+    This deliberately avoids ``base_config.load()`` (see :func:`load_config`), which can be
+    very expensive on large setups. The base config is only needed to resolve the HTTP proxy
+    for data transmission - not to determine whether the user has made a decision yet.
+    """
+    try:
+        return read_config_file(Path(paths.default_config_dir)).enabled
+    except ConfigError:
+        logger.exception("Failed to load config from file")
+        return "not_decided"
+
+
 def load_config(logger: logging.Logger) -> ProductUsageConfig:
     base_config.load()
 

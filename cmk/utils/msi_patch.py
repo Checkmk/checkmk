@@ -191,7 +191,7 @@ def patch_package_code_by_marker(
 ) -> bool:
     """
     Main engine to patch MSI file with new code.
-    Search for 'Intel;1033' marker, add offset and patch code
+    Search for 'x64;1033' marker, add offset and patch code
 
     Args:
         file_name: file to patch

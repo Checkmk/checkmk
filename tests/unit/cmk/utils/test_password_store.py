@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
@@ -64,3 +64,41 @@ def test_extract_from_unknown_valuespec() -> None:
         # We test for an invalid structure here
         password_store.extract(password_id)  # type: ignore[arg-type]
     assert "Unknown password type." in str(excinfo.value)
+
+
+@pytest.fixture(name="password_store_files")
+def fixture_password_store_files() -> Iterator[None]:
+    """Make sure the globally patched store files don't leak into other tests"""
+    yield
+    password_store.pending_secrets_path_site().unlink(missing_ok=True)
+    password_store.password_store_path().unlink(missing_ok=True)
+
+
+def test_make_passwords_hasher_is_deterministic(password_store_files: None) -> None:
+    password_store.save({"my_secret": "staged"}, password_store.pending_secrets_path_site())
+    password_store.save({"my_secret": "configured"}, password_store.password_store_path())
+    assert password_store.make_passwords_hasher()("my_secret") == (
+        password_store.make_passwords_hasher()("my_secret")
+    )
+
+
+def test_make_passwords_hasher_reflects_staged_change(password_store_files: None) -> None:
+    password_store.save({"my_secret": "configured"}, password_store.password_store_path())
+    password_store.save({"my_secret": "old"}, password_store.pending_secrets_path_site())
+    before = password_store.make_passwords_hasher()("my_secret")
+    password_store.save({"my_secret": "new"}, password_store.pending_secrets_path_site())
+    assert password_store.make_passwords_hasher()("my_secret") != before
+
+
+def test_make_passwords_hasher_reflects_configured_change(password_store_files: None) -> None:
+    password_store.save({"my_secret": "staged"}, password_store.pending_secrets_path_site())
+    password_store.save({"my_secret": "old"}, password_store.password_store_path())
+    before = password_store.make_passwords_hasher()("my_secret")
+    password_store.save({"my_secret": "new"}, password_store.password_store_path())
+    assert password_store.make_passwords_hasher()("my_secret") != before
+
+
+def test_make_passwords_hasher_handles_unknown_id(password_store_files: None) -> None:
+    password_store.save({"my_secret": "staged"}, password_store.pending_secrets_path_site())
+    hasher = password_store.make_passwords_hasher()
+    assert hasher("unknown_id") != hasher("my_secret")

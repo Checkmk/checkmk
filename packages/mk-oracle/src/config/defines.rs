@@ -22,6 +22,7 @@ pub mod keys {
     pub const MAX_CONNECTIONS: &str = "max_connections";
     pub const USE_HOST_CLIENT: &str = "use_host_client";
     pub const IGNORE_DB_NAME: &str = "IGNORE_DB_NAME";
+    pub const THREADS: &str = "threads";
 
     pub const AUTHENTICATION: &str = "authentication";
     pub const USERNAME: &str = "username";
@@ -102,6 +103,7 @@ pub mod defaults {
     pub const MAX_CONNECTIONS: u32 = 6;
     pub const USE_HOST_CLIENT: &str = "auto";
     pub const MAX_QUERIES: u32 = 16;
+    pub const THREADS: usize = 1;
 
     pub const AUTH_TYPE: &str = values::STANDARD;
     pub const MODE: &str = values::PORT;

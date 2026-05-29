@@ -149,7 +149,9 @@ impl Options {
                     .get_int::<u8>(keys::IGNORE_DB_NAME)
                     .unwrap_or_default(),
             )],
-            threads: 1,
+            threads: options
+                .get_int::<usize>(keys::THREADS)
+                .unwrap_or(defaults::THREADS),
         }))
     }
 }
@@ -166,6 +168,7 @@ options:
     max_connections: 100
     use_host_client: always
     IGNORE_DB_NAME: 1
+    threads: 4
     ";
         let yaml = create_yaml(OPTIONS_YAML);
         let options = Options::from_yaml(&yaml).unwrap().unwrap();
@@ -176,6 +179,7 @@ options:
             options.params(),
             &vec![(keys::IGNORE_DB_NAME.to_string(), 1)]
         );
+        assert_eq!(options.threads(), 4);
     }
 
     #[test]
@@ -184,6 +188,7 @@ options:
         assert_eq!(options.max_connections(), defaults::MAX_CONNECTIONS.into());
         assert_eq!(options.use_host_client(), &UseHostClient::default());
         assert_eq!(options.max_queries(), defaults::MAX_QUERIES.into());
+        assert_eq!(options.threads(), defaults::THREADS);
         assert_eq!(
             options.params(),
             &vec![(keys::IGNORE_DB_NAME.to_string(), 0)]

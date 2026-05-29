@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import hashlib
 import secrets
 from collections.abc import Callable, Mapping
 from pathlib import Path
@@ -188,6 +189,21 @@ def make_configured_passwords_lookup() -> Callable[[str], str | None]:
     # maybe we should pass this, but lets be consistent for now.
     path = password_store_path()
     return load(path).get
+
+
+def make_passwords_hasher() -> Callable[[str], str]:
+    """Returns a callable that computes a hash
+
+    It is supposed to change if *either* pending or
+    active passwords are changed.
+    """
+    staged = make_staged_passwords_lookup()
+    pending = make_configured_passwords_lookup()
+
+    def hasher(id_: str) -> str:
+        return hashlib.sha256(f"{staged(id_)}{pending(id_)}".encode()).hexdigest()
+
+    return hasher
 
 
 def lookup(pw_file: Path, pw_id: str) -> str:

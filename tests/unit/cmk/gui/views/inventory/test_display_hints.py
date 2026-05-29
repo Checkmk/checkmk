@@ -29,6 +29,7 @@ from cmk.gui.views.inventory._display_hints import (
     _wrap_paint_function,
     AttributeDisplayHint,
     ColumnDisplayHint,
+    DisplayHints,
     inv_display_hints,
     NodeDisplayHint,
     Table,
@@ -96,19 +97,6 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
             ),
         ),
         (
-            ("hardware",),
-            NodeDisplayHint(
-                name="inv_hardware",
-                path=(SDNodeName("hardware"),),
-                icon="hardware",
-                title="Hardware",
-                short_title="Hardware",
-                long_title="Hardware",
-                attributes={},
-                table=Table(columns={}),
-            ),
-        ),
-        (
             ("path", "to", "node"),
             NodeDisplayHint(
                 name="inv_path_to_node",
@@ -142,6 +130,34 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
         assert node_hint.table.long_title == expected_node_hint.table.long_title
         assert node_hint.table.icon == expected_node_hint.table.icon
         assert node_hint.table.is_show_more == expected_node_hint.table.is_show_more
+
+
+def test_get_node_hint_returns_registered_hint_verbatim() -> None:
+    """Cover the "registered hint is returned faithfully" branch of
+    DisplayHints.get_node_hint without depending on a production
+    inv-UI plug-in registering anything."""
+    hints = DisplayHints()
+    registered = NodeDisplayHint(
+        name="inv_hardware",
+        path=(SDNodeName("hardware"),),
+        icon="hardware",
+        title="Hardware",
+        short_title="Hardware",
+        long_title="Hardware",
+        attributes={},
+        table=Table(columns={}),
+    )
+    hints.add(registered)
+
+    node_hint = hints.get_node_hint((SDNodeName("hardware"),))
+
+    assert node_hint.name == "inv_hardware"
+    assert node_hint.icon == "hardware"
+    assert node_hint.title == "Hardware"
+    assert node_hint.short_title == "Hardware"
+    assert node_hint.long_title == "Hardware"
+    assert list(node_hint.attributes) == []
+    assert list(node_hint.table.columns) == []
 
 
 @pytest.mark.parametrize(

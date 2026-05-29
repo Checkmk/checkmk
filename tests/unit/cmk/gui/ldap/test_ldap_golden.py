@@ -9,6 +9,7 @@
 # Golden Tests for the LDAP connector
 # trying to capture the current behavior of the connector to facilitate refactoring
 
+import copy
 import datetime
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
@@ -316,6 +317,7 @@ def test_check_credentials_not_found(mocker: MockerFixture, mock_ldap: MagicMock
     assert connector._ldap_obj
 
     mocker.patch.object(connector, "_connection_id_of_user", return_value="htpasswd")
+    _mock_result3(mocker, connector, [])
     assert (
         connector.check_credentials(
             UserId("alice"),
@@ -627,3 +629,382 @@ def test_check_credentials_with_auth_expire(
         assert "pwdchangedtime" in requested_attrs, (
             f"auth_expire needs 'pwdchangedtime' but _get_user() only requested: {requested_attrs}"
         )
+
+
+# --- CMK-33824: SAML→LDAP attribute-sync takeover ---------------------------
+#
+# When an LDAP background sync finds a directory entry that matches an existing
+# SAML-owned user (by Checkmk UserId == LDAP username), the LDAP-wins rule
+# (see doc/documentation/sec-auth-saml-ldap-attribute-sync.md) requires the
+# LDAP connector to *take over* the user: flip ``connector`` to the LDAP id,
+# overwrite LDAP-managed attributes, emit a security event + change entry, and
+# log a clear TAKEOVER line. The tests below pin that behaviour.
+
+
+def _stub_saml2_connection(
+    connection_id: str,
+    locked_attributes: list[str] | None = None,
+) -> MagicMock:
+    """Return a get_connection-compatible stub for a SAML2 connection.
+
+    ``.type()`` and ``.id`` are read by the takeover gate; ``.locked_attributes()``
+    is read when dropping the previous connection's attributes on takeover. The
+    rest of the UserConnector surface is irrelevant here.
+    """
+    stub = MagicMock(spec=["type", "id", "locked_attributes"])
+    stub.type.return_value = "saml2"
+    stub.id = connection_id
+    stub.locked_attributes.return_value = (
+        ["password", "alias", "email", "contactgroups", "roles"]
+        if locked_attributes is None
+        else locked_attributes
+    )
+    return stub
+
+
+def _stub_htpasswd_connection(connection_id: str) -> MagicMock:
+    stub = MagicMock(spec=["type", "id"])
+    stub.type.return_value = "htpasswd"
+    stub.id = connection_id
+    return stub
+
+
+def _patch_get_connection(mocker: MockerFixture, mapping: dict[str, MagicMock]) -> None:
+    mocker.patch(
+        "cmk.gui.ldap_integration.ldap_connector.get_connection",
+        side_effect=mapping.get,
+    )
+
+
+_carol_ldap_fetch = FetchedLDAPUser(
+    dn="carol",
+    ldap_user_name=LdapUsername("carol"),
+    ldap_user_spec={
+        "dn": ["carol"],
+        "uid": ["CAROL_ID"],
+        "ldap_start_url": ["mr_bojangles.py"],
+        "ldap_temp_unit": ["celsius"],
+    },
+)
+
+
+def _saml_owned_carol(connection_id: str = "saml2_corp") -> UserSpec:
+    return UserSpec(
+        alias="carol",
+        connector=connection_id,
+        contactgroups=[],
+        customer="provider",
+        force_authuser=False,
+        locked=False,
+        roles=["user"],
+        serial=0,
+        start_url="welcome.py",
+        user_scheme_serial=1,
+    )
+
+
+def _ldap_default_user_profile() -> UserSpec:
+    return UserSpec(
+        contactgroups=[],
+        roles=["user"],
+        force_authuser=False,
+    )
+
+
+def _ldap_user_attributes() -> list[tuple[str, UserAttribute]]:
+    return [
+        ("start_url", StartURLUserAttribute()),
+        ("temperature_unit", TemperatureUnitUserAttribute()),
+    ]
+
+
+_test_config_no_suffix = LDAPUserConnectionConfig(
+    {**_test_config, "suffix": None},  # type: ignore[typeddict-item]
+)
+
+
+def test_sync_takes_over_saml_owned_user(mocker: MockerFixture, request_context: None) -> None:
+    """A SAML-owned user with a matching LDAP entry is taken over by LDAP sync.
+
+    Connector flips to the LDAP id and LDAP-managed attributes are written.
+    Spec D1+D4 (CMK-33824 ACs 1 and 2).
+    """
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    _patch_get_connection(mocker, {"saml2_corp": _stub_saml2_connection("saml2_corp")})
+
+    existing_users: Users = {UserId("carol"): _saml_owned_carol()}
+    sync_user_result = SyncUsersResult(
+        sync_start_time=time(),
+        fetched_users={_carol_ldap_fetch.ldap_user_name: _carol_ldap_fetch},
+    )
+
+    user_id = _sync_ldap_user(
+        fetched_ldap_user=_carol_ldap_fetch,
+        ldap_user_connector=LDAPUserConnector(_test_config),
+        users=existing_users,
+        sync_users_result=sync_user_result,
+        user_attributes=_ldap_user_attributes(),
+        default_user_profile=_ldap_default_user_profile(),
+    )
+
+    assert user_id == UserId("carol"), "takeover keeps the bare UserId"
+    taken_over = existing_users[UserId("carol")]
+    assert taken_over["connector"] == _test_config["id"], "connector flipped to LDAP"
+    assert taken_over["start_url"] == "mr_bojangles.py", "LDAP attribute synced"
+    assert taken_over["temperature_unit"] == "celsius", "LDAP attribute synced"
+
+
+def test_takeover_drops_attributes_provided_by_saml(
+    mocker: MockerFixture, request_context: None
+) -> None:
+    """On takeover, attributes the SAML connector managed are dropped.
+
+    CMK-33824: stale SAML values must not linger when the LDAP connection does
+    not re-provide them. Attributes present in the site default profile reset to
+    that default; the rest are removed entirely. The LDAP connector in this test
+    (`_test_config`) only syncs ``start_url`` and ``temperature_unit`` — it does
+    NOT provide email/contactgroups/roles — so those SAML values must disappear.
+    """
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    _patch_get_connection(mocker, {"saml2_corp": _stub_saml2_connection("saml2_corp")})
+
+    saml_user = UserSpec(
+        alias="Carol from SAML",
+        connector="saml2_corp",
+        contactgroups=["saml-only-group"],
+        customer="provider",
+        email="carol@saml.example",
+        force_authuser=False,
+        locked=False,
+        roles=["admin"],
+        serial=0,
+        start_url="welcome.py",
+        user_scheme_serial=1,
+    )
+    existing_users: Users = {UserId("carol"): saml_user}
+    sync_user_result = SyncUsersResult(
+        sync_start_time=time(),
+        fetched_users={_carol_ldap_fetch.ldap_user_name: _carol_ldap_fetch},
+    )
+
+    _sync_ldap_user(
+        fetched_ldap_user=_carol_ldap_fetch,
+        ldap_user_connector=LDAPUserConnector(_test_config),
+        users=existing_users,
+        sync_users_result=sync_user_result,
+        user_attributes=_ldap_user_attributes(),
+        default_user_profile=_ldap_default_user_profile(),
+    )
+
+    taken_over = existing_users[UserId("carol")]
+    assert taken_over["connector"] == _test_config["id"]
+    # `email` is not in the default profile -> removed outright.
+    assert "email" not in taken_over, "stale SAML email must be dropped"
+    # `contactgroups` and `roles` are in the default profile -> reset to default.
+    assert taken_over["contactgroups"] == [], "SAML contact groups reset to default"
+    assert taken_over["roles"] == ["user"], "SAML roles reset to default"
+    # LDAP-provided attributes are still applied.
+    assert taken_over["start_url"] == "mr_bojangles.py"
+    assert taken_over["temperature_unit"] == "celsius"
+
+
+def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_context: None) -> None:
+    """A SAML-owned user with NO matching LDAP entry is left untouched.
+
+    Spec AC3 / D6 — guardrail: ``do_sync`` only iterates fetched LDAP users,
+    so a SAML-only user is never reached by the takeover path.
+    """
+    connector = LDAPUserConnector(_test_config)
+    saml_only_user = _saml_owned_carol("saml2_corp")
+    saml_only_user["alias"] = "alice"
+    loaded_users: Users = {UserId("alice"): copy.deepcopy(saml_only_user)}
+    _patch_get_connection(mocker, {"saml2_corp": _stub_saml2_connection("saml2_corp")})
+
+    # `_complete_sync` only calls `save_users_func` when there are changes;
+    # this test asserts there are *no* changes, so we observe the in-place
+    # mutated `loaded_users` directly.
+    def fail_if_save_called(*_a: object, **_k: object) -> None:
+        raise AssertionError("save_users_func must not be called when nothing changed")
+
+    mocker.patch.object(connector, "get_users", return_value={})
+    connector.do_sync(
+        add_to_changelog=True,
+        only_username=None,
+        user_attributes=get_user_attributes([]),
+        load_users_func=lambda _: loaded_users,
+        save_users_func=fail_if_save_called,
+        default_user_profile={},
+    )
+
+    assert loaded_users == {UserId("alice"): saml_only_user}, (
+        "SAML-only user untouched and no other users created"
+    )
+
+
+def test_sync_for_ldap_only_users_unchanged(mocker: MockerFixture, request_context: None) -> None:
+    """A regular LDAP-owned user still receives the standard modify event.
+
+    AC4 guardrail: the new takeover branch must not affect users that were
+    already owned by the LDAP connector. This pins today's modify path.
+    """
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    # No SAML connector registered — only the LDAP one matters here.
+    _patch_get_connection(mocker, {})
+
+    ldap_owned_carol = UserSpec(
+        alias="carol",
+        connector=_test_config["id"],
+        contactgroups=[],
+        customer="provider",
+        force_authuser=False,
+        locked=False,
+        roles=["user"],
+        serial=0,
+        start_url="welcome.py",
+        user_scheme_serial=1,
+    )
+    existing_users: Users = {UserId("carol"): ldap_owned_carol}
+    sync_user_result = SyncUsersResult(
+        sync_start_time=time(),
+        fetched_users={_carol_ldap_fetch.ldap_user_name: _carol_ldap_fetch},
+    )
+
+    user_id = _sync_ldap_user(
+        fetched_ldap_user=_carol_ldap_fetch,
+        ldap_user_connector=LDAPUserConnector(_test_config),
+        users=existing_users,
+        sync_users_result=sync_user_result,
+        user_attributes=_ldap_user_attributes(),
+        default_user_profile=_ldap_default_user_profile(),
+    )
+
+    assert user_id == UserId("carol")
+    assert existing_users[UserId("carol")]["connector"] == _test_config["id"]
+    # Standard modify path: a single "user modified" event, no takeover entry
+    # in the change log.
+    assert sync_user_result.security_events == [
+        UserManagementEvent(
+            event="user modified",
+            affected_user=UserId("carol"),
+            acting_user=UserId("admin_gav"),
+            connector="ldap",
+            connection_id=_test_config["id"],
+        )
+    ]
+    assert not any("ook over" in c for c in sync_user_result.changes), (
+        "LDAP-only sync must not emit a takeover change entry"
+    )
+
+
+def test_sync_does_not_take_over_htpasswd_user(
+    mocker: MockerFixture, request_context: None
+) -> None:
+    """Takeover is SAML-only — htpasswd-owned users fall through to today's
+    name-conflict skip path.
+    """
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    _patch_get_connection(mocker, {"htpasswd": _stub_htpasswd_connection("htpasswd")})
+
+    htpasswd_carol = UserSpec(
+        alias="carol",
+        connector="htpasswd",
+        contactgroups=[],
+        roles=["user"],
+        serial=0,
+        start_url="welcome.py",
+        user_scheme_serial=1,
+    )
+    existing_users: Users = {UserId("carol"): copy.deepcopy(htpasswd_carol)}
+    sync_user_result = SyncUsersResult(
+        sync_start_time=time(),
+        fetched_users={_carol_ldap_fetch.ldap_user_name: _carol_ldap_fetch},
+    )
+
+    user_id = _sync_ldap_user(
+        fetched_ldap_user=_carol_ldap_fetch,
+        ldap_user_connector=LDAPUserConnector(_test_config_no_suffix),
+        users=existing_users,
+        sync_users_result=sync_user_result,
+        user_attributes=_ldap_user_attributes(),
+        default_user_profile=_ldap_default_user_profile(),
+    )
+
+    assert user_id is None, "name-conflict skip path returns None"
+    assert existing_users[UserId("carol")] == htpasswd_carol, "htpasswd user untouched"
+    assert sync_user_result.security_events == [], "no audit event for skipped user"
+
+
+def test_takeover_emits_security_event_and_change(
+    mocker: MockerFixture, request_context: None
+) -> None:
+    """Takeover records a 'user modified' security event AND a change entry
+    that explicitly names the ownership transfer.
+    """
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    _patch_get_connection(mocker, {"saml2_corp": _stub_saml2_connection("saml2_corp")})
+
+    existing_users: Users = {UserId("carol"): _saml_owned_carol()}
+    sync_user_result = SyncUsersResult(
+        sync_start_time=time(),
+        fetched_users={_carol_ldap_fetch.ldap_user_name: _carol_ldap_fetch},
+    )
+
+    _sync_ldap_user(
+        fetched_ldap_user=_carol_ldap_fetch,
+        ldap_user_connector=LDAPUserConnector(_test_config),
+        users=existing_users,
+        sync_users_result=sync_user_result,
+        user_attributes=_ldap_user_attributes(),
+        default_user_profile=_ldap_default_user_profile(),
+    )
+
+    # An explicit takeover entry appears in the change log alongside the
+    # standard modify entry. Substring match keeps the test resilient to
+    # i18n / minor wording tweaks.
+    assert any("ook over" in c for c in sync_user_result.changes), (
+        f"missing takeover entry; changes were: {sync_user_result.changes!r}"
+    )
+    # The audit event is a 'user modified' under the LDAP connector — no new
+    # event type is needed; the connector + connection_id tell the full story.
+    assert sync_user_result.security_events == [
+        UserManagementEvent(
+            event="user modified",
+            affected_user=UserId("carol"),
+            acting_user=UserId("admin_gav"),
+            connector="ldap",
+            connection_id=_test_config["id"],
+        )
+    ]
+
+
+def test_takeover_with_suffix_keeps_bare_userid(
+    mocker: MockerFixture, request_context: None
+) -> None:
+    """Takeover reuses the bare UserId even when the LDAP connector has a
+    suffix configured. Existing users are never renamed
+    (see cmk/gui/ldap_integration/ldap_suffix_flow.md).
+    """
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    _patch_get_connection(mocker, {"saml2_corp": _stub_saml2_connection("saml2_corp")})
+
+    assert _test_config.get("suffix"), "fixture must have a suffix for this test"
+    existing_users: Users = {UserId("carol"): _saml_owned_carol()}
+    sync_user_result = SyncUsersResult(
+        sync_start_time=time(),
+        fetched_users={_carol_ldap_fetch.ldap_user_name: _carol_ldap_fetch},
+    )
+
+    user_id = _sync_ldap_user(
+        fetched_ldap_user=_carol_ldap_fetch,
+        ldap_user_connector=LDAPUserConnector(_test_config),
+        users=existing_users,
+        sync_users_result=sync_user_result,
+        user_attributes=_ldap_user_attributes(),
+        default_user_profile=_ldap_default_user_profile(),
+    )
+
+    assert user_id == UserId("carol"), "no rename to <name>@<suffix>"
+    suffixed = UserId(f"carol@{_test_config['suffix']}")
+    assert suffixed not in existing_users, (
+        f"takeover must not create a suffixed duplicate; found {suffixed!r}"
+    )

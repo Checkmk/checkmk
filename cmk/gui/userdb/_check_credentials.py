@@ -6,6 +6,7 @@
 import traceback
 from collections.abc import Sequence
 from datetime import datetime
+from pathlib import Path
 from typing import Literal
 
 import cmk.ccc.version as cmk_version
@@ -26,9 +27,19 @@ from cmk.utils.security_event import log_security_event
 from ._connections import active_connections, get_connection
 from ._user_attribute import UserAttribute
 from ._user_spec import new_user_template
-from .store import load_user, load_users, save_users
+from .store import load_cached_profile, load_user, load_users, save_users
 
 auth_logger = gui_logger.getChild("auth")
+
+
+def _connection_id_of_user(user_id: UserId) -> str | None:
+    if not Path.exists(cmk.utils.paths.profile_dir / user_id):
+        return None
+
+    user = load_cached_profile(user_id)
+    if user is None:
+        return None
+    return user.get("connector")
 
 
 def check_credentials(
@@ -39,7 +50,13 @@ def check_credentials(
     default_user_profile: UserSpec,
 ) -> UserId | Literal[False]:
     """Verify the credentials given by a user using all auth connections"""
-    for connection_id, connection in active_connections(active_config.user_connections):
+    user_attribute_connector = _connection_id_of_user(username)
+
+    connections = sorted(
+        active_connections(active_config.user_connections),
+        key=lambda x: x[0] != user_attribute_connector,
+    )
+    for connection_id, connection in connections:
         # None        -> User unknown, means continue with other connectors
         # '<user_id>' -> success
         # False       -> failed

@@ -306,16 +306,69 @@ class SyncUsersResult:
     security_events: list[UserManagementEvent] = field(default_factory=list)
 
 
+def _is_saml_connector(connector_id: str | None) -> bool:
+    if not connector_id:
+        return False
+    connection = get_connection(connector_id)
+    return connection is not None and connection.type() == ConnectorType.SAML2
+
+
+def _reset_attributes_managed_by_connection(
+    user_spec: UserSpec,
+    managing_connector_id: str,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+    default_user_profile: UserSpec,
+) -> None:
+    """Drop profile attributes that the previous connection managed.
+
+    When an LDAP connector takes a user over from another connection (CMK-33824,
+    e.g. SAML), the attribute values written by the previous connection must not
+    linger if the LDAP connection does not re-provide them. Attributes that the
+    site default profile defines are reset to that default; the rest are removed
+    entirely. The LDAP sync plug-ins then overlay the LDAP-derived values as for
+    any other LDAP-managed user.
+
+    The user's identity (``user_id``) and credentials (``password``) are left
+    untouched.
+    """
+    if (connection := get_connection(managing_connector_id)) is None:
+        return
+    spec = cast(dict[str, object], user_spec)
+    default = cast(dict[str, object], default_user_profile)
+    for attr in connection.locked_attributes(user_attributes):
+        if attr in ("password", "user_id"):
+            continue
+        if attr in default:
+            spec[attr] = copy.deepcopy(default[attr])
+        else:
+            spec.pop(attr, None)
+
+
 def _load_copy_of_existing_user(
     ldap_user_name: LdapUsername,
     users: Users,
     ldap_user_connector: LDAPUserConnector,
 ) -> tuple[UserId, UserSpec] | None:
-    """Will return the matching user_id and a copy of the user if it exists for the connector,
-    else it will return None."""
+    """Return the matching user_id and a copy of the user spec if any of the
+    following applies, else ``None``:
 
-    if users.get(UserId(ldap_user_name), {}).get("connector") == ldap_user_connector.id:
-        return UserId(ldap_user_name), copy.deepcopy(users[UserId(ldap_user_name)])
+    1. This LDAP connector already owns the bare ``UserId``.
+    2. This LDAP connector already owns the suffixed ``UserId``.
+    3. CMK-33824 takeover: a SAML connector currently owns the bare
+       ``UserId``. The returned copy has ``connector`` flipped to this LDAP
+       connector's id; the caller writes it back via the normal sync plugins
+       and the standard modify event is emitted by
+       ``_sync_plugins_existing_user``.
+
+    Existing users are never renamed (see ``ldap_suffix_flow.md``); takeover
+    therefore matches the bare ``UserId`` only.
+    """
+
+    bare = UserId(ldap_user_name)
+    if (existing := users.get(bare)) is not None:
+        connector_id = existing.get("connector")
+        if connector_id == ldap_user_connector.id:
+            return bare, copy.deepcopy(existing)
 
     if ldap_user_connector.has_suffix():
         userid_with_suffix = ldap_user_connector.add_suffix(ldap_user_name)
@@ -324,6 +377,21 @@ def _load_copy_of_existing_user(
             and users[userid_with_suffix].get("connector") == ldap_user_connector.id
         ):
             return userid_with_suffix, copy.deepcopy(users[userid_with_suffix])
+
+    # CMK-33824 takeover branch: must run *after* the two "this connector
+    # already owns it" branches above so that the existing ownership wins on
+    # the rare overlap of bare-SAML + suffixed-LDAP-of-this-connector.
+    if existing is not None and _is_saml_connector(existing.get("connector")):
+        ldap_user_connector._logger.info(
+            'TAKEOVER "%s": connector %s -> %s',
+            bare,
+            existing.get("connector"),
+            ldap_user_connector.id,
+        )
+        taken_over = copy.deepcopy(existing)
+        taken_over["connector"] = ldap_user_connector.id
+        return bare, taken_over
+
     return None
 
 
@@ -523,6 +591,27 @@ def _sync_ldap_user(
         )
     ) is not None:
         existing_user_id, copied_user_spec = userid_and_user
+        # CMK-33824 takeover: `_load_copy_of_existing_user` flips the `connector`
+        # field on the returned copy when taking a SAML-owned user over. Record
+        # an explicit change-log entry so admins can see the ownership transfer,
+        # and drop the attributes the previous (SAML) connection managed so its
+        # values do not linger when the LDAP connection does not re-provide them.
+        # The standard "user modified" security event is then emitted by
+        # `_sync_plugins_existing_user`.
+        previous_connector = users[existing_user_id].get("connector")
+        if previous_connector is not None and previous_connector != copied_user_spec.get(
+            "connector"
+        ):
+            sync_users_result.changes.append(
+                _("LDAP [%s]: Took over user %s (was owned by %s)")
+                % (ldap_user_connector.id, existing_user_id, previous_connector)
+            )
+            _reset_attributes_managed_by_connection(
+                user_spec=copied_user_spec,
+                managing_connector_id=previous_connector,
+                user_attributes=user_attributes,
+                default_user_profile=default_user_profile,
+            )
         _sync_plugins_existing_user(
             checkmk_user_id=existing_user_id,
             ldap_user_spec=fetched_ldap_user.ldap_user_spec,
@@ -1572,12 +1661,9 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         default_user_profile: UserSpec,
     ) -> CheckCredentialsResult:
         """This function only validates credentials, no locked checking or similar"""
-        # Connect only to servers of connections, the user is configured for,
-        # to avoid connection errors for unrelated servers
+        # Suffix based connection enforcement only applies to users that are
+        # not yet assigned to a connection
         user_connection_id = self._connection_id_of_user(user_id)
-
-        if user_connection_id is not None and user_connection_id != self.id:
-            return None
 
         try:
             self.connect()

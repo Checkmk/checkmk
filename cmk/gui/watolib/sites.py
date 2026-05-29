@@ -45,6 +45,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
 )
+from cmk.gui.form_specs.unstable.validators import not_empty
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -631,7 +632,11 @@ class SiteManagement:
                         title=Title("Sync attributes only for the following connections"),
                         parameter_form=MultipleChoice(
                             custom_validate=[
-                                validators.LengthInRange(min_value=1, error_msg=Message(""))
+                                not_empty(
+                                    Message(
+                                        "Please select at least one connection or choose a different option."
+                                    )
+                                )
                             ],
                             elements=[
                                 MultipleChoiceElement(  # astrein: disable=localization-checker

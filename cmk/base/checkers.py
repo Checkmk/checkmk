@@ -265,6 +265,7 @@ class CMKSummarizer:
                         source,
                         self.summary_config(source.hostname, source.ident),
                         override_non_ok_state=self.override_non_ok_state,
+                        node_name=(source.hostname if source.hostname != self.host_name else None),
                     )
                     for source, host_sections in host_sections
                 ]
@@ -279,7 +280,9 @@ def _summarize_host_sections(
     config: SummaryConfig,
     *,
     override_non_ok_state: ServiceState | None = None,
+    node_name: HostName | None = None,
 ) -> ActiveCheckResult:
+    node_suffix = f" on node {node_name}" if node_name is not None else ""
     return ActiveCheckResult.from_subresults(
         *(
             ActiveCheckResult(
@@ -288,7 +291,7 @@ def _summarize_host_sections(
                     if (s.state == 0 or override_non_ok_state is None)
                     else override_non_ok_state
                 ),
-                summary=f"[{source.ident}] {s.summary}" if idx == 0 else s.summary,
+                summary=f"[{source.ident}] {s.summary}{node_suffix}" if idx == 0 else s.summary,
                 details=s.details,
                 metrics=s.metrics,
             )

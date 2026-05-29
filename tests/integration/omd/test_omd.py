@@ -217,8 +217,7 @@ def test_run_omd_backup_and_omd_restore(site: Site) -> None:
     restored_site = None
     backup_path = Path(tempfile.gettempdir()) / "backup.tar.gz"
     try:
-        # run the backup
-        site.omd("backup", str(backup_path), check=True)
+        site_factory.backup_site(site.id, backup_path, no_past=True)
         assert backup_path.stat().st_size > 0, "Backup file was not created."
 
         # run restore as root to use a different site name
@@ -244,7 +243,7 @@ def test_run_omd_backup_and_omd_restore_empty() -> None:
         # run the backup
         _ensure_cloud_initial_config()
         restored_site = site_factory.get_site(restored_site_name, create=True)
-        restored_site.omd("backup", str(backup_path), check=True)
+        site_factory.backup_site(restored_site_name, backup_path, no_past=True)
         assert backup_path.stat().st_size > 0, "Backup file was not created."
 
         restored_site.omd("stop")

@@ -1,0 +1,20 @@
+services:
+  oracle-perf:
+    image: gvenzl/oracle-free:23.26.0
+    container_name: oracle-perf
+    ports:
+      - "127.0.0.1:${ORACLE_PORT:-1521}:1521"
+    environment:
+      ORACLE_PASSWORD: ${PERF_DB_PASSWORD:?PERF_DB_PASSWORD is not set}
+    volumes:
+      - oracle-perf-data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+      start_interval: 10s
+
+volumes:
+  oracle-perf-data:

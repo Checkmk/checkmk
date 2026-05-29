@@ -1,0 +1,122 @@
+load(":module_lists.bzl", "PERL_MODULES_LIST_1", "PERL_MODULES_LIST_2")
+load(":rename_perl_packages.bzl", "rename_perl_package")
+
+exports_files(["extensions.bzl"])
+
+[rename_perl_package(
+    name = module.removesuffix("tar.gz").removesuffix("tgz"),
+    srcs = [
+        "@" + module + "//file:downloaded",
+    ],
+    outs = [
+        module,
+    ],
+) for module in PERL_MODULES_LIST_1.keys() + PERL_MODULES_LIST_2.keys()]
+
+filegroup(
+    name = "perl_module_list_1",
+    srcs = list(PERL_MODULES_LIST_1.keys()),
+    tags = ["manual"],
+)
+
+filegroup(
+    name = "perl_module_list_2",
+    srcs = list(PERL_MODULES_LIST_2.keys()),
+    tags = ["manual"],
+)
+
+genrule(
+    name = "perl-list-1",
+    srcs = PERL_MODULES_LIST_1.keys(),
+    outs = ["perl_module_list_1.txt"],
+    cmd = """
+        echo "$(SRCS)" > $(RULEDIR)/perl_module_list_1.txt
+    """,
+    tags = ["manual"],
+)
+
+genrule(
+    name = "perl-list-2",
+    srcs = PERL_MODULES_LIST_2.keys(),
+    outs = ["perl_module_list_2.txt"],
+    cmd = """
+        echo "$(SRCS)" > $(RULEDIR)/perl_module_list_2.txt
+    """,
+    tags = ["manual"],
+)
+
+genrule(
+    name = "perl-modules",
+    srcs = [
+        "build_module.pl",
+        "lib/BuildHelper.pm",
+        ":perl_module_list_1",
+        ":perl_module_list_2",
+        "perl_module_list_1.txt",
+        "perl_module_list_2.txt",
+        "@Crypt-SSLeay//:Crypt-SSLeay-0.72.tar.gz",
+        "bin/cpan.wrapper",
+        "MyConfig.pm",
+        "@openssl//:gen_dir",
+    ],
+    outs = [
+        "perl-modules.tar",
+    ],
+    cmd = """
+        set -x
+        mkdir perl-modules
+        export PATH=$$PWD/perl-modules/bin:$$PATH
+        export PERL_MM_OPT=INSTALL_BASE=$$PWD/perl-modules
+        export PERL_MB_OPT=--install_base=$$PWD/perl-modules
+        export MODULEBUILDRC=$$PWD/perl-modules/.modulebuildrc
+        export PERL5LIB="$$(dirname $(location lib/BuildHelper.pm)):$$PWD/perl-modules/lib/perl5:$$PWD/Crypt-SSLeay-0.72"
+        FORCE=1 $(location build_module.pl) -p $$PWD/perl-modules $$(cat $(location perl_module_list_1.txt));
+        $(location build_module.pl) -p $$PWD/perl-modules $$(cat $(location perl_module_list_2.txt));
+        # Crypt-SSLeay is built from the @Crypt-SSLeay module, whose source is
+        # already patched (via the registry's source.json patches) to not use
+        # SSLv2_client_method with openssl >= 1.1.  We pass the packaged tarball
+        # straight to build_module.pl.
+        $(location build_module.pl) -p $$PWD/perl-modules -L $$PWD/$(location @openssl//:gen_dir) $(locations @Crypt-SSLeay//:Crypt-SSLeay-0.72.tar.gz);
+
+        mv perl-modules perl-modules-install
+        mkdir -p perl-modules/lib/perl5 perl-modules/bin
+        mv perl-modules-install/lib perl-modules/lib/perl5/
+        mv perl-modules-install/bin perl-modules/lib/perl5/
+        mkdir -p perl-modules/local/lib/perl5
+        install -m 755 $(execpath bin/cpan.wrapper) perl-modules/bin/cpan.wrapper
+
+        # Fixup some library permissions. They need to be owner writable to make
+        # dh_strip command of deb packaging procedure work
+        find perl-modules/lib/perl5 -type f -name \\*.so -exec chmod u+w {} \\;
+        find perl-modules/lib/perl5 -type f -name \\*.pm -exec chmod -x {} \\;
+        cd perl-modules/lib/perl5 ; rm -rf utils.pm ; ln -s ../nagios/plugins/utils.pm .; cd -
+        mkdir -p perl-modules/lib/perl5/CPAN
+        cp $(execpath MyConfig.pm) perl-modules/lib/perl5/CPAN/MyConfig.skel
+
+        chmod +w -R perl-modules
+
+        $(execpath @@//bazel/rules:set_runpath_tree) perl-modules perl-modules \
+            $(execpath @patchelf) '$$ORIGIN'
+
+        # Guard against a silently-broken Crypt::SSLeay.  openssl >= 1.1 removed
+        # SSLv2, so the built module must not reference SSLv2_client_method as an
+        # undefined symbol -- it would fail to load at runtime.  When the openssl
+        # headers are not picked up at compile time the SSLv2 code path is
+        # compiled in regardless (hidden by -Wno-implicit-function-declaration),
+        # so check the produced shared object directly and fail loudly.
+        ssleay_so=$$(find perl-modules -path '*Crypt/SSLeay/SSLeay.so' | head -n1)
+        if [ -z "$$ssleay_so" ]; then echo "ERROR: Crypt::SSLeay SSLeay.so not found in build output" >&2; exit 1; fi
+        if nm -D "$$ssleay_so" | grep -q 'U SSLv2_client_method'; then
+            echo "ERROR: $$ssleay_so references undefined SSLv2_client_method; Crypt::SSLeay was built against the wrong openssl headers" >&2
+            exit 1
+        fi
+
+        tar cf $@ -C perl-modules .
+    """,
+    tags = ["manual"],
+    tools = [
+        "@@//bazel/rules:set_runpath_tree",
+        "@patchelf",
+    ],
+    visibility = ["//visibility:public"],
+)

@@ -1,7 +1,8 @@
-"""HTTP file definitions for Perl module dependencies."""
+"""CPAN module lists split into two install passes.
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
-load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
+PERL_MODULES_LIST_1 is installed with FORCE=1 (foundational build tools).
+PERL_MODULES_LIST_2 is installed without FORCE.
+"""
 
 # @unsorted-dict-items
 PERL_MODULES_LIST_1 = {
@@ -350,18 +351,3 @@ PERL_MODULES_LIST_2 = {
         "url": "https://src.fedoraproject.org/repo/pkgs/perl-DateTime/DateTime-1.18.tar.gz/58160bea9744a7bc9d7737f7dad9fa72/DateTime-1.18.tar.gz",
     },
 }
-
-PERL_MODULES_LIST = {}
-PERL_MODULES_LIST.update(PERL_MODULES_LIST_1)
-PERL_MODULES_LIST.update(PERL_MODULES_LIST_2)
-
-def perl_modules():
-    for module in PERL_MODULES_LIST.keys():
-        http_file(
-            name = module,
-            urls = [
-                PERL_MODULES_LIST.get(module).get("url"),
-                UPSTREAM_MIRROR_URL + module,
-            ],
-            sha256 = PERL_MODULES_LIST.get(module).get("sha256"),
-        )

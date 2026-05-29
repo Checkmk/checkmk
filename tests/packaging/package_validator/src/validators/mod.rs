@@ -14,6 +14,7 @@
 
 pub(crate) mod bundled_system_deps;
 pub(crate) mod dependency_resolution;
+pub(crate) mod embedded_build_paths;
 pub(crate) mod parse_errors;
 pub(crate) mod rpath_shape;
 
@@ -38,5 +39,6 @@ pub(crate) fn run_all<'a>(
     ));
     findings.extend(parse_errors::scan_all(package));
     findings.extend(rpath_shape::scan_all(package));
+    findings.extend(embedded_build_paths::scan_all(package));
     findings
 }

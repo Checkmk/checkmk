@@ -48,6 +48,16 @@ const FINDING_SECTIONS: &[FindingSection] = &[
         },
     ),
     (
+        ("ELF File", "Embedded Path Count"),
+        "ELF file(s) leaking build-host paths in .rodata",
+        |f| match f {
+            Finding::EmbeddedBuildPaths { path, strings } => {
+                Some((*path, strings.len().to_string()))
+            }
+            _ => None,
+        },
+    ),
+    (
         ("ELF File", "Invalid Entries"),
         "ELF file(s) with invalid RPATH/RUNPATH entries",
         |f| match f {
@@ -91,6 +101,7 @@ fn every_finding_is_rendered(f: &Finding<'_>) {
         Finding::MissingDependency { .. }
         | Finding::RpathShape { .. }
         | Finding::UnreadableElf { .. }
+        | Finding::EmbeddedBuildPaths { .. }
         | Finding::DependencyResolutionError { .. } => {}
         // Rendered via its own dependency-name-keyed table below.
         Finding::SystemDependencyFoundInPackage { .. } => {}

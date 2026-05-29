@@ -159,7 +159,11 @@ def test_piggyback_services_source_remote_diff_customer(
                 central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
             )
             assert not piggybacked_data_gets_updated(
-                central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
+                central_site,
+                remote_site,
+                _HOSTNAME_SOURCE_CENTRAL,
+                _HOSTNAME_PIGGYBACKED,
+                raise_timeout=False,
             )
 
         _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
@@ -200,7 +204,11 @@ def test_piggyback_services_remote_remote_diff_customer(
             _schedule_and_discover()
             # remote_site is on different customer, data does not flow to remote_site_2
             assert not piggybacked_data_gets_updated(
-                remote_site, remote_site_2, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
+                remote_site,
+                remote_site_2,
+                _HOSTNAME_SOURCE_REMOTE,
+                _HOSTNAME_PIGGYBACKED,
+                raise_timeout=False,
             )
 
             with _change_remote_site_customer(central_site, remote_site_2, "customer1"):
@@ -412,7 +420,11 @@ def test_piggyback_services_remote_remote_central_ph_off(
         with _turn_off_piggyback_hub(central_site):
             time.sleep(5)
             assert not piggybacked_data_gets_updated(
-                remote_site, remote_site_2, _HOSTNAME_SOURCE_REMOTE, _HOSTNAME_PIGGYBACKED
+                remote_site,
+                remote_site_2,
+                _HOSTNAME_SOURCE_REMOTE,
+                _HOSTNAME_PIGGYBACKED,
+                raise_timeout=False,
             )
 
 
@@ -585,7 +597,11 @@ def test_piggyback_services_move_host(
         _move_host(central_site, remote_site_2.id, _HOSTNAME_PIGGYBACKED)
         _schedule_check_and_discover(central_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED)
         assert not piggybacked_data_gets_updated(
-            central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
+            central_site,
+            remote_site,
+            _HOSTNAME_SOURCE_CENTRAL,
+            _HOSTNAME_PIGGYBACKED,
+            raise_timeout=False,
         )
         assert piggybacked_data_gets_updated(
             central_site, remote_site_2, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
@@ -616,7 +632,11 @@ def test_piggyback_host_removal(
         )
 
     assert not piggybacked_data_gets_updated(
-        central_site, remote_site, _HOSTNAME_SOURCE_CENTRAL, _HOSTNAME_PIGGYBACKED
+        central_site,
+        remote_site,
+        _HOSTNAME_SOURCE_CENTRAL,
+        _HOSTNAME_PIGGYBACKED,
+        raise_timeout=False,
     )
 
 

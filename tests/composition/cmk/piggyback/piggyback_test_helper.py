@@ -151,6 +151,7 @@ def piggybacked_data_gets_updated(
     hostname_source: str,
     hostname_piggybacked: str,
     timeout: int = CMK_TRACK_TIMEOUT,
+    raise_timeout: bool = True,
 ) -> bool:
     """Track incoming piggybacked data on the target site.
 
@@ -181,6 +182,12 @@ def piggybacked_data_gets_updated(
                     if f"{hostname_source} -> {hostname_piggybacked}" in line:
                         return True
                 return False
-        except (PBTimeoutError, RuntimeError):
+        except PBTimeoutError:
+            if raise_timeout:
+                raise
+            else:
+                return False
+        finally:
+            # terminate `cmk-piggyback track` run manually,
+            # as `cmk-piggyback track` does not terminate by itself.
             track.terminate()
-            raise

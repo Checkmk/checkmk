@@ -16,6 +16,7 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_faked_artifacts
 @pytest.mark.skip_if_not_containerized
 def test_proxy_register_import_workflow(

@@ -64,6 +64,7 @@ class TestCMKBrokerTest:
             with broker_pong(central_site) as pong:
                 assert pong.returncode is None  # it's running
 
+    @pytest.mark.medium_test_chain
     def test_pong_received_message(self, central_site: Site, remote_site: Site) -> None:
         """Test if the `pong_received_message` works as intended"""
         with rabbitmq_info_on_failure([central_site, remote_site]):
@@ -81,6 +82,7 @@ def _next_free_port(site: Site, key: str, port: str) -> int:
     return int(site.run(["lib/omd/next_free_port", key, port]).stdout.strip())
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")
 class TestMessageBroker:
     def test_message_broker_central_remote(self, central_site: Site, remote_site: Site) -> None:
@@ -198,6 +200,7 @@ def _setup_host(site: Site, hostname: str) -> Iterator[None]:
 
 
 class TestMessageBrokerChangeActivation:
+    @pytest.mark.medium_test_chain
     @pytest.mark.skip_if_edition("cloud")
     def test_message_broker_activation(self, central_site: Site, remote_site: Site) -> None:
         """Test if a change on a single site still correctly keeps the definitions in RabbitMQ consistent and the broker working"""
@@ -255,6 +258,7 @@ def test_unsupported_tls_versions(
         )
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.parametrize("tls_version", SUPPORTED_VERSIONS, ids=lambda v: v.name)
 def test_supported_tls_versions(
     central_site: Site, broker_ca: Path, tls_version: ssl.TLSVersion

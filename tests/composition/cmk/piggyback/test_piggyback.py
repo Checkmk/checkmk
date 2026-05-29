@@ -255,6 +255,7 @@ def _check_update_config_timestamps(sites: Sequence[Site], timestamps_dict: dict
         timestamps_dict[site.id] = file_timestamp
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_not_edition("ultimatemt")
 def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site: Site) -> None:
     """
@@ -353,6 +354,7 @@ def test_config_sync_rename_host(central_site: Site, remote_site: Site) -> None:
         _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
 
 
+@pytest.mark.medium_test_chain
 def test_piggyback_services_remote_remote(
     piggyback_env_three_site_setup: tuple[Site, Site, Site],
 ) -> None:
@@ -455,6 +457,7 @@ def _create_and_rename_host(
         source_site.openapi.changes.activate_and_wait_for_completion()
 
 
+@pytest.mark.medium_test_chain
 def test_piggyback_rename_host(piggyback_env_two_site_setup: tuple[Site, Site]) -> None:
     """
     Scenario: Host renaming triggers piggyback config re-distribution
@@ -611,6 +614,7 @@ def test_piggyback_services_move_host(
         )
 
 
+@pytest.mark.medium_test_chain
 def test_piggyback_host_removal(
     piggyback_env_two_site_setup: tuple[Site, Site],
 ) -> None:

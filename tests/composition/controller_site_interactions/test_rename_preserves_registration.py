@@ -58,6 +58,7 @@ def _test_rename_preserves_registration(
         central_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_not_containerized
 def test_rename_preserves_registration_central(
     central_site: Site,

@@ -439,8 +439,15 @@ function Start-BinarySigning {
 }
 
 function Start-BazelSigning {
+    $signed_plugins_tar = "$repo_root/bazel-bin/agents/windows/plugins/signed_plugins.tar"
+
     if ($argSign -ne $true) {
         Write-Host "Skipping Bazel Signing..." -ForegroundColor Yellow
+        # Signing skipped: the tar is never built by Bazel, but Start-ArtifactUploading
+        # still copies it. Create a zero-sized placeholder so the copy succeeds.
+        New-Item -Path (Split-Path $signed_plugins_tar) -ItemType Directory -Force | Out-Null
+        New-Item -Path $signed_plugins_tar -ItemType File -Force | Out-Null
+        Write-Host "Created zero-sized $signed_plugins_tar (signing skipped)" -ForegroundColor Yellow
         return
     }
 
@@ -452,7 +459,7 @@ function Start-BazelSigning {
         # $signed_dir = (bazel info bazel-bin 2>$null).Trim() - not reliable when bazel is not configured properly
         Write-Host "dir with files is $signed_dir"
         &bazel build //agents/windows/plugins:all
-        if ($LASTEXITCODE -eq 0) { 
+        if ($LASTEXITCODE -eq 0) {
             $env:SignedPluginsFolder = Join-Path (Get-Item -Force ..\..\bazel-bin).Target "\agents\windows\plugins\signed"
             Write-Host "Signed files are located in $env:SignedPluginsFolder"
         }
@@ -463,6 +470,20 @@ function Start-BazelSigning {
     }
     catch {
         Write-Host "Exception during Bazel signing: $_" -ForegroundColor Red
+    }
+
+    # Build the signed plugins tar and invalidate the MSI object cache when the
+    # signed-files folder changed since the previous build (stamp comparison).
+    Write-Host "$env:SignedPluginsFolder is used to store the signed files"
+    $stamp_file = "install\obj\Release\.epf_stamp"
+    $current_val = $env:SignedPluginsFolder ?? ""
+    $previous_val = if (Test-Path $stamp_file) { Get-Content $stamp_file } else { "" }
+    &bazel build //agents/windows/plugins:signed_plugins
+
+    if ($current_val -ne $previous_val) {
+        Remove-Item "install\obj\Release" -Recurse -Force -ErrorAction SilentlyContinue
+        New-Item -Path (Split-Path $stamp_file) -ItemType Directory -Force | Out-Null
+        Set-Content $stamp_file $current_val
     }
 }
 
@@ -478,7 +499,8 @@ function Start-ArtifactUploading {
         @("$build_dir/install/Release/check_mk_service.msi", "$results_dir/check_mk_agent.msi"),
         @("$build_dir/check_mk_service/x64/Release/check_mk_service.exe", "$results_dir/check_mk_agent.exe"),
         @("./install/resources/check_mk.user.yml", "$results_dir/check_mk.user.yml"),
-        @("./install/resources/check_mk.yml", "$results_dir/check_mk.yml")
+        @("./install/resources/check_mk.yml", "$results_dir/check_mk.yml"),
+        @("$repo_root/bazel-bin/agents/windows/plugins/signed_plugins.tar", "$results_dir/signed_plugins.tar")
     )
     foreach ($artifact in $artifacts) {
         Copy-Item $artifact[0] $artifact[1] -Force -ErrorAction Stop
@@ -692,16 +714,6 @@ try {
     }
     Start-BinarySigning
     Start-BazelSigning
-    Write-Host "$env:SignedPluginsFolder is used to store the signed files" 
-    $stamp_file = "install\obj\Release\.epf_stamp"
-    $current_val = $env:SignedPluginsFolder ?? ""
-    $previous_val = if (Test-Path $stamp_file) { Get-Content $stamp_file } else { "" }
-
-    if ($current_val -ne $previous_val) {
-        Remove-Item "install\obj\Release" -Recurse -Force -ErrorAction SilentlyContinue
-        New-Item -Path (Split-Path $stamp_file) -ItemType Directory -Force | Out-Null
-        Set-Content $stamp_file $current_val
-    }
     Build-MSI
     Set-Msi-Version
     Start-ArtifactUploading

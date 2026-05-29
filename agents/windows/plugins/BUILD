@@ -1,3 +1,5 @@
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
 # Sign all PowerShell scripts in the current directory.
 # `build bazel //agents/windows/plugins:all`
 #
@@ -65,6 +67,15 @@ TO_SIGN_SCRIPTS = [
     )
     for n in TO_SIGN_SCRIPTS
 ]
+
+pkg_tar(
+    name = "signed_plugins",
+    srcs = [":sign_" + n.split(":")[-1] for n in TO_SIGN_SCRIPTS],
+    strip_prefix = "signed",
+    tags = ["manual"],
+    target_compatible_with = ["@platforms//os:windows"],
+    visibility = ["//visibility:public"],
+)
 
 sh_library(
     name = "agents_windows_plugins_sh",

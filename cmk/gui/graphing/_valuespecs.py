@@ -36,6 +36,7 @@ from cmk.gui.valuespec import (
     CascadingDropdownChoiceValue,
     Checkbox,
     Dictionary,
+    DictionaryEntry,
     DropdownChoice,
     DropdownChoiceWithHostAndServiceHints,
     Filesize,
@@ -144,12 +145,12 @@ def _vs_title_infos() -> ListChoice:
     return ListChoice(title=_("Title format"), choices=choices, default_value=["plain"])
 
 
-def vs_graph_render_option_elements(default_values=None, exclude=None):
+def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[DictionaryEntry]:
     # Allow custom default values to be specified by the caller. This is, for example,
     # needed by the dashlets which should add the host/service by default.
     default_values = GraphDisplayConfigHTML.model_validate(default_values or {})
 
-    elements = [
+    elements: list[DictionaryEntry] = [
         (
             "font_size",
             Fontsize(

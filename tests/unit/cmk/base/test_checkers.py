@@ -19,15 +19,21 @@ from cmk.agent_based.prediction_backend import (
 from cmk.agent_based.v1 import Metric, Result, State
 from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.base import checkers
+from cmk.ccc import resulttype as result
+from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checkresults import (
     ServiceCheckResult,
     SubmittableServiceCheckResult,
 )
-from cmk.checkengine.helper_interface import HostKey, SourceType
+from cmk.checkengine.helper_interface import FetcherType, HostKey, SourceInfo, SourceType
+from cmk.checkengine.parser import HostSections
 from cmk.checkengine.plugins import CheckPluginName, FinalCheckResult
+from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.summarize import SummaryConfig
+from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.utils.metrics import MetricTuple
 from cmk.utils.servicename import ServiceName
 
@@ -209,8 +215,50 @@ def test_cmk_summarizer_no_data_sources() -> None:
         HostName("test-host"),
         lambda _hn, _ident: None,  # type: ignore[return-value,arg-type]
     )
-    (result,) = summarizer([])
-    assert result.state == 3
+    (res,) = summarizer([])
+    assert res.state == 3
+
+
+def _summary_config(_hn: HostName, _ident: str) -> SummaryConfig:
+    return SummaryConfig(
+        exit_spec=ExitSpec(),
+        piggyback_config=PiggybackConfig(HostName("hostname"), []),
+        expect_data=False,
+    )
+
+
+def _agent_source(hostname: HostName) -> SourceInfo:
+    return SourceInfo(
+        hostname=hostname,
+        ipaddress=None,
+        ident="agent",
+        fetcher_type=FetcherType.TCP,
+        source_type=SourceType.HOST,
+    )
+
+
+def test_cmk_summarizer_annotates_cluster_node_on_failure() -> None:
+    summarizer = checkers.CMKSummarizer(HostName("my-cluster"), _summary_config)
+    (res,) = summarizer(
+        [(_agent_source(HostName("node02")), result.Error(MKTimeout("Agent timeout")))]
+    )
+    assert res.state == 2
+    # The "(!!)" marker is the CRIT state marker appended by ActiveCheckResult.
+    assert res.summary == "[agent] Agent timeout on node node02(!!)"
+
+
+def test_cmk_summarizer_no_node_suffix_for_regular_host() -> None:
+    summarizer = checkers.CMKSummarizer(HostName("my-host"), _summary_config)
+    (res,) = summarizer(
+        [
+            (
+                _agent_source(HostName("my-host")),
+                result.OK(HostSections({})),
+            )
+        ]
+    )
+    assert res.state == 0
+    assert res.summary == "[agent] Success"
 
 
 def _make_hash(params: PredictionParameters, direction: Literal["upper"], metric: str) -> int:

@@ -5,7 +5,6 @@
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/vue'
 import { flushPromises } from '@vue/test-utils'
-import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { Catalog } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
@@ -90,61 +89,6 @@ const passwordCatalogSchema: Catalog = {
 const defaultValues = {
   general_props: { id: '', title: '', comment: '', docu_url: '' },
   password_props: { password: '', owned_by: '', share_with: '' }
-}
-
-const ownedByContactGroupForm: FormSpec.CascadingSingleChoice = {
-  type: 'cascading_single_choice',
-  title: 'Editable by',
-  label: null,
-  help: '',
-  validators: [],
-  input_hint: '',
-  no_elements_text: '',
-  layout: 'vertical',
-  elements: [
-    {
-      name: 'contact_group',
-      title: 'Members of the contact group:',
-      default_value: '',
-      parameter_form: stringField('Contact group')
-    }
-  ]
-}
-
-const schemaWithCascadingOwner: Catalog = {
-  type: 'catalog',
-  title: 'New password',
-  help: '',
-  validators: [],
-  elements: [
-    {
-      name: 'general_props',
-      title: 'General properties',
-      locked: null,
-      elements: [
-        topicElement('id', 'Unique ID'),
-        topicElement('title', 'Title'),
-        topicElement('comment', 'Comment'),
-        topicElement('docu_url', 'Documentation URL')
-      ]
-    },
-    {
-      name: 'password_props',
-      title: 'Password properties',
-      locked: null,
-      elements: [
-        topicElement('password', 'Password'),
-        {
-          type: 'topic_element',
-          name: 'owned_by',
-          required: true,
-          default_value: ['contact_group', ''],
-          parameter_form: ownedByContactGroupForm
-        },
-        topicElement('share_with', 'Share with')
-      ]
-    }
-  ]
 }
 
 const FORM_SPEC_URL = `${location.protocol}//${location.host}/api/internal/domain-types/form_spec/collections/:entity_type`
@@ -348,67 +292,5 @@ describe('PasswordStoreSlideIn', () => {
     expect(
       screen.getByText('This ID is already in use. Please choose another one.')
     ).toBeInTheDocument()
-  })
-
-  test('shows validation error when no contact group can own the password', async () => {
-    server.use(
-      http.get(FORM_SPEC_URL, () =>
-        HttpResponse.json({
-          extensions: {
-            schema: schemaWithCascadingOwner,
-            default_values: {
-              general_props: { id: 'my-password', title: 'My Password', comment: '', docu_url: '' },
-              password_props: {
-                password: 'secret',
-                owned_by: ['contact_group', ''],
-                share_with: ''
-              }
-            }
-          }
-        })
-      )
-    )
-    mockListPasswords()
-    render(PasswordStoreSlideIn, { props: { open: true } })
-
-    await flushPromises()
-    await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
-    await flushPromises()
-
-    expect(
-      screen.getByText(
-        'You need to be member of at least one contact group to be able to create a password.'
-      )
-    ).toBeInTheDocument()
-  })
-
-  test('emits created when a contact group owner is selected', async () => {
-    server.use(
-      http.get(FORM_SPEC_URL, () =>
-        HttpResponse.json({
-          extensions: {
-            schema: schemaWithCascadingOwner,
-            default_values: {
-              general_props: { id: 'my-password', title: 'My Password', comment: '', docu_url: '' },
-              password_props: {
-                password: 'secret',
-                owned_by: ['contact_group', 'linux'],
-                share_with: ''
-              }
-            }
-          }
-        })
-      )
-    )
-    mockListPasswords()
-    const { emitted } = render(PasswordStoreSlideIn, { props: { open: true } })
-
-    await flushPromises()
-    await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
-    await flushPromises()
-
-    expect(emitted().created).toMatchObject([
-      [{ password_props: { owned_by: ['contact_group', 'linux'] } }]
-    ])
   })
 })

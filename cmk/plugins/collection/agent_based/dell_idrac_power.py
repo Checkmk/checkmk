@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Sequence
+import re
+from collections.abc import Mapping, Sequence
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -25,20 +26,54 @@ def inventory_dell_idrac_power(section: Sequence[StringTable]) -> DiscoveryResul
         yield Service(item=index)
 
 
+FIRMWARE_PATTERN = re.compile(r"(?i)^idrac(\d+)")
+TRANSLATE_STATUS_V4 = {
+    "0": (State.OK, "not redundant"),
+    "1": (State.OK, "full"),
+    "2": (State.CRIT, "lost"),
+}
+TRANSLATE_STATUS_V3 = {
+    "1": (State.UNKNOWN, "other"),
+    "2": (State.UNKNOWN, "unknown"),
+    "3": (State.OK, "full"),
+    "4": (State.WARN, "degraded"),
+    "5": (State.CRIT, "lost"),
+    "6": (State.OK, "not redundant"),
+    "7": (State.WARN, "redundancy offline"),
+}
+
+
+def _get_translate_status(firmware_shortname: str | None) -> Mapping[str, tuple[State, str]]:
+    """
+    Get the version dependent powerUnitRedundancyStatus table.
+
+    With iDRAC10 v4 of the MIB was introduced, all other still supported generations use v3.
+    """
+    if firmware_shortname is None:
+        return TRANSLATE_STATUS_V4
+
+    match = FIRMWARE_PATTERN.match(firmware_shortname)
+    if not match:
+        return TRANSLATE_STATUS_V4
+
+    if int(match.group(1)) < 10:
+        return TRANSLATE_STATUS_V3
+
+    return TRANSLATE_STATUS_V4
+
+
 def check_dell_idrac_power(item: str, section: Sequence[StringTable]) -> CheckResult:
-    translate_status = {
-        "1": (State.UNKNOWN, "other"),
-        "2": (State.UNKNOWN, "unknown"),
-        "3": (State.OK, "full"),
-        "4": (State.WARN, "degraded"),
-        "5": (State.CRIT, "lost"),
-        "6": (State.OK, "not redundant"),
-        "7": (State.WARN, "redundancy offline"),
-    }
+    def _get_value(idx: int) -> str | None:
+        try:
+            return section[idx][0][0]
+        except IndexError:
+            return None
+
+    translate_status = _get_translate_status(_get_value(2))
 
     for index, status, _count in section[0]:
         if index == item:
-            state, state_readable = translate_status[status]
+            state, state_readable = translate_status.get(status, (State.UNKNOWN, "n/a"))
             yield Result(state=state, summary="Status: %s" % state_readable)
 
 
@@ -58,6 +93,7 @@ snmp_section_dell_idrac_power = SNMPSection(
             base=".1.3.6.1.4.1.674.10892.5.4.600.12.1",
             oids=["2", "5", "7", "8"],
         ),
+        SNMPTree(base=".1.3.6.1.4.1.674.10892.5.1.1", oids=["2"]),
     ],
     parse_function=parse_dell_idrac_power,
 )

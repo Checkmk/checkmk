@@ -173,7 +173,7 @@ const comboboxButtonRef =
   useTemplateRef<InstanceType<typeof CmkDropdownButton>>('comboboxButtonRef')
 
 // Swallow the click-outside fired by the in-flight bubble when open() is
-// called synchronously from a sibling's click handler.
+// called from a sibling's click handler.
 const suppressNextClickOutside = ref(false)
 
 defineExpose({
@@ -183,10 +183,11 @@ defineExpose({
     }
     suppressNextClickOutside.value = true
     showSuggestions()
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    nextTick(() => {
+    // We use setTimeout here instead of nextTick because
+    // the reset must outlive the entire click dispatch.
+    setTimeout(() => {
       suppressNextClickOutside.value = false
-    })
+    }, 0)
   }
 })
 

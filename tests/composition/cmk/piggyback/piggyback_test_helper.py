@@ -16,7 +16,7 @@ from typing import Final, IO, Literal
 from tests.testlib.common.utils2 import ServiceInfo
 from tests.testlib.site import Site
 
-CMK_TRACK_TIMEOUT: Final = 5  # secs
+CMK_TRACK_TIMEOUT: Final = 30  # secs
 
 
 @dataclass

@@ -85,6 +85,12 @@ async function pickKey(pill: HTMLElement, name: string): Promise<void> {
   await userEvent.click(await screen.findByRole('option', { name }))
 }
 
+async function pickOperator(pill: HTMLElement, phrase: string): Promise<void> {
+  const operatorCombobox = within(pill).getByRole('combobox', { name: 'Attribute operator' })
+  await userEvent.click(operatorCombobox)
+  await userEvent.click(await screen.findByRole('option', { name: phrase }))
+}
+
 test('picking a known key applies key and inferred attributeType in one mutation', async () => {
   const { model } = renderForm(makeModel(), (key) => (key === 'http.method' ? 'datapoint' : null))
   // The pill emits only `update:key`; the parent owns the resolver and merges
@@ -128,6 +134,14 @@ test('manual attributeType change persists on the targeted row', async () => {
 
   expect(model.value![1]!.attributeType).toBe('datapoint')
   expect(model.value![0]!.attributeType).toBe(null)
+})
+
+test('manual operator change persists on the targeted row', async () => {
+  const { model } = renderForm(makeModel())
+  await pickOperator(pillsInOrder()[1]!, 'is not')
+
+  expect(model.value![1]!.operator).toBe('neq')
+  expect(model.value![0]!.operator).toBe('eq')
 })
 
 test('picking a key with no resolver hit auto-opens the type dropdown', async () => {

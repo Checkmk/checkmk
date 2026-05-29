@@ -14,7 +14,8 @@ import CmkIconButton from '@/components/CmkIconButton.vue'
 import type { QuerySuggestionsFn } from '@/components/CmkSuggestions/types'
 
 import { ATTRIBUTE_TYPE_LABELS, operatorPhrase, pillLabel } from './pill-label'
-import type { AttributeCondition, AttributeType } from './types'
+import { EXISTENCE_OPERATORS, STRING_OPERATORS, isOperator, operatorTakesValue } from './types'
+import type { AttributeCondition, AttributeType, Operator } from './types'
 
 const { _t } = usei18n()
 
@@ -32,16 +33,20 @@ const emit = defineEmits<{
   (e: 'remove'): void
   (e: 'update:key', value: string): void
   (e: 'update:attributeType', value: AttributeType): void
+  (e: 'update:operator', value: Operator): void
 }>()
 
 const fullLabel = computed(() => pillLabel(props.condition))
-const operatorText = computed(() => operatorPhrase(props.condition.operator))
-const isExistence = computed(
-  () => props.condition.operator === 'exists' || props.condition.operator === 'not_exists'
-)
+const showValue = computed(() => operatorTakesValue(props.condition.operator))
 
 function onKeyUpdate(value: string | null): void {
   emit('update:key', value ?? '')
+}
+
+function onOperatorUpdate(value: string | null): void {
+  if (value !== null && isOperator(value)) {
+    emit('update:operator', value)
+  }
 }
 
 const attributeTypeInput = computed<string | null>({
@@ -85,6 +90,24 @@ const attributeTypeOptions = computed(() => ({
     { name: 'datapoint', title: _t('Data point') }
   ]
 }))
+
+function operatorSuggestion(name: Operator) {
+  return { name, title: operatorPhrase(name) }
+}
+
+const operatorOptions = computed(() => ({
+  type: 'fixed' as const,
+  suggestions: [
+    {
+      title: _t('Comparison'),
+      suggestions: STRING_OPERATORS.map(operatorSuggestion)
+    },
+    {
+      title: _t('Existence'),
+      suggestions: EXISTENCE_OPERATORS.map(operatorSuggestion)
+    }
+  ]
+}))
 </script>
 
 <template>
@@ -119,11 +142,18 @@ const attributeTypeOptions = computed(() => ({
       </span>
       <span
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator"
-        >{{ operatorText }}</span
       >
+        <CmkDropdown
+          :selected-option="condition.operator"
+          :options="operatorOptions"
+          :label="_t('Attribute operator')"
+          @update:selected-option="onOperatorUpdate"
+        />
+      </span>
       <span
-        v-if="!isExistence"
+        v-if="showValue"
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--value"
+        :aria-label="_t('Attribute value')"
         >{{ condition.value }}</span
       >
     </span>
@@ -158,11 +188,5 @@ const attributeTypeOptions = computed(() => ({
   display: inline-flex;
   align-items: center;
   padding: 0 var(--dimension-2);
-}
-
-/* Operator renders as dimmed/italic metadata around key/value. */
-.metric-backend-attribute-filter-pill__segment--operator {
-  color: var(--font-color-dimmed);
-  font-style: italic;
 }
 </style>

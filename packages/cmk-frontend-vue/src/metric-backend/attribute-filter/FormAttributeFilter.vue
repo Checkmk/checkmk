@@ -10,7 +10,7 @@ import usei18n from '@/lib/i18n'
 import type { QuerySuggestionsFn } from '@/components/CmkSuggestions/types'
 
 import AttributeFilterPill from './AttributeFilterPill.vue'
-import type { AttributeFilterModel, AttributeType, ConnectedCondition } from './types'
+import type { AttributeFilterModel, AttributeType, ConnectedCondition, Operator } from './types'
 
 const { _t } = usei18n()
 
@@ -43,6 +43,10 @@ function updateKey(target: ConnectedCondition, value: string): void {
 function updateAttributeType(target: ConnectedCondition, value: AttributeType): void {
   model.value = model.value.map((c) => (c.id === target.id ? { ...c, attributeType: value } : c))
 }
+
+function updateOperator(target: ConnectedCondition, value: Operator): void {
+  model.value = model.value.map((c) => (c.id === target.id ? { ...c, operator: value } : c))
+}
 </script>
 
 <template>
@@ -56,6 +60,7 @@ function updateAttributeType(target: ConnectedCondition, value: AttributeType): 
       @remove="removeCondition(entry)"
       @update:key="(value) => updateKey(entry, value)"
       @update:attribute-type="(value) => updateAttributeType(entry, value)"
+      @update:operator="(value) => updateOperator(entry, value)"
     />
   </div>
 </template>

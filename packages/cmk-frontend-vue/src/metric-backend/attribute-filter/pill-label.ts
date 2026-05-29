@@ -6,6 +6,7 @@
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
+import { operatorTakesValue } from './types'
 import type { AttributeCondition, AttributeType, Operator } from './types'
 
 export const ATTRIBUTE_TYPE_LABELS: Record<Exclude<AttributeType, null>, string> = {
@@ -45,7 +46,7 @@ export function attributeTypePrefix(attributeType: AttributeType): string {
   return attributeType === null ? '' : `${attributeTypePrefixes()[attributeType]} `
 }
 
-export function operatorPhrase(operator: Operator): string {
+export function operatorPhrase(operator: Operator): TranslatedString {
   return operatorPhrases()[operator]
 }
 
@@ -53,9 +54,8 @@ export function pillLabel(condition: AttributeCondition): string {
   const prefix = attributeTypePrefix(condition.attributeType)
   const phrase = operatorPhrase(condition.operator)
   const key = condition.key ?? ''
-  const isExistence = condition.operator === 'exists' || condition.operator === 'not_exists'
-  if (isExistence) {
-    return `${prefix}${key} ${phrase}`
+  if (operatorTakesValue(condition.operator)) {
+    return `${prefix}${key} ${phrase} ${condition.value}`
   }
-  return `${prefix}${key} ${phrase} ${condition.value}`
+  return `${prefix}${key} ${phrase}`
 }

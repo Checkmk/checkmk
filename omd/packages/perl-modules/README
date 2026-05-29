@@ -1,11 +1,8 @@
 1. adding new modules
-   use the download_package.sh script to download new modules from
-   cpan.
-   ex.: ./download_package.sh Module::Install
-   you have to add the tarball in the right order to the Makefile.
+   Add an entry to extensions.bzl in the bazel module:
+     bazel/thirdparty/modules/perl-modules/0.0.1.cmk.1/src/extensions.bzl
+   Include the CPAN URL and sha256 in the _PERL_MODULES dict.
+   Then add the module filename to the appropriate list in module_lists.bzl.
 
 2. updating modules
-   use the update_modules.sh script to check for updates
-   ex.: ./update_modules.sh Module-Install-1.00.tar.gz
-   The Makefile will be updated automatically but you are responsible
-   for removing old modules from the git repository.
+   Update the URL and sha256 for the module in extensions.bzl.

@@ -1,3 +1,5 @@
+"""Macro to rename Bazel-downloaded Perl packages to their original names."""
+
 def rename_perl_package(name, srcs, outs, **kwargs):
     """This macro is renaming the packages to their original name.
 

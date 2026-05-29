@@ -1,1 +1,4 @@
-{ "mirrors": ["https://bazel-registry.lan.checkmk.net/"] }
+{
+  "mirrors": ["https://bazel-registry.lan.checkmk.net/"],
+  "module_base_path": "."
+}

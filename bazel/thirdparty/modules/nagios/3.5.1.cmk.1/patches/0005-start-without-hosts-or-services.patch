@@ -1,6 +1,5 @@
-diff -ru nagios-3.4.4.orig//base/config.c nagios-3.4.4/base/config.c
---- nagios-3.4.4.orig//base/config.c	2013-01-27 11:42:37.761784344 +0100
-+++ nagios-3.4.4/base/config.c	2013-01-27 11:43:32.078583379 +0100
+--- nagios-base/base/config.c	2013-08-30 19:46:14.000000000 +0200
++++ nagios-step/base/config.c	2026-04-25 18:01:19.092800241 +0200
 @@ -1770,10 +1770,6 @@
  	/*****************************************/
  	if(verify_config == TRUE)

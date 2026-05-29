@@ -76,7 +76,6 @@ configure_make(
             "/usr/lib64/pkgconfig",
             "/usr/lib/x86_64-linux-gnu/pkgconfig",
         ]),
-        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
     },
     lib_source = ":all_srcs",
     linkopts = ["-Wl,--strip-all"],

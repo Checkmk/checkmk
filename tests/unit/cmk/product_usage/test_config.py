@@ -17,6 +17,7 @@ from cmk.utils import http_proxy_config
 from cmk.product_usage.config import (
     get_proxy_config,
     load_config,
+    load_state,
     ProductUsageAnalyticsSettings,
     ProxySetting,
     read_config_file,
@@ -119,6 +120,29 @@ def test_load_config_with_missing_config_file() -> None:
         assert config.enabled is False
         assert config.state == "not_decided"
         assert isinstance(config.proxy_config, http_proxy_config.EnvironmentProxyConfig)
+
+
+def test_load_state_does_not_load_base_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    """load_state must not trigger the (potentially huge) base config load."""
+    base_config_load = MagicMock()
+    monkeypatch.setattr("cmk.product_usage.config.base_config.load", base_config_load)
+
+    mock_read_config = MagicMock(
+        return_value=ProductUsageAnalyticsSettings(
+            enabled="enabled",
+            proxy_setting=("environment", "environment"),
+        )
+    )
+    monkeypatch.setattr("cmk.product_usage.config.read_config_file", mock_read_config)
+
+    assert load_state(logger=mock.Mock()) == "enabled"
+    base_config_load.assert_not_called()
+
+
+def test_load_state_with_missing_config_file(monkeypatch: pytest.MonkeyPatch) -> None:
+    """load_state returns the default state when read_config_file raises."""
+    with mock.patch("cmk.product_usage.config.read_config_file", side_effect=ConfigError):
+        assert load_state(logger=mock.Mock()) == "not_decided"
 
 
 def test_read_config_file_with_missing_file() -> None:

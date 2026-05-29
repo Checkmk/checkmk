@@ -15,6 +15,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
+import datetime
 import enum
 import logging
 
@@ -23,7 +24,7 @@ from sphinx.application import Sphinx
 # -- Project information -----------------------------------------------------
 
 project = "Checkmk's Plug-in APIs"
-copyright = "2023, Checkmk GmbH"  # noqa: A001
+copyright = f"2023-{datetime.date.today().year}, Checkmk GmbH"  # noqa: A001
 author = "Checkmk GmbH"
 
 # -- General configuration ---------------------------------------------------

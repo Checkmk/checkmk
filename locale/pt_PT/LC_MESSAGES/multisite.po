@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-27 17:53+0000\n"
+"PO-Revision-Date: 2026-05-28 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -56958,6 +56958,10 @@ msgid ""
 "again later. If this error persists, please contact the Checkmk support."
 msgstr ""
 
+#, fuzzy
+msgid "Received bandwidth"
+msgstr "E-mails recebidos"
+
 msgid "Received messages"
 msgstr "Mensagens recebidas"
 
@@ -83800,6 +83804,10 @@ msgstr "Quadros Transmitidos"
 msgid "Transmitted Words"
 msgstr "Palavras Transmitidas"
 
+#, fuzzy
+msgid "Transmitted bandwidth"
+msgstr "Palavras Transmitidas"
+
 msgid "Transport Lag"
 msgstr "Lagoa de Transporte"
 
@@ -103579,9 +103587,6 @@ msgstr ""
 
 #~ msgid "Receive start of response"
 #~ msgstr "Receber o início da resposta"
-
-#~ msgid "Received mails"
-#~ msgstr "E-mails recebidos"
 
 #~ msgid "Recent hardware/software inventory"
 #~ msgstr "Inventário recente de hardware/software"

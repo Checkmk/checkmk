@@ -57442,6 +57442,10 @@ msgid ""
 "again later. If this error persists, please contact the Checkmk support."
 msgstr ""
 
+#, fuzzy
+msgid "Received bandwidth"
+msgstr "Courriers reçus"
+
 msgid "Received messages"
 msgstr "Messages reçus"
 
@@ -84590,6 +84594,10 @@ msgstr "Trames transmises"
 msgid "Transmitted Words"
 msgstr "Mots transmis"
 
+#, fuzzy
+msgid "Transmitted bandwidth"
+msgstr "Mots transmis"
+
 msgid "Transport Lag"
 msgstr "Retard de transport"
 
@@ -104554,9 +104562,6 @@ msgstr ""
 
 #~ msgid "Receive start of response"
 #~ msgstr "Réception du début de la réponse"
-
-#~ msgid "Received mails"
-#~ msgstr "Courriers reçus"
 
 #~ msgid "Recent hardware/software inventory"
 #~ msgstr "Inventaire récent du matériel/logiciel"

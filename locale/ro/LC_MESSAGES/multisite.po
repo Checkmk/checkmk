@@ -57115,6 +57115,10 @@ msgstr ""
 "încercați din nou mai târziu. Dacă această eroare persistă, vă rugăm să "
 "contactați serviciul de asistență Checkmk."
 
+#, fuzzy
+msgid "Received bandwidth"
+msgstr "Mailuri primite"
+
 msgid "Received messages"
 msgstr "Mesaje primite"
 
@@ -84132,6 +84136,10 @@ msgstr "Cadre transmise"
 msgid "Transmitted Words"
 msgstr "Cuvinte transmise"
 
+#, fuzzy
+msgid "Transmitted bandwidth"
+msgstr "Cuvinte transmise"
+
 msgid "Transport Lag"
 msgstr "Decalajul de transport"
 
@@ -104010,9 +104018,6 @@ msgstr ""
 
 #~ msgid "Receive start of response"
 #~ msgstr "Primirea începutului de răspuns"
-
-#~ msgid "Received mails"
-#~ msgstr "Mailuri primite"
 
 #~ msgid "Recent hardware/software inventory"
 #~ msgstr "Inventar hardware/software recent"

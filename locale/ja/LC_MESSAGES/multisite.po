@@ -53993,6 +53993,10 @@ msgstr ""
 "ライセンス・サーバ (%s) から無効な応答を受け取りました。後で再試行してくださ"
 "い。このエラーが続く場合は、Checkmk サポートにお問い合わせください。"
 
+#, fuzzy
+msgid "Received bandwidth"
+msgstr "受信メール"
+
 msgid "Received messages"
 msgstr "受信したメッセージ"
 
@@ -79399,6 +79403,10 @@ msgstr "送信されたフレーム"
 msgid "Transmitted Words"
 msgstr "送信された単語"
 
+#, fuzzy
+msgid "Transmitted bandwidth"
+msgstr "送信された単語"
+
 msgid "Transport Lag"
 msgstr "輸送ラグ"
 
@@ -98675,9 +98683,6 @@ msgstr ""
 
 #~ msgid "Receive start of response"
 #~ msgstr "応答の開始を受信します"
-
-#~ msgid "Received mails"
-#~ msgstr "受信メール"
 
 #~ msgid "Recent hardware/software inventory"
 #~ msgstr "最近のハードウェア/ソフトウェアインベントリ"

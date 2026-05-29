@@ -27,4 +27,5 @@ pub mod platform;
 pub mod setup;
 pub mod types;
 pub mod utils;
-mod version;
+#[doc(hidden)]
+pub mod version;

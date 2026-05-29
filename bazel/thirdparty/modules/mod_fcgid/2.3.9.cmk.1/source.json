@@ -7,8 +7,8 @@
     "MODULE.bazel": "sha256-shRqaCcsTOWKahGi7u22GbWynsZ9aCVjeu/9Xkkj/TI="
   },
   "patches": {
-    "0002-fcgid_pm_unix.c.patch": "sha256-a+AyTMSqzsTTRFRZfPFhup6vnBXrztWR/8TDQZZunro=",
-    "0001-fcgid_proc_unix.c.patch": "sha256-1aRm9RiVVK+SIlvFSbuiYScgsmD4xTThKJtIQvmd3/I="
+    "0001-fcgid_proc_unix.c.patch": "sha256-1aRm9RiVVK+SIlvFSbuiYScgsmD4xTThKJtIQvmd3/I=",
+    "0002-fcgid_pm_unix.c.patch": "sha256-a+AyTMSqzsTTRFRZfPFhup6vnBXrztWR/8TDQZZunro="
   },
   "patch_strip": 1
 }

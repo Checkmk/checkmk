@@ -138,6 +138,7 @@ rust_library(
 rust_test_suite(
     name = "mk-oracle-lib-test-external",
     srcs = [
+        "tests/test_mk_oracle_bin.rs",
         "tests/test_ora_sql.rs",
     ],
     compile_data = [

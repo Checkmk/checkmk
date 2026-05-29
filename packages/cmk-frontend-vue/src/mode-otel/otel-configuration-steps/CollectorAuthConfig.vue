@@ -10,7 +10,6 @@ import usei18n from '@/lib/i18n'
 import useId from '@/lib/useId'
 
 import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
-import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkInlineButton from '@/components/user-input/CmkInlineButton.vue'
@@ -31,7 +30,6 @@ const props = defineProps<{
   noAuthAllowed: boolean
   availablePasswords: Suggestion[]
   showErrors: boolean
-  mayCreatePassword: boolean
 }>()
 
 const emit = defineEmits<{ createPassword: [] }>()
@@ -130,22 +128,7 @@ const passwordErrors = computed<string[]>(() => {
           :form-validation="passwordErrors.length > 0"
           :no-elements-text="_t('No passwords available')"
         />
-        <CmkInlineButton :disabled="!mayCreatePassword" @click="emit('createPassword')">{{
-          _t('Create')
-        }}</CmkInlineButton>
-        <CmkHelpText
-          v-if="!mayCreatePassword"
-          :aria-label="_t('Why is creating a password unavailable?')"
-          :help="
-            _t(
-              'Creating a new password is not available for your account. Make sure that you:' +
-                '<ul>' +
-                '<li>Have permission to manage passwords.</li>' +
-                '<li>You are a member of a contact group that could own the new password.</li>' +
-                '</ul>'
-            )
-          "
-        />
+        <CmkInlineButton @click="emit('createPassword')">{{ _t('Create') }}</CmkInlineButton>
       </div>
       <CmkInlineValidation v-if="passwordErrors.length" :validation="passwordErrors" />
     </div>

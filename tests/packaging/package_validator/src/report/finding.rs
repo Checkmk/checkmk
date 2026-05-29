@@ -29,6 +29,12 @@ pub(crate) enum Finding<'a> {
         path: &'a Path,
         message: &'a str,
     },
+    /// Build-host paths (e.g. `/.cache/bazel/`) leaked in the ELF's `.rodata`.
+    /// One finding per ELF.
+    EmbeddedBuildPaths {
+        path: &'a Path,
+        strings: Vec<String>,
+    },
     /// All dependencies of `path` that errored during resolution, as
     /// `(dependency, message)` pairs. One finding per ELF.
     DependencyResolutionError {

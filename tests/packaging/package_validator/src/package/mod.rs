@@ -34,6 +34,11 @@ pub(crate) type PackageElfs<'a> = HashMap<&'a Path, &'a Elf>;
 pub struct Package {
     path: PathBuf,
     files: PackageFiles,
+    /// The extraction directory, kept alive for the `Package`'s lifetime so
+    /// content-based validators can read the extracted files at report time
+    /// (see `extracted_path`). `None` for test packages built via
+    /// `new_for_testing`, which have no real extraction on disk.
+    extraction: Option<TempDir>,
 }
 
 impl Package {
@@ -42,8 +47,12 @@ impl Package {
     /// # Errors
     /// Returns an error if the package type cannot be determined or is unsupported.
     pub fn new(path: PathBuf) -> PackageResult<Self> {
-        let files = Self::extract(&path)?;
-        Ok(Self { path, files })
+        let (files, extraction) = Self::extract(&path)?;
+        Ok(Self {
+            path,
+            files,
+            extraction: Some(extraction),
+        })
     }
 
     /// Get the path to the package.
@@ -82,7 +91,12 @@ impl Package {
             .collect()
     }
 
-    fn extract(path: &Path) -> PackageResult<PackageFiles> {
+    /// Extract the package into a fresh temporary directory and return both the
+    /// classified files and the directory itself. The caller keeps the `TempDir`
+    /// alive (in `Package`) so report-time validators can re-read the extracted
+    /// files; it is cleaned up when the `Package` is dropped. On error the
+    /// `TempDir` is dropped here and cleaned up immediately.
+    fn extract(path: &Path) -> PackageResult<(PackageFiles, TempDir)> {
         let dest = TempDir::new().map_err(|e| PackageError::TempDirFailed { source: e })?;
 
         let extension = path
@@ -92,7 +106,7 @@ impl Package {
                 extension: "unknown".to_string(),
             })?;
 
-        let result = match extension {
+        let files = match extension {
             DebExtractor::EXTENSION => DebExtractor::extract(path, &dest),
             RpmExtractor::EXTENSION => RpmExtractor::extract(path, &dest),
             CmaExtractor::EXTENSION => CmaExtractor::extract(path, &dest),
@@ -101,17 +115,30 @@ impl Package {
                     extension: extension.to_string(),
                 })
             }
-        };
-        // Explicitly close the temporary directory to prevent any errors from being hidden.
-        dest.close()
-            .map_err(|e| PackageError::TempDirFailed { source: e })?;
-        result
+        }?;
+        Ok((files, dest))
+    }
+
+    /// Map an in-package path (a key of `files`) back to its location on disk in
+    /// the extraction directory, so file contents can be read at report time.
+    ///
+    /// `ExtractedFile::package_path` stores `/` + the dest-relative path, so the
+    /// inverse is `dest.join(<package_path without leading '/'>)`. Returns `None`
+    /// for test packages that were not extracted from disk.
+    pub(crate) fn extracted_path(&self, package_path: &Path) -> Option<PathBuf> {
+        let root = self.extraction.as_ref()?;
+        let relative = package_path.strip_prefix("/").ok()?;
+        Some(root.path().join(relative))
     }
 
     #[cfg(test)]
     /// Create a test package with the given files.
     /// This is only available in test builds.
     pub(crate) fn new_for_testing(path: PathBuf, files: PackageFiles) -> Self {
-        Self { path, files }
+        Self {
+            path,
+            files,
+            extraction: None,
+        }
     }
 }

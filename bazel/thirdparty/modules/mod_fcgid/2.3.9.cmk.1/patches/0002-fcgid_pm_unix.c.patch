@@ -1,6 +1,6 @@
---- mod_fcgid-2.3.6/modules/fcgid/fcgid_pm_unix.c.orig	2011-01-03 17:25:30.000000000 +0100
-+++ mod_fcgid-2.3.6/modules/fcgid/fcgid_pm_unix.c	2011-01-03 17:26:39.000000000 +0100
-@@ -282,7 +282,8 @@
+--- mod_fcgid-2.3.9.orig/modules/fcgid/fcgid_pm_unix.c	2026-04-25 17:40:39.192016248 +0200
++++ mod_fcgid-2.3.9/modules/fcgid/fcgid_pm_unix.c	2026-04-25 17:40:39.194852037 +0200
+@@ -285,7 +285,8 @@
           * When running children as the configured user, the real uid
           * is switched.
           */

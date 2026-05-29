@@ -34,24 +34,6 @@ configure_make(
     visibility = ["//visibility:public"],
 )
 
-genrule(
-    name = "skel",
-    srcs = [
-        "@omd_packages//omd/packages/stunnel/skel",
-        "@omd_packages//omd/packages/stunnel/skel:skel_root",
-    ],
-    outs = [
-        "skel/etc/init.d/stunnel",
-        "skel/etc/logrotate.d/stunnel",
-        "skel/etc/rc.d/85-stunnel",
-        "skel/etc/stunnel/server.conf",
-        "skel/etc/stunnel/conf.d",
-    ],
-    cmd = """
-        cp -r --dereference $$(dirname $(execpath @omd_packages//omd/packages/stunnel/skel:skel_root)) $$(realpath $(RULEDIR))
-    """,
-)
-
 filegroup(
     name = "mod_fcgid.so",
     srcs = [":mod_fcgid"],

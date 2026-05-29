@@ -1,0 +1,7 @@
+{
+  "homepage": "https://httpd.apache.org/mod_fcgid/",
+  "maintainers": [],
+  "repository": ["https://github.com/apache/mod_fcgid"],
+  "versions": ["2.3.9.cmk.1"],
+  "yanked_versions": {}
+}

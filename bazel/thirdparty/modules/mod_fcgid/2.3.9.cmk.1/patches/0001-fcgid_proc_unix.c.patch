@@ -1,5 +1,5 @@
---- mod_fcgid-2.3.6/modules/fcgid/fcgid_proc_unix.c.orig	2011-01-03 17:25:28.000000000 +0100
-+++ mod_fcgid-2.3.6/modules/fcgid/fcgid_proc_unix.c	2011-01-03 17:26:27.000000000 +0100
+--- mod_fcgid-2.3.9.orig/modules/fcgid/fcgid_proc_unix.c	2026-04-25 17:40:39.192257265 +0200
++++ mod_fcgid-2.3.9/modules/fcgid/fcgid_proc_unix.c	2026-04-25 17:40:39.193841118 +0200
 @@ -76,7 +76,8 @@
      const char *execuser, *execgroup;
      const char *argv0;
@@ -20,7 +20,7 @@
          || (procinfo->uid == (uid_t) - 1
              && procinfo->gid == (gid_t) - 1)) {
          return apr_proc_create(newproc, progname, args, env, attr, p);
-@@ -267,7 +269,8 @@
+@@ -256,7 +258,8 @@
       * 1. Unlink the socket when the process exits
       * 2. (suexec mode only, in the child cleanup) Switch to the configured uid
       */
@@ -30,7 +30,7 @@
          apr_pool_cleanup_register(procnode->proc_pool,
                                    procnode, socket_file_cleanup,
                                    exec_setuid_cleanup);
-@@ -386,7 +389,8 @@
+@@ -375,7 +378,8 @@
                                           procattr, procinfo,
                                           procnode->proc_pool);
  
@@ -40,9 +40,9 @@
          /* Prior to creating the child process, a child cleanup was registered
           * to switch the uid in the child.  No-op the child cleanup for this
           * pool so that it won't run again as other child processes are created.
-@@ -414,7 +418,8 @@
-     /* su as root before sending signal, for suEXEC */
-     apr_status_t rv;
+@@ -409,7 +413,8 @@
+         return APR_SUCCESS;
+     }
  
 -    if (ap_unixd_config.suexec_enabled && seteuid(0) != 0) {
 +    //if (ap_unixd_config.suexec_enabled && seteuid(0) != 0) {
@@ -50,7 +50,7 @@
  
          /* can't gain privileges to send signal (should not occur); do NOT
           * proceed, as something is broken with current identity
-@@ -423,7 +428,8 @@
+@@ -418,7 +423,8 @@
          _exit(1);
      }
      rv = apr_proc_kill(&(procnode->proc_id), sig);

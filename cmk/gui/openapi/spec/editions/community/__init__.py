@@ -9,6 +9,7 @@ from cmk.gui.agent_registration.api.registration import (
 from cmk.gui.availability.openapi.registration import (
     register as availability_register,
 )
+from cmk.gui.background_job.job import job_registry
 from cmk.gui.background_job.wato._job_ui import (
     register as background_jobs_register_permissions,
 )
@@ -51,6 +52,7 @@ from cmk.gui.openapi.registration import register as openapi_central_register
 from cmk.gui.pagetypes import declare as pagetypes_declare
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.pagetypes._openapi._registration import register as pagetypes_register
+from cmk.gui.parentscan.register import register as parentscan_register
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.sidebar._openapi.registration import register as sidebar_register
 from cmk.gui.user_message.api._registration import (
@@ -70,6 +72,9 @@ from cmk.gui.visuals.info._openapi._registration import (
     register_endpoints as visuals_info_register_endpoints,
 )
 from cmk.gui.wato._permissions import register as wato_permissions_register
+from cmk.gui.wato.pages.folders import folder_bulk_action_registry, folder_menu_entry_registry
+from cmk.gui.watolib.hosts_and_folders import host_action_menu_registry
+from cmk.gui.watolib.mode import mode_registry
 
 
 def register_for_community() -> None:
@@ -121,3 +126,12 @@ def register_for_community() -> None:
     )
 
     metric_endpoint.register(endpoint_registry)
+    parentscan_register(
+        mode_registry,
+        job_registry,
+        endpoint_registry,
+        folder_menu_entry_registry,
+        host_action_menu_registry,
+        permission_registry,
+        folder_bulk_action_registry,
+    )

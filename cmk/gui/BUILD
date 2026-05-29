@@ -765,6 +765,7 @@ py_library(
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/pagetypes",
         "//cmk/gui/painter:v0_base",
+        "//cmk/gui/parentscan",
         "//cmk/gui/product_usage_analytics",
         "//cmk/gui/quick_setup",
         "//cmk/gui/release_flags",

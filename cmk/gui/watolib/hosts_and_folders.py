@@ -4059,17 +4059,6 @@ def ajax_popup_host_action_menu(ctx: PageContext) -> None:
 
     form_name: str = "hosts"
 
-    # Detect network parents
-    if request.get_str_input("show_parentscan_link"):
-        html.open_a(
-            href=None,
-            onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.form_submit, %s);"
-            % json.dumps([form_name, "_parentscan"]),
-        )
-        html.static_icon(StaticIcon(IconNames.parentscan))
-        html.write_text_permissive(_("Detect network parents"))
-        html.close_a()
-
     # Remove TLS registration
     if request.get_str_input("show_remove_tls_link"):
         remove_tls_options: dict[str, str | dict[str, str]] = confirmed_form_submit_options(

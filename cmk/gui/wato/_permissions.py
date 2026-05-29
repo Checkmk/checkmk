@@ -176,22 +176,6 @@ def register(
     permission_registry.register(
         Permission(
             section=PERMISSION_SECTION_WATO,
-            name="parentscan",
-            title=_l("Perform network parent scan"),
-            description=_l(
-                "This permission is necessary for performing automatic "
-                "scans for network parents of hosts (making use of traceroute). "
-                "Please note, that for actually modifying the parents via the "
-                "scan and for the creation of gateway hosts proper permissions "
-                "for host and folders are also necessary."
-            ),
-            defaults=["admin", "user"],
-        )
-    )
-
-    permission_registry.register(
-        Permission(
-            section=PERMISSION_SECTION_WATO,
             name="move_hosts",
             title=_l("Move existing hosts"),
             description=_l(

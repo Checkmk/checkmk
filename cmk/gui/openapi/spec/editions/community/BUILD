@@ -26,6 +26,7 @@ py_library(
         "//cmk/gui/openapi:registration",
         "//cmk/gui/openapi/endpoints",
         "//cmk/gui/pagetypes",
+        "//cmk/gui/parentscan",
         "//cmk/gui/sidebar",
         "//cmk/gui/user_message",
         "//cmk/gui/views:_openapi",

@@ -19,20 +19,20 @@ from cmk.gui.background_job.job import BackgroundJob
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.parent_scan.request_schemas import ParentScan
-from cmk.gui.openapi.endpoints.parent_scan.response_schemas import BackgroundJobStatusObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainType
 from cmk.gui.openapi.utils import serve_json
-from cmk.gui.utils import permission_verification as permissions
-from cmk.gui.watolib.hosts_and_folders import folder_tree
-from cmk.gui.watolib.parent_scan import (
+from cmk.gui.parentscan.background_job import (
     ParentScanBackgroundJob,
     ParentScanSettings,
     start_parent_scan,
     WhereChoices,
 )
+from cmk.gui.parentscan.rest_api.request_schemas import ParentScan
+from cmk.gui.parentscan.rest_api.response_schemas import BackgroundJobStatusObject
+from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 
 @Endpoint(

@@ -471,19 +471,6 @@ class ModeFolder(WatoMode):
                 is_enabled=folder_has_hosts,
             )
 
-        if (
-            not self._folder.locked_hosts()
-            and user.may("wato.parentscan")
-            and self._folder.permissions.may("write")
-        ):
-            yield PageMenuEntry(
-                title=_("Detect network parent hosts"),
-                icon_name=StaticIcon(IconNames.parentscan),
-                item=make_simple_link(self._folder.url([("mode", "parentscan"), ("all", "1")])),
-                disabled_tooltip=add_host_tooltip_text,
-                is_enabled=folder_or_subfolder_has_hosts,
-            )
-
         if user.may("wato.random_hosts"):
             yield PageMenuEntry(
                 title=_("Add random hosts"),
@@ -534,18 +521,6 @@ class ModeFolder(WatoMode):
                     icon_name=StaticIcon(IconNames.move),
                     name="move_rules",
                     item=PageMenuPopup(self._render_bulk_move_form()),
-                    disabled_tooltip=add_host_or_subfolder_tooltip_text,
-                    is_enabled=is_enabled,
-                )
-
-            if user.may("wato.parentscan"):
-                yield PageMenuEntry(
-                    title=_("Detect network parent hosts"),
-                    icon_name=StaticIcon(IconNames.parentscan),
-                    item=make_form_submit_link(
-                        form_name="hosts",
-                        button_name="_parentscan",
-                    ),
                     disabled_tooltip=add_host_or_subfolder_tooltip_text,
                     is_enabled=is_enabled,
                 )
@@ -823,7 +798,6 @@ class ModeFolder(WatoMode):
         search_text = request.get_str_input_mandatory("search", "")
         for request_var, mode_name in [
             ("_bulk_inventory", "bulkinventory"),
-            ("_parentscan", "parentscan"),
             ("_bulk_edit", "bulkedit"),
             ("_bulk_cleanup", "bulkcleanup"),
             *(
@@ -1410,9 +1384,6 @@ class ModeFolder(WatoMode):
 
             if user.may("wato.clone_hosts"):
                 action_menu_show_flags.append("show_clone_link")
-
-        if not self._folder.locked_hosts() and user.may("wato.parentscan"):
-            action_menu_show_flags.append("show_parentscan_link")
 
         if user.may("wato.manage_hosts"):
             action_menu_show_flags.append("show_remove_tls_link")

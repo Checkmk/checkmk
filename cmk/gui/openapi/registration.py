@@ -19,7 +19,6 @@ from cmk.gui.openapi.endpoints import (
     host_internal,
     host_tag_group,
     notification_rules,
-    parent_scan,
     rule,
     ruleset,
     service,
@@ -83,7 +82,6 @@ def register(
     host_internal.register(endpoint_registry)
     host_tag_group.register(endpoint_registry)
     notification_rules.register(endpoint_registry)
-    parent_scan.register(endpoint_registry)
     rule.register(endpoint_registry)
     ruleset.register(endpoint_registry)
     service.register(endpoint_registry)

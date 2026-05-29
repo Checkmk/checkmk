@@ -49,6 +49,7 @@ from cmk.gui.pages import page_registry, PageEndpoint
 from cmk.gui.pagetypes import builtin_pagetype_topic_registry
 from cmk.gui.painter.v0 import painter_registry
 from cmk.gui.painter_options import painter_option_registry
+from cmk.gui.parentscan.register import register as parentscan_register
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.rule_specs.legacy_converter import (
@@ -77,6 +78,7 @@ from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.wato import default_user_menu_topics
 from cmk.gui.wato import registration as wato_registration
 from cmk.gui.wato.pages import roles
+from cmk.gui.wato.pages.folders import folder_bulk_action_registry, folder_menu_entry_registry
 from cmk.gui.watolib import network_scan
 from cmk.gui.watolib.activate_changes import (
     activation_features_registry,
@@ -102,7 +104,7 @@ from cmk.gui.watolib.host_attributes import (
     host_attribute_topic_registry,
 )
 from cmk.gui.watolib.host_rename import rename_host_hook_registry
-from cmk.gui.watolib.hosts_and_folders import folder_validators_registry
+from cmk.gui.watolib.hosts_and_folders import folder_validators_registry, host_action_menu_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.notification_parameter import (
@@ -142,6 +144,15 @@ def register(
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
     logwatch_registration.register(
         page_registry, rulespec_registry, mode_registry, match_item_generator_registry
+    )
+    parentscan_register(
+        mode_registry,
+        job_registry,
+        endpoint_registry,
+        folder_menu_entry_registry,
+        host_action_menu_registry,
+        permission_registry,
+        folder_bulk_action_registry,
     )
     nagvis.register(permission_section_registry, permission_registry, snapin_registry)
     roles.register(mode_registry)

@@ -27,9 +27,16 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.parentscan.background_job import (
+    ParentScanBackgroundJob,
+    ParentScanSettings,
+    start_parent_scan,
+    WhereChoices,
+)
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.wato.pages._bulk_actions import get_hosts_from_checkboxes
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_base_folder_from_request,
@@ -39,16 +46,8 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     SearchFolder,
 )
-from cmk.gui.watolib.mode import ModeRegistry, WatoMode
-from cmk.gui.watolib.parent_scan import (
-    ParentScanBackgroundJob,
-    ParentScanSettings,
-    start_parent_scan,
-    WhereChoices,
-)
+from cmk.gui.watolib.mode import WatoMode
 from cmk.utils.paths import profile_dir
-
-from ._bulk_actions import get_hosts_from_checkboxes
 
 # select: 'noexplicit' -> no explicit parents
 #         'no'         -> no implicit parents
@@ -60,10 +59,6 @@ SelectChoices = Literal["noexplicit", "no", "ignore"]
 class GUIParentScanSettings(ParentScanSettings):
     select: SelectChoices
     recurse: bool
-
-
-def register(mode_registry: ModeRegistry) -> None:
-    mode_registry.register(ModeParentScan)
 
 
 class ModeParentScan(WatoMode):

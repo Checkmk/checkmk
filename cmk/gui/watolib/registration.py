@@ -83,7 +83,6 @@ from .notifications import (
     find_timeperiod_usage_in_notification_rules,
     find_usages_of_contact_group_in_notification_rules,
 )
-from .parent_scan import ParentScanBackgroundJob
 from .password_visitor import PasswordVisitor
 from .recomposers.internal_proxy import recompose as recompose_internal_proxy
 from .recomposers.proxy import recompose as recompose_proxy
@@ -184,7 +183,6 @@ def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(autodiscovery.AutodiscoveryBackgroundJob)
     job_registry.register(BulkDiscoveryBackgroundJob)
     job_registry.register(ActivateChangesSchedulerBackgroundJob)
-    job_registry.register(ParentScanBackgroundJob)
     job_registry.register(RenameHostsBackgroundJob)
     job_registry.register(RenameHostBackgroundJob)
     job_registry.register(ServiceDiscoveryBackgroundJob)

@@ -29,11 +29,11 @@ _STRING_TABLE: StringTable = [
 
 
 def test_parse_dell_idrac_virtdisks() -> None:
-    assert parse_dell_idrac_virtdisks(_STRING_TABLE) == [
-        VirtualDisk(1, "System", DiskState("2"), RaidType("4"), ComponentState("3"), 1),
-        VirtualDisk(2, "Backup", DiskState("3"), RaidType("5"), ComponentState("5"), 0),
-        VirtualDisk(3, "", DiskState("2"), RaidType("4"), ComponentState("3"), 1),
-    ]
+    assert parse_dell_idrac_virtdisks(_STRING_TABLE) == {
+        "System": VirtualDisk(1, "System", DiskState("2"), RaidType("4"), ComponentState("3"), 1),
+        "Backup": VirtualDisk(2, "Backup", DiskState("3"), RaidType("5"), ComponentState("5"), 0),
+        "noname-3": VirtualDisk(3, "", DiskState("2"), RaidType("4"), ComponentState("3"), 1),
+    }
 
 
 @pytest.mark.parametrize(

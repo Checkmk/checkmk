@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
@@ -108,40 +108,46 @@ class VirtualDisk:
         return self.name if self.name else f"noname-{self.index}"
 
 
-def discover_dell_idrac_virtdisks(section: Sequence[VirtualDisk]) -> DiscoveryResult:
-    for disk in section:
-        yield Service(item=disk.item)
+Section = Mapping[str, VirtualDisk]
 
 
-def check_dell_idrac_virtdisks(item: str, section: Sequence[VirtualDisk]) -> CheckResult:
-    for disk in section:
-        if item != disk.item:
-            continue
-        yield Result(state=State.OK, summary=f"Raid level: {disk.raid_type.label}")
-        yield Result(state=disk.disk_state.state, summary=f"Disk status: {disk.disk_state.label}")
-        yield Result(
-            state=disk.component_state.state,
-            summary=f"Component status: {disk.component_state.label}",
-        )
-        yield Result(
-            state=State.OK,
-            summary=f"Remaining redundancy: {disk.remaining_redundancy} physical disk(s)",
-        )
+def discover_dell_idrac_virtdisks(section: Section) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
+
+
+def check_dell_idrac_virtdisks(item: str, section: Section) -> CheckResult:
+    disk = section.get(item)
+    if not disk:
         return
 
+    yield Result(state=State.OK, summary=f"Raid level: {disk.raid_type.label}")
+    yield Result(state=disk.disk_state.state, summary=f"Disk status: {disk.disk_state.label}")
+    yield Result(
+        state=disk.component_state.state,
+        summary=f"Component status: {disk.component_state.label}",
+    )
+    yield Result(
+        state=State.OK,
+        summary=f"Remaining redundancy: {disk.remaining_redundancy} physical disk(s)",
+    )
 
-def parse_dell_idrac_virtdisks(string_table: StringTable) -> Sequence[VirtualDisk]:
-    return [
-        VirtualDisk(
-            index=int(row[0]),
-            name=row[1],
-            disk_state=DiskState(row[2]),
-            raid_type=RaidType(row[3]),
-            component_state=ComponentState(row[4]),
-            remaining_redundancy=int(row[5]),
+
+def parse_dell_idrac_virtdisks(string_table: StringTable) -> Section:
+    return {
+        disk.item: disk
+        for disk in (
+            VirtualDisk(
+                index=int(row[0]),
+                name=row[1],
+                disk_state=DiskState(row[2]),
+                raid_type=RaidType(row[3]),
+                component_state=ComponentState(row[4]),
+                remaining_redundancy=int(row[5]),
+            )
+            for row in string_table
         )
-        for row in string_table
-    ]
+    }
 
 
 snmp_section_dell_idrac_virtdisks = SimpleSNMPSection(

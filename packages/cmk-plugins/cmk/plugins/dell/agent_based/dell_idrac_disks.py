@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
@@ -136,49 +136,55 @@ class Disk:
         return self.name if self.name else f"noname-{self.index}"
 
 
-def discover_dell_idrac_disks(section: Sequence[Disk]) -> DiscoveryResult:
-    for disk in section:
-        yield Service(item=disk.item)
+Section = Mapping[str, Disk]
 
 
-def check_dell_idrac_disks(item: str, section: Sequence[Disk]) -> CheckResult:
-    for disk in section:
-        if item != disk.item:
-            continue
-        yield Result(
-            state=State.OK,
-            summary=f"[{disk.display_name}] Size: {render.disksize(disk.capacity_MB * 1024 * 1024)}",
-        )
-        yield Result(state=disk.disk_state.state, summary=f"Disk state: {disk.disk_state.label}")
-        yield Result(
-            state=disk.component_state.state,
-            summary=f"Component state: {disk.component_state.label}",
-        )
-        if disk.smart_alert:
-            yield Result(state=State.CRIT, summary="Smart alert on disk")
-        yield Result(state=State.OK, summary=f"Spare state: {disk.spare_state.label}")
-        yield Result(
-            state=disk.operation_state.state,
-            summary=f"Operation state: {disk.operation_state.label}",
-        )
+def discover_dell_idrac_disks(section: Section) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
+
+
+def check_dell_idrac_disks(item: str, section: Section) -> CheckResult:
+    disk = section.get(item)
+    if not disk:
         return
 
+    yield Result(
+        state=State.OK,
+        summary=f"[{disk.display_name}] Size: {render.disksize(disk.capacity_MB * 1024 * 1024)}",
+    )
+    yield Result(state=disk.disk_state.state, summary=f"Disk state: {disk.disk_state.label}")
+    yield Result(
+        state=disk.component_state.state,
+        summary=f"Component state: {disk.component_state.label}",
+    )
+    if disk.smart_alert:
+        yield Result(state=State.CRIT, summary="Smart alert on disk")
+    yield Result(state=State.OK, summary=f"Spare state: {disk.spare_state.label}")
+    yield Result(
+        state=disk.operation_state.state,
+        summary=f"Operation state: {disk.operation_state.label}",
+    )
 
-def parse_dell_idrac_disks(string_table: StringTable) -> Sequence[Disk]:
-    return [
-        Disk(
-            index=int(row[0]),
-            name=row[1],
-            disk_state=DiskState(row[2]),
-            capacity_MB=int(row[3]),
-            spare_state=SpareState(row[4]),
-            component_state=ComponentState(row[5]),
-            smart_alert=row[6] == "1",
-            operation_state=OperationState(row[7]),
-            display_name=row[8],
+
+def parse_dell_idrac_disks(string_table: StringTable) -> Section:
+    return {
+        disk.item: disk
+        for disk in (
+            Disk(
+                index=int(row[0]),
+                name=row[1],
+                disk_state=DiskState(row[2]),
+                capacity_MB=int(row[3]),
+                spare_state=SpareState(row[4]),
+                component_state=ComponentState(row[5]),
+                smart_alert=row[6] == "1",
+                operation_state=OperationState(row[7]),
+                display_name=row[8],
+            )
+            for row in string_table
         )
-        for row in string_table
-    ]
+    }
 
 
 snmp_section_dell_idrac_disks = SimpleSNMPSection(

@@ -32,8 +32,8 @@ _SIZE_1024_MB = render.disksize(1024 * 1024 * 1024)
 
 
 def test_parse_dell_idrac_disks() -> None:
-    assert parse_dell_idrac_disks(_STRING_TABLE) == [
-        Disk(
+    assert parse_dell_idrac_disks(_STRING_TABLE) == {
+        "Disk0": Disk(
             1,
             "Disk0",
             DiskState("3"),
@@ -44,7 +44,7 @@ def test_parse_dell_idrac_disks() -> None:
             operation_state=OperationState("1"),
             display_name="Disk 0 in slot",
         ),
-        Disk(
+        "Disk1": Disk(
             2,
             "Disk1",
             DiskState("7"),
@@ -55,7 +55,7 @@ def test_parse_dell_idrac_disks() -> None:
             operation_state=OperationState("2"),
             display_name="Disk 1 in slot",
         ),
-        Disk(
+        "noname-3": Disk(
             3,
             "",
             DiskState("3"),
@@ -66,7 +66,7 @@ def test_parse_dell_idrac_disks() -> None:
             operation_state=OperationState("1"),
             display_name="Empty disk",
         ),
-    ]
+    }
 
 
 @pytest.mark.parametrize(

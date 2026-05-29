@@ -6,6 +6,7 @@
 # pylint: disable=protected-access
 
 import binascii
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -121,3 +122,41 @@ def test_pw_store_characterization() -> None:
     )
 
     assert PasswordStore.decrypt(encrypted) == "Time is an illusion. Lunchtime doubly so."
+
+
+@pytest.fixture(name="password_store_files")
+def fixture_password_store_files() -> Iterator[None]:
+    """Make sure the globally patched store files don't leak into other tests"""
+    yield
+    password_store.pending_password_store_path().unlink(missing_ok=True)
+    password_store.password_store_path().unlink(missing_ok=True)
+
+
+def test_make_passwords_hasher_is_deterministic(password_store_files: None) -> None:
+    password_store.save({"my_secret": "staged"}, password_store.pending_password_store_path())
+    password_store.save({"my_secret": "configured"}, password_store.password_store_path())
+    assert password_store.make_passwords_hasher()("my_secret") == (
+        password_store.make_passwords_hasher()("my_secret")
+    )
+
+
+def test_make_passwords_hasher_reflects_staged_change(password_store_files: None) -> None:
+    password_store.save({"my_secret": "configured"}, password_store.password_store_path())
+    password_store.save({"my_secret": "old"}, password_store.pending_password_store_path())
+    before = password_store.make_passwords_hasher()("my_secret")
+    password_store.save({"my_secret": "new"}, password_store.pending_password_store_path())
+    assert password_store.make_passwords_hasher()("my_secret") != before
+
+
+def test_make_passwords_hasher_reflects_configured_change(password_store_files: None) -> None:
+    password_store.save({"my_secret": "staged"}, password_store.pending_password_store_path())
+    password_store.save({"my_secret": "old"}, password_store.password_store_path())
+    before = password_store.make_passwords_hasher()("my_secret")
+    password_store.save({"my_secret": "new"}, password_store.password_store_path())
+    assert password_store.make_passwords_hasher()("my_secret") != before
+
+
+def test_make_passwords_hasher_handles_unknown_id(password_store_files: None) -> None:
+    password_store.save({"my_secret": "staged"}, password_store.pending_password_store_path())
+    hasher = password_store.make_passwords_hasher()
+    assert hasher("unknown_id") != hasher("my_secret")

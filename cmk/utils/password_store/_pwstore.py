@@ -2,8 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import hashlib
 import os
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from pathlib import Path
 from typing import Literal, NotRequired, TypedDict
@@ -144,6 +145,21 @@ def extract(password_id: PasswordId) -> str | None:
         return load(staging_path).get(pw_id)
 
     raise MKGeneralException("Unknown password type.")
+
+
+def make_passwords_hasher() -> Callable[[str], str]:
+    """Returns a callable that computes a hash
+
+    It is supposed to change if *either* pending or
+    active passwords are changed.
+    """
+    staged = load(pending_password_store_path()).get
+    configured = load(password_store_path()).get
+
+    def hasher(id_: str) -> str:
+        return hashlib.sha256(f"{staged(id_)}{configured(id_)}".encode()).hexdigest()
+
+    return hasher
 
 
 def lookup(pw_file: Path, pw_id: str) -> str:

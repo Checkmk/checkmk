@@ -1,8 +1,9 @@
 module(
     name = "crypt-ssleay",
-    version = "0.72.cmk.1",
+    version = "0.72.cmk.2",
     bazel_compatibility = [">=7.2.1"],
     compatibility_level = 1,
 )
 
+bazel_dep(name = "package_metadata", version = "0.0.7")
 bazel_dep(name = "rules_pkg", version = "1.1.0")

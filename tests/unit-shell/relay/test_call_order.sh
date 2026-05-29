@@ -65,11 +65,11 @@ test_main_successful_call_order() {
         # shellcheck disable=SC2317  # called indirectly via export -f
         get_euid() { echo 0; }
         export -f get_euid
-        main --relay-name "test-relay" \
+        printf 'testtoken\n' | main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
-            --token "testtoken" \
+            --token-stdin \
             2>/dev/null
     )
     local exit_code=$?
@@ -105,8 +105,8 @@ test_main_successful_call_order() {
         "podman pull docker.io/checkmk/check-mk-relay:1.0.0"
         "podman tag docker.io/checkmk/check-mk-relay:1.0.0 localhost/checkmk_relay:checkmk_sync"
         "podman run --rm --uidmap=0:99000:65536 --gidmap=0:99000:65536 -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync test -f /opt/check-mk-relay/workdir/site_config.json"
-        "podman run --rm --uidmap=0:99000:65536 --gidmap=0:99000:65536 --network=bridge -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --trust-cert --token testtoken"
-        "cat *" # Heredoc writes, path varies
+        "podman run --rm -i --uidmap=0:99000:65536 --gidmap=0:99000:65536 --network=bridge -v relay:/opt/check-mk-relay/workdir:Z localhost/checkmk_relay:checkmk_sync cmk-relay register --server server.example.com --site mysite --relay-alias test-relay --trust-cert --token-stdin"
+        "cat *" # write_update_script heredoc, path varies
         "chmod 755 *checkmk_relay-update-manager.sh"
         "cat *" # write_container_unit
         "cat *" # write_path_unit

@@ -23,7 +23,8 @@ setUp() {
     ARGS_TARGET_SITE_NAME=""
     ARGS_USER=""
     ARGS_PASSWORD=""
-    ARGS_TOKEN=""
+    TOKEN=""
+    ARGS_TOKEN_STDIN=""
 
     # Mock functions that parse_args depends on
     # shellcheck disable=SC2317
@@ -52,13 +53,13 @@ test_parse_args_all_required_args() {
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --token "testtoken"
+        --token-stdin
 
     assertEquals "test-relay" "$ARGS_RELAY_NAME"
     assertEquals "1.0.0" "$ARGS_INITIAL_TAG_VERSION"
     assertEquals "server.example.com" "$ARGS_TARGET_SERVER"
     assertEquals "mysite" "$ARGS_TARGET_SITE_NAME"
-    assertEquals "testtoken" "$ARGS_TOKEN"
+    assertEquals "true" "$ARGS_TOKEN_STDIN"
 }
 
 # Test: Arguments in different order
@@ -67,13 +68,13 @@ test_parse_args_different_order() {
         --relay-name "test-relay" \
         --target-server "server.example.com" \
         --initial-tag-version "1.0.0" \
-        --token "testtoken"
+        --token-stdin
 
     assertEquals "test-relay" "$ARGS_RELAY_NAME"
     assertEquals "1.0.0" "$ARGS_INITIAL_TAG_VERSION"
     assertEquals "server.example.com" "$ARGS_TARGET_SERVER"
     assertEquals "mysite" "$ARGS_TARGET_SITE_NAME"
-    assertEquals "testtoken" "$ARGS_TOKEN"
+    assertEquals "true" "$ARGS_TOKEN_STDIN"
 }
 
 # Test: Missing --relay-name
@@ -81,7 +82,7 @@ test_parse_args_missing_relay_name() {
     (parse_args --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --token "testtoken" 2>/dev/null)
+        --token-stdin 2>/dev/null)
 
     assertEquals 1 $?
 }
@@ -91,7 +92,7 @@ test_parse_args_missing_initial_tag_version() {
     (parse_args --relay-name "test-relay" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --token "testtoken" 2>/dev/null)
+        --token-stdin 2>/dev/null)
 
     assertEquals 1 $?
 }
@@ -101,7 +102,7 @@ test_parse_args_missing_target_server() {
     (parse_args --relay-name "test-relay" \
         --initial-tag-version "1.0.0" \
         --target-site-name "mysite" \
-        --token "testtoken" 2>/dev/null)
+        --token-stdin 2>/dev/null)
 
     assertEquals 1 $?
 }
@@ -111,7 +112,7 @@ test_parse_args_missing_target_site_name() {
     (parse_args --relay-name "test-relay" \
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
-        --token "testtoken" 2>/dev/null)
+        --token-stdin 2>/dev/null)
 
     assertEquals 1 $?
 }
@@ -122,7 +123,7 @@ test_parse_args_unknown_option() {
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --token "testtoken" \
+        --token-stdin \
         --unknown-option "value" 2>/dev/null)
 
     assertEquals 1 $?
@@ -146,11 +147,11 @@ test_parse_args_values_with_spaces() {
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "my site" \
-        --token "test token"
+        --token-stdin
 
     assertEquals "test relay with spaces" "$ARGS_RELAY_NAME"
     assertEquals "my site" "$ARGS_TARGET_SITE_NAME"
-    assertEquals "test token" "$ARGS_TOKEN"
+    assertEquals "true" "$ARGS_TOKEN_STDIN"
 }
 
 # Test: Values with special characters
@@ -159,13 +160,13 @@ test_parse_args_special_characters() {
         --initial-tag-version "2.3.0-p1" \
         --target-server "https://server.example.com:8080" \
         --target-site-name "site_123" \
-        --token "tok_admin@example.com"
+        --token-stdin
 
     assertEquals "test-relay_v2" "$ARGS_RELAY_NAME"
     assertEquals "2.3.0-p1" "$ARGS_INITIAL_TAG_VERSION"
     assertEquals "https://server.example.com:8080" "$ARGS_TARGET_SERVER"
     assertEquals "site_123" "$ARGS_TARGET_SITE_NAME"
-    assertEquals "tok_admin@example.com" "$ARGS_TOKEN"
+    assertEquals "true" "$ARGS_TOKEN_STDIN"
 }
 
 # Test: Empty string values should fail
@@ -174,7 +175,7 @@ test_parse_args_empty_relay_name() {
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
-        --token "testtoken" 2>/dev/null)
+        --token-stdin 2>/dev/null)
 
     assertEquals 1 $?
 }
@@ -196,15 +197,9 @@ test_parse_args_missing_auth() {
     assertEquals 1 $?
 }
 
-# Test: Empty token should fail
-test_parse_args_empty_token() {
-    (parse_args --relay-name "test-relay" \
-        --initial-tag-version "1.0.0" \
-        --target-server "server.example.com" \
-        --target-site-name "mysite" \
-        --token "" \
-        2>/dev/null)
-
+# Test: Empty token from stdin should fail
+test_request_token_empty_fails() {
+    (request_token < <(printf ''))
     assertEquals 1 $?
 }
 
@@ -235,17 +230,28 @@ test_parse_args_empty_user() {
     assertEquals 1 $?
 }
 
-# Test: Both --user and --token should fail (mutually exclusive)
-test_parse_args_both_user_and_token() {
+# Test: Both --user and --token-stdin should fail (mutually exclusive)
+test_parse_args_both_user_and_token_stdin() {
     (parse_args --relay-name "test-relay" \
         --initial-tag-version "1.0.0" \
         --target-server "server.example.com" \
         --target-site-name "mysite" \
         --user "testuser" \
-        --token "testtoken" \
+        --token-stdin \
         2>/dev/null)
 
     assertEquals 1 $?
+}
+
+# Test: Token from stdin
+test_request_token_from_stdin_valid() {
+    request_token < <(printf '%s' "my_secret_token")
+    assertEquals "my_secret_token" "$TOKEN"
+}
+
+test_request_token_from_stdin_special_chars() {
+    request_token < <(printf '%s' 'tok_admin@example.com:P@ss!')
+    assertEquals 'tok_admin@example.com:P@ss!' "$TOKEN"
 }
 
 # Test: Password from stdin
@@ -286,6 +292,53 @@ WRAPPER_EOF
     result=$(echo 'mypassword' | script -q -c "UNIT_SH_REPO_PATH='${UNIT_SH_REPO_PATH}' bash ${SHUNIT_TMPDIR}/test_wrapper.sh" /dev/null 2>&1 | tr -d '\r' | tail -n 1)
 
     assertEquals "mypassword" "$result"
+}
+
+# Test: --token VALUE sets TOKEN directly
+test_parse_args_with_token_value() {
+    parse_args --relay-name "test-relay" \
+        --initial-tag-version "1.0.0" \
+        --target-server "server.example.com" \
+        --target-site-name "mysite" \
+        --token "secret-token"
+
+    assertEquals "secret-token" "$TOKEN"
+    assertEquals "" "$ARGS_TOKEN_STDIN"
+}
+
+# Test: --token and --token-stdin are mutually exclusive
+test_parse_args_both_token_value_and_token_stdin_fails() {
+    (parse_args --relay-name "test-relay" \
+        --initial-tag-version "1.0.0" \
+        --target-server "server.example.com" \
+        --target-site-name "mysite" \
+        --token "secret" \
+        --token-stdin \
+        2>/dev/null)
+    assertEquals 1 $?
+}
+
+# Test: --user and --token VALUE are mutually exclusive
+test_parse_args_both_user_and_token_value_fails() {
+    (parse_args --relay-name "test-relay" \
+        --initial-tag-version "1.0.0" \
+        --target-server "server.example.com" \
+        --target-site-name "mysite" \
+        --user "admin" \
+        --token "secret" \
+        2>/dev/null)
+    assertEquals 1 $?
+}
+
+# Test: empty --token value is rejected
+test_parse_args_empty_token_value_fails() {
+    (parse_args --relay-name "test-relay" \
+        --initial-tag-version "1.0.0" \
+        --target-server "server.example.com" \
+        --target-site-name "mysite" \
+        --token "" \
+        2>/dev/null)
+    assertEquals 1 $?
 }
 
 # shellcheck disable=SC1090

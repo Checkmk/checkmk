@@ -60,11 +60,11 @@ test_systemctl_daemon_reload_failure() {
     set +e
     output=$(
         set -euo pipefail
-        main --relay-name "test-relay" \
+        printf 'testtoken\n' | main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
-            --token "testtoken" 2>&1
+            --token-stdin 2>&1
     )
     local exit_code=$?
     set -e
@@ -104,11 +104,11 @@ test_systemctl_enable_path_failure() {
     set +e
     output=$(
         set -euo pipefail
-        main --relay-name "test-relay" \
+        printf 'testtoken\n' | main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
-            --token "testtoken" 2>&1
+            --token-stdin 2>&1
     )
     local exit_code=$?
     set -e
@@ -152,11 +152,11 @@ test_systemctl_start_relay_service_failure() {
     set +e
     output=$(
         set -euo pipefail
-        main --relay-name "test-relay" \
+        printf 'testtoken\n' | main --relay-name "test-relay" \
             --initial-tag-version "1.0.0" \
             --target-server "server.example.com" \
             --target-site-name "mysite" \
-            --token "testtoken" 2>&1
+            --token-stdin 2>&1
     )
     local exit_code=$?
     set -e

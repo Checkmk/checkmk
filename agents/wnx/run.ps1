@@ -124,10 +124,6 @@ if ($argAll) {
     $argWin = $true
 }
 
-# Example of setting environment variables (equivalent to SETLOCAL in batch)
-$env:LOGONSERVER = "YourLogonServerHere"
-$env:USERNAME = "YourUsernameHere"
-
 function Invoke-CheckApp( [String]$title, [String]$cmdline ) {
     try {
         Invoke-Expression $cmdline > $null
@@ -441,51 +437,6 @@ function Start-BinarySigning {
 
     }
     Write-Host "Success binary signing" -foreground Green
-}
-
-# TODO(sk): remove the function as deprecated after switch to bazel signing
-function Start-Ps1Signing {
-    Write-Host "Skipping PS1 Signing..." -ForegroundColor Yellow
-    return
-
-    # code below is a reference for bazel signing
-
-    Write-Host "Ps1 signing..." -ForegroundColor White
-
-    $source_folder = "$repo_root\agents\windows\plugins"
-    $target_folder = "$results_dir\$signing_folder"
-
-    $fileList = @("windows_tasks.ps1", "mk_msoffice.ps1")  # Modify as needed
-
-    if (Test-Path $target_folder) {
-        Remove-Item -Path $target_folder -Recurse -Force
-    }
-
-    New-Item -ItemType Directory -Path $target_folder | Out-Null
-
-    foreach ($file in $fileList) {
-        $sourcePath = Join-Path -Path $source_folder -ChildPath $file
-        $targetPath = Join-Path -Path $target_folder -ChildPath $file
-
-        if (Test-Path $sourcePath) {
-            Copy-Item -Path $sourcePath -Destination $targetPath -Force
-        }
-        else {
-            Write-Warning "File not found: $sourcePath"
-        }
-    }
-
-    Get-ChildItem -Path $target_folder | ForEach-Object {
-        $file = $($_.FullName)
-        Write-Host "Signing $file" -ForegroundColor White
-        & ./scripts/sign_code.cmd $file
-        if ($LASTEXITCODE -ne 0) {
-            Write-Error "Error Signing, error code is $LASTEXITCODE" -ErrorAction Stop
-            throw
-        }
-    }
-
-    Write-Host "Success PS1 signing" -foreground Green
 }
 
 function Start-BazelSigning {

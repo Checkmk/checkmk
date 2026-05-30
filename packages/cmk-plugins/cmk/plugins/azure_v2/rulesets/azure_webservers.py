@@ -32,7 +32,7 @@ def _make_form() -> Dictionary:
                 parameter_form=SimpleLevels(
                     title=Title("Upper levels for rate of server errors"),
                     level_direction=LevelDirection.UPPER,
-                    form_spec_template=Float(unit_symbol="1/2"),
+                    form_spec_template=Float(unit_symbol="/s"),
                     prefill_fixed_levels=DefaultValue((0.01, 0.04)),
                 ),
             ),

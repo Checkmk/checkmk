@@ -703,14 +703,14 @@ class ModeEditHost(ABCHostMode):
             "host" if not self._is_cluster() else "cluster",
             new=False,
         )
-        host = Host.host(self._host.name())
+        host = (tree := folder_tree()).host(self._host.name())
         if host is None:
             flash(f"Host {self._host.name()} could not be found.")
             return None
 
         host.edit(
             attributes,
-            self._get_cluster_nodes(folder_tree(), attributes),
+            self._get_cluster_nodes(tree, attributes),
             pprint_value=config.wato_pprint_config,
             pending_changes=_pending_changes(
                 config=config, local_site=omd_site(), acting_user=user.id

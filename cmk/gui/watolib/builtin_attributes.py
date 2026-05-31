@@ -81,7 +81,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopic,
     sorted_host_attributes,
 )
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.rulesets.internal.form_specs import ListOfStrings as FSListOfStrings
@@ -553,7 +553,7 @@ def validate_host_parents(host: Host) -> None:
                 _("You configured the host to be its own parent, which is not allowed."),
             )
 
-        parent = Host.host(parent_name)
+        parent = folder_tree().host(parent_name)
         if not parent:
             raise MKUserError(
                 None,

@@ -26,7 +26,7 @@ from cmk.gui.site_config import distributed_setup_remote_sites
 from cmk.gui.userdb import connection_choices
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import groups_io, tags
-from cmk.gui.watolib.hosts_and_folders import Host, strip_hostname_whitespace_chars
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host, strip_hostname_whitespace_chars
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.userroles import role_exists, RoleID
 from cmk.livestatus_client.expressions import LqSafe
@@ -114,7 +114,8 @@ class HostConverter:
         return HostName(strip_hostname_whitespace_chars(value))
 
     def host(self, value: str) -> Host:
-        if host := Host.host(HostName(self._parse_host_name(value))):
+        name = HostName(self._parse_host_name(value))
+        if host := folder_tree().host(name):
             self._verify(host)
             return host
 
@@ -122,7 +123,7 @@ class HostConverter:
 
     def host_name(self, value: str) -> HostName:
         name = self._parse_host_name(value)
-        if host := Host.host(name):
+        if host := folder_tree().host(name):
             self._verify(host)
             return name
 
@@ -131,7 +132,7 @@ class HostConverter:
     @classmethod
     def not_exists(cls, value: str) -> HostName:
         name = cls._parse_host_name(value)
-        if Host.host(name):
+        if folder_tree().host(name):
             raise ValueError(f"Host {value!r} already exists.")
 
         return name

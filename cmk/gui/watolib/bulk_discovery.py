@@ -597,7 +597,7 @@ def prepare_hosts_for_discovery(
 ) -> list[DiscoveryHost]:
     hosts_to_discover = []
     for host_name in hostnames:
-        host = Host.host(HostName(host_name))
+        host = folder_tree().host(HostName(host_name))
         if host is None:
             raise MKUserError(None, _("The host '%s' does not exist") % host_name)
         host.permissions.need_permission("write")

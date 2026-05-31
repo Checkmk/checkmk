@@ -1175,7 +1175,7 @@ def folder_from_request(var_folder: str | None = None, host_name: str | None = N
     else:
         folder = folder_tree().root_folder()
         if host_name is not None:  # find host with full scan. Expensive operation
-            host = Host.host(HostName(host_name))
+            host = folder_tree().host(HostName(host_name))
             if host:
                 folder = host.folder()
 
@@ -3095,7 +3095,7 @@ class WATOFoldersOnDemand(Mapping[PathWithoutSlash, Folder]):
 
 
 def validate_host_uniqueness(varname: str, host_name: HostName) -> None:
-    host = Host.host(host_name)
+    host = folder_tree().host(host_name)
     if host:
         raise MKUserError(
             varname,
@@ -3335,14 +3335,10 @@ class Host:
 
     @staticmethod
     def load_host(host_name: HostName) -> Host:
-        host = Host.host(host_name)
+        host = folder_tree().host(host_name)
         if host is None:
             raise MKUserError(None, "Host could not be found.", status=404)
         return host
-
-    @staticmethod
-    def host(host_name: HostName) -> Host | None:
-        return folder_tree().host(host_name)
 
     @staticmethod
     def all() -> dict[HostName, Host]:
@@ -4038,7 +4034,7 @@ def rebuild_folder_lookup_cache(config: Config) -> None:
 
 def ajax_popup_host_action_menu(ctx: PageContext) -> None:
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
-    host = Host.host(hostname)
+    host = folder_tree().host(hostname)
     if host is None:
         html.show_error(_('"%s" is not a valid host name') % hostname)
         return

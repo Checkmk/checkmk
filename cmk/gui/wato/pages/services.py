@@ -88,6 +88,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
     folder_tree,
+    FolderTree,
     Host,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
@@ -324,7 +325,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
         action = DiscoveryAction(options["action"])
         raise_errors = not options["ignore_errors"]
 
-        self._check_permissions(host_name)
+        self._check_permissions(folder_tree(), host_name)
 
         return _AutomationServiceDiscoveryRequest(
             host_name=host_name,
@@ -335,10 +336,10 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
             debug=options.get("debug", False),
         )
 
-    def _check_permissions(self, host_name: HostName) -> None:
+    def _check_permissions(self, tree: FolderTree, host_name: HostName) -> None:
         user.need_permission("wato.hosts")
 
-        host = Host.host(host_name)
+        host = tree.host(host_name)
         if host is None:
             raise MKGeneralException(
                 _(

@@ -32,7 +32,7 @@ from cmk.gui.openapi.framework.model.converter import (
     SiteIdConverter,
     TypedPlainValidator,
 )
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 
 
 @api_model
@@ -461,7 +461,7 @@ class StatusConnectionModel:
             if status_host is None:
                 return StatusHostDisabled(status_host_set="disabled")
 
-            host = Host.host(HostName(status_host[1]))
+            host = folder_tree().host(HostName(status_host[1]))
             assert host is not None
             return StatusHostEnabled(status_host_set="enabled", site=status_host[0], host=host)
 

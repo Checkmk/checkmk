@@ -51,7 +51,7 @@ from cmk.gui.watolib.automations import (
     make_automation_config,
 )
 from cmk.gui.watolib.check_mk_automations import get_agent_output
-from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
+from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_tree, Host
 from cmk.gui.watolib.mode import mode_url
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 
@@ -96,7 +96,7 @@ class FetchAgentOutputRequest:
     def deserialize(cls, serialized: Mapping[str, object]) -> "FetchAgentOutputRequest":
         host_name = serialized["host_name"]
         assert isinstance(host_name, str)
-        host = Host.host(HostName(host_name))
+        host = folder_tree().host(HostName(host_name))
         if host is None:
             raise MKGeneralException(
                 _(

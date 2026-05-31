@@ -72,7 +72,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCom
 from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.backup_snapshots import get_last_wato_snapshot_file
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, DomainRequests
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.pending_changes import (
@@ -926,7 +926,7 @@ def _get_object_reference(object_ref: ObjectRef | None) -> tuple[str | None, str
         return None, None
 
     if object_ref.object_type is ObjectRefType.Host:
-        host = Host.host(HostName(object_ref.ident))
+        host = folder_tree().host(HostName(object_ref.ident))
         if host:
             return host.edit_url(), host.name()
         return None, object_ref.ident

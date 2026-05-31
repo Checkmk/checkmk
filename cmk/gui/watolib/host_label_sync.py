@@ -39,7 +39,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
     remote_automation_config_from_site_config,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.labels import DiscoveredHostLabelsStore
@@ -79,7 +79,7 @@ class SiteRequest:
         )
 
         if enforce_host:
-            host = Host.host(enforce_host.host_name)
+            host = folder_tree().host(enforce_host.host_name)
             if host is None:
                 raise MKGeneralException(
                     _(

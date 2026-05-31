@@ -37,7 +37,7 @@ from cmk.livestatus_client.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.tags import TagGroupID
 
 from .groups_io import load_group_information
-from .hosts_and_folders import Host, strip_hostname_whitespace_chars
+from .hosts_and_folders import folder_tree, Host, strip_hostname_whitespace_chars
 from .tags import load_tag_group
 
 HOST_NAME_REGEXP = r"^[-0-9a-zA-Z_. ]+$"
@@ -259,7 +259,7 @@ class HostField(base.String):
     @override
     def _validate(self, value: HostAddress) -> None:
         super()._validate(value)
-        host = Host.host(value)
+        host = folder_tree().host(value)
         self._confirm_user_has_permission(host)
 
         if (

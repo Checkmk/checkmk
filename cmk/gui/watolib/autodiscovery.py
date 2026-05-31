@@ -33,7 +33,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domain_name import (
     generate_hosts_to_update_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -103,7 +103,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
         )
 
         for hostname, discovery_result in result.hosts.items():
-            host = Host.host(hostname)
+            host = folder_tree().host(hostname)
             if host is None:
                 continue
 

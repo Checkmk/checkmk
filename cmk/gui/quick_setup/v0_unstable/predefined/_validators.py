@@ -36,7 +36,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore, is_locked_by_quick_setup
-from cmk.gui.watolib.hosts_and_folders import _normalize_folder_name, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import _normalize_folder_name, folder_tree
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.rulesets.v1.form_specs import Dictionary, Password
 
@@ -176,7 +176,7 @@ def validate_host_name_doesnt_exists(
 ) -> GeneralStageErrors:
     host_name = find_id_in_form_data(stages_form_data, QSHostName)
     assert host_name is not None
-    host = Host.host(HostName(host_name))
+    host = folder_tree().host(HostName(host_name))
     if host:
         return [
             _(

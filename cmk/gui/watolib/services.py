@@ -70,7 +70,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domain_name import (
     generate_hosts_to_update_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -865,7 +865,7 @@ def _perform_update_host_labels(
     pending_changes: PendingChanges,
 ) -> None:
     for host_name, host_labels in labels_by_nodes.items():
-        if (host := Host.host(host_name)) is None:
+        if (host := folder_tree().host(host_name)) is None:
             raise ValueError(f"no such host: {host_name!r}")
 
         message = _("Updated discovered host labels of '%s' with %d labels") % (

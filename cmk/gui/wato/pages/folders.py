@@ -106,6 +106,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
     folder_tree,
+    FolderTree,
     Host,
     make_action_link,
     SearchFolder,
@@ -630,6 +631,7 @@ class ModeFolder(WatoMode):
             return None
 
         folder_url = self._folder.url()
+        tree = folder_tree()
 
         # Operations on SUBFOLDERS
 
@@ -650,7 +652,6 @@ class ModeFolder(WatoMode):
                 raise MKUserError(None, _("This action cannot be performed on search results"))
             if transactions.check_transaction():
                 var_ident = mandatory_parameter("_ident", request.var("_ident"))
-                tree = folder_tree()
                 what_folder = tree.folder(var_ident)
                 target_folder = tree.folder(
                     mandatory_parameter("_move_folder_to", request.var("_move_folder_to"))
@@ -706,7 +707,7 @@ class ModeFolder(WatoMode):
             if self._folder.has_host(hostname):
                 self._folder.move_hosts(
                     [hostname],
-                    folder_tree().folder(target_folder_str),
+                    tree.folder(target_folder_str),
                     pprint_value=config.wato_pprint_config,
                     pending_changes=_pending_changes(
                         config=config, local_site=omd_site(), acting_user=user.id
@@ -734,7 +735,7 @@ class ModeFolder(WatoMode):
             target_folder_path = target_folder_path if target_folder_path != "@main" else ""
             if target_folder_path is None:
                 raise MKUserError("_bulk_moveto", _("Please select the destination folder"))
-            target_folder = folder_tree().folder(target_folder_path)
+            target_folder = tree.folder(target_folder_path)
             self._folder.move_hosts(
                 selected_host_names,
                 target_folder,
@@ -1417,7 +1418,7 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
     def page(self, ctx: PageContext) -> PageResult:
         html.span(self._move_title())
 
-        choices = self._get_choices()
+        choices = self._get_choices(folder_tree())
         if not choices:
             html.write_text_permissive(_("No valid target folder."))
             return None
@@ -1436,18 +1437,18 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
             return _("Move this host to:")
         return _("Move this folder to:")
 
-    def _get_choices(self) -> Choices:
+    def _get_choices(self, tree: FolderTree) -> Choices:
         choices: Choices = [
             ("@", _("(select target folder)")),
         ]
 
         if self._what == "host" and self._ident is not None:
-            host = Host.host(HostName(self._ident))
+            host = tree.host(HostName(self._ident))
             if host is not None:
                 choices += host.folder().choices_for_moving_host()
 
         elif self._what == "folder" and self._ident is not None:
-            folder = folder_tree().folder(self._ident)
+            folder = tree.folder(self._ident)
             choices += folder.choices_for_moving_folder()
 
         else:
@@ -1465,11 +1466,12 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def __init__(self, edition: Edition, is_new: bool) -> None:
         super().__init__(edition)
         self._is_new = is_new
+        self._tree = folder_tree()
         self._folder = self._init_folder()
 
     @abc.abstractmethod
     def _init_folder(self) -> Folder:
-        return folder_tree().root_folder()
+        return self._tree.root_folder()
 
     @abc.abstractmethod
     def _save(
@@ -1496,7 +1498,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         # two breadcrumb layers up. This is a very specific case, so we realize this locally instead
         # of using a generic approach. Just like it done locally by the action method.
         if (backfolder := request.var("backfolder")) is not None:
-            breadcrumb = make_folder_breadcrumb(folder_tree().folder(backfolder))
+            breadcrumb = make_folder_breadcrumb(self._tree.folder(backfolder))
             breadcrumb.append(self._breadcrumb_item())
 
         return make_simple_form_page_menu(
@@ -1513,7 +1515,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
         if (backfolder := request.var("backfolder")) is not None:
             # Edit icon on subfolder preview should bring user back to parent folder
-            folder = folder_tree().folder(backfolder)
+            folder = self._tree.folder(backfolder)
         else:
             folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
 
@@ -1658,7 +1660,7 @@ class ModeCreateFolder(ABCFolderMode):
 
     @override
     def _init_folder(self) -> Folder:
-        return folder_tree().root_folder()
+        return self._tree.root_folder()
 
     @override
     def title(self) -> str:

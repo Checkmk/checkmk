@@ -46,7 +46,11 @@ from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.check_mk_automations import diag_host
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    folder_from_request,
+    folder_preserving_link,
+    folder_tree,
+)
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -526,7 +530,7 @@ class PageAjaxDiagHost(AjaxPage):
         if not hostname:
             raise MKGeneralException(_("The host name is missing."))
 
-        host = Host.host(hostname)
+        host = folder_tree().host(hostname)
 
         if not host:
             raise MKGeneralException(_("The given host does not exist."))

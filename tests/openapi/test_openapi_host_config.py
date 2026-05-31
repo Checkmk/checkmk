@@ -39,7 +39,7 @@ from cmk.gui.watolib.host_attributes import (
     BuiltInHostTagGroups,
     HostAttributes,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, FolderTree, Host
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
@@ -1131,7 +1131,7 @@ def test_openapi_host_with_non_existing_site(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def mock_host(_hostname):
+    def mock_host(self, _hostname):
         return Host(
             folder=folder_tree().root_folder(),
             host_name=HostName("foo"),
@@ -1139,7 +1139,7 @@ def test_openapi_host_with_non_existing_site(
             cluster_nodes=None,
         )
 
-    monkeypatch.setattr(Host, "host", mock_host)
+    monkeypatch.setattr(FolderTree, "host", mock_host)
     resp = clients.HostConfig.get(host_name="foo")
     assert resp.json["extensions"]["attributes"]["site"] == "Unknown Site: a_non_existing_site"
 

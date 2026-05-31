@@ -620,7 +620,7 @@ class HostField(base.String):
     @override
     def _validate(self, value: HostAddress) -> None:
         super()._validate(value)
-        host = Host.host(value)
+        host = folder_tree().host(value)
         self._confirm_user_has_permission(host)
 
         if (
@@ -870,7 +870,7 @@ class HostnameOrIP(base.String):
     def _validate_hostname(self, value: str) -> ValidationError | Literal["pass"]:
         try:
             if self.presence != "ignore" or self.should_be_cluster or self.should_be_monitored:
-                if host := Host.host(HostName(value)):
+                if host := folder_tree().host(HostName(value)):
                     if self.presence == "should_not_exist":
                         raise self.make_error("should_not_exist", host_name=value)
 

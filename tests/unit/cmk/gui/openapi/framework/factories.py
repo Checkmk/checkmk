@@ -35,6 +35,8 @@ class EndpointPermissionsFactory(DataclassFactory[versioned_endpoint.EndpointPer
 
 class EndpointHandlerFactory(DataclassFactory[versioned_endpoint.EndpointHandler]):
     error_schemas = None
+    status_descriptions = None
+    additional_status_codes = None
 
     @classmethod
     def handler(cls) -> versioned_endpoint.HandlerFunction:

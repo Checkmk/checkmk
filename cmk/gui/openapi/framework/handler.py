@@ -7,7 +7,9 @@
 
 import contextlib
 import json
+import types
 from inspect import BoundArguments
+from typing import get_origin, TypeAliasType
 
 from werkzeug.datastructures import MIMEAccept
 from werkzeug.http import parse_accept_header
@@ -25,14 +27,13 @@ from cmk.gui.openapi.restful_objects.validators import (
     ResponseValidator,
 )
 from cmk.gui.openapi.utils import EXT, RestAPIResponseException, RestAPIWatoDisabledException
-from cmk.gui.utils.dataclasses import DataclassInstance
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.utils.paths import configuration_lockfile
 
 from ._context import ApiContext
 from ._types import RawRequestData
-from ._utils import get_stripped_origin, iter_dataclass_fields
+from ._utils import iter_dataclass_fields, resolve_type
 from .endpoint_model import EndpointModel
 from .model import json_dump_without_omitted
 from .model.response import ApiResponse, TypedResponse
@@ -40,13 +41,11 @@ from .registry import RequestEndpoint
 
 tracer = trace.get_tracer()
 
-type ApiResponseModel[T: DataclassInstance] = T
-"""Some dataclass that was returned from the endpoint."""
 
-
-def dump_body[T: DataclassInstance](
-    body: T | None,
-    body_type: type[T] | None,
+def dump_body(
+    body: object | None,
+    # TODO(PEP-747): replace with TypeForm | None once available
+    body_type: type | TypeAliasType | types.UnionType | None,
     *,
     is_testing: bool,
     body_kind: str = "Response body",
@@ -60,15 +59,19 @@ def dump_body[T: DataclassInstance](
     if body_type is None:
         raise ValueError(f"{body_kind} is of type: {type(body)}, but should be None")
 
-    if not isinstance(body, get_stripped_origin(body_type)):
+    resolved = resolve_type(body_type)
+    check_type = (
+        resolved if isinstance(resolved, types.UnionType) else (get_origin(resolved) or resolved)
+    )
+    if not isinstance(body, check_type):
         raise ValueError(f"{body_kind} is of type: {type(body)}, but should be {body_type}")
 
     return json_dump_without_omitted(body_type, body, is_testing=is_testing)
 
 
 def _create_response(
-    endpoint_response: TypedResponse[ApiResponseModel | None],
-    response_body_type: type[ApiResponseModel] | None,
+    endpoint_response: TypedResponse[object | None],
+    response_body_type: type[object] | None,
     content_type: str | None,
     *,
     fields_filter: FieldsFilter | None,

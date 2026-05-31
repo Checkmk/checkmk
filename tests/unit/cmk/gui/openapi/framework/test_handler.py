@@ -7,6 +7,7 @@
 
 import contextlib
 import dataclasses
+import json
 from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Annotated, cast, override
@@ -94,6 +95,50 @@ def test_dump_response_pydantic_annotated() -> None:
         is_testing=True,
     )
     assert result == b'{"custom_name":"246"}'
+
+
+@dataclass
+class _TestResponseB:
+    name: str
+
+
+type _AliasedResponseUnion = _TestResponse | _TestResponseB
+type _AliasedResponseWithSerializer = Annotated[
+    _TestResponse | _TestResponseB,
+    PlainSerializer(lambda x: {"custom": x.field if hasattr(x, "field") else x.name}),
+]
+
+
+def test_dump_response_union_first_member() -> None:
+    result = dump_body(_TestResponse(field=42), _TestResponse | _TestResponseB, is_testing=True)
+    assert result == b'{"field":42}'
+
+
+def test_dump_response_union_second_member() -> None:
+    result = dump_body(
+        _TestResponseB(name="hello"), _TestResponse | _TestResponseB, is_testing=True
+    )
+    assert result == b'{"name":"hello"}'
+
+
+def test_dump_response_union_wrong_type_raises() -> None:
+    with pytest.raises(ValueError, match="should be"):
+        dump_body(object(), _TestResponse | _TestResponseB, is_testing=True)
+
+
+def test_dump_response_type_alias_union() -> None:
+    result = dump_body(_TestResponse(field=7), _AliasedResponseUnion, is_testing=True)
+    assert result == b'{"field":7}'
+
+
+def test_dump_response_annotated_union_uses_annotation() -> None:
+    # A PlainSerializer on the Annotated wrapper must survive through resolve_type and be
+    # applied by Pydantic — if the annotation were stripped the output would be {"field":...}.
+    result = dump_body(_TestResponse(field=42), _AliasedResponseWithSerializer, is_testing=True)
+    assert result == b'{"custom":42}'
+
+    result = dump_body(_TestResponseB(name="hi"), _AliasedResponseWithSerializer, is_testing=True)
+    assert result == b'{"custom":"hi"}'
 
 
 class _DummyPermissionValidator(PermissionValidator):
@@ -567,3 +612,84 @@ def test_handle_endpoint_missing_etag(permission_validator: PermissionValidator)
             wato_use_git=False,
             is_testing=False,
         )
+
+
+@dataclass
+class _RequestBodyA:
+    a_field: str
+
+
+@dataclass
+class _RequestBodyB:
+    b_field: int
+
+
+type _AliasBody = _RequestBodyA | _RequestBodyB
+
+
+def _handler_union_body(body: _RequestBodyA | _RequestBodyB) -> _RequestBodyA | _RequestBodyB:
+    return body
+
+
+def _handler_alias_body(body: _AliasBody) -> _AliasBody:
+    return body
+
+
+def test_handle_endpoint_request_union_body_dispatches(
+    permission_validator: PermissionValidator,
+) -> None:
+    request_endpoint = RequestEndpointFactory.build(
+        handler=_handler_union_body, content_type="application/json", accept="application/json"
+    )
+    for body_json, expected in [
+        ({"a_field": "hello"}, b'{"a_field":"hello"}'),
+        ({"b_field": 99}, b'{"b_field":99}'),
+    ]:
+        request_data = RawRequestDataFactory.build(
+            body=json.dumps(body_json).encode(),
+            headers=Headers(
+                {
+                    "Accept": request_endpoint.content_type,
+                    "Content-Type": request_endpoint.accept,
+                }
+            ),
+        )
+        response = handle_endpoint_request(
+            request_endpoint,
+            request_data,
+            _api_context(),
+            permission_validator,
+            wato_enabled=True,
+            wato_use_git=False,
+            is_testing=False,
+        )
+        assert response.status_code == 200, response.get_data(as_text=True)
+        assert response.get_data() == expected
+
+
+def test_handle_endpoint_request_type_alias_body(
+    permission_validator: PermissionValidator,
+) -> None:
+    request_endpoint = RequestEndpointFactory.build(
+        handler=_handler_alias_body, content_type="application/json", accept="application/json"
+    )
+    request_data = RawRequestDataFactory.build(
+        body=b'{"a_field": "world"}',
+        headers=Headers(
+            {
+                "Accept": request_endpoint.content_type,
+                "Content-Type": request_endpoint.accept,
+            }
+        ),
+    )
+    response = handle_endpoint_request(
+        request_endpoint,
+        request_data,
+        _api_context(),
+        permission_validator,
+        wato_enabled=True,
+        wato_use_git=False,
+        is_testing=False,
+    )
+    assert response.status_code == 200, response.get_data(as_text=True)
+    assert response.get_data() == b'{"a_field":"world"}'

@@ -10,7 +10,7 @@ import dataclasses
 import inspect
 import types
 from collections.abc import Iterator, Mapping
-from typing import Any, cast, get_args, get_origin, Union
+from typing import Any, cast, get_args, TypeAliasType, Union
 
 from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt, StatusCodeInt
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
@@ -18,7 +18,7 @@ from cmk.gui.openapi.restful_objects.validators import PathParamsValidator
 
 from ._context import ApiContext
 from ._types import HeaderParam, PathParam, QueryParam
-from ._utils import get_stripped_origin, strip_annotated
+from ._utils import get_resolved_origin, resolve_type
 from .endpoint_model import EndpointModel, ParameterInfo, SignatureParametersProcessor
 from .model import ApiOmitted
 from .model.response import ApiErrorDataclass
@@ -115,6 +115,31 @@ def _validate_defaults_model(
             raise ValueError(f"Forbidden `default_factory` for `{path}.{field.name}`.")
 
 
+def _validate_schema_type(
+    # TODO(PEP-747): replace `type | TypeAliasType | types.UnionType` with `TypeForm`
+    schema_type: type | TypeAliasType | types.UnionType,
+    *,
+    path_prefix: str,
+    other_defaults_allowed: bool,
+    schema_kind: str,
+) -> None:
+    resolved = resolve_type(schema_type)
+    if isinstance(resolved, types.UnionType):
+        for member in get_args(resolved):
+            member_type = resolve_type(member)
+            if isinstance(member_type, types.UnionType):
+                raise ValueError(f"Nested union types are not supported in {schema_kind}: {member}")
+            _validate_defaults_model(
+                f"{path_prefix}.{member_type.__name__}",
+                member_type,
+                other_defaults_allowed=other_defaults_allowed,
+            )
+    else:
+        _validate_defaults_model(
+            path_prefix, resolved, other_defaults_allowed=other_defaults_allowed
+        )
+
+
 class ParameterValidator:
     @dataclasses.dataclass(slots=True)
     class Data:
@@ -200,11 +225,11 @@ class ParameterValidator:
         if source.is_list:
             # we have to use Any here, Annotated[...] | None creates Union (which is not a type)
             # so checking for both UnionType and Union is necessary
-            origin: Any = get_stripped_origin(param_info.annotation)
+            origin: Any = get_resolved_origin(param_info.annotation)
             if origin is types.UnionType or origin is Union:
                 if any(
-                    issubclass(get_stripped_origin(arg), list)
-                    for arg in get_args(strip_annotated(param_info.annotation))
+                    issubclass(get_resolved_origin(arg), list)
+                    for arg in get_args(resolve_type(param_info.annotation))
                 ):
                     return
             elif isinstance(origin, type) and issubclass(origin, list):
@@ -248,10 +273,10 @@ class EndpointValidator:
             if body.annotation is inspect.Parameter.empty:
                 raise ValueError("Missing annotation for request body")
 
-            body_type = strip_annotated(body.annotation)
-            if get_origin(body_type) is types.UnionType:
+            body_type = resolve_type(body.annotation)
+            if isinstance(body_type, types.UnionType):
                 if not all(
-                    dataclasses.is_dataclass(strip_annotated(arg)) for arg in get_args(body_type)
+                    dataclasses.is_dataclass(resolve_type(arg)) for arg in get_args(body_type)
                 ):
                     raise ValueError(
                         "All union members of request body annotation must be dataclasses"
@@ -288,8 +313,11 @@ class EndpointValidator:
             )
 
         with _with_endpoint_context(endpoint.operation_id):
-            _validate_defaults_model(
-                "response", model.response_body_type, other_defaults_allowed=False
+            _validate_schema_type(
+                model.response_body_type,
+                path_prefix="response",
+                other_defaults_allowed=False,
+                schema_kind="response schemas",
             )
 
     @staticmethod
@@ -306,20 +334,12 @@ class EndpointValidator:
             )
 
         with _with_endpoint_context(endpoint.operation_id):
-            body_type = strip_annotated(model.request_body_type)
-            if get_origin(body_type) is types.UnionType:
-                for member in get_args(body_type):
-                    _validate_defaults_model(
-                        f"body.{member.__name__}",
-                        strip_annotated(member),
-                        other_defaults_allowed=True,
-                    )
-            else:
-                _validate_defaults_model(
-                    "body",
-                    strip_annotated(model.request_body_type),
-                    other_defaults_allowed=True,
-                )
+            _validate_schema_type(
+                model.request_body_type,
+                path_prefix="body",
+                other_defaults_allowed=True,
+                schema_kind="request body schemas",
+            )
 
     @staticmethod
     def _validate_error_schemas(

@@ -16,7 +16,8 @@ default value. For serializing the response, the `json_dump_without_omitted` fun
 to remove the `ApiOmitted` values from the response body.
 """
 
-from typing import Any, ClassVar, Literal, NoReturn, Self
+import types
+from typing import Any, cast, ClassVar, Literal, NoReturn, Self, TypeAliasType
 
 from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
 from pydantic_core import CoreSchema, PydanticOmit
@@ -77,8 +78,14 @@ class ApiOmitted:
         return value
 
 
-def json_dump_without_omitted[T](
-    instance_type: type[T], instance: T, *, is_testing: bool = False
+# TODO(PEP-747): once TypeForm lands, replace `type | TypeAliasType | types.UnionType` with
+#   `TypeForm[T]` restore `json_dump_without_omitted` to its original generic form:
+#   `json_dump_without_omitted[T](instance_type: TypeForm[T], instance: T) -> bytes`
+def json_dump_without_omitted(
+    instance_type: type | TypeAliasType | types.UnionType,
+    instance: object,
+    *,
+    is_testing: bool = False,
 ) -> bytes:
     """Serialize the given dataclass instance to JSON, removing omitted fields.
 
@@ -92,7 +99,9 @@ def json_dump_without_omitted[T](
           Other fields *must not* use defaults. This is checked for API models in a test.
     """
     # This will be called at most once per REST-API request
-    adapter = get_cached_type_adapter(instance_type)
+    # cast: get_cached_type_adapter is generic (type[T] → TypeAdapter[T]) for concrete callers;
+    # type[object] is the safe upper bound for the broader inputs this function accepts.
+    adapter = get_cached_type_adapter(cast(type[object], instance_type))
     # TODO: Rework how we deal with omitted values once pydantic supports either `PydanticOmit`
     #       in serializers or implements `exclude_if`
     # NOTE: keep in sync with CheckmkGenerateJsonSchema.encode_default for correct schemas

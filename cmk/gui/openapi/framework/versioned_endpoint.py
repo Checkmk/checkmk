@@ -25,12 +25,9 @@ from cmk.gui.openapi.restful_objects.type_defs import (
 )
 from cmk.gui.token_auth import TokenType
 from cmk.gui.utils import permission_verification as permissions
-from cmk.gui.utils.dataclasses import DataclassInstance
 from cmk.licensing.basics.options import OptionName
 
-# the generic argument T will currently not be used, but this is the only way to specify a bound
-# on dataclasses
-type HandlerFunction[T: DataclassInstance] = Callable[..., TypedResponse[T | None]]
+type HandlerFunction = Callable[..., TypedResponse[object | None]]
 
 
 @dataclass(slots=True, frozen=True)

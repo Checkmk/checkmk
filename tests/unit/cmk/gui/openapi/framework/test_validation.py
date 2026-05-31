@@ -9,9 +9,10 @@
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, Literal
 
 import pytest
+from pydantic import Discriminator
 
 from cmk.gui.openapi.framework import (
     HandlerFunction,
@@ -179,3 +180,92 @@ def _error_body_parameter_type_endpoint_handler(body: object) -> None:
 def test_invalid_body_parameter(handler: HandlerFunction, match: str) -> None:
     with pytest.raises(ValueError, match=match):
         validate_endpoint_definition(EndpointDefinitionFactory.build(handler={"handler": handler}))
+
+
+@dataclass
+class _ModelA:
+    type: Literal["a"]
+    value: str
+
+
+@dataclass
+class _ModelB:
+    type: Literal["b"]
+    count: int
+
+
+@dataclass
+class _ModelWithDefault:
+    value: str = "bad"
+
+
+type _AliasedUnion = _ModelA | _ModelB
+type _NestedAnnotatedAlias = Annotated[_AliasedUnion, "some_metadata"]
+type _AliasedAnnotatedUnion = Annotated[_ModelA | _ModelB, Discriminator("type")]
+
+
+def _handler_union_response() -> _ModelA | _ModelB:
+    raise NotImplementedError
+
+
+def _handler_aliased_union_response() -> _AliasedUnion:
+    raise NotImplementedError
+
+
+def _handler_nested_alias_response() -> _NestedAnnotatedAlias:
+    raise NotImplementedError
+
+
+def _handler_aliased_union_body(body: _AliasedUnion) -> _ModelA:
+    raise NotImplementedError
+
+
+def _handler_disc_alias_body(body: _AliasedAnnotatedUnion) -> _ModelA:
+    raise NotImplementedError
+
+
+def _handler_response_with_default() -> _ModelWithDefault:
+    raise NotImplementedError
+
+
+@pytest.mark.parametrize(
+    "handler",
+    [
+        _handler_union_response,
+        _handler_aliased_union_response,
+        _handler_nested_alias_response,
+    ],
+)
+def test_response_valid(handler: HandlerFunction) -> None:
+    validate_endpoint_definition(
+        EndpointDefinitionFactory.build(
+            handler={"handler": handler},
+            metadata={"content_type": "application/json"},
+        )
+    )
+
+
+def test_response_with_default_invalid() -> None:
+    with pytest.raises(ValueError, match="Forbidden `default`"):
+        validate_endpoint_definition(
+            EndpointDefinitionFactory.build(
+                handler={"handler": _handler_response_with_default},
+                metadata={"content_type": "application/json"},
+            )
+        )
+
+
+@pytest.mark.parametrize(
+    "handler",
+    [
+        _handler_aliased_union_body,
+        _handler_disc_alias_body,
+    ],
+)
+def test_request_body_valid(handler: HandlerFunction) -> None:
+    validate_endpoint_definition(
+        EndpointDefinitionFactory.build(
+            handler={"handler": handler},
+            metadata={"method": "post", "content_type": "application/json"},
+        )
+    )

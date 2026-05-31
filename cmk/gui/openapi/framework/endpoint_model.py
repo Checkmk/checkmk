@@ -24,7 +24,7 @@ from cmk.gui.utils.dataclasses import DataclassInstance
 from .._type_adapter import get_cached_type_adapter
 from ._context import ApiContext
 from ._types import HeaderParam, PathParam, QueryParam, RawRequestData
-from ._utils import iter_dataclass_fields, strip_annotated
+from ._utils import iter_dataclass_fields, resolve_type
 from .content_types import convert_request_body
 from .model import api_field
 from .model.response import ApiResponse, TypedResponse
@@ -217,9 +217,9 @@ class _IgnoreExtra:
 
 
 def _configure_extra_forbid(tp: type) -> None:
-    """Recursively set extra="forbid" on BaseModel/dataclass types, unwrapping Annotated and unions."""
-    stripped = strip_annotated(tp)
-    if get_origin(stripped) is types.UnionType:
+    """Recursively set extra="forbid" on BaseModel/dataclass types, unwrapping Annotated, TypeAliasType and unions."""
+    stripped = resolve_type(tp)
+    if isinstance(stripped, types.UnionType):
         for member in get_args(stripped):
             _configure_extra_forbid(member)
     elif issubclass(stripped, BaseModel):

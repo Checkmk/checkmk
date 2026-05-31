@@ -325,6 +325,8 @@ def _permission_descriptions(
         elif isinstance(permission, permissions.Optional):
             desc_list.append(f"{prefix} * Optionally:")
             _add_desc(permission.perm, indent + 1, desc_list)
+        elif isinstance(permission, permissions.DynamicRuntimePerm):
+            desc_list.append(f"{prefix} * {permission.description}")
         else:
             raise NotImplementedError(f"Printing of {permission!r} not yet implemented.")
 

@@ -243,6 +243,33 @@ class OkayToIgnorePerm(Perm):
     """
 
 
+class DynamicRuntimePerm(BasePerm):
+    """For endpoints whose required permissions are determined at runtime and cannot be
+    statically enumerated at declaration time.
+
+    Use only when the permissions genuinely depend on runtime state (e.g. plugin
+    registrations, user-supplied input). Any permission checked during the request will
+    be accepted by the tracking validator.
+    """
+
+    def __init__(
+        self, *, description: str = "Required permissions are determined at runtime."
+    ) -> None:
+        self.description = description
+
+    def __repr__(self) -> str:
+        return f"DynamicRuntimePerm({self.description!r})"
+
+    def has_permission(self, user: UserLike) -> bool:
+        return True
+
+    def iter_perms(self) -> Iterable[Perm]:
+        return []
+
+    def __contains__(self, item: object) -> bool:
+        return isinstance(item, str)
+
+
 class PrefixPerm(BasePerm):
     """Document an entire permission group, like "view" for all view related permissions.
 

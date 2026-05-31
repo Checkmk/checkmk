@@ -112,6 +112,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_from_request,
     folder_preserving_link,
     folder_tree,
+    FolderTree,
     Host,
     strip_hostname_whitespace_chars,
     validate_all_hosts,
@@ -269,7 +270,11 @@ class ABCHostMode(WatoMode, abc.ABC):
     def _is_cluster(self) -> bool:
         return self._host.is_cluster()
 
-    def _get_cluster_nodes(self, attributes: HostAttributes) -> Sequence[HostName] | None:
+    def _get_cluster_nodes(
+        self,
+        tree: FolderTree,
+        attributes: HostAttributes,
+    ) -> Sequence[HostName] | None:
         if not self._is_cluster():
             return None
 
@@ -294,7 +299,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             if cluster_node == self._host.name():
                 raise MKUserError("nodes_%d" % nr, _("The cluster cannot be a node of itself"))
 
-            if not Host.host_exists(cluster_node):
+            if not tree.host_exists(cluster_node):
                 raise MKUserError(
                     "nodes_%d" % nr,
                     _(
@@ -347,9 +352,10 @@ class ABCHostMode(WatoMode, abc.ABC):
     def page(self, config: Config) -> None:
         # Show outcome of host validation. Do not validate new hosts
         errors = None
+        tree = folder_tree()
         if self._mode == "edit":
             errors = (
-                validate_all_hosts(folder_tree(), [self._host.name()]).get(self._host.name(), [])
+                validate_all_hosts(tree, [self._host.name()]).get(self._host.name(), [])
                 + self._host.validation_errors()
             )
 
@@ -386,7 +392,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         except MKUserError:
             host_name = None
         folder = folder_from_request(request.var("folder"), host_name)
-        if Host.host_exists(self._host.name()):
+        if tree.host_exists(self._host.name()):
             all_agents_url = folder_preserving_link(
                 [("mode", "agent_of_host"), ("host", self._host.name())]
             )
@@ -462,7 +468,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                     agent_slideout=get_agent_slideout(
                         hostname=hostname,
                         save_host=self._mode in ["new", "prefill", "clone"],
-                        host_exists=Host.host_exists(self._host.name()),
+                        host_exists=tree.host_exists(self._host.name()),
                         all_agents_url=all_agents_url,
                         user_settings_url=makeuri_contextless(
                             request=request,
@@ -704,7 +710,7 @@ class ModeEditHost(ABCHostMode):
 
         host.edit(
             attributes,
-            self._get_cluster_nodes(attributes),
+            self._get_cluster_nodes(folder_tree(), attributes),
             pprint_value=config.wato_pprint_config,
             pending_changes=_pending_changes(
                 config=config, local_site=omd_site(), acting_user=user.id
@@ -980,7 +986,7 @@ class CreateHostMode(ABCHostMode):
             self._host_type_name(),
             new=True,
         )
-        cluster_nodes = self._get_cluster_nodes(attributes)
+        cluster_nodes = self._get_cluster_nodes(folder_tree(), attributes)
         try:
             hostname = strip_hostname_whitespace_chars(
                 request.get_ascii_input_mandatory(self.VAR_HOST)

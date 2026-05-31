@@ -195,7 +195,7 @@ def _add_scanned_hosts_to_folder(
         if network_scan_properties.get("set_ipaddress", True):
             attrs["ipaddress"] = ipaddr
 
-        if not Host.host_exists(host_name):
+        if not tree.host_exists(host_name):
             entries.append((host_name, attrs, None))
 
     with store.lock_checkmk_configuration(configuration_lockfile):

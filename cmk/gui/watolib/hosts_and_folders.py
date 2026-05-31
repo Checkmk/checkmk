@@ -1027,6 +1027,9 @@ class FolderTree:
         """Look up a host by name from the cache only; return None on miss."""
         return self.folder_lookup_cache.get_cached(host_name)
 
+    def host_exists(self, host_name: HostName) -> bool:
+        return self.host(host_name) is not None
+
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder]:
         if "wato_folders" not in g:
             g.wato_folders = _wato_folders_factory(self)
@@ -3344,10 +3347,6 @@ class Host:
     @staticmethod
     def all() -> dict[HostName, Host]:
         return folder_tree().root_folder().all_hosts_recursively()
-
-    @staticmethod
-    def host_exists(host_name: HostName) -> bool:
-        return Host.host(host_name) is not None
 
     # .--------------------------------------------------------------------.
     # | CONSTRUCTION, LOADING & SAVING                                     |

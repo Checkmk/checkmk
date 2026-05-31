@@ -2954,19 +2954,14 @@ class FolderLookupCache:
         return cmk.utils.paths.tmp_dir / "wato/wato_host_folder_lookup.cache"
 
     def get(self, host_name: HostName) -> Host | None:
-        """This function tries to create a host object using its name from a lookup cache.
-        If this does not work (cache miss), the regular search for the host is started.
-        If the host was found by the regular search, the lookup cache is updated accordingly.
+        """Look up a host by name, falling back to a recursive scan on cache miss.
+
+        On a successful recursive scan, the cache is updated with the new entry.
         """
 
         try:
-            cache = self.get_cache()
-            folder_hint = cache.get(host_name)
-            if folder_hint is not None and self._folder_tree.folder_exists(folder_hint):
-                folder_instance = self._folder_tree.folder(folder_hint)
-                host_instance = folder_instance.host(host_name)
-                if host_instance is not None:
-                    return host_instance
+            if (host_instance := self.get_cached(host_name)) is not None:
+                return host_instance
 
             # The hostname was not found in the lookup cache
             # Use find_host_recursively to search this host in the configuration
@@ -2975,6 +2970,7 @@ class FolderLookupCache:
                 return None
 
             # Save newly found host instance to cache
+            cache = self.get_cache()
             cache[host_name] = host_instance.folder().path()
             self._save(cache)
             return host_instance
@@ -2986,6 +2982,20 @@ class FolderLookupCache:
                 exc_info=True,
             )
             return self._folder_tree.root_folder().find_host_recursively(host_name)
+
+    def get_cached(self, host_name: HostName) -> Host | None:
+        """Look up a host by name from the cache only; return None on miss.
+
+        Unlike `get()`, this never falls back to a recursive scan of the folder
+        tree. Use this in code paths that iterate over many host names and
+        cannot afford the full-tree load on a miss (e.g. rule-condition
+        rendering).
+        """
+        cache = self.get_cache()
+        folder_hint = cache.get(host_name)
+        if folder_hint is None or not self._folder_tree.folder_exists(folder_hint):
+            return None
+        return self._folder_tree.folder(folder_hint).host(host_name)
 
     def get_cache(self) -> dict[HostName, str]:
         if "folder_lookup_cache_dict" not in g:
@@ -3321,6 +3331,16 @@ class Host:
     @staticmethod
     def host(host_name: HostName) -> Host | None:
         return folder_lookup_cache().get(host_name)
+
+    @staticmethod
+    def host_cached(host_name: HostName) -> Host | None:
+        """Look up a host without falling back to a full folder-tree scan.
+
+        Returns `None` if the host is not in the lookup cache. Use in code
+        paths that iterate over many host names where loading the entire
+        folder tree on a miss would be prohibitively expensive.
+        """
+        return folder_lookup_cache().get_cached(host_name)
 
     @staticmethod
     def all() -> dict[HostName, Host]:

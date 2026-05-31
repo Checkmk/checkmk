@@ -146,7 +146,6 @@ from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
-    folder_lookup_cache,
     folder_preserving_link,
     folder_tree,
     FolderTree,
@@ -3098,7 +3097,6 @@ class RuleConditionRenderer:
             [x for x in host_name_conditions if isinstance(x, dict) and "$regex" in x]
         )
 
-        lookup_cache = folder_lookup_cache().get_cache()
         text_list: list[HTML] = []
         if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all
@@ -3112,15 +3110,12 @@ class RuleConditionRenderer:
                 if isinstance(host_spec, dict) and "$regex" in host_spec:
                     text_list.append(HTMLWriter.render_b(host_spec["$regex"]))
                 elif isinstance(host_spec, str):
-                    # Make sure that the host exists and the lookup will not fail
-                    # Otherwise the entire config would be read
                     try:
                         host_name = HostName(host_spec)
                     except HostNameValidationError:
                         text_list.append(HTMLWriter.render_b(host_spec))
                         continue
-                    folder_hint = lookup_cache.get(host_name)
-                    if folder_hint is not None and (host := Host.host(host_name)) is not None:
+                    if (host := Host.host_cached(host_name)) is not None:
                         text_list.append(
                             HTMLWriter.render_b(HTMLWriter.render_a(host_spec, host.edit_url()))
                         )
@@ -3140,8 +3135,6 @@ class RuleConditionRenderer:
                     )
                 elif isinstance(host_spec, str):
                     expression = _("is not") if is_negate else _("is")
-                    # Make sure that the host exists and the lookup will not fail
-                    # Otherwise the entire config would be read
                     try:
                         host_name = HostName(host_spec)
                     except HostNameValidationError:
@@ -3150,8 +3143,7 @@ class RuleConditionRenderer:
                             + HTMLWriter.render_b(host_spec)
                         )
                         continue
-                    folder_hint = lookup_cache.get(host_name)
-                    if folder_hint is not None and (host := Host.host(host_name)) is not None:
+                    if (host := Host.host_cached(host_name)) is not None:
                         text_list.append(
                             HTML.with_escaping(expression + " ")
                             + HTMLWriter.render_b(HTMLWriter.render_a(host_spec, host.edit_url()))

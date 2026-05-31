@@ -16,7 +16,7 @@ from pytest_mock import MockerFixture
 from cmk.gui.config import active_config
 from cmk.gui.utils.html import HTML
 from cmk.gui.wato.pages.rulesets import RuleConditionRenderer
-from cmk.gui.watolib.hosts_and_folders import FolderLookupCache, Host
+from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.utils.rulesets.conditions import HostOrServiceConditions
 from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
@@ -97,14 +97,15 @@ def patch_tag_config(
 
 @pytest.fixture(name="folder_lookup")
 def fixture_folder_lookup(mocker: MockerFixture) -> None:
-    folder_cache = {"cached_host": "cached_host_value"}
-    mocker.patch.object(FolderLookupCache, "get_cache", return_value=folder_cache)
-
     class MockHost:
         def edit_url(self):
             return "cached_host_url"
 
-    mocker.patch.object(Host, "host", return_value=MockHost())
+    mocker.patch.object(
+        Host,
+        "host_cached",
+        side_effect=lambda host_name: MockHost() if host_name == "cached_host" else None,
+    )
 
 
 class TestRuleConditionRenderer:

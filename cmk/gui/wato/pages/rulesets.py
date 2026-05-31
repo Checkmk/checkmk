@@ -3098,6 +3098,7 @@ class RuleConditionRenderer:
         )
 
         text_list: list[HTML] = []
+        tree = folder_tree()
         if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all
             if is_negate:
@@ -3115,7 +3116,7 @@ class RuleConditionRenderer:
                     except HostNameValidationError:
                         text_list.append(HTMLWriter.render_b(host_spec))
                         continue
-                    if (host := Host.host_cached(host_name)) is not None:
+                    if (host := tree.host_cached(host_name)) is not None:
                         text_list.append(
                             HTMLWriter.render_b(HTMLWriter.render_a(host_spec, host.edit_url()))
                         )
@@ -3143,7 +3144,7 @@ class RuleConditionRenderer:
                             + HTMLWriter.render_b(host_spec)
                         )
                         continue
-                    if (host := Host.host_cached(host_name)) is not None:
+                    if (host := tree.host_cached(host_name)) is not None:
                         text_list.append(
                             HTML.with_escaping(expression + " ")
                             + HTMLWriter.render_b(HTMLWriter.render_a(host_spec, host.edit_url()))

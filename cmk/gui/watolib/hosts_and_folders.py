@@ -25,6 +25,7 @@ from collections.abc import Awaitable, Callable, Collection, Iterable, Iterator,
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from enum import Enum
+from functools import cached_property
 from pathlib import Path
 from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, Self, TypedDict
 
@@ -1014,6 +1015,18 @@ class FolderTree:
             self._redis_client = _RedisHelper(self)
         return self._redis_client
 
+    @cached_property
+    def folder_lookup_cache(self) -> FolderLookupCache:
+        return FolderLookupCache(self)
+
+    def host(self, host_name: HostName) -> Host | None:
+        """Look up a host by name, falling back to a recursive scan on cache miss."""
+        return self.folder_lookup_cache.get(host_name)
+
+    def host_cached(self, host_name: HostName) -> Host | None:
+        """Look up a host by name from the cache only; return None on miss."""
+        return self.folder_lookup_cache.get_cached(host_name)
+
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder]:
         if "wato_folders" not in g:
             g.wato_folders = _wato_folders_factory(self)
@@ -1081,6 +1094,8 @@ class FolderTree:
         for cache_id in ["folder_choices", "folder_choices_full_title"]:
             g.pop(cache_id, None)
         self._all_host_attributes = None
+        with suppress(AttributeError):
+            del self.folder_lookup_cache
 
     def reset_redis_client(self) -> None:
         self._redis_client = None
@@ -1138,13 +1153,6 @@ def folder_tree() -> FolderTree:
     if "folder_tree" not in g:
         g.folder_tree = FolderTree(config=HostsAndFoldersConfig.from_config(active_config))
     return g.folder_tree
-
-
-# Hope that we can cleanup these request global objects one day
-def folder_lookup_cache() -> FolderLookupCache:
-    if "folder_lookup_cache" not in g:
-        g.folder_lookup_cache = FolderLookupCache(folder_tree())
-    return g.folder_lookup_cache
 
 
 @request_memoize()
@@ -2358,7 +2366,7 @@ class Folder(FolderProtocol):
         shutil.rmtree(subfolder.filesystem_path())
         self.tree.invalidate_caches()
         need_sidebar_reload()
-        folder_lookup_cache().delete()
+        self.tree.folder_lookup_cache.delete()
 
     def move_subfolder_to(
         self,
@@ -2440,7 +2448,7 @@ class Folder(FolderProtocol):
             ChangeScope.sites(affected_sites),
         )
         need_sidebar_reload()
-        folder_lookup_cache().delete()
+        self.tree.folder_lookup_cache.delete()
 
     def edit(
         self,
@@ -2567,7 +2575,7 @@ class Folder(FolderProtocol):
         self.save(pprint_value=pprint_value)  # num_hosts has changed
 
         folder_path = self.path()
-        folder_lookup_cache().add_hosts([(x[0], folder_path) for x in entries])
+        self.tree.folder_lookup_cache.add_hosts([(x[0], folder_path) for x in entries])
 
     @staticmethod
     def verify_and_update_host_details(
@@ -2658,7 +2666,7 @@ class Folder(FolderProtocol):
 
         self.save_folder_attributes()  # num_hosts has changed
         self.save_hosts(pprint_value=pprint_value)
-        folder_lookup_cache().delete_hosts(host_names)
+        self.tree.folder_lookup_cache.delete_hosts(host_names)
 
     def _validate_delete_hosts(
         self, host_names: Collection[HostName], allow_locked_deletion: bool = False
@@ -2793,7 +2801,7 @@ class Folder(FolderProtocol):
         target_folder.save_hosts(pprint_value=pprint_value)
 
         folder_path = target_folder.path()
-        folder_lookup_cache().add_hosts([(x, folder_path) for x in host_names])
+        self.tree.folder_lookup_cache.add_hosts([(x, folder_path) for x in host_names])
 
     def rename_host(
         self,
@@ -2822,8 +2830,8 @@ class Folder(FolderProtocol):
         del self._hosts[oldname]
         self._hosts[newname] = host
 
-        folder_lookup_cache().delete_hosts([oldname])
-        folder_lookup_cache().add_hosts([(newname, self.path())])
+        self.tree.folder_lookup_cache.delete_hosts([oldname])
+        self.tree.folder_lookup_cache.add_hosts([(newname, self.path())])
 
         self.save_hosts(pprint_value=pprint_value)
 
@@ -2953,6 +2961,11 @@ class FolderLookupCache:
     def _path(self) -> Path:
         return cmk.utils.paths.tmp_dir / "wato/wato_host_folder_lookup.cache"
 
+    @cached_property
+    def _cache(self) -> dict[HostName, str]:
+        """Host name to folder path map, lazily loaded once per instance from disk"""
+        return self._load_from_disk()
+
     def get(self, host_name: HostName) -> Host | None:
         """Look up a host by name, falling back to a recursive scan on cache miss.
 
@@ -2970,7 +2983,7 @@ class FolderLookupCache:
                 return None
 
             # Save newly found host instance to cache
-            cache = self.get_cache()
+            cache = self._cache
             cache[host_name] = host_instance.folder().path()
             self._save(cache)
             return host_instance
@@ -2991,25 +3004,21 @@ class FolderLookupCache:
         cannot afford the full-tree load on a miss (e.g. rule-condition
         rendering).
         """
-        cache = self.get_cache()
+        cache = self._cache
         folder_hint = cache.get(host_name)
         if folder_hint is None or not self._folder_tree.folder_exists(folder_hint):
             return None
         return self._folder_tree.folder(folder_hint).host(host_name)
 
-    def get_cache(self) -> dict[HostName, str]:
-        if "folder_lookup_cache_dict" not in g:
-            cache_path = self._path()
-            if not cache_path.exists() or cache_path.stat().st_size == 0:
-                self.build()
-            try:
-                g.folder_lookup_cache_dict = store.load_object_from_pickle_file(
-                    cache_path, default={}
-                )
-            except (TypeError, pickle.UnpicklingError) as e:
-                logger.warning("Unable to read folder_lookup_cache from disk: %s", str(e))
-                g.folder_lookup_cache_dict = {}
-        return g.folder_lookup_cache_dict
+    def _load_from_disk(self) -> dict[HostName, str]:
+        cache_path = self._path()
+        if not cache_path.exists() or cache_path.stat().st_size == 0:
+            self.build()
+        try:
+            return store.load_object_from_pickle_file(cache_path, default={})
+        except (TypeError, pickle.UnpicklingError) as e:
+            logger.warning("Unable to read folder_lookup_cache from disk: %s", str(e))
+            return {}
 
     def rebuild_outdated(self, max_age: int) -> None:
         cache_path = self._path()
@@ -3037,13 +3046,13 @@ class FolderLookupCache:
         self._path().unlink(missing_ok=True)
 
     def add_hosts(self, host2path_list: Iterable[tuple[HostName, str]]) -> None:
-        cache = self.get_cache()
+        cache = self._cache
         for hostname, folder_path in host2path_list:
             cache[hostname] = folder_path
         self._save(cache)
 
     def delete_hosts(self, hostnames: Iterable[HostName]) -> None:
-        cache = self.get_cache()
+        cache = self._cache
         for hostname in hostnames:
             try:
                 del cache[hostname]
@@ -3330,17 +3339,7 @@ class Host:
 
     @staticmethod
     def host(host_name: HostName) -> Host | None:
-        return folder_lookup_cache().get(host_name)
-
-    @staticmethod
-    def host_cached(host_name: HostName) -> Host | None:
-        """Look up a host without falling back to a full folder-tree scan.
-
-        Returns `None` if the host is not in the lookup cache. Use in code
-        paths that iterate over many host names where loading the entire
-        folder tree on a miss would be prohibitively expensive.
-        """
-        return folder_lookup_cache().get_cached(host_name)
+        return folder_tree().host(host_name)
 
     @staticmethod
     def all() -> dict[HostName, Host]:
@@ -4035,7 +4034,7 @@ def rebuild_folder_lookup_cache(config: Config) -> None:
     if not (localtime.tm_hour == 5 and localtime.tm_min < 5):
         return
 
-    folder_lookup_cache().rebuild_outdated(max_age=300)
+    folder_tree().folder_lookup_cache.rebuild_outdated(max_age=300)
 
 
 def ajax_popup_host_action_menu(ctx: PageContext) -> None:

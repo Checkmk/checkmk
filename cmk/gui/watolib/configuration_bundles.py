@@ -205,7 +205,9 @@ def identify_bundle_references(
         else {}
     )
     bundle_hosts = (
-        _collect_many(_collect_hosts(finder=bundle_id_finder, hosts=Host.all().values()))
+        _collect_many(
+            _collect_hosts(finder=bundle_id_finder, hosts=folder_tree().all_hosts().values())
+        )
         if "host" in affected_entities
         else {}
     )
@@ -467,7 +469,7 @@ def _user_may_delete_config_bundle_objects(
                         PROGRAM_ID_DCD,
                         {dcd_id for dcd_id, _spec in references.dcd_connections},
                     ),
-                    Host.all().values(),
+                    folder_tree().all_hosts().values(),
                 )
             )
         )
@@ -807,7 +809,7 @@ def _delete_dcd_connections(
             host
             for _dcd_id, host in _collect_hosts(
                 _prepare_id_finder(PROGRAM_ID_DCD, {dcd_id for dcd_id, _spec in dcd_connections}),
-                Host.all().values(),
+                folder_tree().all_hosts().values(),
             )
         ),
         pprint_value=pprint_value,

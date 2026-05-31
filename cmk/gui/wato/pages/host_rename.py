@@ -70,7 +70,7 @@ from cmk.gui.watolib.host_rename import (
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
-    Host,
+    folder_tree,
     validate_host_uniqueness,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
@@ -219,7 +219,7 @@ class ModeBulkRenameHost(WatoMode):
         name_collisions = set()
         seen_names = set()
         locked_by_quick_setup = set()
-        all_host_names = Host.all().keys()
+        all_host_names = folder_tree().all_hosts().keys()
         updated_renamings = []
         for folder, old_name, new_name in renamings:
             if new_name in seen_names or new_name in all_host_names:

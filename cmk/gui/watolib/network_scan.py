@@ -93,7 +93,9 @@ def execute_network_scan_job(config: Config) -> None:
 
         try:
             if site_is_local(site_config := config.sites[folder.site_id()]):
-                found = _do_network_scan(folder)
+                found = _do_network_scan(
+                    folder, _known_ip_addresses(list(tree.all_hosts().values()))
+                )
             else:
                 raw_response = do_remote_automation(
                     remote_automation_config_from_site_config(site_config),
@@ -231,8 +233,8 @@ class AutomationNetworkScan(AutomationCommand[NetworkScanRequest]):
 
     @override
     def execute(self, api_request: NetworkScanRequest) -> list[tuple[HostName, HostAddress]]:
-        folder = folder_tree().folder(api_request.folder_path)
-        return _do_network_scan(folder)
+        folder = (tree := folder_tree()).folder(api_request.folder_path)
+        return _do_network_scan(folder, _known_ip_addresses(list(tree.all_hosts().values())))
 
 
 def register(
@@ -254,12 +256,14 @@ def register(
 
 
 # This is executed in the site the host is assigned to.
-def _do_network_scan(folder: Folder) -> list[tuple[HostName, HostAddress]]:
-    ip_addresses = _ip_addresses_to_scan(folder)
+def _do_network_scan(
+    folder: Folder, known_addresses: set[HostAddress]
+) -> list[tuple[HostName, HostAddress]]:
+    ip_addresses = _ip_addresses_to_scan(folder, known_addresses)
     return _scan_ip_addresses(folder, ip_addresses)
 
 
-def _ip_addresses_to_scan(folder: Folder) -> set[HostAddress]:
+def _ip_addresses_to_scan(folder: Folder, known_addresses: set[HostAddress]) -> set[HostAddress]:
     ip_range_specs = folder.attributes["network_scan"]["ip_ranges"]
     exclude_specs = folder.attributes["network_scan"]["exclude_ranges"]
 
@@ -271,7 +275,7 @@ def _ip_addresses_to_scan(folder: Folder) -> set[HostAddress]:
 
     # Reduce by all known host addresses
     # FIXME/TODO: Shouldn't this filtering be done on the central site?
-    to_scan.difference_update(_known_ip_addresses())
+    to_scan.difference_update(known_addresses)
 
     # And now apply the IP regex patterns to exclude even more addresses
     to_scan.difference_update(_excludes_by_regexes(to_scan, exclude_specs))
@@ -366,10 +370,10 @@ def _mask_bits_to_int(n: int) -> int:
 
 
 # This will not scale well. Do you have a better idea?
-def _known_ip_addresses() -> set[HostAddress]:
+def _known_ip_addresses(all_hosts: Sequence[Host]) -> set[HostAddress]:
     addresses = set()
 
-    for host in Host.all().values():
+    for host in all_hosts:
         attributes = host.attributes
 
         address = attributes.get("ipaddress")

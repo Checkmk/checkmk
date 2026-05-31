@@ -1030,6 +1030,9 @@ class FolderTree:
     def host_exists(self, host_name: HostName) -> bool:
         return self.host(host_name) is not None
 
+    def all_hosts(self) -> dict[HostName, Host]:
+        return self.root_folder().all_hosts_recursively()
+
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder]:
         if "wato_folders" not in g:
             g.wato_folders = _wato_folders_factory(self)
@@ -3339,10 +3342,6 @@ class Host:
         if host is None:
             raise MKUserError(None, "Host could not be found.", status=404)
         return host
-
-    @staticmethod
-    def all() -> dict[HostName, Host]:
-        return folder_tree().root_folder().all_hosts_recursively()
 
     # .--------------------------------------------------------------------.
     # | CONSTRUCTION, LOADING & SAVING                                     |

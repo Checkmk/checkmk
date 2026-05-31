@@ -138,10 +138,11 @@ def perform_rename_hosts(
         except MKAuthException as e:
             auth_problems.append((oldname, e))
 
-    # Precompute cluster host list for node renaming due to expensive Host.all()
-    # call. This currently also needs to be done after the host renaming as the
-    # folder_tree cache_invalidation still misses some caches.
-    cluster_hosts = [host for host in Host.all().values() if host.is_cluster()]
+    # Precompute cluster host list for node renaming due to expensive
+    # FolderTree.all_hosts() call. This currently also needs to be done after the
+    # host renaming as the folder_tree cache_invalidation still misses some caches.
+    tree = folder_tree()
+    cluster_hosts = [host for host in tree.all_hosts().values() if host.is_cluster()]
 
     for renaming, this_host_actions in setup_actions.items():
         folder, oldname, newname = renaming
@@ -217,7 +218,7 @@ def perform_rename_hosts(
         action_counts[action] += 1
 
     update_interface(_("Calling final hooks"))
-    call_hook_hosts_changed(folder_tree().root_folder())
+    call_hook_hosts_changed(tree.root_folder())
 
     return action_counts, auth_problems
 

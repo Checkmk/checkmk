@@ -32,7 +32,7 @@ from cmk.gui.watolib.configuration_bundles import (
     delete_config_bundle,
     identify_single_bundle_references,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.pending_changes import (
@@ -208,7 +208,7 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
             attributes={},
         ),
     ]
-    before_create_host_count = len(Host.all())
+    before_create_host_count = len(folder_tree().all_hosts())
     create_config_bundle(
         bundle_id,
         bundle,
@@ -223,7 +223,7 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
 
     assert references.hosts is not None
     assert len(references.hosts) == 2
-    assert len(Host.all()) - before_create_host_count == 2
+    assert len(folder_tree().all_hosts()) - before_create_host_count == 2
 
     delete_config_bundle(
         bundle_id,
@@ -234,7 +234,9 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
     )
     references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
     assert references_after_delete.hosts is None
-    assert len(Host.all()) == before_create_host_count, "Expected created hosts to be deleted"
+    assert len(folder_tree().all_hosts()) == before_create_host_count, (
+        "Expected created hosts to be deleted"
+    )
 
 
 @pytest.mark.usefixtures("request_context", "mock_update_passwords_merged_file")

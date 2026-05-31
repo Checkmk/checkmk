@@ -1702,7 +1702,7 @@ def _match_rule_host_list(rule: Rule, search_hosts_str: str) -> bool:
     if any(c in ".?*+^$|[](){}\\" for c in search_hosts_str):
         match_regex = re.compile(search_hosts_str)
         rule_host_list = []
-        for host_name, _host in Host.all().items():
+        for host_name, _host in folder_tree().all_hosts().items():
             if match_regex.search(host_name):
                 rule_host_list.append(host_name)
         if not any(

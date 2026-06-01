@@ -39,7 +39,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
+from cmk.ccc.regex import regex, WATO_FOLDER_PATH_NAME_CHARS
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
@@ -3969,23 +3969,6 @@ def get_folder_title_path_with_links(path: PathWithoutSlash) -> list[HTML]:
 def get_folder_title(path: str) -> str:
     """Return the title of a folder - which is given as a string path"""
     return folder_tree().folder(path).title()
-
-
-# TODO: Move to Folder()?
-def check_wato_foldername(htmlvarname: str | None, name: str, just_name: bool = False) -> None:
-    if not just_name and folder_from_request(
-        folder_tree(), request.var("folder"), request.get_ascii_input("host")
-    ).has_subfolder(name):
-        raise MKUserError(htmlvarname, _("A folder with that name already exists."))
-
-    if not name:
-        raise MKUserError(htmlvarname, _("Please specify a name."))
-
-    if not regex(WATO_FOLDER_PATH_NAME_REGEX).match(name):
-        raise MKUserError(
-            htmlvarname,
-            _("Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."),
-        )
 
 
 def _ensure_trailing_slash(path: str) -> PathWithSlash:

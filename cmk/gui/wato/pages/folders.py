@@ -15,6 +15,7 @@ from typing import override, TypeVar
 
 import cmk.gui.view_utils
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.regex import regex, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
@@ -99,7 +100,6 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributes,
 )
 from cmk.gui.watolib.hosts_and_folders import (
-    check_wato_foldername,
     disk_or_search_folder_from_request,
     find_available_folder_name,
     Folder,
@@ -1652,6 +1652,24 @@ class ModeEditFolder(ABCFolderMode):
         )
 
 
+def _check_wato_foldername(
+    tree: FolderTree, htmlvarname: str | None, name: str, just_name: bool = False
+) -> None:
+    if not just_name and folder_from_request(
+        tree, request.var("folder"), request.get_ascii_input("host")
+    ).has_subfolder(name):
+        raise MKUserError(htmlvarname, _("A folder with that name already exists."))
+
+    if not name:
+        raise MKUserError(htmlvarname, _("Please specify a name."))
+
+    if not regex(WATO_FOLDER_PATH_NAME_REGEX).match(name):
+        raise MKUserError(
+            htmlvarname,
+            _("Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."),
+        )
+
+
 class ModeCreateFolder(ABCFolderMode):
     @classmethod
     @override
@@ -1689,7 +1707,7 @@ class ModeCreateFolder(ABCFolderMode):
         )
         if show_file_names:
             name = request.get_ascii_input_mandatory("name", "").strip()
-            check_wato_foldername("name", name)
+            _check_wato_foldername(self._tree, "name", name)
         else:
             name = find_available_folder_name(title, parent_folder)
 

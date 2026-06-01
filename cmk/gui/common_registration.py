@@ -19,7 +19,6 @@ from cmk.gui import (
     help_menu,
     hooks,
     inventory,
-    logwatch,
     main,
     message,
     mobile,
@@ -306,7 +305,6 @@ def register(
     message.register(page_registry, cron_job_registry)
     cmk.gui.help.register(page_registry)
     main.register(page_registry)
-    logwatch.register(page_registry)
     prediction.register(page_registry)
     product_usage_analytics.register(
         page_registry,

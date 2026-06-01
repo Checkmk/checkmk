@@ -34,6 +34,7 @@ from cmk.gui.help_menu import (
     default_learning_entries,
 )
 from cmk.gui.ldap_integration.register import register as ldap_registration
+from cmk.gui.logwatch import register as logwatch_registration
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_config
@@ -140,6 +141,9 @@ def register(
     agent_bakery_enabled = features.bakery.enabled
     sample_config_generator_registry.register(SampleConfigGeneratorGroups)
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
+    logwatch_registration.register(
+        page_registry, rulespec_registry, mode_registry, match_item_generator_registry
+    )
     nagvis.register(permission_section_registry, permission_registry, snapin_registry)
     roles.register(mode_registry)
     login.register(page_registry)

@@ -43,7 +43,6 @@ from . import (
     object_parameters,
     parentscan,
     password_store,
-    pattern_editor,
     predefined_conditions,
     random_hosts,
     read_only,
@@ -107,7 +106,6 @@ def register(
     object_parameters.register(mode_registry)
     parentscan.register(mode_registry)
     password_store.register(mode_registry)
-    pattern_editor.register(mode_registry, match_item_generator_registry)
     predefined_conditions.register(mode_registry)
     random_hosts.register(mode_registry)
     read_only.register(mode_registry)

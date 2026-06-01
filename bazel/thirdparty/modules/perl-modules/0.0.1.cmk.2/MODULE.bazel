@@ -6,7 +6,7 @@ module(
 )
 
 bazel_dep(name = "crypt-ssleay", version = "0.72.cmk.1", repo_name = "Crypt-SSLeay")
-bazel_dep(name = "openssl", version = "3.5.6.cmk.3")
+bazel_dep(name = "openssl", version = "3.5.6.cmk.4")
 bazel_dep(name = "patchelf", version = "0.18.0.bcr.1")
 
 perl_modules_ext = use_extension("//:extensions.bzl", "perl_modules")

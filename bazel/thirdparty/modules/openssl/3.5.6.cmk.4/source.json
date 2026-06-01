@@ -4,6 +4,10 @@
   "url": "https://github.com/openssl/openssl/releases/download/openssl-3.5.6/openssl-3.5.6.tar.gz",
   "overlay": {
     "BUILD.bazel": "sha256-it4AjACK30ZWN5Iy55gYDv9PO0ap9ecUbXWgdaREzMI=",
-    "MODULE.bazel": "sha256-xLij7cuoi+lkkvIggVpWPjLd62hXzl1Oc9TOSvj5tAE="
-  }
+    "MODULE.bazel": "sha256-7E++Fd7FKc3YiUz7KjDDjII8p7hr+tzsArd04RpB1bc="
+  },
+  "patches": {
+    "0001-strip-bazel-paths-from-buildinf.patch": "sha256-V2b13a9qrd18viv8Gu/smMph+yuO5mAFcqnKfDpyHis="
+  },
+  "patch_strip": 1
 }

@@ -9,5 +9,10 @@ def erlang_workspace():
         name = "erlang",
         build_file = "@omd_packages//omd/packages/erlang:BUILD",
         commit = version_str,
+        patch_args = ["-p1"],
+        patch_tool = "patch",
+        patches = [
+            "@omd_packages//omd/packages/erlang/patches:0001-strip-bazel-paths-from-compile-info.dif",
+        ],
         remote = "https://github.com/erlang/otp/",
     )

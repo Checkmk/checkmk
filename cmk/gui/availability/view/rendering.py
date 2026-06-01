@@ -359,6 +359,21 @@ def show_availability_page(
                 makeuri(request, [("_unset_logrow_limit", "1"), ("avo_logrow_limit", 0)]),
             )
             html.show_warning(text)
+
+        # A queried site being down means we silently received incomplete data,
+        # so the computed availability cannot be trusted.
+        if dead_sites := [
+            site_id
+            for site_id in sites.live().dead_sites()
+            if only_sites is None or site_id in only_sites
+        ]:
+            html.show_warning(
+                _(
+                    "The following sites could not be reached, so the shown data is "
+                    "incomplete and the computed availability might be incorrect: %s"
+                )
+                % ", ".join(sorted(dead_sites))
+            )
         do_render_availability(
             what,
             av_rawdata,

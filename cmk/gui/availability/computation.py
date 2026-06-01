@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import Counter
 from typing import cast
 
 from livestatus import (
@@ -137,6 +138,9 @@ def get_host_service_availability_rawdata(
     headers += "Timelimit: %d\n" % avoptions["timelimit"]
     headers += filterheaders
     logrow_limit = avoptions["logrow_limit"]
+    # Add a +1 overflow margin so a site returning exactly the limit can be told
+    # apart from one whose data was truncated.
+    livestatus_limit = (logrow_limit + 1) if logrow_limit else None
 
     with CPUTracker(logger.debug) as fetch_rows_tracker:
         data = query_livestatus(
@@ -148,7 +152,7 @@ def get_host_service_availability_rawdata(
                 )
             ),
             only_sites=only_sites,
-            limit=logrow_limit or None,
+            limit=livestatus_limit,
             auth_domain="read",
         )
 
@@ -161,14 +165,17 @@ def get_host_service_availability_rawdata(
         if avoptions["grouping"] not in [None, "host"]:
             filter_groups_of_entries(context, avoptions, spans)
 
-    # Now we find out if the log row limit was exceeded or
-    # if the log's length is the limit by accident.
-    # If this limit was exceeded then we cut off the last element
-    # because it might be incomplete.
+    # Now we find out if the log row limit was exceeded. The livestatus "Limit:"
+    # header is applied to each site individually, so we must check the per-site
+    # row count instead of the summed count of all sites - otherwise a multisite
+    # setup would raise false positives. If the limit was exceeded we cut off the
+    # last element because it might be incomplete.
     exceeded_log_row_limit: bool = False
-    if logrow_limit and len(data) > logrow_limit:
-        exceeded_log_row_limit = True
-        spans = spans[:-1]
+    if livestatus_limit is not None:
+        rows_per_site = Counter(row[0] for row in data)
+        if any(count >= livestatus_limit for count in rows_per_site.values()):
+            exceeded_log_row_limit = True
+            spans = spans[:-1]
 
     if view_process_tracking:
         view_process_tracking.amount_unfiltered_rows = len(data)

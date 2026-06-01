@@ -23,16 +23,24 @@
 /// CI sets CMK_VERSION before invoking ./run or run.cmd.
 /// Local builds without CMK_VERSION get the hardcoded fallback from version.rs.
 fn main() {
-    // Rerun build.rs when CMK_VERSION changes, is set, or is removed.
     println!("cargo:rerun-if-env-changed=CMK_VERSION");
-    // Inject CMK_VERSION into rustc env so option_env!("CMK_VERSION") picks it up.
-    // Cargo tracks this output: recompiles only when the value actually changes.
-    if let Ok(v) = std::env::var("CMK_VERSION") {
-        // Strip quotes that Windows cmd may inject into env values.
-        // For example, '2.6.0'-2026.05.26
-        let v = v.replace(['\'', '"'], "");
-        if !v.is_empty() {
-            println!("cargo:rustc-env=CMK_VERSION={v}");
+    eprintln!("[build.rs] ============================");
+    match std::env::var("CMK_VERSION") {
+        Ok(v) => {
+            eprintln!("[build.rs] CMK_VERSION is set to: '{v}'");
+            println!("cargo:warning=CMK_VERSION is set to: '{v}'");
+            let v = v.replace(['\'', '"'], "");
+            if !v.is_empty() {
+                println!("cargo:rustc-env=CMK_VERSION={v}");
+            } else {
+                eprintln!("[build.rs] CMK_VERSION is empty after stripping quotes");
+                println!("cargo:warning=CMK_VERSION is empty after stripping quotes");
+            }
+        }
+        Err(e) => {
+            eprintln!("[build.rs] CMK_VERSION is NOT set: {e}");
+            println!("cargo:warning=CMK_VERSION is NOT set: {e}");
         }
     }
+    eprintln!("[build.rs] ============================");
 }

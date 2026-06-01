@@ -38,6 +38,7 @@ const props = defineProps<{
   grpcEventConsole: EventConsoleConfig | null
   httpEventConsole: EventConsoleConfig | null
   cloudGrpcEndpoint?: string | null
+  cloudHttpEndpoint?: string | null
 }>()
 
 const activeTab = ref('collector')
@@ -45,12 +46,21 @@ const activeTab = ref('collector')
 const snippetInput = computed<CollectorSnippetInput>(() => ({
   siteName: props.siteName,
   httpInfo: props.httpEnabled
-    ? {
-        endpoint: props.httpEndpoint,
-        tlsEnabled: props.httpTlsEnabled,
-        auth: props.httpAuth,
-        eventConsole: props.httpEventConsole !== null
-      }
+    ? props.cloudHttpEndpoint
+      ? {
+          endpoint: props.httpEndpoint,
+          tlsEnabled: true,
+          tlsSimple: true,
+          auth: props.httpAuth,
+          eventConsole: props.httpEventConsole !== null,
+          overrideEndpoint: props.cloudHttpEndpoint
+        }
+      : {
+          endpoint: props.httpEndpoint,
+          tlsEnabled: props.httpTlsEnabled,
+          auth: props.httpAuth,
+          eventConsole: props.httpEventConsole !== null
+        }
     : null,
   grpcInfo: props.grpcEnabled
     ? props.cloudGrpcEndpoint
@@ -80,17 +90,30 @@ const basicAuthEnabled = computed(
 // Prefer the HTTP endpoint for the SDK example since OTLP/HTTP is the more
 // common SDK transport; fall back to gRPC when only that one is enabled.
 const sdkEndpointDisplay = computed(() => {
-  const httpResolved = props.httpEnabled
-    ? resolveEndpoint(props.httpEndpoint, HTTP_DEFAULT_PORT)
-    : null
-  const grpcResolved = props.grpcEnabled
-    ? resolveEndpoint(props.grpcEndpoint, GRPC_DEFAULT_PORT)
-    : null
-  const resolved = httpResolved ?? grpcResolved
-  if (resolved === null) {
+  const useHttp = props.httpEnabled
+  // Cloud: fixed receiver endpoints are injected; SDKs export to the one
+  // matching the transport shown, mirroring the override applied to the
+  // Collector snippet. HTTP is preferred when enabled.
+  if (useHttp && props.cloudHttpEndpoint) {
+    return props.cloudHttpEndpoint
+  }
+  if (!useHttp && props.grpcEnabled && props.cloudGrpcEndpoint) {
+    return props.cloudGrpcEndpoint
+  }
+
+  const endpoint = useHttp ? props.httpEndpoint : props.grpcEnabled ? props.grpcEndpoint : null
+  if (endpoint === null) {
     return `<host>:${HTTP_DEFAULT_PORT}`
   }
-  return `${resolved.address}:${resolved.port}`
+  const defaultPort = useHttp ? HTTP_DEFAULT_PORT : GRPC_DEFAULT_PORT
+  const resolved = resolveEndpoint(endpoint, defaultPort)
+  if (resolved === null) {
+    return `<host>:${defaultPort}`
+  }
+  const isDefaultSocket =
+    endpoint.socketAddressType === 'default_ipv4' || endpoint.socketAddressType === 'default_ipv6'
+  const address = isDefaultSocket ? '<REPLACE_ME>' : resolved.address
+  return `${address}:${resolved.port}`
 })
 
 const sdkAuthExample = 'echo -n "username:password" | base64'

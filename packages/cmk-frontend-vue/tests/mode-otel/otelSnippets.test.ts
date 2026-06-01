@@ -385,6 +385,26 @@ describe('buildCollectorSnippets', () => {
       expect(exporters).toContain('insecure: true')
       expect(exporters).not.toContain('server_name_override')
     })
+
+    it('applies the override to the http exporter as well', () => {
+      const { exporters } = buildCollectorSnippets({
+        ...baseState,
+        httpInfo: {
+          ...baseExporter,
+          endpoint: { socketAddressType: 'default_ipv4', address: '', port: undefined },
+          overrideEndpoint: 'my-tenant.otel.example.com:4318',
+          tlsEnabled: true,
+          tlsSimple: true
+        },
+        grpcInfo: null
+      })
+      expect(exporters).toContain('otlphttp/checkmk:')
+      expect(exporters).toContain('endpoint: my-tenant.otel.example.com:4318')
+      expect(exporters).toContain('insecure: false')
+      expect(exporters).not.toContain('0.0.0.0')
+      expect(exporters).not.toContain('<REPLACE_ME>')
+      expect(exporters).not.toContain('server_name_override')
+    })
   })
 
   it('produces the full Cloud-style snippet when everything is enabled', () => {

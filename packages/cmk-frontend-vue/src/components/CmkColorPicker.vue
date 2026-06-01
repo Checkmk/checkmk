@@ -20,5 +20,9 @@ const data = defineModel('data', { type: String, default: '#ff0000' })
   padding: 0;
   border: none;
   background: transparent;
+
+  &:focus-visible {
+    outline: revert;
+  }
 }
 </style>

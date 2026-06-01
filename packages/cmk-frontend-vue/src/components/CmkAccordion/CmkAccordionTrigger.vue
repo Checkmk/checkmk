@@ -56,7 +56,10 @@ function toggle() {
   height: 100%;
 
   &:focus-visible {
-    border: 1px solid var(--success);
+    outline: revert;
+
+    /* Draw the ring inside the button */
+    outline-offset: -2px;
   }
 }
 </style>

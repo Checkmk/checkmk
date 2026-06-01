@@ -4,8 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from '@/components/CmkIcon'
-import { type CmkIconProps } from '@/components/CmkIcon'
+import CmkIcon, { type CmkIconProps } from '@/components/CmkIcon'
 
 defineProps<CmkIconProps>()
 
@@ -34,5 +33,13 @@ defineEmits(['click'])
   background: none;
   border: none;
   cursor: pointer;
+
+  /* Collapse the inline-image baseline descender gap so the focus outline
+     hugs the icon instead of leaving a strip below it. */
+  display: inline-flex;
+}
+
+.cmk-icon-button:focus-visible {
+  outline: revert;
 }
 </style>

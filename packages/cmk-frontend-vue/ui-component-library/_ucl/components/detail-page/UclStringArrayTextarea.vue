@@ -45,5 +45,9 @@ function onInput(event: Event) {
 <style scoped>
 .ucl-string-array-textarea__textarea {
   flex: 1;
+
+  &:focus-visible {
+    outline: revert;
+  }
 }
 </style>

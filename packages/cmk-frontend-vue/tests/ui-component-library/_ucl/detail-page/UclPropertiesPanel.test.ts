@@ -187,7 +187,7 @@ describe('prop type interactions update component', () => {
   test('boolean', async () => {
     render(makeTestApp())
     expect(screen.getByTestId('boolean-prop')).toHaveTextContent('false')
-    await userEvent.click(screen.getByRole('checkbox'))
+    await userEvent.click(screen.getByRole('switch'))
     expect(screen.getByTestId('boolean-prop')).toHaveTextContent('true')
   })
 
@@ -260,7 +260,7 @@ describe('prop type interactions update component', () => {
 
     const mirror = screen.getByRole('checkbox', { name: 'initial' })
     // Panel switches have no accessible name — order follows config: [0] Checked, [1] Disabled
-    const [checkedSwitch, disabledSwitch] = screen.getAllByRole('checkbox')
+    const [checkedSwitch, disabledSwitch] = screen.getAllByRole('switch')
 
     expect(mirror).not.toBeChecked()
     expect(mirror).toBeEnabled()

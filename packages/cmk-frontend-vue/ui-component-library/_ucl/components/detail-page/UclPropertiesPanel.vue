@@ -167,5 +167,9 @@ onMounted(() => {
 
 .ucl-properties-panel__textarea {
   flex: 1;
+
+  &:focus-visible {
+    outline: revert;
+  }
 }
 </style>

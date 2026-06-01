@@ -320,8 +320,7 @@ function shiftYear(delta: number) {
 
   &:focus-visible {
     opacity: 1;
-    outline: 2px solid var(--success);
-    outline-offset: 2px;
+    outline: revert;
   }
 }
 

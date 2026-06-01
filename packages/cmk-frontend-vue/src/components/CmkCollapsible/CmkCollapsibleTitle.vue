@@ -105,6 +105,10 @@ immediateWatch(
     pointer-events: none;
     background-color: transparent;
   }
+
+  &:focus-visible {
+    outline: revert;
+  }
 }
 
 .cmk-collapsible-title__icon {

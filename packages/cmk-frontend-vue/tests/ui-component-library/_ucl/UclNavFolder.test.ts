@@ -79,3 +79,9 @@ test('hides children when closed', () => {
 
   expect(screen.queryByText('CmkButton')).toBeNull()
 })
+
+test('button has ucl-nav-folder class for focus-visible styling', () => {
+  render(UclNavFolder, { props: { folder: makeFolder() } })
+  const button = screen.getByRole('button', { name: 'Components' })
+  expect(button).toHaveClass('ucl-nav-folder')
+})

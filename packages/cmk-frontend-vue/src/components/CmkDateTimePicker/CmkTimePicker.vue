@@ -413,10 +413,7 @@ function onPopupKey(e: KeyboardEvent) {
   }
 
   &:focus-visible {
-    opacity: 1;
-    outline: 2px solid var(--success);
-    outline-offset: 2px;
-    border-radius: var(--dimension-3);
+    outline: revert;
   }
 }
 
@@ -491,8 +488,7 @@ function onPopupKey(e: KeyboardEvent) {
   }
 
   &:focus-visible {
-    outline: 2px solid var(--success);
-    outline-offset: -2px;
+    outline: revert;
   }
 }
 

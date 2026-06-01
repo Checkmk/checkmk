@@ -244,7 +244,9 @@ defineProps<CmkChipProps>()
     }
 
     &:focus-visible {
-      border: 1px solid var(--success);
+      outline: revert;
+      outline-offset: 1px;
+      border-radius: 9999px;
     }
   }
 }

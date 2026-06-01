@@ -6,8 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import CmkIcon from '@/components/CmkIcon'
 import type { SimpleIcons } from '@/components/CmkIcon'
+import CmkIcon from '@/components/CmkIcon'
 
 export interface CmkInlineButtonProps {
   icon?: SimpleIcons | null
@@ -58,6 +58,10 @@ defineEmits(['click'])
   background-color: var(--default-button-form-color);
   border: 1px solid var(--button-form-border-color);
   color: var(--button-form-text-color);
+
+  &:focus-visible {
+    outline: revert;
+  }
 
   &:hover:not(.cmk-inline-button--disabled) {
     background-color: color-mix(in srgb, var(--default-button-form-color) 90%, var(--white) 10%);

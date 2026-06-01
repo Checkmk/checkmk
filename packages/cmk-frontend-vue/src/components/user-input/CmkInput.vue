@@ -94,7 +94,10 @@ immediateWatch(
         ref="inputRef"
         v-model="data"
         v-bind="$attrs"
-        :class="[propsCva({ type }), { 'cmk-input--error': validation.length > 0 }]"
+        :class="[
+          propsCva({ type }),
+          { 'cmk-input': true, 'cmk-input--error': validation.length > 0 }
+        ]"
         :type="type"
         step="any"
       />
@@ -107,6 +110,10 @@ immediateWatch(
 .cmk-input__wrapper {
   display: flex;
   flex-direction: column;
+}
+
+.cmk-input:focus-visible {
+  outline: revert;
 }
 
 .cmk-input__input-unit-container {

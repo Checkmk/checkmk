@@ -34,15 +34,15 @@ function setSelectedOption(value: string) {
 </script>
 
 <template>
-  <div class="toggle_buttons_container">
+  <div class="cmk-toggle-button-group__container">
     <button
       v-for="option in options"
       :key="option.value"
       type="button"
-      class="toggle_option"
+      class="cmk-toggle-button-group__toggle-option"
       :class="{
-        selected: isSelected(option.value),
-        disabled: isDisabled(option.disabled)
+        'cmk-toggle-button-group__selected': isSelected(option.value),
+        'cmk-toggle-button-group__disabled': isDisabled(option.disabled)
       }"
       :aria-label="`Toggle ${option.label}`"
       :aria-pressed="isSelected(option.value)"
@@ -56,8 +56,7 @@ function setSelectedOption(value: string) {
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.toggle_buttons_container {
+.cmk-toggle-button-group__container {
   width: max-content;
   max-width: 100%;
   margin-bottom: 8px;
@@ -69,8 +68,7 @@ function setSelectedOption(value: string) {
   flex-wrap: wrap;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.toggle_option {
+.cmk-toggle-button-group__toggle-option {
   height: auto;
   min-width: 150px;
   border: none;
@@ -81,25 +79,27 @@ function setSelectedOption(value: string) {
   font-weight: var(--font-weight-default);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.toggle_option:is(:disabled) {
+.cmk-toggle-button-group__toggle-option:focus-visible {
+  outline: revert;
+}
+
+.cmk-toggle-button-group__toggle-option:is(.cmk-toggle-button-group__disabled) {
   color: var(--toggle-button-group-disabled-text-color);
   cursor: not-allowed;
   background-color: var(--toggle-button-group-inactive-bg-color);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.toggle_option:is(:disabled:hover) {
+.cmk-toggle-button-group__toggle-option:is(.cmk-toggle-button-group__disabled:hover) {
   background-color: var(--toggle-button-group-inactive-bg-color);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.toggle_option:hover:not(:is(.selected, .disabled)) {
+.cmk-toggle-button-group__toggle-option:hover:not(
+    :is(.cmk-toggle-button-group__selected, .cmk-toggle-button-group__disabled)
+  ) {
   background-color: rgb(from var(--toggle-button-group-hover-bg-color) r g b / 60%);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.selected {
+.cmk-toggle-button-group__selected {
   border: 1px solid var(--toggle-button-group-border-color);
   background-color: var(--toggle-button-group-active-bg-color);
   color: var(--toggle-button-group-active-text-color);

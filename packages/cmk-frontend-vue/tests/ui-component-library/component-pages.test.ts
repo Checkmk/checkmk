@@ -213,7 +213,7 @@ test('CmkInlineButton page renders its component', () => {
 
 test('CmkSwitch page renders its component', () => {
   render(UclCmkSwitch, { props: { screenshotMode: false } })
-  within(componentPreview()).getAllByRole('checkbox')
+  within(componentPreview()).getAllByRole('switch')
 })
 
 test('CmkTag page renders its component', () => {

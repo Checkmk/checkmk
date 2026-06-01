@@ -59,6 +59,10 @@ function toggle(f: NavFolder) {
   font-weight: 700;
 }
 
+.ucl-nav-folder:focus-visible {
+  outline: revert;
+}
+
 .ucl-nav-folder--root {
   font-size: 14px;
   padding: 8px 0;

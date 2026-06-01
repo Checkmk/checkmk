@@ -51,8 +51,7 @@ defineExpose({
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 1px var(--success);
-    outline: none;
+    outline: revert;
   }
 }
 </style>

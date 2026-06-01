@@ -159,4 +159,8 @@ defineEmits(['click'])
     border-bottom-left-radius: 0;
   }
 }
+
+.cmk-dropdown-button:focus-visible {
+  outline: revert;
+}
 </style>

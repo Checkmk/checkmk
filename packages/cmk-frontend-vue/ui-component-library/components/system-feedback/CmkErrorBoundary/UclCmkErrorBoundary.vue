@@ -40,6 +40,7 @@ import {
 import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { ref, watch } from 'vue'
 
+import CmkButton from '@/components/CmkButton/CmkButton.vue'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
 import UclCmkErrorBoundaryDev from './UclCmkErrorBoundaryDev.vue'
@@ -76,7 +77,7 @@ function throwError() {
 
     <UclDetailPageComponent>
       <CmkErrorBoundary>
-        <button @click="throwError()">Throw error</button>
+        <CmkButton @click="throwError()">Throw error</CmkButton>
       </CmkErrorBoundary>
 
       <template #properties>

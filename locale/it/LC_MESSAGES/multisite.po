@@ -53621,6 +53621,10 @@ msgstr ""
 "riprova di nuovo più tardi. Se questo errore persiste, per favore contatta "
 "il supporto Checkmk."
 
+#, fuzzy
+msgid "Received bandwidth"
+msgstr "Larghezza di banda da sito a sito"
+
 msgid "Received messages"
 msgstr "Messaggi ricevuti"
 
@@ -79009,6 +79013,10 @@ msgstr "Frames trasmessi"
 msgid "Transmitted Words"
 msgstr "Parole trasmesse"
 
+#, fuzzy
+msgid "Transmitted bandwidth"
+msgstr "Parole trasmesse"
+
 msgid "Transport Lag"
 msgstr "Ritardo nel trasporto"
 
@@ -93321,6 +93329,54 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Remove condition"
+msgstr "Rimuovere la condizione di tag"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "Attributo da impostare"
+
+#, fuzzy
+msgid "[Resource]"
+msgstr "Fonti"
+
+#, fuzzy
+msgid "[Scope]"
+msgstr "ID del nodo"
+
+#, fuzzy
+msgid "[Data point]"
+msgstr "Dati inviati"
+
+#, fuzzy
+msgid "contains"
+msgstr "Contenitori"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "Nome del contenitore"
+
+#, fuzzy
+msgid "starts with"
+msgstr "L'avvertimento inizia con"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "non inizia con "
+
+#, fuzzy
+msgid "ends with"
+msgstr "inizia con "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "Non termina con %s"
+
+#, fuzzy
+msgid "does not exist"
+msgstr "Non esiste"
+
+#, fuzzy
 msgid "Attribute key"
 msgstr "Attributo"
 
@@ -96208,10 +96264,6 @@ msgstr ""
 
 #~ msgid "(This module is not yet implemented)"
 #~ msgstr "(Questo modulo non è ancora implementato)"
-
-#, fuzzy
-#~ msgid "Attribute filters"
-#~ msgstr "Attributo da impostare"
 
 #, fuzzy
 #~ msgid "OpenTelemetry data"
@@ -105837,9 +105889,6 @@ msgstr ""
 
 #~ msgid "This rule allows you to override netapp warnings"
 #~ msgstr "Questa regola permette di sovrascrivere gli avvertimenti di netapp"
-
-#~ msgid "Warning starts with"
-#~ msgstr "L'avvertimento inizia con"
 
 #~ msgid ""
 #~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"

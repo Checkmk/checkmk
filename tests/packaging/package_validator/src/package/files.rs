@@ -13,11 +13,19 @@ use super::elf::{Elf, ElfError};
 use super::extractor::{ExtractedFile, PackageError, PackageResult};
 
 /// Represents a file in a package.
+///
+/// Classification is purely structural — what kind of thing is this file?
+/// Validation of ELF contents (RPATH shape, embedded build paths, …) is the
+/// report layer's job, not the classifier's.
 #[derive(Debug, Clone, Serialize)]
 pub enum PackageFile {
     File,
     Symlink(PathBuf), // Stores the normalized target path of the symlink.
     Elf(Elf),
+    /// A file that looked like an ELF but couldn't be parsed (I/O error,
+    /// goblin parse error, unknown e_type). The string carries the parse
+    /// failure message for reporting.
+    UnreadableElf(String),
 }
 
 impl PackageFile {
@@ -50,7 +58,7 @@ impl PackageFile {
             return match Elf::from_path(path) {
                 Ok(elf) => Ok(Self::Elf(elf)),
                 Err(ElfError::NotElfFile { .. } | ElfError::FileTooSmall { .. }) => Ok(Self::File),
-                Err(e) => Err(PackageError::ElfError(e)),
+                Err(e) => Ok(Self::UnreadableElf(e.to_string())),
             };
         }
         Ok(Self::File)

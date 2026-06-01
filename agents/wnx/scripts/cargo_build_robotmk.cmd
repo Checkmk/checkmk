@@ -25,7 +25,7 @@ if not %errorlevel% == 0 powershell Write-Host "Cargo not found, please install 
 
 set cur_dir=%cd%
 set output_dir=%cur_dir%\..\..\..\..\artefacts
-set target=i686-pc-windows-msvc
+set target=x86_64-pc-windows-msvc
 set exe_name=robotmk_ext.exe
 set exe=target\%target%\release\%exe_name%
 rustup toolchain list

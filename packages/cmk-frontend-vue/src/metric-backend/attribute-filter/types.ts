@@ -22,7 +22,7 @@ export type Operator =
 
 export interface AttributeCondition {
   attributeType: AttributeType
-  key: string
+  key: string | null
   operator: Operator
   value: string
 }

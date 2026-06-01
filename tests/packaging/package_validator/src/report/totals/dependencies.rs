@@ -6,8 +6,8 @@ use rayon::prelude::*;
 use serde::Serialize;
 use std::ops::Add;
 
-use crate::report::dependency_resolver::{DependencyKind, DependencyStatus};
 use crate::report::ReportDependencies;
+use crate::validators::dependency_resolution::{DependencyKind, DependencyStatus};
 
 #[derive(Default, Debug, Clone, PartialEq, Eq, Serialize)]
 pub(crate) struct Totals {

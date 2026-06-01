@@ -228,7 +228,7 @@ function Build-MSI {
     Write-Host "Building MSI..." -ForegroundColor White
     Remove-Item "$build_dir/install/Release/check_mk_service.msi" -Force -ErrorAction SilentlyContinue
 
-    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x86" "/p:EncryptedPluginsFolder=..\..\windows\plugins"
+    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x64" "/p:EncryptedPluginsFolder=..\..\windows\plugins"
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Error building MSI, error code is $LASTEXITCODE" -ErrorAction Stop
     }
@@ -403,7 +403,7 @@ function Start-MsiControlBuild {
     }
 
     Write-Host "Building controlly MSI..." -ForegroundColor White
-    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x86"
+    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x64"
     if ($LASTEXITCODE -ne 0 ) {
         Write-Error "Build Failed, error code is $LASTEXITCODE" -ErrorAction Stop
     }
@@ -419,8 +419,7 @@ function Start-BinarySigning {
     Remove-Item $hash_file -Force
 
     $files_to_sign = @(
-        "$build_dir\check_mk_service\x64\Release\check_mk_service64.exe",
-        "$build_dir\check_mk_service\Win32\Release\check_mk_service32.exe",
+        "$build_dir\check_mk_service\x64\Release\check_mk_service.exe",
         "$results_dir\cmk-agent-ctl.exe",
         "$results_dir\mk-sql.exe",
         "$results_dir\mk-oracle.exe"
@@ -477,8 +476,7 @@ function Start-ArtifactUploading {
     Write-Host "Artifact upload..." -ForegroundColor White
     $artifacts = @(
         @("$build_dir/install/Release/check_mk_service.msi", "$results_dir/check_mk_agent.msi"),
-        @("$build_dir/check_mk_service/x64/Release/check_mk_service64.exe", "$results_dir/check_mk_agent-64.exe"),
-        @("$build_dir/check_mk_service/Win32/Release/check_mk_service32.exe", "$results_dir/check_mk_agent.exe"),
+        @("$build_dir/check_mk_service/x64/Release/check_mk_service.exe", "$results_dir/check_mk_agent.exe"),
         @("./install/resources/check_mk.user.yml", "$results_dir/check_mk.user.yml"),
         @("./install/resources/check_mk.yml", "$results_dir/check_mk.yml")
     )
@@ -599,8 +597,7 @@ function Test-MsiSigning($file) {
 
         $exe_files = @(
             "cmk_agent_ctl.exe",
-            "check_mk_svc32.exe",
-            "check_mk_svc64.exe"
+            "check_mk_svc.exe"
         )
 
         foreach ($exe in $exe_files) {

@@ -1,0 +1,13 @@
+{
+  "integrity": "sha256-9dNPgTZ3gphXz4oEWGI9tFtNnCMR2q6+RG+eAa+p/+g=",
+  "strip_prefix": "Crypt-SSLeay-0.72",
+  "url": "https://www.cpan.org/modules/by-module/Net/NANIS/Crypt-SSLeay-0.72.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-vqdXEyygXzLyeMAuJ+2+pT4EOfYQ9/IMyQfGpysquRM=",
+    "MODULE.bazel": "sha256-4jJggUbGd4AW3Pz9XiPmJLf4r+8MA0cK2FuA5OFv7dk="
+  },
+  "patches": {
+    "Crypt-SSLeay-0.72-do-not-use-SSLv2_client_method-with-new-openssl.patch": "sha256-Mo49BbBgj22IWFO9g4Md/EhBmuzF3utnq+GfGSMyuXU="
+  },
+  "patch_strip": 1
+}

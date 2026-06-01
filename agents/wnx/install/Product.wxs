@@ -38,7 +38,7 @@ just to signal that real build script was not called -->
 
         <Package Id="$(var.PackageCode)"
                  InstallerVersion="200"
-                 Platform="x86"
+                 Platform="x64"
                  Compressed="yes"
                  InstallScope="perMachine" />
 
@@ -194,21 +194,12 @@ just to signal that real build script was not called -->
                                 Execute="immediate" />
 
         <!-- Deferred execution of the above script -->
-        <?if $(var.Platform)~="x64" ?>
         <CustomAction Id="save_version"
                   BinaryKey="WixCA"
                   DllEntry="CAQuietExec64"
                   Execute="deferred"
                   Return="ignore"
                   Impersonate="no" />
-        <?else ?>
-        <CustomAction Id="save_version"
-                  BinaryKey="WixCA"
-                  DllEntry="CAQuietExec"
-                  Execute="deferred"
-                  Return="ignore"
-                  Impersonate="no" />
-        <?endif ?>
 
         <InstallExecuteSequence>
             <Custom Action='save_version_exec' Sequence="1501" ><![CDATA[INSTALLEDSERVICEDESCRIPTION <> ""]]></Custom>
@@ -494,45 +485,16 @@ just to signal that real build script was not called -->
                       DiskId="1" />
             </Component>
 
-            <Component Id="service32"
-                     Guid="{3343809F-E2EF-4D9F-9FA5-AD1AC0968916}">
-                <File Id="check_mk_svc32.exe"
-                      Source="..\build\check_mk_service\Win32\Release\check_mk_service32.exe"
-                      Name="check_mk_agent.exe"
-                      KeyPath="yes"
-                      Checksum="yes" DiskId="1" />
-                <Condition>NOT VersionNT64</Condition>
-                <ServiceInstall
-                  Id="CheckMkService32"
-                  Type="ownProcess"
-                  Vital="yes"
-                  Name="$(var.ServiceName)"
-                  DisplayName="$(var.ServiceDisplayName)"
-                  Description="$(var.ServiceDescription), 32-bit"
-                  Start="auto"
-                  Account="[SERVICEACCOUNT]"
-                  Password="[SERVICEPASSWORD]"
-                  ErrorControl="ignore"
-                  Interactive="no"/>
-                <ServiceControl Id="StartService32"
-                                Start="install"
-                                Stop="both"
-                                Remove="uninstall"
-                                Name="$(var.ServiceName)"
-                                Wait="yes" />
-            </Component>
-
-            <Component Id="service64"
+            <Component Id="service"
                        Guid="{CDDCFF83-A111-4048-BCA2-0DEB2A043A42}">
-                <File Id="check_mk_svc64.exe"
-                      Source="..\build\check_mk_service\x64\Release\check_mk_service64.exe"
+                <File Id="check_mk_svc.exe"
+                      Source="..\build\check_mk_service\x64\Release\check_mk_service.exe"
                       Name="check_mk_agent.exe"
                       KeyPath="yes"
                       Checksum="yes"
                       DiskId="1" />
-                <Condition>VersionNT64</Condition>
                 <ServiceInstall
-                  Id="CheckMkService64"
+                  Id="CheckMkService"
                   Type="ownProcess"
                   Vital="yes"
                   Name="$(var.ServiceName)"
@@ -543,7 +505,7 @@ just to signal that real build script was not called -->
                   Password="[SERVICEPASSWORD]"
                   ErrorControl="ignore"
                   Interactive="no"/>
-                <ServiceControl Id="StartService64"
+                <ServiceControl Id="StartService"
                                 Start="install"
                                 Stop="both"
                                 Remove="uninstall"

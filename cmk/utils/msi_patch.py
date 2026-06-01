@@ -17,8 +17,14 @@ from typing import Final, Literal
 import yaml
 
 TRADITIONAL_UUID: Final = "{BAEBF560-7308-4D53-B426-903EA74B1D7E}"
-MSI_PACKAGE_CODE_MARKER: Final = "Intel;1033"
-MSI_PACKAGE_CODE_OFFSET: Final = len("Intel;1033") + 10
+# WiX 3.14 writes the MSI Template summary-stream property as
+# "platform;language", followed by NUL-pad to the next 4-byte boundary and
+# the 8-byte header of the next property. For our Package/@Platform="x64"
+# build that puts the package-code GUID's opening "{" exactly 12 bytes past
+# the end of the marker text ("x64;1033" is 8 chars -> 4 pad bytes + 8-byte
+# header). x86 markers are no longer produced (CMK-34214).
+MSI_PACKAGE_CODE_MARKER: Final = "x64;1033"
+MSI_PACKAGE_CODE_OFFSET: Final = len(MSI_PACKAGE_CODE_MARKER) + 12
 _UUID_REGEX: Final = re.compile(
     "^{[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12}}", re.I
 )
@@ -185,7 +191,7 @@ def patch_package_code_by_marker(
 ) -> bool:
     """
     Main engine to patch MSI file with new code.
-    Search for 'Intel;1033' marker, add offset and patch code
+    Search for 'x64;1033' marker, add offset and patch code
 
     Args:
         file_name: file to patch

@@ -404,7 +404,7 @@ class LoginPage(Page):
 
         html.close_div()
 
-        html.set_focus(self._username_varname)
+        html.set_focus_by_id("input_user")
         html.hidden_fields()
         html.close_div()
 

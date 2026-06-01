@@ -4,7 +4,7 @@ rem You may need Administrative Account
 rem Usage:
 rem     test_service.cmd <binary> CheckMkService
 rem Example:
-rem     test_service.cmd check_mk_service64.exe CheckMkService
+rem     test_service.cmd check_mk_service.exe CheckMkService
 set svc=%1%
 set svc_name=%2%
 set e=0

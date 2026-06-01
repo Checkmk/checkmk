@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-27 17:53+0000\n"
+"PO-Revision-Date: 2026-05-30 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -53905,6 +53905,10 @@ msgid ""
 "again later. If this error persists, please contact the Checkmk support."
 msgstr ""
 
+#, fuzzy
+msgid "Received bandwidth"
+msgstr "Largura de banda site a site"
+
 msgid "Received messages"
 msgstr "Mensagens recebidas"
 
@@ -79312,6 +79316,10 @@ msgstr "Quadros Transmitidos"
 msgid "Transmitted Words"
 msgstr "Palavras Transmitidas"
 
+#, fuzzy
+msgid "Transmitted bandwidth"
+msgstr "Palavras Transmitidas"
+
 msgid "Transport Lag"
 msgstr "Lagoa de Transporte"
 
@@ -89367,6 +89375,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -89880,6 +89889,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -93601,6 +93611,54 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Remove condition"
+msgstr "Remover a condição da etiqueta"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "Atributo a definir"
+
+#, fuzzy
+msgid "[Resource]"
+msgstr "Fontes"
+
+#, fuzzy
+msgid "[Scope]"
+msgstr "Identificação do nó"
+
+#, fuzzy
+msgid "[Data point]"
+msgstr "Dados enviados"
+
+#, fuzzy
+msgid "contains"
+msgstr "Contêineres"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "Nome do recipiente"
+
+#, fuzzy
+msgid "starts with"
+msgstr "O aviso começa com"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "não começa com "
+
+#, fuzzy
+msgid "ends with"
+msgstr "começa com "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "Não termina com \"%s\"."
+
+#, fuzzy
+msgid "does not exist"
+msgstr "Não existe"
+
+#, fuzzy
 msgid "Attribute key"
 msgstr "Atributo"
 
@@ -96476,10 +96534,6 @@ msgstr ""
 
 #~ msgid "(This module is not yet implemented)"
 #~ msgstr "(Este módulo ainda não está implementado)"
-
-#, fuzzy
-#~ msgid "Attribute filters"
-#~ msgstr "Atributo a definir"
 
 #, fuzzy
 #~ msgid "OpenTelemetry data"
@@ -105935,9 +105989,6 @@ msgstr ""
 
 #~ msgid "This rule allows you to override netapp warnings"
 #~ msgstr "Esta regra permite que você substitua os avisos de netapp"
-
-#~ msgid "Warning starts with"
-#~ msgstr "O aviso começa com"
 
 #~ msgid ""
 #~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"

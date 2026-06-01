@@ -2,6 +2,6 @@
   "homepage": "https://metacpan.org/dist/Crypt-SSLeay",
   "maintainers": [],
   "repository": ["https://github.com/nanis/Crypt-SSLeay"],
-  "versions": ["0.72.cmk.1"],
+  "versions": ["0.72.cmk.2"],
   "yanked_versions": {}
 }

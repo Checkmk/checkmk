@@ -26,7 +26,7 @@ $cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\..\packages\host\cmk-
 # string below is used to quickly switch to the Powershell ISE, do not delete it
 # $sln = 'c:\z\m\check_mk\agents\wnx\wamain.sln'
 
-$platforms = "Configuration=Release,Platform=x86", "Configuration=Release,Platform=x64"
+$platforms = @("Configuration=Release,Platform=x64")
 $err = 0
 $env:StartTime = "$(get-date)"
 
@@ -113,7 +113,7 @@ $cargo_b = {
 # $j_r += start-job -scriptblock $msb -argumentlist ".\ohm\ohm.sln", "/p:Configuration=Release"
 
 
-# Exe 32 & 64 bits
+# Exe 64 bit
 $j_s = @()
 $target = "engine"
 foreach ($p in $platforms) {

@@ -12,7 +12,7 @@ import type { TranslatedString } from '@/lib/i18nString'
 import CmkTag, { type Colors as TagColor } from '@/components/CmkTag.vue'
 
 import type { HostEntry, HostState } from '@/monitoring/shared/api/types'
-import MonitoringTableCell from '@/monitoring/shared/components/MonitoringTableCell.vue'
+import BaseCell from '@/monitoring/shared/components/cell/BaseCell.vue'
 
 const { _t } = usei18n()
 
@@ -44,25 +44,25 @@ const serviceCounts = computed(() => ({
 </script>
 
 <template>
-  <MonitoringTableCell>
+  <BaseCell>
     <CmkTag variant="fill" :color="STATE_COLOR[row.state]" :content="stateLabel[row.state]" />
-  </MonitoringTableCell>
-  <MonitoringTableCell>{{ row.name }}</MonitoringTableCell>
-  <MonitoringTableCell hide-below="l">{{ row.alias }}</MonitoringTableCell>
-  <MonitoringTableCell hide-below="m">{{ row.ip }}</MonitoringTableCell>
-  <MonitoringTableCell>
+  </BaseCell>
+  <BaseCell>{{ row.name }}</BaseCell>
+  <BaseCell hide-below="l">{{ row.alias }}</BaseCell>
+  <BaseCell hide-below="m">{{ row.ip }}</BaseCell>
+  <BaseCell>
     <CmkTag variant="fill" color="success" :content="serviceCounts.ok" />
-  </MonitoringTableCell>
-  <MonitoringTableCell>
+  </BaseCell>
+  <BaseCell>
     <CmkTag variant="fill" color="warning" :content="serviceCounts.warn" />
-  </MonitoringTableCell>
-  <MonitoringTableCell>
+  </BaseCell>
+  <BaseCell>
     <CmkTag variant="fill" color="danger" :content="serviceCounts.crit" />
-  </MonitoringTableCell>
-  <MonitoringTableCell>
+  </BaseCell>
+  <BaseCell>
     <CmkTag variant="fill" color="default" :content="serviceCounts.unknown" />
-  </MonitoringTableCell>
-  <MonitoringTableCell>
+  </BaseCell>
+  <BaseCell>
     <CmkTag variant="outline" color="default" :content="serviceCounts.pending" />
-  </MonitoringTableCell>
+  </BaseCell>
 </template>

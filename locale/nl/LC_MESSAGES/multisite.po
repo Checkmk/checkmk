@@ -53918,6 +53918,10 @@ msgid ""
 "again later. If this error persists, please contact the Checkmk support."
 msgstr ""
 
+#, fuzzy
+msgid "Received bandwidth"
+msgstr "Site-to-site bandbreedte"
+
 msgid "Received messages"
 msgstr "Ontvangen berichten"
 
@@ -79354,6 +79358,10 @@ msgstr "Overgebrachte frames"
 msgid "Transmitted Words"
 msgstr "Overgebrachte woorden"
 
+#, fuzzy
+msgid "Transmitted bandwidth"
+msgstr "Overgebrachte woorden"
+
 msgid "Transport Lag"
 msgstr "Transportvertraging"
 
@@ -93707,6 +93715,54 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Remove condition"
+msgstr "Verwijder tag voorwaarde"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "In te stellen attribuut"
+
+#, fuzzy
+msgid "[Resource]"
+msgstr "Bronnen"
+
+#, fuzzy
+msgid "[Scope]"
+msgstr "Knooppunt-ID"
+
+#, fuzzy
+msgid "[Data point]"
+msgstr "Verzonden gegevens"
+
+#, fuzzy
+msgid "contains"
+msgstr "Containers"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "Naam van de container"
+
+#, fuzzy
+msgid "starts with"
+msgstr "Waarschuwing begint met"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "begint niet met "
+
+#, fuzzy
+msgid "ends with"
+msgstr "begint met "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "Eindigt niet op \"%s\"."
+
+#, fuzzy
+msgid "does not exist"
+msgstr "Bestaat niet"
+
+#, fuzzy
 msgid "Attribute key"
 msgstr "Attribuut"
 
@@ -96572,10 +96628,6 @@ msgstr ""
 
 #~ msgid "(This module is not yet implemented)"
 #~ msgstr "(Deze module is nog niet geïmplementeerd)"
-
-#, fuzzy
-#~ msgid "Attribute filters"
-#~ msgstr "In te stellen attribuut"
 
 #, fuzzy
 #~ msgid "OpenTelemetry data"
@@ -105888,9 +105940,6 @@ msgstr ""
 
 #~ msgid "This rule allows you to override netapp warnings"
 #~ msgstr "Deze regel staat je toe om netapp waarschuwingen op te heffen"
-
-#~ msgid "Warning starts with"
-#~ msgstr "Waarschuwing begint met"
 
 #~ msgid ""
 #~ "&copy; <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"

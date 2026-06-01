@@ -67,8 +67,7 @@ constexpr std::string_view kFailMarker{"fail: "};
 
 namespace registry {
 // Names are from WIX Msi, please, check that they are in sync
-const std::wstring kMsiInfoPath64 = L"SOFTWARE\\WOW6432Node\\checkmkservice";
-const std::wstring kMsiInfoPath32 = L"SOFTWARE\\checkmkservice";
+const std::wstring kMsiInfoPath = L"SOFTWARE\\checkmkservice";
 
 const std::wstring kMsiInstallFolder = L"Install_Folder";
 const std::wstring kMsiInstallService = L"Install_Service";
@@ -92,9 +91,7 @@ constexpr std::wstring_view kMsiCleanInstallationEntry = L"Clean_Installation";
 constexpr std::wstring_view kMsiCleanInstallationlRequest =
     L"yes";  // Sync with InstallFolder.wxs!
 
-inline std::wstring GetMsiRegistryPath() {
-    return tgt::Is64bit() ? registry::kMsiInfoPath64 : registry::kMsiInfoPath32;
-}
+inline std::wstring GetMsiRegistryPath() { return registry::kMsiInfoPath; }
 }  // namespace registry
 
 /// Returns command and success status

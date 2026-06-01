@@ -6,6 +6,10 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -181,6 +185,7 @@ def check_siemens_plc_duration(
 
             key = f"siemens_plc.duration.{item}"
             old_seconds = value_store.get(key)
+            value_store[key] = seconds
             if old_seconds is not None and old_seconds > seconds:
                 yield Result(
                     state=State.CRIT,
@@ -189,17 +194,12 @@ def check_siemens_plc_duration(
                 yield Metric(line[1], seconds)
                 return
 
-            value_store[key] = seconds
-
-            state = State.OK
-            warn, crit = params.get("duration", (None, None))
-            if crit is not None and seconds >= crit:
-                state = State.CRIT
-            elif warn is not None and seconds >= warn:
-                state = State.WARN
-
-            yield Result(state=state, summary=render.time_offset(seconds))
-            yield Metric(line[1], seconds)
+            yield from check_levels(
+                seconds,
+                line[1],
+                params.get("duration"),
+                human_readable_func=render.time_offset,
+            )
             return
 
 
@@ -242,21 +242,17 @@ def check_siemens_plc_counter(
 
             key = f"siemens_plc.counter.{item}"
             old_value = value_store.get(key)
+            value_store[key] = value
             if old_value is not None and old_value > value:
                 yield Result(state=State.CRIT, summary=f"Reduced from {old_value} to {value}")
                 yield Metric(line[1], float(value))
                 return
-            value_store[key] = value
 
-            state = State.OK
-            warn, crit = params.get("levels", (None, None))
-            if crit is not None and value >= crit:
-                state = State.CRIT
-            elif warn is not None and value >= warn:
-                state = State.WARN
-
-            yield Result(state=state, summary=str(value))
-            yield Metric(line[1], float(value))
+            yield from check_levels(
+                value,
+                line[1],
+                params.get("levels"),
+            )
             return
 
 

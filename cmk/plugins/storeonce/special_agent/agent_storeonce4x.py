@@ -17,6 +17,7 @@ import json
 import logging
 import sys
 from collections.abc import Callable, Generator, Sequence
+from types import GeneratorType
 from typing import Any, TypedDict
 
 import urllib3
@@ -272,7 +273,12 @@ def agent_storeonce4x_main(args: argparse.Namespace) -> int:
     for section_basename, function in SECTIONS:
         sys.stdout.write(f"<<<storeonce4x_{section_basename}:sep(0)>>>\n")
         try:
-            sys.stdout.write(f"{json.dumps(function(oauth_session))}\n")
+            data = function(oauth_session)
+            if isinstance(data, GeneratorType):
+                for entry in data:
+                    sys.stdout.write(f"{json.dumps(entry, sort_keys=True)}\n")
+            else:
+                sys.stdout.write(f"{json.dumps(data, sort_keys=True)}\n")
         except Exception as exc:
             if args.debug:
                 raise

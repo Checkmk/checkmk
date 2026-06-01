@@ -89,7 +89,7 @@ def test_parse_command_line_invalid() -> None:
 
 def test_critical_consts(conf_dir: Path) -> None:
     assert msi_patch.MSI_PACKAGE_CODE_OFFSET == 20
-    assert msi_patch.MSI_PACKAGE_CODE_MARKER == "Intel;1033"
+    assert msi_patch.MSI_PACKAGE_CODE_MARKER == "x64;1033"
 
 
 def test_low_level_api(conf_dir: Path, state_file: Path) -> None:

@@ -17,6 +17,7 @@ from cmk.gui.visuals.filter import (
     AjaxDropdownFilter,
     CheckboxRowFilter,
     Filter,
+    FilterGroup,
     FilterGroupCombo,
     FilterNumberRange,
     FilterOption,
@@ -292,6 +293,7 @@ def register(filter_registry: FilterRegistry) -> None:
             ident="hst_service_level",
             title=_l("Host service level"),
             info="host",
+            group=FilterGroup.HOST_PROPERTIES,
         )
     )
 
@@ -313,7 +315,9 @@ class _FilterOptEventEffectiveContactgroup(FilterGroupCombo):
 
 # choices = [ (value, "readable"), .. ]
 class FilterECServiceLevelRange(Filter):
-    def __init__(self, *, ident: str, title: str | LazyString, info: str) -> None:
+    def __init__(
+        self, *, ident: str, title: str | LazyString, info: str, group: FilterGroup | None = None
+    ) -> None:
         self.lower_bound_varname = "%s_lower" % ident
         self.upper_bound_varname = "%s_upper" % ident
         super().__init__(
@@ -327,6 +331,7 @@ class FilterECServiceLevelRange(Filter):
             ],
             link_columns=[],
             is_show_more=True,
+            group=group,
         )
 
     @staticmethod

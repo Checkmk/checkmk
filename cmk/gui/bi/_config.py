@@ -1949,6 +1949,23 @@ class BIModeEditAggregation(ABCBIMode):
                         ),
                     ),
                 ),
+                (
+                    "downtime_only_on_full_problem_coverage",
+                    Checkbox(
+                        title=_("Show downtime only when all current problems are covered"),
+                        label=_("Require all failing components to be in a maintenance window"),
+                        help=_(
+                            "By default, a BI aggregate is marked 'in downtime' as soon as enough "
+                            "components have a scheduled maintenance window to satisfy the "
+                            "aggregation function. This is useful when you treat the aggregate as "
+                            "a single service unit: if a key component is under maintenance, the "
+                            "whole branch is intentionally considered to be in planned downtime. "
+                            "Enable this option if you instead want to require that every "
+                            "currently failing component is covered — ensuring that no active, "
+                            "unplanned failure goes unnoticed behind a partial maintenance window."
+                        ),
+                    ),
+                ),
             ],
             title=_("Computation options"),
             optional_keys=[],

@@ -44,8 +44,6 @@ pub enum ElfError {
     },
     #[error("Unknown ELF type in file: {path:?}")]
     UnknownElfType { path: PathBuf },
-    #[error("Invalid (RPATH or RUNPATH) paths: {paths:?}")]
-    InvalidPaths { paths: Vec<String> },
 }
 
 /// ELF file type (wrapper around `goblin::elf::header::e_type`).
@@ -57,10 +55,6 @@ pub enum ElfType {
     SharedObject,
     Core,
 }
-
-/// Result type for RPATH/RUNPATH validation.
-/// Ok(()) means valid, Err contains list of invalid path error messages.
-type ValidationResult = std::result::Result<(), Vec<String>>;
 
 /// Parsed ELF file information.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -95,13 +89,29 @@ impl Elf {
 
     /// Parse an ELF file from a path.
     ///
+    /// Pure parse: no validation is performed. Callers run validators (RPATH
+    /// shape, embedded build paths, …) separately at the report layer.
+    ///
     /// # Errors
-    /// Returns an error if the file is not an ELF file, or if the RPATH or RUNPATH entries are invalid.
+    /// Returns an error if the file is not an ELF file or cannot be read.
     pub(crate) fn from_path(path: &Path) -> Result<Self> {
-        let elf = Self::parse(path)?;
-        Self::validate(&elf.rpath, &elf.runpath)
-            .map_err(|paths| ElfError::InvalidPaths { paths })?;
-        Ok(elf)
+        Self::parse(path)
+    }
+
+    /// Construct an `Elf` directly from its parts. Test-only.
+    #[cfg(test)]
+    pub(crate) fn for_testing(
+        kind: ElfType,
+        dependencies: Vec<String>,
+        rpath: Vec<String>,
+        runpath: Vec<String>,
+    ) -> Self {
+        Self {
+            kind,
+            dependencies,
+            rpath,
+            runpath,
+        }
     }
 
     /// Get the ELF file type (executable, shared object, etc.).
@@ -206,8 +216,8 @@ impl Elf {
             return Some(PathBuf::from(resolved).clean());
         }
         // Since we already resolved the $ORIGIN, any path that is still
-        // relative is considered invalid.
-        // These cases are handled in the constructor of the Elf struct.
+        // relative is dropped here (not a usable library search path). The
+        // rpath_shape validator separately reports it as an invalid entry.
         None
     }
 
@@ -368,48 +378,6 @@ impl Elf {
     /// As GCC linker and patchelf do not support setting both RPATH and RUNPATH simultaneously, at least in
     /// newer versions.
     ///
-    /// # Returns
-    ///
-    /// Returns `Ok(())` if all paths are valid, or `Err` with a list of error messages describing
-    /// which paths are invalid.
-    fn validate(rpath: &[String], runpath: &[String]) -> ValidationResult {
-        let mut invalid_paths = Vec::new();
-
-        // Validate RUNPATH if present
-        if !runpath.is_empty() {
-            invalid_paths.extend(Self::collect_invalid_paths(runpath, "RUNPATH"));
-        }
-
-        // Validate RPATH if present (even if RUNPATH is also present, as both exist in the ELF)
-        if !rpath.is_empty() {
-            invalid_paths.extend(Self::collect_invalid_paths(rpath, "RPATH"));
-        }
-
-        if invalid_paths.is_empty() {
-            Ok(())
-        } else {
-            Err(invalid_paths)
-        }
-    }
-
-    /// Collect invalid path error messages from a path list.
-    ///
-    /// # Arguments
-    ///
-    /// * `paths` - The paths to validate
-    /// * `prefix` - The prefix to use in error messages (e.g., "RPATH" or "RUNPATH")
-    ///
-    /// # Returns
-    ///
-    /// A vector of error messages for invalid paths.
-    fn collect_invalid_paths(paths: &[String], prefix: &str) -> Vec<String> {
-        paths
-            .iter()
-            .filter(|path| Self::invalid_path(path))
-            .map(|path| format!("{prefix}: {path} is invalid"))
-            .collect()
-    }
-
     /// Check if a path is invalid.
     ///
     /// A path is invalid if it is a relative path without `$ORIGIN` substitution, or if
@@ -427,7 +395,7 @@ impl Elf {
     /// Invalid paths:
     /// - Relative paths without `$ORIGIN`: `../lib`, `./lib`, `lib`
     /// - Paths with relative components before `$ORIGIN`: `../${ORIGIN}/lib`, `./$ORIGIN/lib`
-    fn invalid_path(path: &str) -> bool {
+    pub(crate) fn invalid_path(path: &str) -> bool {
         // Absolute paths are always valid
         if path.starts_with('/') {
             return false;
@@ -563,12 +531,12 @@ mod tests {
         let origin = path.parent().unwrap_or_else(|| Path::new("/"));
 
         // Test with RUNPATH (takes precedence over RPATH)
-        let elf = Elf {
-            kind: ElfType::Executable,
-            dependencies: Vec::new(),
-            rpath: vec!["/usr/lib".to_string()],
-            runpath: vec!["/opt/lib".to_string()],
-        };
+        let elf = Elf::for_testing(
+            ElfType::Executable,
+            Vec::new(),
+            vec!["/usr/lib".to_string()],
+            vec!["/opt/lib".to_string()],
+        );
 
         let normalized = elf.normalize_paths(origin);
         // When RUNPATH is present, only RUNPATH is processed (RPATH is ignored)
@@ -576,98 +544,16 @@ mod tests {
         assert_eq!(normalized, vec![PathBuf::from("/opt/lib")]);
 
         // Test with only RPATH
-        let elf_rpath_only = Elf {
-            kind: ElfType::Executable,
-            dependencies: Vec::new(),
-            rpath: vec!["/usr/lib".to_string()],
-            runpath: Vec::new(),
-        };
+        let elf_rpath_only = Elf::for_testing(
+            ElfType::Executable,
+            Vec::new(),
+            vec!["/usr/lib".to_string()],
+            Vec::new(),
+        );
 
         let normalized_rpath = elf_rpath_only.normalize_paths(origin);
         assert_eq!(normalized_rpath.len(), 1);
         assert_eq!(normalized_rpath, vec![PathBuf::from("/usr/lib")]);
-    }
-
-    #[test]
-    fn test_validate_absolute_paths() {
-        let rpath = vec!["/usr/lib".to_string(), "/opt/lib".to_string()];
-        let runpath = Vec::new();
-        assert!(Elf::validate(&rpath, &runpath).is_ok());
-    }
-
-    #[test]
-    fn test_validate_origin_paths() {
-        let rpath = vec!["$ORIGIN/../lib".to_string(), "${ORIGIN}/lib".to_string()];
-        let runpath = Vec::new();
-        assert!(Elf::validate(&rpath, &runpath).is_ok());
-    }
-
-    #[test]
-    fn test_validate_invalid_relative_paths() {
-        let rpath = vec!["../lib".to_string(), "./lib".to_string()];
-        let runpath = Vec::new();
-        let errors = Elf::validate(&rpath, &runpath).expect_err("Expected invalid paths");
-        assert_eq!(errors.len(), 2);
-        assert!(errors.iter().any(|e| e.contains("../lib")));
-        assert!(errors.iter().any(|e| e.contains("./lib")));
-    }
-
-    #[test]
-    fn test_validate_both_runpath_and_rpath() {
-        // Both should be validated even though RUNPATH takes precedence at runtime
-        let rpath = vec!["../lib".to_string()];
-        let runpath = vec!["/opt/lib".to_string(), "./lib".to_string()];
-        let errors = Elf::validate(&rpath, &runpath).expect_err("Expected invalid paths");
-        assert_eq!(errors.len(), 2); // One from RPATH, one from RUNPATH
-        assert!(errors
-            .iter()
-            .any(|e| e.contains("RPATH") && e.contains("../lib")));
-        assert!(errors
-            .iter()
-            .any(|e| e.contains("RUNPATH") && e.contains("./lib")));
-    }
-
-    #[test]
-    fn test_validate_mixed_valid_invalid() {
-        let rpath = vec!["/usr/lib".to_string(), "../lib".to_string()];
-        let runpath = Vec::new();
-        let errors = Elf::validate(&rpath, &runpath).expect_err("Expected invalid paths");
-        assert_eq!(errors.len(), 1);
-        assert!(errors.iter().any(|e| e.contains("../lib")));
-    }
-
-    #[test]
-    fn test_validate_origin_with_relative_prefix() {
-        // Paths with any content before $ORIGIN are invalid
-        // because that content is resolved relative to CWD before $ORIGIN substitution
-        let rpath = vec![
-            "../${ORIGIN}/lib".to_string(),
-            "./$ORIGIN/lib".to_string(),
-            "../$ORIGIN/lib".to_string(),
-            "some/path/$ORIGIN/lib".to_string(),
-            "prefix/${ORIGIN}/lib".to_string(),
-        ];
-        let runpath = Vec::new();
-        let errors = Elf::validate(&rpath, &runpath)
-            .expect_err("Expected invalid paths with content before $ORIGIN");
-        assert_eq!(errors.len(), 5);
-        assert!(errors.iter().any(|e| e.contains("../${ORIGIN}")));
-        assert!(errors.iter().any(|e| e.contains("./$ORIGIN")));
-        assert!(errors.iter().any(|e| e.contains("../$ORIGIN")));
-        assert!(errors.iter().any(|e| e.contains("some/path/$ORIGIN")));
-        assert!(errors.iter().any(|e| e.contains("prefix/${ORIGIN}")));
-    }
-
-    #[test]
-    fn test_validate_origin_at_start() {
-        // $ORIGIN at the start is valid
-        let rpath = vec![
-            "$ORIGIN/../lib".to_string(),
-            "${ORIGIN}/lib".to_string(),
-            "$ORIGIN/lib".to_string(),
-        ];
-        let runpath = Vec::new();
-        assert!(Elf::validate(&rpath, &runpath).is_ok());
     }
 
     /// Helper to skip tests when fixture files are missing.
@@ -736,74 +622,6 @@ mod tests {
             "RUNPATH should contain '/opt/lib', got: {:?}",
             elf.runpath()
         );
-    }
-
-    #[test]
-    fn test_elf_invalid_relative_rpath() {
-        let Some(elf_path) = require_fixture("test-elf-invalid-relative-rpath.elf") else {
-            return;
-        };
-        let result = Elf::from_path(&elf_path);
-        match result {
-            Err(ElfError::InvalidPaths { paths }) => {
-                assert!(
-                    paths.iter().any(|p| p.contains("../lib")),
-                    "Error should mention '../lib', got: {:?}",
-                    paths
-                );
-            }
-            Ok(_) => {
-                // If patchelf didn't allow setting invalid RPATH, the file might be valid
-                // This is acceptable - the test verifies the validation logic works when invalid paths are present
-            }
-            Err(e) => panic!("Unexpected error: {:?}", e),
-        }
-    }
-
-    #[test]
-    fn test_elf_invalid_relative_dot_rpath() {
-        let Some(elf_path) = require_fixture("test-elf-invalid-relative-dot-rpath.elf") else {
-            return;
-        };
-        let result = Elf::from_path(&elf_path);
-        match result {
-            Err(ElfError::InvalidPaths { paths }) => {
-                assert!(
-                    paths.iter().any(|p| p.contains("./lib")),
-                    "Error should mention './lib', got: {:?}",
-                    paths
-                );
-            }
-            Ok(_) => {
-                // If patchelf didn't allow setting invalid RPATH, the file might be valid
-                // This is acceptable - the test verifies the validation logic works when invalid paths are present
-            }
-            Err(e) => panic!("Unexpected error: {:?}", e),
-        }
-    }
-
-    #[test]
-    fn test_elf_invalid_prefix_origin_rpath() {
-        let Some(elf_path) = require_fixture("test-elf-invalid-prefix-origin-rpath.elf") else {
-            return;
-        };
-        let result = Elf::from_path(&elf_path);
-        match result {
-            Err(ElfError::InvalidPaths { paths }) => {
-                assert!(
-                    paths
-                        .iter()
-                        .any(|p| p.contains("../$ORIGIN") || p.contains("RPATH")),
-                    "Error should mention '../$ORIGIN' or 'RPATH', got: {:?}",
-                    paths
-                );
-            }
-            Ok(_) => {
-                // If patchelf didn't allow setting invalid RPATH, the file might be valid
-                // This is acceptable - the test verifies the validation logic works when invalid paths are present
-            }
-            Err(e) => panic!("Unexpected error: {:?}", e),
-        }
     }
 
     #[test]

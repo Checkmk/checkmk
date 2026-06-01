@@ -41,12 +41,10 @@ class FilterGroup(Enum):
     INVENTORY = "inventory"
     FOLDER = "folder"
     HOST_HAS = "host_has"
-    HOST_ADDRESS = "host_address"
     HOST_CHECK_COMMAND = "host_check_command"
     HOST_CONTACT = "host_contact"
     HOST_IN = "host_in"
-    HOST_IS = "host_is"
-    HOST_NAME = "host_name"
+    HOST_PROPERTIES = "host_properties"
     HOST_STATE = "host_state"
     KUBERNETES = "kubernetes"
     SITE = "site"
@@ -57,6 +55,10 @@ class FilterGroup(Enum):
     SERVICE_IN = "service_in"
     SERVICE_IS = "service_is"
     SERVICE_STATE = "service_state"
+    AGENT = "agent"
+    CLOUD = "cloud"
+    NOTIFICATIONS = "notifications"
+    OTHER = "other"
 
 
 class Filter(abc.ABC):

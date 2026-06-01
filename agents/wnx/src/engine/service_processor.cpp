@@ -217,13 +217,8 @@ std::string FindWinPerfExe(std::string_view exe_name) {
 
     XLOG::t.i("Looking for default agent");
     const fs::path f{cfg::GetRootDir()};
-    std::vector names{f / cfg::kDefaultAppFileName};
-
-    if constexpr (tgt::Is64bit()) {
-        names.emplace_back(f / "check_mk_service64.exe");
-    }
-
-    names.emplace_back(f / "check_mk_service32.exe");
+    const std::array names{f / cfg::kDefaultAppFileName,
+                           f / "check_mk_service.exe"};
 
     for (const auto &name : names) {
         std::error_code ec;

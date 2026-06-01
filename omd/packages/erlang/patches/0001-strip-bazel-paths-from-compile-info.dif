@@ -1,0 +1,42 @@
+Strip the Bazel sandbox path from beam.smp's recorded compile info.
+
+Erlang records its build flags so they can be reported by
+erlang:system_info(compile_info).  The perl helper make_compiler_flags
+emits three `const char*` constants into the generated erl_compile_flags.h
+-- erts_build_flags_CONFIG_H (the full config.h, which embeds a
+#define ERTS_EMU_CMDLINE_FLAGS "..." line), erts_build_flags_CFLAGS and
+erts_build_flags_LDFLAGS -- and erl_bif_info.c compiles them into
+beam.smp's .rodata verbatim.  Under Bazel/rules_foreign_cc those flags
+contain the absolute sandbox execroot path
+(.../.cache/bazel/.../sandbox/.../execroot/_main/...), which leaks the
+build host's directory layout into the shipped binary and trips the
+package build-path validator.
+
+rules_foreign_cc exports the execroot as $EXT_BUILD_ROOT, and the leaked
+sub-paths ($BUILD_TMPDIR, $EXT_BUILD_DEPS) are all below it, so stripping
+that single prefix cleans every recorded path at once.  We map it to "."
+to mirror the -ffile-prefix-map=$EXT_BUILD_ROOT=. convention used for
+debug paths elsewhere in the tree.  The substitution only fires when
+$EXT_BUILD_ROOT is set, so a plain (non-Bazel) OTP build is unaffected.
+These strings are purely informational; nothing resolves them as paths.
+
+--- a/erts/emulator/utils/make_compiler_flags
++++ b/erts/emulator/utils/make_compiler_flags
+@@ -54,8 +54,17 @@
+     }
+ }
+
++# Checkmk: strip the Bazel sandbox/execroot prefix from the recorded build
++# flags so it does not leak into beam.smp's .rodata. CONFIG_H/CFLAGS/LDFLAGS
++# are surfaced verbatim by erlang:system_info(compile_info). EXT_BUILD_ROOT is
++# exported by rules_foreign_cc; when unset (non-Bazel builds) this is a no-op,
++# mirroring -ffile-prefix-map=$EXT_BUILD_ROOT=.
++my $ext_build_root = $ENV{EXT_BUILD_ROOT};
+ foreach(keys %constants) {
+     my $value = $constants{$_};
++    if (defined($ext_build_root) && $ext_build_root ne "") {
++        $value =~ s/\Q$ext_build_root\E/./g;
++    }
+     $value =~ s/"/\\"/g;
+     $constants{$_} = $value
+ }

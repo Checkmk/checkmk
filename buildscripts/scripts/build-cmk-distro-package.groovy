@@ -176,10 +176,13 @@ void main() {
                                 --cmk_edition=${edition} \
                                 ${license_flag} \
                                 --execution_log_json_file="${checkout_dir}/deps_install.json" \
-                        //omd:${package_type}_${edition}
+                                //omd:${package_type}_${edition} \
+                                //omd/dependency_management:generate_bom_csv \
+                                //omd/dependency_management:bill_of_materials_renamed
                         """);
                     }
                     sh("cp --no-preserve=mode ${checkout_dir}/bazel-bin/omd/check-mk*.${package_type} ${checkout_dir}");
+                    sh("cp ${checkout_dir}/bazel-bin/omd/dependency_management/bill-of-materials.{json,csv} ${checkout_dir}");
                 }
                 package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");
                 if (!package_type) {

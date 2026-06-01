@@ -7,6 +7,17 @@ package(default_visibility = ["//visibility:public"])
 
 INSTALL_PREFIX = "py_install"
 
+# Stable, version-independent placeholder baked into the binaries as the
+# compile-time prefix (Python's getpath PREFIX/EXEC_PREFIX, recorded in
+# libpython's .rodata) instead of the per-build bazel sandbox path. It is
+# fixed up to the real OMD path at install time, exactly like the sysconfig
+# placeholder handling in postfix_script below (SUP-28810).
+OMD_PREFIX_PLACEHOLDER = "/replace-me"
+
+# Where `make install` stages the tree (DESTDIR) and where rules_foreign_cc
+# then collects it from: DESTDIR + the baked --prefix == BUILD_TMPDIR/<this>.
+STAGING_PREFIX = INSTALL_PREFIX + OMD_PREFIX_PLACEHOLDER
+
 dependency_info(
     name = "dependency_info",
     package_name = "python",
@@ -44,7 +55,14 @@ out_binaries = [
 
 configure_make(
     name = "python",
-    args = ["-j2"],
+    # Redirect `make install` into the sandbox via DESTDIR so the baked-in
+    # --prefix below can be the stable /replace-me placeholder rather than the
+    # bazel sandbox path. DESTDIR + --prefix == BUILD_TMPDIR/py_install/replace-me,
+    # which is exactly what install_prefix points rules_foreign_cc at.
+    args = [
+        "-j2",
+        "DESTDIR=$$BUILD_TMPDIR$$/%s" % INSTALL_PREFIX,
+    ],
     configure_command = "configure",
     configure_in_place = True,
     configure_options = [
@@ -57,7 +75,12 @@ configure_make(
         "--enable-shared",
         "--with-lto",
         "--without-static-libpython",
-        "DESTDIR=%s" % INSTALL_PREFIX,
+        # Bake a stable prefix into the binaries instead of the bazel sandbox
+        # path. rules_foreign_cc passes its own --prefix=$BUILD_TMPDIR/... first;
+        # autotools honours the last --prefix, so this one wins for the value
+        # compiled into libpython (getpath PREFIX/EXEC_PREFIX). Install is kept
+        # inside the sandbox via DESTDIR (see args above).
+        "--prefix=%s" % OMD_PREFIX_PLACEHOLDER,
     ],
     data = [
         "@@//omd/packages/Python:pip",
@@ -72,7 +95,8 @@ configure_make(
     },
 
     # rules_foreign_cc defaults the install_prefix to "python". This conflicts with the "python" executable that is generated.
-    install_prefix = INSTALL_PREFIX,
+    # Point it at the DESTDIR+prefix staging dir (BUILD_TMPDIR/py_install/replace-me) so the collected tree has the expected bin/lib/... layout at $INSTALLDIR root.
+    install_prefix = STAGING_PREFIX,
     lib_source = ":all_srcs",
     linkopts = ["-Wl,--strip-all"],
     out_binaries = out_binaries,
@@ -119,7 +143,7 @@ configure_make(
         # Tests are not needed in final package
         rm -rf $$INSTALLDIR/lib/python{pyMajMin}/test ;
     """.format(
-        installPrefix = INSTALL_PREFIX,
+        installPrefix = STAGING_PREFIX,
         pyMaj = PYTHON_VERSION_MAJOR,
         pyMajMin = PYTHON_MAJOR_DOT_MINOR,
         pyVers = PYTHON_VERSION,

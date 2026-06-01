@@ -5,7 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { defineComponent, ref } from 'vue'
+import { defineComponent, nextTick, ref } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
 import CmkDropdown from '@/components/CmkDropdown'
@@ -1029,4 +1029,64 @@ test('dropdown with filtered options does not prefill filter input', async () =>
     // Filtered dropdowns should NOT pre-populate the filter
     expect(input).toHaveValue('')
   })
+})
+
+test.fails('open() suppresses trailing click-outside across microtask checkpoint', async () => {
+  // When open() is called from a sibling element's click handler, the click
+  // keeps bubbling up to document.body, where useClickOutside fires. The HTML
+  // spec performs a microtask checkpoint between event-listener invocations on
+  // the same bubble path; jsdom does not, so we simulate it.
+  let openDropdown: (() => void) | null = null
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  const TestWrapper = defineComponent({
+    components: { CmkDropdown },
+    setup() {
+      const captureRef = (
+        el: (InstanceType<typeof CmkDropdown> & { open?: () => void }) | null
+      ) => {
+        if (el?.open) {
+          openDropdown = () => el.open!()
+        }
+      }
+      return { captureRef }
+    },
+    template: `
+      <CmkDropdown
+        :ref="captureRef"
+        :selected-option="null"
+        :options="{ type: 'fixed', suggestions: [{ title: 'Option 1', name: 'option1' }] }"
+        input-hint="Select an option"
+        label="dropdown-label"
+      />
+    `
+  })
+
+  render(TestWrapper)
+  await nextTick()
+  expect(openDropdown).not.toBeNull()
+
+  openDropdown!()
+  // Per the HTML spec, the microtask checkpoint between event-listener
+  // invocations on the same bubble path drains the queue to empty. jsdom does
+  // not perform any drain, so we simulate it with two awaits:
+  //   - first await: the `nextTick(() => suppress = false)` reset fires —
+  //     this is the reset the bug hinges on;
+  //   - second await: CmkDropdown's post-show focus() finishes while
+  //     CmkSuggestions is still mounted, so its internal `await nextTick()`
+  //     does not reject after the body click unmounts the suggestions tree.
+  // Without the second await, that rejection would escape the test as an
+  // unhandled `CmkSuggestions: internal: can not focus` error.
+  await nextTick()
+  await nextTick()
+  document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  // Let Vue flush the close that useClickOutside just triggered so the
+  // assertion observes the post-bug DOM, not the pre-render snapshot.
+  await nextTick()
+
+  expect(screen.queryByText('Option 1')).not.toBeNull()
+
+  // Sanity check: once the macrotask has run, a later click outside closes the dropdown.
+  await new Promise<void>((resolve) => setTimeout(resolve, 0))
+  document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  await waitFor(() => expect(screen.queryByText('Option 1')).toBeNull())
 })

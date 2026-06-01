@@ -180,6 +180,7 @@ COMMUNITY_WHEELS = [
     "//packages/cmk-backup:wheel",
     "//packages/cmk-ccc:wheel",
     "//packages/cmk-check-engine:wheel",
+    "//packages/cmk-crash:wheel",
     "//packages/cmk-crypto:wheel",
     "//packages/cmk-ec:wheel",
     "//packages/cmk-events:wheel",

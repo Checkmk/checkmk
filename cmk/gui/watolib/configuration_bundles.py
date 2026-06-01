@@ -79,7 +79,7 @@ def _get_affected_entities(bundle_group: str | None) -> set[Entity]:
     else:
         group_prefix = bundle_group.split(":", maxsplit=1)[0]
         if group_prefix == "otel_collector":
-            entities: set[Entity] = {"otel_collector"}
+            entities: set[Entity] = {"otel_collector", "password"}
             if DCDConnectionHook.domain_definition is not None:
                 entities.add("dcd")
             return entities

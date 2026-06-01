@@ -169,6 +169,17 @@ get_version_from_source() {
 run_build() {
     case "$(uname)" in
         'SunOS' | 'AIX')
+            target_dir="$(cargo metadata --no-deps --format-version=1 | grep -o '"target_directory":"[^"]*"' | cut -d'"' -f4)/release"
+            stamp_file="${target_dir}/.cmk_version_stamp"
+            current_ver="${CMK_VERSION:-}"
+            previous_ver=""
+            [ -f "${stamp_file}" ] && previous_ver="$(cat "${stamp_file}")"
+            if [ "${current_ver}" != "${previous_ver}" ]; then
+                echo "CMK_VERSION changed: '${previous_ver}' -> '${current_ver}', cleaning target"
+                rm -rf "${target_dir}"
+                mkdir -p "${target_dir}"
+                echo "${current_ver}" >"${stamp_file}"
+            fi
             cargo build --release
             ;;
         *)

@@ -114,6 +114,13 @@ build_cmd = """
     # Keep cargo artifacts inside the sandbox (optional but nice):
     export CARGO_TARGET_DIR="$(@D)/cargo_out"
 
+    # Strip the Bazel sandbox/execroot prefix ($$HOME == $$PWD == execroot) from
+    # the source paths rustc records into panic/debug location metadata (crates
+    # live under $$HOME/.cargo/registry). Without this the build-host layout
+    # leaks into the Rust-backed wheels (cryptography, pydantic-core, bcrypt,
+    # rpds-py, libcst). Mirrors the -ffile-prefix-map=$$HOME=. used for C below.
+    export RUSTFLAGS="--remap-path-prefix=$$HOME=."
+
     export OPENSSL_LIB_DIR="$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib"
     export OPENSSL_INCLUDE_DIR="$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include"
 
@@ -124,7 +131,11 @@ build_cmd = """
     export CC="$$(which gcc)"
 
     # install requirements
-    export CFLAGS="-Wno-error=incompatible-pointer-types"
+    # -ffile-prefix-map strips the Bazel sandbox/execroot prefix ($$HOME == $$PWD
+    # == execroot) from paths the compiler bakes into the extension .so files --
+    # chiefly the Python/openssl/freetds header -I paths captured via __FILE__ --
+    # so the build-host layout does not leak into shipped binaries (SUP-28810).
+    export CFLAGS="-Wno-error=incompatible-pointer-types -ffile-prefix-map=$$HOME=."
     export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include -I$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/include -I$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/include/python{pyMajMin}/"
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/lib -L$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/lib -Wl,--strip-debug"
     {git_ssl_no_verify}\\

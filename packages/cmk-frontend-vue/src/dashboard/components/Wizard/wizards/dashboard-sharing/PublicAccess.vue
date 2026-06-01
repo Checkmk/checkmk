@@ -276,6 +276,7 @@ const handleUpdate = async () => {
 <style scoped>
 .db-public-access__info {
   padding-inline-start: var(--dimension-8);
+  margin-block: 0;
 }
 
 .db-public-access__row {

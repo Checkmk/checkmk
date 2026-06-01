@@ -56,21 +56,6 @@ def _get_translate_status(firmware_shortname: str | None) -> Mapping[str, tuple[
     return TRANSLATE_STATUS_V4
 
 
-def check_dell_idrac_power(item: str, section: Sequence[StringTable]) -> CheckResult:
-    def _get_value(idx: int) -> str | None:
-        try:
-            return section[idx][0][0]
-        except IndexError:
-            return None
-
-    translate_status = _get_translate_status(_get_value(2))
-
-    for index, status, _count in section[0]:
-        if index == item:
-            state, state_readable = translate_status.get(status, (State.UNKNOWN, "n/a"))
-            yield Result(state=state, summary="Status: %s" % state_readable)
-
-
 def parse_dell_idrac_power(string_table: Sequence[StringTable]) -> Sequence[StringTable]:
     return string_table
 
@@ -96,6 +81,21 @@ snmp_section_dell_idrac_power = SNMPSection(
 def discover_dell_idrac_power(section: Sequence[StringTable]) -> DiscoveryResult:
     for index, _status, _count in section[0]:
         yield Service(item=index)
+
+
+def check_dell_idrac_power(item: str, section: Sequence[StringTable]) -> CheckResult:
+    def _get_value(idx: int) -> str | None:
+        try:
+            return section[idx][0][0]
+        except IndexError:
+            return None
+
+    translate_status = _get_translate_status(_get_value(2))
+
+    for index, status, _count in section[0]:
+        if index == item:
+            state, state_readable = translate_status.get(status, (State.UNKNOWN, "n/a"))
+            yield Result(state=state, summary="Status: %s" % state_readable)
 
 
 check_plugin_dell_idrac_power = CheckPlugin(

@@ -71,13 +71,13 @@ async function closeSlideIn() {
 
   <CmkButton
     v-if="!slideoutOpen"
-    variant="secondary"
+    variant="success"
     class="welcome-snapin__continue"
     @click="openSlideIn"
   >
     {{ completed ? _t("What's next") : _t('Continue exploration') }}
   </CmkButton>
-  <CmkButton v-else variant="secondary" class="welcome-snapin__continue" @click="closeSlideIn">
+  <CmkButton v-else variant="success" class="welcome-snapin__continue" @click="closeSlideIn">
     {{ _t('Close') }}
   </CmkButton>
   <WelcomeSnapinSlideout
@@ -101,18 +101,7 @@ async function closeSlideIn() {
 
 .welcome-snapin__continue {
   display: flex;
-  height: var(--dimension-10);
-  background: var(--success);
-  color: var(--black);
   width: 100%;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--border-radius);
   margin-top: var(--spacing);
-  font-weight: var(--font-weight-bold);
-
-  &:hover {
-    background: var(--color-corporate-green-40);
-  }
 }
 </style>

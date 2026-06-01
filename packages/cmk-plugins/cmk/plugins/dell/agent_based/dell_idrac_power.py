@@ -20,12 +20,6 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-
-def discover_dell_idrac_power(section: Sequence[StringTable]) -> DiscoveryResult:
-    for index, _status, _count in section[0]:
-        yield Service(item=index)
-
-
 FIRMWARE_PATTERN = re.compile(r"(?i)^idrac(\d+)")
 TRANSLATE_STATUS_V4 = {
     "0": (State.OK, "not redundant"),
@@ -97,6 +91,11 @@ snmp_section_dell_idrac_power = SNMPSection(
     ],
     parse_function=parse_dell_idrac_power,
 )
+
+
+def discover_dell_idrac_power(section: Sequence[StringTable]) -> DiscoveryResult:
+    for index, _status, _count in section[0]:
+        yield Service(item=index)
 
 
 check_plugin_dell_idrac_power = CheckPlugin(

@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import { getInjectedTriggerItem, getIsItemExpandedCallback } from './trigger-item'
@@ -18,6 +20,8 @@ const props = defineProps<{
   disabled: boolean
 }>()
 
+const ariaLabel = computed(() => _t('Toggle accordion item %{item}', { item: props.value }))
+
 function toggle() {
   if (!props.disabled) {
     toggleItem(props.value)
@@ -31,7 +35,7 @@ function toggle() {
     type="button"
     :aria-controls="'cmk-accordion-content-'.concat(props.value)"
     :aria-expanded="isItemExpanded(props.value)"
-    :aria-label="_t('Toggle accordion item %{item}', { item: props.value })"
+    :aria-label="ariaLabel"
     class="cmk-accordion-trigger__button"
     @click="toggle"
     @keydpress.enter="toggle"
@@ -56,7 +60,10 @@ function toggle() {
   height: 100%;
 
   &:focus-visible {
-    border: 1px solid var(--success);
+    outline: revert;
+
+    /* Draw the ring inside the button */
+    outline-offset: -2px;
   }
 }
 </style>

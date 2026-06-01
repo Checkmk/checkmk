@@ -106,15 +106,23 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
   margin-bottom: -2px;
   border: none;
   background: none;
-  outline: none;
   cursor: pointer;
   vertical-align: text-top;
 
   &:focus,
   &:active {
-    outline: none;
     box-shadow: none;
   }
+}
+
+.cmk-help-text__icon {
+  /* Collapse the inline-image baseline descender gap so the focus outline
+     hugs the icon instead of leaving a strip below it. */
+  display: inline-flex;
+}
+
+.cmk-help-text__icon:focus-visible {
+  outline: revert;
 }
 
 .cmk-help-text__content {

@@ -156,5 +156,9 @@ span {
   &.cmk-checkbox__button--error {
     border: 1px solid var(--inline-error-border-color);
   }
+
+  &:focus-visible {
+    outline: revert;
+  }
 }
 </style>

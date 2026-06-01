@@ -101,6 +101,10 @@ const id = useId()
     background: var(--ux-theme-5);
   }
 
+  &:focus-visible {
+    outline: revert;
+  }
+
   &.cmk-catalog-panel__header--closed {
     border-radius: var(--border-radius);
   }

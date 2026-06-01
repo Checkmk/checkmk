@@ -54,4 +54,8 @@ const style = computed(() => {
 .form-multiline-text__validation-error {
   border: 1px solid var(--inline-error-border-color);
 }
+
+textarea:focus-visible {
+  outline: revert;
+}
 </style>

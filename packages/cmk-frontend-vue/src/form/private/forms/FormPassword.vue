@@ -130,4 +130,8 @@ const passwordStoreOptions = computed(() => {
 .form-password__validation-error {
   border: 1px solid var(--inline-error-border-color);
 }
+
+input:focus-visible {
+  outline: revert;
+}
 </style>

@@ -6,13 +6,28 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 const data = defineModel('data', { type: Boolean, default: false })
+
+function toggle() {
+  data.value = !data.value
+}
 </script>
 
 <template>
-  <label class="cmk-switch">
-    <input v-model="data" type="checkbox" />
-    <span class="cmk-switch__slider"></span>
-  </label>
+  <span class="cmk-switch">
+    <!-- Hidden mirror: keeps native checkbox semantics for forms/v-model and
+         drives the `:checked` slider styling. The visible slider is the
+         interactive control. -->
+    <input v-model="data" type="checkbox" tabindex="-1" aria-hidden="true" />
+    <span
+      class="cmk-switch__slider"
+      role="switch"
+      tabindex="0"
+      :aria-checked="data"
+      @click="toggle"
+      @keydown.space.prevent="toggle"
+      @keydown.enter.prevent="toggle"
+    ></span>
+  </span>
 </template>
 
 <style scoped>
@@ -37,7 +52,7 @@ const data = defineModel('data', { type: Boolean, default: false })
   cursor: pointer;
   inset: 0;
   background-color: var(--color-daylight-grey-60);
-  transition: 0.4s;
+  transition: background-color 0.4s;
   border-radius: 5px; /* Rounded sliders */
 
   &::before {
@@ -48,9 +63,13 @@ const data = defineModel('data', { type: Boolean, default: false })
     left: 1px;
     bottom: 1px;
     background-color: white;
-    transition: 0.4s;
+    transition: transform 0.4s;
     border-radius: 50%; /* Rounded sliders */
   }
+}
+
+.cmk-switch__slider:focus-visible {
+  outline: revert;
 }
 
 input:checked + .cmk-switch__slider {
@@ -59,9 +78,5 @@ input:checked + .cmk-switch__slider {
   &::before {
     transform: translateX(8px);
   }
-}
-
-input:focus + .cmk-switch__slider {
-  box-shadow: 0 0 1px var(--color-light-blue-50);
 }
 </style>

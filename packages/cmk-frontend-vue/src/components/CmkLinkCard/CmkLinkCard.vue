@@ -113,9 +113,12 @@ const classes = computed(() => [
     );
   }
 
-  &:focus,
-  &:focus-visible {
+  &:focus {
     outline: var(--default-border-color-green) auto 1px;
+  }
+
+  &:focus-visible {
+    outline: revert;
   }
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

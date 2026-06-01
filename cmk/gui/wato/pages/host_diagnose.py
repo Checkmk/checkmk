@@ -104,9 +104,10 @@ class ModeDiagHost(WatoMode):
 
     def _from_vars(self) -> None:
         self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
-        self._host = folder_from_request(request.var("folder"), self._hostname).load_host(
-            self._hostname
-        )
+        self._tree = folder_tree()
+        self._host = folder_from_request(
+            self._tree, request.var("folder"), self._hostname
+        ).load_host(self._hostname)
         self._host.permissions.need_permission("read")
 
         if self._host.is_cluster():
@@ -224,7 +225,7 @@ class ModeDiagHost(WatoMode):
                     "edit_host",
                     host=self._hostname,
                     folder=folder_from_request(
-                        request.var("folder"), request.get_ascii_input("host")
+                        self._tree, request.var("folder"), request.get_ascii_input("host")
                     ).path(),
                 )
             )

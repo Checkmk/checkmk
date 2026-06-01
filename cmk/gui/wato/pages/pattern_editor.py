@@ -50,7 +50,11 @@ from cmk.gui.watolib.check_mk_automations import (
     get_service_name,
 )
 from cmk.gui.watolib.config_hostname import ConfigHostname
-from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import (
+    folder_from_request,
+    folder_preserving_link,
+    folder_tree,
+)
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import Rule, rules_grouped_by_folder, SingleRulesetRecursively
 from cmk.gui.watolib.utils import mk_repr
@@ -115,7 +119,10 @@ class ModePatternEditor(WatoMode):
         self._item = request.get_str_input_mandatory("file", "")
         self._match_txt = request.get_str_input_mandatory("match", "")
 
-        self._host = folder_from_request(request.var("folder"), self._hostname).host(self._hostname)
+        self._tree = folder_tree()
+        self._host = folder_from_request(self._tree, request.var("folder"), self._hostname).host(
+            self._hostname
+        )
 
         if self._hostname and not self._host:
             raise MKUserError(None, _("This host does not exist."))
@@ -241,7 +248,9 @@ class ModePatternEditor(WatoMode):
         # Loop all rules for this ruleset
         already_matched = False
         abs_rulenr = 0
-        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
+        folder = folder_from_request(
+            self._tree, request.var("folder"), request.get_ascii_input("host")
+        )
 
         rules = ruleset.get_rules()
         rule_match_results = (

@@ -220,7 +220,7 @@ class ModeDiscovery(WatoMode):
 
     def _from_vars(self) -> None:
         self._host = folder_from_request(
-            request.var("folder"), request.get_ascii_input("host")
+            folder_tree(), request.var("folder"), request.get_ascii_input("host")
         ).load_host(request.get_validated_type_input_mandatory(HostName, "host"))
 
         self._host.permissions.need_permission("read")
@@ -2157,9 +2157,9 @@ class ModeAjaxExecuteCheck(AjaxPage):
             raise MKUserError("site", _("You called this page with an invalid site."))
 
         self._host_name = request.get_validated_type_input_mandatory(HostName, "host")
-        self._host = folder_from_request(request.var("folder"), self._host_name).host(
-            self._host_name
-        )
+        self._host = folder_from_request(
+            folder_tree(), request.var("folder"), self._host_name
+        ).host(self._host_name)
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
         self._host.permissions.need_permission("read")

@@ -67,7 +67,12 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domain_name import (
     generate_hosts_to_update_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    disk_or_search_folder_from_request,
+    folder_tree,
+    FolderTree,
+    Host,
+)
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -593,11 +598,11 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
 
 def prepare_hosts_for_discovery(
-    hostnames: Sequence[str], site_configs: SiteConfigurations
+    tree: FolderTree, hostnames: Sequence[str], site_configs: SiteConfigurations
 ) -> list[DiscoveryHost]:
     hosts_to_discover = []
     for host_name in hostnames:
-        host = folder_tree().host(HostName(host_name))
+        host = tree.host(HostName(host_name))
         if host is None:
             raise MKUserError(None, _("The host '%s' does not exist") % host_name)
         host.permissions.need_permission("write")

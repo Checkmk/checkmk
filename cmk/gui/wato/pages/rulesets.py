@@ -771,7 +771,7 @@ class ModeRulesetGroup(ABCRulesetMode):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         if user.may("wato.hosts") or user.may("wato.seeall"):
             current_folder = folder_from_request(
-                request.var("folder"), request.get_ascii_input("host")
+                folder_tree(), request.var("folder"), request.get_ascii_input("host")
             )
             yield PageMenuEntry(
                 title=_("Hosts in folder: %s") % current_folder.title(),
@@ -930,7 +930,9 @@ class ModeEditRuleset(WatoMode):
 
     def _from_vars(self) -> None:
         tree = folder_tree()
-        self._folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
+        self._folder = folder_from_request(
+            tree, request.var("folder"), request.get_ascii_input("host")
+        )
 
         self._name = request.get_ascii_input_mandatory("varname")
         self._back_mode = request.get_ascii_input_mandatory(
@@ -3338,7 +3340,7 @@ class ModeNewRule(ABCEditRuleMode):
         elif request.has_var("_new_host_rule"):
             # Start creating a new rule for a specific host
             self._folder = folder_from_request(
-                request.var("folder"), request.get_ascii_input("host")
+                tree, request.var("folder"), request.get_ascii_input("host")
             )
 
         else:

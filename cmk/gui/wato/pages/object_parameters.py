@@ -45,6 +45,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
     folder_preserving_link,
+    folder_tree,
     Host,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
@@ -93,7 +94,9 @@ class ModeObjectParameters(WatoMode):
 
     def _from_vars(self) -> None:
         self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
-        host = folder_from_request(request.var("folder"), self._hostname).host(self._hostname)
+        host = folder_from_request(folder_tree(), request.var("folder"), self._hostname).host(
+            self._hostname
+        )
         if host is None:
             raise MKUserError("host", _("The given host does not exist."))
         self._host: Host = host

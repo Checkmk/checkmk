@@ -202,6 +202,7 @@ def test_bulk_import_csv_parsing(
     # Mock here is pretty unavoidable because of the use of nested function definitions
     with mock.patch("cmk.gui.wato.pages.bulk_import.ModeBulkImport._delete_csv_file"):
         mode_bulk_import._import(
+            folder_tree(),
             csv_bulk_import,
             host_attributes,
             debug=False,

@@ -229,6 +229,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         except MKUserError:
             host_name = None
         if folder_from_request(
+            folder_tree(),
             request.var("folder"),
             host_name,
         ).locked_hosts():
@@ -288,7 +289,9 @@ class ABCHostMode(WatoMode, abc.ABC):
         # Fake a cluster host in order to get calculated tag groups via effective attributes...
         cluster_computed_datasources = cmk.utils.tags.compute_datasources(
             Host(
-                folder_from_request(request.var("folder"), request.get_ascii_input(self.VAR_HOST)),
+                folder_from_request(
+                    tree, request.var("folder"), request.get_ascii_input(self.VAR_HOST)
+                ),
                 self._host.name(),
                 attributes,
                 [],
@@ -391,7 +394,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             host_name = request.get_ascii_input(self.VAR_HOST)
         except MKUserError:
             host_name = None
-        folder = folder_from_request(request.var("folder"), host_name)
+        folder = folder_from_request(tree, request.var("folder"), host_name)
         if tree.host_exists(self._host.name()):
             all_agents_url = folder_preserving_link(
                 [("mode", "agent_of_host"), ("host", self._host.name())]
@@ -517,7 +520,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                 new=self._mode != "edit",
                 hosts={self._host.name(): self._host} if self._mode != "new" else {},
                 for_what="host" if not self._is_cluster() else "cluster",
-                parent=folder_from_request(request.var("folder"), host_name),
+                parent=folder_from_request(tree, request.var("folder"), host_name),
                 basic_attributes=basic_attributes,
                 aux_tags_by_tag=config.tags.get_aux_tags_by_tag(),
                 config=config,
@@ -594,7 +597,7 @@ class ModeEditHost(ABCHostMode):
 
     def _init_host(self) -> Host:
         hostname = request.get_validated_type_input_mandatory(HostName, self.VAR_HOST)
-        folder = folder_from_request(request.var("folder"), hostname)
+        folder = folder_from_request(folder_tree(), request.var("folder"), hostname)
         if not folder.has_host(hostname):
             raise MKUserError(self.VAR_HOST, _("You called this page with an invalid host name."))
         host = folder.load_host(hostname)
@@ -634,7 +637,10 @@ class ModeEditHost(ABCHostMode):
         )
 
     def action(self, config: Config) -> ActionResult:
-        folder = folder_from_request(request.var("folder"), request.get_ascii_input(self.VAR_HOST))
+        tree = folder_tree()
+        folder = folder_from_request(
+            tree, request.var("folder"), request.get_ascii_input(self.VAR_HOST)
+        )
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 
@@ -703,7 +709,7 @@ class ModeEditHost(ABCHostMode):
             "host" if not self._is_cluster() else "cluster",
             new=False,
         )
-        host = (tree := folder_tree()).host(self._host.name())
+        host = tree.host(self._host.name())
         if host is None:
             flash(f"Host {self._host.name()} could not be found.")
             return None
@@ -952,7 +958,9 @@ class CreateHostMode(ABCHostMode):
         if not clone_source_name:
             return self._init_new_host_object()
 
-        folder = folder_from_request(request.var("folder"), request.get_ascii_input(self.VAR_HOST))
+        folder = folder_from_request(
+            folder_tree(), request.var("folder"), request.get_ascii_input(self.VAR_HOST)
+        )
         if not folder.has_host(HostName(clone_source_name)):
             raise MKUserError(self.VAR_HOST, _("You called this page with an invalid host name."))
 
@@ -981,12 +989,13 @@ class CreateHostMode(ABCHostMode):
         if not transactions.transaction_valid():
             return redirect(mode_url("folder"))
 
+        tree = folder_tree()
         attributes = collect_attributes(
             all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
             self._host_type_name(),
             new=True,
         )
-        cluster_nodes = self._get_cluster_nodes(folder_tree(), attributes)
+        cluster_nodes = self._get_cluster_nodes(tree, attributes)
         try:
             hostname = strip_hostname_whitespace_chars(
                 request.get_ascii_input_mandatory(self.VAR_HOST)
@@ -997,7 +1006,7 @@ class CreateHostMode(ABCHostMode):
 
         Hostname().validate_value(request.get_ascii_input_mandatory(self.VAR_HOST), self.VAR_HOST)
 
-        folder = folder_from_request(request.var("folder"), hostname)
+        folder = folder_from_request(tree, request.var("folder"), hostname)
         if transactions.check_transaction():
             folder.create_hosts(
                 [(hostname, attributes, cluster_nodes)],
@@ -1080,11 +1089,12 @@ class ModeCreateHost(CreateHostMode):
             host_name = HostName(host_name)
         except (MKUserError, ValueError):
             host_name = HostName("")
+        tree = folder_tree()
         if prefill := request.get_ascii_input("prefill"):
             match prefill:
                 case "snmp":
                     return Host(
-                        folder=folder_from_request(request.var("folder"), host_name),
+                        folder=folder_from_request(tree, request.var("folder"), host_name),
                         host_name=host_name,
                         attributes=HostAttributes(
                             tag_snmp_ds="snmp-v2",
@@ -1095,7 +1105,7 @@ class ModeCreateHost(CreateHostMode):
                     )
                 case "relay":
                     return Host(
-                        folder=folder_from_request(request.var("folder"), host_name),
+                        folder=folder_from_request(tree, request.var("folder"), host_name),
                         host_name=host_name,
                         attributes=HostAttributes(
                             relay=request.get_str_input_mandatory("relayid"),
@@ -1103,7 +1113,7 @@ class ModeCreateHost(CreateHostMode):
                         cluster_nodes=None,
                     )
         return Host(
-            folder=folder_from_request(request.var("folder"), host_name),
+            folder=folder_from_request(tree, request.var("folder"), host_name),
             host_name=host_name,
             attributes={},
             cluster_nodes=None,
@@ -1142,7 +1152,7 @@ class ModeCreateCluster(CreateHostMode):
         except MKUserError:
             host_name = HostName("")
         return Host(
-            folder=folder_from_request(request.var("folder"), host_name),
+            folder=folder_from_request(folder_tree(), request.var("folder"), host_name),
             host_name=host_name,
             attributes={},
             cluster_nodes=[],

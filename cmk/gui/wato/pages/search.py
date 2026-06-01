@@ -22,7 +22,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import TextInput
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import all_host_attributes
-from cmk.gui.watolib.hosts_and_folders import folder_from_request
+from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_tree
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 
 from ._host_attributes import configure_attributes
@@ -47,7 +47,9 @@ class ModeSearch(WatoMode):
 
     def __init__(self, edition: Edition) -> None:
         super().__init__(edition)
-        self._folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
+        self._folder = folder_from_request(
+            folder_tree(), request.var("folder"), request.get_ascii_input("host")
+        )
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(

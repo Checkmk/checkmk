@@ -143,7 +143,7 @@ class ModeBulkRenameHost(WatoMode):
         renaming_config = self._vs_renaming_config().from_html_vars("")
         self._vs_renaming_config().validate_value(renaming_config, "")
         try:
-            renamings = self._collect_host_renamings(renaming_config)
+            renamings = self._collect_host_renamings(folder_tree(), renaming_config)
         except HostRenamingException as e:
             flash(e.message)
             return None
@@ -212,7 +212,7 @@ class ModeBulkRenameHost(WatoMode):
         return f"<b>{message}</b><ul>{values_list}</ul>"
 
     def _validate_renamings(
-        self, renamings: list[tuple[Folder, HostName, str]]
+        self, tree: FolderTree, renamings: list[tuple[Folder, HostName, str]]
     ) -> list[tuple[Folder, HostName, HostName]]:
         """Check if the new names are valid host names and do not collide with existing hosts.
         Return a new list of renamings."""
@@ -220,7 +220,7 @@ class ModeBulkRenameHost(WatoMode):
         name_collisions = set()
         seen_names = set()
         locked_by_quick_setup = set()
-        all_host_names = folder_tree().all_hosts().keys()
+        all_host_names = tree.all_hosts().keys()
         updated_renamings = []
         for folder, old_name, new_name in renamings:
             if new_name in seen_names or new_name in all_host_names:
@@ -259,16 +259,16 @@ class ModeBulkRenameHost(WatoMode):
         return updated_renamings
 
     def _collect_host_renamings(
-        self, renaming_config: dict[str, Any]
+        self, tree: FolderTree, renaming_config: dict[str, Any]
     ) -> list[tuple[Folder, HostName, HostName]]:
         unchecked = self._recurse_hosts_for_renaming(
-            folder_from_request(request.var("folder"), request.get_ascii_input("host")),
+            folder_from_request(tree, request.var("folder"), request.get_ascii_input("host")),
             renaming_config,
         )
         if not unchecked:
             raise HostRenamingException(_("No matching host names"))
 
-        return self._validate_renamings(unchecked)
+        return self._validate_renamings(tree, unchecked)
 
     def _recurse_hosts_for_renaming(
         self, folder: Folder, renaming_config: dict[str, Any]
@@ -461,7 +461,8 @@ class ModeRenameHost(WatoMode):
     def _from_vars(self) -> None:
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
-        folder = folder_from_request(request.var("folder"), host_name)
+        self._tree = folder_tree()
+        folder = folder_from_request(self._tree, request.var("folder"), host_name)
         if not folder.has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
@@ -536,8 +537,10 @@ class ModeRenameHost(WatoMode):
             )
 
         newname = request.get_validated_type_input_mandatory(HostName, "newname")
-        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
-        self._check_new_host_name(folder_tree(), folder, "newname", newname)
+        folder = folder_from_request(
+            self._tree, request.var("folder"), request.get_ascii_input("host")
+        )
+        self._check_new_host_name(self._tree, folder, "newname", newname)
         # Creating pending entry. That makes the site dirty and that will force a sync of
         # the config to that site before the automation is being done.
         host_renaming_job = RenameHostBackgroundJob(self._host)

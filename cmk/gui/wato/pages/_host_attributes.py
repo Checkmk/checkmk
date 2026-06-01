@@ -32,6 +32,7 @@ from cmk.gui.watolib.host_attributes import (
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
+    folder_tree,
     Host,
     SearchFolder,
 )
@@ -182,7 +183,9 @@ def configure_attributes(
                         host_name = request.get_ascii_input("host")
                     except MKUserError:
                         host_name = None
-                    url = folder_from_request(request.var("folder"), host_name).edit_url()
+                    url = folder_from_request(
+                        folder_tree(), request.var("folder"), host_name
+                    ).edit_url()
 
                 container = parent  # container is of type Folder
                 while container:

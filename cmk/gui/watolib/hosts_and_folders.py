@@ -1167,8 +1167,9 @@ def folder_tree() -> FolderTree:
     return g.folder_tree
 
 
-@request_memoize()
-def folder_from_request(var_folder: str | None = None, host_name: str | None = None) -> Folder:
+def folder_from_request(
+    tree: FolderTree, var_folder: str | None = None, host_name: str | None = None
+) -> Folder:
     """
     Return `Folder` that is specified by the current URL
 
@@ -1178,13 +1179,13 @@ def folder_from_request(var_folder: str | None = None, host_name: str | None = N
     """
     if var_folder is not None:
         try:
-            folder = folder_tree().folder(var_folder)
+            folder = tree.folder(var_folder)
         except MKGeneralException as e:
             raise MKUserError("folder", "%s" % e)
     else:
-        folder = folder_tree().root_folder()
+        folder = tree.root_folder()
         if host_name is not None:  # find host with full scan. Expensive operation
-            host = folder_tree().host(HostName(host_name))
+            host = tree.host(HostName(host_name))
             if host:
                 folder = host.folder()
 
@@ -1207,7 +1208,7 @@ def disk_or_search_folder_from_request(
     if search_folder:
         return search_folder
 
-    return folder_from_request(var_folder, host_name)
+    return folder_from_request(tree, var_folder, host_name)
 
 
 def _search_folder_from_request(tree: FolderTree) -> SearchFolder | None:
@@ -1353,7 +1354,7 @@ class Folder(FolderProtocol):
 
     def is_current_folder(self) -> bool:
         return self.is_same_as(
-            folder_from_request(request.var("folder"), request.get_ascii_input("host"))
+            folder_from_request(self.tree, request.var("folder"), request.get_ascii_input("host"))
         )
 
     def is_transitive_parent_of(self, maybe_child: Folder) -> bool:
@@ -3940,7 +3941,9 @@ def _collect_hosts(folder: Folder) -> Mapping[HostName, CollectedHostAttributes]
 
 
 def folder_preserving_link(add_vars: HTTPVariables) -> str:
-    return folder_from_request(request.var("folder"), request.get_ascii_input("host")).url(add_vars)
+    return folder_from_request(
+        folder_tree(), request.var("folder"), request.get_ascii_input("host")
+    ).url(add_vars)
 
 
 def make_action_link(vars_: HTTPVariables) -> str:
@@ -3971,7 +3974,7 @@ def get_folder_title(path: str) -> str:
 # TODO: Move to Folder()?
 def check_wato_foldername(htmlvarname: str | None, name: str, just_name: bool = False) -> None:
     if not just_name and folder_from_request(
-        request.var("folder"), request.get_ascii_input("host")
+        folder_tree(), request.var("folder"), request.get_ascii_input("host")
     ).has_subfolder(name):
         raise MKUserError(htmlvarname, _("A folder with that name already exists."))
 

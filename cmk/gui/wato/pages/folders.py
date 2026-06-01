@@ -1492,7 +1492,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         is_enabled = (
             self._is_new
             or not folder_from_request(
-                request.var("folder"), request.get_ascii_input("host")
+                folder_tree(), request.var("folder"), request.get_ascii_input("host")
             ).locked()
         )
 
@@ -1519,7 +1519,9 @@ class ABCFolderMode(WatoMode, abc.ABC):
             # Edit icon on subfolder preview should bring user back to parent folder
             folder = self._tree.folder(backfolder)
         else:
-            folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
+            folder = folder_from_request(
+                self._tree, request.var("folder"), request.get_ascii_input("host")
+            )
 
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
@@ -1549,7 +1551,9 @@ class ABCFolderMode(WatoMode, abc.ABC):
     @override
     def page(self, config: Config) -> None:
         new = self._is_new
-        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
+        folder = folder_from_request(
+            self._tree, request.var("folder"), request.get_ascii_input("host")
+        )
         folder.permissions.need_permission("read")
 
         if new and folder.locked():
@@ -1625,7 +1629,9 @@ class ModeEditFolder(ABCFolderMode):
 
     @override
     def _init_folder(self) -> Folder:
-        return folder_from_request(request.var("folder"), request.get_ascii_input("host"))
+        return folder_from_request(
+            self._tree, request.var("folder"), request.get_ascii_input("host")
+        )
 
     @override
     def title(self) -> str:
@@ -1678,7 +1684,9 @@ class ModeCreateFolder(ABCFolderMode):
         show_file_names: bool,
         pending_changes: PendingChanges,
     ) -> None:
-        parent_folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
+        parent_folder = folder_from_request(
+            self._tree, request.var("folder"), request.get_ascii_input("host")
+        )
         if show_file_names:
             name = request.get_ascii_input_mandatory("name", "").strip()
             check_wato_foldername("name", name)

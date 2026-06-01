@@ -153,7 +153,9 @@ class AgentOutputPage(Page, abc.ABC):
 
         self._back_url = request.get_url_input("back_url", deflt="") or None
 
-        host = folder_from_request(request.var("folder"), host_name).host(HostName(host_name))
+        host = folder_from_request(folder_tree(), request.var("folder"), host_name).host(
+            HostName(host_name)
+        )
         if not host:
             raise MKGeneralException(
                 _('Host is not managed by Setup. Click <a href="%s">here</a> to go back.')

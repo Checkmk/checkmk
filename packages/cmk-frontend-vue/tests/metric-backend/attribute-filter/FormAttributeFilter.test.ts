@@ -3,14 +3,21 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { flushPromises, mount } from '@vue/test-utils'
+import { userEvent } from '@testing-library/user-event'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
 import { Response } from '@/components/CmkSuggestions/suggestions'
 
-import AttributeFilterPill from '@/metric-backend/attribute-filter/AttributeFilterPill.vue'
 import FormAttributeFilter from '@/metric-backend/attribute-filter/FormAttributeFilter.vue'
+import { pillLabel } from '@/metric-backend/attribute-filter/pill-label'
 import type { AttributeFilterModel, AttributeType } from '@/metric-backend/attribute-filter/types'
+
+const KEY_SUGGESTIONS = [
+  { name: 'http.method', title: 'http.method' },
+  { name: 'service.name', title: 'service.name' },
+  { name: 'foo.bar', title: 'foo.bar' }
+]
 
 function makeModel(): AttributeFilterModel {
   return [
@@ -33,20 +40,22 @@ function makeModel(): AttributeFilterModel {
   ]
 }
 
-function noopQuerySuggestions(_: string): Promise<Response> {
-  return Promise.resolve(new Response([]))
+function querySuggestions(query: string): Promise<Response> {
+  const lower = query.toLowerCase()
+  return Promise.resolve(
+    new Response(KEY_SUGGESTIONS.filter((s) => s.name.toLowerCase().includes(lower)))
+  )
 }
 
-function mountForm(
+function renderForm(
   initial: AttributeFilterModel,
-  resolve?: (key: string) => AttributeType,
-  { attach = false }: { attach?: boolean } = {}
-) {
+  resolve?: (key: string) => AttributeType
+): { model: ReturnType<typeof ref<AttributeFilterModel>> } {
   const model = ref<AttributeFilterModel>(initial)
   const wrapperComponent = defineComponent({
     components: { FormAttributeFilter },
     setup() {
-      return { model, querySuggestions: noopQuerySuggestions, resolveAttributeType: resolve }
+      return { model, querySuggestions, resolveAttributeType: resolve }
     },
     template: `
       <FormAttributeFilter
@@ -56,30 +65,42 @@ function mountForm(
       />
     `
   })
-  const wrapper = mount(wrapperComponent, attach ? { attachTo: document.body } : {})
-  return { wrapper, model }
+  render(wrapperComponent)
+  return { model }
+}
+
+function pillsInOrder(): HTMLElement[] {
+  const outerGroup = screen.getByRole('group', { name: 'Attribute filter' })
+  return within(outerGroup).getAllByRole('group')
+}
+
+async function pickKey(pill: HTMLElement, name: string): Promise<void> {
+  const keyCombobox = within(pill).getByRole('combobox', { name: 'Attribute key' })
+  await userEvent.click(keyCombobox)
+  const filter = screen.getByRole('textbox', { name: 'filter' })
+  // In callback-filtered mode the filter is pre-populated with the current
+  // selection's title; clear it so the typed query starts from scratch.
+  await userEvent.clear(filter)
+  await userEvent.type(filter, name)
+  await userEvent.click(await screen.findByRole('option', { name }))
 }
 
 test('picking a known key applies key and inferred attributeType in one mutation', async () => {
-  const { wrapper, model } = mountForm(makeModel(), (key) =>
-    key === 'http.method' ? 'datapoint' : null
-  )
-  const pills = wrapper.findAllComponents(AttributeFilterPill)
+  const { model } = renderForm(makeModel(), (key) => (key === 'http.method' ? 'datapoint' : null))
   // The pill emits only `update:key`; the parent owns the resolver and merges
   // the inferred attributeType into the same model mutation. A regression that
   // re-splits this into two sequential emits would let the second write
   // overwrite the first via `defineModel`'s deferred prop propagation.
-  pills[0]!.vm.$emit('update:key', 'http.method')
-  await wrapper.vm.$nextTick()
+  await pickKey(pillsInOrder()[0]!, 'http.method')
 
-  expect(model.value[0]).toMatchObject({
+  expect(model.value![0]).toMatchObject({
     id: 'pill-a',
     key: 'http.method',
     attributeType: 'datapoint'
   })
   // Pill B must be untouched — guards against any cross-row contamination
   // that a sloppier identity strategy could introduce.
-  expect(model.value[1]).toMatchObject({
+  expect(model.value![1]).toMatchObject({
     id: 'pill-b',
     key: 'otel.library.name',
     attributeType: 'scope'
@@ -93,58 +114,52 @@ test('picking a key without a resolver hit preserves the existing attributeType'
   const initial = makeModel()
   initial[0]!.attributeType = 'resource'
   initial[0]!.key = 'service.name'
-  const { wrapper, model } = mountForm(initial)
-  const pills = wrapper.findAllComponents(AttributeFilterPill)
-  pills[0]!.vm.$emit('update:key', 'foo.bar')
-  await wrapper.vm.$nextTick()
+  const { model } = renderForm(initial)
+  await pickKey(pillsInOrder()[0]!, 'foo.bar')
 
-  expect(model.value[0]).toMatchObject({ key: 'foo.bar', attributeType: 'resource' })
+  expect(model.value![0]).toMatchObject({ key: 'foo.bar', attributeType: 'resource' })
 })
 
 test('manual attributeType change persists on the targeted row', async () => {
-  const { wrapper, model } = mountForm(makeModel())
-  const pills = wrapper.findAllComponents(AttributeFilterPill)
-  pills[1]!.vm.$emit('update:attributeType', 'datapoint')
-  await wrapper.vm.$nextTick()
+  const { model } = renderForm(makeModel())
+  const typeCombobox = within(pillsInOrder()[1]!).getByRole('combobox', { name: 'Attribute type' })
+  await userEvent.click(typeCombobox)
+  await userEvent.click(await screen.findByRole('option', { name: 'Data point' }))
 
-  expect(model.value[1]!.attributeType).toBe('datapoint')
-  expect(model.value[0]!.attributeType).toBe(null)
+  expect(model.value![1]!.attributeType).toBe('datapoint')
+  expect(model.value![0]!.attributeType).toBe(null)
 })
 
 test('picking a key with no resolver hit auto-opens the type dropdown', async () => {
-  const { wrapper } = mountForm(makeModel(), () => null, { attach: true })
-  const pills = wrapper.findAllComponents(AttributeFilterPill)
-  pills[0]!.vm.$emit('update:key', 'foo.bar')
-  await flushPromises()
+  renderForm(makeModel(), () => null)
+  const pillA = pillsInOrder()[0]!
+  await pickKey(pillA, 'foo.bar')
 
-  const typeButton = pills[0]!.get('[aria-label="Attribute type"]')
-  expect(typeButton.attributes('aria-expanded')).toBe('true')
-  wrapper.unmount()
+  const typeCombobox = within(pillA).getByRole('combobox', { name: 'Attribute type' })
+  await waitFor(() => {
+    expect(typeCombobox.getAttribute('aria-expanded')).toBe('true')
+  })
 })
 
 test('picking a key with a resolver hit does not auto-open the type dropdown', async () => {
-  const { wrapper } = mountForm(
-    makeModel(),
-    (key) => (key === 'http.method' ? 'datapoint' : null),
-    {
-      attach: true
-    }
-  )
-  const pills = wrapper.findAllComponents(AttributeFilterPill)
-  pills[0]!.vm.$emit('update:key', 'http.method')
-  await flushPromises()
+  renderForm(makeModel(), (key) => (key === 'http.method' ? 'datapoint' : null))
+  const pillA = pillsInOrder()[0]!
+  await pickKey(pillA, 'http.method')
 
-  const typeButton = pills[0]!.get('[aria-label="Attribute type"]')
-  expect(typeButton.attributes('aria-expanded')).toBe('false')
-  wrapper.unmount()
+  const typeCombobox = within(pillA).getByRole('combobox', { name: 'Attribute type' })
+  // Give the watcher's nextTick a chance to run; aria-expanded must stay 'false'.
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  expect(typeCombobox.getAttribute('aria-expanded')).toBe('false')
 })
 
 test('remove drops the targeted row by id, leaving siblings intact', async () => {
-  const { wrapper, model } = mountForm(makeModel())
-  const pills = wrapper.findAllComponents(AttributeFilterPill)
-  pills[0]!.vm.$emit('remove')
-  await wrapper.vm.$nextTick()
+  const { model } = renderForm(makeModel())
+  const pillA = pillsInOrder()[0]!
+  const pillALabel = pillLabel(makeModel()[0]!)
+  await userEvent.click(within(pillA).getByRole('button', { name: 'Remove condition' }))
 
   expect(model.value).toHaveLength(1)
-  expect(model.value[0]!.id).toBe('pill-b')
+  expect(model.value![0]!.id).toBe('pill-b')
+  // The removed pill must be gone from the DOM, not just from the model.
+  expect(screen.queryByRole('group', { name: pillALabel })).toBeNull()
 })

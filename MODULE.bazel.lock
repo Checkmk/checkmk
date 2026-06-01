@@ -874,8 +874,8 @@
     },
     "@@perl-modules+//:extensions.bzl%perl_modules": {
       "general": {
-        "bzlTransitiveDigest": "lsDFSrEuPG44MxX7vgP5juTCzT/144pmvhrnHp0H/l0=",
-        "usagesDigest": "zb5Bmth51R1X6HmNEGbi1l2QGzg0cm3DBP7/DoQhzWo=",
+        "bzlTransitiveDigest": "0N81OWmLbJkIaOhPdKTytfOZ9pBrTxSa9PAOUUZw7IQ=",
+        "usagesDigest": "PLGr3pcWDeDtaDHPBwNEWqjFUJCwtbC4FINr6gRb/Zo=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -1230,13 +1230,13 @@
               ]
             }
           },
-          "Text-ParseWords-3.29.tar.gz": {
+          "Text-ParseWords-3.30.tar.gz": {
             "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_file",
             "attributes": {
-              "sha256": "8c45f72afa412d532182963782609517bc42ceb9ccee551aab23459d79959b9a",
+              "sha256": "85e0238179dd43997e58c66bd51611182bc7d533505029a2db0d3232edaff5e8",
               "urls": [
-                "https://mirrors.ircam.fr/pub/devil-linux/devel/sources/1.6/perl-ext/Text-ParseWords-3.29.tar.gz",
-                "https://artifacts.lan.tribe29.com/repository/upstream-archives/Text-ParseWords-3.29.tar.gz"
+                "https://www.cpan.org/modules/by-module/Text/Text-ParseWords-3.30.tar.gz",
+                "https://artifacts.lan.tribe29.com/repository/upstream-archives/Text-ParseWords-3.30.tar.gz"
               ]
             }
           },

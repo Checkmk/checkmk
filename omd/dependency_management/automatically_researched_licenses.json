@@ -551,6 +551,7 @@
   "pkg:cpan/Test%3A%3ACmd@1.08": "Artistic-1.0-Perl OR GPL-1.0-or-later",
   "pkg:cpan/Test%3A%3ASimple@1.001014": "Artistic-1.0-Perl OR GPL-1.0-or-later",
   "pkg:cpan/Text%3A%3AParseWords@3.29": "Artistic-1.0-Perl OR GPL-1.0-or-later",
+  "pkg:cpan/Text%3A%3AParseWords@3.30": "Artistic-1.0-Perl OR GPL-1.0-or-later",
   "pkg:cpan/Try%3A%3ATiny@0.22": "MIT",
   "pkg:cpan/URI@1.67": "Artistic-1.0-Perl OR GPL-1.0-or-later",
   "pkg:cpan/XML%3A%3ALibXML@2.0134": "Artistic-1.0-Perl OR GPL-1.0-or-later",

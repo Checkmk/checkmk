@@ -1,11 +1,11 @@
-"""CPAN module lists split into two install passes.
+"""Module extension that downloads individual CPAN packages as http_file repos."""
 
-PERL_MODULES_LIST_1 is installed with FORCE=1 (foundational build tools).
-PERL_MODULES_LIST_2 is installed without FORCE.
-"""
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+_UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
 
 # @unsorted-dict-items
-PERL_MODULES_LIST_1 = {
+_PERL_MODULES = {
     "ExtUtils-MakeMaker-7.04.tar.gz": {
         "sha256": "98126b012d70c2af0f8e33a07ebe0d6f2340281b2460981b959a9fb31d5ad97f",
         "url": "https://www.cpan.org/modules/by-module/ExtUtils/ExtUtils-MakeMaker-7.04.tar.gz",
@@ -42,10 +42,6 @@ PERL_MODULES_LIST_1 = {
         "sha256": "4e8df3256a5aa9ed304ce1bbcd9140737deef31ba847bff9f4c15480c88c71ab",
         "url": "https://cpan.metacpan.org/authors/id/M/ML/MLEHMANN/JSON-XS-3.01.tar.gz",
     },
-}
-
-# @unsorted-dict-items
-PERL_MODULES_LIST_2 = {
     "Capture-Tiny-0.27.tar.gz": {
         "sha256": "ba54bc0305eb91ee2b0d769470d6bc62edb5b18d9c75b7ea709ea6b31e9bab21",
         "url": "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/Capture-Tiny-0.27.tar.gz",
@@ -150,9 +146,9 @@ PERL_MODULES_LIST_2 = {
         "sha256": "4a9383cf2e0e0194668fe2bd546e894ffad41d556b41d2f2f577c8db682db241",
         "url": "https://www.cpan.org/modules/by-module/Term/TermReadKey-2.37.tar.gz",
     },
-    "Text-ParseWords-3.29.tar.gz": {
-        "sha256": "8c45f72afa412d532182963782609517bc42ceb9ccee551aab23459d79959b9a",
-        "url": "https://mirrors.ircam.fr/pub/devil-linux/devel/sources/1.6/perl-ext/Text-ParseWords-3.29.tar.gz",
+    "Text-ParseWords-3.30.tar.gz": {
+        "sha256": "85e0238179dd43997e58c66bd51611182bc7d533505029a2db0d3232edaff5e8",
+        "url": "https://www.cpan.org/modules/by-module/Text/Text-ParseWords-3.30.tar.gz",
     },
     "Time-HiRes-1.9726.tar.gz": {
         "sha256": "ff662ad9b1f6c75a149db7fa1bfc7a161ac8b271e5f3980345e08b734769109e",
@@ -351,3 +347,18 @@ PERL_MODULES_LIST_2 = {
         "url": "https://src.fedoraproject.org/repo/pkgs/perl-DateTime/DateTime-1.18.tar.gz/58160bea9744a7bc9d7737f7dad9fa72/DateTime-1.18.tar.gz",
     },
 }
+
+def _perl_modules_impl(module_ctx):
+    for name, attrs in _PERL_MODULES.items():
+        http_file(
+            name = name,
+            sha256 = attrs["sha256"],
+            urls = [
+                attrs["url"],
+                _UPSTREAM_MIRROR_URL + name,
+            ],
+        )
+
+perl_modules = module_extension(
+    implementation = _perl_modules_impl,
+)

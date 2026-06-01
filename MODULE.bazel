@@ -381,6 +381,11 @@ http_archive(
 http_archive(
     name = "erlang",
     build_file = "//omd/packages/erlang:BUILD.erlang.bazel",
+    patch_args = ["-p1"],
+    patch_tool = "patch",
+    patches = [
+        "//omd/packages/erlang/patches:0001-strip-bazel-paths-from-compile-info.dif",
+    ],
     sha256 = "a02efb423a7ecdee661b3c3ad2661521d9c00c2dd866c004d95a87d486a03bab",
     strip_prefix = "otp_src_26.2.5.13",
     urls = [

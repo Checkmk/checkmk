@@ -71,6 +71,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
     folder_tree,
+    FolderTree,
     validate_host_uniqueness,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
@@ -536,7 +537,7 @@ class ModeRenameHost(WatoMode):
 
         newname = request.get_validated_type_input_mandatory(HostName, "newname")
         folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
-        self._check_new_host_name(folder, "newname", newname)
+        self._check_new_host_name(folder_tree(), folder, "newname", newname)
         # Creating pending entry. That makes the site dirty and that will force a sync of
         # the config to that site before the automation is being done.
         host_renaming_job = RenameHostBackgroundJob(self._host)
@@ -571,12 +572,14 @@ class ModeRenameHost(WatoMode):
 
         return redirect(host_renaming_job.detail_url())
 
-    def _check_new_host_name(self, folder: Folder, varname: str, host_name: HostName) -> None:
+    def _check_new_host_name(
+        self, tree: FolderTree, folder: Folder, varname: str, host_name: HostName
+    ) -> None:
         if not host_name:
             raise MKUserError(varname, _("Please specify a host name."))
         if folder.has_host(host_name):
             raise MKUserError(varname, _("A host with this name already exists in this folder."))
-        validate_host_uniqueness(varname, host_name)
+        validate_host_uniqueness(tree, varname, host_name)
         Hostname().validate_value(host_name, varname)
 
     def page(self, config: Config) -> None:

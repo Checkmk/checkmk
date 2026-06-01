@@ -2589,13 +2589,12 @@ class Folder(FolderProtocol):
         folder_path = self.path()
         self.tree.folder_lookup_cache.add_hosts([(x[0], folder_path) for x in entries])
 
-    @staticmethod
     def verify_and_update_host_details(
-        name: HostName, attributes: HostAttributes
+        self, name: HostName, attributes: HostAttributes
     ) -> HostAttributes:
         # MKAuthException, MKUserError
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
-        validate_host_uniqueness("host", name)
+        validate_host_uniqueness(self.tree, "host", name)
         return update_metadata(attributes, created_by=user.id)
 
     def _propagate_hosts_changes(
@@ -2703,14 +2702,14 @@ class Folder(FolderProtocol):
                 _("You cannot delete these hosts: %s") % ", ".join(errors),
             )
 
-    @staticmethod
     def _get_hosts_locked_by_quick_setup(
+        self,
         host_names: Collection[HostName],
     ) -> list[HostName]:
         return [
             host_name
             for host_name in host_names
-            if is_locked_by_quick_setup(folder_tree().load_host(host_name).locked_by())
+            if is_locked_by_quick_setup(self.tree.load_host(host_name).locked_by())
         ]
 
     @staticmethod
@@ -3103,8 +3102,8 @@ class WATOFoldersOnDemand(Mapping[PathWithoutSlash, Folder]):
         )
 
 
-def validate_host_uniqueness(varname: str, host_name: HostName) -> None:
-    host = folder_tree().host(host_name)
+def validate_host_uniqueness(tree: FolderTree, varname: str, host_name: HostName) -> None:
+    host = tree.host(host_name)
     if host:
         raise MKUserError(
             varname,

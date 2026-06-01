@@ -1846,6 +1846,7 @@
   "pkg:pypi/pydantic-core@2.41.5": "MIT",
   "pkg:pypi/pydantic@2.12.5": "MIT",
   "pkg:pypi/pygments@2.19.2": "BSD-2-Clause",
+  "pkg:pypi/pygments@2.20.0": "BSD-2-Clause",
   "pkg:pypi/pyjwt@2.11.0": "MIT",
   "pkg:pypi/pymongo@4.16.0": "Apache-2.0",
   "pkg:pypi/pymysql@1.1.2": "MIT",

@@ -1866,6 +1866,7 @@
   "pkg:pypi/python-active-directory@2.0.1": "MIT",
   "pkg:pypi/python-ldap@3.4.5": "python-ldap",
   "pkg:pypi/python-multipart@0.0.22": "Apache-2.0",
+  "pkg:pypi/python-multipart@0.0.30": "Apache-2.0",
   "pkg:pypi/python-snap7@2.0.2": "MIT",
   "pkg:pypi/pytz@2025.2": "MIT",
   "pkg:pypi/pyyaml-ft@8.0.0": "MIT",

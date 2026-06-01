@@ -1,6 +1,6 @@
 module(
     name = "perl-modules",
-    version = "0.0.1.cmk.1",
+    version = "0.0.1.cmk.2",
     bazel_compatibility = [">=7.2.1"],
     compatibility_level = 1,
 )
@@ -79,7 +79,7 @@ use_repo(
     "TermReadKey-2.37.tar.gz",
     "Test-Cmd-1.08.tar.gz",
     "Test-Simple-1.001014.tar.gz",
-    "Text-ParseWords-3.29.tar.gz",
+    "Text-ParseWords-3.30.tar.gz",
     "Time-HiRes-1.9726.tar.gz",
     "Try-Tiny-0.22.tar.gz",
     "Types-Serialiser-1.0.tar.gz",

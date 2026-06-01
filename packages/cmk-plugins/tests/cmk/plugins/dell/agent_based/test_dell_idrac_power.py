@@ -128,13 +128,21 @@ def test_discover_dell_idrac_power_unit(
         pytest.param(
             "1",
             [_REDUNDANCY, _POWER_UNITS, [["iDRAC10"]]],
-            [Result(state=State.OK, summary="Status: OK, Type: AC, Name: PS1 Status")],
+            [
+                Result(state=State.OK, summary="Status: OK"),
+                Result(state=State.OK, summary="Type: AC"),
+                Result(state=State.OK, summary="Name: PS1 Status"),
+            ],
             id="status 3 (OK), type 9 (AC)",
         ),
         pytest.param(
             "2",
             [_REDUNDANCY, _POWER_UNITS, [["iDRAC10"]]],
-            [Result(state=State.CRIT, summary="Status: CRITICAL, Type: AC, Name: PS2 Status")],
+            [
+                Result(state=State.CRIT, summary="Status: CRITICAL"),
+                Result(state=State.OK, summary="Type: AC"),
+                Result(state=State.OK, summary="Name: PS2 Status"),
+            ],
             id="status 5 (CRITICAL), type 9 (AC)",
         ),
         pytest.param(

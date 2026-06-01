@@ -652,9 +652,9 @@ click==8.3.1 \
     #   flask
     #   uvicorn
     #   x-wr-timezone
-cmk-werk-zeug==0.3.2 \
-    --hash=sha256:485e163ee7905193e32b564fa6df96fac694eecd8ddcc3d747380631da019d08 \
-    --hash=sha256:c79cefe217dfd0a4b110202a4c3fdcb71301153972c51075aa4c955b980202a8
+cmk-werk-zeug==0.3.5 \
+    --hash=sha256:a738eac8967a965cb0f177896d3f0f0fc2def1f70bf9fb869b7398df773fd009 \
+    --hash=sha256:ab22c271c0c8ae26a53638c2782cce27cda4ad46bed0f3453ce6922e9865439b
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in

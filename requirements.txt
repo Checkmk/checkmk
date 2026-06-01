@@ -683,9 +683,9 @@ clickhouse-connect==0.15.1 \
     --hash=sha256:f2aaf5fc0bb3098c24f0d8ca7e4ecbe605a26957481dfca2c8cef9d1fad7b7ca \
     --hash=sha256:fa01fdb92db6bf72cb9509eecd0a0057a4558a4f40c02eebffbc2d61b644620e
     # via -r non-free/packages/cmk-metric-backend/requirements.in
-cmk-werk-zeug==0.3.2 \
-    --hash=sha256:485e163ee7905193e32b564fa6df96fac694eecd8ddcc3d747380631da019d08 \
-    --hash=sha256:c79cefe217dfd0a4b110202a4c3fdcb71301153972c51075aa4c955b980202a8
+cmk-werk-zeug==0.3.5 \
+    --hash=sha256:a738eac8967a965cb0f177896d3f0f0fc2def1f70bf9fb869b7398df773fd009 \
+    --hash=sha256:ab22c271c0c8ae26a53638c2782cce27cda4ad46bed0f3453ce6922e9865439b
     # via -r tests/dev-requirements.in
 colorama==0.4.6 \
     --hash=sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44 \

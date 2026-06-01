@@ -27,7 +27,7 @@ from cmk.gui.openapi.framework.model.restrict_features import RestrictFeatures
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.watolib import bakery
-from cmk.gui.watolib.hosts_and_folders import Folder, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.licensing.basics.options import OptionName
 
 from ._utils import (
@@ -110,7 +110,7 @@ def bulk_create_host_v1(
         bakery.try_bake_agents_for_hosts(succeeded_hosts, debug=api_context.config.debug)
 
     return bulk_host_action_response(
-        failed_hosts, [Host.load_host(host_name) for host_name in succeeded_hosts]
+        failed_hosts, [folder_tree().load_host(host_name) for host_name in succeeded_hosts]
     )
 
 

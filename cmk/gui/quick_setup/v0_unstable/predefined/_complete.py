@@ -61,6 +61,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     _normalize_folder_name,
     Folder,
     folder_tree,
+    FolderTree,
     Host,
 )
 from cmk.gui.watolib.passwords import load_passwords
@@ -95,8 +96,8 @@ class DCDHook:
     ] = lambda *_args: []
 
 
-def sanitize_folder_path(
-    folder_path: str, *, pprint_value: bool, pending_changes: PendingChanges
+def _sanitize_folder_path(
+    tree: FolderTree, folder_path: str, *, pprint_value: bool, pending_changes: PendingChanges
 ) -> Folder:
     """Attempt to get the folder from the folder path. If the folder does not exist, create it.
     Returns the folder object."""
@@ -104,7 +105,7 @@ def sanitize_folder_path(
     if folder := existing_folder_from_path(sanitized_folder_path):
         return folder
 
-    folder = folder_tree().root_folder()
+    folder = tree.root_folder()
     for title in sanitized_folder_path.split("/"):
         name = _normalize_folder_name(title)
         folder = (
@@ -326,7 +327,8 @@ def _create_and_save_special_agent_bundle(
         ),
     )
     # TODO: The sanitize function is likely to change once we have a folder FormSpec.
-    folder = sanitize_folder_path(
+    folder = _sanitize_folder_path(
+        (tree := folder_tree()),
         host_path,
         pprint_value=active_config.wato_pprint_config,
         pending_changes=pending_changes,
@@ -384,6 +386,7 @@ def _create_and_save_special_agent_bundle(
         progress_logger.log_new_progress_step("service_discovery", "Run service discovery")
         try:
             _run_service_discovery(
+                tree,
                 host_name,
                 site_id,
                 automation_config=make_automation_config(active_config.sites[site_id]),
@@ -495,6 +498,7 @@ def _get_service_discovery_result(
 
 
 def _run_service_discovery(
+    tree: FolderTree,
     host_name: str,
     site_id: SiteId,
     *,
@@ -505,7 +509,7 @@ def _run_service_discovery(
     use_git: bool,
     pending_changes: PendingChanges,
 ) -> None:
-    host: Host = Host.load_host(HostName(host_name))
+    host = tree.load_host(HostName(host_name))
     # For remote sites this also implicitly syncs the pending changes to run the discovery
     get_check_table(
         host,

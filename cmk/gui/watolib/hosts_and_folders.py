@@ -1033,6 +1033,12 @@ class FolderTree:
     def all_hosts(self) -> dict[HostName, Host]:
         return self.root_folder().all_hosts_recursively()
 
+    def load_host(self, host_name: HostName) -> Host:
+        host = self.host(host_name)
+        if host is None:
+            raise MKUserError(None, "Host could not be found.", status=404)
+        return host
+
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder]:
         if "wato_folders" not in g:
             g.wato_folders = _wato_folders_factory(self)
@@ -2704,7 +2710,7 @@ class Folder(FolderProtocol):
         return [
             host_name
             for host_name in host_names
-            if is_locked_by_quick_setup(Host.load_host(host_name).locked_by())
+            if is_locked_by_quick_setup(folder_tree().load_host(host_name).locked_by())
         ]
 
     @staticmethod
@@ -3331,21 +3337,6 @@ def parent_folder_chain(origin: SearchFolder | Folder) -> list[Folder]:
 
 class Host:
     """Class representing one host that is managed via Setup. Hosts are contained in Folders."""
-
-    # .--------------------------------------------------------------------.
-    # | STATIC METHODS                                                     |
-    # '--------------------------------------------------------------------'
-
-    @staticmethod
-    def load_host(host_name: HostName) -> Host:
-        host = folder_tree().host(host_name)
-        if host is None:
-            raise MKUserError(None, "Host could not be found.", status=404)
-        return host
-
-    # .--------------------------------------------------------------------.
-    # | CONSTRUCTION, LOADING & SAVING                                     |
-    # '--------------------------------------------------------------------'
 
     def __init__(
         self,

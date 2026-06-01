@@ -26,7 +26,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainType
 from cmk.gui.openapi.utils import serve_json
 from cmk.gui.utils import permission_verification as permissions
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.parent_scan import (
     ParentScanBackgroundJob,
     ParentScanSettings,
@@ -73,9 +73,10 @@ def start_parent_scan_background_job(params: Mapping[str, Any]) -> Response:
             assert_never(other)
 
     parent_scan_job = ParentScanBackgroundJob()
+    tree = folder_tree()
     if (
         result := start_parent_scan(
-            hosts=[Host.load_host(name) for name in body["host_names"]],
+            hosts=[tree.load_host(name) for name in body["host_names"]],
             job=parent_scan_job,
             settings=ParentScanSettings(
                 where=where,

@@ -258,7 +258,7 @@ def create_host(params: Mapping[str, Any]) -> Response:
     if params[BAKE_AGENT_PARAM_NAME]:
         bakery.try_bake_agents_for_hosts([host_name], debug=active_config.debug)
 
-    host = Host.load_host(host_name)
+    host = folder_tree().load_host(host_name)
     return _serve_host(
         host,
         host_fields_filter(is_collection=False, include_links=True, effective_attributes=False),
@@ -296,7 +296,7 @@ def create_cluster_host(params: Mapping[str, Any]) -> Response:
     if params[BAKE_AGENT_PARAM_NAME]:
         bakery.try_bake_agents_for_hosts([host_name], debug=active_config.debug)
 
-    host = Host.load_host(host_name)
+    host = folder_tree().load_host(host_name)
     return _serve_host(
         host,
         host_fields_filter(is_collection=False, include_links=True, effective_attributes=False),
@@ -384,8 +384,9 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
     if params[BAKE_AGENT_PARAM_NAME]:
         bakery.try_bake_agents_for_hosts(succeeded_hosts, debug=active_config.debug)
 
+    tree = folder_tree()
     return _bulk_host_action_response(
-        failed_hosts, [Host.load_host(host_name) for host_name in succeeded_hosts]
+        failed_hosts, [tree.load_host(host_name) for host_name in succeeded_hosts]
     )
 
 
@@ -556,7 +557,7 @@ def update_nodes(params: Mapping[str, Any]) -> Response:
     host_name = params["host_name"]
     body = params["body"]
     nodes = body["nodes"]
-    host: Host = Host.load_host(host_name)
+    host = folder_tree().load_host(host_name)
     _require_host_etag(host)
     host.edit(
         host.attributes,
@@ -625,7 +626,7 @@ def update_host(params: Mapping[str, Any]) -> Response:
     """Update a host"""
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_hosts")
-    host: Host = Host.load_host(params["host_name"])
+    host = folder_tree().load_host(params["host_name"])
     _require_host_etag(host)
     body = params["body"]
 
@@ -712,7 +713,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     hosts_by_folder: dict[Folder, list[Host]] = {}
     host_name_to_updates: dict[HostName, list[dict[str, Any]]] = {}
     for update_detail in body["entries"]:
-        host = Host.load_host(update_detail["host_name"])
+        host = folder_tree().load_host(update_detail["host_name"])
         hosts_by_folder.setdefault(host.folder(), []).append(host)
         host_name_to_updates.setdefault(host.name(), []).append(update_detail)
 
@@ -812,7 +813,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
             detail="Please activate all pending changes before executing a host rename process",
         )
     host_name = HostName(params["host_name"])
-    host: Host = Host.load_host(host_name)
+    host = folder_tree().load_host(host_name)
     new_name = HostName(params["body"]["new_name"])
 
     if is_locked_by_quick_setup(host.locked_by()):
@@ -931,7 +932,7 @@ def move(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.move_hosts")
     host_name = params["host_name"]
-    host: Host = Host.load_host(host_name)
+    host = folder_tree().load_host(host_name)
     _require_host_etag(host)
     current_folder = host.folder()
     target_folder: Folder = params["body"]["target_folder"]
@@ -977,7 +978,7 @@ def move(params: Mapping[str, Any]) -> Response:
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a host"""
     user.need_permission("wato.edit")
-    host: Host = Host.load_host(params["host_name"])
+    host = folder_tree().load_host(params["host_name"])
     host.folder().delete_hosts(
         [host.name()],
         automation=delete_hosts,
@@ -1008,8 +1009,9 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     # Ideally, we would not need folder id's. However, folders cannot be sorted.
     folder_by_id = {}
     folder_id_by_hostname = {}
+    tree = folder_tree()
     for hostname in hostnames:
-        folder = Host.load_host(hostname).folder()
+        folder = tree.load_host(hostname).folder()
         folder_id_by_hostname[hostname] = folder.id()
         folder_by_id[folder.id()] = folder
 
@@ -1054,7 +1056,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
 def show_host(params: Mapping[str, Any]) -> Response:
     """Show a host"""
     host_name = params["host_name"]
-    host: Host = Host.load_host(host_name)
+    host = folder_tree().load_host(host_name)
     return _serve_host(
         host,
         _fields_filter_from_params(params, is_collection=False),

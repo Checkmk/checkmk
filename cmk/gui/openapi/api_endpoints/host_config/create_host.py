@@ -26,7 +26,7 @@ from cmk.gui.openapi.framework.model.restrict_features import RestrictFeatures
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.watolib import bakery
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.licensing.basics.options import OptionName
 
 from ._utils import (
@@ -84,7 +84,7 @@ def create_host_v1(
     if not isinstance(bake_agent, ApiOmitted) and bake_agent:
         bakery.try_bake_agents_for_hosts([host_name], debug=api_context.config.debug)
 
-    host = Host.load_host(host_name)
+    host = folder_tree().load_host(host_name)
     return ApiResponse(
         body=serialize_host(host, compute_effective_attributes=False, compute_links=True),
         status_code=200,

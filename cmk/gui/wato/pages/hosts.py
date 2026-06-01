@@ -310,7 +310,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                 )
 
             node_computed_datasources = cmk.utils.tags.compute_datasources(
-                Host.load_host(cluster_node).tag_groups()
+                tree.load_host(cluster_node).tag_groups()
             )
 
             if datasource_differences := cluster_computed_datasources.get_differences_to(

@@ -40,7 +40,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
 )
 from cmk.gui.watolib.check_mk_automations import analyze_host_rule_matches, delete_hosts
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, FolderTree, Host
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
@@ -70,6 +70,7 @@ def execute_host_removal_job(config: Config) -> None:
     def _folder_of_host(h: Host) -> Folder:
         return h.folder()
 
+    tree = folder_tree()
     try:
         _LOGGER.info("Starting host removal background job")
 
@@ -77,6 +78,7 @@ def execute_host_removal_job(config: Config) -> None:
             hosts_to_be_removed := {
                 site_id: hosts
                 for site_id, hosts in _hosts_to_be_removed(
+                    tree=tree,
                     automation_configs={
                         site_id: make_automation_config(
                             config.sites[site_id],
@@ -124,6 +126,7 @@ def execute_host_removal_job(config: Config) -> None:
 
         _LOGGER.info("Hosts removed, starting activation of changes")
         _activate_changes(
+            tree,
             config.sites,
             UserPermissionSerializableConfig.from_global_config(config),
             hosts_to_be_removed,
@@ -150,17 +153,19 @@ def _init_logging() -> None:
 
 def _hosts_to_be_removed(
     *,
+    tree: FolderTree,
     automation_configs: Mapping[SiteId, LocalAutomationConfig | RemoteAutomationConfig],
     debug: bool,
 ) -> list[tuple[SiteId, list[Host]]]:
     _LOGGER_BACKGROUND_JOB.info("Gathering hosts to be removed")
     return [
-        (site_id, _hosts_to_be_removed_for_site(site_id, automation_config, debug=debug))
+        (site_id, _hosts_to_be_removed_for_site(tree, site_id, automation_config, debug=debug))
         for site_id, automation_config in automation_configs.items()
     ]
 
 
 def _hosts_to_be_removed_for_site(
+    tree: FolderTree,
     site_id: SiteId,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     *,
@@ -192,7 +197,7 @@ def _hosts_to_be_removed_for_site(
             return []
         hostnames = json.loads(hostnames_serialized)
 
-    return [Host.load_host(hostname) for hostname in hostnames]
+    return [tree.load_host(hostname) for hostname in hostnames]
 
 
 def _hosts_to_be_removed_local(*, debug: bool) -> Iterator[HostName]:
@@ -277,6 +282,7 @@ def _should_delete_host(
 
 
 def _activate_changes(
+    tree: FolderTree,
     all_site_configs: SiteConfigurations,
     user_permission_config: UserPermissionSerializableConfig,
     sites: Collection[SiteId],
@@ -288,7 +294,7 @@ def _activate_changes(
     _LOGGER_BACKGROUND_JOB.debug("Activating changes for %d site(s)", len(sites))
 
     # workaround until CMK-13093 is fixed
-    folder_tree().invalidate_caches()
+    tree.invalidate_caches()
     manager = ActivateChangesManager()
     manager.changes.load(list(all_site_configs))
     with SuperUserContext():

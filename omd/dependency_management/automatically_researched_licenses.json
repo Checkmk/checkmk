@@ -1771,6 +1771,7 @@
   "pkg:pypi/fastapi@0.129.0": "MIT",
   "pkg:pypi/feedparser@6.0.12": "BSD-2-Clause",
   "pkg:pypi/flask@3.1.2": "BSD-3-Clause",
+  "pkg:pypi/flask@3.1.3": "BSD-3-Clause",
   "pkg:pypi/frozenlist@1.8.0": "Apache-2.0",
   "pkg:pypi/genson@1.3.0": "MIT",
   "pkg:pypi/gitpython@3.1.46": "BSD-3-Clause",

@@ -56,8 +56,7 @@ def render(
     for g in routed_groups:
         family = _family_from_match(g.get("matched_path") or "", g.get("check_type") or "")
         owner = g.get("owner_email") or plugins_coordinator_email
-        addon = "cmk_addons" in (g.get("plugin_path") or "")
-        enriched.append({**g, "_family": family, "_owner": owner, "_addon": addon})
+        enriched.append({**g, "_family": family, "_owner": owner})
 
     by_owner: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for g in enriched:
@@ -79,8 +78,9 @@ def render(
         "",
         (
             f"{total_groups} groups / {total_crashes} crashes — "
-            f"after filtering out solved groups and groups whose newest report is on "
-            f"{_prev_minor(min_version_label)} or older. Crash count in parens after each link."
+            f"after filtering out solved groups, groups whose newest report is on "
+            f"{_prev_minor(min_version_label)} or older, and third-party plugins installed "
+            f"under a site's local/ directory. Crash count in parens after each link."
         ),
         "",
     ]
@@ -141,8 +141,7 @@ def _render_owner_block(
     ):
         out.append(f"{fam}:")
         for e in sorted(by_fam[fam], key=lambda x: (-int(x["num_crashes"]), int(x["group_id"]))):
-            tag = " [addon]" if e["_addon"] else ""
-            out.append(f"{CRASH_GROUP_URL.format(gid=e['group_id'])} ({e['num_crashes']}){tag}")
+            out.append(f"{CRASH_GROUP_URL.format(gid=e['group_id'])} ({e['num_crashes']})")
     out.append("")
     return out
 

@@ -16,7 +16,7 @@ from .cache import cache_dir, load_previous_snapshot, write_snapshot
 from .diff import make_snapshot, render_diff
 from .emit import render
 from .fetch import fetch_enriched_groups
-from .routing import load_components, route_group
+from .routing import is_external_plugin, load_components, route_group
 
 
 def parse_min_version(s: str) -> tuple[int, int]:
@@ -70,8 +70,14 @@ def main(argv: list[str] | None = None) -> int:
 
     print("# fetching crash groups…", file=sys.stderr)
     t0 = time.time()
-    enriched = fetch_enriched_groups(min_version=min_version, use_cache=not args.no_cache)
-    print(f"# enriched {len(enriched)} groups in {time.time() - t0:.1f}s", file=sys.stderr)
+    enriched_all = fetch_enriched_groups(min_version=min_version, use_cache=not args.no_cache)
+    enriched = [g for g in enriched_all if not is_external_plugin(g.plugin_path or "")]
+    n_external = len(enriched_all) - len(enriched)
+    print(
+        f"# enriched {len(enriched_all)} groups in {time.time() - t0:.1f}s "
+        f"(excluded {n_external} third-party / site-local plugin groups)",
+        file=sys.stderr,
+    )
 
     print("# loading component owners…", file=sys.stderr)
     components, path_index = load_components(force_refresh=args.refresh_components)

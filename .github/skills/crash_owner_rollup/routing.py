@@ -25,6 +25,17 @@ from .cache import cache_dir
 GENERIC_PLUGINS_ID = "plugins"
 COMPONENTS_TTL_SECONDS = 24 * 3600
 
+# Site-local install roots. Plugins whose crashing frame lives here are
+# third-party / MKP installs, not shipped Checkmk core (core lives under
+# lib/python3/ without a local/ segment). They are filtered out of the rollup.
+_LOCAL_INSTALL_MARKERS: tuple[str, ...] = ("/local/lib/python3/", "/local/share/check_mk/")
+
+
+def is_external_plugin(plugin_path: str) -> bool:
+    """True if the crash originates in a site-local (third-party / MKP) plugin."""
+    return any(marker in plugin_path for marker in _LOCAL_INSTALL_MARKERS)
+
+
 # Bare filenames too generic to fuzzy-match against the repo
 SKIP_BARE: frozenset[str] = frozenset(
     {

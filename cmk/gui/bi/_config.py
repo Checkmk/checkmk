@@ -912,6 +912,7 @@ class ModeBIRules(ABCBIMode):
         with html.form_context(
             "bulk_action_form",
             method="POST",
+            action=self.mode_url(pack=self.bi_pack.id),
         ):
             if self._view_type == "list":
                 self.render_rules(_("Rules"), only_unused=False)
@@ -2225,6 +2226,7 @@ class BIModeAggregations(ABCBIMode):
         with html.form_context(
             "bulk_action_form",
             method="POST",
+            action=mode_url(self.name(), pack=self.bi_pack.id),
         ):
             self._render_aggregations()
             html.hidden_field("selection_id", weblib.selection_id())

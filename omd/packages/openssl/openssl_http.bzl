@@ -13,4 +13,9 @@ def openssl_workspace():
         sha256 = "c80a01dfc70ece4dc21168932c37739042d404d46ccc81a5986dd75314ecda6f",
         build_file = "@omd_packages//omd/packages/openssl:BUILD.openssl.bazel",
         strip_prefix = "openssl-" + version_str,
+        patch_args = ["-p1"],
+        patch_tool = "patch",
+        patches = [
+            "@omd_packages//omd/packages/openssl/patches:0001-strip-bazel-paths-from-buildinf.patch",
+        ],
     )

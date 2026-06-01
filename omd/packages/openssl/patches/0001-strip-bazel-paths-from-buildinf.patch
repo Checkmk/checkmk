@@ -1,0 +1,40 @@
+Strip the Bazel sandbox path from libcrypto's recorded compiler flags.
+
+OpenSSL records the compiler command line into buildinf.h as
+compiler_flags[] (crypto/build.info runs util/mkbuildinf.pl with
+"$(CC) $(LIB_CFLAGS) $(CPPFLAGS_Q)"), and crypto/cversion.c compiles it
+into libcrypto, surfaced via OpenSSL_version(OPENSSL_CFLAGS).  Under
+Bazel/rules_foreign_cc that string contains the absolute sandbox
+execroot path -- either the cross toolchain's compiler path (e.g.
+.../execroot/_main/external/toolchains_musl+.../bin/aarch64-linux-musl-gcc
+in the musl static builds) or the -ffile-prefix-map=<execroot>=. flag
+added by set_file_prefix_map.  Either way the build host's directory
+layout leaks into libcrypto's .rodata and into every binary that
+statically links it (cmk-agent-ctl, mk-sql, ...), tripping the package
+build-path validator.
+
+rules_foreign_cc exports the execroot as $EXT_BUILD_ROOT, so strip that
+single prefix from the recorded flags, mapping it to "." to mirror the
+-ffile-prefix-map=$EXT_BUILD_ROOT=. convention.  The substitution only
+fires when $EXT_BUILD_ROOT is set, so a plain (non-Bazel) OpenSSL build
+is unaffected.  These flags are purely informational; nothing resolves
+them as paths.
+
+--- a/util/mkbuildinf.pl
++++ b/util/mkbuildinf.pl
+@@ -11,6 +11,15 @@
+
+ my $platform = pop @ARGV;
+ my $cflags = join(' ', @ARGV);
++# Checkmk: strip the Bazel sandbox/execroot prefix from the recorded
++# compiler flags so it does not leak into libcrypto's buildinf
++# compiler_flags[] (surfaced via OpenSSL_version(OPENSSL_CFLAGS)).
++# EXT_BUILD_ROOT is exported by rules_foreign_cc; when unset (non-Bazel
++# builds) this is a no-op, mirroring -ffile-prefix-map=$EXT_BUILD_ROOT=.
++if (defined($ENV{EXT_BUILD_ROOT}) && $ENV{EXT_BUILD_ROOT} ne '') {
++    my $ext_build_root = $ENV{EXT_BUILD_ROOT};
++    $cflags =~ s/\Q$ext_build_root\E/./g;
++}
+ $cflags =~ s(\\)(\\\\)g;
+ $cflags = "compiler: $cflags";
+

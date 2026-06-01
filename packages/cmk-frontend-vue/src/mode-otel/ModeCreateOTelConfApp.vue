@@ -53,6 +53,7 @@ const props = defineProps<{
   metric_backend_allowed: boolean
   overview_url: string
   cloud_grpc_receiver_endpoint?: string | null
+  cloud_http_receiver_endpoint?: string | null
 }>()
 
 const { _t } = usei18n()
@@ -424,6 +425,7 @@ async function onSaveClick(): Promise<void> {
           :grpc-event-console="grpcEventConsole"
           :http-event-console="httpEventConsole"
           :cloud-grpc-endpoint="cloud_grpc_receiver_endpoint ?? null"
+          :cloud-http-endpoint="cloud_http_receiver_endpoint ?? null"
         />
       </template>
 

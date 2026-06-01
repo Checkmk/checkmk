@@ -661,22 +661,26 @@ custom_metrics:
 
     #[test]
     fn test_custom_metric_path_parsed_absolute() {
-        const SOURCE: &str = r#"
+        #[cfg(not(windows))]
+        let sql_path = "/test/checkmk/sql/heavy_query.sql";
+        #[cfg(windows)]
+        let sql_path = r"C:\test\checkmk\sql\heavy_query.sql";
+        let source = format!(
+            r#"
 custom_metrics:
   - heavy_query:
-      path: "/opt/checkmk/sql/heavy_query.sql"
-"#;
-        let s = Sections::from_yaml(&create_yaml(SOURCE), &Sections::default()).unwrap();
+      path: '{}'
+"#,
+            sql_path
+        );
+        let s = Sections::from_yaml(&create_yaml(source), &Sections::default()).unwrap();
         let custom: Vec<&Section> = s
             .sections()
             .iter()
             .filter(|sec| sec.is_custom_metric())
             .collect();
         assert_eq!(custom.len(), 1);
-        assert_eq!(
-            custom[0].path(),
-            Some(Path::new("/opt/checkmk/sql/heavy_query.sql"))
-        );
+        assert_eq!(custom[0].path(), Some(Path::new(sql_path)));
         assert!(custom[0].path().is_some_and(|p| p.is_absolute()));
     }
 

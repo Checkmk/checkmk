@@ -289,9 +289,7 @@ try {
         $env:CI_ORA2_DB_TEST = "${test_host}:${test_user}:${pass}:${test_port}:${test_instance}::${test_service}:${test_sid}:_:"
         Write-Host "CI_ORA2_DB_TEST set from CI_ORA_TEST_PASSWORD" -ForegroundColor Green
 
-        # Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
-        # Write-Host "Tests OK!" -ForegroundColor Green
-        Write-Host "TEST IS SKIPPED on Windows" -ForegroundColor Yellow
+        Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
     }
     if ($packDoc) {
         Invoke-Cargo-With-Explicit-Package "doc"

@@ -317,7 +317,7 @@ fn try_find_instance_runtime() -> Option<PathBuf> {
 
     const ENV_VAR: &str = "ORACLE_HOME";
     if let Some(runtime) =
-        find_default_instance_runtime(ENV_VAR).filter(|r| validate_permissions(r))
+        find_default_instance_runtime(ENV_VAR, false).filter(|r| validate_permissions(r))
     {
         Some(runtime)
     } else {
@@ -326,7 +326,10 @@ fn try_find_instance_runtime() -> Option<PathBuf> {
     }
 }
 
-pub fn find_default_instance_runtime(env_var: &str) -> Option<PathBuf> {
+pub fn find_default_instance_runtime(
+    env_var: &str,
+    skip_permission_validation: bool,
+) -> Option<PathBuf> {
     let oracle_home = match std::env::var(env_var) {
         Ok(path) => path,
         Err(_) => {
@@ -340,7 +343,7 @@ pub fn find_default_instance_runtime(env_var: &str) -> Option<PathBuf> {
     if !candidate.is_dir() {
         log::warn!("{} path {:?} is not a directory", env_var, candidate);
         None
-    } else if !validate_permissions(&candidate) {
+    } else if !validate_permissions(&candidate) && !skip_permission_validation {
         log::warn!("{env_var} path {:?} has wrong permissions", candidate);
         None
     } else {

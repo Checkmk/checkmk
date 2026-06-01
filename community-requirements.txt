@@ -3288,9 +3288,9 @@ paho-mqtt==2.1.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-paramiko==4.0.0 \
-    --hash=sha256:0e20e00ac666503bf0b4eda3b6d833465a2b7aff2e2b3d79a8bba5ef144ee3b9 \
-    --hash=sha256:6a25f07b380cc9c9a88d2b920ad37167ac4667f8d9886ccebd8f90f654b5d69f
+paramiko==5.0.0 \
+    --hash=sha256:36763b5b95c2a0dcfdf1abc48e48156ee425b21efe2f0e787c2dd5a95c0e5e79 \
+    --hash=sha256:b7044611c30140d9a75261653210e2002977b71a0497ff3ba0d98d7edbf62f7c
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in

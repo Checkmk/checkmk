@@ -254,6 +254,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -
             name=view.name,
             spec=view.spec,
             context=view.context,
+            only_sites=view.only_sites,
             process_tracking=view.process_tracking,
             breadcrumb=breadcrumb,
             aggr_rows=rows,

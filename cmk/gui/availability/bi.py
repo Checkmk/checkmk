@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections import Counter
 from collections.abc import Generator, Sequence
-from typing import Any
+from typing import Any, NamedTuple
 
 from livestatus import (
     LivestatusRow,
@@ -90,20 +91,24 @@ class TimelineContainer:
         self.tree_time: AVTimeStamp | None = None
 
 
+class BIAvailability(NamedTuple):
+    timeline_containers: list[TimelineContainer]
+    av_rawdata: AVRawData
+    has_reached_logrow_limit: bool
+
+
 def get_bi_availability(
     avoptions: AVOptions, aggr_rows: Rows, timewarp: AVTimeStamp | None
-) -> tuple[list[TimelineContainer], AVRawData, bool]:
+) -> BIAvailability:
     logrow_limit = avoptions["logrow_limit"]
     if logrow_limit == 0:
         livestatus_limit = None
     else:
         livestatus_limit = (len(aggr_rows) * logrow_limit) + 1
 
-    timeline_containers, fetched_rows = get_timeline_containers(
+    timeline_containers, has_reached_logrow_limit = get_timeline_containers(
         aggr_rows, avoptions, timewarp, livestatus_limit
     )
-
-    has_reached_logrow_limit = bool(livestatus_limit and fetched_rows > livestatus_limit)
 
     spans: list[AVSpan] = []
     for timeline_container in timeline_containers:
@@ -111,7 +116,7 @@ def get_bi_availability(
 
     av_rawdata = spans_by_object(spans)
 
-    return timeline_containers, av_rawdata, has_reached_logrow_limit
+    return BIAvailability(timeline_containers, av_rawdata, has_reached_logrow_limit)
 
 
 def get_bi_availability_rawdata(
@@ -129,14 +134,14 @@ def get_timeline_containers(
     avoptions: AVOptions,
     timewarp: AVTimeStamp | None,
     livestatus_limit: int | None,
-) -> tuple[list[TimelineContainer], int]:
+) -> tuple[list[TimelineContainer], bool]:
     time_range: AVTimeRange = avoptions["range"][0]
-    phases_list, timeline_containers, fetched_rows = get_bi_leaf_history(
+    phases_list, timeline_containers, has_reached_logrow_limit = get_bi_leaf_history(
         aggr_rows, time_range, livestatus_limit
     )
     return (
         compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list),
-        fetched_rows,
+        has_reached_logrow_limit,
     )
 
 
@@ -167,7 +172,7 @@ def get_bi_leaf_history(
     time_range: AVTimeRange,
     livestatus_limit: int | None,
     max_time_range: int = DEFAULT_MAX_TIME_RANGE,
-) -> tuple[AVBIPhases, list[TimelineContainer], int]:
+) -> tuple[AVBIPhases, list[TimelineContainer], bool]:
     """Get state history of all hosts and services contained in the tree.
     In order to simplify the query, we always fetch the information for all hosts of the aggregates.
     """
@@ -214,15 +219,18 @@ def get_bi_leaf_history(
         headers += "Or: %d\n" % len(hosts)
 
     data: list[LivestatusRow] = []
+    has_reached_logrow_limit = False
 
     split_time_ranges = split_time_range(time_range[0], time_range[1], max_time_range)
     for current_time_range in split_time_ranges:
-        get_bi_split_history_data(
-            data, current_time_range, columns, only_sites, headers, livestatus_limit
+        fetched_rows, limit_reached = get_bi_split_history_data(
+            current_time_range, columns, only_sites, headers, livestatus_limit
         )
+        data.extend(fetched_rows)
+        has_reached_logrow_limit = has_reached_logrow_limit or limit_reached
 
     if not data:
-        return [], [], 0
+        return [], [], has_reached_logrow_limit
 
     columns = ["site"] + columns
     rows = [dict(zip(columns, row)) for row in data]
@@ -249,7 +257,7 @@ def get_bi_leaf_history(
 
     for from_time in sorted_times:
         phases_list.append((from_time, phases[from_time]))
-    return phases_list, timeline_containers, sum(len(rows) for rows in merged_rows_by_id.values())
+    return phases_list, timeline_containers, has_reached_logrow_limit
 
 
 def get_bi_merged_rows_by_id(rows: list[Row]) -> dict[tuple[HostName, ServiceName], list[Row]]:
@@ -281,28 +289,30 @@ def get_bi_merged_rows_by_id(rows: list[Row]) -> dict[tuple[HostName, ServiceNam
 
 
 def get_bi_split_history_data(
-    data: list[LivestatusRow],
     time_range: AVTimeRange,
     columns: Sequence[str],
     only_sites: set[Any],
     headers: str,
     livestatus_limit: int | None,
-) -> None:
+) -> tuple[list[LivestatusRow], bool]:
+    """Fetch statehist rows for the given time range.
+
+    Returns the fetched rows together with ``True`` if any single site reached
+    ``livestatus_limit`` for this query.
+    """
     try:
         # Try to fetch complete data
-        data.extend(
-            query_livestatus(
-                Query(
-                    QuerySpecification(
-                        table="statehist",
-                        columns=columns,
-                        headers="Filter: time >= %d\nFilter: time < %d\n" % time_range + headers,
-                    )
-                ),
-                only_sites=list(only_sites),
-                limit=livestatus_limit,
-                auth_domain="read",
-            )
+        fetched_rows = query_livestatus(
+            Query(
+                QuerySpecification(
+                    table="statehist",
+                    columns=columns,
+                    headers="Filter: time >= %d\nFilter: time < %d\n" % time_range + headers,
+                )
+            ),
+            only_sites=list(only_sites),
+            limit=livestatus_limit,
+            auth_domain="read",
         )
     except MKLivestatusPayloadTooLargeError:
         # If the query fails, split the time range into two and try again
@@ -312,10 +322,35 @@ def get_bi_split_history_data(
             # Ceiling division in order not to split into three parts (see docstring example)
             -((time_range[1] - time_range[0]) // -2),
         )
+        data: list[LivestatusRow] = []
+        has_reached_logrow_limit = False
         for current_time_range in split_time_ranges:
-            get_bi_split_history_data(
-                data, current_time_range, columns, only_sites, headers, livestatus_limit
+            rows, limit_reached = get_bi_split_history_data(
+                current_time_range, columns, only_sites, headers, livestatus_limit
             )
+            data.extend(rows)
+            has_reached_logrow_limit = has_reached_logrow_limit or limit_reached
+        return data, has_reached_logrow_limit
+
+    return fetched_rows, _limit_reached_for_any_site(fetched_rows, livestatus_limit)
+
+
+def _limit_reached_for_any_site(
+    rows: Sequence[LivestatusRow], livestatus_limit: int | None
+) -> bool:
+    """Return whether any single site reached the livestatus row limit.
+
+    The livestatus ``Limit:`` header is applied to each site individually (see
+    ``MultiSiteConnection``), so a site truncated its data iff its own row count
+    reaches ``livestatus_limit`` (which carries a +1 overflow margin). Comparing
+    the summed row count of all sites against the per-site limit would yield false
+    positives in multisite setups. ``query_livestatus`` prepends the site id as the
+    first column of each row.
+    """
+    if livestatus_limit is None:
+        return False
+    rows_per_site = Counter(row[0] for row in rows)
+    return any(count >= livestatus_limit for count in rows_per_site.values())
 
 
 def compute_bi_timelines(

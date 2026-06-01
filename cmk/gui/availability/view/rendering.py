@@ -10,7 +10,7 @@ from collections.abc import Iterator, Sequence
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui import availability
+from cmk.gui import availability, sites
 from cmk.gui.availability import (
     AVData,
     AVEntry,
@@ -849,6 +849,7 @@ def show_bi_availability(
     name: ViewName,
     spec: ViewSpec,
     context: VisualContext,
+    only_sites: list[SiteId] | None,
     process_tracking: ViewProcessTracking,
     breadcrumb: Breadcrumb,
     aggr_rows: Rows,
@@ -953,6 +954,15 @@ def show_bi_availability(
             has_reached_logrow_limit,
         ) = availability.get_bi_availability(avoptions, aggr_rows, timewarp)
         process_tracking.amount_rows_after_limit = len(av_rawdata)
+
+        # Detect unreachable sites at the render layer rather than from the
+        # aggregation rows: when a site is down its aggregations drop out of
+        # aggr_rows entirely, so they would otherwise vanish without a warning.
+        dead_sites = [
+            site_id
+            for site_id in sites.live().dead_sites()
+            if only_sites is None or site_id in only_sites
+        ]
 
         for timeline_container in timeline_containers:
             tree = timeline_container.aggr_tree
@@ -1075,6 +1085,15 @@ def show_bi_availability(
                 _("Repeat query without limit."), makeuri(request, [("_unset_logrow_limit", "1")])
             )
             html.show_warning(text)
+
+        if dead_sites:
+            html.show_warning(
+                _(
+                    "The following sites could not be reached, so the shown data is "
+                    "incomplete and the computed availability might be incorrect: %s"
+                )
+                % ", ".join(sorted(dead_sites))
+            )
 
         if html.output_format == "csv_export" and user.may("general.csv_export"):
             _output_csv("bi", av_mode, av_data, avoptions, table_row_limit=table_row_limit)

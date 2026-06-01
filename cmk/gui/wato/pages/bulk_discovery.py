@@ -45,6 +45,7 @@ from cmk.gui.watolib.bulk_discovery import (
 from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_folder_from_request,
     Folder,
+    folder_tree,
     SearchFolder,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
@@ -80,7 +81,7 @@ class ModeBulkDiscovery(WatoMode):
         self._get_bulk_discovery_params()
         self._job = BulkDiscoveryBackgroundJob()
         self._folder = disk_or_search_folder_from_request(
-            request.var("folder"), request.get_ascii_input("host")
+            folder_tree(), request.var("folder"), request.get_ascii_input("host")
         )
 
     def _get_bulk_discovery_params(self) -> None:

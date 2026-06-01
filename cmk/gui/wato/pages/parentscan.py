@@ -35,6 +35,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_base_folder_from_request,
     disk_or_search_folder_from_request,
     Folder,
+    folder_tree,
     Host,
     SearchFolder,
 )
@@ -146,7 +147,7 @@ class ModeParentScan(WatoMode):
         )
         self._job = ParentScanBackgroundJob()
         self._folder = disk_or_search_folder_from_request(
-            request.var("folder"), request.get_ascii_input("host")
+            folder_tree(), request.var("folder"), request.get_ascii_input("host")
         )
 
     @override

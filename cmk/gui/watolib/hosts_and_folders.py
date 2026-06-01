@@ -1191,9 +1191,8 @@ def folder_from_request(var_folder: str | None = None, host_name: str | None = N
     return folder
 
 
-@request_memoize()
 def disk_or_search_folder_from_request(
-    var_folder: str | None = None, host_name: str | None = None
+    tree: FolderTree, var_folder: str | None = None, host_name: str | None = None
 ) -> Folder | SearchFolder:
     """Return `Folder` that is specified by the current URL
 
@@ -1204,16 +1203,15 @@ def disk_or_search_folder_from_request(
     the later case we call search_folder_from_request() to let it decide whether
     this is a host search. This method has to return a folder in all cases.
     """
-    search_folder = _search_folder_from_request()
+    search_folder = _search_folder_from_request(tree)
     if search_folder:
         return search_folder
 
     return folder_from_request(var_folder, host_name)
 
 
-def _search_folder_from_request() -> SearchFolder | None:
+def _search_folder_from_request(tree: FolderTree) -> SearchFolder | None:
     if request.has_var("host_search"):
-        tree = folder_tree()
         base_folder = tree.folder(request.get_str_input_mandatory("folder", ""))
         search_criteria = {
             ".name": request.var("host_search_host"),
@@ -1232,7 +1230,7 @@ def _search_folder_from_request() -> SearchFolder | None:
 def disk_or_search_base_folder_from_request(
     var_folder: str | None = None, host_name: str | None = None
 ) -> Folder:
-    disk_or_search_folder = disk_or_search_folder_from_request(var_folder, host_name)
+    disk_or_search_folder = disk_or_search_folder_from_request(folder_tree(), var_folder, host_name)
     if isinstance(disk_or_search_folder, Folder):
         return disk_or_search_folder
 

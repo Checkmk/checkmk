@@ -192,7 +192,10 @@ class ModeFolder(WatoMode):
             host_name = request.get_ascii_input("host")
         except MKUserError:
             host_name = None
-        self._folder = disk_or_search_folder_from_request(request.var("folder"), host_name)
+        self._tree = folder_tree()
+        self._folder = disk_or_search_folder_from_request(
+            self._tree, request.var("folder"), host_name
+        )
 
         if request.has_var("_show_host_tags"):
             user.wato_folders_show_tags = request.get_ascii_input("_show_host_tags") == "1"
@@ -631,7 +634,6 @@ class ModeFolder(WatoMode):
             return None
 
         folder_url = self._folder.url()
-        tree = folder_tree()
 
         # Operations on SUBFOLDERS
 
@@ -652,8 +654,8 @@ class ModeFolder(WatoMode):
                 raise MKUserError(None, _("This action cannot be performed on search results"))
             if transactions.check_transaction():
                 var_ident = mandatory_parameter("_ident", request.var("_ident"))
-                what_folder = tree.folder(var_ident)
-                target_folder = tree.folder(
+                what_folder = self._tree.folder(var_ident)
+                target_folder = self._tree.folder(
                     mandatory_parameter("_move_folder_to", request.var("_move_folder_to"))
                 )
                 self._folder.move_subfolder_to(
@@ -707,7 +709,7 @@ class ModeFolder(WatoMode):
             if self._folder.has_host(hostname):
                 self._folder.move_hosts(
                     [hostname],
-                    tree.folder(target_folder_str),
+                    self._tree.folder(target_folder_str),
                     pprint_value=config.wato_pprint_config,
                     pending_changes=_pending_changes(
                         config=config, local_site=omd_site(), acting_user=user.id
@@ -735,7 +737,7 @@ class ModeFolder(WatoMode):
             target_folder_path = target_folder_path if target_folder_path != "@main" else ""
             if target_folder_path is None:
                 raise MKUserError("_bulk_moveto", _("Please select the destination folder"))
-            target_folder = tree.folder(target_folder_path)
+            target_folder = self._tree.folder(target_folder_path)
             self._folder.move_hosts(
                 selected_host_names,
                 target_folder,

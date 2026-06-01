@@ -97,7 +97,7 @@ class ParentScanBackgroundJob(BackgroundJob):
 
     def _back_url(self) -> str:
         return disk_or_search_folder_from_request(
-            request.var("folder"), request.get_ascii_input("host")
+            folder_tree(), request.var("folder"), request.get_ascii_input("host")
         ).url()
 
     def do_execute(

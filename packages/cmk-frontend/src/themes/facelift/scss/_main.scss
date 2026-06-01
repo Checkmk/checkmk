@@ -125,10 +125,6 @@ td.checkbox input[type='checkbox'] + label::before {
 input[type='checkbox'] {
   display: none;
 
-  &.vue_checkbox {
-    display: unset;
-  }
-
   + label::before {
     display: inline-block;
     width: 13px;

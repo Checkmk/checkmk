@@ -17,6 +17,7 @@ py_library(
         "_types.py",
         "_utils.py",
         "content_types.py",
+        "exceptions.py",
         "model/__init__.py",
         "model/_api_field.py",
         "model/_api_model.py",

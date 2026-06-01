@@ -13,6 +13,7 @@ from ._types import HeaderParam, PathParam, QueryParam, RawRequestData
 from ._validation import EndpointValidator
 from .api_config import APIConfig, APIVersion, DeprecationDetails
 from .content_types import ContentTypeConverter
+from .exceptions import RedirectException
 from .registry import VersionedEndpointRegistry
 from .versioned_endpoint import (
     EndpointBehavior,
@@ -39,6 +40,7 @@ __all__ = [
     "EndpointPermissions",
     "ETag",
     "HandlerFunction",
+    "RedirectException",
     "HeaderParam",
     "PathParam",
     "QueryParam",

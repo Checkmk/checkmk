@@ -35,6 +35,7 @@ from ._context import ApiContext
 from ._types import RawRequestData
 from ._utils import iter_dataclass_fields, resolve_type
 from .endpoint_model import EndpointModel
+from .exceptions import RedirectException
 from .model import json_dump_without_omitted
 from .model.response import ApiResponse, TypedResponse
 from .registry import RequestEndpoint
@@ -203,7 +204,11 @@ def handle_endpoint_request(
             request_data, content_type, api_context
         )
         with tracer.span("endpoint-body-call"):
-            raw_response = endpoint.handler(*bound_arguments.args, **bound_arguments.kwargs)
+            try:
+                raw_response = endpoint.handler(*bound_arguments.args, **bound_arguments.kwargs)
+            except RedirectException as exc:
+                raw_response = Response(status=exc.status_code)
+                raw_response.location = exc.location
 
     # Step 5: Create the response object
     with tracer.span("create-response"):

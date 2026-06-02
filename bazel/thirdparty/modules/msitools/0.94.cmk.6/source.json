@@ -4,7 +4,7 @@
   "url": "http://ftp.gnome.org/pub/GNOME/sources/msitools/0.94/msitools-0.94.tar.xz",
   "overlay": {
     "BUILD.bazel": "sha256-ScGnzN6d4GixHrHFbfM3rp7V9RZv/Bs/Ykj8kiHRwlI=",
-    "MODULE.bazel": "sha256-yTq450D5Ycwfs8IX/VRlcNjBx7/d/B/5NCjluBUHqfo="
+    "MODULE.bazel": "sha256-Swm4sD6/OEQvC048gidJJKXjFuR3Cx2Vux3h+RI2BXc="
   },
   "patches": {
     "0001-configure_remove_wixl.patch": "sha256-IcS0FzkeqmSYR5NdiOAOSSRtcpehmqFu2y1FmPnYfT8=",

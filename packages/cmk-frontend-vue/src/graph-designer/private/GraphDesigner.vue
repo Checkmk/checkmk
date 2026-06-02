@@ -1478,7 +1478,8 @@ const graphDesignerContentAsJson = computed(() => {
 
 <style scoped>
 .gd__metrics-table {
-  isolation: isolate;
+  position: relative;
+  z-index: 1;
 }
 
 .gd__yellow-border {

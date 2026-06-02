@@ -533,3 +533,27 @@ test('opening a sibling dropdown closes the previously-open one within the same 
   })
   expect(operatorCombobox).toHaveAttribute('aria-expanded', 'true')
 })
+
+test('connector renders between adjacent pills', () => {
+  renderForm([
+    {
+      id: 'pill-a',
+      attributeType: 'resource',
+      key: 'service.name',
+      operator: 'eq',
+      value: 'web-01',
+      connector: null
+    },
+    {
+      id: 'pill-b',
+      attributeType: 'scope',
+      key: 'otel.library.name',
+      operator: 'contains',
+      value: 'api',
+      connector: 'OR'
+    }
+  ])
+  const connectors = screen.getAllByLabelText('Connector')
+  expect(connectors).toHaveLength(1)
+  expect(connectors[0]).toHaveTextContent('OR')
+})

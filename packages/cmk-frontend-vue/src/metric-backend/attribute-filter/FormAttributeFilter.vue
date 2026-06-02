@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import usei18n from '@/lib/i18n'
+import usei18n, { untranslated } from '@/lib/i18n'
 
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import type { QuerySuggestionsFn } from '@/components/CmkSuggestions/types'
@@ -175,6 +175,15 @@ function onEditDone(id: string): void {
       @click="addCondition(0)"
     />
     <template v-for="(entry, index) in model" :key="entry.id">
+      <!-- Connectors (AND/OR) are intentionally kept untranslated:
+           they have no agreed product-wide localisations yet. -->
+      <span
+        v-if="entry.connector !== null"
+        class="metric-backend-form-attribute-filter__connector"
+        :aria-label="_t('Connector')"
+      >
+        {{ untranslated(entry.connector) }}
+      </span>
       <AttributeFilterPill
         :ref="pillRefSetter(entry.id)"
         :condition="entry"
@@ -209,5 +218,11 @@ function onEditDone(id: string): void {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--dimension-3) var(--dimension-4);
+}
+
+.metric-backend-form-attribute-filter__connector {
+  flex-shrink: 0;
+  color: var(--font-color-dimmed);
+  padding: 1px 3px;
 }
 </style>

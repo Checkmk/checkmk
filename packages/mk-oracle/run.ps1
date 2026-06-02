@@ -259,17 +259,6 @@ try {
     if ($packBuild) {
         $cwd = Get-Location
         $target_dir = Join-Path (cargo metadata --no-deps | ConvertFrom-json).target_directory "$cargo_target"
-
-        $stamp_file = Join-Path $target_dir ".cmk_version_stamp"
-        $current_ver = $env:CMK_VERSION ?? ""
-        $previous_ver = if (Test-Path $stamp_file) { Get-Content $stamp_file } else { "" }
-        if ($current_ver -ne $previous_ver) {
-            Write-Host "CMK_VERSION changed: '$previous_ver' -> '$current_ver', cleaning target" -ForegroundColor Yellow
-            Remove-Item $target_dir -Recurse -Force -ErrorAction SilentlyContinue
-            New-Item -Path $target_dir -ItemType Directory -Force | Out-Null
-            Set-Content $stamp_file $current_ver
-        }
-
         Write-Host "Killing processes in $target_dir" -ForegroundColor White
         Get-Process | Where-Object { $_.path -and ($_.path -like "$target_dir\*") } | Stop-Process -Force
         Invoke-Cargo-With-Explicit-Package "build" "--release" "--target" $cargo_target

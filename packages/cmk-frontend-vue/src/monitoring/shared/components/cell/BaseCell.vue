@@ -87,6 +87,11 @@ const activeSlot = computed<string>(() => {
 
   a {
     text-decoration: underline;
+    color: var(--font-color) !important;
+
+    &:hover {
+      text-decoration: none;
+    }
   }
 
   .monitoring-base-cell__wrapper {

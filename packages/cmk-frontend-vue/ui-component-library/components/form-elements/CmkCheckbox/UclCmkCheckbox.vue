@@ -50,6 +50,7 @@ export const panelConfig = {
   padding: {
     type: 'list' as const,
     title: 'Padding',
+    help: 'Adds 2px of padding to the checkbox in the given direction.',
     options: [
       { title: 'Both', name: 'both' },
       { title: 'Top', name: 'top' },
@@ -83,6 +84,7 @@ import {
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import UclCmkCheckboxDev from './UclCmkCheckboxDev.vue'
@@ -97,15 +99,19 @@ const propState = new PanelStateCreator<typeof CmkCheckbox>().createRef(panelCon
     <UclDetailPageHeader>CmkCheckbox</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkCheckbox
-        v-model="propState.modelValue"
-        :label="propState.label"
-        :help="propState.help"
-        :disabled="propState.disabled"
-        :padding="propState.padding"
-        :dots="propState.dots"
-        :external-errors="propState.externalErrors ? [propState.externalErrors] : []"
-      />
+      <div class="ucl-cmk-checkbox__stack">
+        <CmkParagraph>Preceding text</CmkParagraph>
+        <CmkCheckbox
+          v-model="propState.modelValue"
+          :label="propState.label"
+          :help="propState.help"
+          :disabled="propState.disabled"
+          :padding="propState.padding"
+          :dots="propState.dots"
+          :external-errors="propState.externalErrors ? [propState.externalErrors] : []"
+        />
+        <CmkParagraph>Following text</CmkParagraph>
+      </div>
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />
@@ -121,3 +127,10 @@ const propState = new PanelStateCreator<typeof CmkCheckbox>().createRef(panelCon
     </UclDetailPageDeveloperPlayground>
   </UclDetailPageLayout>
 </template>
+
+<style scoped>
+.ucl-cmk-checkbox__stack {
+  display: flex;
+  flex-direction: column;
+}
+</style>

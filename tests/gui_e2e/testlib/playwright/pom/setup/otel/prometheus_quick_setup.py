@@ -9,6 +9,9 @@ from playwright.sync_api import expect, Locator, Page
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
+from tests.gui_e2e.testlib.playwright.pom.setup.otel.add_open_telemetry_collector_prometheus_scraping import (
+    AddOpenTelemetryCollectorPrometheusScraping,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -46,12 +49,17 @@ class PrometheusQuickSetup(CmkPage):
     def configuration_row(self, configuration_name: str) -> Locator:
         return self.configurations_table.locator(f"tr:has(td:has-text('{configuration_name}'))")
 
+    def edit_button(self, configuration_name: str) -> Locator:
+        return self.configuration_row(configuration_name).get_by_role(
+            "link", name="Edit", exact=True
+        )
+
     @property
     def add_configuration_button(self) -> Locator:
         return self.main_area.get_suggestion("Add Prometheus configuration")
 
 
-class AddPrometheusConfiguration(CmkPage):
+class AddPrometheusQuickSetupConfiguration(CmkPage):
     """Represent the Prometheus Quick Setup wizard"""
 
     page_title = "Add Prometheus configuration"
@@ -170,3 +178,91 @@ class AddPrometheusConfiguration(CmkPage):
     def finish_and_go_to_activate_changes(self) -> None:
         self.finish_button.click()
         PrometheusQuickSetup(self.page, navigate_to_page=False)
+
+
+class EditPrometheusQuickSetupConfiguration(CmkPage):
+    """Represent the Prometheus Quick Setup edit page"""
+
+    def __init__(
+        self, page: Page, configuration_name: str | None = None, navigate_to_page: bool = True
+    ) -> None:
+        self._configuration_name = configuration_name
+        super().__init__(page, navigate_to_page)
+
+    @override
+    def navigate(self) -> None:
+        assert self._configuration_name is not None, (
+            "A configuration name is required to navigate to the Prometheus configuration edit page"
+        )
+        overview = PrometheusQuickSetup(self.page)
+        overview.edit_button(self._configuration_name).click()
+        self.validate_page()
+
+    @override
+    def validate_page(self) -> None:
+        logger.info("Validate that current page is the Prometheus configuration edit page")
+        expect(self.prometheus_scraper_button).to_be_visible()
+        expect(self.dynamic_host_management_button).to_be_visible()
+
+    @override
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
+    @property
+    def bundle_links(self) -> Locator:
+        return self.main_area.locator("div.mainmenu")
+
+    @property
+    def prometheus_scraper_button(self) -> Locator:
+        return self.bundle_links.get_by_role("link", name="Prometheus scraper")
+
+    @property
+    def dynamic_host_management_button(self) -> Locator:
+        return self.bundle_links.get_by_role("link", name="Dynamic host management")
+
+    @property
+    def configuration_name_textfield(self) -> Locator:
+        return (
+            self.main_area.locator("tr")
+            .filter(has_text="Configuration name")
+            .get_by_role("textbox")
+        )
+
+    @property
+    def save_button(self) -> Locator:
+        return self.main_area.get_suggestion("Save")
+
+    def rename_configuration(self, new_name: str) -> None:
+        self.configuration_name_textfield.fill(new_name)
+        self.save_button.click()
+
+
+class EditPrometheusQuickSetupScraper(AddOpenTelemetryCollectorPrometheusScraping):
+    """Represent the Prometheus scraper edit page when it is part of the Prometheus Quick Setup."""
+
+    def __init__(
+        self, page: Page, configuration_name: str | None = None, navigate_to_page: bool = True
+    ) -> None:
+        self._configuration_name = configuration_name
+        super().__init__(page, navigate_to_page)
+
+    @override
+    def navigate(self) -> None:
+        assert self._configuration_name is not None, (
+            "A configuration name is required to navigate to the Prometheus scraper edit page"
+        )
+        edit_page = EditPrometheusQuickSetupConfiguration(self.page, self._configuration_name)
+        edit_page.prometheus_scraper_button.click()
+        self.validate_page()
+
+    @override
+    def validate_page(self) -> None:
+        logger.info("Validate that current page is the Prometheus scraper edit page")
+        expect(self.encrypt_communication_with_tls_checkbox).to_be_visible()
+
+    @property
+    def quick_setup_warning(self) -> Locator:
+        return self.main_area.locator("div.warning_container")
+
+    def save(self) -> None:
+        self.save_configuration_button.click()

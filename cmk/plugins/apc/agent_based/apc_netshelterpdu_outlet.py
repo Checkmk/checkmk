@@ -24,7 +24,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.apc.lib_netshelterpdu import DETECT_APC_NETSHELTERPDU
+from cmk.plugins.apc.lib_netshelterpdu import clean_snmp_name, DETECT_APC_NETSHELTERPDU
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -43,7 +43,7 @@ def parse_apc_netshelterpdu_outlet(
     return {
         outlet[0]: APCNetShelterOutlet(
             index=outlet[0],
-            name=outlet[1],
+            name=clean_snmp_name(outlet[1]),
             status=outlet[2],
         )
         for outlet in string_table[0]

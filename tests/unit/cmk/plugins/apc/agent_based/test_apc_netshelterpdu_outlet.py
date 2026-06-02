@@ -58,6 +58,15 @@ def test_check_outlet_unknown_status() -> None:
     assert result == [Result(state=State.UNKNOWN, summary="OUTLET 1: unknown (3)")]
 
 
+def test_check_outlet_strips_null_byte_from_name() -> None:
+    r"""Some APC devices null-pad the outlet name DisplayString (e.g. "OUTLET 1\x00")."""
+    section = parse_apc_netshelterpdu_outlet([[["1", "OUTLET 1\x00", "2"]]])
+
+    assert "\x00" not in section["1"].name
+    result = list(check_apc_netshelterpdu_outlet("1", section))
+    assert result == [Result(state=State.OK, summary="OUTLET 1: on")]
+
+
 def test_parse_empty() -> None:
     section = parse_apc_netshelterpdu_outlet([[]])
     assert section == {}

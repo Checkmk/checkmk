@@ -351,11 +351,7 @@ def _anonymize_metrics_association(
     anon_interface: AnonInterface,
     value: dict[str, Any],
 ) -> object:
-    return {
-        "host_name_resource_attribute_key": anon_interface.get_generic_mapping(
-            value["host_name_resource_attribute_key"],
-            "metrics_association",
-        ),
+    anonymized: dict[str, Any] = {
         "attribute_filters": {
             "resource_attributes": [
                 _anonymize_metrics_association_attribute_filter(anon_interface, attribute_filter)
@@ -371,6 +367,12 @@ def _anonymize_metrics_association(
             ],
         },
     }
+    if "host_name_resource_attribute_key" in value:
+        anonymized["host_name_resource_attribute_key"] = anon_interface.get_generic_mapping(
+            value["host_name_resource_attribute_key"],
+            "metrics_association",
+        )
+    return anonymized
 
 
 def _anonymize_metrics_association_attribute_filter(

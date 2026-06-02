@@ -426,6 +426,52 @@ class TestRuleConditionRenderer:
                 [HTML.without_escaping("foo does not begin with <b>f.*o</b> or <b>b?z</b>")],
                 id="negated item with two regexes",
             ),
+            pytest.param(
+                "service",
+                "foo",
+                [{"$regex": r"^foo.*$"}],
+                [HTML.without_escaping("Service name is <b>^foo.*</b>")],
+                id="service regex with plain end anchor",
+            ),
+            pytest.param(
+                "service",
+                "foo",
+                [{"$regex": r"^File permissions.*\$$"}],
+                [HTML.without_escaping(r"Service name is <b>^File permissions.*\$</b>")],
+                id="service regex with escaped dollar before end anchor",
+            ),
+            pytest.param(
+                "service",
+                "foo",
+                [{"$regex": r"^File permissions.*\$"}],
+                [HTML.without_escaping(r"Service name begins with <b>^File permissions.*\$</b>")],
+                id="service regex with escaped dollar and no end anchor",
+            ),
+            pytest.param(
+                "service",
+                "foo",
+                [{"$regex": "^foo$"}, {"$regex": "^bar$"}],
+                [HTML.without_escaping("Service name is <b>^foo</b> or <b>^bar</b>")],
+                id="service with two anchored regexes",
+            ),
+            pytest.param(
+                "service",
+                "foo",
+                [{"$regex": "^foo$"}, {"$regex": "^bar"}],
+                [HTML.without_escaping("Service name is <b>^foo</b> or begins with <b>^bar</b>")],
+                id="service with mixed anchored and unanchored regexes",
+            ),
+            pytest.param(
+                "service",
+                "foo",
+                {"$nor": [{"$regex": "^foo$"}, {"$regex": "^bar"}]},
+                [
+                    HTML.without_escaping(
+                        "Service name is not <b>^foo</b> or begins not with <b>^bar</b>"
+                    )
+                ],
+                id="negated service with mixed anchored and unanchored regexes",
+            ),
         ],
     )
     def test_service_conditions(
@@ -439,3 +485,37 @@ class TestRuleConditionRenderer:
             list(RuleConditionRenderer()._service_conditions(item_type, item_name, conditions))
             == expected
         )
+
+    @pytest.mark.parametrize(
+        "pattern, expected",
+        [
+            pytest.param("foo$", True, id="plain end anchor"),
+            pytest.param("^foo.*$", True, id="regex with end anchor"),
+            pytest.param("foo", False, id="no dollar"),
+            pytest.param("", False, id="empty string"),
+            pytest.param("$", True, id="only dollar"),
+            pytest.param(r"foo\$", False, id="escaped dollar"),
+            pytest.param(r"foo\\$", True, id="double backslash then anchor"),
+            pytest.param(r"foo\\\$", False, id="triple backslash then escaped dollar"),
+            pytest.param(r"\$$", True, id="escaped dollar followed by anchor"),
+        ],
+    )
+    def test_has_regex_end_anchor(self, pattern: str, expected: bool) -> None:
+        assert RuleConditionRenderer._has_regex_end_anchor(pattern) == expected
+
+    @pytest.mark.parametrize(
+        "pattern, expected",
+        [
+            pytest.param("foo$", "foo", id="strips plain end anchor"),
+            pytest.param("^foo.*$", "^foo.*", id="strips anchor from full regex"),
+            pytest.param("foo", "foo", id="no dollar unchanged"),
+            pytest.param("", "", id="empty string unchanged"),
+            pytest.param("$", "", id="only dollar stripped"),
+            pytest.param(r"foo\$", r"foo\$", id="escaped dollar not stripped"),
+            pytest.param(r"foo\\$", r"foo\\", id="double backslash then anchor stripped"),
+            pytest.param(r"foo\\\$", r"foo\\\$", id="triple backslash escaped dollar not stripped"),
+            pytest.param(r"\$$", r"\$", id="escaped dollar before anchor: only anchor stripped"),
+        ],
+    )
+    def test_strip_regex_end_anchor(self, pattern: str, expected: str) -> None:
+        assert RuleConditionRenderer._strip_regex_end_anchor(pattern) == expected

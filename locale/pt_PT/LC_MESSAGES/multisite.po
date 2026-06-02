@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-05-29 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -11240,6 +11240,17 @@ msgid ""
 "who is permanently logged on to a desktop session. The prerequisites for "
 "this are security-related and must be fulfilled by you (auto-login, screen "
 "saver, session lock, ...)."
+msgstr ""
+
+msgid ""
+"By default, a BI aggregate is marked 'in downtime' as soon as enough "
+"components have a scheduled maintenance window to satisfy the aggregation "
+"function. This is useful when you treat the aggregate as a single service "
+"unit: if a key component is under maintenance, the whole branch is "
+"intentionally considered to be in planned downtime. Enable this option if "
+"you instead want to require that every currently failing component is "
+"covered — ensuring that no active, unplanned failure goes unnoticed behind a "
+"partial maintenance window."
 msgstr ""
 
 #, python-brace-format
@@ -58603,6 +58614,9 @@ msgstr "Utilização de pedidos"
 msgid "Require a comment"
 msgstr "Exija um comentário"
 
+msgid "Require all failing components to be in a maintenance window"
+msgstr ""
+
 #, fuzzy
 msgid "Required"
 msgstr "Porto necessário"
@@ -63541,6 +63555,9 @@ msgstr "Mostrar detalhes"
 #, fuzzy
 msgid "Show details about Livestatus encryption"
 msgstr "Mostrar detalhes sobre criptografia de livestatus"
+
+msgid "Show downtime only when all current problems are covered"
+msgstr ""
 
 msgid "Show dynamic"
 msgstr "Mostrar dinâmica"
@@ -94183,7 +94200,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -94708,7 +94724,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

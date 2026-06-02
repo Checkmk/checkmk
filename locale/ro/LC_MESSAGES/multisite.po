@@ -11269,6 +11269,17 @@ msgstr ""
 "îndeplinite de dumneavoastră (logare automată, screen saver, blocare a "
 "sesiunii, ...)"
 
+msgid ""
+"By default, a BI aggregate is marked 'in downtime' as soon as enough "
+"components have a scheduled maintenance window to satisfy the aggregation "
+"function. This is useful when you treat the aggregate as a single service "
+"unit: if a key component is under maintenance, the whole branch is "
+"intentionally considered to be in planned downtime. Enable this option if "
+"you instead want to require that every currently failing component is "
+"covered — ensuring that no active, unplanned failure goes unnoticed behind a "
+"partial maintenance window."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "By default, all Azure tags for subscriptions, resource groups, and resources "
@@ -58736,6 +58747,9 @@ msgstr "Utilizarea cererilor"
 msgid "Require a comment"
 msgstr "Cereți un comentariu"
 
+msgid "Require all failing components to be in a maintenance window"
+msgstr ""
+
 #, fuzzy
 msgid "Required"
 msgstr "Port necesar"
@@ -63757,6 +63771,9 @@ msgstr "Arată detalii"
 #, fuzzy
 msgid "Show details about Livestatus encryption"
 msgstr "Afișați detalii despre criptarea livestatus"
+
+msgid "Show downtime only when all current problems are covered"
+msgstr ""
 
 msgid "Show dynamic"
 msgstr "Arată dinamic"

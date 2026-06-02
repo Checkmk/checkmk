@@ -11045,6 +11045,17 @@ msgid ""
 "saver, session lock, ...)."
 msgstr ""
 
+msgid ""
+"By default, a BI aggregate is marked 'in downtime' as soon as enough "
+"components have a scheduled maintenance window to satisfy the aggregation "
+"function. This is useful when you treat the aggregate as a single service "
+"unit: if a key component is under maintenance, the whole branch is "
+"intentionally considered to be in planned downtime. Enable this option if "
+"you instead want to require that every currently failing component is "
+"covered — ensuring that no active, unplanned failure goes unnoticed behind a "
+"partial maintenance window."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "By default, all Azure tags for subscriptions, resource groups, and resources "
@@ -58341,6 +58352,9 @@ msgstr "Utilizzo delle richieste"
 msgid "Require a comment"
 msgstr "Richiedi un commento"
 
+msgid "Require all failing components to be in a maintenance window"
+msgstr ""
+
 #, fuzzy
 msgid "Required"
 msgstr "Porta richiesta"
@@ -63286,6 +63300,9 @@ msgstr "Mostra i dettagli"
 #, fuzzy
 msgid "Show details about Livestatus encryption"
 msgstr "Mostra dettagli sulla crittografia di livestatus"
+
+msgid "Show downtime only when all current problems are covered"
+msgstr ""
 
 msgid "Show dynamic"
 msgstr "Mostra dinamica"

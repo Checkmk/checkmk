@@ -2831,6 +2831,29 @@ class RuleConditionRenderer:
 
         return HTML(" ").join(condition)
 
+    @staticmethod
+    def _has_regex_end_anchor(pattern: str) -> bool:
+        """Return True if pattern ends with an unescaped regex '$' anchor.
+
+        A '$' preceded by an odd number of backslashes is an escaped literal dollar sign,
+        not an end anchor.
+        """
+        if not pattern.endswith("$"):
+            return False
+        num_backslashes = 0
+        i = len(pattern) - 2
+        while i >= 0 and pattern[i] == "\\":
+            num_backslashes += 1
+            i -= 1
+        return num_backslashes % 2 == 0
+
+    @staticmethod
+    def _strip_regex_end_anchor(pattern: str) -> str:
+        """Remove a trailing unescaped regex end anchor '$' for display purposes."""
+        if RuleConditionRenderer._has_regex_end_anchor(pattern):
+            return pattern[:-1]
+        return pattern
+
     def _service_conditions(  # pylint: disable=too-many-branches
         self,
         item_type: str | None,
@@ -2856,7 +2879,11 @@ class RuleConditionRenderer:
         condition += HTML(" ")
 
         exact_match_count = len(
-            [x for x in service_conditions if not isinstance(x, dict) or x["$regex"][-1] == "$"]
+            [
+                x
+                for x in service_conditions
+                if not isinstance(x, dict) or self._has_regex_end_anchor(x["$regex"])
+            ]
         )
 
         text_list: list[HTML] = []
@@ -2869,9 +2896,11 @@ class RuleConditionRenderer:
 
             for item_spec in service_conditions:
                 if isinstance(item_spec, dict) and "$regex" in item_spec:
-                    text_list.append(HTMLWriter.render_b(item_spec["$regex"].rstrip("$")))
+                    text_list.append(
+                        HTMLWriter.render_b(self._strip_regex_end_anchor(item_spec["$regex"]))
+                    )
                 elif isinstance(item_spec, str):
-                    text_list.append(HTMLWriter.render_b(item_spec.rstrip("$")))
+                    text_list.append(HTMLWriter.render_b(self._strip_regex_end_anchor(item_spec)))
                 else:
                     raise ValueError("Unsupported item spec")
         else:
@@ -2883,12 +2912,15 @@ class RuleConditionRenderer:
                 else:
                     raise ValueError("Unsupported item spec")
 
-                is_exact = spec[-1] == "$"
+                is_exact = self._has_regex_end_anchor(spec)
                 if is_negate:
                     expression = _("is not ") if is_exact else _("begins not with ")
                 else:
                     expression = _("is ") if is_exact else _("begins with ")
-                text_list.append(escape_to_html(expression) + HTMLWriter.render_b(spec.rstrip("$")))
+                text_list.append(
+                    escape_to_html(expression)
+                    + HTMLWriter.render_b(self._strip_regex_end_anchor(spec))
+                )
 
         if len(text_list) == 1:
             condition += text_list[0]

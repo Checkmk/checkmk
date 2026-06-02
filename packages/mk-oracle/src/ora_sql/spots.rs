@@ -16,9 +16,10 @@
 
 use crate::config::ora_sql::CustomInstance;
 use crate::ora_sql::backend::{ClosedSpot, OpenedSpot};
+use crate::ora_sql::pdbs::{resolve_pdb_patterns, Pdbs};
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
-use crate::types::{InstanceName, SqlBindParam, SqlQuery};
+use crate::types::{InstanceName, PdbName, SqlBindParam, SqlQuery};
 
 use anyhow::Result;
 
@@ -39,6 +40,8 @@ pub struct QueryBlock {
     pub queries: Vec<SqlQuery>,
     pub title: String,
     pub post_processing: PostProcessing,
+    #[allow(dead_code)]
+    pub container: Option<PdbName>,
 }
 
 type InstanceWorks = (InstanceName, Vec<QueryBlock>);
@@ -57,12 +60,25 @@ pub fn make_spot_work_results(
         .into_iter()
         .map(|spot| {
             let instance_candidates = WorkInstances::new(&spot, None);
-            let closed = spot.close();
-            let merged_sections =
-                merge_per_instance_sections(&sections, &closed, custom_instances, global_cache_age);
             match instance_candidates {
-                Err(ref e) => _make_closed_error(closed, e),
-                Ok(instances) => _make_closed_ok(closed, instances, &merged_sections, params),
+                Err(ref e) => {
+                    let closed = spot.close();
+                    _make_closed_error(closed, e)
+                }
+                Ok(mut instances) => {
+                    if let Err(e) = instances.discover_pdbs(&spot) {
+                        log::warn!("PDB discovery failed for {:?}: {e}", spot.target());
+                    }
+                    let pdbs = instances.pdbs().clone();
+                    let closed = spot.close();
+                    let merged_sections = merge_per_instance_sections(
+                        &sections,
+                        &closed,
+                        custom_instances,
+                        global_cache_age,
+                    );
+                    _make_closed_ok(closed, instances, &merged_sections, params, &pdbs)
+                }
             }
         })
         .collect::<Vec<SpotWorkResults>>();
@@ -142,6 +158,7 @@ fn _make_closed_ok(
     instances: WorkInstances,
     sections: &[Section],
     params: &[SqlBindParam],
+    pdbs: &Pdbs,
 ) -> SpotWorkResults {
     let instance_works = instances
         .all()
@@ -168,15 +185,32 @@ fn _make_closed_ok(
                     }
                     section
                         .find_queries(info.0, info.1, params)
-                        .map(|q| QueryBlock {
+                        .map(|q| (section, q))
+                })
+                .flat_map(|(section, q)| {
+                    let post = if section.item_value().is_some() {
+                        PostProcessing::Passthrough
+                    } else {
+                        PostProcessing::Standard
+                    };
+                    if section.pdb_patterns().is_empty() {
+                        vec![QueryBlock {
                             queries: q,
                             title: section.to_work_header_for(service),
-                            post_processing: if section.item_value().is_some() {
-                                PostProcessing::Passthrough
-                            } else {
-                                PostProcessing::Standard
-                            },
-                        })
+                            post_processing: post,
+                            container: None,
+                        }]
+                    } else {
+                        resolve_pdb_patterns(section.pdb_patterns(), pdbs)
+                            .into_iter()
+                            .map(|pdb| QueryBlock {
+                                queries: q.clone(),
+                                title: section.to_work_header_for_pdb(service, &pdb),
+                                post_processing: post,
+                                container: Some(pdb),
+                            })
+                            .collect()
+                    }
                 })
                 .collect::<Vec<QueryBlock>>();
             (service.clone(), queries)

@@ -18,7 +18,7 @@ use crate::config::{self, section, section::names};
 use crate::emit::{header, signaling_header};
 use crate::ora_sql::custom;
 use crate::ora_sql::sqls;
-use crate::types::{InstanceName, InstanceNumVersion, ItemValue, SectionName, Tenant};
+use crate::types::{InstanceName, InstanceNumVersion, ItemValue, PdbName, SectionName, Tenant};
 use crate::types::{SectionAffinity, SqlBindParam, SqlQuery};
 use crate::{constants, utils};
 use anyhow::Result;
@@ -122,6 +122,20 @@ impl Section {
             Some(item) => {
                 let cached = self.cached_subsection_suffix();
                 format!("{}\n[[[{}|{}{}]]]", section_header, instance, item, cached)
+            }
+        }
+    }
+
+    pub fn to_work_header_for_pdb(&self, instance: &InstanceName, pdb: &PdbName) -> String {
+        let section_header = self.to_work_header();
+        match self.item_value.as_ref() {
+            None => section_header,
+            Some(item) => {
+                let cached = self.cached_subsection_suffix();
+                format!(
+                    "{}\n[[[{}_{}|{}{}]]]",
+                    section_header, instance, pdb, item, cached
+                )
             }
         }
     }
@@ -504,6 +518,26 @@ mod tests {
         let sync = make_custom_metric_section("product_price", false, 600);
         let header = sync.to_work_header_for(&InstanceName::from("ORCL"));
         assert_eq!(header, "<<<oracle_sql:sep(58)>>>\n[[[ORCL|product_price]]]");
+    }
+
+    #[test]
+    fn test_work_header_for_pdb_includes_pdb_in_subsection() {
+        let section = make_custom_metric_section("product_price", false, 0);
+        let header =
+            section.to_work_header_for_pdb(&InstanceName::from("ORCL"), &PdbName::from("MYPDB"));
+        assert_eq!(
+            header,
+            "<<<oracle_sql:sep(58)>>>\n[[[ORCL_MYPDB|product_price]]]"
+        );
+    }
+
+    #[test]
+    fn test_work_header_for_pdb_async_includes_cached_marker() {
+        let section = make_custom_metric_section("last_sessions", true, 600);
+        let header =
+            section.to_work_header_for_pdb(&InstanceName::from("ORCL"), &PdbName::from("MYPDB"));
+        assert!(header.starts_with("<<<oracle_sql:sep(58)>>>\n[[[ORCL_MYPDB|last_sessions|cached("));
+        assert!(header.ends_with(",600)]]]"));
     }
 
     #[test]

@@ -18,6 +18,8 @@ use crate::ora_sql::backend::OpenedSpot;
 use crate::ora_sql::sqls;
 use crate::types::{PdbName, SqlQuery};
 use anyhow::Result;
+use regex::Regex;
+use std::collections::HashSet;
 
 const PDB_SEED: &str = "PDB$SEED";
 const CDB_ROOT: &str = "CDB$ROOT";
@@ -69,11 +71,37 @@ impl Pdbs {
     pub fn len(&self) -> usize {
         self.0.len()
     }
+
+    #[cfg(test)]
+    pub fn from_names(names: &[&str]) -> Self {
+        Self(names.iter().map(|n| PdbName::from(*n)).collect())
+    }
 }
 
 fn is_filtered_name(name: &str) -> bool {
     let upper = name.to_uppercase();
     upper == PDB_SEED || upper == CDB_ROOT
+}
+
+/// Match compiled PDB patterns against discovered PDBs.
+/// Each PDB name is collected only once.
+/// Patterns matching nothing are skipped.
+pub fn resolve_pdb_patterns(patterns: &[Regex], discovered: &Pdbs) -> Vec<PdbName> {
+    let mut matched = HashSet::new();
+    for re in patterns {
+        let hits: Vec<_> = discovered
+            .names()
+            .iter()
+            .filter(|pdb| re.is_match(pdb.as_ref()))
+            .map(|pdb| pdb.as_ref().to_string())
+            .collect();
+        if hits.is_empty() {
+            log::warn!("PDB pattern {:?} matched no discovered PDBs", re.as_str());
+            continue;
+        }
+        matched.extend(hits);
+    }
+    matched.into_iter().map(PdbName::from).collect()
 }
 
 #[cfg(test)]
@@ -161,5 +189,34 @@ mod tests {
         let pdbs = Pdbs::discover(&opened).unwrap();
         let names: Vec<&str> = pdbs.names().iter().map(|p| p.as_ref()).collect();
         assert_eq!(names, vec!["PDB1", "PDB2"]);
+    }
+
+    fn exact(name: &str) -> Regex {
+        Regex::new(&format!("^{name}$")).unwrap()
+    }
+
+    #[test]
+    fn test_resolve_returns_all_matched_pdbs() {
+        let pdbs = Pdbs::from_names(&["PDB1", "PDB2", "OTHER"]);
+        let result = resolve_pdb_patterns(&[exact("PDB1"), exact("PDB2")], &pdbs);
+
+        assert_eq!(result.len(), 2);
+        assert!(result.contains(&PdbName::from("PDB1")));
+        assert!(result.contains(&PdbName::from("PDB2")));
+    }
+
+    #[test]
+    fn test_resolve_each_pdb_appears_once() {
+        let pdbs = Pdbs::from_names(&["PDB1"]);
+        assert_eq!(
+            resolve_pdb_patterns(&[exact("PDB1"), exact("PDB1")], &pdbs),
+            vec![PdbName::from("PDB1")]
+        );
+    }
+
+    #[test]
+    fn test_resolve_returns_nothing_when_unmatched() {
+        let pdbs = Pdbs::from_names(&["PDB1"]);
+        assert!(resolve_pdb_patterns(&[exact("MISSING")], &pdbs).is_empty());
     }
 }

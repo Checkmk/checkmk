@@ -22,7 +22,14 @@ defineEmits(['click'])
       }
     "
   >
-    <CmkIcon :name="name" :variant="variant" :size="size" :rotate="rotate" :title="title" />
+    <CmkIcon
+      :name="name"
+      :variant="variant"
+      :size="size"
+      :colored="colored"
+      :rotate="rotate"
+      :title="title"
+    />
   </button>
 </template>
 

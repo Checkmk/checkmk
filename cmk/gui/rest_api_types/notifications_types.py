@@ -37,7 +37,6 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     APICheckmkPassword_FromPassword,
     APICheckmkPassword_FromSecret,
     APINotifyPlugin,
-    APIPagerDutyKeyOption,
     APIPluginDict,
     BasicOrTokenAuth,
     CheckboxEmailBodyInfo,
@@ -1176,11 +1175,34 @@ class JsmOperationsPlugin:
         )
 
 
+def _normalize_pagerduty_routing_key(data: object) -> CheckmkPassword:
+    """Accept both the legacy 2-tuple and the current CheckmkPassword 3-tuple.
+
+    Rules created via the REST API in 2.4.0 wrote the legacy `("routing_key", key)`
+    or `("store", store_id)` form. The notification dispatcher expects the
+    `("cmk_postprocessed", "explicit_password", (uuid, key))` form. The GUI's
+    FormSpec migrate covers UI-touched rules; this normalizer covers rules read
+    via the REST API that have not yet been rewritten through the UI.
+    """
+    if isinstance(data, tuple):
+        if len(data) == 2 and data[0] == "routing_key":
+            return (
+                "cmk_postprocessed",
+                "explicit_password",
+                (password_store.ad_hoc_password_id(), data[1]),
+            )
+        if len(data) == 2 and data[0] == "store":
+            return ("cmk_postprocessed", "stored_password", (data[1], ""))
+        if len(data) == 3 and data[0] == "cmk_postprocessed":
+            return cast(CheckmkPassword, data)
+    raise ValueError(f"Invalid PagerDuty routing_key format: {data!r}")
+
+
 @dataclass
 class PagerDutyPlugin:
     plugin_name: ClassVar[PagerdutyPluginName] = "pagerduty"
     option: PluginOptions = PluginOptions.CANCEL
-    integration_key: APIPagerDutyKeyOption = field(default_factory=APIPagerDutyKeyOption)
+    integration_key: APICheckmkPassword_FromKey = field(default_factory=APICheckmkPassword_FromKey)
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
@@ -1195,7 +1217,9 @@ class PagerDutyPlugin:
 
         return cls(
             option=PluginOptions.WITH_PARAMS,
-            integration_key=APIPagerDutyKeyOption.from_mk_file_format(pluginparams["routing_key"]),
+            integration_key=APICheckmkPassword_FromKey.from_mk_file_format(
+                _normalize_pagerduty_routing_key(pluginparams["routing_key"]),
+            ),
             disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
                 pluginparams.get("ignore_ssl"),
             ),
@@ -1216,7 +1240,7 @@ class PagerDutyPlugin:
 
         return cls(
             option=PluginOptions.WITH_PARAMS,
-            integration_key=APIPagerDutyKeyOption.from_api_request(params["integration_key"]),
+            integration_key=APICheckmkPassword_FromKey.from_api_request(params["integration_key"]),
             disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
                 params["disable_ssl_cert_verification"]
             ),

@@ -592,7 +592,7 @@ class JsmOperationsPluginModel(TypedDict, total=False):
 
 
 class PagerDutyPluginModel(TypedDict):
-    routing_key: tuple[Literal["routing_key", "store"], str]
+    routing_key: CheckmkPassword
     webhook_url: Literal["https://events.pagerduty.com/v2/enqueue"]
     ignore_ssl: NotRequired[Literal[True]]
     proxy_url: NotRequired[ProxyUrl]

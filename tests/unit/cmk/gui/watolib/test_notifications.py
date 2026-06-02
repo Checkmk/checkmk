@@ -265,3 +265,93 @@ def test_notification_rule_roundtrip_preserves_explicit_email_addresses_handling
 
     assert mk_format_cloud["contact_users"] == ["user1"]
     assert mk_format_cloud["contact_emails"] == ["cloud@example.com"]
+
+
+def test_pagerduty_from_api_request_produces_cmk_postprocessed_tuple() -> None:
+    """A PagerDuty rule created via the REST API must serialize to the
+    `("cmk_postprocessed", "explicit_password", (uuid, key))` form so the
+    notification dispatcher recognises the `"explicit_password"` marker.
+    """
+    from cmk.gui.rest_api_types.notifications_rule_types import (
+        API_PagerDutyData,
+        APINotifyPlugin,
+    )
+    from cmk.gui.rest_api_types.notifications_types import PagerDutyPlugin
+    from cmk.utils.notify_types import PluginOptions
+
+    incoming: APINotifyPlugin = {
+        "option": PluginOptions.WITH_PARAMS,
+        "plugin_params": API_PagerDutyData(
+            plugin_name="pagerduty",
+            integration_key={"option": "explicit", "key": "abcdef0123456789"},
+            disable_ssl_cert_verification={"state": "disabled"},
+            http_proxy={"state": "disabled"},
+            url_prefix_for_links_to_checkmk={"state": "disabled"},
+        ),
+    }
+
+    plugin = PagerDutyPlugin.from_api_request(incoming)
+    _, params = plugin.to_mk_file_format()
+    assert params is not None
+    routing_key = params["routing_key"]
+    assert routing_key[0] == "cmk_postprocessed"
+    assert routing_key[1] == "explicit_password"
+    assert routing_key[2][1] == "abcdef0123456789"
+
+
+def test_pagerduty_from_mk_file_format_normalizes_legacy_explicit_tuple() -> None:
+    """Legacy on-disk values written by 2.4.0 REST API as
+    `("routing_key", key)` must be normalised on read so the API can return
+    them without raising and so they get rewritten in the new format.
+    """
+    from cmk.gui.rest_api_types.notifications_types import PagerDutyPlugin
+
+    legacy_params = {
+        "routing_key": ("routing_key", "abcdef0123456789"),
+        "webhook_url": "https://events.pagerduty.com/v2/enqueue",
+    }
+
+    plugin = PagerDutyPlugin.from_mk_file_format(legacy_params)
+    _, params = plugin.to_mk_file_format()
+    assert params is not None
+    routing_key = params["routing_key"]
+    assert routing_key[0] == "cmk_postprocessed"
+    assert routing_key[1] == "explicit_password"
+    assert routing_key[2][1] == "abcdef0123456789"
+
+
+def test_pagerduty_from_mk_file_format_normalizes_legacy_store_tuple() -> None:
+    """Legacy on-disk values for password-store-backed keys must be normalised."""
+    from cmk.gui.rest_api_types.notifications_types import PagerDutyPlugin
+
+    legacy_params = {
+        "routing_key": ("store", "my_pd_key"),
+        "webhook_url": "https://events.pagerduty.com/v2/enqueue",
+    }
+
+    plugin = PagerDutyPlugin.from_mk_file_format(legacy_params)
+    _, params = plugin.to_mk_file_format()
+    assert params is not None
+    routing_key = params["routing_key"]
+    assert routing_key[0] == "cmk_postprocessed"
+    assert routing_key[1] == "stored_password"
+    assert routing_key[2][0] == "my_pd_key"
+
+
+def test_pagerduty_from_mk_file_format_preserves_current_format() -> None:
+    """Values already in the current 3-tuple form must round-trip unchanged."""
+    from cmk.gui.rest_api_types.notifications_types import PagerDutyPlugin
+
+    current_params = {
+        "routing_key": (
+            "cmk_postprocessed",
+            "explicit_password",
+            ("uuid-1234", "abcdef0123456789"),
+        ),
+        "webhook_url": "https://events.pagerduty.com/v2/enqueue",
+    }
+
+    plugin = PagerDutyPlugin.from_mk_file_format(current_params)
+    _, params = plugin.to_mk_file_format()
+    assert params is not None
+    assert params["routing_key"] == current_params["routing_key"]

@@ -9836,6 +9836,17 @@ msgstr ""
 "バージョンのいずれかの使用を強制できます。<br>さらに、Pythonプラグインの実行"
 "に使用されるコマンドを提供できます。"
 
+msgid ""
+"By default, a BI aggregate is marked 'in downtime' as soon as enough "
+"components have a scheduled maintenance window to satisfy the aggregation "
+"function. This is useful when you treat the aggregate as a single service "
+"unit: if a key component is under maintenance, the whole branch is "
+"intentionally considered to be in planned downtime. Enable this option if "
+"you instead want to require that every currently failing component is "
+"covered — ensuring that no active, unplanned failure goes unnoticed behind a "
+"partial maintenance window."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "By default, all Azure tags for subscriptions, resource groups, and resources "
@@ -51247,6 +51258,9 @@ msgstr "リクエストの使用率"
 msgid "Require a comment"
 msgstr "コメントが必要"
 
+msgid "Require all failing components to be in a maintenance window"
+msgstr ""
+
 msgid "Required"
 msgstr "必須"
 
@@ -55541,6 +55555,9 @@ msgstr "詳細を表示"
 
 msgid "Show details about Livestatus encryption"
 msgstr "Livestatus 暗号化に関する詳細を表示"
+
+msgid "Show downtime only when all current problems are covered"
+msgstr ""
 
 msgid "Show dynamic"
 msgstr "ダイナミック表示"
@@ -86677,6 +86694,9 @@ msgstr "重要なヒント"
 msgid "Ctrl + Alt"
 msgstr "Ctrl + Alt"
 
+msgid "Attribute key"
+msgstr "属性キー"
+
 #, fuzzy
 msgid "Remove condition"
 msgstr "タグ条件を削除します"
@@ -86724,9 +86744,6 @@ msgstr "\"%s\"で終わることはできません"
 #, fuzzy
 msgid "does not exist"
 msgstr "存在しない"
-
-msgid "Attribute key"
-msgstr "属性キー"
 
 msgid "Resource attributes"
 msgstr "リソース属性"

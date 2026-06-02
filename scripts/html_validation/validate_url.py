@@ -14,7 +14,7 @@ from pathlib import Path
 import httpx
 
 from scripts.html_validation.lib.exceptions import AuthMissingError
-from scripts.html_validation.lib.http import build_auth_cookies
+from scripts.html_validation.lib.http import build_auth_cookies, raise_if_redirected
 from scripts.html_validation.lib.tag_balance import check_html_tag_balance, TagImbalanceError
 
 
@@ -78,9 +78,10 @@ async def main() -> None:
     async with httpx.AsyncClient(cookies=cookies, timeout=REQUEST_TIMEOUT) as client:
         resp = await client.get(args.url)
 
-    if resp.has_redirect_location and "login.py" in resp.headers.get("location", ""):
-        err_msg = "Error: Request was redirected to login page. Did you pass valid credentials?\n"
-        sys.stderr.write(err_msg)
+    try:
+        raise_if_redirected(resp)
+    except AuthMissingError as exc:
+        sys.stderr.write(f"Error: {exc}\n")
         sys.exit(ExitCode.INVALID_ARGUMENTS)
 
     if args.verbose:

@@ -20,6 +20,8 @@
 //     'celsius'
 //   )
 //   formatter.render(convert(rawBytes))   // → "12.34 kB"
+import type { UnitFormat } from 'cmk-shared-typing/typescript/unit_format'
+
 import {
   DecimalFormatter,
   EngineeringScientificFormatter,
@@ -31,17 +33,10 @@ import {
   TimeFormatter
 } from '@/lib/unit-format/notationFormatter'
 
-export type UnitFormat = {
-  notation: 'decimal' | 'si' | 'iec' | 'standard_scientific' | 'engineering_scientific' | 'time'
-  symbol: string
-  precision: Precision
-  /**
-   * Whether this unit is eligible for auto-conversion (currently only Celsius
-   * <-> Fahrenheit). Defaults to true. Custom-graph user-defined units set
-   * this to false so a literal "°C" label is not treated as a temperature.
-   */
-  convertible?: boolean
-}
+// `UnitFormat` is generated from packages/cmk-shared-typing/source/unit_format.json
+// (the canonical wire format the backend serializes into). Re-exported here so the
+// existing `@/lib/unit-format/unitFormatter` import sites stay unchanged.
+export type { UnitFormat }
 
 export type TemperatureUnit = 'celsius' | 'fahrenheit'
 

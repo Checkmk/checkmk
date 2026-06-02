@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UnitFormat",
+  "type": "object",
+  "properties": {
+    "notation": {
+      "type": "string",
+      "enum": ["decimal", "si", "iec", "standard_scientific", "engineering_scientific", "time"]
+    },
+    "symbol": { "type": "string" },
+    "precision": { "$ref": "#/$defs/precision" },
+    "convertible": {
+      "type": "boolean",
+      "description": "Whether this unit is eligible for auto-conversion (currently only Celsius <-> Fahrenheit). Defaults to true. Custom-graph user-defined units set this to false so a literal \"°C\" label is not treated as a temperature."
+    }
+  },
+  "required": ["notation", "symbol", "precision"],
+  "$defs": {
+    "precision": {
+      "title": "Precision",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["auto", "strict"] },
+        "digits": { "type": "integer" }
+      },
+      "required": ["type", "digits"]
+    }
+  }
+}

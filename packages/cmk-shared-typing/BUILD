@@ -51,6 +51,7 @@ SOURCES_COMMON = [
 SOURCES_SPECIAL_DATACLASSES = [
     "graph_designer.json",
     "service_graphs.json",
+    "unit_format.json",
 ]
 
 json2typescript(

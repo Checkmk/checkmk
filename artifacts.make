@@ -30,6 +30,7 @@ SOURCE_BUILT_MK_ORACLE := \
 	$(SOURCE_BUILT_MK_ORACLE_WINDOWS) \
 	$(SOURCE_BUILT_MK_ORACLE_AIX)
 SOURCE_BUILT_MK_SQL := $(REPO_PATH)/agents/windows/mk-sql.exe
+SOURCE_BUILT_SIGNED_PLUGINS := $(REPO_PATH)/omd/packages/win-signed-plugins/signed_plugins.tar
 SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/check_mk_agent.msi \
 	$(REPO_PATH)/agents/windows/python-3.cab \
@@ -41,6 +42,7 @@ SOURCE_BUILT_AGENTS := \
 	$(SOURCE_BUILT_EXT) \
 	$(SOURCE_BUILT_MK_SQL) \
 	$(SOURCE_BUILT_MK_ORACLE) \
+	$(SOURCE_BUILT_SIGNED_PLUGINS) \
 	$(SOURCE_BUILT_WINDOWS)
 SOURCE_BUILT_ARTIFACTS := \
 	$(SOURCE_BUILT_AGENTS) \

@@ -759,6 +759,7 @@ pkg_tar(
         "//omd/packages/robotmk",
         "//omd/packages/snap7",
         "//omd/packages/stunnel",
+        "//omd/packages/win-signed-plugins",
         "//omd/packages/xmlsec1",
         "//packages/cmk-agent-receiver:omd_skel_tar",
         "//packages/cmk-agent-receiver:pkg_tar",

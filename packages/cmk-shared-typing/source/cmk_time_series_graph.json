@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CmkTimeSeriesGraph",
+  "type": "object",
+  "properties": {
+    "size": { "$ref": "#/$defs/size" },
+    "options": { "$ref": "#/$defs/graph_options" },
+    "interaction": { "$ref": "#/$defs/interaction" },
+    "time_range": { "$ref": "#/$defs/time_range" },
+    "metrics": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/metric" }
+    },
+    "horizontal_lines": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/horizontal_line" }
+    }
+  },
+  "required": ["size", "options", "interaction", "time_range", "metrics", "horizontal_lines"],
+  "$defs": {
+    "size": {
+      "title": "Size",
+      "type": "object",
+      "properties": {
+        "width": { "type": "number" },
+        "height": { "type": "number" },
+        "mode": { "type": "string", "enum": ["resizable", "fixed"] }
+      },
+      "required": ["width", "height", "mode"]
+    },
+    "graph_header": {
+      "title": "GraphHeader",
+      "type": "object",
+      "properties": {
+        "title": { "type": ["string", "null"] },
+        "show_graph_time": { "type": "boolean" }
+      },
+      "required": ["title", "show_graph_time"]
+    },
+    "x_axis": {
+      "title": "XAxis",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "unit": { "type": "string", "enum": ["time"] },
+        "fixed_timerange": { "type": "boolean" }
+      },
+      "required": ["title", "unit", "fixed_timerange"]
+    },
+    "y_axis": {
+      "title": "YAxis",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "unit": { "$ref": "unit_format.json#" }
+      },
+      "required": ["title", "unit"]
+    },
+    "graph_options": {
+      "title": "GraphOptions",
+      "type": "object",
+      "properties": {
+        "header": { "$ref": "#/$defs/graph_header" },
+        "name": { "type": "string" },
+        "x_axis": {
+          "anyOf": [{ "$ref": "#/$defs/x_axis" }, { "type": "null" }]
+        },
+        "y_axis": {
+          "anyOf": [{ "$ref": "#/$defs/y_axis" }, { "type": "null" }]
+        },
+        "show_pin": { "type": "boolean" },
+        "font_size_pt": { "type": "number" }
+      },
+      "required": ["header", "name", "x_axis", "y_axis", "show_pin", "font_size_pt"]
+    },
+    "interaction": {
+      "title": "Interaction",
+      "type": "object",
+      "properties": {
+        "burger": { "type": "string", "enum": ["enabled", "disabled"] },
+        "zoom": { "type": "string", "enum": ["enabled", "disabled"] },
+        "panning": { "type": "string", "enum": ["enabled", "disabled"] },
+        "hover": { "type": "string", "enum": ["enabled", "disabled"] }
+      },
+      "required": ["burger", "zoom", "panning", "hover"]
+    },
+    "time_range": {
+      "title": "TimeRange",
+      "type": "object",
+      "properties": {
+        "start": { "type": "number" },
+        "end": { "type": "number" },
+        "step": { "type": "number" }
+      },
+      "required": ["start", "end", "step"]
+    },
+    "metric_metadata": {
+      "title": "MetricMetadata",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "unit": { "$ref": "unit_format.json#" },
+        "color": { "type": "string" },
+        "expression": { "type": "string" }
+      },
+      "required": ["name", "title", "unit", "color", "expression"]
+    },
+    "metric_render": {
+      "title": "MetricRender",
+      "type": "object",
+      "properties": {
+        "stack": { "type": "string" },
+        "inverse": { "type": "boolean" }
+      },
+      "required": ["stack", "inverse"]
+    },
+    "metric": {
+      "title": "Metric",
+      "type": "object",
+      "properties": {
+        "metadata": { "$ref": "#/$defs/metric_metadata" },
+        "render": { "$ref": "#/$defs/metric_render" },
+        "data_points": {
+          "anyOf": [
+            { "type": "array", "items": { "type": ["number", "null"] } },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["metadata", "render", "data_points"]
+    },
+    "horizontal_line": {
+      "title": "HorizontalLine",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "value": { "type": "number" },
+        "color": { "type": "string" }
+      },
+      "required": ["name", "value", "color"]
+    }
+  }
+}

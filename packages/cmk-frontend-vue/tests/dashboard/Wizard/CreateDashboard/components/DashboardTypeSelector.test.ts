@@ -24,31 +24,39 @@ describe('DashboardTypeSelector', () => {
       render(DashboardTypeSelector, {
         props: { dashboardType: DashboardType.UNRESTRICTED }
       })
-      expect(screen.getByRole('button', { name: 'Toggle Unrestricted' })).toHaveClass('selected')
+      expect(
+        screen.getByRole('button', { name: 'Toggle Unrestricted', pressed: true })
+      ).toBeInTheDocument()
     })
 
     it('does not mark Specific host or Custom as selected when UNRESTRICTED', () => {
       render(DashboardTypeSelector, {
         props: { dashboardType: DashboardType.UNRESTRICTED }
       })
-      expect(screen.getByRole('button', { name: 'Toggle Specific host' })).not.toHaveClass(
-        'selected'
-      )
-      expect(screen.getByRole('button', { name: 'Toggle Custom' })).not.toHaveClass('selected')
+      expect(
+        screen.getByRole('button', { name: 'Toggle Specific host', pressed: false })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Toggle Custom', pressed: false })
+      ).toBeInTheDocument()
     })
 
     it('marks Custom as selected when dashboardType is CUSTOM', () => {
       render(DashboardTypeSelector, {
         props: { dashboardType: DashboardType.CUSTOM }
       })
-      expect(screen.getByRole('button', { name: 'Toggle Custom' })).toHaveClass('selected')
+      expect(
+        screen.getByRole('button', { name: 'Toggle Custom', pressed: true })
+      ).toBeInTheDocument()
     })
 
     it('marks Specific host as selected when dashboardType is SPECIFIC_HOST', () => {
       render(DashboardTypeSelector, {
         props: { dashboardType: DashboardType.SPECIFIC_HOST }
       })
-      expect(screen.getByRole('button', { name: 'Toggle Specific host' })).toHaveClass('selected')
+      expect(
+        screen.getByRole('button', { name: 'Toggle Specific host', pressed: true })
+      ).toBeInTheDocument()
     })
   })
 

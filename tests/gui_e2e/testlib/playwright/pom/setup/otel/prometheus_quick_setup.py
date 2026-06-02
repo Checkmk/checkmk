@@ -54,6 +54,15 @@ class PrometheusQuickSetup(CmkPage):
             "link", name="Edit", exact=True
         )
 
+    def delete_button(self, configuration_name: str) -> Locator:
+        return self.configuration_row(configuration_name).get_by_role(
+            "link", name="Delete this configuration"
+        )
+
+    @property
+    def delete_confirmation_button(self) -> Locator:
+        return self.main_area.get_confirmation_popup_button("Delete")
+
     @property
     def add_configuration_button(self) -> Locator:
         return self.main_area.get_suggestion("Add Prometheus configuration")

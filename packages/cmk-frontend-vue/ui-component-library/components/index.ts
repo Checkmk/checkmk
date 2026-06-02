@@ -5,6 +5,7 @@
  */
 import { Folder, Page } from '@ucl/_ucl/types/page'
 
+import { pages as aiPages } from '../ai'
 import { pages as formSpecPages } from '../form'
 import UclBreakpoints from '../foundations/Breakpoints/UclBreakpoints.vue'
 import UclColors from '../foundations/Colors/UclColors.vue'
@@ -159,6 +160,7 @@ export const roots = [
     true
   ),
   new Folder('Developer Playground', [
+    new Folder('AI', aiPages),
     new Folder('Form Spec Elements', formSpecPages),
     new Folder('I18n', i18nPages),
     new Folder('Metric backend', metricBackendPages),

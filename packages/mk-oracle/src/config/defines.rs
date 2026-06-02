@@ -72,6 +72,8 @@ pub mod keys {
     pub const PIGGYBACK: &str = "piggyback";
 
     pub const CONFIGS: &str = "configs";
+
+    pub const PDBS: &str = "pdbs";
 }
 
 pub mod values {

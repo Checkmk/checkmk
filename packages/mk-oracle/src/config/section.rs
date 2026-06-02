@@ -135,6 +135,7 @@ pub struct SectionBuilder {
     path: Option<PathBuf>,
     affinity: SectionAffinity,
     item_value: Option<ItemValue>, // [PROD|locks]
+    pdb_patterns: Vec<String>,
 }
 
 impl SectionBuilder {
@@ -153,6 +154,7 @@ impl SectionBuilder {
                 .cloned()
                 .unwrap_or(SectionAffinity::Db),
             item_value: None,
+            pdb_patterns: Vec::new(),
         }
     }
     pub fn sep(mut self, sep: Option<char>) -> Self {
@@ -192,6 +194,11 @@ impl SectionBuilder {
         self
     }
 
+    pub fn set_pdb_patterns(mut self, p: Vec<String>) -> Self {
+        self.pdb_patterns = p;
+        self
+    }
+
     pub fn build(self) -> Section {
         let (name, sep) = if self.item_value.is_some() {
             (
@@ -215,6 +222,7 @@ impl SectionBuilder {
             path: self.path,
             affinity: self.affinity,
             item_value: self.item_value,
+            pdb_patterns: self.pdb_patterns,
         }
     }
 }
@@ -228,6 +236,7 @@ pub struct Section {
     path: Option<PathBuf>,
     affinity: SectionAffinity,
     item_value: Option<ItemValue>, // part of [SID|item_value]
+    pdb_patterns: Vec<String>,
 }
 
 impl Section {
@@ -237,6 +246,10 @@ impl Section {
 
     pub fn name(&self) -> &SectionName {
         &self.name
+    }
+
+    pub fn pdb_patterns(&self) -> &Vec<String> {
+        &self.pdb_patterns
     }
 
     pub fn item_value(&self) -> Option<&ItemValue> {
@@ -353,7 +366,11 @@ impl Section {
                     .clone()
             });
 
-        if yaml.get_optional_bool(keys::DISABLED) == Some(true) {
+        let pdbs = yaml.get_string_vector(keys::PDBS, &[""]);
+
+        if !pdbs.is_empty() {
+            builder.set_pdb_patterns(pdbs)
+        } else if yaml.get_optional_bool(keys::DISABLED) == Some(true) {
             builder.set_disabled()
         } else if let Some(v) = yaml.get_optional_bool(keys::IS_ASYNC) {
             builder.set_async(v)
@@ -730,5 +747,38 @@ sections:
     fn test_section_builder_path_setter() {
         let section = SectionBuilder::new("foo").path("queries/foo.sql").build();
         assert_eq!(section.path(), Some(Path::new("queries/foo.sql")));
+    }
+
+    #[test]
+    fn test_pdbs_parsed_from_yaml() {
+        const SOURCE: &str = r#"
+custom_metrics:
+  - product_price:
+      sql: "select 'details:hello' from dual"
+      pdbs: ["PDB1", ".*PDB"]
+"#;
+        let s = Sections::from_yaml(&create_yaml(SOURCE), &Sections::default()).unwrap();
+        let custom: Vec<&Section> = s
+            .sections()
+            .iter()
+            .filter(|sec| sec.is_custom_metric())
+            .collect();
+        assert_eq!(custom[0].pdb_patterns(), &["PDB1", ".*PDB"]);
+    }
+
+    #[test]
+    fn test_pdbs_empty_when_absent() {
+        const SOURCE: &str = r#"
+custom_metrics:
+  - product_price:
+      sql: "select 'details:hello' from dual"
+"#;
+        let s = Sections::from_yaml(&create_yaml(SOURCE), &Sections::default()).unwrap();
+        let custom: Vec<&Section> = s
+            .sections()
+            .iter()
+            .filter(|sec| sec.is_custom_metric())
+            .collect();
+        assert!(custom[0].pdb_patterns().is_empty());
     }
 }

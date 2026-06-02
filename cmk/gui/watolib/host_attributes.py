@@ -125,7 +125,10 @@ class MetricsAssociationAttributeFilters(TypedDict):
 
 class MetricsAssociationEnabled(TypedDict):
     attribute_filters: MetricsAssociationAttributeFilters
-    host_name_resource_attribute_key: str
+    # Optional: a single resource attribute key whose value equals the host name. Used for hosts
+    # configured manually; hosts created by the DCD connector leave this unset and store the
+    # resolved values directly in attribute_filters.
+    host_name_resource_attribute_key: NotRequired[str]
 
 
 # Possible improvements for the future:

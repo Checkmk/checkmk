@@ -796,10 +796,15 @@ class MetricsAssociationAttributeFiltersModel:
 @api_model
 class MetricsAssociationEnabledModel:
     attribute_filters: MetricsAssociationAttributeFiltersModel = api_field(
-        description="Attribute filters. All filters must match (logical AND)."
+        description="Attribute filters. All filters must match (logical AND). "
+        "The resource attributes that the host name template resolved to are included here, "
+        "so the host's series can be selected by filtering on exactly these values."
     )
-    host_name_resource_attribute_key: str = api_field(
-        description="The resource attribute used to compute the host name.",
+    host_name_resource_attribute_key: str | ApiOmitted = api_field(
+        description="Optional. For manually configured hosts: the resource attribute whose value "
+        "equals this host's name. Expanded to a resource attribute filter at query time. Left "
+        "unset for hosts created by the Dynamic Host Management connection.",
+        default_factory=ApiOmitted,
     )
 
 

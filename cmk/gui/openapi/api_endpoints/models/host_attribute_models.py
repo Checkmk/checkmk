@@ -361,9 +361,9 @@ class HostViewAttributeModel(
                             ]
                         ],
                     ),
-                    host_name_resource_attribute_key=metrics_assoc[1][
-                        "host_name_resource_attribute_key"
-                    ],
+                    host_name_resource_attribute_key=metrics_assoc[1].get(
+                        "host_name_resource_attribute_key", ApiOmitted()
+                    ),
                 )
             )
             if (metrics_assoc := value.get("metrics_association"))
@@ -438,38 +438,8 @@ class HostUpdateAttributeModel(
         if not isinstance(self.snmp_community, ApiOmitted):
             attributes["snmp_community"] = self.snmp_community_to_internal(self.snmp_community)
         if not isinstance(self.metrics_association, ApiOmitted):
-            attributes["metrics_association"] = (
-                ("disabled", None)
-                if self.metrics_association == "disabled"
-                else (
-                    "enabled",
-                    MetricsAssociationEnabled(
-                        attribute_filters=MetricsAssociationAttributeFilters(
-                            resource_attributes=[
-                                MetricsAssociationAttributeFilter(
-                                    key=attribute_filter.key,
-                                    value=attribute_filter.value,
-                                )
-                                for attribute_filter in self.metrics_association.attribute_filters.resource_attributes
-                            ],
-                            scope_attributes=[
-                                MetricsAssociationAttributeFilter(
-                                    key=attribute_filter.key,
-                                    value=attribute_filter.value,
-                                )
-                                for attribute_filter in self.metrics_association.attribute_filters.scope_attributes
-                            ],
-                            data_point_attributes=[
-                                MetricsAssociationAttributeFilter(
-                                    key=attribute_filter.key,
-                                    value=attribute_filter.value,
-                                )
-                                for attribute_filter in self.metrics_association.attribute_filters.data_point_attributes
-                            ],
-                        ),
-                        host_name_resource_attribute_key=self.metrics_association.host_name_resource_attribute_key,
-                    ),
-                )
+            attributes["metrics_association"] = _metrics_association_to_internal(
+                self.metrics_association
             )
         if not isinstance(self.labels, ApiOmitted):
             attributes["labels"] = self.labels
@@ -509,3 +479,30 @@ class HostUpdateAttributeModel(
                 attributes[k] = v  # type: ignore[literal-required]
 
         return attributes
+
+
+def _metrics_association_to_internal(
+    model: MetricsAssociationModel,
+) -> tuple[Literal["disabled"], None] | tuple[Literal["enabled"], MetricsAssociationEnabled]:
+    if model == "disabled":
+        return ("disabled", None)
+    enabled = MetricsAssociationEnabled(
+        attribute_filters=MetricsAssociationAttributeFilters(
+            resource_attributes=[
+                MetricsAssociationAttributeFilter(key=f.key, value=f.value)
+                for f in model.attribute_filters.resource_attributes
+            ],
+            scope_attributes=[
+                MetricsAssociationAttributeFilter(key=f.key, value=f.value)
+                for f in model.attribute_filters.scope_attributes
+            ],
+            data_point_attributes=[
+                MetricsAssociationAttributeFilter(key=f.key, value=f.value)
+                for f in model.attribute_filters.data_point_attributes
+            ],
+        ),
+    )
+    # Optional manual convenience key; absent for hosts created by the DCD connector.
+    if not isinstance(model.host_name_resource_attribute_key, ApiOmitted):
+        enabled["host_name_resource_attribute_key"] = model.host_name_resource_attribute_key
+    return ("enabled", enabled)

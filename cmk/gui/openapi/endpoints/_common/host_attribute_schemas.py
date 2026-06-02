@@ -150,9 +150,12 @@ class MetricsAssociationConfig(BaseSchema):
         description="List of filters to apply",
     )
     host_name_resource_attribute_key = fields.String(
-        required=True,
+        required=False,
+        minLength=1,
         example="service.name",
-        description="The resource attribute key to use for the host name",
+        description="Optional. For manually configured hosts: the resource attribute whose value "
+        "equals the host name. Left unset for hosts created by the Dynamic Host Management "
+        "connection.",
     )
 
 

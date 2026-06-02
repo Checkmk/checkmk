@@ -11,7 +11,6 @@ import pytest
 
 VALID_METRICS_ASSOCIATION_CONFIG: dict[str, Any] = {
     "attribute_filters": [],
-    "host_name_resource_attribute_key": "service.name",
 }
 
 INVALID_METRICS_ASSOCIATION_PARAMS = [
@@ -40,8 +39,7 @@ INVALID_METRICS_ASSOCIATION_PARAMS = [
         [
             "enabled",
             {
-                # Missing 'host_name_resource_attribute_key'
-                "attribute_filters": {}
+                # Missing 'attribute_filters'
             },
         ],
         "Missing data for required field",
@@ -51,7 +49,6 @@ INVALID_METRICS_ASSOCIATION_PARAMS = [
         [
             "enabled",
             {
-                "host_name_resource_attribute_key": "service.name",
                 "attribute_filters": "not-a-dict",  # Wrong type
             },
         ],
@@ -62,7 +59,6 @@ INVALID_METRICS_ASSOCIATION_PARAMS = [
         [
             "enabled",
             {
-                "host_name_resource_attribute_key": "service.name",
                 "attribute_filters": {
                     # Missing 'data_point_attributes'
                     "resource_attributes": [{"key": "k", "value": "v"}],
@@ -77,7 +73,6 @@ INVALID_METRICS_ASSOCIATION_PARAMS = [
         [
             "enabled",
             {
-                "host_name_resource_attribute_key": "service.name",
                 "attribute_filters": {
                     "resource_attributes": [{"key": "k", "value": "v"}],
                     "scope_attributes": [

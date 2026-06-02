@@ -197,11 +197,11 @@ void main() {
     }
 
     smart_stage(
-        name: "Trigger trigger-post-submit-test-cascade-heavy",
+        name: "Trigger trigger-post-submit-tests-heavy",
         condition: trigger_post_submit_heavy_chain && currentBuild.result == "SUCCESS",
     ) {
         build(
-            job: "${branch_base_folder}/trigger-post-submit-test-cascade-heavy",
+            job: "${branch_base_folder}/trigger-post-submit-tests-heavy",
             parameters: [
                 stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),
                 stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: params.CIPARAM_OVERRIDE_BUILD_NODE),

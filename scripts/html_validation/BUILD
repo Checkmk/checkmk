@@ -7,6 +7,6 @@ py_library(
     imports = ["../.."],
     visibility = ["//visibility:public"],
     deps = [
-        requirement("requests"),
+        requirement("httpx"),
     ],
 )

@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
+import asyncio
 import enum
 import json
 import os
 import sys
 from pathlib import Path
 
-import requests
+import httpx
 
 from scripts.html_validation.lib.tag_balance import check_html_tag_balance, TagImbalanceError
 
@@ -61,7 +62,7 @@ bash to extract this value.
 REQUEST_TIMEOUT = 30
 
 
-def main() -> None:
+async def main() -> None:
     cli = get_cli_parser()
     args = cli.parse_args()
 
@@ -75,10 +76,10 @@ def main() -> None:
 
     cookies = None if args.no_auth else {args.auth_key: args.auth_val}
 
-    resp = requests.get(args.url, cookies=cookies, timeout=REQUEST_TIMEOUT)
+    async with httpx.AsyncClient(cookies=cookies, timeout=REQUEST_TIMEOUT) as client:
+        resp = await client.get(args.url)
 
-    # Unfortunately, we need to check the history because the redirected response returns 200.
-    if resp.history and "login.py" in resp.history[0].headers.get("Location", ""):
+    if resp.has_redirect_location and "login.py" in resp.headers.get("location", ""):
         err_msg = "Error: Request was redirected to login page. Did you pass valid credentials?\n"
         sys.stderr.write(err_msg)
         sys.exit(ExitCode.INVALID_ARGUMENTS)
@@ -139,4 +140,4 @@ def get_cli_parser() -> argparse.ArgumentParser:
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

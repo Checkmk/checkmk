@@ -25,7 +25,6 @@ const portId = useId()
 
 const props = defineProps<{
   showErrors: boolean
-  bothEndpointsEmpty: boolean
   portConflict: boolean
   defaultPort: number
 }>()
@@ -39,13 +38,7 @@ const socketAddressOptions = computed(() => [
 ])
 
 const errors = computed((): { address: string[]; port: string[] } => {
-  if (
-    !props.showErrors ||
-    endpoint.value.socketAddressType !== 'custom' ||
-    (!endpoint.value.address.trim() &&
-      endpoint.value.port === undefined &&
-      !props.bothEndpointsEmpty)
-  ) {
+  if (!props.showErrors || endpoint.value.socketAddressType !== 'custom') {
     return { address: [], port: [] }
   }
   const portErrors = validatePort(endpoint.value.port, _t)
@@ -53,9 +46,7 @@ const errors = computed((): { address: string[]; port: string[] } => {
     portErrors.push(_t('Port must differ from the other protocol endpoint.'))
   }
   return {
-    address: !endpoint.value.address.trim()
-      ? [_t('Enter a valid IP address or host name.')]
-      : validateAddress(endpoint.value.address, _t),
+    address: validateAddress(endpoint.value.address, _t),
     port: portErrors
   }
 })

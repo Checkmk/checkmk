@@ -145,9 +145,9 @@ function narrowAuth(auth: AuthConfig): OTelAuthInput | null {
 /**
  * Narrow the wizard's `EndpointConfig` (which allows `port: undefined` for
  * default modes) into the create action's `OTelSocketAddressInput`. Mirrors
- * `endpointIsConfigured` in `ConfigureCollector.vue` so the wizard validation
- * rule and the save gate agree: default IPv4/IPv6 are always considered
- * configured (the server resolves the bind), only `'custom'` requires the
+ * `configuredEndpointHasErrors` in `ConfigureCollector.vue` so the wizard
+ * validation rule and the save gate agree: default IPv4/IPv6 are always
+ * accepted (the server resolves the bind), only `'custom'` requires the
  * user-entered address + port.
  */
 function narrowSocketAddress(endpoint: EndpointConfig): OTelSocketAddressInput | null {

@@ -93,12 +93,6 @@ onMounted(async () => {
   }
 })
 
-const bothEndpointsEmpty = computed(
-  () =>
-    (!grpcEnabled.value || !endpointIsConfigured(grpcEndpoint.value)) &&
-    (!httpEnabled.value || !endpointIsConfigured(httpEndpoint.value))
-)
-
 function getEffectivePort(endpoint: EndpointConfig, defaultPort: number): number | undefined {
   if (endpoint.socketAddressType !== 'custom') {
     return defaultPort
@@ -133,28 +127,11 @@ function eventConsoleHasErrors(ec: EventConsoleConfig | null): boolean {
   return ec !== null && !ec.resourceAttribute.trim()
 }
 
-function endpointIsConfigured(endpoint: EndpointConfig): boolean {
-  if (endpoint.socketAddressType !== 'custom') {
-    return true
-  }
-  return !!endpoint.address.trim() || endpoint.port !== undefined
-}
-
 function configuredEndpointHasErrors(endpoint: EndpointConfig): boolean {
   if (endpoint.socketAddressType !== 'custom') {
     return false
   }
   return !isValidIpOrHostname(endpoint.address) || !isValidPort(endpoint.port)
-}
-
-function endpointHasValidationErrors(endpoint: EndpointConfig, other: EndpointConfig): boolean {
-  if (endpoint.socketAddressType !== 'custom') {
-    return false
-  }
-  if (!endpoint.address.trim()) {
-    return endpoint.port !== undefined || !endpointIsConfigured(other)
-  }
-  return configuredEndpointHasErrors(endpoint)
 }
 
 function tabHasValidationErrors(tab: 'grpc' | 'http'): boolean {
@@ -184,13 +161,10 @@ function tabHasValidationErrors(tab: 'grpc' | 'http'): boolean {
   }
 
   const endpoint = tab === 'grpc' ? grpcEndpoint.value : httpEndpoint.value
-  const other = tab === 'grpc' ? httpEndpoint.value : grpcEndpoint.value
-  return endpointHasValidationErrors(endpoint, other)
+  return configuredEndpointHasErrors(endpoint)
 }
 
-function validate(): boolean {
-  displayErrors.value = true
-
+const isValid = computed(() => {
   if (!grpcEnabled.value && !httpEnabled.value) {
     return false
   }
@@ -204,27 +178,28 @@ function validate(): boolean {
     ((!grpcEnabled.value || !tlsHasErrors(grpcAuth.value, grpcEncryption.value)) &&
       (!httpEnabled.value || !tlsHasErrors(httpAuth.value, httpEncryption.value)))
 
-  let isValid: boolean
+  const authValid =
+    (!grpcEnabled.value || !authHasErrors(grpcAuth.value)) &&
+    (!httpEnabled.value || !authHasErrors(httpAuth.value))
+
   if (!props.endpointConfigAllowed) {
-    isValid =
-      (!grpcEnabled.value || !authHasErrors(grpcAuth.value)) &&
-      (!httpEnabled.value || !authHasErrors(httpAuth.value)) &&
-      ecValid &&
-      tlsValid
-  } else {
-    isValid =
-      (!grpcEnabled.value ||
-        !endpointHasValidationErrors(grpcEndpoint.value, httpEndpoint.value)) &&
-      (!httpEnabled.value ||
-        !endpointHasValidationErrors(httpEndpoint.value, grpcEndpoint.value)) &&
-      (!grpcEnabled.value || !authHasErrors(grpcAuth.value)) &&
-      (!httpEnabled.value || !authHasErrors(httpAuth.value)) &&
-      !portsConflict.value &&
-      ecValid &&
-      tlsValid
+    return authValid && ecValid && tlsValid
   }
 
-  if (!isValid) {
+  return (
+    (!grpcEnabled.value || !configuredEndpointHasErrors(grpcEndpoint.value)) &&
+    (!httpEnabled.value || !configuredEndpointHasErrors(httpEndpoint.value)) &&
+    authValid &&
+    !portsConflict.value &&
+    ecValid &&
+    tlsValid
+  )
+})
+
+function validate(): boolean {
+  displayErrors.value = true
+
+  if (!isValid.value) {
     if (
       activeTab.value === 'grpc' &&
       !tabHasValidationErrors('grpc') &&
@@ -240,7 +215,7 @@ function validate(): boolean {
     }
   }
 
-  return isValid
+  return isValid.value
 }
 
 function openPasswordSlideIn(target: 'grpc' | 'http') {
@@ -296,7 +271,6 @@ defineExpose({ validate, onPasswordCreated })
               v-if="endpointConfigAllowed"
               v-model:endpoint="grpcEndpoint"
               :show-errors="displayErrors"
-              :both-endpoints-empty="bothEndpointsEmpty"
               :port-conflict="portsConflict"
               :default-port="grpcDefaultPort"
             />
@@ -336,7 +310,6 @@ defineExpose({ validate, onPasswordCreated })
               v-if="endpointConfigAllowed"
               v-model:endpoint="httpEndpoint"
               :show-errors="displayErrors"
-              :both-endpoints-empty="bothEndpointsEmpty"
               :port-conflict="portsConflict"
               :default-port="httpDefaultPort"
             />

@@ -521,7 +521,7 @@ describe('ConfigureCollector', () => {
       expect(result).toBe(true)
     })
 
-    test('validate() returns true when only HTTP address is set and GRPC is empty', async () => {
+    test('validate() returns false when GRPC is enabled with custom type but address is empty', async () => {
       mockPasswordsResponse()
       const { compRef, grpcEndpoint } = renderComponent(true, true)
 
@@ -531,8 +531,10 @@ describe('ConfigureCollector', () => {
       await waitFor(() => expect(compRef.value).toBeDefined())
       await new Promise((r) => setTimeout(r, 0))
 
+      // GRPC is enabled and set to "custom" but has no address — must fail
+      // regardless of whether the other (disabled) endpoint has a config.
       const result = compRef.value!.validate()
-      expect(result).toBe(true)
+      expect(result).toBe(false)
     })
 
     test('validate() returns false when both addresses are empty', async () => {

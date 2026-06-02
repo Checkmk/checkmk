@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Plugins: Network"
 has_support_component = true
 members_required = 1
+product_managers = ["mohamed.saleh@checkmk.com"]
 description = """
 Generic networking-stack plugins. Covers network interface counters
 (if64/if32 and variants), Linux/OVS/Windows bonding, iptables, OpenVPN

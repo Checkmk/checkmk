@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Plugins: Kubernetes"
 has_support_component = true
 members_required = 2
+product_managers = ["mohamed.saleh@checkmk.com", "mohamed.saleh@checkmk.com"]
 description = """
 - Includes special agent
 """

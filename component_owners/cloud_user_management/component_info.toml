@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Cloud User Management"
 has_support_component = true
 members_required = 2
+product_managers = ["annika.felgentraeger@checkmk.com"]
 description = """
 For cloud we use our own authentication service. The service is used for us and customer to login to the
 cloud platform.

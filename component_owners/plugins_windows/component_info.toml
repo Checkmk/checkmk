@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Plugins: Windows"
 has_support_component = true
 members_required = 2
+product_managers = ["andrea.vaccaro@checkmk.com"]
 description = """
 - Includes the Windows agent and plugins
 """

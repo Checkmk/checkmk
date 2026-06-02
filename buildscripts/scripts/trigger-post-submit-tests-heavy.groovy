@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: trigger-post-submit-test-cascade-full.groovy
+/// file: trigger-post-submit-tests-heavy.groovy
 
 /// Trigger post submit test cascade of heavy jobs
 

@@ -169,7 +169,13 @@ get_version_from_source() {
 run_build() {
     case "$(uname)" in
         'SunOS' | 'AIX')
-            cargo build --release
+            # Strip the build-machine home prefix (first-party source paths baked
+            # in via #[track_caller] and panic locations) and the Rust sysroot
+            # (stdlib source paths) from the release binary. trim-paths in
+            # Cargo.toml is not an option: the IBM Open SDK for Rust on AIX does
+            # not have that feature stabilized (SUP-28810).
+            RUSTFLAGS="${RUSTFLAGS:+${RUSTFLAGS} }--remap-path-prefix=${HOME}=. --remap-path-prefix=$(rustc --print sysroot)=." \
+                cargo build --release
             ;;
         *)
             bazel build --cmk_version="$(get_version_from_source)" :all

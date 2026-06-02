@@ -1413,7 +1413,7 @@ class DcdAPI(BaseAPI):
         title: str,
         site: str | None = None,
         interval: int = 60,
-        host_name_resource_attribute_key: str,
+        host_name_template: str,
         resource_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
         scope_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
         data_point_attribute_filters: Sequence[MetricBackendDCDConnectionAttributeFilter] = (),
@@ -1454,7 +1454,7 @@ class DcdAPI(BaseAPI):
                         }
                         for attribute_filter in data_point_attribute_filters
                     ],
-                    "host_name_resource_attribute_key": host_name_resource_attribute_key,
+                    "host_name_template": host_name_template,
                     "creation_rules": [
                         {
                             "folder_path": "/",

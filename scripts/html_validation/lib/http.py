@@ -36,7 +36,9 @@ class ResponseInfo:
         return "login.py" in self.redirect_location
 
 
-def build_auth_cookies(auth_key: str, auth_val: str, no_auth: bool) -> dict[str, str] | None:
+def build_auth_cookies(
+    auth_key: str, auth_val: str, no_auth: bool = False
+) -> dict[str, str] | None:
     auth_missing = not auth_key or not auth_val
 
     if auth_missing and not no_auth:

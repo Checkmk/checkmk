@@ -45,6 +45,7 @@ function setSelectedOption(value: string) {
         disabled: isDisabled(option.disabled)
       }"
       :aria-label="`Toggle ${option.label}`"
+      :aria-pressed="isSelected(option.value)"
       :disabled="isDisabled(option.disabled)"
       :title="isDisabled(option.disabled) ? option.disabledTooltip : option.tooltip"
       @click.prevent="setSelectedOption(option.value)"

@@ -173,6 +173,51 @@ def test_parse_skips_na_banks() -> None:
     assert "Bank NA" not in section
 
 
+def test_parse_strips_null_bytes_from_names() -> None:
+    r"""Regression: some APC devices pad DisplayStrings with null bytes (e.g. "B6\x00").
+
+    An embedded null byte in the bank/device name flows into the service item and
+    crashes RRD info-file creation with "embedded null byte".
+    """
+    section = parse_apc_netshelterpdu_power(
+        [
+            [["mypdu\x00"]],
+            [["4583", "4605"]],
+            [["3"]],
+            [["1", "5", "620", "1431"]],
+            [["B6\x00", "5", "91"]],
+            [],
+            [["43.5kVA"]],
+        ]
+    )
+    assert section is not None
+    # Null byte stripped from both device and bank names
+    assert "Device mypdu" in section
+    assert "Bank B6" in section
+    # No item may contain a null byte
+    assert all("\x00" not in item for item in section)
+    assert section["Bank B6"].elphase.current is not None
+    assert section["Bank B6"].elphase.current.value == 0.91
+
+
+def test_parse_skips_null_padded_na_banks() -> None:
+    """A null-padded "NA" placeholder must still be filtered out."""
+    section = parse_apc_netshelterpdu_power(
+        [
+            [["mypdu"]],
+            [["0", "0"]],
+            [["1"]],
+            [],
+            [["B1", "5", "231"], ["NA\x00", "0", "0"]],
+            [],
+            [],
+        ]
+    )
+    assert section is not None
+    assert "Bank B1" in section
+    assert "Bank NA" not in section
+
+
 def test_parse_empty() -> None:
     assert parse_apc_netshelterpdu_power([[], [], [], [], [], [], []]) is None
 

@@ -44,7 +44,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.apc.lib_netshelterpdu import DETECT_APC_NETSHELTERPDU
+from cmk.plugins.apc.lib_netshelterpdu import clean_snmp_name, DETECT_APC_NETSHELTERPDU
 from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingState, ReadingWithState
 
 _STATE_MAP: Mapping[str, ReadingState] = {
@@ -114,7 +114,7 @@ def parse_apc_netshelterpdu_power(string_table: Sequence[StringTable]) -> Sectio
     # Device level: name + total power + load percentage
     device_name = None
     if device_info and device_status:
-        pdu_name = device_info[0][0]
+        pdu_name = clean_snmp_name(device_info[0][0])
         device_power = float(device_status[0][0])
         apparent_power = float(device_status[0][1])
         device_name = f"Device {pdu_name}"
@@ -154,7 +154,8 @@ def parse_apc_netshelterpdu_power(string_table: Sequence[StringTable]) -> Sectio
         )
 
     # Bank level: per-bank current
-    for bank_name, bank_state, bank_current in bank_status:
+    for raw_bank_name, bank_state, bank_current in bank_status:
+        bank_name = clean_snmp_name(raw_bank_name)
         if bank_name == "NA":
             continue
         parsed[f"Bank {bank_name}"] = NetShelterPDUItem(

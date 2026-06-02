@@ -59,6 +59,20 @@ class TestResponseInfoIsHtmlDocument:
         assert info.is_html_document is False
 
 
+class TestResponseInfoNotFound:
+    def test_true_when_404(self) -> None:
+        info = _make_response_info(status_code=404)
+        assert info.not_found is True
+
+    def test_false_when_found(self) -> None:
+        info = _make_response_info(status_code=302)
+        assert info.not_found is False
+
+    def test_false_when_ok(self) -> None:
+        info = _make_response_info(status_code=200)
+        assert info.not_found is False
+
+
 def _make_response_info(**kwargs: str | int) -> ResponseInfo:
     defaults: dict[str, str | int] = {
         "url": "http://localhost/check_mk/dashboard.py",

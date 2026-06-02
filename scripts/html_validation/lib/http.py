@@ -35,6 +35,10 @@ class ResponseInfo:
     def is_redirect_to_login(self) -> bool:
         return "login.py" in self.redirect_location
 
+    @property
+    def not_found(self) -> bool:
+        return self.status_code == 404
+
 
 def build_auth_cookies(
     auth_key: str, auth_val: str, no_auth: bool = False

@@ -88,6 +88,11 @@ async def main() -> None:
         sys.stderr.write(f"Error: {err_msg}\n")
         sys.exit(ExitCode.INVALID_ARGUMENTS)
 
+    if resp_info.not_found:
+        err_msg = f"Requested page not found: {resp_info.url}"
+        sys.stderr.write(f"Error: {err_msg}\n")
+        sys.exit(ExitCode.INVALID_ARGUMENTS)
+
     if not resp_info.is_html_document:
         sys.stderr.write("Error: Can only validate HTML documents. Try another URL.\n")
         sys.exit(ExitCode.INVALID_ARGUMENTS)

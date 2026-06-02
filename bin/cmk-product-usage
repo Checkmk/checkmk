@@ -13,7 +13,7 @@ from pathlib import Path
 from cmk.utils import paths
 
 from cmk.product_usage.collection import collect_data, data_storage_path, store_data
-from cmk.product_usage.config import load_config
+from cmk.product_usage.config import load_config, load_state
 from cmk.product_usage.logger import init_logging
 from cmk.product_usage.schedule import (
     create_next_random_ts,
@@ -38,12 +38,11 @@ def main(args: Sequence[str]) -> int:
     request = parse_args(args)
     logger = init_logging(Path(paths.log_dir))
     now = datetime.now()
-    config = load_config(logger)
     next_run_fp = next_run_file_path(Path(paths.var_dir))
 
     try:
         if request.schedule:
-            if not config.enabled:
+            if load_state(logger) != "enabled":
                 return 0
 
             # If this is the first run after product usage analytics being enabled,
@@ -76,6 +75,7 @@ def main(args: Sequence[str]) -> int:
                 store_data(data, Path(paths.var_dir))
 
         if request.upload:
+            config = load_config(logger)
             transmit_data(Path(paths.var_dir), logger, proxy_config=config.proxy_config)
 
         if request.schedule:

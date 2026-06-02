@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from re import Pattern
 from typing import NamedTuple, TypedDict
 
@@ -42,3 +42,7 @@ class ChangeDirective[HostT: str](NamedTuple):
     hosts: Sequence[HostT]
     is_delete_allowed: bool
     all_host_orders: Sequence[HostOrder]
+    # Per-host attributes that override (are merged on top of) the attributes of the matched
+    # ``HostOrder``. Used by connectors that derive attributes from each host's own data, e.g.
+    # the metric backend connector storing the resolved host name template attributes.
+    host_attributes_overrides: Mapping[HostT, Mapping[str, object]] = {}

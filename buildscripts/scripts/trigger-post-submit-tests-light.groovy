@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: trigger-post-submit-test-cascade-light.groovy
+/// file: trigger-post-submit-tests-light.groovy
 
 /// Trigger post submit test cascade of lightweight jobs
 

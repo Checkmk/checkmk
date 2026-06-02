@@ -82,6 +82,9 @@ const activeSlot = computed<string>(() => {
 
 <style scoped>
 .monitoring-base-cell {
+  vertical-align: middle;
+  height: 24px;
+
   a {
     text-decoration: underline;
   }

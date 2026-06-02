@@ -148,17 +148,11 @@ const table = useVueTable({
   border-spacing: 0;
 }
 
-/* stylelint-disable selector-pseudo-class-no-unknown */
-.monitoring-table__header-cell,
-.monitoring-table__row :deep(td) {
+.monitoring-table__header-cell {
   height: 24px;
   padding: 0 var(--dimension-4);
   text-align: left;
   vertical-align: middle;
-}
-/* stylelint-enable selector-pseudo-class-no-unknown */
-
-.monitoring-table__header-cell {
   font-weight: var(--font-weight-bold);
   background: var(--ux-theme-2);
   white-space: nowrap;

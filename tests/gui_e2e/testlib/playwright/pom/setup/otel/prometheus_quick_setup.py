@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -26,9 +24,6 @@ class PrometheusQuickSetup(CmkPage):
     def navigate(self) -> None:
         logger.info(f"Navigate to '{self.page_title}' page")
         self.main_menu.setup_menu(self.main_menu_name, exact=True).click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=prometheus_overview")), wait_until="load"
-        )
         self.validate_page()
 
     @override
@@ -71,10 +66,6 @@ class AddPrometheusConfiguration(CmkPage):
     def navigate(self) -> None:
         overview = PrometheusQuickSetup(self.page)
         overview.add_configuration_button.click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=create_prometheus_config")),
-            wait_until="load",
-        )
         self.validate_page()
 
     @override
@@ -178,6 +169,4 @@ class AddPrometheusConfiguration(CmkPage):
 
     def finish_and_go_to_activate_changes(self) -> None:
         self.finish_button.click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=prometheus_overview")), wait_until="load"
-        )
+        PrometheusQuickSetup(self.page, navigate_to_page=False)

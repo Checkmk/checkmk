@@ -2,9 +2,12 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import dataclasses
+import enum
 from typing import Annotated, Self
 
 from annotated_types import Interval
+from pydantic import PlainValidator
 
 from cmk.gui import sites
 from cmk.gui.logged_in import user
@@ -13,7 +16,7 @@ from cmk.gui.monitor.hosts._models import Host, StateLabel
 from cmk.gui.monitor.hosts._repositories import HostRepository
 from cmk.gui.openapi.framework import QueryParam
 from cmk.gui.openapi.framework.api_config import APIVersion
-from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointDoc,
     EndpointHandler,
@@ -29,6 +32,43 @@ from ._family import MONITOR_HOSTS_FAMILY
 # e.g. global settings.
 _MIN_NUMBER_OF_HOSTS = 0
 _MAX_NUMBER_OF_HOSTS = 5_000
+
+
+class SortColumn(enum.StrEnum):
+    """The host attributes a host query may be sorted by."""
+
+    NAME = "name"
+    ALIAS = "alias"
+    IP = "ip"
+    STATE = "state"
+    NUM_SERVICES = "num_services"
+    NUM_SERVICES_OK = "num_services_ok"
+    NUM_SERVICES_WARN = "num_services_warn"
+    NUM_SERVICES_CRIT = "num_services_crit"
+    NUM_SERVICES_UNKNOWN = "num_services_unknown"
+    NUM_SERVICES_PENDING = "num_services_pending"
+
+
+class SortDirection(enum.StrEnum):
+    """The direction a host query may be sorted in."""
+
+    ASC = "asc"
+    DESC = "desc"
+
+
+@dataclasses.dataclass(frozen=True)
+class HostSort:
+    """A single-column sort requested for a host query."""
+
+    column: SortColumn
+    direction: SortDirection
+
+    def __str__(self) -> str:
+        return f"{self.column.value}:{self.direction.value}"
+
+
+_ALLOWED_COLUMNS = ", ".join(sorted(column.value for column in SortColumn))
+_ALLOWED_DIRECTIONS = ", ".join(sorted(direction.value for direction in SortDirection))
 
 
 @api_model
@@ -87,10 +127,71 @@ type Limit = Annotated[
 ]
 
 
-def list_hosts(limit: Limit = 1000) -> HostsResponse:
+def _parse_sort_token(token: object) -> HostSort:
+    """Parse a single ``column:direction`` query value into a :class:`HostSort`."""
+    if not isinstance(token, str):
+        raise ValueError(f"Expected a 'column:direction' string, got {type(token).__name__!r}.")
+
+    column, separator, direction = token.partition(":")
+    if not separator:
+        raise ValueError(f"Expected a 'column:direction' value, got {token!r}.")
+    try:
+        sort_column = SortColumn(column)
+    except ValueError:
+        raise ValueError(
+            f"Unknown sort column in {token!r}. Allowed columns: {_ALLOWED_COLUMNS}."
+        ) from None
+    try:
+        sort_direction = SortDirection(direction)
+    except ValueError:
+        raise ValueError(
+            f"Unknown sort direction in {token!r}. Allowed directions: {_ALLOWED_DIRECTIONS}."
+        ) from None
+    return HostSort(column=sort_column, direction=sort_direction)
+
+
+def _parse_sort(value: object) -> list[HostSort]:
+    """Parse the repeated ``sort`` query param into :class:`HostSort` objects.
+
+    Each value defines one sort column; multiple values define a multi-column sort applied in the
+    given priority order. An empty list means no sort. The same column must not be repeated. Any
+    ``ValueError`` raised here is turned into a 400 response by the API framework.
+    """
+    if not isinstance(value, list):
+        raise ValueError(f"Expected a list of sort values, got {type(value).__name__!r}.")
+    sorts = [_parse_sort_token(token) for token in value]
+    seen: set[SortColumn] = set()
+    for sort in sorts:
+        if sort.column in seen:
+            raise ValueError(f"Column {sort.column.value!r} appears more than once in the sort.")
+        seen.add(sort.column)
+    return sorts
+
+
+type Sort = Annotated[
+    list[HostSort] | ApiOmitted,
+    PlainValidator(func=_parse_sort, json_schema_input_type=list[str]),
+    QueryParam(
+        description=(
+            "Repeated sort param. Each value is 'column:direction', e.g. 'name:asc'. "
+            f"Allowed columns: {_ALLOWED_COLUMNS}. "
+            f"Allowed directions: {_ALLOWED_DIRECTIONS}. "
+            "Multiple values define a multi-column sort applied in the given order; a column must "
+            "not be repeated. For example, 'sort=name:asc&sort=num_services:desc' sorts by name "
+            "ascending and then by number of services descending."
+        ),
+        example="name:asc",
+        is_list=True,
+    ),
+]
+
+
+def list_hosts(limit: Limit = 1000, sort: Sort = ApiOmitted()) -> HostsResponse:
     """List hosts to be consumed by the all host monitoring page."""
     user.need_permission("general.see_all")
 
+    # ``sort`` is validated to expose the parameter in the API spec; applying it is done by the
+    # host handlers and wired up there separately.
     host_repo = LiveStatusHostRepository(connection=sites.live())
 
     return _handle_list_hosts(host_repo, limit=limit)

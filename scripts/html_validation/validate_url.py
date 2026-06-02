@@ -93,7 +93,7 @@ async def main() -> None:
         sys.exit(ExitCode.INVALID_ARGUMENTS)
 
     try:
-        check_html_tag_balance(str(resp.content))
+        check_html_tag_balance(resp.text)
     except TagImbalanceError as exc:
         err_msg = json.dumps({"url": args.url, "result": exc.get_errors()})
         sys.stderr.write(f"{err_msg}\n")

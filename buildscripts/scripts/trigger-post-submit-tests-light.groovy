@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: trigger-post-submit-test-cascade-light.groovy
+/// file: trigger-post-submit-tests-light.groovy
 
 def main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");

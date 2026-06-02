@@ -7,13 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import {
   type ColumnDef,
   type ColumnFiltersState,
-  FlexRender,
   type SortingState,
   type Updater,
   getCoreRowModel,
   useVueTable
 } from '@tanstack/vue-table'
-import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-vue-next'
+
+import MonitoringTableHeader from './MonitoringTableHeader.vue'
 
 const props = defineProps<{
   rows: T[]
@@ -28,18 +28,6 @@ const emit = defineEmits<{
   (event: 'update:sortState', value: SortingState): void
   (event: 'update:filterState', value: ColumnFiltersState): void
 }>()
-
-type SortDirection = false | 'asc' | 'desc'
-
-function ariaSortFor(direction: SortDirection): 'ascending' | 'descending' | 'none' {
-  if (direction === 'asc') {
-    return 'ascending'
-  }
-  if (direction === 'desc') {
-    return 'descending'
-  }
-  return 'none'
-}
 
 function resolveUpdater<S>(updater: Updater<S>, current: S): S {
   return typeof updater === 'function' ? (updater as (old: S) => S)(current) : updater
@@ -76,54 +64,7 @@ const table = useVueTable({
 <template>
   <div class="monitoring-table" :aria-busy="loading">
     <table class="monitoring-table__table">
-      <thead>
-        <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
-          <th
-            v-for="header in headerGroup.headers"
-            :key="header.id"
-            :colspan="header.colSpan"
-            :class="[
-              'monitoring-table__header-cell',
-              {
-                'monitoring-table__header-cell--sortable': header.column.getCanSort()
-              }
-            ]"
-            :aria-sort="ariaSortFor(header.column.getIsSorted())"
-          >
-            <button
-              v-if="!header.isPlaceholder && header.column.getCanSort()"
-              type="button"
-              class="monitoring-table__header-button"
-              @click="header.column.getToggleSortingHandler()?.($event)"
-            >
-              <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
-              <ChevronUp
-                v-if="header.column.getIsSorted() === 'asc'"
-                class="monitoring-table__sort-icon"
-                :size="14"
-                aria-hidden="true"
-              />
-              <ChevronDown
-                v-else-if="header.column.getIsSorted() === 'desc'"
-                class="monitoring-table__sort-icon"
-                :size="14"
-                aria-hidden="true"
-              />
-              <ChevronsUpDown
-                v-else
-                class="monitoring-table__sort-icon monitoring-table__sort-icon--inactive"
-                :size="14"
-                aria-hidden="true"
-              />
-            </button>
-            <FlexRender
-              v-else-if="!header.isPlaceholder"
-              :render="header.column.columnDef.header"
-              :props="header.getContext()"
-            />
-          </th>
-        </tr>
-      </thead>
+      <MonitoringTableHeader :header-groups="table.getHeaderGroups()" />
       <tbody>
         <tr
           v-for="(row, index) in rows"
@@ -144,44 +85,9 @@ const table = useVueTable({
 
 .monitoring-table__table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   border-spacing: 0;
-}
-
-.monitoring-table__header-cell {
-  height: 24px;
-  padding: 0 var(--dimension-4);
-  text-align: left;
-  vertical-align: middle;
-  font-weight: var(--font-weight-bold);
-  background: var(--ux-theme-2);
-  white-space: nowrap;
-}
-
-.monitoring-table__header-button {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--dimension-2);
-  background: transparent;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-}
-
-.monitoring-table__header-button:focus-visible {
-  outline: 1px solid var(--success);
-  outline-offset: 2px;
-}
-
-.monitoring-table__sort-icon {
-  flex-shrink: 0;
-}
-
-.monitoring-table__sort-icon--inactive {
-  opacity: 0.4;
 }
 
 .monitoring-table__row:nth-child(even) {

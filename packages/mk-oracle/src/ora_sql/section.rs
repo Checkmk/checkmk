@@ -22,6 +22,7 @@ use crate::types::{InstanceName, InstanceNumVersion, ItemValue, SectionName, Ten
 use crate::types::{SectionAffinity, SqlBindParam, SqlQuery};
 use crate::{constants, utils};
 use anyhow::Result;
+use regex::Regex;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
@@ -43,6 +44,7 @@ pub struct Section {
     item_value: Option<ItemValue>,
     inline_sql: Option<String>,
     path: Option<PathBuf>,
+    pdb_patterns: Vec<Regex>,
 }
 
 impl Section {
@@ -66,6 +68,17 @@ impl Section {
             item_value: section.item_value().cloned(),
             inline_sql: section.sql().map(str::to_owned),
             path: section.path().map(Path::to_path_buf),
+            pdb_patterns: section
+                .pdb_patterns()
+                .iter()
+                .filter_map(|p| match Regex::new(&format!("(?i)^{p}$")) {
+                    Ok(r) => Some(r),
+                    Err(e) => {
+                        log::warn!("Invalid PDB pattern {p:?}: {e}");
+                        None
+                    }
+                })
+                .collect(),
         }
     }
 
@@ -74,6 +87,10 @@ impl Section {
             return None;
         }
         Some(signaling_header(&self.header_name))
+    }
+
+    pub fn pdb_patterns(&self) -> &[Regex] {
+        &self.pdb_patterns
     }
 
     pub fn to_work_header(&self) -> String {
@@ -554,5 +571,77 @@ mod tests {
             runtime.inline_sql(),
             Some("select 'details:fallback' from dual")
         );
+    }
+
+    fn section_with_pdb_patterns(patterns: &[&str]) -> Section {
+        let config = section::SectionBuilder::new("test")
+            .set_pdb_patterns(patterns.iter().map(|s| s.to_string()).collect())
+            .build();
+        Section::new(&config, 0)
+    }
+
+    #[test]
+    fn test_pdb_patterns_compiled_anchored() {
+        let pats = section_with_pdb_patterns(&["PDB1"]).pdb_patterns().to_vec();
+        assert!(pats[0].is_match("PDB1"));
+        assert!(!pats[0].is_match("PDB10")); // anchored: no partial match
+    }
+
+    #[test]
+    fn test_pdb_patterns_compiled_case_insensitive() {
+        let pats = section_with_pdb_patterns(&["freepdb1"])
+            .pdb_patterns()
+            .to_vec();
+        assert!(pats[0].is_match("FREEPDB1"));
+        assert!(pats[0].is_match("freepdb1"));
+    }
+
+    #[test]
+    fn test_invalid_pdb_pattern_filtered_out() {
+        // "[invalid" is not a valid regex; only the valid pattern should survive
+        let section = section_with_pdb_patterns(&["[invalid", "PDB1"]);
+        assert_eq!(section.pdb_patterns().len(), 1);
+        assert!(section.pdb_patterns()[0].is_match("PDB1"));
+    }
+
+    #[test]
+    fn test_pdb_patterns_suffix_wildcard() {
+        let pats = section_with_pdb_patterns(&["FREE.*"])
+            .pdb_patterns()
+            .to_vec();
+        assert!(pats[0].is_match("FREEPDB1"));
+        assert!(pats[0].is_match("FREEPDB2"));
+        assert!(!pats[0].is_match("TESTPDB"));
+    }
+
+    #[test]
+    fn test_pdb_patterns_prefix_wildcard() {
+        let pats = section_with_pdb_patterns(&[".*PDB"])
+            .pdb_patterns()
+            .to_vec();
+        assert!(pats[0].is_match("TESTPDB"));
+        assert!(!pats[0].is_match("FREEPDB1")); // ends in digit, not PDB
+    }
+
+    #[test]
+    fn test_pdb_patterns_grouped_alternation() {
+        // Users must group alternations: "(A|B)" not "A|B"
+        let pats = section_with_pdb_patterns(&["(FREEPDB1|XEPDB1)"])
+            .pdb_patterns()
+            .to_vec();
+        assert!(pats[0].is_match("FREEPDB1"));
+        assert!(pats[0].is_match("XEPDB1"));
+        assert!(!pats[0].is_match("TESTPDB"));
+    }
+
+    #[test]
+    fn test_pdb_patterns_character_class() {
+        let pats = section_with_pdb_patterns(&["PDB[123]"])
+            .pdb_patterns()
+            .to_vec();
+        assert!(pats[0].is_match("PDB1"));
+        assert!(pats[0].is_match("PDB2"));
+        assert!(pats[0].is_match("PDB3"));
+        assert!(!pats[0].is_match("PDB4"));
     }
 }

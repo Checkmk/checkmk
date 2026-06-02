@@ -3,9 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
+from typing import Self
+
 from httpx import Response
 
 from scripts.html_validation.lib.exceptions import AuthMissingError
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class ResponseInfo:
+    url: str
+    status_code: int
+    content_type: str
+
+    @classmethod
+    def from_response(cls, resp: Response) -> Self:
+        return cls(
+            url=str(resp.url),
+            status_code=resp.status_code,
+            content_type=str(resp.headers.get("content-type", "")),
+        )
+
+    @property
+    def is_html_document(self) -> bool:
+        return "text/html" in self.content_type
 
 
 def build_auth_cookies(auth_key: str, auth_val: str, no_auth: bool) -> dict[str, str] | None:

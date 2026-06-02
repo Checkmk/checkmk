@@ -14,7 +14,7 @@ from pathlib import Path
 import httpx
 
 from scripts.html_validation.lib.exceptions import AuthMissingError
-from scripts.html_validation.lib.http import build_auth_cookies, raise_if_redirected
+from scripts.html_validation.lib.http import build_auth_cookies, raise_if_redirected, ResponseInfo
 from scripts.html_validation.lib.tag_balance import check_html_tag_balance, TagImbalanceError
 
 
@@ -78,6 +78,8 @@ async def main() -> None:
     async with httpx.AsyncClient(cookies=cookies, timeout=REQUEST_TIMEOUT) as client:
         resp = await client.get(args.url)
 
+    resp_info = ResponseInfo.from_response(resp)
+
     try:
         raise_if_redirected(resp)
     except AuthMissingError as exc:
@@ -85,13 +87,9 @@ async def main() -> None:
         sys.exit(ExitCode.INVALID_ARGUMENTS)
 
     if args.verbose:
-        sys.stdout.write("=" * 60 + "\n")
-        sys.stdout.write(f"URL: {args.url}\n")
-        sys.stdout.write(f"Status code: {resp.status_code}\n")
-        sys.stdout.write(f"Content type: {resp.headers.get('Content-Type')}\n")
-        sys.stdout.write("=" * 60 + "\n")
+        print_response_info(resp_info)
 
-    if "text/html" not in resp.headers.get("Content-Type", ""):
+    if not resp_info.is_html_document:
         sys.stderr.write("Error: Can only validate HTML documents. Try another URL.\n")
         sys.exit(ExitCode.INVALID_ARGUMENTS)
 
@@ -103,6 +101,14 @@ async def main() -> None:
         sys.exit(ExitCode.VALIDATION_ERRORS)
     else:
         sys.exit(ExitCode.SUCCESS)
+
+
+def print_response_info(info: ResponseInfo) -> None:
+    sys.stdout.write("=" * 60 + "\n")
+    sys.stdout.write(f"URL: {info.url}\n")
+    sys.stdout.write(f"Status code: {info.status_code}\n")
+    sys.stdout.write(f"Content type: {info.content_type}\n")
+    sys.stdout.write("=" * 60 + "\n")
 
 
 def get_cli_parser() -> argparse.ArgumentParser:

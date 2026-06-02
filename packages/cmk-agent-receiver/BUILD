@@ -113,6 +113,7 @@ py_library(
     deps = [
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
+        "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-relay-protocols",
         requirement("cryptography"),
         requirement("fastapi"),

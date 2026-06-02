@@ -20,7 +20,6 @@ from cmk.agent_receiver.lib.middleware import B3RequestIDMiddleware
 from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
 from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError, RelaysRepository
-from cmk.ccc import version as cmk_version
 
 from .api.routers.relays import router as relay_router
 from .api.routers.tasks import router as task_router
@@ -97,11 +96,12 @@ def _schedule_initial_relay_config() -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    """App lifespan:
-    1. Schedule (non-blocking) background relay config task if edition supports relays.
+    """App lifespan: schedule the (non-blocking) initial relay config task.
+
+    This is only attached to the app when the relay feature is enabled (see
+    cmk.agent_receiver.main.main_app), so it always schedules the task.
     """
-    if cmk_version.edition_supports_relay(cmk_version.edition(get_config().omd_root)):
-        _schedule_initial_relay_config()
+    _schedule_initial_relay_config()
     yield
 
 

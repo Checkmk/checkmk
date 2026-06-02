@@ -38,6 +38,7 @@ from cmk.gui.watolib.builtin_attributes import (
     HostAttributeWaitingForDiscovery,
 )
 from cmk.gui.watolib.groups import HostAttributeContactGroups
+from cmk.licensing.basics.options import get_license_options
 from cmk.utils import paths
 from cmk.utils.tags import BuiltinTagConfig, TagGroupID
 
@@ -58,26 +59,21 @@ class RelayField(fields.String):
     """A field representing the relay address."""
 
     default_error_messages = {
-        "edition_not_supported": "Relay field not supported in this edition.",
+        "feature_not_licensed": "The relay feature is not enabled with your current license.",
         "no_such_relay": "The specified relay does not exist.",
     }
 
     def __init__(self, **kwargs: Any):
-        self._supported_editions = {
-            version.Edition.ULTIMATEMT,
-            version.Edition.ULTIMATE,
-            version.Edition.CLOUD,
-        }
-        kwargs["description"] = edition_field_description(
-            description=kwargs["description"],
-            supported_editions=self._supported_editions,
+        kwargs["description"] = (
+            f"{kwargs['description']} "
+            "This field requires the relay feature, which must be enabled by your license."
         )
         super().__init__(**kwargs)
 
     @override
     def _validate(self, value: str) -> None:
-        if version.edition(paths.omd_root) not in self._supported_editions:
-            raise self.make_error("edition_not_supported")
+        if not get_license_options(paths.omd_root, version.edition(paths.omd_root)).relay.enabled:
+            raise self.make_error("feature_not_licensed")
         super()._validate(value)
 
         # FYI: The suppression was chosen to keep the logic of this method clear.

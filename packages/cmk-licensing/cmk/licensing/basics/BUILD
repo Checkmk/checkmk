@@ -6,6 +6,7 @@ py_library(
     imports = ["../../.."],
     visibility = [
         "//omd/packages/Python:__pkg__",
+        "//packages/cmk-agent-receiver:__subpackages__",
         "//packages/cmk-licensing:__subpackages__",
     ],
     deps = [

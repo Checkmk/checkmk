@@ -22,6 +22,7 @@ class OptionName(StrEnum):
     BAKERY = auto()
     TELEMETRY = auto()
     OTEL_COLLECTOR = auto()
+    RELAY = auto()
     AWS_EXTENDED = auto()
     GCP_EXTENDED = auto()
     AZURE_EXTENDED = auto()
@@ -32,6 +33,7 @@ class LicenseOptions:
     bakery: LicenseFlag
     telemetry: LicenseFlag
     otel_collector: LicenseFlag
+    relay: LicenseFlag
     aws_extended: LicenseFlag
     gcp_extended: LicenseFlag
     azure_extended: LicenseFlag
@@ -44,6 +46,8 @@ class LicenseOptions:
                 return self.telemetry
             case OptionName.OTEL_COLLECTOR:
                 return self.otel_collector
+            case OptionName.RELAY:
+                return self.relay
             case OptionName.AWS_EXTENDED:
                 return self.aws_extended
             case OptionName.GCP_EXTENDED:
@@ -64,6 +68,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 bakery=LicenseFlag(enabled=False),
                 telemetry=LicenseFlag(enabled=False),
                 otel_collector=LicenseFlag(enabled=False),
+                relay=LicenseFlag(enabled=False),
                 aws_extended=LicenseFlag(enabled=False),
                 gcp_extended=LicenseFlag(enabled=False),
                 azure_extended=LicenseFlag(enabled=False),
@@ -81,6 +86,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 bakery=LicenseFlag(enabled=True),
                 telemetry=LicenseFlag(enabled=True),
                 otel_collector=LicenseFlag(enabled=True),
+                relay=LicenseFlag(enabled=True),
                 aws_extended=LicenseFlag(enabled=True),
                 gcp_extended=LicenseFlag(enabled=True),
                 azure_extended=LicenseFlag(enabled=True),
@@ -91,6 +97,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 bakery=LicenseFlag(enabled=True),
                 telemetry=LicenseFlag(enabled=True),
                 otel_collector=LicenseFlag(enabled=True),
+                relay=LicenseFlag(enabled=True),
                 aws_extended=LicenseFlag(enabled=True),
                 gcp_extended=LicenseFlag(enabled=True),
                 azure_extended=LicenseFlag(enabled=True),
@@ -101,6 +108,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 bakery=LicenseFlag(enabled=True),
                 telemetry=LicenseFlag(enabled=True),
                 otel_collector=LicenseFlag(enabled=True),
+                relay=LicenseFlag(enabled=True),
                 aws_extended=LicenseFlag(enabled=True),
                 gcp_extended=LicenseFlag(enabled=True),
                 azure_extended=LicenseFlag(enabled=True),
@@ -112,6 +120,7 @@ def _make_pro_options() -> LicenseOptions:
         bakery=LicenseFlag(enabled=True),
         telemetry=LicenseFlag(enabled=False),
         otel_collector=LicenseFlag(enabled=False),
+        relay=LicenseFlag(enabled=False),
         aws_extended=LicenseFlag(enabled=False),
         gcp_extended=LicenseFlag(enabled=False),
         azure_extended=LicenseFlag(enabled=False),

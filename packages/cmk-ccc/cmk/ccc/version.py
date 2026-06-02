@@ -97,10 +97,6 @@ def edition_supports_nagvis(ed: Edition, /) -> bool:
     return ed is not Edition.CLOUD
 
 
-def edition_supports_relay(ed: Edition, /) -> bool:
-    return ed in (Edition.ULTIMATEMT, Edition.ULTIMATE, Edition.CLOUD)
-
-
 # Version string: <major>.<minor>.<sub><vtype><patch>-<year>.<month>.<day>
 #                 [------ base -------][-- build ---]-[------ date ------]
 # A version string may consist of the three parts "base", "build" and "date".

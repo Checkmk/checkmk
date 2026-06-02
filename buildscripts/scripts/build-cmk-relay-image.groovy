@@ -61,7 +61,7 @@ void main() {
             }
 
             stage(name: 'Archive SBOM') {
-                archiveArtifacts(artifacts: "${artifact_directory}/${cmk_version_rc_aware}/${sbom_name}")
+                archiveArtifacts(artifacts: "artifacts/${cmk_version_rc_aware}/${sbom_name}")
             }
 
             stage(name: 'Upload tarball to internal deploy dest') {

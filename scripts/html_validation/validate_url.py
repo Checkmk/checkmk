@@ -14,7 +14,7 @@ from pathlib import Path
 import httpx
 
 from scripts.html_validation.lib.exceptions import AuthMissingError
-from scripts.html_validation.lib.http import build_auth_cookies, raise_if_redirected, ResponseInfo
+from scripts.html_validation.lib.http import build_auth_cookies, ResponseInfo
 from scripts.html_validation.lib.tag_balance import check_html_tag_balance, TagImbalanceError
 
 
@@ -80,10 +80,9 @@ async def main() -> None:
 
     resp_info = ResponseInfo.from_response(resp)
 
-    try:
-        raise_if_redirected(resp)
-    except AuthMissingError as exc:
-        sys.stderr.write(f"Error: {exc}\n")
+    if resp_info.is_redirect_to_login:
+        err_msg = f"Request redirected to {resp_info.redirect_location}. Did you pass credentials?"
+        sys.stderr.write(f"Error: {err_msg}\n")
         sys.exit(ExitCode.INVALID_ARGUMENTS)
 
     if args.verbose:

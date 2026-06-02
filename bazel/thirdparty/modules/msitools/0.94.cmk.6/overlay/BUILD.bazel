@@ -1,0 +1,77 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "msitools",
+    license_kind = "@package_metadata//licenses/spdx:GPL-2.0-only",
+    license_text = "COPYING",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = module_version(),
+)
+
+filegroup(
+    name = "srcs",
+    srcs = glob(
+        ["**/*"],
+    ),
+    package_metadata = [":dependency_info"],
+    tags = ["manual"],
+)
+
+configure_make(
+    name = "msitools",
+    args = ["-j4"],
+    copts = [
+        "-Wno-cast-align",
+        "-Wno-incompatible-pointer-types-discards-qualifiers",
+        "-Wno-sometimes-uninitialized",
+        "-Wno-unknown-warning",
+        "-Wno-unused-but-set-variable",
+    ],
+    env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
+    } | select(
+        {
+            "@cmk//distro:sles": {
+                "GSF_LIBS": "-L$${EXT_BUILD_DEPS}/libgsf/lib -lgsf-1",
+                "GSF_CFLAGS": "-I$${EXT_BUILD_DEPS}/libgsf/include/libgsf-1",
+            },
+            "//conditions:default": {},
+        },
+    ),
+    lib_name = "msitools",
+    lib_source = ":srcs",
+    out_binaries = [
+        "msiinfo",
+        "msibuild",
+    ],
+    out_shared_libs = [
+        "libmsi.so.0.0.0",
+    ],
+    postfix_script = """
+        mkdir -p $${INSTALLDIR}/{bin,lib}/
+        install -m 755 $${BUILD_TMPDIR}/.libs/msiinfo $${INSTALLDIR}/bin/
+        install -m 755 $${BUILD_TMPDIR}/.libs/msibuild $${INSTALLDIR}/bin/
+        install -m 755 $${BUILD_TMPDIR}/libmsi/.libs/libmsi.so.0.0.0 $${INSTALLDIR}/lib
+    """,
+    set_file_prefix_map = True,
+    tags = ["manual"],
+    targets = [
+        "-C libmsi",
+        "msibuild",
+        "msiinfo",
+    ],
+    visibility = ["//visibility:public"],
+    deps = select(
+        {
+            "@cmk//distro:sles": ["@libgsf"],
+            "//conditions:default": [],
+        },
+    ),
+)

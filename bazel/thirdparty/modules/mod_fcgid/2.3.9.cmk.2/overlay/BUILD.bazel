@@ -1,0 +1,55 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "mod_fcgid",
+    cpe_format_str = "cpe:2.3:a:apache:mod_fcgid:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:Apache-2.0",
+    license_text = "LICENSE-FCGID",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = module_version(),
+)
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
+    package_metadata = [":dependency_info"],
+)
+
+configure_make(
+    name = "mod_fcgid",
+    args = ["-j4"],
+    configure_command = "configure.apxs",
+    configure_in_place = True,
+    env = {
+        "APXS": "$$(which apxs2 || which apxs)",
+        "CPATH": "/usr/include/apache2-worker",
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
+    },
+    lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
+    out_shared_libs = [
+        "mod_fcgid.so",
+    ],
+    postfix_script = """
+        cp modules/fcgid/.libs/mod_fcgid.so $$INSTALLDIR/lib
+    """,
+    targets = [""],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "mod_fcgid.so",
+    srcs = [":mod_fcgid"],
+    output_group = "mod_fcgid.so",
+    visibility = ["//visibility:public"],
+)

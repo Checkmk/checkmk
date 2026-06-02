@@ -2,6 +2,6 @@
   "homepage": "https://docs.pnp4nagios.org/",
   "maintainers": [],
   "repository": ["https://sourceforge.net/projects/pnp4nagios/"],
-  "versions": ["0.6.26.cmk.1"],
+  "versions": ["0.6.26.cmk.2"],
   "yanked_versions": {}
 }

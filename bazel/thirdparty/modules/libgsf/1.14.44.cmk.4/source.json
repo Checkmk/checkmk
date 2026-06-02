@@ -1,0 +1,9 @@
+{
+  "integrity": "sha256-aL7eEANxZHZJkpcLTLV81q3WmGqEbQRlevnV+sd0/94=",
+  "strip_prefix": "libgsf-1.14.44",
+  "url": "https://ftp.osuosl.org/pub/blfs/conglomeration/libgsf/libgsf-1.14.44.tar.xz",
+  "overlay": {
+    "BUILD.bazel": "sha256-kFkuYNKKudt3UeJSNdT26JfQKTkcwJglS6W0RaeLFDc=",
+    "MODULE.bazel": "sha256-ir6Jyc83r/4zpa0yDOM+btGJLP3bve71rcjE5fF7Za4="
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "integrity": "sha256-q1mooC0PcN48+JsS/h6SFuSxEnvCnASgNs0G3ecu6Ps=",
+  "strip_prefix": "pnp4nagios-0.6.26",
+  "url": "https://sourceforge.net/projects/pnp4nagios/files/PNP-0.6/pnp4nagios-0.6.26.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-OV9Qw6Z6yG7MUzZisAIb7p93wG+SLmG6akMNBh+Anrs=",
+    "MODULE.bazel": "sha256-pNAhLVQ3EfpRIx7jJrlZWPds44SKrbQLLHfbJTf23YI="
+  },
+  "patches": {
+    "0001-prevent-creation-invalid-rrd-files.patch": "sha256-kLc/LDKFnfhiZvRGqTQg8Vt52FhKmFFD+Vs4PSW8w6s="
+  },
+  "patch_strip": 1
+}

@@ -1,0 +1,155 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "nagios",
+    cpe_format_str = "cpe:2.3:a:nagios:nagios:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:GPL-2.0-only",
+    license_text = "LICENSE",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = module_version(),
+)
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
+    package_metadata = [":dependency_info"],
+)
+
+configure_make(
+    name = "nagios",
+    # Pass DESTDIR to make so `make install` writes into a throwaway
+    # staging directory inside $INSTALLDIR rather than to the literal
+    # /usr/lib/omd/nagios paths we baked into the binary via
+    # configure_options below.  The baked paths still appear in
+    # include/locations.h (and thus in .rodata) -- that is the whole
+    # point of the relocatable-binary scheme -- but the actual install
+    # layout is controlled here, and the bits we want are cherry-picked
+    # into the bin/lib/share layout by postfix_script before the staging
+    # tree is deleted.
+    args = [
+        "-j4",
+        "DESTDIR=$$INSTALLDIR$$/staging",
+    ],
+    configure_in_place = True,
+    configure_options = [
+        "--with-nagios-user=$$(id -un)",
+        "--with-nagios-group=$$(id -gn)",
+        "--with-perlcache",
+        "--enable-embedded-perl",
+        # The paths below get baked into the binary's .rodata via
+        # autoconf substitution of @bindir@/@sysconfdir@/@localstatedir@
+        # etc. in include/locations.h.in. We deliberately use
+        # omd-namespaced FHS paths rather than the bazel sandbox path
+        # or the final OMD install path because:
+        #   1. The path must be stable across builds and version-free
+        #      so one binary can be reused across many OMD versions
+        #      installed at /omd/version/<VER>/. The version is set in
+        #      the per-site nagios.cfg at packaging time, never baked
+        #      here.
+        #   2. FHS directories are conventionally root-owned, so the
+        #      (theoretically unreachable) compile-time defaults can't
+        #      be poisoned by a non-root attacker.
+        #   3. The omd/ infix prevents collision with a hypothetical
+        #      distro-packaged nagios on the same host, which would
+        #      use /etc/nagios, /var/log/nagios, etc.
+        # These defaults are dead strings under correct operation: the
+        # init script (skel/etc/init.d/nagios) always invokes nagios
+        # with an explicit config path, and that config
+        # (skel/etc/nagios/nagios.d/omd.cfg) explicitly sets every
+        # substantive path (log_file, status_file, command_file,
+        # lock_file, p1_file, check_result_path, ...) to an
+        # OMD-site-specific value before nagios opens any file.
+        "--prefix=/usr",
+        "--bindir=/usr/lib/omd/nagios",
+        "--sbindir=/usr/lib/omd/nagios",
+        "--libdir=/usr/lib/omd/nagios",
+        "--datadir=/usr/share/omd/nagios",
+        "--sysconfdir=/etc/omd/nagios",
+        "--localstatedir=/var/lib/omd/nagios",
+        "--with-lockfile=/var/run/omd/nagios.lock",
+        "--with-checkresult-dir=/var/lib/omd/nagios/spool/checkresults",
+        "--with-temp-dir=/tmp",
+    ],
+    copts = [
+        # The implicit int warning cannot be fixed with `-std=c89`
+        # as the code also uses newer features such as `inline`.
+        "-Wno-deprecated-non-prototype",
+        "-Wno-implicit-int",
+        "-Wno-unused-but-set-variable",
+    ],
+    env = {
+        "PKG_CONFIG_PATH": ":".join([
+            "/usr/lib/pkgconfig",
+            "/usr/lib64/pkgconfig",
+            "/usr/lib/x86_64-linux-gnu/pkgconfig",
+        ]),
+    },
+    lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
+    out_binaries = [
+        "nagios",
+        "nagiostats",
+    ],
+    out_data_dirs = [
+        "share",
+        "lib",
+    ],
+    postfix_script = """
+        # `make install DESTDIR=...` laid files out under the baked-in
+        # FHS prefix at INSTALLDIR/staging/usr/lib/omd/nagios/...
+        # Relocate the bits we want into the bin/lib/share layout that
+        # out_binaries and out_data_dirs expect.  The baked-in paths
+        # inside the binary are unaffected -- they still read
+        # /usr/lib/omd/nagios/p1.pl etc., which is deliberate and
+        # load-bearing for the relocatability scheme (see
+        # configure_options).
+        set -e
+        mkdir -p $${INSTALLDIR}/bin $${INSTALLDIR}/lib/nagios
+        install -m 755 $${INSTALLDIR}/staging/usr/lib/omd/nagios/nagios $${INSTALLDIR}/bin/nagios
+        install -m 755 $${INSTALLDIR}/staging/usr/lib/omd/nagios/nagiostats $${INSTALLDIR}/bin/nagiostats
+        install -m 644 $${BUILD_TMPDIR}/p1.pl $${INSTALLDIR}/lib/nagios
+
+        # Copy package documentations to have these information in the binary packages
+        mkdir -p $${INSTALLDIR}/share/doc/nagios
+        for file in README THANKS LEGAL LICENSE ; do \
+            install -m 644 $${BUILD_TMPDIR}/$$file $${INSTALLDIR}/share/doc/nagios; \
+        done
+
+        # Drop the DESTDIR staging tree so only the bin/lib/share layout
+        # remains in INSTALLDIR for downstream consumers.
+        rm -rf $${INSTALLDIR}/staging
+    """,
+    set_file_prefix_map = True,
+    targets = [
+        "all",
+        "install-base",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":nagios"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "nagiostats_bin",
+    srcs = [":nagios"],
+    output_group = "nagiostats",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "nagios_bin",
+    srcs = [":nagios"],
+    output_group = "nagios",
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,15 @@
+{
+  "integrity": "sha256-FS60FJy0TxeK+T0Xu+CSG1MS8w+0eA5b4ROzV0e1zS4=",
+  "strip_prefix": "msitools-0.94",
+  "url": "http://ftp.gnome.org/pub/GNOME/sources/msitools/0.94/msitools-0.94.tar.xz",
+  "overlay": {
+    "BUILD.bazel": "sha256-yEP26riZKD3NwoJwOvloTDBs+kLa6psGv4+JlrpMT3U=",
+    "MODULE.bazel": "sha256-jU6wtzh5ZeL8wi1w92MK+8KZ1Q1fTkDTIxWTdD8fJLs="
+  },
+  "patches": {
+    "0001-configure_remove_wixl.patch": "sha256-IcS0FzkeqmSYR5NdiOAOSSRtcpehmqFu2y1FmPnYfT8=",
+    "0002-msibuild_argc_fix.patch": "sha256-THLPm8Q8SS3wALrlzjp4wukacjdA8Z84pT82IoigseA=",
+    "0003-configure_remove_libxml.patch": "sha256-py8705zZSxCJDiHWOYbwZDHH8lAObHwEJDP+J7hg2CY="
+  },
+  "patch_strip": 1
+}

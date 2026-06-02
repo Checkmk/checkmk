@@ -1,9 +1,0 @@
-module(
-    name = "nagios",
-    version = "3.5.1.cmk.1",
-    bazel_compatibility = [">=7.2.1"],
-    compatibility_level = 1,
-)
-
-bazel_dep(name = "cmk", version = "1.0.0")
-bazel_dep(name = "rules_foreign_cc", version = "0.15.0")

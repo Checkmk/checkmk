@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from cmk.agent_based.v2 import (
     any_of,
     CheckPlugin,
     CheckResult,
     contains,
     DiscoveryResult,
+    IgnoreResults,
     Metric,
     render,
     Result,
@@ -55,7 +55,9 @@ def check_dell_eql_storage(item: str, section: StringTable) -> CheckResult:
                 state = State.WARN
             else:
                 state = State.CRIT
-            yield Result(state=state, summary="Health State: %s" % health_states[health_state])
+            yield Result(
+                state=state, summary="Health State: %s" % health_states.get(health_state, "Unknown")
+            )
 
             # Raid Status
             raid_states = {
@@ -75,21 +77,27 @@ def check_dell_eql_storage(item: str, section: StringTable) -> CheckResult:
                 state = State.WARN
             else:
                 state = State.CRIT
-            yield Result(state=state, summary="Raid State: %s" % raid_states[raid_state])
+            yield Result(
+                state=state, summary="Raid State: %s" % raid_states.get(raid_state, "Unknown")
+            )
 
             # Storage
-            total_bytes = int(total_storage) * 1048576
-            used_bytes = int(used_storage) * 1048576
-            repl_bytes = int(repl_storage) * 1048576
-            snap_bytes = int(snap_storage) * 1048576
-            yield Metric("fs_used", used_bytes)
-            yield Metric("fs_used_percent", used_bytes / total_bytes * 100)
-            yield Metric("fs_size", total_bytes)
-            yield Metric("fs_free", total_bytes - used_bytes)
-            yield Result(
-                state=State.OK,
-                summary=f"Used: {render.disksize(used_bytes)}/{render.disksize(total_bytes)} (Snapshots: {render.disksize(snap_bytes)}, Replication: {render.disksize(repl_bytes)})",
-            )
+            try:
+                total_bytes = int(total_storage) * 1048576
+                used_bytes = int(used_storage) * 1048576
+                repl_bytes = int(repl_storage) * 1048576
+                snap_bytes = int(snap_storage) * 1048576
+            except ValueError:
+                yield IgnoreResults("Data for at least one metric missing")
+            else:
+                yield Metric("fs_used", used_bytes)
+                yield Metric("fs_used_percent", used_bytes / total_bytes * 100)
+                yield Metric("fs_size", total_bytes)
+                yield Metric("fs_free", total_bytes - used_bytes)
+                yield Result(
+                    state=State.OK,
+                    summary=f"Used: {render.disksize(used_bytes)}/{render.disksize(total_bytes)} (Snapshots: {render.disksize(snap_bytes)}, Replication: {render.disksize(repl_bytes)})",
+                )
 
 
 def parse_dell_eql_storage(string_table: StringTable) -> StringTable:

@@ -61,7 +61,7 @@ The following exit codes are supported by the script:
 This is useful if you want to just collect all the URLs that resulted in errors. Use the `$?` in
 bash to extract this value.
 """
-REQUEST_TIMEOUT = 30
+MAX_REQUEST_TIMEOUT = 60
 
 
 async def main() -> None:
@@ -75,7 +75,7 @@ async def main() -> None:
         cli.print_help()
         sys.exit(ExitCode.INVALID_ARGUMENTS)
 
-    async with httpx.AsyncClient(cookies=cookies, timeout=REQUEST_TIMEOUT) as client:
+    async with httpx.AsyncClient(cookies=cookies, timeout=args.timeout) as client:
         resp = await client.get(args.url)
 
     resp_info = ResponseInfo.from_response(resp)
@@ -125,6 +125,14 @@ def get_cli_parser() -> argparse.ArgumentParser:
         "--verbose",
         action="store_true",
         help="flag to print out additional information.",
+    )
+    cli.add_argument(
+        "--timeout",
+        type=int,
+        default=30,
+        choices=range(1, MAX_REQUEST_TIMEOUT + 1),
+        metavar=f"[1-{MAX_REQUEST_TIMEOUT}]",
+        help="maximum request timeout (default: 30)",
     )
     cli.add_argument(
         "--no-auth",

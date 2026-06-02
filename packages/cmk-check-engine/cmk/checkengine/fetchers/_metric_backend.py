@@ -31,24 +31,41 @@ class AttributeFilter:
 
 @dataclass(frozen=True)
 class MetricBackendFetcherConfig:
-    host_name_resource_attribute_key: str
     resource_attribute_filters: Sequence[AttributeFilter]
     scope_attribute_filters: Sequence[AttributeFilter]
     data_point_attribute_filters: Sequence[AttributeFilter]
     check_interval: float
 
     @classmethod
-    def from_serialized(cls, metrics_association_raw: str, check_interval: float) -> Self:
+    def from_serialized(
+        cls, metrics_association_raw: str, check_interval: float, host_name: str
+    ) -> Self:
         metrics_association = json.loads(metrics_association_raw)
 
-        host_name_resource_attribute_key = metrics_association["host_name_resource_attribute_key"]
         attribute_filters = metrics_association["attribute_filters"]
 
+        # Manual convenience: a host may carry a single resource attribute key whose value is, by
+        # convention, the host's own name (e.g. "service.name"). Expand it into a concrete resource
+        # attribute filter so a manually configured host's series can be selected. Hosts created by
+        # the DCD connector instead carry the resolved values directly in the attribute filters and
+        # leave this empty.
+        host_name_filters = (
+            [AttributeFilter(key=host_name_resource_attribute_key, value=host_name)]
+            if (
+                host_name_resource_attribute_key := metrics_association.get(
+                    "host_name_resource_attribute_key"
+                )
+            )
+            else []
+        )
+
         return cls(
-            host_name_resource_attribute_key=host_name_resource_attribute_key,
             resource_attribute_filters=[
-                AttributeFilter(key=attribute_filter["key"], value=attribute_filter["value"])
-                for attribute_filter in attribute_filters["resource_attributes"]
+                *host_name_filters,
+                *(
+                    AttributeFilter(key=attribute_filter["key"], value=attribute_filter["value"])
+                    for attribute_filter in attribute_filters["resource_attributes"]
+                ),
             ],
             scope_attribute_filters=[
                 AttributeFilter(key=attribute_filter["key"], value=attribute_filter["value"])

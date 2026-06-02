@@ -3,22 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import client from '@/lib/rest-api-client/client'
 
 import { HostApi } from '@/monitoring/all-hosts/api/hosts'
 import type { HostEntry, HostsPageMeta, HostsResponse } from '@/monitoring/shared/api/types'
-
-const { mockGet } = vi.hoisted(() => ({ mockGet: vi.fn() }))
-
-vi.mock('@/lib/rest-api-client/client', () => ({
-  default: { GET: mockGet },
-  unwrap: vi.fn((result: { data?: unknown; error?: unknown }) => {
-    if (result.error !== undefined) {
-      throw new Error('api error')
-    }
-    return result.data
-  })
-}))
 
 function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
@@ -42,29 +32,108 @@ function makeHostsResponse(hosts: HostEntry[], meta: Partial<HostsPageMeta> = {}
 }
 
 describe('HostApi.fetchHosts', () => {
-  it('calls GET monitor/hosts without query params when called with no arguments', async () => {
-    const response = makeHostsResponse([makeHost()])
-    mockGet.mockResolvedValueOnce({ data: response, response: new Response() })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let getSpy: any
 
-    const result = await new HostApi().fetchHosts()
-
-    expect(mockGet).toHaveBeenCalledWith('/monitor/hosts', { params: {} })
-    expect(result).toEqual(response)
+  beforeEach(() => {
+    getSpy = vi.spyOn(client, 'GET')
   })
 
-  it('passes query params when provided', async () => {
-    const response = makeHostsResponse([])
-    mockGet.mockResolvedValueOnce({ data: response, response: new Response() })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
 
-    await new HostApi().fetchHosts({ limit: '50' })
+  function mockSuccess(body: unknown): void {
+    getSpy.mockResolvedValueOnce({
+      data: body as HostsResponse,
+      error: undefined,
+      response: new Response()
+    } as never)
+  }
 
-    expect(mockGet).toHaveBeenCalledWith('/monitor/hosts', { params: { query: { limit: '50' } } })
+  it('calls the hosts endpoint with no query params when called with no arguments', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts()
+
+    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', { params: { query: {} } })
+  })
+
+  it('includes limit param when provided', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts({ limit: 50 })
+
+    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      params: { query: { limit: '50' } }
+    })
+  })
+
+  it('serializes sort entries as repeated sort params', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts({
+      sort: [
+        { id: 'name', desc: false },
+        { id: 'state', desc: true }
+      ]
+    })
+
+    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      params: { query: { sort: ['name:asc', 'state:desc'] } }
+    })
+  })
+
+  it('serializes a single ascending sort entry', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts({ sort: [{ id: 'alias', desc: false }] })
+
+    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      params: { query: { sort: ['alias:asc'] } }
+    })
+  })
+
+  it('serializes a single descending sort entry', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts({ sort: [{ id: 'num_services', desc: true }] })
+
+    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      params: { query: { sort: ['num_services:desc'] } }
+    })
+  })
+
+  it('omits sort params when sort array is empty', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts({ sort: [] })
+
+    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', { params: { query: {} } })
+  })
+
+  it('omits sort params when sort is not provided', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts({})
+
+    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', { params: { query: {} } })
+  })
+
+  it('throws when the response is not ok', async () => {
+    getSpy.mockResolvedValueOnce({
+      data: undefined,
+      error: {},
+      response: new Response('', { status: 403, statusText: 'Forbidden' })
+    } as never)
+
+    await expect(new HostApi().fetchHosts()).rejects.toThrow()
   })
 
   it('returns the response data from the API', async () => {
     const hosts = [makeHost({ name: 'db-1', state: 'DOWN' }), makeHost({ name: 'web-1' })]
     const response = makeHostsResponse(hosts)
-    mockGet.mockResolvedValueOnce({ data: response, response: new Response() })
+    mockSuccess(response)
 
     const result = await new HostApi().fetchHosts()
 

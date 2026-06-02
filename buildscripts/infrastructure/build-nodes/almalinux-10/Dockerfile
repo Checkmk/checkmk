@@ -78,8 +78,7 @@ RUN yum -y makecache \
     perl-Time-Piece \
     perl-devel \
     php \
-    postgresql-devel \
-    postgresql-server-devel \
+    libpq-devel \
     procps \
     readline-devel \
     rpcbind \

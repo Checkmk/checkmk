@@ -11,6 +11,18 @@ filegroup(
 configure_make(
     name = "libgsf",
     args = ["-j4"],
+    configure_options = [
+        # Bake a stable GSFLOCALEDIR into the binaries instead of the per-build
+        # $BUILD_TMPDIR path. libgsf computes GSFLOCALEDIR two different ways:
+        # libgsf-1.so uses $(datadir)/locale (i.e. $(prefix)/share/locale) and
+        # the gsf tools use $(localedir) directly. Both must be set to avoid
+        # leaking the bazel sandbox path into .rodata (SUP-28810).
+        # /usr/share is used rather than an OMD placeholder because the libgsf
+        # packaging does not patch the compiled-in path at install time;
+        # gettext gracefully falls back to English if no gsf catalogue is found.
+        "--datadir=/usr/share",
+        "--localedir=/usr/share/locale",
+    ],
     copts = [
         "-Wno-incompatible-pointer-types",
     ],
@@ -39,6 +51,7 @@ configure_make(
     out_static_libs = [
         "libgsf-1.a",
     ],
+    set_file_prefix_map = True,
     targets = ["install"],
     visibility = ["//visibility:public"],
 )

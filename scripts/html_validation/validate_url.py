@@ -80,13 +80,13 @@ async def main() -> None:
 
     resp_info = ResponseInfo.from_response(resp)
 
+    if args.verbose:
+        print_response_info(resp_info)
+
     if resp_info.is_redirect_to_login:
         err_msg = f"Request redirected to {resp_info.redirect_location}. Did you pass credentials?"
         sys.stderr.write(f"Error: {err_msg}\n")
         sys.exit(ExitCode.INVALID_ARGUMENTS)
-
-    if args.verbose:
-        print_response_info(resp_info)
 
     if not resp_info.is_html_document:
         sys.stderr.write("Error: Can only validate HTML documents. Try another URL.\n")

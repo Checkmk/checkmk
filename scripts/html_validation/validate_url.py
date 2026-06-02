@@ -13,6 +13,8 @@ from pathlib import Path
 
 import httpx
 
+from scripts.html_validation.lib.exceptions import AuthMissingError
+from scripts.html_validation.lib.http import build_auth_cookies
 from scripts.html_validation.lib.tag_balance import check_html_tag_balance, TagImbalanceError
 
 
@@ -66,15 +68,12 @@ async def main() -> None:
     cli = get_cli_parser()
     args = cli.parse_args()
 
-    auth_missing = not args.auth_key or not args.auth_val
-
-    if auth_missing and not args.no_auth:
-        err_msg = "Error: Missing auth credentials. Either pass to command or set in environment.\n"
-        sys.stderr.write(err_msg)
+    try:
+        cookies = build_auth_cookies(args.auth_key, args.auth_val, args.no_auth)
+    except AuthMissingError as exc:
+        sys.stderr.write(f"Error: {exc}\n")
         cli.print_help()
         sys.exit(ExitCode.INVALID_ARGUMENTS)
-
-    cookies = None if args.no_auth else {args.auth_key: args.auth_val}
 
     async with httpx.AsyncClient(cookies=cookies, timeout=REQUEST_TIMEOUT) as client:
         resp = await client.get(args.url)

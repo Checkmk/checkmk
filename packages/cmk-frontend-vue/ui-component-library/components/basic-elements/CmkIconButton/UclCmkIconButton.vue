@@ -35,6 +35,7 @@ export const panelConfig = {
   variant: {
     type: 'list' as const,
     title: 'Variant',
+    help: "'inline' vertically centers the icon to surrounding text and adds a right margin; 'plain' leaves it on the text baseline with no spacing.",
     options: [
       { title: 'Plain', name: 'plain' },
       { title: 'Inline (with margin)', name: 'inline' }
@@ -56,7 +57,11 @@ export const panelConfig = {
     ],
     initialState: 'medium'
   },
-  title: { type: 'string' as const, title: 'Title (Tooltip)', initialState: 'Get Help' },
+  title: {
+    type: 'string' as const,
+    title: 'Title (Tooltip)',
+    initialState: 'Lorem ipsum dolor sit amet'
+  },
   rotate: { type: 'number' as const, title: 'Rotation (Degrees)', initialState: 0 },
   colored: { type: 'boolean' as const, title: 'Colored', initialState: true }
 } satisfies PanelConfigFor<typeof CmkIconButton>
@@ -76,6 +81,7 @@ import {
 
 import type { CmkIconVariants, IconSizeNames, SimpleIcons } from '@/components/CmkIcon'
 import CmkIconButton from '@/components/CmkIconButton.vue'
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import UclCmkIconButtonDev from './UclCmkIconButtonDev.vue'
 
@@ -97,6 +103,7 @@ const propState = new PanelStateCreator<typeof CmkIconButton>().createRef(panelC
         :rotate="propState.rotate"
         :colored="propState.colored"
       />
+      <CmkParagraph>Adjacent text to CmkIconButton </CmkParagraph>
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

@@ -32,6 +32,14 @@ const sizes: IconSizeNames[] = ['xsmall', 'small', 'medium', 'large', 'xlarge', 
         <CmkIconButton name="main-help" :size="size" :title="size" />
       </div>
     </dd>
+    <dt>Variants</dt>
+    <dd class="ucl-cmk-icon-button-dev__row">
+      <CmkIconButton name="main-help" size="medium" title="plain" />
+      <span>plain </span>
+
+      <CmkIconButton name="main-help" variant="inline" size="medium" title="plain" />
+      <span>inline </span>
+    </dd>
 
     <dt>Various icons</dt>
     <dd class="ucl-cmk-icon-button-dev__row">

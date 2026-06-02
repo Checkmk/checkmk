@@ -20,7 +20,7 @@ export class HostService extends MonitoringService<HostEntry> {
   }
 
   protected async fetchBatch(): Promise<PagedResponse<HostEntry>> {
-    const response = await this.api.fetchHosts()
+    const response = await this.api.fetchHosts({ sort: this.sortState.value })
     return { items: response.hosts, meta: response.meta }
   }
 }

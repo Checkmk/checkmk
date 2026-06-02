@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { SortingState } from '@tanstack/vue-table'
 import { type Ref, ref, shallowRef } from 'vue'
 
 import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
@@ -18,6 +19,7 @@ export abstract class MonitoringService<T> {
   readonly items: Ref<T[]> = shallowRef<T[]>([])
   readonly total: Ref<number> = ref(0)
   readonly loading: Ref<boolean> = ref(false)
+  readonly sortState: Ref<SortingState> = ref<SortingState>([])
 
   private initialFetchTimer: ReturnType<typeof setTimeout> | null = null
   private pollTimer: ReturnType<typeof setInterval> | null = null
@@ -35,6 +37,11 @@ export abstract class MonitoringService<T> {
   }
 
   protected abstract fetchBatch(): Promise<PagedResponse<T>>
+
+  updateSort(sortState: SortingState): void {
+    this.sortState.value = sortState
+    void this.fetch()
+  }
 
   stopPolling(): void {
     if (this.initialFetchTimer !== null) {

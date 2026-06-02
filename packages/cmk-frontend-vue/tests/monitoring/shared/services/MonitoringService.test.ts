@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { SortingState } from '@tanstack/vue-table'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
@@ -188,5 +189,20 @@ describe('MonitoringService', () => {
 
     service.stopPolling()
     consoleErrorSpy.mockRestore()
+  })
+
+  it('updateSort triggers an immediate refresh', async () => {
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0))
+    const service = new TestService(fetchBatch)
+
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchBatch).toHaveBeenCalledTimes(1)
+
+    service.updateSort([{ id: 'name', desc: false }] satisfies SortingState)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchBatch).toHaveBeenCalledTimes(2)
+
+    service.stopPolling()
   })
 })

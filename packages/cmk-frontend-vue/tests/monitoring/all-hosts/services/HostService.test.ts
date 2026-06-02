@@ -54,4 +54,16 @@ describe('HostService', () => {
     expect(service.total.value).toBe(1)
     expect(service.loading.value).toBe(false)
   })
+
+  it('passes sort state to api.fetchHosts after updateSort is called', async () => {
+    const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([], 0))
+    service = new HostService({ fetchHosts })
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.updateSort([{ id: 'name', desc: false }])
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchHosts).toHaveBeenLastCalledWith({ sort: [{ id: 'name', desc: false }] })
+  })
 })

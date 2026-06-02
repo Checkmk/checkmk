@@ -4659,25 +4659,26 @@ def main() -> int:
     output_lines = []
 
     password = resolve_secret_option(args, PASSWORD_OPTION)
+    opt_cert = not args.no_cert_check
     try:
         # Get cluster info
         output_lines.extend(
             process_cluster_info(
-                args.host, args.username, password, opt_demo=args.demo, opt_cert=args.no_cert_check
+                args.host, args.username, password, opt_demo=args.demo, opt_cert=opt_cert
             )
         )
 
         # Get servicesets
         output_lines.extend(
             process_servicesets(
-                args.host, args.username, password, opt_demo=args.demo, opt_cert=args.no_cert_check
+                args.host, args.username, password, opt_demo=args.demo, opt_cert=opt_cert
             )
         )
 
         # Get stores info
         output_lines.extend(
             process_stores_info(
-                args.host, args.username, password, opt_demo=args.demo, opt_cert=args.no_cert_check
+                args.host, args.username, password, opt_demo=args.demo, opt_cert=opt_cert
             )
         )
 

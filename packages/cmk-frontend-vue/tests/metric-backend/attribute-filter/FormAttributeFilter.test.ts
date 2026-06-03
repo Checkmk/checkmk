@@ -534,7 +534,7 @@ test('opening a sibling dropdown closes the previously-open one within the same 
   expect(operatorCombobox).toHaveAttribute('aria-expanded', 'true')
 })
 
-test('connector renders between adjacent pills', () => {
+test('connector renders as a toggle button between adjacent pills', () => {
   renderForm([
     {
       id: 'pill-a',
@@ -553,7 +553,57 @@ test('connector renders between adjacent pills', () => {
       connector: 'OR'
     }
   ])
-  const connectors = screen.getAllByLabelText('Connector')
+  const connectors = screen.getAllByRole('button', {
+    name: /^Toggle connector, currently /
+  })
   expect(connectors).toHaveLength(1)
   expect(connectors[0]).toHaveTextContent('OR')
+  expect(connectors[0]).toHaveAccessibleName('Toggle connector, currently OR')
+})
+
+test('clicking an OR connector flips it to AND', async () => {
+  const { model } = renderForm([
+    { id: 'pill-a', attributeType: null, key: '', operator: 'eq', value: '', connector: null },
+    { id: 'pill-b', attributeType: null, key: '', operator: 'eq', value: '', connector: 'OR' }
+  ])
+  await userEvent.click(screen.getByRole('button', { name: 'Toggle connector, currently OR' }))
+
+  expect(model.value![1]!.connector).toBe('AND')
+  expect(screen.getByRole('button', { name: 'Toggle connector, currently AND' })).toHaveTextContent(
+    'AND'
+  )
+})
+
+test('clicking the connector twice returns it to OR', async () => {
+  const { model } = renderForm([
+    { id: 'pill-a', attributeType: null, key: '', operator: 'eq', value: '', connector: null },
+    { id: 'pill-b', attributeType: null, key: '', operator: 'eq', value: '', connector: 'OR' }
+  ])
+  await userEvent.click(screen.getByRole('button', { name: /^Toggle connector, currently / }))
+  await userEvent.click(screen.getByRole('button', { name: /^Toggle connector, currently / }))
+
+  expect(model.value![1]!.connector).toBe('OR')
+})
+
+test('toggling one connector does not affect its neighbour', async () => {
+  const { model } = renderForm([
+    { id: 'pill-a', attributeType: null, key: '', operator: 'eq', value: '', connector: null },
+    { id: 'pill-b', attributeType: null, key: '', operator: 'eq', value: '', connector: 'OR' },
+    { id: 'pill-c', attributeType: null, key: '', operator: 'eq', value: '', connector: 'OR' }
+  ])
+  const [first, second] = screen.getAllByRole('button', {
+    name: /^Toggle connector, currently /
+  })
+  await userEvent.click(first!)
+
+  expect(model.value![1]!.connector).toBe('AND')
+  expect(model.value![2]!.connector).toBe('OR')
+  expect(second).toHaveAccessibleName('Toggle connector, currently OR')
+})
+
+test('head pill has no connector toggle button', () => {
+  renderForm([
+    { id: 'pill-a', attributeType: null, key: '', operator: 'eq', value: '', connector: null }
+  ])
+  expect(screen.queryByRole('button', { name: /^Toggle connector, currently / })).toBeNull()
 })

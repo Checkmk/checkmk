@@ -105,7 +105,15 @@ function updateValue(target: ConnectedCondition, value: string): void {
   model.value = model.value.map((c) => (c.id === target.id ? { ...c, value } : c))
 }
 
-// Distinguish per-pill add buttons in screen readers via positional aria-label.
+function toggleConnector(target: ConnectedCondition): void {
+  model.value = model.value.map((c) => {
+    if (c.id !== target.id || c.connector === null) {
+      return c
+    }
+    return { ...c, connector: c.connector === 'OR' ? 'AND' : 'OR' }
+  })
+}
+
 function addConditionLabel(entry: ConnectedCondition): string {
   return entry.key
     ? _t('Add condition after %{key}', { key: entry.key })
@@ -177,13 +185,17 @@ function onEditDone(id: string): void {
     <template v-for="(entry, index) in model" :key="entry.id">
       <!-- Connectors (AND/OR) are intentionally kept untranslated:
            they have no agreed product-wide localisations yet. -->
-      <span
+      <button
         v-if="entry.connector !== null"
+        type="button"
         class="metric-backend-form-attribute-filter__connector"
-        :aria-label="_t('Connector')"
+        :aria-label="_t('Toggle connector, currently %{connector}', { connector: entry.connector })"
+        :title="_t('Toggle AND / OR')"
+        @mousedown.prevent
+        @click="toggleConnector(entry)"
       >
         {{ untranslated(entry.connector) }}
-      </span>
+      </button>
       <AttributeFilterPill
         :ref="pillRefSetter(entry.id)"
         :condition="entry"
@@ -222,7 +234,20 @@ function onEditDone(id: string): void {
 
 .metric-backend-form-attribute-filter__connector {
   flex-shrink: 0;
-  color: var(--font-color-dimmed);
-  padding: 1px 3px;
+  appearance: none;
+  background-color: var(--default-button-form-color);
+  border: 1px solid var(--button-form-border-color);
+  color: var(--button-form-text-color);
+  cursor: pointer;
+  font: inherit;
+  padding: 1px 6px;
+}
+
+.metric-backend-form-attribute-filter__connector:hover {
+  background-color: var(--input-hover-bg-color);
+}
+
+.metric-backend-form-attribute-filter__connector:focus-visible {
+  outline: revert;
 }
 </style>

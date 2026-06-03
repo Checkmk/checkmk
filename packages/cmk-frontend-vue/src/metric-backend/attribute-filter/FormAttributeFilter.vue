@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import usei18n, { untranslated } from '@/lib/i18n'
 
@@ -19,8 +19,11 @@ import type {
   AttributeFilterModel,
   AttributeType,
   ConnectedCondition,
+  Connector,
   Operator
 } from './types'
+
+type FilterGroup = { entries: ConnectedCondition[]; startIndex: number }
 
 const { _t } = usei18n()
 
@@ -61,6 +64,12 @@ function pillRefSetter(id: string): (el: unknown) => void {
   return fn
 }
 
+function relinkHead(next: ConnectedCondition[]): void {
+  if (next.length > 0) {
+    next[0] = { ...next[0]!, connector: null }
+  }
+}
+
 function removeCondition(target: ConnectedCondition): void {
   if (editingId.value === target.id) {
     editingId.value = null
@@ -70,8 +79,20 @@ function removeCondition(target: ConnectedCondition): void {
     return
   }
   const next = model.value.filter((c) => c.id !== target.id)
-  if (idx === 0 && next.length > 0) {
-    next[0] = { ...next[0]!, connector: null }
+  if (idx === 0) {
+    relinkHead(next)
+  }
+  model.value = next
+}
+
+function removeGroup(group: FilterGroup): void {
+  const ids = new Set(group.entries.map((e) => e.id))
+  if (editingId.value !== null && ids.has(editingId.value)) {
+    editingId.value = null
+  }
+  const next = model.value.filter((c) => !ids.has(c.id))
+  if (group.startIndex === 0) {
+    relinkHead(next)
   }
   model.value = next
 }
@@ -105,6 +126,18 @@ function updateValue(target: ConnectedCondition, value: string): void {
   model.value = model.value.map((c) => (c.id === target.id ? { ...c, value } : c))
 }
 
+const groups = computed<FilterGroup[]>(() => {
+  const result: FilterGroup[] = []
+  model.value.forEach((entry, idx) => {
+    if (entry.connector === 'OR' || result.length === 0) {
+      result.push({ entries: [entry], startIndex: idx })
+    } else {
+      result[result.length - 1]!.entries.push(entry)
+    }
+  })
+  return result
+})
+
 function toggleConnector(target: ConnectedCondition): void {
   model.value = model.value.map((c) => {
     if (c.id !== target.id || c.connector === null) {
@@ -136,7 +169,7 @@ function tryChangeFocus(): boolean {
   return false
 }
 
-function addCondition(index: number): void {
+function addCondition(index: number, connector: Connector | null): void {
   if (!tryChangeFocus()) {
     return
   }
@@ -146,7 +179,7 @@ function addCondition(index: number): void {
     key: '',
     operator: 'eq',
     value: '',
-    connector: index === 0 ? null : 'OR'
+    connector
   }
   model.value = [...model.value.slice(0, index), fresh, ...model.value.slice(index)]
   editingId.value = fresh.id
@@ -180,45 +213,98 @@ function onEditDone(id: string): void {
       :title="_t('Add condition')"
       :aria-label="_t('Add condition')"
       @mousedown.prevent
-      @click="addCondition(0)"
+      @click="addCondition(0, null)"
     />
-    <template v-for="(entry, index) in model" :key="entry.id">
+    <template v-for="(group, groupIndex) in groups" :key="group.entries[0]!.id">
       <!-- Connectors (AND/OR) are intentionally kept untranslated:
            they have no agreed product-wide localisations yet. -->
       <button
-        v-if="entry.connector !== null"
+        v-if="groupIndex > 0"
         type="button"
         class="metric-backend-form-attribute-filter__connector"
-        :aria-label="_t('Toggle connector, currently %{connector}', { connector: entry.connector })"
+        :aria-label="
+          _t('Toggle connector, currently %{connector}', {
+            connector: group.entries[0]!.connector!
+          })
+        "
         :title="_t('Toggle AND / OR')"
         @mousedown.prevent
-        @click="toggleConnector(entry)"
+        @click="toggleConnector(group.entries[0]!)"
       >
-        {{ untranslated(entry.connector) }}
+        {{ untranslated(group.entries[0]!.connector!) }}
       </button>
-      <AttributeFilterPill
-        :ref="pillRefSetter(entry.id)"
-        :condition="entry"
-        :query-suggestions="querySuggestions"
-        :query-value-suggestions="queryValueSuggestions"
-        removable
-        :editing="entry.id === editingId"
-        @remove="removeCondition(entry)"
-        @edit="startEditing(entry.id)"
-        @done="onEditDone(entry.id)"
-        @update:key="(value) => updateKey(entry, value)"
-        @update:attribute-type="(value) => updateAttributeType(entry, value)"
-        @update:operator="(value) => updateOperator(entry, value)"
-        @update:value="(value) => updateValue(entry, value)"
-      />
+      <div
+        class="metric-backend-form-attribute-filter__group"
+        :class="{
+          'metric-backend-form-attribute-filter__group--singleton': group.entries.length === 1
+        }"
+        :data-testid="group.entries.length > 1 ? 'attribute-filter-group' : undefined"
+      >
+        <CmkIconButton
+          v-if="group.entries.length > 1"
+          class="metric-backend-form-attribute-filter__remove-group"
+          name="close"
+          size="small"
+          :title="_t('Remove group')"
+          :aria-label="_t('Remove group')"
+          @mousedown.prevent
+          @click="removeGroup(group)"
+        />
+        <template v-for="(entry, entryIndex) in group.entries" :key="entry.id">
+          <button
+            v-if="entryIndex > 0"
+            type="button"
+            class="metric-backend-form-attribute-filter__connector"
+            :aria-label="
+              _t('Toggle connector, currently %{connector}', {
+                connector: entry.connector!
+              })
+            "
+            :title="_t('Toggle AND / OR')"
+            @mousedown.prevent
+            @click="toggleConnector(entry)"
+          >
+            {{ untranslated(entry.connector!) }}
+          </button>
+          <AttributeFilterPill
+            :ref="pillRefSetter(entry.id)"
+            :condition="entry"
+            :query-suggestions="querySuggestions"
+            :query-value-suggestions="queryValueSuggestions"
+            removable
+            :editing="entry.id === editingId"
+            @remove="removeCondition(entry)"
+            @edit="startEditing(entry.id)"
+            @done="onEditDone(entry.id)"
+            @update:key="(value) => updateKey(entry, value)"
+            @update:attribute-type="(value) => updateAttributeType(entry, value)"
+            @update:operator="(value) => updateOperator(entry, value)"
+            @update:value="(value) => updateValue(entry, value)"
+          />
+          <CmkIconButton
+            v-if="group.entries.length > 1"
+            class="metric-backend-form-attribute-filter__add"
+            name="add"
+            size="large"
+            :title="_t('Add condition')"
+            :aria-label="addConditionLabel(entry)"
+            @mousedown.prevent
+            @click="addCondition(group.startIndex + entryIndex + 1, 'AND')"
+          />
+        </template>
+      </div>
       <CmkIconButton
         class="metric-backend-form-attribute-filter__add"
         name="add"
         size="large"
         :title="_t('Add condition')"
-        :aria-label="addConditionLabel(entry)"
+        :aria-label="
+          group.entries.length > 1
+            ? _t('Add condition after this group')
+            : addConditionLabel(group.entries[0]!)
+        "
         @mousedown.prevent
-        @click="addCondition(index + 1)"
+        @click="addCondition(group.startIndex + group.entries.length, 'OR')"
       />
     </template>
   </div>
@@ -230,6 +316,40 @@ function onEditDone(id: string): void {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--dimension-3) var(--dimension-4);
+}
+
+.metric-backend-form-attribute-filter__group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dimension-3) var(--dimension-4);
+  padding: var(--dimension-2);
+  border: 1px solid var(--success);
+  border-radius: 5px;
+  position: relative;
+}
+
+/* Keep the wrapper in the DOM (so the group structure is uniform) but flatten layout. */
+.metric-backend-form-attribute-filter__group--singleton {
+  display: contents;
+}
+
+/* Anchored top-left to keep the destructive remove far from the right-edge `+` controls. */
+.metric-backend-form-attribute-filter__remove-group {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  background: var(--default-bg-color);
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.metric-backend-form-attribute-filter__group:hover
+  .metric-backend-form-attribute-filter__remove-group,
+.metric-backend-form-attribute-filter__group:focus-within
+  .metric-backend-form-attribute-filter__remove-group {
+  opacity: 1;
 }
 
 .metric-backend-form-attribute-filter__connector {

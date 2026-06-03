@@ -607,3 +607,140 @@ test('head pill has no connector toggle button', () => {
   ])
   expect(screen.queryByRole('button', { name: /^Toggle connector, currently / })).toBeNull()
 })
+
+const GROUP_TESTID = 'attribute-filter-group'
+
+test('two AND-joined pills render inside one bordered group', () => {
+  renderForm([
+    { id: 'pill-a', attributeType: null, key: '', operator: 'eq', value: '', connector: null },
+    { id: 'pill-b', attributeType: null, key: '', operator: 'eq', value: '', connector: 'AND' }
+  ])
+  const groups = screen.getAllByTestId(GROUP_TESTID)
+  expect(groups).toHaveLength(1)
+  expect(within(groups[0]!).getAllByRole('group')).toHaveLength(2)
+  expect(
+    within(groups[0]!).getByRole('button', { name: 'Toggle connector, currently AND' })
+  ).toBeInTheDocument()
+})
+
+test('OR splits the pills into two bordered groups with OR outside both', () => {
+  renderForm([
+    { id: 'pill-a', attributeType: null, key: '', operator: 'eq', value: '', connector: null },
+    { id: 'pill-b', attributeType: null, key: '', operator: 'eq', value: '', connector: 'AND' },
+    { id: 'pill-c', attributeType: null, key: '', operator: 'eq', value: '', connector: 'OR' },
+    { id: 'pill-d', attributeType: null, key: '', operator: 'eq', value: '', connector: 'AND' }
+  ])
+  const groups = screen.getAllByTestId(GROUP_TESTID)
+  expect(groups).toHaveLength(2)
+  expect(within(groups[0]!).getAllByRole('group')).toHaveLength(2)
+  expect(within(groups[1]!).getAllByRole('group')).toHaveLength(2)
+  expect(
+    within(groups[0]!).queryByRole('button', { name: 'Toggle connector, currently OR' })
+  ).toBeNull()
+  expect(
+    within(groups[1]!).queryByRole('button', { name: 'Toggle connector, currently OR' })
+  ).toBeNull()
+  expect(screen.getByRole('button', { name: 'Toggle connector, currently OR' })).toBeInTheDocument()
+})
+
+test('toggling AND to OR splits a 3-pill group into a pair and a lone pill', async () => {
+  renderForm([
+    { id: 'pill-a', attributeType: null, key: '', operator: 'eq', value: '', connector: null },
+    { id: 'pill-b', attributeType: null, key: '', operator: 'eq', value: '', connector: 'AND' },
+    { id: 'pill-c', attributeType: null, key: '', operator: 'eq', value: '', connector: 'AND' }
+  ])
+  expect(screen.getAllByTestId(GROUP_TESTID)).toHaveLength(1)
+  const ands = screen.getAllByRole('button', { name: 'Toggle connector, currently AND' })
+  expect(ands).toHaveLength(2)
+  await userEvent.click(ands[1]!)
+
+  const groups = screen.getAllByTestId(GROUP_TESTID)
+  expect(groups).toHaveLength(1)
+  expect(within(groups[0]!).getAllByRole('group')).toHaveLength(2)
+  expect(pillsInOrder()).toHaveLength(3)
+})
+
+test('every pill in an AND group has a per-pill + that inserts an AND pill at that position', async () => {
+  const { model } = renderForm([
+    {
+      id: 'pill-a',
+      attributeType: 'resource',
+      key: 'service.name',
+      operator: 'eq',
+      value: '',
+      connector: null
+    },
+    {
+      id: 'pill-b',
+      attributeType: 'scope',
+      key: 'otel.library.name',
+      operator: 'eq',
+      value: '',
+      connector: 'AND'
+    }
+  ])
+  await userEvent.click(screen.getByRole('button', { name: 'Add condition after service.name' }))
+
+  expect(model.value).toHaveLength(3)
+  expect(model.value!.map((c) => c.id)).toEqual(['pill-a', expect.any(String), 'pill-b'])
+  expect(model.value![1]!.connector).toBe('AND')
+  const groups = screen.getAllByTestId(GROUP_TESTID)
+  expect(groups).toHaveLength(1)
+  expect(within(groups[0]!).getAllByRole('group')).toHaveLength(3)
+})
+
+test('the after-group + starts a new OR clause that renders as a bare pill', async () => {
+  const { model } = renderForm([
+    {
+      id: 'pill-a',
+      attributeType: 'resource',
+      key: 'service.name',
+      operator: 'eq',
+      value: '',
+      connector: null
+    },
+    {
+      id: 'pill-b',
+      attributeType: 'scope',
+      key: 'otel.library.name',
+      operator: 'eq',
+      value: '',
+      connector: 'AND'
+    }
+  ])
+  await userEvent.click(screen.getByRole('button', { name: 'Add condition after this group' }))
+
+  expect(model.value).toHaveLength(3)
+  expect(model.value![2]!.connector).toBe('OR')
+  const groups = screen.getAllByTestId(GROUP_TESTID)
+  expect(groups).toHaveLength(1)
+  expect(within(groups[0]!).getAllByRole('group')).toHaveLength(2)
+  expect(pillsInOrder()).toHaveLength(3)
+})
+
+test('the group X removes every pill in that AND group', async () => {
+  const { model } = renderForm([
+    { id: 'pill-a', attributeType: null, key: '', operator: 'eq', value: '', connector: null },
+    { id: 'pill-b', attributeType: null, key: '', operator: 'eq', value: '', connector: 'AND' }
+  ])
+  await userEvent.click(screen.getByRole('button', { name: 'Remove group' }))
+
+  expect(model.value).toEqual([])
+  expect(screen.queryAllByTestId(GROUP_TESTID)).toHaveLength(0)
+})
+
+test('removing the first of two OR-joined groups rewrites the new head connector to null', async () => {
+  const { model } = renderForm([
+    { id: 'pill-a', attributeType: null, key: '', operator: 'eq', value: '', connector: null },
+    { id: 'pill-b', attributeType: null, key: '', operator: 'eq', value: '', connector: 'AND' },
+    { id: 'pill-c', attributeType: null, key: '', operator: 'eq', value: '', connector: 'OR' },
+    { id: 'pill-d', attributeType: null, key: '', operator: 'eq', value: '', connector: 'AND' }
+  ])
+  const removeButtons = screen.getAllByRole('button', { name: 'Remove group' })
+  expect(removeButtons).toHaveLength(2)
+  await userEvent.click(removeButtons[0]!)
+
+  expect(model.value!.map((c) => c.id)).toEqual(['pill-c', 'pill-d'])
+  expect(model.value![0]!.connector).toBeNull()
+  expect(model.value![1]!.connector).toBe('AND')
+})

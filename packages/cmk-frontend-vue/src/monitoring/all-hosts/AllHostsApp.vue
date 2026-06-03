@@ -31,15 +31,50 @@ onBeforeUnmount(() => {
 provide(MONITORING_SERVICE, hostService)
 
 const columns: ColumnDef<HostEntry>[] = [
-  { accessorKey: 'state', header: _t('State'), sortDescFirst: true },
-  { accessorKey: 'name', header: _t('Host'), sortDescFirst: false },
-  { accessorKey: 'alias', header: _t('Alias'), sortDescFirst: false },
-  { accessorKey: 'ip', header: _t('IP address'), sortDescFirst: false },
-  { accessorKey: 'num_services_ok', header: _t('OK'), sortDescFirst: true },
-  { accessorKey: 'num_services_warn', header: _t('Warn'), sortDescFirst: true },
-  { accessorKey: 'num_services_crit', header: _t('Crit'), sortDescFirst: true },
-  { accessorKey: 'num_services_unknown', header: _t('Unknown'), sortDescFirst: true },
-  { accessorKey: 'num_services_pending', header: _t('Pending'), sortDescFirst: true }
+  { accessorKey: 'state', header: _t('State'), sortDescFirst: true, minSize: 60, maxSize: 130 },
+  { accessorKey: 'name', header: _t('Host'), sortDescFirst: false, minSize: 150 },
+  { accessorKey: 'alias', header: _t('Alias'), sortDescFirst: false, minSize: 150 },
+  { accessorKey: 'ip', header: _t('IP address'), sortDescFirst: false, minSize: 100 },
+  {
+    accessorKey: 'num_services_ok',
+    header: _t('OK'),
+    sortDescFirst: true,
+    meta: { justify: 'center' },
+    minSize: 64,
+    maxSize: 90
+  },
+  {
+    accessorKey: 'num_services_warn',
+    header: _t('Warn'),
+    sortDescFirst: true,
+    meta: { justify: 'center' },
+    minSize: 64,
+    maxSize: 90
+  },
+  {
+    accessorKey: 'num_services_crit',
+    header: _t('Crit'),
+    sortDescFirst: true,
+    meta: { justify: 'center' },
+    minSize: 64,
+    maxSize: 90
+  },
+  {
+    accessorKey: 'num_services_unknown',
+    header: _t('Unknown'),
+    sortDescFirst: true,
+    meta: { justify: 'center' },
+    minSize: 92,
+    maxSize: 130
+  },
+  {
+    accessorKey: 'num_services_pending',
+    header: _t('Pending'),
+    sortDescFirst: true,
+    meta: { justify: 'center' },
+    minSize: 92,
+    maxSize: 120
+  }
 ]
 
 const filterState = ref<ColumnFiltersState>([])

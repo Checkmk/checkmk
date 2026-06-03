@@ -21,7 +21,7 @@ use crate::config::{
     ora_sql::Endpoint,
 };
 use crate::ora_sql::types::Target;
-use crate::types::{ConnectionStringType, Credentials, InstanceName, SqlQuery};
+use crate::types::{ConnectionStringType, Credentials, InstanceName, PdbName, SqlQuery};
 use anyhow::{Context, Result};
 use oracle::sql_type::{FromSql, ToSql};
 use oracle::{Connection, Connector, Privilege};
@@ -44,6 +44,10 @@ pub trait OraDbEngine: Send {
     fn close(&mut self) -> Result<()>;
 
     fn query_table(&self, query: &SqlQuery) -> QueryResult;
+
+    fn switch_container(&self, _container: &PdbName) -> Result<()> {
+        anyhow::bail!("container switching not supported by this engine")
+    }
 
     fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync>;
 }
@@ -124,6 +128,18 @@ impl OraDbEngine for StdEngine {
         QueryResult(result)
     }
 
+    fn switch_container(&self, container: &PdbName) -> Result<()> {
+        let conn = self
+            .connection
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No connection established"))?;
+        conn.execute(
+            &format!("ALTER SESSION SET CONTAINER = {}", container.as_ref()),
+            &[] as &[&dyn ToSql],
+        )?;
+        Ok(())
+    }
+
     fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync> {
         Box::new(self.clone())
     }
@@ -179,6 +195,7 @@ impl OraDbEngine for SqlPlusEngine {
         let result = Err(anyhow::anyhow!("Sql*Plus engine is not implemented yet"));
         QueryResult(result)
     }
+
     fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync> {
         Box::new(self.clone())
     }
@@ -198,6 +215,7 @@ impl OraDbEngine for JdbcEngine {
         let result = Err(anyhow::anyhow!("Sql*Plus engine is not implemented yet"));
         QueryResult(result)
     }
+
     fn clone_box(&self) -> Box<dyn OraDbEngine + Send + Sync> {
         Box::new(self.clone())
     }
@@ -312,6 +330,10 @@ impl Spot<Opened> {
         self.engine.query_table(query)
     }
 
+    pub fn switch_container(&self, container: &PdbName) -> Result<()> {
+        self.engine.switch_container(container)
+    }
+
     pub fn target(&self) -> &Target {
         &self.target
     }
@@ -319,6 +341,22 @@ impl Spot<Opened> {
     pub fn database(&self) -> Option<&String> {
         self._database.as_ref()
     }
+}
+
+/// Switch to `container`, run `f`, then reset to `CDB$ROOT`.
+pub fn with_container<T>(
+    spot: &Spot<Opened>,
+    container: Option<&PdbName>,
+    f: impl FnOnce() -> T,
+) -> Result<T> {
+    if let Some(pdb) = container {
+        spot.switch_container(pdb)?;
+    }
+    let result = f();
+    if container.is_some() {
+        spot.switch_container(&PdbName::from("CDB$ROOT"))?;
+    }
+    Ok(result)
 }
 
 impl SpotBuilder {

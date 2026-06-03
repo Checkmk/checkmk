@@ -121,7 +121,13 @@ class ActivateChangesSlideout(LocatorHelper):
 
     @property
     def activation_succcess_banner(self) -> Locator:
-        return self.slideout.get_by_role("status")
+        # TODO "Activating changes" is included on purpose: activations that change OMD config
+        # settings (e.g. switching the OTel collector on) trigger a full site restart, during
+        # which the slideout's polling can silently abort, so the
+        # "Successfully activated" banner is not shown reliably.
+        return self.slideout.get_by_role("status").filter(
+            has_text=re.compile("Activating changes|Successfully activated")
+        )
 
     def _extract_count_from_label(self, label_locator: Locator, label_name: str) -> int:
         """Get the number in parentheses after `label_name` from a label text."""

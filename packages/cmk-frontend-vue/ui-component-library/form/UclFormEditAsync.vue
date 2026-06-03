@@ -89,7 +89,7 @@ const api: API<ObjectId, ObjectId> = {
             validators: [],
             input_hint: null,
             autocompleter: null,
-            field_size: 'SMALL'
+            field_size: 'small'
           } as String
         }
       ],

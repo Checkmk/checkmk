@@ -29,7 +29,7 @@ const spec: FormSpec.String = {
   validators: validators,
   input_hint: 'fooInputHint',
   autocompleter: null,
-  field_size: 'SMALL'
+  field_size: 'small'
 }
 
 test('FormString renders value', () => {
@@ -155,7 +155,7 @@ test('FormString with autocompleter loads value', async () => {
         validators: [],
         label: 'ut_label',
         input_hint: '',
-        field_size: 'MEDIUM',
+        field_size: 'medium',
         autocompleter: {
           data: {
             ident: 'config_hostname',
@@ -191,7 +191,7 @@ test('FormString with autocompleter shows placeholder when data is empty string'
         validators: [],
         label: 'ut_label',
         input_hint: 'Select hostname',
-        field_size: 'MEDIUM',
+        field_size: 'medium',
         autocompleter: {
           data: {
             ident: 'config_hostname',
@@ -227,7 +227,7 @@ test('FormString with autocompleter updates value to title', async () => {
         validators: [],
         label: 'ut_label',
         input_hint: '',
-        field_size: 'MEDIUM',
+        field_size: 'medium',
         autocompleter: {
           data: {
             ident: 'config_hostname',

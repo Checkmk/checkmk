@@ -30,7 +30,7 @@ const stringFormSpec: FormSpec.String = {
   validators: stringValidators,
   input_hint: '',
   autocompleter: null,
-  field_size: 'SMALL'
+  field_size: 'small'
 }
 
 const dictElementGroupFormSpec: FormSpec.DictionaryGroup = {

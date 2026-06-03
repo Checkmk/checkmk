@@ -109,7 +109,7 @@ const minimalSchema: FormSpecString = {
   label: null,
   input_hint: null,
   autocompleter: null,
-  field_size: 'MEDIUM'
+  field_size: 'medium'
 }
 
 // ----- MSW setup -----

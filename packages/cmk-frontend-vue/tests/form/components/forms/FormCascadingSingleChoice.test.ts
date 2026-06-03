@@ -27,7 +27,7 @@ const stringFormSpec: FormSpec.String = {
   help: 'nestedStringHelp',
   validators: stringValidators,
   input_hint: 'nestedStringInputHint',
-  field_size: 'SMALL',
+  field_size: 'small',
   autocompleter: null
 }
 

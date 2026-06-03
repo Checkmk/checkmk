@@ -69,7 +69,7 @@ const errors = computed((): { address: string[]; port: string[] } => {
         :id="addressId"
         v-model="endpoint.address"
         type="text"
-        field-size="MEDIUM"
+        field-size="medium"
         placeholder="0.0.0.0"
         :external-errors="errors.address"
       />

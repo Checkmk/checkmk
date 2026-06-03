@@ -49,7 +49,7 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
     <ContentSpacer />
 
     <DataSettings :label="_t('Enter text')">
-      <CmkInput v-model="handler.text.value" type="text" field-size="LARGE" />
+      <CmkInput v-model="handler.text.value" type="text" field-size="large" />
     </DataSettings>
 
     <ContentSpacer :dimension="6" />

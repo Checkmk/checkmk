@@ -99,7 +99,7 @@ watch(
               type="text"
               :external-errors="nameValidationErrors"
               required
-              field-size="LARGE"
+              field-size="large"
             />
           </div>
           <div v-if="displaySuffixInput" class="db-general-properties__item">
@@ -128,7 +128,7 @@ watch(
                 :aria-label="_t('Add unique ID')"
                 type="text"
                 required
-                field-size="LARGE"
+                field-size="large"
                 :external-errors="uniqueIdValidationErrors"
                 @update:model-value="(val: string | undefined) => (uniqueId = val ?? uniqueId)"
               />

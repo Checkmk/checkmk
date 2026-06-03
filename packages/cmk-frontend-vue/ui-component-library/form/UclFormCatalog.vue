@@ -38,7 +38,7 @@ const spec = ref<Catalog>({
             help: 'This is an ungrouped text input field for basic testing - it is required',
             label: 'Enter your name',
             input_hint: 'John Doe',
-            field_size: 'MEDIUM',
+            field_size: 'medium',
             autocompleter: null,
             validators: [
               {
@@ -94,7 +94,7 @@ const spec = ref<Catalog>({
                 help: 'Enter the username for authentication',
                 label: 'Username',
                 input_hint: 'admin',
-                field_size: 'MEDIUM',
+                field_size: 'medium',
                 autocompleter: null,
                 validators: []
               } as FormString,
@@ -168,7 +168,7 @@ const spec = ref<Catalog>({
             help: 'This is an ungrouped text input field for basic testing - it is required',
             label: 'Enter your name',
             input_hint: 'John Doe',
-            field_size: 'MEDIUM',
+            field_size: 'medium',
             autocompleter: null,
             validators: [
               {
@@ -202,7 +202,7 @@ const spec = ref<Catalog>({
                 help: 'This is an ungrouped text input field for basic testing - it is required',
                 label: 'Enter your name',
                 input_hint: 'John Doe',
-                field_size: 'MEDIUM',
+                field_size: 'medium',
                 autocompleter: null,
                 validators: [
                   {

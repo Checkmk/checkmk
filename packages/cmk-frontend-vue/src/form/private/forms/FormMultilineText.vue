@@ -27,7 +27,7 @@ const [validation, value] = useValidation<string>(
 const style = computed(() => {
   return {
     ...(props.spec.monospaced ? { 'font-family': 'monospace, sans-serif' } : {}),
-    width: inputSizes['LARGE'].width
+    width: inputSizes['large'].width
   }
 })
 </script>

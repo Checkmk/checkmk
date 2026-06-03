@@ -81,10 +81,10 @@ class StringVisitor(FormSpecVisitor[StringAutocompleter, _ParsedValueModel, _Fal
 def field_size_translator(field_size: FieldSize) -> shared_type_defs.StringFieldSize:
     match field_size:
         case FieldSize.SMALL:
-            return shared_type_defs.StringFieldSize.SMALL
+            return shared_type_defs.StringFieldSize.small
         case FieldSize.MEDIUM:
-            return shared_type_defs.StringFieldSize.MEDIUM
+            return shared_type_defs.StringFieldSize.medium
         case FieldSize.LARGE:
-            return shared_type_defs.StringFieldSize.LARGE
+            return shared_type_defs.StringFieldSize.large
         case _:
-            return shared_type_defs.StringFieldSize.MEDIUM
+            return shared_type_defs.StringFieldSize.medium

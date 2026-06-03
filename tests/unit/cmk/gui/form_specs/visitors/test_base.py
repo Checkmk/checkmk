@@ -60,7 +60,7 @@ class DummyVisitor(FormSpecVisitor[String, _ParsedValue, _FallbackModel]):
                 label=None,
                 validators=[],
                 input_hint=None,
-                field_size=VueTypes.StringFieldSize.SMALL,
+                field_size=VueTypes.StringFieldSize.small,
                 autocompleter=None,
             ),
             frontend_value,

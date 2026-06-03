@@ -213,7 +213,7 @@ function getString(name: string, options?: Partial<Omit<String, 'type'>>): Strin
     ],
     label: getLabel(name),
     input_hint: getInputHint(name),
-    field_size: 'MEDIUM',
+    field_size: 'medium',
     autocompleter: null,
     ...options
   }

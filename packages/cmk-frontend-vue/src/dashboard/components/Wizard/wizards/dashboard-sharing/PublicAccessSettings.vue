@@ -121,7 +121,7 @@ const handleSave = () => {
         <CmkInput
           v-model="comment as string"
           :placeholder="_t('Internal comment, not visible to viewers')"
-          field-size="FILL"
+          field-size="fill"
           @update:model-value="displaySuccessMessage = false"
         />
       </FieldComponent>

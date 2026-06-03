@@ -28,7 +28,7 @@ const stringFormSpec: FormSpec.String = {
   validators: stringValidators,
   input_hint: '',
   autocompleter: null,
-  field_size: 'SMALL'
+  field_size: 'small'
 }
 
 const dictElementGroupFormSpec: FormSpec.DictionaryGroup = {
@@ -145,7 +145,7 @@ test('FormDictionary renders required only once depending on label presence', as
     validators: stringValidators,
     input_hint: '',
     autocompleter: null,
-    field_size: 'SMALL'
+    field_size: 'small'
   }
 
   const optionalUnlabeledString: FormSpec.String = {
@@ -156,7 +156,7 @@ test('FormDictionary renders required only once depending on label presence', as
     validators: stringValidators,
     input_hint: '',
     autocompleter: null,
-    field_size: 'SMALL'
+    field_size: 'small'
   }
 
   const requiredString: FormSpec.String = {
@@ -167,7 +167,7 @@ test('FormDictionary renders required only once depending on label presence', as
     validators: stringValidators,
     input_hint: '',
     autocompleter: null,
-    field_size: 'SMALL'
+    field_size: 'small'
   }
 
   const requiredUnlabeledString: FormSpec.String = {
@@ -178,7 +178,7 @@ test('FormDictionary renders required only once depending on label presence', as
     validators: stringValidators,
     input_hint: '',
     autocompleter: null,
-    field_size: 'SMALL'
+    field_size: 'small'
   }
 
   const localSpec: FormSpec.Dictionary = {

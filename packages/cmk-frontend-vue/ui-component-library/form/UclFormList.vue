@@ -31,7 +31,7 @@ const spec = ref<List>({
     label: null,
     validators: [],
     input_hint: null,
-    field_size: 'SMALL',
+    field_size: 'small',
     autocompleter: null
   } as String
 })

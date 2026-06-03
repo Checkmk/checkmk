@@ -67,7 +67,7 @@ const spec: String = {
   validators: [],
   label: null,
   input_hint: '',
-  field_size: 'MEDIUM',
+  field_size: 'medium',
   autocompleter: {
     data: {
       ident: 'config_hostname',

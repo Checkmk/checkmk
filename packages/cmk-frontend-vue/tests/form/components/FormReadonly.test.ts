@@ -65,7 +65,7 @@ const stringFormSpec: FormSpec.String = {
   validators: [],
   input_hint: '',
   autocompleter: null,
-  field_size: 'SMALL'
+  field_size: 'small'
 }
 
 test('FormReadonly renders string', () => {

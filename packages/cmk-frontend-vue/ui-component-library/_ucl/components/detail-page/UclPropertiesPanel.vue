@@ -106,7 +106,7 @@ onMounted(() => {
       <CmkInput
         v-else-if="def.type === 'string'"
         :id="`${uid}-${key}`"
-        field-size="FILL"
+        field-size="fill"
         :model-value="state[key] as string"
         @update:model-value="state[key] = $event ?? ''"
       />

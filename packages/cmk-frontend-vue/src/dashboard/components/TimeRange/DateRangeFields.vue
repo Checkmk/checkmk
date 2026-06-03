@@ -44,15 +44,15 @@ const dateRangeModel = defineModel<{
       <div>
         <div class="db-date-range-fields--field">
           <span>{{ _t('Year') }}</span>
-          <CmkInput v-model="dateRangeModel.from.year" type="number" field-size="SMALL" />
+          <CmkInput v-model="dateRangeModel.from.year" type="number" field-size="small" />
         </div>
         <div class="db-date-range-fields--field">
           <span>{{ _t('Month') }}</span>
-          <CmkInput v-model="dateRangeModel.from.month" type="number" field-size="SMALL" />
+          <CmkInput v-model="dateRangeModel.from.month" type="number" field-size="small" />
         </div>
         <div class="db-date-range-fields--field">
           <span>{{ _t('Day') }}</span>
-          <CmkInput v-model="dateRangeModel.from.day" type="number" field-size="SMALL" />
+          <CmkInput v-model="dateRangeModel.from.day" type="number" field-size="small" />
         </div>
       </div>
     </div>
@@ -61,15 +61,15 @@ const dateRangeModel = defineModel<{
       <div>
         <div class="db-date-range-fields--field">
           <span>{{ _t('Year') }}</span>
-          <CmkInput v-model="dateRangeModel.to.year" type="number" field-size="SMALL" />
+          <CmkInput v-model="dateRangeModel.to.year" type="number" field-size="small" />
         </div>
         <div class="db-date-range-fields--field">
           <span>{{ _t('Month') }}</span>
-          <CmkInput v-model="dateRangeModel.to.month" type="number" field-size="SMALL" />
+          <CmkInput v-model="dateRangeModel.to.month" type="number" field-size="small" />
         </div>
         <div class="db-date-range-fields--field">
           <span>{{ _t('Day') }}</span>
-          <CmkInput v-model="dateRangeModel.to.day" type="number" field-size="SMALL" />
+          <CmkInput v-model="dateRangeModel.to.day" type="number" field-size="small" />
         </div>
       </div>
     </div>

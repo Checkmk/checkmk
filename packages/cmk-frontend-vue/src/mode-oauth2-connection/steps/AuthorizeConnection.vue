@@ -109,7 +109,7 @@ const authorizationUrl = computed(() =>
           </p>
           <CmkInput
             v-model="model.overrideCode"
-            field-size="FILL"
+            field-size="fill"
             :placeholder="_t('Paste the code from the redirect page here')"
           />
         </div>

@@ -87,7 +87,7 @@ async function validate(): Promise<boolean> {
           :id="relayAliasId"
           v-model="relayAlias"
           type="text"
-          field-size="MEDIUM"
+          field-size="medium"
           :external-errors="aliasErrors"
         />
       </div>

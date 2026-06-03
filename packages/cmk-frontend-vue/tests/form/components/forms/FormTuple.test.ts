@@ -16,7 +16,7 @@ const stringSpec1: FormSpec.String = {
   validators: [],
   input_hint: 'firstFooInputHint',
   autocompleter: null,
-  field_size: 'SMALL'
+  field_size: 'small'
 }
 
 const stringSpec2: FormSpec.String = {
@@ -27,7 +27,7 @@ const stringSpec2: FormSpec.String = {
   validators: [],
   input_hint: 'secondFooInputHint',
   autocompleter: null,
-  field_size: 'SMALL'
+  field_size: 'small'
 }
 
 const spec: FormSpec.Tuple = {

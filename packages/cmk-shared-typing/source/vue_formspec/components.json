@@ -195,7 +195,7 @@
             },
             "field_size": {
               "title": "StringFieldSize",
-              "enum": ["SMALL", "MEDIUM", "LARGE"]
+              "enum": ["small", "medium", "large"]
             },
             "autocompleter": {
               "oneOf": [
@@ -1101,7 +1101,7 @@
             },
             "field_size": {
               "title": "StringFieldSize",
-              "enum": ["SMALL", "MEDIUM", "LARGE"]
+              "enum": ["small", "medium", "large"]
             },
             "autocompleter": {
               "oneOf": [

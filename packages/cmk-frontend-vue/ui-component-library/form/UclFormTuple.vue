@@ -28,7 +28,7 @@ function getStringSpec(name: string): String {
     help: `some string help ${name}`,
     label: null,
     input_hint: `some string input hint ${name}`,
-    field_size: 'SMALL',
+    field_size: 'small',
     autocompleter: null,
     validators: []
   }

@@ -29,7 +29,7 @@ function getStringFormspec(
     help: `ut help ${title}`,
     validators: [],
     input_hint: `ut input hint ${title}`,
-    field_size: 'SMALL',
+    field_size: 'small',
     autocompleter: null,
     ...options
   }

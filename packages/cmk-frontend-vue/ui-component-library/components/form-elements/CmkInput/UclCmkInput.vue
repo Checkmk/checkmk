@@ -54,12 +54,12 @@ export const panelConfig = {
     title: 'Size',
     help: 'This Only affects text inputs and controls the width of the input field.',
     options: [
-      { title: 'SMALL', name: 'SMALL' },
-      { title: 'MEDIUM', name: 'MEDIUM' },
-      { title: 'LARGE', name: 'LARGE' },
-      { title: 'FILL', name: 'FILL' }
+      { title: 'Small', name: 'small' },
+      { title: 'Medium', name: 'medium' },
+      { title: 'Large', name: 'large' },
+      { title: 'Fill', name: 'fill' }
     ] satisfies Options<keyof typeof inputSizes>[],
-    initialState: 'SMALL' as const
+    initialState: 'small' as const
   },
   unit: {
     type: 'string' as const,

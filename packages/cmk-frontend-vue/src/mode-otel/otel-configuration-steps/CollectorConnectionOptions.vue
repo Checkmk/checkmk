@@ -86,7 +86,7 @@ const eventConsoleErrors = computed((): string[] => {
           :id="resourceAttributeId"
           v-model="eventConsole.resourceAttribute"
           type="text"
-          field-size="MEDIUM"
+          field-size="medium"
           placeholder="service.name"
           :external-errors="eventConsoleErrors"
         />

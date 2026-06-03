@@ -49,7 +49,7 @@ const componentId = useId()
             <CmkInput
               v-model="data.service_name_template"
               type="text"
-              field-size="LARGE"
+              field-size="large"
               :placeholder="_t('Service name template')"
             />
             <CmkHelpText :help="METRIC_BACKEND_MACRO_HELP" />

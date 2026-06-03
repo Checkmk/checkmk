@@ -19,10 +19,10 @@ const durationModel = defineModel<Age>({
 
 <template>
   <div class="db-duration-fields--container">
-    <CmkInput v-model="durationModel.days" type="number" :unit="_t('days')" field-size="SMALL" />
-    <CmkInput v-model="durationModel.hours" type="number" :unit="_t('hours')" field-size="SMALL" />
-    <CmkInput v-model="durationModel.minutes" type="number" :unit="_t('mins')" field-size="SMALL" />
-    <CmkInput v-model="durationModel.seconds" type="number" :unit="_t('secs')" field-size="SMALL" />
+    <CmkInput v-model="durationModel.days" type="number" :unit="_t('days')" field-size="small" />
+    <CmkInput v-model="durationModel.hours" type="number" :unit="_t('hours')" field-size="small" />
+    <CmkInput v-model="durationModel.minutes" type="number" :unit="_t('mins')" field-size="small" />
+    <CmkInput v-model="durationModel.seconds" type="number" :unit="_t('secs')" field-size="small" />
   </div>
 </template>
 

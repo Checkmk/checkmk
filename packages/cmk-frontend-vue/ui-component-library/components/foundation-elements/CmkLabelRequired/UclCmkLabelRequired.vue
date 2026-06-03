@@ -56,7 +56,7 @@ const exampleFieldId = useId()
         Example Field Name
         <CmkLabelRequired :show="propState.show" :space="propState.space || null" />
       </CmkLabel>
-      <CmkInput :id="exampleFieldId" type="text" field-size="MEDIUM" />
+      <CmkInput :id="exampleFieldId" type="text" field-size="medium" />
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

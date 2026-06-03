@@ -21,7 +21,7 @@ export function makeString(
   title: string,
   inputHint: string,
   autocompleter: null | FormSpec.Autocompleter,
-  fieldSize: FormSpec.StringFieldSize = 'MEDIUM'
+  fieldSize: FormSpec.StringFieldSize = 'medium'
 ): FormSpec.String {
   return {
     type: 'string',

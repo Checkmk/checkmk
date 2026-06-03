@@ -113,7 +113,7 @@ const passwordErrors = computed<string[]>(() => {
         :id="usernameId"
         v-model="auth.credential.username"
         type="text"
-        field-size="MEDIUM"
+        field-size="medium"
         :placeholder="_t('Username')"
         :external-errors="usernameErrors"
       />

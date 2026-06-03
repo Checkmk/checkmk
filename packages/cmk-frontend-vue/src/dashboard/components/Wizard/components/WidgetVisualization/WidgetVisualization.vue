@@ -72,7 +72,7 @@ const displayLinkContent = computed(
         <CmkInput
           :model-value="title"
           type="text"
-          field-size="MEDIUM"
+          field-size="medium"
           @update:model-value="(value) => (title = value ?? title)"
         />
       </FieldComponent>
@@ -86,7 +86,7 @@ const displayLinkContent = computed(
             <CmkInput
               :model-value="titleUrl"
               type="text"
-              field-size="MEDIUM"
+              field-size="medium"
               :external-errors="titleUrlValidationErrors"
               @update:model-value="(value) => (titleUrl = value ?? titleUrl)"
             />

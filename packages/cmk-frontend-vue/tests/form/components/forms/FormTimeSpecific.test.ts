@@ -16,7 +16,7 @@ const embeddedSpec: FormSpec.String = {
   validators: [],
   input_hint: '',
   autocompleter: null,
-  field_size: 'SMALL'
+  field_size: 'small'
 }
 
 const listSpec: FormSpec.List = {

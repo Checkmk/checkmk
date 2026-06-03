@@ -42,7 +42,7 @@ function stringField(title: string) {
     validators: [],
     input_hint: null,
     autocompleter: null,
-    field_size: 'MEDIUM' as const
+    field_size: 'medium' as const
   }
 }
 

@@ -79,7 +79,7 @@ const dashboardEmblem = defineModel<string | null>('dashboardEmblem', {
           :placeholder="_t('Enter description')"
           :aria-label="_t('Enter description')"
           type="text"
-          field-size="LARGE"
+          field-size="large"
         />
       </FieldComponent>
     </TableFormRow>

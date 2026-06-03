@@ -21,7 +21,7 @@ const spec = ref<Metric>({
   validators: [],
   label: null,
   input_hint: '(Select metric)',
-  field_size: 'MEDIUM',
+  field_size: 'medium',
   autocompleter: {
     data: {
       ident: 'monitored_metrics',

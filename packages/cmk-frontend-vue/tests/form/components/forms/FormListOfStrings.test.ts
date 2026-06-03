@@ -29,7 +29,7 @@ const stringFormSpecWithAutocompleter: FormSpec.String = {
   validators: [],
   input_hint: 'Search...',
   autocompleter: { data: { ident: '', params: {} }, fetch_method: 'ajax_vs_autocomplete' },
-  field_size: 'SMALL'
+  field_size: 'small'
 }
 
 const specWithAutocompleter: FormSpec.ListOfStrings = {
@@ -59,7 +59,7 @@ const stringFormSpec: FormSpec.String = {
   validators: stringValidators,
   input_hint: '',
   autocompleter: null,
-  field_size: 'SMALL'
+  field_size: 'small'
 }
 
 const spec: FormSpec.ListOfStrings = {

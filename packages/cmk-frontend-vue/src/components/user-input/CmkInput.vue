@@ -37,7 +37,7 @@ type InputDataType<TType extends InputType> = TType extends 'number' ? number | 
 
 const {
   type = 'text',
-  fieldSize = 'SMALL',
+  fieldSize = 'small',
   unit,
   externalErrors,
   validators,

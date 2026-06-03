@@ -19,7 +19,7 @@ const embeddedSpec: String = {
   help: 'some string help',
   label: null,
   input_hint: 'some string input hint',
-  field_size: 'SMALL',
+  field_size: 'small',
   autocompleter: null,
   validators: []
 }

@@ -43,7 +43,7 @@ const decodedLabel = computed(() => props.component.label?.replace(/&nbsp;/g, '\
       v-model="currentValue"
       type="text"
       :unit="component.suffix || ''"
-      field-size="SMALL"
+      field-size="small"
     />
   </div>
 </template>

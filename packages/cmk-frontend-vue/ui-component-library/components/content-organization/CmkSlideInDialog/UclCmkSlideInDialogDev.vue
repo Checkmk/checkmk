@@ -70,7 +70,7 @@ const catalog = ref<Catalog>({
                   input_hint: 'string input hint',
                   title: 'string title',
                   help: 'some string help',
-                  field_size: 'MEDIUM',
+                  field_size: 'medium',
                   autocompleter: null,
                   validators: []
                 } as String

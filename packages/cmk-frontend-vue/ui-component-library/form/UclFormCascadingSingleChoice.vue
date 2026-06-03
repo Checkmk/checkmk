@@ -56,7 +56,7 @@ const spec = computed(() => {
           label: null,
           validators: [],
           input_hint: 'stringInputHint',
-          field_size: 'SMALL',
+          field_size: 'small',
           autocompleter: null
         } as vue_formspec_components.String
       },
@@ -71,7 +71,7 @@ const spec = computed(() => {
           label: null,
           validators: [],
           input_hint: 'nestedChoiceInputHint',
-          field_size: 'SMALL',
+          field_size: 'small',
           layout: nestedLayout.value,
           no_elements_text: '',
           elements: [
@@ -100,7 +100,7 @@ const spec = computed(() => {
                 label: 'stringLabel',
                 validators: [],
                 input_hint: 'stringInputHint',
-                field_size: 'SMALL',
+                field_size: 'small',
                 autocompleter: null
               } as vue_formspec_components.String
             }

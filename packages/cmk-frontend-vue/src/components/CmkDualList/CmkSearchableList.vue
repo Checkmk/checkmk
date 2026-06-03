@@ -109,7 +109,7 @@ watch(
         :id="`cmk-searchable-list-search-input-${componentId}`"
         v-model="search"
         :aria-label="`${_t('Filter')} ${props.title}`"
-        :field-size="'FILL'"
+        field-size="fill"
       />
       <label
         :for="`cmk-searchable-list-search-input-${componentId}`"

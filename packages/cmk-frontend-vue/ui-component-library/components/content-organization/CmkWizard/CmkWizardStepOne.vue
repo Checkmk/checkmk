@@ -79,7 +79,7 @@ async function validate(): Promise<boolean> {
         :id="nameId"
         v-model="yourName"
         type="text"
-        field-size="MEDIUM"
+        field-size="medium"
         :external-errors="yourNameErrors"
       />
     </template>

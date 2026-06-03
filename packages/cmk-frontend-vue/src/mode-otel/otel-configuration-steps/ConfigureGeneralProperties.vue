@@ -179,7 +179,7 @@ defineExpose({ validate })
       :id="configNameId"
       v-model="configName"
       type="text"
-      field-size="MEDIUM"
+      field-size="medium"
       :placeholder="props.configNamePlaceholder"
       :external-errors="configNameErrors"
       aria-required="true"

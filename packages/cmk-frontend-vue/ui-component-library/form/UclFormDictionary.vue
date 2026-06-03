@@ -100,7 +100,7 @@ const dictionarySpec = computed(
                 name: 'name',
                 parameter_form: {
                   autocompleter: null,
-                  field_size: 'MEDIUM',
+                  field_size: 'medium',
                   help: 'The name is the individual part of the used service name. Choose a human readable and unique title to be able to find your service later in Checkmk.',
                   input_hint: 'My service name',
                   label: null,
@@ -136,7 +136,7 @@ const dictionarySpec = computed(
           name: 'some_string',
           parameter_form: {
             autocompleter: null,
-            field_size: 'MEDIUM',
+            field_size: 'medium',
             help: 'A second string to showcase root level groups.',
             input_hint: null,
             label: null,

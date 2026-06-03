@@ -12,5 +12,5 @@ const username = ref('')
 </script>
 
 <template>
-  <CmkInput v-model="username" type="text" field-size="MEDIUM" />
+  <CmkInput v-model="username" type="text" field-size="medium" />
 </template>

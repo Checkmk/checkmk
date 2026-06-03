@@ -31,7 +31,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
 from cmk.gui.utils import permission_verification as permissions
 
 from ._family import MONITOR_HOSTS_FAMILY
-from ._validators import parse_sort
+from ._validators import parse_host_sort_options
 
 # NOTE: currently hardcoding these constraints. It's to be determined where these should come from,
 # e.g. global settings.
@@ -97,7 +97,7 @@ type Limit = Annotated[
 
 type Sort = Annotated[
     list[HostSort] | ApiOmitted,
-    PlainValidator(func=parse_sort, json_schema_input_type=list[str]),
+    PlainValidator(func=parse_host_sort_options, json_schema_input_type=list[str]),
     QueryParam(
         description=(
             "Repeated sort param. Each value is 'column:direction', e.g. 'name:asc'. "

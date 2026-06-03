@@ -7,7 +7,7 @@
 from cmk.gui.monitor.hosts._models import HostSort, HostSortColumn, HostSortDirection
 
 
-def parse_sort(value: object) -> list[HostSort]:
+def parse_host_sort_options(value: object) -> list[HostSort]:
     """Parse the repeated ``sort`` query param into :class:`HostSort` objects.
 
     Each value defines one sort column; multiple values define a multi-column sort applied in the
@@ -16,7 +16,7 @@ def parse_sort(value: object) -> list[HostSort]:
     """
     if not isinstance(value, list):
         raise ValueError(f"Expected a list of sort values, got {type(value).__name__!r}.")
-    sorts = [_parse_sort_token(token) for token in value]
+    sorts = [_parse_host_sort_option(token) for token in value]
     seen: set[HostSortColumn] = set()
     for sort in sorts:
         if sort.column in seen:
@@ -25,7 +25,7 @@ def parse_sort(value: object) -> list[HostSort]:
     return sorts
 
 
-def _parse_sort_token(token: object) -> HostSort:
+def _parse_host_sort_option(token: object) -> HostSort:
     """Parse a single ``column:direction`` query value into a :class:`HostSort`."""
     if not isinstance(token, str):
         raise ValueError(f"Expected a 'column:direction' string, got {type(token).__name__!r}.")

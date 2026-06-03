@@ -39,9 +39,17 @@ from tests.testlib.rest_api_client import (
     RuleProperties,
 )
 
+# Some core ruleset that is always registered, so this does not pull in the check_parameters
+# plugins. It serialises as a plain ``periodic_discovery = [...]`` assignment, which the
+# on-disk format check in test_openapi_create_rule relies on.
+DEFAULT_RULESET = "periodic_discovery"
 DEFAULT_VALUE_RAW = """{
-    "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-    "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
+    "severity_unmonitored": 1,
+    "severity_changed_service_labels": 0,
+    "severity_changed_service_params": 0,
+    "severity_vanished": 0,
+    "severity_new_host_label": 1,
+    "check_interval": 120.0,
 }"""
 
 DEFAULT_CONDITIONS: RuleConditions = {
@@ -89,17 +97,11 @@ def _create_rule(
     description: str = "",
     documentation_url: str = "",
     disabled: bool = False,
-    ruleset: str = RuleGroup.DiscoveryParameters("inventory_df_rules"),
-    value: dict[str, Any] | list[Any] | tuple | str | None = None,
+    ruleset: str = DEFAULT_RULESET,
     value_raw: str | None = DEFAULT_VALUE_RAW,
     conditions: RuleConditions | None = None,
     expect_ok: bool = True,
 ) -> tuple[Response, dict[str, Any]]:
-    if value is None:
-        value = {
-            "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-            "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-        }
     properties: RuleProperties = {
         "description": description,
         "comment": comment,
@@ -153,9 +155,14 @@ def test_openapi_get_non_existing_rule(clients: ClientRegistry) -> None:
 
 
 def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
-    value_raw = '{"inodes_levels": (10.0, 5.0), "levels": [(0, (0, 0)), (0, (0.0, 0.0))], "magic": 0.8, "trend_perfdata": True}'
+    # Regression guard: a value_raw containing Python tuples must be accepted and parsed.
+    value_raw = """{
+        "name": "API2I",
+        "host": {"address": ("direct", "mimi.ch"), "virthost": "mimi.ch"},
+        "mode": ("url", {"uri": "/lala/misite.html", "ssl": "auto", "urlize": True}),
+    }"""
     clients.Rule.create(
-        ruleset=RuleGroup.CheckgroupParameters("filesystem"),
+        ruleset=RuleGroup.ActiveChecks("http"),
         value_raw=value_raw,
         conditions={},
         folder="~",
@@ -248,7 +255,7 @@ def test_openapi_create_rule(
     # Bundled rulesets like `discovery_parameters:<name>` / `checkgroup_parameters:<name>`
     # are stored as `<parent>['<name>'] = [...]` and therefore need an initial empty
     # dict for the parent variable in the exec context.
-    parent, subkey = values["ruleset"].split(":", 1)
+    parent, _, subkey = values["ruleset"].partition(":")
     default: dict[str, object] = {parent: {}} if subkey else {}
     environ = load_mk_file(rules_mk, default=default, lock=False)
     stored = environ[parent][subkey] if subkey else environ[parent]  # type: ignore[index]
@@ -336,8 +343,11 @@ def test_openapi_show_non_existing_ruleset(clients: ClientRegistry) -> None:
 
 
 def test_openapi_list_rulesets(clients: ClientRegistry) -> None:
-    resp = clients.Ruleset.list(fulltext="cisco_qos", used=False)
-    assert len(resp.json["value"]) == 2
+    resp = clients.Ruleset.list(fulltext="notification_options", used=False)
+    assert {r["id"] for r in resp.json["value"]} == {
+        RuleGroup.ExtraHostConf("notification_options"),
+        RuleGroup.ExtraServiceConf("notification_options"),
+    }
 
 
 def test_create_rule_old_label_format(

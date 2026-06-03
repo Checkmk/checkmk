@@ -100,7 +100,7 @@ py_test(
         "//cmk/gui/openapi/api_endpoints",
         "//cmk/gui/openapi/endpoints",
         "//cmk/gui/openapi/framework",
-        "//cmk/gui/plugins/wato/check_parameters",
+        "//cmk/gui/plugins/wato/check_parameters:stub",
         "//cmk/gui/quick_setup",
         "//cmk/gui/rest_api_types:notifications",
         "//cmk/gui/sidebar",

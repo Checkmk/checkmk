@@ -56,7 +56,7 @@ export const panelConfig = {
   }
 } satisfies PanelConfigFor<
   typeof CmkDualList,
-  'data' | 'backendValidation' | 'validators' | 'elements'
+  'modelValue' | 'backendValidation' | 'validators' | 'elements'
 > & { selectedData: StringArrayPropDef }
 </script>
 
@@ -90,7 +90,7 @@ const elements: DualListElement[] = [
 
 const propState = new PanelStateCreator<
   typeof CmkDualList,
-  'data' | 'backendValidation' | 'validators' | 'elements'
+  'modelValue' | 'backendValidation' | 'validators' | 'elements'
 >().createRef(panelConfig)
 
 const selectedData = computed({
@@ -108,7 +108,7 @@ const selectedData = computed({
 
     <UclDetailPageComponent>
       <CmkDualList
-        v-model:data="selectedData"
+        v-model="selectedData"
         :elements="elements"
         :title="propState.title"
         :validators="[]"

@@ -84,7 +84,7 @@ watch(allowedIds, () => {
 
     <CmkDualList
       v-if="!isLoading"
-      v-model:data="dataElements"
+      v-model="dataElements"
       class="cmk-dual-list__single-list"
       :elements="filteredElements"
       :title="_t('Visual information')"

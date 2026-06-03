@@ -53,7 +53,7 @@ onMounted(async () => {
       <span>{{ _t('Loading') }}</span>
     </div>
     <CmkDualList
-      v-model:data="data"
+      v-model="data"
       :elements="localElements"
       :title="props.spec.title"
       :validators="props.spec.validators"

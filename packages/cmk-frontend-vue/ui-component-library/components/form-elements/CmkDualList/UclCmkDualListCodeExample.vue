@@ -20,7 +20,7 @@ const selectedRoles = ref<DualListElement[]>([availableRoles.value[2]!])
 
 <template>
   <CmkDualList
-    v-model:data="selectedRoles"
+    v-model="selectedRoles"
     :elements="availableRoles"
     title="Assign User Roles"
     :validators="[]"

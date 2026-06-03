@@ -29,7 +29,7 @@ const props = withDefaults(defineProps<CmkDualListProps>(), {
   width: 'medium'
 })
 
-const data = defineModel<DualListElement[]>('data', { required: true })
+const data = defineModel<DualListElement[]>({ required: true })
 
 const unselectedListRef = shallowRef<InstanceType<typeof CmkSearchableList>>()
 const selectedListRef = shallowRef<InstanceType<typeof CmkSearchableList>>()

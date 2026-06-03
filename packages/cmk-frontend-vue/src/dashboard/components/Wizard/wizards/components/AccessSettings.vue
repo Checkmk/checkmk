@@ -168,7 +168,7 @@ if (shareMode.value === 'with_contact_groups' || shareMode.value === 'with_sites
   <CmkInlineValidation v-if="displayDualList && errors.length > 0" :validation="errors" />
   <CmkDualList
     v-if="displayDualList"
-    v-model:data="selectedElements"
+    v-model="selectedElements"
     :elements="availableElements"
     :title="_t('Visual information')"
     :validators="[]"

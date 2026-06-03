@@ -73,7 +73,7 @@ export const panelConfig = {
     title: 'No Results Hint',
     initialState: 'No matches found'
   },
-  selectedOption: {
+  modelValue: {
     type: 'list' as const,
     title: 'Selected Option',
     options: [
@@ -116,9 +116,9 @@ const propState = new PanelStateCreator<
 >().createRef(panelConfig)
 
 const selectedOption = computed<string | null>({
-  get: () => propState.value.selectedOption || null,
+  get: () => propState.value.modelValue || null,
   set: (val) => {
-    propState.value.selectedOption = val ?? ''
+    propState.value.modelValue = val ?? ''
   }
 })
 
@@ -201,7 +201,7 @@ const dynamicOptions = computed<Suggestions>(() => {
 
     <UclDetailPageComponent>
       <CmkDropdown
-        v-model:selected-option="selectedOption"
+        v-model="selectedOption"
         :options="dynamicOptions"
         :input-hint="propState.inputHint"
         :no-results-hint="propState.noResultsHint"

@@ -108,7 +108,7 @@ const formatViewTitle = (
 
     <CmkDropdown
       v-if="!viewsLoading && !dataSourcesLoading && !viewsError && !dataSourcesError"
-      v-model:selected-option="selectedView"
+      v-model="selectedView"
       :options="{ type: 'filtered', suggestions: options }"
       :label="_t('Select view')"
       :input-hint="_t('Choose from available views')"

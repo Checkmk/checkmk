@@ -80,7 +80,7 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
   <div>
     <label>min. opened:</label>
     <CmkDropdown
-      v-model:selected-option="minOpenSelected"
+      v-model="minOpenSelected"
       :options="{
         type: 'fixed' as const,
 
@@ -98,7 +98,7 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
   <div>
     <label>max. opened:</label>
     <CmkDropdown
-      v-model:selected-option="maxOpenSelected"
+      v-model="maxOpenSelected"
       :options="{
         type: 'fixed' as const,
         suggestions: [

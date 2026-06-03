@@ -127,7 +127,7 @@ watch(selectedOperator, (operator) => {
 <template>
   {{ group.title }}
   <CmkDropdown
-    v-model:selected-option="selectedOperator"
+    v-model="selectedOperator"
     :options="{ type: 'fixed', suggestions: operatorChoices }"
     :label="untranslated(props.i18n.choose_operator)"
   />
@@ -148,7 +148,7 @@ watch(selectedOperator, (operator) => {
     >
       <template #item-props="{ index, selectedValue }">
         <CmkDropdown
-          :selected-option="selectedValue"
+          :model-value="selectedValue"
           :options="{
             type: remainingConditions.length > FILTER_SHOW_THRESHOLD - 1 ? 'filtered' : 'fixed',
             suggestions: [
@@ -165,20 +165,20 @@ watch(selectedOperator, (operator) => {
             ]
           }"
           :label="untranslated(props.i18n.choose_condition)"
-          @update:selected-option="(value) => updateMultiValue(index, value!)"
+          @update:model-value="(value) => updateMultiValue(index, value!)"
         />
       </template>
     </CmkList>
   </template>
   <template v-else>
     <CmkDropdown
-      :selected-option="selectedSingleValue"
+      :model-value="selectedSingleValue"
       :options="{
         type: allValueChoices.length > FILTER_SHOW_THRESHOLD ? 'filtered' : 'fixed',
         suggestions: allValueChoices
       }"
       :label="untranslated(props.i18n.choose_condition)"
-      @update:selected-option="(value) => updateValue(selectedOperator, value)"
+      @update:model-value="(value) => updateValue(selectedOperator, value)"
     />
   </template>
 </template>

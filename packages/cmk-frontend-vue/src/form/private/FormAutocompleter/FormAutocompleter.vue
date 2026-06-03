@@ -67,7 +67,7 @@ const slots = useSlots()
 
 <template>
   <CmkDropdown
-    v-model:selected-option="model"
+    v-model="model"
     :options="{ type: 'callback-filtered', querySuggestions: suggestionCallback }"
     :input-hint="placeholder"
     :label="untranslated(label || '')"

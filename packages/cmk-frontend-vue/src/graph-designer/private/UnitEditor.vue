@@ -157,7 +157,7 @@ watch(
     </div>
     <div class="gd-unit-editor__content">
       <CmkDropdown
-        v-model:selected-option="dataUnitChoice"
+        v-model="dataUnitChoice"
         :options="{ type: 'fixed', suggestions: unitChoiceSuggestions }"
         :label="_t('Custom')"
       />
@@ -169,7 +169,7 @@ watch(
           </CmkLabel>
           <CmkIndent>
             <CmkDropdown
-              v-model:selected-option="dataNotation"
+              v-model="dataNotation"
               :component-id="notationId"
               :options="{ type: 'fixed', suggestions: notationSuggestions }"
               :label="_t('Notation')"
@@ -188,7 +188,7 @@ watch(
                   {{ _t('Rounding mode') }}
                 </CmkLabel>
                 <CmkDropdown
-                  v-model:selected-option="dataPrecisionRoundingMode"
+                  v-model="dataPrecisionRoundingMode"
                   :component-id="roundingModeId"
                   :options="{ type: 'fixed', suggestions: precisionRoundingModeSuggestions }"
                   :label="_t('Custom')"

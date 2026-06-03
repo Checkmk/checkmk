@@ -102,7 +102,7 @@ const availableVisualizationTypes = getVisualizationTypes()
         <FieldDescription>{{ _t('Notifications') }}</FieldDescription>
         <FieldComponent>
           <CmkDropdown
-            v-model:selected-option="handler.logtarget.value"
+            v-model="handler.logtarget.value"
             :options="handler.logtargetOptions"
             :label="_t('Notifications')"
           />

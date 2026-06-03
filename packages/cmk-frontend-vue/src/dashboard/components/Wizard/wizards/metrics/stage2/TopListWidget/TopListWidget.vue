@@ -69,7 +69,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
         <FieldDescription>{{ _t('Ranking order') }}</FieldDescription>
         <FieldComponent>
           <CmkDropdown
-            :selected-option="handler.rankingOrder.value"
+            :model-value="handler.rankingOrder.value"
             :label="_t('Select option')"
             :options="{
               type: 'fixed',
@@ -78,7 +78,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
                 { name: 'low', title: _t('Bottom (lowest) N') }
               ]
             }"
-            @update:selected-option="
+            @update:model-value="
               (value) => (handler.rankingOrder.value = value === 'high' ? 'high' : 'low')
             "
           />

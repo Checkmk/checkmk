@@ -167,8 +167,8 @@ const getTagAutocompleter = (index: number): ComputedRef<Autocompleter> =>
         <CmkDropdown
           :options="{ type: 'fixed', suggestions: operatorChoices }"
           :label="_t('Operator')"
-          :selected-option="getOperatorValue(index - 1)"
-          @update:selected-option="(value: string | null) => updateOperator(index - 1, value)"
+          :model-value="getOperatorValue(index - 1)"
+          @update:model-value="(value: string | null) => updateOperator(index - 1, value)"
         />
       </div>
       <div class="db-tag-match-component__value">

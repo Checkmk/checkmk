@@ -107,7 +107,7 @@ const slowOptions: Suggestions = {
 <template>
   <h2>single element, selected</h2>
   <CmkDropdown
-    v-model:selected-option="defaultSelected2"
+    v-model="defaultSelected2"
     :options="{ type: 'fixed', suggestions: [{ name: 'init', title: 'single element' }] }"
     input-hint="some input hint"
     no-results-hint="no results hint"
@@ -117,7 +117,7 @@ const slowOptions: Suggestions = {
   <h2>Labeled dropdown</h2>
   <label for="labeled-dropdown">some label</label>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty1"
+    v-model="defaultEmpty1"
     :options="{
       type: 'fixed',
       suggestions: [
@@ -133,7 +133,7 @@ const slowOptions: Suggestions = {
   />
   <h2>two elements, selected</h2>
   <CmkDropdown
-    v-model:selected-option="defaultSelected1"
+    v-model="defaultSelected1"
     :options="{
       type: 'fixed',
       suggestions: [
@@ -149,7 +149,7 @@ const slowOptions: Suggestions = {
   />
   <h2>no elements</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty2"
+    v-model="defaultEmpty2"
     :options="{
       type: 'fixed',
       suggestions: []
@@ -160,7 +160,7 @@ const slowOptions: Suggestions = {
   />
   <h2>two elements, empty selection</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty2"
+    v-model="defaultEmpty2"
     :options="{
       type: 'fixed',
       suggestions: [
@@ -174,7 +174,7 @@ const slowOptions: Suggestions = {
   />
   <h2>two elements, empty selection, disabled</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty3"
+    v-model="defaultEmpty3"
     :disabled="true"
     :options="{
       type: 'fixed',
@@ -189,7 +189,7 @@ const slowOptions: Suggestions = {
   />
   <h2>no elements, empty selection</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty4"
+    v-model="defaultEmpty4"
     :options="{ type: 'filtered', suggestions: [] }"
     input-hint="some input hint"
     no-results-hint="no results hint"
@@ -198,7 +198,7 @@ const slowOptions: Suggestions = {
   />
   <h2>many elements, filtered, empty selection</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty5"
+    v-model="defaultEmpty5"
     :options="{
       type: 'filtered',
       suggestions: [
@@ -215,7 +215,7 @@ const slowOptions: Suggestions = {
   />
   <h2>callback, filtered, empty selection</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty6"
+    v-model="defaultEmpty6"
     :options="{
       type: 'callback-filtered',
       querySuggestions: async (query) => {
@@ -242,7 +242,7 @@ const slowOptions: Suggestions = {
   />
   <h2>Queried dropdown with unselectable</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty7"
+    v-model="defaultEmpty7"
     :options="{
       type: 'callback-filtered',
       querySuggestions: async (v) => {
@@ -263,7 +263,7 @@ const slowOptions: Suggestions = {
   />
   <h2>Queried dropdown with unselectable as first element</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty3"
+    v-model="defaultEmpty3"
     :options="{
       type: 'callback-filtered',
       querySuggestions: async (v) => {
@@ -294,7 +294,7 @@ const slowOptions: Suggestions = {
     }"
   >
     <CmkDropdown
-      v-model:selected-option="defaultEmpty8"
+      v-model="defaultEmpty8"
       :options="{
         type: 'filtered',
         suggestions: longValues
@@ -305,7 +305,7 @@ const slowOptions: Suggestions = {
     />
     <h2>(wide min width)</h2>
     <CmkDropdown
-      v-model:selected-option="defaultEmpty8"
+      v-model="defaultEmpty8"
       :options="{
         type: 'filtered',
         suggestions: longValues
@@ -317,7 +317,7 @@ const slowOptions: Suggestions = {
     />
     <h2>(fill width)</h2>
     <CmkDropdown
-      v-model:selected-option="defaultEmpty8"
+      v-model="defaultEmpty8"
       :options="{
         type: 'filtered',
         suggestions: longValues
@@ -347,7 +347,7 @@ const slowOptions: Suggestions = {
 
   <h2>very slow callback</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty9"
+    v-model="defaultEmpty9"
     :options="slowOptions"
     input-hint="long dropdown"
     no-results-hint="no results hint"
@@ -366,7 +366,7 @@ const slowOptions: Suggestions = {
 
   <h2>group start</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty4"
+    v-model="defaultEmpty4"
     :options="{ type: 'filtered', suggestions: [] }"
     no-elements-text="no elements"
     label="some label"
@@ -376,7 +376,7 @@ const slowOptions: Suggestions = {
 
   <h2>group end</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty4"
+    v-model="defaultEmpty4"
     :options="{ type: 'filtered', suggestions: [] }"
     no-elements-text="no elements"
     label="some label"
@@ -386,7 +386,7 @@ const slowOptions: Suggestions = {
 
   <h2>group both</h2>
   <CmkDropdown
-    v-model:selected-option="defaultEmpty4"
+    v-model="defaultEmpty4"
     :options="{ type: 'filtered', suggestions: [] }"
     no-elements-text="no elements"
     label="some label"
@@ -398,7 +398,7 @@ const slowOptions: Suggestions = {
   <h1>Error Handling for Callback-Filtered Dropdowns</h1>
   <h2>Graceful error handling with recovery</h2>
   <CmkDropdown
-    v-model:selected-option="errorCase"
+    v-model="errorCase"
     :options="{
       type: 'callback-filtered',
       querySuggestions: async () => {

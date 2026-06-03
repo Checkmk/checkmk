@@ -35,7 +35,6 @@ export interface DropdownOption {
 }
 
 const {
-  selectedOption: selectedOptionPublic,
   inputHint = untranslated(''),
   noResultsHint = '',
   disabled = false,
@@ -47,7 +46,6 @@ const {
   label,
   formValidation = false
 } = defineProps<{
-  selectedOption: string | null
   options: Suggestions
   inputHint?: TranslatedString
   noResultsHint?: TranslatedString
@@ -60,6 +58,8 @@ const {
   formValidation?: boolean
 }>()
 
+const selectedOptionPublic = defineModel<string | null>({ default: null })
+
 const vClickOutside = useClickOutside()
 
 const buttonLabel = ref<TranslatedString>(inputHint)
@@ -69,13 +69,9 @@ const internallyDisabled = ref<boolean>(false)
 
 const selectedOption = ref<SuggestionValue>(new NoSelection())
 
-const emit = defineEmits<{
-  (e: 'update:selectedOption', value: string | null): void
-}>()
-
 immediateWatch(
   () => ({
-    newValue: selectedOptionPublic,
+    newValue: selectedOptionPublic.value,
     newOptions: options
   }),
   async ({ newValue, newOptions }) => {
@@ -88,7 +84,7 @@ immediateWatch(
     callbackFilteredLoading.value = false
     internallyDisabled.value = false
     // Only update if the selected option hasn't changed again while awaiting
-    if (newValue === selectedOptionPublic) {
+    if (newValue === selectedOptionPublic.value) {
       buttonLabel.value = currentSelectionState.buttonLabel
       selectedOption.value = currentSelectionState.value
     }
@@ -233,7 +229,7 @@ function handleUpdate(selected: Suggestion | null): void {
       ? new NoSelection()
       : new SelectionWithTitle(selected.name, selected.title)
   selectedOption.value = newValue
-  emit('update:selectedOption', newValue.getName())
+  selectedOptionPublic.value = newValue.getName()
   callbackFilteredErrorMessage.value = null
   hideSuggestions()
 }

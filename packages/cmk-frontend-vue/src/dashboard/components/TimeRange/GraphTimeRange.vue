@@ -250,7 +250,7 @@ const isCustomDateSelected = computed(() => selectedDropdownOption.value === cus
 <template>
   <div>
     <CmkDropdown
-      v-model:selected-option="selectedDropdownOption"
+      v-model="selectedDropdownOption"
       :options="{ type: 'fixed', suggestions: dropdownOptions }"
       :label="_t('Time range')"
     />

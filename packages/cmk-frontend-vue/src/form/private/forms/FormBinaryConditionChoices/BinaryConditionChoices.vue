@@ -62,7 +62,7 @@ function addItem() {
         <tr v-for="(item, itemIndex) in data" :key="itemIndex">
           <td v-if="itemIndex === 0">
             <CmkDropdown
-              v-model:selected-option="item.operator"
+              v-model="item.operator"
               :options="{
                 type: 'fixed',
                 suggestions: firstOperatorSuggestions
@@ -75,7 +75,7 @@ function addItem() {
           </td>
           <td v-else>
             <CmkDropdown
-              v-model:selected-option="item.operator"
+              v-model="item.operator"
               :options="{
                 type: 'fixed',
                 suggestions: operatorSuggestions
@@ -107,7 +107,7 @@ function addItem() {
         <tr>
           <td v-if="displayFirstOperators()">
             <CmkDropdown
-              v-model:selected-option="defaultOperator"
+              v-model="defaultOperator"
               :options="{
                 type: 'fixed',
                 suggestions: firstOperatorSuggestions
@@ -120,7 +120,7 @@ function addItem() {
           </td>
           <td v-else>
             <CmkDropdown
-              v-model:selected-option="defaultOperator"
+              v-model="defaultOperator"
               :options="{
                 type: 'fixed',
                 suggestions: operatorSuggestions

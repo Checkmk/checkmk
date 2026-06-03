@@ -55,7 +55,7 @@ const hexagonSizeHelpText = _t(
         <FieldDescription>{{ _t('Show state of') }}</FieldDescription>
         <FieldComponent>
           <CmkDropdown
-            v-model:selected-option="handler.showStateOf.value as string"
+            v-model="handler.showStateOf.value as string"
             :label="_t('Select option')"
             :options="{
               type: 'fixed',

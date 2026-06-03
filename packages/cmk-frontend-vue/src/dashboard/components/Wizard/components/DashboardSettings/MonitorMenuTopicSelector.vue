@@ -42,13 +42,13 @@ onBeforeMount(async () => {
   <CmkCheckbox v-model="showInMonitorMenu" :label="_t('Show in monitor menu')" />
   <CmkIndent v-if="showInMonitorMenu">
     <CmkDropdown
-      :selected-option="selectedTopic"
+      :model-value="selectedTopic"
       :label="_t('Select option')"
       :options="{
         type: 'fixed',
         suggestions: topics
       }"
-      @update:selected-option="(value) => (selectedTopic = value || selectedTopic)"
+      @update:model-value="(value) => (selectedTopic = value || selectedTopic)"
     />
   </CmkIndent>
 </template>

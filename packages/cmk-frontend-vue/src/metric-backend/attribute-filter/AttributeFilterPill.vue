@@ -175,7 +175,7 @@ const operatorOptions = computed(() => ({
       >
         <CmkDropdown
           ref="attributeTypeDropdownRef"
-          v-model:selected-option="attributeTypeInput"
+          v-model="attributeTypeInput"
           :options="attributeTypeOptions"
           :disabled="!condition.key"
           :input-hint="_t('Attribute type')"
@@ -188,23 +188,23 @@ const operatorOptions = computed(() => ({
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--key"
       >
         <CmkDropdown
-          :selected-option="condition.key || null"
+          :model-value="condition.key || null"
           :options="{ type: 'callback-filtered', querySuggestions }"
           :label="_t('Attribute key')"
           :input-hint="_t('Attribute key')"
           required
           :form-validation="!isPristine && keyEmpty"
-          @update:selected-option="onKeyUpdate"
+          @update:model-value="onKeyUpdate"
         />
       </span>
       <span
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator"
       >
         <CmkDropdown
-          :selected-option="condition.operator"
+          :model-value="condition.operator"
           :options="operatorOptions"
           :label="_t('Attribute operator')"
-          @update:selected-option="onOperatorUpdate"
+          @update:model-value="onOperatorUpdate"
         />
       </span>
       <span
@@ -213,13 +213,13 @@ const operatorOptions = computed(() => ({
       >
         <CmkDropdown
           ref="valueDropdownRef"
-          :selected-option="condition.value || null"
+          :model-value="condition.value || null"
           :options="valueOptions"
           :label="_t('Attribute value')"
           :input-hint="_t('Attribute value')"
           required
           :form-validation="!isPristine && valueEmpty"
-          @update:selected-option="onValueUpdate"
+          @update:model-value="onValueUpdate"
         />
       </span>
     </span>

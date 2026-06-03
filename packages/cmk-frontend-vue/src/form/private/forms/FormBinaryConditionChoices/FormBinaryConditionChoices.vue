@@ -62,7 +62,7 @@ function removeGroup(groupIndex: number) {
           </td>
           <td v-else class="form-binary-condition-choices__first-line">
             <CmkDropdown
-              v-model:selected-option="group.operator"
+              v-model="group.operator"
               :options="{
                 type: 'fixed',
                 suggestions: operatorSuggestions

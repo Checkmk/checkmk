@@ -74,7 +74,7 @@ watch(
     <CmkLabel v-if="props.readOnly">{{ selectedModeTitle }}</CmkLabel>
     <CmkDropdown
       v-else
-      v-model:selected-option="mode"
+      v-model="mode"
       :options="dropdownOptions"
       :label="_t('Select specific object type')"
     />

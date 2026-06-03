@@ -199,7 +199,7 @@ const validation = computed((): ValidationMessages => {
   <p>
     <CmkHeading>Dictionary type:</CmkHeading>
     <CmkDropdown
-      v-model:selected-option="dictType"
+      v-model="dictType"
       :options="{ type: 'fixed', suggestions: DICT_TYPES }"
       label="Group"
     />
@@ -207,7 +207,7 @@ const validation = computed((): ValidationMessages => {
   <p>
     <CmkHeading>Dictionary top level group:</CmkHeading>
     <CmkDropdown
-      v-model:selected-option="topLevelGroup"
+      v-model="topLevelGroup"
       :options="{ type: 'fixed', suggestions: GROUP_OPTIONS }"
       label="Group"
     />
@@ -215,7 +215,7 @@ const validation = computed((): ValidationMessages => {
   <p>
     <CmkHeading>Dictionary element group:</CmkHeading>
     <CmkDropdown
-      v-model:selected-option="childGroup"
+      v-model="childGroup"
       :options="{ type: 'fixed', suggestions: GROUP_OPTIONS }"
       label="Group"
     />

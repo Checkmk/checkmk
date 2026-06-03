@@ -55,7 +55,7 @@ const errors = computed((): { address: string[]; port: string[] } => {
 <template>
   <CmkLabel :for="socketAddressId">{{ _t('Socket address to listen on') }}</CmkLabel>
   <CmkDropdown
-    v-model:selected-option="endpoint.socketAddressType"
+    v-model="endpoint.socketAddressType"
     :component-id="socketAddressId"
     :options="{ type: 'fixed', suggestions: socketAddressOptions }"
     :label="_t('Socket address to listen on')"

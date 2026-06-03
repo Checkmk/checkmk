@@ -95,7 +95,7 @@ watch(
     </div>
     <div class="gd-explicit-vertical-range-editor__content">
       <CmkDropdown
-        v-model:selected-option="dataExplicitVerticalRange"
+        v-model="dataExplicitVerticalRange"
         :options="{ type: 'fixed', suggestions: explicitVerticalRangeSuggestions }"
         :label="_t('Strict')"
       />

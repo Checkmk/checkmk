@@ -22,7 +22,7 @@ test('dropdown shows options', async () => {
           { title: 'Option 2', name: 'option2' }
         ]
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'some aria label'
     }
@@ -42,7 +42,7 @@ test('dropdown shows no elements text without elements', async () => {
         type: 'fixed',
         suggestions: []
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       noElementsText: 'No options available',
       label: 'some aria label'
@@ -64,7 +64,7 @@ test('dropdown marks selectedOptions as selected', async () => {
           { title: 'Option 2', name: 'option2' }
         ]
       },
-      selectedOption: 'preselected_option',
+      modelValue: 'preselected_option',
       inputHint: 'Select an option',
       label: 'some aria label'
     }
@@ -88,10 +88,10 @@ test('dropdown updates selecedOption', async () => {
         { title: 'Option 2', name: 'option2' }
       ]
     },
-    selectedOption: null,
+    modelValue: null,
     inputHint: 'Select an option',
     showFilter: true,
-    'onUpdate:selectedOption': (option: string | null) => {
+    'onUpdate:modelValue': (option: string | null) => {
       selectedOption = option
     },
     label: 'some aria label'
@@ -111,7 +111,7 @@ test('dropdown shows inputHint when noElementsText is empty and there are no ele
   render(CmkDropdown, {
     props: {
       options: { type: 'fixed', suggestions: [] },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       noElementsText: '',
       label: 'some aria label'
@@ -132,7 +132,7 @@ test('dropdown shows and hides options', async () => {
           { title: 'Option 2', name: 'option2' }
         ]
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'some aria label'
     }
@@ -173,7 +173,7 @@ test('dropdown changes label if options change', async () => {
       }">Change Options</button>
       <CmkDropdown
         :options="options"
-        :selected-option="selectedOption"
+        :model-value="selectedOption"
         input-hint="Select an option"
         label="some aria label"
       />
@@ -197,7 +197,7 @@ test('dropdown resets label if option is reset', async () => {
     template: `
       <button @click="selectedOption = null">Reset</button>
       <CmkDropdown
-        v-model:selected-option="selectedOption"
+        v-model="selectedOption"
         :options="{
           type: 'fixed',
           suggestions: [
@@ -245,7 +245,7 @@ test('dropdown handles race condition when resetting value', async () => {
       },
       template: `
       <CmkDropdown
-        v-model:selected-option="selectedOption"
+        v-model="selectedOption"
         :options="{ type: 'callback-filtered', querySuggestions }"
         input-hint="Select an option"
         label="some aria label"
@@ -290,7 +290,7 @@ test('dropdown hides after clicking already selected option', async () => {
           { title: 'Option 2', name: 'option2' }
         ]
       },
-      selectedOption: 'option1',
+      modelValue: 'option1',
       inputHint: 'Select an option',
       label: 'some aria label'
     }
@@ -321,9 +321,9 @@ test.each([{ showFilter: true }, { showFilter: false }])(
             { title: 'Option 2', name: 'option2' }
           ]
         },
-        selectedOption: null,
+        modelValue: null,
         inputHint: 'Select an option',
-        'onUpdate:selectedOption': (option: string | null) => {
+        'onUpdate:modelValue': (option: string | null) => {
           selectedOption = option
         },
         label: 'some aria label'
@@ -349,9 +349,9 @@ test('dropdown option selection via keyboard wraps', async () => {
           { title: 'Option 2', name: 'option2' }
         ]
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
-      'onUpdate:selectedOption': (option: string | null) => {
+      'onUpdate:modelValue': (option: string | null) => {
         selectedOption = option
       },
       label: 'some aria label'
@@ -378,9 +378,9 @@ test('dropdown option keyboard selection with filtering wraps', async () => {
           { title: 'Foo', name: 'foo' }
         ]
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
-      'onUpdate:selectedOption': (option: string | null) => {
+      'onUpdate:modelValue': (option: string | null) => {
         selectedOption = option
       },
       label: 'some aria label'
@@ -404,7 +404,7 @@ test('dropdown keyboard can handle empty dropdown', async () => {
           { title: 'Option 2', name: 'option2' }
         ]
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'some aria label'
     }
@@ -426,7 +426,7 @@ test('dropdown keyboard can handle selection filtered away dropdown', async () =
           { title: 'Option 2', name: 'option2' }
         ]
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'some aria label'
     }
@@ -451,9 +451,9 @@ test('dropdown option immediate focus and filtering', async () => {
           { title: 'Option 2', name: 'option2' }
         ]
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
-      'onUpdate:selectedOption': (option: string | null) => {
+      'onUpdate:modelValue': (option: string | null) => {
         selectedOption = option
       },
       label: 'some aria label'
@@ -492,7 +492,7 @@ test('dropdown shows required if required is passed', async () => {
           { title: 'Option 2', name: 'option2' }
         ]
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       required: true,
       label: 'some aria label'
@@ -513,7 +513,7 @@ test('dropdown does not show required if required is not passed', async () => {
           { title: 'Option 2', name: 'option2' }
         ]
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'some aria label'
     }
@@ -531,7 +531,7 @@ test('dropdown still clickable if only option is already selected', async () => 
         type: 'filtered',
         suggestions: [{ title: 'Option 1', name: 'option1' }]
       },
-      selectedOption: 'option1',
+      modelValue: 'option1',
       label: 'some aria label'
     }
   })
@@ -550,7 +550,7 @@ test('dropdown clickable if only one option is available', async () => {
         type: 'filtered',
         suggestions: [{ title: 'Option 1', name: 'option1' }]
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'some aria label'
     }
@@ -572,14 +572,14 @@ test('dropdown doesnt interfere with tab order', async () => {
     template: `
       <div>
         <CmkDropdown
-          :selected-option="selectedOption"
+          :model-value="selectedOption"
           :options="{type: 'filtered', suggestions: [
             { title: 'Option 1', name: 'option1' },
             { title: 'Option 2', name: 'option2' }
           ]}"
           label="some aria label in template"
           input-hint="Select an option"
-          @update:selected-option="$emit('update:selectedOption', $event)"
+          @update:model-value="$emit('update:modelValue', $event)"
         />
         <input data-testid="next-input" type="text" />
       </div>
@@ -596,7 +596,7 @@ test('dropdown doesnt interfere with tab order', async () => {
   await userEvent.keyboard('[Space]')
   await screen.findByText('Option 1') // wait for suggestions to be rendered
   await userEvent.keyboard('[ArrowDown][Enter]')
-  expect(emitted('update:selectedOption')).toEqual([['option2']])
+  expect(emitted('update:modelValue')).toEqual([['option2']])
   expect(document.activeElement).toBe(dropdown)
 
   // Tab to the next element
@@ -633,10 +633,10 @@ test('dropdown with callback and freeform element in first place still selects c
           ])
         }
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'some aria label',
-      'onUpdate:selectedOption': (option: string | null) => {
+      'onUpdate:modelValue': (option: string | null) => {
         selectedOption = option
       }
     }
@@ -667,7 +667,7 @@ test('dropdown with callback and unselectable suggestion shows title', async () 
           ])
         }
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'dropdown-label'
     }
@@ -694,10 +694,10 @@ test('dropdown with callback and unselectable selects first selectable suggestio
           ])
         }
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'dropdown-label',
-      'onUpdate:selectedOption': (option: string | null) => {
+      'onUpdate:modelValue': (option: string | null) => {
         selectedOption = option
       }
     }
@@ -726,10 +726,10 @@ test('dropdown with callback and unselectable selects wraps up', async () => {
           ])
         }
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'dropdown-label',
-      'onUpdate:selectedOption': (option: string | null) => {
+      'onUpdate:modelValue': (option: string | null) => {
         selectedOption = option
       }
     }
@@ -758,10 +758,10 @@ test('dropdown with callback skips unselectable with keyboard', async () => {
           ])
         }
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'dropdown-label',
-      'onUpdate:selectedOption': (option: string | null) => {
+      'onUpdate:modelValue': (option: string | null) => {
         selectedOption = option
       }
     }
@@ -790,10 +790,10 @@ test('dropdown unselectable is unselectable', async () => {
           ])
         }
       },
-      selectedOption,
+      modelValue: selectedOption,
       inputHint: 'Select an option',
       label: 'dropdown-label',
-      'onUpdate:selectedOption': (option: string | null) => {
+      'onUpdate:modelValue': (option: string | null) => {
         selectedOption = option
       }
     }
@@ -819,7 +819,7 @@ test('dropdown with callback-filtered shows error message when callback returns 
           return new ErrorResponse(errorMessage)
         }
       },
-      selectedOption: 'invalid_value',
+      modelValue: 'invalid_value',
       inputHint: 'Select an option',
       label: 'dropdown-label'
     }
@@ -853,10 +853,10 @@ test('dropdown with callback-filtered clears error message after successful sele
           ])
         }
       },
-      selectedOption,
+      modelValue: selectedOption,
       inputHint: 'Select an option',
       label: 'dropdown-label',
-      'onUpdate:selectedOption': (option: string | null) => {
+      'onUpdate:modelValue': (option: string | null) => {
         selectedOption = option
       }
     }
@@ -891,7 +891,7 @@ test('dropdown with callback-filtered shows warning message when callback return
           ])
         }
       },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'dropdown-label'
     }
@@ -920,7 +920,7 @@ test('dropdown with callback-filtered options prefills filter input', async () =
           ])
         }
       },
-      selectedOption,
+      modelValue: selectedOption,
       inputHint: 'Select an option',
       label: 'dropdown-label'
     }
@@ -951,7 +951,7 @@ test('callback-filtered dropdown debounces querySuggestions while typing', async
   render(CmkDropdown, {
     props: {
       options: { type: 'callback-filtered', querySuggestions },
-      selectedOption: null,
+      modelValue: null,
       inputHint: 'Select an option',
       label: 'some aria label'
     }
@@ -991,7 +991,7 @@ test('callback-filtered dropdown makes only one request when reopened after sele
     render(CmkDropdown, {
       props: {
         options: { type: 'callback-filtered', querySuggestions },
-        selectedOption: null,
+        modelValue: null,
         inputHint: 'Select an option',
         label: 'some aria label'
       }
@@ -1027,7 +1027,7 @@ test('dropdown with filtered options does not prefill filter input', async () =>
           { name: 'option3', title: 'Option 3' }
         ]
       },
-      selectedOption,
+      modelValue: selectedOption,
       inputHint: 'Select an option',
       label: 'dropdown-label'
     }
@@ -1067,7 +1067,7 @@ test('open() suppresses trailing click-outside across microtask checkpoint', asy
     template: `
       <CmkDropdown
         :ref="captureRef"
-        :selected-option="null"
+        :model-value="null"
         :options="{ type: 'fixed', suggestions: [{ title: 'Option 1', name: 'option1' }] }"
         input-hint="Select an option"
         label="dropdown-label"

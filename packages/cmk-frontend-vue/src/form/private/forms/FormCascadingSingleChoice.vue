@@ -142,7 +142,7 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
       </template>
       <template v-else>
         <CmkDropdown
-          v-model:selected-option="selectedOption"
+          v-model="selectedOption"
           :component-id="componentId"
           :options="{
             type: spec.elements.length > FILTER_SHOW_THRESHOLD ? 'filtered' : 'fixed',

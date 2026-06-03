@@ -45,7 +45,7 @@ const options = computed<Array<Suggestion>>(() =>
 
     <CmkDropdown
       v-if="!isLoading && !error"
-      v-model:selected-option="selectedDatasource"
+      v-model="selectedDatasource"
       :options="{ type: 'filtered', suggestions: options }"
       :label="_t('Select datasource')"
       :input-hint="_t('Choose from available datasources')"

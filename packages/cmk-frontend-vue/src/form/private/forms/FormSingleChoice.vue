@@ -47,7 +47,7 @@ const componentId = useId()
         </div>
         <CmkDropdown
           v-else
-          v-model:selected-option="value"
+          v-model="value"
           :options="{
             type: props.spec.elements.length > 5 ? 'filtered' : 'fixed',
             suggestions: props.spec.elements.map((element) => ({

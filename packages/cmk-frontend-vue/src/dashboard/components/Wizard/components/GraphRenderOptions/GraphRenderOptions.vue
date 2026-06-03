@@ -65,7 +65,7 @@ const displayColorChooser = computed(() => color.value !== undefined && colorOpt
           <CmkCheckbox v-model:model-value="verticalAxis" :label="_t('Vertical axis')" />
           <CmkIndent>
             <CmkDropdown
-              :selected-option="verticalAxisWidthMode"
+              :model-value="verticalAxisWidthMode"
               :label="_t('Select option')"
               :options="{
                 type: 'fixed',
@@ -74,7 +74,7 @@ const displayColorChooser = computed(() => color.value !== undefined && colorOpt
                   { name: 'absolute', title: _t('Use absolute width:') }
                 ]
               }"
-              @update:selected-option="
+              @update:model-value="
                 (value) => {
                   verticalAxisWidthMode = value === 'fixed' ? 'fixed' : 'absolute'
                 }

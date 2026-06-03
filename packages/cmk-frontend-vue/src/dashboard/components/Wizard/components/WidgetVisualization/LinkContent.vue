@@ -62,7 +62,7 @@ watch(
     <div class="db-link-content__container">
       <div class="db-link-content__item">
         <CmkDropdown
-          v-model:selected-option="linkType"
+          v-model="linkType"
           :label="_t('Select a category')"
           :options="{ type: 'fixed', suggestions: linkOptions }"
         />
@@ -70,7 +70,7 @@ watch(
       <div class="db-link-content__item">
         <CmkDropdown
           v-if="linkType === 'dashboards'"
-          v-model:selected-option="linkTarget"
+          v-model="linkTarget"
           :label="_t('Select a target')"
           :options="{ type: 'filtered', suggestions: dashboardTargets }"
         />

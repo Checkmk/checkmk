@@ -99,8 +99,8 @@ if (model.value.length === 0) {
               v-else
               :options="{ type: 'fixed', suggestions: operatorChoices }"
               :label="_t('Group Operator')"
-              :selected-option="operator"
-              @update:selected-option="(value: string | null) => updateGroupOperator(index, value)"
+              :model-value="operator"
+              @update:model-value="(value: string | null) => updateGroupOperator(index, value)"
             />
           </div>
           <div class="query-group__content">

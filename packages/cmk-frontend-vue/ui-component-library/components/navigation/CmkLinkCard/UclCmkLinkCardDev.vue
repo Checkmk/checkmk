@@ -18,7 +18,7 @@ const contrastSelected = ref<'standard' | 'high'>('standard')
 <template>
   <label>Borders: </label>
   <CmkDropdown
-    v-model:selected-option="bordersSelected"
+    v-model="bordersSelected"
     :options="{
       type: 'fixed',
       suggestions: [
@@ -34,7 +34,7 @@ const contrastSelected = ref<'standard' | 'high'>('standard')
   <br />
   <label>Contrast: </label>
   <CmkDropdown
-    v-model:selected-option="contrastSelected"
+    v-model="contrastSelected"
     :options="{
       type: 'fixed',
       suggestions: [

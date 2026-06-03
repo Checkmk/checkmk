@@ -93,7 +93,7 @@ const inventoryPathError = computed(() => {
         <div class="db-stage-contents__field-component-item">
           <CmkInlineValidation :validation="inventoryPathError" />
           <CmkDropdown
-            v-model:selected-option="inventoryPath"
+            v-model="inventoryPath"
             width="fill"
             :input-hint="_t('Select single value')"
             :label="_t('Inventory path')"

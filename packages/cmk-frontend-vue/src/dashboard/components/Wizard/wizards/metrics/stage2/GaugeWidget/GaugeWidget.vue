@@ -57,7 +57,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
         <FieldDescription>{{ _t('Time range') }}</FieldDescription>
         <FieldComponent>
           <CmkDropdown
-            :selected-option="handler.timeRangeType.value"
+            :model-value="handler.timeRangeType.value"
             :label="_t('Select option')"
             :options="{
               type: 'fixed',
@@ -66,7 +66,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
                 { name: 'window', title: _t('Show historic values') }
               ]
             }"
-            @update:selected-option="
+            @update:model-value="
               (value) => {
                 handler.timeRangeType.value = value === 'current' ? 'current' : 'window'
               }

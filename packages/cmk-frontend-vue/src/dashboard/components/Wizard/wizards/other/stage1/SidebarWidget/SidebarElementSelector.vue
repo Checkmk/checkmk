@@ -43,7 +43,7 @@ const dropdownOptions = computed<Suggestion[]>(() =>
   </div>
   <template v-else>
     <CmkDropdown
-      v-model:selected-option="selectedSidebarElement"
+      v-model="selectedSidebarElement"
       :options="{ type: 'filtered', suggestions: dropdownOptions }"
       :label="_t('Select option')"
       width="fill"

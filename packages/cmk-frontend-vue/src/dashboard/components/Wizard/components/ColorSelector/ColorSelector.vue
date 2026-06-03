@@ -46,7 +46,7 @@ const extendedSuggestions = computed(() => [
 <template>
   <div>
     <CmkDropdown
-      v-model:selected-option="mainSelectorOption as string"
+      v-model="mainSelectorOption as string"
       :label="_t('Select option')"
       :options="{
         type: 'fixed',

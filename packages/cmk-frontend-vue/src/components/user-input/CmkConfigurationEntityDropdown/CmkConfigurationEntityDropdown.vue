@@ -171,7 +171,7 @@ const { CmkErrorBoundary, error } = useCmkErrorBoundary()
 
 <template>
   <CmkDropdown
-    v-model:selected-option="selectedObjectId"
+    v-model="selectedObjectId"
     :options="{
       type: choices.length > 5 ? 'filtered' : 'fixed',
       suggestions: choices

@@ -108,7 +108,7 @@ const elementRequired = computed(() => {
     </template>
   </CmkList>
   <CmkDropdown
-    v-model:selected-option="selectedConditionGroup"
+    v-model="selectedConditionGroup"
     :options="{
       type: remainingGroups.length > FILTER_SHOW_THRESHOLD ? 'filtered' : 'fixed',
       suggestions: remainingGroups.map(([name, value]) => ({
@@ -120,6 +120,6 @@ const elementRequired = computed(() => {
     :required="elementRequired"
     :no-elements-text="untranslated(spec.i18n.no_more_condition_groups_to_add)"
     :label="untranslated(spec.i18n.select_condition_group_to_add)"
-    @update:selected-option="addElement"
+    @update:model-value="addElement"
   />
 </template>

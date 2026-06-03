@@ -61,12 +61,12 @@ const handleValueUpdate = (value: string | null): void => {
 
 <template>
   <CmkDropdown
-    :selected-option="currentValue"
+    :model-value="currentValue"
     :options="dropdownOptions"
     :label="untranslated(component.label ?? '')"
     :input-hint="_t('Select an option...')"
     :no-results-hint="_t('No options available')"
     :width="`fill`"
-    @update:selected-option="handleValueUpdate"
+    @update:model-value="handleValueUpdate"
   />
 </template>

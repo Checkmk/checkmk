@@ -40,7 +40,7 @@ const isShowBackground = computed({
     <div class="db-show-service-status__item">
       <CmkLabel>{{ _t('Show label for') }}</CmkLabel> <CmkSpace />
       <CmkDropdown
-        v-model:selected-option="showServiceStatusSelection as string"
+        v-model="showServiceStatusSelection as string"
         :label="_t('Show label for')"
         :options="{
           type: 'fixed',

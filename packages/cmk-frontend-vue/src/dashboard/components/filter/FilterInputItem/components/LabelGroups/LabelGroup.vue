@@ -123,8 +123,8 @@ if (model.value.length === 0) {
               <CmkDropdown
                 :options="{ type: 'fixed', suggestions: getOperatorChoices(index) }"
                 :label="_t('Operator')"
-                :selected-option="getCurrentOperatorValue(index)"
-                @update:selected-option="(value: string | null) => updateOperator(index, value)"
+                :model-value="getCurrentOperatorValue(index)"
+                @update:model-value="(value: string | null) => updateOperator(index, value)"
               />
             </div>
             <div class="db-label-group__item-label">

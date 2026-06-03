@@ -189,7 +189,7 @@ defineExpose({ validate })
     <CmkLabel :for="siteDropdownId">{{ _t('Site selection') }} <CmkLabelRequired /></CmkLabel>
     <div class="mode-otel-configure-general-properties__field-with-error">
       <CmkDropdown
-        v-model:selected-option="siteId"
+        v-model="siteId"
         :component-id="siteDropdownId"
         :options="{ type: 'fixed', suggestions: siteOptions }"
         :input-hint="isLoading ? _t('Loading...') : _t('Select site')"

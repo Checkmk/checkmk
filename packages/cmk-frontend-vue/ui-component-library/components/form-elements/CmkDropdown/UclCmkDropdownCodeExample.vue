@@ -21,7 +21,7 @@ const options: Suggestions = {
 
 <template>
   <CmkDropdown
-    v-model:selected-option="selected"
+    v-model="selected"
     :options="options"
     input-hint="Input Hint"
     no-results-hint="No Results Hint"

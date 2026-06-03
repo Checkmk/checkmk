@@ -34,13 +34,13 @@ const rangeErrors = computed(() =>
 <template>
   <div style="padding-top: 5px">
     <CmkDropdown
-      :selected-option="dataRangeSymbol"
+      :model-value="dataRangeSymbol"
       :label="_t('Select option')"
       :options="{
         type: 'fixed',
         suggestions: DATA_RANGE_SYMBOL_SUGGESTIONS
       }"
-      @update:selected-option="(value) => (dataRangeSymbol = value || dataRangeSymbol)"
+      @update:model-value="(value) => (dataRangeSymbol = value || dataRangeSymbol)"
     />
   </div>
 

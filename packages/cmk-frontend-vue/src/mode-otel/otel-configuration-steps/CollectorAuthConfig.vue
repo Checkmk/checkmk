@@ -99,7 +99,7 @@ const passwordErrors = computed<string[]>(() => {
 <template>
   <CmkLabel :for="authMethodId">{{ _t('Authentication method') }}</CmkLabel>
   <CmkDropdown
-    v-model:selected-option="auth.method"
+    v-model="auth.method"
     :component-id="authMethodId"
     :options="{ type: 'fixed', suggestions: authMethodOptions }"
     :label="_t('Authentication method')"
@@ -122,7 +122,7 @@ const passwordErrors = computed<string[]>(() => {
       <div class="mode-otel-collector-auth-config__password-row">
         <CmkDropdown
           :key="availablePasswords.length"
-          v-model:selected-option="auth.credential.password"
+          v-model="auth.credential.password"
           :component-id="passwordId"
           :options="{ type: 'fixed', suggestions: availablePasswords }"
           :input-hint="_t('Select password')"

@@ -130,8 +130,8 @@ onMounted(() => {
         :component-id="`${uid}-${key}`"
         :label="def.title"
         :options="{ type: 'fixed', suggestions: (def as ListPropDef).options }"
-        :selected-option="state[key] as string"
-        @update:selected-option="$event !== null && (state[key] = $event)"
+        :model-value="state[key] as string"
+        @update:model-value="$event !== null && (state[key] = $event)"
       />
       <UclStringArrayTextarea
         v-else-if="def.type === 'string-array'"

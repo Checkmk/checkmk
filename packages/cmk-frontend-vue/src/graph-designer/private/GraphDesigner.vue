@@ -1196,7 +1196,7 @@ const graphDesignerContentAsJson = computed(() => {
 
         <td class="narrow">
           <CmkDropdown
-            v-model:selected-option="graphLine.line_type"
+            v-model="graphLine.line_type"
             :options="{
               type: 'fixed',
               suggestions: formLineTypeSuggestions
@@ -1236,7 +1236,7 @@ const graphDesignerContentAsJson = computed(() => {
               </template>
               <template #metric_type>
                 <CmkDropdown
-                  v-model:selected-option="graphLine.consolidation_type"
+                  v-model="graphLine.consolidation_type"
                   :options="{
                     type: 'fixed',
                     suggestions: consolidationTypeSuggestions
@@ -1261,7 +1261,7 @@ const graphDesignerContentAsJson = computed(() => {
               </template>
               <template #metric_type>
                 <CmkDropdown
-                  v-model:selected-option="graphLine.scalar_type"
+                  v-model="graphLine.scalar_type"
                   :options="{
                     type: 'fixed',
                     suggestions: scalarTypeSuggestions
@@ -1342,7 +1342,7 @@ const graphDesignerContentAsJson = computed(() => {
           </template>
           <template #metric_type>
             <CmkDropdown
-              v-model:selected-option="dataConsolidationType"
+              v-model="dataConsolidationType"
               :options="{
                 type: 'fixed',
                 suggestions: consolidationTypeSuggestions
@@ -1370,7 +1370,7 @@ const graphDesignerContentAsJson = computed(() => {
           </template>
           <template #metric_type>
             <CmkDropdown
-              v-model:selected-option="dataScalarType"
+              v-model="dataScalarType"
               :options="{
                 type: 'fixed',
                 suggestions: scalarTypeSuggestions

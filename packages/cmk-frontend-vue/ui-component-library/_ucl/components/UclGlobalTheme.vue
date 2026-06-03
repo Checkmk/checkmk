@@ -46,7 +46,7 @@ const themeOptions = [
 
 <template>
   <CmkDropdown
-    v-model:selected-option="selectedThemeModel"
+    v-model="selectedThemeModel"
     :options="{ type: 'fixed', suggestions: themeOptions }"
     label="Theme"
   />

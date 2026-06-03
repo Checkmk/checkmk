@@ -23,7 +23,7 @@ const dataRangeMax = defineModel<number>('dataRangeMax', { required: true })
 <template>
   <div>
     <CmkDropdown
-      :selected-option="dataRangeType"
+      :model-value="dataRangeType"
       :label="_t('Select option')"
       :options="{
         type: 'fixed',
@@ -32,7 +32,7 @@ const dataRangeMax = defineModel<number>('dataRangeMax', { required: true })
           { name: 'fixed', title: _t('Fixed range') }
         ]
       }"
-      @update:selected-option="
+      @update:model-value="
         (value) => {
           dataRangeType = value === 'automatic' ? 'automatic' : 'fixed'
         }

@@ -38,5 +38,9 @@ class TestHostSort:
             parse_host_sort_options(["nameasc"])
 
     def test_duplicate_column_values(self) -> None:
-        with pytest.raises(ValueError, match="appears more than once"):
+        with pytest.raises(ValueError, match="The following columns were duplicated: name"):
             parse_host_sort_options(["name:asc", "name:desc"])
+
+    def test_duplicate_column_values_multiple(self) -> None:
+        with pytest.raises(ValueError, match="The following columns were duplicated: name, alias"):
+            parse_host_sort_options(["name:asc", "name:desc", "alias:asc", "alias:desc"])

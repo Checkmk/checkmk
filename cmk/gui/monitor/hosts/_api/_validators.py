@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import Counter
 
 from cmk.gui.monitor.hosts._models import HostSort, HostSortColumn, HostSortDirection
 
@@ -16,13 +17,16 @@ def parse_host_sort_options(value: object) -> list[HostSort]:
     """
     if not isinstance(value, list):
         raise ValueError(f"Expected a list of sort values, got {type(value).__name__!r}.")
-    sorts = [_parse_host_sort_option(token) for token in value]
-    seen: set[HostSortColumn] = set()
-    for sort in sorts:
-        if sort.column in seen:
-            raise ValueError(f"Column {sort.column.value!r} appears more than once in the sort.")
-        seen.add(sort.column)
-    return sorts
+
+    sort_options = [_parse_host_sort_option(token) for token in value]
+
+    sort_column_counts = Counter(option.column for option in sort_options)
+    duplicate_columns = [name for name, count in sort_column_counts.items() if count > 1]
+
+    if duplicate_columns:
+        raise ValueError(f"The following columns were duplicated: {', '.join(duplicate_columns)}")
+
+    return sort_options
 
 
 def _parse_host_sort_option(token: object) -> HostSort:

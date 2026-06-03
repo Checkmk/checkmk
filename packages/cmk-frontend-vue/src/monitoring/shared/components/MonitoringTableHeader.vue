@@ -59,9 +59,9 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
           v-if="!header.isPlaceholder && header.column.getCanSort()"
           type="button"
           class="monitoring-table-header__header-button"
+          :title="header.column.columnDef.header?.toString()"
           @click="header.column.getToggleSortingHandler()?.($event)"
         >
-          <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
           <ChevronUp
             v-if="header.column.getIsSorted() === 'asc'"
             class="monitoring-table-header__sort-icon"
@@ -80,12 +80,17 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
             :size="14"
             aria-hidden="true"
           />
+          <span class="monitoring-table-header__label">
+            <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
+          </span>
         </button>
-        <FlexRender
+        <span
           v-else-if="!header.isPlaceholder"
-          :render="header.column.columnDef.header"
-          :props="header.getContext()"
-        />
+          class="monitoring-table-header__label"
+          :title="header.column.columnDef.header?.toString()"
+        >
+          <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
+        </span>
       </th>
     </tr>
   </thead>
@@ -99,20 +104,33 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
   background: var(--ux-theme-2);
   white-space: nowrap;
   text-align: left;
-  padding: var(--dimension-2) var(--dimension-4);
 }
 
 .monitoring-table-header__header-button {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-2);
+  max-width: 100%;
+  height: 100%;
   background: transparent;
   border: none;
-  padding: 0;
   margin: 0;
   font: inherit;
   color: inherit;
   cursor: pointer;
+  border-radius: 0;
+  padding: var(--dimension-2) var(--dimension-4);
+
+  &:hover {
+    background-color: var(--ux-theme-3);
+  }
+}
+
+.monitoring-table-header__label {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .monitoring-table-header__header-button:focus-visible {

@@ -9,7 +9,7 @@ import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 import codeExample from './UclCmkSwitchCodeExample.vue?raw'
 
 export const panelConfig = {
-  data: {
+  modelValue: {
     type: 'boolean' as const,
     title: 'Checked State',
     initialState: false
@@ -40,7 +40,7 @@ const propState = new PanelStateCreator<typeof CmkSwitch>().createRef(panelConfi
     <UclDetailPageHeader>CmkSwitch</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkSwitch v-model:data="propState.data" />
+      <CmkSwitch v-model="propState.modelValue" />
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

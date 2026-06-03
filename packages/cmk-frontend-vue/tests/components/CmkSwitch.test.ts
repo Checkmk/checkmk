@@ -10,7 +10,7 @@ import CmkSwitch from '@/components/CmkSwitch.vue'
 
 test('switch is keyboard focusable and toggles via Space/Enter', async () => {
   const user = userEvent.setup()
-  render(CmkSwitch, { props: { data: false } })
+  render(CmkSwitch, { props: { modelValue: false } })
 
   screen.getByRole('switch', { checked: false })
 

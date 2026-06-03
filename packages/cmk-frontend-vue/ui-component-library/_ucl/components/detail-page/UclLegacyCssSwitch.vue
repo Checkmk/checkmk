@@ -24,7 +24,7 @@ const { isLegacyCssEnabled } = useLegacyCss()
     />
     <CmkSpace size="small" />
 
-    <CmkSwitch v-model:data="isLegacyCssEnabled" />
+    <CmkSwitch v-model="isLegacyCssEnabled" />
   </div>
 </template>
 

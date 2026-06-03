@@ -1190,7 +1190,7 @@ const graphDesignerContentAsJson = computed(() => {
             :aria-label="_t('Inline Help: Metric backend (Custom query)')"
           />
         </td>
-        <td class="buttons"><CmkSwitch v-model:data="graphLine.visible" /></td>
+        <td class="buttons"><CmkSwitch v-model="graphLine.visible" /></td>
 
         <td class="narrow">
           <CmkDropdown
@@ -1203,7 +1203,7 @@ const graphDesignerContentAsJson = computed(() => {
           />
         </td>
 
-        <td class="buttons"><CmkSwitch v-model:data="graphLine.mirrored" /></td>
+        <td class="buttons"><CmkSwitch v-model="graphLine.mirrored" /></td>
         <td>
           <div v-if="graphLine.type === 'query'">
             {{ _t('Query') }}:

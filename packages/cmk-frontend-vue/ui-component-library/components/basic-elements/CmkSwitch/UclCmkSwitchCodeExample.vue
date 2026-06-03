@@ -12,5 +12,5 @@ const isEnabled = ref(false)
 </script>
 
 <template>
-  <CmkSwitch v-model:data="isEnabled" />
+  <CmkSwitch v-model="isEnabled" />
 </template>

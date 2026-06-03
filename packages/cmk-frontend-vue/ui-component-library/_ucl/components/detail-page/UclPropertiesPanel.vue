@@ -100,8 +100,8 @@ onMounted(() => {
       <CmkSwitch
         v-if="def.type === 'boolean'"
         :id="`${uid}-${key}`"
-        :data="state[key] as boolean"
-        @update:data="state[key] = $event"
+        :model-value="state[key] as boolean"
+        @update:model-value="state[key] = $event"
       />
       <CmkInput
         v-else-if="def.type === 'string'"

@@ -5,10 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-const data = defineModel('data', { type: Boolean, default: false })
+const modelValue = defineModel({ type: Boolean, default: false })
 
 function toggle() {
-  data.value = !data.value
+  modelValue.value = !modelValue.value
 }
 </script>
 
@@ -17,12 +17,12 @@ function toggle() {
     <!-- Hidden mirror: keeps native checkbox semantics for forms/v-model and
          drives the `:checked` slider styling. The visible slider is the
          interactive control. -->
-    <input v-model="data" type="checkbox" tabindex="-1" aria-hidden="true" />
+    <input v-model="modelValue" type="checkbox" tabindex="-1" aria-hidden="true" />
     <span
       class="cmk-switch__slider"
       role="switch"
       tabindex="0"
-      :aria-checked="data"
+      :aria-checked="modelValue"
       @click="toggle"
       @keydown.space.prevent="toggle"
       @keydown.enter.prevent="toggle"

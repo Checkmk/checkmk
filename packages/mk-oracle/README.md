@@ -14,7 +14,8 @@
   - [Options](#options)
   - [Sections](#sections)
   - [Custom SQL Metrics](#custom-sql-metrics)
-  - [Complete Configuration Example](#complete-configuration-example)
+  - [Targeting Pluggable Databases (PDBs)](#targeting-pluggable-databases-pdbs)
+- [Complete Configuration Example](#complete-configuration-example)
 - [Oracle Wallet Authentication](#oracle-wallet-authentication)
   - [Default Configuration](#default-configuration)
   - [Enabling Wallet Authentication](#enabling-wallet-authentication)
@@ -555,6 +556,38 @@ Custom SQL metrics in this plugin replace the legacy `SQLS_*` configuration vari
 - **Item name is the YAML key.** Equivalent to the legacy `SQLS_ITEM_NAME` (replaces `SQLS_SECTIONS` shell functions).
 - **Cache marker location.** For cached (async) sections, the legacy `cached(<since>,<age>)` marker is emitted on the **subsection** header `[[[<SID>|<item>|cached(...)]]]`, not on the section header. The section header is always plain `<<<oracle_sql:sep(58)>>>`.
 - **Separator is fixed at `:` (ASCII 58).** The output is always emitted under `oracle_sql:sep(58)` so the existing server-side `oracle_sql` check plugin processes it unchanged.
+
+#### Targeting Pluggable Databases (PDBs)
+
+A `custom_metrics` entry can target one or more Pluggable Databases inside a Container Database by adding a `pdbs` list. Each entry is a case-insensitive regular expression matched against the full PDB name. The plugin connects to the CDB root and issues `ALTER SESSION SET CONTAINER = <PDB>` before each query, then resets the session back to `CDB$ROOT` afterwards.
+
+```yaml
+custom_metrics:
+  - product_price:
+      path: 'queries/product_price.sql'
+      pdbs: ['TESTPDB1', 'TESTPDB2'] # exact names
+  - object_count:
+      path: 'queries/object_count.sql'
+      pdbs: ['TEST.*'] # regex — matches any PDB starting with TEST
+```
+
+Resulting agent output (instance SID is `FREE`):
+
+```
+<<<oracle_sql:sep(58)>>>
+[[[FREE_TESTPDB1|product_price]]]
+details:...
+<<<oracle_sql:sep(58)>>>
+[[[FREE_TESTPDB2|product_price]]]
+details:...
+```
+
+- If `pdbs` is **omitted or empty**, the query runs against the CDB root — existing behaviour, unchanged.
+- Patterns are anchored (`^pattern$`) and case-insensitive. A bare `PDB1` matches only `PDB1`, not `PDB10`. Use `PDB1.*` or `(PDB1|PDB10)` for broader matching.
+- PDB names are discovered at runtime via `V$PDBS`. A pattern that matches no discovered PDB is logged as a warning and skipped; other patterns still execute.
+- The same PDB is only queried once even if multiple patterns match it.
+- The monitoring user must hold the `SET CONTAINER` privilege: `GRANT SET CONTAINER TO <user> CONTAINER = ALL`.
+- The connection must target the **CDB root service** (e.g. `service_name: FREE`), not a PDB service name. Connecting directly to a PDB service bypasses the container-switching mechanism.
 
 ### Complete Configuration Example
 

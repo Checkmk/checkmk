@@ -19,7 +19,7 @@ test('CmkInput can be labelled on component', async () => {
       },
       template: `
         <CmkInput
-          v-model:data="data"
+          v-model="data"
           aria-label="some aria label"
         />
       `
@@ -41,7 +41,7 @@ test('CmkInput can be labelled externally', async () => {
         <label for="input-id">some aria label</label>
         <CmkInput
           id="input-id"
-          v-model:data="data"
+          v-model="data"
         />
       `
     })

@@ -40,7 +40,6 @@ pub struct QueryBlock {
     pub queries: Vec<SqlQuery>,
     pub title: String,
     pub post_processing: PostProcessing,
-    #[allow(dead_code)]
     pub container: Option<PdbName>,
 }
 

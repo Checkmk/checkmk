@@ -16,7 +16,9 @@
 
 use crate::config::{self, OracleConfig};
 use crate::emit::header;
-use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, Opened, OpenedSpot, Spot};
+use crate::ora_sql::backend::{
+    make_custom_spot, make_spot, with_container, ClosedSpot, Opened, OpenedSpot, Spot,
+};
 use crate::ora_sql::perf::{Label, PerfTimer};
 use crate::ora_sql::section::Section;
 use crate::setup::{detect_runtime, Env};
@@ -195,17 +197,21 @@ fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
                     let output = match r {
                         Ok(opened) => query_blocks
                             .iter()
-                            .map(|query_block| {
+                            .filter_map(|query_block| {
                                 log::info!("Query: {}", query_block.title);
-                                let mut results = vec![query_block.title.clone()];
-                                results.extend(_exec_queries(
-                                    &opened,
-                                    instance,
-                                    &query_block.queries,
-                                    &query_block.post_processing,
-                                    &query_block.title,
-                                ));
-                                results.join("\n")
+                                with_container(&opened, query_block.container.as_ref(), || {
+                                    let mut results = vec![query_block.title.clone()];
+                                    results.extend(_exec_queries(
+                                        &opened,
+                                        instance,
+                                        &query_block.queries,
+                                        &query_block.post_processing,
+                                        &query_block.title,
+                                    ));
+                                    results.join("\n")
+                                })
+                                .map_err(|e| log::warn!("Cannot switch container: {e}, skipping"))
+                                .ok()
                             })
                             .collect::<Vec<String>>(),
                         Err(e) => {
@@ -251,12 +257,26 @@ fn process_spot_works_para(works: Vec<SpotWorks>, threads: usize) -> Vec<String>
                                     .iter()
                                     .flat_map(|query_block| {
                                         log::debug!("Executing queries for instance: {}", instance);
-                                        _exec_queries_on_spot(
+                                        with_container(
                                             &job.spot,
-                                            instance,
-                                            &query_block.queries,
-                                            query_block.title.as_str(),
-                                            &query_block.post_processing,
+                                            query_block.container.as_ref(),
+                                            || {
+                                                _exec_queries_on_spot(
+                                                    &job.spot,
+                                                    instance,
+                                                    &query_block.queries,
+                                                    query_block.title.as_str(),
+                                                    &query_block.post_processing,
+                                                )
+                                            },
+                                        )
+                                        .unwrap_or_else(
+                                            |e| {
+                                                log::warn!(
+                                                    "Cannot switch container: {e}, skipping"
+                                                );
+                                                vec![]
+                                            },
                                         )
                                     })
                                     .collect::<Vec<String>>();

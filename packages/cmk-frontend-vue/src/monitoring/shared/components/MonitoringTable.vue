@@ -7,27 +7,28 @@ conditions defined in the file COPYING, which is part of this source code packag
 import {
   type ColumnDef,
   type ColumnFiltersState,
-  type SortingState,
   type Updater,
   getCoreRowModel,
   useVueTable
 } from '@tanstack/vue-table'
+import { inject } from 'vue'
 
+import { MONITORING_SERVICE } from './MonitoringTableContext'
 import MonitoringTableHeader from './MonitoringTableHeader.vue'
 
 const props = defineProps<{
   rows: T[]
   loading: boolean
   columns: ColumnDef<T>[]
-  sortState: SortingState
   filterState: ColumnFiltersState
   getRowKey?: (row: T, index: number) => string | number
 }>()
 
 const emit = defineEmits<{
-  (event: 'update:sortState', value: SortingState): void
   (event: 'update:filterState', value: ColumnFiltersState): void
 }>()
+
+const monitoringService = inject(MONITORING_SERVICE)
 
 function resolveUpdater<S>(updater: Updater<S>, current: S): S {
   return typeof updater === 'function' ? (updater as (old: S) => S)(current) : updater
@@ -43,7 +44,7 @@ const table = useVueTable({
   },
   state: {
     get sorting() {
-      return props.sortState
+      return monitoringService?.sortState.value ?? []
     },
     get columnFilters() {
       return props.filterState
@@ -52,7 +53,7 @@ const table = useVueTable({
   manualSorting: true,
   manualFiltering: true,
   onSortingChange: (updater) => {
-    emit('update:sortState', resolveUpdater(updater, props.sortState))
+    monitoringService?.updateSort(resolveUpdater(updater, monitoringService.sortState.value))
   },
   onColumnFiltersChange: (updater) => {
     emit('update:filterState', resolveUpdater(updater, props.filterState))

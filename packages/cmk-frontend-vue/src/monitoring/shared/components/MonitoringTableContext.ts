@@ -5,6 +5,8 @@
  */
 import type { InjectionKey, Ref } from 'vue'
 
+import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
+
 export type BreakpointToken = 's' | 'm' | 'l' | 'xl'
 
 const BREAKPOINT_TOKEN_PX: Readonly<Record<BreakpointToken, number>> = {
@@ -23,3 +25,6 @@ export type CellBreakpoints = Readonly<Record<string, BreakpointValue>>
 
 export const MONITORING_TABLE_WIDTH: InjectionKey<Readonly<Ref<number>>> =
   Symbol('MonitoringTableWidth')
+
+export const MONITORING_SERVICE: InjectionKey<MonitoringService<unknown>> =
+  Symbol('MonitoringService')

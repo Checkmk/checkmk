@@ -4,13 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type ColumnDef, type ColumnFiltersState, type SortingState } from '@tanstack/vue-table'
+import { type ColumnDef, type ColumnFiltersState } from '@tanstack/vue-table'
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
-import { onBeforeUnmount, ref } from 'vue'
+import { onBeforeUnmount, provide, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
 import type { HostEntry } from '@/monitoring/shared/api/types'
+import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 
 import MonitoringTable from '../shared/components/MonitoringTable.vue'
 import { HostApi } from './api/hosts'
@@ -27,19 +28,20 @@ onBeforeUnmount(() => {
   hostService.stopPolling()
 })
 
+provide(MONITORING_SERVICE, hostService)
+
 const columns: ColumnDef<HostEntry>[] = [
-  { accessorKey: 'state', header: _t('State') },
-  { accessorKey: 'name', header: _t('Host') },
-  { accessorKey: 'alias', header: _t('Alias') },
-  { accessorKey: 'ip', header: _t('IP address') },
-  { accessorKey: 'num_services_ok', header: _t('OK') },
-  { accessorKey: 'num_services_warn', header: _t('Warn') },
-  { accessorKey: 'num_services_crit', header: _t('Crit') },
-  { accessorKey: 'num_services_unknown', header: _t('Unknown') },
-  { accessorKey: 'num_services_pending', header: _t('Pending') }
+  { accessorKey: 'state', header: _t('State'), sortDescFirst: true },
+  { accessorKey: 'name', header: _t('Host'), sortDescFirst: false },
+  { accessorKey: 'alias', header: _t('Alias'), sortDescFirst: false },
+  { accessorKey: 'ip', header: _t('IP address'), sortDescFirst: false },
+  { accessorKey: 'num_services_ok', header: _t('OK'), sortDescFirst: true },
+  { accessorKey: 'num_services_warn', header: _t('Warn'), sortDescFirst: true },
+  { accessorKey: 'num_services_crit', header: _t('Crit'), sortDescFirst: true },
+  { accessorKey: 'num_services_unknown', header: _t('Unknown'), sortDescFirst: true },
+  { accessorKey: 'num_services_pending', header: _t('Pending'), sortDescFirst: true }
 ]
 
-const sortState = ref<SortingState>([])
 const filterState = ref<ColumnFiltersState>([])
 
 function rowKey(row: HostEntry): string {
@@ -52,10 +54,8 @@ function rowKey(row: HostEntry): string {
     :rows="hostService.items.value"
     :loading="hostService.loading.value"
     :columns="columns"
-    :sort-state="sortState"
     :filter-state="filterState"
     :get-row-key="rowKey"
-    @update:sort-state="sortState = $event"
     @update:filter-state="filterState = $event"
   >
     <template #row="{ row }">

@@ -5,9 +5,11 @@
  */
 import type { ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table'
 import { fireEvent, render, screen } from '@testing-library/vue'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, provide, ref } from 'vue'
 
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
+import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
+import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
 interface Row {
   id: string
@@ -29,6 +31,18 @@ function makeRows(count: number): Row[] {
   }))
 }
 
+function makeMockService(
+  sortState: SortingState = [],
+  onSortUpdate: (value: SortingState) => void = () => {}
+) {
+  return {
+    sortState: ref<SortingState>(sortState),
+    updateSort: vi.fn((newSort: SortingState) => {
+      onSortUpdate(newSort)
+    })
+  }
+}
+
 function mountTable(overrides: {
   rows?: Row[]
   loading?: boolean
@@ -40,17 +54,17 @@ function mountTable(overrides: {
 }) {
   const rows = overrides.rows ?? makeRows(3)
   const loading = overrides.loading ?? false
-  const sortState = overrides.sortState ?? []
   const filterState = overrides.filterState ?? []
-  const onSortUpdate = overrides.onSortUpdate ?? (() => {})
   const onFilterUpdate = overrides.onFilterUpdate ?? (() => {})
   const getRowKey = overrides.getRowKey
+  const mockService = makeMockService(overrides.sortState, overrides.onSortUpdate)
 
   return render(
     defineComponent({
       components: { MonitoringTable },
       setup() {
-        return { rows, loading, sortState, filterState, onSortUpdate, onFilterUpdate, getRowKey }
+        provide(MONITORING_SERVICE, mockService as unknown as MonitoringService<unknown>)
+        return { rows, loading, filterState, onFilterUpdate, getRowKey }
       },
       render() {
         return h(
@@ -59,10 +73,8 @@ function mountTable(overrides: {
             rows: this.rows,
             loading: this.loading,
             columns: COLUMNS,
-            sortState: this.sortState,
             filterState: this.filterState,
             ...(this.getRowKey ? { getRowKey: this.getRowKey } : {}),
-            'onUpdate:sortState': this.onSortUpdate,
             'onUpdate:filterState': this.onFilterUpdate
           },
           {
@@ -99,7 +111,7 @@ test('sortable headers render as buttons; non-sortable headers do not', () => {
   expect(screen.queryByRole('button', { name: 'Actions' })).not.toBeInTheDocument()
 })
 
-test('clicking a sortable header emits update:sortState with the new sort', async () => {
+test('clicking a sortable header calls updateSort with the new sort', async () => {
   const onSortUpdate = vi.fn()
   mountTable({ onSortUpdate })
 

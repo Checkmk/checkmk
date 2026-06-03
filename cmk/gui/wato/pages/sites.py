@@ -123,7 +123,6 @@ from cmk.gui.watolib.config_domains import (
     finalize_all_settings_per_site,
 )
 from cmk.gui.watolib.config_sync import (
-    central_site_inherited_summary,
     populate_saml_site_endpoint_urls,
 )
 from cmk.gui.watolib.global_settings import (
@@ -462,7 +461,7 @@ class ModeEditSite(WatoMode):
         else:
             data["authentication_connections"] = (
                 "central_site",
-                central_site_inherited_summary(callback_url),
+                self._site_mgmt.central_site_connections_readonly_data(callback_url),
             )
         if "user_attribute_sync_connections" in data:
             value = data["user_attribute_sync_connections"]

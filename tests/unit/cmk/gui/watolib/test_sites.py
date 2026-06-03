@@ -18,6 +18,8 @@ The chain has three parts that are independently testable:
   (both ``"central_site"`` and ``"list"``).
 """
 
+import pytest
+
 from livestatus import (
     NetworkSocketDetails,
     SiteConfiguration,
@@ -93,9 +95,9 @@ def _remote_site_config() -> SiteConfiguration:
 
 def test_auth_connections_from_disk_translates_absent_to_central_site_choice() -> None:
     """Absent key (loaded as ``None``) maps to the ``"central_site"`` form
-    choice with a placeholder summary; the site-edit page injects the real
-    summary at render time."""
-    assert _auth_connections_from_disk(None) == ("central_site", "-")
+    choice with an empty mapping; the site-edit page injects the real
+    read-only connection data at render time."""
+    assert _auth_connections_from_disk(None) == ("central_site", {})
 
 
 def test_auth_connections_from_disk_wraps_bare_list() -> None:
@@ -106,7 +108,7 @@ def test_auth_connections_from_disk_wraps_bare_list() -> None:
 def test_auth_connections_from_disk_passes_tuple_form_through() -> None:
     """The site-edit page pre-wraps the value so the form-friendly tuple
     arrives here directly; pass it through unchanged."""
-    central = ("central_site", "summary text")
+    central = ("central_site", {"connection_0": {"connection_id": "saml_a"}})
     assert _auth_connections_from_disk(central) == central
     list_form = ("list", [("ldap", "ldap_a")])
     assert _auth_connections_from_disk(list_form) == list_form
@@ -118,7 +120,10 @@ def test_auth_connections_to_disk_unwraps_list_choice() -> None:
 
 
 def test_auth_connections_to_disk_returns_drop_key_for_central_site() -> None:
-    assert _auth_connections_to_disk(("central_site", "summary text")) is DROP_KEY
+    assert (
+        _auth_connections_to_disk(("central_site", {"connection_0": {"connection_id": "saml_a"}}))
+        is DROP_KEY
+    )
 
 
 def _choice_names(form_spec: object) -> list[str]:
@@ -159,3 +164,29 @@ def test_authentication_connections_form_spec_no_site_config_offers_both_choices
         "central_site",
         "list",
     ]
+
+
+def test_central_site_connections_readonly_data_empty(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.watolib.sites.central_site_inherited_connections",
+        lambda callback_url: [],
+    )
+    assert SiteManagement.central_site_connections_readonly_data("http://remote/check_mk/") == {
+        "_placeholder": "-"
+    }
+
+
+def test_central_site_connections_readonly_data_builds_aligned_keys(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.watolib.sites.central_site_inherited_connections",
+        lambda callback_url: [
+            ("saml", {"connection_id": "s", "metadata_endpoint": "m", "acs_endpoint": "a"}),
+            ("ldap", "l"),
+        ],
+    )
+    assert SiteManagement.central_site_connections_readonly_data("http://remote/check_mk/") == {
+        "connection_0": {"connection_id": "s", "metadata_endpoint": "m", "acs_endpoint": "a"},
+        "connection_1": {"connection_id": "l"},
+    }

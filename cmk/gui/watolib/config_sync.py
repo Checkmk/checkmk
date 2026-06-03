@@ -295,42 +295,26 @@ def _saml_endpoint_urls(callback_url: str, connection_id: str) -> tuple[str, str
     return connection["checkmk_metadata_endpoint"], acs_endpoint
 
 
-def central_site_inherited_summary(callback_url: str) -> str:
-    """Render a human-readable summary of the central site's authentication connections.
+def central_site_inherited_connections(
+    callback_url: str,
+) -> list[AuthenticationConnectionEntry]:
+    """Resolve the central site's authentication connections for read-only display.
 
-    Used by the site-edit form to show what the remote site would inherit
-    when the admin picks "Use the same connections as the central site".
-    The form widget is read-only display; the summary is recomputed each
-    time the dialog renders.
+    Used by the site-edit form to show what a remote site inherits when the
+    admin picks "Use identity connectors from central site". Each SAML entry is
+    returned with its `metadata_endpoint` / `acs_endpoint` populated from the
+    given callback URL so the read-only display fields show meaningful values.
 
-    Returned format:
-        LDAP: <connection_id>
-        SAML: <connection_id>
-            Metadata endpoint URL: <url>
-            Assertion Consumer Service URL: <url>
-
-    For an unset / empty central, returns a placeholder.
+    Returns an empty list when the central site has no connections configured.
     """
     central_id = omd_site()
     central_config = active_config.sites.get(central_id)
     central_auth = (
         central_config.get("authentication_connections") if central_config is not None else None
     )
-
     if not central_auth:
-        return "-"
-
-    lines: list[str] = []
-    for entry in central_auth:
-        if entry[0] == "ldap":
-            lines.append(f"LDAP: {entry[1]}")
-            continue
-        connection_id = entry[1].get("connection_id", "")
-        metadata, acs = _saml_endpoint_urls(callback_url, connection_id)
-        lines.append(f"SAML: {connection_id or '-'}")
-        lines.append(f"    Metadata endpoint URL: {metadata}")
-        lines.append(f"    Assertion Consumer Service URL: {acs}")
-    return "\n".join(lines) if lines else "-"
+        return []
+    return _populate_endpoint_urls(central_auth, callback_url)
 
 
 def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> SiteGlobals:

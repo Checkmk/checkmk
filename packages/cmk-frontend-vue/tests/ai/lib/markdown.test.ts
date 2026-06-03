@@ -139,3 +139,23 @@ describe('markdown.parse - representative explain_this_service output', () => {
     expect(html).toContain('<strong>WARN</strong>')
   })
 })
+
+describe('markdown.parse - special list tagging', () => {
+  test('adds service-context class to the ul after a "Service context" heading', async () => {
+    const md = ['# Service context', '', '* item one', '* item two', ''].join('\n')
+    const html = await parse(md)
+    expect(html).toContain('class="ai-markdown-content__service-context"')
+  })
+
+  test('adds recommended-actions class to the ol after a "Recommended actions" heading', async () => {
+    const md = ['# Recommended actions', '', '1. step one', '2. step two', ''].join('\n')
+    const html = await parse(md)
+    expect(html).toContain('class="ai-markdown-content__recommended-actions"')
+  })
+
+  test('matching is case-insensitive for the heading text', async () => {
+    const md = ['# SERVICE CONTEXT', '', '* item', ''].join('\n')
+    const html = await parse(md)
+    expect(html).toContain('class="ai-markdown-content__service-context"')
+  })
+})

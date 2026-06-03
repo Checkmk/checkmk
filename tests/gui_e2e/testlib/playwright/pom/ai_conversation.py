@@ -62,7 +62,9 @@ class AiConversationSlideout(LocatorHelper):
 
     @property
     def refresh_button(self) -> Locator:
-        return self.slideout.locator(".ai-conversation-element__controls button[title='Refresh']")
+        return self.slideout.locator(
+            ".ai-conversation-element__controls button[title='Regenerate answer']"
+        )
 
     @property
     def loading_indicator(self) -> Locator:

@@ -56,12 +56,11 @@ aiTemplate.value?.onInfoLoaded(() => {
 .ai-conversation-footer {
   position: absolute;
   bottom: 0;
-  height: var(--dimension-10);
+  min-height: var(--dimension-10);
   padding-top: var(--dimension-4);
   border-top: 1px solid var(--default-border-color);
   font-size: var(--font-size-small);
-  margin-right: var(--dimension-9);
-  width: calc(100% - 2 * var(--dimension-7));
+  width: calc(100% - 2 * var(--cmk-slide-in-dialog-inset, var(--dimension-10)));
   background: var(--default-bg-color);
   color: var(--font-color-dimmed);
 

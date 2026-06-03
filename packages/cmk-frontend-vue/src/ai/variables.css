@@ -1,0 +1,22 @@
+/**
+ * Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+@layer ai {
+  body[data-theme='facelift'] {
+    /*
+     * Recommended-action badge background: in light theme go lighter than the
+     * --border-color-purple ring.
+     */
+    --ai-action-badge-bg: var(--color-purple-10);
+  }
+
+  body[data-theme='modern-dark'] {
+    /*
+     * Recommended-action badge background: in dark theme go darker than the
+     * --border-color-purple ring.
+     */
+    --ai-action-badge-bg: var(--color-purple-90);
+  }
+}

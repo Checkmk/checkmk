@@ -34,6 +34,9 @@ export interface CmkSlideInDialogProps {
     closeButton: boolean
   }
   borderColor?: SlideInVariants['borderColor']
+  // Controls the title margin and content padding.
+  // "wide" gives a roomier layout (e.g. for the Explain-with-AI panel).
+  spacing?: 'default' | 'wide'
 }
 defineProps<CmkSlideInDialogProps>()
 const emit = defineEmits(['close'])
@@ -50,7 +53,11 @@ const emit = defineEmits(['close'])
     :initial-focus-target="scrollContainerEl"
     @close="emit('close')"
   >
-    <DialogTitle v-if="header" class="cmk-slide-in-dialog__title">
+    <DialogTitle
+      v-if="header"
+      class="cmk-slide-in-dialog__title"
+      :class="{ 'cmk-slide-in-dialog--spacing-wide': spacing === 'wide' }"
+    >
       <CmkHeading type="h1" class="cmk-slide-in-dialog__title-header">
         <CmkIcon v-if="header.icon" v-bind="header.icon" />
         {{ header.title }}
@@ -69,6 +76,7 @@ const emit = defineEmits(['close'])
       ref="scrollContainerRef"
       type="outer"
       class="cmk-slide-in-dialog__content"
+      :class="{ 'cmk-slide-in-dialog--spacing-wide': spacing === 'wide' }"
       tabindex="0"
       role="region"
       :aria-label="header?.title ?? _t('Content')"
@@ -97,8 +105,18 @@ const emit = defineEmits(['close'])
   }
 }
 
+.cmk-slide-in-dialog__title.cmk-slide-in-dialog--spacing-wide {
+  margin: var(--dimension-10) var(--dimension-10) var(--dimension-8);
+}
+
 .cmk-slide-in-dialog__content {
-  padding: 0 20px;
+  --cmk-slide-in-dialog-inset: 20px;
+
+  padding: 0 var(--cmk-slide-in-dialog-inset);
+}
+
+.cmk-slide-in-dialog__content.cmk-slide-in-dialog--spacing-wide {
+  --cmk-slide-in-dialog-inset: var(--dimension-10);
 }
 
 .cmk-slide-in-dialog__close {

@@ -52,7 +52,22 @@ function walkTokens(token: Token): void {
   }
 }
 
+const SERVICE_CONTEXT_LIST_PATTERN = /(<h1[^>]*>\s*Service context\s*<\/h1>\s*)<ul>/i
+const RECOMMENDED_ACTIONS_LIST_PATTERN = /(<h1[^>]*>\s*Recommended actions\s*<\/h1>\s*)<ol>/i
+
+function tagSpecialLists(html: string): string {
+  return html
+    .replace(SERVICE_CONTEXT_LIST_PATTERN, '$1<ul class="ai-markdown-content__service-context">')
+    .replace(
+      RECOMMENDED_ACTIONS_LIST_PATTERN,
+      '$1<ol class="ai-markdown-content__recommended-actions">'
+    )
+}
+
 export const markdown = new Marked({
   breaks: true,
-  walkTokens
+  walkTokens,
+  hooks: {
+    postprocess: tagSpecialLists
+  }
 })

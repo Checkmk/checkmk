@@ -496,14 +496,14 @@ watch(
             <CmkIconButton
               name="copied"
               size="medium"
-              :title="_t('Copy response')"
+              :title="_t('Copy answer')"
               class="ai-conversation-element__extra-button ai-conversation-element__extra-button--white"
             />
           </CmkCopy>
           <CmkIconButton
             name="reload"
             size="medium"
-            :title="_t('Refresh')"
+            :title="_t('Regenerate answer')"
             class="ai-conversation-element__extra-button ai-conversation-element__extra-button--white"
             @click="onRefresh"
           />
@@ -516,7 +516,6 @@ watch(
 <style scoped>
 .ai-conversation-element {
   max-width: 100%;
-  margin-bottom: var(--dimension-4);
   display: flex;
   flex-direction: row-reverse;
   width: 60%;
@@ -525,8 +524,8 @@ watch(
   .ai-conversation-element__ai-header {
     display: flex;
     flex-direction: row;
-    align-items: center;
-    margin-left: var(--dimension-4);
+    align-items: flex-start;
+    margin-bottom: var(--dimension-6);
 
     > img {
       margin-right: var(--dimension-4);
@@ -554,18 +553,18 @@ watch(
   }
 
   .ai-conversation-element__text {
-    padding: var(--dimension-4);
+    box-sizing: border-box;
     background: var(--default-form-element-bg-color);
     display: flex;
     flex-direction: column;
     position: relative;
-    margin-bottom: var(--dimension-10);
     margin-left: calc(var(--dimension-4) + var(--dimension-7));
 
     .ai-conversation-element__controls {
       display: flex;
       justify-content: flex-start;
       margin-top: var(--dimension-4);
+      padding-top: var(--dimension-4);
 
       .ai-conversation-element__extra-button {
         border: 1px solid var(--default-component-bg-color);
@@ -616,7 +615,8 @@ watch(
     .ai-conversation-element__text {
       background: transparent;
       border: none;
-      width: calc(100% - (var(--dimension-4) + var(--dimension-7)));
+      margin-left: 0;
+      width: 100%;
     }
   }
 
@@ -629,22 +629,24 @@ watch(
   .ai-conversation-element__system-context {
     display: flex;
     flex-direction: row;
-    gap: calc(2 * var(--dimension-11));
-    border-bottom: 1px solid var(--default-border-color);
-    padding-bottom: var(--dimension-8);
-    border-radius: var(--dimension-2);
+    gap: var(--dimension-6);
+    background-color: var(--even-tr-bg-color);
+    border-radius: var(--dimension-3);
+    margin-bottom: calc(var(--dimension-10) * 2);
 
     .ai-conversation-element__system-context-card {
       display: flex;
       flex-direction: row;
-      padding: var(--dimension-4);
+      align-items: center;
+      flex: 1;
+      padding: var(--dimension-6);
     }
 
     .ai-conversation-element__system-context-card-icon {
       padding: 0 var(--dimension-4);
 
       .ai-conversation-element__system-context-card-icon-wrapper {
-        background-color: var(--default-form-element-bg-color);
+        background-color: var(--ux-theme-6);
         border: 1px solid var(--default-border-color);
         border-radius: var(--dimension-3);
         padding: var(--dimension-4);

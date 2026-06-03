@@ -36,6 +36,7 @@ function onClose() {
     size="small"
     :open="slideInOpen"
     border-color="purple"
+    spacing="wide"
     @close="onClose"
   >
     <AiConversation v-if="slideInOpen" @close="onClose" />

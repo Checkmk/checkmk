@@ -39,10 +39,14 @@ watchEffect(() => {
   selectedMagnitudes.value = getSelectedMagnitudes(props.displayedMagnitudes)
 })
 
-const data = defineModel<number | null>('data', { required: true })
+const modelValue = defineModel<number | null>({ required: true })
 const values = ref<Partial<Record<Magnitude, number>>>(splitToUnits(0))
 
-const [validation, value] = useValidation(data, props.validators, () => props.backendValidation)
+const [validation, value] = useValidation(
+  modelValue,
+  props.validators,
+  () => props.backendValidation
+)
 
 const i18n: Record<Magnitude | 'validation_negative_number', TranslatedString | string> = {
   day: _t('Days'),

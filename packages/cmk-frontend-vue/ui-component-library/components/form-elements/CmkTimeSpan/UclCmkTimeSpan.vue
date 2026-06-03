@@ -9,7 +9,7 @@ import { type BoolPropDef, type PanelConfigFor } from '@ucl/_ucl/types/prop-def'
 import codeExample from './UclCmkTimeSpanCodeExample.vue?raw'
 
 type OmittedProps =
-  | 'data'
+  | 'modelValue'
   | 'ariaLabel'
   | 'title'
   | 'backendValidation'
@@ -86,7 +86,7 @@ const displayedMagnitudes = computed<Magnitude[]>(() => {
 
     <UclDetailPageComponent>
       <CmkTimeSpan
-        v-model:data="data"
+        v-model="data"
         :label="propState.label"
         title="Duration"
         :input-hint="propState.inputHint"

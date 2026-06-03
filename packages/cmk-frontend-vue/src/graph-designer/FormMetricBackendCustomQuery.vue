@@ -165,7 +165,7 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
             effectively causing it to not show the validation messages -->
           <FormValidation :validation="validationByLocation.aggregation_lookback"></FormValidation>
           <CmkTimeSpan
-            v-model:data="aggregationLookback"
+            v-model="aggregationLookback"
             :aria-label="_t('Aggregation lookback')"
             :label="''"
             :title="''"
@@ -173,7 +173,7 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
             :displayed-magnitudes="['hour', 'minute', 'second']"
             :validators="[]"
             :backend-validation="[]"
-            @update:data="validationByLocation.aggregation_lookback = []"
+            @update:model-value="validationByLocation.aggregation_lookback = []"
           />
           <CmkHelpText :help="AGGREGATION_LOOKBACK_HELP_TEXT" />
           <FormHelp :help="AGGREGATION_LOOKBACK_HELP_TEXT" />

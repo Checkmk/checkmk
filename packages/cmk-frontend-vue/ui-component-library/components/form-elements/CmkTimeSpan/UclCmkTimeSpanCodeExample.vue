@@ -13,7 +13,7 @@ const data = ref<number | null>(0)
 
 <template>
   <CmkTimeSpan
-    v-model:data="data"
+    v-model="data"
     :label="null"
     title="Duration"
     :input-hint="null"

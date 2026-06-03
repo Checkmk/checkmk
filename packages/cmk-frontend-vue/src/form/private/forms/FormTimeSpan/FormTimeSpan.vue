@@ -23,7 +23,7 @@ const data = defineModel<number | null>('data', { required: true })
 
 <template>
   <CmkTimeSpan
-    v-model:data="data"
+    v-model="data"
     :label="spec.label"
     :title="spec.title"
     :input-hint="spec.input_hint"

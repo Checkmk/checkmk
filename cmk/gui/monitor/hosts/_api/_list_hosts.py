@@ -48,12 +48,20 @@ class SortColumn(enum.StrEnum):
     NUM_SERVICES_UNKNOWN = "num_services_unknown"
     NUM_SERVICES_PENDING = "num_services_pending"
 
+    @classmethod
+    def options(cls) -> str:
+        return ", ".join(sorted(item.value for item in cls))
+
 
 class SortDirection(enum.StrEnum):
     """The direction a host query may be sorted in."""
 
     ASC = "asc"
     DESC = "desc"
+
+    @classmethod
+    def options(cls) -> str:
+        return ", ".join(sorted(item.value for item in cls))
 
 
 @dataclasses.dataclass(frozen=True)
@@ -65,10 +73,6 @@ class HostSort:
 
     def __str__(self) -> str:
         return f"{self.column.value}:{self.direction.value}"
-
-
-_ALLOWED_COLUMNS = ", ".join(sorted(column.value for column in SortColumn))
-_ALLOWED_DIRECTIONS = ", ".join(sorted(direction.value for direction in SortDirection))
 
 
 @api_model
@@ -139,13 +143,13 @@ def _parse_sort_token(token: object) -> HostSort:
         sort_column = SortColumn(column)
     except ValueError:
         raise ValueError(
-            f"Unknown sort column in {token!r}. Allowed columns: {_ALLOWED_COLUMNS}."
+            f"Unknown sort column in {token!r}. Allowed columns: {SortColumn.options()}."
         ) from None
     try:
         sort_direction = SortDirection(direction)
     except ValueError:
         raise ValueError(
-            f"Unknown sort direction in {token!r}. Allowed directions: {_ALLOWED_DIRECTIONS}."
+            f"Unknown sort direction in {token!r}. Allowed directions: {SortDirection.options()}."
         ) from None
     return HostSort(column=sort_column, direction=sort_direction)
 
@@ -174,8 +178,8 @@ type Sort = Annotated[
     QueryParam(
         description=(
             "Repeated sort param. Each value is 'column:direction', e.g. 'name:asc'. "
-            f"Allowed columns: {_ALLOWED_COLUMNS}. "
-            f"Allowed directions: {_ALLOWED_DIRECTIONS}. "
+            f"Allowed columns: {SortColumn.options()}. "
+            f"Allowed directions: {SortDirection.options()}. "
             "Multiple values define a multi-column sort applied in the given order; a column must "
             "not be repeated. For example, 'sort=name:asc&sort=num_services:desc' sorts by name "
             "ascending and then by number of services descending."

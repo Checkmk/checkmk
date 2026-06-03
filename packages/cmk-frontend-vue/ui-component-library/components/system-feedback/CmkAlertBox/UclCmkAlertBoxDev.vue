@@ -38,7 +38,7 @@ function reset() {
       </p>
       <template v-if="mode1Shown">
         <CmkAlertBox
-          v-for="v in ['info', 'success', 'warning', 'error', 'loading'] as const"
+          v-for="v in ['info', 'success', 'warning', 'error'] as const"
           :key="v"
           :variant="v"
           heading="Headline"

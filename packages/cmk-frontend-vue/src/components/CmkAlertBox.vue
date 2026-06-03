@@ -60,7 +60,8 @@ type BaseProps = {
 export type CmkAlertBoxProps = BaseProps &
   (
     | { variant?: DismissibleVariants; dismissible?: boolean }
-    | { variant: Exclude<Variants, DismissibleVariants>; dismissible?: false }
+    | { variant: 'error' | 'warning'; dismissible?: false }
+    | { variant: 'loading'; dismissible?: false; mainButton?: never; buttons?: never }
   )
 
 const props = defineProps<CmkAlertBoxProps>()

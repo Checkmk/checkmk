@@ -19,18 +19,13 @@ type ProxySetting = (
     | tuple[Literal["url"], http_proxy_config.ProxyConfigSpec]
 )
 
+type ProxyConfig = http_proxy_config.HTTPProxyConfig
+
 
 @dataclass
 class ProductUsageAnalyticsSettings:
     enabled: Literal["enabled", "disabled", "not_decided"]
     proxy_setting: ProxySetting
-
-
-@dataclass(frozen=True)
-class ProductUsageConfig:
-    enabled: bool
-    state: Literal["not_decided", "enabled", "disabled"]
-    proxy_config: http_proxy_config.HTTPProxyConfig
 
 
 def load_product_usage_config(

@@ -202,6 +202,11 @@ def _load_plugins(logger: logging.Logger) -> None:
             if edition(paths.omd_root) is Edition.ULTIMATEMT
             else []
         ),
+        (
+            load_plugins_with_exceptions("cmk.update_config.nonfree.cloud.plugins.actions")
+            if edition(paths.omd_root) is Edition.CLOUD
+            else []
+        ),
     ):
         logger.error("Error in action plug-in %s: %s\n", plugin, exc)
         if debug.enabled():
@@ -219,6 +224,11 @@ def _load_pre_plugins() -> None:
         (
             load_plugins_with_exceptions("cmk.update_config.nonfree.ultimate.plugins.pre_actions")
             if edition(paths.omd_root) in (Edition.ULTIMATE, Edition.ULTIMATEMT)
+            else []
+        ),
+        (
+            load_plugins_with_exceptions("cmk.update_config.nonfree.cloud.plugins.pre_actions")
+            if edition(paths.omd_root) is Edition.CLOUD
             else []
         ),
     ):

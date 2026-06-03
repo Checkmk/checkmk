@@ -4,21 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
-import logging
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from cmk.base.app import make_app
-from cmk.base.config import load
 from cmk.ccc.version import edition
 from cmk.product_usage.collection import (
     collect_data,
     data_storage_path,
     store_data,
 )
-from cmk.product_usage.config import get_proxy_config, load_product_usage_config, ProductUsageConfig
+from cmk.product_usage.config import (
+    get_proxy_config,
+    load_product_usage_config,
+    ProxyConfig,
+    ProxySetting,
+)
 from cmk.product_usage.logger import init_logging
 from cmk.product_usage.schedule import (
     create_next_random_ts,
@@ -40,23 +42,23 @@ class ProductUsageRequest:
     schedule: bool = False
 
 
-def load_config(logger: logging.Logger) -> ProductUsageConfig:
+def resolve_proxy_config(proxy_setting: ProxySetting) -> ProxyConfig:
+    # Building the base app and loading the base config is expensive and pulls in cmk.base (and
+    # its transitive `import livestatus`). It is only needed to read the configured HTTP proxies
+    # for the upload, so we import it lazily and call this only on the upload path. This keeps
+    # disabled and not-due runs cheap and free of cmk.base imports.
+    from cmk.base.app import make_app
+    from cmk.base.config import load
+
+    this_edition = edition(paths.omd_root)
     base_config = load(
         discovery_rulesets=(),
-        get_builtin_host_labels=make_app(edition(paths.omd_root)).get_builtin_host_labels,
+        get_builtin_host_labels=make_app(this_edition).get_builtin_host_labels,
     )
 
-    config = load_product_usage_config(paths.default_config_dir, logger)
-
-    proxy_config = get_proxy_config(
-        proxy_setting=config.proxy_setting,
+    return get_proxy_config(
+        proxy_setting=proxy_setting,
         global_proxies=base_config.loaded_config.http_proxies,
-    )
-
-    return ProductUsageConfig(
-        enabled=config.enabled == "enabled",
-        state=config.enabled,
-        proxy_config=proxy_config,
     )
 
 
@@ -64,12 +66,12 @@ def main(args: Sequence[str]) -> int:
     request = parse_args(args)
     logger = init_logging(paths.log_dir)
     now = datetime.now()
-    config = load_config(logger)
+    settings = load_product_usage_config(paths.default_config_dir, logger)
     next_run_fp = next_run_file_path(paths.var_dir)
 
     try:
         if request.schedule:
-            if not config.enabled:
+            if settings.enabled != "enabled":
                 return 0
 
             # If this is the first run after product usage analytics being enabled,
@@ -102,7 +104,8 @@ def main(args: Sequence[str]) -> int:
                 store_data(data, paths.var_dir)
 
         if request.upload:
-            transmit_data(paths.var_dir, logger, proxy_config=config.proxy_config)
+            proxy_config = resolve_proxy_config(settings.proxy_setting)
+            transmit_data(paths.var_dir, logger, proxy_config=proxy_config)
 
         if request.schedule:
             next_scheduled_run_at = create_next_ts(now)

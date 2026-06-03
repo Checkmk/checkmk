@@ -130,7 +130,20 @@ export default [
   {
     files: ['packages/cmk-frontend-vue/tests/**/*'],
     rules: {
-      'vue/one-component-per-file': 'off'
+      'vue/one-component-per-file': 'off',
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@vue/test-utils',
+              message:
+                'Use @testing-library/vue instead of @vue/test-utils. ' +
+                'See https://wiki.lan.checkmk.net/spaces/DEV/pages/149528812/All+things+Vue'
+            }
+          ]
+        }
+      ]
     }
   }
 ]

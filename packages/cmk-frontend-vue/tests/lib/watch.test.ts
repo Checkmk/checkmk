@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+// eslint-disable-next-line no-restricted-imports -- TODO: migrate to @testing-library/vue, see https://wiki.lan.checkmk.net/spaces/DEV/pages/149528812/All+things+Vue
 import { mount } from '@vue/test-utils'
 import { type Component, defineComponent, h, onErrorCaptured } from 'vue'
 

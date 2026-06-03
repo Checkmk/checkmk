@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
+// eslint-disable-next-line no-restricted-imports -- TODO: migrate to @testing-library/vue, see https://wiki.lan.checkmk.net/spaces/DEV/pages/149528812/All+things+Vue
 import { flushPromises, mount } from '@vue/test-utils'
 import { GridLayout } from 'grid-layout-plus'
 import { defineComponent, nextTick, ref } from 'vue'

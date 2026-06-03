@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/vue'
+// eslint-disable-next-line no-restricted-imports -- TODO: migrate to @testing-library/vue, see https://wiki.lan.checkmk.net/spaces/DEV/pages/149528812/All+things+Vue
 import { flushPromises } from '@vue/test-utils'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { Catalog } from 'cmk-shared-typing/typescript/vue_formspec_components'

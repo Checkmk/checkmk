@@ -29,7 +29,7 @@ export const a11yData = [
 ]
 
 export const panelConfig = {
-  data: {
+  modelValue: {
     type: 'string' as const,
     title: 'Color',
     initialState: '#ff0000',
@@ -61,7 +61,7 @@ const propState = new PanelStateCreator<typeof CmkColorPicker>().createRef(panel
     <UclDetailPageHeader>CmkColorPicker</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkColorPicker v-model:data="propState.data" />
+      <CmkColorPicker v-model="propState.modelValue" />
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

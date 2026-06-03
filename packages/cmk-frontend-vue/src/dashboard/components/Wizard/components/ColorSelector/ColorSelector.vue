@@ -54,7 +54,7 @@ const extendedSuggestions = computed(() => [
       }"
     />
     <div>
-      <CmkColorPicker v-if="!staticOptionNames.includes(color)" v-model:data="color" />
+      <CmkColorPicker v-if="!staticOptionNames.includes(color)" v-model="color" />
     </div>
   </div>
 </template>

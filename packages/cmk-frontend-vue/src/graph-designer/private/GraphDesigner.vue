@@ -1170,7 +1170,7 @@ const graphDesignerContentAsJson = computed(() => {
         <td class="narrow">
           <CmkColorPicker
             v-if="graphLine.type !== 'query'"
-            v-model:data="graphLine.color"
+            v-model="graphLine.color"
             :aria-label="_t('Color picker')"
           />
         </td>

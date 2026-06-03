@@ -40,6 +40,19 @@ export interface KeyStates {
   [key: string]: boolean
 }
 
+const MODIFIER_KEYS = new Set([
+  'control',
+  'ctrl',
+  'shift',
+  'alt',
+  'altgraph',
+  'meta',
+  'os',
+  'super',
+  'cmd',
+  'command'
+])
+
 export class KeyShortcutService {
   private keyStates: KeyStates = {}
   private handlers: KeyShortcutHandler[] = []
@@ -97,6 +110,14 @@ export class KeyShortcutService {
   }
 
   private ensureShortcut(shortcut: KeyShortcut): KeyShortcutEnsured {
+    const modifierKeys = shortcut.key.filter((key) => MODIFIER_KEYS.has(key.toLowerCase()))
+    if (modifierKeys.length > 0) {
+      throw new Error(
+        `Modifier keys are not allowed in the shortcut "key" array: ${modifierKeys.join(', ')}. ` +
+          'Use the "ctrl", "shift" or "alt" flags instead.'
+      )
+    }
+
     if (!shortcut.ctrl) {
       shortcut.ctrl = false
     }

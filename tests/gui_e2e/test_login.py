@@ -87,12 +87,18 @@ def get_invalid_ldap_credentials(open_ldap_manager: OpenLDAPManager) -> CmkCrede
 
 
 @pytest.mark.parametrize(
-    "url",
+    "url, expected_suffix",
     [
         pytest.param(
-            r"index.py?start_url=%2F<SITE_ID>%2Fcheck_mk%2Fbookmark_lists.py", id="browser"
+            r"index.py?start_url=%2F<SITE_ID>%2Fcheck_mk%2Fbookmark_lists.py",
+            r"bookmark_lists.py",
+            id="browser",
         ),
-        pytest.param(r"mobile_view.py?view_name=mobile_notifications", id="mobile"),
+        pytest.param(
+            r"mobile_view.py?view_name=mobile_notifications",
+            r"mobile_view.py?view_name=mobile_notifications",
+            id="mobile",
+        ),
     ],
 )
 def test_redirected_to_desired_page(
@@ -100,6 +106,7 @@ def test_redirected_to_desired_page(
     credentials: CmkCredentials,
     test_site: Site,
     url: str,
+    expected_suffix: str,
 ) -> None:
     _, page = new_browser_context_and_page
     cmk_page = url.replace(r"<SITE_ID>", test_site.id)
@@ -107,7 +114,10 @@ def test_redirected_to_desired_page(
 
     login_page = LoginPage(page, visit_url)
     login_page.login(credentials)
-    expect(login_page.page).to_have_url(re.compile(f"{re.escape(cmk_page)}$"))
+    # `index.py?start_url=...` now HTTP-redirects straight to the target page
+    # instead of wrapping it in a main iframe, so the final URL is the start_url
+    # target itself rather than the `index.py` wrapper.
+    expect(login_page.page).to_have_url(re.compile(f"{re.escape(expected_suffix)}$"))
 
 
 @pytest.mark.skipif(not is_containerized(), reason="Only to be run in a container")

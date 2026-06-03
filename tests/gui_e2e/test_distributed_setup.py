@@ -20,7 +20,6 @@ from tests.gui_e2e.testlib.playwright.pom.setup.distributed_monitoring import (
     DistributedMonitoring,
 )
 from tests.gui_e2e.testlib.playwright.pom.setup.hosts import HostProperties
-from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import is_cleanup_enabled
 
@@ -87,19 +86,21 @@ def fixture_remote_site(
 ) -> Iterator[Site]:
     """Return the remote Checkmk site object."""
 
-    with exit_pytest_on_exceptions(
-        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
-    ):
+    try:
         with site_factory.get_test_site_ctx(name="remote") as _remote_site:
-            yield _remote_site
-
-            # Cleanup: Remove files to unlock local setup again in remote site.
-            for file_to_delete in (
-                "etc/check_mk/multisite.d/wato/sitespecific.mk",
-                "etc/check_mk/conf.d/distributed_wato.mk",
-            ):
-                if _remote_site.file_exists(file_to_delete):
-                    _remote_site.delete_file(file_to_delete)
+            try:
+                yield _remote_site
+            finally:
+                # Cleanup: Remove files to unlock local setup again in remote site.
+                for file_to_delete in (
+                    "etc/check_mk/multisite.d/wato/sitespecific.mk",
+                    "etc/check_mk/conf.d/distributed_wato.mk",
+                ):
+                    if _remote_site.file_exists(file_to_delete):
+                        _remote_site.delete_file(file_to_delete)
+    except BaseException as exc:
+        exc.add_note("Error in remote site creation / connection! Failing test case run...")
+        raise exc
 
 
 def test_remote_host_configuring(

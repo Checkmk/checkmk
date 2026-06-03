@@ -70,13 +70,14 @@ def fixture_remote_site_wato_disabled(
 
     WATO is disabled on the remote site (disable_remote_configuration=True).
     """
-    with exit_pytest_on_exceptions(
-        exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
-    ):
+    try:
         with site_factory.connected_remote_site(
             "remote", test_site, request.node.name
         ) as remote_site:
             yield remote_site
+    except BaseException as exc:
+        exc.add_note("Error in remote site creation / connection! Failing test case run...")
+        raise exc
 
 
 @pytest.fixture(name="credentials", scope="session")

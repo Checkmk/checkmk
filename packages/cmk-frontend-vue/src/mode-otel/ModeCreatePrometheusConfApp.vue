@@ -9,6 +9,7 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkWizard, {
   CmkWizardButton,
   CmkWizardModeToggle,
@@ -124,6 +125,11 @@ const saveButtonLabel = computed(() =>
 
 const saveButtonDisabled = computed(() => saveState.value === 'running')
 
+// In overview mode all steps are validated on save (the per-step Next buttons
+// are hidden). When that validation fails we surface this message above the
+// finalize button so the user knows why the save did not proceed.
+const overviewValidationFailed = ref(false)
+
 async function onSaveClick(): Promise<void> {
   // Second click after a successful run navigates back to the Prometheus
   // Overview page and opens the "Activate changes" panel so the user can
@@ -151,8 +157,10 @@ async function onSaveClick(): Promise<void> {
       validatePrometheusScraper()
     ])
     if (!generalValid || !scraperValid) {
+      overviewValidationFailed.value = true
       return
     }
+    overviewValidationFailed.value = false
   }
   await finalizeRef.value?.runActions()
 }
@@ -239,14 +247,36 @@ async function onSaveClick(): Promise<void> {
         </FinalizeConfiguration>
       </template>
       <template #actions>
-        <CmkWizardButton
-          type="finish"
-          :override-label="saveButtonLabel"
-          :disabled="saveButtonDisabled"
-          @click="onSaveClick"
-        />
-        <CmkWizardButton v-if="showBackControls" type="previous" />
+        <div class="mode-otel-mode-create-prometheus-conf-app__actions">
+          <CmkAlertBox v-if="overviewValidationFailed" variant="error" size="small">
+            {{ _t('The form still contains invalid data. Please correct them and try again.') }}
+          </CmkAlertBox>
+          <div class="mode-otel-mode-create-prometheus-conf-app__actions-buttons">
+            <CmkWizardButton
+              type="finish"
+              :override-label="saveButtonLabel"
+              :disabled="saveButtonDisabled"
+              @click="onSaveClick"
+            />
+            <CmkWizardButton v-if="showBackControls" type="previous" />
+          </div>
+        </div>
       </template>
     </CmkWizardStep>
   </CmkWizard>
 </template>
+
+<style scoped>
+.mode-otel-mode-create-prometheus-conf-app__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
+}
+
+.mode-otel-mode-create-prometheus-conf-app__actions-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--dimension-4);
+}
+</style>

@@ -9,12 +9,25 @@ from collections.abc import Callable, Mapping
 import pytest
 
 from cmk.ccc.version import Edition
+from cmk.gui.valuespec import Dictionary, Float, Integer, Tuple
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
-from cmk.gui.watolib.rulespecs import Rulespec
+from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
+from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec
 from cmk.update_config.plugins.actions import rulesets as rulesets_updater
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
+
+_ARTIFICIAL_RULESPECS: Mapping[RulesetName, Rulespec] = {
+    RuleGroup.CheckgroupParameters("ntp_time"): HostRulespec(
+        name=RuleGroup.CheckgroupParameters("ntp_time"),
+        group=RulespecGroupMonitoringConfigurationVarious,
+        valuespec=lambda: Dictionary(
+            elements=[("ntp_levels", Tuple(elements=[Integer(), Float(), Float()]))],
+            optional_keys=True,
+        ),
+    ),
+}
 
 
 def _instantiate_ruleset(
@@ -82,6 +95,7 @@ def test_validate_rule_values(
             ruleset_name: _instantiate_ruleset(
                 ruleset_name,
                 rule_value,
+                _ARTIFICIAL_RULESPECS.get(ruleset_name),
             )
             for ruleset_name, rule_value in rulesets(test_edition).items()
         }

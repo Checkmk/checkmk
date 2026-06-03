@@ -7,8 +7,11 @@ import logging
 
 import pytest
 
+from cmk.gui.valuespec import Dictionary
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
+from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
+from cmk.gui.watolib.rulespecs import HostRulespec
 from cmk.gui.watolib.sample_config import INVENTORY_PROCESS_DISCOVERY_RULES
 from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     _NEW_DEFAULT_RULE_IDS,
@@ -17,10 +20,16 @@ from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     rule_present,
 )
 
+_PS_DISCOVERY_RULESPEC = HostRulespec(
+    name=PS_DISCOVERY_RULE_NAME,
+    group=RulespecGroupMonitoringConfigurationVarious,
+    valuespec=lambda: Dictionary(elements=[], optional_keys=True),
+)
+
 
 def _make_ruleset_collection_with_preexisting_rule(id_: str) -> RulesetCollection:
     # add some rule, but not quite one of ours:
-    ruleset = Ruleset(PS_DISCOVERY_RULE_NAME)
+    ruleset = Ruleset(PS_DISCOVERY_RULE_NAME, rulespec=_PS_DISCOVERY_RULESPEC)
     folder = folder_tree().root_folder()
     rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())
     rule.id = id_
@@ -58,7 +67,7 @@ def test_update_with_one_preexisting_adds_new_defaults() -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_update_with_all_preexisting_adds_nothing() -> None:
-    ruleset = Ruleset(PS_DISCOVERY_RULE_NAME)
+    ruleset = Ruleset(PS_DISCOVERY_RULE_NAME, rulespec=_PS_DISCOVERY_RULESPEC)
     folder = folder_tree().root_folder()
     for shipped_rule in INVENTORY_PROCESS_DISCOVERY_RULES:
         rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())

@@ -39,7 +39,11 @@ import requests
 from pydantic import BaseModel, RootModel
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
-from cmk.plugins.azure_v2.lib import compute_unique_name_hash, get_params_from_azure_id
+from cmk.plugins.azure_v2.lib import (
+    compute_unique_name_hash,
+    get_params_from_azure_id,
+    RESOURCE_TYPE_ABBREVIATIONS,
+)
 from cmk.plugins.azure_v2.special_agent.azure_api_client import (
     ApiError,
     ApiErrorAuthorizationRequestDenied,
@@ -98,37 +102,40 @@ class UniqueHostnamesConfig:
 
 
 class FetchedResource(Enum):
-    """Available Azure resources, with section name and abbreviation.
-    Abbreviations follow https://github.com/MicrosoftDocs/cloud-adoption-framework/blob/main/docs/ready/azure-best-practices/resource-abbreviations.md where possible.
+    """Available Azure resources, with section name.
+    The host name abbreviations are maintained in cmk.plugins.azure_v2.lib.constants.
     """
 
     # fmt: off
-    VIRTUAL_MACHINES            = ("Microsoft.Compute/virtualMachines",            "virtualmachines",          "vm")
-    VAULTS                      = ("Microsoft.RecoveryServices/vaults",            "vaults",                   "rsv")
-    APP_GATEWAYS                = ("Microsoft.Network/applicationGateways",        "applicationgateways",      "agw")
-    LOAD_BALANCERS              = ("Microsoft.Network/loadBalancers",              "loadbalancers",            "lb")
-    VIRTUAL_NETWORK_GATEWAYS    = ("Microsoft.Network/virtualNetworkGateways",     "virtualnetworkgateways",   "vgw")
-    REDIS                       = ("Microsoft.Cache/Redis",                        "redis",                    "redis")
-    COSMOSDB                    = ("Microsoft.DocumentDB/databaseAccounts",        "databaseaccounts",         "cosmos")
+    VIRTUAL_MACHINES            = ("Microsoft.Compute/virtualMachines",            "virtualmachines")
+    VAULTS                      = ("Microsoft.RecoveryServices/vaults",            "vaults")
+    APP_GATEWAYS                = ("Microsoft.Network/applicationGateways",        "applicationgateways")
+    LOAD_BALANCERS              = ("Microsoft.Network/loadBalancers",              "loadbalancers")
+    VIRTUAL_NETWORK_GATEWAYS    = ("Microsoft.Network/virtualNetworkGateways",     "virtualnetworkgateways")
+    REDIS                       = ("Microsoft.Cache/Redis",                        "redis")
+    COSMOSDB                    = ("Microsoft.DocumentDB/databaseAccounts",        "databaseaccounts")
     # made-up resource type for cosmosdb databases:
-    COSMOSDB_DATABASE           = ("Microsoft.DocumentDB/databaseAccounts/cosmos_database", "databaseaccounts","cosmosdb")
-    FIREWALLS                   = ("Microsoft.Network/azureFirewalls",             "azurefirewalls",           "afw")
-    MYSQL_FLEXIBLE_SERVERS      = ("Microsoft.DBforMySQL/flexibleServers",         "flexibleservers",          "mysql")
-    POSTGRESQL_FLEXIBLE_SERVERS = ("Microsoft.DBforPostgreSQL/flexibleServers",    "flexibleservers",          "psql")
-    VIRTUAL_NETWORKS            = ("Microsoft.Network/virtualNetworks",            "virtualnetworks",          "vnet")
-    NAT_GATEWAYS                = ("Microsoft.Network/natGateways",                "natgateways",              "ng")
-    SQL_DATABASES               = ("Microsoft.Sql/servers/databases",              "databases",                "sqldb")
-    STORAGE_ACCOUNTS            = ("Microsoft.Storage/storageAccounts",            "storageaccounts",          "st")
-    WEB_SITES                   = ("Microsoft.Web/sites",                          "sites",                    "app")
-    MYSQL_SERVERS               = ("Microsoft.DBforMySQL/servers",                 "servers",                  "mysql")
-    POSTGRESQL_SERVERS          = ("Microsoft.DBforPostgreSQL/servers",            "servers",                  "psql")
-    TRAFFIC_MANAGER             = ("Microsoft.Network/trafficManagerProfiles",     "trafficmanagerprofiles",   "traf")
+    COSMOSDB_DATABASE           = ("Microsoft.DocumentDB/databaseAccounts/cosmos_database", "databaseaccounts")
+    FIREWALLS                   = ("Microsoft.Network/azureFirewalls",             "azurefirewalls")
+    MYSQL_FLEXIBLE_SERVERS      = ("Microsoft.DBforMySQL/flexibleServers",         "flexibleservers")
+    POSTGRESQL_FLEXIBLE_SERVERS = ("Microsoft.DBforPostgreSQL/flexibleServers",    "flexibleservers")
+    VIRTUAL_NETWORKS            = ("Microsoft.Network/virtualNetworks",            "virtualnetworks")
+    NAT_GATEWAYS                = ("Microsoft.Network/natGateways",                "natgateways")
+    SQL_DATABASES               = ("Microsoft.Sql/servers/databases",              "databases")
+    STORAGE_ACCOUNTS            = ("Microsoft.Storage/storageAccounts",            "storageaccounts")
+    WEB_SITES                   = ("Microsoft.Web/sites",                          "sites")
+    MYSQL_SERVERS               = ("Microsoft.DBforMySQL/servers",                 "servers")
+    POSTGRESQL_SERVERS          = ("Microsoft.DBforPostgreSQL/servers",            "servers")
+    TRAFFIC_MANAGER             = ("Microsoft.Network/trafficManagerProfiles",     "trafficmanagerprofiles")
     # fmt: on
 
-    def __init__(self, resource_type: str, section_name: str, abbreviation: str) -> None:
+    def __init__(self, resource_type: str, section_name: str) -> None:
         self.resource_type = resource_type
         self.section_name = section_name
-        self.abbreviation = abbreviation
+        # Direct mapping access: a fetched resource type missing from the
+        # shared mapping must fail at import time, not when hostnames are
+        # computed.
+        self.abbreviation = RESOURCE_TYPE_ABBREVIATIONS[resource_type]
 
     @classmethod
     def from_type(cls, resource_type: str) -> FetchedResource | None:

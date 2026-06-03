@@ -40,15 +40,15 @@ function mountRow(row: HostEntry) {
 test('renders host name, alias and ip in their cells', () => {
   mountRow(makeHost())
 
-  expect(screen.getByText('web-1')).toBeInTheDocument()
-  expect(screen.getByText('web server 1')).toBeInTheDocument()
-  expect(screen.getByText('10.0.0.1')).toBeInTheDocument()
+  expect(screen.getByTitle('web-1')).toBeInTheDocument()
+  expect(screen.getByTitle('web server 1')).toBeInTheDocument()
+  expect(screen.getByTitle('10.0.0.1')).toBeInTheDocument()
 })
 
 test('renders state badge with success color for state UP', () => {
   const { container } = mountRow(makeHost({ state: 'UP' }))
 
-  const stateTag = container.querySelector('.cmk-tag--color-success')
+  const stateTag = container.querySelector('.monitoring-highlight-wrapper--color-success')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UP')
 })
@@ -56,7 +56,7 @@ test('renders state badge with success color for state UP', () => {
 test('renders state badge with danger color for state DOWN', () => {
   const { container } = mountRow(makeHost({ state: 'DOWN' }))
 
-  const stateTag = container.querySelector('.cmk-tag--color-danger')
+  const stateTag = container.querySelector('.monitoring-highlight-wrapper--color-danger')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('DOWN')
 })
@@ -64,7 +64,7 @@ test('renders state badge with danger color for state DOWN', () => {
 test('renders state badge with warning color for state UNREACHABLE', () => {
   const { container } = mountRow(makeHost({ state: 'UNREACHABLE' }))
 
-  const stateTag = container.querySelector('.cmk-tag--color-warning')
+  const stateTag = container.querySelector('.monitoring-highlight-wrapper--color-warning')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UNREACH')
 })

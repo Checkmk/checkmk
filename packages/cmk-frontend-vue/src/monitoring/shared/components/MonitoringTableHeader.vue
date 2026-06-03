@@ -48,6 +48,9 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
   if (columnDef.maxSize !== undefined) {
     style.maxWidth = `${columnDef.maxSize}px`
   }
+  if (columnDef.meta?.justify !== undefined) {
+    style.textAlign = columnDef.meta.justify
+  }
   return style
 }
 </script>

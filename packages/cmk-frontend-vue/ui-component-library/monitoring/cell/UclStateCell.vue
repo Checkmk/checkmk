@@ -37,6 +37,17 @@ export const panelConfig = {
     title: 'pending',
     initialState: false,
     help: 'Show the pending (reload) indicator icon.'
+  },
+  justify: {
+    type: 'list' as const,
+    title: 'justify',
+    options: [
+      { title: 'left', name: 'left' },
+      { title: 'center', name: 'center' },
+      { title: 'right', name: 'right' }
+    ],
+    initialState: 'left',
+    help: 'Horizontal alignment of the cell content.'
   }
 } satisfies PanelConfig
 </script>
@@ -54,6 +65,7 @@ import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { computed, ref } from 'vue'
 
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
+import type { ColumnJustify } from '@/monitoring/shared/components/MonitoringTableContext'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -65,6 +77,7 @@ const propState = ref(
 )
 
 const state = computed<HostState>(() => propState.value.state)
+const justify = computed<ColumnJustify>(() => propState.value.justify as ColumnJustify)
 
 const SLIDER_MIN = 50
 const SLIDER_MAX = 250
@@ -91,7 +104,8 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
     header: 'State',
     size: sliderValue.value,
     minSize: COLUMN_MIN,
-    maxSize: COLUMN_MAX
+    maxSize: COLUMN_MAX,
+    meta: { justify: justify.value }
   }
 ])
 
@@ -141,7 +155,12 @@ const currentWidth = computed(() => `${effectiveWidth.value} px`)
             @update:filter-state="filterState = $event"
           >
             <template #row>
-              <StateCell :state="state" :stale="propState.stale" :pending="propState.pending" />
+              <StateCell
+                column-id="cell"
+                :state="state"
+                :stale="propState.stale"
+                :pending="propState.pending"
+              />
             </template>
           </MonitoringTable>
         </div>

@@ -33,7 +33,12 @@ async function mountCell(
       new Map([
         [
           TEST_COLUMN_ID,
-          { width: options.cellWidth ?? null, pinnedLeft: null, isLastPinned: false }
+          {
+            width: options.cellWidth ?? null,
+            pinnedLeft: null,
+            isLastPinned: false,
+            justify: 'left' as const
+          }
         ]
       ])
   )

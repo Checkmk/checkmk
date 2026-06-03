@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { type ColumnJustify, justifyToFlex } from '../../MonitoringTableContext'
+
 export interface CellHighlight {
   type: 'inline' | 'outline' | 'full'
   color: 'default' | 'success' | 'warning' | 'danger' | 'info'
@@ -14,7 +16,10 @@ export interface CellHighlight {
 const props = defineProps<{
   highlight?: CellHighlight | undefined
   isLinked?: boolean | undefined
+  justify?: ColumnJustify | undefined
 }>()
+
+const justifyContent = computed(() => justifyToFlex(props.justify ?? 'left'))
 
 const highlightClass = computed<string | null>(() => {
   if (props.highlight) {
@@ -58,9 +63,10 @@ const highlightClass = computed<string | null>(() => {
 
   &.monitoring-highlight-wrapper--full {
     margin: 0;
-    width: auto;
+    width: 100%;
     padding: var(--dimension-3) var(--dimension-3);
     border-radius: 0;
+    justify-content: v-bind(justifyContent);
   }
 
   &.monitoring-highlight-wrapper--color-default {

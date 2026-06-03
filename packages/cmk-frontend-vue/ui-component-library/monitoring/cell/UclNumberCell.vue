@@ -89,6 +89,17 @@ export const panelConfig = {
     title: 'maxWidth',
     initialState: 120,
     help: 'Maximum column width in px (tanstack column maxSize).'
+  },
+  justify: {
+    type: 'list' as const,
+    title: 'justify',
+    options: [
+      { title: 'left', name: 'left' },
+      { title: 'center', name: 'center' },
+      { title: 'right', name: 'right' }
+    ],
+    initialState: 'left',
+    help: 'Horizontal alignment of the cell content.'
   }
 } satisfies PanelConfig
 </script>
@@ -106,6 +117,7 @@ import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { computed, ref } from 'vue'
 
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
+import type { ColumnJustify } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import type { CellHighlight } from '@/monitoring/shared/components/cell/base/HighlightWrapper.vue'
@@ -127,6 +139,8 @@ const linkedTo = computed<CellLink | undefined>(() =>
       }
     : undefined
 )
+
+const justify = computed<ColumnJustify>(() => propState.value.justify as ColumnJustify)
 
 const highlight = computed<CellHighlight | undefined>(() =>
   propState.value.highlightEnabled
@@ -168,7 +182,8 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
     id: 'cell',
     header: 'Value',
     minSize: propState.value.minWidth,
-    maxSize: propState.value.maxWidth
+    maxSize: propState.value.maxWidth,
+    meta: { justify: justify.value }
   }
 ])
 </script>
@@ -190,6 +205,7 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
         >
           <template #row>
             <NumberCell
+              column-id="cell"
               :value="propState.value"
               :decimals="propState.decimals"
               :highlight="highlight"

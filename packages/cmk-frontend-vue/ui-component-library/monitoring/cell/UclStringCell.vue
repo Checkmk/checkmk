@@ -71,6 +71,17 @@ export const panelConfig = {
     title: 'maxWidth',
     initialState: 600,
     help: 'Maximum column width in px (tanstack column maxSize). Clamps the slider.'
+  },
+  justify: {
+    type: 'list' as const,
+    title: 'justify',
+    options: [
+      { title: 'left', name: 'left' as const },
+      { title: 'center', name: 'center' as const },
+      { title: 'right', name: 'right' as const }
+    ],
+    initialState: 'left' as const,
+    help: 'Horizontal alignment of the cell content.'
   }
 } satisfies PanelConfig
 </script>
@@ -88,6 +99,7 @@ import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { computed, ref } from 'vue'
 
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
+import type { ColumnJustify } from '@/monitoring/shared/components/MonitoringTableContext'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -97,6 +109,8 @@ const propState = ref(
     Object.entries(panelConfig).map(([key, def]) => [key, def.initialState])
   ) as InferPanelState<typeof panelConfig>
 )
+
+const justify = computed<ColumnJustify>(() => propState.value.justify as ColumnJustify)
 
 const SLIDER_MIN = 60
 const SLIDER_MAX = 600
@@ -121,7 +135,8 @@ const filterState = ref<ColumnFiltersState>([])
 const columns = computed<ColumnDef<DemoRow>[]>(() => [
   {
     id: 'cell',
-    header: 'Value'
+    header: 'Value',
+    meta: { justify: justify.value }
   }
 ])
 
@@ -202,6 +217,7 @@ const currentWidth = computed(() => `${effectiveCellWidth.value} px`)
           >
             <template #row>
               <StringCell
+                column-id="cell"
                 :value="propState.value"
                 :hard-break-every="propState.hardBreakEvery"
                 :linked-to="linkedTo"

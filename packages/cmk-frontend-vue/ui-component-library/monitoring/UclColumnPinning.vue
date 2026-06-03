@@ -56,11 +56,41 @@ const columns: ColumnDef<HostEntry>[] = [
   { accessorKey: 'name', header: 'Host', minSize: 100, maxSize: 320 },
   { accessorKey: 'alias', header: 'Alias', minSize: 100, maxSize: 320 },
   { accessorKey: 'ip', header: 'IP address', minSize: 100, maxSize: 160 },
-  { accessorKey: 'num_services_ok', header: 'OK', minSize: 64, maxSize: 90 },
-  { accessorKey: 'num_services_warn', header: 'Warn', minSize: 64, maxSize: 90 },
-  { accessorKey: 'num_services_crit', header: 'Crit', minSize: 64, maxSize: 90 },
-  { accessorKey: 'num_services_unknown', header: 'Unknown', minSize: 92, maxSize: 130 },
-  { accessorKey: 'num_services_pending', header: 'Pending', minSize: 92, maxSize: 120 }
+  {
+    accessorKey: 'num_services_ok',
+    header: 'OK',
+    meta: { justify: 'center' },
+    minSize: 64,
+    maxSize: 90
+  },
+  {
+    accessorKey: 'num_services_warn',
+    header: 'Warn',
+    meta: { justify: 'center' },
+    minSize: 64,
+    maxSize: 90
+  },
+  {
+    accessorKey: 'num_services_crit',
+    header: 'Crit',
+    meta: { justify: 'center' },
+    minSize: 64,
+    maxSize: 90
+  },
+  {
+    accessorKey: 'num_services_unknown',
+    header: 'Unknown',
+    meta: { justify: 'center' },
+    minSize: 92,
+    maxSize: 130
+  },
+  {
+    accessorKey: 'num_services_pending',
+    header: 'Pending',
+    meta: { justify: 'center' },
+    minSize: 92,
+    maxSize: 120
+  }
 ]
 
 const totalMinWidth = columns.reduce((sum, column) => sum + (column.minSize ?? 0), 0)

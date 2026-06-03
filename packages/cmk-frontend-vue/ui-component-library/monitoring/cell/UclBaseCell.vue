@@ -23,6 +23,17 @@ export const panelConfig = {
     initialState: 'host-01.example.com',
     help: 'Content rendered into the cell when no breakpoints are configured.'
   },
+  justify: {
+    type: 'list' as const,
+    title: 'justify',
+    options: [
+      { title: 'left', name: 'left' },
+      { title: 'center', name: 'center' },
+      { title: 'right', name: 'right' }
+    ],
+    initialState: 'left',
+    help: 'Align the cell content; for a full highlight, also aligns its inner content.'
+  },
   linkEnabled: {
     type: 'boolean' as const,
     title: 'linkedTo',
@@ -119,6 +130,8 @@ const linkedTo = computed<CellLink | undefined>(() =>
     : undefined
 )
 
+const justify = computed(() => propState.value.justify as 'left' | 'center' | 'right')
+
 const highlight = computed<CellHighlight | undefined>(() =>
   propState.value.highlightEnabled
     ? {
@@ -158,8 +171,8 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
   {
     id: 'cell',
     header: 'Cell',
-    size: 200,
-    maxSize: 250
+    size: 320,
+    maxSize: 360
   }
 ])
 </script>
@@ -180,7 +193,7 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
           @update:filter-state="filterState = $event"
         >
           <template #row>
-            <BaseCell :linked-to="linkedTo" :highlight="highlight">
+            <BaseCell :linked-to="linkedTo" :highlight="highlight" :justify="justify">
               {{ propState.defaultContent }}
             </BaseCell>
           </template>

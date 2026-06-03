@@ -16,6 +16,7 @@ import { computed, inject, onBeforeUnmount, provide, ref, watch } from 'vue'
 
 import {
   COLUMN_LAYOUT_KEY,
+  type ColumnJustify,
   type ColumnLayoutInfo,
   MONITORING_SERVICE
 } from './MonitoringTableContext'
@@ -106,6 +107,7 @@ interface ColumnMetric {
   min: number
   max: number
   isLeftPinned: boolean
+  justify: ColumnJustify
 }
 
 const columnMetrics = computed<ColumnMetric[]>(() =>
@@ -113,7 +115,8 @@ const columnMetrics = computed<ColumnMetric[]>(() =>
     id: column.id,
     min: column.columnDef.minSize ?? DEFAULT_COLUMN_MIN_SIZE,
     max: column.columnDef.maxSize ?? DEFAULT_COLUMN_MAX_SIZE,
-    isLeftPinned: column.getIsPinned() === 'left'
+    isLeftPinned: column.getIsPinned() === 'left',
+    justify: column.columnDef.meta?.justify ?? 'left'
   }))
 )
 
@@ -179,6 +182,7 @@ interface ColumnLayout {
   width: number
   isPinned: boolean
   left: number
+  justify: ColumnJustify
 }
 
 const columnLayout = computed<ColumnLayout[]>(() => {
@@ -189,7 +193,14 @@ const columnLayout = computed<ColumnLayout[]>(() => {
   return metrics.map((metric, index) => {
     const width = widths[index] ?? metric.min
     const isPinned = pinningActive.value && metric.isLeftPinned
-    const entry: ColumnLayout = { id: metric.id, index, width, isPinned, left: pinnedOffset }
+    const entry: ColumnLayout = {
+      id: metric.id,
+      index,
+      width,
+      isPinned,
+      left: pinnedOffset,
+      justify: metric.justify
+    }
     if (isPinned) {
       pinnedOffset += width
     }
@@ -211,7 +222,8 @@ const columnInfos = computed<Map<string, ColumnLayoutInfo>>(() => {
     infos.set(entry.id, {
       width: containerWidth.value === null ? null : entry.width,
       pinnedLeft: entry.isPinned ? entry.left : null,
-      isLastPinned: entry.index === lastPinnedIndex.value
+      isLastPinned: entry.index === lastPinnedIndex.value,
+      justify: entry.justify
     })
   }
   return infos

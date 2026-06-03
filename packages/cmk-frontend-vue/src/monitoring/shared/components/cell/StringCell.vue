@@ -50,8 +50,6 @@ const display = computed(() => {
   word-break: normal;
 }
 
-/* The highlight wrapper must fill the cell so the clamped text wraps within the
-   available width (minus the wrapper padding and the trailing link icon). */
 /* stylelint-disable selector-pseudo-class-no-unknown */
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .monitoring-string-cell :deep(.monitoring-highlight-wrapper) {

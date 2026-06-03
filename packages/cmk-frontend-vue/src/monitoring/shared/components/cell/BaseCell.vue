@@ -11,6 +11,8 @@ import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import {
   COLUMN_LAYOUT_KEY,
   type CellBreakpoints,
+  type ColumnJustify,
+  justifyToFlex,
   resolveBreakpoint
 } from '../MonitoringTableContext'
 import HighlightWrapper, { type CellHighlight } from './base/HighlightWrapper.vue'
@@ -26,6 +28,7 @@ const props = defineProps<{
   breakpoints?: CellBreakpoints | undefined
   linkedTo?: CellLink | undefined
   highlight?: CellHighlight | undefined
+  justify?: ColumnJustify | undefined
 }>()
 
 const slots = useSlots()
@@ -35,6 +38,13 @@ const columns = inject(COLUMN_LAYOUT_KEY, null)
 const columnInfo = computed(() =>
   props.columnId ? (columns?.value.get(props.columnId) ?? null) : null
 )
+
+// Explicit prop wins; otherwise fall back to the column's alignment (meta.justify
+// flows in through the layout), so the header and body align from one source.
+const effectiveJustify = computed<ColumnJustify>(
+  () => props.justify ?? columnInfo.value?.justify ?? 'left'
+)
+const justifyContent = computed(() => justifyToFlex(effectiveJustify.value))
 
 const pinnedLeft = computed(() => columnInfo.value?.pinnedLeft ?? null)
 const pinnedStyle = computed<CSSProperties>(() =>
@@ -68,15 +78,16 @@ const activeSlot = computed<string>(() => {
   >
     <a
       v-if="linkedTo && linkedTo.variant !== 'icon'"
+      class="monitoring-base-cell__link"
       :href="linkedTo.href"
       :target="linkedTo.target"
     >
-      <HighlightWrapper :highlight="highlight" :is-linked="true">
+      <HighlightWrapper :highlight="highlight" :justify="effectiveJustify" :is-linked="true">
         <slot :name="activeSlot" />
       </HighlightWrapper>
     </a>
     <div v-else class="monitoring-base-cell__wrapper">
-      <HighlightWrapper :highlight="highlight">
+      <HighlightWrapper :highlight="highlight" :justify="effectiveJustify">
         <slot :name="activeSlot" />
       </HighlightWrapper>
       <a
@@ -94,6 +105,7 @@ const activeSlot = computed<string>(() => {
 .monitoring-base-cell {
   vertical-align: middle;
   height: 24px;
+  text-align: v-bind(effectiveJustify);
 
   a {
     text-decoration: underline;
@@ -104,10 +116,16 @@ const activeSlot = computed<string>(() => {
     }
   }
 
+  .monitoring-base-cell__link {
+    display: flex;
+    justify-content: v-bind(justifyContent);
+  }
+
   .monitoring-base-cell__wrapper {
     display: flex;
     align-items: center;
     flex-direction: row;
+    justify-content: v-bind(justifyContent);
 
     .monitoring-base-cell__link-icon {
       flex: 0 0 auto;

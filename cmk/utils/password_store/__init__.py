@@ -156,6 +156,79 @@ def ad_hoc_password_id() -> str:
     return f"{_PASSWORD_ID_PREFIX}{uuid4()}"
 
 
+# Sentinel emitted by ``migrate_to_password`` in cmk.rulesets.v1.form_specs when
+# converting the legacy ``("password", str)`` two-tuple to the canonical triple
+# on first load. Treated as "no recoverable UUID" by
+# :func:`preserve_explicit_password_uuids` so we do not propagate it onto disk.
+_MIGRATION_SENTINEL_PASSWORD_ID = "throwaway-id"
+
+
+def _is_explicit_password_triple(value: object) -> bool:
+    return (
+        isinstance(value, tuple)
+        and len(value) == 3
+        and value[0] == "cmk_postprocessed"
+        and value[1] == "explicit_password"
+        and isinstance(value[2], tuple)
+        and len(value[2]) == 2
+    )
+
+
+def preserve_explicit_password_uuids(new: object, old: object) -> object:
+    """Return ``new`` with explicit-password UUIDs copied from ``old``.
+
+    Walks ``new`` and ``old`` in parallel and, wherever both hold an
+    explicit-password triple at the same structural position, substitutes the
+    old UUID into the new triple. The UUID is a slot identifier used as the
+    lookup key in ``helper_config/<serial>/stored_passwords``; the legacy
+    valuespec roundtrip (see ``_transform_password_back`` in
+    ``cmk.gui.utils.rule_specs.legacy_converter``) drops it on every save and
+    mints a fresh one, which causes intermittent active-check failures because
+    older command lines still reference the previous UUID. Preserving the slot
+    identity across saves closes that gap.
+
+    The UUID is preserved regardless of whether the password value itself
+    changed: the UUID is not derived from the value, and keeping it stable
+    across a password change also closes the window between activation and
+    core reload during which the freshly-written ``stored_passwords`` and the
+    still-cached command lines could otherwise disagree.
+
+    A fresh UUID is kept when the old value has no counterpart at that
+    position, when the old UUID is empty / not a string, or when it equals the
+    migration sentinel ``"throwaway-id"``.
+
+    The function is pure and returns a new value rather than mutating its
+    inputs; ``Rule.value`` is shared by reference in other code paths
+    (audit-log diffing, ``to_config`` serialisation) which must not see
+    in-place changes.
+    """
+    if _is_explicit_password_triple(new) and _is_explicit_password_triple(old):
+        old_uuid = old[2][0]  # type: ignore[index]
+        if isinstance(old_uuid, str) and old_uuid and old_uuid != _MIGRATION_SENTINEL_PASSWORD_ID:
+            return (new[0], new[1], (old_uuid, new[2][1]))  # type: ignore[index]
+        return new
+
+    if isinstance(new, dict) and isinstance(old, dict):
+        return {
+            key: preserve_explicit_password_uuids(value, old.get(key, _MISSING))
+            for key, value in new.items()
+        }
+
+    if isinstance(new, list) and isinstance(old, list) and len(new) == len(old):
+        return [preserve_explicit_password_uuids(n, o) for n, o in zip(new, old)]
+
+    if isinstance(new, tuple) and isinstance(old, tuple) and len(new) == len(old):
+        return tuple(preserve_explicit_password_uuids(n, o) for n, o in zip(new, old))
+
+    return new
+
+
+# Sentinel value distinguishing "old dict had no such key" from "old held
+# ``None`` at this position". Both cases skip substitution, but only the first
+# warrants recursion into ``new``.
+_MISSING: object = object()
+
+
 def extract(password_id: PasswordId) -> str | None:
     """Translate the password store reference to the actual password"""
     staging_path = pending_password_store_path()

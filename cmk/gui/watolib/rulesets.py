@@ -29,6 +29,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
+from cmk.utils.password_store import preserve_explicit_password_uuids
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.rulesets.conditions import (
     HostOrServiceConditionRegex,
@@ -954,6 +955,10 @@ class Ruleset:
     def edit_rule(self, orig_rule: Rule, rule: Rule) -> None:
         folder_rules = self._rules[orig_rule.folder.path()]
         index = folder_rules.index(orig_rule)
+
+        # FYI: This is totally out of place here. But the logical consequence of a restriction placed into
+        # cmk.base.cee.fetcher_config.write_local
+        rule.value = preserve_explicit_password_uuids(rule.value, orig_rule.value)
 
         folder_rules[index] = rule
 

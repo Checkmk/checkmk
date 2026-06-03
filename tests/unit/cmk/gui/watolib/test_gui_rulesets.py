@@ -773,3 +773,60 @@ def test_rules_grouped_by_folder() -> None:
             list(rule[0].path() for rule in rulesets.rules_grouped_by_folder(sorted_rules, root))
             == expected_folder_order
         )
+
+
+def _make_check_sql_rule(ruleset: Ruleset, uuid: str, password: str) -> Rule:
+    """Build a check_sql rule carrying a canonical explicit-password triple."""
+    return Rule.from_config(
+        folder_tree().root_folder(),
+        ruleset,
+        {
+            "id": "1",
+            "value": {
+                "description": "DB",
+                "dbms": "mssql",
+                "name": "tempdb",
+                "user": "monitor",
+                "password": ("cmk_postprocessed", "explicit_password", (uuid, password)),
+                "sql": "SELECT 1",
+            },
+            "condition": {"host_name": ["HOSTLIST"]},
+        },
+    )
+
+
+def test_edit_rule_preserves_explicit_password_uuid(request_context: None) -> None:
+    """Saving a rule with an unchanged explicit password keeps the original UUID."""
+    ruleset = _ruleset(RuleGroup.ActiveChecks("sql"))
+    orig = _make_check_sql_rule(ruleset, "uuid-orig", "s3cr3t")
+    ruleset.append_rule(folder_tree().root_folder(), orig)
+
+    new = _make_check_sql_rule(ruleset, "uuid-fresh", "s3cr3t")
+    new.value["user"] = "different-monitor"  # unrelated change
+
+    ruleset.edit_rule(orig, new)
+
+    assert new.value["password"] == (
+        "cmk_postprocessed",
+        "explicit_password",
+        ("uuid-orig", "s3cr3t"),
+    )
+
+
+def test_edit_rule_preserves_uuid_when_password_value_changes(
+    request_context: None,
+) -> None:
+    """UUID is a slot identifier: preserve it even when the password value changes."""
+    ruleset = _ruleset(RuleGroup.ActiveChecks("sql"))
+    orig = _make_check_sql_rule(ruleset, "uuid-orig", "s3cr3t")
+    ruleset.append_rule(folder_tree().root_folder(), orig)
+
+    new = _make_check_sql_rule(ruleset, "uuid-fresh", "rotated-secret")
+
+    ruleset.edit_rule(orig, new)
+
+    assert new.value["password"] == (
+        "cmk_postprocessed",
+        "explicit_password",
+        ("uuid-orig", "rotated-secret"),
+    )

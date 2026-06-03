@@ -99,6 +99,114 @@ def test_encrypt_decrypt_identity() -> None:
     assert PasswordStore.decrypt(PasswordStore.encrypt(data)) == data
 
 
+def _explicit(uuid: str, value: str) -> tuple:
+    return ("cmk_postprocessed", "explicit_password", (uuid, value))
+
+
+def _stored(pw_id: str) -> tuple:
+    return ("cmk_postprocessed", "stored_password", (pw_id, ""))
+
+
+def test_preserve_uuids_top_level_unchanged_password() -> None:
+    old = _explicit("uuid-old", "s3cr3t")
+    new = _explicit("uuid-new", "s3cr3t")
+    assert password_store.preserve_explicit_password_uuids(new, old) == _explicit(
+        "uuid-old", "s3cr3t"
+    )
+
+
+def test_preserve_uuids_top_level_changed_password() -> None:
+    """UUID is a slot identifier, not derived from the value: preserve even on value change."""
+    old = _explicit("uuid-old", "s3cr3t")
+    new = _explicit("uuid-new", "new-s3cr3t")
+    assert password_store.preserve_explicit_password_uuids(new, old) == _explicit(
+        "uuid-old", "new-s3cr3t"
+    )
+
+
+def test_preserve_uuids_no_orig_counterpart() -> None:
+    new = _explicit("uuid-new", "s3cr3t")
+    assert password_store.preserve_explicit_password_uuids(new, None) == new
+    assert password_store.preserve_explicit_password_uuids(new, "some scalar") == new
+
+
+def test_preserve_uuids_throwaway_sentinel() -> None:
+    """The migration sentinel emitted by migrate_to_password must not be propagated."""
+    old = _explicit("throwaway-id", "s3cr3t")
+    new = _explicit("uuid-new", "s3cr3t")
+    assert password_store.preserve_explicit_password_uuids(new, old) == new
+
+
+def test_preserve_uuids_invalid_old_uuid() -> None:
+    new = _explicit("uuid-new", "s3cr3t")
+    assert password_store.preserve_explicit_password_uuids(new, _explicit("", "s3cr3t")) == new
+    assert (
+        password_store.preserve_explicit_password_uuids(
+            new, ("cmk_postprocessed", "explicit_password", (None, "s3cr3t"))
+        )
+        == new
+    )
+
+
+def test_preserve_uuids_stored_password_passthrough() -> None:
+    """Stored-password triples use user-chosen IDs and must not be rewritten."""
+    new = _stored("my_db_password")
+    old = _stored("my_db_password")
+    assert password_store.preserve_explicit_password_uuids(new, old) == new
+
+
+def test_preserve_uuids_buried_inside_dict_and_list() -> None:
+    old = {"creds": [{"primary": _explicit("uuid-old", "s3cr3t")}]}
+    new = {"creds": [{"primary": _explicit("uuid-new", "s3cr3t")}]}
+    assert password_store.preserve_explicit_password_uuids(new, old) == {
+        "creds": [{"primary": _explicit("uuid-old", "s3cr3t")}]
+    }
+
+
+def test_preserve_uuids_two_passwords_independent() -> None:
+    old = {
+        "a": _explicit("uuid-a-old", "p1"),
+        "b": _explicit("uuid-b-old", "p2"),
+    }
+    new = {
+        "a": _explicit("uuid-a-new", "p1-changed"),
+        "b": _explicit("uuid-b-new", "p2"),
+    }
+    result = password_store.preserve_explicit_password_uuids(new, old)
+    assert result == {
+        "a": _explicit("uuid-a-old", "p1-changed"),
+        "b": _explicit("uuid-b-old", "p2"),
+    }
+
+
+def test_preserve_uuids_dict_key_added_in_new() -> None:
+    old = {"a": _explicit("uuid-a-old", "p1")}
+    new = {
+        "a": _explicit("uuid-a-new", "p1"),
+        "b": _explicit("uuid-b-new", "p2"),
+    }
+    result = password_store.preserve_explicit_password_uuids(new, old)
+    assert result == {
+        "a": _explicit("uuid-a-old", "p1"),
+        "b": _explicit("uuid-b-new", "p2"),
+    }
+
+
+def test_preserve_uuids_list_length_mismatch_passes_new_through() -> None:
+    old = [_explicit("uuid-old", "s3cr3t")]
+    new = [
+        _explicit("uuid-new-0", "s3cr3t"),
+        _explicit("uuid-new-1", "other"),
+    ]
+    assert password_store.preserve_explicit_password_uuids(new, old) == new
+
+
+def test_preserve_uuids_scalars_and_none() -> None:
+    assert password_store.preserve_explicit_password_uuids("x", "y") == "x"
+    assert password_store.preserve_explicit_password_uuids(None, None) is None
+    assert password_store.preserve_explicit_password_uuids(42, "str") == 42
+
+
 @pytest.mark.usefixtures("fixed_secret")
 def test_pw_store_characterization() -> None:
     """This is a characterization (aka "golden master") test to ensure that the password store can

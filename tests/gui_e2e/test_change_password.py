@@ -5,7 +5,6 @@
 import logging
 import re
 from collections.abc import Iterator
-from urllib.parse import quote_plus
 
 import pytest
 
@@ -31,13 +30,13 @@ def navigate_to_edit_user_page(dashboard_page: MainDashboard, user_name: str) ->
     logger.info("Navigate to 'Edit user' page")
     dashboard_page.main_menu.setup_menu("Users").click()
     dashboard_page.page.wait_for_url(
-        url=re.compile(quote_plus("wato.py?mode=users")), wait_until="load"
+        url=re.compile(re.escape("wato.py?mode=users")), wait_until="load"
     )
     dashboard_page.main_area.locator(
         f"tr:has(td:has-text('{user_name}')) >> a[title='Properties']"
     ).click()
     dashboard_page.page.wait_for_url(
-        url=re.compile(quote_plus(f"edit={user_name}")), wait_until="load"
+        url=re.compile(re.escape(f"edit={user_name}")), wait_until="load"
     )
 
 

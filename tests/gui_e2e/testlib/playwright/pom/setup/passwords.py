@@ -5,7 +5,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
@@ -26,7 +25,7 @@ class Passwords(CmkPage):
     def navigate(self) -> None:
         logger.info("Navigate to 'Passwords' page")
         self.main_menu.setup_menu("Passwords").click()
-        self.page.wait_for_url(url=re.compile(quote_plus("mode=passwords")), wait_until="load")
+        self.page.wait_for_url(url=re.compile(re.escape("mode=passwords")), wait_until="load")
         self.validate_page()
 
     @override

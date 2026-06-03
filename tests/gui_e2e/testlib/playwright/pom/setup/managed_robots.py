@@ -7,7 +7,6 @@ import logging
 import re
 from pathlib import Path
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -33,7 +32,7 @@ class ManagedRobotsOverview(CmkPage):
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu("Managed robots", show_more=True).click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=robotmk_managed_robots_overview")),
+            url=re.compile(re.escape("wato.py?mode=robotmk_managed_robots_overview")),
             wait_until="load",
         )
         self.validate_page()

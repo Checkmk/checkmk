@@ -7,7 +7,6 @@ import logging
 import re
 from abc import ABC
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import Locator, Page
 
@@ -31,7 +30,7 @@ class GlobalSettings(CmkPage):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is 'Global settings' page")
-        _url_pattern = quote_plus("wato.py?mode=globalvars")
+        _url_pattern = re.escape("wato.py?mode=globalvars")
         self.page.wait_for_url(re.compile(f"{_url_pattern}$"), wait_until="load")
         self.main_area.check_page_title(self.page_title)
 
@@ -115,7 +114,7 @@ class EditPiggybackHubGlobally(EditGlobalSetting):
         settings_page.search_settings(_setting_name)
         settings_page.setting_link(_setting_name).click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("varname=site_piggyback_hub")), wait_until="load"
+            url=re.compile(re.escape("varname=site_piggyback_hub")), wait_until="load"
         )
 
     @property
@@ -157,7 +156,7 @@ class SiteSpecificGlobalSettings(CmkPage):
 
         distributed_monitoring_page = DistributedMonitoring(self.page)
         distributed_monitoring_page.site_specific_global_configuration(self._site_id).click()
-        _edit_sites_url_pattern = quote_plus(
+        _edit_sites_url_pattern = re.escape(
             f"wato.py?folder=&mode=edit_site_globals&site={self._site_id}"
         )
         self.page.wait_for_url(re.compile(f"{_edit_sites_url_pattern}$"), wait_until="load")
@@ -270,7 +269,7 @@ class EditPiggybackHubSiteSpecific(EditSiteSpecificGlobalSetting):
         settings_page.search_settings(_setting_name)
         settings_page.setting_link(_setting_name).click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("varname=site_piggyback_hub")), wait_until="load"
+            url=re.compile(re.escape("varname=site_piggyback_hub")), wait_until="load"
         )
 
     @property

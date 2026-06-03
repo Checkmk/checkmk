@@ -6,7 +6,6 @@ import logging
 import re
 from abc import abstractmethod
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -44,7 +43,7 @@ class BaseNotificationPage(QuickSetupPage):
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.page.wait_for_url(
-            url=re.compile(quote_plus("mode=notification_rule_quick_setup")), wait_until="load"
+            url=re.compile(re.escape("mode=notification_rule_quick_setup")), wait_until="load"
         )
         self.main_area.check_page_title(self.page_title)
         expect(self.overview_mode_button).to_be_visible()
@@ -210,7 +209,7 @@ class BaseNotificationPage(QuickSetupPage):
     def apply_and_create_another_rule(self) -> None:
         self.apply_and_create_another_rule_button.click()
         self.page.wait_for_url(
-            url=re.compile(rf"{quote_plus('wato.py?mode=notification_rule_quick_setup')}$"),
+            url=re.compile(rf"{re.escape('wato.py?mode=notification_rule_quick_setup')}$"),
             wait_until="load",
         )
 
@@ -321,7 +320,7 @@ class BaseNotificationPage(QuickSetupPage):
         self.apply_button.click()
 
         self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=notifications")), wait_until="load"
+            url=re.compile(re.escape("wato.py?mode=notifications")), wait_until="load"
         )
 
 

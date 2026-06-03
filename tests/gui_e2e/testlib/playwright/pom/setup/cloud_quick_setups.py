@@ -6,7 +6,6 @@ import logging
 import re
 from abc import abstractmethod
 from typing import Final, Literal, NamedTuple, override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -50,7 +49,7 @@ class BaseQuickSetupConfigurationList(CmkPage):
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu(self.setup_entry, exact=True).click()
-        _url_pattern: str = quote_plus(
+        _url_pattern: str = re.escape(
             "wato.py?mode=edit_configuration_bundles&varname=special_agents"
         )
         self.page.wait_for_url(
@@ -141,7 +140,7 @@ class BaseQuickSetupAddNewConfiguration(QuickSetupPage):
         logger.info(f"Navigate to 'Quick setup > {self.page_title}' page")
         list_page = self.list_configuration_page()
         list_page.add_configuration_button.click()
-        _url_pattern: str = quote_plus(
+        _url_pattern: str = re.escape(
             "wato.py?mode=new_special_agent_configuration&varname=special_agents"
         )
         self.page.wait_for_url(

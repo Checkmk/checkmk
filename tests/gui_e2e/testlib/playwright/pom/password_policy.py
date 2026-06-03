@@ -5,7 +5,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
@@ -43,7 +42,7 @@ class PasswordPolicy(CmkPage):
         settings_page.search_settings(_setting_name)
         settings_page.setting_link(_setting_name).click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("varname=password_policy")), wait_until="load"
+            url=re.compile(re.escape("varname=password_policy")), wait_until="load"
         )
 
     @override

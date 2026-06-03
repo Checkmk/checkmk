@@ -5,7 +5,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
@@ -34,7 +33,7 @@ class AddRuleFilesystems(CmkPage):
         logger.info("Navigate to 'Add rule: %s' page", self.rule_name)
         service_rules_page.add_rule_button.click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus(self.url_pattern % self.url_specific)),
+            url=re.compile(re.escape(self.url_pattern % self.url_specific)),
             wait_until="load",
         )
         self.validate_page()

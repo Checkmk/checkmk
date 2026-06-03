@@ -5,7 +5,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
@@ -30,7 +29,7 @@ class SetupHost(CmkPage):
         """
         logger.info("Navigate to 'Setup hosts' page")
         self.main_menu.setup_menu("Hosts").click()
-        _url_pattern: str = quote_plus("wato.py?mode=folder")
+        _url_pattern: str = re.escape("wato.py?mode=folder")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self.validate_page()
 
@@ -188,7 +187,7 @@ class AddHost(CmkPage):
         logger.info("Navigate to '%s' page", self.page_title)
         setup_host_page.add_host.click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?folder=&mode=newhost")), wait_until="load"
+            url=re.compile(re.escape("wato.py?folder=&mode=newhost")), wait_until="load"
         )
         self.validate_page()
 
@@ -297,7 +296,7 @@ class AddHost(CmkPage):
         self.main_area.get_suggestion("Save & view folder").click()
         try:
             self.page.wait_for_url(
-                url=re.compile(quote_plus("wato.py?folder=&mode=folder")), wait_until="load"
+                url=re.compile(re.escape("wato.py?folder=&mode=folder")), wait_until="load"
             )
         except Exception as e:
             if self.main_area.locator("div.error").count() != 0:
@@ -355,7 +354,7 @@ class HostProperties(CmkPage):
         setup_host_page = SetupHost(self.page)
         logger.info("Navigate to 'Host properties' page")
         setup_host_page.get_link(self.details.name).click()
-        _url_pattern = quote_plus(f"wato.py?folder=&host={self.details.name}&mode=edit_host")
+        _url_pattern = re.escape(f"wato.py?folder=&host={self.details.name}&mode=edit_host")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self.validate_page()
 
@@ -477,7 +476,7 @@ class ImportHostsViaCSVFileUpload(CmkPage):
         logger.info("Navigate to 'Import hosts via CSV file' page")
         setup_host = SetupHost(self.page)
         setup_host.main_area.click_item_in_dropdown_list("Hosts", "Import hosts via CSV file")
-        _url_pattern = quote_plus("wato.py?folder=&mode=bulk_import")
+        _url_pattern = re.escape("wato.py?folder=&mode=bulk_import")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self.validate_page()
 

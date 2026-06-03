@@ -6,7 +6,6 @@
 import logging
 import re
 from collections.abc import Iterator
-from urllib.parse import quote_plus
 
 import pytest
 from playwright.sync_api import expect
@@ -29,7 +28,7 @@ def test_werks_available(werks_page: Werks) -> None:
     assert len(displayed_werk_ids) > 0, "Checkmk site does not display any werks!"
 
     for werk_id in displayed_werks:
-        _url_pattern: str = quote_plus(f"werk.py?werk={werk_id}")
+        _url_pattern: str = re.escape(f"werk.py?werk={werk_id}")
         werks_page.werk(werk_id).click()
         werks_page.page.wait_for_url(re.compile(f"{_url_pattern}$"), wait_until="load")
         werks_page.page.go_back(wait_until="load")

@@ -5,7 +5,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -53,7 +52,7 @@ class HostEffectiveParameters(CmkPage):
         logger.info("Navigate to '%s' page", self.page_title)
         setup_hosts_page.effective_parameters_button(self.host.name).click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("mode=object_parameters")),
+            url=re.compile(re.escape("mode=object_parameters")),
             wait_until="load",
         )
         self.validate_page()

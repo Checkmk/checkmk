@@ -7,7 +7,6 @@ import logging
 import re
 from enum import StrEnum
 from typing import override, TypeVar
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -46,7 +45,7 @@ class DistributedMonitoring(CmkPage):
         """Instructions to navigate to `Setup -> General -> Distributed monitoring` page."""
         logger.info(f"Navigate to '{self.page_title}' page")
         self.main_menu.setup_menu(self.page_title).click()
-        _url_pattern: str = quote_plus("wato.py?mode=sites")
+        _url_pattern: str = re.escape("wato.py?mode=sites")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self.validate_page()
 
@@ -216,7 +215,7 @@ class AddSiteConnection(CmkPage):
         logger.info(f"Navigate to '{self.page_title}' page")
         _distributed_monitoring = DistributedMonitoring(self.page)
         _distributed_monitoring.add_connection_button.click()
-        _url_pattern: str = quote_plus("wato.py?mode=edit_site")
+        _url_pattern: str = re.escape("wato.py?mode=edit_site")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self.validate_page()
 
@@ -341,7 +340,7 @@ class LoginRemoteSite(CmkPage):
         _distributed_monitoring = DistributedMonitoring(self.page)
         _distributed_monitoring.get_login_button(self.__remote_site_id).click()
         _url_pattern = re.compile(
-            quote_plus("wato.py?") + r".*" + quote_plus(f"_login={self.__remote_site_id}")
+            re.escape("wato.py?") + r".*" + re.escape(f"_login={self.__remote_site_id}")
         )
         self.page.wait_for_url(url=_url_pattern, wait_until="load")
         self.validate_page()

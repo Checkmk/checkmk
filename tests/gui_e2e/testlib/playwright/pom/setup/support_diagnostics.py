@@ -11,7 +11,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
@@ -39,7 +38,7 @@ class SupportDiagnosticsSelectSite(CmkPage):
 
     @override
     def validate_page(self) -> None:
-        _url_pattern = quote_plus("wato.py?mode=diagnostics")
+        _url_pattern = re.escape("wato.py?mode=diagnostics")
         self.page.wait_for_url(re.compile(f"{_url_pattern}$"), wait_until="load")
         self.main_area.check_page_title(self.title)
 

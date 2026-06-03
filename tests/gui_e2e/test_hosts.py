@@ -5,7 +5,6 @@
 import logging
 import re
 from collections.abc import Iterator
-from urllib.parse import quote_plus
 
 import pytest
 from faker import Faker
@@ -60,7 +59,7 @@ def test_create_and_delete_a_host(dashboard_page: MainDashboard, test_site: Site
     )
     # validate
     host.main_menu.monitor_all_hosts.click()
-    host.page.wait_for_url(url=re.compile(quote_plus("view_name=allhost")), wait_until="load")
+    host.page.wait_for_url(url=re.compile(re.escape("view_name=allhost")), wait_until="load")
     host.select_host(host.details.name)
     # Cleanup: delete host
     host.navigate()

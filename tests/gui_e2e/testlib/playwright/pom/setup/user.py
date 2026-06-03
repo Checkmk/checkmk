@@ -7,7 +7,6 @@ import logging
 import re
 from abc import abstractmethod
 from typing import NamedTuple, override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -94,7 +93,7 @@ class AddUser(BaseUserPage):
     def navigate(self) -> None:
         users_page = Users(self.page)
         users_page.add_user_button.click()
-        self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_user")), wait_until="load")
+        self.page.wait_for_url(url=re.compile(re.escape("mode=edit_user")), wait_until="load")
         self.validate_page()
 
     @override
@@ -140,7 +139,7 @@ class EditUser(BaseUserPage):
     def navigate(self) -> None:
         users_page = Users(self.page)
         users_page.user_properties_button(self.username).click()
-        self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_user")), wait_until="load")
+        self.page.wait_for_url(url=re.compile(re.escape("mode=edit_user")), wait_until="load")
         self.validate_page()
 
     @override

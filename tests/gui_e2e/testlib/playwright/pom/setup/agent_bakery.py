@@ -6,7 +6,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
@@ -54,7 +53,7 @@ class AgentBakeryPage(CmkPage):
         """Go to `Setup > Windows, Linux, Solaris, AIX` / Agent bakery page."""
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu(self.page_title).click()
-        self.page.wait_for_url(re.compile(quote_plus("wato.py?mode=agents")), wait_until="load")
+        self.page.wait_for_url(re.compile(re.escape("wato.py?mode=agents")), wait_until="load")
         self.bake_and_sign_agents_button.click()
         self.validate_page()
 

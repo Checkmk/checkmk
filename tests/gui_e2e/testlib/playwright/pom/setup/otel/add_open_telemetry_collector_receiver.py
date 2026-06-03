@@ -5,7 +5,6 @@
 import logging
 import re
 from typing import Any, override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -44,7 +43,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         """Instructions to navigate to `Add OpenTelemetry collector` page."""
         otel_collector_receiver_page = OpenTelemetryCollectorReceiver(self.page)
         otel_collector_receiver_page.add_open_telemetry_collector_receiver_configuration_btn.click()
-        _url_pattern: str = quote_plus("mode=edit_otel_collectors_receiver")
+        _url_pattern: str = re.escape("mode=edit_otel_collectors_receiver")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self.validate_page()
 

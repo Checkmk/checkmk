@@ -6,7 +6,6 @@
 import logging
 import re
 from typing import Literal, override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
@@ -40,9 +39,7 @@ class HostSearch(CmkPage):
     def navigate(self) -> None:
         logger.info("Navigate to Monitor >> Overview >> %s", self.page_title)
         self.main_menu.monitor_menu("Host search").click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("view_name=searchhost")), wait_until="load"
-        )
+        self.page.wait_for_url(url=re.compile(re.escape("view_name=searchhost")), wait_until="load")
         self.validate_page()
 
     @override

@@ -6,7 +6,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -55,21 +54,21 @@ class HostStatus(CmkPage):
         """
         logger.info("Navigate to Monitor >> Overview >> All hosts")
         self.main_menu.monitor_menu("All hosts").click()
-        self.page.wait_for_url(url=re.compile(quote_plus("view_name=allhosts")), wait_until="load")
+        self.page.wait_for_url(url=re.compile(re.escape("view_name=allhosts")), wait_until="load")
 
         logger.info("Navigate to 'Services of host %s'", self.host_details.name)
         self.main_area.locator("table.data").get_by_role(
             "link", name=self.host_details.name, exact=True
         ).click()
         services_of_host_url_pattern = (
-            quote_plus(f"host={self.host_details.name}") + ".*" + quote_plus("view_name=host")
+            re.escape(f"host={self.host_details.name}") + ".*" + re.escape("view_name=host")
         )
         self.page.wait_for_url(url=re.compile(services_of_host_url_pattern), wait_until="load")
 
         logger.info("Navigate to '%s'", self.page_title)
         self.main_area.click_item_in_dropdown_list(dropdown_button="Host", item="Status of host")
         status_of_host_url_pattern = (
-            quote_plus(f"host={self.host_details.name}") + ".*" + quote_plus("view_name=hoststatus")
+            re.escape(f"host={self.host_details.name}") + ".*" + re.escape("view_name=hoststatus")
         )
         self.page.wait_for_url(url=re.compile(status_of_host_url_pattern), wait_until="load")
         self.validate_page()

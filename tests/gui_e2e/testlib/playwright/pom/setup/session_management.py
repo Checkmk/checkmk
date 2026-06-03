@@ -6,7 +6,6 @@ import logging
 import re
 from dataclasses import dataclass
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Page
 
@@ -97,9 +96,7 @@ class SessionManagementPage(CmkPage):
     def navigate_from_global_settings(self, global_settings: GlobalSettings) -> None:
         global_settings.search_settings(self.setting_name)
         global_settings.setting_link(self.setting_name).click()
-        self.page.wait_for_url(
-            url=re.compile(quote_plus("varname=session_mgmt")), wait_until="load"
-        )
+        self.page.wait_for_url(url=re.compile(re.escape("varname=session_mgmt")), wait_until="load")
         self.validate_page()
 
     def get_max_duration_values(self) -> TimeoutValues:

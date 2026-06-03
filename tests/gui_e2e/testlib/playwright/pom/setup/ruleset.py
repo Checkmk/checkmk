@@ -6,7 +6,6 @@ import logging
 import re
 from re import Pattern
 from typing import overload, override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -61,7 +60,7 @@ class Ruleset(CmkPage):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.rule_name)
-        self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_ruleset")), wait_until="load")
+        self.page.wait_for_url(url=re.compile(re.escape("mode=edit_ruleset")), wait_until="load")
         self.main_area.check_page_title(self.rule_name)
         expect(self.main_area.get_suggestion("Add rule")).to_be_visible()
 

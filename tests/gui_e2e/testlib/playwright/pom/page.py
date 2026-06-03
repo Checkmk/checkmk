@@ -7,7 +7,7 @@ import re
 from abc import abstractmethod
 from re import Pattern
 from typing import Literal, override
-from urllib.parse import quote_plus, urljoin
+from urllib.parse import urljoin
 
 from playwright.sync_api import expect, Locator, Page, Response
 from playwright.sync_api import TimeoutError as PWTimeoutError
@@ -137,7 +137,7 @@ class CmkPage(LocatorHelper):
         try:
             if navigate_to_page:
                 self.main_menu.changes_menu("Open full view").click()
-            self.page.wait_for_url(url=re.compile(quote_plus("wato.py?mode=changelog")))
+            self.page.wait_for_url(url=re.compile(re.escape("wato.py?mode=changelog")))
             self._activate_selected()
             self._expect_success_state()
         except Exception as e:

@@ -6,7 +6,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 from playwright.sync_api import TimeoutError as PWTimeoutError
@@ -30,7 +29,7 @@ class RolesAndPermissions(CmkPage):
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu(self.page_title).click()
-        _url_pattern: str = quote_plus("wato.py?mode=roles")
+        _url_pattern: str = re.escape("wato.py?mode=roles")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self.validate_page()
 

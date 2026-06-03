@@ -7,7 +7,6 @@ import logging
 import re
 import time
 from typing import Any, override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, FilePayload, Locator
 
@@ -90,7 +89,7 @@ class SignatureKeysPage(CmkPage):
 
         logger.info("Navigate to '%s' / Agent bakery page.", os_list_menu_item)
         self.main_menu.setup_menu(os_list_menu_item).click()
-        self.page.wait_for_url(re.compile(quote_plus("wato.py?mode=agents")), wait_until="load")
+        self.page.wait_for_url(re.compile(re.escape("wato.py?mode=agents")), wait_until="load")
         self.main_area.check_page_title(os_list_menu_item)
 
         logger.info("Navigate to '%s' page.", self.page_title)
@@ -105,7 +104,7 @@ class SignatureKeysPage(CmkPage):
     @override
     def validate_page(self) -> None:
         self.page.wait_for_url(
-            re.compile(quote_plus("wato.py?folder=&mode=signature_keys")), wait_until="load"
+            re.compile(re.escape("wato.py?folder=&mode=signature_keys")), wait_until="load"
         )
         self.main_area.check_page_title(self.page_title)
 
@@ -176,7 +175,7 @@ class AddSignatureKeyPage(SignatureKeysPage):
         self._navigate_to_signature_keys()
         self.main_area.get_suggestion("Generate key").click()
         self.page.wait_for_url(
-            re.compile(quote_plus("wato.py?mode=edit_signature_key")), wait_until="load"
+            re.compile(re.escape("wato.py?mode=edit_signature_key")), wait_until="load"
         )
 
     @override
@@ -209,7 +208,7 @@ class UploadSignatureKeyPage(SignatureKeysPage):
         self._navigate_to_signature_keys()
         self.upload_key_button.click()
         self.page.wait_for_url(
-            re.compile(quote_plus("wato.py?mode=upload_signature_key")), wait_until="load"
+            re.compile(re.escape("wato.py?mode=upload_signature_key")), wait_until="load"
         )
         self.validate_page()
 

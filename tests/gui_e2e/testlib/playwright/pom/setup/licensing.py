@@ -5,7 +5,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
@@ -37,7 +36,7 @@ class Licensing(CmkPage):
         """
         logger.info("Navigate to 'Licensing' page")
         self.main_menu.setup_menu("Licensing").click()
-        _url_pattern: str = quote_plus("wato.py?mode=licensing")
+        _url_pattern: str = re.escape("wato.py?mode=licensing")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self.validate_page()
 

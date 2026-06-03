@@ -5,7 +5,6 @@
 import logging
 import re
 from typing import Literal, override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -32,7 +31,7 @@ class OTelQuickSetup(CmkPage):
         logger.info(f"Navigate to '{self.page_title}' page")
         self.main_menu.setup_menu(self.main_menu_name, exact=True).click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=otel_overview")), wait_until="load"
+            url=re.compile(re.escape("wato.py?mode=otel_overview")), wait_until="load"
         )
         self.validate_page()
 
@@ -78,7 +77,7 @@ class AddOTelConfiguration(CmkPage):
         overview = OTelQuickSetup(self.page)
         overview.add_configuration_button.click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=create_otel_config")),
+            url=re.compile(re.escape("wato.py?mode=create_otel_config")),
             wait_until="load",
         )
         self.validate_page()
@@ -258,5 +257,5 @@ class AddOTelConfiguration(CmkPage):
     def finish_and_go_to_activate_changes(self) -> None:
         self.finish_button.click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=otel_overview")), wait_until="load"
+            url=re.compile(re.escape("wato.py?mode=otel_overview")), wait_until="load"
         )

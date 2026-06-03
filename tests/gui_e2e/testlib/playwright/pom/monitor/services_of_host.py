@@ -6,7 +6,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import Page
 
@@ -44,7 +43,7 @@ class ServicesOfHostPage(CmkPage):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is %s page", self.page_title)
-        self.page.wait_for_url(url=re.compile(quote_plus("view_name=host")), wait_until="load")
+        self.page.wait_for_url(url=re.compile(re.escape("view_name=host")), wait_until="load")
         self.main_area.check_page_title(self.page_title)
 
     @override

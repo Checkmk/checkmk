@@ -6,7 +6,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 from playwright.sync_api import TimeoutError as PWTimeoutError
@@ -25,7 +24,7 @@ class Users(CmkPage):
     """
 
     page_title = "Users"
-    url_pattern = re.compile(quote_plus("wato.py?mode=users"))
+    url_pattern = re.compile(re.escape("wato.py?mode=users"))
 
     @override
     def navigate(self) -> None:

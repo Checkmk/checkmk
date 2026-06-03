@@ -8,7 +8,6 @@ from abc import abstractmethod
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
@@ -149,7 +148,7 @@ class QuickSetupPage(CmkPage):
             "Save"
         ).first.click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=test_notifications")), wait_until="load"
+            url=re.compile(re.escape("wato.py?mode=test_notifications")), wait_until="load"
         )
 
     def save_and_create_another_rule(self) -> None:

@@ -5,7 +5,6 @@
 
 import re
 from collections.abc import Iterator
-from urllib.parse import quote_plus
 
 import pytest
 from playwright.sync_api import BrowserContext, expect, Page
@@ -73,7 +72,7 @@ def _create_new_dashboard(
     edit_dashboards = EditDashboards(page)
     edit_dashboards.main_area.click_item_in_dropdown_list("Dashboards", "Add dashboard", exact=True)
     edit_dashboards.page.wait_for_url(
-        url=re.compile(quote_plus("dashboard.py?mode=create")), wait_until="load"
+        url=re.compile(re.escape("dashboard.py?mode=create")), wait_until="load"
     )
 
     create_dashboard_sidebar = CreateDashboardSidebar(page)

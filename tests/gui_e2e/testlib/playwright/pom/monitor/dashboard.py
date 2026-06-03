@@ -7,7 +7,6 @@ import re
 from enum import StrEnum
 from re import Pattern
 from typing import Literal, override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
@@ -251,7 +250,7 @@ class MainDashboard(BaseDashboard):
         logger.info("Navigate to 'Main dashboard' page")
         self.main_menu.monitor_menu("Main dashboard").click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("dashboard.py?name=main")), wait_until="load"
+            url=re.compile(re.escape("dashboard.py?name=main")), wait_until="load"
         )
         self.validate_page()
 
@@ -314,7 +313,7 @@ class ProblemDashboard(BaseDashboard):
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.monitor_menu(self.page_title).click()
-        url = quote_plus("dashboard.py?name=problems")
+        url = re.escape("dashboard.py?name=problems")
         self.page.wait_for_url(url=re.compile(url), wait_until="load")
         self.validate_page()
 

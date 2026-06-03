@@ -6,7 +6,6 @@
 import logging
 import re
 from typing import NamedTuple, override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -38,7 +37,7 @@ class EditRole(CmkPage):
     def navigate(self) -> None:
         roles_and_permissions_page = RolesAndPermissions(self.page)
         roles_and_permissions_page.role_properties_button(self.role_name).click()
-        self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_role")), wait_until="load")
+        self.page.wait_for_url(url=re.compile(re.escape("mode=edit_role")), wait_until="load")
         self.validate_page()
 
     @override

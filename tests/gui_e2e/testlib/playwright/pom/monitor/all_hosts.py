@@ -6,7 +6,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
@@ -26,7 +25,7 @@ class AllHosts(CmkPage):
         """Instructions to navigate to `Monitor -> Overview -> All hosts` page."""
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.monitor_all_hosts.click()
-        self.page.wait_for_url(url=re.compile(quote_plus("view_name=allhost")), wait_until="load")
+        self.page.wait_for_url(url=re.compile(re.escape("view_name=allhost")), wait_until="load")
         self.validate_page()
 
     @override

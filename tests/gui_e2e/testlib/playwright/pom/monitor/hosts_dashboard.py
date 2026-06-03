@@ -5,7 +5,6 @@
 import logging
 import re
 from typing import NamedTuple, override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect
 
@@ -32,7 +31,7 @@ class HostsDashboard(BaseDashboard):
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.monitor_menu(self.page_title).click()
-        _url_pattern: str = quote_plus(
+        _url_pattern: str = re.escape(
             f"dashboard.py?name={self.page_title.split()[0].lower()}_hosts_overview"
         )
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")

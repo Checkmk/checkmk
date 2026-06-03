@@ -4,7 +4,6 @@
 import logging
 import re
 from typing import override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
@@ -27,7 +26,7 @@ class CustomGraphs(CmkPage):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
-        _url_pattern: str = quote_plus("custom_graphs.py")
+        _url_pattern: str = re.escape("custom_graphs.py")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         expect(
             self.add_graph, f"'{self.add_graph}' button not visible in '{self.page_title}' page"
@@ -55,7 +54,7 @@ class CreateCustomGraph(CmkPage):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is 'Create custom graph' page")
-        _url_pattern = quote_plus("edit_custom_graph.py")
+        _url_pattern = re.escape("edit_custom_graph.py")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self.main_area.check_page_title(self.page_title)
 
@@ -128,7 +127,7 @@ class DesignGraph(BaseGraph):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is 'Design graph' page")
-        _url_pattern = quote_plus("custom_graph_design.py")
+        _url_pattern = re.escape("custom_graph_design.py")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self.main_area.check_page_title(self.page_title)
 
@@ -185,7 +184,7 @@ class CustomGraph(BaseGraph):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s page", self.page_title)
-        _url_pattern: str = quote_plus("custom_graph.py")
+        _url_pattern: str = re.escape("custom_graph.py")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         expect(
             self.edit_graph,

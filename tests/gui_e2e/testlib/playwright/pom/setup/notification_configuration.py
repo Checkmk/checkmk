@@ -5,7 +5,6 @@
 import logging
 import re
 from typing import overload, override
-from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator
 
@@ -28,7 +27,7 @@ class NotificationConfiguration(CmkPage):
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu("Notifications", exact=True).click()
         self.page.wait_for_url(
-            url=re.compile(quote_plus("wato.py?mode=notifications")), wait_until="load"
+            url=re.compile(re.escape("wato.py?mode=notifications")), wait_until="load"
         )
         self.validate_page()
 

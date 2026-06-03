@@ -22,7 +22,6 @@ import argparse
 import asyncio
 import datetime
 import enum
-import hashlib
 import json
 import logging
 import re
@@ -40,6 +39,7 @@ import requests
 from pydantic import BaseModel, RootModel
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
+from cmk.plugins.azure_v2.lib import compute_unique_name_hash, get_params_from_azure_id
 from cmk.plugins.azure_v2.special_agent.azure_api_client import (
     ApiError,
     ApiErrorAuthorizationRequestDenied,
@@ -181,26 +181,6 @@ class _AzureEntity(ABC):
             use_unique_hostnames = bool(self.unique_hostnames_config)
         return self._unique_name() if use_unique_hostnames else self._entity_name
 
-    def _compute_unique_name_hash(self, uniqueness_keys: Sequence[str]) -> str:
-        """
-        Keys for the hash:
-        Tenant: no need to add anything, since the tenant should be unique (and the tenant is
-        the "main" host in checkmk, so the user-defined-name)
-
-        Subscription:   subscription-id
-        Resource-group: subscription-id,  (it is not possibile to create two resource-groups with the same name in the same subscription)
-                        resource-type (a resource-group can have the same name of a subscription)
-        Resource:   subscription-id,
-                    resource-group (lower, because azure do not ensure returning a consistent casing),
-                    resource-type (not lower, wecause we have seen types with different casing)
-        """
-        HASH_CHARS_TO_KEEP = 8
-        unique_string = f"azure{''.join(uniqueness_keys)}"
-        hashed = hashlib.sha256(unique_string.encode("utf-8"), usedforsecurity=False).hexdigest()[
-            -HASH_CHARS_TO_KEEP:
-        ]
-        return hashed
-
     def _compute_unique_name(self, uniqueness_keys: Sequence[str], prefix: str) -> str:
         """
         The concept of "unique name" should be only known and used by a resource object.
@@ -211,7 +191,7 @@ class _AzureEntity(ABC):
         resource-groups or subscriptions. We can also have the same subscription-name
         in the same tenant.
         """
-        hashed = self._compute_unique_name_hash(uniqueness_keys)
+        hashed = compute_unique_name_hash(uniqueness_keys)
 
         if self.unique_hostnames_config.enabled == "long":
             return f"azr_{prefix}_{self._entity_name}_{hashed}"
@@ -965,15 +945,6 @@ class AzureResource(_AzureEntity):
 def filter_keys(mapping: Mapping, keys: Iterable[str]) -> Mapping:
     items = ((k, mapping.get(k)) for k in keys)
     return {k: v for k, v in items if v is not None}
-
-
-def get_params_from_azure_id(
-    resource_id: str, resource_types: Sequence[str] | None = None
-) -> Sequence[str]:
-    values = resource_id.lower().split("/")
-    type_strings = list(map(str.lower, resource_types)) if resource_types else []
-    index_keywords = ["subscriptions", "resourcegroups"] + type_strings
-    return [values[values.index(keyword) + 1] for keyword in index_keywords]
 
 
 async def get_frontend_ip_configs(

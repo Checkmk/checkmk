@@ -34,7 +34,7 @@ _MIN_NUMBER_OF_HOSTS = 0
 _MAX_NUMBER_OF_HOSTS = 5_000
 
 
-class SortColumn(enum.StrEnum):
+class HostSortColumn(enum.StrEnum):
     """The host attributes a host query may be sorted by."""
 
     NAME = "name"
@@ -53,7 +53,7 @@ class SortColumn(enum.StrEnum):
         return ", ".join(sorted(item.value for item in cls))
 
 
-class SortDirection(enum.StrEnum):
+class HostSortDirection(enum.StrEnum):
     """The direction a host query may be sorted in."""
 
     ASC = "asc"
@@ -68,8 +68,8 @@ class SortDirection(enum.StrEnum):
 class HostSort:
     """A single-column sort requested for a host query."""
 
-    column: SortColumn
-    direction: SortDirection
+    column: HostSortColumn
+    direction: HostSortDirection
 
     def __str__(self) -> str:
         return f"{self.column.value}:{self.direction.value}"
@@ -140,16 +140,16 @@ def _parse_sort_token(token: object) -> HostSort:
     if not separator:
         raise ValueError(f"Expected a 'column:direction' value, got {token!r}.")
     try:
-        sort_column = SortColumn(column)
+        sort_column = HostSortColumn(column)
     except ValueError:
         raise ValueError(
-            f"Unknown sort column in {token!r}. Allowed columns: {SortColumn.options()}."
+            f"Unknown sort column in {token!r}. Allowed columns: {HostSortColumn.options()}."
         ) from None
     try:
-        sort_direction = SortDirection(direction)
+        sort_direction = HostSortDirection(direction)
     except ValueError:
         raise ValueError(
-            f"Unknown sort direction in {token!r}. Allowed directions: {SortDirection.options()}."
+            f"Unknown sort direction in {token!r}. Allowed directions: {HostSortDirection.options()}."
         ) from None
     return HostSort(column=sort_column, direction=sort_direction)
 
@@ -164,7 +164,7 @@ def _parse_sort(value: object) -> list[HostSort]:
     if not isinstance(value, list):
         raise ValueError(f"Expected a list of sort values, got {type(value).__name__!r}.")
     sorts = [_parse_sort_token(token) for token in value]
-    seen: set[SortColumn] = set()
+    seen: set[HostSortColumn] = set()
     for sort in sorts:
         if sort.column in seen:
             raise ValueError(f"Column {sort.column.value!r} appears more than once in the sort.")
@@ -178,8 +178,8 @@ type Sort = Annotated[
     QueryParam(
         description=(
             "Repeated sort param. Each value is 'column:direction', e.g. 'name:asc'. "
-            f"Allowed columns: {SortColumn.options()}. "
-            f"Allowed directions: {SortDirection.options()}. "
+            f"Allowed columns: {HostSortColumn.options()}. "
+            f"Allowed directions: {HostSortDirection.options()}. "
             "Multiple values define a multi-column sort applied in the given order; a column must "
             "not be repeated. For example, 'sort=name:asc&sort=num_services:desc' sorts by name "
             "ascending and then by number of services descending."

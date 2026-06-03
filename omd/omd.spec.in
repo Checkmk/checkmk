@@ -153,6 +153,16 @@ echo "pre-compile bytecode (.pyc) for Python files.."
     "${BASE_PATH}" \
 >/dev/null
 
+# Unpack the signed Windows agent plugins shipped as a tar, if present and
+# non-empty. The tar is produced by the Windows signing CI job; on builds
+# without signing it is empty or zero-size, in which case unpacking is a
+# no-op or skipped. Keep in sync with omd/debian/postinst.in!
+SIGNED_PLUGINS_DIR="${BASE_PATH}/share/check_mk/agents/windows/plugins/signed"
+if [ -s "${SIGNED_PLUGINS_DIR}/signed_plugins.tar" ]; then
+    echo "Unpacking signed Windows agent plugins.."
+    tar xf "${SIGNED_PLUGINS_DIR}/signed_plugins.tar" -C "${SIGNED_PLUGINS_DIR}"
+fi
+
 # SLES: make sure apache modules are activated
 if which a2enmod >/dev/null 2>&1
 then
@@ -204,6 +214,13 @@ if [ $1 = 0 ] ; then
             exit 1
         fi
     done
+
+    # Remove .ps1 files unpacked from signed_plugins.tar during %post.
+    # These are not tracked by rpm and would be left behind on uninstall.
+    SIGNED_PLUGINS_DIR="/omd/versions/%{version}/share/check_mk/agents/windows/plugins/signed"
+    if [ -d "${SIGNED_PLUGINS_DIR}" ]; then
+        find "${SIGNED_PLUGINS_DIR}" -name '*.ps1' -type f -delete
+    fi
 fi
 
 

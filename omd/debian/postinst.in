@@ -100,6 +100,16 @@ case "$1" in
         "${BASE_PATH}" \
     >/dev/null
 
+    # Unpack the signed Windows agent plugins shipped as a tar, if present and
+    # non-empty. The tar is produced by the Windows signing CI job; on builds
+    # without signing it is empty or zero-size, in which case unpacking is a
+    # no-op or skipped. Keep in sync with the %post section of omd/omd.spec.in!
+    SIGNED_PLUGINS_DIR="${BASE_PATH}/share/check_mk/agents/windows/plugins/signed"
+    if [ -s "${SIGNED_PLUGINS_DIR}/signed_plugins.tar" ]; then
+        echo "Unpacking signed Windows agent plugins.."
+        tar xf "${SIGNED_PLUGINS_DIR}/signed_plugins.tar" -C "${SIGNED_PLUGINS_DIR}"
+    fi
+
     db_stop
     # -- create apache config include if not exist
     if test -d /etc/apache2/conf-available; then

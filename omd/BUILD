@@ -247,7 +247,7 @@ pkg_files(
 )
 
 pkg_tar(
-    name = "agents_windows",
+    name = "agents_windows_base",
     srcs = [
         ":agents_windows_ext_built",
         "//agents/windows:cfg_examples",
@@ -257,6 +257,14 @@ pkg_tar(
     package_dir = "share/check_mk",
     stamp = 1,
     strip_prefix = ".",
+)
+
+pkg_tar(
+    name = "agents_windows_signed_plugins",
+    srcs = ["//agents/windows/plugins:signed_ps1"],
+    package_dir = "share/check_mk/agents/windows/plugins",
+    stamp = 1,
+    strip_prefix = "/agents/windows/plugins/.signed",
 )
 
 pkg_files(
@@ -437,7 +445,8 @@ pkg_files(
                "//packages/cmk-shared-typing:pkg_tar",
                "//packages/unixcat:unixcat_tar",
                ":agents_scripts_super_server",
-               ":agents_windows",
+               ":agents_windows_base",
+               ":agents_windows_signed_plugins",
                "//omd/dependency_management:license_info",
            ] + select({
                "@cmk//distro:almalinux": ["//omd/packages/xinetd"],

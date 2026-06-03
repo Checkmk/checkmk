@@ -937,3 +937,77 @@ def test_windows_artifacts_are_signed(
             LOGGER.info("PASS: No further signable files* found (excluding ignored).")
 
     assert not any(signing_failures)
+
+
+EXPECTED_PS1_PLUGINS = [
+    "arcserve_backup.ps1",
+    "citrix_farm.ps1",
+    "citrix_licenses.ps1",
+    "citrix_xenapp.ps1",
+    "hyperv_host.ps1",
+    "hyperv_vms.ps1",
+    "hyperv_vms_guestinfos.ps1",
+    "iis_app_pool_state.ps1",
+    "kaspersky_av_client.ps1",
+    "mk_inventory.ps1",
+    "mk_msoffice.ps1",
+    "mk_mysql.ps1",
+    "mk_oracle.ps1",
+    "msexch_dag.ps1",
+    "msexch_database.ps1",
+    "nvidia_smi.ps1",
+    "rds_licenses.ps1",
+    "sansymphony.ps1",
+    "veeam_backup_status.ps1",
+    "win_printers.ps1",
+    "windows_if.ps1",
+    "windows_multipath.ps1",
+    "windows_os_bonding.ps1",
+    "windows_tasks.ps1",
+    "windows_updates.ps1",
+]
+
+
+def test_powershell_plugins_present(package_path: str) -> None:
+    if package_path.endswith(".tar.gz"):
+        pytest.skip("source package")
+
+    missing = [
+        plugin
+        for plugin in EXPECTED_PS1_PLUGINS
+        if not _file_exists_in_package(
+            package_path, f"share/check_mk/agents/windows/plugins/{plugin}"
+        )
+    ]
+    assert not missing, f"Missing PowerShell plugins in package: {missing}"
+
+
+def test_powershell_plugins_are_signed(package_path: str) -> None:
+    # We only check for the presence of an Authenticode signature block, not its
+    # validity.  osslsigncode does not support PowerShell scripts, and full
+    # cryptographic verification is left to deployment and E2E tests that run on
+    # Windows with Get-AuthenticodeSignature.
+    if package_path.endswith(".tar.gz"):
+        pytest.skip("source package")
+
+    paths = _get_paths_from_package(package_path)
+    omd_version = _get_omd_version(package_path)
+
+    ps1_files = [
+        rel
+        for path in paths
+        if (
+            rel := path.removeprefix("/")
+            .removeprefix(f"opt/omd/versions/{omd_version}/")
+            .removeprefix(f"{omd_version}/")
+        ).endswith(".ps1")
+        and Path(rel).parent == Path("share/check_mk/agents/windows/plugins")
+    ]
+
+    unsigned = []
+    for ps1 in ps1_files:
+        content = _get_file_from_package(package_path, ps1)
+        if b"SIG # Begin signature block" not in content:
+            unsigned.append(ps1)
+
+    assert not unsigned, f"Unsigned PowerShell plugins: {unsigned}"

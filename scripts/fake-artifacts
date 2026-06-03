@@ -8,5 +8,9 @@ REPO_PATH="$(git rev-parse --show-toplevel)"
 IFS=' ' read -ra artifacts <<<"$(make --no-print-directory -C "${REPO_PATH}" print-artifacts-SOURCE_BUILT_ARTIFACTS)"
 for f in "${artifacts[@]}"; do
     mkdir -p "$(dirname "${f}")"
-    touch "${f}"
+    case "${f}" in
+        # A valid (empty) tar: consumers like pkg_tar reject a 0-byte stub.
+        *.tar) tar -cf "${f}" -T /dev/null ;;
+        *) touch "${f}" ;;
+    esac
 done

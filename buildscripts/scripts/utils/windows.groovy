@@ -41,6 +41,7 @@ void build(Map args) {
                     "robotmk_ext.exe",
                     "mk-oracle.exe",
                     "mk-sql.exe",
+                    "signed_plugins.tar",
                     "windows_files_hashes.txt",
                 ].join(",")] :
             (args.TARGET == "agent_no_sign") ? [

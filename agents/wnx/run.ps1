@@ -463,8 +463,15 @@ function Start-BinarySigning {
 }
 
 function Start-BazelSigning {
+    $signed_plugins_tar = "$repo_root/bazel-bin/agents/windows/plugins/signed_plugins.tar"
+
     if ($argSign -ne $true) {
         Write-Host "Skipping Bazel Signing..." -ForegroundColor Yellow
+        # Signing skipped: the tar is never built by Bazel, but Start-ArtifactUploading
+        # still copies it. Create a zero-sized placeholder so the copy succeeds.
+        New-Item -Path (Split-Path $signed_plugins_tar) -ItemType Directory -Force | Out-Null
+        New-Item -Path $signed_plugins_tar -ItemType File -Force | Out-Null
+        Write-Host "Created zero-sized $signed_plugins_tar (signing skipped)" -ForegroundColor Yellow
         return
     }
 
@@ -473,11 +480,12 @@ function Start-BazelSigning {
     try {
         $env:BAZELISK_BASE_URL = "https://github.com/aspect-build/aspect-cli/releases/download"
         $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
-        $signed_dir = (bazel info bazel-bin 2>$null).Trim()                                                                       
+        # $signed_dir = (bazel info bazel-bin 2>$null).Trim() - not reliable when bazel is not configured properly
         Write-Host "dir with files is $signed_dir"
         &bazel build //agents/windows/plugins:all
         if ($LASTEXITCODE -eq 0) {
-            Write-Host "Signed files are located in $signed_dir"
+            $env:SignedPluginsFolder = Join-Path (Get-Item -Force ..\..\bazel-bin).Target "\agents\windows\plugins\signed"
+            Write-Host "Signed files are located in $env:SignedPluginsFolder"
         }
         else {
             Write-Host "Error during signing $LASTEXITCODE"
@@ -486,6 +494,20 @@ function Start-BazelSigning {
     }
     catch {
         Write-Host "Exception during Bazel signing: $_" -ForegroundColor Red
+    }
+
+    # Build the signed plugins tar and invalidate the MSI object cache when the
+    # signed-files folder changed since the previous build (stamp comparison).
+    Write-Host "$env:SignedPluginsFolder is used to store the signed files"
+    $stamp_file = "install\obj\Release\.epf_stamp"
+    $current_val = $env:SignedPluginsFolder ?? ""
+    $previous_val = if (Test-Path $stamp_file) { Get-Content $stamp_file } else { "" }
+    &bazel build //agents/windows/plugins:signed_plugins
+
+    if ($current_val -ne $previous_val) {
+        Remove-Item "install\obj\Release" -Recurse -Force -ErrorAction SilentlyContinue
+        New-Item -Path (Split-Path $stamp_file) -ItemType Directory -Force | Out-Null
+        Set-Content $stamp_file $current_val
     }
 }
 
@@ -503,7 +525,8 @@ function Start-ArtifactUploading {
         @("$build_dir/ohm/OpenHardwareMonitorCLI.exe", "$results_dir/OpenHardwareMonitorCLI.exe"),
         @("$build_dir/ohm/OpenHardwareMonitorLib.dll", "$results_dir/OpenHardwareMonitorLib.dll"),
         @("./install/resources/check_mk.user.yml", "$results_dir/check_mk.user.yml"),
-        @("./install/resources/check_mk.yml", "$results_dir/check_mk.yml")
+        @("./install/resources/check_mk.yml", "$results_dir/check_mk.yml"),
+        @("$repo_root/bazel-bin/agents/windows/plugins/signed_plugins.tar", "$results_dir/signed_plugins.tar")
     )
     foreach ($artifact in $artifacts) {
         Copy-Item $artifact[0] $artifact[1] -Force -ErrorAction Stop
@@ -664,11 +687,25 @@ $argAttached = $false
 $result = 1
 try {
     # SETTING UP
+    $env:SignedPluginsFolder = "..\..\windows\plugins"
     $mainStartTime = Get-Date
     Invoke-Detach $argDetach
     Update-ArtefactDirs
     Clear-Artifacts
     Clear-All
+
+    # Delete stale PCH files if compiler version changed (MSVC error C1853).
+    # PCH embeds compiler version; version mismatch after VS update causes build failure.
+    $cl_version_marker = "$build_dir\.cl_version"
+    $cl_output = (& "$msbuild_exe" -version 2>&1 | Select-Object -Last 1).ToString().Trim()
+    $stored_version = if (Test-Path $cl_version_marker) { Get-Content $cl_version_marker } else { "" }
+    if ($cl_output -ne $stored_version) {
+        Write-Host "Compiler version changed ($stored_version -> $cl_output), cleaning stale PCH files" -ForegroundColor Yellow
+        Get-ChildItem -Path "$build_dir" -Filter "*.pch" -Recurse -ErrorAction SilentlyContinue |
+            Remove-Item -Force
+        New-Item -ItemType Directory -Path "$build_dir" -Force -ErrorAction SilentlyContinue | Out-Null
+        Set-Content $cl_version_marker $cl_output
+    }
 
     # BUILDING
     Build-Agent

@@ -162,6 +162,12 @@ void provide_agent_binaries(Map args) {
                 cp \
                     mk-oracle.exe \
                     ${checkout_dir}/omd/packages/mk-oracle/
+                _signed_dir=${checkout_dir}/agents/windows/plugins/.signed
+                mkdir -p "\${_signed_dir}"
+                cp ${checkout_dir}/agents/windows/plugins/*.ps1 "\${_signed_dir}/"
+                if tar tf signed_plugins.tar | grep -q .; then
+                    tar xf signed_plugins.tar -C "\${_signed_dir}/"
+                fi
                 cp \
                     check_mk_agent.exe \
                     check_mk_agent.msi \

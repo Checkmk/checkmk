@@ -1,3 +1,5 @@
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
 # Sign all PowerShell scripts in the current directory.
 # `build bazel //agents/windows/plugins:all`
 #
@@ -11,11 +13,22 @@ filegroup(
             "BUILD",
             "reference/**",
             "scripts/**",
+            ".signed/**",
             ".gitattributes",
             ".gitignore",
             "**/OWNERS",
             ".f12",
+            "*.ps1",
         ],
+    ),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "signed_ps1",
+    srcs = glob(
+        [".signed/*.ps1"],
+        allow_empty = True,
     ),
     visibility = ["//visibility:public"],
 )
@@ -29,6 +42,7 @@ TO_SIGN_SCRIPTS = [
     "hyperv_vms.ps1",
     "iis_app_pool_state.ps1",
     "kaspersky_av_client.ps1",
+    "mk_inventory.ps1",
     "mk_msoffice.ps1",
     "mk_mysql.ps1",
     "mk_oracle.ps1",
@@ -60,3 +74,12 @@ TO_SIGN_SCRIPTS = [
     )
     for n in TO_SIGN_SCRIPTS
 ]
+
+pkg_tar(
+    name = "signed_plugins",
+    srcs = [":sign_" + n.split(":")[-1] for n in TO_SIGN_SCRIPTS],
+    strip_prefix = "signed",
+    tags = ["manual"],
+    target_compatible_with = ["@platforms//os:windows"],
+    visibility = ["//visibility:public"],
+)

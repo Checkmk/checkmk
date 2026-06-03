@@ -54,3 +54,44 @@ class Host:
                 return "UNREACHABLE"
             case _:
                 assert_never(self.state)
+
+
+class HostSortColumn(enum.StrEnum):
+    """The host attributes a host query may be sorted by."""
+
+    NAME = "name"
+    ALIAS = "alias"
+    IP = "ip"
+    STATE = "state"
+    NUM_SERVICES = "num_services"
+    NUM_SERVICES_OK = "num_services_ok"
+    NUM_SERVICES_WARN = "num_services_warn"
+    NUM_SERVICES_CRIT = "num_services_crit"
+    NUM_SERVICES_UNKNOWN = "num_services_unknown"
+    NUM_SERVICES_PENDING = "num_services_pending"
+
+    @classmethod
+    def options(cls) -> str:
+        return ", ".join(sorted(item.value for item in cls))
+
+
+class HostSortDirection(enum.StrEnum):
+    """The direction a host query may be sorted in."""
+
+    ASC = "asc"
+    DESC = "desc"
+
+    @classmethod
+    def options(cls) -> str:
+        return ", ".join(sorted(item.value for item in cls))
+
+
+@dataclasses.dataclass(frozen=True)
+class HostSort:
+    """A single-column sort requested for a host query."""
+
+    column: HostSortColumn
+    direction: HostSortDirection
+
+    def __str__(self) -> str:
+        return f"{self.column.value}:{self.direction.value}"

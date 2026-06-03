@@ -259,7 +259,7 @@ export class MainMenuService extends ServiceBase {
       }
     }
 
-    this.registerShortCut({ key: ['Alt'], alt: true, ctrl: true }, () => {
+    this.registerShortCut({ key: ['k'], alt: true }, () => {
       this.toggleKeyHints()
     })
     this.registerShortCut({ key: ['Escape'] }, () => {

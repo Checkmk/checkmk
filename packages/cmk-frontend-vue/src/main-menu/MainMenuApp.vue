@@ -88,7 +88,7 @@ function navElClick(e: MouseEvent) {
         </CmkButton>
         <CmkKeyboardKey
           v-if="mainMenu.showKeyHints.value"
-          :keyboard-key="_t('Ctrl + Alt')"
+          :keyboard-key="_t('Alt + k')"
           size="small"
           class="mm-app__key-hint"
         />

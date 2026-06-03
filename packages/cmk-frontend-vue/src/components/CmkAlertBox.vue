@@ -201,11 +201,13 @@ const alertIconColor = computed(() => {
 .cmk-alert-box__body {
   width: 100%;
   white-space: pre-line;
+  color: var(--cmk-alert-box-text-color);
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
 .cmk-alert-box__text :deep(.cmk-heading) {
   width: 100%;
+  font-size: var(--font-size-large);
 }
 
 .cmk-alert-box__close {

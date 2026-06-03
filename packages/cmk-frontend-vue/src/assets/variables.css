@@ -187,6 +187,7 @@
     --cmk-alert-box-warning-icon-color: var(--color-yellow-80);
     --cmk-alert-box-success-icon-color: var(--color-corporate-green-80);
     --cmk-alert-box-info-icon-color: var(--color-dark-blue-80);
+    --cmk-alert-box-text-color: var(--color-mid-grey-100);
   }
 
   body[data-theme='modern-dark'] {
@@ -322,6 +323,7 @@
     --cmk-alert-box-warning-icon-color: var(--color-yellow-20);
     --cmk-alert-box-success-icon-color: var(--color-corporate-green-20);
     --cmk-alert-box-info-icon-color: var(--color-dark-blue-20);
+    --cmk-alert-box-text-color: var(--color-mid-grey-0);
   }
 }
 

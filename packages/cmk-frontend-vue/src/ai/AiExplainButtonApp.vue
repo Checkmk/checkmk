@@ -110,6 +110,10 @@ document.addEventListener('cmk-ai-explain-button', (event: Event) => {
   </Teleport>
 </template>
 
+<style>
+@import url('./variables.css');
+</style>
+
 <style scoped>
 .ai-explain-button-app__tooltip-wrapper {
   position: absolute;

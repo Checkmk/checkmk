@@ -9,6 +9,7 @@ import type { BoolPropDef, StringPropDef } from '@ucl/_ucl/types/prop-def'
 
 import { type CmkIconProps } from '@/components/CmkIcon'
 import type { SlideInVariants } from '@/components/CmkSlideIn'
+import type { CmkSlideInDialogProps } from '@/components/CmkSlideInDialog.vue'
 
 import codeExample from './UclCmkSlideInDialogCodeExample.vue?raw'
 
@@ -74,6 +75,15 @@ export const panelConfig = {
       { title: 'Purple', name: 'purple' }
     ] satisfies Options<SlideInVariants['borderColor']>[],
     initialState: 'default' as const
+  },
+  spacing: {
+    type: 'list' as const,
+    title: 'Spacing',
+    options: [
+      { title: 'Default', name: 'default' },
+      { title: 'Wide', name: 'wide' }
+    ] satisfies Options<CmkSlideInDialogProps['spacing']>[],
+    initialState: 'default' as const
   }
 } satisfies CmkSlideInDialogDemoProps
 </script>
@@ -125,6 +135,7 @@ const headerConfig = computed(() => ({
         :header="headerConfig"
         :size="propState.size"
         :border-color="propState.borderColor"
+        :spacing="propState.spacing"
         @close="propState.open = false"
       >
         <CmkHeading type="h2">Content Area</CmkHeading>

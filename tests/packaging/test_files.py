@@ -609,6 +609,7 @@ def _parse_pipfile_packages(pipfile_path: Path) -> tuple[str, dict[str, str]]:
     return python_version, packages
 
 
+@pytest.mark.skip_if_faked_artifacts
 def test_python3_cab_integrity(package_path: str) -> None:
     """Test may be a bit fragile, still it is the best option to validate that bcab is ok"""
     if package_path.endswith(".tar.gz"):

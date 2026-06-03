@@ -100206,6 +100206,10 @@ msgid "The password was rejected by the server."
 msgstr "Contraseña del usuario"
 
 #, fuzzy
+msgid "Could not save the referenced passwords"
+msgstr "No se han podido guardar los cambios: %s"
+
+#, fuzzy
 msgid "Collector configuration"
 msgstr "Configuración de host"
 

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-29 17:53+0000\n"
+"PO-Revision-Date: 2026-06-02 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -99382,6 +99382,10 @@ msgstr "Não foi possível salvar as mudanças: %s"
 #, fuzzy
 msgid "The password was rejected by the server."
 msgstr "Senha do usuário"
+
+#, fuzzy
+msgid "Could not save the referenced passwords"
+msgstr "Não foi possível salvar as mudanças: %s"
 
 #, fuzzy
 msgid "Collector configuration"

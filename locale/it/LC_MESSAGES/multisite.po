@@ -99248,6 +99248,10 @@ msgid "The password was rejected by the server."
 msgstr "Password dell'utente"
 
 #, fuzzy
+msgid "Could not save the referenced passwords"
+msgstr "Impossibile salvare le modifiche: %s"
+
+#, fuzzy
 msgid "Collector configuration"
 msgstr "Configurazione dell'host"
 

@@ -94356,6 +94356,10 @@ msgid "The password was rejected by the server."
 msgstr "ユーザーのパスワード。"
 
 #, fuzzy
+msgid "Could not save the referenced passwords"
+msgstr "変更を保存できませんでした: %s"
+
+#, fuzzy
 msgid "Collector configuration"
 msgstr "メトリック設定"
 

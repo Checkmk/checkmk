@@ -99491,6 +99491,10 @@ msgid "The password was rejected by the server."
 msgstr "Wachtwoord van de gebruiker"
 
 #, fuzzy
+msgid "Could not save the referenced passwords"
+msgstr "Kon wijzigingen niet opslaan: %s"
+
+#, fuzzy
 msgid "Collector configuration"
 msgstr "Host configuratie"
 

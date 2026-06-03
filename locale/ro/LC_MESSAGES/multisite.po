@@ -99815,6 +99815,10 @@ msgid "The password was rejected by the server."
 msgstr "Parola utilizatorului"
 
 #, fuzzy
+msgid "Could not save the referenced passwords"
+msgstr "Nu s-a putut salva modificările: %s"
+
+#, fuzzy
 msgid "Collector configuration"
 msgstr "Configurație gazdă"
 

@@ -61,4 +61,5 @@ export interface ConnectedCondition extends AttributeCondition {
   id: string
 }
 
+// DNF: a run of 'AND'-joined entries is one conjunct; each 'OR' starts a new disjunct.
 export type AttributeFilterModel = ConnectedCondition[]

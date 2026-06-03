@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-01 17:53+0000\n"
+"PO-Revision-Date: 2026-06-02 17:52+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -10132,6 +10132,15 @@ msgid ""
 "covered — ensuring that no active, unplanned failure goes unnoticed behind a "
 "partial maintenance window."
 msgstr ""
+"Standardmäßig wird ein BI-Aggregat als 'in Wartungszeit' markiert, sobald "
+"genügend Komponenten ein geplantes Wartungsfenster aufweisen, um die "
+"Aggregationsfunktion zu erfüllen. Dies ist nützlich, wenn Sie das Aggregat "
+"als eine einzige Service-Einheit betrachten: Befindet sich eine "
+"Schlüsselkomponente in Wartung, wird der gesamte Branch bewusst als in der "
+"geplanten Wartungszeit befindlich betrachtet. Aktivieren Sie diese Option, "
+"wenn Sie stattdessen verlangen möchten, dass jede aktuell ausgefallene "
+"Komponente erfasst wird – um sicherzustellen, dass kein aktiver, ungeplanter "
+"Ausfall hinter einem teilweisen Wartungsfenster unbemerkt bleibt."
 
 #, python-brace-format
 msgid ""
@@ -52502,6 +52511,8 @@ msgstr "Erfordert Kommentar"
 
 msgid "Require all failing components to be in a maintenance window"
 msgstr ""
+"Anforderung, dass alle ausgefallenen Komponenten innerhalb eines "
+"Wartungsfensters liegen müssen"
 
 msgid "Required"
 msgstr "Erforderlich"
@@ -56922,7 +56933,7 @@ msgid "Show details about Livestatus encryption"
 msgstr "Details zur Livestatus-Verschlüsselung anzeigen"
 
 msgid "Show downtime only when all current problems are covered"
-msgstr ""
+msgstr "Wartungszeit nur anzeigen, wenn alle aktuellen Probleme abgedeckt sind"
 
 msgid "Show dynamic"
 msgstr "Dynamisch anzeigen"
@@ -60205,7 +60216,7 @@ msgid "State when reported device status is UP"
 msgstr "Zustand, wenn der gemeldete Gerätezustand UP ist"
 
 msgid "State when reported device status is present"
-msgstr "Zustand, wenn der gemeldete Gerätezustand PRESENT ist"
+msgstr "Zustand, wenn es einen gemeldeten Gerätezustand gibt"
 
 msgid "State when security updates are pending"
 msgstr "Zustand wenn Sicherheitsupdates ausstehen"
@@ -88482,6 +88493,9 @@ msgstr "Änderungen speichern"
 msgid "Public link can't be generated"
 msgstr "Es kann kein öffentlicher Link erstellt werden"
 
+msgid "Review filters"
+msgstr "Filter überprüfen"
+
 msgid ""
 "Public dashboards are view-only and don't support runtime filters.nRemove "
 "runtime filters or convert them to default filters to continue."
@@ -88489,9 +88503,6 @@ msgstr ""
 "Öffentliche Dashboards sind schreibgeschützt und unterstützen keine "
 "Laufzeitfilter. Entfernen Sie Laufzeitfilter oder konvertieren Sie sie in "
 "Standardfilter, um fortzufahren."
-
-msgid "Review filters"
-msgstr "Filter überprüfen"
 
 msgid "Event selection"
 msgstr "Ereignis-Auswahl"
@@ -89153,18 +89164,18 @@ msgstr "Keine ausstehenden Änderungen auf Ihren Instanzen."
 msgid "Working with a complex environment?"
 msgstr "Arbeiten Sie in einem komplexen Umfeld?"
 
+msgid "Keep quick activation"
+msgstr "Schnelle Aktivierung beibehalten"
+
+msgid "Set full activation page as default"
+msgstr "Die Seite zur vollständigen Aktivierung als Standard festlegen"
+
 msgid ""
 "In complex environments, activation issues are more common and may require "
 "closer review.n"
 msgstr ""
 "In komplexen Umgebungen treten Aktivierungsprobleme häufiger auf und "
 "erfordern unter Umständen eine genauere Überprüfung."
-
-msgid "Keep quick activation"
-msgstr "Schnelle Aktivierung beibehalten"
-
-msgid "Set full activation page as default"
-msgstr "Die Seite zur vollständigen Aktivierung als Standard festlegen"
 
 msgid "Applying user setting..."
 msgstr "Benutzerdefinierte Einstellung wird angewendet..."
@@ -89180,13 +89191,13 @@ msgstr ""
 msgid "You can change this at any time in your profile settings."
 msgstr "Sie können dies jederzeit in Ihren Profileinstellungen ändern."
 
+msgid "Open full activation page"
+msgstr "Ganze Seite für die Aktivierung öffnen"
+
 msgid "Clicking on 'Changes' will now open the full 'Activate changes' page.n"
 msgstr ""
 "Wenn Sie auf 'Änderungen' klicken, wird nun die vollständige Seite "
 "'Änderungen aktivieren' geöffnet."
-
-msgid "Open full activation page"
-msgstr "Ganze Seite für die Aktivierung öffnen"
 
 msgid "Could not apply user setting."
 msgstr "Die Benutzereinstellung konnte nicht übernommen werden."
@@ -89206,8 +89217,16 @@ msgstr "Wichtige Hinweise"
 msgid "Ctrl + Alt"
 msgstr "Strg + Alt"
 
+#, fuzzy
+msgid "Existence"
+msgstr "Listener"
+
 msgid "Attribute key"
 msgstr "Attribut-Schlüssel"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Zu setzendes Attribut"
 
 msgid "Remove condition"
 msgstr "Bedingung entfernen"
@@ -90027,6 +90046,14 @@ msgstr "Passwort auswählen"
 msgid "No passwords available"
 msgstr "Keine Passwörter verfügbar"
 
+#, fuzzy
+msgid "Why is creating a password unavailable?"
+msgstr "Keine Passwörter verfügbar"
+
+#, fuzzy
+msgid "Creating a new password is not available for your account. "
+msgstr "Das neue Passwort muss sich vom aktuellen unterscheiden."
+
 msgid "TLS encryption must be enabled when using basic authentication."
 msgstr ""
 "Die TLS-Verschlüsselung muss aktiviert sein, wenn die Basisauthentifizierung "
@@ -90359,6 +90386,10 @@ msgstr "Passwort \"%{title}\" konnte nicht gespeichert werden"
 msgid "The password was rejected by the server."
 msgstr "Das Passwort wurde vom Server zurückgewiesen."
 
+#, fuzzy
+msgid "Could not save the referenced passwords"
+msgstr "Passwort \"%{title}\" konnte nicht gespeichert werden"
+
 msgid "Collector configuration"
 msgstr "Collector-Konfiguration"
 
@@ -90656,9 +90687,6 @@ msgstr ""
 
 msgid "Ignore for this host"
 msgstr "Für diesen Host ignorieren"
-
-msgid "Close for now"
-msgstr "Für den Augenblick schließen"
 
 msgid "Close & run service discovery"
 msgstr "Schließen & Service-Erkennung durchführen"
@@ -91543,6 +91571,9 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#~ msgid "Close for now"
+#~ msgstr "Für den Augenblick schließen"
+
 #~ msgid "We are currently experiencing high load. Please try again later."
 #~ msgstr ""
 #~ "Derzeit ist die Auslastung sehr hoch. Bitte versuchen Sie es später "
@@ -91645,9 +91676,6 @@ msgstr ""
 
 #~ msgid "Env creation"
 #~ msgstr "Erstellung der Umgebung"
-
-#~ msgid "Listener"
-#~ msgstr "Listener"
 
 #~ msgid "Listeners"
 #~ msgstr "Listeners"

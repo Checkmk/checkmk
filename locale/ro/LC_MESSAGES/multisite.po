@@ -93034,15 +93034,15 @@ msgstr "Schimbare de stare"
 msgid "Public link can't be generated"
 msgstr "Fără dată de expirare"
 
-msgid ""
-"Public dashboards are view-only and don't support runtime filters.nRemove "
-"runtime filters or convert them to default filters to continue."
-msgstr ""
-
 # georgem ##############
 #, fuzzy
 msgid "Review filters"
 msgstr "Filtre de service"
+
+msgid ""
+"Public dashboards are view-only and don't support runtime filters.nRemove "
+"runtime filters or convert them to default filters to continue."
+msgstr ""
 
 #, fuzzy
 msgid "Event selection"
@@ -93814,11 +93814,6 @@ msgstr "Nu există modificări în așteptare."
 msgid "Working with a complex environment?"
 msgstr "Îmbinare cu evenimentul deschis"
 
-msgid ""
-"In complex environments, activation issues are more common and may require "
-"closer review.n"
-msgstr ""
-
 #, fuzzy
 msgid "Keep quick activation"
 msgstr "Activare automată"
@@ -93826,6 +93821,11 @@ msgstr "Activare automată"
 #, fuzzy
 msgid "Set full activation page as default"
 msgstr "Activarea regulii"
+
+msgid ""
+"In complex environments, activation issues are more common and may require "
+"closer review.n"
+msgstr ""
 
 msgid "Applying user setting..."
 msgstr ""
@@ -93841,12 +93841,12 @@ msgstr ""
 msgid "You can change this at any time in your profile settings."
 msgstr "Utilizatorii pot modifica acest atribut în setările personale"
 
-msgid "Clicking on 'Changes' will now open the full 'Activate changes' page.n"
-msgstr ""
-
 #, fuzzy
 msgid "Open full activation page"
 msgstr "Activarea regulii"
+
+msgid "Clicking on 'Changes' will now open the full 'Activate changes' page.n"
+msgstr ""
 
 #, fuzzy
 msgid "Could not apply user setting."
@@ -93869,8 +93869,16 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Existence"
+msgstr "Ascultător"
+
+#, fuzzy
 msgid "Attribute key"
 msgstr "Atributul"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Atributul de setat"
 
 #, fuzzy
 msgid "Remove condition"
@@ -94686,6 +94694,14 @@ msgstr "Parolă nouă"
 msgid "No passwords available"
 msgstr "Porturi disponibile"
 
+#, fuzzy
+msgid "Why is creating a password unavailable?"
+msgstr "Porturi disponibile"
+
+#, fuzzy
+msgid "Creating a new password is not available for your account. "
+msgstr "Noua parolă trebuie să fie diferită de cea actuală."
+
 msgid "TLS encryption must be enabled when using basic authentication."
 msgstr ""
 
@@ -95008,6 +95024,10 @@ msgid "The password was rejected by the server."
 msgstr "Parola utilizatorului"
 
 #, fuzzy
+msgid "Could not save the referenced passwords"
+msgstr "Nu s-a putut salva modificările: %s"
+
+#, fuzzy
 msgid "Collector configuration"
 msgstr "Configurația filtrului Iptables"
 
@@ -95277,10 +95297,6 @@ msgstr ""
 #, fuzzy
 msgid "Ignore for this host"
 msgstr "Parametrii pentru această gazdă"
-
-#, fuzzy
-msgid "Close for now"
-msgstr "Niveluri pentru Inodes"
 
 #, fuzzy
 msgid "Close & run service discovery"
@@ -96111,6 +96127,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Close for now"
+#~ msgstr "Niveluri pentru Inodes"
+
+#, fuzzy
 #~ msgid "We are currently experiencing high load. Please try again later."
 #~ msgstr ""
 #~ "Nu s-au găsit rânduri corespunzătoare. Vă rugăm să încercați un alt "
@@ -96219,9 +96239,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Env creation"
 #~ msgstr "Creație"
-
-#~ msgid "Listener"
-#~ msgstr "Ascultător"
 
 #~ msgid "Listeners"
 #~ msgstr "Ascultători"

@@ -85899,6 +85899,9 @@ msgstr "変更を保存"
 msgid "Public link can't be generated"
 msgstr "公開リンクは生成できません"
 
+msgid "Review filters"
+msgstr "レビューフィルター"
+
 msgid ""
 "Public dashboards are view-only and don't support runtime filters.nRemove "
 "runtime filters or convert them to default filters to continue."
@@ -85906,9 +85909,6 @@ msgstr ""
 "公開ダッシュボードは閲覧専用であり、実行時のフィルダーはサポートされていませ"
 "ん、n続行するには、実行時フィルターを削除するか、デフォルトフィルターに変換し"
 "てください。"
-
-msgid "Review filters"
-msgstr "レビューフィルター"
 
 #, fuzzy
 msgid "Event selection"
@@ -86638,13 +86638,6 @@ msgstr "保留中の変更はありません。"
 msgid "Working with a complex environment?"
 msgstr "複雑な環境下で作業していますか？"
 
-msgid ""
-"In complex environments, activation issues are more common and may require "
-"closer review.n"
-msgstr ""
-"複雑な環境では、アクティベーションに関する問題がより頻繁に発生するため、より"
-"詳細な確認が必要になる場合があります"
-
 #, fuzzy
 msgid "Keep quick activation"
 msgstr "自動アクティベーション"
@@ -86652,6 +86645,13 @@ msgstr "自動アクティベーション"
 #, fuzzy
 msgid "Set full activation page as default"
 msgstr "ルールのアクティブ化"
+
+msgid ""
+"In complex environments, activation issues are more common and may require "
+"closer review.n"
+msgstr ""
+"複雑な環境では、アクティベーションに関する問題がより頻繁に発生するため、より"
+"詳細な確認が必要になる場合があります"
 
 msgid "Applying user setting..."
 msgstr "ユーザー設定を適用しています..."
@@ -86667,13 +86667,13 @@ msgstr ""
 msgid "You can change this at any time in your profile settings."
 msgstr "ユーザーは個人設定でこの属性を変更できます。"
 
-msgid "Clicking on 'Changes' will now open the full 'Activate changes' page.n"
-msgstr ""
-"「変更」をクリックすると、「変更を有効にする」ページが開くようになりました"
-
 #, fuzzy
 msgid "Open full activation page"
 msgstr "ルールのアクティブ化"
+
+msgid "Clicking on 'Changes' will now open the full 'Activate changes' page.n"
+msgstr ""
+"「変更」をクリックすると、「変更を有効にする」ページが開くようになりました"
 
 msgid "Could not apply user setting."
 msgstr "ユーザー設定を適用できませんでした。"
@@ -86694,8 +86694,16 @@ msgstr "重要なヒント"
 msgid "Ctrl + Alt"
 msgstr "Ctrl + Alt"
 
+#, fuzzy
+msgid "Existence"
+msgstr "リスナー"
+
 msgid "Attribute key"
 msgstr "属性キー"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "設定する属性"
 
 #, fuzzy
 msgid "Remove condition"
@@ -87584,6 +87592,14 @@ msgstr "新しいパスワード"
 msgid "No passwords available"
 msgstr "利用可能なユーザーはいません"
 
+#, fuzzy
+msgid "Why is creating a password unavailable?"
+msgstr "利用可能なユーザーはいません"
+
+#, fuzzy
+msgid "Creating a new password is not available for your account. "
+msgstr "新しいパスワードは、現在のパスワードとは異なる必要があります。"
+
 msgid "TLS encryption must be enabled when using basic authentication."
 msgstr "基本認証を使用する場合は、TLS暗号化を有効にする必要があります。"
 
@@ -87937,6 +87953,10 @@ msgid "The password was rejected by the server."
 msgstr "ユーザーのパスワード。"
 
 #, fuzzy
+msgid "Could not save the referenced passwords"
+msgstr "変更を保存できませんでした: %s"
+
+#, fuzzy
 msgid "Collector configuration"
 msgstr "Iptablesフィルター構成"
 
@@ -88243,10 +88263,6 @@ msgstr ""
 #, fuzzy
 msgid "Ignore for this host"
 msgstr "このホストのパラメーター"
-
-#, fuzzy
-msgid "Close for now"
-msgstr "Iノードのレベル"
 
 #, fuzzy
 msgid "Close & run service discovery"
@@ -89183,6 +89199,10 @@ msgid ""
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
 
+#, fuzzy
+#~ msgid "Close for now"
+#~ msgstr "Iノードのレベル"
+
 #~ msgid "We are currently experiencing high load. Please try again later."
 #~ msgstr ""
 #~ "現在、サーバーに負荷がかかっています。しばらくしてから再度お試しください。"
@@ -89286,9 +89306,6 @@ msgstr ""
 
 #~ msgid "Env creation"
 #~ msgstr "環境の作成"
-
-#~ msgid "Listener"
-#~ msgstr "リスナー"
 
 #~ msgid "Listeners"
 #~ msgstr "リスナー"

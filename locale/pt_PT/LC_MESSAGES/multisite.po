@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-30 17:53+0000\n"
+"PO-Revision-Date: 2026-06-02 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -92793,14 +92793,14 @@ msgstr "Mudou"
 msgid "Public link can't be generated"
 msgstr "Estado de registo"
 
+#, fuzzy
+msgid "Review filters"
+msgstr "Filtros de serviço"
+
 msgid ""
 "Public dashboards are view-only and don't support runtime filters.nRemove "
 "runtime filters or convert them to default filters to continue."
 msgstr ""
-
-#, fuzzy
-msgid "Review filters"
-msgstr "Filtros de serviço"
 
 #, fuzzy
 msgid "Event selection"
@@ -93571,11 +93571,6 @@ msgstr "Não há alterações pendentes."
 msgid "Working with a complex environment?"
 msgstr "Fusão com evento aberto"
 
-msgid ""
-"In complex environments, activation issues are more common and may require "
-"closer review.n"
-msgstr ""
-
 #, fuzzy
 msgid "Keep quick activation"
 msgstr "Ativação automática"
@@ -93583,6 +93578,11 @@ msgstr "Ativação automática"
 #, fuzzy
 msgid "Set full activation page as default"
 msgstr "Ativação da regra"
+
+msgid ""
+"In complex environments, activation issues are more common and may require "
+"closer review.n"
+msgstr ""
 
 msgid "Applying user setting..."
 msgstr ""
@@ -93598,12 +93598,12 @@ msgstr ""
 msgid "You can change this at any time in your profile settings."
 msgstr "Os usuários podem alterar este atributo em suas configurações pessoais"
 
-msgid "Clicking on 'Changes' will now open the full 'Activate changes' page.n"
-msgstr ""
-
 #, fuzzy
 msgid "Open full activation page"
 msgstr "Ativação da regra"
+
+msgid "Clicking on 'Changes' will now open the full 'Activate changes' page.n"
+msgstr ""
 
 #, fuzzy
 msgid "Could not apply user setting."
@@ -93626,8 +93626,16 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Existence"
+msgstr "Ouvinte"
+
+#, fuzzy
 msgid "Attribute key"
 msgstr "Atributo"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Atributo a definir"
 
 #, fuzzy
 msgid "Remove condition"
@@ -94433,6 +94441,14 @@ msgstr "Nova Senha"
 msgid "No passwords available"
 msgstr "Portos disponíveis"
 
+#, fuzzy
+msgid "Why is creating a password unavailable?"
+msgstr "Portos disponíveis"
+
+#, fuzzy
+msgid "Creating a new password is not available for your account. "
+msgstr "A nova senha deve ser diferente da sua senha atual."
+
 msgid "TLS encryption must be enabled when using basic authentication."
 msgstr ""
 
@@ -94754,6 +94770,10 @@ msgid "The password was rejected by the server."
 msgstr "Senha do usuário"
 
 #, fuzzy
+msgid "Could not save the referenced passwords"
+msgstr "Não foi possível salvar as mudanças: %s"
+
+#, fuzzy
 msgid "Collector configuration"
 msgstr "Configuração do filtro Iptables"
 
@@ -95023,10 +95043,6 @@ msgstr ""
 #, fuzzy
 msgid "Ignore for this host"
 msgstr "Parâmetros para este anfitrião"
-
-#, fuzzy
-msgid "Close for now"
-msgstr "Níveis para Inodes"
 
 #, fuzzy
 msgid "Close & run service discovery"
@@ -95852,6 +95868,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Close for now"
+#~ msgstr "Níveis para Inodes"
+
+#, fuzzy
 #~ msgid "We are currently experiencing high load. Please try again later."
 #~ msgstr ""
 #~ "Não encontrei filas correspondentes. Por favor, tente outro termo de "
@@ -95960,9 +95980,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Env creation"
 #~ msgstr "Criação"
-
-#~ msgid "Listener"
-#~ msgstr "Ouvinte"
 
 #~ msgid "Listeners"
 #~ msgstr "Ouvintes"

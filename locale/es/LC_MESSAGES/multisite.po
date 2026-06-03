@@ -93608,14 +93608,14 @@ msgstr "Ha cambiado"
 msgid "Public link can't be generated"
 msgstr "Estado de registro"
 
+#, fuzzy
+msgid "Review filters"
+msgstr "Filtros de servicio"
+
 msgid ""
 "Public dashboards are view-only and don't support runtime filters.nRemove "
 "runtime filters or convert them to default filters to continue."
 msgstr ""
-
-#, fuzzy
-msgid "Review filters"
-msgstr "Filtros de servicio"
 
 #, fuzzy
 msgid "Event selection"
@@ -94387,11 +94387,6 @@ msgstr "No hay cambios pendientes"
 msgid "Working with a complex environment?"
 msgstr "Fusión con evento abierto"
 
-msgid ""
-"In complex environments, activation issues are more common and may require "
-"closer review.n"
-msgstr ""
-
 #, fuzzy
 msgid "Keep quick activation"
 msgstr "Activación automática"
@@ -94399,6 +94394,11 @@ msgstr "Activación automática"
 #, fuzzy
 msgid "Set full activation page as default"
 msgstr "Activación de la regla"
+
+msgid ""
+"In complex environments, activation issues are more common and may require "
+"closer review.n"
+msgstr ""
 
 msgid "Applying user setting..."
 msgstr ""
@@ -94414,12 +94414,12 @@ msgstr ""
 msgid "You can change this at any time in your profile settings."
 msgstr "Los usuarios pueden cambiar este atributo en su configuración personal"
 
-msgid "Clicking on 'Changes' will now open the full 'Activate changes' page.n"
-msgstr ""
-
 #, fuzzy
 msgid "Open full activation page"
 msgstr "Activación de la regla"
+
+msgid "Clicking on 'Changes' will now open the full 'Activate changes' page.n"
+msgstr ""
 
 #, fuzzy
 msgid "Could not apply user setting."
@@ -94442,8 +94442,16 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Existence"
+msgstr "Oyente"
+
+#, fuzzy
 msgid "Attribute key"
 msgstr "Atributo"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Atributo a fijar"
 
 #, fuzzy
 msgid "Remove condition"
@@ -95256,6 +95264,14 @@ msgstr "Nueva contraseña"
 msgid "No passwords available"
 msgstr "Puertos disponibles"
 
+#, fuzzy
+msgid "Why is creating a password unavailable?"
+msgstr "Puertos disponibles"
+
+#, fuzzy
+msgid "Creating a new password is not available for your account. "
+msgstr "La nueva contraseña debe ser diferente de la actual."
+
 msgid "TLS encryption must be enabled when using basic authentication."
 msgstr ""
 
@@ -95577,6 +95593,10 @@ msgid "The password was rejected by the server."
 msgstr "Contraseña del usuario"
 
 #, fuzzy
+msgid "Could not save the referenced passwords"
+msgstr "No se han podido guardar los cambios: %s"
+
+#, fuzzy
 msgid "Collector configuration"
 msgstr "Configuración del filtro Iptables"
 
@@ -95846,10 +95866,6 @@ msgstr ""
 #, fuzzy
 msgid "Ignore for this host"
 msgstr "Parámetros para este host"
-
-#, fuzzy
-msgid "Close for now"
-msgstr "Niveles para Inodes"
 
 #, fuzzy
 msgid "Close & run service discovery"
@@ -96674,6 +96690,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Close for now"
+#~ msgstr "Niveles para Inodes"
+
+#, fuzzy
 #~ msgid "We are currently experiencing high load. Please try again later."
 #~ msgstr ""
 #~ "No se han encontrado filas coincidentes. Por favor, intente con otro "
@@ -96783,9 +96803,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Env creation"
 #~ msgstr "Creación"
-
-#~ msgid "Listener"
-#~ msgstr "Oyente"
 
 #~ msgid "Listeners"
 #~ msgstr "Oyentes"

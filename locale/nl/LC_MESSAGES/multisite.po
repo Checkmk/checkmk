@@ -92899,14 +92899,14 @@ msgstr "Is veranderd"
 msgid "Public link can't be generated"
 msgstr "Registratie Staat"
 
+#, fuzzy
+msgid "Review filters"
+msgstr "Service Filters"
+
 msgid ""
 "Public dashboards are view-only and don't support runtime filters.nRemove "
 "runtime filters or convert them to default filters to continue."
 msgstr ""
-
-#, fuzzy
-msgid "Review filters"
-msgstr "Service Filters"
 
 #, fuzzy
 msgid "Event selection"
@@ -93676,11 +93676,6 @@ msgstr "Geen hangende wijzigingen"
 msgid "Working with a complex environment?"
 msgstr "Samenvoegen met open gebeurtenis"
 
-msgid ""
-"In complex environments, activation issues are more common and may require "
-"closer review.n"
-msgstr ""
-
 #, fuzzy
 msgid "Keep quick activation"
 msgstr "Automatische activering"
@@ -93688,6 +93683,11 @@ msgstr "Automatische activering"
 #, fuzzy
 msgid "Set full activation page as default"
 msgstr "Activering van de regel"
+
+msgid ""
+"In complex environments, activation issues are more common and may require "
+"closer review.n"
+msgstr ""
 
 msgid "Applying user setting..."
 msgstr ""
@@ -93704,12 +93704,12 @@ msgid "You can change this at any time in your profile settings."
 msgstr ""
 "Gebruikers kunnen dit kenmerk in hun persoonlijke instellingen wijzigen"
 
-msgid "Clicking on 'Changes' will now open the full 'Activate changes' page.n"
-msgstr ""
-
 #, fuzzy
 msgid "Open full activation page"
 msgstr "Activering van de regel"
+
+msgid "Clicking on 'Changes' will now open the full 'Activate changes' page.n"
+msgstr ""
 
 #, fuzzy
 msgid "Could not apply user setting."
@@ -93732,8 +93732,16 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Existence"
+msgstr "Luisteraar"
+
+#, fuzzy
 msgid "Attribute key"
 msgstr "Attribuut"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "In te stellen attribuut"
 
 #, fuzzy
 msgid "Remove condition"
@@ -94539,6 +94547,14 @@ msgstr "Nieuw wachtwoord"
 msgid "No passwords available"
 msgstr "Beschikbare poorten"
 
+#, fuzzy
+msgid "Why is creating a password unavailable?"
+msgstr "Beschikbare poorten"
+
+#, fuzzy
+msgid "Creating a new password is not available for your account. "
+msgstr "Het nieuwe wachtwoord moet verschillen van uw huidige wachtwoord."
+
 msgid "TLS encryption must be enabled when using basic authentication."
 msgstr ""
 
@@ -94860,6 +94876,10 @@ msgid "The password was rejected by the server."
 msgstr "Wachtwoord van de gebruiker"
 
 #, fuzzy
+msgid "Could not save the referenced passwords"
+msgstr "Kon wijzigingen niet opslaan: %s"
+
+#, fuzzy
 msgid "Collector configuration"
 msgstr "Iptables filter configuratie"
 
@@ -95129,10 +95149,6 @@ msgstr ""
 #, fuzzy
 msgid "Ignore for this host"
 msgstr "Parameters voor deze host"
-
-#, fuzzy
-msgid "Close for now"
-msgstr "Niveaus voor Inodes"
 
 #, fuzzy
 msgid "Close & run service discovery"
@@ -95956,6 +95972,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Close for now"
+#~ msgstr "Niveaus voor Inodes"
+
+#, fuzzy
 #~ msgid "We are currently experiencing high load. Please try again later."
 #~ msgstr "Geen overeenkomende rijen gevonden. Probeer een andere zoekterm."
 
@@ -96063,9 +96083,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Env creation"
 #~ msgstr "Schepping"
-
-#~ msgid "Listener"
-#~ msgstr "Luisteraar"
 
 #~ msgid "Listeners"
 #~ msgstr "Luisteraars"

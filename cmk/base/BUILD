@@ -1,8 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
-exports_files([".f12"])
-
 py_library(
     name = "utils",
     srcs = [
@@ -377,5 +375,12 @@ py_library(
         "//cmk/base/modes:modes-registry",
         "//cmk/base/plugins:plugins-bakery",
         "//cmk/base/sources",
+    ],
+)
+
+sh_library(
+    name = "f12",
+    srcs = [
+        ".f12",
     ],
 )

@@ -122,8 +122,8 @@ filegroup(
     ],
 )
 
-filegroup(
-    name = "shell_scripts",
+sh_library(
+    name = "active_checks",
     srcs = [
         "activemq/libexec/agent_activemq",
         "alertmanager/libexec/agent_alertmanager",

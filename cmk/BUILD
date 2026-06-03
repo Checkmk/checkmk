@@ -506,15 +506,9 @@ py_pytest_main(
 )
 
 sh_library(
-    name = "cmk_sh",
+    name = "f12",
     srcs = [
         ".f12",
-        "//cmk/base:.f12",
-        "//cmk/config_anonymizer:.f12",
-        "//cmk/gui:.f12",
-        "//cmk/gui/openapi:.f12",
-        "//cmk/gui/wsgi:.f12",
-        "//cmk/plugins:shell_scripts",
     ],
 )
 

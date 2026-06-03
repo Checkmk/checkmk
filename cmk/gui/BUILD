@@ -1,10 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
-exports_files([
-    ".f12",
-])
-
 py_library(
     name = "core_toolkit",
     srcs = [
@@ -782,5 +778,12 @@ py_library(
         "//packages/cmk-trace",
         requirement("flask"),
         requirement("werkzeug"),
+    ],
+)
+
+sh_library(
+    name = "f12",
+    srcs = [
+        ".f12",
     ],
 )

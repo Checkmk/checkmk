@@ -1,11 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 
-exports_files(
-    [
-        ".f12",
-        "default_rule_values.mk",
-    ],
-)
+exports_files(["default_rule_values.mk"])
 
 py_library(
     name = "config_anonymizer",
@@ -35,5 +30,12 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-livestatus-client",
+    ],
+)
+
+sh_library(
+    name = "f12",
+    srcs = [
+        ".f12",
     ],
 )

@@ -1,8 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
-exports_files([".f12"])
-
 py_library(
     name = "utils",
     srcs = ["utils.py"],
@@ -96,5 +94,12 @@ py_library(
         "//cmk/gui/openapi/framework:core",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/openapi/shared_endpoint_families",
+    ],
+)
+
+sh_library(
+    name = "f12",
+    srcs = [
+        ".f12",
     ],
 )

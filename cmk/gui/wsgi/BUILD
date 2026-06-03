@@ -1,8 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
-exports_files([".f12"])
-
 py_library(
     name = "utils",
     srcs = ["utils.py"],
@@ -71,5 +69,12 @@ py_library(
         requirement("opentelemetry-instrumentation-wsgi"),
         requirement("pyprof2calltree"),
         requirement("werkzeug"),
+    ],
+)
+
+sh_library(
+    name = "f12",
+    srcs = [
+        ".f12",
     ],
 )

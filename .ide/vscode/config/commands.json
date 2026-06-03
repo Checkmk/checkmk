@@ -22,7 +22,8 @@
   "cmk.runUcl": {
     "name": "Run UI Component Library",
     "command": "cd packages/cmk-frontend-vue && ibazel run :vite -- --config vite.config.ucl.ts",
-    "requires": "frontend"
+    "requires": "frontend",
+    "force": true
   },
   "cmk.installNodeModules": {
     "name": "Install node_modules",

@@ -23,6 +23,9 @@ export interface CommandEntry {
   command: string
   requires?: string
   postAction?: string
+  // Long-running commands (e.g. a dev server): on re-run, force any live
+  // instance to quit and reuse its terminal instead of just being killed.
+  force?: boolean
 }
 
 export function checkBuildStatus(wsPath: string): BuildStatus {

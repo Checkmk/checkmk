@@ -38,11 +38,35 @@ export function getExtendedPath(): string {
   return missing.length > 0 ? `${missing.join(':')}:${currentPath}` : currentPath
 }
 
-export function runCommand(name: string, command: string): vscode.TaskExecution | undefined {
+export interface RunCommandOptions {
+  // Force commands (e.g. the long-running UCL dev server) run in their own
+  // reusable terminal and force-restart on re-run: any live instance is
+  // terminated first so a fresh run always launches in place. Without this,
+  // commands keep VS Code's default shared-panel behaviour.
+  force?: boolean
+}
+
+export function runCommand(
+  name: string,
+  command: string,
+  options: RunCommandOptions = {}
+): vscode.TaskExecution | undefined {
   const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
   if (!workspaceFolder) {
     notifyError('No workspace folder found')
     return
+  }
+
+  if (options.force) {
+    // VS Code dedupes tasks by identity, so an already-active task would
+    // otherwise be terminated without a fresh one launching. Explicitly
+    // terminate any live instance first, so the executeTask() below always
+    // starts a clean new run.
+    for (const active of vscode.tasks.taskExecutions) {
+      if (active.task.source === 'CMK' && active.task.name === name) {
+        active.terminate()
+      }
+    }
   }
 
   const task = new vscode.Task(
@@ -55,7 +79,12 @@ export function runCommand(name: string, command: string): vscode.TaskExecution 
       env: { PATH: getExtendedPath() }
     })
   )
-  task.presentationOptions = { reveal: vscode.TaskRevealKind.Always }
+  // Dedicated panel: the command reuses its own terminal across runs, so a
+  // restart replaces the previous output in place instead of leaking terminals.
+  task.presentationOptions = {
+    reveal: vscode.TaskRevealKind.Always,
+    ...(options.force ? { panel: vscode.TaskPanelKind.Dedicated } : {})
+  }
 
   // vscode.tasks.executeTask returns a Thenable<TaskExecution>,
   // but callers treat the return as the execution itself.

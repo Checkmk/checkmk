@@ -364,12 +364,12 @@ export function updateContextKeys(extensionSets: ExtensionSets): void {
 
 export function registerBuildCommands(
   context: vscode.ExtensionContext,
-  commands: Record<string, { name: string; command: string; postAction?: string }>
+  commands: Record<string, { name: string; command: string; postAction?: string; force?: boolean }>
 ): void {
   for (const [id, entry] of Object.entries(commands)) {
     context.subscriptions.push(
       vscode.commands.registerCommand(id, async () => {
-        const execution = await runCommand(entry.name, entry.command)
+        const execution = await runCommand(entry.name, entry.command, { force: entry.force })
         if (!execution) return
 
         if (entry.postAction) {

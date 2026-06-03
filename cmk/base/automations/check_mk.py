@@ -820,6 +820,8 @@ def _execute_autodiscovery(
                 if params.commandline_only:
                     console.verbose("  failed: discovery check disabled")
                     discovery_result, activate_host = None, False
+                    # Delete the file. This host will be skipped every time anyway.
+                    (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
                 else:
                     hosts_config = config_cache.hosts_config
                     discovery_result, activate_host = autodiscovery(

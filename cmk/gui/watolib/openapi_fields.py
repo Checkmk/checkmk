@@ -964,6 +964,7 @@ PrivacyProtocolType = Literal[
     "AES-256",
     "AES-192-Blumenthal",
     "AES-256-Blumenthal",
+    "AES-256-C",
 ]
 
 
@@ -984,6 +985,7 @@ PRIV_PROT_MAP: Mapping[PrivacyProtocolType, str] = {
     "AES-256": "AES-256",
     "AES-192-Blumenthal": "AES-192-Blumenthal",
     "AES-256-Blumenthal": "AES-256-Blumenthal",
+    "AES-256-C": "AES-256-C",
 }
 
 

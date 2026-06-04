@@ -20,6 +20,7 @@ py_library(
         "cmk/snmplib/__init__.py",
         "cmk/snmplib/_detect.py",
         "cmk/snmplib/_getoid.py",
+        "cmk/snmplib/_parse.py",
         "cmk/snmplib/_table.py",
         "cmk/snmplib/_typedefs.py",
         "cmk/snmplib/_walk.py",

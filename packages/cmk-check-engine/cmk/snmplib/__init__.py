@@ -8,6 +8,7 @@ from ._detect import SNMPDetectAtom as SNMPDetectAtom
 from ._detect import SNMPDetectBaseType as SNMPDetectBaseType
 from ._detect import SNMPDetectSpec as SNMPDetectSpec
 from ._getoid import get_single_oid as get_single_oid
+from ._parse import parse_oid_range_config as parse_oid_range_config
 from ._table import get_snmp_table as get_snmp_table
 from ._table import SNMPDecodedString as SNMPDecodedString
 from ._table import SNMPRawData as SNMPRawData
@@ -19,7 +20,6 @@ from ._typedefs import ensure_str as ensure_str
 from ._typedefs import OID as OID
 from ._typedefs import OIDRange as OIDRange
 from ._typedefs import OIDSpecLike as OIDSpecLike
-from ._typedefs import parse_oid_range_config as parse_oid_range_config
 from ._typedefs import RangeLimit as RangeLimit
 from ._typedefs import SNMPBackend as SNMPBackend
 from ._typedefs import SNMPBackendEnum as SNMPBackendEnum

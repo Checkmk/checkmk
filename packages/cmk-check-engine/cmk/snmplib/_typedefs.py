@@ -68,7 +68,7 @@ class SNMPTimeout(TimeoutError):
 # (3) security name (-u)
 # (4) auth password (-A)
 # And if it is a six-tuple, it has the following additional arguments:
-# (5) privacy protocol (DES|AES|AES-192|AES-256) (-x)
+# (5) privacy protocol (DES|AES|AES-192|AES-256|AES-256-C) (-x)
 # (6) privacy protocol pass phrase (-X)
 SNMPCommunity = str
 SNMPv3NoAuthNoPriv = tuple[str, str]

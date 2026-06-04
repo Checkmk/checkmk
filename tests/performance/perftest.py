@@ -6,6 +6,7 @@
 
 """Performance test classes"""
 
+import itertools
 import json
 import logging
 import os
@@ -24,6 +25,7 @@ from playwright._impl._api_structures import SetCookieParam
 from playwright.sync_api import BrowserContext, Page
 from requests.auth import HTTPBasicAuth
 
+from tests.performance.mock_remote_sites import mock_remote_site_cluster
 from tests.performance.sysmon import track_resources
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import check_output
@@ -74,6 +76,11 @@ class PerformanceTest:
             val if isinstance((val := pytestconfig.getoption("object_count")), int) else 100
         )
         self._dcd_piggyback_rule_id = ""
+        self.mocked_sites = (
+            val
+            if isinstance((val := pytestconfig.getoption("mocked_sites", default=None)), int)
+            else 30
+        )
         # Total piggybacked host count for distributed piggyback scenarios
         # (default: 2 * object_count, matching the real-remote-site variant).
         self.pb_hosts = (
@@ -81,6 +88,9 @@ class PerformanceTest:
             if isinstance((val := pytestconfig.getoption("pb_hosts", default=None)), int)
             else 2 * self.object_count
         )
+        # When set, bulk change activation hosts are spread over these site IDs
+        # (used with mocked remote sites) instead of self.sites.
+        self.bulk_change_target_site_ids: list[str] | None = None
 
     @property
     def sites(self) -> list[Site]:
@@ -209,16 +219,17 @@ class PerformanceTest:
         target_sites: list[Site] | None = None,
         host_ip_offset: int = 0,
         folder: str = "/",
+        target_site_ids: list[str] | None = None,
     ) -> list[dict[str, object]]:
-        target_sites = target_sites or [central_site]
+        site_ids = target_site_ids or [site.id for site in (target_sites or [central_site])]
         unixtime = int(time())
         hosts = []
-        for site in target_sites:
-            is_central_site = site.id == central_site.id
+        for site_id in site_ids:
+            is_central_site = site_id == central_site.id
             for idx, ip in enumerate(
                 PerformanceTest._generate_ips(host_ip_offset, host_count), start=1
             ):
-                hostname = f"{site.id}_{unixtime}_{idx}"
+                hostname = f"{site_id}_{unixtime}_{idx}"
                 entry: dict[str, object] = {
                     "host_name": hostname,
                     "folder": folder,
@@ -229,7 +240,7 @@ class PerformanceTest:
                     },
                 }
                 if (not is_central_site) and isinstance(entry["attributes"], dict):
-                    entry["attributes"]["site"] = site.id
+                    entry["attributes"]["site"] = site_id
                 hosts.append(entry)
         return hosts
 
@@ -619,6 +630,11 @@ class PerformanceTest:
             )
         host_ip_offset = 0
         host_count = 10
+        target_site_id_cycle = (
+            itertools.cycle(self.bulk_change_target_site_ids)
+            if self.bulk_change_target_site_ids
+            else None
+        )
         for location_id, location in enumerate(host_tag_groups["location"]):
             self.central_site.openapi.folders.create(
                 folder=location["id"],
@@ -643,9 +659,12 @@ class PerformanceTest:
                         self.generate_hosts(
                             host_count,
                             self.central_site,
-                            [self.sites[location_id]],
+                            None if target_site_id_cycle else [self.sites[location_id]],
                             host_ip_offset,
                             folder=environment_folder,
+                            target_site_ids=(
+                                [next(target_site_id_cycle)] if target_site_id_cycle else None
+                            ),
                         )
                     )
                     host_ip_offset += host_count
@@ -731,6 +750,54 @@ class PerformanceTest:
                 yield hostnames
             finally:
                 self.delete_hosts(self.central_site, hostnames)
+
+    @contextmanager
+    def mocked_remote_sites_environment(
+        self, count: int | None = None, activate_delay: float = 0.0
+    ) -> Iterator[list[str]]:
+        """Register "count" (default: "mocked_sites") mock remote sites on the central site.
+
+        The mock sites emulate the remote side of the activate changes protocol
+        (config sync, activation, broker certificates) and a minimal livestatus
+        endpoint, so the central site performs its full per-site activation work
+        without the resource cost of real OMD sites. See mock_remote_sites.py.
+        """
+        with mock_remote_site_cluster(
+            count or self.mocked_sites,
+            self.central_site.version,
+            activate_delay=activate_delay,
+        ) as cluster:
+            logger.info("Registering %d mock remote sites...", len(cluster.site_ids))
+            for site_id in cluster.site_ids:
+                self.central_site.openapi.sites.create(cluster.site_connection_config(site_id))
+                self.central_site.openapi.sites.login(
+                    site_id, password=self.central_site.admin_password
+                )
+            self.central_site.openapi.changes.activate_and_wait_for_completion(
+                force_foreign_changes=True
+            )
+            try:
+                yield cluster.site_ids
+            finally:
+                logger.info("Removing %d mock remote sites...", len(cluster.site_ids))
+                # A failed benchmark round may leave hosts assigned to the mock
+                # sites behind; they block the deletion of the site connections.
+                # All generated host names start with the mock site ID.
+                if leftover_hosts := [
+                    hostname
+                    for hostname in self.central_site.openapi.hosts.get_all_names()
+                    if hostname.startswith(tuple(cluster.site_ids))
+                ]:
+                    logger.warning(
+                        "Deleting %d leftover hosts assigned to mock sites...",
+                        len(leftover_hosts),
+                    )
+                    self.delete_hosts(self.central_site, leftover_hosts)
+                for site_id in cluster.site_ids:
+                    self.central_site.openapi.sites.delete(site_id)
+                self.central_site.openapi.changes.activate_and_wait_for_completion(
+                    force_foreign_changes=True
+                )
 
     def setup_nagios_core_plugin_import(self) -> None:
         """Setup: Nagios core plugin import

@@ -70,6 +70,13 @@ build_cmd = """
     # https://github.com/sfackler/rust-openssl/blob/10cee24f49cd3f37da1dbf663ba67bca6728db1f/openssl-sys/build/find_normal.rs#L8
     # TODO: we should ideally adjust the PKG_CONFIG_PATH to add the openssl pkgconfig files
 
+    # Strip the Bazel sandbox/execroot prefix ($$HOME == $$PWD == execroot) from
+    # the source paths rustc records into panic/debug location metadata (crates
+    # live under $$HOME/.cargo/registry). Without this the build-host layout
+    # leaks into the Rust-backed wheels (cryptography, pydantic-core, bcrypt,
+    # rpds-py, libcst). Mirrors the -ffile-prefix-map=$$HOME=. used for C below.
+    export RUSTFLAGS="--remap-path-prefix=$$HOME=."
+
     export OPENSSL_LIB_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib"
     export OPENSSL_INCLUDE_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include"
 

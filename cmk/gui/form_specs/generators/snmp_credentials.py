@@ -123,6 +123,10 @@ def _snmpv3_auth_priv_element(for_ec: bool = False) -> Tuple:
         ("AES-192", Title("AES-192")),
         ("AES-256", Title("AES-256")),
     ]
+    # There is a naming mismatch in "AES-xxx" between pysnmp and net-snmp!
+    # In pysnmp, "AES-xxx" means Cisco key-localization.
+    # In net-snmp, "AES-xxx" means Blumenthal.
+    # TODO: Clean up this ambiguity and fix the comment in the `if` branch!
     if for_ec:
         # EC uses pysnmp which supports these protocols
         # netsnmp/inline + classic do not support these protocols
@@ -133,6 +137,10 @@ def _snmpv3_auth_priv_element(for_ec: bool = False) -> Tuple:
                 ("AES-256-Blumenthal", Title("AES-256-Blumenthal")),
             ]
         )
+    else:
+        # AES-256-C is Cisco's key-localization variant of AES-256.
+        # It is known to SNMP-pull backends (net-snmp) but not to the EC (pysnmp).
+        priv_protocol_choices.append(("AES-256-C", Title("AES-256-C (Cisco)")))
 
     elements1: list[FormSpec[Any]] = [
         FixedValue(

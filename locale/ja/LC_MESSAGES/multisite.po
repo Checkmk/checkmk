@@ -23760,7 +23760,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "Enabling this option will enforce two-factor authentication for all users. "
-"Enabling this setting will override role based two-factor enforcement."
+"Enabling this setting will override role based two-factor enforcement. "
+"Automation users are exempt, as they cannot use two-factor authentication."
 msgstr ""
 "このオプションを有効にすると、すべてのユーザーに二要素認証が適用されます。こ"
 "の設定を有効にすると、ロールベースの二要素認証が無効になります。"
@@ -33216,7 +33217,9 @@ msgid ""
 "If this setting is changed from disabled to enabled, all users with this "
 "role will be required to use a two-factor authentication and will be logged "
 "out of any current sessions if they have not enabled two-factor. 'Enforce "
-"two-factor authentication' in the global settings will override this setting."
+"two-factor authentication' in the global settings will override this "
+"setting. Automation users are exempt, as they cannot use two-factor "
+"authentication."
 msgstr ""
 "この設定を無効から有効に変更すると、この役割を持つすべてのユーザーは二要素認"
 "証の使用が必須となり、二要素認証を有効化していない場合、現在のセッションから"
@@ -36918,6 +36921,12 @@ msgstr "カスペルスキーアンチウイルス時間設定"
 
 msgid "Keep comment after acknowledgment expires (persistent comment)"
 msgstr "承認が切れた後もコメントを保持する（永続的コメント）"
+
+msgid "Keep containers exited with non-zero exit code"
+msgstr ""
+
+msgid "Keep containers exited with non-zero exit code in monitoring"
+msgstr ""
 
 msgid "Keep existing connections"
 msgstr "既存の接続を維持"
@@ -84932,6 +84941,15 @@ msgstr ""
 "視システムに追加されます。"
 
 msgid ""
+"When enabled (default), containers that have exited with a non-zero exit "
+"code will continue to be monitored individually. When disabled, they are "
+"removed from individual monitoring. Note: containers exited with exit code 0 "
+"are always removed from individual monitoring regardless of this setting. "
+"All exited containers are still counted in the container count service on "
+"the Podman host."
+msgstr ""
+
+msgid ""
 "When enabled all exceptions occuring during the helper execution will raise "
 "through and directly result in termination of the helper process."
 msgstr ""
@@ -94011,6 +94029,13 @@ msgstr "構成を分析する"
 #, fuzzy
 msgid "Get your configuration ready to be applied."
 msgstr "コア構成がリロードされました"
+
+#, fuzzy
+msgid ""
+"The form still contains invalid data. Please correct them and try again."
+msgstr ""
+"ステージ %s に無効なフォームデータが含まれています。修正して再度お試しくださ"
+"い。"
 
 #, fuzzy
 msgid "Save Prometheus configuration"

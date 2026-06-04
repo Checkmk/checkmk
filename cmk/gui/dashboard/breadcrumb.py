@@ -40,6 +40,16 @@ def dashboard_topic_breadcrumb(topic: str, user_permissions: UserPermissions) ->
     )
 
 
+# These dashboards are not part of the Azure overview -> subscription ->
+# resource group drill-down hierarchy and keep the default breadcrumb
+_AZURE_BREADCRUMB_EXCLUDES = {
+    "azure_vm_overview",
+    "azure_vm_instances",
+    "azure_storage_overview",
+    "azure_storage_accounts",
+}
+
+
 def dashboard_breadcrumb(
     name: str,
     board: DashboardConfig,
@@ -52,9 +62,77 @@ def dashboard_breadcrumb(
     if "kubernetes" in name:
         return kubernetes_dashboard_breadcrumb(name, board, title, breadcrumb, context)
 
+    if name.startswith("azure_") and name not in _AZURE_BREADCRUMB_EXCLUDES:
+        return azure_dashboard_breadcrumb(name, title, breadcrumb, context)
+
     breadcrumb.append(
         BreadcrumbItem(title, makeuri(request, [("name", name)]), f"dashboard_{name}")
     )
+    return breadcrumb
+
+
+def azure_dashboard_breadcrumb(
+    name: str,
+    title: str,
+    breadcrumb: Breadcrumb,
+    context: VisualContext,
+) -> Breadcrumb:
+    """
+    Realize the Azure hierarchy breadcrumb
+    Azure (overview board) -> Azure subscription -> Azure resource group
+    """
+    breadcrumb.append(
+        BreadcrumbItem(
+            "Azure",
+            makeuri_contextless(request, [("name", "azure_overview")]),
+            "dashboard_azure_overview",
+        )
+    )
+    if name == "azure_overview":
+        return breadcrumb
+
+    # Subscription
+    subscription_id: str | None = context.get("azure_subscription", {}).get("azure_subscription")
+    if not subscription_id:
+        breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)]), None))
+        return breadcrumb
+    subscription_name: str | None = context.get("azure_subscription_name", {}).get(
+        "azure_subscription_name"
+    )
+    add_vars: HTTPVariables = [
+        ("site", context.get("site", {}).get("site")),
+        ("azure_subscription", subscription_id),
+        ("azure_subscription_name", subscription_name),
+    ]
+    breadcrumb.append(
+        BreadcrumbItem(
+            f"Subscription {subscription_name or subscription_id}",
+            makeuri_contextless(request, [("name", "azure_subscription"), *add_vars]),
+            "azure_subscription",
+        )
+    )
+    if name == "azure_subscription":
+        return breadcrumb
+
+    # Resource group
+    resource_group: str | None = context.get("azure_resource_group", {}).get("azure_resource_group")
+    if not resource_group:
+        breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)]), None))
+        return breadcrumb
+    add_vars.append(("azure_resource_group", resource_group))
+    breadcrumb.append(
+        BreadcrumbItem(
+            f"Resource group {resource_group}",
+            makeuri_contextless(request, [("name", "azure_resource_group"), *add_vars]),
+            "azure_resource_group",
+        )
+    )
+    if name == "azure_resource_group":
+        return breadcrumb
+
+    # Any deeper Azure dashboard not covered above (e.g. one missing from the
+    # exclude list) still gets a final breadcrumb item for the current page.
+    breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)]), None))
     return breadcrumb
 
 

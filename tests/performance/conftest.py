@@ -68,6 +68,16 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="The number of objects created for each scenario.",
         default=100,
     )
+    parser.addoption(
+        "--pb-hosts",
+        action="store",
+        type=int,
+        help=(
+            "The total number of piggybacked hosts for the distributed piggyback "
+            "scenarios (default: 2 * object-count)."
+        ),
+        default=None,
+    )
 
 
 @pytest.fixture(name="track_system_resources", scope="function")

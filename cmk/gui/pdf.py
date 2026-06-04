@@ -489,22 +489,23 @@ class Document:
     def add_heading(self, level: int, text: str, numbers: bool) -> None:
         text = self._sanitize_text(text)
         level = self._gfx_state["heading_offset"] + level
-
-        next_number = self._heading_numbers.get(level, 0) + 1
-        self._heading_numbers[level] = next_number
         self._heading_level = level
 
-        for lev in self._heading_numbers:
-            if lev > level:
-                self._heading_numbers[lev] = 0
-
         if numbers:
+            self._heading_numbers[level] = self._heading_numbers.get(level, 0) + 1
+            # Descending into a (sub-)section restarts the deeper levels' counters.
+            for lev in self._heading_numbers:
+                if lev > level:
+                    self._heading_numbers[lev] = 0
             numparts = [self._heading_numbers.get(l, 1) for l in range(1, level + 1)]
             heading = ".".join(map(str, numparts))
             if level == 1:
                 heading += "."
             heading += " " + text
         else:
+            # An un-numbered heading (e.g. a grouped view's group header or an
+            # availability timeline/annotations sub-heading) must not consume a number
+            # at its level; otherwise the next numbered heading there would skip one.
             heading = text
 
         self.add_margin(7)

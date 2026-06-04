@@ -6,14 +6,16 @@
 
 """Performance test classes"""
 
+import json
 import logging
 import os
 import re
 import subprocess
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass
 from pathlib import Path
-from time import time
+from time import sleep, time
 from urllib.parse import parse_qs, urlencode, urljoin, urlparse, urlunparse
 
 import pytest
@@ -72,6 +74,13 @@ class PerformanceTest:
             val if isinstance((val := pytestconfig.getoption("object_count")), int) else 100
         )
         self._dcd_piggyback_rule_id = ""
+        # Total piggybacked host count for distributed piggyback scenarios
+        # (default: 2 * object_count, matching the real-remote-site variant).
+        self.pb_hosts = (
+            val
+            if isinstance((val := pytestconfig.getoption("pb_hosts", default=None)), int)
+            else 2 * self.object_count
+        )
 
     @property
     def sites(self) -> list[Site]:
@@ -222,6 +231,39 @@ class PerformanceTest:
                 if (not is_central_site) and isinstance(entry["attributes"], dict):
                     entry["attributes"]["site"] = site.id
                 hosts.append(entry)
+        return hosts
+
+    @staticmethod
+    def generate_piggyback_hosts(
+        host_count: int,
+        central_site: Site,
+        target_sites: list[Site] | None = None,
+        folder: str = "/",
+        target_site_ids: list[str] | None = None,
+    ) -> list[dict[str, object]]:
+        """Generate piggybacked host entries, distributed over the given target sites.
+
+        host_count piggybacked hosts are generated for each target site.
+        """
+        site_ids = target_site_ids or [site.id for site in (target_sites or [central_site])]
+        unixtime = int(time())
+        hosts: list[dict[str, object]] = []
+        for site_id in site_ids:
+            for idx in range(1, host_count + 1):
+                attributes: dict[str, object] = {
+                    "tag_address_family": "no-ip",
+                    "tag_agent": "no-agent",
+                    "tag_piggyback": "piggyback",
+                }
+                if site_id != central_site.id:
+                    attributes["site"] = site_id
+                hosts.append(
+                    {
+                        "host_name": f"{site_id}_pb_{unixtime}_{idx}",
+                        "folder": folder,
+                        "attributes": attributes,
+                    }
+                )
         return hosts
 
     def scenario_create_and_delete_hosts(
@@ -625,6 +667,70 @@ class PerformanceTest:
         """
         self.central_site.ensure_running()
         assert self.central_site.openapi.changes.activate_and_wait_for_completion()
+
+    def await_broker_ready(self, timeout: int = 180, check_shovels: bool = True) -> None:
+        """Wait until the message broker of each site is up and all shovels are running.
+
+        With check_shovels=False only the broker ports are awaited. This is needed
+        when the remote sites are mocked: the central broker's shovels towards the
+        mocked sites can never establish a connection.
+        """
+        for site in self.sites:
+            port = site.get_config("RABBITMQ_PORT")
+            for _ in range(timeout):
+                if site.execute(["rabbitmq-diagnostics", "check_port_listener", port]).wait() == 0:
+                    break
+                sleep(1)
+            else:
+                raise TimeoutError(
+                    f'Message broker of site "{site.id}" is not listening on port {port}!'
+                )
+        if not check_shovels:
+            return
+        for site in self.sites:
+            for _ in range(timeout):
+                shovel_status = site.run(
+                    ["rabbitmqctl", "shovel_status", "--formatter", "json"], check=False
+                )
+                if shovel_status.returncode == 0 and all(
+                    shovel["state"] == "running" for shovel in json.loads(shovel_status.stdout)
+                ):
+                    break
+                sleep(1)
+            else:
+                raise TimeoutError(f'Message broker shovels of site "{site.id}" are not running!')
+
+    @contextmanager
+    def distributed_piggyback_environment(
+        self,
+        target_site_ids: list[str] | None = None,
+        pb_hosts_per_site: int | None = None,
+        check_shovels: bool = True,
+    ) -> Iterator[list[str]]:
+        """Provide a distributed piggyback environment.
+
+        Enable the piggyback hub on all (real) sites and create "pb_hosts_per_site"
+        (default: "object_count") piggybacked hosts on each target site (default:
+        each remote site). Wait for the message broker connections between the
+        sites to be established before yielding the piggybacked host names.
+        """
+        with ExitStack() as stack:
+            for site in self.sites:
+                stack.enter_context(site.omd_config("PIGGYBACK_HUB", "on"))
+            hostnames = self.create_hosts(
+                self.central_site,
+                self.generate_piggyback_hosts(
+                    pb_hosts_per_site or self.object_count,
+                    self.central_site,
+                    self.remote_sites or None,
+                    target_site_ids=target_site_ids,
+                ),
+            )
+            try:
+                self.await_broker_ready(check_shovels=check_shovels)
+                yield hostnames
+            finally:
+                self.delete_hosts(self.central_site, hostnames)
 
     def setup_nagios_core_plugin_import(self) -> None:
         """Setup: Nagios core plugin import

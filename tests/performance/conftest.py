@@ -69,6 +69,13 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=100,
     )
     parser.addoption(
+        "--mocked-sites",
+        action="store",
+        type=int,
+        help="The number of mocked remote sites used for the mocked distributed scenarios.",
+        default=30,
+    )
+    parser.addoption(
         "--pb-hosts",
         action="store",
         type=int,

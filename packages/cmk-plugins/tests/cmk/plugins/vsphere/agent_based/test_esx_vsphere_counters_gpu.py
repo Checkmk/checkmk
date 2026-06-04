@@ -30,16 +30,33 @@ def test_discover_esx_vsphere_counters_gpu_utilization() -> None:
 
 
 def test_check_counters_gpu_utilization() -> None:
+    """The API reports percent counters in hundredths of a percent: 4200 means 42%."""
     value = list(
         plugin.check_esx_vsphere_counters_gpu_utilization(
             item="gpu1",
             params=plugin.GpuUtilizationParams(levels_upper=("fixed", (80.0, 90.0))),
-            section=OrderedDict({"gpu.utilization": {"gpu1": [(["42", "42"], "percent")]}}),
+            section=OrderedDict({"gpu.utilization": {"gpu1": [(["4200", "4200"], "percent")]}}),
         )
     )
     expected = [
         Result(state=State.OK, summary="Utilization: 42.00%"),
         Metric("esx_gpu_utilization", 42.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+    ]
+    assert value == expected
+
+
+def test_check_counters_gpu_utilization_hundredths_of_a_percent() -> None:
+    """Regression: a raw value of 1850 is 18.5% utilization, not an absurd 1850%."""
+    value = list(
+        plugin.check_esx_vsphere_counters_gpu_utilization(
+            item="gpu1",
+            params=plugin.GpuUtilizationParams(levels_upper=("fixed", (80.0, 90.0))),
+            section=OrderedDict({"gpu.utilization": {"gpu1": [(["1850", "1850"], "percent")]}}),
+        )
+    )
+    expected = [
+        Result(state=State.OK, summary="Utilization: 18.50%"),
+        Metric("esx_gpu_utilization", 18.5, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
     ]
     assert value == expected
 

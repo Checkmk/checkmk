@@ -29,6 +29,11 @@ from cmk.plugins.vsphere.lib.esx_vsphere import average_valid_samples, Section
 # gpu.power.used|gpu-1|21|watt
 # gpu.temperature|gpu-1|35|celsius
 # gpu.utilization|gpu-1|42|percent
+#
+# The vSphere performance API reports percent counters as fixed point integers
+# in hundredths of a percent (e.g. 2067 means 20.67%); see the counter
+# reference of vim.PerformanceManager. The gpu.mem.usage sample above confirms
+# this: 135 corresponds to 318976/23580672 kB = 1.35%.
 
 
 def discover_esx_vsphere_counters_gpu_utilization(section: Section) -> DiscoveryResult:
@@ -49,13 +54,14 @@ def check_esx_vsphere_counters_gpu_utilization(
 
     # average_valid_samples returns None when all samples for the interval are
     # unavailable (-1); treat that as unknown rather than reporting -1%.
-    utilization = average_valid_samples(gpu_data[0][0])
-    if utilization is None:
+    raw_utilization = average_valid_samples(gpu_data[0][0])
+    if raw_utilization is None:
         yield Result(state=State.UNKNOWN, summary="Utilization is unknown.")
         return
 
     yield from check_levels(
-        utilization,
+        # percent counters are reported in hundredths of a percent (see above)
+        raw_utilization / 100.0,
         levels_upper=params["levels_upper"],
         render_func=render.percent,
         metric_name="esx_gpu_utilization",

@@ -180,6 +180,7 @@ py_wheel(
             "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters",
             "//cmk/nonfree/ultimate/metric_backend",
             "//cmk/post_rename_site/nonfree/ultimate/plugins",
+            "//cmk/update_config/nonfree/cloud",
             "//cmk/update_config/nonfree/pro",
             "//cmk/update_config/nonfree/ultimate",
             "//cmk/utils:pro",

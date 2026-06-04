@@ -201,6 +201,11 @@ def _snmpv3_auth_priv_credentials_element(for_ec: bool = False) -> ValueSpec:
                 ("AES-256-Blumenthal", _("AES-256-Blumenthal")),
             ]
         )
+    else:
+        # AES-256-C is Cisco's key-localization variant of AES-256.
+        # It is supported by the SNMP-pull backends (net-snmp) but not by the EC (pysnmp).
+        # There use AES-256 instead!
+        priv_protocol_choices.append(("AES-256-C", _("AES-256-C (Cisco)")))
     elements1: list[ValueSpec] = [
         FixedValue(
             value="authPriv",

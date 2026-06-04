@@ -23,6 +23,7 @@ py_library(
         requirement("requests"),
         requirement("playwright"),
         requirement("pytest_benchmark"),
+        requirement("cryptography"),
         "//tests/testlib",
         "//tests/testlib/common:repo",
         "//tests/testlib/common:utils",

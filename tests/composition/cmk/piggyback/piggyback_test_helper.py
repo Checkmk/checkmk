@@ -190,4 +190,4 @@ def piggybacked_data_gets_updated(
         finally:
             # terminate `cmk-piggyback track` run manually,
             # as `cmk-piggyback track` does not terminate by itself.
-            track.terminate()
+            track.kill()

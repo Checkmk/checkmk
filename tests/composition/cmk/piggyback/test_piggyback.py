@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import os
 import time
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
@@ -397,10 +396,6 @@ def _turn_off_piggyback_hub(site: Site) -> Iterator[None]:
         await_broker_ready(site)
 
 
-@pytest.mark.skipif(
-    os.getenv("DISTRO", "") in ["almalinux-8", "almalinux-9", "ubuntu-22.04"],
-    reason="Test execution hanging. See CMK-35431.",
-)
 def test_piggyback_services_remote_remote_central_ph_off(
     piggyback_env_three_site_setup: tuple[Site, Site, Site],
 ) -> None:

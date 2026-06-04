@@ -24,6 +24,7 @@ from pytest_benchmark.fixture import BenchmarkFixture
 from tests.performance.perftest import PerformanceTest
 from tests.testlib.common.repo import qa_test_data_path
 from tests.testlib.site import Site
+from tests.testlib.version import CMKVersion, version_from_env
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,39 @@ def test_performance_bulk_change_activation(
     perftest_dist: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
 ) -> None:
     """Bulk host creation"""
+    benchmark.pedantic(  # type: ignore[no-untyped-call]
+        perftest_dist.scenario_bulk_change_activation,
+        args=[],
+        setup=perftest_dist.setup_bulk_change_activation,
+        teardown=perftest_dist.teardown_bulk_change_activation,
+        rounds=perftest_dist.rounds,
+        iterations=perftest_dist.iterations,
+    )
+
+
+@pytest.fixture(name="distributed_piggyback", scope="module")
+def _distributed_piggyback(perftest_dist: PerformanceTest) -> Iterator[None]:
+    """Enable the piggyback hub on all sites and create piggybacked hosts on the remote sites."""
+    with perftest_dist.distributed_piggyback_environment():
+        yield
+
+
+@pytest.mark.skipif(
+    version_from_env() < CMKVersion("2.4.0"),
+    reason="Distributed piggyback is not supported on Checkmk versions below 2.4.0!",
+)
+def test_performance_bulk_change_activation_distributed_piggyback(
+    perftest_dist: PerformanceTest,
+    distributed_piggyback: None,
+    benchmark: BenchmarkFixture,
+    track_system_resources: None,
+) -> None:
+    """Bulk change activation with distributed piggyback enabled (CMK-35259)
+
+    Activate a large number of pending changes in a distributed environment
+    where the piggyback hub is enabled on all sites and a notable amount of
+    piggybacked hosts is monitored on the remote sites.
+    """
     benchmark.pedantic(  # type: ignore[no-untyped-call]
         perftest_dist.scenario_bulk_change_activation,
         args=[],

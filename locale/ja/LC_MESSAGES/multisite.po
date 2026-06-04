@@ -21730,9 +21730,11 @@ msgstr ""
 "ティビティの詳細なログエントリが作成されます。無効にすると、問題のみがログに"
 "記録されます。"
 
+#, fuzzy
 msgid ""
 "Enabling this option will enforce two-factor authentication for all users. "
-"Enabling this setting will override role based two-factor enforcement."
+"Enabling this setting will override role based two-factor enforcement. "
+"Automation users are exempt, as they cannot use two-factor authentication."
 msgstr ""
 "このオプションを有効にすると、すべてのユーザーに二要素認証が適用されます。こ"
 "の設定を有効にすると、ロールベースの二要素認証の強制が上書きされます。"
@@ -30692,11 +30694,14 @@ msgstr ""
 "と比較されます。WARN または CRIT レベルを設定して、最後の分のデルタが平均のデ"
 "ルタより X パーセント高いかどうかを確認することができます。"
 
+#, fuzzy
 msgid ""
 "If this setting is changed from disabled to enabled, all users with this "
 "role will be required to use a two-factor authentication and will be logged "
 "out of any current sessions if they have not enabled two-factor. 'Enforce "
-"two-factor authentication' in the global settings will override this setting."
+"two-factor authentication' in the global settings will override this "
+"setting. Automation users are exempt, as they cannot use two-factor "
+"authentication."
 msgstr ""
 "この設定を無効から有効に変更すると、この役割を持つすべてのユーザーは二要素認"
 "証の使用が必須となり、二要素認証を有効化していない場合、現在のセッションから"
@@ -87531,6 +87536,13 @@ msgid "Get your configuration ready to be applied."
 msgstr "設定を適用できる状態に準備してください。"
 
 #, fuzzy
+msgid ""
+"The form still contains invalid data. Please correct them and try again."
+msgstr ""
+"ステージ %s に無効なフォームデータが含まれています。修正して再度お試しくださ"
+"い。"
+
+#, fuzzy
 msgid "Save Prometheus configuration"
 msgstr "Prometheusの設定を追加する"
 
@@ -88142,6 +88154,10 @@ msgid ""
 "The Relay is officially supported to run on the following operating systems:"
 msgstr ""
 "Relayは、以下のオペレーティングシステムでの動作が公式にサポートされています："
+
+#, fuzzy
+msgid "Stale state"
+msgstr "すべての状態"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"

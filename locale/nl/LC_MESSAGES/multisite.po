@@ -23286,7 +23286,8 @@ msgstr ""
 
 msgid ""
 "Enabling this option will enforce two-factor authentication for all users. "
-"Enabling this setting will override role based two-factor enforcement."
+"Enabling this setting will override role based two-factor enforcement. "
+"Automation users are exempt, as they cannot use two-factor authentication."
 msgstr ""
 
 msgid ""
@@ -33094,7 +33095,9 @@ msgid ""
 "If this setting is changed from disabled to enabled, all users with this "
 "role will be required to use a two-factor authentication and will be logged "
 "out of any current sessions if they have not enabled two-factor. 'Enforce "
-"two-factor authentication' in the global settings will override this setting."
+"two-factor authentication' in the global settings will override this "
+"setting. Automation users are exempt, as they cannot use two-factor "
+"authentication."
 msgstr ""
 
 msgid "If value is a tuple it has to have length of two."
@@ -94487,6 +94490,10 @@ msgstr "Analyseren configuratie"
 msgid "Get your configuration ready to be applied."
 msgstr "Kernconfiguratie opnieuw geladen"
 
+msgid ""
+"The form still contains invalid data. Please correct them and try again."
+msgstr ""
+
 #, fuzzy
 msgid "Save Prometheus configuration"
 msgstr "Configuratie toestand toevoegen"
@@ -95052,6 +95059,10 @@ msgstr "configuratie"
 msgid ""
 "The Relay is officially supported to run on the following operating systems:"
 msgstr ""
+
+#, fuzzy
+msgid "Stale state"
+msgstr "alle staten"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""

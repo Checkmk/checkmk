@@ -22331,9 +22331,11 @@ msgstr ""
 "alle Replikationsaktivitäten der Remote-Instanz erstellt. Bei Deaktivierung "
 "werden nur Probleme protokolliert."
 
+#, fuzzy
 msgid ""
 "Enabling this option will enforce two-factor authentication for all users. "
-"Enabling this setting will override role based two-factor enforcement."
+"Enabling this setting will override role based two-factor enforcement. "
+"Automation users are exempt, as they cannot use two-factor authentication."
 msgstr ""
 "Wenn Sie diese Option aktivieren, wird die Zwei-Faktor-Authentifizierung für "
 "alle Benutzer erzwungen. Wenn Sie diese Einstellung aktivieren, wird die "
@@ -31549,11 +31551,14 @@ msgstr ""
 "WARN- oder CRIT-Levels einstellen, um zu prüfen, ob das Delta der letzten "
 "Minute um X Prozent höher ist als das durchschnittliche Delta."
 
+#, fuzzy
 msgid ""
 "If this setting is changed from disabled to enabled, all users with this "
 "role will be required to use a two-factor authentication and will be logged "
 "out of any current sessions if they have not enabled two-factor. 'Enforce "
-"two-factor authentication' in the global settings will override this setting."
+"two-factor authentication' in the global settings will override this "
+"setting. Automation users are exempt, as they cannot use two-factor "
+"authentication."
 msgstr ""
 "Wenn diese Einstellung von deaktiviert auf aktiviert gesetzt wird, müssen "
 "alle Benutzer mit dieser Rolle eine Zwei-Faktor-Authentifizierung verwenden "
@@ -89993,6 +89998,13 @@ msgstr "Konfiguration fertigstellen"
 msgid "Get your configuration ready to be applied."
 msgstr "Bereiten Sie Ihre Konfiguration für ihre Anwendung vor."
 
+#, fuzzy
+msgid ""
+"The form still contains invalid data. Please correct them and try again."
+msgstr ""
+"Stufe %s enthält ungültige Formulardaten. Bitte korrigieren Sie diese und "
+"versuchen Sie es erneut."
+
 msgid "Save Prometheus configuration"
 msgstr "Prometheus-Konfiguration speichern"
 
@@ -90568,6 +90580,10 @@ msgid ""
 "The Relay is officially supported to run on the following operating systems:"
 msgstr ""
 "Das Relay wird offiziell für die folgenden Betriebssysteme unterstützt:"
+
+#, fuzzy
+msgid "Stale state"
+msgstr "alle Zustände"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""

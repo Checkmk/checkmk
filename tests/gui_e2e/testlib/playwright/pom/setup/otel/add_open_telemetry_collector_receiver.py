@@ -222,3 +222,26 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
             )
         logger.info("Save the OpenTelemetry Collector configuration")
         self.save_configuration_button.click()
+
+
+class EditOpenTelemetryCollectorReceiver(AddOpenTelemetryCollectorReceiver):
+    """Represent the OpenTelemetry Collector receiver edit form.
+
+    Reached from the OpenTelemetry Quick Setup configuration edit page by clicking the
+    'OpenTelemetry Collector' tile (`mode=edit_otel_collectors_receiver&ident=...`). The page is
+    structurally identical to the add form but its title differs and, for a quick-setup-managed
+    receiver, it shows a 'Part of OpenTelemetry configuration' warning at the top.
+    """
+
+    def __init__(self, page: Page, navigate_to_page: bool = False) -> None:
+        super().__init__(page, navigate_to_page)
+
+    @override
+    def validate_page(self) -> None:
+        logger.info("Validate that the OpenTelemetry Collector receiver edit form is shown")
+        expect(self.save_configuration_button).to_be_visible()
+        expect(self.receiver_protocol_endpoint_checkbox("GRPC-based OTLP receiver")).to_be_visible()
+
+    @property
+    def quick_setup_warning(self) -> Locator:
+        return self.main_area.locator("div.warning_container")

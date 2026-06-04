@@ -60,6 +60,56 @@ class OTelQuickSetup(CmkPage):
     def add_configuration_button(self) -> Locator:
         return self.main_area.get_suggestion("Add OpenTelemetry configuration")
 
+    def edit_configuration_button(self, configuration_name: str) -> Locator:
+        return self.configuration_row(configuration_name).get_by_role(
+            "link", name="Edit", exact=True
+        )
+
+
+class EditOTelConfiguration(CmkPage):
+    """Represent the OpenTelemetry Quick Setup configuration edit page.
+
+    Reached via the 'Edit' button on the `OTelQuickSetup` overview (`mode=edit_otel_config`).
+    It renders the bundle component tiles ('OpenTelemetry Collector', 'Dynamic host management')
+    on top of the configuration properties form.
+    """
+
+    page_title = "Edit configuration"
+
+    def __init__(self, page: Page, configuration_name: str, navigate_to_page: bool = True) -> None:
+        self._configuration_name = configuration_name
+        super().__init__(page, navigate_to_page)
+
+    @override
+    def navigate(self) -> None:
+        overview = OTelQuickSetup(self.page)
+        overview.edit_configuration_button(self._configuration_name).click()
+        # Don't wait on the parent-frame URL here: its sync with the iframe can break after a
+        # site restart, making wait_for_url flaky. Validate the rendered iframe content instead.
+        self.validate_page()
+
+    @override
+    def validate_page(self) -> None:
+        logger.info(f"Validate that current page is '{self.page_title}' page")
+        expect(self.otel_collector_tile).to_be_visible()
+        expect(self.dynamic_host_management_tile).to_be_visible()
+
+    @override
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
+    @property
+    def _tiles(self) -> Locator:
+        return self.main_area.locator("div.mainmenu")
+
+    @property
+    def otel_collector_tile(self) -> Locator:
+        return self._tiles.get_by_role("link").filter(has_text="OpenTelemetry Collector")
+
+    @property
+    def dynamic_host_management_tile(self) -> Locator:
+        return self._tiles.get_by_role("link").filter(has_text="Dynamic host management")
+
 
 class AddOTelConfiguration(CmkPage):
     """Represent the OpenTelemetry Quick Setup wizard"""

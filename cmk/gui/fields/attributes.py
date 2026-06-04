@@ -624,6 +624,7 @@ PRIV_PROT_MAP = {
     "AES-256": "AES-256",
     "AES-192-Blumenthal": "AES-192-Blumenthal",
     "AES-256-Blumenthal": "AES-256-Blumenthal",
+    "AES-256-C": "AES-256-C",
 }
 
 

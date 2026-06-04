@@ -77,7 +77,7 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-gui-e2e-cloud                      Run limited e2e tests (cloud edition)
   test-extension-compatibility            Run extension compatibility tests
 
-DOCKERABLE TESTS (local / -docker variant available for each)
+SITELESS TESTS (local / -docker variant available for each)
   test-format                             Run format checks via bazel
   test-license-headers                    Run license header checks via bazel
   test-mypy                               Run mypy type checks
@@ -426,7 +426,7 @@ test-plugins-siteless() {
 }
 
 # ---------------------------------------------------------------------------
-# Docker variants of system/dockerable tests
+# Docker variants of system/siteless tests
 # ---------------------------------------------------------------------------
 
 _system-tests-docker() {
@@ -472,7 +472,7 @@ test-integration-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py"
 test-composition-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
 container-debug-docker() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
 
-# Dockerable test -docker variants
+# Siteless test -docker variants
 test-format-docker() { _dockerable-test-docker test-format; }
 test-license-headers-docker() { _dockerable-test-docker test-license-headers; }
 test-mypy-docker() { _dockerable-test-docker test-mypy; }

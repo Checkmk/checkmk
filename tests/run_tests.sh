@@ -575,15 +575,7 @@ test-unit-all() {
 }
 
 test-unit-all-coverage() {
-    cd "$REPO_PATH"
-    bazel coverage --test_verbose_timeout_warnings //tests/unit/... \
-        --test_env="TZ=$(_random_tz)" \
-        ${BAZEL_COVERAGE_ARGS:-}
-    export PATH="$PATH:$(bazel run //bazel/tools:bazel_env print-path)"
-    genhtml --title "Checkmk Unit Test Coverage" \
-        --quiet \
-        --output results/coverage \
-        bazel-out/_coverage/_coverage_report.dat
+    "$SCRIPT_DIR/scripts/coverage/code_coverage.sh" --run --generate-html
 }
 
 test-unit-testlib() {

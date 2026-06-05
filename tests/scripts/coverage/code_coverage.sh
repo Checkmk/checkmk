@@ -3,107 +3,180 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# The script updates the unit tests code coverage statistics with uploading of
-# the statistics into Checkmk's code coverage tracking system.
-# The script requires certain environment variables to be set for database connection:
-#   POSTGRES_HOST
-#   POSTGRES_PORT
-#   POSTGRES_DB
-#   QA_POSTGRES_USER
-#   QA_POSTGRES_PASSWORD
-#
-# Usage:
-#   ./update_code_cov.sh [UPLOAD_MODE] [ALIAS]
+set -e -o pipefail
 
-set -e
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_PATH="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
-# Get git branch name
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
+SOURCE_DIRS=(cmk non-free omd packages agents)
 
-UPLOAD_MODE=${1}
-TARGET=test-unit-all-coverage
-ALIAS="${2:-${TARGET}-${BRANCH}}"
+# ---------------------------------------------------------------------------
+# Parse arguments
+# ---------------------------------------------------------------------------
 
-case "$UPLOAD_MODE" in
-    --summary)
-        PER_FILE_OPT=
-        ;;
-    --detailed)
-        PER_FILE_OPT=" --include-module-data"
-        ;;
-    "" | --help | -h)
-        echo "The script uploads code coverage statistics to the database."
-        echo "Requires the following environment variables to be set:"
-        echo "  POSTGRES_HOST"
-        echo "  POSTGRES_PORT"
-        echo "  POSTGRES_DB"
-        echo "  QA_POSTGRES_USER"
-        echo "  QA_POSTGRES_PASSWORD"
-        echo ""
-        echo "Usage: $0 [--summary|--detailed] [alias]"
-        echo "  --summary   Upload summary data only"
-        echo "  --detailed  Upload summary and detailed module data (includes --include-module-data)"
-        echo "  alias       Optional alias for the coverage data test run (default: ${TARGET}-${BRANCH})"
-        exit 0
-        ;;
-    *)
-        echo "Error: Unknown option '$UPLOAD_MODE'"
-        echo "Usage: $0 [--summary|--detailed] [alias]"
-        exit 1
-        ;;
-esac
-echo "Upload mode: ${UPLOAD_MODE} [${PER_FILE_OPT}] , alias: ${ALIAS}, branch: ${BRANCH}"
+RUN=false
+GENERATE_HTML=false
+UPLOAD_MODE=""
+ALIAS=""
 
-# Check if required env variables are set
-REQUIRED_VARS=("POSTGRES_HOST" "POSTGRES_PORT" "POSTGRES_DB" "QA_POSTGRES_USER" "QA_POSTGRES_PASSWORD")
-for var in "${REQUIRED_VARS[@]}"; do
-    if [ -z "${!var}" ]; then
-        echo "Error: Environment variable $var is not set."
-        exit 1
-    fi
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --run)
+            RUN=true
+            shift
+            ;;
+        --generate-html)
+            GENERATE_HTML=true
+            shift
+            ;;
+        --upload-totals)
+            UPLOAD_MODE="totals"
+            shift
+            ;;
+        --upload-per-module)
+            UPLOAD_MODE="per-module"
+            shift
+            ;;
+        --help | -h)
+            echo "Usage: $0 [--run] [--generate-html] [--upload-totals|--upload-per-module [alias]]"
+            echo ""
+            echo "  --run                    Run bazel coverage"
+            echo "  --generate-html          Generate HTML report from coverage data"
+            echo "  --upload-totals [alias]  Upload aggregate totals to DB"
+            echo "  --upload-per-module [alias]  Upload totals and per-module data to DB"
+            echo ""
+            echo "  --upload-* require: POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, QA_POSTGRES_USER, QA_POSTGRES_PASSWORD"
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown option '$1'" >&2
+            echo "Run '$0 --help' for usage." >&2
+            exit 1
+            ;;
+        *)
+            ALIAS="$1"
+            shift
+            ;;
+    esac
 done
 
-# Activate the virtual environment
-VENV_PATH="$(dirname "$0")/../../../.venv/bin/activate"
-if [ ! -f "${VENV_PATH}" ]; then
-    echo "Error: Virtual environment not found at $VENV_PATH"
+if [[ "$RUN" == false && "$GENERATE_HTML" == false && -z "$UPLOAD_MODE" ]]; then
+    echo "Error: no operation specified. Use --run, --generate-html, --upload-totals, or --upload-per-module." >&2
+    echo "Run '$0 --help' for usage." >&2
     exit 1
 fi
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+ALIAS="${ALIAS:-test-unit-all-coverage-${BRANCH}}"
+
+# ---------------------------------------------------------------------------
+# Fail fast: validate all upload prerequisites before doing any work
+# ---------------------------------------------------------------------------
+
+if [[ -n "$UPLOAD_MODE" ]]; then
+    TRACKED_BRANCHES=(master main)
+    if [[ ! " ${TRACKED_BRANCHES[*]} " == *" ${BRANCH} "* ]] && [[ ! "$BRANCH" =~ ^[0-9]+\.[0-9]+ ]]; then
+        echo "Error: branch '$BRANCH' is not tracked in the coverage database." >&2
+        echo "Upload is only supported for master and release branches (e.g. 2.4.0)." >&2
+        exit 1
+    fi
+
+    REQUIRED_VARS=(POSTGRES_HOST POSTGRES_PORT POSTGRES_DB QA_POSTGRES_USER QA_POSTGRES_PASSWORD)
+    for var in "${REQUIRED_VARS[@]}"; do
+        if [ -z "${!var}" ]; then
+            echo "Error: Environment variable $var is not set." >&2
+            exit 1
+        fi
+    done
+
+    read -r COMMIT_HASH COMMIT_DATE COMMIT_TIME COMMIT_TZ _ <<< \
+        "$(git log --first-parent --pretty=format:'%h %ci %s' "$BRANCH" | head -1)"
+    COMMIT_TIME="${COMMIT_DATE}T${COMMIT_TIME}${COMMIT_TZ}"
+    if ! date -d "$COMMIT_TIME" >/dev/null 2>&1; then
+        echo "Error: Invalid COMMIT_TIME format: $COMMIT_TIME" >&2
+        exit 1
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# Prepare and activate venv — mirrors scripts/run-uvenv behaviour
+# ---------------------------------------------------------------------------
+make --silent -C "$REPO_PATH" .venv 1>&2
 # shellcheck source=/dev/null
-source "${VENV_PATH}"
+source "$REPO_PATH/.venv/bin/activate"
 
-# Get last commit info
-git pull origin "${BRANCH}"
-read -r COMMIT_HASH COMMIT_DATE COMMIT_TIME COMMIT_TZ _ <<< \
-    "$(git log --first-parent --pretty=format:'%h %ci %s' "$BRANCH" | head -1)"
-COMMIT_TIME="${COMMIT_DATE}T${COMMIT_TIME}${COMMIT_TZ}"
+# ---------------------------------------------------------------------------
+# Execute
+# ---------------------------------------------------------------------------
 
-# Validate COMMIT_TIME format
-if ! date -d "${COMMIT_TIME}" >/dev/null 2>&1; then
-    echo "Error: Invalid COMMIT_TIME format: ${COMMIT_TIME}"
-    exit 1
+cd "$REPO_PATH"
+
+COVERAGE_DAT="bazel-out/_coverage/_coverage_report.dat"
+COVERAGE_FILTERED_DAT="bazel-out/_coverage/_coverage_report_filtered.dat"
+COVERAGE_HTML_DIR="results/coverage"
+RESULT_CSV="$COVERAGE_HTML_DIR/coverage.csv"
+
+if [[ "$RUN" == true || "$GENERATE_HTML" == true ]]; then
+    bazel_env_path="$(bazel run //bazel/tools:bazel_env print-path)"
+    export PATH="$PATH:$bazel_env_path"
 fi
 
-# Run the code coverage update script
-BAZEL_COVERAGE_ARGS='--flaky_test_attempts=3 --instrumentation_filter="//(cmk|packages|agents)[/:@]"' tests/run_tests.sh "${TARGET}"
-
-# Check if coverage data file exists
-COVERAGE_DATA_FILE="$(bazel info bazel-testlogs)"/tests/unit/repo/coverage.dat
-if [ ! -f "${COVERAGE_DATA_FILE}" ]; then
-    echo "Error: Coverage data file not found at ${COVERAGE_DATA_FILE}"
-    exit 1
+if [[ "$RUN" == true ]]; then
+    filter=$(
+        IFS='|'
+        echo "${SOURCE_DIRS[*]}"
+    )
+    bazel coverage //... \
+        --cmk_edition=ultimate \
+        --test_tag_filters=-component,-cpp,-requires-git \
+        --keep_going \
+        --build_tests_only \
+        --combined_report=lcov \
+        --nocache_test_results \
+        --instrumentation_filter="//(${filter})[/:@]"
+    # Strip the repo root prefix so paths are workspace-relative
+    sed -i "s|^SF:${REPO_PATH}/|SF:|g" "$COVERAGE_DAT"
+    lcov --extract "$COVERAGE_DAT" \
+        "${SOURCE_DIRS[@]/%//*.py}" \
+        --output-file "$COVERAGE_FILTERED_DAT"
+    lcov --remove "$COVERAGE_FILTERED_DAT" \
+        '*/.cache/bazel/*' '*/tests/*' 'tests/*' \
+        --output-file "$COVERAGE_FILTERED_DAT"
 fi
 
-RESULT_CSV="./results/coverage/coverage.csv"
-# Convert coverage data to CSV, Assuming the ./results/coverage directory exists after 'bazel coverage'
-tests/scripts/coverage/code_coverage_summary.py -i "${COVERAGE_DATA_FILE}" -o "${RESULT_CSV}"
-
-if [ ! -f "${RESULT_CSV}" ]; then
-    echo "Error: ${RESULT_CSV} not created."
-    exit 1
+if [[ "$GENERATE_HTML" == true ]]; then
+    if [ ! -f "$COVERAGE_FILTERED_DAT" ]; then
+        echo "Error: Coverage data file not found at $COVERAGE_FILTERED_DAT" >&2
+        exit 1
+    fi
+    genhtml --title "Checkmk Unit Test Coverage" \
+        --quiet \
+        --output "$COVERAGE_HTML_DIR" \
+        "$COVERAGE_FILTERED_DAT"
 fi
 
-echo "Uploading code coverage for commit ${COMMIT_HASH} at ${COMMIT_TIME}"
-set -x
-# shellcheck disable=SC2086
-tests/scripts/coverage/store_code_coverage.py --csv-file "${RESULT_CSV}" --makefile-target "${TARGET}" --alias "${ALIAS}" --git-commit-hash "${COMMIT_HASH}" --commit-time "${COMMIT_TIME}" ${PER_FILE_OPT}
+if [[ -n "$UPLOAD_MODE" ]]; then
+    if [ ! -f "$COVERAGE_FILTERED_DAT" ]; then
+        echo "Error: Coverage data file not found at $COVERAGE_FILTERED_DAT" >&2
+        exit 1
+    fi
+
+    mkdir -p "$COVERAGE_HTML_DIR"
+    "$SCRIPT_DIR/code_coverage_summary.py" -i "$COVERAGE_FILTERED_DAT" -o "$RESULT_CSV"
+    if [ ! -f "$RESULT_CSV" ]; then
+        echo "Error: $RESULT_CSV not created." >&2
+        exit 1
+    fi
+
+    [[ "$UPLOAD_MODE" == "per-module" ]] && PER_FILE_OPT="--include-module-data" || PER_FILE_OPT=""
+
+    echo "Uploading coverage for commit $COMMIT_HASH at $COMMIT_TIME (mode: $UPLOAD_MODE, alias: $ALIAS)"
+    # shellcheck disable=SC2086
+    "$SCRIPT_DIR/store_code_coverage.py" \
+        --csv-file "$RESULT_CSV" \
+        --makefile-target test-unit-all-coverage \
+        --alias "$ALIAS" \
+        --git-commit-hash "$COMMIT_HASH" \
+        --commit-time "$COMMIT_TIME" \
+        ${PER_FILE_OPT}
+fi

@@ -13,17 +13,31 @@ when instantiated.
 from collections.abc import Sequence
 
 from cmk.livestatus_client import MultiSiteConnection
+from cmk.livestatus_client.expressions import NothingExpression, Or, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Status
 
 from ._models import Host, HostState, ServiceCounts
+
+_SEARCHABLE_COLUMNS = (Hosts.name, Hosts.alias, Hosts.address)
+
+
+def _search_filter(search_query: str) -> QueryExpression:
+    """Build an OR-combined case-insensitive "contains" filter over the searchable columns.
+
+    ``search_query`` is expected to be already whitespace-stripped. An empty value yields a no-op
+    filter, so the resulting query is identical to one without a search.
+    """
+    if not search_query:
+        return NothingExpression()
+    return Or(*(column.contains(search_query, ignore_case=True) for column in _SEARCHABLE_COLUMNS))
 
 
 class LiveStatusHostRepository:
     def __init__(self, *, connection: MultiSiteConnection) -> None:
         self._connection = connection
 
-    def fetch(self, *, limit: int) -> Sequence[Host]:
+    def fetch(self, *, limit: int, search_query: str = "") -> Sequence[Host]:
         q = Query(
             [
                 Hosts.name,
@@ -37,6 +51,7 @@ class LiveStatusHostRepository:
                 Hosts.num_services_unknown,
                 Hosts.num_services_pending,
             ],
+            _search_filter(search_query),
             extra_headers=[
                 f"Limit: {limit}",
             ],
@@ -62,8 +77,17 @@ class LiveStatusHostRepository:
                 for row in q.iterate(conn)
             ]
 
-    def count(self) -> int:
-        q = Query([Status.num_hosts])
+    def count(self, *, search_query: str = "") -> int:
+        if not search_query:
+            q = Query([Status.num_hosts])
+            with detailed_connection(self._connection) as conn:
+                return sum(row["num_hosts"] for row in q.iterate(conn))
 
-        with detailed_connection(self._connection) as conn:
-            return sum(row["num_hosts"] for row in q.iterate(conn))
+        # A filtered total can't be read from the ``status`` table. Count the matches server-side
+        # via ``Stats`` instead of transferring and counting every matching row. The ``Query`` class
+        # can't emit ``Stats`` headers yet, so the query is assembled by hand from the shared filter.
+        # The ``Stats`` count is the trailing column of each returned row; summing it across rows
+        # adds up the per-site counts.
+        filter_lines = (": ".join(line) for line in _search_filter(search_query).render())
+        stats_query = "\n".join([f"GET {Hosts.__tablename__}", "Stats: state >= 0", *filter_lines])
+        return sum(int(row[-1]) for row in self._connection.query(stats_query))

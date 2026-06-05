@@ -127,16 +127,18 @@ def list_hosts(limit: Limit = 1000, sort: Sort = ApiOmitted(), q: Search = "") -
     """List hosts to be consumed by the all host monitoring page."""
     user.need_permission("general.see_all")
 
-    # ``sort`` and ``q`` are validated to expose the parameters in the API spec; applying them is
-    # done by the host handlers and wired up there separately.
+    # ``sort`` is validated to expose the parameter in the API spec; applying it is done by the
+    # host handlers and wired up there separately.
     host_repo = LiveStatusHostRepository(connection=sites.live())
 
-    return _handle_list_hosts(host_repo, limit=limit)
+    return _handle_list_hosts(host_repo, limit=limit, search_query=q)
 
 
-def _handle_list_hosts(host_repo: HostRepository, *, limit: int) -> HostsResponse:
-    hosts = host_repo.fetch(limit=limit)
-    host_total = host_repo.count()
+def _handle_list_hosts(
+    host_repo: HostRepository, *, limit: int, search_query: str = ""
+) -> HostsResponse:
+    hosts = host_repo.fetch(limit=limit, search_query=search_query)
+    host_total = host_repo.count(search_query=search_query)
 
     return HostsResponse(
         hosts=[HostEntry.from_domain(host) for host in hosts],

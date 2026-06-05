@@ -173,7 +173,6 @@ class TestMonitorHostsResponse:
         assert len(resp.json["hosts"]) == 3
         assert resp.json["meta"]["total"] == 3
 
-    @pytest.mark.xfail(strict=True, reason="server-side host search is wired up in CMK-35350")
     def test_search_filters_hosts_and_total(
         self,
         clients: ClientRegistry,
@@ -187,7 +186,6 @@ class TestMonitorHostsResponse:
         assert [host["name"] for host in resp.json["hosts"]] == ["heute"]
         assert resp.json["meta"]["total"] == 1
 
-    @pytest.mark.xfail(strict=True, reason="server-side host search is wired up in CMK-35350")
     def test_search_with_no_matches(
         self,
         clients: ClientRegistry,
@@ -221,7 +219,7 @@ class TestMonitorHostsResponse:
         mock_livestatus.expect_query(
             [
                 "GET hosts",
-                "Columns: name",
+                "Stats: state >= 0",
                 *search_filter,
             ]
         )

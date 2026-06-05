@@ -17,10 +17,18 @@ from ._models import Host
 
 
 class HostRepository(Protocol):
-    def fetch(self, *, limit: int) -> Sequence[Host]:
-        """Fetch hosts based on filter criteria."""
+    def fetch(self, *, limit: int, search_query: str = "") -> Sequence[Host]:
+        """Fetch hosts based on filter criteria.
+
+        ``search_query`` is an already whitespace-stripped free-text search. When empty, no search
+        filter is applied.
+        """
         ...
 
-    def count(self) -> int:
-        """Count the total number of hosts."""
+    def count(self, *, search_query: str = "") -> int:
+        """Count the hosts matching the given criteria.
+
+        ``search_query`` is an already whitespace-stripped free-text search. When empty, the total
+        number of hosts is returned.
+        """
         ...

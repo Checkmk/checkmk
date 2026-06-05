@@ -58,15 +58,15 @@ def main() {
     job_parameters = job_parameters_common + job_parameters_use_case;
 
     // TODO we should take this list from a single source of truth
-    assert edition in ["cloud", "enterprise", "managed", "raw", "saas"] : (
+    assert edition in ["cloud", "enterprise", "managed", "raw"] : (
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}");
 
     def build_image = true;
     def run_int_tests = true;
     def run_fips_tests = edition == "enterprise";
-    def run_comp_tests = !(edition in ["saas"]);
-    def run_image_tests = !(edition in ["saas", "managed"]);
-    def run_update_tests = (edition in ["cloud", "enterprise", "managed", "raw", "saas"]);
+    def run_comp_tests = true;
+    def run_image_tests = !(edition in ["managed"]);
+    def run_update_tests = (edition in ["cloud", "enterprise", "managed", "raw"]);
 
     print(
         """
@@ -183,19 +183,6 @@ def main() {
             smart_build(
                 use_upstream_build: true,
                 relative_job_name: "${edition_base_folder}/build-cmk-deliverables",
-                build_params: job_parameters,
-                build_params_no_check: job_parameters_no_check,
-                download: false,
-            );
-        }[0]
-
-        success &= smart_stage(
-                name: "Trigger SaaS Gitlab jobs",
-                condition: false,
-                raiseOnError: false,) {
-            smart_build(
-                use_upstream_build: true,
-                relative_job_name: "${edition_base_folder}/trigger-saas-gitlab",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,
                 download: false,

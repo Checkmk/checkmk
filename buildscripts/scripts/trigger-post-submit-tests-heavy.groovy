@@ -18,7 +18,6 @@ def main() {
         "test-gui-crawl-node",
         "test-gui-e2e-cce",
         "test-gui-e2e-cee",
-        "test-gui-e2e-cse",
         "test-integration-agent-plugin",
         "test-integration-cee",
         "test-integration-cme",

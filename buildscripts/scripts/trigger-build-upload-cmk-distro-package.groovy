@@ -37,7 +37,7 @@ def main() {
     // the downloaded package.
     def download_dir = "package_download";
     def setup_values = single_tests.common_prepare(version: "daily", docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
-    def all_editions = ["cloud", "enterprise", "managed", "raw", "saas", params.EDITION].unique().sort();
+    def all_editions = ["cloud", "enterprise", "managed", "raw", params.EDITION].unique().sort();
     def fips_edition = "enterprise";
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         // run everything requiring python in this container

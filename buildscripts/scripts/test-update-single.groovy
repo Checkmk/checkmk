@@ -26,8 +26,6 @@ def build_make_target(edition, cross_edition_target="") {
             }
         case 'cloud':
             return prefix + "cce" + suffix;
-        case 'saas':
-            return prefix + "cse" + suffix;
         case 'managed':
             return prefix + "cme" + suffix;
         default:
@@ -41,7 +39,6 @@ def short_edition_to_long_name(abbreviation) {
         'cee': 'enterprise',
         'cme': 'managed',
         'cre': 'raw',
-        'cse': 'saas',
     ][abbreviation];
 }
 

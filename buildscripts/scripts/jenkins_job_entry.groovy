@@ -36,7 +36,6 @@ def main(job_definition_file) {
                 "cee": "enterpise",
                 "cre": "raw",
                 "cme": "managed",
-                "cse": "saas",
                 "cce": "cloud",
             ].get(it, it)
         };

@@ -526,9 +526,6 @@ def main() -> None:
         case "cloud":
             suffix = ".cce"
             registries = [dockerhub, nexus]
-        case "saas":
-            suffix = ".cse"
-            registries = [nexus]
         case _:
             raise Exception(f"ERROR: Unknown edition '{args.edition}'")
 

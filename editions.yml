@@ -28,17 +28,11 @@ daily_reduced: &daily_reduced
     - "sles-15sp7"
     - "sles-16.0"
 
-daily_saas: &daily_saas
-    - "ubuntu-22.04"
-    - "ubuntu-24.04"
-
 # Builds for those distros will only be available internally for development purpose
 # internal_distros: &internal_distros
 #     - "ubuntu-23.10"
 
-# Currently, all builds of the saas edition should stay completley internal
-internal_editions:
-    - "saas"
+internal_editions: []
 
 cma_distros: &cma_distros
     - "cma-4"
@@ -88,14 +82,6 @@ editions:
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*daily_reduced]
         weekly: *common
-        testbuild: []
-    saas:
-        release: *daily_saas
-        daily: *daily_saas
-        daily_tests: *daily_saas
-        daily_update_tests: [*daily_saas]
-        fips: []
-        weekly: *daily_saas
         testbuild: []
 
 # TODO: Sync this with our omd/distros/*.mk files

@@ -9,6 +9,7 @@ from typing import NoReturn
 import pytest
 
 from tests.unit.cmk.plugins.kube.agent_kube.factory import (
+    APICronJobFactory,
     APIDaemonSetFactory,
     APIDataFactory,
     APINodeFactory,
@@ -453,6 +454,45 @@ def test_create_correct_number_pod_names_for_cluster_host(
 
     assert len(cluster_piggy_back) == 1
     assert len(cluster_piggy_back[0].pod_names) == total
+
+
+def test_cronjobs_filtered_by_monitored_namespaces() -> None:
+    monitored_ns = api.NamespaceName("monitored")
+    excluded_ns = api.NamespaceName("excluded")
+
+    cron_job_monitored = APICronJobFactory.build(
+        metadata=MetaDataFactory.build(namespace=monitored_ns, factory_use_construct=True),
+    )
+    cron_job_excluded = APICronJobFactory.build(
+        metadata=MetaDataFactory.build(namespace=excluded_ns, factory_use_construct=True),
+    )
+
+    composed_entities = agent.ComposedEntities.from_api_resources(
+        excluded_node_roles=[],
+        api_data=APIDataFactory.build(
+            pods=[],
+            nodes=[],
+            deployments=(),
+            statefulsets=(),
+            daemonsets=(),
+            cron_jobs=[cron_job_monitored, cron_job_excluded],
+        ),
+    )
+
+    pods_to_host = agent.determine_pods_to_host(
+        monitored_objects=[agent.MonitoredObject.cronjobs],
+        composed_entities=composed_entities,
+        monitored_namespaces={monitored_ns},
+        api_pods=[],
+        resource_quotas=[],
+        monitored_api_namespaces=[],
+        api_cron_jobs=[cron_job_monitored, cron_job_excluded],
+        piggyback_formatter=lambda obj: getattr(getattr(obj, "metadata", None), "name", ""),
+    )
+
+    piggyback_names = {p.piggyback for p in pods_to_host.piggybacks if p.piggyback}
+    assert cron_job_monitored.metadata.name in piggyback_names
+    assert cron_job_excluded.metadata.name not in piggyback_names
 
 
 @pytest.mark.parametrize(

@@ -138,7 +138,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   const authBanner = needsAuth
     ? `<div class="banner banner-warn">
         <span>sudo credentials not cached — service status unavailable.</span>
-        <button class="btn btn-small" data-action="omd-auth"><span class="codicon codicon-shield"></span> Authenticate (YubiKey)</button>
+        <button class="btn btn-small" data-action="omd-auth"><span class="codicon codicon-shield"></span> Authenticate (sudo)</button>
        </div>`
     : ''
 

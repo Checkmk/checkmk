@@ -8,6 +8,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
+import { availableEditions, effectiveEdition } from '../core/editions'
 import { error, log, notifyError, notifyInfo } from '../core/log'
 import {
   DISCOVERY_ROOTS,
@@ -70,16 +71,13 @@ export { parseRustTestsFromFile, parseLibtestOutput } from './runners/rust'
 export { extractSystemOut as extractRustLibtestOutput } from './junit'
 export { discoverTargetsFromFilesystem }
 
-const EDITIONS = ['community', 'pro', 'ultimate', 'ultimatemt', 'cloud'] as const
-
 function getWorkspacePath(): string | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
 }
 
 function getRunOptions(): RunOptions {
-  const cfg = vscode.workspace.getConfiguration('cmk.bazelTests')
   return {
-    edition: cfg.get<string>('edition') || 'pro'
+    edition: effectiveEdition()
   }
 }
 
@@ -498,7 +496,13 @@ async function runOneUnit(
 
 async function runConfigurePicker(): Promise<void> {
   const cfg = vscode.workspace.getConfiguration('cmk.bazelTests')
-  const editionItems = EDITIONS.map((e) => ({ label: e, picked: e === cfg.get<string>('edition') }))
+  const editions = availableEditions()
+  if (editions.length === 1) {
+    notifyInfo(`CMK Tests · ${editions[0]} (only edition available in this checkout)`)
+    return
+  }
+  const current = effectiveEdition()
+  const editionItems = editions.map((e) => ({ label: e, picked: e === current }))
   const editionPick = await vscode.window.showQuickPick(editionItems, {
     title: 'CMK Tests · Edition',
     placeHolder: 'Pick the Checkmk edition for --cmk_edition'

@@ -8,7 +8,7 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 
 import * as profileManager from '../profiles/profileManager'
-import { gitAsync } from '../scm/git'
+import { gitAsync, isInternalCheckout, repoRoot } from '../scm/git'
 
 export interface BuildTarget {
   ok: boolean
@@ -277,12 +277,16 @@ export function createStatusBar(
         })
       }
 
-      items.push({ label: '', kind: vscode.QuickPickItemKind.Separator })
-      items.push({
-        label: '$(cloud-upload) Push to Gerrit',
-        description: 'git push for review',
-        commandId: 'cmk.pushToGerrit'
-      })
+      // Gerrit push is internal-only — omit it on community clones.
+      const cwd = repoRoot()
+      if (cwd && isInternalCheckout(cwd)) {
+        items.push({ label: '', kind: vscode.QuickPickItemKind.Separator })
+        items.push({
+          label: '$(cloud-upload) Push to Gerrit',
+          description: 'git push for review',
+          commandId: 'cmk.pushToGerrit'
+        })
+      }
 
       const picked = await vscode.window.showQuickPick(
         items.filter((i) => i.commandId || i.kind),

@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -159,7 +159,7 @@
       },
       {
         "command": "cmk.omdAuth",
-        "title": "CMK ▸ OMD: Authenticate sudo (YubiKey)"
+        "title": "CMK ▸ OMD: Authenticate sudo"
       },
       {
         "command": "cmk.omdCreateSite",
@@ -467,7 +467,7 @@
             "cloud"
           ],
           "default": "pro",
-          "description": "Checkmk edition passed to bazel as --cmk_edition=<edition> when running tests via the CMK ▸ Bazel Tests Test Explorer group."
+          "description": "Checkmk edition passed to bazel as --cmk_edition=<edition> when running tests via the CMK ▸ Bazel Tests Test Explorer group. On a community checkout only the community edition can be built, so this is automatically clamped to 'community' regardless of the value set here."
         },
         "cmk.benchmarkStartup": {
           "type": "boolean",
@@ -557,12 +557,12 @@
         {
           "command": "cmk.pushToGerrit",
           "group": "navigation",
-          "when": "gitOpenRepositoryCount > 0"
+          "when": "gitOpenRepositoryCount > 0 && cmk.internalCheckout"
         },
         {
           "command": "cmk.checkoutBranch",
           "group": "navigation",
-          "when": "gitOpenRepositoryCount > 0"
+          "when": "gitOpenRepositoryCount > 0 && cmk.internalCheckout"
         },
         {
           "command": "cmk.toggleSkipPreCommit",
@@ -588,6 +588,18 @@
         }
       ],
       "commandPalette": [
+        {
+          "command": "cmk.pushToGerrit",
+          "when": "cmk.internalCheckout"
+        },
+        {
+          "command": "cmk.checkoutBranch",
+          "when": "cmk.internalCheckout"
+        },
+        {
+          "command": "cmk.createSandboxBranch",
+          "when": "cmk.internalCheckout"
+        },
         {
           "command": "cmk.buildVenv",
           "when": "cmk.pythonInstalled"

@@ -6,7 +6,7 @@
 import * as vscode from 'vscode'
 
 import { log, notifyError, notifyInfo, notifyWarn } from '../core/log'
-import { gitAsync, repoRoot } from './git'
+import { gitAsync, isInternalCheckout, repoRoot } from './git'
 
 async function getCurrentBranch(cwd: string): Promise<string | null> {
   return gitAsync(cwd, ['rev-parse', '--abbrev-ref', 'HEAD'])
@@ -34,7 +34,14 @@ function createGerritStatusBar(context: vscode.ExtensionContext): void {
 }
 
 export function registerGerritPush(context: vscode.ExtensionContext): void {
-  createGerritStatusBar(context)
+  // Gerrit review is internal-only. Community clones (github.com) push via pull
+  // requests, so hide the status bar and gate the command/menu via context key.
+  // `cmk.internalCheckout` is shared with the custom branch-checkout button.
+  const cwd = repoRoot()
+  const internal = !!cwd && isInternalCheckout(cwd)
+  void vscode.commands.executeCommand('setContext', 'cmk.internalCheckout', internal)
+
+  if (internal) createGerritStatusBar(context)
 
   context.subscriptions.push(
     vscode.commands.registerCommand('cmk.pushToGerrit', async () => {

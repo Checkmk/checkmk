@@ -50,6 +50,23 @@ export function currentBranch(cwd: string): string {
   }
 }
 
+/** True for an internal Checkmk dev checkout, detected by a git remote pointing
+ *  at the internal Gerrit review server. Community clones (github.com) push via
+ *  pull requests instead, so the internal-workflow SCM UI (Gerrit push, custom
+ *  branch checkout) is hidden there. Detected from the dedicated Gerrit SSH port
+ *  (29418); the review host name is a secondary signal. Reads `.git/config`
+ *  directly — a local file read, no subprocess on the activation path. */
+export function isInternalCheckout(cwd: string): boolean {
+  const dir = gitDir(cwd)
+  if (!dir) return false
+  try {
+    const config = fs.readFileSync(path.join(dir, 'config'), 'utf8')
+    return /:29418\b/.test(config) || /\breview\.[\w.-]+\b/.test(config)
+  } catch {
+    return false
+  }
+}
+
 /** Run `git <args>` asynchronously without going through a shell.
  *  Returns trimmed stdout on success, or null on failure. */
 export async function gitAsync(cwd: string, args: string[]): Promise<string | null> {

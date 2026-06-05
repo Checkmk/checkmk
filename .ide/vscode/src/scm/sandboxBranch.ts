@@ -6,7 +6,7 @@
 import * as vscode from 'vscode'
 
 import { log, notifyError } from '../core/log'
-import { currentBranch, gitAsync, repoRoot } from './git'
+import { currentBranch, gitAsync, isInternalCheckout, repoRoot } from './git'
 
 const COMMON_BASES = ['master', '2.4.0', '2.3.0', '2.2.0']
 const REMOTE_BRANCH_CAP = 100
@@ -297,5 +297,9 @@ export function registerSandboxBranch(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('cmk.createSandboxBranch', createSandboxBranch),
     vscode.commands.registerCommand('cmk.checkoutBranch', checkoutBranch)
   )
-  createCheckoutStatusBar(context)
+  // The custom branch-checkout button drives the internal sandbox (git workon)
+  // workflow, so only surface it on an internal checkout. Community clones use
+  // VS Code's built-in SCM branch controls instead.
+  const cwd = repoRoot()
+  if (cwd && isInternalCheckout(cwd)) createCheckoutStatusBar(context)
 }

@@ -493,8 +493,7 @@ export function enumerateIssues(state: StateCache): Issue[] {
         severity: 'warning',
         label: 'OMD authentication',
         description: 'sudo required · Authenticate',
-        tooltip:
-          'OMD site status requires sudo. Click to open the YubiKey authentication terminal.',
+        tooltip: 'OMD site status requires sudo. Click to open the sudo authentication terminal.',
         icon: 'shield',
         command: 'cmk.omdAuth'
       })

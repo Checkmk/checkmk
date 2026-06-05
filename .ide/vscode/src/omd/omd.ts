@@ -9,6 +9,7 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { shellEscape } from '../core/config'
+import { type Edition, availableEditions } from '../core/editions'
 import { error, log } from '../core/log'
 import { safeExecAsync } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
@@ -245,16 +246,19 @@ export async function createSite(): Promise<void> {
   })
   if (!version) return
 
-  const edition = await vscode.window.showQuickPick(
-    [
-      { label: 'pro', description: 'Checkmk Pro (default)' },
-      { label: 'community', description: 'Checkmk Community' },
-      { label: 'cloud', description: 'Checkmk Cloud' },
-      { label: 'ultimatemt', description: 'Checkmk MSP' },
-      { label: 'ultimate', description: 'Checkmk Ultimate' }
-    ],
-    { placeHolder: 'Select edition' }
-  )
+  const editionChoices = [
+    { label: 'pro', description: 'Checkmk Pro (default)' },
+    { label: 'community', description: 'Checkmk Community' },
+    { label: 'cloud', description: 'Checkmk Cloud' },
+    { label: 'ultimatemt', description: 'Checkmk MSP' },
+    { label: 'ultimate', description: 'Checkmk Ultimate' }
+  ].filter((e) => availableEditions().includes(e.label as Edition))
+  // On a community-only checkout the list collapses to a single entry — skip the
+  // picker and use it directly rather than showing a one-option QuickPick.
+  const edition =
+    editionChoices.length === 1
+      ? editionChoices[0]
+      : await vscode.window.showQuickPick(editionChoices, { placeHolder: 'Select edition' })
   if (!edition) return
 
   const name = await vscode.window.showInputBox({

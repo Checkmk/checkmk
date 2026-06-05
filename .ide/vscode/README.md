@@ -191,7 +191,7 @@ Expanding a site shows individual service status with per-service start/stop/res
 
 **Socket Proxy:** F1 → `CMK ▸ OMD: Socket Proxy` exposes OMD Unix sockets (livestatus, Redis, mkeventd, rrdcached) as TCP ports on localhost via `socat`. This allows external tools (database clients, monitoring dashboards) to connect to site sockets without sudo. Active proxies are shown in the OMD section with their assigned ports.
 
-**Authentication:** OMD commands require sudo. Click "Authenticate (YubiKey)" to cache credentials. A background keepalive extends the sudo cache for up to 1 hour. Subsequent read-only OMD queries (status refresh, log discovery) are piped through the keepalive terminal's authenticated TTY so they reuse the same sudo ticket — no re-prompt per action.
+**Authentication:** OMD commands require sudo. Click "Authenticate (sudo)" to cache credentials. A background keepalive extends the sudo cache for up to 1 hour. Subsequent read-only OMD queries (status refresh, log discovery) are piped through the keepalive terminal's authenticated TTY so they reuse the same sudo ticket — no re-prompt per action.
 
 #### Issues (Activity Bar Badge)
 
@@ -343,6 +343,8 @@ Run options are configured via the **CMK Tests · Config** webview inside the Te
 
 - **Edition** — `community` / `pro` / `ultimate` / `ultimatemt` / `cloud`, passed as `--cmk_edition=<edition>`. Persists in `cmk.bazelTests.edition` workspace setting.
 
+On a **community checkout** (a clone of the open-source repo), only the `community` edition can be built, so the extension auto-detects this and restricts the edition everywhere: the effective `--cmk_edition` is clamped to `community` regardless of the setting, and the other editions are dropped from the **CMK Tests · Config** dropdown, the `CMK ▸ Test: Configure Bazel run options` picker, and the OMD **Create Site** edition picker.
+
 Site-related env vars (`VERSION`, `REUSE`, `CLEANUP`, `DEBUG`) are not exposed because they only matter for the Make-driven integration / composition / gui_e2e suites, which Bazel test targets don't run. Discovery uses `find` to enumerate `BUILD` / `BUILD.bazel` files in the discovery roots; the tree refreshes automatically when any of those files changes. Trigger a manual refresh via the Test Explorer's refresh button or `CMK ▸ Test: Refresh Bazel test targets`.
 
 Because CMK Tests covers vitest and rust tests too, the standalone **Vitest** (`vitest.explorer`) and **Rust Test Adapter** (`swellaby.vscode-rust-test-adapter`) extensions are no longer recommended — they can be uninstalled or disabled.
@@ -357,6 +359,8 @@ F1 → `CMK ▸ Push to Gerrit` pushes commits for Gerrit code review. It:
 - Shows the number of commits to be pushed before confirming
 
 Also available from the cloud-upload icon in the Source Control title bar, alongside `CMK ▸ Git: Checkout Branch…` and the pre-commit hook toggle.
+
+Gerrit review and the custom branch-checkout button are part of the internal contribution workflow. They are auto-detected from the git remote and shown only on an internal checkout — on a community clone (a github.com remote) the Gerrit status bar item, the custom branch-checkout button, and their commands are hidden, since community contributions go through pull requests instead.
 
 ### 11. Dynamic Mypy Targets
 

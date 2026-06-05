@@ -5,34 +5,44 @@
  */
 import * as vscode from 'vscode'
 
+import { type Edition, availableEditions, effectiveEdition } from '../core/editions'
 import { error, log } from '../core/log'
 import { esc, getNonce } from '../sidebar/html'
 
-const EDITIONS = ['community', 'pro', 'ultimate', 'ultimatemt', 'cloud'] as const
-
 interface ConfigState {
   edition: string
+  editions: readonly Edition[]
+  communityOnly: boolean
 }
 
 function readState(): ConfigState {
-  const cfg = vscode.workspace.getConfiguration('cmk.bazelTests')
+  const editions = availableEditions()
   return {
-    edition: cfg.get<string>('edition') || 'pro'
+    edition: effectiveEdition(),
+    editions,
+    communityOnly: editions.length === 1
   }
 }
 
 function renderHtml(state: ConfigState, nonce: string, cspSource: string): string {
-  const editionOptions = EDITIONS.map(
-    (e) => `<option value="${esc(e)}"${e === state.edition ? ' selected' : ''}>${esc(e)}</option>`
-  ).join('')
+  const editionOptions = state.editions
+    .map(
+      (e) => `<option value="${esc(e)}"${e === state.edition ? ' selected' : ''}>${esc(e)}</option>`
+    )
+    .join('')
+
+  const communityHint = state.communityOnly
+    ? `<div class="cfg-hint">Only the community edition is available in this checkout.</div>`
+    : ''
 
   const body = `
   <div class="cfg-card">
     <div class="cfg-row">
       <label class="cfg-label" for="edition">Edition</label>
-      <select id="edition" class="cfg-input">${editionOptions}</select>
+      <select id="edition" class="cfg-input"${state.communityOnly ? ' disabled' : ''}>${editionOptions}</select>
     </div>
     <div class="cfg-hint">Passed to bazel as <code>--cmk_edition=&lt;edition&gt;</code>. Saved in <code>cmk.bazelTests.edition</code> workspace setting.</div>
+    ${communityHint}
   </div>`
 
   const css = `
@@ -120,7 +130,7 @@ class BazelTestsConfigViewProvider implements vscode.WebviewViewProvider {
   }
 
   private async _apply(edition: string): Promise<void> {
-    if (!EDITIONS.includes(edition as (typeof EDITIONS)[number])) return
+    if (!availableEditions().includes(edition as Edition)) return
     const cfg = vscode.workspace.getConfiguration('cmk.bazelTests')
     await cfg.update('edition', edition, vscode.ConfigurationTarget.Workspace)
     log(`Bazel test config applied: edition=${edition}`)

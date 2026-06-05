@@ -69,6 +69,7 @@ export const panelConfig = {
   inline: {
     type: 'boolean' as const,
     title: 'Inline',
+    help: 'When enabled, the input renders inline-block and flows on the same line as surrounding text; when disabled it occupies its own block-level line.',
     initialState: false
   },
   externalErrors: {
@@ -90,6 +91,7 @@ import {
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 
+import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -102,15 +104,17 @@ const propState = new PanelStateCreator<typeof CmkInput>().createRef(panelConfig
     <UclDetailPageHeader>CmkInput</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkInput
-        v-model="propState.modelValue"
-        :type="propState.type"
-        :field-size="propState.fieldSize"
-        :unit="propState.unit"
-        :inline="propState.inline"
-        :external-errors="propState.externalErrors ? [propState.externalErrors] : []"
-      />
-
+      <div>
+        <CmkInput
+          v-model="propState.modelValue"
+          :type="propState.type"
+          :field-size="propState.fieldSize"
+          :unit="propState.unit"
+          :inline="propState.inline"
+          :external-errors="propState.externalErrors ? [propState.externalErrors] : []"
+        />
+        <CmkParagraph>Adjacent text to CmkInput </CmkParagraph>
+      </div>
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />
       </template>

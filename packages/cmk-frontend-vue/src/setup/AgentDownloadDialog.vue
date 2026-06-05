@@ -76,7 +76,7 @@ const triggerRescan = () => {
         />
         <CmkAlertBox
           :heading="dialogTitle"
-          :variant="noTlsProvided || isNotRegistered ? 'warning' : 'info'"
+          variant="info"
           :main-button="{
             title: slideInButtonTitle,
             onclick: () => {

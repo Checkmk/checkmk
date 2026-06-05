@@ -130,6 +130,42 @@ describe('HostApi.fetchHosts', () => {
     await expect(new HostApi().fetchHosts()).rejects.toThrow()
   })
 
+  it('forwards a non-empty search query as the q param', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts({ searchQuery: 'web-server' })
+
+    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      params: { query: { q: 'web-server' } }
+    })
+  })
+
+  it('omits the q param when the search query is empty', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts({ searchQuery: '' })
+
+    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', { params: { query: {} } })
+  })
+
+  it('omits the q param when the search query is only whitespace', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts({ searchQuery: '   ' })
+
+    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', { params: { query: {} } })
+  })
+
+  it('keeps other params when omitting an empty q', async () => {
+    mockSuccess(makeHostsResponse([]))
+
+    await new HostApi().fetchHosts({ limit: 50, searchQuery: '' })
+
+    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      params: { query: { limit: '50' } }
+    })
+  })
+
   it('returns the response data from the API', async () => {
     const hosts = [makeHost({ name: 'db-1', state: 'DOWN' }), makeHost({ name: 'web-1' })]
     const response = makeHostsResponse(hosts)

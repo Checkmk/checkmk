@@ -12,11 +12,15 @@ import type { HostsRequest, HostsResponse } from '../../shared/api/types'
 export interface HostQueryParams {
   limit?: number
   sort?: SortingState
+  searchQuery?: string
 }
 
 export class HostApi {
   public async fetchHosts(params: HostQueryParams = {}): Promise<HostsResponse> {
     const sort = (params.sort ?? []).map((s) => `${s.id}:${s.desc ? 'desc' : 'asc'}`)
+    // Drop an empty or whitespace-only search query so an empty search matches a request without
+    // the `q` param.
+    const searchQuery = params.searchQuery?.trim()
     // The schema types limit as string and sort as string (not string[]); openapi-fetch's
     // defaultQuerySerializer handles string[] as repeated params at runtime, so the cast
     // is only needed to bridge the incorrectly-generated schema types.
@@ -25,7 +29,8 @@ export class HostApi {
         params: {
           query: {
             ...(params.limit !== undefined && { limit: String(params.limit) }),
-            ...(sort.length > 0 && { sort })
+            ...(sort.length > 0 && { sort }),
+            ...(searchQuery !== undefined && searchQuery !== '' && { q: searchQuery })
           } as unknown as NonNullable<HostsRequest>
         }
       })

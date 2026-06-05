@@ -1897,6 +1897,7 @@
   "pkg:pypi/tzdata@2025.3": "Apache-2.0",
   "pkg:pypi/tzlocal@5.3.1": "MIT",
   "pkg:pypi/urllib3@2.6.3": "MIT",
+  "pkg:pypi/urllib3@2.7.0": "MIT",
   "pkg:pypi/uvicorn-worker@0.4.0": "BSD-3-Clause",
   "pkg:pypi/uvicorn@0.40.0": "BSD-3-Clause",
   "pkg:pypi/uvicorn@0.48.0": "BSD-3-Clause",

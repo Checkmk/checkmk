@@ -22,8 +22,9 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
 </script>
 
 <template>
-  <StateCell :state="row.state" />
+  <StateCell column-id="state" :state="row.state" />
   <StringCell
+    column-id="name"
     :value="row.name"
     :linked-to="{
       href: `view.py?host=${row.name}&view_name=host`,
@@ -31,9 +32,10 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
       variant: 'icon'
     }"
   />
-  <StringCell :value="row.alias" />
-  <StringCell :value="row.ip" />
+  <StringCell column-id="alias" :value="row.alias" />
+  <StringCell column-id="ip" :value="row.ip" />
   <NumberCell
+    column-id="num_services_ok"
     :value="row.num_services_ok"
     :highlight="OK_HIGHLIGHT"
     :linked-to="{
@@ -42,6 +44,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     }"
   />
   <NumberCell
+    column-id="num_services_warn"
     :value="row.num_services_warn"
     :highlight="WARN_HIGHLIGHT"
     :linked-to="{
@@ -50,6 +53,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     }"
   />
   <NumberCell
+    column-id="num_services_crit"
     :value="row.num_services_crit"
     :highlight="CRIT_HIGHLIGHT"
     :linked-to="{
@@ -58,6 +62,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     }"
   />
   <NumberCell
+    column-id="num_services_unknown"
     :value="row.num_services_unknown"
     :highlight="UNKNOWN_HIGHLIGHT"
     :linked-to="{
@@ -66,6 +71,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     }"
   />
   <NumberCell
+    column-id="num_services_pending"
     :value="row.num_services_pending"
     :highlight="PENDING_HIGHLIGHT"
     :linked-to="{

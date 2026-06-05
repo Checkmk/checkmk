@@ -9,11 +9,15 @@ import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import BaseCell from './BaseCell.vue'
 
+defineProps<{
+  columnId?: string | undefined
+}>()
+
 const value = defineModel<boolean>({ required: false, default: false })
 </script>
 
 <template>
-  <BaseCell class="monitoring-checkbox-cell">
+  <BaseCell class="monitoring-checkbox-cell" :column-id="columnId">
     <template #default>
       <CmkCheckbox v-model="value"></CmkCheckbox>
     </template>

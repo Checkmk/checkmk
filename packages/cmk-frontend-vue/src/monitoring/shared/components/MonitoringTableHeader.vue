@@ -6,11 +6,24 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts" generic="T">
 import { type ColumnDef, FlexRender, type HeaderGroup } from '@tanstack/vue-table'
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-vue-next'
-import type { CSSProperties } from 'vue'
+import { type CSSProperties, inject } from 'vue'
+
+import { COLUMN_LAYOUT_KEY } from './MonitoringTableContext'
 
 defineProps<{
   headerGroups: HeaderGroup<T>[]
 }>()
+
+const columns = inject(COLUMN_LAYOUT_KEY, null)
+
+function stickyStyle(columnId: string): CSSProperties {
+  const left = columns?.value.get(columnId)?.pinnedLeft ?? null
+  return left !== null ? { position: 'sticky', left: `${left}px`, zIndex: 3 } : {}
+}
+
+function isLastPinned(columnId: string): boolean {
+  return columns?.value.get(columnId)?.isLastPinned ?? false
+}
 
 type SortDirection = false | 'asc' | 'desc'
 
@@ -49,10 +62,11 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
         :class="[
           'monitoring-table-header__header-cell',
           {
-            'monitoring-table-header__header-cell--sortable': header.column.getCanSort()
+            'monitoring-table-header__header-cell--sortable': header.column.getCanSort(),
+            'monitoring-table-header__header-cell--last-pinned': isLastPinned(header.column.id)
           }
         ]"
-        :style="columnStyle(header.column.columnDef)"
+        :style="[columnStyle(header.column.columnDef), stickyStyle(header.column.id)]"
         :aria-sort="ariaSortFor(header.column.getIsSorted())"
       >
         <button
@@ -104,6 +118,18 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
   background: var(--ux-theme-2);
   white-space: nowrap;
   text-align: left;
+}
+
+.monitoring-table-header__header-cell--last-pinned::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  transform: translateX(100%);
+  pointer-events: none;
+  background: linear-gradient(to right, rgb(0 0 0 / 30%), rgb(0 0 0 / 0%));
 }
 
 .monitoring-table-header__header-button {

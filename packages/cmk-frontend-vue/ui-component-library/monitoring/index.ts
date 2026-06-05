@@ -5,6 +5,7 @@
  */
 import { Folder, Page } from '@ucl/_ucl/types/page'
 
+import UclColumnPinning from './UclColumnPinning.vue'
 import UclTableCellBreakpoints from './UclTableCellBreakpoints.vue'
 import UclBaseCell from './cell/UclBaseCell.vue'
 import UclCheckboxCell from './cell/UclCheckboxCell.vue'
@@ -20,5 +21,6 @@ export const pages: Array<Folder | Page> = [
     new Page('StateCell', UclStateCell),
     new Page('StringCell', UclStringCell)
   ]),
-  new Page('Table Cell breakpoints', UclTableCellBreakpoints)
+  new Page('Table cell breakpoints', UclTableCellBreakpoints),
+  new Page('Table column pinning', UclColumnPinning)
 ]

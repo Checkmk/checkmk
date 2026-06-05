@@ -21,6 +21,7 @@ export interface StateCellProps {
   state: HostState
   stale?: boolean | undefined
   pending?: boolean | undefined
+  columnId?: string | undefined
 }
 
 const { _t } = usei18n()
@@ -82,6 +83,7 @@ const primaryColor = computed<CustomIconColor>(() => {
 
 <template>
   <BaseCell
+    :column-id="columnId"
     :highlight="stateHighlight"
     :breakpoints="{
       s: 108

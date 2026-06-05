@@ -14,6 +14,7 @@ const props = withDefaults(
     value: string
     hardBreakEvery?: number
     linkedTo?: CellLink | undefined
+    columnId?: string | undefined
   }>(),
   { hardBreakEvery: 15, linkedTo: undefined }
 )
@@ -28,7 +29,7 @@ const display = computed(() => {
 </script>
 
 <template>
-  <BaseCell class="monitoring-string-cell" :linked-to="linkedTo">
+  <BaseCell class="monitoring-string-cell" :column-id="columnId" :linked-to="linkedTo">
     <template #default>
       <span :title="value" class="monitoring-string-cell__text">{{ display }}</span>
     </template>

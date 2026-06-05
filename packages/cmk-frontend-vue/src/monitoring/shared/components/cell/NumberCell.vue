@@ -17,6 +17,7 @@ export interface NumberCellProps {
   linkedTo?: CellLink | undefined
   decimals?: number | undefined
   highlight?: CellHighlight | undefined
+  columnId?: string | undefined
 }
 
 const props = defineProps<NumberCellProps>()
@@ -27,7 +28,7 @@ const valueString = computed(() => {
 </script>
 
 <template>
-  <BaseCell :highlight="highlight" :linked-to="linkedTo">
+  <BaseCell :column-id="columnId" :highlight="highlight" :linked-to="linkedTo">
     <template #default>
       {{ valueString }}
     </template>

@@ -4,12 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, inject, ref, useSlots } from 'vue'
+import { type CSSProperties, computed, inject, ref, useSlots } from 'vue'
 
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 
 import {
   type BreakpointValue,
+  COLUMN_LAYOUT_KEY,
   type CellBreakpoints,
   MONITORING_TABLE_WIDTH,
   resolveBreakpoint
@@ -23,6 +24,7 @@ export interface CellLink {
 }
 
 const props = defineProps<{
+  columnId?: string | undefined
   breakpoints?: CellBreakpoints | undefined
   hideBelow?: BreakpointValue | undefined
   linkedTo?: CellLink | undefined
@@ -31,6 +33,20 @@ const props = defineProps<{
 
 const slots = useSlots()
 const containerWidth = inject(MONITORING_TABLE_WIDTH, ref<number>(Number.POSITIVE_INFINITY))
+
+// The owning MonitoringTable runs the single ResizeObserver and provides the
+// resolved per-column layout. The cell only reads its slice here; it never
+// observes anything itself.
+const columns = inject(COLUMN_LAYOUT_KEY, null)
+
+const columnInfo = computed(() =>
+  props.columnId ? (columns?.value.get(props.columnId) ?? null) : null
+)
+
+const pinnedLeft = computed(() => columnInfo.value?.pinnedLeft ?? null)
+const pinnedStyle = computed<CSSProperties>(() =>
+  pinnedLeft.value !== null ? { position: 'sticky', left: `${pinnedLeft.value}px`, zIndex: 1 } : {}
+)
 
 const visible = computed(() => {
   if (props.hideBelow === undefined) {
@@ -55,7 +71,15 @@ const activeSlot = computed<string>(() => {
 </script>
 
 <template>
-  <td v-if="visible" class="monitoring-base-cell">
+  <td
+    v-if="visible"
+    class="monitoring-base-cell"
+    :class="{
+      'monitoring-base-cell--pinned': pinnedLeft !== null,
+      'monitoring-base-cell--last-pinned': columnInfo?.isLastPinned
+    }"
+    :style="pinnedStyle"
+  >
     <a
       v-if="linkedTo && linkedTo.variant !== 'icon'"
       :href="linkedTo.href"
@@ -104,5 +128,21 @@ const activeSlot = computed<string>(() => {
       margin: 0 var(--dimension-3) 0 var(--dimension-2);
     }
   }
+}
+
+.monitoring-base-cell--pinned {
+  background: inherit;
+}
+
+.monitoring-base-cell--last-pinned::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  transform: translateX(100%);
+  pointer-events: none;
+  background: linear-gradient(to right, rgb(0 0 0 / 30%), rgb(0 0 0 / 0%));
 }
 </style>

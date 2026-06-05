@@ -1,13 +1,13 @@
 {
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^9.39.4",
     "@typescript-eslint/parser": "^8.58.2",
     "@vue/compiler-dom": "3.5.32",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.7.0",
     "@vue/server-renderer": "3.5.32",
     "@vue/test-utils": "^2.4.6",
-    "eslint": "^10.2.1",
+    "eslint": "^9.39.4",
     "eslint-plugin-vue": "^10.8.0",
     "jsdom": "^29.0.2",
     "postcss-html": "^1.8.1",

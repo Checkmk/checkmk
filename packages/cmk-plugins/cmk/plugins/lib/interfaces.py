@@ -301,9 +301,9 @@ class Attributes:
         if self.speed > 9 * 1000 * 1000 * 1000 * 1000:
             self.speed /= 10000
 
-        self.descr = _cleanup_if_strings(self.descr)
-        self.alias = _cleanup_if_strings(self.alias)
-        self.name = _cleanup_if_strings(self.name)
+        self.descr = cleanup_if_strings(self.descr)
+        self.alias = cleanup_if_strings(self.alias)
+        self.name = cleanup_if_strings(self.name)
 
     @property
     def oper_status_up(self) -> str:
@@ -840,7 +840,7 @@ def mac_address_from_hexstring(hexstr: str) -> str:
 # 0 byte. When this string is part of the data which is sent to
 # the nagios pipe all chars after the 0 byte are stripped of.
 # Stupid fix: Remove all 0 bytes. Hope this causes no problems.
-def _cleanup_if_strings(s: str) -> str:
+def cleanup_if_strings(s: str) -> str:
     if s and s != "":
         s = "".join([c for c in s if c != chr(0)]).strip()
     return s.replace("\n", " ")

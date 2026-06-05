@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v2 import CheckResult, exists, OIDBytes, StringByteTable
@@ -34,10 +34,32 @@ END_OIDS: list[str | OIDBytes] = [
     "31.1.1.1.18",  # ifAlias                  18
     OIDBytes("2.2.1.6"),  # ifPhysAddress      19
     "31.1.1.1.15",  # ifHighSpeed              20
-    "31.1.1.1.1",  # ifName                    21
 ]
 
+# ifName (.31.1.1.1.1) is deliberately *not* part of END_OIDS. It is fetched by the
+# standalone `if_names` SNMP section (see agent_based/if64.py) and merged into the `name`
+# attribute at check time, so it can be disabled separately via the "Disabled or enabled
+# sections (SNMP)" ruleset to reduce SNMP traffic.
+
 HAS_ifHCInOctets = exists(".1.3.6.1.2.1.31.1.1.1.6.*")
+
+# Maps the interface index to its ifName (.1.3.6.1.2.1.31.1.1.1.1), provided by the
+# standalone `if_names` SNMP section and merged into the `name` attribute at check time.
+IfNamesSection = Mapping[str, str]
+
+
+def add_names_to_ifaces[
+    TInterfaceType: (interfaces.InterfaceWithCounters, interfaces.InterfaceWithRates)
+](
+    section: interfaces.Section[TInterfaceType],
+    section_if_names: IfNamesSection | None,
+) -> None:
+    if section_if_names is None:
+        return
+    for iface in section:
+        if (name := section_if_names.get(iface.attributes.index)) is not None:
+            iface.attributes.name = name
+
 
 _PORT_TYPES = {
     "other": "1",
@@ -320,7 +342,6 @@ def generic_parse_if64(
     string_table: StringByteTable,
     timestamp: float,
     port_map: Mapping[str, str] | None = None,
-    names: Sequence[str] | None = None,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
         interfaces.InterfaceWithCounters(
@@ -335,7 +356,6 @@ def generic_parse_if64(
                 phys_address=line[19],
                 extra_info=_port_mapping(str(line[1]), port_map) if port_map else None,
                 admin_status=str(line[20]) if len(line) == 21 else None,
-                name=names[i] if names is not None else "",
             ),
             interfaces.Counters(
                 in_octets=interfaces.saveint(line[5]),
@@ -353,7 +373,7 @@ def generic_parse_if64(
             ),
             timestamp=timestamp,
         )
-        for i, line in enumerate(string_table)
+        for line in string_table
     ]
 
 
@@ -362,29 +382,25 @@ def parse_if64(
     timestamp: float,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     preprocessed_lines: StringByteTable = []
-    names: list[str] = []
     for line in string_table:
         # some DLINK switches apparently report a broken interface with index 0, filter that out
-        if interfaces.saveint(line[0]) <= 0:
-            continue
-        # ifHighSpeed can't represent interfaces with less than 10^6 bit bandwidth, ifSpeed is
-        # capped at 4GBit. Combine the two to get the actual interface speed.
-        if line[20] in ["0", ""]:
-            line[3] = str(interfaces.saveint(line[3]))
-        else:
-            line[3] = fix_if_64_highspeed(str(line[20]))
+        if interfaces.saveint(line[0]) > 0:
+            # ifHighSpeed can't represent interfaces with less than 10^6 bit bandwidth, ifSpeed is
+            # capped at 4GBit.
+            # combine the two to get the actual interface speed
+            if line[20] in ["0", ""]:
+                line[3] = str(interfaces.saveint(line[3]))
+            else:
+                line[3] = fix_if_64_highspeed(str(line[20]))
 
-        # Fujitsu SC2 Servers do not use numeric values for port state and type
-        line[2] = _convert_type(str(line[2]))
-        line[4] = _convert_status(str(line[4]))
+            # Fujitsu SC2 Servers do not use numeric values for port state and type
+            line[2] = _convert_type(str(line[2]))
+            line[4] = _convert_status(str(line[4]))
 
-        # Extract ifName at slot 21, then strip ifHighSpeed (slot 20) and ifName (slot 21)
-        # so the resulting line matches generic_parse_if64's expected layout. Any caller-
-        # appended fields (e.g. ifAdminStatus at slot 22) are preserved.
-        names.append(str(line[21]))
-        preprocessed_lines.append(line[:20] + line[22:])
+            # remove ifHighSpeed
+            preprocessed_lines.append(line[:20] if len(line) == 21 else line[:20] + line[21:])
 
-    return generic_parse_if64(preprocessed_lines, timestamp, names=names)
+    return generic_parse_if64(preprocessed_lines, timestamp)
 
 
 def generic_check_if64(

@@ -21,6 +21,20 @@ def test_parse_if64adm() -> None:
     }
 
 
+def test_parse_if_names() -> None:
+    assert if64.parse_if_names(
+        [
+            ["1", "lo"],
+            ["2", "port1.5"],
+            ["3", ""],
+            ["0", "invalid index"],
+        ]
+    ) == {
+        "1": "lo",
+        "2": "port1.5",
+    }
+
+
 def test_add_admin_status_to_ifaces() -> None:
     ifaces = [
         interfaces.InterfaceWithCounters(

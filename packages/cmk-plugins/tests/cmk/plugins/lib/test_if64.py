@@ -4,7 +4,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.plugins.lib import interfaces
-from cmk.plugins.lib.if64 import generic_parse_if64
+from cmk.plugins.lib.if64 import add_names_to_ifaces, generic_parse_if64
+
+
+def test_add_names_to_ifaces() -> None:
+    ifaces = [
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(index="1", descr="eth0", alias="uplink", type="6"),
+            interfaces.Counters(),
+            0.0,
+        ),
+        interfaces.InterfaceWithCounters(
+            interfaces.Attributes(index="2", descr="eth1", alias="", type="6"),
+            interfaces.Counters(),
+            0.0,
+        ),
+    ]
+    add_names_to_ifaces(ifaces, {"1": "port1"})
+    assert ifaces[0].attributes.name == "port1"
+    assert ifaces[1].attributes.name == ""
+
+
+def test_add_names_to_ifaces_disabled_section() -> None:
+    iface = interfaces.InterfaceWithCounters(
+        interfaces.Attributes(index="1", descr="eth0", alias="", type="6"),
+        interfaces.Counters(),
+        0.0,
+    )
+    add_names_to_ifaces([iface], None)
+    assert iface.attributes.name == ""
 
 
 def test_generic_parse_if64() -> None:

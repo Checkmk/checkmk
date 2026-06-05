@@ -13,6 +13,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     get_value_store,
+    OIDEnd,
     Result,
     RuleSetType,
     SimpleSNMPSection,
@@ -82,6 +83,32 @@ snmp_section_if64adm = SimpleSNMPSection(
 )
 
 
+def parse_if_names(string_table: StringTable) -> if64.IfNamesSection:
+    return {
+        index: interfaces.cleanup_if_strings(name)
+        for index, name in string_table
+        if interfaces.saveint(index) > 0 and name
+    }
+
+
+# This section fetches ifName (.1.3.6.1.2.1.31.1.1.1.1) on its own, so that the additional
+# SNMP traffic it causes can be disabled independently of the main interface section via the
+# ruleset "Disabled or enabled sections (SNMP)". It is enabled by default; the `name`
+# attribute (and the "Use name" item appearance) is only populated when it is fetched.
+snmp_section_if_names = SimpleSNMPSection(
+    name="if_names",
+    parse_function=parse_if_names,
+    fetch=SNMPTree(
+        base=f"{if64.BASE_OID}.31.1.1.1",  # IF-MIB::ifXTable
+        oids=[
+            OIDEnd(),  # ifIndex
+            "1",  # ifName
+        ],
+    ),
+    detect=if64.HAS_ifHCInOctets,
+)
+
+
 def _add_admin_status_to_ifaces[
     TInterfaceType: (interfaces.InterfaceWithCounters, interfaces.InterfaceWithRates)
 ](
@@ -99,10 +126,12 @@ def discover_if64(
     params: Sequence[Mapping[str, Any]],
     section_if64: interfaces.Section[interfaces.InterfaceWithCounters] | None,
     section_if64adm: If64AdmSection | None,
+    section_if_names: if64.IfNamesSection | None,
 ) -> DiscoveryResult:
     if section_if64 is None:
         return
     _add_admin_status_to_ifaces(section_if64, section_if64adm)
+    if64.add_names_to_ifaces(section_if64, section_if_names)
     yield from interfaces.discover_interfaces(
         params,
         section_if64,
@@ -133,10 +162,12 @@ def check_if64(
     params: Mapping[str, Any],
     section_if64: interfaces.Section[interfaces.InterfaceWithCounters] | None,
     section_if64adm: If64AdmSection | None,
+    section_if_names: if64.IfNamesSection | None,
 ) -> CheckResult:
     if section_if64 is None:
         return
     _add_admin_status_to_ifaces(section_if64, section_if64adm)
+    if64.add_names_to_ifaces(section_if64, section_if_names)
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
@@ -186,11 +217,13 @@ def cluster_check_if64(
     params: Mapping[str, Any],
     section_if64: Mapping[str, interfaces.Section[interfaces.InterfaceWithCounters] | None],
     section_if64adm: Mapping[str, If64AdmSection | None],
+    section_if_names: Mapping[str, if64.IfNamesSection | None],
 ) -> CheckResult:
     sections_w_admin_status: dict[str, interfaces.Section[interfaces.InterfaceWithCounters]] = {}
     for node_name, node_section_if64 in section_if64.items():
         if node_section_if64 is not None:
-            _add_admin_status_to_ifaces(node_section_if64, section_if64adm[node_name])
+            _add_admin_status_to_ifaces(node_section_if64, section_if64adm.get(node_name))
+            if64.add_names_to_ifaces(node_section_if64, section_if_names.get(node_name))
             sections_w_admin_status[node_name] = node_section_if64
 
     ifaces = []
@@ -218,7 +251,7 @@ def cluster_check_if64(
 
 check_plugin_if64 = CheckPlugin(
     name="if64",
-    sections=["if64", "if64adm"],
+    sections=["if64", "if64adm", "if_names"],
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
     discovery_ruleset_type=RuleSetType.ALL,

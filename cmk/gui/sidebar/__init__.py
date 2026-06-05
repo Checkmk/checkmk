@@ -506,12 +506,15 @@ class SidebarRenderer:
     def _show_body_start(
         self, *, screenshot_mode: bool, sidebar_notify_interval: int | None, kiosk: bool
     ) -> None:
-        # Chrome-bearing pages get the sidebar's ``body.side`` styling, kiosk
-        # pages (widget iframes, snapin previews embedded elsewhere) get the
-        # default ``body.main``. Both paths preserve extra body classes that
-        # the page registered via ``html.add_body_css_class`` (e.g.
-        # ``view``, ``dashlet``, ``inline``).
-        body_classes = list(html._body_classes) if kiosk else ["side", *html._body_classes[1:]]
+        # Chrome-bearing pages now host the main content in the same document as
+        # the sidebar, so the body needs both the sidebar's ``body.side`` shell
+        # styling and the ``body.main`` styling for the content area (link
+        # colors, warnings, the page-menu shortcut/suggestion de-duplication that
+        # used to live in the main iframe, ...). Kiosk pages (widget iframes,
+        # snapin previews embedded elsewhere) keep only the default ``body.main``.
+        # Both paths preserve extra body classes that the page registered via
+        # ``html.add_body_css_class`` (e.g. ``view``, ``dashlet``, ``inline``).
+        body_classes = list(html._body_classes) if kiosk else ["side", *html._body_classes]
         if screenshot_mode:
             body_classes.append("screenshotmode")
 

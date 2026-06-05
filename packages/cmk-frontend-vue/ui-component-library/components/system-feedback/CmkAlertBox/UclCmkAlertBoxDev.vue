@@ -43,10 +43,7 @@ function reset() {
           :variant="v"
           heading="Headline"
           :main-button="{ title: _t('Confirm'), onclick: () => {} }"
-          :buttons="[
-            { title: _t('Edit'), variant: 'secondary', onclick: () => {} },
-            { title: _t('Dismiss'), variant: 'optional', onclick: dismissMode1 }
-          ]"
+          :optional-button="{ title: _t('Dismiss'), icon: 'cancel', onclick: dismissMode1 }"
         >
           Body text to provide context.
         </CmkAlertBox>

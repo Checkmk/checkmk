@@ -70,13 +70,10 @@ function goToFullPage() {
       title: _t('Keep quick activation'),
       onclick: () => setChangesAction('slideout')
     }"
-    :buttons="[
-      {
-        title: _t('Set full activation page as default'),
-        variant: 'secondary',
-        onclick: () => setChangesAction('full_page')
-      }
-    ]"
+    :optional-button="{
+      title: _t('Set full activation page as default'),
+      onclick: () => setChangesAction('full_page')
+    }"
     class="mm-user-setting-dialog"
   >
     {{
@@ -101,13 +98,10 @@ function goToFullPage() {
     v-if="successFullPage"
     variant="success"
     :heading="_t('Preference saved.')"
-    :buttons="[
-      {
-        title: _t('Open full activation page'),
-        variant: 'primary',
-        onclick: goToFullPage
-      }
-    ]"
+    :optional-button="{
+      title: _t('Open full activation page'),
+      onclick: goToFullPage
+    }"
     class="mm-user-setting-dialog"
   >
     {{

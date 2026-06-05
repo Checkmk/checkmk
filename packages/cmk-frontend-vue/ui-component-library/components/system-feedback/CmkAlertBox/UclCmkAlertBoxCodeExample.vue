@@ -20,15 +20,13 @@ const mainButton = {
     isOpen.value = false
   }
 }
-const buttons = [
-  {
-    title: _t('Edit'),
-    variant: 'secondary' as const,
-    onclick: () => {
-      isOpen.value = false
-    }
+const optionalButton = {
+  title: _t('Dismiss'),
+  icon: 'cancel' as const,
+  onclick: () => {
+    isOpen.value = false
   }
-]
+}
 </script>
 
 <template>
@@ -38,7 +36,7 @@ const buttons = [
     size="medium"
     heading="Confirm deletion"
     :main-button="mainButton"
-    :buttons="buttons"
+    :optional-button="optionalButton"
   >
     This action cannot be undone. Are you sure you want to continue?
   </CmkAlertBox>

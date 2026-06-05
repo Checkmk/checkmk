@@ -83,15 +83,13 @@ const triggerRescan = () => {
               slideInOpen = true
             }
           }"
-          :buttons="[
-            {
-              title: hideButtonTitle,
-              onclick: () => {
-                tooltipHidden = true
-              },
-              variant: 'optional'
+          :optional-button="{
+            title: hideButtonTitle,
+            icon: 'cancel',
+            onclick: () => {
+              tooltipHidden = true
             }
-          ]"
+          }"
           class="setup-agent-download-dialog__dialog"
         >
           {{ dialogMessage }}

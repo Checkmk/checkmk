@@ -5,27 +5,31 @@
   "properties": {
     "title": { "type": "string" },
     "message": { "type": "string" },
-    "buttons": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/dialog_button" }
-    },
-    "dismissal_button": { "$ref": "#/$defs/dismissal_button" }
+    "main_button": { "$ref": "#/$defs/main_button" },
+    "optional_button": { "$ref": "#/$defs/optional_button" }
   },
   "required": ["message"],
   "$defs": {
-    "dialog_button": {
+    "main_button": {
       "type": "object",
       "properties": {
         "title": { "type": "string" },
-        "variant": { "$ref": "#/$defs/button_variant" },
         "action": { "$ref": "#/$defs/dialog_action" }
       },
-      "required": ["title", "variant", "action"]
+      "required": ["title", "action"]
     },
-    "dismissal_button": {
+    "optional_button": {
       "type": "object",
       "properties": {
         "title": { "type": "string" },
+        "action": { "$ref": "#/$defs/dialog_action" },
+        "dismissal": { "$ref": "#/$defs/dismissal" }
+      },
+      "required": ["title"]
+    },
+    "dismissal": {
+      "type": "object",
+      "properties": {
         "key": {
           "enum": [
             "notification_fallback",
@@ -35,10 +39,7 @@
           ]
         }
       },
-      "required": ["title", "key"]
-    },
-    "button_variant": {
-      "enum": ["primary", "secondary", "optional", "success", "warning", "danger", "info"]
+      "required": ["key"]
     },
     "dialog_action": {
       "oneOf": [{ "$ref": "#/$defs/redirect_action" }]

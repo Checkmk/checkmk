@@ -58,7 +58,7 @@ export const panelConfig = {
   },
   autoDismiss: { type: 'boolean' as const, title: 'Auto Dismiss (6s)', initialState: false },
   mainButton: { type: 'boolean' as const, title: 'Main Button', initialState: false },
-  buttons: { type: 'boolean' as const, title: 'Secondary Buttons', initialState: false }
+  optionalButton: { type: 'boolean' as const, title: 'Optional Button', initialState: false }
 } satisfies PanelConfigFor<typeof CmkAlertBox>
 </script>
 
@@ -95,14 +95,12 @@ const alertBoxProps = computed(
       ...(propState.value.mainButton && {
         mainButton: { title: 'Confirm', onclick: () => console.log('Confirm clicked') }
       }),
-      ...(propState.value.buttons && {
-        buttons: [
-          {
-            title: 'Edit',
-            variant: 'secondary' as const,
-            onclick: () => console.log('Edit clicked')
-          }
-        ]
+      ...(propState.value.optionalButton && {
+        optionalButton: {
+          title: 'Dismiss',
+          icon: 'cancel' as const,
+          onclick: () => console.log('Dismiss clicked')
+        }
       })
     }) as CmkAlertBoxProps & { open: boolean }
 )

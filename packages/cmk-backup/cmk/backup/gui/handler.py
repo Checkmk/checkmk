@@ -578,24 +578,21 @@ class ModeBackup(WatoMode[object]):
                     "message": _(
                         "You can leave this page. This backup continues in the background."
                     ),
-                    "buttons": [
-                        {
-                            "title": _("Refresh status"),
-                            "variant": "info",
-                            "action": {
-                                "type": "redirect",
-                                "url": makeactionuri_contextless(
-                                    request,
-                                    transactions,
-                                    [
-                                        ("mode", "backup"),
-                                        ("_action", "refresh"),
-                                        ("_job", running_job.ident),
-                                    ],
-                                ),
-                            },
-                        }
-                    ],
+                    "main_button": {
+                        "title": _("Refresh status"),
+                        "action": {
+                            "type": "redirect",
+                            "url": makeactionuri_contextless(
+                                request,
+                                transactions,
+                                [
+                                    ("mode", "backup"),
+                                    ("_action", "refresh"),
+                                    ("_job", running_job.ident),
+                                ],
+                            ),
+                        },
+                    },
                 },
             )
         self._show_job_list(backup_jobs, table_row_limit=config.table_row_limit)

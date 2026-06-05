@@ -439,13 +439,11 @@ onMounted(async () => {
         />
         <CmkAlertBox
           v-else-if="changesInfoShown"
-          :buttons="[
-            {
-              title: _t('Do not show again'),
-              variant: 'optional',
-              onclick: dismissChangesInfo
-            }
-          ]"
+          :optional-button="{
+            title: _t('Do not show again'),
+            icon: 'cancel',
+            onclick: dismissChangesInfo
+          }"
         >
           {{
             _t(`Changes are saved without affecting live monitoring, allowing you to review and adjust them safely.

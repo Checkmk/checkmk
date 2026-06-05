@@ -13,6 +13,7 @@ import type { TranslatedString } from '@/lib/i18nString'
 import type { ButtonVariants } from '@/components/CmkButton'
 import CmkButton from '@/components/CmkButton'
 import CmkIcon from '@/components/CmkIcon'
+import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
 import CmkHeading from './typography/CmkHeading.vue'
@@ -50,18 +51,14 @@ type BaseProps = {
   heading?: string | undefined
   autoDismiss?: boolean | undefined
   mainButton?: { title: TranslatedString; onclick: () => void }
-  buttons?: {
-    title: TranslatedString
-    variant: ButtonVariants['variant']
-    onclick: () => void
-  }[]
+  optionalButton?: { title: TranslatedString; icon?: SimpleIcons; onclick: () => void }
 }
 
 export type CmkAlertBoxProps = BaseProps &
   (
     | { variant?: DismissibleVariants; dismissible?: boolean }
     | { variant: 'error' | 'warning'; dismissible?: false }
-    | { variant: 'loading'; dismissible?: false; mainButton?: never; buttons?: never }
+    | { variant: 'loading'; dismissible?: false; mainButton?: never; optionalButton?: never }
   )
 
 const props = defineProps<CmkAlertBoxProps>()
@@ -99,7 +96,7 @@ const showCloseButton = computed(
   () =>
     !!props.dismissible &&
     !props.mainButton &&
-    !props.buttons?.length &&
+    !props.optionalButton &&
     DISMISSIBLE_VARIANTS.includes(props.variant ?? 'info')
 )
 
@@ -141,18 +138,14 @@ const alertIconColor = computed(() => {
       <div class="cmk-alert-box__body">
         <slot />
       </div>
-      <div v-if="mainButton || buttons?.length" class="cmk-alert-box__actions">
+      <div v-if="mainButton || optionalButton" class="cmk-alert-box__actions">
         <CmkButton v-if="mainButton" :variant="mainButtonVariant" @click="mainButton.onclick">
           {{ mainButton.title }}
         </CmkButton>
-        <!-- eslint-disable vue/valid-v-for since no unique identifier is present for key -->
-        <template v-for="button in buttons">
-          <CmkButton :variant="button.variant" @click="button.onclick">
-            <CmkIcon v-if="button.variant === 'optional'" name="cancel" variant="inline" />
-            {{ button.title }}
-          </CmkButton>
-        </template>
-        <!-- eslint-enable vue/valid-v-for -->
+        <CmkButton v-if="optionalButton" variant="optional" @click="optionalButton.onclick">
+          <CmkIcon v-if="optionalButton.icon" :name="optionalButton.icon" variant="inline" />
+          {{ optionalButton.title }}
+        </CmkButton>
       </div>
     </div>
     <button

@@ -32,13 +32,11 @@ function openInSameTab(url: string) {
       title: untranslated(properties['i18n']['setup_link_title']),
       onclick: () => openInSameTab(properties['setup_link'])
     }"
-    :buttons="[
-      {
-        title: untranslated(properties['i18n']['do_not_show_again_title']),
-        variant: 'optional',
-        onclick: dismissAlert
-      }
-    ]"
+    :optional-button="{
+      title: untranslated(properties['i18n']['do_not_show_again_title']),
+      icon: 'cancel',
+      onclick: dismissAlert
+    }"
   >
     {{ untranslated(props.properties['i18n']['message']) }}
   </CmkAlertBox>

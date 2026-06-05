@@ -125,13 +125,11 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
       <CmkAlertBox
         v-if="alertShown"
         class="form-edit-async__dialog"
-        :buttons="[
-          {
-            title: _t('Do not show again'),
-            variant: 'optional',
-            onclick: dismissAlert
-          }
-        ]"
+        :optional-button="{
+          title: _t('Do not show again'),
+          icon: 'cancel',
+          onclick: dismissAlert
+        }"
       >
         {{
           props.permanentChoiceWarning ??

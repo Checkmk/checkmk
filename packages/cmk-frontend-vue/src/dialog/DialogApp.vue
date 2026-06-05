@@ -23,9 +23,7 @@ function getDialogAction(action: DialogAction): () => void {
   throw new Error(`Unknown action: ${action.type}`)
 }
 
-const { isShown: dismissalShown, dismiss: dismissAlert } = useDismissDialog(
-  props.dismissal_button?.key
-)
+const { isShown, dismiss: dismissAlert } = useDismissDialog(props.optional_button?.dismissal?.key)
 
 const alertBoxProps = computed<CmkAlertBoxProps>(() => {
   const baseProps: CmkAlertBoxProps = {}
@@ -34,22 +32,26 @@ const alertBoxProps = computed<CmkAlertBoxProps>(() => {
     baseProps.heading = props.title
   }
 
-  const allButtons = (props.buttons ?? []).map((button) => ({
-    title: button.title as TranslatedString,
-    variant: button.variant,
-    onclick: getDialogAction(button.action)
-  }))
-
-  if (props.dismissal_button) {
-    allButtons.push({
-      title: props.dismissal_button.title as TranslatedString,
-      variant: 'optional' as const,
-      onclick: dismissAlert
-    })
+  if (props.main_button) {
+    baseProps.mainButton = {
+      title: props.main_button.title as TranslatedString,
+      onclick: getDialogAction(props.main_button.action)
+    }
   }
 
-  if (allButtons.length) {
-    baseProps.buttons = allButtons
+  if (props.optional_button) {
+    if (props.optional_button.dismissal) {
+      baseProps.optionalButton = {
+        title: props.optional_button.title as TranslatedString,
+        icon: 'cancel',
+        onclick: dismissAlert
+      }
+    } else if (props.optional_button.action) {
+      baseProps.optionalButton = {
+        title: props.optional_button.title as TranslatedString,
+        onclick: getDialogAction(props.optional_button.action)
+      }
+    }
   }
 
   return baseProps
@@ -57,5 +59,5 @@ const alertBoxProps = computed<CmkAlertBoxProps>(() => {
 </script>
 
 <template>
-  <CmkAlertBox v-if="dismissalShown" v-bind="alertBoxProps">{{ props.message }}</CmkAlertBox>
+  <CmkAlertBox v-if="isShown" v-bind="alertBoxProps">{{ props.message }}</CmkAlertBox>
 </template>

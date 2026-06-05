@@ -373,7 +373,11 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             ("_show_filter_form", "0"),
         ]
 
+        skip_site = False
         for plugin in self._used_search_plugins:
+            if plugin.is_group_match():
+                skip_site = True
+
             match_info = plugin.get_matches(
                 target_view,
                 self._rows[0] if exact_match else None,
@@ -385,6 +389,13 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
                 continue
             _text, url_filters = match_info
             url_params.extend(url_filters)
+
+        # For an exact match we navigate to the single object's view (e.g. the host view).
+        # Add the site of the matched row so context-dependent page menu entries (like the
+        # host inventory) which require an unambiguous site are shown - just like when
+        # selecting the result from the dropdown (see create_results()).
+        if exact_match and not skip_site:
+            url_params.append(("site", self._rows[0]["site"]))
 
         return url_params
 

@@ -57,3 +57,33 @@ fn test_version() {
         );
     }
 }
+
+#[test]
+fn test_help() {
+    let output = run_bin().arg("--help").ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    // Each option must be advertised; for options with a short form the help
+    // lists it as "-x, --long", so this also checks the short/long pairing.
+    for expected in [
+        "-v, --verbose",
+        "-l, --display-log",
+        "--print-info",
+        "--log-dir",
+        "--temp-dir",
+        "--state-dir",
+        "--no-spool",
+        "-c, --config-file",
+        "--detect-sids",
+        "--find-runtime",
+        "--runtime-ready",
+        "-f, --filter",
+        "-g, --generate-plugins",
+        "-h, --help",
+        "-V, --version",
+    ] {
+        assert!(
+            stdout.contains(expected),
+            "Missing option in --help output: {expected}"
+        );
+    }
+}

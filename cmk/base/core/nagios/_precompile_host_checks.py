@@ -20,7 +20,7 @@ import py_compile
 import re
 import socket
 import sys
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import assert_never
 
@@ -44,6 +44,8 @@ from cmk.checkengine.plugins import (
 from cmk.discover_plugins import PluginLocation
 from cmk.utils.ip_lookup import IPLookup, IPStackConfig
 from cmk.utils.log import console
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
 
 from ._host_check_config import HostCheckConfig
@@ -114,6 +116,7 @@ def precompile_hostchecks(
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
     plugins: AgentBasedPlugins,
+    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     get_ip_stack_config: Callable[[HostName], IPStackConfig],
     ip_address_of: IPLookup,
     *,
@@ -122,7 +125,7 @@ def precompile_hostchecks(
     console.verbose("Creating precompiled host check config...")
     hosts_config = config_cache.hosts_config
 
-    save_packed_config(config_path, config_cache)
+    save_packed_config(config_path, config_cache, discovery_rules)
 
     console.verbose("Precompiling host checks...")
 

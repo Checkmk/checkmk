@@ -15,7 +15,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersOperatingSystem,
 )
 from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Float, Integer, TextInput, Tuple
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_ntp_rules() -> Dictionary:
@@ -42,7 +41,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name=RuleGroup.DiscoveryParameters("ntp_discovery"),
+        name="ntp_discovery",
         valuespec=_valuespec_ntp_rules,
     )
 )

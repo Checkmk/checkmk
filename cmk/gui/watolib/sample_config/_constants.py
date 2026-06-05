@@ -380,20 +380,18 @@ SHIPPED_RULES = {
             "options": {"description": "Perform every two hours a service discovery"},
         },
     ],
-    "discovery_parameters": {
-        # Include monitoring of checkmk's tmpfs
-        "inventory_df_rules": [
-            {
-                "id": "b0ee8a51-703c-47e4-aec4-76430281604d",
-                "condition": _CMK_SERVER_CONDITION,
-                "value": {
-                    "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-                    "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-                },
+    # Include monitoring of checkmk's tmpfs
+    "inventory_df_rules": [
+        {
+            "id": "b0ee8a51-703c-47e4-aec4-76430281604d",
+            "condition": _CMK_SERVER_CONDITION,
+            "value": {
+                "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+                "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
             },
-        ],
-        "inventory_processes_rules": INVENTORY_PROCESS_DISCOVERY_RULES,
-    },
+        },
+    ],
+    "inventory_processes_rules": INVENTORY_PROCESS_DISCOVERY_RULES,
 }
 
 

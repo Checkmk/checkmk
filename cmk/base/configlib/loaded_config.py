@@ -40,7 +40,7 @@ from cmk.utils.notify_types import (
     NotifyPluginParamsDict,
 )
 from cmk.utils.oauth2_connection import OAuth2Connection
-from cmk.utils.rulesets import ruleset_matcher
+from cmk.utils.rulesets import ruleset_matcher, RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
 
@@ -60,7 +60,7 @@ class LoadedConfigFragment:
     # NOTE: all of the below is wishful typing, no parsing is done yet.
     # for now we just copy what we find in default_config
     folder_attributes: Mapping[str, FolderAttributesForBase]
-    discovery_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
+    discovery_parameters: Mapping[RuleSetName, Sequence[RuleSpec]]
     checkgroup_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
     logwatch_rules: Sequence[RuleSpec[object]]
     static_checks: Mapping[

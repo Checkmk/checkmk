@@ -10,7 +10,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
 )
 from cmk.gui.valuespec import Dictionary, DropdownChoice
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_cpu_utilization_multiitem_discovery() -> Dictionary:
@@ -44,7 +43,7 @@ def _valuespec_cpu_utilization_multiitem_discovery() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
-        name=RuleGroup.DiscoveryParameters("cpu_utilization_multiitem_discovery"),
+        name="cpu_utilization_multiitem_discovery",
         valuespec=_valuespec_cpu_utilization_multiitem_discovery,
     )
 )

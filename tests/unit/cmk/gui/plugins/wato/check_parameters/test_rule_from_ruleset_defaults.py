@@ -40,7 +40,7 @@ def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> No
     [
         # non-binary host ruleset
         (
-            RuleGroup.DiscoveryParameters("inventory_processes_rules"),
+            "inventory_processes_rules",
             _valuespec_inventory_processes_rules().default_value(),
             False,
         ),

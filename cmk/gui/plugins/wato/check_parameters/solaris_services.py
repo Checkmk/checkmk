@@ -23,7 +23,6 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_inventory_solaris_services_rules() -> Dictionary:
@@ -75,7 +74,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
-        name=RuleGroup.DiscoveryParameters("inventory_solaris_services_rules"),
+        name="inventory_solaris_services_rules",
         valuespec=_valuespec_inventory_solaris_services_rules,
     )
 )

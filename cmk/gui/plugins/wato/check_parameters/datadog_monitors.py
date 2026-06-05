@@ -19,7 +19,6 @@ from cmk.gui.valuespec import (
     RegExp,
     TextInput,
 )
-from cmk.utils.rulesets.definition import RuleGroup
 
 _DEFAULT_DATADOG_AND_CHECKMK_STATES = (
     ("Alert", 2),
@@ -64,7 +63,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name=RuleGroup.DiscoveryParameters("datadog_monitors_discovery"),
+        name="datadog_monitors_discovery",
         valuespec=_valuespec_datadog_monitors_discovery,
     ),
 )

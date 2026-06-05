@@ -780,19 +780,12 @@ class InputConditions(Conditions):
             )
 
 
-_RULESET_NAME_HINT = (
-    "Note: Since Checkmk 3.0 discovery rulesets are referred to by"
-    " `discovery_parameters:<OLD NAME>`. Using `<OLD NAME>` on its"
-    " own will stop working in Checkmk 3.1."
-)
-
-
 class RuleExtensions(base.BaseSchema):
     """Serializes the 'extensions' part of the Rule Domain Object."""
 
     cast_to_dict = True
 
-    ruleset = fields.String(description=f"The name of the ruleset. {_RULESET_NAME_HINT}")
+    ruleset = fields.String(description="The name of the ruleset.")
     folder = gui_fields.FolderField(required=True, example="~router")
     folder_index = fields.Integer(
         description="The position of this rule in the chain in this folder.",
@@ -891,7 +884,7 @@ class InputRuleObject(UpdateRuleObject):
     cast_to_dict = True
 
     ruleset = fields.String(
-        description=f"The name of the ruleset. {_RULESET_NAME_HINT}",
+        description="Name of rule set.",
         example="host_label_rules",
         required=True,
     )
@@ -1022,7 +1015,7 @@ def _collection_value(
 
 class RuleSearchOptions(base.BaseSchema):
     ruleset_name = fields.String(
-        description=f"The name of the ruleset. {_RULESET_NAME_HINT}",
+        description="The name of the ruleset.",
         example="host_groups",
         required=True,
     )

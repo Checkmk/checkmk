@@ -334,6 +334,7 @@ def _check_failed_gui_plugins(logger: logging.Logger) -> None:
 
 def _initialize_base_environment(edition: Edition) -> None:
     base_config.load(
+        discovery_rulesets=(),
         get_builtin_host_labels=make_app(edition).get_builtin_host_labels,
         edition=edition,
     )

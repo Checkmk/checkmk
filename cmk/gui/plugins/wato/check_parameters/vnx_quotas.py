@@ -10,7 +10,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
 )
 from cmk.gui.valuespec import Dictionary, ListOf, TextInput, Tuple
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_discovery_rules_vnx_quotas() -> Dictionary:
@@ -59,7 +58,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name=RuleGroup.DiscoveryParameters("discovery_rules_vnx_quotas"),
+        name="discovery_rules_vnx_quotas",
         valuespec=_valuespec_discovery_rules_vnx_quotas,
     )
 )

@@ -1311,6 +1311,7 @@ def _execute_autodiscovery(
                 core,
                 env.plugins,
                 locking_mode=env.loaded_config.restart_locking,
+                discovery_rules=env.loaded_config.discovery_parameters,
                 hosts_to_update=None,
                 service_depends_on=config.ServiceDependsOn(
                     tag_list=env.config_cache.host_tags.tag_list,
@@ -1342,6 +1343,7 @@ def _execute_autodiscovery(
                     service_dependencies=env.loaded_config.service_dependencies,
                 ),
                 locking_mode=env.loaded_config.restart_locking,
+                discovery_rules=env.loaded_config.discovery_parameters,
                 duplicates=sorted(
                     hosts_config.duplicates(
                         lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
@@ -1464,6 +1466,7 @@ def _automation_update_host_labels(
 
     if loading_result is None:
         loading_result = load_config(
+            discovery_rulesets=(),
             get_builtin_host_labels=app.get_builtin_host_labels,
             edition=app.edition,
         )
@@ -2152,6 +2155,7 @@ def _automation_analyse_host(
 
     if loading_result is None:
         loading_result = load_config(
+            discovery_rulesets=(),
             get_builtin_host_labels=app.get_builtin_host_labels,
             edition=app.edition,
         )
@@ -2177,6 +2181,7 @@ def _automation_analyze_host_rule_matches(
 
     if loading_result is None:
         loading_result = load_config(
+            discovery_rulesets=(),
             get_builtin_host_labels=app.get_builtin_host_labels,
             edition=app.edition,
         )
@@ -2216,6 +2221,7 @@ def _automation_analyze_service_rule_matches(
 
     if loading_result is None:
         loading_result = load_config(
+            discovery_rulesets=(),
             get_builtin_host_labels=app.get_builtin_host_labels,
             edition=app.edition,
         )
@@ -2256,6 +2262,7 @@ def _automation_analyze_host_rule_effectiveness(
 
     if loading_result is None:
         loading_result = load_config(
+            discovery_rulesets=(),
             get_builtin_host_labels=app.get_builtin_host_labels,
             edition=app.edition,
         )
@@ -2586,6 +2593,7 @@ def _execute_silently(
                 rctx.monitoring_core,
                 env.plugins,
                 action=action,
+                discovery_rules=env.loaded_config.discovery_parameters,
                 hosts_to_update=hosts_to_update,
                 service_depends_on=rctx.service_depends_on,
                 locking_mode=env.loaded_config.restart_locking,
@@ -2630,6 +2638,7 @@ def _automation_get_configuration(
     variable_names = ast.literal_eval(sys.stdin.read())
 
     config.load(
+        discovery_rulesets=(),
         get_builtin_host_labels=app.get_builtin_host_labels,
         edition=app.edition,
         with_conf_d=False,
@@ -3798,6 +3807,7 @@ def _automation_update_passwords_merged_file(
     loading_result: config.LoadingResult | None,
 ) -> UpdatePasswordsMergedFileResult:
     loading_result = loading_result or load_config(
+        discovery_rulesets=(),
         get_builtin_host_labels=app.get_builtin_host_labels,
         edition=app.edition,
     )
@@ -4101,6 +4111,7 @@ def _automation_find_unknown_check_parameter_rule_sets(
 ) -> UnknownCheckParameterRuleSetsResult:
     plugins = plugins or load_plugins()  # do we really still need this?
     loaded_config = loaded_config or load_config(
+        discovery_rulesets=(),
         get_builtin_host_labels=app.get_builtin_host_labels,
         edition=app.edition,
     )

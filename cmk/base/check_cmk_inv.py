@@ -36,6 +36,7 @@ from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugin_backend import (
+    extract_known_discovery_rulesets,
     load_selected_plugins,
     plugin_index,
 )
@@ -143,6 +144,7 @@ def _inventory_as_check(
     plugins: AgentBasedPlugins,
 ) -> ServiceState:
     loading_result = config.load(
+        discovery_rulesets=extract_known_discovery_rulesets(plugins),
         get_builtin_host_labels=app.get_builtin_host_labels,
         edition=app.edition,
     )

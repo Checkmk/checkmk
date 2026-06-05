@@ -330,7 +330,6 @@ def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | N
 
     with store.lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
         loading_result = config.load(
-            discovery_rulesets=(),
             get_builtin_host_labels=app.get_builtin_host_labels,
             edition=app.edition,
             with_conf_d=True,
@@ -819,7 +818,6 @@ def _automation_notification_replay(
 ) -> NotificationReplayResult:
     plugins = plugins or load_plugins()  # do we really still need this?
     loading_result = loading_result or load_config(
-        discovery_rulesets=(),
         get_builtin_host_labels=app.get_builtin_host_labels,
         edition=app.edition,
     )
@@ -850,7 +848,6 @@ def _automation_notification_analyse(
 ) -> NotificationAnalyseResult:
     plugins = plugins or load_plugins()  # do we really still need this?
     loading_result = loading_result or load_config(
-        discovery_rulesets=(),
         get_builtin_host_labels=app.get_builtin_host_labels,
         edition=app.edition,
     )
@@ -885,7 +882,6 @@ def _automation_notification_test(
 
     plugins = plugins or load_plugins()  # do we really still need this?
     loading_result = loading_result or load_config(
-        discovery_rulesets=(),
         get_builtin_host_labels=app.get_builtin_host_labels,
         edition=app.edition,
     )
@@ -920,7 +916,6 @@ def _automation_get_bulks(
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
     if loading_result is None:
         loading_result = load_config(
-            discovery_rulesets=(),
             get_builtin_host_labels=app.get_builtin_host_labels,
             edition=app.edition,
         )

@@ -21,6 +21,7 @@ from cmk.gui.watolib.rulesets import (
     RuleConditions,
     RulesetCollection,
 )
+from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.log import VERBOSE
 from cmk.utils.rulesets.definition import RuleGroup
@@ -92,7 +93,7 @@ def load_and_transform(
     transform_replaced_wato_rulesets(
         logger,
         all_rulesets,
-        REPLACED_RULESETS,
+        {**REPLACED_RULESETS, **_discovery_parameter_renames()},
     )
     transform_wato_rulesets_params(
         logger,
@@ -106,6 +107,23 @@ def load_and_transform(
         use_git=use_git,
     )
     return all_rulesets
+
+
+def _discovery_parameter_renames() -> Mapping[RulesetName, RulesetName]:
+    """Map legacy top-level `inventory_*_rules` / `discovery_*` ruleset names to their
+    `discovery_parameters:<old>` equivalent, derived from the live rulespec registry.
+
+    Customer configs from before the consolidation still contain entries like
+    `inventory_df_rules = [...]`. After the rulespec rename, those entries surface as
+    "unknown rulesets" until this transform moves them under the registered
+    `discovery_parameters:inventory_df_rules` rulespec.
+    """
+    prefix = RuleGroup.DiscoveryParameters("")
+    return {
+        RulesetName(name.removeprefix(prefix)): RulesetName(name)
+        for name in rulespec_registry
+        if name.startswith(prefix)
+    }
 
 
 def _delete_deprecated_wato_rulesets(

@@ -362,7 +362,6 @@ def create_diagnostics_dump(
             edition=app.edition,
             loaded_config=(
                 load_config(
-                    discovery_rulesets=(),
                     get_builtin_host_labels=app.get_builtin_host_labels,
                     edition=app.edition,
                 )

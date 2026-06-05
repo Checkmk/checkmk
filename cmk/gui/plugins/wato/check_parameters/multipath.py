@@ -23,6 +23,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_inventory_multipath_rules() -> Dictionary:
@@ -53,7 +54,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name="inventory_multipath_rules",
+        name=RuleGroup.DiscoveryParameters("inventory_multipath_rules"),
         valuespec=_valuespec_inventory_multipath_rules,
     )
 )

@@ -20,6 +20,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_discovery_win_dhcp_pools() -> Dictionary:
@@ -45,7 +46,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name="discovery_win_dhcp_pools",
+        name=RuleGroup.DiscoveryParameters("discovery_win_dhcp_pools"),
         valuespec=_valuespec_discovery_win_dhcp_pools,
     )
 )

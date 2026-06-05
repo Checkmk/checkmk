@@ -43,6 +43,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.utils.rulesets.definition import RuleGroup
 
 # This object indicates that the setting 'CPU rescale maximum load' has not been set, which can only
 # be the case for legacy rules from before version 1.6.0, see werk #6646. Note that we cannot use
@@ -745,7 +746,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
-        name="inventory_processes_rules",
+        name=RuleGroup.DiscoveryParameters("inventory_processes_rules"),
         valuespec=_valuespec_inventory_processes_rules,
     )
 )
@@ -973,7 +974,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
-        name="discovery_hr_processes_rules",
+        name=RuleGroup.DiscoveryParameters("discovery_hr_processes_rules"),
         valuespec=_valuespec_discovery_hr_processes_rules,
     )
 )

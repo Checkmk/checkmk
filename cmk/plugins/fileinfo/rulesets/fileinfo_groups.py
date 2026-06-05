@@ -196,13 +196,14 @@ rule_spec_fileinfo_groups = DiscoveryParameters(
 
 
 def _item_spec_fileinfo_groups() -> String:
+    href = "wato.py?mode=edit_ruleset&varname=discovery_parameters%3Afileinfo_groups"
     return String(
         title=Title("File Group Name"),
         help_text=Help(
             "This name must match the name of the group defined "
-            'in the <a href="wato.py?mode=edit_ruleset&varname=fileinfo_groups">%s</a> rule set.'
+            'in the <a href="%s">%s</a> rule set.'
         )
-        % Help("File grouping patterns"),
+        % (href, Help("File grouping patterns")),
     )
 
 

@@ -72,8 +72,6 @@ from cmk.utils.notify import (
     NotifyHostFiles,
 )
 from cmk.utils.notify_types import Contact
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.utils.timeperiod import TimeperiodSpecs
 
@@ -142,7 +140,6 @@ class NagiosCore(MonitoringCore):
         ip_address_of_mgmt: ip_lookup.IPLookupOptional,
         licensing_handler: LicensingHandler,
         plugins: AgentBasedPlugins,
-        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         passwords: Mapping[str, Secret[str]],
         *,
         hosts_to_update: set[HostName] | None = None,
@@ -171,7 +168,6 @@ class NagiosCore(MonitoringCore):
             passive_service_name_config,
             enforced_services_table,
             plugins,
-            discovery_rules,
             get_ip_stack_config,
             ip_address_of,
             precompile_mode=(
@@ -251,7 +247,6 @@ class NagiosCore(MonitoringCore):
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
         plugins: AgentBasedPlugins,
-        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         get_ip_stack_config: Callable[[HostName], IPStackConfig],
         ip_address_of: ip_lookup.IPLookup,
         *,
@@ -266,7 +261,6 @@ class NagiosCore(MonitoringCore):
             passive_service_name_config,
             enforced_services_table,
             plugins,
-            discovery_rules,
             get_ip_stack_config,
             ip_address_of,
             precompile_mode=precompile_mode,

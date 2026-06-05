@@ -65,7 +65,7 @@ def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> No
 
 
 def test_rule_from_config_unhandled_format():
-    ruleset = _ruleset("inventory_processes_rules")
+    ruleset = _ruleset(RuleGroup.DiscoveryParameters("inventory_processes_rules"))
 
     with pytest.raises(MKGeneralException, match="Invalid rule"):
         rulesets.Rule.from_config(
@@ -94,7 +94,7 @@ def test_rule_from_config_unhandled_format():
     [
         # non-binary host ruleset
         (
-            "inventory_processes_rules",
+            RuleGroup.DiscoveryParameters("inventory_processes_rules"),
             {
                 "id": "1",
                 "value": "VAL",
@@ -111,7 +111,7 @@ def test_rule_from_config_unhandled_format():
             },
         ),
         (
-            "inventory_processes_rules",
+            RuleGroup.DiscoveryParameters("inventory_processes_rules"),
             {
                 "id": "1",
                 "value": "VAL",
@@ -137,7 +137,7 @@ def test_rule_from_config_unhandled_format():
         ),
         # $or tags
         (
-            "inventory_processes_rules",
+            RuleGroup.DiscoveryParameters("inventory_processes_rules"),
             {
                 "id": "1",
                 "value": "ORED_TAGS",
@@ -169,7 +169,7 @@ def test_rule_from_config_unhandled_format():
         ),
         # $nor tags
         (
-            "inventory_processes_rules",
+            RuleGroup.DiscoveryParameters("inventory_processes_rules"),
             {
                 "id": "1",
                 "value": "NORED_TAGS",

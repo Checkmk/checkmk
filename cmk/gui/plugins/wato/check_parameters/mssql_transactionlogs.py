@@ -15,6 +15,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
 )
 from cmk.gui.valuespec import Checkbox, Dictionary
+from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_mssql_transactionlogs_discovery() -> Dictionary:
@@ -43,7 +44,7 @@ def _valuespec_mssql_transactionlogs_discovery() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
-        name="mssql_transactionlogs_discovery",
+        name=RuleGroup.DiscoveryParameters("mssql_transactionlogs_discovery"),
         valuespec=_valuespec_mssql_transactionlogs_discovery,
     )
 )

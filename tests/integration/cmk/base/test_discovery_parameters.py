@@ -14,6 +14,8 @@ from tests.integration.linux_test_host import create_linux_test_host
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 
+# TODO(igor): rewrite these tests to use the rest API to set up the rules
+
 
 def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) -> None:
     host_name = "disco-params-test-host"
@@ -81,7 +83,7 @@ check_plugin_test_check_1 = CheckPlugin(
     # And now overwrite the setting in the config
     site.write_file(
         "etc/check_mk/conf.d/test_check_1.mk",
-        "discover_test_check_1 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n",
+        "discovery_parameters = {'discover_test_check_1': [{'value': {'levels': (1, 2)}, 'condition': {}}]}\n",
     )
 
     # rediscover with the setting in the config
@@ -165,7 +167,7 @@ check_plugin_test_check_2 = CheckPlugin(
     # And now overwrite the setting in the config
     site.write_file(
         "etc/check_mk/conf.d/test_check_2.mk",
-        "discover_test_check_2 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n",
+        "discovery_parameters = {'discover_test_check_2': [{'value': {'levels': (1, 2)}, 'condition': {}}]}\n",
     )
 
     # rediscover with the setting in the config

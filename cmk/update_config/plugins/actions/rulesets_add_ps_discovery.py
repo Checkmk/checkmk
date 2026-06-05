@@ -12,8 +12,9 @@ from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset, RulesetCollecti
 from cmk.gui.watolib.sample_config import INVENTORY_PROCESS_DISCOVERY_RULES
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.utils.rulesets.definition import RuleGroup
 
-PS_DISCOVERY_RULE_NAME = "inventory_processes_rules"
+PS_DISCOVERY_RULE_NAME = RuleGroup.DiscoveryParameters("inventory_processes_rules")
 _NEW_DEFAULT_RULE_IDS = frozenset[str]()
 
 

@@ -2726,7 +2726,6 @@ cmc_host_rrd_config = [
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
 
     yield config.load(
-        discovery_rulesets=(),
         get_builtin_host_labels=(app := make_app()).get_builtin_host_labels,
         edition=app.edition,
     ).loaded_config
@@ -2820,7 +2819,6 @@ def test_explicit_setting_loading(patch_omd_site: None) -> None:
             _add_explicit_setting_in_folder(wato_main_folder / foldername, setting, values)
 
         config.load(
-            discovery_rulesets=(),
             get_builtin_host_labels=(app := make_app()).get_builtin_host_labels,
             edition=app.edition,
         )
@@ -2847,7 +2845,7 @@ def test_save_packed_config(monkeypatch: MonkeyPatch, config_path: Path) -> None
 
     assert not precompiled_check_config.exists()
 
-    config.save_packed_config(config_path, config_cache, {})
+    config.save_packed_config(config_path, config_cache)
 
     assert precompiled_check_config.exists()
 
@@ -2858,7 +2856,6 @@ def test_load_packed_config(config_path: Path) -> None:
     assert "abcd" not in config.__dict__
     config.load_packed_config(
         config_path,
-        discovery_rulesets=(),
         get_builtin_host_labels=(app := make_app()).get_builtin_host_labels,
         edition=app.edition,
     )

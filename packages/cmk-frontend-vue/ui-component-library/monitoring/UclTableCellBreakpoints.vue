@@ -61,13 +61,13 @@ export const panelConfig = {
   pxS: {
     type: 'number' as const,
     title: 'S = … px',
-    initialState: 70,
+    initialState: 95,
     help: 'Pixel value passed to the cell whenever a slot or hide-below is set to "S".'
   },
   pxM: {
     type: 'number' as const,
     title: 'M = … px',
-    initialState: 150
+    initialState: 180
   },
   pxL: {
     type: 'number' as const,
@@ -92,12 +92,9 @@ import {
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
-import { computed, provide, ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import {
-  type CellBreakpoints,
-  MONITORING_TABLE_WIDTH
-} from '@/monitoring/shared/components/MonitoringTableContext'
+import { type CellBreakpoints } from '@/monitoring/shared/components/MonitoringTableContext'
 import BaseCell from '@/monitoring/shared/components/cell/BaseCell.vue'
 
 type TokenName = 's' | 'm' | 'l' | 'xl'
@@ -113,7 +110,6 @@ const propState = ref(
 const SLIDER_MIN = 10
 
 const sliderValue = ref<number>(propState.value.pxXL)
-provide(MONITORING_TABLE_WIDTH, sliderValue)
 
 const sliderMax = computed(() => Math.max(propState.value.pxXL * 1.5, sliderValue.value + 10, 600))
 

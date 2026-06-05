@@ -4,15 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type CSSProperties, computed, inject, ref, useSlots } from 'vue'
+import { type CSSProperties, computed, inject, useSlots } from 'vue'
 
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 
 import {
-  type BreakpointValue,
   COLUMN_LAYOUT_KEY,
   type CellBreakpoints,
-  MONITORING_TABLE_WIDTH,
   resolveBreakpoint
 } from '../MonitoringTableContext'
 import HighlightWrapper, { type CellHighlight } from './base/HighlightWrapper.vue'
@@ -26,17 +24,12 @@ export interface CellLink {
 const props = defineProps<{
   columnId?: string | undefined
   breakpoints?: CellBreakpoints | undefined
-  hideBelow?: BreakpointValue | undefined
   linkedTo?: CellLink | undefined
   highlight?: CellHighlight | undefined
 }>()
 
 const slots = useSlots()
-const containerWidth = inject(MONITORING_TABLE_WIDTH, ref<number>(Number.POSITIVE_INFINITY))
 
-// The owning MonitoringTable runs the single ResizeObserver and provides the
-// resolved per-column layout. The cell only reads its slice here; it never
-// observes anything itself.
 const columns = inject(COLUMN_LAYOUT_KEY, null)
 
 const columnInfo = computed(() =>
@@ -47,13 +40,7 @@ const pinnedLeft = computed(() => columnInfo.value?.pinnedLeft ?? null)
 const pinnedStyle = computed<CSSProperties>(() =>
   pinnedLeft.value !== null ? { position: 'sticky', left: `${pinnedLeft.value}px`, zIndex: 1 } : {}
 )
-
-const visible = computed(() => {
-  if (props.hideBelow === undefined) {
-    return true
-  }
-  return containerWidth.value >= resolveBreakpoint(props.hideBelow)
-})
+const cellWidth = computed(() => columnInfo.value?.width ?? Number.POSITIVE_INFINITY)
 
 const activeSlot = computed<string>(() => {
   if (props.breakpoints) {
@@ -61,7 +48,7 @@ const activeSlot = computed<string>(() => {
       .map(([name, value]) => [name, resolveBreakpoint(value)] as const)
       .sort((a, b) => b[1] - a[1])
     for (const [name, threshold] of ranked) {
-      if (containerWidth.value >= threshold && slots[name]) {
+      if (cellWidth.value >= threshold && slots[name]) {
         return name
       }
     }
@@ -72,7 +59,6 @@ const activeSlot = computed<string>(() => {
 
 <template>
   <td
-    v-if="visible"
     class="monitoring-base-cell"
     :class="{
       'monitoring-base-cell--pinned': pinnedLeft !== null,

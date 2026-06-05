@@ -42,6 +42,7 @@ export const panelConfig = {
 </script>
 
 <script setup lang="ts">
+import type { ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table'
 import {
   UclDetailPageCodeExample,
   UclDetailPageComponent,
@@ -50,9 +51,9 @@ import {
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
-import { computed, provide, ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import { MONITORING_TABLE_WIDTH } from '@/monitoring/shared/components/MonitoringTableContext'
+import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -65,20 +66,34 @@ const propState = ref(
 
 const state = computed<HostState>(() => propState.value.state)
 
-/** Width at which StateCell switches between the icon-only and labelled slot. */
-const S_BREAKPOINT = 85
-
 const SLIDER_MIN = 50
-const SLIDER_MAX = 200
+const SLIDER_MAX = 250
 
 const sliderValue = ref<number>(150)
 
 const COLUMN_MIN = 85
 const COLUMN_MAX = 150
 
-/** Resolved column width: the slider value clamped to the column's min/max. */
 const effectiveWidth = computed(() => Math.min(Math.max(sliderValue.value, COLUMN_MIN), COLUMN_MAX))
-provide(MONITORING_TABLE_WIDTH, effectiveWidth)
+
+type DemoRow = { id: string }
+
+const rows: DemoRow[] = [{ id: 'demo' }]
+const sortState = ref<SortingState>([])
+const filterState = ref<ColumnFiltersState>([])
+
+// The slider drives the tanstack column size; the table sizes to that column
+// (see the width: auto override below) so the bordered box shrink-wraps it and
+// its padding stays visible instead of the table clipping past it.
+const columns = computed<ColumnDef<DemoRow>[]>(() => [
+  {
+    id: 'cell',
+    header: 'State',
+    size: sliderValue.value,
+    minSize: COLUMN_MIN,
+    maxSize: COLUMN_MAX
+  }
+])
 
 const sliderFillPercent = computed(
   () => ((sliderValue.value - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100
@@ -89,7 +104,7 @@ const sliderTrackBackground = computed(
     `linear-gradient(to right, var(--success) 0%, var(--success) ${sliderFillPercent.value}%, var(--ux-theme-6) ${sliderFillPercent.value}%, var(--ux-theme-6) 100%)`
 )
 
-const currentWidth = computed(() => `${sliderValue.value} px`)
+const currentWidth = computed(() => `${effectiveWidth.value} px`)
 </script>
 
 <template>
@@ -100,7 +115,7 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
       <div class="ucl-state-cell__stack">
         <div class="ucl-state-cell__slider-controls">
           <div class="ucl-state-cell__slider-header">
-            <span class="ucl-state-cell__slider-label">Container width</span>
+            <span class="ucl-state-cell__slider-label">Cell width</span>
             <span class="ucl-state-cell__current-width">
               <strong>{{ currentWidth }}</strong>
             </span>
@@ -115,23 +130,23 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
           />
         </div>
 
-        <div
-          class="ucl-state-cell__container"
-          :style="{ width: `calc(${sliderValue}px + 2 * var(--dimension-4))` }"
-        >
-          <table class="ucl-state-cell__container-table">
-            <tbody>
-              <tr>
-                <StateCell :state="state" :stale="propState.stale" :pending="propState.pending" />
-              </tr>
-            </tbody>
-          </table>
+        <div class="ucl-state-cell__container">
+          <MonitoringTable
+            :rows="rows"
+            :loading="false"
+            :columns="columns"
+            :sort-state="sortState"
+            :filter-state="filterState"
+            @update:sort-state="sortState = $event"
+            @update:filter-state="filterState = $event"
+          >
+            <template #row>
+              <StateCell :state="state" :stale="propState.stale" :pending="propState.pending" />
+            </template>
+          </MonitoringTable>
         </div>
 
-        <p class="ucl-state-cell__hint">
-          Drag the slider to change the container width. At or above {{ S_BREAKPOINT }} px the cell
-          renders the state label next to the icon; below it the cell collapses to the icon only.
-        </p>
+        <p class="ucl-state-cell__hint">Drag the slider to change the cell width.</p>
       </div>
 
       <template #properties>
@@ -206,27 +221,22 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
 }
 
 .ucl-state-cell__container {
+  width: fit-content;
+  max-width: 100%;
   border: 1px dashed var(--ux-theme-6);
   border-radius: 4px;
   padding: var(--dimension-4);
   box-sizing: border-box;
   margin-left: calc(-1 * var(--dimension-4));
-  max-width: 100%;
   overflow: hidden;
 }
 
-.ucl-state-cell__container-table {
-  border-collapse: collapse;
-  width: 100%;
-  table-layout: fixed;
+/* Size the table to its column (driven by the slider) so the box above can
+   shrink-wrap it and keep its padding visible. */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.ucl-state-cell__container :deep(.monitoring-table__table) {
+  width: auto;
 }
-
-/* stylelint-disable selector-pseudo-class-no-unknown */
-.ucl-state-cell__container-table :deep(td) {
-  border: 1px solid var(--ux-theme-6);
-  vertical-align: top;
-}
-/* stylelint-enable selector-pseudo-class-no-unknown */
 
 .ucl-state-cell__hint {
   margin: 0;

@@ -59,11 +59,24 @@ export const panelConfig = {
     title: '↳ variant',
     options: LINK_VARIANT_OPTIONS,
     initialState: 'icon' as const
+  },
+  minWidth: {
+    type: 'number' as const,
+    title: 'minWidth',
+    initialState: 150,
+    help: 'Minimum column width in px (tanstack column minSize). Clamps the slider.'
+  },
+  maxWidth: {
+    type: 'number' as const,
+    title: 'maxWidth',
+    initialState: 600,
+    help: 'Maximum column width in px (tanstack column maxSize). Clamps the slider.'
   }
 } satisfies PanelConfig
 </script>
 
 <script setup lang="ts">
+import type { ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table'
 import {
   UclDetailPageCodeExample,
   UclDetailPageComponent,
@@ -74,6 +87,7 @@ import {
 import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { computed, ref } from 'vue'
 
+import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -86,11 +100,30 @@ const propState = ref(
 
 const SLIDER_MIN = 60
 const SLIDER_MAX = 600
-const STRING_CELL_MIN_WIDTH = 150
 
 const sliderValue = ref<number>(200)
 
-const effectiveCellWidth = computed(() => Math.max(sliderValue.value, STRING_CELL_MIN_WIDTH))
+/** Slider width clamped by the configured min/max column width. */
+const effectiveCellWidth = computed(() =>
+  Math.min(Math.max(sliderValue.value, propState.value.minWidth), propState.value.maxWidth)
+)
+
+type DemoRow = { id: string }
+
+const rows: DemoRow[] = [{ id: 'demo' }]
+const sortState = ref<SortingState>([])
+const filterState = ref<ColumnFiltersState>([])
+
+// The slider-driven container (with its CSS min/max-width) is what sizes this
+// demo. The column stays flexible so the table fills the container's padded
+// content box instead of overflowing it (table-layout: fixed would otherwise
+// expand the table to the explicit column width and clip past the padding).
+const columns = computed<ColumnDef<DemoRow>[]>(() => [
+  {
+    id: 'cell',
+    header: 'Value'
+  }
+])
 
 const linkedTo = computed<CellLink | undefined>(() =>
   propState.value.linkEnabled
@@ -124,7 +157,7 @@ const sliderTrackBackground = computed(
     `linear-gradient(to right, var(--success) 0%, var(--success) ${sliderFillPercent.value}%, var(--ux-theme-6) ${sliderFillPercent.value}%, var(--ux-theme-6) 100%)`
 )
 
-const currentWidth = computed(() => `${sliderValue.value} px`)
+const currentWidth = computed(() => `${effectiveCellWidth.value} px`)
 </script>
 
 <template>
@@ -152,19 +185,29 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
 
         <div
           class="ucl-string-cell__container"
-          :style="{ maxWidth: `calc(${effectiveCellWidth}px + 2 * var(--dimension-4))` }"
+          :style="{
+            width: `${sliderValue}px`,
+            minWidth: `${propState.minWidth}px`,
+            maxWidth: `${propState.maxWidth}px`
+          }"
         >
-          <table class="ucl-string-cell__container-table">
-            <tbody>
-              <tr>
-                <StringCell
-                  :value="propState.value"
-                  :hard-break-every="propState.hardBreakEvery"
-                  :linked-to="linkedTo"
-                />
-              </tr>
-            </tbody>
-          </table>
+          <MonitoringTable
+            :rows="rows"
+            :loading="false"
+            :columns="columns"
+            :sort-state="sortState"
+            :filter-state="filterState"
+            @update:sort-state="sortState = $event"
+            @update:filter-state="filterState = $event"
+          >
+            <template #row>
+              <StringCell
+                :value="propState.value"
+                :hard-break-every="propState.hardBreakEvery"
+                :linked-to="linkedTo"
+              />
+            </template>
+          </MonitoringTable>
         </div>
 
         <p class="ucl-string-cell__hint">
@@ -255,19 +298,6 @@ const currentWidth = computed(() => `${sliderValue.value} px`)
   margin-left: calc(-1 * var(--dimension-4));
   overflow: hidden;
 }
-
-.ucl-string-cell__container-table {
-  border-collapse: collapse;
-  width: 100%;
-  table-layout: fixed;
-}
-
-/* stylelint-disable selector-pseudo-class-no-unknown */
-.ucl-string-cell__container-table :deep(td) {
-  border: 1px solid var(--ux-theme-6);
-  vertical-align: top;
-}
-/* stylelint-enable selector-pseudo-class-no-unknown */
 
 .ucl-string-cell__hint {
   margin: 0;

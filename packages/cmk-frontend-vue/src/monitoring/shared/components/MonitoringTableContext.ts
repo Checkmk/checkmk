@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ComputedRef, InjectionKey, Ref } from 'vue'
+import type { ComputedRef, InjectionKey } from 'vue'
 
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
@@ -22,9 +22,6 @@ export function resolveBreakpoint(value: BreakpointValue): number {
   return typeof value === 'number' ? value : BREAKPOINT_TOKEN_PX[value]
 }
 export type CellBreakpoints = Readonly<Record<string, BreakpointValue>>
-
-export const MONITORING_TABLE_WIDTH: InjectionKey<Readonly<Ref<number>>> =
-  Symbol('MonitoringTableWidth')
 
 export const MONITORING_SERVICE: InjectionKey<MonitoringService<unknown>> =
   Symbol('MonitoringService')

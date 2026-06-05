@@ -77,11 +77,24 @@ export const panelConfig = {
       { title: 'info', name: 'info' }
     ],
     initialState: 'default'
+  },
+  minWidth: {
+    type: 'number' as const,
+    title: 'minWidth',
+    initialState: 60,
+    help: 'Minimum column width in px (tanstack column minSize).'
+  },
+  maxWidth: {
+    type: 'number' as const,
+    title: 'maxWidth',
+    initialState: 120,
+    help: 'Maximum column width in px (tanstack column maxSize).'
   }
 } satisfies PanelConfig
 </script>
 
 <script setup lang="ts">
+import type { ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table'
 import {
   UclDetailPageCodeExample,
   UclDetailPageComponent,
@@ -92,6 +105,7 @@ import {
 import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { computed, ref } from 'vue'
 
+import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import type { CellHighlight } from '@/monitoring/shared/components/cell/base/HighlightWrapper.vue'
@@ -142,6 +156,21 @@ const visibleConfig = computed(() =>
     })
   )
 )
+
+type DemoRow = { id: string }
+
+const rows: DemoRow[] = [{ id: 'demo' }]
+const sortState = ref<SortingState>([])
+const filterState = ref<ColumnFiltersState>([])
+
+const columns = computed<ColumnDef<DemoRow>[]>(() => [
+  {
+    id: 'cell',
+    header: 'Value',
+    minSize: propState.value.minWidth,
+    maxSize: propState.value.maxWidth
+  }
+])
 </script>
 
 <template>
@@ -149,18 +178,26 @@ const visibleConfig = computed(() =>
     <UclDetailPageHeader>NumberCell</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <table class="ucl-number-cell__table">
-        <tbody>
-          <tr>
+      <div class="ucl-number-cell__table-wrap">
+        <MonitoringTable
+          :rows="rows"
+          :loading="false"
+          :columns="columns"
+          :sort-state="sortState"
+          :filter-state="filterState"
+          @update:sort-state="sortState = $event"
+          @update:filter-state="filterState = $event"
+        >
+          <template #row>
             <NumberCell
               :value="propState.value"
               :decimals="propState.decimals"
               :highlight="highlight"
               :linked-to="linkedTo"
             />
-          </tr>
-        </tbody>
-      </table>
+          </template>
+        </MonitoringTable>
+      </div>
 
       <template #properties>
         <UclPropertiesPanel
@@ -176,15 +213,19 @@ const visibleConfig = computed(() =>
 </template>
 
 <style scoped>
-.ucl-number-cell__table {
-  border-collapse: collapse;
+.ucl-number-cell__table-wrap {
+  width: 100%;
+}
+
+/* The demo has a single sized column. MonitoringTable stretches its table to
+   width: 100%, which (with table-layout: fixed) would spread the slack onto that
+   lone column and hide its size. Let the table size to its columns instead. */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.ucl-number-cell__table-wrap :deep(.monitoring-table__table) {
+  width: auto;
 }
 
 /* stylelint-disable selector-pseudo-class-no-unknown */
-.ucl-number-cell__table :deep(td) {
-  border: 1px solid var(--ux-theme-6);
-}
-
 .ucl-number-cell__panel :deep(div:has(> div > label[for$='-linkHref'])),
 .ucl-number-cell__panel :deep(div:has(> div > label[for$='-linkTarget'])),
 .ucl-number-cell__panel :deep(div:has(> div > label[for$='-linkVariant'])),

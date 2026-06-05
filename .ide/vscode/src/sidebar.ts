@@ -348,6 +348,12 @@ async function handleMessage(msg: WebviewMessage): Promise<void> {
 
 // ── Public API ──
 
+/** Current state snapshot for read-only consumers (e.g. the diagnostics
+ *  report). Forces a full refresh if the cache has never been built. */
+export function getState(): StateCache {
+  return _stateCache ?? refreshStateCache()
+}
+
 export function refreshOmd(): void {
   if (!_stateCache) return
   const omdSites = detectOmdSites().map((site) => ({

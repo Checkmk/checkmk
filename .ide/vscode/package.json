@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -173,6 +173,10 @@
       {
         "command": "cmk.rebuildExtension",
         "title": "CMK ▸ Rebuild & Install Extension"
+      },
+      {
+        "command": "cmk.collectDiagnostics",
+        "title": "CMK ▸ Collect Diagnostics Report"
       },
       {
         "command": "cmk.installDevSite",

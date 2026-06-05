@@ -254,6 +254,10 @@
         "title": "CMK ▸ Cmd: Regenerate mypy config"
       },
       {
+        "command": "cmk.rebuildExtension",
+        "title": "CMK ▸ Cmd: Rebuild & Reinstall Extension"
+      },
+      {
         "command": "cmk.mypy.resetTargetsToBaseline",
         "title": "CMK ▸ Mypy: Apply Baseline"
       },

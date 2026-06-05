@@ -19,7 +19,7 @@ import {
 } from './core/config'
 import { error, log, notifyInfo, registerErrorHandlers } from './core/log'
 import { bindPersistedCacheContext } from './core/persistedCache'
-import { checkVersionMismatch } from './core/versionCheck'
+import { checkVersionMismatch, rebuildExtension } from './core/versionCheck'
 import { deployToSite } from './omd/devDeployTools'
 import { checkForUpdates, isInstalledAsync as isDevSiteInstalledAsync } from './omd/devSiteTools'
 import { registerLogs } from './omd/logs'
@@ -120,6 +120,15 @@ export function activate(context: vscode.ExtensionContext): void {
   registerSandboxBranch(context)
   registerOmd(context, refreshAll, refreshOmd)
   registerLogs()
+
+  // On-demand rebuild & reinstall, for iterating on the extension itself
+  // without waiting for the version-mismatch prompt.
+  context.subscriptions.push(
+    vscode.commands.registerCommand('cmk.rebuildExtension', () => {
+      log('Rebuild & reinstall extension')
+      return rebuildExtension(context)
+    })
+  )
 
   // cmk-dev-site: create site command + update check
   // Detect cmk-dev-install-site asynchronously so the up-to-3s subprocess

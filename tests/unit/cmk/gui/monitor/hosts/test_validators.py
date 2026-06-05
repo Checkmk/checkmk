@@ -5,8 +5,35 @@
 
 import pytest
 
-from cmk.gui.monitor.hosts._api._validators import parse_host_sort_options
+from cmk.gui.monitor.hosts._api._validators import (
+    parse_host_search_query,
+    parse_host_sort_options,
+)
 from cmk.gui.monitor.hosts._models import HostSort, HostSortColumn, HostSortDirection
+
+
+class TestHostSearchQuery:
+    def test_plain_value_is_kept(self) -> None:
+        assert parse_host_search_query("web-server") == "web-server"
+
+    def test_surrounding_whitespace_is_stripped(self) -> None:
+        assert parse_host_search_query("  web-server  ") == "web-server"
+
+    def test_inner_whitespace_is_kept(self) -> None:
+        assert parse_host_search_query("  web server  ") == "web server"
+
+    def test_newline_characters_are_removed(self) -> None:
+        assert parse_host_search_query("web\nserver\r\n") == "webserver"
+
+    def test_empty_value_is_no_filter(self) -> None:
+        assert parse_host_search_query("") == ""
+
+    def test_whitespace_only_value_is_no_filter(self) -> None:
+        assert parse_host_search_query("   ") == ""
+
+    def test_invalid_value_type(self) -> None:
+        with pytest.raises(ValueError, match="Expected a search string"):
+            parse_host_search_query(123)
 
 
 class TestHostSort:

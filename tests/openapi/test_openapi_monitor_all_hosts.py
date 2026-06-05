@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.ccc.user import UserId
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
@@ -155,6 +157,74 @@ class TestMonitorHostsResponse:
         expected = {"limit": self.limit, "total": 3}
 
         assert value == expected
+
+    @pytest.mark.parametrize("query", ["", "   "])
+    def test_blank_search_is_treated_as_no_filter(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        query: str,
+    ) -> None:
+        self._setup_host_table(mock_livestatus)
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=self.limit, q=query)
+
+        assert len(resp.json["hosts"]) == 3
+        assert resp.json["meta"]["total"] == 3
+
+    @pytest.mark.xfail(strict=True, reason="server-side host search is wired up in CMK-35350")
+    def test_search_filters_hosts_and_total(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        self._setup_search(mock_livestatus, query="heute")
+
+        with mock_livestatus():
+            resp = clients.MonitorHosts.list_all(limit=self.limit, q="heute")
+
+        assert [host["name"] for host in resp.json["hosts"]] == ["heute"]
+        assert resp.json["meta"]["total"] == 1
+
+    @pytest.mark.xfail(strict=True, reason="server-side host search is wired up in CMK-35350")
+    def test_search_with_no_matches(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        self._setup_search(mock_livestatus, query="no-such-host")
+
+        with mock_livestatus():
+            resp = clients.MonitorHosts.list_all(limit=self.limit, q="no-such-host")
+
+        assert resp.json["hosts"] == []
+        assert resp.json["meta"]["total"] == 0
+
+    def _setup_search(self, mock_livestatus: MockLiveStatusConnection, *, query: str) -> None:
+        mock_livestatus.add_table("hosts", self.hosts)
+
+        search_filter = [
+            f"Filter: name ~~ {query}",
+            f"Filter: alias ~~ {query}",
+            f"Filter: address ~~ {query}",
+            "Or: 3",
+        ]
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending",
+                *search_filter,
+                f"Limit: {self.limit}",
+            ]
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name",
+                *search_filter,
+            ]
+        )
 
     def _setup_host_table(self, mock_livestatus: MockLiveStatusConnection) -> None:
         # Add the hosts defined in the fixture to the mock livestatus "hosts" table.

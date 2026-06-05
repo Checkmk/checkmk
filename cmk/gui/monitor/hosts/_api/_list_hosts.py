@@ -31,7 +31,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
 from cmk.gui.utils import permission_verification as permissions
 
 from ._family import MONITOR_HOSTS_FAMILY
-from ._validators import parse_host_sort_options
+from ._validators import parse_host_search_query, parse_host_sort_options
 
 # NOTE: currently hardcoding these constraints. It's to be determined where these should come from,
 # e.g. global settings.
@@ -113,12 +113,22 @@ type Sort = Annotated[
 ]
 
 
-def list_hosts(limit: Limit = 1000, sort: Sort = ApiOmitted()) -> HostsResponse:
+type Search = Annotated[
+    str,
+    PlainValidator(func=parse_host_search_query, json_schema_input_type=str),
+    QueryParam(
+        description="Filter hosts by name, alias, or IP. Empty string returns all hosts.",
+        example="web-server",
+    ),
+]
+
+
+def list_hosts(limit: Limit = 1000, sort: Sort = ApiOmitted(), q: Search = "") -> HostsResponse:
     """List hosts to be consumed by the all host monitoring page."""
     user.need_permission("general.see_all")
 
-    # ``sort`` is validated to expose the parameter in the API spec; applying it is done by the
-    # host handlers and wired up there separately.
+    # ``sort`` and ``q`` are validated to expose the parameters in the API spec; applying them is
+    # done by the host handlers and wired up there separately.
     host_repo = LiveStatusHostRepository(connection=sites.live())
 
     return _handle_list_hosts(host_repo, limit=limit)

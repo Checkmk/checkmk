@@ -4240,6 +4240,7 @@ class MonitorHostsClient(RestApiClient):
     def list_all(
         self,
         limit: int,
+        q: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
@@ -4248,6 +4249,7 @@ class MonitorHostsClient(RestApiClient):
             query_params=_only_set_keys(
                 {
                     "limit": limit,
+                    "q": q,
                 }
             ),
             expect_ok=expect_ok,

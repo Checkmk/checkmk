@@ -8,6 +8,19 @@ from collections import Counter
 from cmk.gui.monitor.hosts._models import HostSort, HostSortColumn, HostSortDirection
 
 
+def parse_host_search_query(value: object) -> str:
+    """Normalize the ``q`` search query param.
+
+    Newline characters are removed and leading and trailing whitespace is stripped. An empty or
+    whitespace-only value is treated as no filter and normalized to an empty string. Any
+    ``ValueError`` raised here is turned into a 400 response by the API framework.
+    """
+    if not isinstance(value, str):
+        raise ValueError(f"Expected a search string, got {type(value).__name__!r}.")
+
+    return value.replace("\n", "").replace("\r", "").strip()
+
+
 def parse_host_sort_options(value: object) -> list[HostSort]:
     """Parse the repeated ``sort`` query param into :class:`HostSort` objects.
 

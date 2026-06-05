@@ -89,10 +89,18 @@ fn test_help() {
     }
 }
 
-fn generate_plugins_dir() -> (tempfile::TempDir, std::path::PathBuf) {
+struct TestEnv {
+    _tmp: tempfile::TempDir,
+    plugins_dir: std::path::PathBuf,
+    config: std::path::PathBuf,
+}
+
+fn setup_test_env() -> TestEnv {
     let tmp = tempfile::tempdir().unwrap();
     let plugins_dir = tmp.path().join("plugins");
     fs::create_dir(&plugins_dir).unwrap();
+    #[cfg(windows)]
+    fs::create_dir(tmp.path().join("bakery")).unwrap();
 
     let config = tmp.path().join("mk-oracle.yml");
     fs::write(
@@ -110,25 +118,25 @@ oracle:
     )
     .unwrap();
 
-    // Windows async plugin creation needs a bakery dir next to plugins dir
-    fs::create_dir(tmp.path().join("bakery")).unwrap();
-
-    run_bin()
-        .args(["-c", config.to_str().unwrap()])
-        .args(["-g", plugins_dir.to_str().unwrap()])
-        .assert()
-        .success();
-
-    (tmp, plugins_dir)
+    TestEnv {
+        _tmp: tmp,
+        plugins_dir,
+        config,
+    }
 }
 
 #[cfg(windows)]
 #[test]
 fn test_generate_plugins() {
-    let (_tmp, plugins_dir) = generate_plugins_dir();
-    let sync_content = fs::read_to_string(plugins_dir.join("oracle_unified_sync.ps1"))
+    let env = setup_test_env();
+    run_bin()
+        .args(["-c", env.config.to_str().unwrap()])
+        .args(["-g", env.plugins_dir.to_str().unwrap()])
+        .assert()
+        .success();
+    let sync_content = fs::read_to_string(env.plugins_dir.join("oracle_unified_sync.ps1"))
         .expect("sync plugin missing");
-    let async_content = fs::read_to_string(plugins_dir.join("oracle_unified_async.ps1"))
+    let async_content = fs::read_to_string(env.plugins_dir.join("oracle_unified_async.ps1"))
         .expect("async plugin missing");
     assert!(!sync_content.is_empty(), "sync plugin empty");
     assert!(!async_content.is_empty(), "async plugin empty");
@@ -139,9 +147,14 @@ fn test_generate_plugins() {
 fn test_generate_plugins() {
     use std::os::unix::fs::PermissionsExt;
 
-    let (_tmp, plugins_dir) = generate_plugins_dir();
-    let sync_path = plugins_dir.join("oracle_unified_sync");
-    let async_path = plugins_dir.join("600").join("oracle_unified_async");
+    let env = setup_test_env();
+    run_bin()
+        .args(["-c", env.config.to_str().unwrap()])
+        .args(["-g", env.plugins_dir.to_str().unwrap()])
+        .assert()
+        .success();
+    let sync_path = env.plugins_dir.join("oracle_unified_sync");
+    let async_path = env.plugins_dir.join("600").join("oracle_unified_async");
     let sync_content = fs::read_to_string(&sync_path).expect("sync plugin missing");
     let async_content = fs::read_to_string(&async_path).expect("async plugin missing");
     assert!(!sync_content.is_empty(), "sync plugin empty");
@@ -159,4 +172,21 @@ fn test_generate_plugins() {
         EXECUTABLE_BITS,
         "async plugin not executable"
     );
+}
+
+#[test]
+fn test_print_info() {
+    let env = setup_test_env();
+    let output = run_bin()
+        .args(["-c", env.config.to_str().unwrap()])
+        .args(["--print-info", "-l"])
+        .output() // exit code varies: no Oracle runtime on Linux → exit 1
+        .unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    for expected in ["Log level", "Log dir", "Temp dir", "MK_CONFDIR"] {
+        assert!(
+            stderr.contains(expected),
+            "Missing in --print-info output: {expected}"
+        );
+    }
 }

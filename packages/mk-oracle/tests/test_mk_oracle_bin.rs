@@ -17,6 +17,7 @@
 use assert_cmd::Command;
 use mk_oracle::version::VERSION;
 use std::ffi::OsString;
+use std::fs;
 use std::sync::OnceLock;
 
 static BIN_COMMAND_PATH: OnceLock<OsString> = OnceLock::new();
@@ -86,4 +87,76 @@ fn test_help() {
             "Missing option in --help output: {expected}"
         );
     }
+}
+
+fn generate_plugins_dir() -> (tempfile::TempDir, std::path::PathBuf) {
+    let tmp = tempfile::tempdir().unwrap();
+    let plugins_dir = tmp.path().join("plugins");
+    fs::create_dir(&plugins_dir).unwrap();
+
+    let config = tmp.path().join("mk-oracle.yml");
+    fs::write(
+        &config,
+        r#"---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+    authentication:
+      username: dummy
+      password: dummy
+      type: standard
+"#,
+    )
+    .unwrap();
+
+    // Windows async plugin creation needs a bakery dir next to plugins dir
+    fs::create_dir(tmp.path().join("bakery")).unwrap();
+
+    run_bin()
+        .args(["-c", config.to_str().unwrap()])
+        .args(["-g", plugins_dir.to_str().unwrap()])
+        .assert()
+        .success();
+
+    (tmp, plugins_dir)
+}
+
+#[cfg(windows)]
+#[test]
+fn test_generate_plugins() {
+    let (_tmp, plugins_dir) = generate_plugins_dir();
+    let sync_content = fs::read_to_string(plugins_dir.join("oracle_unified_sync.ps1"))
+        .expect("sync plugin missing");
+    let async_content = fs::read_to_string(plugins_dir.join("oracle_unified_async.ps1"))
+        .expect("async plugin missing");
+    assert!(!sync_content.is_empty(), "sync plugin empty");
+    assert!(!async_content.is_empty(), "async plugin empty");
+}
+
+#[cfg(not(windows))]
+#[test]
+fn test_generate_plugins() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let (_tmp, plugins_dir) = generate_plugins_dir();
+    let sync_path = plugins_dir.join("oracle_unified_sync");
+    let async_path = plugins_dir.join("600").join("oracle_unified_async");
+    let sync_content = fs::read_to_string(&sync_path).expect("sync plugin missing");
+    let async_content = fs::read_to_string(&async_path).expect("async plugin missing");
+    assert!(!sync_content.is_empty(), "sync plugin empty");
+    assert!(!async_content.is_empty(), "async plugin empty");
+    const EXECUTABLE_BITS: u32 = 0o111;
+    let sync_mode = sync_path.metadata().unwrap().permissions().mode();
+    let async_mode = async_path.metadata().unwrap().permissions().mode();
+    assert_eq!(
+        sync_mode & EXECUTABLE_BITS,
+        EXECUTABLE_BITS,
+        "sync plugin not executable"
+    );
+    assert_eq!(
+        async_mode & EXECUTABLE_BITS,
+        EXECUTABLE_BITS,
+        "async plugin not executable"
+    );
 }

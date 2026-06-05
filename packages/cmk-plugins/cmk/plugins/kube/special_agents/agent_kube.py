@@ -702,7 +702,7 @@ def determine_pods_to_host(
                     )
                 ],
             )
-            for k in api_cron_jobs
+            for k in kube_objects_from_namespaces(api_cron_jobs, monitored_namespaces)
         )
     return PodsToHost(
         piggybacks=piggybacks,

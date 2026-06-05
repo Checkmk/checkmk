@@ -99,21 +99,33 @@ export function registerGitFixers(): vscode.Disposable[] {
       )
       if (choice !== 'Reset') return
       log('git: hard-resetting tests/qa-test-data to tracked gitlink')
-      // Read the tracked gitlink SHA from the parent's index and checkout the
+      // Read the tracked gitlink SHA from the parent's index and check out the
       // submodule worktree at exactly that SHA. Avoids `git submodule update
       // --init --force` because that falls back to the relative `../qa-test-
       // data` URL declared in .gitmodules, which git 2.38+ refuses over the
       // `file://` transport — so the action would fail with "fatal: transport
       // 'file' not allowed" even when the submodule is already correct.
-      // If the tracked SHA happens to be missing locally, we fetch first.
+      //
+      // If the tracked SHA is missing locally we fetch it *by SHA*: a plain
+      // `git fetch origin` only retrieves branch tips, so a gitlink that points
+      // at a commit not reachable from any branch head stays absent and the
+      // checkout fails with "fatal: reference is not a tree" (CMK-35371). When
+      // the server rejects a want-by-sha request we fall back to a full
+      // branches+tags fetch, which still lands the commit if it is reachable
+      // from a ref. Statements are newline-joined under `set -e` rather than
+      // chained with `&&` so the fetch/checkout flow isn't at the mercy of
+      // `&&`/`||` precedence.
       const inner = [
+        'set -e',
         "TRACKED_SHA=$(git ls-tree HEAD tests/qa-test-data | awk '{print $3}')",
         'test -n "$TRACKED_SHA" || { echo "qa-test-data not tracked in HEAD"; exit 1; }',
         'git -C tests/qa-test-data reset --hard',
         'git -C tests/qa-test-data clean -fdx',
-        'git -C tests/qa-test-data cat-file -e "$TRACKED_SHA" 2>/dev/null || git -C tests/qa-test-data fetch origin',
+        'if ! git -C tests/qa-test-data cat-file -e "${TRACKED_SHA}^{commit}" 2>/dev/null; then',
+        '  git -C tests/qa-test-data fetch origin "$TRACKED_SHA" || git -C tests/qa-test-data fetch origin --tags',
+        'fi',
         'git -C tests/qa-test-data checkout --force --detach "$TRACKED_SHA"'
-      ].join(' && ')
+      ].join('\n')
       const exec = runCommand('Reset tests/qa-test-data', inner)
       if (!exec) {
         await notifyError('CMK: Could not start the reset task.')

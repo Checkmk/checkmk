@@ -21,7 +21,7 @@ push the result to the QA Metabase postgres for dashboarding.
 ## Environment
 
 The lib reads its connection from these env vars (mirrors
-`tests/scripts/store_code_coverage.py`):
+`tests/scripts/coverage/store_code_coverage.py`):
 
 - `POSTGRES_HOST`, `POSTGRES_PORT` (default 5432), `POSTGRES_DB`, `QA_POSTGRES_USER` — required.
 - Auth: `QA_POSTGRES_PASSWORD` _or_ the SSL trio
@@ -51,5 +51,5 @@ against a fixture repo built in `tmp_path`.
 
 ## Out of scope (today)
 
-- Migrating `tests/scripts/store_code_coverage.py` onto this lib. Planned as
+- Migrating `tests/scripts/coverage/store_code_coverage.py` onto this lib. Planned as
   a follow-up once the lib has shipped its first consumer.

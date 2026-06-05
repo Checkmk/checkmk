@@ -64,7 +64,7 @@ for var in "${REQUIRED_VARS[@]}"; do
 done
 
 # Activate the virtual environment
-VENV_PATH="$(dirname "$0")/../../.venv/bin/activate"
+VENV_PATH="$(dirname "$0")/../../../.venv/bin/activate"
 if [ ! -f "${VENV_PATH}" ]; then
     echo "Error: Virtual environment not found at $VENV_PATH"
     exit 1
@@ -96,7 +96,7 @@ fi
 
 RESULT_CSV="./results/coverage/coverage.csv"
 # Convert coverage data to CSV, Assuming the ./results/coverage directory exists after 'bazel coverage'
-tests/scripts/code_coverage_summary.py -i "${COVERAGE_DATA_FILE}" -o "${RESULT_CSV}"
+tests/scripts/coverage/code_coverage_summary.py -i "${COVERAGE_DATA_FILE}" -o "${RESULT_CSV}"
 
 if [ ! -f "${RESULT_CSV}" ]; then
     echo "Error: ${RESULT_CSV} not created."
@@ -106,4 +106,4 @@ fi
 echo "Uploading code coverage for commit ${COMMIT_HASH} at ${COMMIT_TIME}"
 set -x
 # shellcheck disable=SC2086
-tests/scripts/store_code_coverage.py --csv-file "${RESULT_CSV}" --makefile-target "${TARGET}" --alias "${ALIAS}" --git-commit-hash "${COMMIT_HASH}" --commit-time "${COMMIT_TIME}" ${PER_FILE_OPT}
+tests/scripts/coverage/store_code_coverage.py --csv-file "${RESULT_CSV}" --makefile-target "${TARGET}" --alias "${ALIAS}" --git-commit-hash "${COMMIT_HASH}" --commit-time "${COMMIT_TIME}" ${PER_FILE_OPT}

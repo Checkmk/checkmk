@@ -50,6 +50,19 @@ Check the status bar — click the CMK indicator to build any stale targets. At 
 
 Open the Checkmk sidebar (activity bar icon) — the **Environment** section shows versions and build status. The **IDE Health** section confirms settings and extensions are correctly configured.
 
+## Platform Support
+
+The extension is built for a Linux development environment — it shells out to `bazel`, `git`, `sudo`, `omd`, and `socat`, and reads paths like `/omd/sites`. It runs natively on Linux and macOS (Linux is the primary target).
+
+**On Windows, use WSL2.** The extension is a workspace extension, so under the [Remote - WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl) extension its host runs _inside_ your WSL2 distro — a real Linux environment — and every feature works there, including OMD site management, the socket proxy, and the Bazel build commands. Plain Windows (without WSL2) is **not** supported.
+
+To set it up correctly:
+
+1. **Clone the Checkmk repo inside the WSL2 filesystem** (e.g. `~/git/checkmk`), not on a Windows drive mount (`/mnt/c/...`). Windows mounts cripple Bazel/Git performance and don't preserve the executable bit on `.git/hooks/pre-commit`.
+2. **Open the folder with WSL: Open Folder in WSL…** so the extension activates in the WSL2 extension host.
+3. **Install the VSIX into the WSL remote** — run the install command from a WSL2 shell (it targets the remote, not the Windows client).
+4. **OMD sites must live inside WSL2** for the OMD Sites section to manage them. VS Code's automatic port forwarding makes the **Browser** button and socket proxies reachable from your Windows browser without extra configuration.
+
 ## Features
 
 ### 1. Language Profiles

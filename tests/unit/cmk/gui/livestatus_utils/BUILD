@@ -13,9 +13,11 @@ py_test(
     name = "livestatus_utils",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
     args = [
+        "--config-file=$(location @//:pyproject.toml)",
         "--import-mode=importlib",
         "tests/unit/cmk/gui/livestatus_utils",
     ],
+    data = ["@//:pyproject.toml"],
     env = {"EDITION": "community"},
     main = ":__test__.py",
     deps = [

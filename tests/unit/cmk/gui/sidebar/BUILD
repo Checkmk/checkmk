@@ -12,7 +12,11 @@ py_pytest_main(
 py_test(
     name = "sidebar",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/sidebar"],
+    args = [
+        "--config-file=$(location @//:pyproject.toml)",
+        "tests/unit/cmk/gui/sidebar",
+    ],
+    data = ["@//:pyproject.toml"],
     env = {"EDITION": "community"},
     main = ":__test__.py",
     deps = [

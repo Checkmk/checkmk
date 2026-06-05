@@ -13,9 +13,11 @@ py_test(
     name = "data_source",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
     args = [
+        "--config-file=$(location @//:pyproject.toml)",
         "--import-mode=importlib",
         "tests/unit/cmk/gui/data_source",
     ],
+    data = ["@//:pyproject.toml"],
     env = {"EDITION": "community"},
     main = ":__test__.py",
     deps = [

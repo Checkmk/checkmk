@@ -52,9 +52,11 @@ py_test(
     name = "tests",
     srcs = ["__test__.py"] + glob(["test_*.py"]),
     args = [
+        "--config-file=$(location @//:pyproject.toml)",
         "--import-mode=importlib",
         "tests/unit/cmk/gui",
     ],
+    data = ["@//:pyproject.toml"],
     env = {
         "EDITION": "community",
     },

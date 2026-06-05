@@ -12,7 +12,11 @@ py_pytest_main(
 py_test(
     name = "availability",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/availability"],
+    args = [
+        "--config-file=$(location @//:pyproject.toml)",
+        "tests/unit/cmk/gui/availability",
+    ],
+    data = ["@//:pyproject.toml"],
     env = {"EDITION": "community"},
     main = ":__test__.py",
     deps = [

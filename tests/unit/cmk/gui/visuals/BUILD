@@ -13,9 +13,11 @@ py_test(
     name = "visuals",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
     args = [
+        "--config-file=$(location @//:pyproject.toml)",
         "--import-mode=importlib",
         "tests/unit/cmk/gui/visuals",
     ],
+    data = ["@//:pyproject.toml"],
     env = {"EDITION": "community"},
     main = ":__test__.py",
     deps = [

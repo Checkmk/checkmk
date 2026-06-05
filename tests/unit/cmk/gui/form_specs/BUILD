@@ -12,7 +12,11 @@ py_pytest_main(
 py_test(
     name = "form_specs",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/form_specs"],
+    args = [
+        "--config-file=$(location @//:pyproject.toml)",
+        "tests/unit/cmk/gui/form_specs",
+    ],
+    data = ["@//:pyproject.toml"],
     env = {"EDITION": "community"},
     main = ":__test__.py",
     deps = [

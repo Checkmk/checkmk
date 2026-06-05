@@ -285,3 +285,8 @@ filterwarnings = [
 # file in addition to the console.
 junit_logging = "all"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.coverage.run]
+# Exclude temp files from coverage command to avoid coverage.exceptions.NoSource
+# error thrown for generated .mk files
+omit = ["/tmp/**"]

@@ -13,9 +13,11 @@ py_test(
     name = "plugins",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
     args = [
+        "--config-file=$(location @//:pyproject.toml)",
         "--import-mode=importlib",
         "tests/unit/cmk/gui/plugins",
     ],
+    data = ["@//:pyproject.toml"],
     env = {"EDITION": "community"},
     main = ":__test__.py",
     deps = [

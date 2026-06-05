@@ -37,7 +37,13 @@ class ConnectorObject[HostT: str](abc.ABC):
     @abc.abstractmethod
     def _serialize_attributes(
         self,
-    ) -> Mapping[str, Sequence[HostT] | int | Mapping[str, Mapping[str, str]]]:
+    ) -> Mapping[
+        str,
+        Sequence[HostT]
+        | int
+        | Mapping[str, Mapping[str, str]]
+        | Mapping[str, Mapping[str, Mapping[str, str]]],
+    ]:
         """Serialize object type specific attributes for transport"""
         raise NotImplementedError()
 

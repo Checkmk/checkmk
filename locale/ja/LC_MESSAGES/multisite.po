@@ -86696,8 +86696,8 @@ msgstr "サイドバー"
 msgid "Key hints"
 msgstr "重要なヒント"
 
-msgid "Ctrl + Alt"
-msgstr "Ctrl + Alt"
+msgid "Alt + k"
+msgstr ""
 
 #, fuzzy
 msgid "Existence"
@@ -89214,6 +89214,9 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Ctrl + Alt"
+#~ msgstr "Ctrl + Alt"
 
 #, fuzzy
 #~ msgid "Close for now"

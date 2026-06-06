@@ -89219,8 +89219,8 @@ msgstr "Seitenleiste"
 msgid "Key hints"
 msgstr "Wichtige Hinweise"
 
-msgid "Ctrl + Alt"
-msgstr "Strg + Alt"
+msgid "Alt + k"
+msgstr ""
 
 #, fuzzy
 msgid "Existence"
@@ -91586,6 +91586,9 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Ctrl + Alt"
+#~ msgstr "Strg + Alt"
 
 #~ msgid "Close for now"
 #~ msgstr "Für den Augenblick schließen"

@@ -93345,7 +93345,7 @@ msgstr "Barra laterale"
 msgid "Key hints"
 msgstr ""
 
-msgid "Ctrl + Alt"
+msgid "Alt + k"
 msgstr ""
 
 #, fuzzy

@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-04 17:53+0000\n"
+"PO-Revision-Date: 2026-06-05 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -93625,7 +93625,7 @@ msgstr "Barra lateral"
 msgid "Key hints"
 msgstr ""
 
-msgid "Ctrl + Alt"
+msgid "Alt + k"
 msgstr ""
 
 #, fuzzy

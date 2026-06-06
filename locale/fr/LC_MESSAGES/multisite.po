@@ -56845,9 +56845,8 @@ msgstr "RAM utilisée"
 msgid "RAM used (averaged)"
 msgstr "Lire l'exe moyen"
 
-#, fuzzy
-msgid "RCC"
-msgstr "CMC"
+msgid "RCC (non-root deployments on Linux only)"
+msgstr ""
 
 #, fuzzy
 msgid "RCC Remote server address"
@@ -91830,8 +91829,9 @@ msgid ""
 "Python environments required for the execution of Robot Framework suites. "
 "This eliminates the need to install and configure Python and all of its "
 "library packages on the target hosts. RCC environments are created right "
-"after the schedulder gets started by the Checkmk agent and before it enters "
-"the scheduling phase."
+"after the scheduler gets started by the Checkmk agent and before it enters "
+"the scheduling phase. Note that on Linux systems, RCC is only supported for "
+"non-root agent deployments. See werk #19460 for details."
 msgstr ""
 
 #, fuzzy
@@ -101484,6 +101484,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "RCC"
+#~ msgstr "CMC"
 
 #~ msgid ""
 #~ "At the time the report was created not all Checkmk sites were reachable. "

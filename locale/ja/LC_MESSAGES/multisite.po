@@ -53438,9 +53438,8 @@ msgstr "使用されるRAM"
 msgid "RAM used (averaged)"
 msgstr "RAM使用量（平均）"
 
-#, fuzzy
-msgid "RCC"
-msgstr "CMC"
+msgid "RCC (non-root deployments on Linux only)"
+msgstr ""
 
 msgid "RCC Remote server address"
 msgstr "RCC リモートサーバーのアドレス"
@@ -86080,14 +86079,16 @@ msgid ""
 "Site Management.</a>"
 msgstr ""
 
+#, fuzzy
 msgid ""
 "With the help of the <a href=\"https://github.com/robocorp/rcc\" "
 "target=\"_blank\">RCC</a> binary, the Robotmk scheduler can generate the "
 "Python environments required for the execution of Robot Framework suites. "
 "This eliminates the need to install and configure Python and all of its "
 "library packages on the target hosts. RCC environments are created right "
-"after the schedulder gets started by the Checkmk agent and before it enters "
-"the scheduling phase."
+"after the scheduler gets started by the Checkmk agent and before it enters "
+"the scheduling phase. Note that on Linux systems, RCC is only supported for "
+"non-root agent deployments. See werk #19460 for details."
 msgstr ""
 "<a href=\"https://github.com/robocorp/rcc\" target=\"_blank\">RCC</a>バイナリ"
 "の助けを借りて、Robotmk スケジューラは Robot Framework スイートの実行に必要"
@@ -95463,6 +95464,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "RCC"
+#~ msgstr "CMC"
 
 #~ msgid ""
 #~ "At the time the report was created not all Checkmk sites were reachable. "

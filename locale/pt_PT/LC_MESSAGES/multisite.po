@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-06-04 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -56362,9 +56362,8 @@ msgstr "RAM utilizado"
 msgid "RAM used (averaged)"
 msgstr "Ler exe médio"
 
-#, fuzzy
-msgid "RCC"
-msgstr "CMC"
+msgid "RCC (non-root deployments on Linux only)"
+msgstr ""
 
 #, fuzzy
 msgid "RCC Remote server address"
@@ -90918,8 +90917,9 @@ msgid ""
 "Python environments required for the execution of Robot Framework suites. "
 "This eliminates the need to install and configure Python and all of its "
 "library packages on the target hosts. RCC environments are created right "
-"after the schedulder gets started by the Checkmk agent and before it enters "
-"the scheduling phase."
+"after the scheduler gets started by the Checkmk agent and before it enters "
+"the scheduling phase. Note that on Linux systems, RCC is only supported for "
+"non-root agent deployments. See werk #19460 for details."
 msgstr ""
 
 #, fuzzy
@@ -94218,7 +94218,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -94743,7 +94742,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -100476,6 +100474,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "RCC"
+#~ msgstr "CMC"
 
 #~ msgid ""
 #~ "At the time the report was created not all Checkmk sites were reachable. "

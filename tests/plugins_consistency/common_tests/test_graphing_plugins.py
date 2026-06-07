@@ -313,13 +313,10 @@ def test_bundles() -> None:
 
 _ALLOWED_BUNDLE_VIOLATIONS = {
     # FIXME CMK-33780
-    "cmk.plugins.azure_v2_extended.graphing.azure_natgateways_packets",
     "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_database_container_throughput",
     "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_storage",
     "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_database_container_requests",
     "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_database_requests",
-    "cmk.plugins.azure_v2_extended.graphing.azure_natgateways_throughput",
-    "cmk.plugins.azure_v2_extended.graphing.azure_natgateways_connections",
     "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_throughput",
     "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_database_throughput",
     "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_requests",

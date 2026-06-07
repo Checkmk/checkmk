@@ -293,7 +293,6 @@ def test_bundles() -> None:
         ).items()
         if (bundles := metric_names.bundles)
         and (len(bundles) > 1 or set(metric_names.from_metrics) != set(bundles[0]))
-        and module not in _ALLOWED_BUNDLE_VIOLATIONS
     ]
 
     assert not [m for m, *_ in offenders]
@@ -309,9 +308,6 @@ def test_bundles() -> None:
             " definitions or exactly one cohesive bundle of metric, perfometer or graph"
             " template definitions."
         )
-
-
-_ALLOWED_BUNDLE_VIOLATIONS: set[str] = set()
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {

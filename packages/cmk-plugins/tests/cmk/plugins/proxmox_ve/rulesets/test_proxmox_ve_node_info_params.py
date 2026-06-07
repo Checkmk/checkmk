@@ -89,6 +89,43 @@ from cmk.plugins.proxmox_ve.rulesets.proxmox_ve_node_info_params import (
             {},
             id="Fix wrong default value 'active': 0 -> 'online': 0. Do not change already migrated values",
         ),
+        pytest.param(
+            {
+                "required_node_status": NODE_STATUS_DEFAULT,
+                "required_subscription_status": SUBSCRIPTION_STATUS_DEFAULT,
+                "subscription_expiration_days_levels": ("fixed", (30, 7)),
+            },
+            NODE_STATUS_DEFAULT,
+            SUBSCRIPTION_STATUS_DEFAULT,
+            id="Already-valid dicts pass through unchanged",
+        ),
+        pytest.param(
+            {
+                "required_node_status": None,
+                "required_subscription_status": SUBSCRIPTION_STATUS_DEFAULT,
+                "subscription_expiration_days_levels": ("fixed", (30, 7)),
+            },
+            {},
+            SUBSCRIPTION_STATUS_DEFAULT,
+            id="Subscription dict with 'active' passes through unchanged — active is valid for subscription",
+        ),
+        pytest.param(
+            {
+                "required_node_status": None,
+                "required_subscription_status": {
+                    "new": 0,
+                    "online": 0,
+                    "notfound": 1,
+                    "invalid": 1,
+                    "expired": 2,
+                    "suspended": 1,
+                },
+                "subscription_expiration_days_levels": ("fixed", (30, 7)),
+            },
+            {},
+            SUBSCRIPTION_STATUS_DEFAULT,
+            id="Corrupted subscription dict with 'online' is repaired back to 'active'",
+        ),
     ],
 )
 def test_migrate_required_status(

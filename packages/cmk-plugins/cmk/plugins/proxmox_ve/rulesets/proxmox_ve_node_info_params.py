@@ -60,8 +60,10 @@ def _migrate_required_status(value: object, default_status: Mapping[str, int]) -
         return {}
 
     if isinstance(value, dict):
-        if "active" in value:
+        if "active" in value and "online" in default_status:
             value["online"] = value.pop("active")
+        elif "online" in value and "online" not in default_status and "active" in default_status:
+            value["active"] = value.pop("online")
         return value
 
     if isinstance(value, str):

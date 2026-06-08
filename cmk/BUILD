@@ -76,21 +76,11 @@ py_library(
 
 py_cmk_package(
     name = "whl_contents",
-    # Proto py_library outputs whose owner is the workspace-root BUILD.
-    include_labels = [
-        "@@//:config_proto",
-        "@@//:cycletime_proto",
-        "@@//:state_proto",
-    ],
-    # The monolithic cmk wheel bundles only files from the //cmk/ tree. //packages/cmk-* and most of
-    # //non-free/packages/cmk-* ship in their own wheels and must be filtered out.
-    include_roots = [
-        "cmk",
-        # TODO: cmc-protocols and cmk-multi-tenancy live under non-free/packages but are bundled into
-        # the cmk wheel (they also publish their own wheels). Clean up separately.
-        "non-free/packages/cmc-protocols",
-        "non-free/packages/cmk-multi-tenancy",
-    ],
+    # The monolithic cmk wheel bundles only files from the //cmk/ tree. Everything under
+    # //packages/cmk-* and //non-free/packages/cmk-* ships in its own wheel that is deployed
+    # separately via //omd:edition_deps, so it must be filtered out here to avoid shipping
+    # it twice.
+    include_roots = ["cmk"],
     deps = select({
         "@cmk//edition:cloud": ["//cmk/editions/nonfree:cloud"],
         "@cmk//edition:community": ["//cmk/editions:community"],

@@ -4,7 +4,7 @@ Stock `py_package` filters by *Python import path* (`packages = ["cmk"]` keeps a
 path starts with `cmk/`). That is too coarse when several Bazel packages share an import namespace but
 ship in separate wheels (e.g. //packages/cmk-ccc exposes `cmk.ccc.*`). This rule filters by *Bazel
 target owner* instead: it walks the transitive Python sources of its deps and keeps only files whose
-owning target sits under one of `include_roots` or matches one of `include_labels`.
+owning target sits under one of `include_roots`.
 """
 
 load("@rules_python//python:defs.bzl", "PyInfo")
@@ -41,7 +41,7 @@ def _py_cmk_package_impl(ctx):
         owner = f.owner
         if owner == None or owner.workspace_name != "":
             continue
-        if _under_root(owner.package, ctx.attr.include_roots) or str(owner) in ctx.attr.include_labels:
+        if _under_root(owner.package, ctx.attr.include_roots):
             in_scope.append(f)
 
     return [DefaultInfo(files = depset(direct = in_scope))]
@@ -52,9 +52,6 @@ py_cmk_package = rule(
         "deps": attr.label_list(
             providers = [[PyInfo]],
             doc = "Targets to collect filtered sources from.",
-        ),
-        "include_labels": attr.string_list(
-            doc = "Explicit target labels to keep regardless of their package (e.g. workspace-root outputs).",
         ),
         "include_roots": attr.string_list(
             doc = "Bazel package paths (e.g. \"cmk\") whose owned files are kept, including subpackages.",

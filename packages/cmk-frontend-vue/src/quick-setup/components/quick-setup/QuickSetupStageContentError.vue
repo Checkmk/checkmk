@@ -33,7 +33,9 @@ const detailedErrors = computed<Array<DetailedError>>(() => props.errors.filter(
 
 <template>
   <CmkAlertBox v-for="error in detailedErrors" :key="error.details" variant="error">
-    <CmkHtml :html="error.message" />
+    <div class="qs-stage-content-error__message">
+      <CmkHtml :html="error.message" />
+    </div>
     <CmkButton v-if="details === false" @click="details = true">{{ _t('Show details') }}</CmkButton>
     <div v-else>
       <pre>{{ error.details }}</pre>
@@ -41,7 +43,17 @@ const detailedErrors = computed<Array<DetailedError>>(() => props.errors.filter(
   </CmkAlertBox>
   <CmkAlertBox v-if="validationErrors.length > 0" variant="error">
     <div v-for="error in validationErrors" :key="error">
-      <CmkHtml :html="error" />
+      <div class="qs-stage-content-error__message">
+        <CmkHtml :html="error" />
+      </div>
     </div>
   </CmkAlertBox>
 </template>
+
+<style scoped>
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+.qs-stage-content-error__message :deep(pre) {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+</style>

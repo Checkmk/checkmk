@@ -80,7 +80,7 @@ def branch_name() {
             // e.g. 2.3.0 (stable) + 0.1.0 = 2.4.0
             return env.GERRIT_BRANCH ?: get_branch_version("${checkout_dir}")
         } else {
-            return env.GERRIT_BRANCH ?: "master"
+            return env.GERRIT_BRANCH ?: "2.3.0";
         }
     } else {
         // defined in global-defaults.yml
@@ -98,7 +98,7 @@ def safe_branch_name() {
             // e.g. 2.5.0 (stable) + 0.1.0 = 2.6.0
             really_safe_name = get_branch_version("${checkout_dir}").replaceAll("/", "-").replaceAll("\\+security", "");
         } else {
-            really_safe_name = "master";
+            really_safe_name = "2.3.0";
         }
     }
     return really_safe_name;

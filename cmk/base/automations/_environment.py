@@ -44,6 +44,7 @@ from cmk.base.core.active_config_layout import RELATIVE_PATH_TRUSTED_CAS
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.checkengine.checking import ServiceConfigurer
+from cmk.checkengine.plugin_backend import extract_known_discovery_rulesets
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.fetchers import FetcherTrigger
 from cmk.utils import ip_lookup
@@ -108,6 +109,7 @@ class AutomationEnvironment:
             plugins = load_plugins()
         if loading_result is None:
             loading_result = load_config(
+                discovery_rulesets=extract_known_discovery_rulesets(plugins),
                 get_builtin_host_labels=app.get_builtin_host_labels,
                 edition=app.edition,
             )

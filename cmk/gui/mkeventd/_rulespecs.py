@@ -26,17 +26,13 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.gui.watolib.rulespec_groups import (
-    RulespecGroupCheckParametersApplications,
-    RulespecGroupCheckParametersDiscovery,
-)
+from cmk.gui.watolib.rulespec_groups import RulespecGroupCheckParametersApplications
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithoutItem,
     HostRulespec,
     rulespec_registry,
     ServiceRulespec,
 )
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _item_help_logwatch_rules() -> str:
@@ -225,9 +221,9 @@ def _valuespec_logwatch_groups() -> Dictionary:
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupCheckParametersDiscovery,
+        group=RulespecGroupCheckParametersApplications,
         match_type="all",
-        name=RuleGroup.DiscoveryParameters("logwatch_groups"),
+        name="logwatch_groups",
         valuespec=_valuespec_logwatch_groups,
     )
 )

@@ -12,7 +12,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
 )
 from cmk.gui.valuespec import Dictionary, ListOf, Migrate, RegExp, TextInput, Tuple
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_sap_value_groups() -> Migrate[dict[str, Any]]:
@@ -66,7 +65,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
-        name=RuleGroup.DiscoveryParameters("sap_value_groups"),
+        name="sap_value_groups",
         valuespec=_valuespec_sap_value_groups,
     )
 )

@@ -41,7 +41,6 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _transform_discards(v: tuple[float, float] | Mapping[str, object]) -> Mapping[str, object]:
@@ -444,7 +443,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
-        name=RuleGroup.DiscoveryParameters("inventory_if_rules"),
+        name="inventory_if_rules",
         valuespec=_valuespec_inventory_if_rules,
     )
 )

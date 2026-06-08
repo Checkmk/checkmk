@@ -12,16 +12,9 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.fields import base
 from cmk.gui.openapi.restful_objects import response_schemas
 
-_RULESET_NAME_HINT = (
-    "Note: Since Checkmk 3.0 discovery rulesets are referred to by"
-    " `discovery_parameters:<OLD NAME>`. Using `<OLD NAME>` on its"
-    " own will stop working in Checkmk 3.1."
-)
-
-
 RULESET_NAME = {
     "ruleset_name": fields.String(
-        description=f"The name of the ruleset. {_RULESET_NAME_HINT}",
+        description="The name of the ruleset.",
         example="host_groups",
         required=True,
     )
@@ -30,7 +23,7 @@ RULESET_NAME = {
 
 class RulesetExtensions(base.BaseSchema):
     name = fields.String(
-        description=f"The name of the ruleset. {_RULESET_NAME_HINT}",
+        description="The name of the ruleset",
         example="host_groups",
     )
     folder = gui_fields.FolderField(required=True, example="~router")

@@ -13,7 +13,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
 )
 from cmk.gui.valuespec import Dictionary, Integer, ListOf, TextInput, Tuple
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_winperf_msx_queues_inventory() -> Dictionary:
@@ -58,7 +57,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name=RuleGroup.DiscoveryParameters("winperf_msx_queues_inventory"),
+        name="winperf_msx_queues_inventory",
         valuespec=_valuespec_winperf_msx_queues_inventory,
     )
 )

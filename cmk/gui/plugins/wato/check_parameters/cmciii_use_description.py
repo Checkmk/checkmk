@@ -11,7 +11,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
 )
 from cmk.gui.valuespec import Dictionary, DropdownChoice
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_discovery_cmciii() -> Dictionary:
@@ -42,7 +41,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name=RuleGroup.DiscoveryParameters("discovery_cmciii"),
+        name="discovery_cmciii",
         valuespec=_valuespec_discovery_cmciii,
     )
 )

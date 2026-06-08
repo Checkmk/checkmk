@@ -89,7 +89,7 @@ def _create_rule(
     description: str = "",
     documentation_url: str = "",
     disabled: bool = False,
-    ruleset: str = RuleGroup.DiscoveryParameters("inventory_df_rules"),
+    ruleset: str = "inventory_df_rules",
     value: dict[str, Any] | list[Any] | tuple | str | None = None,
     value_raw: str | None = DEFAULT_VALUE_RAW,
     conditions: RuleConditions | None = None,
@@ -244,15 +244,8 @@ def test_openapi_create_rule(
     assert ext["conditions"].items() >= values["conditions"].items()
     # Check that the format on disk is as expected.
     rules_mk = paths.omd_root / "etc/check_mk/conf.d/wato/rules.mk"
-
-    # Bundled rulesets like `discovery_parameters:<name>` / `checkgroup_parameters:<name>`
-    # are stored as `<parent>['<name>'] = [...]` and therefore need an initial empty
-    # dict for the parent variable in the exec context.
-    parent, subkey = values["ruleset"].split(":", 1)
-    default: dict[str, object] = {parent: {}} if subkey else {}
-    environ = load_mk_file(rules_mk, default=default, lock=False)
-    stored = environ[parent][subkey] if subkey else environ[parent]  # type: ignore[index]
-    stored_condition = stored[0]["condition"]  # type: ignore[index]
+    environ = load_mk_file(rules_mk, default={}, lock=False)
+    stored_condition = environ[values["ruleset"]][0]["condition"]  # type: ignore[index]
     expected_condition = {
         "host_tags": {"criticality": "prod", "networking": {"$ne": "wan"}},
         "host_label_groups": [("and", [("and", "os:windows")])],

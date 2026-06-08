@@ -6,7 +6,7 @@
 import argparse
 import logging
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import assert_never
 
 from cmk.ccc.version import edition
@@ -62,15 +62,11 @@ from cmk.update_config.plugins.actions.rulesets import (
     validate_rule_values,
 )
 from cmk.update_config.plugins.lib.rulesets import (
-    transform_replaced_wato_rulesets,
     transform_wato_rulesets_params,
 )
 from cmk.utils import paths
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.rulesets.ruleset_matcher import (
-    RulesetName,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -147,9 +143,7 @@ def _mkps_modules(mkps: Sequence[str]) -> set[str]:
     return modules
 
 
-def _discover_load_plugins(
-    modules: set[str], include_bakery: bool
-) -> tuple[set[str], Mapping[RulesetName, RulesetName]]:
+def _discover_load_plugins(modules: set[str], include_bakery: bool) -> set[str]:
     used_entry_points = (
         entry_point_prefixes()
         if include_bakery
@@ -177,8 +171,6 @@ def _discover_load_plugins(
                 return RuleGroup.AgentConfig(plugin.name)
             case CheckParameters():
                 return RuleGroup.CheckgroupParameters(plugin.name)
-            case DiscoveryParameters():
-                return RuleGroup.DiscoveryParameters(plugin.name)
             case EnforcedService():
                 return RuleGroup.StaticChecks(plugin.name)
             case InventoryParameters():
@@ -187,7 +179,7 @@ def _discover_load_plugins(
                 return RuleGroup.NotificationParameters(plugin.name)
             case SpecialAgent():
                 return RuleGroup.SpecialAgents(plugin.name)
-            case AgentAccess() | Host() | SNMP():
+            case AgentAccess() | Host() | DiscoveryParameters() | SNMP():
                 return str(plugin.name)
             case Service():
                 match plugin.condition:
@@ -198,22 +190,10 @@ def _discover_load_plugins(
             case other:
                 assert_never(other)
 
-    # If the MKP was disabled when the 2.5 -> 3.0 discovery_parameters consolidation ran
-    # during omd update, the customer's rules.mk still has the rules under the
-    # bare legacy name. Build a rename map so the loader below moves those
-    # entries under `discovery_parameters:<name>` before the value transform.
-    # starting from 3.1 this can be removed ( = no renames anymore)
-    renames = {
-        RulesetName(plugin.name): RulesetName(RuleGroup.DiscoveryParameters(plugin.name))
-        for plugin in discovered.plugins.values()
-        if isinstance(plugin, DiscoveryParameters)
-    }
-    return {_add_name_prefix(el) for el in discovered.plugins.values()}, renames
+    return {_add_name_prefix(el) for el in discovered.plugins.values()}
 
 
-def _load_and_transform_rulesets(
-    discovered_names: set[str], renames: Mapping[RulesetName, RulesetName]
-) -> None:
+def _load_and_transform_rulesets(discovered_names: set[str]) -> None:
     main_modules.register(edition(paths.omd_root))
 
     if errors := main_modules.get_failed_plugins():
@@ -221,9 +201,6 @@ def _load_and_transform_rulesets(
 
     with disable_redis(), gui_context(), SuperUserContext():
         all_rulesets = AllRulesets.load_all_rulesets()
-
-        transform_replaced_wato_rulesets(logger, all_rulesets, renames)
-
         discovered_rulesets = {
             ruleset_name: ruleset
             for ruleset_name, ruleset in all_rulesets.get_rulesets().items()
@@ -234,7 +211,7 @@ def _load_and_transform_rulesets(
             logger, (rulesets := RulesetCollection(discovered_rulesets)), raise_errors=True
         )
 
-        if not transformed_rulesets and not renames:
+        if not transformed_rulesets:
             logger.info("No rulesets transformed")
             return
         sys.stdout.write("Successfully migrated rules for rulesets:\n")
@@ -255,15 +232,13 @@ def migrate_extension_rulesets(args: argparse.Namespace) -> int:
     if not modules:
         return 0
 
-    affected_ruleset_names, renames = _discover_load_plugins(
-        modules, include_bakery=args.include_bakery
-    )
+    affected_ruleset_names = _discover_load_plugins(modules, include_bakery=args.include_bakery)
     if not affected_ruleset_names:
         logger.info("No rule sets contained in enabled extensions")
         return 0
 
     logger.debug("Discovered rule sets in enabled extensions: %s", affected_ruleset_names)
-    _load_and_transform_rulesets(affected_ruleset_names, renames)
+    _load_and_transform_rulesets(affected_ruleset_names)
 
     return 0
 

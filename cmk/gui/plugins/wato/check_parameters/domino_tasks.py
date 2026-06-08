@@ -25,7 +25,6 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _vs_levels(help_txt: str) -> Tuple:
@@ -146,7 +145,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
-        name=RuleGroup.DiscoveryParameters("inv_domino_tasks_rules"),
+        name="inv_domino_tasks_rules",
         valuespec=_valuespec_inv_domino_tasks_rules,
     )
 )

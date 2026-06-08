@@ -27,6 +27,7 @@ class UpdateRulesets(UpdateAction):
     def __call__(self, logger: Logger) -> None:
         omd_edition = edition(utils_paths.omd_root)
         loading_result = base_config.load(
+            discovery_rulesets=(),
             get_builtin_host_labels=make_app(omd_edition).get_builtin_host_labels,
             edition=omd_edition,
         )

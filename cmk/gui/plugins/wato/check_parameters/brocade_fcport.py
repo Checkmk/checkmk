@@ -23,7 +23,6 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.utils.rulesets.definition import RuleGroup
 
 _brocade_fcport_adm_choices = [
     (1, "online(1)"),
@@ -141,7 +140,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name=RuleGroup.DiscoveryParameters("brocade_fcport_inventory"),
+        name="brocade_fcport_inventory",
         valuespec=_valuespec_brocade_fcport_inventory,
     )
 )

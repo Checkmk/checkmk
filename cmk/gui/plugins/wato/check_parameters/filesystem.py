@@ -26,7 +26,6 @@ from cmk.gui.valuespec import (
     TextInput,
     TextOrRegExp,
 )
-from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _validate_discovery_filesystem_params(value: dict[str, Any], varprefix: str) -> None:
@@ -95,7 +94,7 @@ def _valuespec_inventory_df_rules() -> Dictionary:
                         ("uuid_and_mountpoint", _("UUID and mount point")),
                     ],
                     help=_(
-                        "Specifies how the <a href='wato.py?mode=edit_ruleset&varname=discovery_parameters%3Afilesystem_groups'>File system grouping patterns</a> feature processes this file system."
+                        "Specifies how the <a href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>File system grouping patterns</a> feature processes this file system."
                     ),
                     default_value="mountpoint",
                 ),
@@ -134,7 +133,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name=RuleGroup.DiscoveryParameters("inventory_df_rules"),
+        name="inventory_df_rules",
         valuespec=_valuespec_inventory_df_rules,
     )
 )
@@ -158,7 +157,7 @@ def _list_of_filesystem_groups_specs_elements(*, show_df_help: bool = False) -> 
             "the check <tt>df</tt>, the pattern matches either the mount "
             "point or the combination of volume and mount point, "
             "depending on the configuration in "
-            "<a href='wato.py?mode=edit_ruleset&varname=discovery_parameters%3Ainventory_df_rules'>"
+            "<a href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>"
             "File system discovery</a>."
         )
 
@@ -225,7 +224,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
-        name=RuleGroup.DiscoveryParameters("filesystem_groups"),
+        name="filesystem_groups",
         valuespec=_valuespec_filesystem_groups,
     )
 )
@@ -279,7 +278,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="list",
-        name=RuleGroup.DiscoveryParameters("discovery_qtree"),
+        name="discovery_qtree",
         valuespec=_discovery_valuespec_qtree_quota,
     )
 )

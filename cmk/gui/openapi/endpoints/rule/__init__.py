@@ -58,7 +58,6 @@ from cmk.utils.rulesets.conditions import (
     allow_host_label_conditions,
     allow_service_label_conditions,
 )
-from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec
 
 
@@ -537,13 +536,7 @@ def _retrieve_from_rulesets(rulesets: RulesetCollection, ruleset_name: str) -> R
     try:
         ruleset = rulesets.get(ruleset_name)
     except KeyError:
-        # We renamed the discovery rules from 2.5 -> 3.0
-        # To not break existing API clients we check for the old name if the new one is not found.
-        # Can be removed after 3.0 is branched off.
-        try:
-            ruleset = rulesets.get(RuleGroup.DiscoveryParameters(ruleset_name))
-        except KeyError:
-            raise ruleset_exception
+        raise ruleset_exception
 
     if not visible_ruleset(ruleset.rulespec.name):
         raise ruleset_exception

@@ -1513,7 +1513,7 @@ def test_convert_to_legacy_rulespec_group(
                 help_text=api_v1.Help("help text"),
             ),
             legacy_rulespecs.HostRulespec(
-                name=RuleGroup.DiscoveryParameters("test_rulespec"),
+                name="test_rulespec",
                 group=_to_generated_builtin_sub_group(
                     legacy_wato.RulespecGroupDiscoveryCheckParameters,
                     "Applications",

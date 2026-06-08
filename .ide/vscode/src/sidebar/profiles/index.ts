@@ -12,15 +12,16 @@ import sectionCss from './style.css'
 
 export async function handleMessage(
   msg: WebviewMessage,
-  { refreshAll }: SectionContext
+  { refreshProfiles }: SectionContext
 ): Promise<boolean> {
   switch (msg.type) {
     case 'toggleProfile':
+      // The webview shows a spinner client-side on click (toggle-profile is an
+      // ASYNC_ACTION) and start()/stop() drive the status-bar spinner — so we
+      // must NOT pre-set loading here: toggle() bails out when loading is true.
       log(`Toggle profile: ${msg.name}`)
-      profileManager.setLoading(msg.name as string, true)
-      refreshAll()
       await profileManager.toggle(msg.name as string)
-      refreshAll()
+      refreshProfiles()
       return true
     default:
       return false

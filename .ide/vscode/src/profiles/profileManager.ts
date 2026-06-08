@@ -141,14 +141,6 @@ export function getAll(): ProfileInfo[] {
   }))
 }
 
-export function setLoading(name: string, loading: boolean): void {
-  const family = families[name]
-  if (!family) return
-  family.loading = loading
-  if (loading) showLoading(name)
-  else updateStatusBarItem(name)
-}
-
 export function setIssues(name: string, hasIssues: boolean): void {
   const family = families[name]
   if (!family) return

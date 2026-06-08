@@ -340,7 +340,7 @@ async function handleMessage(msg: WebviewMessage): Promise<void> {
     return
   }
 
-  const ctx = { refreshAll, refreshOmd, showSectionLoading }
+  const ctx = { refreshAll, refreshOmd, refreshProfiles, showSectionLoading }
   for (const mod of Object.values(sectionModules)) {
     if (await mod.handleMessage(msg, ctx)) return
   }
@@ -364,6 +364,24 @@ export function refreshOmd(): void {
   _stateCache = { ..._stateCache, omdSites, activeProxies }
   updateIssues(_issuesView, _issuesProvider, _stateCache)
   _providers['omd']?.refresh()
+}
+
+/**
+ * Re-render after a profile toggle using the existing state cache. Cheaper
+ * than `refreshAll()`: re-reads only the `profiles` slice (no bazel build
+ * status / OMD / mypy recompute) and re-renders the views that reflect
+ * profile state. Stale per-profile build severity self-corrects on the next
+ * overview tick / watcher-driven `refreshAll()`.
+ */
+export function refreshProfiles(): void {
+  if (!_stateCache) {
+    refreshAll()
+    return
+  }
+  _stateCache = { ..._stateCache, profiles: profileManager.getAll() }
+  updateIssues(_issuesView, _issuesProvider, _stateCache)
+  _providers['profiles']?.refresh()
+  _providers['overview']?.refresh()
 }
 
 export function refreshAll(): void {

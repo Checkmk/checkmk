@@ -147,6 +147,7 @@ export interface StateCache {
 export interface SectionContext {
   refreshAll: () => void
   refreshOmd: () => void
+  refreshProfiles: () => void
   showSectionLoading: (...sections: string[]) => void
 }
 

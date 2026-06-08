@@ -43,7 +43,7 @@ import { registerGerritPush, registerSandboxBranch, registerScm } from './scm'
 import { registerGitFixers } from './scm/gitState'
 import { registerIdePickers } from './setup/idePicker'
 import { registerTemplates } from './setup/templates'
-import { refreshAll, refreshOmd, registerSidebar } from './sidebar'
+import { refreshAll, refreshOmd, refreshProfiles, registerSidebar } from './sidebar'
 import { registerBazelTestRunner } from './testing/bazelTest'
 import { registerBazelTestController } from './testing/bazelTestController'
 import { registerBazelTestsConfigView } from './testing/bazelTestsConfigView'
@@ -279,7 +279,7 @@ export function activate(context: vscode.ExtensionContext): void {
     cppDisable
   )
 
-  profileManager.setOnRefresh(refreshAll)
+  profileManager.setOnRefresh(refreshProfiles)
   profileManager.init(context)
   registerProfileDetector(context)
 

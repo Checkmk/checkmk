@@ -181,7 +181,7 @@ def test_get_services_unexpected_result_or_column(local_connection: mock.Mock) -
                 ],
             ],
             {
-                "test_command_1": {"count": 0, "count_hosts": 0, "count_disabled": 2},
+                "check_mk-test_command_1": {"count": 0, "count_hosts": 0, "count_disabled": 2},
             },
         ),
         (
@@ -198,8 +198,8 @@ def test_get_services_unexpected_result_or_column(local_connection: mock.Mock) -
                 ],
             ],
             {
-                "test_command_1": {"count": 0, "count_hosts": 0, "count_disabled": 1},
-                "test_command_2": {"count": 0, "count_hosts": 0, "count_disabled": 2},
+                "check_mk-test_command_1": {"count": 0, "count_hosts": 0, "count_disabled": 1},
+                "check_mk-test_command_2": {"count": 0, "count_hosts": 0, "count_disabled": 2},
             },
         ),
     ],

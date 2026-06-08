@@ -747,6 +747,10 @@ def _add_template_attachments(
             elements.remove("longoutput")
         if "abstime" in elements:
             elements.remove("abstime")
+        if "omdsite" in elements:
+            elements.remove("omdsite")
+        if "address" in elements:
+            elements.remove("address")
         if elements:
             attachments.append(attach_file(icon="additional.png"))
     if context.get("PARAMETER_SVC_LABELS") or context.get("PARAMETER_HOST_LABELS"):

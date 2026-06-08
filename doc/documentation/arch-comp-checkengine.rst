@@ -7,7 +7,7 @@ Check engine
 Introduction and goals
 ======================
 
-WIP
+This package contains the business logic for the checkers.
 
 Architecture
 ============
@@ -50,3 +50,26 @@ Nagios-compatible format.
    Fetcher - Source
    Core -- CheckEngine
    CheckEngine - CheckAPI
+
+The typical sequence of events is
+
+.. uml::
+
+   actor User
+   participant Fetcher
+   participant Parser
+   participant Summarizer
+
+   User -> Fetcher : fetch()
+   Fetcher --> Fetcher : I/O
+   Fetcher -> Parser : parse(RawData)
+   Parser --> Parser : parse data
+   Parser --> Parser : cache data
+   Parser -> Summarizer : summarize(HostSections)
+   Summarizer --> User : ServiceCheckResult
+
+.. seealso::
+
+   :py:mod:`cmk.fetchers` for the fetchers.
+
+   ``cmk.base.sources``: The entry point into the core helpers from base.

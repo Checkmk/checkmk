@@ -7,7 +7,7 @@ import { cmkAjax } from '@/lib/ajax'
 
 export async function fetchMetricColor<OutputType>(
   metricName: string,
-  metricType: 'average' | 'min' | 'max' | 'warn' | 'crit'
+  metricType: 'average' | 'min' | 'max' | 'warn' | 'crit' | 'warn_lower' | 'crit_lower'
 ): Promise<OutputType> {
   return cmkAjax('ajax_fetch_metric_color.py', {
     metric_name: metricName,

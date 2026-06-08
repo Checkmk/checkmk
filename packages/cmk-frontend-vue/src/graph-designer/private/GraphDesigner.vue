@@ -110,10 +110,12 @@ const consolidationTypeSuggestions: Suggestion[] = [
   { name: 'max', title: _t('Maximum') }
 ]
 
-const dataScalarType = ref<'warn' | 'crit' | 'min' | 'max'>('crit')
+const dataScalarType = ref<'warn' | 'crit' | 'warn_lower' | 'crit_lower' | 'min' | 'max'>('crit')
 const scalarTypeSuggestions: Suggestion[] = [
   { name: 'warn', title: _t('Warning') },
   { name: 'crit', title: _t('Critical') },
+  { name: 'warn_lower', title: _t('Warning (lower)') },
+  { name: 'crit_lower', title: _t('Critical (lower)') },
   { name: 'min', title: _t('Minimum') },
   { name: 'max', title: _t('Maximum') }
 ]

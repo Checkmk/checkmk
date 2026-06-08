@@ -226,7 +226,7 @@
         },
         "scalar_type": {
           "type": "string",
-          "enum": ["warn", "crit", "min", "max"]
+          "enum": ["warn", "crit", "warn_lower", "crit_lower", "min", "max"]
         }
       },
       "required": [

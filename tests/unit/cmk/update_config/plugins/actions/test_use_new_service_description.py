@@ -9,6 +9,8 @@ from contextlib import contextmanager
 
 import pytest
 
+from livestatus import SiteConfiguration, SiteConfigurations, SiteId
+
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import Item
 
@@ -18,6 +20,7 @@ from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
+from cmk.gui.watolib.sites import site_management_registry
 
 from cmk.update_config.plugins.actions.use_new_service_description import (
     UpdateUseNewServiceDescription,
@@ -54,6 +57,42 @@ def _setup_global_settings(global_settings_setup: GlobalSettings) -> Generator[N
         yield
     finally:
         save_global_settings(original_global_settings)
+
+
+@contextmanager
+def _setup_remote_site_globals(site_id: str, site_globals: GlobalSettings) -> Generator[None]:
+    site_mgmt = site_management_registry["site_management"]
+    original_sites = site_mgmt.load_sites()
+    try:
+        site_mgmt.save_sites(
+            SiteConfigurations(
+                {
+                    **original_sites,
+                    SiteId(site_id): SiteConfiguration(
+                        alias="Test Remote Site",
+                        socket=("local", None),
+                        proxy=None,
+                        disable_wato=False,
+                        disabled=False,
+                        insecure=False,
+                        url_prefix=f"/{site_id}/",
+                        multisiteurl="",
+                        persist=False,
+                        replicate_ec=False,
+                        replication=None,
+                        timeout=10,
+                        user_login=True,
+                        # Non-empty globals make the site's globals editable, see
+                        # site_globals_editable()
+                        globals=dict(site_globals),
+                    ),
+                }
+            ),
+            activate=False,
+        )
+        yield
+    finally:
+        site_mgmt.save_sites(original_sites, activate=False)
 
 
 @pytest.mark.usefixtures("request_context")
@@ -127,6 +166,35 @@ def test_update_action_new_format(
         assert (
             global_settings["use_new_descriptions_for"]
             == expected_global_settings["use_new_descriptions_for"]
+        )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_update_action_updates_remote_site_specific_settings() -> None:
+    """Test that the update action updates site specific settings stored per remote site in the
+    central site configuration (sites.mk 'globals'), not only the installation wide global.mk."""
+    site_id = "remote_test_site"
+    initial_site_globals: GlobalSettings = {
+        "use_new_descriptions_for": {
+            plugin: True
+            for plugin in set(_USE_NEW_DESCRIPTIONS_FOR_SETTING_PLUGINS) - {"casa_cpu_temp"}
+        }
+    }
+    expected_use_new_descriptions_for = {
+        plugin: plugin != "casa_cpu_temp" for plugin in _USE_NEW_DESCRIPTIONS_FOR_SETTING_PLUGINS
+    }
+    with _setup_global_settings({}), _setup_remote_site_globals(site_id, initial_site_globals):
+        action = UpdateUseNewServiceDescription(
+            name="use_new_service_description",
+            title="Use new service description",
+            sort_index=17,  # before rulesets and global settings
+        )
+        action(logging.getLogger())
+
+        sites = site_management_registry["site_management"].load_sites()
+        assert (
+            sites[SiteId(site_id)]["globals"]["use_new_descriptions_for"]
+            == expected_use_new_descriptions_for
         )
 
 

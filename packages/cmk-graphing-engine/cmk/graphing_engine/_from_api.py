@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Sequence
 from typing import assert_never
 
 from cmk.graphing.v1 import graphs as graphs_v1
@@ -187,6 +187,47 @@ def _parse_quantity(
             )
         case _:
             assert_never(quantity)
+
+
+def _metric_names_in_quantity(quantity: _ApiQuantity) -> Iterable[MetricName]:
+    match quantity:
+        case str():
+            yield MetricName(quantity)
+        case metrics_v1.Constant():
+            return
+        case (
+            metrics_v2_unstable.LowerWarningOf()
+            | metrics_v2_unstable.LowerCriticalOf()
+            | metrics_v1.WarningOf()
+            | metrics_v1.CriticalOf()
+            | metrics_v1.MinimumOf()
+            | metrics_v1.MaximumOf()
+        ):
+            yield MetricName(quantity.metric_name)
+        case metrics_v1.Sum():
+            for summand in quantity.summands:
+                yield from _metric_names_in_quantity(summand)
+        case metrics_v1.Product():
+            for factor in quantity.factors:
+                yield from _metric_names_in_quantity(factor)
+        case metrics_v1.Difference():
+            yield from _metric_names_in_quantity(quantity.minuend)
+            yield from _metric_names_in_quantity(quantity.subtrahend)
+        case metrics_v1.Fraction():
+            yield from _metric_names_in_quantity(quantity.dividend)
+            yield from _metric_names_in_quantity(quantity.divisor)
+        case _:
+            assert_never(quantity)
+
+
+def metric_names_of_graph(graph: graphs_v1.Graph) -> Sequence[MetricName]:
+    return list(
+        set(
+            name
+            for quantity in (*graph.compound_lines, *graph.simple_lines)
+            for name in _metric_names_in_quantity(quantity)
+        )
+    )
 
 
 def _parse_bound(

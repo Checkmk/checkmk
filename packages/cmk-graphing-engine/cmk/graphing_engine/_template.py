@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Container, Sequence
+from collections.abc import Callable, Container, Sequence
 from dataclasses import dataclass
+
+from cmk.graphing.v1 import graphs as graphs_v1
 
 from ._discovery import DiscoveredGraph
 from ._fetch import FetchRRD
-from ._objects import Bidirectional, Graph, MetricName, StackGroup
+from ._from_api import metric_names_of_graph, parse_graph_from_api
+from ._objects import Graph, MetricName, StackGroup
 from ._options import CommonOptions, ServiceRef
 
 
@@ -16,7 +19,8 @@ from ._options import CommonOptions, ServiceRef
 class TemplateDiscoveryOptions:
     common: CommonOptions
     service: ServiceRef
-    registered_graphs: Sequence[Graph | Bidirectional]
+    localizer: Callable[[str], str]
+    registered_graphs: Sequence[graphs_v1.Graph | graphs_v1.Bidirectional]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -26,13 +30,13 @@ class TemplateOptions:
 
 
 def _matches(
-    graph: Graph,
+    graph: graphs_v1.Graph,
     names: Sequence[MetricName],
     available: Container[MetricName],
 ) -> bool:
-    if any(name in available for name in graph.conflicting):
+    if any(MetricName(name) in available for name in graph.conflicting):
         return False
-    optional = frozenset(graph.optional)
+    optional = frozenset(MetricName(name) for name in graph.optional)
     return all(name in available for name in names if name not in optional)
 
 
@@ -43,16 +47,16 @@ class _GraphMatch:
 
 
 def _walk(
-    graph: Graph | Bidirectional,
+    graph: graphs_v1.Graph | graphs_v1.Bidirectional,
     available: Container[MetricName],
 ) -> _GraphMatch:
     match graph:
-        case Graph():
-            names = graph.metric_names()
+        case graphs_v1.Graph():
+            names = metric_names_of_graph(graph)
             return _GraphMatch(metric_names=names, matched=_matches(graph, names, available))
-        case Bidirectional():
-            lower_names = graph.lower.metric_names()
-            upper_names = graph.upper.metric_names()
+        case graphs_v1.Bidirectional():
+            lower_names = metric_names_of_graph(graph.lower)
+            upper_names = metric_names_of_graph(graph.upper)
             return _GraphMatch(
                 metric_names=list(set((*lower_names, *upper_names))),
                 matched=(
@@ -72,14 +76,14 @@ def discover_template_graphs(
 
     discovered: list[DiscoveredGraph[TemplateOptions]] = []
     claimed: set[MetricName] = set()
-    for graph in options.registered_graphs:
-        walk = _walk(graph, translated_metrics)
+    for plugin in options.registered_graphs:
+        walk = _walk(plugin, translated_metrics)
         if not walk.matched:
             continue
         claimed.update(walk.metric_names)
         discovered.append(
             DiscoveredGraph(
-                graph=graph,
+                graph=parse_graph_from_api(plugin, options.localizer),
                 options=post_options,
                 scalars={
                     name: bounds

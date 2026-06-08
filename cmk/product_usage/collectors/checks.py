@@ -92,7 +92,13 @@ def _get_disabled_services(connection: LocalConnection) -> Checks:
             if not match:
                 continue
 
-            ignored_service = match.group(1)
+            # The discovery output carries the bare check plugin name (e.g.
+            # "services"), but disabled services are always discovered passive
+            # Checkmk checks whose check command is "check_mk-<plugin>". The
+            # enabled services in `_get_services` are keyed by that check
+            # command, so re-add the prefix here to merge the disabled count
+            # into the same entry instead of a separate, prefix-less one.
+            ignored_service = f"check_mk-{match.group(1)}"
             value = checks.setdefault(
                 ignored_service,
                 {"count_hosts": 0, "count": 0, "count_disabled": 0},

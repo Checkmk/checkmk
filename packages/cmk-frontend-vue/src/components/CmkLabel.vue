@@ -25,7 +25,8 @@ const labelVariants = cva('', {
     },
     cursor: {
       default: '',
-      pointer: 'cmk-label--cursor-pointer'
+      pointer: 'cmk-label--cursor-pointer',
+      inherit: 'cmk-label--cursor-inherit'
     }
   },
   defaultVariants: {
@@ -95,6 +96,10 @@ label {
 
   &.cmk-label--cursor-pointer {
     cursor: pointer;
+  }
+
+  &.cmk-label--cursor-inherit {
+    cursor: inherit;
   }
 }
 

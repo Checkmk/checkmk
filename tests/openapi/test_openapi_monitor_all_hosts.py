@@ -41,6 +41,18 @@ class TestMonitorHostsQueryParamValidation:
         resp = clients.MonitorHosts.list_all(limit=1_000_000, expect_ok=False)
         assert resp.status_code == 400
 
+    @pytest.mark.parametrize(
+        "sort",
+        [
+            pytest.param(["nameasc"], id="missing colon separator"),
+            pytest.param(["invalid:asc"], id="invalid column"),
+            pytest.param(["name:invalid"], id="invalid direction"),
+        ],
+    )
+    def test_invalid_sort_params(self, clients: ClientRegistry, sort: list[str]) -> None:
+        resp = clients.MonitorHosts.list_all(limit=100, sort=sort, expect_ok=False)
+        assert resp.status_code == 400
+
 
 class TestMonitorHostsResponse:
     @property
@@ -213,6 +225,7 @@ class TestMonitorHostsResponse:
                 "GET hosts",
                 "Columns: name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending",
                 *search_filter,
+                "OrderBy: name asc",
                 f"Limit: {self.limit}",
             ]
         )
@@ -237,6 +250,7 @@ class TestMonitorHostsResponse:
             [
                 "GET hosts",
                 "Columns: name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending",
+                "OrderBy: name asc",
                 f"Limit: {self.limit}",
             ]
         )

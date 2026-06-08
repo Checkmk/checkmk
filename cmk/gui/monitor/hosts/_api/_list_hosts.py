@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
 from typing import Annotated, Self
 
 from annotated_types import Interval
@@ -37,6 +38,8 @@ from ._validators import parse_host_search_query, parse_host_sort_options
 _MIN_NUMBER_OF_HOSTS = 0
 _MAX_NUMBER_OF_HOSTS = 5_000
 _DEFAULT_LIMIT = 1_000
+
+_DEFAULT_SORT = (HostSort(column=HostSortColumn.NAME, direction=HostSortDirection.ASC),)
 
 
 @api_model
@@ -123,18 +126,24 @@ def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
     """List hosts to be consumed by the all host monitoring page."""
     user.need_permission("general.see_all")
 
-    # ``sort`` is validated to expose the parameter in the API spec; applying it is done by the
-    # host handlers and wired up there separately.
     host_repo = LiveStatusHostRepository(connection=sites.live())
 
-    search_query = "" if isinstance(body.q, ApiOmitted) else body.q
-    return _handle_list_hosts(host_repo, limit=body.limit, search_query=search_query)
+    return _handle_list_hosts(
+        host_repo,
+        limit=body.limit,
+        search_query="" if isinstance(body.q, ApiOmitted) else body.q,
+        sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
+    )
 
 
 def _handle_list_hosts(
-    host_repo: HostRepository, *, limit: int, search_query: str = ""
+    host_repo: HostRepository,
+    *,
+    limit: int,
+    search_query: str = "",
+    sorters: Sequence[HostSort] = _DEFAULT_SORT,
 ) -> HostsResponse:
-    hosts = host_repo.fetch(limit=limit, search_query=search_query)
+    hosts = host_repo.fetch(limit=limit, search_query=search_query, sorters=sorters)
     host_total = host_repo.count(search_query=search_query)
 
     return HostsResponse(

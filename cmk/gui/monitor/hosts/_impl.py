@@ -17,7 +17,7 @@ from cmk.livestatus_client.expressions import NothingExpression, Or, QueryExpres
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Status
 
-from ._models import Host, HostState, ServiceCounts
+from ._models import Host, HostSort, HostSortColumn, HostState, ServiceCounts
 
 _SEARCHABLE_COLUMNS = (Hosts.name, Hosts.alias, Hosts.address)
 
@@ -37,7 +37,13 @@ class LiveStatusHostRepository:
     def __init__(self, *, connection: MultiSiteConnection) -> None:
         self._connection = connection
 
-    def fetch(self, *, limit: int, search_query: str = "") -> Sequence[Host]:
+    def fetch(
+        self,
+        *,
+        limit: int,
+        search_query: str = "",
+        sorters: Sequence[HostSort],
+    ) -> Sequence[Host]:
         q = Query(
             [
                 Hosts.name,
@@ -53,6 +59,16 @@ class LiveStatusHostRepository:
             ],
             _search_filter(search_query),
             extra_headers=[
+                # NOTE: Livestatus doesn't support sorting by multiple columns at the moment. The
+                # resulting query will only take the first `OrderBy` statement and sort by that
+                # criteria. We are leaving the wiring in for now and will investigate the ability to
+                # sort by multiple columns in the livestatus client. Alternatively, we can apply
+                # only the first filter in this query and then sort the other columns after limiting
+                # the results (in Python).
+                *[
+                    f"OrderBy: {_SORT_COLUMN_OVERRIDES.get(s.column, s.column)} {s.direction}"
+                    for s in sorters
+                ],
                 f"Limit: {limit}",
             ],
         )
@@ -91,3 +107,10 @@ class LiveStatusHostRepository:
         filter_lines = (": ".join(line) for line in _search_filter(search_query).render())
         stats_query = "\n".join([f"GET {Hosts.__tablename__}", "Stats: state >= 0", *filter_lines])
         return sum(int(row[-1]) for row in self._connection.query(stats_query))
+
+
+# NOTE: the sort values defined in the model may not match the livestatus column. This mapping
+# handles columns that do not match allowing us to translate these columns when building the query.
+_SORT_COLUMN_OVERRIDES: dict[HostSortColumn, str] = {
+    HostSortColumn.IP: "address",
+}

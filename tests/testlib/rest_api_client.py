@@ -4241,6 +4241,7 @@ class MonitorHostsClient(RestApiClient):
         self,
         limit: int,
         q: str | None = None,
+        sort: list[str] | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
@@ -4250,6 +4251,7 @@ class MonitorHostsClient(RestApiClient):
                 {
                     "limit": limit,
                     "q": q,
+                    "sort": sort,
                 }
             ),
             expect_ok=expect_ok,

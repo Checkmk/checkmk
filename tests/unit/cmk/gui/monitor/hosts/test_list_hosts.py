@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from polyfactory.factories import DataclassFactory
 
 from cmk.gui.monitor.hosts._api._list_hosts import _handle_list_hosts
-from cmk.gui.monitor.hosts._models import Host
+from cmk.gui.monitor.hosts._models import Host, HostSort
 from cmk.gui.monitor.hosts._repositories import HostRepository
 
 
@@ -21,7 +21,13 @@ def get_fake_host_repository(*, n_hosts: int) -> HostRepository:
         def __init__(self) -> None:
             self._hosts = [HostFactory.build() for _ in range(n_hosts)]
 
-        def fetch(self, *, limit: int, search_query: str = "") -> Sequence[Host]:
+        def fetch(
+            self,
+            *,
+            limit: int,
+            search_query: str = "",
+            sorters: Sequence[HostSort],
+        ) -> Sequence[Host]:
             return self._matching(search_query)[:limit]
 
         def count(self, *, search_query: str = "") -> int:
@@ -63,7 +69,13 @@ def test_handle_list_hosts_forwards_search_query_to_repository() -> None:
     calls: dict[str, str] = {}
 
     class RecordingRepository:
-        def fetch(self, *, limit: int, search_query: str = "") -> Sequence[Host]:
+        def fetch(
+            self,
+            *,
+            limit: int,
+            search_query: str = "",
+            sorters: Sequence[HostSort],
+        ) -> Sequence[Host]:
             calls["fetch"] = search_query
             return []
 

@@ -13,11 +13,17 @@ they will return. This allows us to pass stubs when testing our applications.
 from collections.abc import Sequence
 from typing import Protocol
 
-from ._models import Host
+from ._models import Host, HostSort
 
 
 class HostRepository(Protocol):
-    def fetch(self, *, limit: int, search_query: str = "") -> Sequence[Host]:
+    def fetch(
+        self,
+        *,
+        limit: int,
+        search_query: str = "",
+        sorters: Sequence[HostSort],
+    ) -> Sequence[Host]:
         """Fetch hosts based on filter criteria.
 
         ``search_query`` is an already whitespace-stripped free-text search. When empty, no search

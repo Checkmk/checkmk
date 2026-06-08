@@ -281,10 +281,15 @@ class UserSidebarConfig:
         # Filter default config based on each snapin's included_in_default_sidebar() method
         # This allows snapins to control whether they appear in the default configuration
         # based on user attributes or other conditions
+        # Custom snap-ins are not part of the static snapin_registry (they are loaded
+        # lazily via all_snapins()), so a direct lookup would raise a KeyError here. Keep
+        # snap-ins that are not in the registry and let the all_snapins() filter in _load()
+        # validate them, instead of crashing the whole sidebar.
         default_config = [
             snapin
             for snapin in self._default_config
-            if snapin_registry[snapin[0]].included_in_default_sidebar()
+            if snapin[0] not in snapin_registry
+            or snapin_registry[snapin[0]].included_in_default_sidebar()
         ]
 
         return {

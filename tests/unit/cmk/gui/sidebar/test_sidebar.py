@@ -172,6 +172,27 @@ def test_load_default_config_for_existing_user(monkeypatch: pytest.MonkeyPatch) 
         ]
 
 
+def test_load_default_config_with_custom_snapin(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A custom snap-in in the default config must not crash the sidebar.
+
+    Custom snap-ins are not part of the static snapin_registry, so the
+    included_in_default_sidebar() filter must not look them up directly. The
+    unknown snap-in is dropped by the all_snapins() filter instead of raising."""
+    with monkeypatch.context() as m:
+        m.setattr(user, "get_attribute", lambda key, default=None: default)
+
+        user_permissions = UserPermissions({}, {}, {}, [])
+        user_config = sidebar.UserSidebarConfig(
+            user,
+            [("tactical_overview", "open"), ("my_custom_snapin", "open")],
+            user_permissions,
+        )
+        assert user_config.folded is False
+        assert user_config.snapins == [
+            UserSidebarSnapin.from_snapin_type_id("tactical_overview", user_permissions),
+        ]
+
+
 def test_load_legacy_list_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,

@@ -519,6 +519,7 @@ py_library(
     deps = [
         "//tests/testlib/common:repo",
         requirement("cryptography"),
+        requirement("docker"),
         requirement("requests"),
         requirement("psycopg"),
         requirement("jinja2"),

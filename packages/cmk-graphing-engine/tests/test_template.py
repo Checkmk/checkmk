@@ -11,7 +11,7 @@ from cmk.graphing_engine import (
     discover_template_graphs,
     Graph,
     MetricName,
-    RRDKey,
+    RRDSource,
     Scalars,
     ServiceRef,
     StackGroup,
@@ -42,7 +42,7 @@ def _translated(name: MetricName, *, bounds: Scalars = Scalars()) -> TranslatedM
         name=name,
         value=1.0,
         bounds=bounds,
-        originals=[RRDKey(service=_service(), metric_name=name, scale=1.0)],
+        originals=[RRDSource(service=_service(), metric_name=name, scale=1.0)],
     )
 
 
@@ -63,11 +63,11 @@ class _FakeFetchRRD:
 
     def time_series(
         self,
-        keys: Sequence[RRDKey],
+        keys: Sequence[RRDSource],
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
-    ) -> Mapping[RRDKey, TimeSeries]:
+    ) -> Mapping[RRDSource, TimeSeries]:
         raise NotImplementedError
 
 

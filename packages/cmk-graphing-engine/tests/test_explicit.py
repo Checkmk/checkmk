@@ -13,7 +13,7 @@ from cmk.graphing_engine import (
     ExplicitOptions,
     Graph,
     MetricName,
-    RRDKey,
+    RRDSource,
     Scalars,
     ServiceRef,
     TemperatureUnit,
@@ -53,11 +53,11 @@ class _FakeFetchRRD:
 
     def time_series(
         self,
-        keys: Sequence[RRDKey],
+        keys: Sequence[RRDSource],
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
-    ) -> Mapping[RRDKey, TimeSeries]:
+    ) -> Mapping[RRDSource, TimeSeries]:
         raise NotImplementedError
 
 
@@ -88,7 +88,7 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
     options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
     cpu_user_bounds = Scalars(warning=80.0, critical=90.0)
     cpu_system_bounds = Scalars(warning=50.0, critical=70.0, minimum=0.0, maximum=100.0)
-    cpu_user_key = RRDKey(service=service, metric_name=cpu_user, scale=1.0)
+    cpu_user_key = RRDSource(service=service, metric_name=cpu_user, scale=1.0)
     rrd = _FakeFetchRRD(
         translated_metrics_response={
             service: {
@@ -102,7 +102,7 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
                     name=cpu_system,
                     value=8.0,
                     bounds=cpu_system_bounds,
-                    originals=[RRDKey(service=service, metric_name=cpu_system, scale=1.0)],
+                    originals=[RRDSource(service=service, metric_name=cpu_system, scale=1.0)],
                 ),
             }
         },

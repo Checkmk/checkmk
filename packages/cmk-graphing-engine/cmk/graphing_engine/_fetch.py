@@ -35,7 +35,7 @@ class Scalars:
 
 
 @dataclass(frozen=True, kw_only=True)
-class RRDKey:
+class RRDSource:
     service: ServiceRef
     metric_name: MetricName
     scale: float
@@ -46,7 +46,7 @@ class TranslatedMetric:
     name: MetricName
     value: float | None
     bounds: Scalars
-    originals: Sequence[RRDKey]
+    originals: Sequence[RRDSource]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -62,8 +62,8 @@ class FetchRRD(Protocol):
 
     def time_series(
         self,
-        keys: Sequence[RRDKey],
+        keys: Sequence[RRDSource],
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
-    ) -> Mapping[RRDKey, TimeSeries]: ...
+    ) -> Mapping[RRDSource, TimeSeries]: ...

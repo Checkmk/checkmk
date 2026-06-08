@@ -9,7 +9,7 @@ from ._explicit import (
     ExplicitDiscoveryOptions,
     ExplicitOptions,
 )
-from ._fetch import FetchRRD, RRDKey, Scalars, TimeSeries, TranslatedMetric
+from ._fetch import FetchRRD, RRDSource, Scalars, TimeSeries, TranslatedMetric
 from ._from_api import parse_graph_from_api
 from ._objects import (
     AutoPrecision,
@@ -88,7 +88,7 @@ __all__ = [
     "Precision",
     "Product",
     "Quantity",
-    "RRDKey",
+    "RRDSource",
     "SINotation",
     "Scalars",
     "ServiceRef",

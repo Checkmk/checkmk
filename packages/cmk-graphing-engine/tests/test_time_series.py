@@ -12,7 +12,7 @@ from cmk.graphing_engine import (
     Graph,
     GraphRequest,
     MetricName,
-    RRDKey,
+    RRDSource,
     ServiceRef,
     TemperatureUnit,
     TimeRange,
@@ -43,12 +43,12 @@ def _series(value: float) -> TimeSeries:
 class _FakeFetchRRD:
     def __init__(
         self,
-        time_series_response: Mapping[RRDKey, TimeSeries] | None = None,
+        time_series_response: Mapping[RRDSource, TimeSeries] | None = None,
     ) -> None:
         self._response = time_series_response or {}
         self.time_series_calls: list[
             tuple[
-                tuple[RRDKey, ...],
+                tuple[RRDSource, ...],
                 TimeRange,
                 ConsolidationFunction,
             ]
@@ -61,11 +61,11 @@ class _FakeFetchRRD:
 
     def time_series(
         self,
-        keys: Sequence[RRDKey],
+        keys: Sequence[RRDSource],
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
-    ) -> Mapping[RRDKey, TimeSeries]:
+    ) -> Mapping[RRDSource, TimeSeries]:
         self.time_series_calls.append((tuple(keys), time_range, consolidation_function))
         return {key: self._response[key] for key in keys if key in self._response}
 
@@ -80,8 +80,8 @@ def test_returns_one_data_mapping_per_request_keyed_by_metric_name() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     cpu_system = MetricName("cpu_system")
-    cpu_user_key = RRDKey(service=service, metric_name=cpu_user, scale=1.0)
-    cpu_system_key = RRDKey(service=service, metric_name=cpu_system, scale=1.0)
+    cpu_user_key = RRDSource(service=service, metric_name=cpu_user, scale=1.0)
+    cpu_system_key = RRDSource(service=service, metric_name=cpu_system, scale=1.0)
     cpu_user_series = _series(1.0)
     cpu_system_series = _series(2.0)
     graph = Graph(name="cpu", title="CPU", simple_lines=[cpu_user, cpu_system])
@@ -106,8 +106,8 @@ def test_multiple_requests_yield_one_mapping_each_in_order() -> None:
     service = _service()
     x = MetricName("x")
     y = MetricName("y")
-    x_key = RRDKey(service=service, metric_name=x, scale=1.0)
-    y_key = RRDKey(service=service, metric_name=y, scale=1.0)
+    x_key = RRDSource(service=service, metric_name=x, scale=1.0)
+    y_key = RRDSource(service=service, metric_name=y, scale=1.0)
     x_series = _series(1.0)
     y_series = _series(2.0)
     graph_x = Graph(name="x", title="x", simple_lines=[x])

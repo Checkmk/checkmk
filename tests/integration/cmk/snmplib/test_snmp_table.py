@@ -10,7 +10,7 @@ from subprocess import CalledProcessError
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress
-from cmk.snmplib import BackendOIDSpec, BackendSNMPTree, SNMPBackendEnum, SpecialColumn
+from cmk.checkengine.snmplib import BackendOIDSpec, BackendSNMPTree, SNMPBackendEnum, SpecialColumn
 from tests.testlib.site import Site
 
 from .snmp_helpers import default_config, get_single_oid, get_snmp_table

@@ -10,7 +10,7 @@ from collections.abc import MutableMapping, Sequence
 from pathlib import Path
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.snmplib import (
+from cmk.checkengine.snmplib import (
     BackendSNMPTree,
     OID,
     SNMPBackendEnum,

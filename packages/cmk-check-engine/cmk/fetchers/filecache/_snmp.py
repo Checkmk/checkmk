@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import ast
 
-from cmk.snmplib import SNMPRawData, SNMPSectionMarker
+from cmk.checkengine.snmplib import SNMPRawData, SNMPSectionMarker
 
 from ._cache import FileCache
 

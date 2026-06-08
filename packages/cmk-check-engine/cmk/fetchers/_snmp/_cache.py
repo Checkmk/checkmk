@@ -9,7 +9,7 @@ from pathlib import Path
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKTimeout
-from cmk.snmplib import SNMPRawDataElem, SNMPRowInfo, SNMPSectionMarker, SNMPSectionName
+from cmk.checkengine.snmplib import SNMPRawDataElem, SNMPRowInfo, SNMPSectionMarker, SNMPSectionName
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="comparison-overlap"

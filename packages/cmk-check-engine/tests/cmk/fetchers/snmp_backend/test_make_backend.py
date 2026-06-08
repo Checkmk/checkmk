@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 from cmk.fetchers.snmp_backend import make_backend
 from cmk.snmp_backends.classic import ClassicSNMPBackend
-from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 
 
 @pytest.fixture(name="snmp_config")

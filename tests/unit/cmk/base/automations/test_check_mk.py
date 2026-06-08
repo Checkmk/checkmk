@@ -32,6 +32,7 @@ from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import CheckPreview, CheckPreviewEntry, QualifiedDiscovery
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.checkengine.snmplib import oids_to_walk, SNMPContextConfig
 from cmk.discover_plugins import PluginLocation
 from cmk.fetchers import (
     Fetcher,
@@ -42,7 +43,6 @@ from cmk.fetchers import (
 )
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.server_side_calls_backend import load_active_checks
-from cmk.snmplib import oids_to_walk, SNMPContextConfig
 from cmk.utils import config_warnings
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.common.empty_config import EMPTY_CONFIG

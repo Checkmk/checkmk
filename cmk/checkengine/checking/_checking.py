@@ -36,12 +36,12 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
+from cmk.checkengine.snmplib import SNMPRawData
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.inventory.structured_data import (
     InventoryStore,
 )
-from cmk.snmplib import SNMPRawData
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console
 from cmk.utils.servicename import ServiceName

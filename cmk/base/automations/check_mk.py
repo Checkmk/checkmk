@@ -165,6 +165,18 @@ from cmk.checkengine.plugins import (
     SectionName,
     ServiceID,
 )
+from cmk.checkengine.snmplib import (
+    BackendOIDSpec,
+    BackendSNMPTree,
+    get_snmp_table,
+    oids_to_walk,
+    SNMPBackend,
+    SNMPBackendEnum,
+    SNMPCredentials,
+    SNMPHostConfig,
+    SNMPVersion,
+    walk_for_export,
+)
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
@@ -210,18 +222,6 @@ from cmk.server_side_calls_backend import (
     SecretsConfig,
     SpecialAgent,
     SpecialAgentCommandLine,
-)
-from cmk.snmplib import (
-    BackendOIDSpec,
-    BackendSNMPTree,
-    get_snmp_table,
-    oids_to_walk,
-    SNMPBackend,
-    SNMPBackendEnum,
-    SNMPCredentials,
-    SNMPHostConfig,
-    SNMPVersion,
-    walk_for_export,
 )
 from cmk.utils import config_warnings, ip_lookup, log, man_pages
 from cmk.utils.auto_queue import AutoQueue

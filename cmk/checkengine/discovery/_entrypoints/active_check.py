@@ -50,8 +50,8 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
+from cmk.checkengine.snmplib import SNMPRawData
 from cmk.checkengine.summarize import SummarizerFunction
-from cmk.snmplib import SNMPRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console

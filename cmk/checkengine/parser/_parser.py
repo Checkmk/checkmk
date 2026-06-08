@@ -17,7 +17,7 @@ import cmk.ccc.resulttype as result
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import AgentRawData, SourceInfo
 from cmk.checkengine.plugins import SectionName
-from cmk.snmplib import SNMPRawData, SNMPRawDataElem
+from cmk.checkengine.snmplib import SNMPRawData, SNMPRawDataElem
 
 __all__ = [
     "AgentRawDataSection",

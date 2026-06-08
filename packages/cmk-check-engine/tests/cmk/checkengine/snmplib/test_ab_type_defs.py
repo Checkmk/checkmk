@@ -11,7 +11,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v1 import OIDEnd, SNMPTree
-from cmk.snmplib import SpecialColumn
+from cmk.checkengine.snmplib import SpecialColumn
 
 
 def test_oid_end_repr() -> None:

@@ -10,9 +10,9 @@ from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.core.interface import MonitoringCore
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.checkengine.snmplib import SNMPPluginStore
 from cmk.core_client import NagiosClient
 from cmk.licensing.community_handler import CommunityLicensingHandler
-from cmk.snmplib import SNMPPluginStore
 from cmk.utils import paths
 from cmk.utils.labels import LabelManager
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher

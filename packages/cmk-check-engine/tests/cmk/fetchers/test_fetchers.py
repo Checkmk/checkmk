@@ -21,6 +21,21 @@ import cmk.fetchers._snmp._fetcher as snmp
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.helper_interface import AgentRawData, FetcherError
+from cmk.checkengine.snmplib import (
+    BackendOIDSpec,
+    BackendSNMPTree,
+    SNMPBackendEnum,
+    SNMPDetectSpec,
+    SNMPHostConfig,
+    SNMPPluginStore,
+    SNMPPluginStoreItem,
+    SNMPRawData,
+    SNMPSectionMarker,
+    SNMPSectionName,
+    SNMPTable,
+    SNMPVersion,
+)
+from cmk.checkengine.snmplib import SNMPSectionName as SectionName
 from cmk.fetchers import (
     ActivatedSecrets,
     agent_protocol,
@@ -45,21 +60,6 @@ from cmk.fetchers.filecache import (
     NoCache,
     SNMPFileCache,
 )
-from cmk.snmplib import (
-    BackendOIDSpec,
-    BackendSNMPTree,
-    SNMPBackendEnum,
-    SNMPDetectSpec,
-    SNMPHostConfig,
-    SNMPPluginStore,
-    SNMPPluginStoreItem,
-    SNMPRawData,
-    SNMPSectionMarker,
-    SNMPSectionName,
-    SNMPTable,
-    SNMPVersion,
-)
-from cmk.snmplib import SNMPSectionName as SectionName
 
 # TODO(ml): This is way too complicated for a unit test.
 PLUGIN_STORE = SNMPPluginStore(

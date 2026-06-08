@@ -10,7 +10,7 @@ import pytest
 
 from cmk.agent_based.v1 import OIDBytes, OIDCached, OIDEnd, SNMPTree
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.snmplib import (
+from cmk.checkengine.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
     SNMPBackendEnum,

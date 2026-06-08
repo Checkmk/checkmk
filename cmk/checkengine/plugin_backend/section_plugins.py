@@ -38,8 +38,8 @@ from cmk.checkengine.plugins import (
     SNMPParseFunction,
     SNMPSectionPlugin,
 )
+from cmk.checkengine.snmplib import SNMPDetectBaseType
 from cmk.discover_plugins import PluginLocation
-from cmk.snmplib import SNMPDetectBaseType
 from cmk.utils.rulesets import RuleSetName
 
 from .utils import (

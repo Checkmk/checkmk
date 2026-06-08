@@ -14,7 +14,7 @@ import pytest
 import cmk.snmp_backends.classic as classic_snmp
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
+from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 
 logger = logging.getLogger(__name__)
 

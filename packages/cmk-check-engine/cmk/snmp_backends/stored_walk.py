@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Final
 
 from cmk.checkengine.helper_interface import FetcherError
-from cmk.snmplib import (
+from cmk.checkengine.snmplib import (
     OID,
     SNMPBackend,
     SNMPBackendEnum,

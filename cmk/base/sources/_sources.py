@@ -15,6 +15,7 @@ from typing import Final, Literal, Protocol
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.checkengine.snmplib import SNMPRawData
 from cmk.fetchers import (
     Fetcher,
     IPMIFetcher,
@@ -34,7 +35,6 @@ from cmk.fetchers.filecache import (
     NoCache,
     SNMPFileCache,
 )
-from cmk.snmplib import SNMPRawData
 
 from ._api import Source
 

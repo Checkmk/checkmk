@@ -24,10 +24,10 @@ from cmk.base.default_config.cmc import (
     SmartPingTuning,
 )
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.snmplib import SNMPCredentials, SNMPTiming
 from cmk.fetchers import IPMICredentials
 from cmk.inventory.structured_data import RawIntervalFromConfig
 from cmk.rrd import RRDObjectConfig
-from cmk.snmplib import SNMPCredentials, SNMPTiming
 from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.labels import Labels

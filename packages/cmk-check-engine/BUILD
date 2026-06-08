@@ -17,15 +17,15 @@ exports_files(
 py_library(
     name = "snmplib",
     srcs = [
-        "cmk/snmplib/__init__.py",
-        "cmk/snmplib/_detect.py",
-        "cmk/snmplib/_getoid.py",
-        "cmk/snmplib/_parse.py",
-        "cmk/snmplib/_table.py",
-        "cmk/snmplib/_typedefs.py",
-        "cmk/snmplib/_walk.py",
+        "cmk/checkengine/snmplib/__init__.py",
+        "cmk/checkengine/snmplib/_detect.py",
+        "cmk/checkengine/snmplib/_getoid.py",
+        "cmk/checkengine/snmplib/_parse.py",
+        "cmk/checkengine/snmplib/_table.py",
+        "cmk/checkengine/snmplib/_typedefs.py",
+        "cmk/checkengine/snmplib/_walk.py",
     ],
-    data = ["cmk/snmplib/py.typed"],
+    data = ["cmk/checkengine/snmplib/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
@@ -142,7 +142,7 @@ py_pytest_main(
 py_test(
     name = "snmplib-tests",
     size = "small",
-    srcs = glob(["tests/cmk/snmplib/**/*.py"]) + [":__test__.py"],
+    srcs = glob(["tests/cmk/checkengine/snmplib/**/*.py"]) + [":__test__.py"],
     main = "__test__.py",
     deps = [
         "__test__",

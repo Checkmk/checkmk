@@ -12,13 +12,19 @@ from typing import Any
 
 import cmk.utils.paths
 from cmk.ccc.version import Edition, edition
+from cmk.checkengine.snmplib import (
+    OID,
+    SNMPBackend,
+    SNMPBackendEnum,
+    SNMPHostConfig,
+    walk_for_export,
+)
 from cmk.snmp_backends.classic import (  # astrein: disable=cmk-module-layer-violation
     ClassicSNMPBackend,
 )
 from cmk.snmp_backends.stored_walk import (  # astrein: disable=cmk-module-layer-violation
     StoredWalkSNMPBackend,
 )
-from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, walk_for_export
 
 if edition(cmk.utils.paths.omd_root) is not Edition.COMMUNITY:
     from cmk.snmp_backends.inline import (  # type: ignore[import,unused-ignore] # astrein: disable=cmk-module-layer-violation

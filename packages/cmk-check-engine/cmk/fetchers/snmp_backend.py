@@ -11,7 +11,7 @@ import pkgutil
 from collections.abc import Mapping
 
 import cmk.snmp_backends
-from cmk.snmplib import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
+from cmk.checkengine.snmplib import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
 
 def discover_backends() -> Mapping[SNMPBackendEnum, type[SNMPBackend]]:

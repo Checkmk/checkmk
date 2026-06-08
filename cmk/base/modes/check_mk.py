@@ -96,6 +96,15 @@ from cmk.checkengine.plugins import (
     SNMPSectionPlugin,
 )
 from cmk.checkengine.sectionparser import SectionPlugin
+from cmk.checkengine.snmplib import (
+    get_single_oid,
+    OID,
+    oids_to_walk,
+    SNMPBackend,
+    SNMPBackendEnum,
+    SNMPSectionName,
+    walk_for_export,
+)
 from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
@@ -127,15 +136,6 @@ from cmk.server_side_calls_backend import (
     ExecutableFinder,
     load_active_checks,
     load_secrets_file,
-)
-from cmk.snmplib import (
-    get_single_oid,
-    OID,
-    oids_to_walk,
-    SNMPBackend,
-    SNMPBackendEnum,
-    SNMPSectionName,
-    walk_for_export,
 )
 from cmk.utils import config_warnings, ip_lookup, log, timeperiod
 from cmk.utils.auto_queue import AutoQueue

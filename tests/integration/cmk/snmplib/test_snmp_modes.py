@@ -22,7 +22,7 @@ from subprocess import CalledProcessError
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress
-from cmk.snmplib import (
+from cmk.checkengine.snmplib import (
     OID,
     SNMPBackendEnum,
     SNMPContextConfig,

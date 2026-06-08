@@ -13,7 +13,7 @@ import cmk.ccc.resulttype as result
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.helper_interface import AgentRawData, SourceInfo, SourceType
-from cmk.snmplib import SNMPRawData
+from cmk.checkengine.snmplib import SNMPRawData
 
 __all__ = ["FetcherFunction", "HostKey"]
 

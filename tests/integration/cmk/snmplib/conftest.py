@@ -32,7 +32,7 @@ from pysnmp.hlapi.asyncio import (  # type: ignore[attr-defined]
 )
 
 from cmk.ccc import debug
-from cmk.snmplib import SNMPBackendEnum
+from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.utils import log
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils import wait_until

@@ -24,8 +24,8 @@ from cmk.ccc.crash_reporting import (
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import AgentRawData
 from cmk.checkengine.plugins import CheckPluginName, SectionName
+from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.piggyback.backend import get_messages_for
-from cmk.snmplib import SNMPBackendEnum
 from cmk.utils.servicename import ServiceName
 
 _MAX_SECTION_CONTENT_BYTES = 1024 * 1024  # 1 MB

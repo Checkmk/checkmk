@@ -5,7 +5,7 @@
 
 
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.snmplib import (
+from cmk.checkengine.snmplib import (
     BackendSNMPTree,
     SNMPDetectSpec,
     SNMPPluginStore,

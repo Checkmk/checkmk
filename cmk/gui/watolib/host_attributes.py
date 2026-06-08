@@ -27,6 +27,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.translations import TranslationOptions
 from cmk.ccc.user import UserId
+from cmk.checkengine.snmplib import SNMPCredentials  # astrein: disable=cmk-module-layer-violation
 from cmk.fields import String
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
@@ -44,7 +45,6 @@ from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, Single
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
 from cmk.rulesets.v1.form_specs import String as StringFormSpec
-from cmk.snmplib import SNMPCredentials  # astrein: disable=cmk-module-layer-violation
 from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 

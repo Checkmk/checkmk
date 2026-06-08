@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.snmplib import SNMPRawData
+from cmk.checkengine.snmplib import SNMPRawData
 
 from ._markers import SectionMarker
 from ._parser import HostSections, Parser, SNMPParsedData

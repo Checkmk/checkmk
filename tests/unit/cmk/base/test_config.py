@@ -68,13 +68,13 @@ from cmk.checkengine.plugins import (
     ServiceID,
 )
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
+from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
 from cmk.fetchers import agent_protocol, Mode
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.password_store.v1_unstable import Secret
 from cmk.piggyback import backend as piggyback_backend
 from cmk.server_side_calls.v1 import ActiveCheckConfig
-from cmk.snmplib import SNMPBackendEnum
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher, RulesetMatcher, RuleSpec

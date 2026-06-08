@@ -99,6 +99,7 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     SectionsParser,
 )
+from cmk.checkengine.snmplib import SNMPRawDataElem
 from cmk.fetchers import (
     AdHocSecrets,
     Mode,
@@ -108,7 +109,6 @@ from cmk.fetchers import (
     StoredSecrets,
 )
 from cmk.fetchers.filecache import FileCacheOptions
-from cmk.snmplib import SNMPRawDataElem
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel

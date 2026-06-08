@@ -97,6 +97,16 @@ from cmk.checkengine.plugins import (
     ServiceID,
     SNMPSectionPlugin,
 )
+from cmk.checkengine.snmplib import (  # some of these are required in the modules' namespace to load the configuration!
+    parse_oid_range_config,
+    SNMPBackendEnum,
+    SNMPContextConfig,
+    SNMPCredentials,
+    SNMPHostConfig,
+    SNMPSectionName,
+    SNMPTiming,
+    SNMPVersion,
+)
 from cmk.checkengine.summarize import SummaryConfig
 from cmk.fetchers import (
     IPMICredentials,
@@ -134,16 +144,6 @@ from cmk.server_side_calls_backend import (
 )
 from cmk.server_side_calls_backend.config_processing import (
     extract_all_adhoc_secrets,
-)
-from cmk.snmplib import (  # some of these are required in the modules' namespace to load the configuration!
-    parse_oid_range_config,
-    SNMPBackendEnum,
-    SNMPContextConfig,
-    SNMPCredentials,
-    SNMPHostConfig,
-    SNMPSectionName,
-    SNMPTiming,
-    SNMPVersion,
 )
 from cmk.utils import config_warnings, ip_lookup, password_store
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode

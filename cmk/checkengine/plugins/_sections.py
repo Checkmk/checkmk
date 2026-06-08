@@ -13,8 +13,8 @@ from cmk.agent_based.v2 import (
     StringByteTable,
     StringTable,
 )
+from cmk.checkengine.snmplib import SNMPDetectBaseType
 from cmk.discover_plugins import PluginLocation
-from cmk.snmplib import SNMPDetectBaseType
 from cmk.utils.rulesets import RuleSetName
 
 from ._common import LegacyPluginLocation, RuleSetTypeName, SectionName

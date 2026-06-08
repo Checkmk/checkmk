@@ -14,7 +14,7 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.ccc.tty import format_warning
 from cmk.checkengine.helper_interface import FetcherError
-from cmk.snmplib import (
+from cmk.checkengine.snmplib import (
     get_single_oid,
     SNMPBackend,
     SNMPDecodedString,

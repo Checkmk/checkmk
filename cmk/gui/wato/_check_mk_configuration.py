@@ -16,6 +16,7 @@ from typing import Any, Literal
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition
+from cmk.checkengine.snmplib import SNMPBackendEnum  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.groups import GroupName
@@ -125,7 +126,6 @@ from cmk.gui.watolib.translation import (
 )
 from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
-from cmk.snmplib import SNMPBackendEnum  # astrein: disable=cmk-module-layer-violation
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 

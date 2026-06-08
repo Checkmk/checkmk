@@ -10,7 +10,7 @@ from typing import assert_never, Literal
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.checkengine.helper_interface import FetcherError
-from cmk.snmplib import (
+from cmk.checkengine.snmplib import (
     OID,
     SNMPBackend,
     SNMPBackendEnum,

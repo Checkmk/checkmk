@@ -18,11 +18,11 @@ from typing import NoReturn
 import pytest
 from pytest import MonkeyPatch
 
-import cmk.snmplib._table as _snmp_table
+import cmk.checkengine.snmplib._table as _snmp_table
 from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.helper_interface import SourceType
-from cmk.snmplib import (
+from cmk.checkengine.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
     ensure_str,

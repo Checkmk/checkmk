@@ -10,8 +10,6 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, KW_ONLY
 from typing import NewType
 
-MetricName = NewType("MetricName", str)
-
 
 @dataclass(frozen=True)
 class DecimalNotation:
@@ -78,6 +76,9 @@ class Constant:
     unit: Unit
     color: str
     value: int | float
+
+
+MetricName = NewType("MetricName", str)
 
 
 @dataclass(frozen=True)

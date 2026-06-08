@@ -767,6 +767,10 @@ def _add_template_attachments(
         if "graph" in elements:
             attachments.append(attach_file(icon="graph.png"))
             elements.remove("graph")
+        if "omdsite" in elements:
+            elements.remove("omdsite")
+        if "address" in elements:
+            elements.remove("address")
         if elements:
             attachments.append(attach_file(icon="additional.png"))
     if context.get("PARAMETER_SVC_LABELS") or context.get("PARAMETER_HOST_LABELS"):

@@ -47,6 +47,7 @@
             {% endif %}
         </td>
     </tr>
+    {% if "address" in elements %}
     <tr>
         <td width="100"
             style="padding: 5px 0;
@@ -59,6 +60,8 @@
                    line-height: 1.4;
                    mso-line-height-rule: exactly">{{ data.HOSTADDRESS }}</td>
     </tr>
+    {% endif %}
+    {% if "omdsite" in elements %}
     <tr>
         <td width="100"
             style="padding: 5px 0;
@@ -71,6 +74,7 @@
                    line-height: 1.4;
                    mso-line-height-rule: exactly">{{ data.OMD_SITE }}</td>
     </tr>
+    {% endif %}
     <tr>
         <td width="100"
             style="padding: 5px 0;

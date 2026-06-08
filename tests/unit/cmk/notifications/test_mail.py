@@ -3,11 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
 import pytest
+from jinja2 import Environment, FileSystemLoader
 from jinja2.exceptions import TemplateNotFound
 from pytest_mock import MockerFixture
 
 from cmk.notification_plugins import mail
+
+TEMPLATE_DIR = Path(__file__).parents[4] / "notifications" / "templates" / "mail"
 
 
 @pytest.mark.parametrize(
@@ -442,3 +447,44 @@ def test_mail_content_from_host_context(mocker: MockerFixture) -> None:
         assert content.reply_to == ""
         assert content.content_txt == HOST_CONTENT_TXT
         assert content.attachments == []
+
+
+def _render_event_overview(elements: list[str]) -> str:
+    # Render the "Event overview" template in isolation. The selected ``elements``
+    # (from the rule's "HTML email parameters") gate the optional Address/Site rows.
+    env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)), autoescape=True)
+    env.filters["timestamp"] = mail.TemplateRenderer.format_timestamp
+    macros = env.get_template("macros.html").module
+    data = {
+        "WHAT": "HOST",
+        "HOSTADDRESS": "127.0.0.1",
+        "OMD_SITE": "heute",
+        "HOSTOUTPUT_HTML": "Packet received via smart PING",
+        "LASTHOSTSTATECHANGE": "1552482625",
+    }
+    return env.get_template("event_overview.html").render(
+        data=data,
+        elements=elements,
+        service_notification=False,
+        macros=macros,
+    )
+
+
+def test_event_overview_omits_address_and_site_when_not_selected() -> None:
+    html = _render_event_overview(["graph"])
+    assert "Address:" not in html
+    assert "Site:" not in html
+
+
+def test_event_overview_shows_address_when_selected() -> None:
+    html = _render_event_overview(["address"])
+    assert "Address:" in html
+    assert "127.0.0.1" in html
+    assert "Site:" not in html
+
+
+def test_event_overview_shows_site_when_selected() -> None:
+    html = _render_event_overview(["omdsite"])
+    assert "Site:" in html
+    assert "heute" in html
+    assert "Address:" not in html

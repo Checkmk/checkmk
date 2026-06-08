@@ -79,7 +79,10 @@ py_test(
         "--random-order-bucket=global",
         "--dist=loadfile",
     ],
-    data = ["@//:pyproject.toml"] + glob(
+    data = [
+        "//notifications:mail_templates",
+        "@//:pyproject.toml",
+    ] + glob(
         include = [
             # canned data
             "**/_check_form_submit_response",

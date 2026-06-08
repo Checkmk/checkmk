@@ -665,7 +665,6 @@ pkg_files(
         "@cmk//distro:almalinux-9": ["//omd/distros:ALMALINUX_9.mk"],
         "@cmk//distro:debian-12": ["//omd/distros:DEBIAN_12.mk"],
         "@cmk//distro:debian-13": ["//omd/distros:DEBIAN_13.mk"],
-        "@cmk//distro:sles-15sp6": ["//omd/distros:SLES_15SP6.mk"],
         "@cmk//distro:sles-15sp7": ["//omd/distros:SLES_15SP7.mk"],
         "@cmk//distro:sles-16.0": ["//omd/distros:SLES_16.0.mk"],
         "@cmk//distro:ubuntu-22.04": ["//omd/distros:UBUNTU_22.04.mk"],
@@ -679,7 +678,6 @@ pkg_files(
         "@cmk//distro:almalinux-9": {"//omd/distros:ALMALINUX_9.mk": "distro.info"},
         "@cmk//distro:debian-12": {"//omd/distros:DEBIAN_12.mk": "distro.info"},
         "@cmk//distro:debian-13": {"//omd/distros:DEBIAN_13.mk": "distro.info"},
-        "@cmk//distro:sles-15sp6": {"//omd/distros:SLES_15SP6.mk": "distro.info"},
         "@cmk//distro:sles-15sp7": {"//omd/distros:SLES_15SP7.mk": "distro.info"},
         "@cmk//distro:sles-16.0": {"//omd/distros:SLES_16.0.mk": "distro.info"},
         "@cmk//distro:ubuntu-22.04": {"//omd/distros:UBUNTU_22.04.mk": "distro.info"},
@@ -890,7 +888,6 @@ pkg_name_info(
         "@cmk//distro:almalinux-9": "el9-38",
         "@cmk//distro:debian-12": "0.bookworm",
         "@cmk//distro:debian-13": "0.trixie",
-        "@cmk//distro:sles-15sp6": "sles15sp6",
         "@cmk//distro:sles-15sp7": "sles15sp7",
         "@cmk//distro:sles-16.0": "sles16.0",
         "@cmk//distro:ubuntu-22.04": "0.jammy",
@@ -1010,7 +1007,6 @@ write_omd_spec(
         "@cmk//distro:almalinux-10": "el10",
         "@cmk//distro:almalinux-8": "el8",
         "@cmk//distro:almalinux-9": "el9",
-        "@cmk//distro:sles-15sp6": "sles15sp6",
         "@cmk//distro:sles-15sp7": "sles15sp7",
         "@cmk//distro:sles-16.0": "sles16.0",
         "//conditions:default": "",
@@ -1033,7 +1029,6 @@ pkg_rpm_from_tar(
         "@cmk//distro:almalinux-10": "el10",
         "@cmk//distro:almalinux-8": "el8",
         "@cmk//distro:almalinux-9": "el9",
-        "@cmk//distro:sles-15sp6": "sles15sp6",
         "@cmk//distro:sles-15sp7": "sles15sp7",
         "@cmk//distro:sles-16.0": "sles16.0",
         "//conditions:default": "",
@@ -1072,10 +1067,6 @@ sh_test(
             "$(location //tests/packaging/package_validator:system_dependencies_el)",
             "$(location //tests/packaging/package_validator:system_dependencies_el9)",
         ],
-        "@cmk//distro:sles-15sp6": [
-            "$(location //tests/packaging/package_validator:system_dependencies_sles)",
-            "$(location //tests/packaging/package_validator:system_dependencies_sles15sp6)",
-        ],
         "@cmk//distro:sles-15sp7": [
             "$(location //tests/packaging/package_validator:system_dependencies_sles)",
             "$(location //tests/packaging/package_validator:system_dependencies_sles15sp7)",
@@ -1102,10 +1093,6 @@ sh_test(
         "@cmk//distro:almalinux-9": [
             "//tests/packaging/package_validator:system_dependencies_el",
             "//tests/packaging/package_validator:system_dependencies_el9",
-        ],
-        "@cmk//distro:sles-15sp6": [
-            "//tests/packaging/package_validator:system_dependencies_sles",
-            "//tests/packaging/package_validator:system_dependencies_sles15sp6",
         ],
         "@cmk//distro:sles-15sp7": [
             "//tests/packaging/package_validator:system_dependencies_sles",

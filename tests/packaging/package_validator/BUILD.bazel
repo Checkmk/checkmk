@@ -137,12 +137,6 @@ filegroup(
 )
 
 filegroup(
-    name = "system_dependencies_sles15sp6",
-    srcs = ["system-dependencies.sles15sp6.txt"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
     name = "system_dependencies_sles15sp7",
     srcs = ["system-dependencies.sles15sp7.txt"],
     visibility = ["//visibility:public"],

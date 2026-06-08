@@ -39,7 +39,7 @@ failed_sections=()
 
 for section in "${sections[@]}"; do
     echo "Running section: $section"
-    if ! DB_SECTION="$section" "${SCRIPT_DIR}/run_comparison.sh" $*; then
+    if ! DB_SECTION="$section" "${SCRIPT_DIR}/run_comparison.sh" "$@"; then
         failed_sections+=("$section")
     fi
 done

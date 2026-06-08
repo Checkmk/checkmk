@@ -117,9 +117,9 @@ else {
             "--var" {
                 [Environment]::SetEnvironmentVariable($args[++$i], $args[++$i])
             }
-            "--shorten" { 
-                $shortenLink = $args[++$i] 
-                $shortenPath = $args[++$i] 
+            "--shorten" {
+                $shortenLink = $args[++$i]
+                $shortenPath = $args[++$i]
             }
         }
     }
@@ -180,7 +180,7 @@ function Invoke-Cargo-With-Explicit-Package {
     }
 }
 
-function Test-Administrator {  
+function Test-Administrator {
     [OutputType([bool])]
     param()
     process {
@@ -281,11 +281,12 @@ try {
         # for local test you may add this
         # $env:CI_ORA1_DB_TEST="localhost:SYS:Oracle-dba:1521:XE:sysdba::_:_:"
         Write-Host "Component test!" -Foreground White
-        if ($env:CI_ORA_TEST_PASSWORD -eq "") {
+        if ([string]::IsNullOrEmpty($env:CI_ORA_TEST_PASSWORD)) {
             Write-Host "CI_ORA_TEST_PASSWORD is absent, component testing may fail" -ForegroundColor Red
             exit 1
         }
         $pass = $env:CI_ORA_TEST_PASSWORD
+
         $env:CI_ORA2_DB_TEST = "${test_host}:${test_user}:${pass}:${test_port}:${test_instance}::${test_service}:${test_sid}:_:"
         Write-Host "CI_ORA2_DB_TEST set from CI_ORA_TEST_PASSWORD" -ForegroundColor Green
 

@@ -12,7 +12,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Final, Self
 
-from cmk.helper_interface import AgentRawData, FetcherError
+from cmk.checkengine.helper_interface import AgentRawData, FetcherError
 
 from ._abstract import Fetcher
 

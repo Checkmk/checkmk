@@ -12,7 +12,7 @@ from typing import final, Literal, Protocol, Self, SupportsBytes
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKTimeout
-from cmk.helper_interface import FetcherError
+from cmk.checkengine.helper_interface import FetcherError
 
 __all__ = ["Fetcher", "Mode", "Serializer", "Deserializer"]
 

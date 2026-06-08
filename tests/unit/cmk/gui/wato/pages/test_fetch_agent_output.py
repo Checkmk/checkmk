@@ -13,6 +13,7 @@ from cmk.automations.results import GetAgentOutputResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.checkengine.helper_interface import AgentRawData
 from cmk.gui.wato.pages.fetch_agent_output import (
     FetchAgentOutputRequest,
     get_fetch_agent_job_status,
@@ -20,7 +21,6 @@ from cmk.gui.wato.pages.fetch_agent_output import (
     start_fetch_agent_job,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
-from cmk.helper_interface import AgentRawData
 from cmk.utils.automation_config import LocalAutomationConfig
 from tests.testlib.common.repo import repo_path
 

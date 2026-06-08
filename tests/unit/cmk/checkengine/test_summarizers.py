@@ -12,10 +12,10 @@ from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
+from cmk.checkengine.helper_interface import FetcherError
 from cmk.checkengine.parser import HostSections
 from cmk.checkengine.plugins import SectionName
 from cmk.checkengine.summarize import summarize_failure, summarize_piggyback, summarize_success
-from cmk.helper_interface import FetcherError
 from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.piggyback.backend import PiggybackMetaData
 

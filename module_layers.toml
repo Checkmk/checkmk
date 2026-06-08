@@ -259,7 +259,7 @@ allows = [
   "@plugin_apis",
   "@trace",
   "cmk.checkengine",
-  "cmk.helper_interface",
+  "cmk.checkengine.helper_interface",
   "cmk.utils.check_utils",
   "cmk.utils.config_warnings",
   "cmk.utils.http_proxy_config",
@@ -366,7 +366,7 @@ allows = [
   "cmk.fetcher_encoder",
   "cmk.fetcher_helper",
   "cmk.fetchers",
-  "cmk.helper_interface",
+  "cmk.checkengine.helper_interface",
   "cmk.inventory",
   "cmk.licensing",
   "cmk.robotmk",
@@ -387,7 +387,7 @@ allows = [
   "cmk.fetcher_encoder",
   "cmk.fetcher_helper",
   "cmk.fetchers",
-  "cmk.helper_interface",
+  "cmk.checkengine.helper_interface",
   "cmk.inventory",
   "cmk.relay_fetcher_trigger",
   "cmk.rrd",
@@ -407,7 +407,7 @@ allows = [
   "cmk.fetcher_encoder",
   "cmk.fetcher_helper",
   "cmk.fetchers",
-  "cmk.helper_interface",
+  "cmk.checkengine.helper_interface",
   "cmk.licensing.basics.options",
   "cmk.licensing.nonfree",
   "cmk.multi_tenancy.shared",
@@ -434,7 +434,7 @@ allows = [
   "cmk.events",
   "cmk.fetcher_helper",
   "cmk.fetchers",
-  "cmk.helper_interface",
+  "cmk.checkengine.helper_interface",
   "cmk.inventory",
   "cmk.piggyback",
   "cmk.rrd",
@@ -467,7 +467,7 @@ allows = [
   "cmk.events",
   "cmk.fetcher_helper",
   "cmk.fetchers",
-  "cmk.helper_interface",
+  "cmk.checkengine.helper_interface",
   "cmk.inventory",
   "cmk.licensing",
   "cmk.logwatch",
@@ -525,7 +525,12 @@ allows = [
 ]
 
 [components."cmk.check_helper_protocol"]
-allows = ["@ccc", "cmk.fetchers", "cmk.helper_interface", "cmk.snmplib"]
+allows = [
+  "@ccc",
+  "cmk.fetchers",
+  "cmk.checkengine.helper_interface",
+  "cmk.snmplib",
+]
 
 [components."cmk.checkengine.value_store"]
 allows = ["@ccc", "cmk.utils"]
@@ -536,7 +541,7 @@ allows = [
   "@plugin_apis",
   "@trace",
   "cmk.discover_plugins",
-  "cmk.helper_interface",
+  "cmk.checkengine.helper_interface",
   "cmk.inventory",
   "cmk.piggyback.backend",
   "cmk.snmplib",
@@ -582,7 +587,7 @@ allows = [
   "cmk.check_helper",
   "cmk.check_helper_protocol",
   "cmk.fetchers",
-  "cmk.helper_interface",
+  "cmk.checkengine.helper_interface",
   "cmk.telemetry.fetcher.agent_otel",
   "cmk.relay_fetcher_trigger",
   "cmk.relay_trigger_protocol",
@@ -635,7 +640,7 @@ allows = [
   "@crypto",
   "@plugin_apis",
   "@relay_protocols",
-  "cmk.helper_interface",
+  "cmk.checkengine.helper_interface",
   "cmk.snmp_backends",
   "cmk.snmplib",
 ]
@@ -966,11 +971,11 @@ excludes = [
 ]
 
 # should become a package
-[components."cmk.helper_interface"]
+[components."cmk.checkengine.helper_interface"]
 allows = ["@ccc"]
 
 [components."cmk.snmp_backends.inline"]
-allows = ["@ccc", "cmk.helper_interface", "cmk.snmplib"]
+allows = ["@ccc", "cmk.checkengine.helper_interface", "cmk.snmplib"]
 
 [components."cmk.inventory"]
 allows = ["@ccc", "cmk.utils.paths"]
@@ -1028,7 +1033,7 @@ allows = []
 allows = ["@ccc", "@plugin_apis", "cmk.utils.password_store", "cmk.utils.paths"]
 
 [components."cmk.snmp_backends"]
-allows = ["@ccc", "cmk.helper_interface", "cmk.snmplib"]
+allows = ["@ccc", "cmk.checkengine.helper_interface", "cmk.snmplib"]
 
 [components."cmk.snmplib"]
 allows = ["@ccc", "cmk.agent_based.v1"]
@@ -1211,7 +1216,7 @@ allows = [
   "cmk.check_helper_protocol",
   "cmk.fetcher_encoder",
   "cmk.fetchers",
-  "cmk.helper_interface",
+  "cmk.checkengine.helper_interface",
   "cmk.relay_trigger_protocol",
   "cmk.snmplib",
 ]
@@ -1597,7 +1602,7 @@ allows = ["@ccc", "@crypto", "cmk.utils"]
 allows = [
   "@ccc",
   "cmk.check_helper_protocol",
-  "cmk.helper_interface",
+  "cmk.checkengine.helper_interface",
   "cmk.snmplib",
 ]
 

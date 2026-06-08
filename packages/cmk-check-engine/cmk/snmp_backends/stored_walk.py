@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
 
-from cmk.helper_interface import FetcherError
+from cmk.checkengine.helper_interface import FetcherError
 from cmk.snmplib import (
     OID,
     SNMPBackend,

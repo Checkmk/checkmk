@@ -20,6 +20,7 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.translations import TranslationOptions
+from cmk.checkengine.helper_interface import AgentRawData
 from cmk.checkengine.parser import (
     AgentParser,
     AgentRawDataSectionElem,
@@ -30,7 +31,6 @@ from cmk.checkengine.parser import (
 from cmk.checkengine.parser._agent import ParserState
 from cmk.checkengine.parser._markers import PiggybackMarker, SectionMarker
 from cmk.checkengine.plugins import SectionName
-from cmk.helper_interface import AgentRawData
 from cmk.snmplib import SNMPRawData, SNMPSectionMarker
 
 StringTable = list[list[str]]

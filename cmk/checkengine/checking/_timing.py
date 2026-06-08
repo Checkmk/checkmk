@@ -9,7 +9,7 @@ from contextlib import suppress
 
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.helper_interface import FetcherType, SourceInfo
+from cmk.checkengine.helper_interface import FetcherType, SourceInfo
 
 __all__ = ["make_timing_results"]
 

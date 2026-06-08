@@ -16,10 +16,10 @@ from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery.types import QualifiedDiscovery
 from cmk.checkengine.fetcher import HostKey
+from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.plugins import SectionName
 from cmk.checkengine.sectionparser import Provider, ResolvedResult
-from cmk.helper_interface import SourceType
 from cmk.utils.labels import HostLabel as _HostLabel
 from cmk.utils.labels import merge_cluster_labels
 from cmk.utils.log import console

@@ -18,7 +18,7 @@ from typing import Any, Final
 
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
-from cmk.helper_interface import FetcherError
+from cmk.checkengine.helper_interface import FetcherError
 from cmk.snmplib import (
     get_snmp_table,
     SNMPBackend,

@@ -15,10 +15,10 @@ from pathlib import Path
 from typing import assert_never, Final, Literal
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.helper_interface import AgentRawData, FetcherType
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.fetchers import Fetcher, TLSConfig
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
-from cmk.helper_interface import AgentRawData, FetcherType
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
 from cmk.snmplib import SNMPBackendEnum
 from cmk.utils.agent_registration import HostAgentConnectionMode

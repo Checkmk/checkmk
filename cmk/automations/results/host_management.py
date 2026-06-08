@@ -16,8 +16,8 @@ from typing import Any
 
 from cmk.automations.results._base import ABCAutomationResult, result_type_registry
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.helper_interface import AgentRawData
 from cmk.checkengine.submitters import ServiceDetails
-from cmk.helper_interface import AgentRawData
 from cmk.utils.config_warnings import ConfigurationWarnings
 
 from ..types import AutomationID

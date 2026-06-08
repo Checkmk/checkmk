@@ -57,13 +57,13 @@ py_library(
 py_library(
     name = "helper-interface",
     srcs = [
-        "cmk/helper_interface/__init__.py",
-        "cmk/helper_interface/_agentdatatype.py",
-        "cmk/helper_interface/_crashreporting.py",
-        "cmk/helper_interface/_exceptions.py",
-        "cmk/helper_interface/_source_info.py",
+        "cmk/checkengine/helper_interface/__init__.py",
+        "cmk/checkengine/helper_interface/_agentdatatype.py",
+        "cmk/checkengine/helper_interface/_crashreporting.py",
+        "cmk/checkengine/helper_interface/_exceptions.py",
+        "cmk/checkengine/helper_interface/_source_info.py",
     ],
-    data = ["cmk/helper_interface/py.typed"],
+    data = ["cmk/checkengine/helper_interface/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [

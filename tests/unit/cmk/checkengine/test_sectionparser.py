@@ -14,6 +14,7 @@ from cmk.checkengine.discovery._discover.host_labels import (
     _all_parsing_results as all_parsing_results,
 )
 from cmk.checkengine.fetcher import HostKey
+from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.parser import AgentRawDataSection, AgentRawDataSectionElem, HostSections
 from cmk.checkengine.plugins import ParsedSectionName, SectionName
 from cmk.checkengine.sectionparser import _ParsingResult as ParsingResult
@@ -23,7 +24,6 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     SectionsParser,
 )
-from cmk.helper_interface import SourceType
 
 
 def _section(

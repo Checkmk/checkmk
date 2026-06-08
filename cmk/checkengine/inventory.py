@@ -27,8 +27,8 @@ import cmk.ccc.debug
 from cmk.agent_based.v1 import Attributes, TableRow
 from cmk.ccc import tty
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.plugins import SectionName
-from cmk.helper_interface import SourceType
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.inventory.structured_data import (
     ImmutableTree,

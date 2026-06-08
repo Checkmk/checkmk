@@ -22,8 +22,8 @@ from cmk.ccc.crash_reporting import (
     make_crash_report_base_path,
 )
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.helper_interface import AgentRawData
 from cmk.checkengine.plugins import CheckPluginName, SectionName
-from cmk.helper_interface import AgentRawData
 from cmk.piggyback.backend import get_messages_for
 from cmk.snmplib import SNMPBackendEnum
 from cmk.utils.servicename import ServiceName

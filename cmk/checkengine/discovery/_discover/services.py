@@ -13,6 +13,7 @@ from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery.types import QualifiedDiscovery
 from cmk.checkengine.fetcher import HostKey
+from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPluginName,
@@ -22,7 +23,6 @@ from cmk.checkengine.plugins import (
 )
 from cmk.checkengine.sectionparser import Provider
 from cmk.checkengine.sectionparserutils import get_section_kwargs
-from cmk.helper_interface import SourceType
 from cmk.utils.log import console
 
 __all__ = ["analyse_services", "discover_services", "find_plugins"]

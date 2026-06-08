@@ -30,6 +30,7 @@ from cmk.ccc.resulttype import OK
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.discovery import ABCDiscoveryConfig, commandline_discovery
 from cmk.checkengine.discovery._autochecks import AutochecksStore
+from cmk.checkengine.helper_interface import SourceInfo
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
@@ -37,7 +38,6 @@ from cmk.checkengine.submitters import FormattedSubmittee, Submitter
 from cmk.checkengine.summarize import SummaryConfig
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import AgentFileCache, FileCacheMode, MaxAge
-from cmk.helper_interface import SourceInfo
 from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher

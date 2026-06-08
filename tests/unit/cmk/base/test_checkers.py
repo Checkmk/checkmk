@@ -27,9 +27,9 @@ from cmk.checkengine.checkresults import (
     SubmittableServiceCheckResult,
 )
 from cmk.checkengine.fetcher import HostKey
+from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugins import CheckPluginName, FinalCheckResult
-from cmk.helper_interface import SourceType
 from cmk.utils.servicename import ServiceName
 
 

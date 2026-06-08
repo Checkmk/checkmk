@@ -74,6 +74,7 @@ from cmk.checkengine.discovery import (
     remove_autochecks_of_host,
 )
 from cmk.checkengine.fetcher import FetcherFunction
+from cmk.checkengine.helper_interface import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import (
     NO_SELECTION,
@@ -112,7 +113,6 @@ from cmk.fetchers._utils.config import (
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.fetchers.snmp_backend import make_backend
-from cmk.helper_interface import FetcherType, SourceType
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.inventory.structured_data import (
     ImmutableTree,

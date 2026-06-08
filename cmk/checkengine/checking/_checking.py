@@ -17,6 +17,7 @@ from cmk.checkengine.checkerplugin import AggregatedResult, CheckerPlugin, Confi
 from cmk.checkengine.checkresults import ActiveCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import HostKey
+from cmk.checkengine.helper_interface import AgentRawData, SourceInfo
 from cmk.checkengine.inventory import (
     HWSWInventoryParameters,
     inventorize_status_data_of_real_host,
@@ -37,7 +38,6 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
-from cmk.helper_interface import AgentRawData, SourceInfo
 from cmk.inventory.structured_data import (
     InventoryStore,
 )

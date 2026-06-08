@@ -151,6 +151,7 @@ from cmk.checkengine.discovery import (
     automation_discovery as _automation_discovery,
 )
 from cmk.checkengine.fetcher import FetcherFunction
+from cmk.checkengine.helper_interface import AgentRawData, FetcherError, FetcherType, SourceType
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.plugin_backend import (
@@ -192,7 +193,6 @@ from cmk.fetchers._utils.config import (
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
 from cmk.fetchers.snmp_backend import make_backend as make_snmp_backend
-from cmk.helper_interface import AgentRawData, FetcherError, FetcherType, SourceType
 from cmk.inventory import structured_data
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.piggyback.backend import (

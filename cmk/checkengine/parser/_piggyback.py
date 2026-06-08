@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Final
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.helper_interface import AgentRawData
+from cmk.checkengine.helper_interface import AgentRawData
 from cmk.piggyback.backend import get_messages_for, PiggybackMessage
 
 from ._agent import (

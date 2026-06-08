@@ -7,7 +7,8 @@ import type { SortingState } from '@tanstack/vue-table'
 
 import client, { unwrap } from '@/lib/rest-api-client/client'
 
-import type { HostsRequest, HostsResponse } from '../../shared/api/types'
+import type { HostsRequestBody, HostsResponse } from '../../shared/api/types'
+import { DEFAULT_BATCH_SIZE } from '../../shared/constants'
 
 export interface HostQueryParams {
   limit?: number
@@ -21,18 +22,15 @@ export class HostApi {
     // Drop an empty or whitespace-only search query so an empty search matches a request without
     // the `q` param.
     const searchQuery = params.searchQuery?.trim()
-    // The schema types limit as string and sort as string (not string[]); openapi-fetch's
-    // defaultQuerySerializer handles string[] as repeated params at runtime, so the cast
-    // is only needed to bridge the incorrectly-generated schema types.
+    const body: HostsRequestBody = {
+      limit: params.limit ?? DEFAULT_BATCH_SIZE,
+      ...(sort.length > 0 && { sort }),
+      ...(searchQuery && { q: searchQuery })
+    }
     return unwrap(
-      await client.GET('/monitor/hosts', {
-        params: {
-          query: {
-            ...(params.limit !== undefined && { limit: String(params.limit) }),
-            ...(sort.length > 0 && { sort }),
-            ...(searchQuery !== undefined && searchQuery !== '' && { q: searchQuery })
-          } as unknown as NonNullable<HostsRequest>
-        }
+      await client.POST('/monitor/hosts', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body
       })
     )
   }

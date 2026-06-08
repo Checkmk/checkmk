@@ -9,6 +9,7 @@ import client from '@/lib/rest-api-client/client'
 
 import { HostApi } from '@/monitoring/all-hosts/api/hosts'
 import type { HostEntry, HostsPageMeta, HostsResponse } from '@/monitoring/shared/api/types'
+import { DEFAULT_BATCH_SIZE } from '@/monitoring/shared/constants'
 
 function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
@@ -28,15 +29,17 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
 }
 
 function makeHostsResponse(hosts: HostEntry[], meta: Partial<HostsPageMeta> = {}): HostsResponse {
-  return { hosts, meta: { limit: 1000, total: hosts.length, ...meta } }
+  return { hosts, meta: { limit: DEFAULT_BATCH_SIZE, total: hosts.length, ...meta } }
 }
+
+const CONTENT_TYPE = { params: { header: { 'Content-Type': 'application/json' } } }
 
 describe('HostApi.fetchHosts', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let getSpy: any
+  let postSpy: any
 
   beforeEach(() => {
-    getSpy = vi.spyOn(client, 'GET')
+    postSpy = vi.spyOn(client, 'POST')
   })
 
   afterEach(() => {
@@ -44,7 +47,7 @@ describe('HostApi.fetchHosts', () => {
   })
 
   function mockSuccess(body: unknown): void {
-    getSpy.mockResolvedValueOnce({
+    postSpy.mockResolvedValueOnce({
       data: body as HostsResponse,
       error: undefined,
       response: new Response()
@@ -56,7 +59,10 @@ describe('HostApi.fetchHosts', () => {
 
     await new HostApi().fetchHosts()
 
-    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', { params: { query: {} } })
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: { limit: DEFAULT_BATCH_SIZE }
+    })
   })
 
   it('includes limit param when provided', async () => {
@@ -64,12 +70,10 @@ describe('HostApi.fetchHosts', () => {
 
     await new HostApi().fetchHosts({ limit: 50 })
 
-    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', {
-      params: { query: { limit: '50' } }
-    })
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', { ...CONTENT_TYPE, body: { limit: 50 } })
   })
 
-  it('serializes sort entries as repeated sort params', async () => {
+  it('serializes sort entries as column:direction strings', async () => {
     mockSuccess(makeHostsResponse([]))
 
     await new HostApi().fetchHosts({
@@ -79,8 +83,9 @@ describe('HostApi.fetchHosts', () => {
       ]
     })
 
-    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', {
-      params: { query: { sort: ['name:asc', 'state:desc'] } }
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: { limit: DEFAULT_BATCH_SIZE, sort: ['name:asc', 'state:desc'] }
     })
   })
 
@@ -89,8 +94,9 @@ describe('HostApi.fetchHosts', () => {
 
     await new HostApi().fetchHosts({ sort: [{ id: 'alias', desc: false }] })
 
-    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', {
-      params: { query: { sort: ['alias:asc'] } }
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: { limit: DEFAULT_BATCH_SIZE, sort: ['alias:asc'] }
     })
   })
 
@@ -99,8 +105,9 @@ describe('HostApi.fetchHosts', () => {
 
     await new HostApi().fetchHosts({ sort: [{ id: 'num_services', desc: true }] })
 
-    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', {
-      params: { query: { sort: ['num_services:desc'] } }
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: { limit: DEFAULT_BATCH_SIZE, sort: ['num_services:desc'] }
     })
   })
 
@@ -109,7 +116,10 @@ describe('HostApi.fetchHosts', () => {
 
     await new HostApi().fetchHosts({ sort: [] })
 
-    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', { params: { query: {} } })
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: { limit: DEFAULT_BATCH_SIZE }
+    })
   })
 
   it('omits sort params when sort is not provided', async () => {
@@ -117,11 +127,14 @@ describe('HostApi.fetchHosts', () => {
 
     await new HostApi().fetchHosts({})
 
-    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', { params: { query: {} } })
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: { limit: DEFAULT_BATCH_SIZE }
+    })
   })
 
   it('throws when the response is not ok', async () => {
-    getSpy.mockResolvedValueOnce({
+    postSpy.mockResolvedValueOnce({
       data: undefined,
       error: {},
       response: new Response('', { status: 403, statusText: 'Forbidden' })
@@ -135,8 +148,9 @@ describe('HostApi.fetchHosts', () => {
 
     await new HostApi().fetchHosts({ searchQuery: 'web-server' })
 
-    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', {
-      params: { query: { q: 'web-server' } }
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: { limit: DEFAULT_BATCH_SIZE, q: 'web-server' }
     })
   })
 
@@ -145,7 +159,10 @@ describe('HostApi.fetchHosts', () => {
 
     await new HostApi().fetchHosts({ searchQuery: '' })
 
-    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', { params: { query: {} } })
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: { limit: DEFAULT_BATCH_SIZE }
+    })
   })
 
   it('omits the q param when the search query is only whitespace', async () => {
@@ -153,7 +170,10 @@ describe('HostApi.fetchHosts', () => {
 
     await new HostApi().fetchHosts({ searchQuery: '   ' })
 
-    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', { params: { query: {} } })
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: { limit: DEFAULT_BATCH_SIZE }
+    })
   })
 
   it('keeps other params when omitting an empty q', async () => {
@@ -161,8 +181,9 @@ describe('HostApi.fetchHosts', () => {
 
     await new HostApi().fetchHosts({ limit: 50, searchQuery: '' })
 
-    expect(getSpy).toHaveBeenCalledWith('/monitor/hosts', {
-      params: { query: { limit: '50' } }
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts', {
+      ...CONTENT_TYPE,
+      body: { limit: 50 }
     })
   })
 

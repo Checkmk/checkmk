@@ -18,7 +18,6 @@ from cmk.gui.monitor.hosts._models import (
     StateLabel,
 )
 from cmk.gui.monitor.hosts._repositories import HostRepository
-from cmk.gui.openapi.framework import QueryParam
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.versioned_endpoint import (
@@ -37,6 +36,7 @@ from ._validators import parse_host_search_query, parse_host_sort_options
 # e.g. global settings.
 _MIN_NUMBER_OF_HOSTS = 0
 _MAX_NUMBER_OF_HOSTS = 5_000
+_DEFAULT_LIMIT = 1_000
 
 
 @api_model
@@ -88,42 +88,38 @@ class HostsResponse:
     meta: HostsPageMeta = api_field(description="Page metadata")
 
 
-type Limit = Annotated[
-    int,
-    Interval(ge=_MIN_NUMBER_OF_HOSTS, le=_MAX_NUMBER_OF_HOSTS),
-    QueryParam(description="Number of hosts to return", example="1000"),
-]
-
-
-type Sort = Annotated[
-    list[HostSort] | ApiOmitted,
-    PlainValidator(func=parse_host_sort_options, json_schema_input_type=list[str]),
-    QueryParam(
+@api_model
+class HostsRequestBody:
+    limit: Annotated[int, Interval(ge=_MIN_NUMBER_OF_HOSTS, le=_MAX_NUMBER_OF_HOSTS)] = api_field(
+        description="Number of hosts to return",
+        example=_DEFAULT_LIMIT,
+        default=_DEFAULT_LIMIT,
+    )
+    sort: Annotated[
+        list[HostSort] | ApiOmitted,
+        PlainValidator(func=parse_host_sort_options, json_schema_input_type=list[str]),
+    ] = api_field(
         description=(
-            "Repeated sort param. Each value is 'column:direction', e.g. 'name:asc'. "
+            "Sort options. Each value is 'column:direction', e.g. 'name:asc'. "
             f"Allowed columns: {HostSortColumn.options()}. "
             f"Allowed directions: {HostSortDirection.options()}. "
             "Multiple values define a multi-column sort applied in the given order; a column must "
-            "not be repeated. For example, 'sort=name:asc&sort=num_services:desc' sorts by name "
-            "ascending and then by number of services descending."
+            "not be repeated."
         ),
         example="name:asc",
-        is_list=True,
-    ),
-]
-
-
-type Search = Annotated[
-    str,
-    PlainValidator(func=parse_host_search_query, json_schema_input_type=str),
-    QueryParam(
-        description="Filter hosts by name, alias, or IP. Empty string returns all hosts.",
+        default_factory=ApiOmitted,
+    )
+    q: Annotated[
+        str | ApiOmitted,
+        PlainValidator(func=parse_host_search_query, json_schema_input_type=str),
+    ] = api_field(
+        description="Filter hosts by name, alias, or IP. Omit or pass empty string to return all hosts.",
         example="web-server",
-    ),
-]
+        default_factory=ApiOmitted,
+    )
 
 
-def list_hosts(limit: Limit = 1000, sort: Sort = ApiOmitted(), q: Search = "") -> HostsResponse:
+def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
     """List hosts to be consumed by the all host monitoring page."""
     user.need_permission("general.see_all")
 
@@ -131,7 +127,8 @@ def list_hosts(limit: Limit = 1000, sort: Sort = ApiOmitted(), q: Search = "") -
     # host handlers and wired up there separately.
     host_repo = LiveStatusHostRepository(connection=sites.live())
 
-    return _handle_list_hosts(host_repo, limit=limit, search_query=q)
+    search_query = "" if isinstance(body.q, ApiOmitted) else body.q
+    return _handle_list_hosts(host_repo, limit=body.limit, search_query=search_query)
 
 
 def _handle_list_hosts(
@@ -150,7 +147,7 @@ ENDPOINT_LIST_HOSTS = VersionedEndpoint(
     metadata=EndpointMetadata(
         path="/monitor/hosts",
         link_relation="cmk/list",
-        method="get",
+        method="post",
     ),
     permissions=EndpointPermissions(
         required=permissions.Undocumented(

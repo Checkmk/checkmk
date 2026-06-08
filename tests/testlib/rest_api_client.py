@@ -4244,9 +4244,9 @@ class MonitorHostsClient(RestApiClient):
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
-            "get",
+            "post",
             url="/monitor/hosts",
-            query_params=_only_set_keys(
+            body=_only_set_keys(
                 {
                     "limit": limit,
                     "q": q,

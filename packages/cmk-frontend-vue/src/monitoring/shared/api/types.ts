@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { components, operations } from 'cmk-shared-typing/typescript/openapi_internal'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 
-export type HostsRequest = operations['Monitor Hosts.list_hosts']['parameters']['query']
+export type HostsRequestBody = components['schemas']['HostsRequestBody']
 
 export type HostsResponse = components['schemas']['HostsResponse']
 

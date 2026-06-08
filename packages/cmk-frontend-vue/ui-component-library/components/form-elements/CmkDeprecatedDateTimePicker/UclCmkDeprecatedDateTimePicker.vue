@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
-import codeExample from './UclCmkDateTimePickerCodeExample.vue?raw'
+import codeExample from './UclCmkDeprecatedDateTimePickerCodeExample.vue?raw'
 
 type Mode = 'datetime' | 'date' | 'time'
 
@@ -49,7 +49,7 @@ export const panelConfig = {
     title: 'Suffix',
     initialState: 'UTC+1'
   }
-} satisfies PanelConfigFor<typeof CmkDateTimePicker, 'date' | 'time'>
+} satisfies PanelConfigFor<typeof CmkDeprecatedDateTimePicker, 'date' | 'time'>
 </script>
 
 <script setup lang="ts">
@@ -64,23 +64,24 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import { ref } from 'vue'
 
-import CmkDateTimePicker from '@/components/CmkDateTimePicker/CmkDateTimePicker.vue'
+import CmkDeprecatedDateTimePicker from '@/components/CmkDeprecatedDateTimePicker/CmkDeprecatedDateTimePicker.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkDateTimePicker, 'date' | 'time'>().createRef(
-  panelConfig
-)
+const propState = new PanelStateCreator<
+  typeof CmkDeprecatedDateTimePicker,
+  'date' | 'time'
+>().createRef(panelConfig)
 const date = ref('2026-03-15')
 const time = ref('14:30')
 </script>
 
 <template>
   <UclDetailPageLayout>
-    <UclDetailPageHeader>CmkDateTimePicker</UclDetailPageHeader>
+    <UclDetailPageHeader>CmkDeprecatedDateTimePicker</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkDateTimePicker
+      <CmkDeprecatedDateTimePicker
         v-model:date="date"
         v-model:time="time"
         :mode="propState.mode"

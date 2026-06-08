@@ -25,7 +25,7 @@ import UclCmkSlideInDialog from '@ucl/components/content-organization/CmkSlideIn
 import UclCmkTabs from '@ucl/components/content-organization/CmkTabs/UclCmkTabs.vue'
 import UclCmkWizard from '@ucl/components/content-organization/CmkWizard/UclCmkWizard.vue'
 import UclCmkCheckbox from '@ucl/components/form-elements/CmkCheckbox/UclCmkCheckbox.vue'
-import UclCmkDateTimePicker from '@ucl/components/form-elements/CmkDateTimePicker/UclCmkDateTimePicker.vue'
+import UclCmkDeprecatedDateTimePicker from '@ucl/components/form-elements/CmkDeprecatedDateTimePicker/UclCmkDeprecatedDateTimePicker.vue'
 import UclCmkDropdown from '@ucl/components/form-elements/CmkDropdown/UclCmkDropdown.vue'
 import UclCmkDualList from '@ucl/components/form-elements/CmkDualList/UclCmkDualList.vue'
 import UclCmkInput from '@ucl/components/form-elements/CmkInput/UclCmkInput.vue'
@@ -107,8 +107,8 @@ test('CmkSlideInDropdown page renders its component', async () => {
   await within(componentPreview()).findByRole('combobox')
 })
 
-test('CmkDateTimePicker page renders its component', async () => {
-  render(UclCmkDateTimePicker, { props: { screenshotMode: false } })
+test('CmkDeprecatedDateTimePicker page renders its component', async () => {
+  render(UclCmkDeprecatedDateTimePicker, { props: { screenshotMode: false } })
   const preview = within(componentPreview())
   expect(await preview.findAllByRole('button')).toHaveLength(2) // calendar and time picker triggers
   expect(await preview.findAllByRole('spinbutton')).toHaveLength(3) // date input

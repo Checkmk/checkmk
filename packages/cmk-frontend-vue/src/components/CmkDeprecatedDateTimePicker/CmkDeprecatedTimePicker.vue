@@ -222,7 +222,7 @@ function cancelPopup() {
 }
 
 function selectedOption(column: HTMLDivElement | null): HTMLButtonElement | null {
-  return column?.querySelector('.cmk-time-picker__option--selected') ?? null
+  return column?.querySelector('.cmk-deprecated-time-picker__option--selected') ?? null
 }
 
 function scrollAndFocusSelected() {
@@ -255,7 +255,7 @@ function onPopupKey(e: KeyboardEvent) {
     minutesRef.value?.focus()
   } else if (
     e.key === 'Enter' &&
-    (e.target as HTMLElement | null)?.classList.contains('cmk-time-picker__option')
+    (e.target as HTMLElement | null)?.classList.contains('cmk-deprecated-time-picker__option')
   ) {
     e.preventDefault()
     confirmPopup()
@@ -264,12 +264,12 @@ function onPopupKey(e: KeyboardEvent) {
 </script>
 
 <template>
-  <span v-click-outside="() => (popupOpen = false)" class="cmk-time-picker">
+  <span v-click-outside="() => (popupOpen = false)" class="cmk-deprecated-time-picker">
     <!-- eslint-disable vue/no-bare-strings-in-template -->
-    <span class="cmk-time-picker__field">
+    <span class="cmk-deprecated-time-picker__field">
       <input
         ref="hoursRef"
-        class="cmk-time-picker__segment"
+        class="cmk-deprecated-time-picker__segment"
         type="text"
         inputmode="numeric"
         :value="hoursDisplay"
@@ -281,10 +281,10 @@ function onPopupKey(e: KeyboardEvent) {
         @focus="selectOnFocus"
         @blur="onHoursBlur"
       />
-      <span class="cmk-time-picker__separator">:</span>
+      <span class="cmk-deprecated-time-picker__separator">:</span>
       <input
         ref="minutesRef"
-        class="cmk-time-picker__segment"
+        class="cmk-deprecated-time-picker__segment"
         type="text"
         inputmode="numeric"
         :value="minutesDisplay"
@@ -298,23 +298,23 @@ function onPopupKey(e: KeyboardEvent) {
       />
     </span>
     <CmkIconButton
-      class="cmk-time-picker__trigger"
+      class="cmk-deprecated-time-picker__trigger"
       name="clock"
       size="medium"
       :aria-label="_t('Open time picker')"
       @click="togglePopup"
     />
     <!-- eslint-enable vue/no-bare-strings-in-template -->
-    <div v-if="popupOpen" class="cmk-time-picker__popup" @keydown="onPopupKey">
-      <div class="cmk-time-picker__columns">
-        <div ref="hoursColumnRef" class="cmk-time-picker__column">
-          <div class="cmk-time-picker__column-header">{{ untranslated('H') }}</div>
+    <div v-if="popupOpen" class="cmk-deprecated-time-picker__popup" @keydown="onPopupKey">
+      <div class="cmk-deprecated-time-picker__columns">
+        <div ref="hoursColumnRef" class="cmk-deprecated-time-picker__column">
+          <div class="cmk-deprecated-time-picker__column-header">{{ untranslated('H') }}</div>
           <button
             v-for="h in allHours"
             :key="h"
             type="button"
-            class="cmk-time-picker__option"
-            :class="{ 'cmk-time-picker__option--selected': h === pendingHours }"
+            class="cmk-deprecated-time-picker__option"
+            :class="{ 'cmk-deprecated-time-picker__option--selected': h === pendingHours }"
             :tabindex="h === pendingHours ? 0 : -1"
             @click="selectHour(h)"
             @keydown="navigateOption($event, 'hours')"
@@ -322,14 +322,14 @@ function onPopupKey(e: KeyboardEvent) {
             {{ pad(h) }}
           </button>
         </div>
-        <div ref="minutesColumnRef" class="cmk-time-picker__column">
-          <div class="cmk-time-picker__column-header">{{ untranslated('M') }}</div>
+        <div ref="minutesColumnRef" class="cmk-deprecated-time-picker__column">
+          <div class="cmk-deprecated-time-picker__column-header">{{ untranslated('M') }}</div>
           <button
             v-for="m in allMinutes"
             :key="m"
             type="button"
-            class="cmk-time-picker__option"
-            :class="{ 'cmk-time-picker__option--selected': m === pendingMinutes }"
+            class="cmk-deprecated-time-picker__option"
+            :class="{ 'cmk-deprecated-time-picker__option--selected': m === pendingMinutes }"
             :tabindex="m === pendingMinutes ? 0 : -1"
             @click="selectMinute(m)"
             @keydown="navigateOption($event, 'minutes')"
@@ -338,7 +338,7 @@ function onPopupKey(e: KeyboardEvent) {
           </button>
         </div>
       </div>
-      <div class="cmk-time-picker__actions">
+      <div class="cmk-deprecated-time-picker__actions">
         <CmkButton variant="secondary" @click="cancelPopup">
           {{ _t('Cancel') }}
         </CmkButton>
@@ -351,14 +351,14 @@ function onPopupKey(e: KeyboardEvent) {
 </template>
 
 <style scoped>
-.cmk-time-picker {
+.cmk-deprecated-time-picker {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-4);
 }
 
-.cmk-time-picker__field {
+.cmk-deprecated-time-picker__field {
   display: inline-flex;
   align-items: center;
   gap: 0;
@@ -373,7 +373,7 @@ function onPopupKey(e: KeyboardEvent) {
   font-variant-numeric: tabular-nums;
 }
 
-.cmk-time-picker .cmk-time-picker__segment {
+.cmk-deprecated-time-picker .cmk-deprecated-time-picker__segment {
   width: 2ch;
   border: none;
   background: transparent;
@@ -395,12 +395,12 @@ function onPopupKey(e: KeyboardEvent) {
   }
 }
 
-.cmk-time-picker__separator {
+.cmk-deprecated-time-picker__separator {
   color: var(--font-color-dimmed);
   padding: 0 var(--dimension-1);
 }
 
-.cmk-time-picker__trigger {
+.cmk-deprecated-time-picker__trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -417,7 +417,7 @@ function onPopupKey(e: KeyboardEvent) {
   }
 }
 
-.cmk-time-picker__popup {
+.cmk-deprecated-time-picker__popup {
   position: absolute;
   top: 100%;
   left: 0;
@@ -433,12 +433,12 @@ function onPopupKey(e: KeyboardEvent) {
   box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
 }
 
-.cmk-time-picker__columns {
+.cmk-deprecated-time-picker__columns {
   display: flex;
   gap: var(--dimension-2);
 }
 
-.cmk-time-picker__actions {
+.cmk-deprecated-time-picker__actions {
   display: flex;
   justify-content: flex-end;
   gap: var(--dimension-3);
@@ -446,7 +446,7 @@ function onPopupKey(e: KeyboardEvent) {
   padding-top: var(--dimension-3);
 }
 
-.cmk-time-picker__column {
+.cmk-deprecated-time-picker__column {
   display: flex;
   flex-direction: column;
   max-height: 200px;
@@ -456,7 +456,7 @@ function onPopupKey(e: KeyboardEvent) {
   scrollbar-color: var(--scrollbar-color, #888) transparent;
 }
 
-.cmk-time-picker__column-header {
+.cmk-deprecated-time-picker__column-header {
   position: sticky;
   top: 0;
   background: var(--default-bg-color);
@@ -468,7 +468,7 @@ function onPopupKey(e: KeyboardEvent) {
   border-bottom: 1px solid var(--default-border-color);
 }
 
-.cmk-time-picker__option {
+.cmk-deprecated-time-picker__option {
   display: block;
   width: 100%;
   margin: 0;
@@ -492,7 +492,7 @@ function onPopupKey(e: KeyboardEvent) {
   }
 }
 
-.cmk-time-picker__option--selected {
+.cmk-deprecated-time-picker__option--selected {
   background: var(--color-dark-blue-50);
   color: var(--white);
 

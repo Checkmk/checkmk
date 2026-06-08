@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import CmkDateTimePicker from '@/components/CmkDateTimePicker/CmkDateTimePicker.vue'
+import CmkDeprecatedDateTimePicker from '@/components/CmkDeprecatedDateTimePicker/CmkDeprecatedDateTimePicker.vue'
 
 const props = defineProps<{
   mode?: 'datetime' | 'date' | 'time'
@@ -55,7 +55,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <CmkDateTimePicker
+  <CmkDeprecatedDateTimePicker
     v-model:date="dateValue"
     v-model:time="timeValue"
     :mode="effectiveMode"

@@ -35,7 +35,7 @@ import UclCmkSlideInDialog from './content-organization/CmkSlideInDialog/UclCmkS
 import UclCmkTabs from './content-organization/CmkTabs/UclCmkTabs.vue'
 import UclCmkWizard from './content-organization/CmkWizard/UclCmkWizard.vue'
 import UclCmkCheckbox from './form-elements/CmkCheckbox/UclCmkCheckbox.vue'
-import UclCmkDateTimePicker from './form-elements/CmkDateTimePicker/UclCmkDateTimePicker.vue'
+import UclCmkDeprecatedDateTimePicker from './form-elements/CmkDeprecatedDateTimePicker/UclCmkDeprecatedDateTimePicker.vue'
 import UclCmkDropdown from './form-elements/CmkDropdown/UclCmkDropdown.vue'
 import UclCmkDualList from './form-elements/CmkDualList/UclCmkDualList.vue'
 import UclCmkInput from './form-elements/CmkInput/UclCmkInput.vue'
@@ -101,7 +101,7 @@ const contentOrganizationPages = [
 
 const formElementsPages = [
   new Page('CmkCheckbox', UclCmkCheckbox),
-  new Page('CmkDateTimePicker', UclCmkDateTimePicker),
+  new Page('CmkDeprecatedDateTimePicker', UclCmkDeprecatedDateTimePicker),
   new Page('CmkDropdown', UclCmkDropdown),
   new Page('CmkDualList', UclCmkDualList),
   new Page('CmkInput', UclCmkInput),

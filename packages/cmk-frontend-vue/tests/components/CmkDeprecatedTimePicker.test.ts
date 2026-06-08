@@ -7,10 +7,10 @@ import { userEvent } from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
-import CmkTimePicker from '@/components/CmkDateTimePicker/CmkTimePicker.vue'
+import CmkDeprecatedTimePicker from '@/components/CmkDeprecatedDateTimePicker/CmkDeprecatedTimePicker.vue'
 
 test('CmkTimePicker renders initial time value', () => {
-  render(CmkTimePicker, {
+  render(CmkDeprecatedTimePicker, {
     props: { modelValue: '14:30' }
   })
 
@@ -21,7 +21,7 @@ test('CmkTimePicker renders initial time value', () => {
 })
 
 test('CmkTimePicker defaults to 00:00 for invalid input', () => {
-  render(CmkTimePicker, {
+  render(CmkDeprecatedTimePicker, {
     props: { modelValue: 'invalid' }
   })
 
@@ -33,12 +33,12 @@ test('CmkTimePicker defaults to 00:00 for invalid input', () => {
 
 test('CmkTimePicker emits update on arrow key up in hours', async () => {
   const wrapper = defineComponent({
-    components: { CmkTimePicker },
+    components: { CmkDeprecatedTimePicker },
     setup() {
       const time = ref('10:30')
       return { time }
     },
-    template: `<CmkTimePicker v-model="time" />`
+    template: `<CmkDeprecatedTimePicker v-model="time" />`
   })
   render(wrapper)
 
@@ -50,12 +50,12 @@ test('CmkTimePicker emits update on arrow key up in hours', async () => {
 
 test('CmkTimePicker wraps hours from 23 to 0 on arrow up', async () => {
   const wrapper = defineComponent({
-    components: { CmkTimePicker },
+    components: { CmkDeprecatedTimePicker },
     setup() {
       const time = ref('23:00')
       return { time }
     },
-    template: `<CmkTimePicker v-model="time" />`
+    template: `<CmkDeprecatedTimePicker v-model="time" />`
   })
   render(wrapper)
 
@@ -67,12 +67,12 @@ test('CmkTimePicker wraps hours from 23 to 0 on arrow up', async () => {
 
 test('CmkTimePicker keyboard input accepts two-digit hours', async () => {
   const wrapper = defineComponent({
-    components: { CmkTimePicker },
+    components: { CmkDeprecatedTimePicker },
     setup() {
       const time = ref('00:00')
       return { time }
     },
-    template: `<CmkTimePicker v-model="time" />`
+    template: `<CmkDeprecatedTimePicker v-model="time" />`
   })
   render(wrapper)
 
@@ -84,7 +84,7 @@ test('CmkTimePicker keyboard input accepts two-digit hours', async () => {
 })
 
 test('CmkTimePicker has accessible trigger button', () => {
-  render(CmkTimePicker, {
+  render(CmkDeprecatedTimePicker, {
     props: { modelValue: '12:00' }
   })
 
@@ -92,7 +92,7 @@ test('CmkTimePicker has accessible trigger button', () => {
 })
 
 test('CmkTimePicker popup opens on trigger click', async () => {
-  render(CmkTimePicker, {
+  render(CmkDeprecatedTimePicker, {
     props: { modelValue: '12:00' }
   })
 
@@ -105,12 +105,12 @@ test('CmkTimePicker popup opens on trigger click', async () => {
 
 test('CmkTimePicker updates value on popup hour selection', async () => {
   const wrapper = defineComponent({
-    components: { CmkTimePicker },
+    components: { CmkDeprecatedTimePicker },
     setup() {
       const time = ref('05:30')
       return { time }
     },
-    template: `<CmkTimePicker v-model="time" />`
+    template: `<CmkDeprecatedTimePicker v-model="time" />`
   })
   render(wrapper)
 
@@ -133,12 +133,12 @@ test('CmkTimePicker updates value on popup hour selection', async () => {
 
 test('CmkTimePicker enter on focused option applies that value', async () => {
   const wrapper = defineComponent({
-    components: { CmkTimePicker },
+    components: { CmkDeprecatedTimePicker },
     setup() {
       const time = ref('05:30')
       return { time }
     },
-    template: `<CmkTimePicker v-model="time" />`
+    template: `<CmkDeprecatedTimePicker v-model="time" />`
   })
   render(wrapper)
 
@@ -157,12 +157,12 @@ test('CmkTimePicker enter on focused option applies that value', async () => {
 
 test('CmkTimePicker discards popup selection on cancel', async () => {
   const wrapper = defineComponent({
-    components: { CmkTimePicker },
+    components: { CmkDeprecatedTimePicker },
     setup() {
       const time = ref('05:30')
       return { time }
     },
-    template: `<CmkTimePicker v-model="time" />`
+    template: `<CmkDeprecatedTimePicker v-model="time" />`
   })
   render(wrapper)
 

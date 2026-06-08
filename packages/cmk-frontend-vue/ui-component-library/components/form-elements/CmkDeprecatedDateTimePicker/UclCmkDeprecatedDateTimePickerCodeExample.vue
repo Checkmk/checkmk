@@ -6,12 +6,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import CmkDateTimePicker from '@/components/CmkDateTimePicker/CmkDateTimePicker.vue'
+import CmkDeprecatedDateTimePicker from '@/components/CmkDeprecatedDateTimePicker/CmkDeprecatedDateTimePicker.vue'
 
 const date = ref('2026-03-15')
 const time = ref('14:30')
 </script>
 
 <template>
-  <CmkDateTimePicker v-model:date="date" v-model:time="time" mode="datetime" suffix="UTC+1" />
+  <CmkDeprecatedDateTimePicker
+    v-model:date="date"
+    v-model:time="time"
+    mode="datetime"
+    suffix="UTC+1"
+  />
 </template>

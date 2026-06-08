@@ -6,18 +6,18 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
-import CmkDateTimePicker from '@/components/CmkDateTimePicker/CmkDateTimePicker.vue'
+import CmkDeprecatedDateTimePicker from '@/components/CmkDeprecatedDateTimePicker/CmkDeprecatedDateTimePicker.vue'
 
-test('CmkDateTimePicker renders date and time in datetime mode', () => {
+test('CmkDeprecatedDateTimePicker renders date and time in datetime mode', () => {
   render(
     defineComponent({
-      components: { CmkDateTimePicker },
+      components: { CmkDeprecatedDateTimePicker },
       setup() {
         const date = ref('2026-03-15')
         const time = ref('14:30')
         return { date, time }
       },
-      template: `<CmkDateTimePicker v-model:date="date" v-model:time="time" mode="datetime" />`
+      template: `<CmkDeprecatedDateTimePicker v-model:date="date" v-model:time="time" mode="datetime" />`
     })
   )
 
@@ -25,16 +25,16 @@ test('CmkDateTimePicker renders date and time in datetime mode', () => {
   expect(screen.getByRole('button', { name: 'Open calendar' })).toBeInTheDocument()
 })
 
-test('CmkDateTimePicker renders only date in date mode', () => {
+test('CmkDeprecatedDateTimePicker renders only date in date mode', () => {
   render(
     defineComponent({
-      components: { CmkDateTimePicker },
+      components: { CmkDeprecatedDateTimePicker },
       setup() {
         const date = ref('2026-03-15')
         const time = ref('00:00')
         return { date, time }
       },
-      template: `<CmkDateTimePicker v-model:date="date" v-model:time="time" mode="date" />`
+      template: `<CmkDeprecatedDateTimePicker v-model:date="date" v-model:time="time" mode="date" />`
     })
   )
 
@@ -42,16 +42,16 @@ test('CmkDateTimePicker renders only date in date mode', () => {
   expect(screen.queryByRole('textbox', { name: 'Hours' })).not.toBeInTheDocument()
 })
 
-test('CmkDateTimePicker renders only time in time mode', () => {
+test('CmkDeprecatedDateTimePicker renders only time in time mode', () => {
   render(
     defineComponent({
-      components: { CmkDateTimePicker },
+      components: { CmkDeprecatedDateTimePicker },
       setup() {
         const date = ref('')
         const time = ref('14:30')
         return { date, time }
       },
-      template: `<CmkDateTimePicker v-model:date="date" v-model:time="time" mode="time" />`
+      template: `<CmkDeprecatedDateTimePicker v-model:date="date" v-model:time="time" mode="time" />`
     })
   )
 
@@ -59,32 +59,32 @@ test('CmkDateTimePicker renders only time in time mode', () => {
   expect(screen.queryByRole('button', { name: 'Open calendar' })).not.toBeInTheDocument()
 })
 
-test('CmkDateTimePicker displays suffix text', () => {
+test('CmkDeprecatedDateTimePicker displays suffix text', () => {
   render(
     defineComponent({
-      components: { CmkDateTimePicker },
+      components: { CmkDeprecatedDateTimePicker },
       setup() {
         const date = ref('2026-03-15')
         const time = ref('14:30')
         return { date, time }
       },
-      template: `<CmkDateTimePicker v-model:date="date" v-model:time="time" suffix="UTC+1" />`
+      template: `<CmkDeprecatedDateTimePicker v-model:date="date" v-model:time="time" suffix="UTC+1" />`
     })
   )
 
   expect(screen.getByText('UTC+1')).toBeInTheDocument()
 })
 
-test('CmkDateTimePicker opens calendar on trigger click', async () => {
+test('CmkDeprecatedDateTimePicker opens calendar on trigger click', async () => {
   render(
     defineComponent({
-      components: { CmkDateTimePicker },
+      components: { CmkDeprecatedDateTimePicker },
       setup() {
         const date = ref('2026-03-15')
         const time = ref('14:30')
         return { date, time }
       },
-      template: `<CmkDateTimePicker v-model:date="date" v-model:time="time" mode="date" />`
+      template: `<CmkDeprecatedDateTimePicker v-model:date="date" v-model:time="time" mode="date" />`
     })
   )
 
@@ -95,16 +95,16 @@ test('CmkDateTimePicker opens calendar on trigger click', async () => {
   expect(screen.getByRole('button', { name: 'Next month' })).toBeInTheDocument()
 })
 
-test('CmkDateTimePicker defaults to datetime mode', () => {
+test('CmkDeprecatedDateTimePicker defaults to datetime mode', () => {
   render(
     defineComponent({
-      components: { CmkDateTimePicker },
+      components: { CmkDeprecatedDateTimePicker },
       setup() {
         const date = ref('2026-03-15')
         const time = ref('14:30')
         return { date, time }
       },
-      template: `<CmkDateTimePicker v-model:date="date" v-model:time="time" />`
+      template: `<CmkDeprecatedDateTimePicker v-model:date="date" v-model:time="time" />`
     })
   )
 

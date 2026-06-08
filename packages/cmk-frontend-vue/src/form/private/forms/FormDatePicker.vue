@@ -9,7 +9,7 @@ import { ref } from 'vue'
 
 import useId from '@/lib/useId'
 
-import CmkDateTimePicker from '@/components/CmkDateTimePicker/CmkDateTimePicker.vue'
+import CmkDeprecatedDateTimePicker from '@/components/CmkDeprecatedDateTimePicker/CmkDeprecatedDateTimePicker.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
@@ -46,7 +46,7 @@ const unusedTime = ref('00:00')
     </div>
     <div class="form-date-picker__input-wrapper">
       <CmkInlineValidation :validation="validation" />
-      <CmkDateTimePicker v-model:date="value" v-model:time="unusedTime" mode="date" />
+      <CmkDeprecatedDateTimePicker v-model:date="value" v-model:time="unusedTime" mode="date" />
     </div>
   </div>
 </template>

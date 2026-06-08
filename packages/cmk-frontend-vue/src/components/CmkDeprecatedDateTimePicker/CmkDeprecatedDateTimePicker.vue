@@ -39,7 +39,7 @@ import CmkButton from '@/components/CmkButton'
 import CmkIcon from '@/components/CmkIcon'
 import ArrowDown from '@/components/graphics/ArrowDown.vue'
 
-import CmkTimePicker from './CmkTimePicker.vue'
+import CmkDeprecatedTimePicker from './CmkDeprecatedTimePicker.vue'
 import { parseDateString } from './dateUtils'
 
 const { mode = 'datetime' } = defineProps<{
@@ -120,7 +120,7 @@ function shiftYear(delta: number) {
 </script>
 
 <template>
-  <span class="cmk-date-time-picker">
+  <span class="cmk-deprecated-date-time-picker">
     <!-- @vue-expect-error reka-ui DatePickerRoot types incompatible with exactOptionalPropertyTypes -->
     <DatePickerRoot
       v-if="showDate"
@@ -131,44 +131,54 @@ function shiftYear(delta: number) {
       :locale="'en-CA'"
       :prevent-deselect="true"
     >
-      <DatePickerAnchor as="span" class="cmk-date-time-picker__anchor">
+      <DatePickerAnchor as="span" class="cmk-deprecated-date-time-picker__anchor">
         <DatePickerField
           v-slot="{ segments }"
-          class="cmk-date-time-picker__field"
+          class="cmk-deprecated-date-time-picker__field"
           :aria-label="_t('Date')"
         >
           <template v-for="item in segments" :key="item.part">
             <DatePickerInput
               v-if="item.part !== 'literal'"
               :part="item.part"
-              class="cmk-date-time-picker__segment"
+              class="cmk-deprecated-date-time-picker__segment"
             >
               {{ item.value }}
             </DatePickerInput>
-            <span v-else class="cmk-date-time-picker__literal">{{ item.value }}</span>
+            <span v-else class="cmk-deprecated-date-time-picker__literal">{{ item.value }}</span>
           </template>
         </DatePickerField>
-        <DatePickerTrigger class="cmk-date-time-picker__trigger" :aria-label="_t('Open calendar')">
+        <DatePickerTrigger
+          class="cmk-deprecated-date-time-picker__trigger"
+          :aria-label="_t('Open calendar')"
+        >
           <CmkIcon name="insertdate" size="medium" />
         </DatePickerTrigger>
       </DatePickerAnchor>
-      <DatePickerContent class="cmk-date-time-picker__popover" align="start" :side-offset="4">
-        <DatePickerCalendar v-slot="{ weekDays, grid }" class="cmk-date-time-picker__calendar">
+      <DatePickerContent
+        class="cmk-deprecated-date-time-picker__popover"
+        align="start"
+        :side-offset="4"
+      >
+        <DatePickerCalendar
+          v-slot="{ weekDays, grid }"
+          class="cmk-deprecated-date-time-picker__calendar"
+        >
           <DatePickerHeader
             v-if="calendarView === 'calendar'"
-            class="cmk-date-time-picker__calendar-header"
+            class="cmk-deprecated-date-time-picker__calendar-header"
           >
             <DatePickerPrev
-              class="cmk-date-time-picker__nav-btn"
+              class="cmk-deprecated-date-time-picker__nav-btn"
               :aria-label="_t('Previous month')"
             >
               <ArrowDown
-                class="cmk-date-time-picker__nav-icon cmk-date-time-picker__nav-icon--prev"
+                class="cmk-deprecated-date-time-picker__nav-icon cmk-deprecated-date-time-picker__nav-icon--prev"
               />
             </DatePickerPrev>
-            <DatePickerHeading class="cmk-date-time-picker__calendar-heading">
+            <DatePickerHeading class="cmk-deprecated-date-time-picker__calendar-heading">
               <CmkButton
-                class="cmk-date-time-picker__heading-toggle"
+                class="cmk-deprecated-date-time-picker__heading-toggle"
                 variant="optional"
                 :title="_t('Select month and year')"
                 @click="toggleMonthPicker"
@@ -176,45 +186,51 @@ function shiftYear(delta: number) {
                 {{ displayMonthName }} {{ calendarPlaceholder.year }}
               </CmkButton>
             </DatePickerHeading>
-            <DatePickerNext class="cmk-date-time-picker__nav-btn" :aria-label="_t('Next month')">
+            <DatePickerNext
+              class="cmk-deprecated-date-time-picker__nav-btn"
+              :aria-label="_t('Next month')"
+            >
               <ArrowDown
-                class="cmk-date-time-picker__nav-icon cmk-date-time-picker__nav-icon--next"
+                class="cmk-deprecated-date-time-picker__nav-icon cmk-deprecated-date-time-picker__nav-icon--next"
               />
             </DatePickerNext>
           </DatePickerHeader>
-          <div v-if="calendarView === 'month-picker'" class="cmk-date-time-picker__month-picker">
-            <div class="cmk-date-time-picker__calendar-header">
+          <div
+            v-if="calendarView === 'month-picker'"
+            class="cmk-deprecated-date-time-picker__month-picker"
+          >
+            <div class="cmk-deprecated-date-time-picker__calendar-header">
               <CmkButton
-                class="cmk-date-time-picker__nav-btn"
+                class="cmk-deprecated-date-time-picker__nav-btn"
                 variant="optional"
                 :title="_t('Previous year')"
                 @click="shiftYear(-1)"
               >
                 <ArrowDown
-                  class="cmk-date-time-picker__nav-icon cmk-date-time-picker__nav-icon--prev"
+                  class="cmk-deprecated-date-time-picker__nav-icon cmk-deprecated-date-time-picker__nav-icon--prev"
                 />
               </CmkButton>
-              <span class="cmk-date-time-picker__calendar-heading">{{
+              <span class="cmk-deprecated-date-time-picker__calendar-heading">{{
                 calendarPlaceholder.year
               }}</span>
               <CmkButton
-                class="cmk-date-time-picker__nav-btn"
+                class="cmk-deprecated-date-time-picker__nav-btn"
                 variant="optional"
                 :title="_t('Next year')"
                 @click="shiftYear(1)"
               >
                 <ArrowDown
-                  class="cmk-date-time-picker__nav-icon cmk-date-time-picker__nav-icon--next"
+                  class="cmk-deprecated-date-time-picker__nav-icon cmk-deprecated-date-time-picker__nav-icon--next"
                 />
               </CmkButton>
             </div>
-            <div class="cmk-date-time-picker__month-grid">
+            <div class="cmk-deprecated-date-time-picker__month-grid">
               <CmkButton
                 v-for="(name, index) in shortMonthNames"
                 :key="index"
-                class="cmk-date-time-picker__month-option"
+                class="cmk-deprecated-date-time-picker__month-option"
                 :class="{
-                  'cmk-date-time-picker__month-option--selected':
+                  'cmk-deprecated-date-time-picker__month-option--selected':
                     index + 1 === calendarPlaceholder.month
                 }"
                 variant="optional"
@@ -234,7 +250,7 @@ function shiftYear(delta: number) {
                 <DatePickerHeadCell
                   v-for="day in weekDays"
                   :key="day"
-                  class="cmk-date-time-picker__head-cell"
+                  class="cmk-deprecated-date-time-picker__head-cell"
                 >
                   {{ day }}
                 </DatePickerHeadCell>
@@ -253,7 +269,7 @@ function shiftYear(delta: number) {
                   <DatePickerCellTrigger
                     :day="weekDate"
                     :month="month.value"
-                    class="cmk-date-time-picker__cell-trigger"
+                    class="cmk-deprecated-date-time-picker__cell-trigger"
                   />
                 </DatePickerCell>
               </DatePickerGridRow>
@@ -263,9 +279,9 @@ function shiftYear(delta: number) {
       </DatePickerContent>
     </DatePickerRoot>
 
-    <CmkTimePicker v-if="showTime" v-model="time" />
+    <CmkDeprecatedTimePicker v-if="showTime" v-model="time" />
 
-    <span v-if="suffix" class="cmk-date-time-picker__suffix">
+    <span v-if="suffix" class="cmk-deprecated-date-time-picker__suffix">
       {{ suffix }}
     </span>
   </span>
@@ -273,19 +289,19 @@ function shiftYear(delta: number) {
 
 <!-- unscoped: reka-ui child components don't receive scoped data attributes -->
 <style>
-.cmk-date-time-picker {
+.cmk-deprecated-date-time-picker {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-4);
 }
 
-.cmk-date-time-picker__anchor {
+.cmk-deprecated-date-time-picker__anchor {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-4);
 }
 
-.cmk-date-time-picker__field {
+.cmk-deprecated-date-time-picker__field {
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--default-form-element-border-color);
@@ -300,7 +316,7 @@ function shiftYear(delta: number) {
   font-variant-numeric: tabular-nums;
 }
 
-.cmk-date-time-picker__trigger {
+.cmk-deprecated-date-time-picker__trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -324,7 +340,7 @@ function shiftYear(delta: number) {
   }
 }
 
-.cmk-date-time-picker__segment {
+.cmk-deprecated-date-time-picker__segment {
   padding: 1px var(--dimension-2);
   border: none;
   border-radius: var(--dimension-2);
@@ -341,11 +357,11 @@ function shiftYear(delta: number) {
   }
 }
 
-.cmk-date-time-picker__literal {
+.cmk-deprecated-date-time-picker__literal {
   color: var(--font-color-dimmed);
 }
 
-.cmk-date-time-picker__popover {
+.cmk-deprecated-date-time-picker__popover {
   z-index: var(--z-index-modal-popup, 3500);
   background: var(--default-bg-color);
   border: 1px solid var(--default-border-color);
@@ -355,24 +371,24 @@ function shiftYear(delta: number) {
   color: var(--font-color);
 }
 
-.cmk-date-time-picker__calendar {
+.cmk-deprecated-date-time-picker__calendar {
   font-size: 13px;
   color: var(--font-color);
   min-width: 260px;
 }
 
-.cmk-date-time-picker__calendar button {
+.cmk-deprecated-date-time-picker__calendar button {
   color: var(--font-color);
 }
 
-.cmk-date-time-picker__calendar-header {
+.cmk-deprecated-date-time-picker__calendar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--dimension-4);
 }
 
-.cmk-date-time-picker__calendar-heading {
+.cmk-deprecated-date-time-picker__calendar-heading {
   display: flex;
   align-items: center;
   gap: var(--dimension-3);
@@ -380,7 +396,7 @@ function shiftYear(delta: number) {
   color: var(--font-color);
 }
 
-.cmk-date-time-picker__heading-toggle {
+.cmk-deprecated-date-time-picker__heading-toggle {
   font-weight: 600;
   font-size: 13px;
   background: transparent;
@@ -393,17 +409,17 @@ function shiftYear(delta: number) {
   }
 }
 
-.cmk-date-time-picker__month-picker {
+.cmk-deprecated-date-time-picker__month-picker {
   margin-top: var(--dimension-3);
 }
 
-.cmk-date-time-picker__month-grid {
+.cmk-deprecated-date-time-picker__month-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--dimension-3);
 }
 
-.cmk-date-time-picker__month-option {
+.cmk-deprecated-date-time-picker__month-option {
   height: var(--dimension-11);
   border: none;
   background: transparent;
@@ -416,13 +432,13 @@ function shiftYear(delta: number) {
     background: var(--input-hover-bg-color);
   }
 
-  &.cmk-date-time-picker__month-option--selected {
+  &.cmk-deprecated-date-time-picker__month-option--selected {
     background: var(--color-dark-blue-50);
     color: var(--white);
   }
 }
 
-.cmk-date-time-picker__nav-btn {
+.cmk-deprecated-date-time-picker__nav-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -440,20 +456,20 @@ function shiftYear(delta: number) {
   }
 }
 
-.cmk-date-time-picker__nav-icon {
+.cmk-deprecated-date-time-picker__nav-icon {
   flex-shrink: 0;
   width: 0.7em;
 }
 
-.cmk-date-time-picker__nav-icon--prev {
+.cmk-deprecated-date-time-picker__nav-icon--prev {
   transform: rotate(90deg);
 }
 
-.cmk-date-time-picker__nav-icon--next {
+.cmk-deprecated-date-time-picker__nav-icon--next {
   transform: rotate(-90deg);
 }
 
-.cmk-date-time-picker__head-cell {
+.cmk-deprecated-date-time-picker__head-cell {
   font-weight: 600;
   font-size: 12px;
   padding: var(--dimension-3) var(--dimension-4);
@@ -461,7 +477,7 @@ function shiftYear(delta: number) {
   color: var(--font-color-dimmed);
 }
 
-.cmk-date-time-picker__cell-trigger {
+.cmk-deprecated-date-time-picker__cell-trigger {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -496,7 +512,7 @@ function shiftYear(delta: number) {
   }
 }
 
-.cmk-date-time-picker__suffix {
+.cmk-deprecated-date-time-picker__suffix {
   color: var(--font-color-dimmed);
   font-size: 12px;
 }

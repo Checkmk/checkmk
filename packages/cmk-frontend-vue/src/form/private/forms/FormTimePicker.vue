@@ -8,7 +8,7 @@ import type { TimePicker } from 'cmk-shared-typing/typescript/vue_formspec_compo
 
 import useId from '@/lib/useId'
 
-import CmkTimePicker from '@/components/CmkDateTimePicker/CmkTimePicker.vue'
+import CmkDeprecatedTimePicker from '@/components/CmkDeprecatedDateTimePicker/CmkDeprecatedTimePicker.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
@@ -44,7 +44,7 @@ const componentId = useId()
     </div>
     <div class="form-time-picker__input-wrapper">
       <CmkInlineValidation :validation="validation" />
-      <CmkTimePicker :id="componentId" v-model="value" />
+      <CmkDeprecatedTimePicker :id="componentId" v-model="value" />
     </div>
   </div>
 </template>

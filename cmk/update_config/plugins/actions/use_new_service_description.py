@@ -13,8 +13,16 @@ from cmk.utils.paths import autochecks_dir
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore
 
-from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
+from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    load_site_global_settings,
+    save_global_settings,
+    save_site_global_settings,
+)
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
+from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
@@ -115,34 +123,85 @@ def _update_new_format(
     return results
 
 
+def _update_use_new_descriptions_for(
+    logger: Logger,
+    settings: GlobalSettings,
+    autocheck_entries: Sequence[AutocheckEntry],
+) -> GlobalSettings:
+    match settings.get("use_new_descriptions_for"):
+        case None:
+            return settings
+        case dict(use_new_descriptions_for_mapping):
+            updated_value: Mapping[str, bool] = _update_new_format(
+                logger,
+                USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"],
+                use_new_descriptions_for_mapping,
+                autocheck_entries,
+            )
+            return {**settings, "use_new_descriptions_for": updated_value}
+        case list(use_new_descriptions_selected_plugins):
+            updated_value = _migrate_from_old_format(
+                logger,
+                USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"],
+                use_new_descriptions_selected_plugins,
+                autocheck_entries,
+            )
+            return {**settings, "use_new_descriptions_for": updated_value}
+        case _:
+            raise ValueError(
+                f"Unknown 'use_new_descriptions_for' format: {settings.get('use_new_descriptions_for')}"
+            )
+
+
+def _update_installation_wide_global_settings(
+    logger: Logger, autocheck_entries: Sequence[AutocheckEntry]
+) -> None:
+    save_global_settings(
+        _update_use_new_descriptions_for(
+            logger,
+            load_configuration_settings(full_config=True),
+            autocheck_entries,
+        )
+    )
+
+
+def _update_site_specific_global_settings(
+    logger: Logger, autocheck_entries: Sequence[AutocheckEntry]
+) -> None:
+    if not is_wato_slave_site():
+        return
+    save_site_global_settings(
+        _update_use_new_descriptions_for(
+            logger,
+            load_site_global_settings(),
+            autocheck_entries,
+        )
+    )
+
+
+def _update_remote_site_specific_global_settings(
+    logger: Logger, autocheck_entries: Sequence[AutocheckEntry]
+) -> None:
+    site_mgmt = site_management_registry["site_management"]
+    configured_sites = site_mgmt.load_sites()
+    for site_id, site_spec in configured_sites.items():
+        if site_globals_editable(site_id, site_spec):
+            site_spec["globals"] = dict(
+                _update_use_new_descriptions_for(
+                    logger,
+                    site_spec.setdefault("globals", {}),
+                    autocheck_entries,
+                )
+            )
+    site_mgmt.save_sites(configured_sites, activate=False)
+
+
 class UpdateUseNewServiceDescription(UpdateAction):
     def __call__(self, logger: Logger) -> None:
-        global_settings = load_configuration_settings(full_config=True)
-
-        updated_global_settings = dict(global_settings).copy()
-        match updated_global_settings.get("use_new_descriptions_for"):
-            case None:
-                return
-            case dict(use_new_descriptions_for_mapping):
-                updated_global_settings["use_new_descriptions_for"] = _update_new_format(
-                    logger,
-                    USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"],
-                    use_new_descriptions_for_mapping,
-                    _read_autocheck_entries(),
-                )
-            case list(use_new_descriptions_selected_plugins):
-                updated_global_settings["use_new_descriptions_for"] = _migrate_from_old_format(
-                    logger,
-                    USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"],
-                    use_new_descriptions_selected_plugins,
-                    _read_autocheck_entries(),
-                )
-            case _:
-                raise ValueError(
-                    f"Unknown 'use_new_descriptions_for' format: {updated_global_settings.get('use_new_descriptions_for')}"
-                )
-
-        save_global_settings(updated_global_settings)
+        autocheck_entries = _read_autocheck_entries()
+        _update_installation_wide_global_settings(logger, autocheck_entries)
+        _update_site_specific_global_settings(logger, autocheck_entries)
+        _update_remote_site_specific_global_settings(logger, autocheck_entries)
 
 
 update_action_registry.register(

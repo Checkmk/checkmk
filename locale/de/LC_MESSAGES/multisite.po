@@ -4,11 +4,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-02 17:52+0000\n"
-"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
-">\n"
+"PO-Revision-Date: 2026-06-08 13:23+0000\n"
+"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
+"de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -20299,7 +20299,7 @@ msgid "Do not deploy plug-in for Windows interfaces"
 msgstr "Plugin für Windows Schnittstellen nicht verteilen"
 
 msgid "Do not deploy plug-in for Windows system info"
-msgstr "Plugins für Windows Systeminfo nicht verteilen"
+msgstr "Plugin für Windows Systeminfo nicht verteilen"
 
 #, python-format
 msgid "Do not deploy the %s plug-in"
@@ -20578,7 +20578,7 @@ msgid "Docsis cable modem status"
 msgstr "Status des Docsis Kabel-Modems"
 
 msgid "Docsis downstream channels"
-msgstr "Docsis-Downstream-Kanäle"
+msgstr "Docsis Downstream-Kanäle"
 
 msgid "Docsis upstream channels"
 msgstr "Docsis Upstream-Kanäle"
@@ -20619,7 +20619,7 @@ msgid "Domain (only used for European accounts)"
 msgstr "Domain (nur für europäische Konten verwendet)"
 
 msgid "Domino mail queue names"
-msgstr "Domino Mailschlangen-Namen"
+msgstr "Domino Mail Warteschlangen-Namen"
 
 msgid "Don't activate services matching"
 msgstr "Zutreffende Services nicht aktivieren"
@@ -21000,7 +21000,7 @@ msgstr ""
 "Bei jedem Durchgang holt der Agent Ereignisse ab, die maximal so alt sind. "
 "Der Agent merkt sich die Ereignisse, die bereits beim letzten Durchgang "
 "abgeholt wurden, d.h. kein Ereignis wird mehrfach an die Event Console "
-"gesendet. Wenn Sie diesen Wert niedriger als das Prüfintervall des Hosts "
+"gesendet. Wenn Sie diesen Wert niedriger als das Check-Intervall des Hosts "
 "einstellen, führt dies zu fehlenden Ereignissen. Beachten Sie auch, dass die "
 "Datadog-API es erlaubt, neue Ereignisse zu erstellen, die in der "
 "Vergangenheit liegen. Solche Ereignisse werden vom Agenten übersehen, wenn "
@@ -21015,7 +21015,7 @@ msgstr ""
 "Bei jedem Lauf holt der Agent Protokolle ab, die maximal so alt sind. Der "
 "Agent merkt sich die Protokolle, die beim letzten Lauf bereits abgeholt "
 "wurden, d.h. es werden keine Protokolle mehrfach an die Event Console "
-"gesendet. Wenn Sie diesen Wert niedriger als den Checkintervall des Hosts "
+"gesendet. Wenn Sie diesen Wert niedriger als das Check-Intervall des Hosts "
 "einstellen, werden Protokolle fehlen. "
 
 msgid ""
@@ -22331,15 +22331,16 @@ msgstr ""
 "alle Replikationsaktivitäten der Remote-Instanz erstellt. Bei Deaktivierung "
 "werden nur Probleme protokolliert."
 
-#, fuzzy
 msgid ""
 "Enabling this option will enforce two-factor authentication for all users. "
 "Enabling this setting will override role based two-factor enforcement. "
 "Automation users are exempt, as they cannot use two-factor authentication."
 msgstr ""
-"Wenn Sie diese Option aktivieren, wird die Zwei-Faktor-Authentifizierung für "
-"alle Benutzer erzwungen. Wenn Sie diese Einstellung aktivieren, wird die "
-"rollenbasierte Zwei-Faktor-Authentifizierung außer Kraft gesetzt."
+"Durch Aktivieren dieser Option wird die Zwei-Faktor-Authentifizierung für "
+"alle Benutzer erzwungen. Diese Einstellung hat Vorrang vor der "
+"rollenbasierten Erzwingung der Zwei-Faktor-Authentifizierung. Automation-"
+"Benutzer sind davon ausgenommen, da sie die Zwei-Faktor-Authentifizierung "
+"nicht nutzen können."
 
 msgid ""
 "Enabling this option will result in an additional service for every RMON-"
@@ -27264,7 +27265,7 @@ msgid "Has changed"
 msgstr "Hat sich geändert"
 
 msgid "Has inventory data"
-msgstr "Hat Inventardaten"
+msgstr "Hat Inventurdaten"
 
 msgid "Has metrics"
 msgstr "Hat Metriken"
@@ -29451,7 +29452,7 @@ msgid "Host group of DOWN hosts"
 msgstr "Host-Gruppe der Hosts im Zustand DOWN"
 
 msgid "Host group of PENDING"
-msgstr "Host-Gruppe der Hosts im Zustand PENDING"
+msgstr "Host-Gruppe des Zustands PENDING"
 
 msgid "Host group of UP hosts"
 msgstr "Host-Gruppe der Hosts im Zustand UP"
@@ -31551,7 +31552,6 @@ msgstr ""
 "WARN- oder CRIT-Levels einstellen, um zu prüfen, ob das Delta der letzten "
 "Minute um X Prozent höher ist als das durchschnittliche Delta."
 
-#, fuzzy
 msgid ""
 "If this setting is changed from disabled to enabled, all users with this "
 "role will be required to use a two-factor authentication and will be logged "
@@ -31564,7 +31564,9 @@ msgstr ""
 "alle Benutzer mit dieser Rolle eine Zwei-Faktor-Authentifizierung verwenden "
 "und werden aus allen laufenden Sitzungen ausgeloggt, wenn sie Zwei-Faktor "
 "nicht aktiviert haben. Die Option 'Zwei-Faktor-Authentifizierung erzwingen' "
-"in den globalen Einstellungen überschreibt diese Einstellung."
+"in den globalen Einstellungen überschreibt diese Einstellung. Automation-"
+"Benutzer sind davon ausgenommen, da sie die Zwei-Faktor-Authentifizierung "
+"nicht nutzen können."
 
 msgid "If value is a tuple it has to have length of two."
 msgstr "Wenn der Wert ein Tupel ist, muss er die Länge zwei haben."
@@ -38554,8 +38556,7 @@ msgstr ""
 "\"Änderungen aktivieren\" sofort wirksam."
 
 msgid "Makes the icon appear in the column instead of the drop-down menu."
-msgstr ""
-"Lässt das Symbol direkt in der Spalte erscheinen und nicht im Drop-down-Menü."
+msgstr "Lässt das Symbol in der Spalte erscheinen anstatt im Drop-down-Menü."
 
 msgid "Man Page Browser"
 msgstr "Manpage Browser"
@@ -38789,7 +38790,7 @@ msgid "Map data to group host"
 msgstr "Daten dem Gruppen-Host zuordnen"
 
 msgid "Map data to specific host (piggyback)"
-msgstr "Daten einem spezifischen Host zuordnen (Piggyback)"
+msgstr "Daten mit einem spezifischen Host abgleichen (Piggyback)"
 
 msgid "Map data to the VM itself"
 msgstr "Daten der VM selbst zuordnen"
@@ -43262,7 +43263,7 @@ msgid "Not a number"
 msgstr "Dies ist keine Nummer"
 
 msgid "Not a valid URL (only HTTP and HTTPS URLs are allowed)."
-msgstr "Keine gültige URL (nur http- und https-URLs sind zulässig)."
+msgstr "Keine gültige URL (nur HTTP- und HTTPS-URLs sind zulässig)."
 
 msgid "Not an active member of the stack"
 msgstr "Kein aktives Stackmitglied"
@@ -45564,12 +45565,13 @@ msgid ""
 "spied out (such as passwords for plug-ins)."
 msgstr ""
 "Optional. Der Agent Updater versucht, das Protokoll automatisch zu erkennen, "
-"wobei zunächst HTTPS und anschließend HTTP geprüft wird. Mit dieser "
-"Einstellung können Sie eines der beiden Protokolle erzwingen.<br>HTTPS wird "
-"dringend empfohlen. Dies setzt jedoch eine gültige SSL-Konfiguration Ihres "
-"Apache-Webservers auf Ihrem Monitoring-Server voraus. Bei Verwendung von "
-"HTTP könnten vertrauliche Daten, die in den gebackenen Agenten enthalten "
-"sind, ausspioniert werden (z. B. Passwörter für Plug-ins)."
+"wobei zunächst HTTPS und anschließend HTTP ausprobiert wird. Mit dieser "
+"Einstellung können Sie eines der beiden Protokolle erzwingen. <br>Die "
+"Verwendung von HTTPS wird dringend empfohlen. Dies setzt jedoch eine gültige "
+"SSL-Konfiguration Ihres Apache-Webservers auf Ihrem Monitoring-Server "
+"voraus. Bei Verwendung von HTTP könnten vertrauliche Daten, die in den "
+"gebackenen Agenten enthalten sind (z. B. Passwörter für Plug-ins), "
+"ausspioniert werden."
 
 msgid ""
 "Optional. Usage depends on user creation option:<br><i>Automatic</i>: Create "
@@ -47740,7 +47742,7 @@ msgid "Pending DHCP leases"
 msgstr "Ausstehende DHCP-Leases"
 
 msgid "Pending DNS requests"
-msgstr "Ausstehende DNS-Anfragen"
+msgstr "Offene DNS-Anfragen"
 
 msgid "Pending changes"
 msgstr "Ausstehende Änderungen"
@@ -56480,7 +56482,7 @@ msgstr ""
 "verteilten Monitorings separat konfigurieren."
 
 msgid "Set the logging level for Windows agent"
-msgstr "Loglevel des Windows-Agenten festlegen"
+msgstr "Logging-Level des Windows-Agenten festlegen"
 
 msgid "Set the maximum number of concurrent pings sent to target IP addresses."
 msgstr ""
@@ -59525,7 +59527,7 @@ msgid "Started at: %s."
 msgstr "Gestartet um: %s."
 
 msgid "Starting"
-msgstr "Startend"
+msgstr "Wird gestartet"
 
 msgid "Starting Quick Setup action..."
 msgstr "Quick Setup Aktion wird gestartet..."
@@ -72459,7 +72461,7 @@ msgstr ""
 "CRITICAL ausgelöst wird"
 
 msgid "Time left until full"
-msgstr "Verbleibende Zeit"
+msgstr "Verbleibende Zeit bis voll"
 
 msgid "Time of comment"
 msgstr "Zeit des Kommentars"
@@ -89220,18 +89222,16 @@ msgid "Key hints"
 msgstr "Wichtige Hinweise"
 
 msgid "Alt + k"
-msgstr ""
+msgstr "Alt + k"
 
-#, fuzzy
 msgid "Existence"
-msgstr "Listener"
+msgstr "Existenz"
 
 msgid "Attribute key"
 msgstr "Attribut-Schlüssel"
 
-#, fuzzy
 msgid "Attribute operator"
-msgstr "Zu setzendes Attribut"
+msgstr "Attribut-Operator"
 
 msgid "Remove condition"
 msgstr "Bedingung entfernen"
@@ -89998,12 +89998,11 @@ msgstr "Konfiguration fertigstellen"
 msgid "Get your configuration ready to be applied."
 msgstr "Bereiten Sie Ihre Konfiguration für ihre Anwendung vor."
 
-#, fuzzy
 msgid ""
 "The form still contains invalid data. Please correct them and try again."
 msgstr ""
-"Stufe %s enthält ungültige Formulardaten. Bitte korrigieren Sie diese und "
-"versuchen Sie es erneut."
+"Das Formular enthält noch fehlerhafte Angaben. Bitte korrigieren Sie diese "
+"und versuchen Sie es erneut."
 
 msgid "Save Prometheus configuration"
 msgstr "Prometheus-Konfiguration speichern"
@@ -90058,13 +90057,11 @@ msgstr "Passwort auswählen"
 msgid "No passwords available"
 msgstr "Keine Passwörter verfügbar"
 
-#, fuzzy
 msgid "Why is creating a password unavailable?"
-msgstr "Keine Passwörter verfügbar"
+msgstr "Warum kann kein Passwort erstellt werden?"
 
-#, fuzzy
 msgid "Creating a new password is not available for your account. "
-msgstr "Das neue Passwort muss sich vom aktuellen unterscheiden."
+msgstr "Für Ihr Konto ist die Erstellung eines neuen Passworts nicht möglich. "
 
 msgid "TLS encryption must be enabled when using basic authentication."
 msgstr ""
@@ -90398,9 +90395,8 @@ msgstr "Passwort \"%{title}\" konnte nicht gespeichert werden"
 msgid "The password was rejected by the server."
 msgstr "Das Passwort wurde vom Server zurückgewiesen."
 
-#, fuzzy
 msgid "Could not save the referenced passwords"
-msgstr "Passwort \"%{title}\" konnte nicht gespeichert werden"
+msgstr "Die angegebenen Passwörter konnten nicht gespeichert werden"
 
 msgid "Collector configuration"
 msgstr "Collector-Konfiguration"
@@ -90581,9 +90577,8 @@ msgid ""
 msgstr ""
 "Das Relay wird offiziell für die folgenden Betriebssysteme unterstützt:"
 
-#, fuzzy
 msgid "Stale state"
-msgstr "alle Zustände"
+msgstr "Veraltet-Zustand"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""

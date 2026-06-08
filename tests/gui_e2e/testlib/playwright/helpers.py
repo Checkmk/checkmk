@@ -14,9 +14,22 @@ from enum import Enum
 from pprint import pformat
 from re import Pattern
 from typing import Any, NamedTuple
+from urllib.parse import quote_plus
 
 from playwright.sync_api import Error, expect, Frame, FrameLocator, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
+
+
+def url_suffix_regex(url_suffix: str) -> Pattern[str]:
+    """Compile a regex matching a URL suffix on both new and old Checkmk sites.
+
+    Post-iframe-removal sites navigate straight to the target page, so the
+    address bar shows the suffix verbatim (``wato.py?mode=licensing``). Older
+    sites reached in mixed-version distributed tests still wrap the page in the
+    main iframe, so the top URL is the percent-encoded ``index.py?start_url=...``
+    form (``wato.py%3Fmode%3Dlicensing``). Match either form.
+    """
+    return re.compile(f"{re.escape(url_suffix)}|{re.escape(quote_plus(url_suffix))}")
 
 
 class LocatorHelper(ABC):

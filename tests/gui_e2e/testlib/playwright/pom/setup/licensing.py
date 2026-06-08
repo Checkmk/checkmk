@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import re
 from typing import override
 
 from playwright.sync_api import expect, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
+from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID, url_suffix_regex
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -36,8 +35,10 @@ class Licensing(CmkPage):
         """
         logger.info("Navigate to 'Licensing' page")
         self.main_menu.setup_menu("Licensing").click()
-        _url_pattern: str = re.escape("wato.py?mode=licensing")
-        self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
+        # Distributed mixed-version tests reach this page on an older remote
+        # site that still wraps it in the main iframe, so match both the
+        # decoded (new) and percent-encoded (old) URL forms.
+        self.page.wait_for_url(url=url_suffix_regex("wato.py?mode=licensing"), wait_until="load")
         self.validate_page()
 
     @override

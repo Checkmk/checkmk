@@ -12,10 +12,12 @@ Checkmk special agent for monitoring Redfish management interfaces.
 # mypy: disable-error-code="type-arg"
 
 import argparse
+import contextlib
 import json
+import logging
 import sys
 import time
-from collections.abc import Collection, Container, Iterable, Mapping, Sequence
+from collections.abc import Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Final, Literal, Self
 
@@ -117,6 +119,7 @@ class RedfishData:
     hostname: str
     use_cache: bool
     redfish_connection: RedfishClient
+    debug: bool = False
     sections: set[str] = field(default_factory=set)
     cache_per_section: Mapping[str, int] = field(default_factory=dict)
     cache_timestamp_per_section: Mapping[str, int] = field(default_factory=dict)
@@ -125,6 +128,7 @@ class RedfishData:
     base_data: Mapping[str, Any] = field(default_factory=dict)
     vendor_data: Vendor | None = None
     section_data: dict[str, Any] = field(default_factory=dict)
+    emitted_sections: set[str] = field(default_factory=set)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -312,12 +316,16 @@ def fetch_list_of_elements(
         fetch_result = data.get(section)
         if not fetch_result:
             continue
-        if isinstance(fetch_result, Mapping):
-            # result = fetch_data(redfishobj, fetch_result.get("@odata.id"), section)
-            fetch_entry(redfishobj, fetch_result, section)
-        else:
-            for entry in fetch_result:
-                fetch_entry(redfishobj, entry, section)
+        try:
+            if isinstance(fetch_result, Mapping):
+                fetch_entry(redfishobj, fetch_result, section)
+            else:
+                for entry in fetch_result:
+                    fetch_entry(redfishobj, entry, section)
+        except Exception:
+            if redfishobj.debug:
+                raise
+            logging.exception("redfish: failed fetching list section %s", section)
     return redfishobj
 
 
@@ -338,25 +346,30 @@ def fetch_sections(
         section_url = data.get(section, {}).get("@odata.id")
         if not section_url:
             continue
-        section_data = fetch_data(redfishobj.redfish_connection, section_url, section)
-        if section_data.get("Members@odata.count") == 0:
-            continue
-        if "Collection" in section_data.get("@odata.type", {}):
-            if section_data.get("Members@odata.count", 0) != 0:
-                result = fetch_collection(redfishobj.redfish_connection, section_data, section)
-                if section in redfishobj.section_data.keys():
-                    redfishobj.section_data[section].extend(result)
-                else:
-                    redfishobj.section_data.setdefault(section, list(result))
-        elif section in redfishobj.section_data.keys():
-            redfishobj.section_data[section].append(section_data)
-        else:
-            redfishobj.section_data.setdefault(
-                section,
-                [
-                    section_data,
-                ],
-            )
+        try:
+            section_data = fetch_data(redfishobj.redfish_connection, section_url, section)
+            if section_data.get("Members@odata.count") == 0:
+                continue
+            if "Collection" in section_data.get("@odata.type", {}):
+                if section_data.get("Members@odata.count", 0) != 0:
+                    result = fetch_collection(redfishobj.redfish_connection, section_data, section)
+                    if section in redfishobj.section_data.keys():
+                        redfishobj.section_data[section].extend(result)
+                    else:
+                        redfishobj.section_data.setdefault(section, list(result))
+            elif section in redfishobj.section_data.keys():
+                redfishobj.section_data[section].append(section_data)
+            else:
+                redfishobj.section_data.setdefault(
+                    section,
+                    [
+                        section_data,
+                    ],
+                )
+        except Exception:
+            if redfishobj.debug:
+                raise
+            logging.exception("redfish: failed fetching section %s", section)
     return redfishobj
 
 
@@ -410,20 +423,41 @@ def fetch_extra_data(
     return redfishobj
 
 
-def process_result(redfishobj: RedfishData) -> None:
-    """process and output a fetched result set"""
-    result = redfishobj.section_data
-    for element, el_result in result.items():
-        section_header = _make_section_header(
-            f"redfish_{element.lower()}",
-            separator="\0",
-            cachetime=redfishobj.cache_timestamp_per_section.get(element),
-            validity=redfishobj.cache_per_section.get(element),
-        )
-        content = el_result if isinstance(el_result, list) else [el_result]
-        sys.stdout.write(f"{section_header}\n")
-        for entry in content:
-            sys.stdout.write(f"{json.dumps(entry, sort_keys=True)}\n")
+def _emit_section(redfishobj: RedfishData, section: str, data: Any) -> None:
+    """Write one section header + JSON bodies to stdout and flush. No-op if already emitted."""
+    if section in redfishobj.emitted_sections:
+        return
+    section_header = _make_section_header(
+        f"redfish_{section.lower()}",
+        separator="\0",
+        cachetime=redfishobj.cache_timestamp_per_section.get(section),
+        validity=redfishobj.cache_per_section.get(section),
+    )
+    content = data if isinstance(data, list) else [data]
+    sys.stdout.write(f"{section_header}\n")
+    for entry in content:
+        sys.stdout.write(f"{json.dumps(entry, sort_keys=True)}\n")
+    sys.stdout.flush()
+    redfishobj.emitted_sections.add(section)
+
+
+def _emit_pending(redfishobj: RedfishData) -> None:
+    """Emit every collected section that hasn't been written yet."""
+    for section, data in list(redfishobj.section_data.items()):
+        _emit_section(redfishobj, section, data)
+
+
+@contextlib.contextmanager
+def _phase(redfishobj: RedfishData, name: str) -> Iterator[None]:
+    """Run a fetch phase. Flush collected sections in `finally`; re-raise only on --debug."""
+    try:
+        yield
+    except Exception:
+        if redfishobj.debug:
+            raise
+        logging.exception("redfish: failure during phase %s", name)
+    finally:
+        _emit_pending(redfishobj)
 
 
 def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
@@ -501,30 +535,31 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     else:
         extra_links = []
 
-    if data_model in ["Hp"] and ("FirmwareInventory" in redfishobj.sections):
-        try:
-            res_dir = redfishobj.base_data["Oem"][data_model]["Links"]["ResourceDirectory"][
-                "@odata.id"
-            ]
-        except KeyError:
-            res_dir = None
+    with _phase(redfishobj, "firmware-inventory-hp"):
+        if data_model in ["Hp"] and ("FirmwareInventory" in redfishobj.sections):
+            try:
+                res_dir = redfishobj.base_data["Oem"][data_model]["Links"]["ResourceDirectory"][
+                    "@odata.id"
+                ]
+            except KeyError:
+                res_dir = None
 
-        if res_dir:
-            res_data = fetch_data(redfishobj.redfish_connection, res_dir, "ResourceDirectory")
-            res_instances = res_data.get("Instances", [])
-            assert not isinstance(res_instances, str)
-            for instance in res_instances:
-                if "#FwSwVersionInventory." in instance.get(
-                    "@odata.type", ""
-                ) and "FirmwareInventory" in instance.get("@odata.id", ""):
-                    firmwares = fetch_data(
-                        redfishobj.redfish_connection,
-                        instance["@odata.id"] + vendor_data.expand_string,
-                        "FirmwareDirectory",
-                    )
-                    if firmwares.get("Current"):
-                        redfishobj.sections.remove("FirmwareInventory")
-                        redfishobj.section_data.setdefault("FirmwareInventory", firmwares)
+            if res_dir:
+                res_data = fetch_data(redfishobj.redfish_connection, res_dir, "ResourceDirectory")
+                res_instances = res_data.get("Instances", [])
+                assert not isinstance(res_instances, str)
+                for instance in res_instances:
+                    if "#FwSwVersionInventory." in instance.get(
+                        "@odata.type", ""
+                    ) and "FirmwareInventory" in instance.get("@odata.id", ""):
+                        firmwares = fetch_data(
+                            redfishobj.redfish_connection,
+                            instance["@odata.id"] + vendor_data.expand_string,
+                            "FirmwareDirectory",
+                        )
+                        if firmwares.get("Current"):
+                            redfishobj.sections.remove("FirmwareInventory")
+                            redfishobj.section_data.setdefault("FirmwareInventory", firmwares)
 
     if manager_data:
         sys.stdout.write("<<<redfish_manager:sep(0)>>>\n")
@@ -532,6 +567,7 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
 
     sys.stdout.write("<<<redfish_system:sep(0)>>>\n")
     sys.stdout.write(f"{json.dumps(systems_data, sort_keys=True)}\n")
+    sys.stdout.flush()
 
     systems_sections = list(
         {
@@ -550,97 +586,112 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
 
     resulting_sections = list(set(systems_sections).intersection(redfishobj.sections))
     update_service = redfishobj.base_data.get("UpdateService")
-    if (
-        "FirmwareInventory" in resulting_sections
-        and isinstance(update_service, Mapping)
-        and "@odata.id" in update_service
-    ):
-        firmware_url = (
-            update_service["@odata.id"],
-            "/FirmwareInventory",
-            (vendor_data.expand_string if vendor_data.expand_string else ""),
-        )
-        if vendor_data.expand_string:
-            firmwares = fetch_data(
-                redfishobj.redfish_connection,
-                "".join(firmware_url),
-                "FirmwareDirectory",
-                timeout=40,
+    with _phase(redfishobj, "firmware-inventory"):
+        if (
+            "FirmwareInventory" in resulting_sections
+            and isinstance(update_service, Mapping)
+            and "@odata.id" in update_service
+        ):
+            firmware_url = (
+                update_service["@odata.id"],
+                "/FirmwareInventory",
+                (vendor_data.expand_string if vendor_data.expand_string else ""),
             )
-            if members := firmwares.get("Members"):
-                assert not isinstance(members, str)
-                redfishobj.section_data.setdefault(
-                    "FirmwareInventory",
-                    members,
+            if vendor_data.expand_string:
+                firmwares = fetch_data(
+                    redfishobj.redfish_connection,
+                    "".join(firmware_url),
+                    "FirmwareDirectory",
+                    timeout=40,
                 )
-        else:
-            firmware_col = fetch_data(
-                redfishobj.redfish_connection,
-                "".join(firmware_url),
-                "FirmwareDirectory",
-            )
-            firmwares = fetch_collection(redfishobj.redfish_connection, firmware_col, "Manager")
-            redfishobj.section_data.setdefault("FirmwareInventory", list(firmwares))
-
-    for system in systems_data:
-        if data_model in ["Hpe", "Hp"] and "SmartStorage" in resulting_sections:
-            if isinstance((fv := vendor_data.firmware_version), str) and fv.startswith("3."):
-                resulting_sections.remove("SmartStorage")
-            elif "Storage" in resulting_sections:
-                resulting_sections.remove("Storage")
-        fetch_sections(redfishobj, resulting_sections, redfishobj.sections, system)
-        if "Storage" in redfishobj.section_data.keys():
-            storage_data = redfishobj.section_data["Storage"]
-            if isinstance(storage_data, list):
-                for entry in storage_data:
-                    if entry.get("error"):
-                        continue
-                    if entry.get("Drives@odata.count", 0) != 0 or len(entry.get("Drives", [])) >= 1:
-                        fetch_list_of_elements(
-                            redfishobj, systems_sub_sections, redfishobj.sections, entry
-                        )
+                if members := firmwares.get("Members"):
+                    assert not isinstance(members, str)
+                    redfishobj.section_data.setdefault(
+                        "FirmwareInventory",
+                        members,
+                    )
             else:
-                fetch_list_of_elements(
-                    redfishobj, systems_sub_sections, redfishobj.sections, storage_data
+                firmware_col = fetch_data(
+                    redfishobj.redfish_connection,
+                    "".join(firmware_url),
+                    "FirmwareDirectory",
                 )
+                firmwares = fetch_collection(redfishobj.redfish_connection, firmware_col, "Manager")
+                redfishobj.section_data.setdefault("FirmwareInventory", list(firmwares))
 
-        if extra_links:
-            fetch_extra_data(redfishobj, data_model, extra_links, redfishobj.sections, system)
+    with _phase(redfishobj, "systems"):
+        for system in systems_data:
+            if data_model in ["Hpe", "Hp"] and "SmartStorage" in resulting_sections:
+                if isinstance((fv := vendor_data.firmware_version), str) and fv.startswith("3."):
+                    resulting_sections.remove("SmartStorage")
+                elif "Storage" in resulting_sections:
+                    resulting_sections.remove("Storage")
+            fetch_sections(redfishobj, resulting_sections, redfishobj.sections, system)
+            if "Storage" in redfishobj.section_data.keys():
+                storage_data = redfishobj.section_data["Storage"]
+                if isinstance(storage_data, list):
+                    for entry in storage_data:
+                        if entry.get("error"):
+                            continue
+                        if (
+                            entry.get("Drives@odata.count", 0) != 0
+                            or len(entry.get("Drives", [])) >= 1
+                        ):
+                            fetch_list_of_elements(
+                                redfishobj, systems_sub_sections, redfishobj.sections, entry
+                            )
+                else:
+                    fetch_list_of_elements(
+                        redfishobj, systems_sub_sections, redfishobj.sections, storage_data
+                    )
 
-    # fetch chassis
-    chassis_col = fetch_data(redfishobj.redfish_connection, chassis_url, "Chassis")
-    chassis_data = fetch_collection(redfishobj.redfish_connection, chassis_col, "Chassis")
-    sys.stdout.write("<<<redfish_chassis:sep(0)>>>\n")
-    sys.stdout.write(f"{json.dumps(chassis_data, sort_keys=True)}\n")
+            if extra_links:
+                fetch_extra_data(redfishobj, data_model, extra_links, redfishobj.sections, system)
 
-    legacy_environment = ("Power", "Thermal")
-    modern_environment = ("Sensors", "ThermalSubsystem", "PowerSubsystem", "EnvironmentMetrics")
+    chassis_data: Sequence[Mapping[str, Any]] = []
+    with _phase(redfishobj, "chassis"):
+        chassis_col = fetch_data(redfishobj.redfish_connection, chassis_url, "Chassis")
+        chassis_data = fetch_collection(redfishobj.redfish_connection, chassis_col, "Chassis")
+        sys.stdout.write("<<<redfish_chassis:sep(0)>>>\n")
+        sys.stdout.write(f"{json.dumps(chassis_data, sort_keys=True)}\n")
+        sys.stdout.flush()
 
-    has_legacy = any(isinstance(chassis.get("Power"), dict) for chassis in chassis_data)
-    chassis_sections = list(legacy_environment if has_legacy else modern_environment)
-    chassis_sections.append("NetworkAdapters")
+        legacy_environment = ("Power", "Thermal")
+        modern_environment = (
+            "Sensors",
+            "ThermalSubsystem",
+            "PowerSubsystem",
+            "EnvironmentMetrics",
+        )
 
-    resulting_sections = list(set(chassis_sections).intersection(redfishobj.sections))
-    for chassis in chassis_data:
-        fetch_sections(redfishobj, resulting_sections, redfishobj.sections, chassis)
+        has_legacy = any(isinstance(chassis.get("Power"), dict) for chassis in chassis_data)
+        chassis_sections = list(legacy_environment if has_legacy else modern_environment)
+        chassis_sections.append("NetworkAdapters")
+
+        resulting_sections = list(set(chassis_sections).intersection(redfishobj.sections))
+        for chassis in chassis_data:
+            fetch_sections(redfishobj, resulting_sections, redfishobj.sections, chassis)
 
     # Traverse PowerSubsystem → PowerSupplies (similar to Storage → Drives)
-    for ps_entry in redfishobj.section_data.get("PowerSubsystem", []):
-        if ps_entry.get("error"):
-            continue
-        ps_supplies = ps_entry.get("PowerSupplies", {})
-        if not isinstance(ps_supplies, dict) or "@odata.id" not in ps_supplies:
-            continue
-        supplies_data = fetch_data(
-            redfishobj.redfish_connection, ps_supplies["@odata.id"], "PowerSupplies"
-        )
-        if "Collection" not in supplies_data.get("@odata.type", ""):
-            continue
-        members = fetch_collection(redfishobj.redfish_connection, supplies_data, "PowerSupplies")
-        if members:
-            redfishobj.section_data.setdefault("PowerSupplies", []).extend(members)
+    with _phase(redfishobj, "powersupplies"):
+        for ps_entry in redfishobj.section_data.get("PowerSubsystem", []):
+            if ps_entry.get("error"):
+                continue
+            ps_supplies = ps_entry.get("PowerSupplies", {})
+            if not isinstance(ps_supplies, dict) or "@odata.id" not in ps_supplies:
+                continue
+            supplies_data = fetch_data(
+                redfishobj.redfish_connection, ps_supplies["@odata.id"], "PowerSupplies"
+            )
+            if "Collection" not in supplies_data.get("@odata.type", ""):
+                continue
+            members = fetch_collection(
+                redfishobj.redfish_connection, supplies_data, "PowerSupplies"
+            )
+            if members:
+                redfishobj.section_data.setdefault("PowerSupplies", []).extend(members)
 
-    process_result(redfishobj)
+    _emit_pending(redfishobj)
     store_section_data(storage, redfishobj)
     return 0
 
@@ -726,6 +777,7 @@ def agent_redfish_main(args: argparse.Namespace) -> int:
 
     # Start Redfish Session Object
     redfishobj = get_session(args)
+    redfishobj.debug = args.debug
     redfishobj.cache_per_section = {
         n: int(m) for n, m, *_ in (element.split("-") for element in args.cached_sections)
     }

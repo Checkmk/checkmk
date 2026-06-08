@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""Unit tests for user identity unification across connectors (CMK-33805).
+
+These cover the credential-resolution layer (`cmk.gui.userdb._check_credentials`)
+that is meant to resolve a user reaching Checkmk through more than one connector
+to a *single* record — no duplicate account created by the second connector.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+from datetime import datetime
+
+import pytest
+
+from cmk.ccc.user import UserId
+from cmk.crypto.password import Password
+from cmk.gui.type_defs import UserSpec
+from cmk.gui.userdb import _check_credentials, new_user_template
+
+_NOW = datetime(2026, 6, 8, 12, 0, 0)
+
+
+def _default_profile() -> UserSpec:
+    """A fresh default profile per call.
+
+    `new_user_template` merges the profile into the new record with a shallow
+    `update`, so a single shared instance would hand every created user the
+    *same* `roles`/`contactgroups` list objects — one test mutating them would
+    leak into the next.
+    """
+    return UserSpec(contactgroups=[], roles=["user"], force_authuser=False)
+
+
+class _FakeConnector:
+    """A minimal stand-in for a `UserConnector` whose `check_credentials` result
+    is whatever the test wants. Records whether it was consulted."""
+
+    def __init__(self, connector_id: str, result: object) -> None:
+        self._id = connector_id
+        self._result = result
+        self.consulted = False
+
+    def type(self) -> str:
+        return self._id
+
+    def check_credentials(self, *_args: object, **_kwargs: object) -> object:
+        self.consulted = True
+        return self._result
+
+
+def _patch_resolution(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    connectors: Sequence[tuple[str, _FakeConnector]],
+    existing: bool,
+) -> dict[str, int]:
+    """Wire up `_check_credentials` so `check_credentials` runs without a real
+    site: a fixed connector chain, a known `user_exists` answer, and recording
+    stubs for the user-store mutators. Returns a dict counting store writes.
+
+    The connector chain is injected by stubbing `active_connections` (the
+    production code calls it with the `user_connections` argument); `pprint_value`
+    and `debug` are plain parameters of `check_credentials`/`_create_non_existing_user`
+    now, so the tests need no request context or `active_config` proxy."""
+    calls = {"save_users": 0, "load_users": 0, "do_sync": 0}
+
+    monkeypatch.setattr(_check_credentials, "active_connections", lambda _cfg: list(connectors))
+    monkeypatch.setattr(_check_credentials, "user_exists", lambda _u: existing)
+    monkeypatch.setattr(_check_credentials, "load_user", lambda _u: UserSpec(roles=["user"]))
+    monkeypatch.setattr(
+        _check_credentials, "is_customer_user_allowed_to_login", lambda _u, _s: True
+    )
+    monkeypatch.setattr(_check_credentials, "user_locked", lambda _u, _s: False)
+
+    def _load_users(lock: bool = False) -> dict[UserId, UserSpec]:
+        calls["load_users"] += 1
+        return {}
+
+    def _save_users(*_args: object, **_kwargs: object) -> None:
+        calls["save_users"] += 1
+
+    monkeypatch.setattr(_check_credentials, "load_users", _load_users)
+    monkeypatch.setattr(_check_credentials, "save_users", _save_users)
+
+    # `_create_non_existing_user` looks the connection up again for the post-
+    # creation sync hook. Return a stub whose `do_sync` is recorded, so the
+    # create path runs to completion instead of falling into the error branch
+    # (which would touch the `html` request-context proxy).
+    class _FakeConnection:
+        def type(self) -> str:
+            return "ldap"
+
+        def do_sync(self, *_args: object, **_kwargs: object) -> None:
+            calls["do_sync"] += 1
+
+    monkeypatch.setattr(_check_credentials, "get_connection", lambda _cid: _FakeConnection())
+    monkeypatch.setattr(_check_credentials, "log_security_event", lambda _e: None)
+    return calls
+
+
+def test_create_non_existing_user_is_noop_when_user_exists(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`_create_non_existing_user` must short-circuit on `user_exists`
+    so a second connector neither overwrites nor duplicates the record."""
+    calls = _patch_resolution(monkeypatch, connectors=[], existing=True)
+
+    _check_credentials._create_non_existing_user(
+        "saml2", UserId("bob"), [], [], _NOW, _default_profile(), pprint_value=False, debug=False
+    )
+
+    assert calls["save_users"] == 0
+    assert calls["load_users"] == 0
+
+
+def test_create_non_existing_user_creates_when_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Negative/mutation guard: when the user does *not* exist, the
+    record is created — proving the no-op above is genuinely gated on
+    `user_exists`, not always skipping."""
+    calls = _patch_resolution(monkeypatch, connectors=[], existing=False)
+
+    _check_credentials._create_non_existing_user(
+        "ldap", UserId("carol"), [], [], _NOW, _default_profile(), pprint_value=False, debug=False
+    )
+
+    assert calls["save_users"] == 1
+    # the freshly created user is handed to the connector's sync hook
+    assert calls["do_sync"] == 1
+
+
+def test_check_credentials_stops_at_first_matching_connector(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Once a connector returns a `UserId`, later connectors are not
+    consulted — two enabled connectors never both create the same user."""
+    first = _FakeConnector("saml2", result=UserId("dave"))
+    second = _FakeConnector("ldap", result=UserId("dave"))
+    _patch_resolution(monkeypatch, connectors=[("saml2", first), ("ldap", second)], existing=True)
+
+    result = _check_credentials.check_credentials(
+        UserId("dave"),
+        Password("pw"),
+        [],
+        [],
+        _NOW,
+        _default_profile(),
+        pprint_value=False,
+        debug=False,
+    )
+
+    assert result == UserId("dave")
+    assert first.consulted is True
+    assert second.consulted is False
+
+
+def test_unknown_user_falls_through_to_next_connector(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Negative: a connector returning `None` (user unknown) does not
+    stop the chain; the next connector is consulted."""
+    first = _FakeConnector("saml2", result=None)
+    second = _FakeConnector("ldap", result=UserId("erin"))
+    _patch_resolution(monkeypatch, connectors=[("saml2", first), ("ldap", second)], existing=True)
+
+    result = _check_credentials.check_credentials(
+        UserId("erin"),
+        Password("pw"),
+        [],
+        [],
+        _NOW,
+        _default_profile(),
+        pprint_value=False,
+        debug=False,
+    )
+
+    assert result == UserId("erin")
+    assert first.consulted is True
+    assert second.consulted is True
+
+
+def test_new_user_template_stamps_single_owning_connector() -> None:
+    """A freshly provisioned user carries exactly the creating
+    connector id, so a new record has one unambiguous owner."""
+    template = new_user_template("ldap_corp", _default_profile())
+
+    assert template["connector"] == "ldap_corp"
+    # default profile is merged in without clobbering the connector
+    assert template["roles"] == ["user"]

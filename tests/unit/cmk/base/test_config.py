@@ -11,6 +11,7 @@ import shutil
 import socket
 import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Literal, NoReturn
@@ -2999,6 +3000,45 @@ def test_load_packed_config(config_path: VersionedConfigPath) -> None:
     # Mypy does not understand that we add some new member for testing
     assert config.abcd == 1  # type: ignore[attr-defined]
     del config.__dict__["abcd"]
+
+
+@contextmanager
+def _preserve_config_global(name: str) -> Iterator[None]:
+    """Restore a cmk.base.config module global after the test"""
+    original = getattr(config, name)
+    try:
+        yield
+    finally:
+        setattr(config, name, original)
+
+
+@pytest.mark.parametrize(
+    ["stored_value", "expected"],
+    [
+        pytest.param(
+            ["df", "cmciii_temp"],
+            {"df": True, "cmciii_temp": True},
+            id="old_list_format_converted",
+        ),
+        pytest.param([], {}, id="empty_list_converted"),
+        pytest.param(
+            {"df": True, "cmciii_temp": False},
+            {"df": True, "cmciii_temp": False},
+            id="new_dict_format_untouched",
+        ),
+    ],
+)
+def test_load_packed_config_normalizes_use_new_descriptions_for(
+    config_path: VersionedConfigPath,
+    stored_value: object,
+    expected: dict[str, bool],
+) -> None:
+    config.PackedConfigStore.from_serial(config_path).write(
+        {"use_new_descriptions_for": stored_value}
+    )
+    with _preserve_config_global("use_new_descriptions_for"):
+        config.load_packed_config(config_path)
+        assert config.use_new_descriptions_for == expected
 
 
 class TestPackedConfigStore:

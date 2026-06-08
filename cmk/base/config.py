@@ -582,6 +582,7 @@ def _perform_post_config_loading_actions() -> None:
     global_dict = globals()
     _collect_parameter_rulesets_from_globals(global_dict)
     _transform_plugin_names_from_160_to_170(global_dict)
+    _transform_use_new_descriptions_for(global_dict)
     _drop_invalid_ssc_rules(global_dict)
 
     get_config_cache().initialize()
@@ -724,6 +725,14 @@ def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None
         global_dict["service_descriptions"] = {
             maincheckify(k): str(v) for k, v in global_dict["service_descriptions"].items()
         }
+
+
+def _transform_use_new_descriptions_for(global_dict: dict[str, Any]) -> None:
+    # Werk #19411 (2.4.0p26) changed the format of "use_new_descriptions_for" from a list of enabled
+    # plugins to a mapping of plugin name to enabled state. An older central site may still
+    # distribute the old (list) format to an already updated remote site, so accept both here.
+    if isinstance(value := global_dict.get("use_new_descriptions_for"), list):
+        global_dict["use_new_descriptions_for"] = {plugin: True for plugin in value}
 
 
 def _is_mapping_rulespec(rs: RuleSpec[object]) -> TypeGuard[RuleSpec[Mapping[str, object]]]:

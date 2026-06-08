@@ -142,6 +142,9 @@ if [[ "$RUN" == true ]]; then
     lcov --remove "$COVERAGE_FILTERED_DAT" \
         '*/.cache/bazel/*' '*/tests/*' 'tests/*' \
         --output-file "$COVERAGE_FILTERED_DAT"
+    "$SCRIPT_DIR/add_missing_coverage.py" \
+        --coverage-file "$COVERAGE_FILTERED_DAT" \
+        "${SOURCE_DIRS[@]}"
 fi
 
 if [[ "$GENERATE_HTML" == true ]]; then

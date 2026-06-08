@@ -10,6 +10,7 @@ void main() {
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     def job_names = [
         "trigger-test-agent-plugin-unit",
@@ -30,6 +31,7 @@ void main() {
         |safe_branch_name:.... │${safe_branch_name}│
         |job_names:........... │${job_names}│
         |branch_base_folder:.. │${checkout_dir}│
+        |force_build:......... │${force_build}│
         |===================================================
         """.stripMargin());
 
@@ -40,13 +42,19 @@ void main() {
             ) {
                 smart_build(
                     // see global-defaults.yml, needs to run in minimal container
-                    job: "${branch_base_folder}/light/${job_name}",
-                    parameters: [
-                        stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
-                        stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.CIPARAM_OVERRIDE_BUILD_NODE),
-                        stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
-                        stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: params.CIPARAM_CLEANUP_WORKSPACE),
+                    use_upstream_build: true,
+                    force_build: force_build,
+                    relative_job_name: "${branch_base_folder}/light/${job_name}",
+                    build_params: [
+                        CUSTOM_GIT_REF: effective_git_ref,
                     ],
+                    build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    ],
+                    no_remove_others: true, // do not delete other files in the dest dir
+                    download: false,    // use copyArtifacts to avoid nested directories
                 );
             }
         }]

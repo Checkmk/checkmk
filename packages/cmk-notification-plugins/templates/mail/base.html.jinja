@@ -35,7 +35,7 @@
                 {% set elements = ["graph"] %}
             {% endif %}
         {% endif %}
-        {% set elements_to_ignore = ["graph", "abstime", "longoutput"] %}
+        {% set elements_to_ignore = ["graph", "abstime", "longoutput", "omdsite", "address"] %}
         {% set elements_without_graph = elements | reject("in", elements_to_ignore) | list %}
         {% set state_mapping = {
             "OK": "background-color: #13D389; color: #000000;",

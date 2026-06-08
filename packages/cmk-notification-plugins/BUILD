@@ -35,6 +35,7 @@ py_cmk_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/**/*.py"]),
+    data = glob(["templates/mail/*"]),
     deps = [
         ":cmk-notification-plugins",
         requirement("pytest-mock"),

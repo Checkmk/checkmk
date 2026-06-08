@@ -40,14 +40,18 @@
             {% endif %}
         </td>
     </tr>
-    <tr>
-        <td width="120" style="padding:5px 0;font-weight:600;line-height:1.4;">Address:</td>
-        <td style="padding:5px 0;line-height:1.4;">{{ data.get('HOSTADDRESS', 'N/A') }}</td>
-    </tr>
-    <tr>
-        <td width="120" style="padding:5px 0;font-weight:600;line-height:1.4;">Site:</td>
-        <td style="padding:5px 0;line-height:1.4;">{{ data.get('OMD_SITE', 'N/A') }}</td>
-    </tr>
+    {% if "address" in elements %}
+        <tr>
+            <td width="120" style="padding:5px 0;font-weight:600;line-height:1.4;">Address:</td>
+            <td style="padding:5px 0;line-height:1.4;">{{ data.get('HOSTADDRESS', 'N/A') }}</td>
+        </tr>
+    {% endif %}
+    {% if "omdsite" in elements %}
+        <tr>
+            <td width="120" style="padding:5px 0;font-weight:600;line-height:1.4;">Site:</td>
+            <td style="padding:5px 0;line-height:1.4;">{{ data.get('OMD_SITE', 'N/A') }}</td>
+        </tr>
+    {% endif %}
     <tr>
         <td width="120" style="padding:5px 0;font-weight:600;line-height:1.4;">Summary:</td>
         <td style="padding:5px 0;line-height:1.4;">

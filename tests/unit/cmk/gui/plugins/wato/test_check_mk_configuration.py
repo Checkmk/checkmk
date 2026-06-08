@@ -59,6 +59,17 @@ def test_use_new_descriptions_for_sample_config_readable() -> None:
         assert sample_config_as_ui_model[plugin_name] == expected_selected
 
 
+def test_use_new_descriptions_for_reads_old_list_format() -> None:
+    value_spec = ConfigVariableUseNewDescriptionsFor().valuespec()
+
+    transformed = value_spec.transform_value(["cmciii_temp", "df"])
+
+    assert transformed["cmciii_temp"] is True
+    assert transformed["df"] is True
+    assert transformed["aix_memory"] is False
+    value_spec.validate_datatype(transformed, "")
+
+
 def test_use_new_descriptions_sample_config_same_entries_as_ui_selection() -> None:
     """Ensure sample config and UI selection of plugins for new descriptions are in sync"""
     value_spec = ConfigVariableUseNewDescriptionsFor().valuespec()

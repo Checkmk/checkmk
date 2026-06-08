@@ -3406,10 +3406,21 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ),
             ),
         ]
-        return Dictionary(
-            title=_("Use new service names"),
-            elements=available_selection,
-            optional_keys=[],
+        plugin_names = [plugin for plugin, _checkbox in available_selection]
+        return Migrate(
+            Dictionary(
+                title=_("Use new service names"),
+                elements=available_selection,
+                optional_keys=[],
+            ),
+            # Werk #19411 (2.4.0p26) changed the format from a list of enabled plugins to a
+            # mapping of plugin name to enabled state. An older central site may still distribute
+            # the old (list) format to an already updated remote site, so accept both here.
+            migrate=lambda value: (
+                {plugin: plugin in value for plugin in plugin_names}
+                if isinstance(value, list)
+                else value
+            ),
         )
 
 

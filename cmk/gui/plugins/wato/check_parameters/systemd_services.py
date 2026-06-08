@@ -30,6 +30,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_discovery_systemd_units_services_rules() -> Dictionary:
@@ -85,7 +86,7 @@ rulespec_registry.register(
         title=lambda: _("Systemd single services discovery"),
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
-        name="discovery_systemd_units_services_rules",
+        name=RuleGroup.DiscoveryParameters("discovery_systemd_units_services_rules"),
         valuespec=_valuespec_discovery_systemd_units_services_rules,
     )
 )
@@ -188,7 +189,7 @@ rulespec_registry.register(
         title=lambda: _("Systemd single service discovery"),
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
-        name="discovery_systemd_units_services",
+        name=RuleGroup.DiscoveryParameters("discovery_systemd_units_services"),
         valuespec=_valuespec_discovery_systemd_units_addon,
     )
 )
@@ -198,7 +199,7 @@ rulespec_registry.register(
         title=lambda: _("Systemd single socket discovery"),
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
-        name="discovery_systemd_units_sockets",
+        name=RuleGroup.DiscoveryParameters("discovery_systemd_units_sockets"),
         valuespec=_valuespec_discovery_systemd_units,
     )
 )

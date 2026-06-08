@@ -12,6 +12,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersStorage,
 )
 from cmk.gui.valuespec import Age, Checkbox, Dictionary, ListOf, TextInput, Tuple
+from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _parameter_valuespec_snapvault() -> Dictionary:
@@ -94,7 +95,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="list",
-        name="discovery_snapvault",
+        name=RuleGroup.DiscoveryParameters("discovery_snapvault"),
         valuespec=_discovery_valuespec_snapvault,
     )
 )

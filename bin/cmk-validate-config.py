@@ -7,10 +7,7 @@ import sys
 
 from cmk.base import config
 from cmk.base.app import make_app
-from cmk.ccc.version import edition
-from cmk.checkengine.plugin_backend import (
-    extract_known_discovery_rulesets,
-)
+from cmk.ccc.version import edition as get_edition
 from cmk.gui import main_modules
 from cmk.gui.script_helpers import gui_context
 from cmk.utils import paths
@@ -20,19 +17,20 @@ from cmk.validate_config import validate_mk_files
 
 def main() -> int:
     try:
-        main_modules.register(edition(paths.omd_root))
+        edition = get_edition(paths.omd_root)
+        main_modules.register(edition)
 
         if errors := main_modules.get_failed_plugins():
             sys.stderr.write(f"The following errors occurred during plug-in loading: {errors!r}\n")
             return 1
 
         with disable_redis(), gui_context():
-            plugins = config.load_all_plugins()
+            config.load_all_plugins()
             # Watch out: always load the plugins before loading the config.
             # The validation step will not be executed otherwise.
             config.load(
-                discovery_rulesets=extract_known_discovery_rulesets(plugins),
-                get_builtin_host_labels=make_app(edition(paths.omd_root)).get_builtin_host_labels,
+                get_builtin_host_labels=make_app(edition).get_builtin_host_labels,
+                edition=edition,
             )
 
             result = validate_mk_files()

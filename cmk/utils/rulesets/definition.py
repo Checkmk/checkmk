@@ -18,6 +18,7 @@ class RuleGroupType(enum.Enum):
     SPECIAL_AGENTS = "special_agents"
     STATIC_CHECKS = "static_checks"
     CHECKGROUP_PARAMETERS = "checkgroup_parameters"
+    DISCOVERY_PARAMETERS = "discovery_parameters"
 
 
 # I am not sure we need this in the long run, but for now it helps to see the possible values.
@@ -94,6 +95,10 @@ class RuleGroup:
     @staticmethod
     def CheckgroupParameters(name: str | None) -> str:
         return f"{RuleGroupType.CHECKGROUP_PARAMETERS.value}:{name}"
+
+    @staticmethod
+    def DiscoveryParameters(name: str | None) -> str:
+        return f"{RuleGroupType.DISCOVERY_PARAMETERS.value}:{name}"
 
 
 def is_from_ruleset_group(rule_name: str, group_type: RuleGroupType) -> bool:

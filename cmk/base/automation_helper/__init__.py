@@ -22,9 +22,6 @@ from cmk.base.automations.automations import Automations, discover_automations
 from cmk.base.config import ConfigCache
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.ccc.site import SiteId
-from cmk.checkengine.plugin_backend import (
-    extract_known_discovery_rulesets,
-)
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils.caching import cache_manager
 from cmk.utils.labels import Labels
@@ -139,9 +136,7 @@ def _reload_automation_config(
     plugins: AgentBasedPlugins, get_builtin_host_labels: Callable[[SiteId], Labels]
 ) -> config.LoadingResult:
     cache_manager.clear()
-    discovery_rulesets = extract_known_discovery_rulesets(plugins)
     return config.load(
-        discovery_rulesets,
         get_builtin_host_labels,
         cmk_version.edition(omd_root),
         validate_hosts=False,

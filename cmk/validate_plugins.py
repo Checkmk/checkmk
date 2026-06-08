@@ -181,7 +181,7 @@ def _validate_agent_based_plugin_v2_ruleset_ref(
                 f"'{ruleset_ref_attr}' of {type(plugin).__name__} '{plugin.name}' references "
                 f"non-existent rule spec '{ruleset_ref}'"
             )
-        # we're validating against the enforces service rule in this case
+        # we're validating against the enforced service rule in this case
         assert isinstance(plugin, (agent_based_v2.CheckPlugin, agent_based_v3_unstable.CheckPlugin))
         params = (plugin.name, "item" if "%s" in plugin.service_name else None, default_params)
 
@@ -234,7 +234,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
                     if (
                         error := _validate_agent_based_plugin_v2_ruleset_ref(
                             plugin,
-                            rule_group=lambda x: f"{x}",
+                            rule_group=RuleGroup.DiscoveryParameters,
                             ruleset_ref_attr="discovery_ruleset_name",
                             default_params_attr="discovery_default_parameters",
                         )
@@ -268,7 +268,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
                     if (
                         error := _validate_agent_based_plugin_v2_ruleset_ref(
                             plugin,
-                            rule_group=lambda x: f"{x}",
+                            rule_group=RuleGroup.DiscoveryParameters,
                             ruleset_ref_attr="host_label_ruleset_name",
                             default_params_attr="host_label_default_parameters",
                         )

@@ -14,6 +14,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
 )
 from cmk.gui.valuespec import Checkbox, Dictionary, Float, Tuple
+from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _valuespec_inventory_mssql_counters_rules() -> Dictionary:
@@ -30,7 +31,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name="inventory_mssql_counters_rules",
+        name=RuleGroup.DiscoveryParameters("inventory_mssql_counters_rules"),
         valuespec=_valuespec_inventory_mssql_counters_rules,
     )
 )

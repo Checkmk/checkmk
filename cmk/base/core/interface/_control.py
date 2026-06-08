@@ -30,8 +30,6 @@ from cmk.core_client import CoreAction, CoreClient
 from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.labels import Labels
 from cmk.utils.log import console
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
 
 from ._base_core import MonitoringCore
@@ -63,7 +61,6 @@ def do_reload(
     core: MonitoringCore,
     plugins: AgentBasedPlugins,
     *,
-    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
@@ -84,7 +81,6 @@ def do_reload(
         core,
         plugins,
         action=CoreAction.RELOAD,
-        discovery_rules=discovery_rules,
         hosts_to_update=hosts_to_update,
         service_depends_on=service_depends_on,
         locking_mode=locking_mode,
@@ -113,7 +109,6 @@ def do_restart(
     core: MonitoringCore,
     plugins: AgentBasedPlugins,
     *,
-    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     action: CoreAction = CoreAction.RESTART,
     hosts_to_update: set[HostName] | None = None,
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
@@ -134,7 +129,6 @@ def do_restart(
                 passive_service_name_config=passive_service_name_config,
                 enforced_services_table=enforced_services_table,
                 plugins=plugins,
-                discovery_rules=discovery_rules,
                 get_ip_stack_config=get_ip_stack_config,
                 default_address_family=default_address_family,
                 ip_address_of=ip_address_of,
@@ -165,7 +159,6 @@ def do_create_config(
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
     plugins: AgentBasedPlugins,
-    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -206,7 +199,6 @@ def do_create_config(
                 passive_service_name_config,
                 enforced_services_table,
                 plugins,
-                discovery_rules,
                 get_ip_stack_config,
                 default_address_family,
                 ip_address_of,
@@ -281,7 +273,6 @@ def _create_active_config(
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
     ],
     plugins: AgentBasedPlugins,
-    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
     get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -318,7 +309,6 @@ def _create_active_config(
             passive_service_name_config,
             enforced_services_table,
             plugins,
-            discovery_rules,
             get_ip_stack_config,
             default_address_family,
             ip_address_of,

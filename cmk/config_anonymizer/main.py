@@ -21,7 +21,6 @@ from cmk.base.config import load, load_all_plugins
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
 from cmk.ccc.version import edition
-from cmk.checkengine.plugin_backend import extract_known_discovery_rulesets
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui import main_modules as main_modules
@@ -170,7 +169,6 @@ def main(argv: Sequence[str]) -> None:
             builtin_host_labels = builtin_host_labels_callable(omd_site())
 
             loaded_config_result = load(
-                discovery_rulesets=extract_known_discovery_rulesets(all_plugins),
                 get_builtin_host_labels=builtin_host_labels_callable,
                 edition=edition(paths.omd_root),
                 with_conf_d=True,

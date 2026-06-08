@@ -200,6 +200,7 @@ def convert_to_legacy_rulespec(
                 to_convert,
                 legacy_rulespec_groups.RulespecGroupDiscoveryCheckParameters,
                 localizer,
+                config_scope_prefix=RuleGroup.DiscoveryParameters,
             )
         case ruleset_api_v1.rule_specs.Service():
             match to_convert.condition:

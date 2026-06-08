@@ -22,8 +22,6 @@ from cmk.licensing.handler import LicensingHandler
 from cmk.password_store.v1_unstable import Secret
 from cmk.utils import ip_lookup, paths
 from cmk.utils.labels import Labels
-from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
 
 tracer = trace.get_tracer()
@@ -54,7 +52,6 @@ class MonitoringCore(abc.ABC):
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
         plugins: AgentBasedPlugins,
-        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         get_ip_stack_config: Callable[[HostName], ip_lookup.IPStackConfig],
         default_address_family: Callable[
             [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -80,7 +77,6 @@ class MonitoringCore(abc.ABC):
             ip_address_of_mgmt,
             licensing_handler,
             plugins,
-            discovery_rules,
             passwords,
             hosts_to_update=hosts_to_update,
             service_depends_on=service_depends_on,
@@ -107,7 +103,6 @@ class MonitoringCore(abc.ABC):
         ip_address_of_mgmt: ip_lookup.IPLookupOptional,
         licensing_handler: LicensingHandler,
         plugins: AgentBasedPlugins,
-        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         passwords: Mapping[str, Secret[str]],
         *,
         hosts_to_update: set[HostName] | None = None,

@@ -67,7 +67,7 @@ class DiscoveryConfig(ABCDiscoveryConfig):
 
     matcher: RulesetMatcher
     labels_of_host: Callable[[HostName], Labels]
-    rules: Mapping[RuleSetName, Sequence[RuleSpec[Mapping[str, object]]]]
+    rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
 
     def __call__(
         self, host_name: HostName, rule_set_name: RuleSetName, rule_set_type: RuleSetTypeName

@@ -159,7 +159,7 @@ from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.misc import key_config_paths
 from cmk.utils.password_store import make_configured_passwords_lookup
-from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
+from cmk.utils.rulesets import ruleset_matcher, tuple_rulesets
 from cmk.utils.rulesets.ruleset_matcher import (
     RulesetMatcher,
     RulesetName,
@@ -557,9 +557,7 @@ class LoadingResult:
 
 
 # This function still mostly manipulates a global state.
-# Passing the discovery rulesets as an argument is a first step to make it more functional.
 def load(
-    discovery_rulesets: Iterable[RuleSetName],
     get_builtin_host_labels: Callable[[SiteId], Labels],
     edition: cmk_version.Edition,
     with_conf_d: bool = True,
@@ -572,7 +570,6 @@ def load(
 
     loading_result = _perform_post_config_loading_actions(
         target_context,
-        discovery_rulesets,
         get_builtin_host_labels,
         edition=edition,
     )
@@ -598,10 +595,8 @@ def load(
 
 
 # This function still mostly manipulates a global state.
-# Passing the discovery rulesets as an argument is a first step to make it more functional.
 def load_packed_config(
     config_path: Path,
-    discovery_rulesets: Iterable[RuleSetName],
     get_builtin_host_labels: Callable[[SiteId], Labels],
     edition: cmk_version.Edition,
     ipaddresses_override: Mapping[HostName, HostAddress] | None = None,
@@ -636,7 +631,6 @@ def load_packed_config(
 
     return _perform_post_config_loading_actions(
         globals(),
-        discovery_rulesets,
         get_builtin_host_labels,
         edition=edition,
     )
@@ -644,7 +638,6 @@ def load_packed_config(
 
 def _perform_post_config_loading_actions(
     loaded_context: dict[str, Any],
-    discovery_rulesets: Iterable[RuleSetName],
     get_builtin_host_labels: Callable[[SiteId], Labels],
     *,
     edition: cmk_version.Edition,
@@ -653,19 +646,11 @@ def _perform_post_config_loading_actions(
     # First cleanup things (needed for e.g. reloading the config)
     cache_manager.clear_all()
 
-    discovery_settings = _collect_parameter_rulesets_from_globals(
-        loaded_context, discovery_rulesets
-    )
     _transform_plugin_names_from_160_to_170(loaded_context)
     _drop_invalid_ssc_rules(loaded_context)
 
     loaded_config = LoadedConfigFragment(
-        discovery_parameters=discovery_settings,
-        **{
-            f.name: loaded_context[f.name]
-            for f in dataclasses.fields(LoadedConfigFragment)
-            if f.name != "discovery_parameters"
-        },
+        **{f.name: loaded_context[f.name] for f in dataclasses.fields(LoadedConfigFragment)},
     )
 
     config_cache = ConfigCache(
@@ -850,14 +835,6 @@ def _drop_invalid_ssc_rules(global_dict: dict[str, Any]) -> None:
         }
 
 
-def _collect_parameter_rulesets_from_globals(
-    global_dict: dict[str, Any], discovery_rulesets: Iterable[RuleSetName]
-) -> Mapping[RuleSetName, Sequence[RuleSpec]]:
-    return {
-        ruleset_name: global_dict.pop(str(ruleset_name), []) for ruleset_name in discovery_rulesets
-    }
-
-
 # Create list of all files to be included during configuration loading
 def get_config_file_paths(with_conf_d: bool) -> list[Path]:
     list_of_files = [cmk.utils.paths.main_config_file]
@@ -873,11 +850,10 @@ def get_config_file_paths(with_conf_d: bool) -> list[Path]:
 def save_packed_config(
     config_path: Path,
     config_cache: ConfigCache,
-    discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
 ) -> None:
     """Create and store a precompiled configuration for Checkmk helper processes"""
     PackedConfigStore.from_serial(config_path).write(
-        PackedConfigGenerator(config_cache, discovery_rules, globals()).generate()
+        PackedConfigGenerator(config_cache, globals()).generate()
     )
 
 
@@ -911,11 +887,9 @@ class PackedConfigGenerator:
     def __init__(
         self,
         config_cache: ConfigCache,
-        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
         loaded_config: Mapping[str, object],
     ) -> None:
         self._config_cache = config_cache
-        self._discovery_rules = discovery_rules
         self._loaded_config = loaded_config
 
     def generate(self) -> Mapping[str, Any]:
@@ -1005,7 +979,7 @@ class PackedConfigGenerator:
 
             helper_config[varname] = val
 
-        return helper_config | {str(k): v for k, v in self._discovery_rules.items()}
+        return helper_config
 
 
 class PackedConfigStore:

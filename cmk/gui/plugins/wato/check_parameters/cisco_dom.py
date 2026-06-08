@@ -20,6 +20,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _vs_cisco_dom(which_levels: str) -> tuple[str, Alternative]:
@@ -119,7 +120,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name="discovery_cisco_dom_rules",
+        name=RuleGroup.DiscoveryParameters("discovery_cisco_dom_rules"),
         valuespec=_valuespec_discovery_cisco_dom_rules,
     )
 )

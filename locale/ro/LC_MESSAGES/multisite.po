@@ -96850,6 +96850,10 @@ msgid "Review applied filters."
 msgstr "Filtre aplicate:"
 
 #, fuzzy
+msgid "Invalid URL"
+msgstr "URL invalid dat"
+
+#, fuzzy
 msgid "Not available on shared dashboards"
 msgstr "Nu aveți voie să editați tablouri de bord."
 

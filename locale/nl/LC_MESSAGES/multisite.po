@@ -96539,6 +96539,10 @@ msgid "Review applied filters."
 msgstr "Toegepaste filters:"
 
 #, fuzzy
+msgid "Invalid URL"
+msgstr "Ongeldige URL gegeven"
+
+#, fuzzy
 msgid "Not available on shared dashboards"
 msgstr "U mag dashboards niet bewerken."
 

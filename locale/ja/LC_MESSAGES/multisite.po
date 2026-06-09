@@ -91432,6 +91432,10 @@ msgid "Review applied filters."
 msgstr "適用されたフィルター:"
 
 #, fuzzy
+msgid "Invalid URL"
+msgstr "無効なURLが指定されました"
+
+#, fuzzy
 msgid "Not available on shared dashboards"
 msgstr "ダッシュボードを編集することは許可されていません。"
 

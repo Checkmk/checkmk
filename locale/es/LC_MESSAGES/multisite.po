@@ -97253,6 +97253,10 @@ msgid "Review applied filters."
 msgstr "Filtros aplicados:"
 
 #, fuzzy
+msgid "Invalid URL"
+msgstr "URL inválida dada"
+
+#, fuzzy
 msgid "Not available on shared dashboards"
 msgstr "No está permitido editar los cuadros de mando."
 

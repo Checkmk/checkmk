@@ -96298,6 +96298,10 @@ msgid "Review applied filters."
 msgstr "Filtri applicati:"
 
 #, fuzzy
+msgid "Invalid URL"
+msgstr "URL dato non valido"
+
+#, fuzzy
 msgid "Not available on shared dashboards"
 msgstr "Non ti è permesso di modificare i dashboard."
 

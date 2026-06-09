@@ -131,23 +131,6 @@ process churn.
 
 ---
 
-### Arbitrary TARGETED_THRESHOLD causes inconsistent deploy speed
-
-**File:** `deployers/wheel_deployer.py` — `TARGETED_THRESHOLD = 15`
-
-Below 15 changed files: fast targeted copy. At 16: full `rmtree` + `copytree`
-of the entire package. The threshold is arbitrary and there is no indication
-when it triggers. Deploy times vary during refactors.
-
-**Trigger:** Changing 16+ files in a single Python package.
-
-**Workaround:** None needed — correctness is fine, just slower than expected.
-
-**Fix:** Either remove the threshold (always do targeted copy) or log when the
-full-copy path is triggered so the developer understands the slowdown.
-
----
-
 ### Deleted files silently not tracked on git errors
 
 **File:** `state/change_detector.py` — `_git_diff_deleted()`
@@ -196,20 +179,3 @@ machine.
 
 **Fix:** Bump to 1800s (30 min), or disable the timeout when stdout is a TTY
 (interactive user can Ctrl-C).
-
----
-
-### All packages report version 1.0.0
-
-**File:** `deployers/wheel_deployer.py` — `_DIST_INFO_VERSION = "1.0.0"`
-
-All deployed packages get hardcoded version `1.0.0` in their dist-info.
-`pip show` and `importlib.metadata.version()` always return `1.0.0`, making it
-impossible to distinguish which version of a package is deployed.
-
-**Trigger:** Running `pip show cmk-*` on a site with deployed packages.
-
-**Workaround:** Check the deploy state file or git log instead of pip.
-
-**Fix:** Use the git commit short hash or timestamp as the version (e.g.,
-`0.0.0+dev.a1b2c3d`).

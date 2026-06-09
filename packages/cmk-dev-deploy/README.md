@@ -70,16 +70,16 @@ cdd -v
 
   Deploying (2 step(s), max 4 worker(s))...
   config       deployed  0.3s  (2 spec(s))
-  wheels       deployed  0.8s  (1 deployed, 3 skipped)
+  wheels       deployed  2.8s  (44 wheel(s) reinstalled)
 
 [info] Services restarted: 2 in 1.0s
 
-  Timeline (2.3s):
-  config     ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0.0-0.3s (13%)
-  wheels     ░░███████████████░░░░░░░░░░░░░░░░░░░░░░░░  0.3-1.1s (35%)
-  services   ░░░░░░░░░░░░░░░░░████████████████████████  1.1-2.3s (52%)
+  Timeline (4.3s):
+  config     ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0.0-0.3s (7%)
+  wheels     ███████████████████████████░░░░░░░░░░░░░  0.0-2.8s (65%)
+  services   ░░░░░░░░░░░░░░░░░░░░░░░░░░░██████████████  2.8-4.3s (35%)
 
-[ok] Deploy complete in 2.3s
+[ok] Deploy complete in 4.3s
 ```
 
 On first run, the tool will:
@@ -97,10 +97,10 @@ After the initial setup, subsequent deploys without `-v` show a compact summary:
   Build path: fast
 
   config       deployed  0.3s  (2 spec(s))
-  wheels       deployed  0.8s  (1 deployed, 3 skipped)
+  wheels       deployed  2.8s  (44 wheel(s) reinstalled)
 
 [info] Services restarted: 2 in 1.0s
-[ok] Deploy complete in 2.3s
+[ok] Deploy complete in 4.3s
 ```
 
 ## OverlayFS
@@ -132,7 +132,7 @@ Detect changes, deploy, and exit.
 cdd
 ```
 
-Computes the diff between your working tree and the last deployed commit, categorizes changes (Python, C++, Rust, config, etc.), and runs only the deployers that have work to do. For Python-only changes, uses a fast path (direct wheel copy) that skips Bazel entirely.
+Computes the diff between your working tree and the last deployed commit, categorizes changes (Python, C++, Rust, config, etc.), and runs only the deployers that have work to do. Python changes are deployed by reinstalling the edition's wheels via `bazel run //:deploy-python`; Bazel's action cache keeps unchanged wheels free.
 
 ```bash
 cdd --full              # force full deploy (tears down and recreates the overlay)
@@ -154,13 +154,13 @@ Polls the git working tree every 1 second using content-aware hashing (not just 
 [info] Watching for changes on site v260... (Ctrl-C to stop)
 
 --- watch cycle 1 ---
-  wheels       deployed  0.5s  (targeted: 3 files)
-  Cycle 1: deployed wheels in 0.7s
+  wheels       deployed  2.8s  (44 wheel(s) reinstalled)
+  Cycle 1: deployed wheels in 3.0s
 
 --- watch cycle 2 ---
-  wheels       deployed  0.4s  (targeted: 1 files)
+  wheels       deployed  2.6s  (44 wheel(s) reinstalled)
   config       deployed  0.2s  (1 spec(s))
-  Cycle 2: deployed wheels, config in 0.8s
+  Cycle 2: deployed wheels, config in 2.9s
 ```
 
 Press Ctrl-C to stop.
@@ -248,18 +248,16 @@ Each deploy cycle follows these stages:
 
 4. **Change detection** -- Run `git diff` against the last deployed commit (from saved state) or the site build commit. Categorize files into Python, C++, Rust, Vue, config, data, build, test, and other.
 
-5. **Dependency expansion** -- If changed files belong to packages with declared dependencies, expand to include downstream packages that may need rebuilding.
-
-6. **Deployer selection** -- Three parallel deployers, each running only if its source paths have changes:
+5. **Deployer selection** -- Three parallel deployers, each running only if its source paths have changes:
    - **Config deployer** -- copies config/data files (agents, notifications, locale, etc.) using `shutil.copy2` or locale compilation (`msgfmt`)
    - **Bazel builder** -- builds C++, Rust, and frontend Bazel targets, then installs artifacts to the site with correct permissions and post-install fixups (e.g. `setcap` for ICMP binaries)
-   - **Wheel deployer** -- deploys Python packages as wheels (direct source copy for development packages, Bazel-built wheels for generated packages)
+   - **Wheel deployer** -- runs `bazel run //:deploy-python`, which builds the edition's `py_wheel` targets and force-reinstalls them against the site Python via uv (including bytecode compilation)
 
-7. **Parallel execution** -- Run applicable deployers in parallel (up to `--jobs` workers).
+6. **Parallel execution** -- Run applicable deployers in parallel (up to `--jobs` workers).
 
-8. **Service restart** -- Only restart services affected by the deployers that actually ran. Uses a three-tier resolution: explicit service specs > wheel convention (any wheel triggers `apache:reload`) > config spec annotations. Services are restarted in dependency order.
+7. **Service restart** -- Only restart services affected by the deployers that actually ran. Uses a three-tier resolution: explicit service specs > wheel convention (any wheel triggers `apache:reload`) > config spec annotations. Services are restarted in dependency order.
 
-9. **State save** -- Record the current HEAD commit and per-deployer dirty file hashes for incremental tracking. Partial failures save state only for successful deployers.
+8. **State save** -- Record the current HEAD commit and per-deployer dirty file hashes for incremental tracking. Partial failures save state only for successful deployers.
 
 ## Incremental Deploy
 
@@ -276,7 +274,7 @@ State tracking enables incremental deploys: only changes since the last successf
 The codebase supports five editions: `community`, `pro`, `ultimate`, `ultimatemt`, and `cloud`. The tool reads the target site's edition from its version symlink and:
 
 - Skips Bazel install specs that don't match the site edition (e.g. CMC binaries on a community site)
-- Removes edition-specific directories (`nonfree/pro/`, `nonfree/cloud/`, etc.) after wheel deployment
+- Builds edition-correct wheels (`--cmk_edition` resolves the wheel lists and the `select()`ed non-free contents of `//cmk:whl`)
 - Skips edition-gated service restarts (e.g. CMC and DCD only on pro+ editions)
 
 ## SSH Key Setup
@@ -327,11 +325,11 @@ Use `--json-errors` to also print the bundle to stdout (useful for CI/automation
 
 ### Deploy Manifest
 
-The deploy manifest is a JSON file that maps Bazel targets to site destinations. It is auto-generated by querying Bazel for `py_wheel` targets (wheel specs), `deps_packages` packaging targets (config specs), and install targets (compiled artifact specs). The manifest is cached and regenerated when stale or when `--rebuild-manifest` is passed.
+The deploy manifest is a JSON file that maps Bazel targets to site destinations. It is auto-generated by querying Bazel for the wheels deployed by `//:deploy-python` (wheel prefixes), `deps_packages` packaging targets (config specs), and install targets (compiled artifact specs). The manifest is cached and regenerated when stale or when `--rebuild-manifest` is passed.
 
-Three types of deploy specs are derived from the manifest:
+It contains:
 
-- **Wheel specs** -- Python packages deployed as wheels. `deploy_mode` is either `direct` (copy source files), `flat` (copy from flat layout), or `generated` (bazel build + extract from wheel zipfile).
+- **Wheel prefixes** -- the source-tree prefixes covered by wheel deployment, used for step gating, `.py` categorization, coverage warnings, and the service-restart convention. Which wheels get deployed (per edition) is defined in `bazel/rules/deploy.bzl`, not here.
 - **Config specs** -- Config/data directories deployed via `copy_dir`, `install_files`, or `locale_compile` methods. Each spec maps a source prefix to a site destination.
 - **Install specs** -- Compiled artifacts (C++ binaries, Rust binaries, frontend dist bundles) built by Bazel and installed with specific permissions and post-install actions.
 

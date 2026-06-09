@@ -86,7 +86,7 @@ def _translated(name: MetricName, *, bounds: Scalars = Scalars()) -> TranslatedM
     return TranslatedMetric(
         name=name,
         value=1.0,
-        bounds=bounds,
+        scalars=bounds,
         originals=[RRDSource(service=_service(), metric_name=name, scale=1.0)],
     )
 

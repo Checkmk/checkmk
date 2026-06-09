@@ -133,7 +133,7 @@ class RRDSource:
 class TranslatedMetric:
     name: MetricName
     value: float | None
-    bounds: Scalars
+    scalars: Scalars
     originals: Sequence[RRDSource]
 
 
@@ -280,10 +280,10 @@ def _scalars_of(
     translated_metrics: Mapping[MetricName, TranslatedMetric],
 ) -> Mapping[RRDMetric, Scalars]:
     return {
-        metric: bounds
+        metric: scalars
         for metric in rrd_metrics
         if (translated := translated_metrics.get(metric.metric_name))
-        and (bounds := translated.bounds)
+        and (scalars := translated.scalars)
     }
 
 

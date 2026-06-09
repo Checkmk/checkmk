@@ -119,13 +119,13 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
                 cpu_user: TranslatedMetric(
                     name=cpu_user,
                     value=42.0,
-                    bounds=cpu_user_bounds,
+                    scalars=cpu_user_bounds,
                     originals=[cpu_user_key],
                 ),
                 cpu_system: TranslatedMetric(
                     name=cpu_system,
                     value=8.0,
-                    bounds=cpu_system_bounds,
+                    scalars=cpu_system_bounds,
                     originals=[RRDSource(service=service, metric_name=cpu_system, scale=1.0)],
                 ),
             }
@@ -170,14 +170,14 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
                 if_in: TranslatedMetric(
                     name=if_in,
                     value=1.0,
-                    bounds=if_in_bounds,
+                    scalars=if_in_bounds,
                     originals=[RRDSource(service=service, metric_name=if_in, scale=1.0)],
                 ),
                 # if_out has no bounds, so it contributes no scalars.
                 if_out: TranslatedMetric(
                     name=if_out,
                     value=2.0,
-                    bounds=Scalars(),
+                    scalars=Scalars(),
                     originals=[RRDSource(service=service, metric_name=if_out, scale=1.0)],
                 ),
             }

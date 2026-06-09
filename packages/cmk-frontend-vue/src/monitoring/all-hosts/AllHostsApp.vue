@@ -4,7 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type ColumnDef, type ColumnFiltersState } from '@tanstack/vue-table'
+import {
+  type ColumnDef,
+  type ColumnFiltersState,
+  type ColumnPinningState
+} from '@tanstack/vue-table'
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
 import { onBeforeUnmount, provide, ref } from 'vue'
 
@@ -77,6 +81,8 @@ const columns: ColumnDef<HostEntry>[] = [
   }
 ]
 
+const columnPinning: ColumnPinningState = { left: ['state', 'name'] }
+
 const filterState = ref<ColumnFiltersState>([])
 
 function rowKey(row: HostEntry): string {
@@ -90,6 +96,7 @@ function rowKey(row: HostEntry): string {
     :loading="hostService.loading.value"
     :columns="columns"
     :filter-state="filterState"
+    :column-pinning="columnPinning"
     :get-row-key="rowKey"
     @update:filter-state="filterState = $event"
   >

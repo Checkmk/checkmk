@@ -5,18 +5,31 @@
 """Tests for the ``user_sync`` → ``authentication_connections`` /
 ``user_attribute_sync_connections`` migration."""
 
+import logging
+from types import SimpleNamespace
+
 import pytest
 
+from cmk.ccc.site import SiteId
 from cmk.gui.watolib.sites import (
     _auth_connections_from_disk,
     _auth_connections_to_disk,
     _user_attribute_sync_from_disk,
     _user_attribute_sync_to_disk,
 )
+from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.plugins.actions import (
+    migrate_user_sync_to_auth_connections as mod,
+)
 from cmk.update_config.plugins.actions.migrate_user_sync_to_auth_connections import (
     _derive_new_values,
     _MISSING,
+    MigrateUserSyncToAuthConnections,
 )
+from tests.unit.cmk.update_config.plugins.actions.site_mgmt_fakes import FakeSiteMgmt
+
+_LOGGER = logging.getLogger("test")
+_CENTRAL = SiteId("central")
 
 
 def test_legacy_all_on_central_migrates_to_all_types() -> None:
@@ -132,3 +145,80 @@ def test_migrated_legacy_values_feed_ported_form_spec_without_diff(
         _user_attribute_sync_to_disk(_user_attribute_sync_from_disk(attr_sync_value))
         == attr_sync_value
     )
+
+
+def _action() -> MigrateUserSyncToAuthConnections:
+    return MigrateUserSyncToAuthConnections(
+        name="migrate_user_sync_to_auth_connections",
+        title="test",
+        sort_index=35,
+        expiry_version=ExpiryVersion.CMK_310,
+    )
+
+
+def _run(monkeypatch: pytest.MonkeyPatch, sites: dict[SiteId, dict[str, object]]) -> FakeSiteMgmt:
+    fake = FakeSiteMgmt(sites)
+    monkeypatch.setattr(mod, "site_management_registry", {"site_management": fake})
+    monkeypatch.setattr(mod, "omd_site", lambda: _CENTRAL)
+    monkeypatch.setattr(
+        mod,
+        "active_config",
+        SimpleNamespace(wato_pprint_config=False, liveproxyd_enabled=False, wato_use_git=False),
+    )
+    monkeypatch.setattr(mod, "make_folder_tree", lambda _config: None)
+    _action()(_LOGGER)
+    return fake
+
+
+def test_call_migrates_legacy_list_and_preserves_other_site_fields(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``__call__`` derives the new fields from a legacy
+    ``("list", [...])`` ``user_sync``, drops the obsolete key, and leaves
+    unrelated site-spec fields untouched."""
+    sites: dict[SiteId, dict[str, object]] = {
+        SiteId("remote1"): {"user_sync": ("list", ["ldap_a"]), "alias": "Remote 1"}
+    }
+    fake = _run(monkeypatch, sites)
+
+    assert fake.saved is not None  # a site changed, so the map was written
+    spec = fake.saved[SiteId("remote1")]
+    assert spec["authentication_connections"] == [("ldap", "ldap_a")]
+    assert spec["user_attribute_sync_connections"] == ["ldap_a"]
+    assert "user_sync" not in spec  # obsolete key removed
+    assert spec["alias"] == "Remote 1"  # unrelated field preserved
+
+
+def test_call_does_not_overwrite_preexisting_new_fields(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A site that already set ``authentication_connections``
+    manually keeps it; only the still-unset field is filled, and the legacy
+    key is dropped."""
+    sites: dict[SiteId, dict[str, object]] = {
+        SiteId("remote1"): {
+            "user_sync": ("list", ["ldap_a"]),
+            "authentication_connections": [("ldap", "manual")],
+        }
+    }
+    fake = _run(monkeypatch, sites)
+
+    assert fake.saved is not None
+    spec = fake.saved[SiteId("remote1")]
+    assert spec["authentication_connections"] == [("ldap", "manual")]  # not overwritten
+    assert spec["user_attribute_sync_connections"] == ["ldap_a"]  # unset field filled
+    assert "user_sync" not in spec
+
+
+def test_call_is_noop_when_already_migrated(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Idempotency: a re-run on a site with no ``user_sync`` and
+    the new fields already present writes nothing."""
+    sites: dict[SiteId, dict[str, object]] = {
+        SiteId("remote1"): {
+            "authentication_connections": [("ldap", "x")],
+            "user_attribute_sync_connections": ["x"],
+        }
+    }
+    fake = _run(monkeypatch, sites)
+
+    assert fake.saved is None  # save_sites never called

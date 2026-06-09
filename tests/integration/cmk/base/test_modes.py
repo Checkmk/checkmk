@@ -222,17 +222,17 @@ def test_dump_agent_missing_arg(execute: Execute) -> None:
 
 
 def test_dump_agent_error(execute: Execute) -> None:
-    output_long = None
+    output_long = (
+        "Program fetcher failure. "
+        "Command: 'cat ~/var/check_mk/agent_output/modes-test-host4'. "
+        "Exit code: 1. "
+        "Error message: cat: /omd/sites/int_test/var/check_mk/agent_output/modes-test-host4: No such file or directory"
+    )
     for opt in ["--dump-agent", "-d"]:
         p = execute(["cmk", opt, "modes-test-host4"])
         assert p.returncode == 1, on_failure(p)
-        assert p.stdout == ""
-        assert "[agent]: Agent exited " in p.stderr
-
-        if output_long is None:
-            output_long = p.stdout
-        else:
-            assert p.stdout == output_long
+        assert p.stdout.rstrip("\n") == output_long
+        assert "[agent]: Program exited " in p.stderr
 
 
 def test_dump_agent_test(execute: Execute) -> None:

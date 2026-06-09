@@ -118,11 +118,16 @@ class ProgramFetcher(Fetcher[AgentRawData]):
         stdout, stderr = self._process.communicate(
             input=self.stdin.encode() if self.stdin else None
         )
-        if self._process.returncode == 127:
-            exepath = self.cmdline.split()[0]  # for error message, hide options!
-            raise FetcherError(f"Program '{exepath}' not found (exit code 127)")
         if self._process.returncode:
+            self._logger.error(
+                "Program fetcher failure. Command: '%s'. Exit code: %s. Error message: %s",
+                self.cmdline,
+                self._process.returncode,
+                stderr.decode() if hasattr(stderr, "decode") else stderr,
+            )
+            # FYI: We do not want to expose any details about the command in the UI.
+            # It might contain sensitive information!
             raise FetcherError(
-                f"Agent exited with code {self._process.returncode}: {stderr.decode().strip()}"
+                f"Program exited with status {self._process.returncode}. See log for details."
             )
         return stdout

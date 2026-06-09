@@ -35,6 +35,7 @@ from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.password import Password as PasswordType
 from cmk.crypto.pem import PEMDecodingError
 from cmk.gui import forms, key_mgmt, keypair_store
+from cmk.gui.backup.formspec_adapter import target_config_from_ui
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
@@ -1966,7 +1967,7 @@ class PageEditBackupTarget:
 
         if "ident" in target_config:
             self._ident = TargetId(target_config.pop("ident"))
-        self._target_cfg = cast(TargetConfig, target_config)
+        self._target_cfg = target_config_from_ui(target_config)
 
         if self._ident is None:
             raise MKGeneralException("Cannot create or modify job without identifier")

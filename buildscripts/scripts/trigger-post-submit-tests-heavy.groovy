@@ -19,6 +19,7 @@ void main() {
         "test-gui-e2e-cloud",
         "test-gui-e2e-pro",
         "test-gui-e2e-ultimate",
+        "test-integration-agent-plugin",
         "test-integration-pro",
         "test-integration-community",
         "test-integration-redfish",

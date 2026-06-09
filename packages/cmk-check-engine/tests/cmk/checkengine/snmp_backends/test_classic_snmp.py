@@ -11,7 +11,7 @@ from typing import NamedTuple
 
 import pytest
 
-import cmk.snmp_backends.classic as classic_snmp
+import cmk.checkengine.snmp_backends.classic as classic_snmp
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion

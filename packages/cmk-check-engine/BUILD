@@ -41,11 +41,11 @@ py_library(
 py_library(
     name = "snmp-backends",
     srcs = [
-        "cmk/snmp_backends/_utils.py",
-        "cmk/snmp_backends/classic.py",
-        "cmk/snmp_backends/stored_walk.py",
+        "cmk/checkengine/snmp_backends/_utils.py",
+        "cmk/checkengine/snmp_backends/classic.py",
+        "cmk/checkengine/snmp_backends/stored_walk.py",
     ],
-    data = ["cmk/snmp_backends/py.typed"],
+    data = ["cmk/checkengine/snmp_backends/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
@@ -155,7 +155,7 @@ py_test(
 py_test(
     name = "snmp-backends-tests",
     size = "small",
-    srcs = glob(["tests/cmk/snmp_backends/**/*.py"]) + [":__test__.py"],
+    srcs = glob(["tests/cmk/checkengine/snmp_backends/**/*.py"]) + [":__test__.py"],
     main = "__test__.py",
     deps = [
         "__test__",

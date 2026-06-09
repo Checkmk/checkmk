@@ -641,7 +641,7 @@ allows = [
   "@plugin_apis",
   "@relay_protocols",
   "cmk.checkengine.helper_interface",
-  "cmk.snmp_backends",
+  "cmk.checkengine.snmp_backends",
   "cmk.checkengine.snmplib",
 ]
 
@@ -974,7 +974,7 @@ excludes = [
 [components."cmk.checkengine.helper_interface"]
 allows = ["@ccc"]
 
-[components."cmk.snmp_backends.inline"]
+[components."cmk.checkengine.snmp_backends.inline"]
 allows = ["@ccc", "cmk.checkengine.helper_interface", "cmk.checkengine.snmplib"]
 
 [components."cmk.inventory"]
@@ -1032,7 +1032,7 @@ allows = []
 [components."cmk.special_agents"]
 allows = ["@ccc", "@plugin_apis", "cmk.utils.password_store", "cmk.utils.paths"]
 
-[components."cmk.snmp_backends"]
+[components."cmk.checkengine.snmp_backends"]
 allows = ["@ccc", "cmk.checkengine.helper_interface", "cmk.checkengine.snmplib"]
 
 [components."cmk.checkengine.snmplib"]

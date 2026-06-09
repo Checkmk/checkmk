@@ -10,7 +10,7 @@ import logging
 import pkgutil
 from collections.abc import Mapping
 
-import cmk.snmp_backends
+import cmk.checkengine.snmp_backends
 from cmk.checkengine.snmplib import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
 
@@ -25,7 +25,7 @@ def discover_backends() -> Mapping[SNMPBackendEnum, type[SNMPBackend]]:
     """
     backends: dict[SNMPBackendEnum, type[SNMPBackend]] = {}
     for mod_info in pkgutil.iter_modules(
-        cmk.snmp_backends.__path__, f"{cmk.snmp_backends.__name__}."
+        cmk.checkengine.snmp_backends.__path__, f"{cmk.checkengine.snmp_backends.__name__}."
     ):
         if mod_info.name.rsplit(".", 1)[-1].startswith("_"):
             # Private submodules are expected to not expose a backend!

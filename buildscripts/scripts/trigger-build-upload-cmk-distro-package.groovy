@@ -90,7 +90,7 @@ void main() {
                 smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    force_build: env.DISABLE_JENKINS_CACHE == "true",
+                    force_build: params.DISABLE_JENKINS_CACHE == true,
                     relative_job_name: "${branch_base_folder}/builders/trigger-cmk-distro-package",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,

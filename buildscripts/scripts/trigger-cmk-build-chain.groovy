@@ -98,7 +98,7 @@ void main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                force_build: env.DISABLE_JENKINS_CACHE == "true",
+                force_build: params.DISABLE_JENKINS_CACHE == true,
                 relative_job_name: "${edition_base_folder}/build-cmk-deliverables",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,
@@ -112,7 +112,7 @@ void main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                force_build: env.DISABLE_JENKINS_CACHE == "true",
+                force_build: params.DISABLE_JENKINS_CACHE == true,
                 relative_job_name: "${edition_base_folder}/build-cmk-image",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,
@@ -129,7 +129,7 @@ void main() {
                         raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        force_build: env.DISABLE_JENKINS_CACHE == "true",
+                        force_build: params.DISABLE_JENKINS_CACHE == true,
                         relative_job_name: "${edition_base_folder}/test-integration-docker",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
@@ -144,7 +144,7 @@ void main() {
                         raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        force_build: env.DISABLE_JENKINS_CACHE == "true",
+                        force_build: params.DISABLE_JENKINS_CACHE == true,
                         relative_job_name: "${edition_base_folder}/test-integration-packages",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
@@ -159,7 +159,7 @@ void main() {
                         raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        force_build: env.DISABLE_JENKINS_CACHE == "true",
+                        force_build: params.DISABLE_JENKINS_CACHE == true,
                         relative_job_name: "${edition_base_folder}/test-composition",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
@@ -174,7 +174,7 @@ void main() {
                         raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        force_build: env.DISABLE_JENKINS_CACHE == "true",
+                        force_build: params.DISABLE_JENKINS_CACHE == true,
                         relative_job_name: "${edition_base_folder}/test-update",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
@@ -190,7 +190,7 @@ void main() {
                     raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        force_build: env.DISABLE_JENKINS_CACHE == "true",
+                        force_build: params.DISABLE_JENKINS_CACHE == true,
                         relative_job_name: "${builders_base_folder}/test-component-mk-oracle",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
@@ -206,7 +206,7 @@ void main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                force_build: env.DISABLE_JENKINS_CACHE == "true",
+                force_build: params.DISABLE_JENKINS_CACHE == true,
                 relative_job_name: "${edition_base_folder}/build-cmk-deliverables",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,

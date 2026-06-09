@@ -31,15 +31,15 @@ def discover_explicit_graphs(
     rrd: FetchRRD,
 ) -> Sequence[DiscoveredGraph[ExplicitOptions]]:
     translated_metrics = rrd.translated_metrics([options.service]).get(options.service, {})
-    metric_names = options.graph.metric_names()
     return [
         DiscoveredGraph(
             graph=options.graph,
             options=ExplicitOptions(common=options.common, service=options.service),
             scalars={
-                name: bounds
-                for name in metric_names
-                if name in translated_metrics and (bounds := translated_metrics[name].bounds)
+                metric: bounds
+                for metric in options.graph.rrd_metrics()
+                if metric.metric_name in translated_metrics
+                and (bounds := translated_metrics[metric.metric_name].bounds)
             },
         )
     ]

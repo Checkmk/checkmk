@@ -33,6 +33,7 @@ from ._objects import (
     Precision,
     Product,
     Quantity,
+    RRDMetric,
     SINotation,
     StackGroup,
     StandardScientificNotation,
@@ -42,6 +43,7 @@ from ._objects import (
     Unit,
     WarningOf,
 )
+from ._options import ConsolidationFunction, ServiceRef
 
 type _ApiQuantity = (
     str
@@ -128,13 +130,28 @@ def _parse_unit(unit: metrics_v1.Unit) -> Unit:
     return Unit(notation=notation, precision=precision)
 
 
+def _rrd_metric(
+    metric_name: str,
+    service: ServiceRef,
+    consolidation_function: ConsolidationFunction,
+) -> RRDMetric:
+    return RRDMetric(
+        host_name=service.host_name,
+        service_name=service.service_name,
+        metric_name=MetricName(metric_name),
+        consolidation_function=consolidation_function,
+    )
+
+
 def _parse_quantity(
     quantity: _ApiQuantity,
     localizer: Callable[[str], str],
+    service: ServiceRef,
+    consolidation_function: ConsolidationFunction,
 ) -> Quantity:
     match quantity:
         case str():
-            return MetricName(quantity)
+            return _rrd_metric(quantity, service, consolidation_function)
         case metrics_v1.Constant():
             return Constant(
                 title=quantity.title.localize(localizer),
@@ -143,50 +160,72 @@ def _parse_quantity(
                 value=quantity.value,
             )
         case metrics_v2_unstable.LowerWarningOf():
-            return LowerWarningOf(metric_name=MetricName(quantity.metric_name))
+            return LowerWarningOf(
+                metric=_rrd_metric(quantity.metric_name, service, consolidation_function)
+            )
         case metrics_v2_unstable.LowerCriticalOf():
-            return LowerCriticalOf(metric_name=MetricName(quantity.metric_name))
+            return LowerCriticalOf(
+                metric=_rrd_metric(quantity.metric_name, service, consolidation_function)
+            )
         case metrics_v1.WarningOf():
-            return WarningOf(metric_name=MetricName(quantity.metric_name))
+            return WarningOf(
+                metric=_rrd_metric(quantity.metric_name, service, consolidation_function)
+            )
         case metrics_v1.CriticalOf():
-            return CriticalOf(metric_name=MetricName(quantity.metric_name))
+            return CriticalOf(
+                metric=_rrd_metric(quantity.metric_name, service, consolidation_function)
+            )
         case metrics_v1.MinimumOf():
             return MinimumOf(
-                metric_name=MetricName(quantity.metric_name),
+                metric=_rrd_metric(quantity.metric_name, service, consolidation_function),
                 color=_parse_color(quantity.color),
             )
         case metrics_v1.MaximumOf():
             return MaximumOf(
-                metric_name=MetricName(quantity.metric_name),
+                metric=_rrd_metric(quantity.metric_name, service, consolidation_function),
                 color=_parse_color(quantity.color),
             )
         case metrics_v1.Sum():
             return Sum(
                 title=quantity.title.localize(localizer),
                 color=_parse_color(quantity.color),
-                summands=[_parse_quantity(s, localizer) for s in quantity.summands],
+                summands=[
+                    _parse_quantity(s, localizer, service, consolidation_function)
+                    for s in quantity.summands
+                ],
             )
         case metrics_v1.Product():
             return Product(
                 title=quantity.title.localize(localizer),
                 unit=_parse_unit(quantity.unit),
                 color=_parse_color(quantity.color),
-                factors=[_parse_quantity(f, localizer) for f in quantity.factors],
+                factors=[
+                    _parse_quantity(f, localizer, service, consolidation_function)
+                    for f in quantity.factors
+                ],
             )
         case metrics_v1.Difference():
             return Difference(
                 title=quantity.title.localize(localizer),
                 color=_parse_color(quantity.color),
-                minuend=_parse_quantity(quantity.minuend, localizer),
-                subtrahend=_parse_quantity(quantity.subtrahend, localizer),
+                minuend=_parse_quantity(
+                    quantity.minuend, localizer, service, consolidation_function
+                ),
+                subtrahend=_parse_quantity(
+                    quantity.subtrahend, localizer, service, consolidation_function
+                ),
             )
         case metrics_v1.Fraction():
             return Fraction(
                 title=quantity.title.localize(localizer),
                 unit=_parse_unit(quantity.unit),
                 color=_parse_color(quantity.color),
-                dividend=_parse_quantity(quantity.dividend, localizer),
-                divisor=_parse_quantity(quantity.divisor, localizer),
+                dividend=_parse_quantity(
+                    quantity.dividend, localizer, service, consolidation_function
+                ),
+                divisor=_parse_quantity(
+                    quantity.divisor, localizer, service, consolidation_function
+                ),
             )
         case _:
             assert_never(quantity)
@@ -238,25 +277,31 @@ def metric_names_of_graph(
 def _parse_bound(
     bound: int | float | _ApiQuantity,
     localizer: Callable[[str], str],
+    service: ServiceRef,
+    consolidation_function: ConsolidationFunction,
 ) -> Bound:
     if isinstance(bound, int | float):
         return bound
-    return _parse_quantity(bound, localizer)
+    return _parse_quantity(bound, localizer, service, consolidation_function)
 
 
 def _parse_minimal_range(
     minimal_range: graphs_v1.MinimalRange | graphs_v2_unstable.MinimalRange,
     localizer: Callable[[str], str],
+    service: ServiceRef,
+    consolidation_function: ConsolidationFunction,
 ) -> MinimalRange:
     return MinimalRange(
-        lower=_parse_bound(minimal_range.lower, localizer),
-        upper=_parse_bound(minimal_range.upper, localizer),
+        lower=_parse_bound(minimal_range.lower, localizer, service, consolidation_function),
+        upper=_parse_bound(minimal_range.upper, localizer, service, consolidation_function),
     )
 
 
 def _parse_graph(
     graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
     localizer: Callable[[str], str],
+    service: ServiceRef,
+    consolidation_function: ConsolidationFunction,
 ) -> Graph:
     return Graph(
         name=graph.name,
@@ -264,14 +309,26 @@ def _parse_graph(
         vertical_range=(
             None
             if graph.minimal_range is None
-            else _parse_minimal_range(graph.minimal_range, localizer)
+            else _parse_minimal_range(
+                graph.minimal_range, localizer, service, consolidation_function
+            )
         ),
         stack_groups=(
-            [StackGroup(members=[_parse_quantity(q, localizer) for q in graph.compound_lines])]
+            [
+                StackGroup(
+                    members=[
+                        _parse_quantity(q, localizer, service, consolidation_function)
+                        for q in graph.compound_lines
+                    ]
+                )
+            ]
             if graph.compound_lines
             else []
         ),
-        simple_lines=[_parse_quantity(q, localizer) for q in graph.simple_lines],
+        simple_lines=[
+            _parse_quantity(q, localizer, service, consolidation_function)
+            for q in graph.simple_lines
+        ],
     )
 
 
@@ -283,16 +340,18 @@ def parse_graph_from_api(
         | graphs_v2_unstable.Bidirectional
     ),
     localizer: Callable[[str], str],
+    service: ServiceRef,
+    consolidation_function: ConsolidationFunction,
 ) -> Graph | Bidirectional:
     match graph:
         case graphs_v1.Graph() | graphs_v2_unstable.Graph():
-            return _parse_graph(graph, localizer)
+            return _parse_graph(graph, localizer, service, consolidation_function)
         case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
             return Bidirectional(
                 name=graph.name,
                 title=graph.title.localize(localizer),
-                lower=_parse_graph(graph.lower, localizer),
-                upper=_parse_graph(graph.upper, localizer),
+                lower=_parse_graph(graph.lower, localizer, service, consolidation_function),
+                upper=_parse_graph(graph.upper, localizer, service, consolidation_function),
             )
         case _:
             assert_never(graph)

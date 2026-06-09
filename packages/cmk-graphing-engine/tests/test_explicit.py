@@ -13,6 +13,7 @@ from cmk.graphing_engine import (
     ExplicitOptions,
     Graph,
     MetricName,
+    RRDMetric,
     RRDSource,
     Scalars,
     ServiceRef,
@@ -27,13 +28,21 @@ from cmk.graphing_engine import (
 def _common() -> CommonOptions:
     return CommonOptions(
         time_range=TimeRange(start=0, end=60, step=10),
-        consolidation_function=ConsolidationFunction.AVERAGE,
         temperature_unit=TemperatureUnit.CELSIUS,
     )
 
 
 def _service() -> ServiceRef:
     return ServiceRef(site_id="s", host_name="h", service_name="svc")
+
+
+def _rrd(name: MetricName) -> RRDMetric:
+    return RRDMetric(
+        host_name="h",
+        service_name="svc",
+        metric_name=name,
+        consolidation_function=ConsolidationFunction.AVERAGE,
+    )
 
 
 class _FakeFetchRRD:
@@ -83,7 +92,7 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
         name="cpu",
         title="CPU",
         # cpu_user as a curve; cpu_system referenced only by a scalar threshold.
-        simple_lines=[cpu_user, WarningOf(metric_name=cpu_system)],
+        simple_lines=[_rrd(cpu_user), WarningOf(metric=_rrd(cpu_system))],
     )
     options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
     cpu_user_bounds = Scalars(warning=80.0, critical=90.0)
@@ -111,15 +120,15 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
     assert rendered.scalars == {
-        cpu_user: cpu_user_bounds,
-        cpu_system: cpu_system_bounds,
+        _rrd(cpu_user): cpu_user_bounds,
+        _rrd(cpu_system): cpu_system_bounds,
     }
     assert rrd.translated_metrics_calls == [(service,)]
 
 
 def test_discover_explicit_graphs_omits_scalars_for_metrics_not_in_translated_metrics() -> None:
     service = _service()
-    inline = Graph(name="g", title="g", simple_lines=[MetricName("missing_metric")])
+    inline = Graph(name="g", title="g", simple_lines=[_rrd(MetricName("missing_metric"))])
     options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
     rrd = _FakeFetchRRD(translated_metrics_response={service: {}})
 

@@ -12,14 +12,15 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from ._discovery import DiscoveredGraph
 from ._fetch import FetchRRD
 from ._from_api import metric_names_of_graph, parse_graph_from_api
-from ._objects import Graph, MetricName, StackGroup
-from ._options import CommonOptions, ServiceRef
+from ._objects import Graph, MetricName, RRDMetric, StackGroup
+from ._options import CommonOptions, ConsolidationFunction, ServiceRef
 
 
 @dataclass(frozen=True, kw_only=True)
 class TemplateDiscoveryOptions:
     common: CommonOptions
     service: ServiceRef
+    consolidation_function: ConsolidationFunction
     localizer: Callable[[str], str]
     registered_graphs: Sequence[
         graphs_v1.Graph
@@ -92,14 +93,21 @@ def discover_template_graphs(
         if not walk.matched:
             continue
         claimed.update(walk.metric_names)
+        graph = parse_graph_from_api(
+            plugin,
+            options.localizer,
+            options.service,
+            options.consolidation_function,
+        )
         discovered.append(
             DiscoveredGraph(
-                graph=parse_graph_from_api(plugin, options.localizer),
+                graph=graph,
                 options=post_options,
                 scalars={
-                    name: bounds
-                    for name in walk.metric_names
-                    if name in translated_metrics and (bounds := translated_metrics[name].bounds)
+                    metric: bounds
+                    for metric in graph.rrd_metrics()
+                    if metric.metric_name in translated_metrics
+                    and (bounds := translated_metrics[metric.metric_name].bounds)
                 },
             )
         )
@@ -107,15 +115,21 @@ def discover_template_graphs(
     for name, metric in translated_metrics.items():
         if name in claimed:
             continue
+        rrd_metric = RRDMetric(
+            host_name=options.service.host_name,
+            service_name=options.service.service_name,
+            metric_name=name,
+            consolidation_function=options.consolidation_function,
+        )
         discovered.append(
             DiscoveredGraph(
                 graph=Graph(
                     name=name,
                     title=name,
-                    stack_groups=[StackGroup(members=[name])],
+                    stack_groups=[StackGroup(members=[rrd_metric])],
                 ),
                 options=post_options,
-                scalars={name: metric.bounds} if metric.bounds else {},
+                scalars={rrd_metric: metric.bounds} if metric.bounds else {},
             )
         )
 

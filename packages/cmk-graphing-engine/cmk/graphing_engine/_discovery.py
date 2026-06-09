@@ -7,11 +7,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from ._fetch import Scalars
-from ._objects import Bidirectional, Graph, MetricName
+from ._objects import Bidirectional, Graph, RRDMetric
 
 
 @dataclass(frozen=True, kw_only=True)
 class DiscoveredGraph[Options]:
     graph: Graph | Bidirectional
     options: Options
-    scalars: Mapping[MetricName, Scalars]
+    scalars: Mapping[RRDMetric, Scalars]

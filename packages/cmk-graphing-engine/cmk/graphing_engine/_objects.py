@@ -10,6 +10,8 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, KW_ONLY
 from typing import NewType
 
+from ._options import ConsolidationFunction
+
 
 @dataclass(frozen=True)
 class DecimalNotation:
@@ -81,35 +83,43 @@ class Constant:
 MetricName = NewType("MetricName", str)
 
 
+@dataclass(frozen=True, kw_only=True)
+class RRDMetric:
+    host_name: str
+    service_name: str
+    metric_name: MetricName
+    consolidation_function: ConsolidationFunction
+
+
 @dataclass(frozen=True)
 class WarningOf:
-    metric_name: MetricName
+    metric: RRDMetric
 
 
 @dataclass(frozen=True)
 class CriticalOf:
-    metric_name: MetricName
+    metric: RRDMetric
 
 
 @dataclass(frozen=True)
 class LowerWarningOf:
-    metric_name: MetricName
+    metric: RRDMetric
 
 
 @dataclass(frozen=True)
 class LowerCriticalOf:
-    metric_name: MetricName
+    metric: RRDMetric
 
 
 @dataclass(frozen=True)
 class MinimumOf:
-    metric_name: MetricName
+    metric: RRDMetric
     color: str
 
 
 @dataclass(frozen=True)
 class MaximumOf:
-    metric_name: MetricName
+    metric: RRDMetric
     color: str
 
 
@@ -148,7 +158,7 @@ class Fraction:
 
 
 type Quantity = (
-    MetricName
+    RRDMetric
     | Constant
     | WarningOf
     | CriticalOf
@@ -186,9 +196,9 @@ class StackGroup:
     members: Sequence[Quantity]
 
 
-def _metric_names_in_quantity(quantity: Quantity) -> Iterable[MetricName]:
+def _rrd_metrics_in_quantity(quantity: Quantity) -> Iterable[RRDMetric]:
     match quantity:
-        case str():
+        case RRDMetric():
             yield quantity
         case Constant():
             return
@@ -200,19 +210,19 @@ def _metric_names_in_quantity(quantity: Quantity) -> Iterable[MetricName]:
             | MinimumOf()
             | MaximumOf()
         ):
-            yield quantity.metric_name
+            yield quantity.metric
         case Sum():
             for operand in quantity.summands:
-                yield from _metric_names_in_quantity(operand)
+                yield from _rrd_metrics_in_quantity(operand)
         case Product():
             for operand in quantity.factors:
-                yield from _metric_names_in_quantity(operand)
+                yield from _rrd_metrics_in_quantity(operand)
         case Difference():
-            yield from _metric_names_in_quantity(quantity.minuend)
-            yield from _metric_names_in_quantity(quantity.subtrahend)
+            yield from _rrd_metrics_in_quantity(quantity.minuend)
+            yield from _rrd_metrics_in_quantity(quantity.subtrahend)
         case Fraction():
-            yield from _metric_names_in_quantity(quantity.dividend)
-            yield from _metric_names_in_quantity(quantity.divisor)
+            yield from _rrd_metrics_in_quantity(quantity.dividend)
+            yield from _rrd_metrics_in_quantity(quantity.divisor)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -223,15 +233,15 @@ class Graph:
     stack_groups: Sequence[StackGroup] = ()
     simple_lines: Sequence[Quantity] = ()
 
-    def metric_names(self) -> Sequence[MetricName]:
+    def rrd_metrics(self) -> Sequence[RRDMetric]:
         return list(
             set(
-                name
+                rrd_metric
                 for quantity in itertools.chain(
                     (m for g in self.stack_groups for m in g.members),
                     self.simple_lines,
                 )
-                for name in _metric_names_in_quantity(quantity)
+                for rrd_metric in _rrd_metrics_in_quantity(quantity)
             )
         )
 
@@ -243,5 +253,5 @@ class Bidirectional:
     lower: Graph
     upper: Graph
 
-    def metric_names(self) -> Sequence[MetricName]:
-        return list(set((*self.lower.metric_names(), *self.upper.metric_names())))
+    def rrd_metrics(self) -> Sequence[RRDMetric]:
+        return list(set((*self.lower.rrd_metrics(), *self.upper.rrd_metrics())))

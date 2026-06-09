@@ -28,7 +28,6 @@ class TimeRange:
 @dataclass(frozen=True, kw_only=True)
 class CommonOptions:
     time_range: TimeRange
-    consolidation_function: ConsolidationFunction
     temperature_unit: TemperatureUnit
 
 

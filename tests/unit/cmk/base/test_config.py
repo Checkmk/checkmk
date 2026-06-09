@@ -1858,10 +1858,6 @@ def test_config_cache_tag_list_of_host_not_existing(monkeypatch: MonkeyPatch) ->
     }
 
 
-def test_host_tags_default() -> None:
-    assert isinstance(config.host_tags, dict)
-
-
 def test_host_tags_of_host(monkeypatch: MonkeyPatch) -> None:
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
@@ -1892,10 +1888,6 @@ def test_host_tags_of_host(monkeypatch: MonkeyPatch) -> None:
         "site": "unit",
         "snmp_ds": "no-snmp",
     }
-
-
-def test_service_tag_rules_default() -> None:
-    assert isinstance(config.service_tag_rules, list)
 
 
 def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
@@ -1946,10 +1938,6 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
         "snmp_ds": "no-snmp",
     }
     assert config_cache.tags_of_service(test_host, "CPU load", {}) == {"criticality": "prod"}
-
-
-def test_host_label_rules_default() -> None:
-    assert isinstance(config.host_label_rules, list)
 
 
 def test_labels(monkeypatch: MonkeyPatch) -> None:
@@ -2013,10 +2001,6 @@ def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_pat
         "cmk/site": "discovered",
         "äzzzz": "discovered",
     }
-
-
-def test_service_label_rules_default() -> None:
-    assert isinstance(config.service_label_rules, list)
 
 
 @pytest.mark.parametrize(
@@ -2623,41 +2607,49 @@ def test_load_config_folder_paths(folder_path_test_config: LoadedConfigFragment)
     assert config_cache.host_path(HostName("lvl1aaa-host")) == "/wato/lvl1_aaa/"
     assert config_cache.host_path(HostName("lvl2-host")) == "/wato/lvl1/lvl2/"
 
-    assert config.cmc_host_rrd_config[0]["condition"]["host_folder"] == "/wato/lvl1_aaa/"
-    assert config.cmc_host_rrd_config[1]["condition"]["host_folder"] == "/wato/lvl1/lvl2/"
-    assert config.cmc_host_rrd_config[2]["condition"]["host_folder"] == "/wato/lvl1/"
-    assert "host_folder" not in config.cmc_host_rrd_config[3]["condition"]
-    assert "host_folder" not in config.cmc_host_rrd_config[4]["condition"]
+    assert (
+        folder_path_test_config.cmc_host_rrd_config[0]["condition"]["host_folder"]
+        == "/wato/lvl1_aaa/"
+    )
+    assert (
+        folder_path_test_config.cmc_host_rrd_config[1]["condition"]["host_folder"]
+        == "/wato/lvl1/lvl2/"
+    )
+    assert (
+        folder_path_test_config.cmc_host_rrd_config[2]["condition"]["host_folder"] == "/wato/lvl1/"
+    )
+    assert "host_folder" not in folder_path_test_config.cmc_host_rrd_config[3]["condition"]
+    assert "host_folder" not in folder_path_test_config.cmc_host_rrd_config[4]["condition"]
 
     ruleset_matcher = config_cache.ruleset_matcher
     assert ruleset_matcher.get_host_values_all(
-        HostName("main-host"), config.cmc_host_rrd_config, lambda hn: {}
+        HostName("main-host"), folder_path_test_config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values_all(
-        HostName("lvl0-host"), config.cmc_host_rrd_config, lambda hn: {}
+        HostName("lvl0-host"), folder_path_test_config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values_all(
-        HostName("lvl1-host"), config.cmc_host_rrd_config, lambda hn: {}
+        HostName("lvl1-host"), folder_path_test_config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL1",
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values_all(
-        HostName("lvl1aaa-host"), config.cmc_host_rrd_config, lambda hn: {}
+        HostName("lvl1aaa-host"), folder_path_test_config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL1aaa",
         "LVL0",
         "MAIN",
     ]
     assert ruleset_matcher.get_host_values_all(
-        HostName("lvl2-host"), config.cmc_host_rrd_config, lambda hn: {}
+        HostName("lvl2-host"), folder_path_test_config.cmc_host_rrd_config, lambda hn: {}
     ) == [
         "LVL2",
         "LVL1",

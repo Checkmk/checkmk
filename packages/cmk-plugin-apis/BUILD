@@ -208,9 +208,6 @@ py_library(
     data = ["cmk/dcd_connectors/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
-    deps = [
-        "//packages/cmk-ccc:hostaddress",
-    ],
 )
 
 py_library(

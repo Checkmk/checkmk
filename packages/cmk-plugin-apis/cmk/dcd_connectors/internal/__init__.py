@@ -30,7 +30,7 @@ from ._plugin import Connector, ConnectorContext, PhaseStep, SiteChanges
 from ._types import ChangeDirective, find_order, GlobalIdent, HostOrder
 
 
-def entry_point_prefixes() -> Mapping[type[ConnectorSpec], str]:
+def entry_point_prefixes() -> Mapping[type[ConnectorSpec[str]], str]:
     """Return the types of plug-ins and their respective prefixes that can be discovered by Checkmk.
 
     These types can be used to create plug-ins that can be discovered by Checkmk.

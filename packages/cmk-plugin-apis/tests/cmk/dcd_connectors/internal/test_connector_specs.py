@@ -12,12 +12,12 @@ from cmk.dcd_connectors.internal import (
 )
 
 
-def _dummy_factory(_ctx: ConnectorContext) -> Connector:
+def _dummy_factory(_ctx: ConnectorContext) -> Connector[str]:
     raise NotImplementedError
 
 
 def test_connector_spec_stores_all_fields() -> None:
-    spec = ConnectorSpec(
+    spec = ConnectorSpec[str](
         name="test",
         create_connector=_dummy_factory,
         connector_object_class=NullObject,
@@ -28,7 +28,7 @@ def test_connector_spec_stores_all_fields() -> None:
 
 
 def test_connector_spec_name_used_by_discovery() -> None:
-    spec = ConnectorSpec(
+    spec = ConnectorSpec[str](
         name="my_connector",
         create_connector=_dummy_factory,
         connector_object_class=NullObject,

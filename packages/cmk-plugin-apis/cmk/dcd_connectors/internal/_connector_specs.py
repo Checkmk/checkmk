@@ -11,7 +11,7 @@ from ._plugin import Connector, ConnectorContext
 
 
 @dataclass(frozen=True)
-class ConnectorSpec:
+class ConnectorSpec[HostT: str]:
     """Specification of a DCD connector.
 
     Instances of this class will only be picked up by Checkmk if their names
@@ -22,5 +22,5 @@ class ConnectorSpec:
     """
 
     name: str
-    create_connector: Callable[[ConnectorContext], Connector]
-    connector_object_class: type[ConnectorObject]
+    create_connector: Callable[[ConnectorContext], Connector[HostT]]
+    connector_object_class: type[ConnectorObject[HostT]]

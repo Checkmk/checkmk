@@ -7,10 +7,8 @@ import abc
 from collections.abc import Mapping, Sequence
 from typing import Self
 
-from cmk.ccc.hostaddress import HostName
 
-
-class ConnectorObject(abc.ABC):
+class ConnectorObject[HostT: str](abc.ABC):
     """Abstract base class for transporting connector infos.
 
     Children of this class are used to transport objects between
@@ -37,7 +35,7 @@ class ConnectorObject(abc.ABC):
         }
 
     @abc.abstractmethod
-    def _serialize_attributes(self) -> Mapping[str, Sequence[HostName] | int]:
+    def _serialize_attributes(self) -> Mapping[str, Sequence[HostT] | int]:
         """Serialize object type specific attributes for transport"""
         raise NotImplementedError()
 
@@ -45,24 +43,24 @@ class ConnectorObject(abc.ABC):
         return True
 
 
-class NullObject(ConnectorObject):
+class NullObject[HostT: str](ConnectorObject[HostT]):
     @classmethod
     def deserialize_attributes(cls, _serialized: dict) -> Self:  # type: ignore[type-arg]
         return cls()
 
-    def _serialize_attributes(self) -> Mapping[str, Sequence[HostName] | int]:
+    def _serialize_attributes(self) -> Mapping[str, Sequence[HostT] | int]:
         return {}
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
 
 
-class FailedToContactRemoteSite(ConnectorObject):
+class FailedToContactRemoteSite[HostT: str](ConnectorObject[HostT]):
     @classmethod
     def deserialize_attributes(cls, _serialized: dict) -> Self:  # type: ignore[type-arg]
         return cls()
 
-    def _serialize_attributes(self) -> Mapping[str, Sequence[HostName] | int]:
+    def _serialize_attributes(self) -> Mapping[str, Sequence[HostT] | int]:
         return {}
 
     def __repr__(self) -> str:

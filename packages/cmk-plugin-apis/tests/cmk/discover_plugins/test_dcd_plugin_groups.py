@@ -34,7 +34,7 @@ class _AssumeDirs:
         )
 
 
-def _dummy_factory(_ctx: ConnectorContext) -> Connector:
+def _dummy_factory(_ctx: ConnectorContext) -> Connector[str]:
     raise NotImplementedError
 
 

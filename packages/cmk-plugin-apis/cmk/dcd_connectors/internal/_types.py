@@ -7,8 +7,6 @@ from collections.abc import Sequence
 from re import Pattern
 from typing import NamedTuple, TypedDict
 
-from cmk.ccc.hostaddress import HostName
-
 
 class GlobalIdent(TypedDict):
     site_id: str
@@ -26,18 +24,21 @@ class HostOrder(NamedTuple):
     connector_name: str
 
 
-def find_order(host: HostName, orders: Sequence[HostOrder]) -> HostOrder | None:
+def find_order(host: str, orders: Sequence[HostOrder]) -> HostOrder | None:
     for order in orders:
         if not order.host_filters or any(f.match(host) for f in order.host_filters):
             return order
     return None
 
 
-class ChangeDirective(NamedTuple):
+# Plugin-apis stays str-only; downstream specialises ``HostT`` to e.g.
+# ``cmk.ccc.hostaddress.HostName`` to preserve strong typing without
+# making plugin-apis depend on cmk-ccc.
+class ChangeDirective[HostT: str](NamedTuple):
     """Hint how to apply changes to the site"""
 
     ident: GlobalIdent
     site_id: str
-    hosts: Sequence[HostName]
+    hosts: Sequence[HostT]
     is_delete_allowed: bool
     all_host_orders: Sequence[HostOrder]

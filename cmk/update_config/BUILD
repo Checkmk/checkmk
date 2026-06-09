@@ -74,6 +74,8 @@ py_library(
         "//cmk/utils",
         "//cmk/utils:redis",
         "//cmk/utils:werks",
+        "//packages/cmk-backup:gui",
+        "//packages/cmk-backup:utils",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",

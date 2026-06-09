@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._password import (
+    formspec_to_password_id,
+    is_formspec_password,
+    password_id_to_formspec,
+)
 from ._utils import (
     create_validation_error_for_mk_user_error,
     DisplayMode,
@@ -45,15 +50,18 @@ __all__ = [
     "DisplayMode",
     "FormSpecValidationError",
     "FormSpecVisitor",
+    "formspec_to_password_id",
     "get_prefill_default",
     "get_title_and_help",
     "get_visitor",
     "IncomingData",
     "InvalidValue",
+    "is_formspec_password",
     "localize",
     "optional_validation",
     "parse_and_validate_frontend_data",
     "parse_data_from_field_id",
+    "password_id_to_formspec",
     "process_validation_errors",
     "process_validation_messages",
     "RawDiskData",

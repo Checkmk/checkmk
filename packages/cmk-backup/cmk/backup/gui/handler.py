@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import assert_never, cast, Final
 
 import cmk.ccc.version as cmk_version
+from cmk.backup.gui.formspec_adapter import FormspecAdapter
 from cmk.backup.utils.config import Config as RawConfig
 from cmk.backup.utils.job import JobConfig, JobState, ScheduleConfig
 from cmk.backup.utils.targets import TargetId
@@ -60,6 +61,7 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.form_specs import (
     DisplayMode,
+    IncomingData,
     parse_data_from_field_id,
     RawDiskData,
     read_data_from_frontend,
@@ -124,7 +126,6 @@ from cmk.rulesets.v1.form_specs import (
     Integer,
     InvalidElementMode,
     InvalidElementValidator,
-    migrate_to_password,
     Password,
     String,
     validators,
@@ -1393,7 +1394,6 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
                             min_value=1, error_msg=Message("Text field cannot be empty")
                         )
                     ],
-                    migrate=migrate_to_password,
                 ),
             ),
             "bucket": DictElement(
@@ -1475,7 +1475,6 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                             title=Title("Storage account shared key"),
                             parameter_form=Password(
                                 title=Title("Shared key"),
-                                migrate=migrate_to_password,
                                 custom_validate=[
                                     validators.LengthInRange(
                                         min_value=1,
@@ -1517,7 +1516,6 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                                         required=True,
                                         parameter_form=Password(
                                             title=Title("Client secret"),
-                                            migrate=migrate_to_password,
                                             custom_validate=[
                                                 validators.LengthInRange(
                                                     min_value=1,
@@ -1850,12 +1848,12 @@ class ModeEditBackupTarget(WatoMode[object]):
 
             self._new = False
             self._ident: TargetId | None = target_ident
-            self._target_cfg: TargetConfig | dict[str, object] = target.config
+            self._target_cfg: TargetConfig | None = target.config
             self._title = _("Edit backup target: %s") % target.title
         else:
             self._new = True
             self._ident = None
-            self._target_cfg = {}
+            self._target_cfg = None
             self._title = _("Add backup target")
 
     def title(self) -> str:
@@ -1953,7 +1951,7 @@ class ModeEditBackupTarget(WatoMode[object]):
 
         if "ident" in target_config:
             self._ident = TargetId(target_config.pop("ident"))
-        self._target_cfg = cast(TargetConfig, target_config)
+        self._target_cfg = FormspecAdapter.from_form_spec(target_config)
 
         if self._ident is None:
             raise MKGeneralException("Cannot create or modify job without identifier")
@@ -1971,11 +1969,12 @@ class ModeEditBackupTarget(WatoMode[object]):
         flat_catalog = create_flat_catalog_from_dictionary(
             self.fs_backup_target(BackupConfig.load())
         )
-        value_for_frontend = (
-            read_data_from_frontend("edit_target")
-            if self._received_data_from_frontend
-            else RawDiskData(self._target_cfg)
-        )
+        if self._received_data_from_frontend:
+            value_for_frontend: IncomingData = read_data_from_frontend("edit_target")
+        elif self._target_cfg is None:
+            value_for_frontend = RawDiskData({})
+        else:
+            value_for_frontend = FormspecAdapter.to_form_spec(self._target_cfg)
 
         with html.form_context("edit_target", method="POST"):
             html.prevent_password_auto_completion()

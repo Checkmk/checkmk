@@ -286,7 +286,6 @@ py_library(
     srcs = ["cmk-cert.py"],
     imports = ["."],
     deps = [
-        "//cmk/gui:app",
         "//cmk/gui/cmkcert",
     ],
 )

@@ -129,6 +129,7 @@ bazel_env(
         "bandit": ":bandit",
         "clangd": "@clang-linux-x86_64//:bin/clangd",
         "genhtml": "@lcov//:genhtml",
+        "lcov": "@lcov//:lcov",
         "mypy": ":mypy_cli_original",
         "osslsigncode": "@osslsigncode",
         "plantuml": "@plantuml",

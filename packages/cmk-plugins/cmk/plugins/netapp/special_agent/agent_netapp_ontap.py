@@ -11,7 +11,7 @@ import argparse
 import logging
 import sys
 from collections import defaultdict
-from collections.abc import Collection, Iterable, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from enum import Enum
 from typing import Final
 
@@ -466,7 +466,30 @@ def fetch_vs_status(connection: HostConnection) -> Iterable[models.SvmModel]:
     )
 
 
-def fetch_interfaces(connection: HostConnection) -> Iterable[models.IpInterfaceModel]:
+def _fetch_node_ha_partner_names(
+    connection: HostConnection,
+) -> Mapping[str, tuple[str, ...] | None]:
+    """Return the HA (storage failover) partner node names indexed by node name."""
+    partner_names_by_node: dict[str, tuple[str, ...] | None] = {}
+
+    for element in NetAppResource.Node.get_collection(
+        connection=connection,
+        fields="name,ha.partners.name",
+    ):
+        element_data = element.to_dict()
+        ha_partners = (element_data.get("ha") or {}).get("partners")
+        partner_names_by_node[element_data["name"]] = (
+            tuple(partner["name"] for partner in ha_partners if partner.get("name"))
+            if ha_partners is not None
+            else None
+        )
+
+    return partner_names_by_node
+
+
+def fetch_interfaces(
+    connection: HostConnection, logger: logging.Logger
+) -> Iterable[models.IpInterfaceModel]:
     field_query = (
         "uuid",
         "name",
@@ -480,23 +503,41 @@ def fetch_interfaces(connection: HostConnection) -> Iterable[models.IpInterfaceM
         "location.is_home",
     )
 
+    interfaces: list[models.IpInterfaceModel] = []
     for element in NetAppResource.IpInterface.get_collection(
         connection=connection, fields=",".join(field_query)
     ):
         element_data = element.to_dict()
 
-        yield models.IpInterfaceModel(
-            uuid=element_data["uuid"],
-            name=element_data["name"],
-            enabled=element_data["enabled"],
-            state=element_data.get("state"),
-            node_name=element_data["location"]["node"]["name"],
-            port_name=element_data["location"]["port"]["name"],
-            failover=element_data["location"]["failover"],
-            home_node=element_data["location"]["home_node"]["name"],
-            home_port=element_data["location"]["home_port"]["name"],
-            is_home=element_data["location"]["is_home"],
+        interfaces.append(
+            models.IpInterfaceModel(
+                uuid=element_data["uuid"],
+                name=element_data["name"],
+                enabled=element_data["enabled"],
+                state=element_data.get("state"),
+                node_name=element_data["location"]["node"]["name"],
+                port_name=element_data["location"]["port"]["name"],
+                failover=element_data["location"]["failover"],
+                home_node=element_data["location"]["home_node"]["name"],
+                home_port=element_data["location"]["home_port"]["name"],
+                is_home=element_data["location"]["is_home"],
+            )
         )
+
+    # The "sfo_partners_only" failover policy only fails over to ports on the home
+    # node or its HA partner nodes. Those partner names are not part of the interface
+    # resource, so enrich the affected interfaces with an extra query - but only when
+    # at least one interface actually uses that policy.
+    if any(interface.failover == "sfo_partners_only" for interface in interfaces):
+        try:
+            partner_names_by_node = _fetch_node_ha_partner_names(connection)
+            for interface in interfaces:
+                if interface.failover == "sfo_partners_only":
+                    interface.ha_partner_names = partner_names_by_node.get(interface.home_node)
+        except Exception:
+            logger.exception("Could not collect ha_partner_names")
+
+    yield from interfaces
 
 
 def fetch_ports(connection: HostConnection) -> Iterable[models.PortModel]:
@@ -1138,7 +1179,7 @@ def write_sections(
     if FetchedResource.interfaces.value in fetched_resources:
         interfaces: list[models.IpInterfaceModel] | None = None
         try:
-            interfaces = list(fetch_interfaces(connection))
+            interfaces = list(fetch_interfaces(connection, logger))
         except NetAppRestError as exc:
             if exc.status_code == 401:
                 raise

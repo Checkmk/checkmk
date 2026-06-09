@@ -179,6 +179,17 @@ def _merge_if_counters_sections(
                 filtered = [el for el in fail_ports if el.split("|")[0] == interface["home-node"]]
                 if filtered:
                     interface["failover_ports"] = ";".join(filtered)
+            case "sfo_partners_only":
+                # Only failover to ports on the home node or its HA (storage failover)
+                # partner nodes within the same broadcast domain. The partner names are
+                # provided by the special agent (see fetch_interfaces). A missing broadcast
+                # domain is accepted: no failover group is reported and, unlike the other
+                # broadcast-domain-based policies, it is not flagged as CRIT.
+                ha_partner_names = interface.get("ha_partner_names") or ()
+                eligible_nodes = {interface["home-node"], *ha_partner_names}
+                filtered = [el for el in fail_ports if el.split("|")[0] in eligible_nodes]
+                if filtered:
+                    interface["failover_ports"] = ";".join(filtered)
             case "home_port_only":
                 interface["failover_ports"] = failover_home_port
             case _:

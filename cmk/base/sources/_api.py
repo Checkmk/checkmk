@@ -8,9 +8,9 @@ from __future__ import annotations
 import abc
 from collections.abc import Sized
 
+from cmk.checkengine.fetchers import Fetcher
+from cmk.checkengine.fetchers.filecache import FileCache, FileCacheOptions
 from cmk.checkengine.helper_interface import SourceInfo
-from cmk.fetchers import Fetcher
-from cmk.fetchers.filecache import FileCache, FileCacheOptions
 
 
 class Source[TRawData: Sized](abc.ABC):

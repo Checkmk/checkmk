@@ -18,8 +18,7 @@ from cmk.base.config import ConfigCache
 from cmk.base.sources import make_sources, Source
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.fetchers import (
+from cmk.checkengine.fetchers import (
     NoSelectedSNMPSections,
     PiggybackFetcher,
     ProgramFetcher,
@@ -28,7 +27,8 @@ from cmk.fetchers import (
     TCPFetcher,
     TLSConfig,
 )
-from cmk.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID

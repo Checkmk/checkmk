@@ -17,9 +17,33 @@ from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped,unuse
 from pytest import MonkeyPatch
 
 import cmk.ccc.resulttype as result
-import cmk.fetchers._snmp._fetcher as snmp
+import cmk.checkengine.fetchers._snmp._fetcher as snmp
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.fetchers import (
+    ActivatedSecrets,
+    Fetcher,
+    IPMIFetcher,
+    Mode,
+    PiggybackFetcher,
+    PlainFetcherTrigger,
+    ProgramFetcher,
+    SNMPFetcher,
+    SNMPScanConfig,
+    SNMPSectionMeta,
+    TCPFetcher,
+    TLSConfig,
+)
+from cmk.checkengine.fetchers._ipmi import IPMISensor
+from cmk.checkengine.fetchers._tcp import agent_protocol
+from cmk.checkengine.fetchers.filecache import (
+    AgentFileCache,
+    FileCache,
+    FileCacheMode,
+    MaxAge,
+    NoCache,
+    SNMPFileCache,
+)
 from cmk.checkengine.helper_interface import AgentRawData, FetcherError
 from cmk.checkengine.snmplib import (
     BackendOIDSpec,
@@ -36,30 +60,6 @@ from cmk.checkengine.snmplib import (
     SNMPVersion,
 )
 from cmk.checkengine.snmplib import SNMPSectionName as SectionName
-from cmk.fetchers import (
-    ActivatedSecrets,
-    agent_protocol,
-    Fetcher,
-    IPMIFetcher,
-    Mode,
-    PiggybackFetcher,
-    PlainFetcherTrigger,
-    ProgramFetcher,
-    SNMPFetcher,
-    SNMPScanConfig,
-    SNMPSectionMeta,
-    TCPFetcher,
-    TLSConfig,
-)
-from cmk.fetchers._ipmi import IPMISensor
-from cmk.fetchers.filecache import (
-    AgentFileCache,
-    FileCache,
-    FileCacheMode,
-    MaxAge,
-    NoCache,
-    SNMPFileCache,
-)
 
 # TODO(ml): This is way too complicated for a unit test.
 PLUGIN_STORE = SNMPPluginStore(

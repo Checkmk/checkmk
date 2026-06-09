@@ -127,7 +127,7 @@ allows = [
   "cmk.bi",
   "cmk.ccc",
   "cmk.checkengine",
-  "cmk.fetchers",
+  "cmk.checkengine.fetchers",
   "cmk.gui",
   "cmk.server_side_calls_backend",
   "cmk.utils",
@@ -365,7 +365,7 @@ allows = [
   "cmk.core_client",
   "cmk.fetcher_encoder",
   "cmk.fetcher_helper",
-  "cmk.fetchers",
+  "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.inventory",
   "cmk.licensing",
@@ -386,7 +386,7 @@ allows = [
   "cmk.checkengine.plugins",
   "cmk.fetcher_encoder",
   "cmk.fetcher_helper",
-  "cmk.fetchers",
+  "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.inventory",
   "cmk.relay_fetcher_trigger",
@@ -406,7 +406,7 @@ allows = [
   "cmk.events",
   "cmk.fetcher_encoder",
   "cmk.fetcher_helper",
-  "cmk.fetchers",
+  "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.licensing.basics.options",
   "cmk.licensing.nonfree",
@@ -433,7 +433,7 @@ allows = [
   "cmk.ec",
   "cmk.events",
   "cmk.fetcher_helper",
-  "cmk.fetchers",
+  "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.inventory",
   "cmk.piggyback",
@@ -466,7 +466,7 @@ allows = [
   "cmk.ec",
   "cmk.events",
   "cmk.fetcher_helper",
-  "cmk.fetchers",
+  "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.inventory",
   "cmk.licensing",
@@ -527,7 +527,7 @@ allows = [
 [components."cmk.check_helper_protocol"]
 allows = [
   "@ccc",
-  "cmk.fetchers",
+  "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.checkengine.snmplib",
 ]
@@ -578,7 +578,7 @@ allows = ["@ccc", "cmk.utils.paths"]
 allows = ["@ccc", "@livestatus_client"]
 
 [components."cmk.fetcher_encoder"]
-allows = ["cmk.fetchers"]
+allows = ["cmk.checkengine.fetchers"]
 
 [components."cmk.fetcher_helper"]
 allows = [
@@ -586,7 +586,7 @@ allows = [
   "@relay_protocols",
   "cmk.check_helper",
   "cmk.check_helper_protocol",
-  "cmk.fetchers",
+  "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.telemetry.fetcher.agent_otel",
   "cmk.relay_fetcher_trigger",
@@ -620,7 +620,7 @@ allows = [
   "@plugin_apis",
   "cmk.base.config",
   "cmk.discover_plugins",
-  "cmk.fetchers",
+  "cmk.checkengine.fetchers",
   "cmk.metric_backend",
   "cmk.utils.paths",
 ]
@@ -634,7 +634,7 @@ allows = ["@ccc", "@crypto", "cmk.gui", "cmk.utils"]
 [components."cmk.ec"]
 allows = ["@ccc", "@livestatus_client", "@mkp_tool", "cmk.events", "cmk.utils"]
 
-[components."cmk.fetchers"]
+[components."cmk.checkengine.fetchers"]
 allows = [
   "@ccc",
   "@crypto",
@@ -1052,7 +1052,7 @@ allows = [
   "cmk.dcd.gui",
   "cmk.discover_plugins",
   "cmk.diskspace.config",
-  "cmk.fetchers",
+  "cmk.checkengine.fetchers",
   "cmk.gui",
   "cmk.message_broker_certs",
   "cmk.nonfree.ultimate.metric_backend",
@@ -1077,7 +1077,7 @@ allows = [
   "cmk.dcd.protocols",
   "cmk.discover_plugins",
   "cmk.diskspace.config",
-  "cmk.fetchers",
+  "cmk.checkengine.fetchers",
   "cmk.gui",
   "cmk.licensing",
   "cmk.message_broker_certs",
@@ -1215,7 +1215,7 @@ allows = [
   "@relay_protocols",
   "cmk.check_helper_protocol",
   "cmk.fetcher_encoder",
-  "cmk.fetchers",
+  "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.relay_trigger_protocol",
   "cmk.checkengine.snmplib",

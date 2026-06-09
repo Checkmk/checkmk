@@ -33,6 +33,9 @@ from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checking import make_timing_results
 from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.fetchers import Mode as FetchMode
+from cmk.checkengine.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig, StoredSecrets
+from cmk.checkengine.fetchers.filecache import FileCacheOptions
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugin_backend import (
@@ -41,9 +44,6 @@ from cmk.checkengine.plugin_backend import (
 )
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.submitters import ServiceState
-from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig, StoredSecrets
-from cmk.fetchers.filecache import FileCacheOptions
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils.ip_lookup import (
     ConfiguredIPLookup,

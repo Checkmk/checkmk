@@ -14,22 +14,22 @@ import pytest
 
 import cmk.base.sources._sources as _sources_module
 import cmk.ccc.resulttype as result
-import cmk.fetchers._snmp._fetcher as _snmp_module
+import cmk.checkengine.fetchers._snmp._fetcher as _snmp_module
 import cmk.utils.paths as cmk_paths
 from cmk.base import config
 from cmk.base.community_app import make_app
 from cmk.base.modes import check_mk
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
-from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
-from cmk.fetchers import (
+from cmk.checkengine.fetchers import (
     Fetcher,
     FetcherSecrets,
     Mode,
     PiggybackFetcher,
     PlainFetcherTrigger,
 )
-from cmk.fetchers.snmp_backend import make_backend
+from cmk.checkengine.fetchers.snmp_backend import make_backend
+from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
+from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario

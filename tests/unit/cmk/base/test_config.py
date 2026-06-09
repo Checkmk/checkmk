@@ -56,6 +56,8 @@ from cmk.checkengine.discovery import (
     DiscoveryCheckParameters,
     RediscoveryParameters,
 )
+from cmk.checkengine.fetchers import Mode
+from cmk.checkengine.fetchers._tcp import agent_protocol
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.checkengine.plugin_backend.section_plugins_legacy import convert_legacy_sections
@@ -71,7 +73,6 @@ from cmk.checkengine.plugins import (
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
-from cmk.fetchers import agent_protocol, Mode
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.password_store.v1_unstable import Secret
 from cmk.piggyback import backend as piggyback_backend

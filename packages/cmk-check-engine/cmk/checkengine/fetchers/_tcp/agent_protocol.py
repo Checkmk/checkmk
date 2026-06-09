@@ -15,9 +15,9 @@ from collections.abc import Buffer, Callable, Iterator
 from enum import Enum
 from typing import assert_never, Final, Self
 
+from cmk.checkengine.fetchers._abstract import Deserializer, Serializer
 from cmk.checkengine.helper_interface import FetcherError
 from cmk.crypto.deprecated import AesCbcCipher
-from cmk.fetchers._abstract import Deserializer, Serializer
 
 OPENSSL_SALTED_MARKER = "Salted__"
 

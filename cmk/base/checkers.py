@@ -67,6 +67,18 @@ from cmk.checkengine.discovery import (
     HostLabelPlugin,
 )
 from cmk.checkengine.fetcher import HostKey
+from cmk.checkengine.fetchers import (
+    AdHocSecrets,
+    Fetcher,
+    FetcherSecrets,
+    FetcherTrigger,
+    Mode,
+    ProgramFetcher,
+    StoredSecrets,
+    TLSConfig,
+)
+from cmk.checkengine.fetchers._utils.config import make_persisted_section_dir
+from cmk.checkengine.fetchers.filecache import FileCache, FileCacheOptions, MaxAge, NoCache
 from cmk.checkengine.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.parser import HostSections, parse_raw_data, SectionNameCollection
@@ -96,18 +108,6 @@ from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPRawData
 from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
 from cmk.checkengine.value_store import ValueStoreManager
-from cmk.fetchers import (
-    AdHocSecrets,
-    Fetcher,
-    FetcherSecrets,
-    FetcherTrigger,
-    Mode,
-    ProgramFetcher,
-    StoredSecrets,
-    TLSConfig,
-)
-from cmk.fetchers._utils.config import make_persisted_section_dir
-from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge, NoCache
 from cmk.server_side_calls_backend import ExecutableFinder, SpecialAgentCommandLine
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.ip_lookup import (

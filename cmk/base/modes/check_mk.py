@@ -74,6 +74,19 @@ from cmk.checkengine.discovery import (
     remove_autochecks_of_host,
 )
 from cmk.checkengine.fetcher import FetcherFunction
+from cmk.checkengine.fetchers import (
+    AdHocSecrets,
+    NoSelectedSNMPSections,
+    SNMPFetcherConfig,
+    StoredSecrets,
+    TLSConfig,
+)
+from cmk.checkengine.fetchers import Mode as FetchMode
+from cmk.checkengine.fetchers._utils.config import (
+    make_persisted_section_dir,
+)
+from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.checkengine.fetchers.snmp_backend import make_backend
 from cmk.checkengine.helper_interface import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import (
@@ -109,19 +122,6 @@ from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import discover_families, PluginGroup
-from cmk.fetchers import (
-    AdHocSecrets,
-    NoSelectedSNMPSections,
-    SNMPFetcherConfig,
-    StoredSecrets,
-    TLSConfig,
-)
-from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers._utils.config import (
-    make_persisted_section_dir,
-)
-from cmk.fetchers.filecache import FileCacheOptions, MaxAge
-from cmk.fetchers.snmp_backend import make_backend
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.inventory.structured_data import (
     ImmutableTree,

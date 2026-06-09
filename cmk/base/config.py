@@ -79,6 +79,22 @@ from cmk.checkengine.discovery import (
     merge_cluster_autochecks,
 )
 from cmk.checkengine.exitspec import ExitSpec
+from cmk.checkengine.fetchers import (
+    IPMICredentials,
+    IPMIFetcher,
+    NoSelectedSNMPSections,
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    SNMPFetcherConfig,
+    SNMPScanConfig,
+    SNMPSectionMeta,
+    TCPFetcher,
+    TCPFetcherConfig,
+    TLSConfig,
+)
+from cmk.checkengine.fetchers._utils.config import make_persisted_section_dir
+from cmk.checkengine.fetchers.filecache import MaxAge
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
@@ -108,22 +124,6 @@ from cmk.checkengine.snmplib import (  # some of these are required in the modul
     SNMPVersion,
 )
 from cmk.checkengine.summarize import SummaryConfig
-from cmk.fetchers import (
-    IPMICredentials,
-    IPMIFetcher,
-    NoSelectedSNMPSections,
-    PiggybackFetcher,
-    ProgramFetcher,
-    SNMPFetcher,
-    SNMPFetcherConfig,
-    SNMPScanConfig,
-    SNMPSectionMeta,
-    TCPFetcher,
-    TCPFetcherConfig,
-    TLSConfig,
-)
-from cmk.fetchers._utils.config import make_persisted_section_dir
-from cmk.fetchers.filecache import MaxAge
 from cmk.inventory.structured_data import RawIntervalFromConfig
 from cmk.password_store.v1_unstable import Secret
 from cmk.piggyback import backend as piggyback_backend

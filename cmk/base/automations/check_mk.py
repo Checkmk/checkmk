@@ -151,6 +151,24 @@ from cmk.checkengine.discovery import (
     automation_discovery as _automation_discovery,
 )
 from cmk.checkengine.fetcher import FetcherFunction
+from cmk.checkengine.fetchers import (
+    ActivatedSecrets,
+    AdHocSecrets,
+    Mode,
+    NoSelectedSNMPSections,
+    PlainFetcherTrigger,
+    ProgramFetcher,
+    SNMPFetcherConfig,
+    StoredSecrets,
+    TCPFetcher,
+    TLSConfig,
+)
+from cmk.checkengine.fetchers._tcp import agent_protocol
+from cmk.checkengine.fetchers._utils.config import (
+    make_persisted_section_dir,
+)
+from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
+from cmk.checkengine.fetchers.snmp_backend import make_backend as make_snmp_backend
 from cmk.checkengine.helper_interface import AgentRawData, FetcherError, FetcherType, SourceType
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
@@ -187,24 +205,6 @@ from cmk.discover_plugins import (
     PluginGroup,
     plugins_local_path,
 )
-from cmk.fetchers import (
-    ActivatedSecrets,
-    AdHocSecrets,
-    agent_protocol,
-    Mode,
-    NoSelectedSNMPSections,
-    PlainFetcherTrigger,
-    ProgramFetcher,
-    SNMPFetcherConfig,
-    StoredSecrets,
-    TCPFetcher,
-    TLSConfig,
-)
-from cmk.fetchers._utils.config import (
-    make_persisted_section_dir,
-)
-from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
-from cmk.fetchers.snmp_backend import make_backend as make_snmp_backend
 from cmk.inventory import structured_data
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.piggyback.backend import (

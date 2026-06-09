@@ -78,6 +78,15 @@ from cmk.checkengine.discovery._utils.filters import (
 )
 from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.fetcher import HostKey
+from cmk.checkengine.fetchers import (
+    AdHocSecrets,
+    Mode,
+    NoSelectedSNMPSections,
+    PlainFetcherTrigger,
+    SNMPFetcherConfig,
+    StoredSecrets,
+)
+from cmk.checkengine.fetchers.filecache import FileCacheOptions
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
 from cmk.checkengine.plugins import (
@@ -100,15 +109,6 @@ from cmk.checkengine.sectionparser import (
     SectionsParser,
 )
 from cmk.checkengine.snmplib import SNMPRawDataElem
-from cmk.fetchers import (
-    AdHocSecrets,
-    Mode,
-    NoSelectedSNMPSections,
-    PlainFetcherTrigger,
-    SNMPFetcherConfig,
-    StoredSecrets,
-)
-from cmk.fetchers.filecache import FileCacheOptions
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel

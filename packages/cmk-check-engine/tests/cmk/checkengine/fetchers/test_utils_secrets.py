@@ -6,7 +6,7 @@
 
 from pathlib import Path
 
-from cmk.fetchers import AdHocSecrets
+from cmk.checkengine.fetchers import AdHocSecrets
 from cmk.password_store.v1_unstable import Secret
 
 

@@ -20,11 +20,11 @@ from cmk.base.core.nagios import HostCheckConfig
 from cmk.base.modes.check_mk import run_checking
 from cmk.ccc.config_path import detect_latest_config_path
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.fetchers import StoredSecrets
 from cmk.checkengine.plugin_backend import (
     load_selected_plugins,
 )
 from cmk.discover_plugins import PluginLocation
-from cmk.fetchers import StoredSecrets
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils.paths import omd_root
 

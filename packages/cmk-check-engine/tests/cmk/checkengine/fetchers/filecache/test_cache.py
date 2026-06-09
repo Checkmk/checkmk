@@ -5,8 +5,8 @@
 
 import json
 
-from cmk.fetchers import Mode
-from cmk.fetchers.filecache import MaxAge
+from cmk.checkengine.fetchers import Mode
+from cmk.checkengine.fetchers.filecache import MaxAge
 
 
 class TestMaxAge:

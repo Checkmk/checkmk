@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.fetchers.snmp_backend import make_backend
 from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
-from cmk.fetchers.snmp_backend import make_backend
 
 
 @pytest.fixture(name="snmp_config")
@@ -47,7 +47,7 @@ def test_factory_snmp_backend_inline_unavailable(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    import cmk.fetchers.snmp_backend as snmp_backend_module
+    import cmk.checkengine.fetchers.snmp_backend as snmp_backend_module
 
     monkeypatch.setattr(
         snmp_backend_module,

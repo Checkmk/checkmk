@@ -27,11 +27,7 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
-from cmk.checkengine.helper_interface import AgentRawData, SourceType
-from cmk.checkengine.parameters import IsTimeperiodActiveCallback, TimespecificParameters
-from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
-from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPVersion
-from cmk.fetchers import (
+from cmk.checkengine.fetchers import (
     Fetcher,
     IPMIFetcher,
     NoSelectedSNMPSections,
@@ -43,7 +39,11 @@ from cmk.fetchers import (
     TCPFetcher,
     TLSConfig,
 )
-from cmk.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.checkengine.helper_interface import AgentRawData, SourceType
+from cmk.checkengine.parameters import IsTimeperiodActiveCallback, TimespecificParameters
+from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
+from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPVersion
 from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import ExecutableFinder
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig

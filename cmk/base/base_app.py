@@ -11,10 +11,10 @@ from cmk.base.core.interface import MonitoringCore
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
+from cmk.checkengine.fetchers import Fetcher, FetcherTriggerFactory
 from cmk.checkengine.helper_interface import AgentRawData
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.snmplib import SNMPPluginStore
-from cmk.fetchers import Fetcher, FetcherTriggerFactory
 from cmk.licensing.handler import LicensingHandler
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher

@@ -48,6 +48,7 @@ from cmk.ccc.config_path import ConfigCreationContext
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
+from cmk.checkengine.fetchers import StoredSecrets
 from cmk.checkengine.plugin_backend import plugin_index
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
@@ -56,7 +57,6 @@ from cmk.checkengine.plugins import (
     ServiceID,
 )
 from cmk.core_client import NagiosClient
-from cmk.fetchers import StoredSecrets
 from cmk.licensing.handler import LicensingHandler
 from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import ActiveServiceData

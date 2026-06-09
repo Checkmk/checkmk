@@ -2810,14 +2810,15 @@ def test_explicit_setting_loading(patch_omd_site: None) -> None:
         for foldername, setting, values in settings:
             _add_explicit_setting_in_folder(wato_main_folder / foldername, setting, values)
 
-        config.load(
+        loading_result = config.load(
             get_builtin_host_labels=(app := make_app()).get_builtin_host_labels,
             edition=app.edition,
         )
-        assert config.explicit_host_conf["parents"][HostName("hostA")] == "setting1"
-        assert config.explicit_host_conf["parents"][HostName("hostB")] == "setting2"
-        assert config.explicit_host_conf["other"][HostName("hostA")] == "setting3"
-        assert config.explicit_host_conf["other"][HostName("hostB")] == "setting4"
+        explicit_host_conf = loading_result.loaded_config.explicit_host_conf
+        assert explicit_host_conf["parents"][HostName("hostA")] == "setting1"
+        assert explicit_host_conf["parents"][HostName("hostB")] == "setting2"
+        assert explicit_host_conf["other"][HostName("hostA")] == "setting3"
+        assert explicit_host_conf["other"][HostName("hostB")] == "setting4"
     finally:
         main_mk_file.unlink()
         for foldername, _setting, _values in settings:

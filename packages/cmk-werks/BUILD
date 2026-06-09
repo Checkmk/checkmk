@@ -28,6 +28,7 @@ py_library(
     name = "cmk-werks",
     srcs = [
         "cmk/werks/__init__.py",
+        "cmk/werks/__main__.py",
         "cmk/werks/cli.py",
         "cmk/werks/collect.py",
         "cmk/werks/config.py",
@@ -169,6 +170,15 @@ sh_library(
         ".f12",
         "run",
     ],
+)
+
+py_binary(
+    name = "werk",
+    srcs = ["cmk/werks/__main__.py"],
+    imports = ["."],
+    main = "cmk/werks/__main__.py",
+    visibility = ["//visibility:public"],
+    deps = ["//packages/cmk-werks"],
 )
 
 py_binary(

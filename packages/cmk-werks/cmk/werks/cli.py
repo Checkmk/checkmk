@@ -1200,7 +1200,3 @@ def main(argv: Sequence[str] | None = None) -> None:
         # ignore BrokenPipeError: [Errno 32] Broken pipe
         if e.errno != errno.EPIPE:
             raise
-
-
-if __name__ == "__main__":
-    main()

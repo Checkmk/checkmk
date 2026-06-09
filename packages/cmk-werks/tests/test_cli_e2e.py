@@ -109,13 +109,13 @@ def run_cli_with_vcr(
 
     # Debug info
     print("Running CLI with VCR:")
-    print(f"  Command: {[sys.executable, '-m', 'cmk.werks.cli'] + args}")
+    print(f"  Command: {[sys.executable, '-m', 'cmk.werks'] + args}")
     print(f"  Cassette: {cassette_path}")
     print(f"  VCR Config: {vcr_config}")
     print(f"  PYTHONPATH: {env['PYTHONPATH']}")
 
     p = subprocess.Popen(
-        [sys.executable, "-m", "cmk.werks.cli"] + args,
+        [sys.executable, "-m", "cmk.werks"] + args,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -135,7 +135,7 @@ def run_cli_with_vcr(
 def call(*args: str) -> None:
     # we can not call main directly, because the script was not created with that in mind
     # for example we have very sticky caches
-    subprocess.check_call(["python", "-m", "cmk.werks.cli", *args])
+    subprocess.check_call(["python", "-m", "cmk.werks", *args])
 
 
 def create_werk(*, title: str, vcr_cassette_dir: str, vcr_config: dict[str, Any]) -> None:

@@ -13,4 +13,7 @@ from ._objects import Bidirectional, Graph, RRDMetric, Scalars
 class DiscoveredGraph[Options]:
     graph: Graph | Bidirectional
     options: Options
+    # The graph's title with its expressions evaluated against the translated metrics; graph.title
+    # still carries the original, unevaluated title.
+    graph_title: str
     scalars: Mapping[RRDMetric, Scalars]

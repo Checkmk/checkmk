@@ -189,6 +189,8 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
     assert discovered[0].graph == parse_graph_from_api(
         plugin, _id, service, ConsolidationFunction.AVERAGE, _METRICS
     )
+    # A plain title without expressions is carried through unchanged.
+    assert discovered[0].graph_title == "CPU"
     assert discovered[0].scalars == {_rrd(cpu_user): cpu_user_bounds}
 
 
@@ -421,3 +423,116 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
     assert discovered.scalars == {_rrd(cpu_system): cpu_system_bounds}
+
+
+def test_discover_template_graphs_evaluates_the_title_expression() -> None:
+    service = _service()
+    cpu_user = MetricName("cpu_user")
+    plugin = graphs_v1.Graph(
+        name="cpu",
+        title=Title('CPU - _EXPRESSION:{"metric": "cpu_user", "scalar": "max"} cores'),
+        simple_lines=["cpu_user"],
+    )
+    options = TemplateDiscoveryOptions(
+        common=_common(),
+        service=service,
+        consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
+        localizer=_id,
+        registered_graphs=[plugin],
+    )
+    rrd = _FakeFetchRRD(
+        translated_metrics_response={
+            service: {cpu_user: _translated(cpu_user, bounds=Scalars(maximum=8.0))}
+        }
+    )
+
+    [discovered] = discover_template_graphs(options, rrd=rrd)
+
+    # The evaluated title is exposed via graph_title; the graph keeps its raw title.
+    assert discovered.graph_title == "CPU - 8 cores"
+    assert "_EXPRESSION:" in discovered.graph.title
+
+
+def test_discover_template_graphs_title_expression_falls_back_when_unresolvable() -> None:
+    service = _service()
+    cpu_user = MetricName("cpu_user")
+    plugin = graphs_v1.Graph(
+        name="cpu",
+        title=Title('CPU - _EXPRESSION:{"metric": "cpu_user", "scalar": "max"} cores'),
+        simple_lines=["cpu_user"],
+    )
+    options = TemplateDiscoveryOptions(
+        common=_common(),
+        service=service,
+        consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
+        localizer=_id,
+        registered_graphs=[plugin],
+    )
+    # cpu_user is available (so the plugin matches) but carries no maximum scalar.
+    rrd = _FakeFetchRRD(translated_metrics_response={service: {cpu_user: _translated(cpu_user)}})
+
+    [discovered] = discover_template_graphs(options, rrd=rrd)
+
+    assert discovered.graph_title == "CPU"
+
+
+def test_discover_template_graphs_requires_a_metric_referenced_only_in_the_title() -> None:
+    service = _service()
+    util = MetricName("util")
+    # cpu_user is referenced by the title only (not drawn as a line).
+    plugin = graphs_v1.Graph(
+        name="cpu",
+        title=Title('CPU - _EXPRESSION:{"metric": "cpu_user", "scalar": "max"} cores'),
+        simple_lines=["util"],
+    )
+    options = TemplateDiscoveryOptions(
+        common=_common(),
+        service=service,
+        consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
+        localizer=_id,
+        registered_graphs=[plugin],
+    )
+    # cpu_user (referenced by the title) is missing, so the plugin must not match; only the
+    # fallback single-metric graph for util is discovered.
+    rrd = _FakeFetchRRD(translated_metrics_response={service: {util: _translated(util)}})
+
+    discovered = discover_template_graphs(options, rrd=rrd)
+
+    assert [d.graph.name for d in discovered] == ["util"]
+
+
+def test_discover_template_graphs_claims_a_metric_referenced_only_in_the_title() -> None:
+    service = _service()
+    util = MetricName("util")
+    cpu_user = MetricName("cpu_user")
+    plugin = graphs_v1.Graph(
+        name="cpu",
+        title=Title('CPU - _EXPRESSION:{"metric": "cpu_user", "scalar": "max"} cores'),
+        simple_lines=["util"],
+    )
+    options = TemplateDiscoveryOptions(
+        common=_common(),
+        service=service,
+        consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
+        localizer=_id,
+        registered_graphs=[plugin],
+    )
+    rrd = _FakeFetchRRD(
+        translated_metrics_response={
+            service: {
+                util: _translated(util),
+                cpu_user: _translated(cpu_user, bounds=Scalars(maximum=8.0)),
+            }
+        }
+    )
+
+    discovered = discover_template_graphs(options, rrd=rrd)
+
+    # The plugin matches and claims cpu_user via its title, so cpu_user is not emitted separately.
+    assert len(discovered) == 1
+    assert discovered[0].graph.name == "cpu"
+    assert discovered[0].graph_title == "CPU - 8 cores"

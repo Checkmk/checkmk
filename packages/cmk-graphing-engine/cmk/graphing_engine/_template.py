@@ -12,7 +12,12 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._discovery import DiscoveredGraph
 from ._fetch import FetchRRD
-from ._from_api import metric_from_api, metric_names_of_graph, parse_graph_from_api
+from ._from_api import (
+    metric_from_api,
+    metric_names_of_graph,
+    metric_names_of_title,
+    parse_graph_from_api,
+)
 from ._objects import Graph, MetricName, StackGroup
 from ._options import CommonOptions, ConsolidationFunction, ServiceRef
 
@@ -69,13 +74,17 @@ def _walk(
             names = metric_names_of_graph(graph)
             return _GraphMatch(metric_names=names, matched=_matches(graph, names, available))
         case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
+            title_names = metric_names_of_title(graph.title)
             lower_names = metric_names_of_graph(graph.lower)
             upper_names = metric_names_of_graph(graph.upper)
             return _GraphMatch(
-                metric_names=list(set((*lower_names, *upper_names))),
+                metric_names=list(set((*title_names, *lower_names, *upper_names))),
                 matched=(
-                    _matches(graph.lower, lower_names, available)
-                    or _matches(graph.upper, upper_names, available)
+                    all(name in available for name in title_names)
+                    and (
+                        _matches(graph.lower, lower_names, available)
+                        or _matches(graph.upper, upper_names, available)
+                    )
                 ),
             )
 
@@ -106,6 +115,7 @@ def discover_template_graphs(
             DiscoveredGraph(
                 graph=graph,
                 options=post_options,
+                graph_title=graph.evaluated_title(translated_metrics),
                 scalars=graph.scalars(translated_metrics),
             )
         )
@@ -134,6 +144,7 @@ def discover_template_graphs(
             DiscoveredGraph(
                 graph=graph,
                 options=post_options,
+                graph_title=graph.evaluated_title(translated_metrics),
                 scalars=graph.scalars(translated_metrics),
             )
         )

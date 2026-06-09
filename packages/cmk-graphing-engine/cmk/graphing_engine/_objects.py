@@ -6,7 +6,9 @@
 from __future__ import annotations
 
 import itertools
-from collections.abc import Iterable, Mapping, Sequence
+import json
+import re
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
 from typing import NewType
 
@@ -287,6 +289,52 @@ def _scalars_of(
     }
 
 
+# A graph title may embed expressions referencing a metric's scalar, e.g.
+# 'CPU load - _EXPRESSION:{"metric": "load1", "scalar": "max"} CPU cores'.
+_TITLE_EXPRESSION_PREFIX = "_EXPRESSION:"
+_TITLE_EXPRESSION_PATTERN = re.compile(re.escape(_TITLE_EXPRESSION_PREFIX) + r"\{.*?\}")
+_TITLE_SCALARS: Mapping[str, Callable[[Scalars], float | None]] = {
+    "warn": lambda scalars: scalars.warning,
+    "crit": lambda scalars: scalars.critical,
+    "warn_lower": lambda scalars: scalars.lower_warning,
+    "crit_lower": lambda scalars: scalars.lower_critical,
+    "min": lambda scalars: scalars.minimum,
+    "max": lambda scalars: scalars.maximum,
+}
+
+
+def _evaluate_title_expression(
+    raw: str,
+    translated_metrics: Mapping[MetricName, TranslatedMetric],
+) -> float | None:
+    expression = json.loads(raw[len(_TITLE_EXPRESSION_PREFIX) :])
+    if (translated := translated_metrics.get(MetricName(expression["metric"]))) is None:
+        return None
+    if (scalar := _TITLE_SCALARS.get(expression["scalar"])) is None:
+        return None
+    return scalar(translated.scalars)
+
+
+def metric_names_in_title(title: str) -> Iterable[MetricName]:
+    for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
+        yield MetricName(json.loads(raw[len(_TITLE_EXPRESSION_PREFIX) :])["metric"])
+
+
+def _evaluate_title(
+    title: str,
+    translated_metrics: Mapping[MetricName, TranslatedMetric],
+) -> str:
+    for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
+        value = _evaluate_title_expression(raw, translated_metrics)
+        if value is None:
+            # An expression could not be resolved: fall back to the static part of the title
+            # (everything before the first dash).
+            return title.split("-", maxsplit=1)[0].strip()
+        # Rendering as an integer is hard-coded because it is all we need for now.
+        title = title.replace(raw, str(int(value)), 1)
+    return title
+
+
 @dataclass(frozen=True, kw_only=True)
 class Graph:
     name: str
@@ -313,6 +361,9 @@ class Graph:
     ) -> Mapping[RRDMetric, Scalars]:
         return _scalars_of(self.rrd_metrics(), translated_metrics)
 
+    def evaluated_title(self, translated_metrics: Mapping[MetricName, TranslatedMetric]) -> str:
+        return _evaluate_title(self.title, translated_metrics)
+
 
 @dataclass(frozen=True, kw_only=True)
 class Bidirectional:
@@ -329,3 +380,6 @@ class Bidirectional:
         translated_metrics: Mapping[MetricName, TranslatedMetric],
     ) -> Mapping[RRDMetric, Scalars]:
         return _scalars_of(self.rrd_metrics(), translated_metrics)
+
+    def evaluated_title(self, translated_metrics: Mapping[MetricName, TranslatedMetric]) -> str:
+        return _evaluate_title(self.title, translated_metrics)

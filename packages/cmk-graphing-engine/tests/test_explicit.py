@@ -96,6 +96,7 @@ def test_discover_explicit_graphs_without_keys_returns_inline_definition_unchang
     assert len(rendered) == 1
     assert rendered[0].graph is inline
     assert rendered[0].options == ExplicitOptions(common=_common(), service=service)
+    assert rendered[0].graph_title == "t"
     assert rendered[0].scalars == {}
 
 

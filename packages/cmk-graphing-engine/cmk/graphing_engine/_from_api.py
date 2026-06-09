@@ -9,6 +9,7 @@ from typing import assert_never
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import Title
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 
@@ -28,6 +29,7 @@ from ._objects import (
     LowerWarningOf,
     MaximumOf,
     Metric,
+    metric_names_in_title,
     MetricName,
     MinimalRange,
     MinimumOf,
@@ -278,6 +280,12 @@ def _metric_names_in_quantity(quantity: _ApiQuantity) -> Iterable[MetricName]:
             assert_never(quantity)
 
 
+def metric_names_of_title(title: Title) -> Sequence[MetricName]:
+    # Metric names referenced by title expressions are independent of the localization, so the
+    # title is rendered without translating it.
+    return list(metric_names_in_title(title.localize(lambda text: text)))
+
+
 def metric_names_of_graph(
     graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
 ) -> Sequence[MetricName]:
@@ -287,6 +295,7 @@ def metric_names_of_graph(
             for quantity in (*graph.compound_lines, *graph.simple_lines)
             for name in _metric_names_in_quantity(quantity)
         )
+        | set(metric_names_of_title(graph.title))
     )
 
 

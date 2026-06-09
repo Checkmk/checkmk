@@ -312,7 +312,11 @@ def _show_graph_html_content(
         ),
     )
 
-    if graph_render_config.show_controls:
+    if (
+        graph_render_config.show_controls
+        # Forecast graphs cannot be added to dashboards or custom graphs
+        and graph_artwork.definition.specification.graph_type != "forecast"
+    ):
         _show_graph_add_to_icon_for_popup(graph_artwork, graph_data_range, graph_render_config)
 
     v_axis_label = graph_artwork.vertical_axis["axis_label"]

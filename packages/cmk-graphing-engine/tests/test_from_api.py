@@ -56,8 +56,6 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
         vertical_range=MinimalRange(lower=0, upper=100),
         stack_groups=[StackGroup(members=[MetricName("a"), MetricName("b")])],
         simple_lines=[MetricName("c"), WarningOf(metric_name=MetricName("a"))],
-        optional=[MetricName("a")],
-        conflicting=[MetricName("d")],
     )
 
 
@@ -260,15 +258,11 @@ def test_parse_graph_from_api_handles_bidirectional() -> None:
             title="lo",
             stack_groups=[StackGroup(members=[MetricName("a")])],
             simple_lines=[],
-            optional=[],
-            conflicting=[],
         ),
         upper=Graph(
             name="up",
             title="up",
             stack_groups=[StackGroup(members=[MetricName("b")])],
             simple_lines=[],
-            optional=[],
-            conflicting=[],
         ),
     )

@@ -222,8 +222,6 @@ class Graph:
     vertical_range: VerticalRange | None = None
     stack_groups: Sequence[StackGroup] = ()
     simple_lines: Sequence[Quantity] = ()
-    optional: Sequence[MetricName] = ()
-    conflicting: Sequence[MetricName] = ()
 
     def metric_names(self) -> Sequence[MetricName]:
         return list(

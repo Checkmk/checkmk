@@ -272,8 +272,6 @@ def _parse_graph(
             else []
         ),
         simple_lines=[_parse_quantity(q, localizer) for q in graph.simple_lines],
-        optional=[MetricName(name) for name in graph.optional],
-        conflicting=[MetricName(name) for name in graph.conflicting],
     )
 
 

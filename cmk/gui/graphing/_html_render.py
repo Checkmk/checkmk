@@ -343,7 +343,11 @@ def _show_graph_html_content(
         style=f"font-size: {graph_render_config.font_size:.1f}pt;",
     )
 
-    if graph_render_config.show_controls:
+    if (
+        graph_render_config.show_controls
+        # Forecast graphs cannot be added to dashboards or custom graphs
+        and graph_artwork.definition.specification.graph_type != "forecast"
+    ):
         # Data will be transferred via URL and Javascript magic eventually
         # to our function popup_add_element (htdocs/reporting.py)
         # argument report_name --> provided by popup system

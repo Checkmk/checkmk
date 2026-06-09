@@ -1689,6 +1689,7 @@ def register_starred_filters(filter_registry: FilterRegistry) -> None:
         what="host",
         title=_l("Favorite Hosts"),
         sort_index=501,
+        group=FilterGroup.OTHER,
     )
 
     filter_starred_with_register(

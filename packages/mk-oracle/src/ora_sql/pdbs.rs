@@ -46,16 +46,10 @@ impl Pdbs {
 
     fn from_rows(rows: Vec<Vec<String>>) -> Self {
         let pdbs = rows
-            .into_iter()
-            .filter_map(|mut row| {
-                let raw = row.drain(..).next()?;
-                let trimmed = raw.trim();
-                if trimmed.is_empty() || is_filtered_name(trimmed) {
-                    None
-                } else {
-                    Some(PdbName::from(trimmed))
-                }
-            })
+            .iter()
+            .filter_map(|row| row.first().map(|raw| raw.trim()))
+            .filter(|name| !name.is_empty() && !is_filtered_name(name))
+            .map(PdbName::from)
             .collect();
         Self(pdbs)
     }

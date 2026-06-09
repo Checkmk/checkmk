@@ -72,6 +72,7 @@ FAILOVER_STATUS = {
     "home_port_only": State.OK,
     "default": State.OK,
     "home_node_only": State.OK,
+    "sfo_partners_only": State.OK,
     "broadcast_domain_only": State.OK,
 }
 
@@ -393,7 +394,9 @@ def merge_if_sections(
 
             # home_port_only does not use the broadcast domain for failover (it targets
             # the home port directly), so a missing broadcast domain is not an issue there.
-            # For all other policies the broadcast domain is the basis for building the
+            # sfo_partners_only also tolerates a missing broadcast domain: no failover
+            # group is reported, but it is intentionally not treated as an error. For the
+            # remaining policies the broadcast domain is the basis for building the
             # failover group, so flag it as CRIT when it is absent.
             if not values.get("broadcast_domain") and values.get("failover") in (
                 "default",

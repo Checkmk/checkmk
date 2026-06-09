@@ -317,6 +317,9 @@ class IpInterfaceModel(BaseModel):
     home_node: str
     home_port: str
     is_home: bool
+    # HA (storage failover) partner node names, only set for interfaces using the
+    # "sfo_partners_only" failover policy (see fetch_interfaces in the special agent).
+    ha_partner_names: tuple[str, ...] | None = None
 
     def serialize(self) -> dict[str, Any]:
         return {
@@ -330,6 +333,7 @@ class IpInterfaceModel(BaseModel):
             "home-node": self.home_node,
             "home-port": self.home_port,
             "is-home": self.is_home,
+            "ha_partner_names": self.ha_partner_names,
         }
 
 

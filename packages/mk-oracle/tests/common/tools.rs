@@ -282,3 +282,68 @@ oracle:
     );
     Config::from_string(config_str).unwrap().unwrap()
 }
+
+pub fn make_mini_config_pdb(endpoint: &SqlDbEndpoint, pdbs: &[&str]) -> Config {
+    let pdbs_yaml = pdbs
+        .iter()
+        .map(|p| format!("\"{p}\""))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let config_str = format!(
+        r#"
+---
+oracle:
+  main:
+    authentication:
+       username: "{user}"
+       password: "{pwd}"
+       type: standard
+       role: ""
+    connection:
+       hostname: {host}
+       port: {port}
+       timeout: 15
+       service_name: {service}
+    custom_metrics:
+      - container_identity:
+          sql: "SELECT SYS_CONTEXT('USERENV', 'CON_NAME') FROM DUAL"
+          pdbs: [{pdbs}]
+"#,
+        user = endpoint.user,
+        pwd = endpoint.pwd,
+        host = endpoint.host,
+        port = endpoint.port,
+        service = endpoint.service_name,
+        pdbs = pdbs_yaml,
+    );
+    Config::from_string(config_str).unwrap().unwrap()
+}
+
+pub fn make_mini_config_cdb_root(endpoint: &SqlDbEndpoint) -> Config {
+    let config_str = format!(
+        r#"
+---
+oracle:
+  main:
+    authentication:
+       username: "{user}"
+       password: "{pwd}"
+       type: standard
+       role: ""
+    connection:
+       hostname: {host}
+       port: {port}
+       timeout: 15
+       service_name: {service}
+    custom_metrics:
+      - container_identity:
+          sql: "SELECT SYS_CONTEXT('USERENV', 'CON_NAME') FROM DUAL"
+"#,
+        user = endpoint.user,
+        pwd = endpoint.pwd,
+        host = endpoint.host,
+        port = endpoint.port,
+        service = endpoint.service_name,
+    );
+    Config::from_string(config_str).unwrap().unwrap()
+}

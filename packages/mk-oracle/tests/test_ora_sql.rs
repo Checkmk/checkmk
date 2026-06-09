@@ -20,9 +20,9 @@ extern crate common;
 mod common;
 
 use crate::common::tools::{
-    make_mini_config, make_mini_config_custom_instance, make_mini_config_with_sid,
-    make_wallet_config, platform::add_runtime_to_path, ORA_ENDPOINT_ENV_VAR_EXT,
-    ORA_ENDPOINT_ENV_VAR_LOCAL,
+    make_mini_config, make_mini_config_cdb_root, make_mini_config_custom_instance,
+    make_mini_config_pdb, make_mini_config_with_sid, make_wallet_config,
+    platform::add_runtime_to_path, ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
 };
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::defines::defaults::SECTION_SEPARATOR;
@@ -1416,6 +1416,41 @@ fn test_pdbs_discovery() {
             assert!(!upper.is_empty(), "PDB name is empty");
         }
     }
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pdb_nonexistent_pattern_produces_no_subsection() {
+    add_runtime_to_path();
+    let Some(ep) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).ok() else {
+        return;
+    };
+    let config = make_mini_config_pdb(&ep, &["GHOST_PDB"]);
+    let env = Env::default();
+    let output = generate_data(&config, &env).await.unwrap().join("\n");
+    assert!(
+        !output.contains("container_identity"),
+        "expected no subsection output: {output}"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_pdb_absent_runs_against_cdb_root() {
+    add_runtime_to_path();
+    let Some(ep) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).ok() else {
+        return;
+    };
+    let sid = ep.sid.as_deref().unwrap_or(&ep.service_name).to_uppercase();
+    let config = make_mini_config_cdb_root(&ep);
+    let env = Env::default();
+    let output = generate_data(&config, &env).await.unwrap().join("\n");
+    assert!(
+        output.contains(&format!("{sid}|container_identity")),
+        "expected CDB root subsection: {output}"
+    );
+    assert!(
+        output.contains("CDB$ROOT"),
+        "expected CDB$ROOT in output: {output}"
+    );
 }
 
 #[test]

@@ -518,7 +518,7 @@ def get_docs_base_url(language: str) -> str:
 
 @dataclass(frozen=True, kw_only=True)
 class DocReferenceUtm:
-    campaign: Literal["help_menu", "inline_help", "error_help", "setup_wizard"]
+    campaign: Literal["help_menu", "inline_help", "error_help", "setup_wizard", "dashboard"]
     content: str
 
 

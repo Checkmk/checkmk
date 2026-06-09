@@ -35,6 +35,21 @@ body.side {
   }
 }
 
+// Post-iframe-removal, chrome-bearing pages carry both `side` (the sidebar
+// shell) and `main` (content-area styling: link colors, warnings, page-menu
+// shortcut de-duplication, ...). `body.main`'s flex-column page layout is
+// meant for a standalone content document; on the shared shell document it
+// overrides the float-based layout and collapses `#check_mk_navigation` to
+// zero height (the nav renders but is not visible). This higher-specificity
+// rule restores the shell box model while leaving main's descendant content
+// styling untouched.
+body.side.main {
+  display: block;
+  height: 100vh;
+  padding: 0;
+  background: $navigation-bg-color;
+}
+
 #check_mk_navigation {
   display: flex;
   flex-direction: column;

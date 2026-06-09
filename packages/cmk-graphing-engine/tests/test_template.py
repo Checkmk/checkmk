@@ -11,10 +11,13 @@ from cmk.graphing.v1 import Title
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
+    AutoPrecision,
     CommonOptions,
     ConsolidationFunction,
+    DecimalNotation,
     discover_template_graphs,
     Graph,
+    Metric,
     MetricName,
     parse_graph_from_api,
     RRDMetric,
@@ -28,11 +31,26 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
     TranslatedMetric,
+    Unit,
 )
 
 
 def _id(s: str) -> str:
     return s
+
+
+# Uniform definitions for every metric referenced below: the title "Metric", plain decimal unit,
+# blue. _metric() below mirrors what the parser produces from these.
+_TITLE = Title("Metric")
+_METRICS = {
+    name: metrics_v1.Metric(
+        name=name,
+        title=_TITLE,
+        unit=metrics_v1.Unit(metrics_v1.DecimalNotation("")),
+        color=metrics_v1.Color.BLUE,
+    )
+    for name in ("cpu_user", "cpu_system", "cpu_iowait", "util", "extra", "if_in", "if_out")
+}
 
 
 def _common() -> CommonOptions:
@@ -52,6 +70,15 @@ def _rrd(name: MetricName) -> RRDMetric:
         service_name="svc",
         metric_name=name,
         consolidation_function=ConsolidationFunction.AVERAGE,
+    )
+
+
+def _metric(name: MetricName) -> Metric:
+    return Metric(
+        rrd_metric=_rrd(name),
+        title="Metric",
+        unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
+        color="#28a2f3",
     )
 
 
@@ -95,6 +122,7 @@ def test_discover_template_graphs_empty_service_returns_no_graphs() -> None:
         common=_common(),
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
         localizer=_id,
         registered_graphs=[graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["x"])],
     )
@@ -111,6 +139,7 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
         common=_common(),
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
         localizer=_id,
         registered_graphs=[],
     )
@@ -123,7 +152,7 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
     assert discovered.graph == Graph(
-        name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[_rrd(cpu_user)])]
+        name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[_metric(cpu_user)])]
     )
     assert discovered.options == TemplateOptions(common=_common(), service=service)
     assert discovered.scalars == {_rrd(cpu_user): cpu_user_bounds}
@@ -140,6 +169,7 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
         common=_common(),
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -157,7 +187,7 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
 
     assert len(discovered) == 1
     assert discovered[0].graph == parse_graph_from_api(
-        plugin, _id, service, ConsolidationFunction.AVERAGE
+        plugin, _id, service, ConsolidationFunction.AVERAGE, _METRICS
     )
     assert discovered[0].scalars == {_rrd(cpu_user): cpu_user_bounds}
 
@@ -171,6 +201,7 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
         common=_common(),
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -183,10 +214,10 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
     [matched, fallback] = discover_template_graphs(options, rrd=rrd)
 
     assert matched.graph == parse_graph_from_api(
-        plugin, _id, service, ConsolidationFunction.AVERAGE
+        plugin, _id, service, ConsolidationFunction.AVERAGE, _METRICS
     )
     assert fallback.graph == Graph(
-        name=extra, title=extra, stack_groups=[StackGroup(members=[_rrd(extra)])]
+        name=extra, title=extra, stack_groups=[StackGroup(members=[_metric(extra)])]
     )
 
 
@@ -200,6 +231,7 @@ def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() 
         common=_common(),
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -208,7 +240,7 @@ def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() 
     [fallback] = discover_template_graphs(options, rrd=rrd)
 
     assert fallback.graph == Graph(
-        name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[_rrd(cpu_user)])]
+        name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[_metric(cpu_user)])]
     )
 
 
@@ -225,6 +257,7 @@ def test_discover_template_graphs_optional_missing_metric_still_matches() -> Non
         common=_common(),
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -233,7 +266,7 @@ def test_discover_template_graphs_optional_missing_metric_still_matches() -> Non
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
     assert discovered.graph == parse_graph_from_api(
-        plugin, _id, service, ConsolidationFunction.AVERAGE
+        plugin, _id, service, ConsolidationFunction.AVERAGE, _METRICS
     )
 
 
@@ -251,6 +284,7 @@ def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() ->
         common=_common(),
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -276,6 +310,7 @@ def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
         common=_common(),
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -291,7 +326,7 @@ def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
     assert discovered.graph == parse_graph_from_api(
-        plugin, _id, service, ConsolidationFunction.AVERAGE
+        plugin, _id, service, ConsolidationFunction.AVERAGE, _METRICS
     )
 
 
@@ -309,6 +344,7 @@ def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
         common=_common(),
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -319,7 +355,7 @@ def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
     assert discovered.graph == parse_graph_from_api(
-        plugin, _id, service, ConsolidationFunction.AVERAGE
+        plugin, _id, service, ConsolidationFunction.AVERAGE, _METRICS
     )
 
 
@@ -336,6 +372,7 @@ def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantit
         common=_common(),
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -367,6 +404,7 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
         common=_common(),
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
         localizer=_id,
         registered_graphs=[plugin],
     )

@@ -6,12 +6,15 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.graphing_engine import (
+    AutoPrecision,
     CommonOptions,
     ConsolidationFunction,
+    DecimalNotation,
     discover_explicit_graphs,
     ExplicitDiscoveryOptions,
     ExplicitOptions,
     Graph,
+    Metric,
     MetricName,
     RRDMetric,
     RRDSource,
@@ -21,6 +24,7 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
     TranslatedMetric,
+    Unit,
     WarningOf,
 )
 
@@ -42,6 +46,15 @@ def _rrd(name: MetricName) -> RRDMetric:
         service_name="svc",
         metric_name=name,
         consolidation_function=ConsolidationFunction.AVERAGE,
+    )
+
+
+def _metric(name: MetricName) -> Metric:
+    return Metric(
+        rrd_metric=_rrd(name),
+        title=name,
+        unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
+        color="#28a2f3",
     )
 
 
@@ -92,7 +105,7 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
         name="cpu",
         title="CPU",
         # cpu_user as a curve; cpu_system referenced only by a scalar threshold.
-        simple_lines=[_rrd(cpu_user), WarningOf(metric=_rrd(cpu_system))],
+        simple_lines=[_metric(cpu_user), WarningOf(metric=_rrd(cpu_system), color="#28a2f3")],
     )
     options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
     cpu_user_bounds = Scalars(warning=80.0, critical=90.0)
@@ -128,7 +141,7 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
 
 def test_discover_explicit_graphs_omits_scalars_for_metrics_not_in_translated_metrics() -> None:
     service = _service()
-    inline = Graph(name="g", title="g", simple_lines=[_rrd(MetricName("missing_metric"))])
+    inline = Graph(name="g", title="g", simple_lines=[_metric(MetricName("missing_metric"))])
     options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
     rrd = _FakeFetchRRD(translated_metrics_response={service: {}})
 

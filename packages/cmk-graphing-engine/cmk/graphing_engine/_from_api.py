@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never
 
@@ -27,6 +27,7 @@ from ._objects import (
     LowerCriticalOf,
     LowerWarningOf,
     MaximumOf,
+    Metric,
     MetricName,
     MinimalRange,
     MinimumOf,
@@ -131,11 +132,17 @@ def _parse_unit(unit: metrics_v1.Unit) -> Unit:
     return Unit(notation=notation, precision=precision)
 
 
+# Defaults for metrics that have no registered definition.
+_FALLBACK_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
+_FALLBACK_COLOR = _COLORS[metrics_v1.Color.GRAY]
+
+
 @dataclass(frozen=True)
 class _ParseContext:
     localizer: Callable[[str], str]
     service: ServiceRef
     consolidation_function: ConsolidationFunction
+    metrics: Mapping[str, metrics_v1.Metric]
 
     def rrd_metric(self, metric_name: str) -> RRDMetric:
         return RRDMetric(
@@ -145,11 +152,32 @@ class _ParseContext:
             consolidation_function=self.consolidation_function,
         )
 
+    def metric(self, metric_name: str) -> Metric:
+        title, unit, color = self._title_unit_color(metric_name)
+        return Metric(
+            rrd_metric=self.rrd_metric(metric_name),
+            title=title,
+            unit=unit,
+            color=color,
+        )
+
+    def metric_color(self, metric_name: str) -> str:
+        return self._title_unit_color(metric_name)[2]
+
+    def _title_unit_color(self, metric_name: str) -> tuple[str, Unit, str]:
+        if (definition := self.metrics.get(metric_name)) is None:
+            return metric_name, _FALLBACK_UNIT, _FALLBACK_COLOR
+        return (
+            definition.title.localize(self.localizer),
+            _parse_unit(definition.unit),
+            _parse_color(definition.color),
+        )
+
 
 def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
     match quantity:
         case str():
-            return context.rrd_metric(quantity)
+            return context.metric(quantity)
         case metrics_v1.Constant():
             return Constant(
                 title=quantity.title.localize(context.localizer),
@@ -158,13 +186,25 @@ def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
                 value=quantity.value,
             )
         case metrics_v2_unstable.LowerWarningOf():
-            return LowerWarningOf(metric=context.rrd_metric(quantity.metric_name))
+            return LowerWarningOf(
+                metric=context.rrd_metric(quantity.metric_name),
+                color=context.metric_color(quantity.metric_name),
+            )
         case metrics_v2_unstable.LowerCriticalOf():
-            return LowerCriticalOf(metric=context.rrd_metric(quantity.metric_name))
+            return LowerCriticalOf(
+                metric=context.rrd_metric(quantity.metric_name),
+                color=context.metric_color(quantity.metric_name),
+            )
         case metrics_v1.WarningOf():
-            return WarningOf(metric=context.rrd_metric(quantity.metric_name))
+            return WarningOf(
+                metric=context.rrd_metric(quantity.metric_name),
+                color=context.metric_color(quantity.metric_name),
+            )
         case metrics_v1.CriticalOf():
-            return CriticalOf(metric=context.rrd_metric(quantity.metric_name))
+            return CriticalOf(
+                metric=context.rrd_metric(quantity.metric_name),
+                color=context.metric_color(quantity.metric_name),
+            )
         case metrics_v1.MinimumOf():
             return MinimumOf(
                 metric=context.rrd_metric(quantity.metric_name),
@@ -297,11 +337,13 @@ def parse_graph_from_api(
     localizer: Callable[[str], str],
     service: ServiceRef,
     consolidation_function: ConsolidationFunction,
+    metrics: Mapping[str, metrics_v1.Metric],
 ) -> Graph | Bidirectional:
     context = _ParseContext(
         localizer=localizer,
         service=service,
         consolidation_function=consolidation_function,
+        metrics=metrics,
     )
     match graph:
         case graphs_v1.Graph() | graphs_v2_unstable.Graph():
@@ -315,3 +357,18 @@ def parse_graph_from_api(
             )
         case _:
             assert_never(graph)
+
+
+def metric_from_api(
+    metric_name: str,
+    localizer: Callable[[str], str],
+    service: ServiceRef,
+    consolidation_function: ConsolidationFunction,
+    metrics: Mapping[str, metrics_v1.Metric],
+) -> Metric:
+    return _ParseContext(
+        localizer=localizer,
+        service=service,
+        consolidation_function=consolidation_function,
+        metrics=metrics,
+    ).metric(metric_name)

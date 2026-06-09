@@ -92,6 +92,14 @@ class RRDMetric:
 
 
 @dataclass(frozen=True, kw_only=True)
+class Metric:
+    rrd_metric: RRDMetric
+    title: str
+    unit: Unit
+    color: str
+
+
+@dataclass(frozen=True, kw_only=True)
 class Scalars:
     lower_warning: float | None = None
     lower_critical: float | None = None
@@ -132,21 +140,25 @@ class TranslatedMetric:
 @dataclass(frozen=True)
 class WarningOf:
     metric: RRDMetric
+    color: str
 
 
 @dataclass(frozen=True)
 class CriticalOf:
     metric: RRDMetric
+    color: str
 
 
 @dataclass(frozen=True)
 class LowerWarningOf:
     metric: RRDMetric
+    color: str
 
 
 @dataclass(frozen=True)
 class LowerCriticalOf:
     metric: RRDMetric
+    color: str
 
 
 @dataclass(frozen=True)
@@ -196,7 +208,7 @@ class Fraction:
 
 
 type Quantity = (
-    RRDMetric
+    Metric
     | Constant
     | WarningOf
     | CriticalOf
@@ -236,8 +248,8 @@ class StackGroup:
 
 def _rrd_metrics_in_quantity(quantity: Quantity) -> Iterable[RRDMetric]:
     match quantity:
-        case RRDMetric():
-            yield quantity
+        case Metric():
+            yield quantity.rrd_metric
         case Constant():
             return
         case (

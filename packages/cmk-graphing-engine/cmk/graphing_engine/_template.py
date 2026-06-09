@@ -3,16 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Container, Sequence
+from collections.abc import Callable, Container, Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.graphing.v1 import graphs as graphs_v1
+from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._discovery import DiscoveredGraph
 from ._fetch import FetchRRD
-from ._from_api import metric_names_of_graph, parse_graph_from_api
-from ._objects import Graph, MetricName, RRDMetric, StackGroup
+from ._from_api import metric_from_api, metric_names_of_graph, parse_graph_from_api
+from ._objects import Graph, MetricName, StackGroup
 from ._options import CommonOptions, ConsolidationFunction, ServiceRef
 
 
@@ -28,6 +29,7 @@ class TemplateDiscoveryOptions:
         | graphs_v2_unstable.Graph
         | graphs_v2_unstable.Bidirectional
     ]
+    metrics: Mapping[str, metrics_v1.Metric]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -98,6 +100,7 @@ def discover_template_graphs(
             options.localizer,
             options.service,
             options.consolidation_function,
+            options.metrics,
         )
         discovered.append(
             DiscoveredGraph(
@@ -116,11 +119,12 @@ def discover_template_graphs(
             stack_groups=[
                 StackGroup(
                     members=[
-                        RRDMetric(
-                            host_name=options.service.host_name,
-                            service_name=options.service.service_name,
-                            metric_name=name,
-                            consolidation_function=options.consolidation_function,
+                        metric_from_api(
+                            name,
+                            options.localizer,
+                            options.service,
+                            options.consolidation_function,
+                            options.metrics,
                         )
                     ]
                 )

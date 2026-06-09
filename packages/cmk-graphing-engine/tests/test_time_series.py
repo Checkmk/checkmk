@@ -6,11 +6,14 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.graphing_engine import (
+    AutoPrecision,
     CommonOptions,
     ConsolidationFunction,
+    DecimalNotation,
     fetch_time_series,
     Graph,
     GraphRequest,
+    Metric,
     MetricName,
     RRDMetric,
     RRDSource,
@@ -19,6 +22,7 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
     TranslatedMetric,
+    Unit,
 )
 
 
@@ -42,6 +46,15 @@ def _rrd(
         service_name="svc",
         metric_name=MetricName(name),
         consolidation_function=consolidation_function,
+    )
+
+
+def _line(rrd: RRDMetric) -> Metric:
+    return Metric(
+        rrd_metric=rrd,
+        title=rrd.metric_name,
+        unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
+        color="#28a2f3",
     )
 
 
@@ -96,7 +109,7 @@ def test_returns_one_data_mapping_per_request_keyed_by_rrd_metric() -> None:
     cpu_system_key = RRDSource(service=service, metric_name=cpu_system.metric_name, scale=1.0)
     cpu_user_series = _series(1.0)
     cpu_system_series = _series(2.0)
-    graph = Graph(name="cpu", title="CPU", simple_lines=[cpu_user, cpu_system])
+    graph = Graph(name="cpu", title="CPU", simple_lines=[_line(cpu_user), _line(cpu_system)])
     request = GraphRequest(graph=graph, common=_common(), service=service)
     rrd = _FakeFetchRRD(
         time_series_response={
@@ -129,7 +142,7 @@ def test_builds_sources_from_per_metric_host_and_service() -> None:
         scale=1.0,
     )
     other_series = _series(3.0)
-    graph = Graph(name="g", title="g", simple_lines=[other])
+    graph = Graph(name="g", title="g", simple_lines=[_line(other)])
     request = GraphRequest(graph=graph, common=_common(), service=service)
     rrd = _FakeFetchRRD(time_series_response={other_key: other_series})
 
@@ -148,7 +161,7 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
     max_key = RRDSource(service=service, metric_name=MetricName("b"), scale=1.0)
     avg_series = _series(1.0)
     max_series = _series(2.0)
-    graph = Graph(name="g", title="g", simple_lines=[avg_metric, max_metric])
+    graph = Graph(name="g", title="g", simple_lines=[_line(avg_metric), _line(max_metric)])
     request = GraphRequest(graph=graph, common=_common(), service=service)
     rrd = _FakeFetchRRD(time_series_response={avg_key: avg_series, max_key: max_series})
 
@@ -171,8 +184,8 @@ def test_multiple_requests_yield_one_mapping_each_in_order() -> None:
     y_key = RRDSource(service=service, metric_name=y.metric_name, scale=1.0)
     x_series = _series(1.0)
     y_series = _series(2.0)
-    graph_x = Graph(name="x", title="x", simple_lines=[x])
-    graph_y = Graph(name="y", title="y", simple_lines=[y])
+    graph_x = Graph(name="x", title="x", simple_lines=[_line(x)])
+    graph_y = Graph(name="y", title="y", simple_lines=[_line(y)])
     request_x = GraphRequest(graph=graph_x, common=_common(), service=service)
     request_y = GraphRequest(graph=graph_y, common=_common(), service=service)
     rrd = _FakeFetchRRD(time_series_response={x_key: x_series, y_key: y_series})

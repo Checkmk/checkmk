@@ -232,3 +232,100 @@ def test_missing_broadcast_domain_sets_flag(failover_policy: str) -> None:
 
     assert extra_data["lif_no_bd"].get("missing_broadcast_domain") is True
     assert "failover_ports" not in extra_data["lif_no_bd"]
+
+
+def test_sfo_partners_only_missing_broadcast_domain_not_flagged() -> None:
+    """For sfo_partners_only a missing broadcast domain is accepted: no failover group is
+    reported and, unlike the other broadcast-domain-based policies, it is not flagged."""
+    port_no_bd = PortModelFactory.build(
+        port_type="physical",
+        uuid="uuid-sfo-no-bd",
+        node_name="node1",
+        name="e0b",
+        state="up",
+        speed=1000,
+        mac_address="00:0c:29:12:34:60",
+        broadcast_domain=None,
+    )
+    iface_no_bd = IpInterfaceModelFactory.build(
+        name="lif_sfo_no_bd",
+        uuid="uuid-lif-sfo-no-bd",
+        state="up",
+        enabled=True,
+        node_name="node1",
+        port_name="e0b",
+        failover="sfo_partners_only",
+        home_node="node1",
+        home_port="e0b",
+        is_home=True,
+        ha_partner_names=("node2",),
+    )
+
+    (_, extra_data) = _merge_if_counters_sections(
+        {iface_no_bd.name: iface_no_bd}, {port_no_bd.item_name(): port_no_bd}, None, 0.0
+    )
+
+    assert "missing_broadcast_domain" not in extra_data["lif_sfo_no_bd"]
+    assert "failover_ports" not in extra_data["lif_sfo_no_bd"]
+
+
+def test_sfo_partners_only_failover_ports() -> None:
+    """sfo_partners_only interfaces fail over to ports on the home node or its HA
+    partner nodes within the same broadcast domain, excluding other nodes."""
+    ports = [
+        PortModelFactory.build(
+            port_type="physical",
+            uuid="uuid-port1",
+            node_name="node1",
+            name="port1",
+            state="up",
+            speed=1000,
+            mac_address="00:0c:29:12:34:01",
+            broadcast_domain="bd1",
+        ),
+        PortModelFactory.build(
+            port_type="physical",
+            uuid="uuid-port2",
+            node_name="node2",
+            name="port2",
+            state="up",
+            speed=1000,
+            mac_address="00:0c:29:12:34:02",
+            broadcast_domain="bd1",
+        ),
+        PortModelFactory.build(
+            port_type="physical",
+            uuid="uuid-port3",
+            node_name="node3",
+            name="port3",
+            state="up",
+            speed=1000,
+            mac_address="00:0c:29:12:34:03",
+            broadcast_domain="bd1",
+        ),
+    ]
+    interface = IpInterfaceModelFactory.build(
+        name="lif_sfo",
+        uuid="uuid-lif-sfo",
+        state="up",
+        enabled=True,
+        node_name="node1",
+        port_name="port1",
+        failover="sfo_partners_only",
+        home_node="node1",
+        home_port="port1",
+        is_home=True,
+        ha_partner_names=("node2",),
+    )
+
+    (_, extra_data) = _merge_if_counters_sections(
+        {interface.name: interface}, {port.item_name(): port for port in ports}, None, 0.0
+    )
+
+    # node1 (home) and node2 (HA partner) are eligible; node3 is excluded.
+    assert sorted(
+        (fop["node"], fop["port"]) for fop in extra_data["lif_sfo"].get("failover_ports", [])
+    ) == [
+        ("node1", "port1"),
+        ("node2", "port2"),
+    ]

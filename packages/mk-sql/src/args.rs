@@ -7,7 +7,7 @@ use clap::Parser;
 use std::path::PathBuf;
 
 #[derive(Parser, Default)]
-#[command(about = "Check SQL plugin.", version = version::VERSION)]
+#[command(name = "mk-sql", about = "Check SQL plugin.", version = version::VERSION)]
 pub struct Args {
     /// Enable verbose output. Use once (-v) for logging level DEBUG and twice (-vv) for logging
     /// level TRACE.

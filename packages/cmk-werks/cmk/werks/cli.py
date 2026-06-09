@@ -1512,7 +1512,3 @@ def main(argv: Sequence[str] | None = None) -> None:
     goto_werksdir()
     main_args = parse_arguments(argv or sys.argv[1:])
     main_args.func(main_args)
-
-
-if __name__ == "__main__":
-    main()

@@ -1,5 +1,5 @@
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
@@ -14,6 +14,7 @@ py_library(
     name = "cmk-werks",
     srcs = [
         "cmk/werks/__init__.py",
+        "cmk/werks/__main__.py",
         "cmk/werks/cli.py",
         "cmk/werks/collect.py",
         "cmk/werks/config.py",
@@ -99,4 +100,13 @@ package_wheel(
     name = "pkg_tar",
     visibility = ["//visibility:public"],
     whl = "wheel",
+)
+
+py_binary(
+    name = "werk",
+    srcs = ["cmk/werks/__main__.py"],
+    imports = ["."],
+    main = "cmk/werks/__main__.py",
+    visibility = ["//visibility:public"],
+    deps = ["//packages/cmk-werks"],
 )

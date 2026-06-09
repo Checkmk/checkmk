@@ -67,7 +67,7 @@ current_version = "0.1.0"
 def call(*args: str) -> None:
     # we can not call main directly, because the script was not created with that in mind
     # for example we have very sticky caches
-    subprocess.check_call(["python", "-m", "cmk.werks.cli", *args])
+    subprocess.check_call(["python", "-m", "cmk.werks", *args])
 
 
 def create_werk(*, title: str) -> None:
@@ -75,7 +75,7 @@ def create_werk(*, title: str) -> None:
     change.write_text("smth")
     repo = Repo(".")
     repo.index.add([str(change)])
-    p = subprocess.Popen(["python", "-m", "cmk.werks.cli", "new"], stdin=subprocess.PIPE)
+    p = subprocess.Popen(["python", "-m", "cmk.werks", "new"], stdin=subprocess.PIPE)
     stdout, stderr = p.communicate(title.encode() + b"\nf\nc\nc\n1\nc\n")
     print(stdout, stderr)
     p.wait()

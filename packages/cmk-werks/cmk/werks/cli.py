@@ -7,6 +7,7 @@
 import argparse
 import ast
 import datetime
+import getpass
 import json
 from dataclasses import dataclass
 import fcntl
@@ -1144,7 +1145,7 @@ def main_init() -> None:
 
     paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
     while True:
-        secret = get_input("Secret")
+        secret = getpass.getpass("Secret: ")
         with paths.secret_file.open("w") as fp:
             fp.write(secret)
 

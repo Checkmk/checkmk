@@ -28,7 +28,7 @@ from cmk.gui.type_defs import VisualTypeName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm, makeuri_contextless
 from cmk.gui.visuals import visual_page_breadcrumb
 from cmk.gui.visuals._filter_context import requested_context_from_request
 from cmk.utils import paths
@@ -134,7 +134,10 @@ def page_dashboard_app(ctx: PageContext) -> None:
         },
         "links": {
             "list_dashboards": f"{PAGE_EDIT_DASHBOARDS_LINK}.py",
-            "user_guide": "https://docs.checkmk.com/master/en/dashboards.html",
+            "user_guide": doc_reference_url(
+                utm=DocReferenceUtm(campaign="dashboard", content="user_guide"),
+                doc_ref=DocReference.DASHBOARDS,
+            ),
         },
         "available_layouts": available_layouts,
         "available_features": {

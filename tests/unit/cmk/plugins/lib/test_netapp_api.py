@@ -575,6 +575,26 @@ INTERFACE = InterfaceWithCounters(
             ],
             id="home_node_only missing broadcast domain raises CRIT",
         ),
+        pytest.param(
+            "lif1",
+            {"errors": {"both": ("perc", (0.01, 0.1))}},
+            [INTERFACE],
+            {
+                "lif1": NICExtraInfo(
+                    {
+                        "home_port": "e0a",
+                        "home_node": "node1",
+                        "is_home": True,
+                        "failover_policy": "sfo_partners_only",
+                    }
+                )
+            },
+            [
+                Result(state=State.OK, summary="Failover policy: sfo-partner-only"),
+                Result(state=State.OK, summary="Current Port: e0a (is home port)"),
+            ],
+            id="sfo_partners_only is a handled policy",
+        ),
     ],
 )
 def test_check_home_port_status(
@@ -676,28 +696,6 @@ def test_check_home_port_status_with_failover_ports(
                 Result(state=State.OK, notice="Failover Group: []"),
             ],
             id="Failover policy not handled",
-        ),
-        pytest.param(
-            "lif1",
-            {"errors": {"both": ("perc", (0.01, 0.1))}},
-            [INTERFACE],
-            {
-                "lif1": NICExtraInfo(
-                    {
-                        "home_port": "e0a",
-                        "home_node": "node1",
-                        "is_home": False,
-                        "failover_policy": "sfo_partners_only",
-                        "failover_ports": [],
-                    }
-                )
-            },
-            [
-                Result(state=State.UNKNOWN, summary="Failover policy: sfo-partner-only"),
-                Result(state=State.OK, summary="Current Port: e0a (is not home port)"),
-                Result(state=State.OK, notice="Failover Group: []"),
-            ],
-            id="Failover policy not handled 2",
         ),
         pytest.param(
             "lif1",

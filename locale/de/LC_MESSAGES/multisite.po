@@ -4,11 +4,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-08 13:23+0000\n"
-"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
-"de/>\n"
+"PO-Revision-Date: 2026-06-09 01:53+0000\n"
+"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
+">\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2737,6 +2737,9 @@ msgstr "AES-256"
 
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
+
+msgid "AES-256-C (Cisco)"
+msgstr ""
 
 msgid "AI"
 msgstr "KI"
@@ -7416,6 +7419,10 @@ msgstr ""
 "Es muss mindestens eine Hyper-V Monitoring-Komponente ausgewählt werden. "
 "Bitte wählen Sie aus den verfügbaren Monitoring-Optionen aus."
 
+#, fuzzy
+msgid "At least one contact group must be selected"
+msgstr "Mindestens ein Ziel muss ausgewählt werden."
+
 msgid "At least one host event must be selected."
 msgstr "Mindestens ein Host-Ereignis muss ausgewählt werden."
 
@@ -7500,6 +7507,10 @@ msgstr "Attribut"
 msgid "Attribute match value"
 msgstr "Attribut-Match-Wert"
 
+#, fuzzy
+msgid "Attribute match value must not be empty"
+msgstr "Attribut-Match-Wert"
+
 msgid "Attribute name"
 msgstr "Attribut-Name"
 
@@ -7574,6 +7585,10 @@ msgid "Authentication connections"
 msgstr "Authentifizierungsverbindungen"
 
 msgid "Authentication context class reference"
+msgstr "Referenz der Klasse des Authentifizierungskontexts"
+
+#, fuzzy
+msgid "Authentication context class reference must not be empty"
 msgstr "Referenz der Klasse des Authentifizierungskontexts"
 
 msgid "Authentication error"
@@ -9304,6 +9319,10 @@ msgstr ""
 "Bester Knoten: Die Prüffunktion des Plugins wird auf jeden einzelnen Knoten "
 "angewendet. Das beste Ergebnis bestimmt den Gesamtzustand des geclusterten "
 "Services."
+
+#, fuzzy
+msgid "Better"
+msgstr "Buchstabe"
 
 msgid "BigQuery table ID"
 msgstr "BigQuery Tabellen-ID"
@@ -11923,6 +11942,10 @@ msgstr ""
 "aktivieren\" ein vollständiger Neustart aller betroffenen Instanzen "
 "ausgelöst."
 
+#, fuzzy
+msgid "Changing your password is not allowed on remote sites."
+msgstr "Login ist auf dieser Instanz nicht erlaubt."
+
 msgid "Channel"
 msgstr "Kanal"
 
@@ -13307,6 +13330,10 @@ msgstr "Citrix XenApp (Windows)"
 
 msgid "City name"
 msgstr "Stadtname"
+
+#, fuzzy
+msgid "Claim name must not be empty"
+msgstr "Jobname darf nicht leer sein."
 
 msgid "Class"
 msgstr "Klasse"
@@ -23291,6 +23318,10 @@ msgstr "Jede Woche am..."
 
 msgid "Evictions"
 msgstr "Räumungen"
+
+#, fuzzy
+msgid "Exact"
+msgstr "Genaue Übereinstimmung"
 
 msgid "Exact RWVDMS name or regex"
 msgstr "Genauer RWVDMS-Name oder Regex"
@@ -35809,9 +35840,6 @@ msgstr ""
 msgid "Learning Checkmk"
 msgstr "Checkmk kennenlernen"
 
-msgid "Leave empty to auto-generate from Checkmk server URL"
-msgstr "Leer lassen, um automatisch aus der Checkmk-Server-URL zu generieren"
-
 msgid "Left"
 msgstr "Links"
 
@@ -43376,11 +43404,13 @@ msgstr ""
 "Daher verwenden neuere Versionen diese Konfigurationsvariable nicht mehr und "
 "melden sie auch nicht."
 
+#, fuzzy
 msgid ""
 "Note that specifically for the check <tt>df</tt>, the pattern matches either "
 "the mount point or the combination of volume and mount point, depending on "
 "the configuration in <a href='wato.py?"
-"mode=edit_ruleset&varname=inventory_df_rules'>File system discovery</a>."
+"mode=edit_ruleset&varname=discovery_parameters%3Ainventory_df_rules'>File "
+"system discovery</a>."
 msgstr ""
 "Beachten Sie, dass speziell für den Check <tt>df</tt> das Pattern entweder "
 "mit dem Mount-Punkt oder der Kombination aus Volume und Mount-Punkt "
@@ -50945,13 +50975,6 @@ msgstr "Nur-Lese-Modus"
 msgid "Read-only mode for configuration"
 msgstr "Nur-Lese-Modus für die Konfiguration"
 
-msgid ""
-"Read-only summary of the connections inherited from the central site. "
-"Refreshed each time this dialog is opened."
-msgstr ""
-"Nur-Lese-Zusammenfassung der von der Zentralinstanz übernommenen "
-"Verbindungen. Wird bei jedem Öffnen dieses Dialogs aktualisiert."
-
 msgid "Reading connections"
 msgstr "Lesende Verbindungen"
 
@@ -53199,6 +53222,10 @@ msgstr "Rolle"
 msgid "Role attribute"
 msgstr "Rollen-Attribut"
 
+#, fuzzy
+msgid "Role attribute must not be empty"
+msgstr "Das Attribut existiert nicht."
+
 msgid "Roles"
 msgstr "Rollen"
 
@@ -55049,11 +55076,12 @@ msgstr ""
 "Verbindungen ermöglichen die Verbindung über einen Proxy-Server; es werden "
 "nur globale und manuelle Proxy-Konfigurationen unterstützt."
 
+#, fuzzy
 msgid ""
 "Select the connections that are available for login on this site. Choose "
-"<i>Use the same connections as the central site</i> to inherit the central "
+"<i>Use identity connectors from central site</i> to inherit the central "
 "site's selection (changes made on the central site take effect after the "
-"next configuration sync), or <i>Use the following connections</i> to pick "
+"next configuration sync), or <i>Use following connections</i> to pick "
 "specific LDAP and SAML connections. Each SAML entry may optionally override "
 "the SP entity ID, which is useful when multiple sites share the same SAML "
 "connection but need to be registered separately at the IdP."
@@ -58520,10 +58548,11 @@ msgstr "Spezifische Benutzer"
 msgid "Specific version"
 msgstr "Spezifische Version"
 
+#, fuzzy
 msgid ""
 "Specifies how the <a href='wato.py?"
-"mode=edit_ruleset&varname=filesystem_groups'>File system grouping patterns</"
-"a> feature processes this file system."
+"mode=edit_ruleset&varname=discovery_parameters%3Afilesystem_groups'>File "
+"system grouping patterns</a> feature processes this file system."
 msgstr ""
 "Legt fest wie die Funktion <a href='wato.py?"
 "mode=edit_ruleset&varname=filesystem_groups'>Dateisystem-Gruppierungs-"
@@ -59711,7 +59740,7 @@ msgstr "Zustand bei nicht übereinstimmenden Aggregator-IDs für LACP"
 
 msgid "State for receptacles if the exact amount of remaining space is unknown"
 msgstr ""
-"Angabe für Behältnisse, wenn die genaue Größe des verbleibenden Platzes "
+"Zustand für Behältnisse, wenn die genaue Größe des verbleibenden Platzes "
 "nicht bekannt ist"
 
 msgid "State for specific bonding modes"
@@ -60690,8 +60719,8 @@ msgstr ""
 msgid ""
 "Subfolders are locked (you cannot create or remove folders in this folder)"
 msgstr ""
-"Unterordner sind gesperrt (Sie können hier keine Ordner erstellen oder "
-"entfernen)"
+"Unterordner sind gesperrt (Sie können in diesem Ordner keine Ordner "
+"erstellen oder entfernen)"
 
 msgid "Subject"
 msgstr "Subjekt"
@@ -61782,7 +61811,7 @@ msgid ""
 "is applied both to the initial connection, as well as the time the plug-in "
 "has to wait between chunks of data it receives."
 msgstr ""
-"Weisen Sie das jolokia-Plugin an, nicht mehr auf eine Antwort von jeder "
+"Weisen Sie das Jolokia-Plugin an, nicht mehr auf eine Antwort von jeder "
 "konfigurierten Instanz zu warten, nachdem die angegebene Anzahl von Sekunden "
 "verstrichen ist. Dieses Zeitlimit gilt sowohl für die erste Verbindung als "
 "auch für die Zeit, die das Plugin zwischen den empfangenen Datenpaketen "
@@ -61922,7 +61951,7 @@ msgstr "Test"
 
 msgid "Test a self-defined notification against your rule set."
 msgstr ""
-"Testen Sie eine selbst definierte Benachrichtigung anhand Ihres Regelsatzes."
+"Testen Sie eine selbst-definierte Benachrichtigung anhand Ihres Regelsatzes."
 
 msgid "Test authentication"
 msgstr "Test-Authentifizierung"
@@ -63612,6 +63641,10 @@ msgid ""
 msgstr ""
 "Der Verbindungstimeout in Sekunden bei Aufbau einer Verbindung mit dem PLC."
 
+#, fuzzy
+msgid "The connection ID must not be empty"
+msgstr "Die Verbindung %r existiert nicht"
+
 msgid ""
 "The connection id must consist only of letters, digit and the underscore."
 msgstr ""
@@ -65159,6 +65192,10 @@ msgstr ""
 "später in Checkmk finden zu können. Sie können in diesem Feld Makros "
 "verwenden. Die gebräuchlichsten sind $HOSTNAME$, $HOSTALIAS$ oder "
 "$HOSTADDRESS$."
+
+#, fuzzy
+msgid "The name must not be empty"
+msgstr "Der Metrikname darf nicht leer sein"
 
 msgid "The name of the Datadog monitor."
 msgstr "Der Name des Datadog-Monitors."
@@ -69000,10 +69037,10 @@ msgstr "Dieser Name wird bereits von einer anderen Zeitperiode verwendet."
 msgid "This name is already used. Please choose another one."
 msgstr "Dieser Name wird bereits verwendet. Bitte wählen Sie einen andere."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"This name must match the name of the group defined in the <a href=\"wato.py?"
-"mode=edit_ruleset&varname=fileinfo_groups\">%s</a> rule set."
+"This name must match the name of the group defined in the <a href=\"%s\">%s</"
+"a> rule set."
 msgstr ""
 "Dieser Name muss mit dem Namen übereinstimmen, der in der Gruppe im "
 "Regelsatz <a href=\"wato.py?mode=edit_ruleset&varname=fileinfo_groups\">%s</"
@@ -75923,6 +75960,14 @@ msgstr "Überprüfen einer URL"
 msgid "URL from host to remote site"
 msgstr "URL vom Host zur Remote-Instanz"
 
+#, fuzzy
+msgid "URL must not be empty"
+msgstr "Die Eingabe darf nicht leer sein"
+
+#, fuzzy
+msgid "URL must use HTTPS"
+msgstr "Slack Webhooks erfordern HTTPS."
+
 msgid "URL not allowed"
 msgstr "URL nicht erlaubt"
 
@@ -77714,6 +77759,10 @@ msgstr "CSV Export verwenden"
 msgid "Use Checkmk Python, if it has been installed"
 msgstr "Verwenden Sie Checkmk Python, wenn es installiert wurde"
 
+#, fuzzy
+msgid "Use Checkmk certificate"
+msgstr "Zertifikat prüfen"
+
 msgid ""
 "Use Checkmk clusters if an item can move from one host to another at runtime."
 msgstr ""
@@ -77901,6 +77950,10 @@ msgstr "Fettschritt verwenden"
 msgid "Use container name"
 msgstr "Containername verwenden"
 
+#, fuzzy
+msgid "Use custom certificate"
+msgstr "Benutzerdefiniertes CA-Zertifikat"
+
 msgid "Use custom path"
 msgstr "Verwende benutzerdefinierten Pfad"
 
@@ -77973,6 +78026,10 @@ msgstr ""
 msgid "Use fixed width (relative to font size)"
 msgstr "Feste Breite (relativ zur Schriftgröße) verwenden"
 
+#, fuzzy
+msgid "Use following connections"
+msgstr "Die folgenden Verbindungen verwenden"
+
 msgid "Use for all connections"
 msgstr "Für alle Verbindungen verwenden"
 
@@ -77990,6 +78047,10 @@ msgstr "Host-Adresse benutzen"
 
 msgid "Use host name"
 msgstr "Host-Namen benutzen"
+
+#, fuzzy
+msgid "Use identity connectors from central site"
+msgstr "Die gleichen Verbindungen wie die Zentralinstanz nutzen"
 
 msgid "Use in notifications"
 msgstr "In Benachrichtigungen nutzen"
@@ -78206,9 +78267,6 @@ msgstr ""
 "Verwenden Sie den folgenden Befehl, um ein Agentenpaket in der "
 "Basiskonfiguration herunterzuladen:"
 
-msgid "Use the following connections"
-msgstr "Die folgenden Verbindungen verwenden"
-
 msgid "Use the following credentials"
 msgstr "Mit den folgenden Daten anmelden"
 
@@ -78267,9 +78325,6 @@ msgstr ""
 
 msgid "Use the remote SID"
 msgstr "Benutze die Remote-ID"
-
-msgid "Use the same connections as the central site"
-msgstr "Die gleichen Verbindungen wie die Zentralinstanz nutzen"
 
 msgid "Use the status of the Check_MK Service"
 msgstr "Den Status des Check_MK Service verwenden"
@@ -78748,6 +78803,10 @@ msgstr "Benutzername"
 
 msgid "User ID attribute"
 msgstr "Attribut der Benutzer-ID"
+
+#, fuzzy
+msgid "User ID attribute must not be empty"
+msgstr "User-ID darf nicht Keiner sein"
 
 msgid "User ID for web login"
 msgstr "Benutzer-ID für Web-Login"
@@ -79652,9 +79711,6 @@ msgstr "Werttyp"
 #, python-format
 msgid "Value must be one of '%s'"
 msgstr "Wert muss einer von '%s' sein"
-
-msgid "Value must be string"
-msgstr "Wert muss ein String sein"
 
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
@@ -82783,6 +82839,10 @@ msgstr "XDA-Trefferverhältnis"
 msgid "XInetd status"
 msgstr "XInetd-Status"
 
+#, fuzzy
+msgid "XML metadata must not be empty"
+msgstr "Der Metrikname darf nicht leer sein"
+
 msgid "XMPP Failed inbound stream establishes"
 msgstr "XMPP Fehlschläge bei Aufbau eingehender Streams"
 
@@ -84865,8 +84925,17 @@ msgstr "Ihre Veränderungen betreffen mehrere Objekte"
 msgid "Your old password is wrong."
 msgstr "Ihr altes Passwort ist falsch."
 
+msgid ""
+"Your password can only be changed on the central site. Please log in to the "
+"central Checkmk site to change your password."
+msgstr ""
+
 msgid "Your password has expired"
 msgstr "Ihr Passwort ist abgelaufen"
+
+msgid ""
+"Your password is managed by another system and cannot be changed in Checkmk."
+msgstr ""
 
 msgid "Your personal notification rules"
 msgstr "Ihre persönlichen Benachrichtigungsregeln"
@@ -89236,6 +89305,14 @@ msgstr "Attribut-Operator"
 msgid "Remove condition"
 msgstr "Bedingung entfernen"
 
+#, fuzzy
+msgid "Add condition after %{key}"
+msgstr "Bedingung hinzufügen"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "Zusätzliche Optionen des Streudiagramms"
+
 msgid "Attribute filter"
 msgstr "Attribut-Filter"
 
@@ -91582,6 +91659,20 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#~ msgid "Leave empty to auto-generate from Checkmk server URL"
+#~ msgstr ""
+#~ "Leer lassen, um automatisch aus der Checkmk-Server-URL zu generieren"
+
+#~ msgid ""
+#~ "Read-only summary of the connections inherited from the central site. "
+#~ "Refreshed each time this dialog is opened."
+#~ msgstr ""
+#~ "Nur-Lese-Zusammenfassung der von der Zentralinstanz übernommenen "
+#~ "Verbindungen. Wird bei jedem Öffnen dieses Dialogs aktualisiert."
+
+#~ msgid "Value must be string"
+#~ msgstr "Wert muss ein String sein"
+
 #~ msgid "Ctrl + Alt"
 #~ msgstr "Strg + Alt"
 
@@ -91935,9 +92026,6 @@ msgstr ""
 #~ "vorzuverarbeiten, um nur sinnvolle Ereignisse weiterzuleiten. Weitere "
 #~ "Informationen finden Sie im <a href='https://docs.checkmk.com/latest/en/"
 #~ "ec.html#tuning'>Handbuch zur Event Console.</a>"
-
-#~ msgid "Job name should not be empty."
-#~ msgstr "Jobname darf nicht leer sein."
 
 #~ msgid "List of users and passwords allowed to use this endpoint"
 #~ msgstr ""
@@ -93733,9 +93821,6 @@ msgstr ""
 #~ msgid "The list needs to have at least one element"
 #~ msgstr "Die Liste muss mindestens ein Element enthalten"
 
-#~ msgid "The metric name cannot be empty"
-#~ msgstr "Der Metrikname darf nicht leer sein"
-
 #~ msgid "Total errors (Last day)"
 #~ msgstr "Gesamt-Fehlerrate (letzter Tag)"
 
@@ -95426,9 +95511,6 @@ msgstr ""
 
 #~ msgid "Create robot"
 #~ msgstr "Roboter erstellen"
-
-#~ msgid "Custom CA certificate"
-#~ msgstr "Benutzerdefiniertes CA-Zertifikat"
 
 #~ msgid "Custom profile"
 #~ msgstr "Benutzerdefiniertes Profil"
@@ -97163,9 +97245,6 @@ msgstr ""
 #~ msgid "Choose a visualization type."
 #~ msgstr "Wählen Sie einen Visualisierungstyp."
 
-#~ msgid "At least one scope must be selected."
-#~ msgstr "Mindestens ein Ziel muss ausgewählt werden."
-
 #~ msgid "Single graph"
 #~ msgstr "Einzelner Graph"
 
@@ -97608,10 +97687,6 @@ msgstr ""
 #, python-format
 #~ msgid "Still no data in '%s'"
 #~ msgstr "Noch keine Daten in '%s'"
-
-#, python-format
-#~ msgid "The connection %r does not exist"
-#~ msgstr "Die Verbindung %r existiert nicht"
 
 #~ msgid ""
 #~ "The dynamic configuration will interrupt the service discovery and force "
@@ -102752,9 +102827,6 @@ msgstr ""
 
 #~ msgid "First with unit"
 #~ msgstr "Erster mit Einheit"
-
-#~ msgid "Slack Webhooks must use HTTPS."
-#~ msgstr "Slack Webhooks erfordern HTTPS."
 
 #~ msgid "The maximum number of projects per resource is 50."
 #~ msgstr "Die maximale Anzahl an Projekten pro Ressource beträgt 50."

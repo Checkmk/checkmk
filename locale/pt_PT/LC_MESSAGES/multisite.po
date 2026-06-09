@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-06-06 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -2692,6 +2692,9 @@ msgstr "AES-256"
 
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
+
+msgid "AES-256-C (Cisco)"
+msgstr ""
 
 #, fuzzy
 msgid "AI"
@@ -7594,6 +7597,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "At least one contact group must be selected"
+msgstr "Indique quando falta o arquivo"
+
+#, fuzzy
 msgid "At least one host event must be selected."
 msgstr "Indique quando falta o arquivo"
 
@@ -7685,6 +7692,10 @@ msgid "Attribute match value"
 msgstr "Valor de correspondência do atributo"
 
 #, fuzzy
+msgid "Attribute match value must not be empty"
+msgstr "Valor de correspondência do atributo"
+
+#, fuzzy
 msgid "Attribute name"
 msgstr "Valor de correspondência do atributo"
 
@@ -7766,6 +7777,10 @@ msgstr "Método de autenticação"
 
 #, fuzzy
 msgid "Authentication context class reference"
+msgstr "Fonte de autenticação"
+
+#, fuzzy
+msgid "Authentication context class reference must not be empty"
 msgstr "Fonte de autenticação"
 
 #, fuzzy
@@ -9770,6 +9785,10 @@ msgstr ""
 "Melhor: A função de verificação do plugin será aplicada a cada nó "
 "individual. O melhor resultado determinará o estado geral do serviço "
 "agrupado."
+
+#, fuzzy
+msgid "Better"
+msgstr "Carta"
 
 msgid "BigQuery table ID"
 msgstr ""
@@ -12436,6 +12455,10 @@ msgid ""
 "activate changes."
 msgstr ""
 
+#, fuzzy
+msgid "Changing your password is not allowed on remote sites."
+msgstr "O login não é permitido neste site."
+
 msgid "Channel"
 msgstr "Canal"
 
@@ -13918,6 +13941,10 @@ msgstr "Citrix XenApp (Windows)"
 
 msgid "City name"
 msgstr "Nome da cidade"
+
+#, fuzzy
+msgid "Claim name must not be empty"
+msgstr "Chave secreta"
 
 msgid "Class"
 msgstr "Classe"
@@ -24235,6 +24262,10 @@ msgstr "Todas as semanas em..."
 
 msgid "Evictions"
 msgstr "Despejos"
+
+#, fuzzy
+msgid "Exact"
+msgstr "Correspondência exacta"
 
 msgid "Exact RWVDMS name or regex"
 msgstr "Nome exato do RWVDMS ou regex"
@@ -37500,9 +37531,6 @@ msgstr ""
 msgid "Learning Checkmk"
 msgstr "Verificação de aprendizagem"
 
-msgid "Leave empty to auto-generate from Checkmk server URL"
-msgstr ""
-
 msgid "Left"
 msgstr "Esquerda"
 
@@ -45617,7 +45645,8 @@ msgid ""
 "Note that specifically for the check <tt>df</tt>, the pattern matches either "
 "the mount point or the combination of volume and mount point, depending on "
 "the configuration in <a href='wato.py?"
-"mode=edit_ruleset&varname=inventory_df_rules'>File system discovery</a>."
+"mode=edit_ruleset&varname=discovery_parameters%3Ainventory_df_rules'>File "
+"system discovery</a>."
 msgstr ""
 "Você pode especificar um ou vários padrões de globbing contendo <tt>**</tt>, "
 "<tt>?</tt> e <tt>[...]</tt>, por exemplo <tt>/spool/tmpspace*</tt>. Os "
@@ -53813,11 +53842,6 @@ msgstr "Modo apenas leitura"
 msgid "Read-only mode for configuration"
 msgstr "Configuração remota"
 
-msgid ""
-"Read-only summary of the connections inherited from the central site. "
-"Refreshed each time this dialog is opened."
-msgstr ""
-
 msgid "Reading connections"
 msgstr "Conexões de leitura"
 
@@ -56165,6 +56189,10 @@ msgstr "Papel"
 msgid "Role attribute"
 msgstr "Atributo de função"
 
+#, fuzzy
+msgid "Role attribute must not be empty"
+msgstr "O atributo não existe."
+
 msgid "Roles"
 msgstr "Papéis"
 
@@ -58142,9 +58170,9 @@ msgstr ""
 
 msgid ""
 "Select the connections that are available for login on this site. Choose "
-"<i>Use the same connections as the central site</i> to inherit the central "
+"<i>Use identity connectors from central site</i> to inherit the central "
 "site's selection (changes made on the central site take effect after the "
-"next configuration sync), or <i>Use the following connections</i> to pick "
+"next configuration sync), or <i>Use following connections</i> to pick "
 "specific LDAP and SAML connections. Each SAML entry may optionally override "
 "the SP entity ID, which is useful when multiple sites share the same SAML "
 "connection but need to be registered separately at the IdP."
@@ -61742,8 +61770,8 @@ msgstr "Versão específica"
 #, fuzzy
 msgid ""
 "Specifies how the <a href='wato.py?"
-"mode=edit_ruleset&varname=filesystem_groups'>File system grouping patterns</"
-"a> feature processes this file system."
+"mode=edit_ruleset&varname=discovery_parameters%3Afilesystem_groups'>File "
+"system grouping patterns</a> feature processes this file system."
 msgstr ""
 "Especifica como o <a href='wato.py?"
 "mode=edit_ruleset&varname=filesystem_groups'>Filesystem grouping patterns</"
@@ -66951,6 +66979,10 @@ msgstr ""
 "O tempo limite de conexão em segundos ao estabelecer uma conexão com o PLC."
 
 #, fuzzy
+msgid "The connection ID must not be empty"
+msgstr "A ligação %r não existe"
+
+#, fuzzy
 msgid ""
 "The connection id must consist only of letters, digit and the underscore."
 msgstr ""
@@ -68425,6 +68457,10 @@ msgid ""
 "You may use macros in this field. The most common ones are $HOSTNAME$, "
 "$HOSTALIAS$ or $HOSTADDRESS$."
 msgstr ""
+
+#, fuzzy
+msgid "The name must not be empty"
+msgstr "Chave secreta"
 
 msgid "The name of the Datadog monitor."
 msgstr "O nome do monitor Datadog."
@@ -72155,8 +72191,8 @@ msgstr "Este nome já é usado. Por favor, escolha outro."
 
 #, fuzzy, python-format
 msgid ""
-"This name must match the name of the group defined in the <a href=\"wato.py?"
-"mode=edit_ruleset&varname=fileinfo_groups\">%s</a> rule set."
+"This name must match the name of the group defined in the <a href=\"%s\">%s</"
+"a> rule set."
 msgstr ""
 "Este nome deve corresponder ao nome do grupo definido em <a href=\"wato.py?"
 "mode=edit_ruleset&varname=fileinfo_groups\">%s</a> ruleset."
@@ -79698,6 +79734,13 @@ msgstr "Verificação de URL"
 msgid "URL from host to remote site"
 msgstr "URL do host para o site remoto"
 
+#, fuzzy
+msgid "URL must not be empty"
+msgstr "Chave secreta"
+
+msgid "URL must use HTTPS"
+msgstr ""
+
 msgid "URL not allowed"
 msgstr "URL não permitido"
 
@@ -81561,6 +81604,10 @@ msgstr "Utilizar exportação CSV"
 msgid "Use Checkmk Python, if it has been installed"
 msgstr "Use o Checkmk Python, se tiver sido instalado"
 
+#, fuzzy
+msgid "Use Checkmk certificate"
+msgstr "certificado do AC"
+
 msgid ""
 "Use Checkmk clusters if an item can move from one host to another at runtime."
 msgstr ""
@@ -81753,6 +81800,10 @@ msgid "Use container name"
 msgstr "Nome do Container"
 
 #, fuzzy
+msgid "Use custom certificate"
+msgstr "certificado do AC"
+
+#, fuzzy
 msgid "Use custom path"
 msgstr "Definir tema personalizado"
 
@@ -81822,6 +81873,10 @@ msgstr "Use nomes de serviço explícitos e ignore as tags AWS em geral"
 msgid "Use fixed width (relative to font size)"
 msgstr "Usar largura fixa (em relação ao tamanho da fonte)"
 
+#, fuzzy
+msgid "Use following connections"
+msgstr "Use a seguinte cor"
+
 msgid "Use for all connections"
 msgstr "Utilização para todas as ligações"
 
@@ -81841,6 +81896,10 @@ msgstr "Use o endereço do anfitrião"
 #, fuzzy
 msgid "Use host name"
 msgstr "Usar hostname"
+
+#, fuzzy
+msgid "Use identity connectors from central site"
+msgstr "Tempo limite de conexão TCP para conexão com o mestre"
 
 msgid "Use in notifications"
 msgstr "Utilização em notificações"
@@ -82051,10 +82110,6 @@ msgid ""
 "configuration:"
 msgstr ""
 
-#, fuzzy
-msgid "Use the following connections"
-msgstr "Use a seguinte cor"
-
 msgid "Use the following credentials"
 msgstr "Use as seguintes credenciais"
 
@@ -82113,10 +82168,6 @@ msgstr ""
 
 msgid "Use the remote SID"
 msgstr "Use o SID remoto"
-
-#, fuzzy
-msgid "Use the same connections as the central site"
-msgstr "Tempo limite de conexão TCP para conexão com o mestre"
 
 #, fuzzy
 msgid "Use the status of the Check_MK Service"
@@ -82616,6 +82667,10 @@ msgstr "Identificação do usuário"
 
 msgid "User ID attribute"
 msgstr "Atributo User-ID"
+
+#, fuzzy
+msgid "User ID attribute must not be empty"
+msgstr "O valor deve ser uma cadeia de caracteres"
 
 msgid "User ID for web login"
 msgstr "Identificação do usuário para login na web"
@@ -83685,9 +83740,6 @@ msgstr "Tipo de valor"
 #, fuzzy, python-format
 msgid "Value must be one of '%s'"
 msgstr "deve ser igual a '%s'"
-
-msgid "Value must be string"
-msgstr "O valor deve ser uma cadeia de caracteres"
 
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
@@ -86861,6 +86913,10 @@ msgstr "índice de acerto XDA"
 msgid "XInetd status"
 msgstr "Estado do XInetd"
 
+#, fuzzy
+msgid "XML metadata must not be empty"
+msgstr "Chave secreta"
+
 msgid "XMPP Failed inbound stream establishes"
 msgstr "O XMPP Failed inbound stream estabelece"
 
@@ -88889,9 +88945,18 @@ msgstr "Suas modificações afetam alguns objetos"
 msgid "Your old password is wrong."
 msgstr "A sua senha antiga está errada."
 
+msgid ""
+"Your password can only be changed on the central site. Please log in to the "
+"central Checkmk site to change your password."
+msgstr ""
+
 #, fuzzy
 msgid "Your password has expired"
 msgstr "Da loja de senhas"
+
+msgid ""
+"Your password is managed by another system and cannot be changed in Checkmk."
+msgstr ""
 
 msgid "Your personal notification rules"
 msgstr "As suas regras de notificação pessoal"
@@ -89395,7 +89460,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -89909,7 +89973,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -93647,6 +93710,14 @@ msgid "Remove condition"
 msgstr "Remover a condição da etiqueta"
 
 #, fuzzy
+msgid "Add condition after %{key}"
+msgstr "Adicionar condição"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "Opções adicionais"
+
+#, fuzzy
 msgid "Attribute filter"
 msgstr "Atributo a definir"
 
@@ -95880,6 +95951,9 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Value must be string"
+#~ msgstr "O valor deve ser uma cadeia de caracteres"
+
 #, fuzzy
 #~ msgid "Close for now"
 #~ msgstr "Níveis para Inodes"
@@ -96201,10 +96275,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "IP address or host name should not be empty"
-#~ msgstr "Chave secreta"
-
-#, fuzzy
-#~ msgid "Job name should not be empty."
 #~ msgstr "Chave secreta"
 
 #, fuzzy
@@ -97941,10 +98011,6 @@ msgstr ""
 #~ msgstr "O agrupamento deve ter pelo menos um nó"
 
 #, fuzzy
-#~ msgid "The metric name cannot be empty"
-#~ msgstr "Chave secreta"
-
-#, fuzzy
 #~ msgid "Total errors (Last day)"
 #~ msgstr "Taxa de erro total"
 
@@ -99326,10 +99392,6 @@ msgstr ""
 #~ msgstr "Criar anfitriões"
 
 #, fuzzy
-#~ msgid "Custom CA certificate"
-#~ msgstr "certificado do AC"
-
-#, fuzzy
 #~ msgid "Custom profile"
 #~ msgstr "Título personalizado"
 
@@ -100503,10 +100565,6 @@ msgstr ""
 #~ msgstr "visualização do BI"
 
 #, fuzzy
-#~ msgid "At least one scope must be selected."
-#~ msgstr "Indique quando falta o arquivo"
-
-#, fuzzy
 #~ msgid "Single graph"
 #~ msgstr "Ligações rejeitadas"
 
@@ -100938,10 +100996,6 @@ msgstr ""
 
 #~ msgid "Steps"
 #~ msgstr "Passos"
-
-#, python-format
-#~ msgid "The connection %r does not exist"
-#~ msgstr "A ligação %r não existe"
 
 #~ msgid ""
 #~ "The interval the connection will be executed to check the available "

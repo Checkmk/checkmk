@@ -2625,6 +2625,9 @@ msgstr "AES-256"
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
 
+msgid "AES-256-C (Cisco)"
+msgstr ""
+
 msgid "AI"
 msgstr "AI"
 
@@ -7176,6 +7179,10 @@ msgstr ""
 "Hyper-V 監視コンポーネントを少なくとも 1 つ選択する必要があります。利用可能な"
 "監視オプションから選択してください。"
 
+#, fuzzy
+msgid "At least one contact group must be selected"
+msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
+
 msgid "At least one host event must be selected."
 msgstr "少なくとも1つのホストイベントを選択する必要があります。"
 
@@ -7256,6 +7263,10 @@ msgstr "属性"
 msgid "Attribute match value"
 msgstr "属性一致する値"
 
+#, fuzzy
+msgid "Attribute match value must not be empty"
+msgstr "属性一致する値"
+
 msgid "Attribute name"
 msgstr "属性名"
 
@@ -7331,6 +7342,10 @@ msgid "Authentication connections"
 msgstr "認証方法"
 
 msgid "Authentication context class reference"
+msgstr "認証コンテキストクラスリファレンス"
+
+#, fuzzy
+msgid "Authentication context class reference must not be empty"
 msgstr "認証コンテキストクラスリファレンス"
 
 msgid "Authentication error"
@@ -9055,6 +9070,10 @@ msgid ""
 msgstr ""
 "ベスト：プラグインのチェック機能は個々のノードに適用される。最良の結果がクラ"
 "スタ化されたサービス全体の状態を決定します。"
+
+#, fuzzy
+msgid "Better"
+msgstr "文字"
 
 msgid "BigQuery table ID"
 msgstr "BigQueryテーブルID"
@@ -11572,6 +11591,10 @@ msgstr ""
 "この設定を変更すると、アクティベーションの変更中に、影響を受けるすべてのサイ"
 "トが完全が再起動されます。"
 
+#, fuzzy
+msgid "Changing your password is not allowed on remote sites."
+msgstr "このサイトへのログインは許可されていません。"
+
 msgid "Channel"
 msgstr "チャネル"
 
@@ -12896,6 +12919,10 @@ msgstr "Citrix XenApp(Windows)"
 
 msgid "City name"
 msgstr "市の名前"
+
+#, fuzzy
+msgid "Claim name must not be empty"
+msgstr "ユーザー名は空欄にできません。"
 
 msgid "Class"
 msgstr "クラス"
@@ -22642,6 +22669,10 @@ msgstr "毎週..."
 
 msgid "Evictions"
 msgstr "エビクション"
+
+#, fuzzy
+msgid "Exact"
+msgstr "完全に一致"
 
 msgid "Exact RWVDMS name or regex"
 msgstr "正確なRWVDMS名または正規表現"
@@ -34846,9 +34877,6 @@ msgstr ""
 msgid "Learning Checkmk"
 msgstr "Checkmkが学習する"
 
-msgid "Leave empty to auto-generate from Checkmk server URL"
-msgstr ""
-
 msgid "Left"
 msgstr "左"
 
@@ -42291,11 +42319,13 @@ msgstr ""
 "い。新しいバージョンではこの設定変数を使用したり報告したりすることはありませ"
 "ん。"
 
+#, fuzzy
 msgid ""
 "Note that specifically for the check <tt>df</tt>, the pattern matches either "
 "the mount point or the combination of volume and mount point, depending on "
 "the configuration in <a href='wato.py?"
-"mode=edit_ruleset&varname=inventory_df_rules'>File system discovery</a>."
+"mode=edit_ruleset&varname=discovery_parameters%3Ainventory_df_rules'>File "
+"system discovery</a>."
 msgstr ""
 "なお、 <tt>df</tt>,というチェックに関しては、 <a href='wato.py?"
 "mode=edit_ruleset&varname=inventory_df_rules'>ファイルシステム検出</a>.の設定"
@@ -49701,11 +49731,6 @@ msgstr "読み取り専用モード"
 msgid "Read-only mode for configuration"
 msgstr "設定用の読み取り専用モード"
 
-msgid ""
-"Read-only summary of the connections inherited from the central site. "
-"Refreshed each time this dialog is opened."
-msgstr ""
-
 msgid "Reading connections"
 msgstr "接続の読み取り"
 
@@ -51916,6 +51941,10 @@ msgstr "役割"
 msgid "Role attribute"
 msgstr "役割属性"
 
+#, fuzzy
+msgid "Role attribute must not be empty"
+msgstr "属性が存在しません。"
+
 msgid "Roles"
 msgstr "役割"
 
@@ -53746,9 +53775,9 @@ msgstr ""
 
 msgid ""
 "Select the connections that are available for login on this site. Choose "
-"<i>Use the same connections as the central site</i> to inherit the central "
+"<i>Use identity connectors from central site</i> to inherit the central "
 "site's selection (changes made on the central site take effect after the "
-"next configuration sync), or <i>Use the following connections</i> to pick "
+"next configuration sync), or <i>Use following connections</i> to pick "
 "specific LDAP and SAML connections. Each SAML entry may optionally override "
 "the SP entity ID, which is useful when multiple sites share the same SAML "
 "connection but need to be registered separately at the IdP."
@@ -57106,10 +57135,11 @@ msgstr "特定のユーザー"
 msgid "Specific version"
 msgstr "特定のバージョン"
 
+#, fuzzy
 msgid ""
 "Specifies how the <a href='wato.py?"
-"mode=edit_ruleset&varname=filesystem_groups'>File system grouping patterns</"
-"a> feature processes this file system."
+"mode=edit_ruleset&varname=discovery_parameters%3Afilesystem_groups'>File "
+"system grouping patterns</a> feature processes this file system."
 msgstr ""
 "<a href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>ファイルシステ"
 "ムのグループ化</a>機能が、このファイルシステムを処理する方法を指定します。"
@@ -61982,6 +62012,10 @@ msgid ""
 "The connect timeout in seconds when establishing a connection with the PLC."
 msgstr "PLCとの接続を確立する際の接続タイムアウトを秒数で指定します。"
 
+#, fuzzy
+msgid "The connection ID must not be empty"
+msgstr "接続 %r が存在しません"
+
 msgid ""
 "The connection id must consist only of letters, digit and the underscore."
 msgstr ""
@@ -63422,6 +63456,10 @@ msgstr ""
 "けることができるように、全員が読みやすく、ユニークなタイトルを選択してくださ"
 "い。このフィールドにはマクロを使用できます。最も一般的なものは$HOSTNAME$、"
 "$HOSTALIAS$、$HOSTADDRESS$です。"
+
+#, fuzzy
+msgid "The name must not be empty"
+msgstr "メトリック名は空欄にできません"
 
 msgid "The name of the Datadog monitor."
 msgstr "Datagodモニターの名称。"
@@ -67040,10 +67078,10 @@ msgstr "この名前はすでに別の期間で使用されています。"
 msgid "This name is already used. Please choose another one."
 msgstr "この名前はすでに使用されています。別のものを選択してください。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"This name must match the name of the group defined in the <a href=\"wato.py?"
-"mode=edit_ruleset&varname=fileinfo_groups\">%s</a> rule set."
+"This name must match the name of the group defined in the <a href=\"%s\">%s</"
+"a> rule set."
 msgstr ""
 "この名前は、ルールセットの <a href=\"wato.py?"
 "mode=edit_ruleset&varname=fileinfo_groups\">%s</a>で定義されたグループの名前"
@@ -73760,6 +73798,13 @@ msgstr "URLチェック"
 msgid "URL from host to remote site"
 msgstr "ホストからリモートサイトへのURL"
 
+#, fuzzy
+msgid "URL must not be empty"
+msgstr "入力を空にすることはできません"
+
+msgid "URL must use HTTPS"
+msgstr ""
+
 msgid "URL not allowed"
 msgstr "許可されていないURL"
 
@@ -75506,6 +75551,10 @@ msgstr "CSVエクスポートを使用"
 msgid "Use Checkmk Python, if it has been installed"
 msgstr "Checkmk Pythonがインストールされている場合は、それを使用します"
 
+#, fuzzy
+msgid "Use Checkmk certificate"
+msgstr "証明書のチェック"
+
 msgid ""
 "Use Checkmk clusters if an item can move from one host to another at runtime."
 msgstr ""
@@ -75691,6 +75740,10 @@ msgstr "太字を使用する"
 msgid "Use container name"
 msgstr "コンテナ名を使用する"
 
+#, fuzzy
+msgid "Use custom certificate"
+msgstr "カスタムCA証明書"
+
 msgid "Use custom path"
 msgstr "カスタムパスの使用"
 
@@ -75759,6 +75812,10 @@ msgstr "明示的なサービス名を使用し、AWSタグ全体を無視しま
 msgid "Use fixed width (relative to font size)"
 msgstr "固定幅を使用(フォントサイズに対して)"
 
+#, fuzzy
+msgid "Use following connections"
+msgstr "次の色を使用する"
+
 msgid "Use for all connections"
 msgstr "すべての接続に使用"
 
@@ -75776,6 +75833,10 @@ msgstr "ホストアドレスを使用する"
 
 msgid "Use host name"
 msgstr "ホスト名を使用する"
+
+#, fuzzy
+msgid "Use identity connectors from central site"
+msgstr "セントラルサイトに接続するためのTCP接続タイムアウト"
 
 msgid "Use in notifications"
 msgstr "通知で使用"
@@ -75976,10 +76037,6 @@ msgid ""
 "configuration:"
 msgstr ""
 
-#, fuzzy
-msgid "Use the following connections"
-msgstr "次の色を使用する"
-
 msgid "Use the following credentials"
 msgstr "次の資格情報を使用します"
 
@@ -76034,10 +76091,6 @@ msgstr ""
 
 msgid "Use the remote SID"
 msgstr "リモートSIDを使用する"
-
-#, fuzzy
-msgid "Use the same connections as the central site"
-msgstr "セントラルサイトに接続するためのTCP接続タイムアウト"
 
 msgid "Use the status of the Check_MK Service"
 msgstr "Check_MKサービスのステータスを使用する"
@@ -76494,6 +76547,10 @@ msgstr "ユーザーID"
 
 msgid "User ID attribute"
 msgstr "ユーザーID属性"
+
+#, fuzzy
+msgid "User ID attribute must not be empty"
+msgstr "ユーザーIDは空白不可です"
 
 msgid "User ID for web login"
 msgstr "Webログイン用のユーザーID"
@@ -77388,9 +77445,6 @@ msgstr "値型"
 #, python-format
 msgid "Value must be one of '%s'"
 msgstr "値は '%s' のいずれかでなければならない"
-
-msgid "Value must be string"
-msgstr "値は文字列であること"
 
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
@@ -80387,6 +80441,10 @@ msgstr "XDA ヒット率"
 msgid "XInetd status"
 msgstr "XInetdステータス"
 
+#, fuzzy
+msgid "XML metadata must not be empty"
+msgstr "メトリック名は空欄にできません"
+
 msgid "XMPP Failed inbound stream establishes"
 msgstr "XMPP失敗したインバウンドストリームが確立します"
 
@@ -82318,8 +82376,17 @@ msgstr "変更は一部のオブジェクトに影響します"
 msgid "Your old password is wrong."
 msgstr "古いパスワードが間違っています。"
 
+msgid ""
+"Your password can only be changed on the central site. Please log in to the "
+"central Checkmk site to change your password."
+msgstr ""
+
 msgid "Your password has expired"
 msgstr "パスワードの有効期限が切れています"
+
+msgid ""
+"Your password is managed by another system and cannot be changed in Checkmk."
+msgstr ""
 
 msgid "Your personal notification rules"
 msgstr "あなたの個人的な通知ルール"
@@ -86715,6 +86782,14 @@ msgid "Remove condition"
 msgstr "タグ条件を削除します"
 
 #, fuzzy
+msgid "Add condition after %{key}"
+msgstr "条件を追加"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "追加オプション"
+
+#, fuzzy
 msgid "Attribute filter"
 msgstr "属性フィルター"
 
@@ -89215,6 +89290,9 @@ msgid ""
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
 
+#~ msgid "Value must be string"
+#~ msgstr "値は文字列であること"
+
 #~ msgid "Ctrl + Alt"
 #~ msgstr "Ctrl + Alt"
 
@@ -89563,9 +89641,6 @@ msgstr ""
 #~ "グのフィルタリングと事前処理を推奨します。詳細は、<a href='https://"
 #~ "docs.checkmk.com/latest/en/ec.html#tuning'>イベントコンソールのユーザーガ"
 #~ "イドをご確認ください。</a>"
-
-#~ msgid "Job name should not be empty."
-#~ msgstr "ユーザー名は空欄にできません。"
 
 #~ msgid "List of users and passwords allowed to use this endpoint"
 #~ msgstr "このエンドポイントを使用できるユーザーとパスワードのリスト"
@@ -91335,9 +91410,6 @@ msgstr ""
 #~ msgid "The list needs to have at least one element"
 #~ msgstr "クラスターには少なくとも1つの要素が必要です"
 
-#~ msgid "The metric name cannot be empty"
-#~ msgstr "メトリック名は空欄にできません"
-
 #~ msgid "Total errors (Last day)"
 #~ msgstr "エラー総数（過去1日）"
 
@@ -92948,9 +93020,6 @@ msgstr ""
 
 #~ msgid "Create robot"
 #~ msgstr "ロボットを作成する"
-
-#~ msgid "Custom CA certificate"
-#~ msgstr "カスタムCA証明書"
 
 #~ msgid "Custom profile"
 #~ msgstr "カスタムプロフィール"
@@ -94619,10 +94688,6 @@ msgstr ""
 #~ msgstr "可視化タイプを選択してください。"
 
 #, fuzzy
-#~ msgid "At least one scope must be selected."
-#~ msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
-
-#, fuzzy
 #~ msgid "Single graph"
 #~ msgstr "オプション選択"
 
@@ -95063,10 +95128,6 @@ msgstr ""
 #, python-format
 #~ msgid "Still no data in '%s'"
 #~ msgstr "'%s'にまだデータがありません"
-
-#, python-format
-#~ msgid "The connection %r does not exist"
-#~ msgstr "接続 %r が存在しません"
 
 #~ msgid ""
 #~ "The dynamic configuration will interrupt the service discovery and force "

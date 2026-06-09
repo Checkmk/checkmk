@@ -2685,6 +2685,9 @@ msgstr "AES-256"
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
 
+msgid "AES-256-C (Cisco)"
+msgstr ""
+
 #, fuzzy
 msgid "AI"
 msgstr "AIX"
@@ -7578,6 +7581,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "At least one contact group must be selected"
+msgstr "Staat wanneer bestand ontbreekt"
+
+#, fuzzy
 msgid "At least one host event must be selected."
 msgstr "Staat wanneer bestand ontbreekt"
 
@@ -7668,6 +7675,10 @@ msgid "Attribute match value"
 msgstr "In te stellen attribuut"
 
 #, fuzzy
+msgid "Attribute match value must not be empty"
+msgstr "In te stellen attribuut"
+
+#, fuzzy
 msgid "Attribute name"
 msgstr "In te stellen attribuut"
 
@@ -7749,6 +7760,10 @@ msgstr "Authenticatiemethode"
 
 #, fuzzy
 msgid "Authentication context class reference"
+msgstr "Authenticatiebron"
+
+#, fuzzy
+msgid "Authentication context class reference must not be empty"
 msgstr "Authenticatiebron"
 
 #, fuzzy
@@ -9753,6 +9768,10 @@ msgstr ""
 "Best: De controle functie van de plugin zal worden toegepast op elke "
 "individuele node. De beste uitkomst zal de algemene toestand van de "
 "geclusterde dienst bepalen."
+
+#, fuzzy
+msgid "Better"
+msgstr "Brief"
 
 msgid "BigQuery table ID"
 msgstr ""
@@ -12419,6 +12438,10 @@ msgid ""
 "activate changes."
 msgstr ""
 
+#, fuzzy
+msgid "Changing your password is not allowed on remote sites."
+msgstr "Inloggen is niet toegestaan op deze site."
+
 msgid "Channel"
 msgstr "Kanaal"
 
@@ -13904,6 +13927,10 @@ msgstr "Citrix XenApp (Windows)"
 
 msgid "City name"
 msgstr "Naam van de stad"
+
+#, fuzzy
+msgid "Claim name must not be empty"
+msgstr "Geheime sleutel"
 
 msgid "Class"
 msgstr "Klasse"
@@ -24234,6 +24261,10 @@ msgstr "Elke week op..."
 
 msgid "Evictions"
 msgstr "Uitzettingen"
+
+#, fuzzy
+msgid "Exact"
+msgstr "Exacte overeenkomst"
 
 msgid "Exact RWVDMS name or regex"
 msgstr "Exacte RWVDMS-naam of regex"
@@ -37502,9 +37533,6 @@ msgstr ""
 msgid "Learning Checkmk"
 msgstr "Leren Checkmk"
 
-msgid "Leave empty to auto-generate from Checkmk server URL"
-msgstr ""
-
 msgid "Left"
 msgstr "Links"
 
@@ -45617,7 +45645,8 @@ msgid ""
 "Note that specifically for the check <tt>df</tt>, the pattern matches either "
 "the mount point or the combination of volume and mount point, depending on "
 "the configuration in <a href='wato.py?"
-"mode=edit_ruleset&varname=inventory_df_rules'>File system discovery</a>."
+"mode=edit_ruleset&varname=discovery_parameters%3Ainventory_df_rules'>File "
+"system discovery</a>."
 msgstr ""
 "U kunt één of meer Globbing-patronen opgeven die <tt>*</tt>, <tt>?</tt> en "
 "<tt>[...]</tt> bevatten, bijvoorbeeld <tt>/spool/tmpspace*</tt>. De "
@@ -53825,11 +53854,6 @@ msgstr "Alleen lezen"
 msgid "Read-only mode for configuration"
 msgstr "Configuratie op afstand"
 
-msgid ""
-"Read-only summary of the connections inherited from the central site. "
-"Refreshed each time this dialog is opened."
-msgstr ""
-
 msgid "Reading connections"
 msgstr "Aansluitingen lezen"
 
@@ -56159,6 +56183,10 @@ msgstr "Rol"
 msgid "Role attribute"
 msgstr "Rolkenmerk"
 
+#, fuzzy
+msgid "Role attribute must not be empty"
+msgstr "Het kenmerk bestaat niet."
+
 msgid "Roles"
 msgstr "Rollen"
 
@@ -58132,9 +58160,9 @@ msgstr ""
 
 msgid ""
 "Select the connections that are available for login on this site. Choose "
-"<i>Use the same connections as the central site</i> to inherit the central "
+"<i>Use identity connectors from central site</i> to inherit the central "
 "site's selection (changes made on the central site take effect after the "
-"next configuration sync), or <i>Use the following connections</i> to pick "
+"next configuration sync), or <i>Use following connections</i> to pick "
 "specific LDAP and SAML connections. Each SAML entry may optionally override "
 "the SP entity ID, which is useful when multiple sites share the same SAML "
 "connection but need to be registered separately at the IdP."
@@ -61726,8 +61754,8 @@ msgstr "Specifieke versie"
 #, fuzzy
 msgid ""
 "Specifies how the <a href='wato.py?"
-"mode=edit_ruleset&varname=filesystem_groups'>File system grouping patterns</"
-"a> feature processes this file system."
+"mode=edit_ruleset&varname=discovery_parameters%3Afilesystem_groups'>File "
+"system grouping patterns</a> feature processes this file system."
 msgstr ""
 "Specificeert hoe de <a href='wato.py?"
 "mode=edit_ruleset&varname=filesystem_groups'>Filesystem grouping patterns</"
@@ -66960,6 +66988,10 @@ msgstr ""
 "met de PLC."
 
 #, fuzzy
+msgid "The connection ID must not be empty"
+msgstr "De verbinding %r bestaat niet"
+
+#, fuzzy
 msgid ""
 "The connection id must consist only of letters, digit and the underscore."
 msgstr "De site-id mag alleen bestaan uit letters, cijfers en de underscore."
@@ -68439,6 +68471,10 @@ msgid ""
 "You may use macros in this field. The most common ones are $HOSTNAME$, "
 "$HOSTALIAS$ or $HOSTADDRESS$."
 msgstr ""
+
+#, fuzzy
+msgid "The name must not be empty"
+msgstr "Geheime sleutel"
 
 msgid "The name of the Datadog monitor."
 msgstr "De naam van de Datadog monitor."
@@ -72204,8 +72240,8 @@ msgstr "Deze naam is al in gebruik. Gelieve een andere te kiezen."
 
 #, fuzzy, python-format
 msgid ""
-"This name must match the name of the group defined in the <a href=\"wato.py?"
-"mode=edit_ruleset&varname=fileinfo_groups\">%s</a> rule set."
+"This name must match the name of the group defined in the <a href=\"%s\">%s</"
+"a> rule set."
 msgstr ""
 "Deze naam moet overeenkomen met de naam van de groep gedefinieerd in de <a "
 "href=\"wato.py?mode=edit_ruleset&varname=fileinfo_groups\">%s</a> regelset."
@@ -79743,6 +79779,13 @@ msgstr "URL controleren"
 msgid "URL from host to remote site"
 msgstr "URL van host naar externe site"
 
+#, fuzzy
+msgid "URL must not be empty"
+msgstr "Geheime sleutel"
+
+msgid "URL must use HTTPS"
+msgstr ""
+
 msgid "URL not allowed"
 msgstr "URL niet toegestaan"
 
@@ -81607,6 +81650,10 @@ msgstr "CSV-export gebruiken"
 msgid "Use Checkmk Python, if it has been installed"
 msgstr "Gebruik Checkmk Python, als het geïnstalleerd is"
 
+#, fuzzy
+msgid "Use Checkmk certificate"
+msgstr "CA-certificaat"
+
 msgid ""
 "Use Checkmk clusters if an item can move from one host to another at runtime."
 msgstr ""
@@ -81802,6 +81849,10 @@ msgid "Use container name"
 msgstr "Container Naam"
 
 #, fuzzy
+msgid "Use custom certificate"
+msgstr "CA-certificaat"
+
+#, fuzzy
 msgid "Use custom path"
 msgstr "Aangepast thema instellen"
 
@@ -81873,6 +81924,10 @@ msgstr "Gebruik expliciete dienstnamen en negeer algemene AWS-tags"
 msgid "Use fixed width (relative to font size)"
 msgstr "Gebruik vaste breedte (ten opzichte van lettergrootte)"
 
+#, fuzzy
+msgid "Use following connections"
+msgstr "Gebruik de volgende kleur"
+
 msgid "Use for all connections"
 msgstr "Gebruik voor alle verbindingen"
 
@@ -81892,6 +81947,10 @@ msgstr "Gebruik host adres"
 #, fuzzy
 msgid "Use host name"
 msgstr "Gebruik hostnaam"
+
+#, fuzzy
+msgid "Use identity connectors from central site"
+msgstr "TCP connect timeout voor verbinding met de master"
 
 msgid "Use in notifications"
 msgstr "Gebruik in kennisgevingen"
@@ -82107,10 +82166,6 @@ msgid ""
 "configuration:"
 msgstr ""
 
-#, fuzzy
-msgid "Use the following connections"
-msgstr "Gebruik de volgende kleur"
-
 msgid "Use the following credentials"
 msgstr "Gebruik de volgende inloggegevens"
 
@@ -82170,10 +82225,6 @@ msgstr ""
 
 msgid "Use the remote SID"
 msgstr "Gebruik de externe SID"
-
-#, fuzzy
-msgid "Use the same connections as the central site"
-msgstr "TCP connect timeout voor verbinding met de master"
 
 #, fuzzy
 msgid "Use the status of the Check_MK Service"
@@ -82672,6 +82723,10 @@ msgstr "Gebruikers-ID"
 
 msgid "User ID attribute"
 msgstr "Kenmerk gebruikers-ID"
+
+#, fuzzy
+msgid "User ID attribute must not be empty"
+msgstr "De waarde moet een string zijn"
 
 msgid "User ID for web login"
 msgstr "Gebruikers-ID voor web login"
@@ -83740,9 +83795,6 @@ msgstr "Waarde Type"
 #, fuzzy, python-format
 msgid "Value must be one of '%s'"
 msgstr "moet gelijk zijn aan '%s'"
-
-msgid "Value must be string"
-msgstr "De waarde moet een string zijn"
 
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
@@ -86942,6 +86994,10 @@ msgstr "XDA hitratio"
 msgid "XInetd status"
 msgstr "XInetd status"
 
+#, fuzzy
+msgid "XML metadata must not be empty"
+msgstr "Geheime sleutel"
+
 msgid "XMPP Failed inbound stream establishes"
 msgstr "XMPP Mislukte inkomende stream maakt"
 
@@ -88984,9 +89040,18 @@ msgstr "Uw wijzigingen beïnvloeden sommige objecten"
 msgid "Your old password is wrong."
 msgstr "Je oude wachtwoord is fout."
 
+msgid ""
+"Your password can only be changed on the central site. Please log in to the "
+"central Checkmk site to change your password."
+msgstr ""
+
 #, fuzzy
 msgid "Your password has expired"
 msgstr "Van wachtwoord opslag"
+
+msgid ""
+"Your password is managed by another system and cannot be changed in Checkmk."
+msgstr ""
 
 msgid "Your personal notification rules"
 msgstr "Uw persoonlijke meldingsregels"
@@ -93751,6 +93816,14 @@ msgid "Remove condition"
 msgstr "Verwijder tag voorwaarde"
 
 #, fuzzy
+msgid "Add condition after %{key}"
+msgstr "Voorwaarde toevoegen"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "Extra opties"
+
+#, fuzzy
 msgid "Attribute filter"
 msgstr "In te stellen attribuut"
 
@@ -95982,6 +96055,9 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Value must be string"
+#~ msgstr "De waarde moet een string zijn"
+
 #, fuzzy
 #~ msgid "Close for now"
 #~ msgstr "Niveaus voor Inodes"
@@ -96298,10 +96374,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "IP address or host name should not be empty"
-#~ msgstr "Geheime sleutel"
-
-#, fuzzy
-#~ msgid "Job name should not be empty."
 #~ msgstr "Geheime sleutel"
 
 #, fuzzy
@@ -98030,10 +98102,6 @@ msgstr ""
 #~ msgstr "Het cluster moet ten minste één knooppunt hebben"
 
 #, fuzzy
-#~ msgid "The metric name cannot be empty"
-#~ msgstr "Geheime sleutel"
-
-#, fuzzy
 #~ msgid "Total errors (Last day)"
 #~ msgstr "Totaal foutenpercentage"
 
@@ -99342,10 +99410,6 @@ msgstr ""
 #~ msgstr "Maak hosts"
 
 #, fuzzy
-#~ msgid "Custom CA certificate"
-#~ msgstr "CA-certificaat"
-
-#, fuzzy
 #~ msgid "Custom profile"
 #~ msgstr "Aangepaste titel"
 
@@ -100524,10 +100588,6 @@ msgstr ""
 #~ msgstr "BI-visualisatie"
 
 #, fuzzy
-#~ msgid "At least one scope must be selected."
-#~ msgstr "Staat wanneer bestand ontbreekt"
-
-#, fuzzy
 #~ msgid "Single graph"
 #~ msgstr "Afgewezen verbindingen"
 
@@ -100955,10 +101015,6 @@ msgstr ""
 
 #~ msgid "Steps"
 #~ msgstr "Stappen"
-
-#, python-format
-#~ msgid "The connection %r does not exist"
-#~ msgstr "De verbinding %r bestaat niet"
 
 #~ msgid ""
 #~ "The interval the connection will be executed to check the available "

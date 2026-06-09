@@ -2716,6 +2716,9 @@ msgstr "AES-256"
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
 
+msgid "AES-256-C (Cisco)"
+msgstr ""
+
 #, fuzzy
 msgid "AI"
 msgstr "AIX"
@@ -7592,6 +7595,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "At least one contact group must be selected"
+msgstr "Starea când lipsește fișierul"
+
+#, fuzzy
 msgid "At least one host event must be selected."
 msgstr "Starea când lipsește fișierul"
 
@@ -7679,6 +7686,10 @@ msgid "Attribute match value"
 msgstr "Valoarea de potrivire a atributului"
 
 #, fuzzy
+msgid "Attribute match value must not be empty"
+msgstr "Valoarea de potrivire a atributului"
+
+#, fuzzy
 msgid "Attribute name"
 msgstr "Valoarea de potrivire a atributului"
 
@@ -7759,6 +7770,10 @@ msgstr "Metoda de autentificare"
 
 #, fuzzy
 msgid "Authentication context class reference"
+msgstr "Sursa de autentificare"
+
+#, fuzzy
+msgid "Authentication context class reference must not be empty"
 msgstr "Sursa de autentificare"
 
 msgid "Authentication error"
@@ -9750,6 +9765,10 @@ msgstr ""
 "Cel mai bun: Funcția de verificare a plug-in-ului va fi aplicată fiecărui "
 "nod în parte. Cel mai bun rezultat va determina starea generală a "
 "serviciului grupat."
+
+#, fuzzy
+msgid "Better"
+msgstr "Scrisoare"
 
 msgid "BigQuery table ID"
 msgstr ""
@@ -12437,6 +12456,10 @@ msgid ""
 "activate changes."
 msgstr ""
 
+#, fuzzy
+msgid "Changing your password is not allowed on remote sites."
+msgstr "Autentificarea nu este permisă pe acest site."
+
 msgid "Channel"
 msgstr "Canal"
 
@@ -13917,6 +13940,10 @@ msgstr "Citrix XenApp (Windows)"
 
 msgid "City name"
 msgstr "Numele orașului"
+
+#, fuzzy
+msgid "Claim name must not be empty"
+msgstr "Cheia secretă"
 
 msgid "Class"
 msgstr "Clasa"
@@ -24279,6 +24306,10 @@ msgstr "În fiecare săptămână, la..."
 
 msgid "Evictions"
 msgstr "Evacuări"
+
+#, fuzzy
+msgid "Exact"
+msgstr "Potrivire exactă"
 
 msgid "Exact RWVDMS name or regex"
 msgstr "Numele exact al RWVDMS sau regex"
@@ -37592,9 +37623,6 @@ msgstr ""
 msgid "Learning Checkmk"
 msgstr "Învățare Checkmk"
 
-msgid "Leave empty to auto-generate from Checkmk server URL"
-msgstr ""
-
 msgid "Left"
 msgstr "Stânga"
 
@@ -45694,7 +45722,8 @@ msgid ""
 "Note that specifically for the check <tt>df</tt>, the pattern matches either "
 "the mount point or the combination of volume and mount point, depending on "
 "the configuration in <a href='wato.py?"
-"mode=edit_ruleset&varname=inventory_df_rules'>File system discovery</a>."
+"mode=edit_ruleset&varname=discovery_parameters%3Ainventory_df_rules'>File "
+"system discovery</a>."
 msgstr ""
 "Puteți specifica unul sau mai multe modele de globbing care conțin <tt>*</"
 "tt>, <tt>?</tt> și <tt>[...]</tt>, de exemplu <tt>/spool/tmpspace*</tt>. "
@@ -53896,11 +53925,6 @@ msgstr "Mod de numai citire"
 msgid "Read-only mode for configuration"
 msgstr "Configurație la distanță"
 
-msgid ""
-"Read-only summary of the connections inherited from the central site. "
-"Refreshed each time this dialog is opened."
-msgstr ""
-
 msgid "Reading connections"
 msgstr "Conexiuni de lectură"
 
@@ -56233,6 +56257,10 @@ msgstr "Rol"
 msgid "Role attribute"
 msgstr "Atributul rolului"
 
+#, fuzzy
+msgid "Role attribute must not be empty"
+msgstr "Atributul nu există."
+
 msgid "Roles"
 msgstr "Roluri"
 
@@ -58210,9 +58238,9 @@ msgstr ""
 
 msgid ""
 "Select the connections that are available for login on this site. Choose "
-"<i>Use the same connections as the central site</i> to inherit the central "
+"<i>Use identity connectors from central site</i> to inherit the central "
 "site's selection (changes made on the central site take effect after the "
-"next configuration sync), or <i>Use the following connections</i> to pick "
+"next configuration sync), or <i>Use following connections</i> to pick "
 "specific LDAP and SAML connections. Each SAML entry may optionally override "
 "the SP entity ID, which is useful when multiple sites share the same SAML "
 "connection but need to be registered separately at the IdP."
@@ -61841,8 +61869,8 @@ msgstr "Versiune specifică"
 #, fuzzy
 msgid ""
 "Specifies how the <a href='wato.py?"
-"mode=edit_ruleset&varname=filesystem_groups'>File system grouping patterns</"
-"a> feature processes this file system."
+"mode=edit_ruleset&varname=discovery_parameters%3Afilesystem_groups'>File "
+"system grouping patterns</a> feature processes this file system."
 msgstr ""
 "Specifică modul în care <a href='wato.py?"
 "mode=edit_ruleset&varname=filesystem_groups'>Modele de grupare a sistemelor "
@@ -67066,6 +67094,10 @@ msgstr ""
 "PLC."
 
 #, fuzzy
+msgid "The connection ID must not be empty"
+msgstr "Conexiunea %r nu există"
+
+#, fuzzy
 msgid ""
 "The connection id must consist only of letters, digit and the underscore."
 msgstr ""
@@ -68554,6 +68586,10 @@ msgid ""
 "You may use macros in this field. The most common ones are $HOSTNAME$, "
 "$HOSTALIAS$ or $HOSTADDRESS$."
 msgstr ""
+
+#, fuzzy
+msgid "The name must not be empty"
+msgstr "Cheia secretă"
 
 msgid "The name of the Datadog monitor."
 msgstr "Numele monitorului Datadog."
@@ -72336,8 +72372,8 @@ msgstr "Acest nume este deja utilizat. Vă rugăm să alegeți un alt nume."
 
 #, fuzzy, python-format
 msgid ""
-"This name must match the name of the group defined in the <a href=\"wato.py?"
-"mode=edit_ruleset&varname=fileinfo_groups\">%s</a> rule set."
+"This name must match the name of the group defined in the <a href=\"%s\">%s</"
+"a> rule set."
 msgstr ""
 "Acest nume trebuie să se potrivească cu numele grupului definit în <a "
 "href=\"wato.py?mode=edit_ruleset&varname=fileinfo_groups\">%s</a> ruleset."
@@ -79857,6 +79893,13 @@ msgstr "Verificarea URL-ului"
 msgid "URL from host to remote site"
 msgstr "URL de la gazdă la site-ul la distanță"
 
+#, fuzzy
+msgid "URL must not be empty"
+msgstr "Cheia secretă"
+
+msgid "URL must use HTTPS"
+msgstr ""
+
 msgid "URL not allowed"
 msgstr "URL nepermis"
 
@@ -81725,6 +81768,10 @@ msgstr "Utilizați exportul CSV"
 msgid "Use Checkmk Python, if it has been installed"
 msgstr "Utilizați Checkmk Python, dacă a fost instalat."
 
+#, fuzzy
+msgid "Use Checkmk certificate"
+msgstr "Verificați certificatele"
+
 msgid ""
 "Use Checkmk clusters if an item can move from one host to another at runtime."
 msgstr ""
@@ -81914,6 +81961,10 @@ msgid "Use container name"
 msgstr "Denumirea containerului"
 
 #, fuzzy
+msgid "Use custom certificate"
+msgstr "Certificat CA"
+
+#, fuzzy
 msgid "Use custom path"
 msgstr "Utilizați tipul personalizat"
 
@@ -81985,6 +82036,10 @@ msgstr ""
 msgid "Use fixed width (relative to font size)"
 msgstr "Utilizați lățimea fixă (în raport cu dimensiunea fontului)"
 
+#, fuzzy
+msgid "Use following connections"
+msgstr "Utilizați următoarea culoare"
+
 msgid "Use for all connections"
 msgstr "Utilizați pentru toate conexiunile"
 
@@ -82004,6 +82059,10 @@ msgstr "Utilizați adresa gazdă"
 #, fuzzy
 msgid "Use host name"
 msgstr "Utilizați numele de gazdă"
+
+#, fuzzy
+msgid "Use identity connectors from central site"
+msgstr "Timpul de așteptare a conexiunii TCP pentru conectarea la master"
 
 msgid "Use in notifications"
 msgstr "Utilizare în notificări"
@@ -82222,10 +82281,6 @@ msgid ""
 "configuration:"
 msgstr ""
 
-#, fuzzy
-msgid "Use the following connections"
-msgstr "Utilizați următoarea culoare"
-
 msgid "Use the following credentials"
 msgstr "Utilizați următoarele acreditări"
 
@@ -82285,10 +82340,6 @@ msgstr ""
 
 msgid "Use the remote SID"
 msgstr "Utilizați SID-ul la distanță"
-
-#, fuzzy
-msgid "Use the same connections as the central site"
-msgstr "Timpul de așteptare a conexiunii TCP pentru conectarea la master"
 
 #, fuzzy
 msgid "Use the status of the Check_MK Service"
@@ -82795,6 +82846,10 @@ msgstr "ID-ul utilizatorului"
 
 msgid "User ID attribute"
 msgstr "Atributul ID utilizator"
+
+#, fuzzy
+msgid "User ID attribute must not be empty"
+msgstr "Valoarea trebuie să fie un șir de caractere"
 
 msgid "User ID for web login"
 msgstr "ID-ul de utilizator pentru autentificarea web"
@@ -83867,9 +83922,6 @@ msgstr "Tip de valoare"
 #, fuzzy, python-format
 msgid "Value must be one of '%s'"
 msgstr "trebuie să fie egală cu '%s'"
-
-msgid "Value must be string"
-msgstr "Valoarea trebuie să fie un șir de caractere"
 
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
@@ -87067,6 +87119,10 @@ msgstr "XDA hitratio"
 msgid "XInetd status"
 msgstr "Starea XInetd"
 
+#, fuzzy
+msgid "XML metadata must not be empty"
+msgstr "Cheia secretă"
+
 msgid "XMPP Failed inbound stream establishes"
 msgstr "XMPP Failed inbound stream stabilește"
 
@@ -89106,9 +89162,18 @@ msgstr "Modificările dumneavoastră afectează unele obiecte"
 msgid "Your old password is wrong."
 msgstr "Vechea dvs. parolă este greșită."
 
+msgid ""
+"Your password can only be changed on the central site. Please log in to the "
+"central Checkmk site to change your password."
+msgstr ""
+
 #, fuzzy
 msgid "Your password has expired"
 msgstr "Din magazinul de parole"
+
+msgid ""
+"Your password is managed by another system and cannot be changed in Checkmk."
+msgstr ""
 
 msgid "Your personal notification rules"
 msgstr "Regulile dumneavoastră personale de notificare"
@@ -93888,6 +93953,14 @@ msgid "Remove condition"
 msgstr "Eliminarea condiției de etichetare"
 
 #, fuzzy
+msgid "Add condition after %{key}"
+msgstr "Adăugați o condiție"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "Opțiuni adiționale"
+
+#, fuzzy
 msgid "Attribute filter"
 msgstr "Atributul de setat"
 
@@ -96137,6 +96210,9 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Value must be string"
+#~ msgstr "Valoarea trebuie să fie un șir de caractere"
+
 #, fuzzy
 #~ msgid "Close for now"
 #~ msgstr "Niveluri pentru Inodes"
@@ -96458,10 +96534,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "IP address or host name should not be empty"
-#~ msgstr "Cheia secretă"
-
-#, fuzzy
-#~ msgid "Job name should not be empty."
 #~ msgstr "Cheia secretă"
 
 #, fuzzy
@@ -98203,10 +98275,6 @@ msgstr ""
 #~ msgstr "Clusterul trebuie să aibă cel puțin un nod"
 
 #, fuzzy
-#~ msgid "The metric name cannot be empty"
-#~ msgstr "Cheia secretă"
-
-#, fuzzy
 #~ msgid "Total errors (Last day)"
 #~ msgstr "Rata totală de eroare"
 
@@ -99743,10 +99811,6 @@ msgstr ""
 #~ msgid "Create robot"
 #~ msgstr "Creați gazde"
 
-#, fuzzy
-#~ msgid "Custom CA certificate"
-#~ msgstr "Certificat CA"
-
 #~ msgid "Custom profile"
 #~ msgstr "Profil personalizat"
 
@@ -101180,10 +101244,6 @@ msgstr ""
 #~ msgstr "Afișați vizualizarea barei"
 
 #, fuzzy
-#~ msgid "At least one scope must be selected."
-#~ msgstr "Starea când lipsește fișierul"
-
-#, fuzzy
 #~ msgid "Single graph"
 #~ msgstr "Conexiuni respinse"
 
@@ -101614,10 +101674,6 @@ msgstr ""
 
 #~ msgid "Steps"
 #~ msgstr "Pași"
-
-#, python-format
-#~ msgid "The connection %r does not exist"
-#~ msgstr "Conexiunea %r nu există"
 
 #~ msgid ""
 #~ "The interval the connection will be executed to check the available "

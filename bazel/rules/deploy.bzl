@@ -87,6 +87,7 @@ deploy_python = macro(
 # an edition.
 
 COMMUNITY_WHEELS = [
+    "//cmk:whl",
     "//packages/cmk-agent-receiver:wheel",
     "//packages/cmk-backup:wheel",
     "//packages/cmk-ccc:wheel",
@@ -103,11 +104,13 @@ COMMUNITY_WHEELS = [
     "//packages/cmk-notification-plugins:wheel",
     "//packages/cmk-plugin-apis:wheel",
     "//packages/cmk-plugins:wheel-for-f12-aws",
+    "//packages/cmk-plugins:wheel-for-f12-azure_deprecated",
     "//packages/cmk-plugins:wheel-for-f12-azure_v2",
     "//packages/cmk-plugins:wheel-for-f12-bazel",
     "//packages/cmk-plugins:wheel-for-f12-cisco_prime",
     "//packages/cmk-plugins:wheel-for-f12-dell",
     "//packages/cmk-plugins:wheel-for-f12-elasticsearch",
+    "//packages/cmk-plugins:wheel-for-f12-gcp",
     "//packages/cmk-plugins:wheel-for-f12-gerrit",
     "//packages/cmk-plugins:wheel-for-f12-graylog",
     "//packages/cmk-plugins:wheel-for-f12-ipmi",
@@ -122,6 +125,7 @@ COMMUNITY_WHEELS = [
     "//packages/cmk-plugins:wheel-for-f12-randomds",
     "//packages/cmk-plugins:wheel-for-f12-redfish",
     "//packages/cmk-plugins:wheel-for-f12-splunk",
+    "//packages/cmk-plugins:wheel-for-f12-stulz",
     "//packages/cmk-plugins:wheel-for-f12-tplink",
     "//packages/cmk-plugins:wheel-for-f12-ucs_bladecenter",
     "//packages/cmk-plugins:wheel-for-f12-vsphere",
@@ -133,9 +137,9 @@ COMMUNITY_WHEELS = [
 ]
 
 PRO_WHEELS = COMMUNITY_WHEELS + [
+    "//non-free/packages/cmc-protocols:wheel",
     "//non-free/packages/cmk-bakery:wheel",
     "//non-free/packages/cmk-core-helpers:wheel",
-    "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-wheel",
     "//non-free/packages/cmk-dcd:wheel",
     "//non-free/packages/cmk-licensing-nonfree:wheel",
     "//non-free/packages/cmk-liveproxyd:wheel",
@@ -145,19 +149,24 @@ PRO_WHEELS = COMMUNITY_WHEELS + [
     "//non-free/packages/cmk-robotmk:wheel",
 ]
 
-CLOUD_WHEELS = [p for p in PRO_WHEELS + [
+CLOUD_WHEELS = PRO_WHEELS + [
     "//non-free/packages/cmk-cloud:wheel",
+    "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-wheel",
     "//non-free/packages/cmk-metric-backend:wheel",
     "//non-free/packages/cmk-otel-collector:wheel",
-    "//non-free/packages/cmk-plugins-nonfree:wheel-gcp_extended",
+    "//non-free/packages/cmk-otel-collector:wheel-auth-only",
+    "//non-free/packages/cmk-plugins-nonfree:wheel-azure_deprecated_extended",
     "//non-free/packages/cmk-plugins-nonfree:wheel-azure_v2_extended",
+    "//non-free/packages/cmk-plugins-nonfree:wheel-gcp_extended",
     "//non-free/packages/cmk-telemetry:wheel",
-] if p != "//packages/cmk-backup:wheel"]  # Urks... Need some other structure here.
+]
 
 ULTIMATE_WHEELS = PRO_WHEELS + [
+    "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-wheel",
     "//non-free/packages/cmk-metric-backend:wheel",
     "//non-free/packages/cmk-otel-collector:wheel",
     "//non-free/packages/cmk-plugins-nonfree:wheel-aws_extended",
+    "//non-free/packages/cmk-plugins-nonfree:wheel-azure_deprecated_extended",
     "//non-free/packages/cmk-plugins-nonfree:wheel-azure_v2_extended",
     "//non-free/packages/cmk-plugins-nonfree:wheel-gcp_extended",
     "//non-free/packages/cmk-telemetry:wheel",

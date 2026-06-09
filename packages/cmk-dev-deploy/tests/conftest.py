@@ -110,12 +110,12 @@ def _build_seed_manifest() -> dict[str, object]:
         if not spec.get("source_prefix"):
             spec["source_prefix"] = _label_to_package_path(spec["package_target"])
 
-    # Representative wheel and config specs (covering paths used in tests)
-    wheel_specs: list[dict[str, object]] = [
-        {"source_prefix": "cmk"},
-        {"source_prefix": "packages/cmk-ccc"},
-        {"source_prefix": "packages/cmk-shared-typing"},
-        {"source_prefix": "non-free/packages/cmk-bakery"},
+    # Representative wheel prefixes and config specs (covering paths used in tests)
+    wheel_prefixes: list[str] = [
+        "cmk/",
+        "packages/cmk-ccc/",
+        "packages/cmk-shared-typing/",
+        "non-free/packages/cmk-bakery/",
     ]
     config_specs: list[dict[str, object]] = [
         {"source_prefix": "agents/", "method": "copy_dir"},
@@ -126,7 +126,7 @@ def _build_seed_manifest() -> dict[str, object]:
 
     manifest_data: dict[str, object] = {
         "install_specs": install_specs,
-        "wheel_specs": wheel_specs,
+        "wheel_prefixes": wheel_prefixes,
         "config_specs": config_specs,
         "service_specs": toml_data["service_specs"],
         "deploy_deps": {},

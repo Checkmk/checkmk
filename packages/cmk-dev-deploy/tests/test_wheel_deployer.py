@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from subprocess import CompletedProcess
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -52,10 +52,8 @@ def _site(tmp_path: Path, edition: Edition = Edition.ULTIMATE) -> SiteInfo:
 # ---------------------------------------------------------------------------
 
 
-def test_wheel_prefixes_derived_from_specs() -> None:
-    spec = Mock()
-    spec.package = "packages/cmk-ccc"
-    with patch.object(wheel_deployer, "get_wheel_specs", return_value=(spec,)):
+def test_wheel_prefixes_come_from_manifest() -> None:
+    with patch.object(wheel_deployer, "get_wheel_prefixes", return_value=("packages/cmk-ccc/",)):
         assert wheel_deployer.wheel_prefixes() == ("packages/cmk-ccc/",)
 
 

@@ -15,7 +15,7 @@ from cmk.dev_deploy.manifest.reader import (
     get_frontend_supervised_prefixes,
     get_install_specs,
     get_service_specs,
-    get_wheel_specs,
+    get_wheel_prefixes,
     hash_path,
     manifest_path,
 )
@@ -36,7 +36,7 @@ __all__ = [
     "get_frontend_supervised_prefixes",
     "get_install_specs",
     "get_service_specs",
-    "get_wheel_specs",
+    "get_wheel_prefixes",
     "hash_path",
     "is_manifest_stale",
     "manifest_path",

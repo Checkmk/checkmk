@@ -24,6 +24,7 @@ from cmk.dev_deploy.manifest.reader import (
     clear_cache,
     hash_path,
     manifest_path,
+    MANIFEST_VERSION,
 )
 from cmk.dev_deploy.state.change_detector import reset_categorization_cache
 
@@ -149,10 +150,23 @@ def save_manifest_hashes(repo_root: Path) -> None:
     output.verbose(f"Manifest: saved {len(current)} file hashes in {time.monotonic() - t0:.2f}s")
 
 
+def _manifest_version_matches() -> bool:
+    """Return True when the manifest on disk has the expected format version."""
+    try:
+        data = json.loads(manifest_path().read_text())
+    except (OSError, json.JSONDecodeError):
+        return False
+    return isinstance(data, dict) and data.get("_version") == MANIFEST_VERSION
+
+
 def is_manifest_stale(repo_root: Path) -> bool:
     """Return True if build files have changed since manifest generation."""
     if not manifest_path().is_file():
         output.info("Manifest: not found, will generate")
+        return True
+
+    if not _manifest_version_matches():
+        output.info("Manifest: format version changed, regenerating...")
         return True
 
     stored = _load_stored_hashes()

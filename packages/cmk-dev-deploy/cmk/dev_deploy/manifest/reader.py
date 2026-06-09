@@ -27,11 +27,12 @@ from cmk.dev_deploy.types import (
     Service,
     ServiceAction,
     ServiceSpec,
-    WheelDeployMode,
-    WheelDeploySpec,
 )
 
 logger = logging.getLogger(__name__)
+
+MANIFEST_VERSION = "3"
+"""Manifest format version; a mismatch triggers regeneration."""
 
 
 def _manifest_dir() -> Path:
@@ -106,20 +107,6 @@ def _parse_config_spec(raw: dict[str, Any]) -> ConfigDeploySpec:
     )
 
 
-def _parse_wheel_spec(raw: dict[str, Any]) -> WheelDeploySpec:
-    """Convert a manifest wheel_spec dict to a WheelDeploySpec dataclass."""
-    return WheelDeploySpec(
-        package=raw["source_prefix"].rstrip("/"),
-        wheel_targets=tuple(raw["wheel_targets"]),
-        edition_constraint=frozenset(raw["editions"]) if raw["editions"] else None,
-        deploy_mode=WheelDeployMode(raw.get("deploy_mode", "direct")),
-        source_subdirs=tuple(raw.get("source_subdirs", [])),
-        distribution_name=raw.get("distribution_name", ""),
-        strip_prefix=raw.get("strip_prefix", ""),
-        edition_filter=raw.get("edition_filter", False),
-    )
-
-
 def _parse_service_pair(s: str) -> tuple[Service, ServiceAction]:
     """Parse a "name:action" string into a (Service, ServiceAction) tuple."""
     name, action = s.split(":")
@@ -176,10 +163,10 @@ def get_config_specs() -> tuple[ConfigDeploySpec, ...]:
     return tuple(_parse_config_spec(s) for s in data["config_specs"])
 
 
-def get_wheel_specs() -> tuple[WheelDeploySpec, ...]:
-    """Return all wheel deploy specs from the manifest as typed dataclasses."""
+def get_wheel_prefixes() -> tuple[str, ...]:
+    """Return the source-tree prefixes of deployed wheels (with trailing slash)."""
     data = _load_raw()
-    return tuple(_parse_wheel_spec(s) for s in data["wheel_specs"])
+    return tuple(data["wheel_prefixes"])
 
 
 def get_service_specs() -> tuple[ServiceSpec, ...]:

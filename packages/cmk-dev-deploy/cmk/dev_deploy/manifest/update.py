@@ -4,11 +4,11 @@
 
 """Build the deploy manifest from auto-discovered Bazel targets and TOML overrides.
 
-Auto-discovers wheel specs from ``py_wheel`` targets and config specs from
-``deps_packages`` packaging targets.  Manual specs (package/service) are loaded
-from ``deploy_specs.toml``.  Enriches sentinel fields from ``bazel cquery`` data,
-computes cross-deployer dependency edges (deploy_deps), and writes the resulting
-JSON manifest for the deploy tool.
+Auto-discovers config specs from ``deps_packages`` packaging targets and the
+deployed wheel prefixes from ``//:deploy-python``.  Manual specs
+(package/service) are loaded from ``deploy_specs.toml``.  Enriches sentinel
+fields from ``bazel cquery`` data, computes cross-deployer dependency edges
+(deploy_deps), and writes the resulting JSON manifest for the deploy tool.
 
 Usage (from repo root)::
 
@@ -32,6 +32,7 @@ from typing import Any
 
 from cmk.dev_deploy.core import output
 from cmk.dev_deploy.core.output import Spinner
+from cmk.dev_deploy.manifest.reader import MANIFEST_VERSION
 from cmk.dev_deploy.manifest.staleness import save_manifest_hashes
 from cmk.dev_deploy.types import CategorizationRule, ChangeCategory, DeployMethod
 
@@ -225,101 +226,6 @@ def _validate_manual_specs(manual: dict[str, Any], repo_root: Path) -> None:
             "deploy_specs.toml references paths that no longer exist:\n"
             + "\n".join(f"  - {e}" for e in errors)
         )
-
-
-# ---------------------------------------------------------------------------
-# Auto-discovery: wheel specs from py_wheel targets
-# ---------------------------------------------------------------------------
-
-
-def _classify_deploy_mode(source_prefix: str, repo_root: Path) -> str:
-    """Initial deploy_mode classification for a wheel spec.
-
-    Returns 'generated' only if the source directory does not exist at all.
-    Otherwise returns 'direct' — packages with generated Python sources
-    (e.g. cmk-shared-typing) are reclassified during enrichment based on
-    the Bazel build graph (see ``_enrich_wheel_specs``).
-    """
-    source_dir = repo_root / source_prefix.rstrip("/")
-    if not source_dir.is_dir():
-        return "generated"
-    return "direct"
-
-
-def _discover_wheel_specs(
-    wheel_targets_map: dict[str, list[str]],
-    repo_root: Path,
-    is_nonfree_checkout: bool,
-) -> list[dict[str, Any]]:
-    """Auto-discover wheel specs from Bazel py_wheel targets.
-
-    For each discovered py_wheel target, auto-derives all fields:
-    - name: deploy_wheel_ + normalized package name
-    - package_target: the py_wheel label
-    - source_prefix: from _label_to_package_path()
-    - deploy_mode: initial 'direct' or 'generated' (refined during enrichment via Bazel)
-    - edition_filter: True only for //cmk:whl
-    - editions: from _derive_editions() (non-free path detection)
-
-    Args:
-        wheel_targets_map: Mapping of package path to list of py_wheel target
-            names, from _query_py_wheel_targets().
-        repo_root: Absolute path to the git repository root.
-        is_nonfree_checkout: True if repo has non-free/ directory.
-
-    Returns:
-        List of wheel spec dicts ready for enrichment.
-    """
-    wheel_specs: list[dict[str, Any]] = []
-
-    for pkg_path, target_names in sorted(wheel_targets_map.items()):
-        # Build the full label for the first (or only) wheel target
-        for tname in target_names:
-            label = f"//{pkg_path}{tname}" if tname.startswith(":") else f"//{pkg_path}:{tname}"
-
-            # Derive source_prefix
-            source_prefix = _label_to_package_path(label)
-
-            # Skip non-free specs in GPL-only checkout
-            if not is_nonfree_checkout and (
-                source_prefix.startswith("non-free/") or "non-free/" in label
-            ):
-                continue
-
-            # Normalize name: deploy_wheel_ + package name with underscores
-            pkg_name = source_prefix.rstrip("/").replace("/", "_").replace("-", "_")
-            # For targets like cmk-livestatus-client with multiple wheels,
-            # use the target name to disambiguate
-            if len(target_names) > 1:
-                target_suffix = tname.lstrip(":").replace("-", "_")
-                name = f"deploy_wheel_{target_suffix}"
-            else:
-                name = f"deploy_wheel_{pkg_name}"
-
-            deploy_mode = _classify_deploy_mode(source_prefix, repo_root)
-            editions = _derive_editions(source_prefix, label)
-
-            # edition_filter is True only for the main cmk wheel (//cmk:whl)
-            edition_filter = pkg_path == "cmk" and tname in (":whl", "whl")
-
-            wheel_specs.append(
-                {
-                    "deploy_mode": deploy_mode,
-                    "distribution_name": "",
-                    "edition_filter": edition_filter,
-                    "editions": editions,
-                    "name": name,
-                    "package_target": label,
-                    "source_prefix": "",
-                    "source_subdirs": [],
-                    "strip_prefix": "",
-                    "wheel_targets": [],
-                }
-            )
-
-    # Sort by name for deterministic output
-    wheel_specs.sort(key=lambda s: s["name"])
-    return wheel_specs
 
 
 # ---------------------------------------------------------------------------
@@ -699,37 +605,29 @@ def _query_deps_packages_targets(repo_root: Path) -> list[str]:
     return sorted(targets)
 
 
-def _query_py_wheel_targets(repo_root: Path) -> dict[str, list[str]]:
-    """Discover ``py_wheel`` targets in package directories via ``bazel query``.
+def _query_wheel_prefixes(repo_root: Path) -> list[str]:
+    """Derive the source-tree prefixes of deployed wheels from //:deploy-python.
 
-    Returns:
-        Dict mapping package path (e.g. ``"packages/cmk-ccc"``) to sorted list
-        of target names (e.g. ``[":wheel"]``).  Empty dict on query failure.
+    A plain (non-configured) ``bazel query`` on the ``whls`` attribute unions
+    all edition ``select()`` branches, so the result covers every edition.
+    The prefix of a wheel is its package directory (e.g. ``//cmk:whl`` ->
+    ``cmk/``).
     """
-    query = 'kind("py_wheel rule", //cmk:* + //packages/...:* + //non-free/packages/...:*)'
+    query = "labels(whls, //:deploy-python_gen)"
     result = _run_bazel_query(
         ["bazel", "query", query, "--output=label", "--keep_going"],
         repo_root,
     )
     if result is None:
-        output.warn("bazel query for py_wheel failed (see log for details)")
-        return {}
+        output.warn("bazel query for deploy-python wheels failed (see log for details)")
+        return []
 
-    by_package: dict[str, list[str]] = {}
-    for line in result.stdout.strip().splitlines():
-        line = line.strip()
-        if not line or not line.startswith("//"):
-            continue
-        label = line[2:]  # strip "//"
-        if ":" in label:
-            pkg, name = label.split(":", 1)
-            by_package.setdefault(pkg, []).append(":" + name)
-
-    # Sort target lists for determinism
-    for tgts in by_package.values():
-        tgts.sort()
-
-    return by_package
+    prefixes = {
+        line.strip()[2:].split(":", 1)[0] + "/"
+        for line in result.stdout.strip().splitlines()
+        if line.strip().startswith("//")
+    }
+    return sorted(prefixes)
 
 
 # ---------------------------------------------------------------------------
@@ -965,311 +863,6 @@ def _deploy_name_to_package_path(name: str) -> str:
     return f"packages/{pkg_name}"
 
 
-def _query_wheel_source_subdirs(
-    wheel_targets_map: dict[str, list[str]],
-    repo_root: Path,
-) -> dict[str, dict[str, Any]]:
-    """Query Bazel for py_wheel source subdirectories and distribution names.
-
-    For each py_wheel target, queries its XML attributes (``distribution``,
-    ``strip_path_prefixes``) and its transitive source files via
-    ``labels(srcs, deps(TARGET))``.  Applies strip_path_prefixes to derive
-    relative paths, then groups into source subdirectories.
-
-    Args:
-        wheel_targets_map: Mapping of package path to list of py_wheel target
-            names (e.g. ``{"packages/cmk-ccc": [":wheel"]}``).
-        repo_root: Absolute path to the git repository root.
-
-    Returns:
-        Dict mapping full py_wheel label (e.g. ``"//packages/cmk-ccc:wheel"``)
-        to ``{"distribution_name": str, "source_subdirs": list[str],
-        "has_generated_sources": bool, "strip_prefix": str}``.  The
-        ``strip_prefix`` mirrors the rule's ``strip_path_prefixes[0]`` (empty
-        when the rule does not strip) and lets the deployer resolve repo paths.
-    """
-    # 1. Collect all full py_wheel labels
-    all_labels: list[str] = []
-    for pkg_path, target_names in wheel_targets_map.items():
-        for tname in target_names:
-            label = f"//{pkg_path}{tname}" if tname.startswith(":") else f"//{pkg_path}:{tname}"
-            all_labels.append(label)
-
-    if not all_labels:
-        return {}
-
-    # 2. Query XML attrs for all py_wheel targets (distribution, strip_path_prefixes)
-    rule_attrs = _query_rule_attrs_xml(all_labels, repo_root)
-
-    # 3. Batched srcs query: one query for ALL wheels using set union
-    #    (replaces 2*N per-target queries with 2 total)
-    union_expr = " + ".join(all_labels)
-    srcs_query = f"labels(srcs, deps({union_expr}))"
-    srcs_result = _run_bazel_query(
-        ["bazel", "query", srcs_query, "--output=label", "--keep_going"],
-        repo_root,
-    )
-    all_src_labels: list[str] = []
-    if srcs_result:
-        all_src_labels = [
-            line.strip()
-            for line in srcs_result.stdout.strip().splitlines()
-            if line.strip() and line.strip().startswith("//")
-        ]
-
-    # 4. Batched generated-file query
-    gen_query = f'kind("generated file", labels(srcs, deps({union_expr})))'
-    gen_result = _run_bazel_query(
-        ["bazel", "query", gen_query, "--output=label", "--keep_going"],
-        repo_root,
-    )
-    all_gen_labels: set[str] = set()
-    if gen_result and gen_result.stdout.strip():
-        for gline in gen_result.stdout.strip().splitlines():
-            gline = gline.strip()
-            if gline.endswith(".py"):
-                all_gen_labels.add(gline)
-
-    # 5. For each wheel, parse attrs and filter the batched srcs
-    result: dict[str, dict[str, Any]] = {}
-    for label in all_labels:
-        rule_elem = rule_attrs.get(label)
-        if rule_elem is None:
-            logger.warning("No rule attrs for py_wheel %s", label)
-            continue
-
-        distribution = _parse_string(rule_elem, "distribution")
-        strip_prefixes = _parse_string_list(rule_elem, "strip_path_prefixes")
-        pkg_path = label.lstrip("/").split(":")[0]
-
-        # ``pkg_path`` filters srcs to this wheel; ``strip_prefixes`` (if set
-        # on the BUILD rule) determines the in-wheel layout.  Previously this
-        # defaulted strip to ``[pkg_path]`` which is wrong for monolithic
-        # wheels like ``//cmk:whl`` that have no explicit ``strip_path_prefixes``:
-        # ``py_wheel`` leaves their files at the full Bazel path, so the wheel
-        # really contains ``cmk/<...>`` and the manifest must reflect that to
-        # stay site-relative.
-        filter_prefix = pkg_path + "/" if pkg_path else ""
-
-        stripped_paths: list[str] = []
-        for src_label in all_src_labels:
-            path = src_label[2:]  # strip //
-            if ":" in path:
-                pkg, name = path.split(":", 1)
-                path = f"{pkg}/{name}"
-
-            if not path.endswith(".py"):
-                continue
-
-            if filter_prefix and not path.startswith(filter_prefix):
-                continue
-
-            stripped = path
-            for prefix in strip_prefixes:
-                prefix_with_slash = prefix if prefix.endswith("/") else prefix + "/"
-                if path.startswith(prefix_with_slash):
-                    stripped = path[len(prefix_with_slash) :]
-                    break
-
-            stripped_paths.append(stripped)
-
-        source_subdirs = _derive_subdirs_from_paths(stripped_paths)
-
-        # Check for generated .py files from this package
-        gen_prefix = f"//{pkg_path}:"
-        has_generated_sources = any(g.startswith(gen_prefix) for g in all_gen_labels)
-
-        # Repo-side strip prefix: empty when ``py_wheel`` does not strip
-        # (monolithic case), otherwise the rule's ``strip_path_prefixes[0]``.
-        # The deployer uses this to resolve repo paths uniformly:
-        # ``source = repo_root / strip_prefix / subdir``.
-        strip_prefix = strip_prefixes[0] if strip_prefixes else ""
-
-        result[label] = {
-            "distribution_name": distribution,
-            "source_subdirs": sorted(source_subdirs),
-            "has_generated_sources": has_generated_sources,
-            "strip_prefix": strip_prefix,
-        }
-
-    return result
-
-
-def _derive_subdirs_from_paths(rel_paths: list[str]) -> set[str]:
-    """Derive source subdirectories from a list of relative file paths.
-
-    Two-pass approach:
-    1. Collect all ``__init__.py`` locations to identify real packages
-    2. For each non-init file, group at the deepest *package* ancestor
-
-    A depth-2 directory (e.g. ``cmk/bakery/``) that has NO ``__init__.py``
-    in the source list is a namespace package — files beneath it are grouped
-    at depth 3 instead (e.g. ``cmk/bakery/base/``).  This prevents the
-    deployer from cleaning sibling sub-packages it doesn't own.
-
-    Examples:
-    - ``cmk/ccc/foo.py`` → ``cmk/ccc/`` (has ``cmk/ccc/__init__.py``)
-    - ``cmk/plugins/aws/foo.py`` → ``cmk/plugins/aws/`` (``cmk/plugins/`` has no init)
-    - ``cmk/bakery/base/cfg.py`` → ``cmk/bakery/base/`` (``cmk/bakery/`` has no init)
-    - ``cmk_update_agent.py`` → ``cmk_update_agent.py``
-    """
-    # Pass 1: collect all directories that contain __init__.py
-    init_dirs: set[str] = set()
-    for path in rel_paths:
-        if path.endswith("/__init__.py"):
-            init_dirs.add("/".join(path.split("/")[:-1]) + "/")
-
-    # Pass 2: derive subdir for each file
-    subdirs: set[str] = set()
-    for path in rel_paths:
-        parts = path.split("/")
-
-        if len(parts) == 1:
-            # Top-level file: e.g. cmk_update_agent.py
-            subdirs.add(path)
-            continue
-
-        dir_path = "/".join(parts[:-1]) + "/"
-        filename = parts[-1]
-
-        if filename == "__init__.py":
-            subdirs.add(dir_path)
-            continue
-
-        if len(parts) == 2:
-            if dir_path in init_dirs:
-                # Parent is a real package — group here (e.g. legacy_checks/foo.py
-                # when legacy_checks/__init__.py exists)
-                subdirs.add(dir_path)
-            else:
-                # Standalone file in a namespace: e.g. check_helper_protocol.py
-                subdirs.add(path)
-            continue
-
-        # Default: depth 2 (e.g. cmk/ccc/)
-        depth2 = "/".join(parts[:2]) + "/"
-
-        if depth2 in init_dirs:
-            # Real package at depth 2 — group here
-            subdirs.add(depth2)
-        elif len(parts) > 3:
-            # Namespace at depth 2 (no __init__.py) — go to depth 3
-            subdirs.add("/".join(parts[:3]) + "/")
-        else:
-            # Depth-3 file in a namespace: e.g. cmk/plugins/utils.py
-            subdirs.add(depth2)
-
-    return subdirs
-
-
-def _enrich_wheel_specs(
-    specs: list[dict[str, Any]],
-    wheel_targets_map: dict[str, list[str]],
-    repo_root: Path,
-) -> None:
-    """Derive source_prefix, wheel targets, source_subdirs, and distribution_name."""
-    # First: derive source_prefix and discover wheel targets (existing logic)
-    for spec in specs:
-        if not spec.get("source_prefix"):
-            pt = spec.get("package_target", "")
-            if pt:
-                spec["source_prefix"] = _label_to_package_path(pt)
-            else:
-                spec["source_prefix"] = _deploy_name_to_package_path(spec["name"])
-
-        if not spec.get("wheel_targets"):
-            source_prefix = spec.get("source_prefix", "").rstrip("/")
-            discovered_wheels = wheel_targets_map.get(source_prefix, [])
-            if discovered_wheels:
-                spec["wheel_targets"] = discovered_wheels
-
-    # Second: query Bazel for source_subdirs and distribution_name
-    wheel_source_info = _query_wheel_source_subdirs(wheel_targets_map, repo_root)
-
-    for spec in specs:
-        if spec.get("deploy_mode") == "generated":
-            continue  # generated packages have no source on disk
-
-        pt = spec.get("package_target", "")
-        if pt:
-            # Direct match: package_target IS a py_wheel label
-            info = wheel_source_info.get(pt)
-            if info:
-                spec["source_subdirs"] = info["source_subdirs"]
-                spec["distribution_name"] = info["distribution_name"]
-                spec["strip_prefix"] = info["strip_prefix"]
-                # Reclassify to "generated" if Bazel reports all .py sources
-                # are generated (e.g. cmk-shared-typing from JSON schemas)
-                if info.get("has_generated_sources"):
-                    logger.debug(
-                        "Reclassifying %s as 'generated' (Bazel reports generated sources)",
-                        spec["name"],
-                    )
-                    spec["deploy_mode"] = "generated"
-                continue
-
-        # Fallback: look up by source_prefix in wheel_targets_map
-        source_prefix = spec.get("source_prefix", "").rstrip("/")
-        whl_targets = wheel_targets_map.get(source_prefix, [])
-        if len(whl_targets) == 1:
-            label = (
-                f"//{source_prefix}{whl_targets[0]}"
-                if whl_targets[0].startswith(":")
-                else f"//{source_prefix}:{whl_targets[0]}"
-            )
-            info = wheel_source_info.get(label)
-            if info:
-                spec["source_subdirs"] = info["source_subdirs"]
-                spec["distribution_name"] = info["distribution_name"]
-                spec["strip_prefix"] = info["strip_prefix"]
-                if info.get("has_generated_sources"):
-                    logger.debug(
-                        "Reclassifying %s as 'generated' (Bazel reports generated sources)",
-                        spec["name"],
-                    )
-                    spec["deploy_mode"] = "generated"
-        elif len(whl_targets) > 1:
-            # Multiple wheel targets for this source_prefix (e.g. cmk-plugins).
-            # All wheels in one package share strip_path_prefixes, so taking
-            # the first non-empty value is sufficient.
-            all_subdirs: set[str] = set()
-            dist_names: list[str] = []
-            any_generated = False
-            strip_prefix_value = ""
-            for tname in whl_targets:
-                label = (
-                    f"//{source_prefix}{tname}"
-                    if tname.startswith(":")
-                    else f"//{source_prefix}:{tname}"
-                )
-                info = wheel_source_info.get(label)
-                if info:
-                    all_subdirs.update(info["source_subdirs"])
-                    if info["distribution_name"]:
-                        dist_names.append(info["distribution_name"])
-                    if not strip_prefix_value:
-                        strip_prefix_value = info.get("strip_prefix", "")
-                    if info.get("has_generated_sources"):
-                        any_generated = True
-            spec["source_subdirs"] = sorted(all_subdirs)
-            spec["strip_prefix"] = strip_prefix_value
-            if dist_names:
-                spec["distribution_name"] = dist_names[0]
-            # Only reclassify if ALL wheel targets have generated sources
-            if any_generated and all(
-                wheel_source_info.get(
-                    f"//{source_prefix}{t}" if t.startswith(":") else f"//{source_prefix}:{t}",
-                    {},
-                ).get("has_generated_sources", False)
-                for t in whl_targets
-            ):
-                logger.debug(
-                    "Reclassifying %s as 'generated' (all wheel targets have generated sources)",
-                    spec["name"],
-                )
-                spec["deploy_mode"] = "generated"
-
-
 # ---------------------------------------------------------------------------
 # Validation
 # ---------------------------------------------------------------------------
@@ -1282,7 +875,7 @@ def _validate_manifest(manifest: dict[str, Any]) -> None:
     after enrichment.
     """
     unresolved: list[str] = []
-    for spec_key in ("config_specs", "install_specs", "wheel_specs", "service_specs"):
+    for spec_key in ("config_specs", "install_specs", "service_specs"):
         for spec in manifest.get(spec_key, []):
             if not spec.get("source_prefix", "").strip():
                 unresolved.append(
@@ -1437,7 +1030,7 @@ def _compute_categorization_rules(
     Produces rules from four sources:
     1. install_specs: compiled artifacts (C++, Rust, Vue, Frontend) with
        extensions derived from the Bazel build graph
-    2. wheel_specs: Python packages
+    2. wheel_prefixes: Python packages
     3. config_specs: config/data directories
     4. supplementary_rules: from deploy_specs.toml [[categorization]] entries
 
@@ -1495,15 +1088,8 @@ def _compute_categorization_rules(
             )
         )
 
-    # --- From wheel_specs ---
-    for spec in manifest_data.get("wheel_specs", []):
-        source_prefix = spec.get("source_prefix", "").rstrip("/")
-        if not source_prefix:
-            continue
-
-        # Ensure trailing slash for prefix matching
-        prefix = source_prefix + "/"
-
+    # --- From wheel prefixes ---
+    for prefix in manifest_data.get("wheel_prefixes", []):
         _add(
             CategorizationRule(
                 prefix=prefix,
@@ -1511,16 +1097,6 @@ def _compute_categorization_rules(
                 category=ChangeCategory.PYTHON,
             )
         )
-
-        # Special case: cmk-shared-typing .ts files are consumed by cmk-frontend-vue
-        if source_prefix == "packages/cmk-shared-typing":
-            _add(
-                CategorizationRule(
-                    prefix=prefix,
-                    extensions=frozenset({".ts"}),
-                    category=ChangeCategory.VUE,
-                )
-            )
 
     # --- From config_specs ---
     for spec in manifest_data.get("config_specs", []):
@@ -1600,7 +1176,7 @@ def _compute_deploy_deps(
     # 1. Collect all unique source_prefixes and deployable packages
     all_prefixes: set[str] = set()
     deployable_packages: set[str] = set()
-    for spec_key in ("install_specs", "config_specs", "wheel_specs", "service_specs"):
+    for spec_key in ("install_specs", "config_specs", "service_specs"):
         for spec in manifest_data.get(spec_key, []):
             prefix = spec.get("source_prefix", "")
             if prefix:
@@ -1609,12 +1185,19 @@ def _compute_deploy_deps(
                 if stripped.startswith("packages/") or stripped.startswith("non-free/packages/"):
                     deployable_packages.add(stripped)
 
+    # Wheel packages are deployable too (by the wheel step), so install
+    # specs depending on them must keep watching their directories.
+    for prefix in manifest_data.get("wheel_prefixes", []):
+        stripped = prefix.rstrip("/")
+        if stripped.startswith("packages/") or stripped.startswith("non-free/packages/"):
+            deployable_packages.add(stripped)
+
     if not deployable_packages:
         return {}
 
     # 2. Build prefix → package_target lookup from all specs (skip empty)
     prefix_to_target: dict[str, str] = {}
-    for spec_key in ("install_specs", "config_specs", "wheel_specs", "service_specs"):
+    for spec_key in ("install_specs", "config_specs", "service_specs"):
         for spec in manifest_data.get(spec_key, []):
             prefix = spec.get("source_prefix", "")
             pkg_target = spec.get("package_target", "")
@@ -1734,12 +1317,12 @@ def main(spinner: Spinner | None = None) -> int:
     manual = _load_specs_from_toml(specs_path(), is_nonfree_checkout)
     _done(lbl, t0)
 
-    # 2. Auto-discover wheel and config specs from Bazel
+    # 2. Auto-discover wheel prefixes and config specs from Bazel
     try:
-        lbl = "Discovering py_wheel targets"
+        lbl = "Querying deploy wheel prefixes"
         t0 = _begin(lbl)
-        wheel_targets_map = _query_py_wheel_targets(repo_root)
-        _done(lbl, t0, f"{len(wheel_targets_map)} packages")
+        wheel_prefixes = _query_wheel_prefixes(repo_root)
+        _done(lbl, t0, f"{len(wheel_prefixes)} prefixes")
 
         lbl = "Discovering config targets"
         t0 = _begin(lbl)
@@ -1783,12 +1366,6 @@ def main(spinner: Spinner | None = None) -> int:
         _enrich_install_specs(manual.get("install_specs", []), pkg_data)
         _done(lbl, t0)
 
-        wheel_specs = _discover_wheel_specs(wheel_targets_map, repo_root, is_nonfree_checkout)
-        lbl = "Enriching wheel specs"
-        t0 = _begin(lbl)
-        _enrich_wheel_specs(wheel_specs, wheel_targets_map, repo_root)
-        _done(lbl, t0, f"{len(wheel_specs)} specs")
-
         # Query source file extensions for install specs (for categorization)
         lbl = "Querying install spec extensions"
         t0 = _begin(lbl)
@@ -1802,10 +1379,10 @@ def main(spinner: Spinner | None = None) -> int:
 
     # 3. Merge and validate
     manifest_data: dict[str, Any] = {
-        "_version": "2.0",
+        "_version": MANIFEST_VERSION,
         "config_specs": config_specs,
         "install_specs": manual["install_specs"],
-        "wheel_specs": wheel_specs,
+        "wheel_prefixes": wheel_prefixes,
         "service_specs": manual["service_specs"],
     }
 
@@ -1844,10 +1421,7 @@ def main(spinner: Spinner | None = None) -> int:
         assert spinner is not None
         spinner.stop()
 
-    n_specs = sum(
-        len(manifest_data[k])
-        for k in ("config_specs", "install_specs", "wheel_specs", "service_specs")
-    )
+    n_specs = sum(len(manifest_data[k]) for k in ("config_specs", "install_specs", "service_specs"))
     total_elapsed = _time.monotonic() - total_start
     output.info(
         f"Manifest generated in {total_elapsed:.1f}s ({n_specs} specs, {len(computed_deps)} deps)"

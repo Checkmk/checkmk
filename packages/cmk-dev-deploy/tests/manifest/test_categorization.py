@@ -144,13 +144,13 @@ class TestExtensionsToCategory:
 def _make_manifest(
     *,
     install_specs: list[dict[str, Any]] | None = None,
-    wheel_specs: list[dict[str, Any]] | None = None,
+    wheel_prefixes: list[str] | None = None,
     config_specs: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Build a minimal manifest_data dict for testing."""
     return {
         "install_specs": install_specs or [],
-        "wheel_specs": wheel_specs or [],
+        "wheel_prefixes": wheel_prefixes or [],
         "config_specs": config_specs or [],
         "service_specs": [],
     }
@@ -265,15 +265,11 @@ class TestComputeCategorizationRules:
         rules = _compute_categorization_rules(manifest, {})
         assert not any(r["prefix"] == "packages/unknown-pkg/" for r in rules)
 
-    def test_wheel_spec_python(self) -> None:
-        """Wheel spec produces PYTHON rule with .py extension."""
+    def test_wheel_prefix_python(self) -> None:
+        """Wheel prefix produces PYTHON rule with .py extension."""
         from cmk.dev_deploy.manifest.update import _compute_categorization_rules
 
-        manifest = _make_manifest(
-            wheel_specs=[
-                {"source_prefix": "packages/cmk-ccc"},
-            ]
-        )
+        manifest = _make_manifest(wheel_prefixes=["packages/cmk-ccc/"])
         rules = _compute_categorization_rules(manifest, {})
         assert any(
             r["prefix"] == "packages/cmk-ccc/"
@@ -283,15 +279,11 @@ class TestComputeCategorizationRules:
         )
 
     def test_cmk_shared_typing_dual_rules(self) -> None:
-        """cmk-shared-typing produces both PYTHON (.py) and VUE (.ts) rules."""
+        """cmk-shared-typing gets a PYTHON (.py) rule plus the VUE (.ts) rule from the TOML."""
         from cmk.dev_deploy.manifest.update import _compute_categorization_rules
 
-        manifest = _make_manifest(
-            wheel_specs=[
-                {"source_prefix": "packages/cmk-shared-typing"},
-            ]
-        )
-        rules = _compute_categorization_rules(manifest, {})
+        manifest = _make_manifest(wheel_prefixes=["packages/cmk-shared-typing/"])
+        rules = _compute_categorization_rules(manifest, {}, _load_toml_supplementary())
         st_rules = [r for r in rules if r["prefix"] == "packages/cmk-shared-typing/"]
         categories = {r["category"] for r in st_rules}
         assert "python" in categories
@@ -375,11 +367,7 @@ class TestComputeCategorizationRules:
         """Catch-all packages/ sorts after specific package prefixes."""
         from cmk.dev_deploy.manifest.update import _compute_categorization_rules
 
-        manifest = _make_manifest(
-            wheel_specs=[
-                {"source_prefix": "packages/cmk-ccc"},
-            ]
-        )
+        manifest = _make_manifest(wheel_prefixes=["packages/cmk-ccc/"])
         rules = _compute_categorization_rules(manifest, {}, _load_toml_supplementary())
         prefixes = [r["prefix"] for r in rules]
         specific_idx = prefixes.index("packages/cmk-ccc/")
@@ -411,9 +399,7 @@ class TestComputeCategorizationRules:
                 {"source_prefix": "packages/cmk-frontend-vue", "frontend_supervised": True},
                 {"source_prefix": "packages/cmk-frontend", "frontend_supervised": False},
             ],
-            wheel_specs=[
-                {"source_prefix": "packages/cmk-ccc"},
-            ],
+            wheel_prefixes=["packages/cmk-ccc/"],
         )
         extensions = {
             "packages/cmk-frontend-vue": frozenset({".vue", ".ts", ".tsx", ".js"}),
@@ -444,12 +430,8 @@ class TestComputeCategorizationRules:
         """Rules with same prefix but different extensions are both emitted."""
         from cmk.dev_deploy.manifest.update import _compute_categorization_rules
 
-        manifest = _make_manifest(
-            wheel_specs=[
-                {"source_prefix": "packages/cmk-shared-typing"},
-            ]
-        )
-        rules = _compute_categorization_rules(manifest, {})
+        manifest = _make_manifest(wheel_prefixes=["packages/cmk-shared-typing/"])
+        rules = _compute_categorization_rules(manifest, {}, _load_toml_supplementary())
         st_rules = [r for r in rules if r["prefix"] == "packages/cmk-shared-typing/"]
         assert len(st_rules) == 2
         ext_sets = [frozenset(r["extensions"]) for r in st_rules]

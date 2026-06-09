@@ -51,15 +51,13 @@ def _mock_specs(
         spec.files = tuple(Mock(src=src) for src in files)
         config_specs.append(spec)
 
-    wheel_specs = []
-    for pkg in wheel_packages:
-        spec = Mock()
-        spec.package = pkg
-        wheel_specs.append(spec)
+    wheel_prefixes = tuple(pkg + "/" for pkg in wheel_packages)
 
     monkeypatch.setattr("cmk.dev_deploy.manifest.registry.get_install_specs", lambda: install_specs)
     monkeypatch.setattr("cmk.dev_deploy.manifest.registry.get_config_specs", lambda: config_specs)
-    monkeypatch.setattr("cmk.dev_deploy.manifest.registry.get_wheel_specs", lambda: wheel_specs)
+    monkeypatch.setattr(
+        "cmk.dev_deploy.manifest.registry.get_wheel_prefixes", lambda: wheel_prefixes
+    )
 
 
 # ---------------------------------------------------------------------------

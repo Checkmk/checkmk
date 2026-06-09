@@ -24,8 +24,6 @@ from cmk.dev_deploy.types import (
     ServiceAction,
     ServiceSpec,
     SiteInfo,
-    WheelDeployMode,
-    WheelDeploySpec,
 )
 
 # ---------------------------------------------------------------------------
@@ -72,17 +70,6 @@ def _bazel_target(package: str, label: str | None = None) -> BazelTarget:
     )
 
 
-def _wheel_spec(package: str) -> WheelDeploySpec:
-    return WheelDeploySpec(
-        package=package,
-        wheel_targets=(f"//{package}:wheel",),
-        edition_constraint=None,
-        deploy_mode=WheelDeployMode.DIRECT,
-        source_subdirs=(),
-        distribution_name=package.replace("/", "-"),
-    )
-
-
 def _config_spec(
     source_prefix: str,
     services: tuple[tuple[Service, ServiceAction], ...] = (),
@@ -104,7 +91,7 @@ def _patch_specs(
     monkeypatch: pytest.MonkeyPatch,
     *,
     service_specs: list[ServiceSpec] | None = None,
-    wheel_specs: list[WheelDeploySpec] | None = None,
+    wheel_prefixes: tuple[str, ...] = (),
     config_specs: list[ConfigDeploySpec] | None = None,
 ) -> None:
     """Patch all three spec getters used by resolve_services()."""
@@ -113,8 +100,8 @@ def _patch_specs(
         lambda: service_specs or [],
     )
     monkeypatch.setattr(
-        "cmk.dev_deploy.manifest.reader.get_wheel_specs",
-        lambda: wheel_specs or [],
+        "cmk.dev_deploy.manifest.reader.get_wheel_prefixes",
+        lambda: wheel_prefixes,
     )
     monkeypatch.setattr(
         "cmk.dev_deploy.manifest.reader.get_config_specs",
@@ -390,7 +377,7 @@ class TestWheelConventionDefault:
         """File under a wheel prefix -> apache:reload + automation-helper + cmc."""
         _patch_specs(
             monkeypatch,
-            wheel_specs=[_wheel_spec("packages/cmk-ccc")],
+            wheel_prefixes=("packages/cmk-ccc/",),
         )
         changes = _changeset(files=("packages/cmk-ccc/foo.py",))
         result = resolve_services(changes, None, _site())
@@ -404,7 +391,7 @@ class TestWheelConventionDefault:
         """CRE strips cmc via edition gating, leaving apache + automation-helper."""
         _patch_specs(
             monkeypatch,
-            wheel_specs=[_wheel_spec("packages/cmk-ccc")],
+            wheel_prefixes=("packages/cmk-ccc/",),
         )
         changes = _changeset(files=("packages/cmk-ccc/foo.py",))
         result = resolve_services(changes, None, _site(Edition.COMMUNITY))
@@ -424,7 +411,7 @@ class TestWheelConventionDefault:
                     edition_constraint=None,
                 ),
             ],
-            wheel_specs=[_wheel_spec("packages/cmk-ec")],
+            wheel_prefixes=("packages/cmk-ec/",),
         )
         changes = _changeset(files=("packages/cmk-ec/foo.py",))
         result = resolve_services(changes, None, _site())
@@ -441,7 +428,7 @@ class TestWheelConventionDefault:
                     edition_constraint=None,
                 ),
             ],
-            wheel_specs=[_wheel_spec("cmk")],
+            wheel_prefixes=("cmk/",),
         )
         changes = _changeset(files=("cmk/base/config.py",))
         result = resolve_services(changes, None, _site())
@@ -452,7 +439,7 @@ class TestWheelConventionDefault:
         """File not under any wheel or config spec -> no services."""
         _patch_specs(
             monkeypatch,
-            wheel_specs=[_wheel_spec("packages/cmk-ccc")],
+            wheel_prefixes=("packages/cmk-ccc/",),
         )
         changes = _changeset(files=("some/random/file.txt",))
         result = resolve_services(changes, None, _site())
@@ -462,10 +449,7 @@ class TestWheelConventionDefault:
         """Multiple files under different wheels still produce a single default set."""
         _patch_specs(
             monkeypatch,
-            wheel_specs=[
-                _wheel_spec("packages/cmk-ccc"),
-                _wheel_spec("packages/cmk-crypto"),
-            ],
+            wheel_prefixes=("packages/cmk-ccc/", "packages/cmk-crypto/"),
         )
         changes = _changeset(
             files=(
@@ -484,7 +468,7 @@ class TestWheelConventionDefault:
         """Bazel target matching also falls through to wheel convention."""
         _patch_specs(
             monkeypatch,
-            wheel_specs=[_wheel_spec("packages/cmk-ccc")],
+            wheel_prefixes=("packages/cmk-ccc/",),
         )
         targets = _target_set(
             targets=(_bazel_target("packages/cmk-ccc"),),
@@ -503,7 +487,7 @@ class TestWheelConventionDefault:
         """Wheel convention only fires when wheel_spec is in deployed_deployers."""
         _patch_specs(
             monkeypatch,
-            wheel_specs=[_wheel_spec("packages/cmk-ccc")],
+            wheel_prefixes=("packages/cmk-ccc/",),
         )
         changes = _changeset(
             files=("packages/cmk-ccc/foo.py",),

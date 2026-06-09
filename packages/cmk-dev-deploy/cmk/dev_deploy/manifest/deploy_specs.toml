@@ -40,6 +40,12 @@ prefix = "packages/mk-sql/"
 category = "rust"
 extensions = [".rs"]
 
+# cmk-shared-typing .ts files are consumed by cmk-frontend-vue
+[[categorization]]
+prefix = "packages/cmk-shared-typing/"
+category = "vue"
+extensions = [".ts"]
+
 # Catch-all: notification scripts (no per-file spec)
 [[categorization]]
 prefix = "notifications/"

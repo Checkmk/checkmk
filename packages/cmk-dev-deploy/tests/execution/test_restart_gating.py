@@ -105,7 +105,7 @@ def _make_targets(packages: tuple[str, ...]) -> BazelTargetSet:
 
 
 @patch("cmk.dev_deploy.manifest.reader.get_config_specs", return_value=())
-@patch("cmk.dev_deploy.manifest.reader.get_wheel_specs", return_value=())
+@patch("cmk.dev_deploy.manifest.reader.get_wheel_prefixes", return_value=())
 @patch(
     "cmk.dev_deploy.manifest.reader.get_service_specs",
     return_value=_TEST_SERVICE_SPECS,

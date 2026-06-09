@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from cmk.dev_deploy.manifest.deps import expand_dependencies, extract_changed_dirs
+from cmk.dev_deploy.manifest.deps import expand_dependencies
 
 _GET_DEPLOY_DEPS = "cmk.dev_deploy.manifest.reader.get_deploy_deps"
 
@@ -96,68 +96,3 @@ class TestExpandDependencies:
         with patch(_GET_DEPLOY_DEPS, return_value=deps):
             result = expand_dependencies({"packages/a/"})
         assert result == {"packages/a/", "packages/b/", "packages/c/", "packages/d/"}
-
-
-# ---------------------------------------------------------------------------
-# extract_changed_dirs
-# ---------------------------------------------------------------------------
-
-
-class TestExtractChangedDirs:
-    """Tests for extract_changed_dirs()."""
-
-    def test_empty_files_returns_empty(self) -> None:
-        """No files produces empty result."""
-        with patch(_GET_DEPLOY_DEPS, return_value={"packages/a/": []}):
-            assert extract_changed_dirs(()) == set()
-
-    def test_file_matches_no_key_returns_empty(self) -> None:
-        """File that does not start with any deploy_deps key is ignored."""
-        deps: dict[str, list[str]] = {"packages/a/": []}
-        with patch(_GET_DEPLOY_DEPS, return_value=deps):
-            result = extract_changed_dirs(("unrelated/foo.py",))
-        assert result == set()
-
-    def test_file_matches_a_key(self) -> None:
-        """File starting with a deploy_deps key returns that key."""
-        deps: dict[str, list[str]] = {"packages/a/": []}
-        with patch(_GET_DEPLOY_DEPS, return_value=deps):
-            result = extract_changed_dirs(("packages/a/src/main.py",))
-        assert result == {"packages/a/"}
-
-    def test_longest_prefix_wins(self) -> None:
-        """When multiple keys match, the longest prefix is selected."""
-        deps: dict[str, list[str]] = {
-            "packages/": [],
-            "packages/a/": [],
-            "packages/a/sub/": [],
-        }
-        with patch(_GET_DEPLOY_DEPS, return_value=deps):
-            result = extract_changed_dirs(("packages/a/sub/file.py",))
-        assert result == {"packages/a/sub/"}
-
-    def test_multiple_files_same_dir_returns_dir_once(self) -> None:
-        """Multiple files under the same key produce a single entry."""
-        deps: dict[str, list[str]] = {"cmk/gui/": []}
-        with patch(_GET_DEPLOY_DEPS, return_value=deps):
-            result = extract_changed_dirs(
-                ("cmk/gui/views.py", "cmk/gui/models.py", "cmk/gui/utils.py")
-            )
-        assert result == {"cmk/gui/"}
-
-    def test_multiple_files_different_dirs(self) -> None:
-        """Files in different dirs produce all matching dirs."""
-        deps: dict[str, list[str]] = {
-            "cmk/gui/": [],
-            "cmk/base/": [],
-        }
-        with patch(_GET_DEPLOY_DEPS, return_value=deps):
-            result = extract_changed_dirs(("cmk/gui/views.py", "cmk/base/core.py"))
-        assert result == {"cmk/gui/", "cmk/base/"}
-
-    def test_mixed_matching_and_unmatched(self) -> None:
-        """Only files matching a key are included; others silently ignored."""
-        deps: dict[str, list[str]] = {"cmk/gui/": []}
-        with patch(_GET_DEPLOY_DEPS, return_value=deps):
-            result = extract_changed_dirs(("cmk/gui/views.py", "README.md", "tests/conftest.py"))
-        assert result == {"cmk/gui/"}

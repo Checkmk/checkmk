@@ -171,11 +171,11 @@ class TestCollectManifestState:
 
     def test_manifest_found(self, tmp_path: Path) -> None:
         manifest = tmp_path / "deploy_manifest.json"
-        manifest.write_text(json.dumps({"wheel_specs": [1, 2, 3], "config_specs": [1]}))
+        manifest.write_text(json.dumps({"wheel_prefixes": [1, 2, 3], "config_specs": [1]}))
         with patch("cmk.dev_deploy.manifest.reader.manifest_path", return_value=manifest):
             state = _collect_manifest_state()
         assert state["manifest_exists"] is True
-        assert state["manifest_spec_count"]["wheel_specs"] == 3
+        assert state["manifest_spec_count"]["wheel_prefixes"] == 3
         assert state["manifest_spec_count"]["config_specs"] == 1
 
 

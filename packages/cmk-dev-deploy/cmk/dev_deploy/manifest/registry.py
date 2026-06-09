@@ -14,7 +14,7 @@ from __future__ import annotations
 from cmk.dev_deploy.manifest.reader import (
     get_config_specs,
     get_install_specs,
-    get_wheel_specs,
+    get_wheel_prefixes,
 )
 
 
@@ -35,7 +35,7 @@ def _registered_coverage() -> tuple[frozenset[str], frozenset[str]]:
     deploys it.
     """
     install_dirs = frozenset(spec.package + "/" for spec in get_install_specs())
-    wheel_dirs = frozenset(spec.package + "/" for spec in get_wheel_specs())
+    wheel_dirs = frozenset(get_wheel_prefixes())
 
     config_dirs: set[str] = set()
     config_files: set[str] = set()

@@ -93,15 +93,14 @@ def resolve_services(
     from cmk.dev_deploy.manifest.reader import (
         get_config_specs,
         get_service_specs,
-        get_wheel_specs,
+        get_wheel_prefixes,
     )
 
     all_service_specs = get_service_specs()
-    all_wheel_specs = get_wheel_specs()
     all_config_specs = get_config_specs()
 
-    # Pre-compute wheel prefixes for tier-2 matching
-    wheel_prefixes = tuple(ws.package + "/" for ws in all_wheel_specs)
+    # Wheel prefixes for tier-2 matching
+    wheel_prefixes = get_wheel_prefixes()
 
     raw: list[tuple[Service, ServiceAction]] = []
 

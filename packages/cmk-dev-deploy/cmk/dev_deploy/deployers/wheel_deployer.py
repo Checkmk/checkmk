@@ -22,7 +22,7 @@ from cmk.dev_deploy.core import output
 from cmk.dev_deploy.core.subprocess_utils import run_checked
 from cmk.dev_deploy.core.timeouts import BAZEL_BUILD
 from cmk.dev_deploy.errors import WheelDeployError
-from cmk.dev_deploy.manifest.reader import get_wheel_specs
+from cmk.dev_deploy.manifest.reader import get_wheel_prefixes
 from cmk.dev_deploy.types import ChangeSet, SiteInfo, WheelDeployResult
 
 DEPLOY_PYTHON_TARGET = "//:deploy-python"
@@ -30,7 +30,7 @@ DEPLOY_PYTHON_TARGET = "//:deploy-python"
 
 def wheel_prefixes() -> tuple[str, ...]:
     """Source-tree prefixes covered by wheel deployment."""
-    return tuple(spec.package + "/" for spec in get_wheel_specs())
+    return get_wheel_prefixes()
 
 
 def has_wheel_changes(changes: ChangeSet | None) -> bool:

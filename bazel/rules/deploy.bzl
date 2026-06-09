@@ -80,11 +80,99 @@ deploy_python = macro(
     implementation = _deploy_python_impl,
 )
 
-# NOTE: omd/BUILD contains similar, but slightly different lists of artifacts
-# which define what goes into a given edition. We should somehow remove this
-# duplication. In the end, there should be a single source of truth for
-# deployment and building a distro package regarding what actually constitutes
-# an edition.
+_ProductWheelsInfo = provider(
+    doc = "Transitive py_wheel labels found in the product's dependency graph.",
+    fields = {"labels": "depset of label strings"},
+)
+
+def _product_wheels_aspect_impl(target, ctx):
+    own = []
+    if PyWheelInfo in target and not target.label.workspace_name:
+        # External wheels are skipped: they are not built from this repo.
+        own.append("//{}:{}".format(target.label.package, target.label.name))
+
+    transitive = []
+    for attr_name in dir(ctx.rule.attr):
+        value = getattr(ctx.rule.attr, attr_name, None)
+        if type(value) == "Target":
+            deps = [value]
+        elif type(value) == "list":
+            deps = [v for v in value if type(v) == "Target"]
+        elif type(value) == "dict":
+            deps = [k for k in value.keys() if type(k) == "Target"]
+        else:
+            continue
+        for dep in deps:
+            if _ProductWheelsInfo in dep:
+                transitive.append(dep[_ProductWheelsInfo].labels)
+
+    return [_ProductWheelsInfo(labels = depset(own, transitive = transitive))]
+
+_product_wheels_aspect = aspect(
+    implementation = _product_wheels_aspect_impl,
+    attr_aspects = ["*"],
+)
+
+def _deploy_python_drift_test_impl(ctx):
+    product = {
+        label.replace("wheel-for-pkg_tar-", "wheel-for-f12-"): None
+        for label in ctx.attr.product[_ProductWheelsInfo].labels.to_list()
+    }
+    deployed = {
+        "//{}:{}".format(whl.label.package, whl.label.name): None
+        for whl in ctx.attr.whls
+    }
+
+    product_file = ctx.actions.declare_file(ctx.label.name + ".product")
+    ctx.actions.write(product_file, "\n".join(sorted(product)) + "\n")
+    deployed_file = ctx.actions.declare_file(ctx.label.name + ".deployed")
+    ctx.actions.write(deployed_file, "\n".join(sorted(deployed)) + "\n")
+
+    script = ctx.actions.declare_file(ctx.label.name + ".sh")
+    ctx.actions.write(script, """#!/bin/bash
+if ! diff -u "{product}" "{deployed}"; then
+    echo
+    echo "The edition wheel lists in bazel/rules/deploy.bzl drifted from the" 1>&2
+    echo "product definition (omd/BUILD). Update the lists to match the diff" 1>&2
+    echo "above ('-' = shipped but not deployed, '+' = deployed but not shipped)." 1>&2
+    exit 1
+fi
+""".format(
+        product = product_file.short_path,
+        deployed = deployed_file.short_path,
+    ), is_executable = True)
+
+    return [DefaultInfo(
+        executable = script,
+        runfiles = ctx.runfiles(files = [product_file, deployed_file]),
+    )]
+
+deploy_python_drift_test = rule(
+    implementation = _deploy_python_drift_test_impl,
+    attrs = {
+        "product": attr.label(
+            mandatory = True,
+            aspects = [_product_wheels_aspect],
+        ),
+        "whls": attr.label_list(providers = [PyWheelInfo]),
+    },
+    test = True,
+)
+
+# NOTE: omd/BUILD is the source of truth for what constitutes an edition.
+# The lists below must stay in sync with it; //:deploy-python-drift-test
+# fails with a diff when they drift. Two deliberate deviations:
+#
+# * The product ships the wheel-for-pkg_tar-* plugin wheels and adds the
+#   libexec files via a separate tar (CMK-27714 workaround, see
+#   packages/cmk-plugins/BUILD). We deploy the wheel-for-f12-* siblings,
+#   which carry the libexec files inside the wheel.
+# * External wheels (e.g. @rrdtool_native) are not deployed: they are not
+#   built from this repo, so they cannot change during development.
+#
+# Once CMK-27714 is fixed and the wheel duplication in cmk-plugins is gone,
+# these lists can be replaced by collecting the product's wheels directly
+# (see _product_wheels_aspect below).
 
 COMMUNITY_WHEELS = [
     "//cmk:whl",

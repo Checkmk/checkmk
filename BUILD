@@ -12,7 +12,7 @@ load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_multirun//:defs.bzl", "multirun")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
-load("//bazel/rules:deploy.bzl", "CLOUD_WHEELS", "COMMUNITY_WHEELS", "PRO_WHEELS", "ULTIMATEMT_WHEELS", "ULTIMATE_WHEELS", "deploy_python")
+load("//bazel/rules:deploy.bzl", "CLOUD_WHEELS", "COMMUNITY_WHEELS", "PRO_WHEELS", "ULTIMATEMT_WHEELS", "ULTIMATE_WHEELS", "deploy_python", "deploy_python_drift_test")
 load("//bazel/rules:proto.bzl", "proto_library_as")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
 
@@ -477,13 +477,21 @@ alias(
     actual = "//bazel/tools:buildifier.check",
 )
 
+EDITION_WHEELS = select({
+    "@cmk//edition:cloud": CLOUD_WHEELS,
+    "@cmk//edition:community": COMMUNITY_WHEELS,
+    "@cmk//edition:pro": PRO_WHEELS,
+    "@cmk//edition:ultimate": ULTIMATE_WHEELS,
+    "@cmk//edition:ultimatemt": ULTIMATEMT_WHEELS,
+})
+
 deploy_python(
     name = "deploy-python",
-    whls = select({
-        "@cmk//edition:cloud": CLOUD_WHEELS,
-        "@cmk//edition:community": COMMUNITY_WHEELS,
-        "@cmk//edition:pro": PRO_WHEELS,
-        "@cmk//edition:ultimate": ULTIMATE_WHEELS,
-        "@cmk//edition:ultimatemt": ULTIMATEMT_WHEELS,
-    }),
+    whls = EDITION_WHEELS,
+)
+
+deploy_python_drift_test(
+    name = "deploy-python-drift-test",
+    product = "//omd:deps_packages",
+    whls = EDITION_WHEELS,
 )

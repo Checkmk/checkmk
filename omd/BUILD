@@ -801,6 +801,9 @@ pkg_tar(
 pkg_tar(
     name = "deps_packages",
     tags = ["manual"],
+    # //:deploy-python-drift-test checks the deploy wheel lists against
+    # the wheels actually shipped via this target.
+    visibility = ["//:__pkg__"],
     deps = [
         ":deps_packages_base",
         "//omd/dependency_management:license_info",

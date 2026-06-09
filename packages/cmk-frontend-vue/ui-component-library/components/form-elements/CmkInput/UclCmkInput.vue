@@ -91,7 +91,6 @@ import {
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 
-import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -113,7 +112,7 @@ const propState = new PanelStateCreator<typeof CmkInput>().createRef(panelConfig
           :inline="propState.inline"
           :external-errors="propState.externalErrors ? [propState.externalErrors] : []"
         />
-        <CmkParagraph>Adjacent text to CmkInput </CmkParagraph>
+        Adjacent text to CmkInput
       </div>
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

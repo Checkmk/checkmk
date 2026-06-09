@@ -28,8 +28,8 @@ from cmk.checkengine.checkresults import (
 )
 from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.helper_interface import SourceType
-from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugins import CheckPluginName, FinalCheckResult
+from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.servicename import ServiceName
 
 

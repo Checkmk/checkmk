@@ -117,6 +117,20 @@ py_library(
     ],
 )
 
+py_library(
+    name = "specs",
+    srcs = glob([
+        "cmk/checkengine/specs/*.py",
+    ]),
+    data = ["cmk/checkengine/specs/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cmk/utils",
+        "//packages/cmk-ccc:debug",
+    ],
+)
+
 py_test(
     name = "fetchers-tests",
     size = "small",
@@ -165,6 +179,18 @@ py_test(
     ],
 )
 
+py_test(
+    name = "specs-tests",
+    size = "small",
+    srcs = glob(["tests/cmk/checkengine/specs/*.py"]) + [":__test__.py"],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "specs",
+        requirement("pytest"),
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-check-engine",
@@ -177,6 +203,7 @@ py_wheel(
         ":helper-interface",
         ":snmp-backends",
         ":snmplib",
+        ":specs",
     ],
 )
 
@@ -212,6 +239,7 @@ py_requirements_test(
         ":fetchers",
         ":helper-interface",
         ":snmplib",
+        ":specs",
     ],
     requirements_in = "requirements.in",
 )

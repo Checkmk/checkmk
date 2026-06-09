@@ -170,7 +170,6 @@ from cmk.checkengine.fetchers._utils.config import (
 from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
 from cmk.checkengine.fetchers.snmp_backend import make_backend as make_snmp_backend
 from cmk.checkengine.helper_interface import AgentRawData, FetcherError, FetcherType, SourceType
-from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.plugin_backend import (
     get_check_plugin,
@@ -195,6 +194,7 @@ from cmk.checkengine.snmplib import (
     SNMPVersion,
     walk_for_export,
 )
+from cmk.checkengine.specs.parameters import TimespecificParameters
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager

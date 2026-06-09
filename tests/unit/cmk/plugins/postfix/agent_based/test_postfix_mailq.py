@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.checkengine.parameters import Parameters
+from cmk.checkengine.specs.parameters import Parameters
 from cmk.plugins.postfix.agent_based.postfix_mailq import (
     check_postfix_mailq,
     DEFAULT_ITEM_NAME,

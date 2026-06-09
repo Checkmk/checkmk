@@ -20,6 +20,7 @@ py_library(
         "//packages/cmk-ccc:translations",
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:snmplib",
+        "//packages/cmk-check-engine:specs",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-trace",

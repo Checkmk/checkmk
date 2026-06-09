@@ -11,13 +11,13 @@ from typing import Protocol
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
-from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugin_backend import get_check_plugin
 from cmk.checkengine.plugins import (
     CheckPlugin,
     CheckPluginName,
     ServiceID,
 )
+from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.parameters import merge_parameters
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import Item, ServiceName

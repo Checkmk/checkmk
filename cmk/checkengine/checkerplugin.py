@@ -12,9 +12,9 @@ from typing import Protocol
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.checkengine.fetcher import HostKey
-from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.plugins import CheckPluginName, ParsedSectionName, ServiceID
 from cmk.checkengine.sectionparser import Provider
+from cmk.checkengine.specs.parameters import TimespecificParameters
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import Item, ServiceName
 

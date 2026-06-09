@@ -15,7 +15,6 @@ from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import ABCCheckingConfig, ServiceConfigurer
-from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugin_backend import get_check_plugin
 from cmk.checkengine.plugins import (
     AutocheckEntry,
@@ -25,6 +24,7 @@ from cmk.checkengine.plugins import (
     ServiceID,
 )
 from cmk.checkengine.plugins._common import LegacyPluginLocation
+from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID

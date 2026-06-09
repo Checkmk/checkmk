@@ -18,8 +18,8 @@ from typing import Any
 from cmk.agent_based.legacy.conversion import convert_legacy_results
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import Metric, Result, Service
-from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.plugins import CheckPlugin, FinalCheckResult, LegacyPluginLocation
+from cmk.checkengine.specs.parameters import Parameters
 
 from .check_plugins import create_check_plugin
 

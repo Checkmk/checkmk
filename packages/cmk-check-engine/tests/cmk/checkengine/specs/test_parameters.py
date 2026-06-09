@@ -7,7 +7,11 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.checkengine.parameters import Parameters, TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.specs.parameters import (
+    Parameters,
+    TimespecificParameters,
+    TimespecificParameterSet,
+)
 from cmk.utils.timeperiod import TimeperiodName
 
 
@@ -39,16 +43,17 @@ class TestTimespecificParameterSet:
         assert not tsp.timeperiod_values
 
     def test_evaluate_constant_reevaluates_to_itself(self) -> None:
-        assert TimespecificParameterSet(_default(), ()).evaluate(lambda x: True) == _default()
+        assert TimespecificParameterSet(_default(), ()).evaluate(lambda x: True) == _default()  # noqa: ARG005
 
     def test_evaluate_no_period_active(self) -> None:
         assert (
-            TimespecificParameterSet(_default(), _tp_values()).evaluate(lambda x: False)
+            TimespecificParameterSet(_default(), _tp_values()).evaluate(lambda x: False)  # noqa: ARG005
             == _default()
         )
 
     def test_evaluate_first_period_wins(self) -> None:
-        assert TimespecificParameterSet(_default(), _tp_values()).evaluate(lambda x: True) == {
+        always_true = lambda x: True  # noqa: ARG005
+        assert TimespecificParameterSet(_default(), _tp_values()).evaluate(always_true) == {
             "default": 42,
             "value": "from tp1",
         }
@@ -61,6 +66,7 @@ class TestTimespecificParameterSet:
 
 class TestTimespecificParameters:
     def test_first_key_wins(self) -> None:
+        always_true = lambda x: True  # noqa: ARG005
         assert TimespecificParameters(
             (
                 TimespecificParameterSet(
@@ -78,7 +84,7 @@ class TestTimespecificParameters:
                     ],
                 ),
             )
-        ).evaluate(lambda x: True) == {"key": "I am only default, but the most specific rule!"}
+        ).evaluate(always_true) == {"key": "I am only default, but the most specific rule!"}
 
     def test_keys_of_active_timeperiods_are_aggregated(self) -> None:
         assert set(

@@ -32,10 +32,6 @@ from cmk.checkengine.discovery._discover.host_labels import (
 )
 from cmk.checkengine.discovery.types import QualifiedDiscovery
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
-from cmk.checkengine.parameters import (
-    TimespecificParameters,
-    TimespecificParametersPreview,
-)
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.plugins import (
     AutocheckEntry,
@@ -51,6 +47,10 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
+from cmk.checkengine.specs.parameters import (
+    TimespecificParameters,
+    TimespecificParametersPreview,
+)
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console

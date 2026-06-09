@@ -80,7 +80,6 @@ from cmk.checkengine.fetchers import (
 from cmk.checkengine.fetchers._utils.config import make_persisted_section_dir
 from cmk.checkengine.fetchers.filecache import FileCache, FileCacheOptions, MaxAge, NoCache
 from cmk.checkengine.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
-from cmk.checkengine.parameters import Parameters, ParametersTypeAlias
 from cmk.checkengine.parser import HostSections, parse_raw_data, SectionNameCollection
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
@@ -105,6 +104,7 @@ from cmk.checkengine.sectionparserutils import (
     get_section_kwargs,
 )
 from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPRawData
+from cmk.checkengine.specs.parameters import Parameters, ParametersTypeAlias
 from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
 from cmk.checkengine.value_store import ValueStoreManager

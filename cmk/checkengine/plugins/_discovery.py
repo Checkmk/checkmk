@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import NamedTuple, TypedDict
 
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.parameters import Parameters
+from cmk.checkengine.specs.parameters import Parameters
 from cmk.utils.servicename import Item
 
 from ._check import CheckPluginName, ServiceID

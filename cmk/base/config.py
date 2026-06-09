@@ -97,7 +97,6 @@ from cmk.checkengine.fetchers._utils.config import make_persisted_section_dir
 from cmk.checkengine.fetchers.filecache import MaxAge
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
-from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.checkengine.plugin_backend.section_plugins_legacy import (
     convert_legacy_sections,
@@ -123,6 +122,7 @@ from cmk.checkengine.snmplib import (  # some of these are required in the modul
     SNMPTiming,
     SNMPVersion,
 )
+from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
 from cmk.inventory.structured_data import RawIntervalFromConfig
 from cmk.password_store.v1_unstable import Secret

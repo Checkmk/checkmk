@@ -133,6 +133,7 @@ py_library(
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:snmplib",
+        "//packages/cmk-check-engine:specs",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-plugin-apis:agent_based",
     ],
@@ -159,6 +160,7 @@ py_library(
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:snmplib",
+        "//packages/cmk-check-engine:specs",
         "//packages/cmk-plugin-apis:password_store",
     ],
 )

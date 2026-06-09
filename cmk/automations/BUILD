@@ -25,6 +25,7 @@ py_library(
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-check-engine:specs",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-trace",
         requirement("requests"),

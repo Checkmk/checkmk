@@ -28,7 +28,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     :value="row.name"
     :linked-to="{
       href: `view.py?host=${row.name}&view_name=host`,
-      target: 'main',
+      target: '_top',
       variant: 'icon'
     }"
   />
@@ -40,7 +40,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     :highlight="OK_HIGHLIGHT"
     :linked-to="{
       href: `view.py?host=${row.name}&view_name=host_ok`,
-      target: 'main'
+      target: '_top'
     }"
   />
   <NumberCell
@@ -49,7 +49,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     :highlight="WARN_HIGHLIGHT"
     :linked-to="{
       href: `view.py?host=${row.name}&view_name=host_warn`,
-      target: 'main'
+      target: '_top'
     }"
   />
   <NumberCell
@@ -58,7 +58,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     :highlight="CRIT_HIGHLIGHT"
     :linked-to="{
       href: `view.py?host=${row.name}&view_name=host_crit`,
-      target: 'main'
+      target: '_top'
     }"
   />
   <NumberCell
@@ -67,7 +67,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     :highlight="UNKNOWN_HIGHLIGHT"
     :linked-to="{
       href: `view.py?host=${row.name}&view_name=host_unknown`,
-      target: 'main'
+      target: '_top'
     }"
   />
   <NumberCell
@@ -76,7 +76,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     :highlight="PENDING_HIGHLIGHT"
     :linked-to="{
       href: `view.py?host=${row.name}&view_name=host_pending`,
-      target: 'main'
+      target: '_top'
     }"
   />
 </template>

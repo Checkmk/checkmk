@@ -90,11 +90,15 @@ class DisplayOptions:
         # not be added to the URLs. So the real parameters need to be preserved for this case.
         self.title_options = request.get_ascii_input("display_options")
 
-        # If display option 'M' is set, then all links are targetet to the 'main'
-        # frame. Also the display options are removed since the view in the main
-        # frame should be displayed in standard mode.
+        # If display option 'M' is set, then all links break out to the top
+        # frame. Also the display options are removed since the view in the
+        # top frame should be displayed in standard mode. (Pre-iframe-removal
+        # this targeted the named 'main' iframe; that frame no longer exists,
+        # so links from embedded views, e.g. dashlet widget iframes, must use
+        # '_top' to navigate the surrounding page instead of opening a blank
+        # window named 'main'.)
         if self.disabled(self.M):
-            html.link_target = "main"
+            html.link_target = "_top"
             request.del_var("display_options")
 
     # If all display_options are upper case assume all not given values default

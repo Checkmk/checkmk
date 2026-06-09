@@ -113,6 +113,26 @@ def test_parse_graph_from_api_uses_localizer() -> None:
     assert parsed.title == "<t>"
 
 
+def test_parse_graph_from_api_parses_a_metric_valued_minimal_range_bound() -> None:
+    graph = graphs_v1.Graph(
+        name="g",
+        title=Title("t"),
+        # The lower bound references a metric rather than a fixed value.
+        minimal_range=graphs_v1.MinimalRange("a", 100),
+        simple_lines=["a"],
+    )
+    parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, _METRICS)
+    assert isinstance(parsed, Graph)
+    assert parsed.vertical_range == MinimalRange(lower=_metric("a"), upper=100)
+
+
+def test_parse_graph_from_api_threshold_uses_fallback_color_for_undefined_metric() -> None:
+    graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=[metrics_v1.WarningOf("u")])
+    parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, {})
+    assert isinstance(parsed, Graph)
+    assert parsed.simple_lines == [WarningOf(metric=_rrd("u"), color="#8c8c8c")]
+
+
 def test_parse_graph_from_api_bakes_metric_attributes_into_the_leaf() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
     parsed = parse_graph_from_api(

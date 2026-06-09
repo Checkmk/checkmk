@@ -7,12 +7,14 @@ from collections.abc import Mapping, Sequence
 
 from cmk.graphing_engine import (
     AutoPrecision,
+    Bidirectional,
     CommonOptions,
     ConsolidationFunction,
     DecimalNotation,
     discover_explicit_graphs,
     ExplicitDiscoveryOptions,
     ExplicitOptions,
+    FixedRange,
     Graph,
     Metric,
     MetricName,
@@ -148,3 +150,58 @@ def test_discover_explicit_graphs_omits_scalars_for_metrics_not_in_translated_me
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
     assert rendered.scalars == {}
+
+
+def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> None:
+    service = _service()
+    if_in = MetricName("if_in")
+    if_out = MetricName("if_out")
+    inline = Bidirectional(
+        name="if",
+        title="Interface",
+        lower=Graph(name="in", title="In", simple_lines=[_metric(if_in)]),
+        upper=Graph(name="out", title="Out", simple_lines=[_metric(if_out)]),
+    )
+    options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
+    if_in_bounds = Scalars(warning=10.0)
+    rrd = _FakeFetchRRD(
+        translated_metrics_response={
+            service: {
+                if_in: TranslatedMetric(
+                    name=if_in,
+                    value=1.0,
+                    bounds=if_in_bounds,
+                    originals=[RRDSource(service=service, metric_name=if_in, scale=1.0)],
+                ),
+                # if_out has no bounds, so it contributes no scalars.
+                if_out: TranslatedMetric(
+                    name=if_out,
+                    value=2.0,
+                    bounds=Scalars(),
+                    originals=[RRDSource(service=service, metric_name=if_out, scale=1.0)],
+                ),
+            }
+        }
+    )
+
+    [rendered] = discover_explicit_graphs(options, rrd=rrd)
+
+    assert rendered.scalars == {_rrd(if_in): if_in_bounds}
+
+
+def test_discover_explicit_graphs_passes_through_a_fixed_vertical_range() -> None:
+    service = _service()
+    inline = Graph(
+        name="g",
+        title="g",
+        vertical_range=FixedRange(lower=0, upper=100),
+        simple_lines=[_metric(MetricName("a"))],
+    )
+    options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
+    rrd = _FakeFetchRRD(translated_metrics_response={service: {}})
+
+    [rendered] = discover_explicit_graphs(options, rrd=rrd)
+
+    assert rendered.graph is inline
+    assert isinstance(rendered.graph, Graph)
+    assert rendered.graph.vertical_range == FixedRange(lower=0, upper=100)

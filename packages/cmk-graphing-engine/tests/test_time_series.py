@@ -7,6 +7,7 @@ from collections.abc import Mapping, Sequence
 
 from cmk.graphing_engine import (
     AutoPrecision,
+    Bidirectional,
     CommonOptions,
     ConsolidationFunction,
     DecimalNotation,
@@ -193,3 +194,25 @@ def test_multiple_requests_yield_one_mapping_each_in_order() -> None:
     results = fetch_time_series([request_x, request_y], rrd=rrd)
 
     assert results == [{x: x_series}, {y: y_series}]
+
+
+def test_fetches_metrics_from_both_halves_of_a_bidirectional() -> None:
+    service = _service()
+    in_ = _rrd("if_in")
+    out = _rrd("if_out")
+    in_key = RRDSource(service=service, metric_name=in_.metric_name, scale=1.0)
+    out_key = RRDSource(service=service, metric_name=out.metric_name, scale=1.0)
+    in_series = _series(1.0)
+    out_series = _series(2.0)
+    graph = Bidirectional(
+        name="if",
+        title="Interface",
+        lower=Graph(name="in", title="In", simple_lines=[_line(in_)]),
+        upper=Graph(name="out", title="Out", simple_lines=[_line(out)]),
+    )
+    request = GraphRequest(graph=graph, common=_common(), service=service)
+    rrd = _FakeFetchRRD(time_series_response={in_key: in_series, out_key: out_series})
+
+    [data] = fetch_time_series([request], rrd=rrd)
+
+    assert data == {in_: in_series, out: out_series}

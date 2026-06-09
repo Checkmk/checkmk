@@ -3037,7 +3037,7 @@ def _automation_diag_snmp(
     app: CheckmkBaseApp,
     args: list[str],
     _plugins: AgentBasedPlugins | None,
-    _loading_result: config.LoadingResult | None,
+    loading_result: config.LoadingResult | None,
 ) -> DiagSnmpResult:
     diag_input = DiagSnmpInput.deserialize(sys.stdin.read())
     ip_address = diag_input.ip_address
@@ -3075,7 +3075,11 @@ def _automation_diag_snmp(
     elif diag_input.snmp_community:
         credentials = diag_input.snmp_community
     else:
-        credentials = config.snmp_default_community
+        loading_result = loading_result or load_config(
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            edition=app.edition,
+        )
+        credentials = loading_result.loaded_config.snmp_default_community
 
     # Determine SNMP version
     if diag_input.snmpv3_use is not None:
@@ -3260,6 +3264,7 @@ class AutomationDiagHost:
                         snmpv3_security_password,
                         snmpv3_privacy_proto,
                         snmpv3_privacy_password,
+                        env.loaded_config.snmp_default_community,
                         env.loaded_config.explicit_snmp_communities,
                     )
                 )
@@ -3511,6 +3516,7 @@ class AutomationDiagHost:
         snmpv3_security_password: str | None,
         snmpv3_privacy_proto: str | None,
         snmpv3_privacy_password: str | None,
+        default_snmp_community: str,
         explicit_snmp_communities: Mapping[HostName | HostAddress, object],
     ) -> tuple[int, str]:
         # SNMPv3 tuples
@@ -3560,7 +3566,7 @@ class AutomationDiagHost:
             credentials = snmp_community or (
                 snmp_config.credentials
                 if isinstance(snmp_config.credentials, str)
-                else config.snmp_default_community
+                else default_snmp_community
             )
 
         # Determine SNMPv2/v3 community

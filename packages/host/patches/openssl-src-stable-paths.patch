@@ -1,0 +1,65 @@
+# SUP-28810: bake stable FHS paths into the vendored OpenSSL built by openssl-src.
+#
+# openssl-src configures OpenSSL with --prefix=<crate OUT_DIR>, so the per-build
+# sandbox path leaks into libcrypto's ENGINESDIR/MODULESDIR/OPENSSLDIR strings and
+# into the statically linked agent binaries (tripping package_validator). Mirror
+# omd/packages/openssl "bake stable FHS paths into libcrypto.a": configure with a
+# stable --prefix=/usr, install the real artifacts into OUT_DIR via DESTDIR, and
+# report the relocated usr/{lib,bin,include} layout back to openssl-sys.
+# OPENSSLDIR is handled separately via OPENSSL_CONFIG_DIR=/etc/ssl.
+#
+# FHS (/usr, /etc/ssl) is deliberate, NOT an OMD namespace (/omd/versions/...).
+# This matches the static-archive case in omd/packages/openssl (the
+# openssl_static target): the baked strings are dead under correct operation --
+# the statically linked consumers here (cmk-agent-ctl, mk-sql) never read openssl
+# config files nor dlopen engines/providers, so the paths only need to be
+# deterministic and non-leaking. The OMD namespace is reserved for the shared
+# libcrypto.so loaded at runtime inside a site; the agent binaries ship to
+# monitored hosts that have no /omd tree, so FHS is the correct choice.
+#
+# Applied to a build-time copy of the locked openssl-src crate by
+# patch-vendored-openssl-src.sh. The hunks are anchored on src/lib.rs context; a
+# crate upgrade that moves them makes `patch` fail loudly rather than silently
+# shipping leaked paths.
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -175,7 +175,7 @@
+                     .replace("\\", "/")
+             ));
+         } else {
+-            configure.arg(&format!("--prefix={}", install_dir.display()));
++            configure.arg("--prefix=/usr"); // SUP-28810
+         }
+
+         // Specify that openssl directory where things are loaded at runtime is
+@@ -610,7 +610,7 @@
+
+             let mut install =
+                 cc::windows_registry::find(target, "nmake.exe").ok_or("failed to find nmake")?;
+-            install.arg("install_dev").current_dir(&inner_dir);
++            install.arg("install_dev").arg(format!("DESTDIR={}", install_dir.display())).current_dir(&inner_dir);
+             self.run_command(install, "installing OpenSSL")?;
+         } else {
+             let mut depend = self.cmd_make()?;
+@@ -634,7 +634,7 @@
+             self.run_command(build, "building OpenSSL")?;
+
+             let mut install = self.cmd_make()?;
+-            install.arg("install_dev").current_dir(&inner_dir);
++            install.arg("install_dev").arg(format!("DESTDIR={}", install_dir.display())).current_dir(&inner_dir);
+             self.run_command(install, "installing OpenSSL")?;
+         }
+
+@@ -647,9 +647,9 @@
+         fs::remove_dir_all(&inner_dir).map_err(|e| format!("{}: {e}", inner_dir.display()))?;
+
+         Ok(Artifacts {
+-            lib_dir: install_dir.join("lib"),
+-            bin_dir: install_dir.join("bin"),
+-            include_dir: install_dir.join("include"),
++            lib_dir: install_dir.join("usr").join("lib"),
++            bin_dir: install_dir.join("usr").join("bin"),
++            include_dir: install_dir.join("usr").join("include"),
+             libs: libs,
+             target: target.to_string(),
+         })

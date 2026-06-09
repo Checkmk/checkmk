@@ -1,1 +1,3 @@
 target/
+# SUP-28810: path-stabilised vendored openssl-src copy (see patch-vendored-openssl-src.sh)
+.sup28810/

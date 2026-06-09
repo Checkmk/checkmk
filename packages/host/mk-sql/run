@@ -149,6 +149,13 @@ $RUSTFLAGS \
 --remap-path-prefix=${REPO_DIR}=/builddir \
 --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo-home"
     export RUSTFLAGS
+
+    # SUP-28810: redirect the vendored `openssl-src` crate at a path-stabilised
+    # copy so OpenSSL's ENGINESDIR/MODULESDIR/OPENSSLDIR strings are deterministic
+    # FHS paths instead of leaking this build's sandbox path into the binary.
+    # Sets OPENSSL_CONFIG_DIR and OPENSSL_SRC_PATCH_CONFIG (used by the build below).
+    . "${REPO_DIR}/packages/host/patch-vendored-openssl-src.sh"
+    setup_vendored_openssl_src_patch "${REPO_DIR}" "${PWD##*/}"
 }
 
 run_cargo_cmd_with_explicit_package() {
@@ -182,12 +189,14 @@ main() {
     # TODO: We actually want to call '"${BAZEL_CMD}" build :all' instead of
     # Cargo below, but we need a statically linked executable, and our Bazel
     # machinery for Rust doesn't handle this yet.
-    test ${RUN_BUILD} = yes && run_cargo_cmd_with_explicit_package build --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
-    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full run_cargo_cmd_with_explicit_package test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
+    openssl_patch_args=()
+    [[ -n "${OPENSSL_SRC_PATCH_CONFIG:-}" ]] && openssl_patch_args=(--config "${OPENSSL_SRC_PATCH_CONFIG}")
+    test ${RUN_BUILD} = yes && run_cargo_cmd_with_explicit_package build --jobs="${JOBS}" --release --all-targets "${openssl_patch_args[@]}" ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full run_cargo_cmd_with_explicit_package test --jobs="${JOBS}" --release --all-targets "${openssl_patch_args[@]}" ${FEATURES:+"--features=$FEATURES"}
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
-    test ${RUN_CLIPPY} = yes && run_cargo_cmd_with_explicit_package clippy --release --all-targets ${FEATURES:+"--features=$FEATURES"} -- --deny warnings
+    test ${RUN_CLIPPY} = yes && run_cargo_cmd_with_explicit_package clippy --release --all-targets "${openssl_patch_args[@]}" ${FEATURES:+"--features=$FEATURES"} -- --deny warnings
     test ${RUN_FORMAT} = yes && run_format
-    test ${RUN_DOCUMENTATION} = yes && run_cargo_cmd_with_explicit_package doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_DOCUMENTATION} = yes && run_cargo_cmd_with_explicit_package doc --jobs="${JOBS}" --release --lib --bins --examples "${openssl_patch_args[@]}" ${FEATURES:+"--features=$FEATURES"}
     true
 }
 

@@ -103,21 +103,44 @@ class DistributedMonitoring(CmkPage):
         add_site_connection_page.fill_site_connection_form(remote_site)
         add_site_connection_page.save_button.click()
 
-    def check_site_online_status(self, site_id: str) -> None:
+    def check_site_online_status(self, site_id: str, times_to_reload_page: int = 5) -> None:
         """Check via the UI that the remote site is online.
+
+        Both the 'livestatus connection' and 'replication status' are validated.
+        The page is reloaded up to 'times_to_reload_page' times on failure,
+        as connection state of remote sites is not refreshed on Distributed monitoring page.
 
         Args:
             site_id: The ID of the site to check.
+            times_to_reload_page: Reload page, by default 5 times, to perform validation again.
         """
         logger.info(f"Check via the UI that the remote site '{site_id}' is online")
-        site_status = self.data_table.locator(f"div#livestatus_status_{site_id}")
-        expect(
-            site_status,
-            message=(
-                f"Status of remote site '{site_id}' is not Online in the UI; "
-                f"actual status = '{site_status.text_content()}'"
-            ),
-        ).to_have_text("Online")
+        site_live = self.data_table.locator(f"div#livestatus_status_{site_id}")
+        site_http = self.data_table.locator(f"div#replication_status_{site_id}")
+        expected_text = "Online"
+        assert_msg = f"Expected remote site '{site_id}' connection to be '{expected_text}'!"
+
+        # CMK-35636 - connection timeout encountered in CI builds, frequently.
+        # ReplicationStatusFetcher::_fetch_for_site configured to timeout in 5 seconds.
+        # worst-case scenario: Assertions is raised after 2 x 5 minutes.
+        num_attempt = 1
+        while True:
+            logger.info(
+                "Validate remote site ('%s') connection - attempt %d / %d",
+                site_id,
+                num_attempt,
+                times_to_reload_page,
+            )
+            try:
+                expect(site_live, message=assert_msg).to_have_text(expected_text)
+                expect(site_http, message=assert_msg).to_have_text(re.compile(expected_text))
+                return
+            except AssertionError as exc:
+                if num_attempt <= times_to_reload_page:
+                    self.page.reload(wait_until="domcontentloaded")
+                    num_attempt += 1
+                    continue
+                raise exc
 
     def clean_all_site_connections(self) -> int:
         """Delete all site connections.
@@ -166,6 +189,7 @@ class DistributedMonitoring(CmkPage):
         Returns None if the replication is disabled (and therefore the license state is unknown).
         Returns a boolean indicating the license state otherwise.
         """
+        self.check_site_online_status(site_id)
         if "not enabled" in self._get_table_row(site_id).inner_text().lower():
             logger.info(
                 'Replication disabled for remote site "%s"; licensing status unknown!', site_id

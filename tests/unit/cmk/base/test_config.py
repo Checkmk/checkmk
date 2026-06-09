@@ -7,6 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 
+import dataclasses
 import itertools
 import re
 import shutil
@@ -79,6 +80,7 @@ from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher, RulesetMatcher, RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
+from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
@@ -2380,34 +2382,45 @@ def test_config_cache_check_period_of_service(
     assert config_cache.check_period_of_passive_service(hostname, "CPU load", {}) == result
 
 
-def test_config_cache_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
+def test_config_cache_max_cachefile_age_no_cluster() -> None:
     xyz_host = HostName("xyz")
-    ts.add_host(xyz_host)
-    ts.apply(monkeypatch)
+    config_cache = config.ConfigCache(
+        dataclasses.replace(EMPTY_CONFIG, all_hosts=(xyz_host,)),
+        (app := make_app()).get_builtin_host_labels,
+        app.edition,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+    )
 
-    config_cache = ts.config_cache
     assert xyz_host not in config_cache.hosts_config.clusters
     assert (
         config_cache.max_cachefile_age(xyz_host).get(Mode.CHECKING)
-        == config.check_max_cachefile_age
+        == EMPTY_CONFIG.check_max_cachefile_age
     )
     assert (
         config_cache.max_cachefile_age(xyz_host).get(Mode.CHECKING)
-        != config.cluster_max_cachefile_age
+        != EMPTY_CONFIG.cluster_max_cachefile_age
     )
 
 
-def test_config_cache_max_cachefile_age_cluster(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
+def test_config_cache_max_cachefile_age_cluster() -> None:
     clu = HostName("clu")
-    ts.add_cluster(clu)
-    config_cache = ts.apply(monkeypatch)
+    config_cache = config.ConfigCache(
+        dataclasses.replace(EMPTY_CONFIG, clusters={clu: []}),
+        (app := make_app()).get_builtin_host_labels,
+        app.edition,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+    )
 
     assert clu in config_cache.hosts_config.clusters
-    assert config_cache.max_cachefile_age(clu).get(Mode.CHECKING) != config.check_max_cachefile_age
     assert (
-        config_cache.max_cachefile_age(clu).get(Mode.CHECKING) == config.cluster_max_cachefile_age
+        config_cache.max_cachefile_age(clu).get(Mode.CHECKING)
+        != EMPTY_CONFIG.check_max_cachefile_age
+    )
+    assert (
+        config_cache.max_cachefile_age(clu).get(Mode.CHECKING)
+        == EMPTY_CONFIG.cluster_max_cachefile_age
     )
 
 

@@ -8,6 +8,8 @@ from collections.abc import Mapping, Sequence
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
+from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
+from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     CommonOptions,
     ConsolidationFunction,
@@ -221,6 +223,79 @@ def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() ->
     discovered = discover_template_graphs(options, rrd=rrd)
 
     assert all(d.graph.name != "cpu" for d in discovered)
+
+
+def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
+    service = _service()
+    cpu_user = MetricName("cpu_user")
+    cpu_system = MetricName("cpu_system")
+    plugin = graphs_v2_unstable.Graph(
+        name="cpu", title=Title("CPU"), simple_lines=["cpu_user", "cpu_system"]
+    )
+    options = TemplateDiscoveryOptions(
+        common=_common(), service=service, localizer=_id, registered_graphs=[plugin]
+    )
+    rrd = _FakeFetchRRD(
+        translated_metrics_response={
+            service: {
+                cpu_user: _translated(cpu_user),
+                cpu_system: _translated(cpu_system),
+            }
+        }
+    )
+
+    [discovered] = discover_template_graphs(options, rrd=rrd)
+
+    assert discovered.graph == parse_graph_from_api(plugin, _id)
+
+
+def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
+    service = _service()
+    in_ = MetricName("if_in")
+    out = MetricName("if_out")
+    plugin = graphs_v2_unstable.Bidirectional(
+        name="if",
+        title=Title("Interface"),
+        lower=graphs_v2_unstable.Graph(name="in", title=Title("In"), simple_lines=["if_in"]),
+        upper=graphs_v2_unstable.Graph(name="out", title=Title("Out"), simple_lines=["if_out"]),
+    )
+    options = TemplateDiscoveryOptions(
+        common=_common(), service=service, localizer=_id, registered_graphs=[plugin]
+    )
+    rrd = _FakeFetchRRD(
+        translated_metrics_response={service: {in_: _translated(in_), out: _translated(out)}}
+    )
+
+    [discovered] = discover_template_graphs(options, rrd=rrd)
+
+    assert discovered.graph == parse_graph_from_api(plugin, _id)
+
+
+def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantity() -> None:
+    service = _service()
+    cpu_user = MetricName("cpu_user")
+    cpu_system = MetricName("cpu_system")
+    plugin = graphs_v2_unstable.Graph(
+        name="cpu",
+        title=Title("CPU"),
+        simple_lines=["cpu_user", metrics_v2_unstable.LowerWarningOf("cpu_system")],
+    )
+    options = TemplateDiscoveryOptions(
+        common=_common(), service=service, localizer=_id, registered_graphs=[plugin]
+    )
+    cpu_system_bounds = Scalars(warning=50.0)
+    rrd = _FakeFetchRRD(
+        translated_metrics_response={
+            service: {
+                cpu_user: _translated(cpu_user),
+                cpu_system: _translated(cpu_system, bounds=cpu_system_bounds),
+            }
+        }
+    )
+
+    [discovered] = discover_template_graphs(options, rrd=rrd)
+
+    assert discovered.scalars == {cpu_system: cpu_system_bounds}
 
 
 def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics() -> None:

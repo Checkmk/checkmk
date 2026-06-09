@@ -223,7 +223,9 @@ def _metric_names_in_quantity(quantity: _ApiQuantity) -> Iterable[MetricName]:
             assert_never(quantity)
 
 
-def metric_names_of_graph(graph: graphs_v1.Graph) -> Sequence[MetricName]:
+def metric_names_of_graph(
+    graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
+) -> Sequence[MetricName]:
     return list(
         set(
             name

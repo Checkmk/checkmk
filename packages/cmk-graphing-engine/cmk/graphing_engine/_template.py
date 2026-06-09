@@ -7,6 +7,7 @@ from collections.abc import Callable, Container, Sequence
 from dataclasses import dataclass
 
 from cmk.graphing.v1 import graphs as graphs_v1
+from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._discovery import DiscoveredGraph
 from ._fetch import FetchRRD
@@ -20,7 +21,12 @@ class TemplateDiscoveryOptions:
     common: CommonOptions
     service: ServiceRef
     localizer: Callable[[str], str]
-    registered_graphs: Sequence[graphs_v1.Graph | graphs_v1.Bidirectional]
+    registered_graphs: Sequence[
+        graphs_v1.Graph
+        | graphs_v1.Bidirectional
+        | graphs_v2_unstable.Graph
+        | graphs_v2_unstable.Bidirectional
+    ]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,7 +36,7 @@ class TemplateOptions:
 
 
 def _matches(
-    graph: graphs_v1.Graph,
+    graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
     names: Sequence[MetricName],
     available: Container[MetricName],
 ) -> bool:
@@ -47,14 +53,19 @@ class _GraphMatch:
 
 
 def _walk(
-    graph: graphs_v1.Graph | graphs_v1.Bidirectional,
+    graph: (
+        graphs_v1.Graph
+        | graphs_v1.Bidirectional
+        | graphs_v2_unstable.Graph
+        | graphs_v2_unstable.Bidirectional
+    ),
     available: Container[MetricName],
 ) -> _GraphMatch:
     match graph:
-        case graphs_v1.Graph():
+        case graphs_v1.Graph() | graphs_v2_unstable.Graph():
             names = metric_names_of_graph(graph)
             return _GraphMatch(metric_names=names, matched=_matches(graph, names, available))
-        case graphs_v1.Bidirectional():
+        case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
             lower_names = metric_names_of_graph(graph.lower)
             upper_names = metric_names_of_graph(graph.upper)
             return _GraphMatch(

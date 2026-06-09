@@ -9,6 +9,7 @@
 import argparse
 import datetime
 import errno
+import getpass
 import os
 import shlex
 import subprocess
@@ -814,7 +815,7 @@ def main_init() -> None:
 
     paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
     while True:
-        secret = get_input("Secret")
+        secret = getpass.getpass("Secret: ")
         with paths.secret_file.open("w") as fp:
             fp.write(secret)
 

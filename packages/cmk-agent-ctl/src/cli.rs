@@ -8,7 +8,7 @@ use super::{site_spec, version};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(about = "Checkmk agent controller.", version = version::VERSION)]
+#[command(name = "cmk-agent-ctl", about = "Checkmk agent controller.", version = version::VERSION)]
 pub struct Cli {
     /// Enable verbose output. Use once (-v) for logging level INFO, twice (-vv) for
     /// logging level DEBUG, and three times (-vvv) for logging level TRACE.

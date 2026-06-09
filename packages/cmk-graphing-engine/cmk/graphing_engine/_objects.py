@@ -163,6 +163,29 @@ type Quantity = (
 )
 
 
+type Bound = int | float | Quantity
+
+
+@dataclass(frozen=True)
+class MinimalRange:
+    lower: Bound
+    upper: Bound
+
+
+@dataclass(frozen=True)
+class FixedRange:
+    lower: Bound
+    upper: Bound
+
+
+type VerticalRange = MinimalRange | FixedRange
+
+
+@dataclass(frozen=True)
+class StackGroup:
+    members: Sequence[Quantity]
+
+
 def _metric_names_in_quantity(quantity: Quantity) -> Iterable[MetricName]:
     match quantity:
         case str():
@@ -190,29 +213,6 @@ def _metric_names_in_quantity(quantity: Quantity) -> Iterable[MetricName]:
         case Fraction():
             yield from _metric_names_in_quantity(quantity.dividend)
             yield from _metric_names_in_quantity(quantity.divisor)
-
-
-type Bound = int | float | Quantity
-
-
-@dataclass(frozen=True)
-class MinimalRange:
-    lower: Bound
-    upper: Bound
-
-
-@dataclass(frozen=True)
-class FixedRange:
-    lower: Bound
-    upper: Bound
-
-
-type VerticalRange = MinimalRange | FixedRange
-
-
-@dataclass(frozen=True)
-class StackGroup:
-    members: Sequence[Quantity]
 
 
 @dataclass(frozen=True, kw_only=True)

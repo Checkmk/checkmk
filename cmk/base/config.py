@@ -28,6 +28,7 @@ import sys
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
+from types import ModuleType
 from typing import (
     Any,
     AnyStr,
@@ -528,7 +529,8 @@ def get_default_config() -> dict[str, Any]:
     return {
         key: copy.deepcopy(value) if isinstance(value, dict | list) else value
         for key, value in default_config.__dict__.items()
-        if key[0] != "_"
+        # we don't want default_configs submodules here:
+        if key[0] != "_" and not isinstance(value, ModuleType)
     }
 
 

@@ -235,7 +235,6 @@ def build_and_save_state(
     branch: str,
     successful_deployers: set[str],
     previous_state: DeployState | None,
-    wheel_per_pkg_states: dict[str, DeployerState] | None = None,
     deployer_dirty_hashes: dict[str, dict[str, str]] | None = None,
     all_succeeded: bool = True,
 ) -> None:
@@ -276,7 +275,7 @@ def build_and_save_state(
         diff_base_commit=diff_base,
     )
 
-    all_deployer_names = ["install_spec", "config_spec"]
+    all_deployer_names = ["install_spec", "config_spec", "wheel_spec"]
     for name in all_deployer_names:
         if name in successful_deployers:
             # Use per-deployer dirty hashes if available, else global fallback
@@ -298,17 +297,6 @@ def build_and_save_state(
                 previous_state.deployers[name], current_dirty
             )
         # else: no entry (first deploy, deployer didn't run)
-
-    # Per-package wheel states (from wheel_deployer)
-    if wheel_per_pkg_states:
-        for key, pkg_state in wheel_per_pkg_states.items():
-            new_state.deployers[key] = pkg_state
-
-    # Carry forward previous per-package wheel states not in new deploy
-    if previous_state is not None:
-        for key, prev_ds in previous_state.deployers.items():
-            if key.startswith("wheel:") and key not in new_state.deployers:
-                new_state.deployers[key] = prune_stale_dirty(prev_ds, current_dirty)
 
     try:
         save_state(new_state, site_root)

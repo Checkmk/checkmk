@@ -6,7 +6,7 @@
 
 This subpackage groups all deployer implementations:
 
-- ``wheel_deployer``: wheel deployment (direct copy + .dist-info + edition filter + targeted deploy)
+- ``wheel_deployer``: wheel deployment via ``bazel run //:deploy-python``
 - ``config_deployer``: config/data file deployment (agents, notifications, etc.)
 - ``bazel_builder``: Bazel build + artifact installation (C++, Rust, Vue)
 """

@@ -25,11 +25,7 @@ _REGISTRY: tuple[DeployerInfo, ...] = (
 )
 
 # Pre-built lookup dicts (immutable after module load)
-STEP_TO_DEPLOYER: dict[str, str] = {
-    info.step_name: info.deployer_name
-    for info in _REGISTRY
-    if info.deployer_name != "wheel_spec"  # wheel uses per-package state keys
-}
+STEP_TO_DEPLOYER: dict[str, str] = {info.step_name: info.deployer_name for info in _REGISTRY}
 
 DEPLOYER_DISPLAY_NAMES: dict[str, str] = {
     info.deployer_name: info.display_name for info in _REGISTRY

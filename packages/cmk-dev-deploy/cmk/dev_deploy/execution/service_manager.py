@@ -12,9 +12,14 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from cmk.dev_deploy.core.timeouts import SERVICE_RELOAD, SERVICE_RESTART
-from cmk.dev_deploy.site.edition_filter import PRO_PLUS_EDITIONS
 from cmk.dev_deploy.site.privilege import run_as_site_user, SSHState
-from cmk.dev_deploy.types import ChangeCategory, Service, ServiceAction, ServiceResult
+from cmk.dev_deploy.types import (
+    ChangeCategory,
+    PRO_PLUS_EDITIONS,
+    Service,
+    ServiceAction,
+    ServiceResult,
+)
 
 if TYPE_CHECKING:
     from cmk.dev_deploy.types import BazelTargetSet, ChangeSet, SiteInfo

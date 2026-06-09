@@ -9,20 +9,13 @@ Used by path-aware skip logic to filter git diffs per-deployer instead of
 globally.
 
 Public API:
-    resolve_source_paths(deployer_name, repo_root) -> tuple[str, ...] | None
+    resolve_source_paths(deployer_name) -> tuple[str, ...] | None
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 
-from cmk.dev_deploy.types import WheelDeployMode, WheelDeploySpec
-
-
-def resolve_source_paths(
-    deployer_name: str,
-    repo_root: Path,
-) -> tuple[str, ...] | None:
+def resolve_source_paths(deployer_name: str) -> tuple[str, ...] | None:
     """Resolve repo-relative source path prefixes for a deployer.
 
     Returns a tuple of repo-relative path prefixes (strings ending with ``/``
@@ -30,9 +23,8 @@ def resolve_source_paths(
     (caller should treat as "always deploy").
 
     Args:
-        deployer_name: Deployer key, e.g. ``'config_spec'``,
-            ``'install_spec'``, or ``'wheel:packages/cmk-ccc'``.
-        repo_root: Absolute path to the git repository root.
+        deployer_name: Deployer key, e.g. ``'config_spec'`` or
+            ``'install_spec'``.
 
     Returns:
         Tuple of repo-relative path prefixes, or ``None`` for unknown deployers.
@@ -43,8 +35,8 @@ def resolve_source_paths(
     if deployer_name == "install_spec":
         return _resolve_install_paths()
 
-    if deployer_name.startswith("wheel:"):
-        return _resolve_wheel_paths(deployer_name, repo_root)
+    if deployer_name == "wheel_spec":
+        return _resolve_wheel_paths()
 
     # Unknown deployer: return None (fallback = always deploy)
     return None
@@ -93,50 +85,12 @@ def _resolve_install_paths() -> tuple[str, ...]:
 # ---------------------------------------------------------------------------
 
 
-def _find_wheel_spec(package_path: str) -> WheelDeploySpec | None:
-    """Find a WheelDeploySpec by package path."""
-    from cmk.dev_deploy.manifest.reader import get_wheel_specs
+def _resolve_wheel_paths() -> tuple[str, ...]:
+    """Return the source-tree prefixes covered by wheel deployment.
 
-    for spec in get_wheel_specs():
-        if spec.package == package_path:
-            return spec
-    return None
-
-
-def _resolve_wheel_paths(
-    deployer_name: str,
-    _repo_root: Path,
-) -> tuple[str, ...] | None:
-    """Resolve source paths for a wheel deployer key.
-
-    Each deploy_wheel is now a single distribution (multi-dist packages were
-    split into separate entries).  Uses Bazel-derived ``source_subdirs`` from
-    the manifest instead of auto-discovering from disk.
+    Used to record path-filtered dirty hashes in the deploy state so the
+    dirty/revert detection in change_detector covers Python files.
     """
-    # Parse deployer_name: "wheel:{package}"
-    remainder = deployer_name[len("wheel:") :]
-    package_path = remainder.split(":", 1)[0]
+    from cmk.dev_deploy.deployers.wheel_deployer import wheel_prefixes
 
-    spec = _find_wheel_spec(package_path)
-    if spec is None:
-        return None
-
-    return _resolve_package_level(spec)
-
-
-def _resolve_package_level(
-    spec: WheelDeploySpec,
-) -> tuple[str, ...]:
-    """Resolve paths for a wheel deployer key using Bazel-derived source_subdirs."""
-    if spec.deploy_mode == WheelDeployMode.GENERATED:
-        # Generated packages might not have Python sources on disk; their inputs
-        # can be anywhere under the package directory (e.g. source/**.json
-        # schemas). Track the whole package root so any file change triggers a
-        # rebuild.
-        return (spec.package + "/",)
-
-    if spec.source_subdirs:
-        return tuple(spec.package + "/" + subdir for subdir in spec.source_subdirs)
-
-    # Fallback: the whole package dir
-    return (spec.package + "/",)
+    return wheel_prefixes()

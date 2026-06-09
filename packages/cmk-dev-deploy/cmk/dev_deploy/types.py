@@ -6,14 +6,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from cmk.dev_deploy.state.deploy_state import DeployerState
+from types import MappingProxyType
+from typing import Any
 
 
 class Edition(StrEnum):
@@ -37,6 +35,26 @@ class Edition(StrEnum):
     def matches(self, constraint: Collection[str] | None) -> bool:
         """Return True if this edition satisfies *constraint* (None = all match)."""
         return constraint is None or self.value in constraint
+
+
+EDITION_INCLUDES: Mapping[Edition, frozenset[str]] = MappingProxyType(
+    {
+        Edition.COMMUNITY: frozenset(),
+        Edition.PRO: frozenset({"pro"}),
+        Edition.ULTIMATE: frozenset({"pro", "ultimate"}),
+        Edition.ULTIMATEMT: frozenset({"pro", "ultimate", "ultimatemt"}),
+        Edition.CLOUD: frozenset({"pro", "ultimate", "cloud"}),
+    }
+)
+"""Non-free edition directory names each edition includes.
+
+The hierarchy is non-linear: cloud includes pro + ultimate but NOT ultimatemt.
+"""
+
+PRO_PLUS_EDITIONS: frozenset[str] = frozenset(
+    e.value for e in Edition if "pro" in EDITION_INCLUDES[e]
+)
+"""Editions that include commercial-only features (CMC, DCD, etc.)."""
 
 
 @dataclass(frozen=True)
@@ -321,14 +339,10 @@ class ConfigDeployResult:
 
 @dataclass(frozen=True)
 class WheelDeployResult:
-    """Summary of a wheel package deployment cycle."""
+    """Summary of a wheel deployment cycle."""
 
-    wheels_deployed: int
-    wheels_skipped: int
-    wheels_skipped_edition: int
-    wheels_skipped_missing: int
+    wheels_installed: int
     elapsed: float
-    per_package_states: dict[str, DeployerState]
 
 
 @dataclass(frozen=True)

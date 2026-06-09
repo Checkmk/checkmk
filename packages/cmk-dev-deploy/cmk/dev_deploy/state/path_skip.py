@@ -67,7 +67,7 @@ def check_skip(
     from cmk.dev_deploy.execution.source_paths import resolve_source_paths
 
     # Step 1: Resolve source paths
-    paths = resolve_source_paths(deployer_name, repo_root)
+    paths = resolve_source_paths(deployer_name)
 
     if paths is None:
         # HEAD fallback mode: no source path metadata

@@ -24,8 +24,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
 
-from cmk.dev_deploy.site.edition_filter import EDITION_CONFIG
-from cmk.dev_deploy.types import ChangeSet, SiteInfo
+from cmk.dev_deploy.types import ChangeSet, EDITION_INCLUDES, SiteInfo
 
 
 @dataclass(frozen=True)
@@ -157,7 +156,7 @@ def check_edition_mismatch(changes: ChangeSet | None, site: SiteInfo | None) -> 
         return None
 
     site_edition = site.edition
-    site_includes = EDITION_CONFIG.includes.get(site_edition, frozenset())
+    site_includes = EDITION_INCLUDES.get(site_edition, frozenset())
 
     mismatched: list[str] = []
     for filepath in changes.files:

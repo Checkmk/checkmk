@@ -602,15 +602,9 @@ def print_dry_run_plan(
     changes: ChangeSet | None,
     targets: BazelTargetSet | None,
     services: list[tuple[Service, ServiceAction]],
-    expanded_deps: set[str] | None,
 ) -> None:
     """Display a complete deployment plan without executing anything."""
     _print_locked(f"\n{BOLD}DRY RUN -- no changes will be made{RESET}")
-
-    if expanded_deps:
-        _print_locked("\n  Transitive dependencies would also be deployed:")
-        for dep in sorted(expanded_deps):
-            _print_locked(f"    {dep}")
 
     if build_path == "fast":
         _print_locked("\n  Would deploy: Python files (fast path)")
@@ -690,20 +684,6 @@ def print_frontend_skip(package_name: str) -> None:
     print_deployer_skipped_line(package_name, "skipped (handled by Vite)")
 
 
-# --- Dependency expansion display ---
-
-
-@_verbose_only
-def print_dep_expansion(expanded: set[str], original: set[str]) -> None:
-    """Display additional directories added via dependency expansion."""
-    new_deps = expanded - original
-    if not new_deps:
-        return
-    info(f"Dependency expansion: {len(new_deps)} additional dir(s) will be deployed")
-    for dep in sorted(new_deps):
-        _print_locked(f"    {dep}")
-
-
 # --- Debug-level output (skip traces and state) ---
 
 # --- Watch mode display ---
@@ -777,35 +757,6 @@ def print_watch_heartbeat(idle_polls: int) -> None:
     """Display dim heartbeat to confirm watcher is alive during idle polling."""
     minutes = idle_polls // 60
     _print_locked(f"{_deploy_prefix()}{DIM}  ... still watching ({minutes}m idle){RESET}")
-
-
-# --- Batched targeted deploy summary (consolidates per-spec output) ---
-
-
-def print_targeted_deploy_batch(
-    results: list[tuple[str, tuple[str, ...], float]],
-) -> None:
-    """Print consolidated targeted deploy summary, one line per unique package."""
-    if not results:
-        return
-    dp = _deploy_prefix()
-    for pkg_name, files, elapsed in results:
-        _print_locked(
-            f"{dp}  {BOLD}python{' ' * 6}{RESET} {GREEN}{BOLD}deployed{RESET}  "
-            f"{DIM}{elapsed:.1f}s{RESET}  {BOLD}[targeted]{RESET} {pkg_name} ({len(files)} file(s))"
-        )
-        if _config.verbosity >= Verbosity.VERBOSE:
-            for filepath in files:
-                _print_locked(f"{dp}    {DIM}{filepath}{RESET}")
-
-
-def print_wheel_full_deploy(package_name: str, elapsed: float) -> None:
-    """Print a per-package line for full (non-targeted) wheel deploys."""
-    dp = _deploy_prefix()
-    _print_locked(
-        f"{dp}  {BOLD}python{' ' * 6}{RESET} {GREEN}{BOLD}deployed{RESET}  "
-        f"{DIM}{elapsed:.1f}s{RESET}  [full] {package_name}"
-    )
 
 
 # --- Parallel execution timeline (ASCII Gantt chart) ---

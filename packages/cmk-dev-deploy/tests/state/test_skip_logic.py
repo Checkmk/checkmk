@@ -224,8 +224,8 @@ class TestPartialFailureStateSave:
         assert loaded.deployers["install_spec"].git_commit == "c" * 40
         # config_spec carries forward old commit
         assert loaded.deployers["config_spec"].git_commit == "a" * 40
-        # wheel_spec is not a pipeline deployer, not in all_deployer_names
-        assert "wheel_spec" not in loaded.deployers
+        # wheel_spec carries forward like any other pipeline deployer
+        assert loaded.deployers["wheel_spec"].git_commit == "a" * 40
 
     def test_save_carries_forward_failed_deployers(self, tmp_path: Path) -> None:
         """config_spec not in successful set -> carries forward 'old' commit."""

@@ -22,10 +22,7 @@ from cmk.dev_deploy.cli import parse_args
 from cmk.dev_deploy.core import output
 from cmk.dev_deploy.deployers.bazel_builder import build_and_install
 from cmk.dev_deploy.deployers.config_deployer import deploy_config
-from cmk.dev_deploy.deployers.wheel_deployer import (
-    deploy_wheels,
-    specs_for_changed_files,
-)
+from cmk.dev_deploy.deployers.wheel_deployer import deploy_wheels, has_wheel_changes
 from cmk.dev_deploy.errors import (
     ChangeDetectionError,
     DeployError,
@@ -44,8 +41,6 @@ from cmk.dev_deploy.execution.step_registry import (
     STEP_DISPLAY_NAMES,
     STEP_TO_DEPLOYER,
 )
-from cmk.dev_deploy.manifest.deps import expand_dependencies, extract_changed_dirs
-from cmk.dev_deploy.manifest.reader import get_wheel_specs
 from cmk.dev_deploy.manifest.registry import uncovered_changed_files
 from cmk.dev_deploy.site.privilege import SSHState
 from cmk.dev_deploy.site.site_resolver import find_repo_root, resolve_site
@@ -60,7 +55,6 @@ from cmk.dev_deploy.state.deploy_state import (
     build_and_save_state,
     compute_dirty_hashes,
     delete_state,
-    DeployerState,
     DeployState,
     get_current_branch,
     get_head_commit,
@@ -84,27 +78,6 @@ def _has_config_data_changes(changes: ChangeSet | None) -> bool:
     if changes is None:
         return True
     return ChangeCategory.CONFIG in changes.categories or ChangeCategory.DATA in changes.categories
-
-
-def _has_wheel_changes(changes: ChangeSet | None) -> bool:
-    if changes is None:
-        return True
-    return len(specs_for_changed_files(changes.files)) > 0
-
-
-def _has_wheel_changes_with_deps(
-    changes: ChangeSet | None,
-    expanded_deps: set[str] | None,
-) -> bool:
-    if _has_wheel_changes(changes):
-        return True
-    if expanded_deps:
-        for dep in expanded_deps:
-            dep_stripped = dep.rstrip("/")
-            for spec in get_wheel_specs():
-                if dep_stripped == spec.package or spec.package.startswith(dep_stripped):
-                    return True
-    return False
 
 
 def _compute_skip_results(
@@ -286,17 +259,6 @@ def _run_deploy_cycle(
     if edition_warning:
         output.warn(edition_warning)
 
-    # Dependency expansion
-    expanded_deps: set[str] | None = None
-    if changes is not None and not changes.is_empty:
-        original_dirs = extract_changed_dirs(changes.files)
-        if original_dirs:
-            all_dirs = expand_dependencies(original_dirs)
-            new_deps = all_dirs - original_dirs
-            if new_deps:
-                expanded_deps = new_deps
-                output.print_dep_expansion(all_dirs, original_dirs)
-
     # Check for unregistered changed files.  We suppress files we know are
     # not deployed (TEST/BUILD/IGNORED).  OTHER means "no rule matched" --
     # exactly the case where the registry coverage check is informative,
@@ -374,7 +336,6 @@ def _run_deploy_cycle(
             changes=changes,
             targets=targets,
             services=resolve_services(changes, targets, site),
-            expanded_deps=expanded_deps,
         )
         return _make_result(0)
 
@@ -384,7 +345,6 @@ def _run_deploy_cycle(
     # Build deployment step list (unified for both fast and full paths)
     steps: list[DeployStep] = []
     deploy_step_names: list[str] = []
-    _wheel_per_pkg_states: dict[str, DeployerState] = {}
 
     # Config deploy: included if config/data changes detected (and not skipped)
     if _has_config_data_changes(changes):
@@ -442,42 +402,19 @@ def _run_deploy_cycle(
             steps.append(DeployStep(name="bazel_build", action=_bazel_action))
             deploy_step_names.append("bazel_build")
 
-    # Wheel deploy: included if wheel changes detected
-    # Per-package skip logic is handled internally by wheel_deployer
-    _wheel_all_skipped = False
-    if _has_wheel_changes_with_deps(changes, expanded_deps):
+    # Wheel deploy: included if any changed file belongs to a deployed wheel.
+    # Bazel's action cache and uv's reinstall speed make per-package
+    # selection unnecessary -- the step always reinstalls all wheels.
+    if has_wheel_changes(changes):
 
         def _wheel_action() -> str | None:
-            nonlocal _wheel_all_skipped
-            wheel_result = deploy_wheels(
-                changes,
-                repo_root,
-                site,
-                state=state,
+            wheel_result = deploy_wheels(repo_root, site)
+            msg = (
+                f"Wheel deployment complete in {wheel_result.elapsed:.1f}s"
+                f" ({wheel_result.wheels_installed} wheel(s) reinstalled)"
             )
-            # Store per-package states for state save
-            nonlocal _wheel_per_pkg_states
-            _wheel_per_pkg_states = wheel_result.per_package_states
-            # Track deployed/skipped for cycle summary
-            if wheel_result.wheels_deployed > 0:
-                deployed_names.append("wheels")
-                msg = (
-                    f"Wheel deployment complete in {wheel_result.elapsed:.1f}s"
-                    f" ({wheel_result.wheels_deployed} deployed,"
-                    f" {wheel_result.wheels_skipped} skipped)"
-                )
-                output.print_deployer_deployed("wheels", wheel_result.elapsed, msg)
-                return msg
-            elif wheel_result.wheels_skipped > 0:
-                _wheel_all_skipped = True
-                skipped_names.append("wheels")
-                skipped_reasons["wheels"] = f"all {wheel_result.wheels_skipped} packages up to date"
-                output.print_deployer_skipped_line(
-                    "wheels",
-                    f"all {wheel_result.wheels_skipped} packages up to date",
-                )
-                return f"Wheels: all {wheel_result.wheels_skipped} packages up to date"
-            return None
+            output.print_deployer_deployed("wheels", wheel_result.elapsed, msg)
+            return msg
 
         steps.append(DeployStep(name="wheel_deploy", action=_wheel_action))
         deploy_step_names.append("wheel_deploy")
@@ -513,21 +450,15 @@ def _run_deploy_cycle(
         result_deployer = STEP_TO_DEPLOYER.get(r.name)
         if result_deployer and r.success:
             successful_deployers.add(result_deployer)
-            # Record deployed display name (wheels tracked separately in _wheel_action)
             if r.name in STEP_DISPLAY_NAMES:
                 deployed_names.append(STEP_DISPLAY_NAMES[r.name])
-        # Wheel deploy doesn't use STEP_TO_DEPLOYER anymore (per-package state)
-        # but still needs to signal for restart gating -- only when wheels
-        # were actually deployed, not when all packages were skipped.
-        if r.name == "wheel_deploy" and r.success and not _wheel_all_skipped:
-            successful_deployers.add("wheel_spec")
 
     # Compute per-deployer path-filtered dirty hashes for state saving
     # Done AFTER deploy completes so hashes reflect post-deploy state
     _deployer_dirty: dict[str, dict[str, str]] = {}
-    for dep_name in ("config_spec", "install_spec"):
+    for dep_name in ("config_spec", "install_spec", "wheel_spec"):
         if dep_name in successful_deployers:
-            paths = resolve_source_paths(dep_name, repo_root)
+            paths = resolve_source_paths(dep_name)
             if paths is not None and len(paths) > 0:
                 _deployer_dirty[dep_name] = compute_dirty_hashes(repo_root, path_prefixes=paths)
             else:
@@ -549,7 +480,6 @@ def _run_deploy_cycle(
             current_branch,
             successful_deployers,
             state,
-            wheel_per_pkg_states=_wheel_per_pkg_states,
             deployer_dirty_hashes=_deployer_dirty,
             all_succeeded=False,
         )
@@ -595,7 +525,6 @@ def _run_deploy_cycle(
         current_branch,
         successful_deployers,
         state,
-        wheel_per_pkg_states=_wheel_per_pkg_states,
         deployer_dirty_hashes=_deployer_dirty,
     )
 

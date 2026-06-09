@@ -1406,15 +1406,6 @@ fn test_pdbs_discovery() {
             "Expected exactly one PDB after filtering, got {:?}",
             pdbs.names(),
         );
-
-        // Sanity-check the filter behaviour without caring what the real
-        // PDB name is.
-        for name in pdbs.names() {
-            let upper = name.as_ref().to_uppercase();
-            assert_ne!(upper, "CDB$ROOT", "filter let CDB$ROOT through");
-            assert_ne!(upper, "PDB$SEED", "filter let PDB$SEED through");
-            assert!(!upper.is_empty(), "PDB name is empty");
-        }
     }
 }
 

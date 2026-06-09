@@ -448,3 +448,93 @@ def test_docker_oracle(
     assert len(missing_non_empty_sections) == 0, (
         f"Missing non-empty sections from agent output: {missing_non_empty_sections}"
     )
+
+
+# ---------------------------------------------------------------------------
+# PDB filtering tests — require extra PDBs created in the container
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(name="oracle_with_pdbs", scope="session")
+def _oracle_with_pdbs(oracle: OracleDatabase) -> OracleDatabase:
+    """Extend the Oracle fixture with extra PDBs for PDB filtering tests."""
+    sql = "\n".join(
+        [
+            "WHENEVER SQLERROR EXIT SQL.SQLCODE",
+            # Enable Oracle Managed Files so PDB datafiles can be placed automatically.
+            # The Oracle Free Docker container ships with db_create_file_dest unset.
+            "ALTER SYSTEM SET DB_CREATE_FILE_DEST='/opt/oracle/oradata/FREE' SCOPE=BOTH;",
+            f"GRANT SET CONTAINER TO {oracle.cmk_username} CONTAINER=ALL;",
+            "CREATE PLUGGABLE DATABASE TESTPDB1 ADMIN USER admin IDENTIFIED BY admin;",
+            "ALTER PLUGGABLE DATABASE TESTPDB1 OPEN;",
+            "CREATE PLUGGABLE DATABASE TESTPDB2 ADMIN USER admin IDENTIFIED BY admin;",
+            "ALTER PLUGGABLE DATABASE TESTPDB2 OPEN;",
+            "CREATE PLUGGABLE DATABASE DEVPDB1 ADMIN USER admin IDENTIFIED BY admin;",
+            "ALTER PLUGGABLE DATABASE DEVPDB1 OPEN;",
+            "EXIT;",
+        ]
+    )
+    sql_path = oracle.ORAENV / "create_pdbs.sql"
+    sql_path.write_text(sql, encoding="utf-8")
+    container_sql_path = oracle.ROOT / "create_pdbs.sql"
+    assert copy_to_container(oracle.container, sql_path, oracle.ROOT), (
+        "Failed to copy create_pdbs.sql to container"
+    )
+    rc, output = oracle.container.exec_run(
+        f"""bash -c 'sqlplus -s "/ as sysdba" < "{container_sql_path.as_posix()}"'""",
+        user="oracle",
+    )
+    assert rc == 0, f"Failed to create extra PDBs: {output.decode('utf-8')}"
+    return oracle
+
+
+def _pdb_config_yml(oracle: OracleDatabase, pdbs: list[str]) -> str:
+    pdbs_str = ", ".join(f'"{p}"' for p in pdbs)
+    return "\n".join(
+        [
+            "---",
+            "oracle:",
+            "  main:",
+            "    authentication:",
+            f"      username: {oracle.cmk_username}",
+            f"      password: {oracle.cmk_password}",
+            "      type: standard",
+            "    connection:",
+            "      hostname: localhost",
+            f"      port: {oracle.PORT}",
+            "      timeout: 15",
+            f"      service_name: {oracle.SID}",
+            "    custom_metrics:",
+            "      - container_identity:",
+            "          sql: \"SELECT SYS_CONTEXT('USERENV', 'CON_NAME') FROM DUAL\"",
+            f"          pdbs: [{pdbs_str}]",
+        ]
+    )
+
+
+def test_pdb_exact_names_produce_correct_subsections(oracle_with_pdbs: OracleDatabase) -> None:
+    oracle = oracle_with_pdbs
+    cfg_path = _install_custom_config(
+        oracle, _pdb_config_yml(oracle, ["TESTPDB1", "TESTPDB2"]), "mk-oracle.pdb-exact.yml"
+    )
+    output = _run_new_plugin(oracle, cfg_path)
+    assert f"{oracle.SID}_TESTPDB1|container_identity" in output, (
+        f"missing TESTPDB1 subsection: {output}"
+    )
+    assert f"{oracle.SID}_TESTPDB2|container_identity" in output, (
+        f"missing TESTPDB2 subsection: {output}"
+    )
+    assert f"{oracle.SID}_DEVPDB1" not in output, f"DEVPDB1 must not appear: {output}"
+    assert f"{oracle.SID}_FREEPDB1" not in output, f"FREEPDB1 must not appear: {output}"
+
+
+def test_pdb_regex_matches_only_test_pdbs(oracle_with_pdbs: OracleDatabase) -> None:
+    oracle = oracle_with_pdbs
+    cfg_path = _install_custom_config(
+        oracle, _pdb_config_yml(oracle, ["TEST.*"]), "mk-oracle.pdb-regex.yml"
+    )
+    output = _run_new_plugin(oracle, cfg_path)
+    assert f"{oracle.SID}_TESTPDB1|container_identity" in output, f"missing TESTPDB1: {output}"
+    assert f"{oracle.SID}_TESTPDB2|container_identity" in output, f"missing TESTPDB2: {output}"
+    assert f"{oracle.SID}_DEVPDB1" not in output, f"DEVPDB1 must not appear: {output}"
+    assert f"{oracle.SID}_FREEPDB1" not in output, f"FREEPDB1 must not appear: {output}"

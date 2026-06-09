@@ -15,7 +15,7 @@ description:
 
  - OmniSwitch 6450-10: AOS 6.7.2.191.R04 GA
 
- The check has configurable levels for {WARN}/{CRIT} (default: 45, 50).
+ The check levels for {WARN}/{CRIT} are set to 90 and 95 respectively.
 
  The value is a average in percent over the last hour. This average is calculated by the device.
 

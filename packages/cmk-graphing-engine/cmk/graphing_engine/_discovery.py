@@ -6,8 +6,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from ._fetch import Scalars
-from ._objects import Bidirectional, Graph, RRDMetric
+from ._objects import Bidirectional, Graph, RRDMetric, Scalars
 
 
 @dataclass(frozen=True, kw_only=True)

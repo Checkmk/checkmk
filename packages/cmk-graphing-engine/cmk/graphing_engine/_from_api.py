@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable, Sequence
+from dataclasses import dataclass
 from typing import assert_never
 
 from cmk.graphing.v1 import graphs as graphs_v1
@@ -130,102 +131,77 @@ def _parse_unit(unit: metrics_v1.Unit) -> Unit:
     return Unit(notation=notation, precision=precision)
 
 
-def _rrd_metric(
-    metric_name: str,
-    service: ServiceRef,
-    consolidation_function: ConsolidationFunction,
-) -> RRDMetric:
-    return RRDMetric(
-        host_name=service.host_name,
-        service_name=service.service_name,
-        metric_name=MetricName(metric_name),
-        consolidation_function=consolidation_function,
-    )
+@dataclass(frozen=True)
+class _ParseContext:
+    localizer: Callable[[str], str]
+    service: ServiceRef
+    consolidation_function: ConsolidationFunction
+
+    def rrd_metric(self, metric_name: str) -> RRDMetric:
+        return RRDMetric(
+            host_name=self.service.host_name,
+            service_name=self.service.service_name,
+            metric_name=MetricName(metric_name),
+            consolidation_function=self.consolidation_function,
+        )
 
 
-def _parse_quantity(
-    quantity: _ApiQuantity,
-    localizer: Callable[[str], str],
-    service: ServiceRef,
-    consolidation_function: ConsolidationFunction,
-) -> Quantity:
+def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
     match quantity:
         case str():
-            return _rrd_metric(quantity, service, consolidation_function)
+            return context.rrd_metric(quantity)
         case metrics_v1.Constant():
             return Constant(
-                title=quantity.title.localize(localizer),
+                title=quantity.title.localize(context.localizer),
                 unit=_parse_unit(quantity.unit),
                 color=_parse_color(quantity.color),
                 value=quantity.value,
             )
         case metrics_v2_unstable.LowerWarningOf():
-            return LowerWarningOf(
-                metric=_rrd_metric(quantity.metric_name, service, consolidation_function)
-            )
+            return LowerWarningOf(metric=context.rrd_metric(quantity.metric_name))
         case metrics_v2_unstable.LowerCriticalOf():
-            return LowerCriticalOf(
-                metric=_rrd_metric(quantity.metric_name, service, consolidation_function)
-            )
+            return LowerCriticalOf(metric=context.rrd_metric(quantity.metric_name))
         case metrics_v1.WarningOf():
-            return WarningOf(
-                metric=_rrd_metric(quantity.metric_name, service, consolidation_function)
-            )
+            return WarningOf(metric=context.rrd_metric(quantity.metric_name))
         case metrics_v1.CriticalOf():
-            return CriticalOf(
-                metric=_rrd_metric(quantity.metric_name, service, consolidation_function)
-            )
+            return CriticalOf(metric=context.rrd_metric(quantity.metric_name))
         case metrics_v1.MinimumOf():
             return MinimumOf(
-                metric=_rrd_metric(quantity.metric_name, service, consolidation_function),
+                metric=context.rrd_metric(quantity.metric_name),
                 color=_parse_color(quantity.color),
             )
         case metrics_v1.MaximumOf():
             return MaximumOf(
-                metric=_rrd_metric(quantity.metric_name, service, consolidation_function),
+                metric=context.rrd_metric(quantity.metric_name),
                 color=_parse_color(quantity.color),
             )
         case metrics_v1.Sum():
             return Sum(
-                title=quantity.title.localize(localizer),
+                title=quantity.title.localize(context.localizer),
                 color=_parse_color(quantity.color),
-                summands=[
-                    _parse_quantity(s, localizer, service, consolidation_function)
-                    for s in quantity.summands
-                ],
+                summands=[_parse_quantity(s, context) for s in quantity.summands],
             )
         case metrics_v1.Product():
             return Product(
-                title=quantity.title.localize(localizer),
+                title=quantity.title.localize(context.localizer),
                 unit=_parse_unit(quantity.unit),
                 color=_parse_color(quantity.color),
-                factors=[
-                    _parse_quantity(f, localizer, service, consolidation_function)
-                    for f in quantity.factors
-                ],
+                factors=[_parse_quantity(f, context) for f in quantity.factors],
             )
         case metrics_v1.Difference():
             return Difference(
-                title=quantity.title.localize(localizer),
+                title=quantity.title.localize(context.localizer),
                 color=_parse_color(quantity.color),
-                minuend=_parse_quantity(
-                    quantity.minuend, localizer, service, consolidation_function
-                ),
-                subtrahend=_parse_quantity(
-                    quantity.subtrahend, localizer, service, consolidation_function
-                ),
+                minuend=_parse_quantity(quantity.minuend, context),
+                subtrahend=_parse_quantity(quantity.subtrahend, context),
             )
         case metrics_v1.Fraction():
             return Fraction(
-                title=quantity.title.localize(localizer),
+                title=quantity.title.localize(context.localizer),
                 unit=_parse_unit(quantity.unit),
                 color=_parse_color(quantity.color),
-                dividend=_parse_quantity(
-                    quantity.dividend, localizer, service, consolidation_function
-                ),
-                divisor=_parse_quantity(
-                    quantity.divisor, localizer, service, consolidation_function
-                ),
+                dividend=_parse_quantity(quantity.dividend, context),
+                divisor=_parse_quantity(quantity.divisor, context),
             )
         case _:
             assert_never(quantity)
@@ -274,61 +250,40 @@ def metric_names_of_graph(
     )
 
 
-def _parse_bound(
-    bound: int | float | _ApiQuantity,
-    localizer: Callable[[str], str],
-    service: ServiceRef,
-    consolidation_function: ConsolidationFunction,
-) -> Bound:
+def _parse_bound(bound: int | float | _ApiQuantity, context: _ParseContext) -> Bound:
     if isinstance(bound, int | float):
         return bound
-    return _parse_quantity(bound, localizer, service, consolidation_function)
+    return _parse_quantity(bound, context)
 
 
 def _parse_minimal_range(
     minimal_range: graphs_v1.MinimalRange | graphs_v2_unstable.MinimalRange,
-    localizer: Callable[[str], str],
-    service: ServiceRef,
-    consolidation_function: ConsolidationFunction,
+    context: _ParseContext,
 ) -> MinimalRange:
     return MinimalRange(
-        lower=_parse_bound(minimal_range.lower, localizer, service, consolidation_function),
-        upper=_parse_bound(minimal_range.upper, localizer, service, consolidation_function),
+        lower=_parse_bound(minimal_range.lower, context),
+        upper=_parse_bound(minimal_range.upper, context),
     )
 
 
 def _parse_graph(
     graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
-    localizer: Callable[[str], str],
-    service: ServiceRef,
-    consolidation_function: ConsolidationFunction,
+    context: _ParseContext,
 ) -> Graph:
     return Graph(
         name=graph.name,
-        title=graph.title.localize(localizer),
+        title=graph.title.localize(context.localizer),
         vertical_range=(
             None
             if graph.minimal_range is None
-            else _parse_minimal_range(
-                graph.minimal_range, localizer, service, consolidation_function
-            )
+            else _parse_minimal_range(graph.minimal_range, context)
         ),
         stack_groups=(
-            [
-                StackGroup(
-                    members=[
-                        _parse_quantity(q, localizer, service, consolidation_function)
-                        for q in graph.compound_lines
-                    ]
-                )
-            ]
+            [StackGroup(members=[_parse_quantity(q, context) for q in graph.compound_lines])]
             if graph.compound_lines
             else []
         ),
-        simple_lines=[
-            _parse_quantity(q, localizer, service, consolidation_function)
-            for q in graph.simple_lines
-        ],
+        simple_lines=[_parse_quantity(q, context) for q in graph.simple_lines],
     )
 
 
@@ -343,15 +298,20 @@ def parse_graph_from_api(
     service: ServiceRef,
     consolidation_function: ConsolidationFunction,
 ) -> Graph | Bidirectional:
+    context = _ParseContext(
+        localizer=localizer,
+        service=service,
+        consolidation_function=consolidation_function,
+    )
     match graph:
         case graphs_v1.Graph() | graphs_v2_unstable.Graph():
-            return _parse_graph(graph, localizer, service, consolidation_function)
+            return _parse_graph(graph, context)
         case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
             return Bidirectional(
                 name=graph.name,
                 title=graph.title.localize(localizer),
-                lower=_parse_graph(graph.lower, localizer, service, consolidation_function),
-                upper=_parse_graph(graph.upper, localizer, service, consolidation_function),
+                lower=_parse_graph(graph.lower, context),
+                upper=_parse_graph(graph.upper, context),
             )
         case _:
             assert_never(graph)

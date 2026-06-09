@@ -6,9 +6,9 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-from ._fetch import FetchRRD, RRDSource, TimeSeries
-from ._objects import Bidirectional, Graph, RRDMetric
-from ._options import CommonOptions, ServiceRef
+from ._fetch import FetchRRD, TimeSeries
+from ._objects import Bidirectional, Graph, RRDMetric, RRDSource
+from ._options import CommonOptions, ConsolidationFunction, ServiceRef
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -21,8 +21,11 @@ class GraphRequest:
 def _fetch_time_series_per_request(
     request: GraphRequest, rrd: FetchRRD
 ) -> Mapping[RRDMetric, TimeSeries]:
-    sources = {
-        metric: RRDSource(
+    # Each metric carries its own consolidation function, so group the sources in a single pass and
+    # fetch one batch per distinct function.
+    metric_by_source_by_function: dict[ConsolidationFunction, dict[RRDSource, RRDMetric]] = {}
+    for metric in request.graph.rrd_metrics():
+        source = RRDSource(
             service=ServiceRef(
                 site_id=request.service.site_id,
                 host_name=metric.host_name,
@@ -31,17 +34,10 @@ def _fetch_time_series_per_request(
             metric_name=metric.metric_name,
             scale=1.0,
         )
-        for metric in request.graph.rrd_metrics()
-    }
-    # Each metric carries its own consolidation function, so the sources are fetched in one batch
-    # per distinct function.
+        metric_by_source_by_function.setdefault(metric.consolidation_function, {})[source] = metric
+
     result: dict[RRDMetric, TimeSeries] = {}
-    for consolidation_function in {metric.consolidation_function for metric in sources}:
-        metric_by_source = {
-            source: metric
-            for metric, source in sources.items()
-            if metric.consolidation_function == consolidation_function
-        }
+    for consolidation_function, metric_by_source in metric_by_source_by_function.items():
         for source, time_series in rrd.time_series(
             list(metric_by_source),
             time_range=request.common.time_range,

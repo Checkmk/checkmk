@@ -7,46 +7,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
-from ._objects import MetricName
+from ._objects import MetricName, RRDSource, TranslatedMetric
 from ._options import ConsolidationFunction, ServiceRef, TimeRange
-
-
-@dataclass(frozen=True, kw_only=True)
-class Scalars:
-    lower_warning: float | None = None
-    lower_critical: float | None = None
-    warning: float | None = None
-    critical: float | None = None
-    minimum: float | None = None
-    maximum: float | None = None
-
-    def __bool__(self) -> bool:
-        return any(
-            value is not None
-            for value in (
-                self.lower_warning,
-                self.lower_critical,
-                self.warning,
-                self.critical,
-                self.minimum,
-                self.maximum,
-            )
-        )
-
-
-@dataclass(frozen=True, kw_only=True)
-class RRDSource:
-    service: ServiceRef
-    metric_name: MetricName
-    scale: float
-
-
-@dataclass(frozen=True, kw_only=True)
-class TranslatedMetric:
-    name: MetricName
-    value: float | None
-    bounds: Scalars
-    originals: Sequence[RRDSource]
 
 
 @dataclass(frozen=True, kw_only=True)

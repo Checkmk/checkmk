@@ -6,11 +6,11 @@
 from __future__ import annotations
 
 import itertools
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
 from typing import NewType
 
-from ._options import ConsolidationFunction
+from ._options import ConsolidationFunction, ServiceRef
 
 
 @dataclass(frozen=True)
@@ -89,6 +89,44 @@ class RRDMetric:
     service_name: str
     metric_name: MetricName
     consolidation_function: ConsolidationFunction
+
+
+@dataclass(frozen=True, kw_only=True)
+class Scalars:
+    lower_warning: float | None = None
+    lower_critical: float | None = None
+    warning: float | None = None
+    critical: float | None = None
+    minimum: float | None = None
+    maximum: float | None = None
+
+    def __bool__(self) -> bool:
+        return any(
+            value is not None
+            for value in (
+                self.lower_warning,
+                self.lower_critical,
+                self.warning,
+                self.critical,
+                self.minimum,
+                self.maximum,
+            )
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class RRDSource:
+    service: ServiceRef
+    metric_name: MetricName
+    scale: float
+
+
+@dataclass(frozen=True, kw_only=True)
+class TranslatedMetric:
+    name: MetricName
+    value: float | None
+    bounds: Scalars
+    originals: Sequence[RRDSource]
 
 
 @dataclass(frozen=True)
@@ -225,6 +263,18 @@ def _rrd_metrics_in_quantity(quantity: Quantity) -> Iterable[RRDMetric]:
             yield from _rrd_metrics_in_quantity(quantity.divisor)
 
 
+def _scalars_of(
+    rrd_metrics: Iterable[RRDMetric],
+    translated_metrics: Mapping[MetricName, TranslatedMetric],
+) -> Mapping[RRDMetric, Scalars]:
+    return {
+        metric: bounds
+        for metric in rrd_metrics
+        if (translated := translated_metrics.get(metric.metric_name))
+        and (bounds := translated.bounds)
+    }
+
+
 @dataclass(frozen=True, kw_only=True)
 class Graph:
     name: str
@@ -245,6 +295,12 @@ class Graph:
             )
         )
 
+    def scalars(
+        self,
+        translated_metrics: Mapping[MetricName, TranslatedMetric],
+    ) -> Mapping[RRDMetric, Scalars]:
+        return _scalars_of(self.rrd_metrics(), translated_metrics)
+
 
 @dataclass(frozen=True, kw_only=True)
 class Bidirectional:
@@ -255,3 +311,9 @@ class Bidirectional:
 
     def rrd_metrics(self) -> Sequence[RRDMetric]:
         return list(set((*self.lower.rrd_metrics(), *self.upper.rrd_metrics())))
+
+    def scalars(
+        self,
+        translated_metrics: Mapping[MetricName, TranslatedMetric],
+    ) -> Mapping[RRDMetric, Scalars]:
+        return _scalars_of(self.rrd_metrics(), translated_metrics)

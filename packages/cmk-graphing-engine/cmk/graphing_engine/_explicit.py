@@ -35,11 +35,6 @@ def discover_explicit_graphs(
         DiscoveredGraph(
             graph=options.graph,
             options=ExplicitOptions(common=options.common, service=options.service),
-            scalars={
-                metric: bounds
-                for metric in options.graph.rrd_metrics()
-                if metric.metric_name in translated_metrics
-                and (bounds := translated_metrics[metric.metric_name].bounds)
-            },
+            scalars=options.graph.scalars(translated_metrics),
         )
     ]

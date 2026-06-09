@@ -9,7 +9,7 @@ from ._explicit import (
     ExplicitDiscoveryOptions,
     ExplicitOptions,
 )
-from ._fetch import FetchRRD, RRDSource, Scalars, TimeSeries, TranslatedMetric
+from ._fetch import FetchRRD, TimeSeries
 from ._from_api import parse_graph_from_api
 from ._objects import (
     AutoPrecision,
@@ -35,12 +35,15 @@ from ._objects import (
     Product,
     Quantity,
     RRDMetric,
+    RRDSource,
+    Scalars,
     SINotation,
     StackGroup,
     StandardScientificNotation,
     StrictPrecision,
     Sum,
     TimeNotation,
+    TranslatedMetric,
     Unit,
     VerticalRange,
     WarningOf,

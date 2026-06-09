@@ -103,33 +103,34 @@ def discover_template_graphs(
             DiscoveredGraph(
                 graph=graph,
                 options=post_options,
-                scalars={
-                    metric: bounds
-                    for metric in graph.rrd_metrics()
-                    if metric.metric_name in translated_metrics
-                    and (bounds := translated_metrics[metric.metric_name].bounds)
-                },
+                scalars=graph.scalars(translated_metrics),
             )
         )
 
-    for name, metric in translated_metrics.items():
+    for name in translated_metrics:
         if name in claimed:
             continue
-        rrd_metric = RRDMetric(
-            host_name=options.service.host_name,
-            service_name=options.service.service_name,
-            metric_name=name,
-            consolidation_function=options.consolidation_function,
+        graph = Graph(
+            name=name,
+            title=name,
+            stack_groups=[
+                StackGroup(
+                    members=[
+                        RRDMetric(
+                            host_name=options.service.host_name,
+                            service_name=options.service.service_name,
+                            metric_name=name,
+                            consolidation_function=options.consolidation_function,
+                        )
+                    ]
+                )
+            ],
         )
         discovered.append(
             DiscoveredGraph(
-                graph=Graph(
-                    name=name,
-                    title=name,
-                    stack_groups=[StackGroup(members=[rrd_metric])],
-                ),
+                graph=graph,
                 options=post_options,
-                scalars={rrd_metric: metric.bounds} if metric.bounds else {},
+                scalars=graph.scalars(translated_metrics),
             )
         )
 

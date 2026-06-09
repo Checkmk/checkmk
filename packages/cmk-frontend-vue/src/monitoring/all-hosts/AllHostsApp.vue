@@ -14,6 +14,8 @@ import { onBeforeUnmount, provide, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkSearchInput from '@/components/CmkSearchInput.vue'
+
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 
@@ -91,6 +93,11 @@ function rowKey(row: HostEntry): string {
 </script>
 
 <template>
+  <CmkSearchInput
+    class="monitoring-all-hosts-app__search"
+    :placeholder="_t('Search hosts…')"
+    @search="hostService.updateSearch($event)"
+  />
   <MonitoringTable
     :rows="hostService.items.value"
     :loading="hostService.loading.value"
@@ -105,3 +112,10 @@ function rowKey(row: HostEntry): string {
     </template>
   </MonitoringTable>
 </template>
+
+<style scoped>
+.monitoring-all-hosts-app__search {
+  margin-bottom: var(--spacing);
+  max-width: 360px;
+}
+</style>

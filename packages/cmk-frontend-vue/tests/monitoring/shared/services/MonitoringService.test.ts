@@ -205,4 +205,21 @@ describe('MonitoringService', () => {
 
     service.stopPolling()
   })
+
+  it('updateSearch stores the query and triggers an immediate refresh', async () => {
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0))
+    const service = new TestService(fetchBatch)
+
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchBatch).toHaveBeenCalledTimes(1)
+    expect(service.searchQuery.value).toBe('')
+
+    service.updateSearch('db')
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.searchQuery.value).toBe('db')
+    expect(fetchBatch).toHaveBeenCalledTimes(2)
+
+    service.stopPolling()
+  })
 })

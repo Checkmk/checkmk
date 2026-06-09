@@ -41,6 +41,7 @@ import UclCmkDropdown from './form-elements/CmkDropdown/UclCmkDropdown.vue'
 import UclCmkDualList from './form-elements/CmkDualList/UclCmkDualList.vue'
 import UclCmkInput from './form-elements/CmkInput/UclCmkInput.vue'
 import UclCmkList from './form-elements/CmkList/UclCmkList.vue'
+import UclCmkSearchInput from './form-elements/CmkSearchInput/UclCmkSearchInput.vue'
 import UclCmkTimeSpan from './form-elements/CmkTimeSpan/UclCmkTimeSpan.vue'
 import UclCmkToggleButtonGroup from './form-elements/CmkToggleButtonGroup/UclCmkToggleButtonGroup.vue'
 import UclCmkHtml from './foundation-elements/CmkHtml/UclCmkHtml.vue'
@@ -105,6 +106,7 @@ const formElementsPages = [
   new Page('CmkDualList', UclCmkDualList),
   new Page('CmkInput', UclCmkInput),
   new Page('CmkList', UclCmkList),
+  new Page('CmkSearchInput', UclCmkSearchInput),
   new Page('CmkTimeSpan', UclCmkTimeSpan),
   new Page('CmkToggleButtonGroup', UclCmkToggleButtonGroup)
 ]

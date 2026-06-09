@@ -64,6 +64,21 @@ describe('HostService', () => {
     service.updateSort([{ id: 'name', desc: false }])
     await vi.advanceTimersByTimeAsync(0)
 
-    expect(fetchHosts).toHaveBeenLastCalledWith({ sort: [{ id: 'name', desc: false }] })
+    expect(fetchHosts).toHaveBeenLastCalledWith({
+      sort: [{ id: 'name', desc: false }],
+      searchQuery: ''
+    })
+  })
+
+  it('passes the search query to api.fetchHosts after updateSearch is called', async () => {
+    const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([], 0))
+    service = new HostService({ fetchHosts })
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.updateSearch('web01')
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchHosts).toHaveBeenLastCalledWith({ sort: [], searchQuery: 'web01' })
   })
 })

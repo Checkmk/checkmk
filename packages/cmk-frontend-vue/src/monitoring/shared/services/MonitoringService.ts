@@ -20,6 +20,7 @@ export abstract class MonitoringService<T> {
   readonly total: Ref<number> = ref(0)
   readonly loading: Ref<boolean> = ref(false)
   readonly sortState: Ref<SortingState> = ref<SortingState>([])
+  readonly searchQuery: Ref<string> = ref('')
 
   private initialFetchTimer: ReturnType<typeof setTimeout> | null = null
   private pollTimer: ReturnType<typeof setInterval> | null = null
@@ -40,6 +41,11 @@ export abstract class MonitoringService<T> {
 
   updateSort(sortState: SortingState): void {
     this.sortState.value = sortState
+    void this.fetch()
+  }
+
+  updateSearch(searchQuery: string): void {
+    this.searchQuery.value = searchQuery
     void this.fetch()
   }
 

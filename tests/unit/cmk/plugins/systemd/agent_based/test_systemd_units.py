@@ -28,7 +28,6 @@ from cmk.plugins.systemd.agent_based.systemd_units import (
     Section,
     UnitEntry,
 )
-from cmk.utils.check_utils import ParametersTypeAlias
 
 
 @pytest.mark.parametrize(
@@ -1148,7 +1147,7 @@ def test_discover_systemd_units_services_summary(
     ],
 )
 def test_check_systemd_units_services(
-    item: str, params: ParametersTypeAlias, section: Section, check_results: Sequence[Result]
+    item: str, params: Mapping[str, object], section: Section, check_results: Sequence[Result]
 ) -> None:
     assert list(check_systemd_services(item, params, section)) == check_results
 
@@ -1186,7 +1185,7 @@ def test_check_systemd_units_services(
     ],
 )
 def test_check_systemd_units_sockets(
-    item: str, params: ParametersTypeAlias, section: Section, check_results: Sequence[Result]
+    item: str, params: Mapping[str, object], section: Section, check_results: Sequence[Result]
 ) -> None:
     assert list(check_systemd_sockets(item, params, section)) == check_results
 
@@ -1608,7 +1607,7 @@ def test_check_systemd_units_sockets(
     ],
 )
 def test_check_systemd_units_services_summary(
-    params: ParametersTypeAlias, section: Section, check_results: Sequence[Result]
+    params: Mapping[str, object], section: Section, check_results: Sequence[Result]
 ) -> None:
     assert (
         list(check_systemd_units_services_summary(params=params, section=section)) == check_results

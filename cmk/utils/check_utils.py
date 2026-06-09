@@ -5,11 +5,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
-
-ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
-
 
 def worst_service_state(*states: int, default: int) -> int:
     """Return the 'worst' aggregation of all states

@@ -8,10 +8,9 @@ from __future__ import annotations
 import pprint
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from typing import Final, TypedDict
+from typing import Any, Final, TypedDict
 
 import cmk.ccc.debug
-from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.parameters import merge_parameters
 from cmk.utils.timeperiod import TimeperiodName, TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
 
@@ -22,6 +21,8 @@ __all__ = [
     "TimespecificParameterSet",
     "IsTimeperiodActiveCallback",
 ]
+
+ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
 
 
 class Parameters(ParametersTypeAlias):

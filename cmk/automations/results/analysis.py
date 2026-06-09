@@ -21,9 +21,8 @@ from cmk.automations.results._base import (
 )
 from cmk.ccc import version as cmk_version
 from cmk.checkengine.legacy import LegacyCheckParameters
-from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.parameters import ParametersTypeAlias, TimespecificParameters
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
-from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.servicename import Item, ServiceName

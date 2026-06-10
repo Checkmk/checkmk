@@ -15,7 +15,6 @@ from ._objects import (
     RRDMetricData,
     RRDMetricRef,
     RRDMetricWithCF,
-    RRDOriginal,
 )
 from ._options import CommonOptions, ConsolidationFunction, ServiceRef, TimeRange
 
@@ -33,11 +32,11 @@ class FetchRRD(Protocol):
 
     def time_series(
         self,
-        keys: Sequence[RRDOriginal],
+        rrd_metrics: Sequence[RRDMetricRef],
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
-    ) -> Mapping[RRDOriginal, TimeSeries]: ...
+    ) -> Mapping[RRDMetricRef, TimeSeries]: ...
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -59,21 +58,20 @@ def _fetch_time_series_per_request(
     request: GraphRequest, rrd: FetchRRD
 ) -> Mapping[RRDMetricRef, TimeSeries]:
     # A pinned metric is fetched with its own consolidation function, a bare one with the request's.
-    # Group the sources in a single pass and fetch one batch per distinct function.
-    metric_by_source_by_function: dict[ConsolidationFunction, dict[RRDOriginal, RRDMetricRef]] = {}
+    # Group the metrics in a single pass and fetch one batch per distinct function.
+    metrics_by_function: dict[ConsolidationFunction, list[RRDMetricRef]] = {}
     for metric in request.graph.rrd_metrics():
-        source = RRDOriginal(metric_name=metric.metric_name, scale=1.0)
-        function = _consolidation_function(metric, request)
-        metric_by_source_by_function.setdefault(function, {})[source] = metric
+        metrics_by_function.setdefault(_consolidation_function(metric, request), []).append(metric)
 
     result: dict[RRDMetricRef, TimeSeries] = {}
-    for consolidation_function, metric_by_source in metric_by_source_by_function.items():
-        for source, time_series in rrd.time_series(
-            list(metric_by_source),
-            time_range=request.common.time_range,
-            consolidation_function=consolidation_function,
-        ).items():
-            result[metric_by_source[source]] = time_series
+    for consolidation_function, metrics in metrics_by_function.items():
+        result.update(
+            rrd.time_series(
+                metrics,
+                time_range=request.common.time_range,
+                consolidation_function=consolidation_function,
+            )
+        )
     return result
 
 

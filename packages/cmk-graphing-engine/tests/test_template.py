@@ -21,6 +21,7 @@ from cmk.graphing_engine import (
     parse_graph_from_api,
     RRDMetric,
     RRDMetricData,
+    RRDMetricRef,
     RRDOriginal,
     ServiceRef,
     StackGroup,
@@ -117,11 +118,11 @@ class _FakeFetchRRD:
 
     def time_series(
         self,
-        keys: Sequence[RRDOriginal],
+        rrd_metrics: Sequence[RRDMetricRef],
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
-    ) -> Mapping[RRDOriginal, TimeSeries]:
+    ) -> Mapping[RRDMetricRef, TimeSeries]:
         raise NotImplementedError
 
 

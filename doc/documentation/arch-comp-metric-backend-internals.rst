@@ -54,7 +54,11 @@ The metric backend configuration is stored in ``etc/check_mk/metric_backend.json
 read at startup by all components that need to connect to ClickHouse. The config is a
 discriminated union of two models:
 
-* ``ConfigMetricBackendSelfHosted`` — ports, mTLS certificate paths, server hostname
+* ``SerializedConfigSelfHosted`` — address and ports only. The mTLS certificate paths
+  and the server hostname expected by the client depend on the site name and are
+  therefore not stored in the file (it would become stale when the site is renamed);
+  they are derived from the site root when the file is read, yielding the in-memory
+  model ``ConfigMetricBackendSelfHosted``.
 * ``ConfigMetricBackendCloud`` — address, HTTP port, TLS flag, credentials
 
 The config file is written by the GUI config domain (``_config_domain.py``) when the

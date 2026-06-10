@@ -16,11 +16,13 @@ from cmk.graphing_engine import (
     DecimalNotation,
     discover_template_graphs,
     Graph,
+    Line,
     MetricName,
     parse_graph_from_api,
     PerformanceData,
     PerformanceDataByService,
     PerformanceValue,
+    Quantity,
     RRDMetric,
     RRDMetricData,
     RRDMetricRef,
@@ -67,6 +69,14 @@ def _rrd(name: MetricName) -> RRDMetric:
         service_name="svc",
         metric_name=name,
     )
+
+
+def _line(quantity: Quantity) -> Line:
+    return Line(quantity=quantity, inverse=False)
+
+
+def _stack(*members: Quantity) -> StackGroup:
+    return StackGroup(members=list(members), inverse=False)
 
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
@@ -182,7 +192,7 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
     assert discovered.graph == Graph(
-        name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[_rrd(cpu_user)])]
+        name=cpu_user, title=cpu_user, stack_groups=[_stack(_rrd(cpu_user))]
     )
     assert discovered.options == TemplateOptions(
         time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
@@ -243,9 +253,7 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
     [matched, fallback] = discover_template_graphs(options, rrd=rrd)
 
     assert matched.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
-    assert fallback.graph == Graph(
-        name=extra, title=extra, stack_groups=[StackGroup(members=[_rrd(extra)])]
-    )
+    assert fallback.graph == Graph(name=extra, title=extra, stack_groups=[_stack(_rrd(extra))])
 
 
 def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() -> None:
@@ -268,7 +276,7 @@ def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() 
     [fallback] = discover_template_graphs(options, rrd=rrd)
 
     assert fallback.graph == Graph(
-        name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[_rrd(cpu_user)])]
+        name=cpu_user, title=cpu_user, stack_groups=[_stack(_rrd(cpu_user))]
     )
 
 
@@ -564,7 +572,7 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> 
     assert len(discovered) == 1
     graph = discovered[0].graph
     assert isinstance(graph, Graph)
-    assert _rrd(predict) in graph.simple_lines
+    assert _line(_rrd(predict)) in graph.simple_lines
     assert _rrd(predict) in discovered[0].metric_data
 
 
@@ -589,7 +597,7 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_fallback_graph() ->
     assert [d.graph.name for d in discovered] == ["cpu_user"]
     graph = discovered[0].graph
     assert isinstance(graph, Graph)
-    assert _rrd(predict) in graph.simple_lines
+    assert _line(_rrd(predict)) in graph.simple_lines
 
 
 def test_discover_template_graphs_ignores_a_predictive_metric_without_its_base() -> None:

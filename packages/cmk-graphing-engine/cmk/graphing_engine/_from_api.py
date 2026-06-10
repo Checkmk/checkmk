@@ -25,6 +25,7 @@ from ._objects import (
     Fraction,
     Graph,
     IECNotation,
+    Line,
     LowerCriticalOf,
     LowerWarningOf,
     MaximumOf,
@@ -325,11 +326,18 @@ def _parse_graph(
             else _parse_minimal_range(graph.minimal_range, context)
         ),
         stack_groups=(
-            [StackGroup(members=[_parse_quantity(q, context) for q in graph.compound_lines])]
+            [
+                StackGroup(
+                    members=[_parse_quantity(q, context) for q in graph.compound_lines],
+                    inverse=False,
+                )
+            ]
             if graph.compound_lines
             else []
         ),
-        simple_lines=[_parse_quantity(q, context) for q in graph.simple_lines],
+        simple_lines=[
+            Line(quantity=_parse_quantity(q, context), inverse=False) for q in graph.simple_lines
+        ],
     )
 
 

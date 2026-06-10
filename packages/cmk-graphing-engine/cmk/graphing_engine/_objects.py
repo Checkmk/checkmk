@@ -210,6 +210,15 @@ type VerticalRange = MinimalRange | FixedRange
 @dataclass(frozen=True)
 class StackGroup:
     members: Sequence[Quantity]
+    # An inverse group is mirrored below the x-axis (the lower half of a former bidirectional).
+    inverse: bool
+
+
+@dataclass(frozen=True)
+class Line:
+    quantity: Quantity
+    # An inverse line is mirrored below the x-axis (the lower half of a former bidirectional).
+    inverse: bool
 
 
 def _rrd_metrics_in_quantity(quantity: Quantity) -> Iterable[RRDMetricRef]:
@@ -397,7 +406,7 @@ class Graph(_GraphObject):
     title: str
     vertical_range: VerticalRange | None = None
     stack_groups: Sequence[StackGroup] = ()
-    simple_lines: Sequence[Quantity] = ()
+    simple_lines: Sequence[Line] = ()
 
     def rrd_metrics(self) -> Sequence[RRDMetricRef]:
         return list(
@@ -405,7 +414,7 @@ class Graph(_GraphObject):
                 rrd_metric
                 for quantity in itertools.chain(
                     (m for g in self.stack_groups for m in g.members),
-                    self.simple_lines,
+                    (line.quantity for line in self.simple_lines),
                 )
                 for rrd_metric in _rrd_metrics_in_quantity(quantity)
             )

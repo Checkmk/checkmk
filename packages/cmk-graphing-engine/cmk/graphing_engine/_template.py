@@ -21,6 +21,7 @@ from ._from_api import (
 from ._objects import (
     Bidirectional,
     Graph,
+    Line,
     MetricName,
     MetricTranslations,
     RRDMetric,
@@ -111,7 +112,7 @@ def _predictive_lines_of_graph(
     available: Mapping[MetricName, RRDMetricData],
 ) -> tuple[Graph, set[MetricName]]:
     # For every metric drawn in the graph, draw its predictive companions if the service has them.
-    added: list[RRDMetric] = []
+    added: list[Line] = []
     names: set[MetricName] = set()
     for base in dict.fromkeys(metric.metric_name for metric in graph.rrd_metrics()):
         for predictive in (
@@ -120,10 +121,13 @@ def _predictive_lines_of_graph(
         ):
             if predictive in available and predictive not in names:
                 added.append(
-                    RRDMetric(
-                        host_name=service.host_name,
-                        service_name=service.service_name,
-                        metric_name=predictive,
+                    Line(
+                        quantity=RRDMetric(
+                            host_name=service.host_name,
+                            service_name=service.service_name,
+                            metric_name=predictive,
+                        ),
+                        inverse=False,
                     )
                 )
                 names.add(predictive)
@@ -229,7 +233,8 @@ def discover_template_graphs(
                                     service_name=options.service.service_name,
                                     metric_name=name,
                                 )
-                            ]
+                            ],
+                            inverse=False,
                         )
                     ],
                 )

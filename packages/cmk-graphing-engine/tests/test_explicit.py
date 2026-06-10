@@ -17,10 +17,12 @@ from cmk.graphing_engine import (
     ExplicitOptions,
     FixedRange,
     Graph,
+    Line,
     MetricName,
     PerformanceData,
     PerformanceDataByService,
     PerformanceValue,
+    Quantity,
     RRDMetricData,
     RRDMetricRef,
     RRDMetricWithCF,
@@ -63,6 +65,10 @@ def _time_range() -> TimeRange:
 
 def _service() -> ServiceRef:
     return ServiceRef(host_name="h", service_name="svc")
+
+
+def _line(quantity: Quantity) -> Line:
+    return Line(quantity=quantity, inverse=False)
 
 
 def _options(graph: Graph | Bidirectional) -> ExplicitDiscoveryOptions:
@@ -175,7 +181,10 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
         name="cpu",
         title="CPU",
         # cpu_user as a curve; cpu_system referenced only by a scalar threshold.
-        simple_lines=[_rrd(cpu_user), WarningOf(metric=_rrd(cpu_system), color="#28a2f3")],
+        simple_lines=[
+            _line(_rrd(cpu_user)),
+            _line(WarningOf(metric=_rrd(cpu_system), color="#28a2f3")),
+        ],
     )
     options = _options(inline)
     rrd = _FakeFetchRRD(
@@ -208,7 +217,7 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
 
 def test_discover_explicit_graphs_omits_scalars_for_metrics_not_in_translated_metrics() -> None:
     service = _service()
-    inline = Graph(name="g", title="g", simple_lines=[_rrd(MetricName("missing_metric"))])
+    inline = Graph(name="g", title="g", simple_lines=[_line(_rrd(MetricName("missing_metric")))])
     options = _options(inline)
     rrd = _FakeFetchRRD(performance_response={service: _perf_data()})
 
@@ -224,8 +233,8 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
     inline = Bidirectional(
         name="if",
         title="Interface",
-        lower=Graph(name="in", title="In", simple_lines=[_rrd(if_in)]),
-        upper=Graph(name="out", title="Out", simple_lines=[_rrd(if_out)]),
+        lower=Graph(name="in", title="In", simple_lines=[_line(_rrd(if_in))]),
+        upper=Graph(name="out", title="Out", simple_lines=[_line(_rrd(if_out))]),
     )
     options = _options(inline)
     rrd = _FakeFetchRRD(
@@ -260,7 +269,7 @@ def test_discover_explicit_graphs_keeps_same_metric_name_on_different_services_d
         metric_name=load,
         consolidation_function=ConsolidationFunction.AVERAGE,
     )
-    inline = Graph(name="load", title="Load", simple_lines=[metric_a, metric_b])
+    inline = Graph(name="load", title="Load", simple_lines=[_line(metric_a), _line(metric_b)])
     options = _options(inline)
     rrd = _FakeFetchRRD(
         performance_response={
@@ -284,7 +293,7 @@ def test_discover_explicit_graphs_passes_through_a_fixed_vertical_range() -> Non
         name="g",
         title="g",
         vertical_range=FixedRange(lower=0, upper=100),
-        simple_lines=[_rrd(MetricName("a"))],
+        simple_lines=[_line(_rrd(MetricName("a")))],
     )
     options = _options(inline)
     rrd = _FakeFetchRRD(performance_response={service: _perf_data()})

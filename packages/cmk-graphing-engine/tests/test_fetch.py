@@ -11,8 +11,10 @@ from cmk.graphing_engine import (
     fetch_time_series,
     Graph,
     GraphRequest,
+    Line,
     MetricName,
     PerformanceDataByService,
+    Quantity,
     RRDMetric,
     RRDMetricRef,
     RRDMetricWithCF,
@@ -20,6 +22,10 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
 )
+
+
+def _line(quantity: Quantity) -> Line:
+    return Line(quantity=quantity, inverse=False)
 
 
 def _time_range() -> TimeRange:
@@ -86,7 +92,7 @@ def test_returns_one_data_mapping_per_request_keyed_by_rrd_metric() -> None:
     cpu_system = _rrd_with_cf("cpu_system")
     cpu_user_series = _series(1.0)
     cpu_system_series = _series(2.0)
-    graph = Graph(name="cpu", title="CPU", simple_lines=[cpu_user, cpu_system])
+    graph = Graph(name="cpu", title="CPU", simple_lines=[_line(cpu_user), _line(cpu_system)])
     request = GraphRequest(
         graph=graph, time_range=_time_range(), consolidation_function=ConsolidationFunction.MAX
     )
@@ -111,7 +117,7 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
     max_metric = _rrd_with_cf("b", ConsolidationFunction.MAX)
     avg_series = _series(1.0)
     max_series = _series(2.0)
-    graph = Graph(name="g", title="g", simple_lines=[avg_metric, max_metric])
+    graph = Graph(name="g", title="g", simple_lines=[_line(avg_metric), _line(max_metric)])
     request = GraphRequest(
         graph=graph, time_range=_time_range(), consolidation_function=ConsolidationFunction.MAX
     )
@@ -133,8 +139,8 @@ def test_multiple_requests_yield_one_mapping_each_in_order() -> None:
     y = _rrd_with_cf("y")
     x_series = _series(1.0)
     y_series = _series(2.0)
-    graph_x = Graph(name="x", title="x", simple_lines=[x])
-    graph_y = Graph(name="y", title="y", simple_lines=[y])
+    graph_x = Graph(name="x", title="x", simple_lines=[_line(x)])
+    graph_y = Graph(name="y", title="y", simple_lines=[_line(y)])
     request_x = GraphRequest(
         graph=graph_x, time_range=_time_range(), consolidation_function=ConsolidationFunction.MAX
     )
@@ -156,8 +162,8 @@ def test_fetches_metrics_from_both_halves_of_a_bidirectional() -> None:
     graph = Bidirectional(
         name="if",
         title="Interface",
-        lower=Graph(name="in", title="In", simple_lines=[in_]),
-        upper=Graph(name="out", title="Out", simple_lines=[out]),
+        lower=Graph(name="in", title="In", simple_lines=[_line(in_)]),
+        upper=Graph(name="out", title="Out", simple_lines=[_line(out)]),
     )
     request = GraphRequest(
         graph=graph, time_range=_time_range(), consolidation_function=ConsolidationFunction.MAX
@@ -175,7 +181,7 @@ def test_bare_metric_adopts_the_request_consolidation_function() -> None:
     pinned = _rrd_with_cf("peak", ConsolidationFunction.MAX)
     bare_series = _series(1.0)
     peak_series = _series(2.0)
-    graph = Graph(name="g", title="g", simple_lines=[bare, pinned])
+    graph = Graph(name="g", title="g", simple_lines=[_line(bare), _line(pinned)])
     request = GraphRequest(
         graph=graph, time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
     )

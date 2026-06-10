@@ -6,6 +6,7 @@
 /// avoid redundant code in the actual job definition files and to be able
 /// to provide a standard environment for all Checkmk jobs
 import java.text.SimpleDateFormat
+import java.util.TimeZone
 
 def main(job_definition_file) {
     /// brings raise, load_json, cmd_output
@@ -18,7 +19,10 @@ def main(job_definition_file) {
     /// before midnight we keep a single date for the whole
     /// job
     // TODO: this should be passed through by trigger-jobs
-    build_date = (new SimpleDateFormat("yyyy.MM.dd")).format(new Date());
+    def sdf = new SimpleDateFormat("yyyy.MM.dd")
+    // don't use "CET" directly as it won't auto-adjust on the DST switch
+    sdf.timeZone = TimeZone.getTimeZone("Europe/Berlin")
+    build_date = sdf.format(new Date());
 
     job_params_from_comments = arguments_from_comments();
 

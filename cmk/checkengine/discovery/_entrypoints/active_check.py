@@ -15,7 +15,6 @@ from typing import Literal
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery._autochecks import (
     AutochecksConfig,
     AutocheckServiceWithNodes,
@@ -50,6 +49,7 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.snmplib import SNMPRawData
+from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel

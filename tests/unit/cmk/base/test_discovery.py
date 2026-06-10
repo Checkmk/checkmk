@@ -41,7 +41,6 @@ from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     ABCDiscoveryConfig,
     analyse_cluster_labels,
@@ -108,6 +107,7 @@ from cmk.checkengine.sectionparser import (
     SectionsParser,
 )
 from cmk.checkengine.snmplib import SNMPRawDataElem
+from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel

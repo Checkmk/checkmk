@@ -23,13 +23,13 @@ from cmk.ccc import resulttype as result
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
-from cmk.checkengine.checkresults import (
-    ServiceCheckResult,
-    SubmittableServiceCheckResult,
-)
 from cmk.checkengine.helper_interface import FetcherType, HostKey, SourceInfo, SourceType
 from cmk.checkengine.parser import HostSections
 from cmk.checkengine.plugins import CheckPluginName, FinalCheckResult
+from cmk.checkengine.specs.checkresults import (
+    ServiceCheckResult,
+    SubmittableServiceCheckResult,
+)
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig

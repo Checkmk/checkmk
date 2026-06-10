@@ -14,13 +14,13 @@ from typing import Any, Final, Literal, NamedTuple, Protocol
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
 from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.checkresults import state_markers
 from cmk.checkengine.plugins import (
     CheckPlugin,
     FinalCheckFunction,
     FinalCheckResult,
     ServiceID,
 )
+from cmk.checkengine.specs.checkresults import state_markers
 from cmk.checkengine.value_store import ValueStoreManager
 
 _Kwargs = Mapping[str, Any]

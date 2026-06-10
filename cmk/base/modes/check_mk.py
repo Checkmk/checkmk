@@ -67,7 +67,6 @@ from cmk.checkengine.checking import (
     execute_checkmk_checks,
     make_timing_results,
 )
-from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     commandline_discovery,
     execute_check_discovery,
@@ -118,6 +117,7 @@ from cmk.checkengine.snmplib import (
     SNMPSectionName,
     walk_for_export,
 )
+from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.submitters import get_submitter, ServiceState
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager

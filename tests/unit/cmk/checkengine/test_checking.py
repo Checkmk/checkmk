@@ -14,8 +14,8 @@ from cmk.checkengine.checking import (
     merge_enforced_services,
     ServiceConfigurer,
 )
-from cmk.checkengine.checkresults import UnsubmittableServiceCheckResult
 from cmk.checkengine.plugins import CheckPlugin, CheckPluginName, ServiceID
+from cmk.checkengine.specs.checkresults import UnsubmittableServiceCheckResult
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.discover_plugins import PluginLocation

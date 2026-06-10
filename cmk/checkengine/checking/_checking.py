@@ -14,7 +14,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
 from cmk.ccc.resulttype import Result
 from cmk.checkengine.checkerplugin import AggregatedResult, CheckerPlugin, ConfiguredService
-from cmk.checkengine.checkresults import ActiveCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.helper_interface import AgentRawData, HostKey, SourceInfo
 from cmk.checkengine.inventory import (
     HWSWInventoryParameters,
@@ -35,6 +34,7 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.snmplib import SNMPRawData
+from cmk.checkengine.specs.checkresults import ActiveCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction

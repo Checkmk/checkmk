@@ -12,7 +12,6 @@ from typing import Any
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.helper_interface import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, AgentRawDataSectionElem, HostSections
 from cmk.checkengine.plugins import ParsedSectionName, SectionName
@@ -26,6 +25,7 @@ from cmk.checkengine.sectionparserutils import (
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
+from cmk.checkengine.specs.checkresults import ActiveCheckResult
 
 
 def _test_section(

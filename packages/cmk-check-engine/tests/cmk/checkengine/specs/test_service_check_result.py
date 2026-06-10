@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.checkresults import UnsubmittableServiceCheckResult
+from cmk.checkengine.specs.checkresults import UnsubmittableServiceCheckResult
 
 
 def test_cluster_received_no_data_no_nodes() -> None:

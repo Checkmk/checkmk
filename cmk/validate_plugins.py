@@ -22,9 +22,6 @@ from cmk.base.config import (  # astrein: disable=cmk-module-layer-violation
 from cmk.ccc import debug
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import edition
-from cmk.checkengine.checkresults import (  # astrein: disable=cmk-module-layer-violation
-    ActiveCheckResult,
-)
 from cmk.checkengine.plugin_backend import (  # astrein: disable=cmk-module-layer-violation
     ENTRY_POINT_PREFIXES,
     extract_known_discovery_rulesets,
@@ -34,6 +31,11 @@ from cmk.checkengine.plugins import (  # astrein: disable=cmk-module-layer-viola
     CheckPlugin,
     InventoryPlugin,
     InventoryPluginName,
+)
+
+# TODO: Remove suppression for layer violation?
+from cmk.checkengine.specs.checkresults import (  # astrein: disable=cmk-module-layer-violation
+    ActiveCheckResult,
 )
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.gui import main_modules  # astrein: disable=cmk-module-layer-violation

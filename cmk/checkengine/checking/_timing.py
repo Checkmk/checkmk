@@ -8,8 +8,8 @@ from collections.abc import Iterable
 from contextlib import suppress
 
 from cmk.ccc.cpu_tracking import Snapshot
-from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.helper_interface import FetcherType, SourceInfo
+from cmk.checkengine.specs.checkresults import ActiveCheckResult
 
 __all__ = ["make_timing_results"]
 

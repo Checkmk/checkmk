@@ -30,6 +30,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher import FetcherFunction
 from cmk.checkengine.helper_interface import HostKey, SourceType
 from cmk.checkengine.plugins import SectionName
+from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.inventory.structured_data import (
     ImmutableTree,
@@ -44,7 +45,6 @@ from cmk.inventory.structured_data import (
 )
 from cmk.utils.log import console, section
 
-from .checkresults import ActiveCheckResult
 from .parser import group_by_host, HostSections, ParserFunction
 from .plugins import InventoryPlugin, InventoryPluginName, ParsedSectionName
 from .sectionparser import (

@@ -8,13 +8,13 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v1 import TableRow
-from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.inventory import (
     _check_trees,
     _create_trees_from_inventory_plugin_items,
     HWSWInventoryParameters,
     ItemsOfInventoryPlugin,
 )
+from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.inventory.structured_data import ImmutableTree, MutableTree, SDKey, SDNodeName
 
 

@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.specs.checkresults import ActiveCheckResult
 
 
 class TestActiveCheckResult:

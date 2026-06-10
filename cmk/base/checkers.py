@@ -53,13 +53,6 @@ from cmk.checkengine.checkerplugin import (
     ConfiguredService,
 )
 from cmk.checkengine.checking import cluster_mode
-from cmk.checkengine.checkresults import (
-    ActiveCheckResult,
-    ServiceCheckResult,
-    state_markers,
-    SubmittableServiceCheckResult,
-    UnsubmittableServiceCheckResult,
-)
 from cmk.checkengine.discovery import (
     ABCDiscoveryConfig,
     get_plugin_parameters,
@@ -109,6 +102,13 @@ from cmk.checkengine.sectionparserutils import (
     get_section_kwargs,
 )
 from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPRawData
+from cmk.checkengine.specs.checkresults import (
+    ActiveCheckResult,
+    ServiceCheckResult,
+    state_markers,
+    SubmittableServiceCheckResult,
+    UnsubmittableServiceCheckResult,
+)
 from cmk.checkengine.specs.parameters import Parameters, ParametersTypeAlias
 from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig

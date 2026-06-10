@@ -14,10 +14,6 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkerplugin import CheckerPlugin, ConfiguredService
-from cmk.checkengine.checkresults import (
-    ActiveCheckResult,
-    SubmittableServiceCheckResult,
-)
 from cmk.checkengine.discovery._autochecks import AutochecksConfig, AutochecksStore
 from cmk.checkengine.discovery._autodiscovery import (
     discovery_by_host,
@@ -47,6 +43,10 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
+from cmk.checkengine.specs.checkresults import (
+    ActiveCheckResult,
+    SubmittableServiceCheckResult,
+)
 from cmk.checkengine.specs.parameters import (
     TimespecificParameters,
     TimespecificParametersPreview,

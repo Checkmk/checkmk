@@ -17,7 +17,6 @@ from cmk.agent_based.v1 import Attributes, TableRow
 from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import (
     _check_fetched_data_or_trees,
@@ -32,6 +31,7 @@ from cmk.checkengine.parser import HostSections
 from cmk.checkengine.plugins import ParsedSectionName, SectionName
 from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.snmplib import SNMPRawData
+from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.inventory.structured_data import (
     _MutableAttributes,
     _serialize_retention_interval,

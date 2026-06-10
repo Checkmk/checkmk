@@ -7,8 +7,7 @@
 
 
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.fetcher import HostKey
-from cmk.checkengine.helper_interface import SourceType
+from cmk.checkengine.helper_interface import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, group_by_host, HostSections
 from cmk.checkengine.plugins import SectionName
 

@@ -34,8 +34,7 @@ from cmk.checkengine.discovery._discover.host_labels import (
 from cmk.checkengine.discovery._utils.filters import ServiceFilter, ServiceFilters
 from cmk.checkengine.discovery._utils.params import DiscoveryCheckParameters
 from cmk.checkengine.discovery.types import DiscoverySettings, QualifiedDiscovery
-from cmk.checkengine.fetcher import HostKey
-from cmk.checkengine.helper_interface import AgentRawData, SourceInfo
+from cmk.checkengine.helper_interface import AgentRawData, HostKey, SourceInfo
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.plugins import (
     AutocheckEntry,

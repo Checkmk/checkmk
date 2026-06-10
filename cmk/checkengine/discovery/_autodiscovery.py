@@ -15,7 +15,8 @@ from typing import assert_never, Literal
 import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.fetcher import FetcherFunction, HostKey
+from cmk.checkengine.fetcher import FetcherFunction
+from cmk.checkengine.helper_interface import HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.plugins import (
     AutocheckEntry,

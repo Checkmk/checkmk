@@ -5,23 +5,16 @@
 
 from __future__ import annotations
 
-import dataclasses
 from collections.abc import Sequence
 from typing import Protocol
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.helper_interface import AgentRawData, SourceInfo, SourceType
+from cmk.checkengine.helper_interface import AgentRawData, SourceInfo
 from cmk.checkengine.snmplib import SNMPRawData
 
-__all__ = ["FetcherFunction", "HostKey"]
-
-
-@dataclasses.dataclass(frozen=True)
-class HostKey:
-    hostname: HostName
-    source_type: SourceType
+__all__ = ["FetcherFunction"]
 
 
 class FetcherFunction(Protocol):

@@ -77,7 +77,6 @@ from cmk.checkengine.discovery._utils.filters import (
     ServiceFilters,
 )
 from cmk.checkengine.discovery.types import DiscoveredItem
-from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.fetchers import (
     AdHocSecrets,
     Mode,
@@ -87,7 +86,7 @@ from cmk.checkengine.fetchers import (
     StoredSecrets,
 )
 from cmk.checkengine.fetchers.filecache import FileCacheOptions
-from cmk.checkengine.helper_interface import SourceType
+from cmk.checkengine.helper_interface import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,

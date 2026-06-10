@@ -11,7 +11,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, MutableMapping
 
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.fetcher import HostKey
+from cmk.checkengine.helper_interface import HostKey
 from cmk.checkengine.plugins import SectionName
 
 from ._parser import HostSections

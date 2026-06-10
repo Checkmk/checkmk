@@ -12,8 +12,7 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery.types import QualifiedDiscovery
-from cmk.checkengine.fetcher import HostKey
-from cmk.checkengine.helper_interface import SourceType
+from cmk.checkengine.helper_interface import HostKey, SourceType
 from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPluginName,

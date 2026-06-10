@@ -15,10 +15,9 @@ from typing import Any, Final, NamedTuple, Self
 
 from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.helper_interface import SourceType
+from cmk.checkengine.helper_interface import HostKey, SourceType
 from cmk.piggyback.backend import store_piggyback_raw_data
 
-from .fetcher import HostKey
 from .parser import HostSections
 from .plugins import ParsedSectionName, SectionName
 

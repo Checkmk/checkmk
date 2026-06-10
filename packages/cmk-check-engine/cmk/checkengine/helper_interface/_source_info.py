@@ -35,3 +35,9 @@ class SourceInfo:
     ident: str
     fetcher_type: FetcherType
     source_type: SourceType
+
+
+@dataclasses.dataclass(frozen=True)
+class HostKey:
+    hostname: HostName
+    source_type: SourceType

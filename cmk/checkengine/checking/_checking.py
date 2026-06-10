@@ -15,8 +15,7 @@ from cmk.ccc.regex import regex
 from cmk.ccc.resulttype import Result
 from cmk.checkengine.checkerplugin import AggregatedResult, CheckerPlugin, ConfiguredService
 from cmk.checkengine.checkresults import ActiveCheckResult, SubmittableServiceCheckResult
-from cmk.checkengine.fetcher import HostKey
-from cmk.checkengine.helper_interface import AgentRawData, SourceInfo
+from cmk.checkengine.helper_interface import AgentRawData, HostKey, SourceInfo
 from cmk.checkengine.inventory import (
     HWSWInventoryParameters,
     inventorize_status_data_of_real_host,

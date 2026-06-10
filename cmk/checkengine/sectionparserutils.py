@@ -6,8 +6,9 @@
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Final, NamedTuple
 
+from cmk.checkengine.helper_interface import HostKey
+
 from .checkresults import ActiveCheckResult
-from .fetcher import HostKey
 from .plugins import ParsedSectionName
 from .sectionparser import ParsedSectionContent, Provider
 from .submitters import ServiceState

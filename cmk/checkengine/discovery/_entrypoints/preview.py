@@ -31,7 +31,8 @@ from cmk.checkengine.discovery._discover.host_labels import (
     HostLabelPlugin,
 )
 from cmk.checkengine.discovery.types import QualifiedDiscovery
-from cmk.checkengine.fetcher import FetcherFunction, HostKey
+from cmk.checkengine.fetcher import FetcherFunction
+from cmk.checkengine.helper_interface import HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.plugins import (
     AutocheckEntry,

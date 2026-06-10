@@ -11,7 +11,7 @@ from typing import Protocol
 
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkresults import ServiceCheckResult
-from cmk.checkengine.fetcher import HostKey
+from cmk.checkengine.helper_interface import HostKey
 from cmk.checkengine.plugins import CheckPluginName, ParsedSectionName, ServiceID
 from cmk.checkengine.sectionparser import Provider
 from cmk.checkengine.specs.parameters import TimespecificParameters

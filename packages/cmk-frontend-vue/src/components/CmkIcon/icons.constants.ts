@@ -764,7 +764,8 @@ export const oneColorIcons = [
   'broken-chain',
   'share',
   'stale',
-  'reload'
+  'reload',
+  'filter'
 ] as const
 export const twoColorIcons = ['aggr'] as const
 

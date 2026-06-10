@@ -59,6 +59,12 @@ class LicenseOptions:
         return {f.name for f in fields(self) if not getattr(self, f.name).enabled}
 
 
+def _pro_signal_present(omd_root: Path) -> bool:
+    # DEMO ONLY (CMK-35348): marker file (relative to omd_root) that forces an ultimate
+    # build to behave as a pro build. Will be replaced by license-driven logic.
+    return (omd_root / Path("etc/check_mk/pro")).exists()
+
+
 def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
     licensed = load_plain_verification_response(omd_root)
     match edition:
@@ -78,6 +84,9 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
             return _make_pro_options()
 
         case Edition.ULTIMATE:
+            if _pro_signal_present(omd_root):
+                # DEMO ONLY (CMK-35348)
+                return _make_pro_options()
             if licensed and licensed.checkmk_edition is LicensedEdition.cee:
                 # WIP: behave like a PRO.
                 return _make_pro_options()

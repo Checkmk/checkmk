@@ -8,7 +8,7 @@
 )]
 param()
 
-$CMK_VERSION = "2.6.0b1"
+$CMK_VERSION = "3.0.0b1"
 $MK_CONFDIR = $env:MK_CONFDIR
 $ClientId = ""
 $TenantId = ""

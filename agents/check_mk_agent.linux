@@ -562,7 +562,7 @@ sudo_or_su() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.6.0b1"
+    echo "Version: 3.0.0b1"
     echo "AgentOS: linux"
     echo "Hostname: $(uname -n)"
 

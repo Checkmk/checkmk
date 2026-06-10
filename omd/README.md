@@ -36,14 +36,14 @@ Clone from the Checkmk Git, then execute the following commands:
 
 ```bash
 # To build a different edition, alter e.g. pro to community
-bazel build --cmk_version="2.6.0b1" --cmk_edition="pro" //omd:deps_install_pro
+bazel build --cmk_version="3.0.0b1" --cmk_edition="pro" //omd:deps_install_pro
 ```
 
 At the time of writing, several artifacts cannot (yet) be built in bazel.
 You either need to provide them manually in your worktree or use the faking mechanism via a build setting:
 
 ```bash
-bazel build --//:use_faked_artifacts=true --cmk_version="2.6.0b1" --cmk_edition="pro" //omd:deps_install_pro
+bazel build --//:use_faked_artifacts=true --cmk_version="3.0.0b1" --cmk_edition="pro" //omd:deps_install_pro
 ```
 
 > NOTE: `bazel` already provides a lot of the tool hermetically, however they are (and most likely will be) system dependencies,

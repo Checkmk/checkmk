@@ -16,7 +16,7 @@ from typing import Any, TYPE_CHECKING
 if TYPE_CHECKING:
     from rados import Rados  # type: ignore[import-not-found]
 
-__version__ = "2.6.0b1"
+__version__ = "3.0.0b1"
 
 
 def _bail_out_missing_dependency() -> int:

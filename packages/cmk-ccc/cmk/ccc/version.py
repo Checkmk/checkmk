@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-__version__ = "2.6.0b1"
+__version__ = "3.0.0b1"
 
 import enum
 import functools
@@ -629,6 +629,7 @@ def versions_compatible(
 
     last_major_releases = {
         1: _BaseVersion(1, 6, 0),
+        2: _BaseVersion(2, 5, 0),
     }
 
     if to_v.base.major - from_v.base.major == 1 and to_v.base.minor == 0:

@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.6.0b1"
+$CMK_VERSION = "3.0.0b1"
 # Copyright (C) 2025 Checkmk GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

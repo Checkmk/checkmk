@@ -12,4 +12,4 @@ your monitoring sites under share/check_mk/werks.
 Edition-specific changes are contained in share/check_mk/werks-EDITION_NAME
 
 From the git of Checkmk, you can create the ChangeLog file with the command
-"bazel build --cmk_edition=community --cmk_version=2.6.0b1 //omd/packages/changelog".
+"bazel build --cmk_edition=community --cmk_version=3.0.0b1 //omd/packages/changelog".

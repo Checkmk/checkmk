@@ -20,7 +20,7 @@ from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_sec
 from cmk.plugins.jolokia.agents import mk_jolokia
 from cmk.server_side_programs.v1_unstable import vcrtrace
 
-__version__ = "2.6.0b1"
+__version__ = "3.0.0b1"
 
 USER_AGENT = "checkmk-special-jolokia-" + __version__
 

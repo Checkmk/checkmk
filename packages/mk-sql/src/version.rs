@@ -6,5 +6,5 @@
 // Cargo uses this as-is: CMK_VERSION env overrides the fallback at compile time.
 pub const VERSION: &str = match option_env!("CMK_VERSION") {
     Some(v) => v,
-    None => "2.6.0b1",
+    None => "3.0.0b1",
 };

@@ -172,7 +172,7 @@ def move_rule_to(param: Mapping[str, Any]) -> http.Response:
     source_entry.folder = dest_folder  # this ensures the correct folder is returned in the response
     all_rulesets.save()
 
-    return serve_json(_serialize_rule(source_entry))
+    return serve_json(_serialize_rule(_get_rule_by_id(rule_id)))
 
 
 @Endpoint(

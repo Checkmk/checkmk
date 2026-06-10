@@ -3,34 +3,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 
 import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_value_store, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.bvip.lib import DETECT_BVIP
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
-check_info = {}
+
+def parse_bvip_util(string_table: StringTable) -> StringTable:
+    return string_table
 
 
-def discover_bvip_util(info):
-    if info:
+def discover_bvip_util(section: StringTable) -> DiscoveryResult:
+    if section:
         for name in ["Total", "Coder", "VCA"]:
-            yield name, {}
+            yield Service(item=name)
 
 
-def check_bvip_util(item, params, info):
+def check_bvip_util(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
     items = {
         "Total": 0,
         "Coder": 1,
         "VCA": 2,
     }
 
-    usage = int(info[0][items[item]])
+    usage = int(section[0][items[item]])
     if item == "Total":
         usage = 100 - usage
     yield from check_cpu_util(
@@ -41,18 +50,19 @@ def check_bvip_util(item, params, info):
     )
 
 
-def parse_bvip_util(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["bvip_util"] = LegacyCheckDefinition(
+snmp_section_bvip_util = SimpleSNMPSection(
     name="bvip_util",
-    parse_function=parse_bvip_util,
     detect=DETECT_BVIP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1.1.9.1",
         oids=["1", "2", "3"],
     ),
+    parse_function=parse_bvip_util,
+)
+
+
+check_plugin_bvip_util = CheckPlugin(
+    name="bvip_util",
     service_name="CPU utilization %s",
     discovery_function=discover_bvip_util,
     check_function=check_bvip_util,

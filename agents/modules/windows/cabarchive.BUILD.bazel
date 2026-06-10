@@ -1,0 +1,13 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+# Pure-Python Microsoft Cabinet writer (LGPL-2.1-or-later, GitHub: hughsie/python-cabarchive).
+# Used by //agents/modules/windows:python_3_cab to avoid a system gcab dependency.
+py_library(
+    name = "cabarchive",
+    srcs = glob(
+        ["cabarchive/*.py"],
+        exclude = ["cabarchive/test_*.py"],
+    ),
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)

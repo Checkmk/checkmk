@@ -7,7 +7,7 @@ name = "pypi"
 
 [packages]
 colorama = "==0.4.6"    # Windows has to have some color output
-pyyaml = "==6.0.1"      # to support the agent config
+pyyaml = "==6.0.2"      # to support the agent config (6.0.2 ships cp313-win_amd64 wheels)
 certifi= "==2023.11.17" # jolokia
 chardet = "==5.2.0"     # jolokia
 idna = "==3.6"          # jolokia

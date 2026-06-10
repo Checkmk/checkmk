@@ -6,6 +6,8 @@ repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_lice
 
 snap7_repository = use_repo_rule("//omd/packages/snap7:snap7_repository.bzl", "snap7_repository")
 
+windows_python_wheels = use_repo_rule("//agents/modules/windows:windows_python_wheels.bzl", "windows_python_wheels")
+
 bazel_dep(name = "asio", version = "1.34.2.cmk.1")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 bazel_dep(name = "aspect_rules_js", version = "2.3.7")
@@ -14,6 +16,7 @@ bazel_dep(name = "aspect_rules_py", version = "1.11.5")
 bazel_dep(name = "aspect_rules_ts", version = "3.6.0")
 bazel_dep(name = "aspect_rules_webpack", version = "0.17.0")
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
+bazel_dep(name = "cabextract", version = "1.11")
 bazel_dep(name = "cmk", version = "0.0.0")
 bazel_dep(name = "crypt-ssleay", version = "0.72.cmk.2", repo_name = "Crypt-SSLeay")
 bazel_dep(name = "gazelle", version = "0.45.0")
@@ -686,6 +689,66 @@ http_file(
         "https://repo1.maven.org/maven2/org/wiremock/wiremock-standalone/3.13.1/wiremock-standalone-3.13.1.jar",
         UPSTREAM_MIRROR_URL + "/wiremock-standalone-3.13.1.jar",
     ],
+)
+
+# Per-feature python.org MSIs consumed by //agents/modules/windows:python_3_cab
+# to build python-3.cab on Linux without Wine.  Refresh via
+# agents/modules/windows/refresh_msi_pins.py <new version>.
+# cabarchive: pure-Python CAB writer used by the windows-agent python-3.cab
+# build (see //agents/modules/windows:python_3_cab) to package the produced
+# Python tree into a Microsoft Cabinet without a system gcab/makecab.exe.
+http_archive(
+    name = "cabarchive",
+    build_file = "//agents/modules/windows:cabarchive.BUILD.bazel",
+    integrity = "sha256-tQixytiQhX5V8/eiAnynvtudwF3l7/B/gon5VGIAp6o=",
+    strip_prefix = "cabarchive-0.2.5",
+    urls = [
+        "https://files.pythonhosted.org/packages/source/c/cabarchive/cabarchive-0.2.5.tar.gz",
+        UPSTREAM_MIRROR_URL + "cabarchive-0.2.5.tar.gz",
+    ],
+)
+
+http_file(
+    name = "python_msi_ucrt",
+    downloaded_file_path = "ucrt.msi",
+    sha256 = "5e6af3bfa726e50a320830ce6bf080d5fad049389cfea13d63812a7f4be50aa2",
+    url = "https://www.python.org/ftp/python/3.13.13/amd64/ucrt.msi",
+)
+
+http_file(
+    name = "python_msi_core",
+    downloaded_file_path = "core.msi",
+    sha256 = "863c2828e167418fc53e0290b379938f3bdbcfbb88e89e15e6265672345940a4",
+    url = "https://www.python.org/ftp/python/3.13.13/amd64/core.msi",
+)
+
+http_file(
+    name = "python_msi_exe",
+    downloaded_file_path = "exe.msi",
+    sha256 = "6ec09f11d20a58d77bcc40c86eb1eff0bd55ea4d28a89a569754583705efa1ac",
+    url = "https://www.python.org/ftp/python/3.13.13/amd64/exe.msi",
+)
+
+http_file(
+    name = "python_msi_lib",
+    downloaded_file_path = "lib.msi",
+    sha256 = "c72f5fca7ed487818bb52c66fc9126f2ecc4260e8e394c9394e21825bbf0c936",
+    url = "https://www.python.org/ftp/python/3.13.13/amd64/lib.msi",
+)
+
+http_file(
+    name = "python_msi_pip",
+    downloaded_file_path = "pip.msi",
+    sha256 = "6899283565a7d4d85058518d58f9edcda2e0828496d46b0bca4fee20d7e7d7cf",
+    url = "https://www.python.org/ftp/python/3.13.13/amd64/pip.msi",
+)
+
+# win_amd64 wheel closure for python-3.cab's .venv, fetched at the fetch phase
+# from the sha256-pinned lock.  Regenerate the lock via
+# agents/modules/windows/refresh_wheel_pins.py <new version>.
+windows_python_wheels(
+    name = "windows_python_wheels",
+    lock = "//agents/modules/windows:windows_python_wheels.lock.json",
 )
 
 http_archive(

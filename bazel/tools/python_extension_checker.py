@@ -155,6 +155,7 @@ IGNORE_SUFFIXES = [
     ".toml",
     ".txt",
     ".yaml",
+    ".tmpl",
     ".yml",
 ]
 

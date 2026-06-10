@@ -147,6 +147,24 @@ def test_translate_keeps_the_predict_prefix_on_the_renamed_metric() -> None:
     assert data.originals == [RRDOriginal(metric_name=MetricName("predict_temperature"), scale=1.0)]
 
 
+def test_translate_scales_a_predictive_metric_like_its_base() -> None:
+    perf = PerformanceData(
+        check_command="check_mk-cpu",
+        values=[PerformanceValue(metric_name=MetricName("predict_cpu_user"), value=21.0)],
+    )
+    # The scale of the base metric (cpu_user) is applied to its predictive companion as well.
+    translations = {
+        "check_mk-cpu": {
+            MetricName("cpu_user"): MetricTranslation(name=MetricName("cpu_user"), scale=2.0)
+        }
+    }
+
+    [(name, data)] = translate_performance_data(perf, translations, _METRICS, _id).items()
+    assert name == MetricName("predict_cpu_user")
+    assert data.value == 42.0
+    assert data.originals == [RRDOriginal(metric_name=MetricName("predict_cpu_user"), scale=2.0)]
+
+
 def test_translate_merges_metrics_renaming_to_the_same_target() -> None:
     perf = PerformanceData(
         check_command="check_mk-cpu",

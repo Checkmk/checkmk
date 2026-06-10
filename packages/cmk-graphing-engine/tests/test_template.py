@@ -540,3 +540,70 @@ def test_discover_template_graphs_claims_a_metric_referenced_only_in_the_title()
     assert len(discovered) == 1
     assert discovered[0].graph.name == "cpu"
     assert discovered[0].graph_title == "CPU - 8 cores"
+
+
+def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> None:
+    service = _service()
+    cpu_user = MetricName("cpu_user")
+    predict = MetricName("predict_cpu_user")
+    plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
+    options = TemplateDiscoveryOptions(
+        time_range=_time_range(),
+        service=service,
+        consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
+        translations={},
+        localizer=_id,
+        registered_graphs=[plugin],
+    )
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user), _perf(predict))})
+
+    discovered = discover_template_graphs(options, rrd=rrd)
+
+    # The predictive metric is drawn alongside cpu_user, not as a graph of its own.
+    assert len(discovered) == 1
+    graph = discovered[0].graph
+    assert isinstance(graph, Graph)
+    assert _rrd(predict) in graph.simple_lines
+    assert _rrd(predict) in discovered[0].metric_data
+
+
+def test_discover_template_graphs_adds_predictive_lines_to_a_fallback_graph() -> None:
+    service = _service()
+    cpu_user = MetricName("cpu_user")
+    predict = MetricName("predict_cpu_user")
+    options = TemplateDiscoveryOptions(
+        time_range=_time_range(),
+        service=service,
+        consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
+        translations={},
+        localizer=_id,
+        registered_graphs=[],
+    )
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user), _perf(predict))})
+
+    discovered = discover_template_graphs(options, rrd=rrd)
+
+    # Only the cpu_user fallback graph is emitted; its predictive companion is added as a line.
+    assert [d.graph.name for d in discovered] == ["cpu_user"]
+    graph = discovered[0].graph
+    assert isinstance(graph, Graph)
+    assert _rrd(predict) in graph.simple_lines
+
+
+def test_discover_template_graphs_ignores_a_predictive_metric_without_its_base() -> None:
+    service = _service()
+    predict = MetricName("predict_cpu_user")
+    options = TemplateDiscoveryOptions(
+        time_range=_time_range(),
+        service=service,
+        consolidation_function=ConsolidationFunction.AVERAGE,
+        metrics=_METRICS,
+        translations={},
+        localizer=_id,
+        registered_graphs=[],
+    )
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(predict))})
+
+    assert discover_template_graphs(options, rrd=rrd) == []

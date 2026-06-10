@@ -100,7 +100,6 @@ cc_library(
         "src/rrd_resize.c",
         "src/rrd_tune.c",
         "src/rrd_version.c",
-        "src/rrd_xport.c",
     ],
     copts = [
         "-std=gnu99",

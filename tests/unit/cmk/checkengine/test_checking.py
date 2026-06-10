@@ -15,8 +15,8 @@ from cmk.checkengine.checking import (
     ServiceConfigurer,
 )
 from cmk.checkengine.checkresults import UnsubmittableServiceCheckResult
-from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.plugins import CheckPlugin, CheckPluginName, ServiceID
+from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.discover_plugins import PluginLocation
 from cmk.utils.rulesets import RuleSetName

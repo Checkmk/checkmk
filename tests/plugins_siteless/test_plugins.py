@@ -23,9 +23,9 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import edition
 from cmk.checkengine import value_store
 from cmk.checkengine.checking import execute_checkmk_checks
-from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.helper_interface import FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
+from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.logwatch.config import ParameterLogwatchEc, ParameterLogwatchRules, set_global_state
 from cmk.utils import paths
 from cmk.utils.everythingtype import EVERYTHING

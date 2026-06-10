@@ -10,9 +10,9 @@ from typing import Any, Final, Literal, SupportsInt, TypedDict
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import RediscoveryParameters
-from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetchers import IPMICredentials
 from cmk.checkengine.snmplib import SNMPCredentials, SNMPTiming
+from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.inventory.structured_data import RawIntervalFromConfig
 from cmk.server_side_calls_backend import ConfigSet as SSCConfigSet
 from cmk.utils.host_storage import FolderAttributesForBase

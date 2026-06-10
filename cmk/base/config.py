@@ -78,7 +78,6 @@ from cmk.checkengine.discovery import (
     DiscoveryCheckParameters,
     merge_cluster_autochecks,
 )
-from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetchers import (
     IPMICredentials,
     IPMIFetcher,
@@ -122,6 +121,7 @@ from cmk.checkengine.snmplib import (  # some of these are required in the modul
     SNMPTiming,
     SNMPVersion,
 )
+from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
 from cmk.inventory.structured_data import RawIntervalFromConfig

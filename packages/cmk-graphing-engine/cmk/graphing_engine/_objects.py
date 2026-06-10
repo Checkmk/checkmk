@@ -383,30 +383,23 @@ def _evaluate_title(
     return title
 
 
-class _GraphObject:
-    # Shared behaviour of Graph and Bidirectional; both expose a title and their drawn metrics.
-    title: str
-
-    def rrd_metrics(self) -> Sequence[RRDMetricRef]:
-        raise NotImplementedError
-
-    def metric_data(
-        self,
-        translated_metrics: TranslatedMetrics,
-    ) -> Mapping[RRDMetricRef, RRDMetricData]:
-        return _metric_data_of(self.rrd_metrics(), translated_metrics)
-
-    def evaluated_title(self, translated_metrics: TranslatedMetrics) -> str:
-        return _evaluate_title(self.title, _flatten(translated_metrics))
-
-
 @dataclass(frozen=True, kw_only=True)
-class Graph(_GraphObject):
+class Graph:
     name: str
     title: str
     vertical_range: VerticalRange | None = None
     stack_groups: Sequence[StackGroup] = ()
     simple_lines: Sequence[Line] = ()
+
+    def drawn_metrics(self) -> Iterable[tuple[RRDMetricRef, bool]]:
+        # Each drawn metric paired with the direction (inverse) of the line drawing it.
+        for group in self.stack_groups:
+            for member in group.members:
+                for rrd_metric in _rrd_metrics_in_quantity(member):
+                    yield rrd_metric, group.inverse
+        for line in self.simple_lines:
+            for rrd_metric in _rrd_metrics_in_quantity(line.quantity):
+                yield rrd_metric, line.inverse
 
     def rrd_metrics(self) -> Sequence[RRDMetricRef]:
         return list(
@@ -420,13 +413,11 @@ class Graph(_GraphObject):
             )
         )
 
+    def metric_data(
+        self,
+        translated_metrics: TranslatedMetrics,
+    ) -> Mapping[RRDMetricRef, RRDMetricData]:
+        return _metric_data_of(self.rrd_metrics(), translated_metrics)
 
-@dataclass(frozen=True, kw_only=True)
-class Bidirectional(_GraphObject):
-    name: str
-    title: str
-    lower: Graph
-    upper: Graph
-
-    def rrd_metrics(self) -> Sequence[RRDMetricRef]:
-        return list(dict.fromkeys((*self.lower.rrd_metrics(), *self.upper.rrd_metrics())))
+    def evaluated_title(self, translated_metrics: TranslatedMetrics) -> str:
+        return _evaluate_title(self.title, _flatten(translated_metrics))

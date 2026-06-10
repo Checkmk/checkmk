@@ -19,7 +19,6 @@ from ._from_api import (
     parse_graph_from_api,
 )
 from ._objects import (
-    Bidirectional,
     Graph,
     Line,
     MetricName,
@@ -106,15 +105,20 @@ def _walk(
             )
 
 
-def _predictive_lines_of_graph(
+def _add_predictive_lines(
     graph: Graph,
     service: ServiceRef,
     available: Mapping[MetricName, RRDMetricData],
 ) -> tuple[Graph, set[MetricName]]:
-    # For every metric drawn in the graph, draw its predictive companions if the service has them.
+    """Augment a template graph with the predictive companions of its metrics (new graph object)."""
+    # A predictive companion is drawn in the same direction as the line of the metric it predicts.
+    inverse_by_metric: dict[MetricName, bool] = {}
+    for rrd_metric, inverse in graph.drawn_metrics():
+        inverse_by_metric.setdefault(rrd_metric.metric_name, inverse)
+
     added: list[Line] = []
     names: set[MetricName] = set()
-    for base in dict.fromkeys(metric.metric_name for metric in graph.rrd_metrics()):
+    for base, inverse in inverse_by_metric.items():
         for predictive in (
             MetricName(f"predict_{base}"),
             MetricName(f"predict_lower_{base}"),
@@ -127,7 +131,7 @@ def _predictive_lines_of_graph(
                             service_name=service.service_name,
                             metric_name=predictive,
                         ),
-                        inverse=False,
+                        inverse=inverse,
                     )
                 )
                 names.add(predictive)
@@ -143,29 +147,6 @@ def _predictive_lines_of_graph(
         ),
         names,
     )
-
-
-def _add_predictive_lines(
-    graph: Graph | Bidirectional,
-    service: ServiceRef,
-    available: Mapping[MetricName, RRDMetricData],
-) -> tuple[Graph | Bidirectional, set[MetricName]]:
-    """Augment a template graph with the predictive companions of its metrics (new graph object)."""
-    match graph:
-        case Graph():
-            return _predictive_lines_of_graph(graph, service, available)
-        case Bidirectional():
-            lower, lower_names = _predictive_lines_of_graph(graph.lower, service, available)
-            upper, upper_names = _predictive_lines_of_graph(graph.upper, service, available)
-            return (
-                Bidirectional(
-                    name=graph.name,
-                    title=graph.title,
-                    lower=lower,
-                    upper=upper,
-                ),
-                lower_names | upper_names,
-            )
 
 
 def discover_template_graphs(
@@ -189,7 +170,7 @@ def discover_template_graphs(
     discovered: list[DiscoveredGraph[TemplateOptions]] = []
     claimed: set[MetricName] = set()
 
-    def _discover(base: Graph | Bidirectional) -> DiscoveredGraph[TemplateOptions]:
+    def _discover(base: Graph) -> DiscoveredGraph[TemplateOptions]:
         # Draw the predictive companions of the graph's metrics, claim them, and build the result.
         graph, predictive_names = _add_predictive_lines(base, options.service, service_metrics)
         claimed.update(predictive_names)

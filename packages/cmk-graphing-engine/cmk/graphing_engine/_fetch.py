@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ._objects import (
-    Bidirectional,
     Graph,
     PerformanceDataByService,
     RRDMetric,
@@ -43,7 +42,7 @@ class FetchRRD(Protocol):
 class GraphRequest:
     time_range: TimeRange
     consolidation_function: ConsolidationFunction
-    graph: Graph | Bidirectional
+    graph: Graph
 
 
 def _consolidation_function(metric: RRDMetricRef, request: GraphRequest) -> ConsolidationFunction:

@@ -6,7 +6,6 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.graphing_engine import (
-    Bidirectional,
     ConsolidationFunction,
     fetch_time_series,
     Graph,
@@ -159,11 +158,10 @@ def test_fetches_metrics_from_both_halves_of_a_bidirectional() -> None:
     out = _rrd_with_cf("if_out")
     in_series = _series(1.0)
     out_series = _series(2.0)
-    graph = Bidirectional(
+    graph = Graph(
         name="if",
         title="Interface",
-        lower=Graph(name="in", title="In", simple_lines=[_line(in_)]),
-        upper=Graph(name="out", title="Out", simple_lines=[_line(out)]),
+        simple_lines=[_line(out), Line(quantity=in_, inverse=True)],
     )
     request = GraphRequest(
         graph=graph, time_range=_time_range(), consolidation_function=ConsolidationFunction.MAX

@@ -13,7 +13,6 @@ from ._fetch import fetch_time_series, FetchRRD, GraphRequest, TimeSeries
 from ._from_api import parse_graph_from_api
 from ._objects import (
     AutoPrecision,
-    Bidirectional,
     Bound,
     Constant,
     CriticalOf,
@@ -69,7 +68,6 @@ from ._translate import fetch_translated_metrics, translate_performance_data
 
 __all__ = [
     "AutoPrecision",
-    "Bidirectional",
     "Bound",
     "ConsolidationFunction",
     "Constant",

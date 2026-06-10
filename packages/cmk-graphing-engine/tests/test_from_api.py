@@ -10,7 +10,6 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     AutoPrecision,
-    Bidirectional,
     Constant,
     CriticalOf,
     DecimalNotation,
@@ -337,26 +336,20 @@ def test_parse_graph_from_api_recurses_into_nested_quantities() -> None:
     ]
 
 
-def test_parse_graph_from_api_handles_bidirectional() -> None:
+def test_parse_graph_from_api_collapses_bidirectional_into_one_graph() -> None:
+    # A bidirectional becomes a single graph: the upper half normal, the lower half inverse.
     bidir = graphs_v1.Bidirectional(
         name="b",
         title=Title("title"),
         lower=graphs_v1.Graph(name="lo", title=Title("lo"), compound_lines=["a"]),
         upper=graphs_v1.Graph(name="up", title=Title("up"), compound_lines=["b"]),
     )
-    assert parse_graph_from_api(bidir, _id, _SERVICE, _METRICS) == Bidirectional(
+    assert parse_graph_from_api(bidir, _id, _SERVICE, _METRICS) == Graph(
         name="b",
         title="title",
-        lower=Graph(
-            name="lo",
-            title="lo",
-            stack_groups=[_stack(_rrd("a"))],
-            simple_lines=[],
-        ),
-        upper=Graph(
-            name="up",
-            title="up",
-            stack_groups=[_stack(_rrd("b"))],
-            simple_lines=[],
-        ),
+        stack_groups=[
+            StackGroup(members=[_rrd("b")], inverse=False),
+            StackGroup(members=[_rrd("a")], inverse=True),
+        ],
+        simple_lines=[],
     )

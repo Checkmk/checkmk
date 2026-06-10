@@ -6,12 +6,12 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from ._objects import Bidirectional, Graph, RRDMetricData, RRDMetricRef
+from ._objects import Graph, RRDMetricData, RRDMetricRef
 
 
 @dataclass(frozen=True, kw_only=True)
 class DiscoveredGraph[Options]:
-    graph: Graph | Bidirectional
+    graph: Graph
     options: Options
     # The graph's title with its expressions evaluated against the translated metrics; graph.title
     # still carries the original, unevaluated title.

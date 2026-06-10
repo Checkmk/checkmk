@@ -9,7 +9,6 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
 from cmk.graphing_engine import (
     AutoPrecision,
-    Bidirectional,
     ConsolidationFunction,
     DecimalNotation,
     discover_explicit_graphs,
@@ -71,7 +70,7 @@ def _line(quantity: Quantity) -> Line:
     return Line(quantity=quantity, inverse=False)
 
 
-def _options(graph: Graph | Bidirectional) -> ExplicitDiscoveryOptions:
+def _options(graph: Graph) -> ExplicitDiscoveryOptions:
     return ExplicitDiscoveryOptions(
         time_range=_time_range(),
         graph=graph,
@@ -230,11 +229,10 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
     service = _service()
     if_in = MetricName("if_in")
     if_out = MetricName("if_out")
-    inline = Bidirectional(
+    inline = Graph(
         name="if",
         title="Interface",
-        lower=Graph(name="in", title="In", simple_lines=[_line(_rrd(if_in))]),
-        upper=Graph(name="out", title="Out", simple_lines=[_line(_rrd(if_out))]),
+        simple_lines=[_line(_rrd(if_out)), Line(quantity=_rrd(if_in), inverse=True)],
     )
     options = _options(inline)
     rrd = _FakeFetchRRD(

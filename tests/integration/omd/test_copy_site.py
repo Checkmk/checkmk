@@ -9,7 +9,6 @@ from tests.testlib.agent_hosts import piggyback_host_from_dummy_generator
 from tests.testlib.site import Site, SiteFactory
 
 
-@pytest.mark.xfail(reason="CMK-35646; flake")
 @pytest.mark.skip_if_edition("community")
 def test_locked_host_attributes_after_site_copy(site: Site, site_factory: SiteFactory) -> None:
     """Test that locked host attributes are locked after site copy.

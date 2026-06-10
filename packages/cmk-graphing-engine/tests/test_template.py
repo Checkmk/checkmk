@@ -17,7 +17,6 @@ from cmk.graphing_engine import (
     DecimalNotation,
     discover_template_graphs,
     Graph,
-    Metric,
     MetricName,
     parse_graph_from_api,
     RRDMetric,
@@ -39,7 +38,7 @@ def _id(s: str) -> str:
 
 
 # Uniform definitions for every metric referenced below: the title "Metric", plain decimal unit,
-# blue. _metric() below mirrors what the parser produces from these.
+# blue. _rrd() below mirrors what the parser produces from these.
 _TITLE = Title("Metric")
 _METRICS = {
     name: metrics_v1.Metric(
@@ -72,13 +71,7 @@ def _rrd(name: MetricName) -> RRDMetric:
     )
 
 
-def _metric(name: MetricName) -> Metric:
-    return Metric(
-        rrd_metric=_rrd(name),
-        title="Metric",
-        unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
-        color="#28a2f3",
-    )
+_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
 
 def _metric_data(
@@ -96,6 +89,9 @@ def _metric_data(
         value=1.0,
         scale=1.0,
         originals=[RRDOriginal(metric_name=name, scale=1.0)],
+        title="Metric",
+        unit=_UNIT,
+        color="#28a2f3",
         lower_warning=lower_warning,
         lower_critical=lower_critical,
         warning=warning,
@@ -165,7 +161,7 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
     assert discovered.graph == Graph(
-        name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[_metric(cpu_user)])]
+        name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[_rrd(cpu_user)])]
     )
     assert discovered.options == TemplateOptions(
         common=_common(), consolidation_function=ConsolidationFunction.AVERAGE
@@ -238,7 +234,7 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
         plugin, _id, service, ConsolidationFunction.AVERAGE, _METRICS
     )
     assert fallback.graph == Graph(
-        name=extra, title=extra, stack_groups=[StackGroup(members=[_metric(extra)])]
+        name=extra, title=extra, stack_groups=[StackGroup(members=[_rrd(extra)])]
     )
 
 
@@ -261,7 +257,7 @@ def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() 
     [fallback] = discover_template_graphs(options, rrd=rrd)
 
     assert fallback.graph == Graph(
-        name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[_metric(cpu_user)])]
+        name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[_rrd(cpu_user)])]
     )
 
 

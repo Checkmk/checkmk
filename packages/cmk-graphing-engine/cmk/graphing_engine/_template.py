@@ -136,10 +136,8 @@ def discover_template_graphs(
                     members=[
                         metric_from_api(
                             name,
-                            options.localizer,
                             options.service,
                             options.consolidation_function,
-                            options.metrics,
                         )
                     ]
                 )

@@ -93,14 +93,6 @@ class RRDMetric:
     consolidation_function: ConsolidationFunction
 
 
-@dataclass(frozen=True, kw_only=True)
-class Metric:
-    rrd_metric: RRDMetric
-    title: str
-    unit: Unit
-    color: str
-
-
 @dataclass(frozen=True)
 class WarningOf:
     metric: RRDMetric
@@ -172,7 +164,7 @@ class Fraction:
 
 
 type Quantity = (
-    Metric
+    RRDMetric
     | Constant
     | WarningOf
     | CriticalOf
@@ -212,8 +204,8 @@ class StackGroup:
 
 def _rrd_metrics_in_quantity(quantity: Quantity) -> Iterable[RRDMetric]:
     match quantity:
-        case Metric():
-            yield quantity.rrd_metric
+        case RRDMetric():
+            yield quantity
         case Constant():
             return
         case (
@@ -251,6 +243,9 @@ class RRDMetricData:
     value: float | None
     scale: float
     originals: Sequence[RRDOriginal]
+    title: str
+    unit: Unit
+    color: str
     lower_warning: float | None = None
     lower_critical: float | None = None
     warning: float | None = None

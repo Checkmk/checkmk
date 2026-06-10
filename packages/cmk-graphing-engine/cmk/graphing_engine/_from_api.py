@@ -28,7 +28,6 @@ from ._objects import (
     LowerCriticalOf,
     LowerWarningOf,
     MaximumOf,
-    Metric,
     metric_names_in_title,
     MetricName,
     MinimalRange,
@@ -135,7 +134,6 @@ def _parse_unit(unit: metrics_v1.Unit) -> Unit:
 
 
 # Defaults for metrics that have no registered definition.
-_FALLBACK_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _FALLBACK_COLOR = _COLORS[metrics_v1.Color.GRAY]
 
 
@@ -154,32 +152,16 @@ class _ParseContext:
             consolidation_function=self.consolidation_function,
         )
 
-    def metric(self, metric_name: str) -> Metric:
-        title, unit, color = self._title_unit_color(metric_name)
-        return Metric(
-            rrd_metric=self.rrd_metric(metric_name),
-            title=title,
-            unit=unit,
-            color=color,
-        )
-
     def metric_color(self, metric_name: str) -> str:
-        return self._title_unit_color(metric_name)[2]
-
-    def _title_unit_color(self, metric_name: str) -> tuple[str, Unit, str]:
         if (definition := self.metrics.get(metric_name)) is None:
-            return metric_name, _FALLBACK_UNIT, _FALLBACK_COLOR
-        return (
-            definition.title.localize(self.localizer),
-            _parse_unit(definition.unit),
-            _parse_color(definition.color),
-        )
+            return _FALLBACK_COLOR
+        return _parse_color(definition.color)
 
 
 def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
     match quantity:
         case str():
-            return context.metric(quantity)
+            return context.rrd_metric(quantity)
         case metrics_v1.Constant():
             return Constant(
                 title=quantity.title.localize(context.localizer),
@@ -370,14 +352,12 @@ def parse_graph_from_api(
 
 def metric_from_api(
     metric_name: str,
-    localizer: Callable[[str], str],
     service: ServiceRef,
     consolidation_function: ConsolidationFunction,
-    metrics: Mapping[str, metrics_v1.Metric],
-) -> Metric:
-    return _ParseContext(
-        localizer=localizer,
-        service=service,
+) -> RRDMetric:
+    return RRDMetric(
+        host_name=service.host_name,
+        service_name=service.service_name,
+        metric_name=MetricName(metric_name),
         consolidation_function=consolidation_function,
-        metrics=metrics,
-    ).metric(metric_name)
+    )

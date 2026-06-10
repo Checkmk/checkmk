@@ -22,7 +22,6 @@ from cmk.graphing_engine import (
     LowerCriticalOf,
     LowerWarningOf,
     MaximumOf,
-    Metric,
     MetricName,
     MinimalRange,
     MinimumOf,
@@ -47,8 +46,8 @@ def _id(s: str) -> str:
 _SERVICE = ServiceRef(host_name="host", service_name="svc")
 _CF = ConsolidationFunction.AVERAGE
 
-# Every test metric shares a uniform definition: the title "Metric", a plain decimal unit and blue
-# (#28a2f3). _metric()/_rrd() below mirror what the parser produces from these.
+# Every test metric is registered as blue (#28a2f3); only the colour is consulted by parsing now,
+# to colour threshold lines. _rrd() below mirrors the bare metric the parser produces for a curve.
 _TITLE = Title("Metric")
 _METRICS = {
     name: metrics_v1.Metric(
@@ -70,15 +69,6 @@ def _rrd(name: str) -> RRDMetric:
     )
 
 
-def _metric(name: str) -> Metric:
-    return Metric(
-        rrd_metric=_rrd(name),
-        title="Metric",
-        unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
-        color="#28a2f3",
-    )
-
-
 def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group() -> None:
     graph = graphs_v1.Graph(
         name="g",
@@ -93,8 +83,8 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
         name="g",
         title="Title",
         vertical_range=MinimalRange(lower=0, upper=100),
-        stack_groups=[StackGroup(members=[_metric("a"), _metric("b")])],
-        simple_lines=[_metric("c"), WarningOf(metric=_rrd("a"), color="#28a2f3")],
+        stack_groups=[StackGroup(members=[_rrd("a"), _rrd("b")])],
+        simple_lines=[_rrd("c"), WarningOf(metric=_rrd("a"), color="#28a2f3")],
     )
 
 
@@ -123,7 +113,7 @@ def test_parse_graph_from_api_parses_a_metric_valued_minimal_range_bound() -> No
     )
     parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, _METRICS)
     assert isinstance(parsed, Graph)
-    assert parsed.vertical_range == MinimalRange(lower=_metric("a"), upper=100)
+    assert parsed.vertical_range == MinimalRange(lower=_rrd("a"), upper=100)
 
 
 def test_parse_graph_from_api_threshold_uses_fallback_color_for_undefined_metric() -> None:
@@ -133,48 +123,24 @@ def test_parse_graph_from_api_threshold_uses_fallback_color_for_undefined_metric
     assert parsed.simple_lines == [WarningOf(metric=_rrd("u"), color="#8c8c8c")]
 
 
-def test_parse_graph_from_api_bakes_metric_attributes_into_the_leaf() -> None:
+def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
+    # A curve parses to a bare RRDMetric carrying the service's host/service and the consolidation
+    # function; its display attributes (title/unit/color) come from the data layer, not parsing.
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
     parsed = parse_graph_from_api(
         graph,
         _id,
         ServiceRef(host_name="my-host", service_name="my-service"),
         ConsolidationFunction.MAX,
-        {
-            "a": metrics_v1.Metric(
-                name="a",
-                title=Title("Metric A"),
-                unit=metrics_v1.Unit(metrics_v1.SINotation("bytes")),
-                color=metrics_v1.Color.RED,
-            )
-        },
+        _METRICS,
     )
     assert isinstance(parsed, Graph)
     assert parsed.simple_lines == [
-        Metric(
-            rrd_metric=RRDMetric(
-                host_name="my-host",
-                service_name="my-service",
-                metric_name=MetricName("a"),
-                consolidation_function=ConsolidationFunction.MAX,
-            ),
-            title="Metric A",
-            unit=Unit(notation=SINotation("bytes"), precision=AutoPrecision(2)),
-            color="#ed3b3b",
-        )
-    ]
-
-
-def test_parse_graph_from_api_falls_back_for_metrics_without_a_definition() -> None:
-    graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["undefined"])
-    parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, {})
-    assert isinstance(parsed, Graph)
-    assert parsed.simple_lines == [
-        Metric(
-            rrd_metric=_rrd("undefined"),
-            title="undefined",
-            unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
-            color="#8c8c8c",
+        RRDMetric(
+            host_name="my-host",
+            service_name="my-service",
+            metric_name=MetricName("a"),
+            consolidation_function=ConsolidationFunction.MAX,
         )
     ]
 
@@ -293,25 +259,25 @@ def test_parse_graph_from_api_maps_sum_product_difference_fraction() -> None:
     parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, _METRICS)
     assert isinstance(parsed, Graph)
     assert parsed.simple_lines == [
-        Sum(title="s", color="#28a2f3", summands=[_metric("a"), _metric("b")]),
+        Sum(title="s", color="#28a2f3", summands=[_rrd("a"), _rrd("b")]),
         Product(
             title="p",
             unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
             color="#ed3b3b",
-            factors=[_metric("x"), _metric("y")],
+            factors=[_rrd("x"), _rrd("y")],
         ),
         Difference(
             title="d",
             color="#15d1a0",
-            minuend=_metric("a"),
-            subtrahend=_metric("b"),
+            minuend=_rrd("a"),
+            subtrahend=_rrd("b"),
         ),
         Fraction(
             title="f",
             unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
             color="#ffd703",
-            dividend=_metric("a"),
-            divisor=_metric("b"),
+            dividend=_rrd("a"),
+            divisor=_rrd("b"),
         ),
     ]
 
@@ -338,12 +304,12 @@ def test_parse_graph_from_api_recurses_into_nested_quantities() -> None:
             title="outer",
             color="#28a2f3",
             summands=[
-                _metric("a"),
+                _rrd("a"),
                 Product(
                     title="inner",
                     unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
                     color="#ed3b3b",
-                    factors=[_metric("b"), _metric("c")],
+                    factors=[_rrd("b"), _rrd("c")],
                 ),
             ],
         ),
@@ -363,13 +329,13 @@ def test_parse_graph_from_api_handles_bidirectional() -> None:
         lower=Graph(
             name="lo",
             title="lo",
-            stack_groups=[StackGroup(members=[_metric("a")])],
+            stack_groups=[StackGroup(members=[_rrd("a")])],
             simple_lines=[],
         ),
         upper=Graph(
             name="up",
             title="up",
-            stack_groups=[StackGroup(members=[_metric("b")])],
+            stack_groups=[StackGroup(members=[_rrd("b")])],
             simple_lines=[],
         ),
     )

@@ -16,7 +16,6 @@ from cmk.graphing_engine import (
     ExplicitOptions,
     FixedRange,
     Graph,
-    Metric,
     MetricName,
     RRDMetric,
     RRDMetricData,
@@ -50,13 +49,7 @@ def _rrd(name: MetricName) -> RRDMetric:
     )
 
 
-def _metric(name: MetricName) -> Metric:
-    return Metric(
-        rrd_metric=_rrd(name),
-        title=name,
-        unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
-        color="#28a2f3",
-    )
+_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
 
 class _FakeFetchRRD:
@@ -106,12 +99,15 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
         name="cpu",
         title="CPU",
         # cpu_user as a curve; cpu_system referenced only by a scalar threshold.
-        simple_lines=[_metric(cpu_user), WarningOf(metric=_rrd(cpu_system), color="#28a2f3")],
+        simple_lines=[_rrd(cpu_user), WarningOf(metric=_rrd(cpu_system), color="#28a2f3")],
     )
     options = ExplicitDiscoveryOptions(common=_common(), graph=inline)
     cpu_user_data = RRDMetricData(
         name=cpu_user,
         value=42.0,
+        title="CPU user",
+        unit=_UNIT,
+        color="#28a2f3",
         warning=80.0,
         critical=90.0,
         scale=1.0,
@@ -120,6 +116,9 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
     cpu_system_data = RRDMetricData(
         name=cpu_system,
         value=8.0,
+        title="CPU system",
+        unit=_UNIT,
+        color="#28a2f3",
         warning=50.0,
         critical=70.0,
         minimum=0.0,
@@ -144,7 +143,7 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
 
 def test_discover_explicit_graphs_omits_scalars_for_metrics_not_in_translated_metrics() -> None:
     service = _service()
-    inline = Graph(name="g", title="g", simple_lines=[_metric(MetricName("missing_metric"))])
+    inline = Graph(name="g", title="g", simple_lines=[_rrd(MetricName("missing_metric"))])
     options = ExplicitDiscoveryOptions(common=_common(), graph=inline)
     rrd = _FakeFetchRRD(translated_metrics_response={service: {}})
 
@@ -160,13 +159,16 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
     inline = Bidirectional(
         name="if",
         title="Interface",
-        lower=Graph(name="in", title="In", simple_lines=[_metric(if_in)]),
-        upper=Graph(name="out", title="Out", simple_lines=[_metric(if_out)]),
+        lower=Graph(name="in", title="In", simple_lines=[_rrd(if_in)]),
+        upper=Graph(name="out", title="Out", simple_lines=[_rrd(if_out)]),
     )
     options = ExplicitDiscoveryOptions(common=_common(), graph=inline)
     if_in_data = RRDMetricData(
         name=if_in,
         value=1.0,
+        title="If in",
+        unit=_UNIT,
+        color="#28a2f3",
         warning=10.0,
         scale=1.0,
         originals=[RRDOriginal(metric_name=if_in, scale=1.0)],
@@ -174,6 +176,9 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
     if_out_data = RRDMetricData(
         name=if_out,
         value=2.0,
+        title="If out",
+        unit=_UNIT,
+        color="#28a2f3",
         scale=1.0,
         originals=[RRDOriginal(metric_name=if_out, scale=1.0)],
     )
@@ -192,7 +197,7 @@ def test_discover_explicit_graphs_passes_through_a_fixed_vertical_range() -> Non
         name="g",
         title="g",
         vertical_range=FixedRange(lower=0, upper=100),
-        simple_lines=[_metric(MetricName("a"))],
+        simple_lines=[_rrd(MetricName("a"))],
     )
     options = ExplicitDiscoveryOptions(common=_common(), graph=inline)
     rrd = _FakeFetchRRD(translated_metrics_response={service: {}})

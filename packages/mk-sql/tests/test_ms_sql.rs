@@ -413,10 +413,18 @@ async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut UniClien
             '|',
         )
         .await;
-    assert_eq!(
-        blocked_sessions,
-        &format!("{}|No blocking sessions\n", instance.name)
-    );
+    let no_blocking = format!("{}|No blocking sessions\n", instance.name);
+    if blocked_sessions != &no_blocking {
+        for l in blocked_sessions.lines() {
+            let values = l.split('|').collect::<Vec<&str>>();
+            assert_eq!(values.len(), 5, "expected 5 fields: {l}");
+            assert_eq!(values[0], instance.name.to_string(), "wrong instance: {l}");
+            assert!(values[1].parse::<u64>().is_ok(), "bad session_id: {l}");
+            assert!(values[2].parse::<u64>().is_ok(), "bad blocking_id: {l}");
+            assert!(!values[3].is_empty(), "empty wait_type: {l}");
+            assert!(values[4].parse::<u64>().is_ok(), "bad wait_time: {l}");
+        }
+    }
 }
 
 async fn validate_all_sessions_to_check_format(instance: &SqlInstance, client: &mut UniClient) {

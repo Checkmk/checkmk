@@ -19,6 +19,7 @@ import CmkSearchInput from '@/components/CmkSearchInput.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 
+import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
 import MonitoringTable from '../shared/components/MonitoringTable.vue'
 import { HostApi } from './api/hosts'
 import HostRow from './components/HostRow.vue'
@@ -98,6 +99,10 @@ function rowKey(row: HostEntry): string {
     :placeholder="_t('Search hosts…')"
     @search="hostService.updateSearch($event)"
   />
+  <MonitoringResultsCount
+    class="monitoring-all-hosts-app__results-count"
+    :active-filter-count="filterState.length"
+  />
   <MonitoringTable
     :rows="hostService.items.value"
     :loading="hostService.loading.value"
@@ -115,7 +120,10 @@ function rowKey(row: HostEntry): string {
 
 <style scoped>
 .monitoring-all-hosts-app__search {
-  margin-bottom: var(--spacing);
   max-width: 360px;
+}
+
+.monitoring-all-hosts-app__results-count {
+  margin: var(--spacing-half) 0 var(--spacing);
 }
 </style>

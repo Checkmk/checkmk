@@ -4,15 +4,26 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { useTemplateRef } from 'vue'
+
 import CmkIcon, { type CmkIconProps } from '@/components/CmkIcon'
 
 defineProps<CmkIconProps>()
 
 defineEmits(['click'])
+
+const button = useTemplateRef<HTMLButtonElement>('button')
+
+defineExpose({
+  focus: () => {
+    button.value?.focus()
+  }
+})
 </script>
 
 <template>
   <button
+    ref="button"
     type="button"
     class="cmk-icon-button"
     :title="title"

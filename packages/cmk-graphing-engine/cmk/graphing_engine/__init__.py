@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._evaluate import evaluate_time_series, evaluate_value
 from ._explicit import (
     discover_explicit_graphs,
     ExplicitDiscoveryOptions,
@@ -117,6 +118,8 @@ __all__ = [
     "WarningOf",
     "discover_explicit_graphs",
     "discover_template_graphs",
+    "evaluate_time_series",
+    "evaluate_value",
     "fetch_time_series",
     "fetch_translated_metrics",
     "parse_graph_from_api",

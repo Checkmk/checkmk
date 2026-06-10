@@ -15,6 +15,7 @@ py_library(
     name = "cmk-graphing-engine",
     srcs = [
         "cmk/graphing_engine/__init__.py",
+        "cmk/graphing_engine/_evaluate.py",
         "cmk/graphing_engine/_explicit.py",
         "cmk/graphing_engine/_fetch.py",
         "cmk/graphing_engine/_from_api.py",

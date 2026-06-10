@@ -4,5 +4,14 @@ has_support_component = true
 members_required = 3
 product_managers = ["cedric.archenoul@checkmk.com"]
 description = """
--
+- UI - Setup is concerned with reading, storing and updating configurations
+- The majority of the functionality consists of:
+    * Host and folder management
+    * Ruleset handling
+    * Global settings framework
+    * Change activation
+    * Roles & permission management
+- Some other smaller concerns are also part of UI - Setup, this is the result
+  of bundling all UI configuration management (the former wato/watolib - web
+  administration tool) into one component.
 """

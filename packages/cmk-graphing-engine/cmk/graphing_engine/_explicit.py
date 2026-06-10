@@ -9,8 +9,8 @@ from typing import ClassVar, Literal
 
 from ._discovery import DiscoveredGraph
 from ._fetch import fetch_translated_metrics, FetchRRD
-from ._objects import Bidirectional, Graph
-from ._options import CommonOptions, ServiceRef
+from ._objects import Bidirectional, Graph, ServiceRef
+from ._options import CommonOptions
 
 
 @dataclass(frozen=True, kw_only=True)

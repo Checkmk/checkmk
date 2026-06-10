@@ -39,6 +39,7 @@ from ._objects import (
     RRDMetricRef,
     RRDMetricWithCF,
     RRDOriginal,
+    ServiceRef,
     SINotation,
     StackGroup,
     StandardScientificNotation,
@@ -52,7 +53,6 @@ from ._objects import (
 from ._options import (
     CommonOptions,
     ConsolidationFunction,
-    ServiceRef,
     TemperatureUnit,
     TimeRange,
 )

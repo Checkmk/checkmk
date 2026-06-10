@@ -13,9 +13,10 @@ from ._objects import (
     RRDMetric,
     RRDMetricRef,
     RRDMetricWithCF,
+    ServiceRef,
     TranslatedMetrics,
 )
-from ._options import CommonOptions, ConsolidationFunction, ServiceRef, TimeRange
+from ._options import CommonOptions, ConsolidationFunction, TimeRange
 
 
 @dataclass(frozen=True, kw_only=True)

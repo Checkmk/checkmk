@@ -12,7 +12,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
 from typing import NewType
 
-from ._options import ConsolidationFunction, ServiceRef
+from ._options import ConsolidationFunction
 
 
 @dataclass(frozen=True)
@@ -242,6 +242,12 @@ def _rrd_metrics_in_quantity(quantity: Quantity) -> Iterable[RRDMetricRef]:
 
 
 @dataclass(frozen=True, kw_only=True)
+class ServiceRef:
+    host_name: str
+    service_name: str
+
+
+@dataclass(frozen=True, kw_only=True)
 class RRDOriginal:
     metric_name: MetricName
     scale: float
@@ -281,7 +287,9 @@ def _metric_data_of(
     return result
 
 
-def _flatten(translated_metrics: TranslatedMetrics) -> Mapping[MetricName, RRDMetricData]:
+def _flatten(
+    translated_metrics: TranslatedMetrics,
+) -> Mapping[MetricName, RRDMetricData]:
     return {
         name: data
         for per_service in translated_metrics.values()

@@ -7,10 +7,11 @@ import enum
 from dataclasses import dataclass
 
 
-class ConsolidationFunction(enum.StrEnum):
-    MIN = "min"
-    MAX = "max"
-    AVERAGE = "average"
+@dataclass(frozen=True, kw_only=True)
+class TimeRange:
+    start: int
+    end: int
+    step: int
 
 
 class TemperatureUnit(enum.StrEnum):
@@ -19,19 +20,12 @@ class TemperatureUnit(enum.StrEnum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class TimeRange:
-    start: int
-    end: int
-    step: int
-
-
-@dataclass(frozen=True, kw_only=True)
 class CommonOptions:
     time_range: TimeRange
     temperature_unit: TemperatureUnit
 
 
-@dataclass(frozen=True, kw_only=True)
-class ServiceRef:
-    host_name: str
-    service_name: str
+class ConsolidationFunction(enum.StrEnum):
+    MIN = "min"
+    MAX = "max"
+    AVERAGE = "average"

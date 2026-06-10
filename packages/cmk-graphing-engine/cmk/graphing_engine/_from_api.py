@@ -37,6 +37,7 @@ from ._objects import (
     Product,
     Quantity,
     RRDMetric,
+    ServiceRef,
     SINotation,
     StackGroup,
     StandardScientificNotation,
@@ -46,7 +47,6 @@ from ._objects import (
     Unit,
     WarningOf,
 )
-from ._options import ServiceRef
 
 type _ApiQuantity = (
     str

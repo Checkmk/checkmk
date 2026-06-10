@@ -18,8 +18,8 @@ from ._from_api import (
     metric_names_of_title,
     parse_graph_from_api,
 )
-from ._objects import Graph, MetricName, RRDMetric, StackGroup
-from ._options import CommonOptions, ConsolidationFunction, ServiceRef
+from ._objects import Graph, MetricName, RRDMetric, ServiceRef, StackGroup
+from ._options import CommonOptions, ConsolidationFunction
 
 
 @dataclass(frozen=True, kw_only=True)

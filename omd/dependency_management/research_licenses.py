@@ -15,6 +15,11 @@ from cyclonedx import Component, ComponentList, components_without_license, Lice
 
 TIMEOUT = 60
 
+# crates.io rejects requests with a generic/library User-Agent (returns 403).
+# Its crawler policy requires a descriptive UA identifying the caller with a
+# contact address. See https://crates.io/data-access
+_CRATES_IO_USER_AGENT = "checkmk-license-research (https://checkmk.com; feedback@checkmk.com)"
+
 
 class NoLicenseFound(Exception):
     pass
@@ -52,7 +57,7 @@ def research_cargo_license(component: Component) -> SPDXId:
     assert component.purl.type_ == "cargo"
 
     url = f"https://crates.io/api/v1/crates/{component.purl.name}/{component.purl.version}"
-    response = requests.get(url, timeout=TIMEOUT)
+    response = requests.get(url, timeout=TIMEOUT, headers={"User-Agent": _CRATES_IO_USER_AGENT})
     response.raise_for_status()
 
     license_ = response.json()["version"].get("license")

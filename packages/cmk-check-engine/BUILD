@@ -118,6 +118,22 @@ py_library(
 )
 
 py_library(
+    name = "fetcher-protocol",
+    srcs = [
+        "cmk/checkengine/fetcher.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":helper-interface",
+        ":snmplib",
+        "//packages/cmk-ccc:cpu-tracking",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:resulttype",
+    ],
+)
+
+py_library(
     name = "specs",
     srcs = glob([
         "cmk/checkengine/specs/*.py",
@@ -199,6 +215,7 @@ py_wheel(
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
+        ":fetcher-protocol",
         ":fetchers",
         ":helper-interface",
         ":snmp-backends",
@@ -237,6 +254,7 @@ py_requirements_test(
     name = "requirements-test",
     libs = [
         ":fetchers",
+        ":fetcher-protocol",
         ":helper-interface",
         ":snmplib",
         ":specs",

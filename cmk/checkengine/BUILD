@@ -18,6 +18,7 @@ py_library(
         "//packages/cmk-ccc:cpu-tracking",
         "//packages/cmk-ccc:timeout",
         "//packages/cmk-ccc:translations",
+        "//packages/cmk-check-engine:fetcher-protocol",
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine:specs",

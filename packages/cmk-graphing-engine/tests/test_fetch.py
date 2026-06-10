@@ -15,6 +15,7 @@ from cmk.graphing_engine import (
     MetricName,
     RRDMetric,
     RRDMetricData,
+    RRDMetricWithCF,
     RRDOriginal,
     ServiceRef,
     TemperatureUnit,
@@ -30,11 +31,11 @@ def _common() -> CommonOptions:
     )
 
 
-def _rrd(
+def _rrd_with_cf(
     name: str,
     consolidation_function: ConsolidationFunction = ConsolidationFunction.AVERAGE,
-) -> RRDMetric:
-    return RRDMetric(
+) -> RRDMetricWithCF:
+    return RRDMetricWithCF(
         host_name="h",
         service_name="svc",
         metric_name=MetricName(name),
@@ -86,14 +87,16 @@ def test_empty_requests_returns_empty_list() -> None:
 
 
 def test_returns_one_data_mapping_per_request_keyed_by_rrd_metric() -> None:
-    cpu_user = _rrd("cpu_user")
-    cpu_system = _rrd("cpu_system")
+    cpu_user = _rrd_with_cf("cpu_user")
+    cpu_system = _rrd_with_cf("cpu_system")
     cpu_user_key = RRDOriginal(metric_name=cpu_user.metric_name, scale=1.0)
     cpu_system_key = RRDOriginal(metric_name=cpu_system.metric_name, scale=1.0)
     cpu_user_series = _series(1.0)
     cpu_system_series = _series(2.0)
     graph = Graph(name="cpu", title="CPU", simple_lines=[cpu_user, cpu_system])
-    request = GraphRequest(graph=graph, common=_common())
+    request = GraphRequest(
+        graph=graph, common=_common(), consolidation_function=ConsolidationFunction.MAX
+    )
     rrd = _FakeFetchRRD(
         time_series_response={
             cpu_user_key: cpu_user_series,
@@ -111,14 +114,16 @@ def test_returns_one_data_mapping_per_request_keyed_by_rrd_metric() -> None:
 
 
 def test_fetches_one_batch_per_consolidation_function() -> None:
-    avg_metric = _rrd("a", ConsolidationFunction.AVERAGE)
-    max_metric = _rrd("b", ConsolidationFunction.MAX)
+    avg_metric = _rrd_with_cf("a", ConsolidationFunction.AVERAGE)
+    max_metric = _rrd_with_cf("b", ConsolidationFunction.MAX)
     avg_key = RRDOriginal(metric_name=MetricName("a"), scale=1.0)
     max_key = RRDOriginal(metric_name=MetricName("b"), scale=1.0)
     avg_series = _series(1.0)
     max_series = _series(2.0)
     graph = Graph(name="g", title="g", simple_lines=[avg_metric, max_metric])
-    request = GraphRequest(graph=graph, common=_common())
+    request = GraphRequest(
+        graph=graph, common=_common(), consolidation_function=ConsolidationFunction.MAX
+    )
     rrd = _FakeFetchRRD(time_series_response={avg_key: avg_series, max_key: max_series})
 
     [data] = fetch_time_series([request], rrd=rrd)
@@ -133,16 +138,20 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
 
 
 def test_multiple_requests_yield_one_mapping_each_in_order() -> None:
-    x = _rrd("x")
-    y = _rrd("y")
+    x = _rrd_with_cf("x")
+    y = _rrd_with_cf("y")
     x_key = RRDOriginal(metric_name=x.metric_name, scale=1.0)
     y_key = RRDOriginal(metric_name=y.metric_name, scale=1.0)
     x_series = _series(1.0)
     y_series = _series(2.0)
     graph_x = Graph(name="x", title="x", simple_lines=[x])
     graph_y = Graph(name="y", title="y", simple_lines=[y])
-    request_x = GraphRequest(graph=graph_x, common=_common())
-    request_y = GraphRequest(graph=graph_y, common=_common())
+    request_x = GraphRequest(
+        graph=graph_x, common=_common(), consolidation_function=ConsolidationFunction.MAX
+    )
+    request_y = GraphRequest(
+        graph=graph_y, common=_common(), consolidation_function=ConsolidationFunction.MAX
+    )
     rrd = _FakeFetchRRD(time_series_response={x_key: x_series, y_key: y_series})
 
     results = fetch_time_series([request_x, request_y], rrd=rrd)
@@ -151,8 +160,8 @@ def test_multiple_requests_yield_one_mapping_each_in_order() -> None:
 
 
 def test_fetches_metrics_from_both_halves_of_a_bidirectional() -> None:
-    in_ = _rrd("if_in")
-    out = _rrd("if_out")
+    in_ = _rrd_with_cf("if_in")
+    out = _rrd_with_cf("if_out")
     in_key = RRDOriginal(metric_name=in_.metric_name, scale=1.0)
     out_key = RRDOriginal(metric_name=out.metric_name, scale=1.0)
     in_series = _series(1.0)
@@ -163,9 +172,35 @@ def test_fetches_metrics_from_both_halves_of_a_bidirectional() -> None:
         lower=Graph(name="in", title="In", simple_lines=[in_]),
         upper=Graph(name="out", title="Out", simple_lines=[out]),
     )
-    request = GraphRequest(graph=graph, common=_common())
+    request = GraphRequest(
+        graph=graph, common=_common(), consolidation_function=ConsolidationFunction.MAX
+    )
     rrd = _FakeFetchRRD(time_series_response={in_key: in_series, out_key: out_series})
 
     [data] = fetch_time_series([request], rrd=rrd)
 
     assert data == {in_: in_series, out: out_series}
+
+
+def test_bare_metric_adopts_the_request_consolidation_function() -> None:
+    # A bare RRDMetric uses the request's function; a pinned RRDMetricWithCF keeps its own.
+    bare = RRDMetric(host_name="h", service_name="svc", metric_name=MetricName("load"))
+    pinned = _rrd_with_cf("peak", ConsolidationFunction.MAX)
+    bare_key = RRDOriginal(metric_name=MetricName("load"), scale=1.0)
+    peak_key = RRDOriginal(metric_name=MetricName("peak"), scale=1.0)
+    bare_series = _series(1.0)
+    peak_series = _series(2.0)
+    graph = Graph(name="g", title="g", simple_lines=[bare, pinned])
+    request = GraphRequest(
+        graph=graph, common=_common(), consolidation_function=ConsolidationFunction.AVERAGE
+    )
+    rrd = _FakeFetchRRD(time_series_response={bare_key: bare_series, peak_key: peak_series})
+
+    [data] = fetch_time_series([request], rrd=rrd)
+
+    assert data == {bare: bare_series, pinned: peak_series}
+    keys_by_cf = {cf: keys for keys, _tr, cf in rrd.time_series_calls}
+    assert keys_by_cf == {
+        ConsolidationFunction.AVERAGE: (bare_key,),
+        ConsolidationFunction.MAX: (peak_key,),
+    }

@@ -7,7 +7,16 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
-from ._objects import Bidirectional, Graph, MetricName, RRDMetric, RRDMetricData, RRDOriginal
+from ._objects import (
+    Bidirectional,
+    Graph,
+    MetricName,
+    RRDMetric,
+    RRDMetricData,
+    RRDMetricRef,
+    RRDMetricWithCF,
+    RRDOriginal,
+)
 from ._options import CommonOptions, ConsolidationFunction, ServiceRef, TimeRange
 
 
@@ -34,20 +43,30 @@ class FetchRRD(Protocol):
 @dataclass(frozen=True, kw_only=True)
 class GraphRequest:
     common: CommonOptions
+    consolidation_function: ConsolidationFunction
     graph: Graph | Bidirectional
+
+
+def _consolidation_function(metric: RRDMetricRef, request: GraphRequest) -> ConsolidationFunction:
+    match metric:
+        case RRDMetricWithCF():
+            return metric.consolidation_function
+        case RRDMetric():
+            return request.consolidation_function
 
 
 def _fetch_time_series_per_request(
     request: GraphRequest, rrd: FetchRRD
-) -> Mapping[RRDMetric, TimeSeries]:
-    # Each metric carries its own consolidation function, so group the sources in a single pass and
-    # fetch one batch per distinct function.
-    metric_by_source_by_function: dict[ConsolidationFunction, dict[RRDOriginal, RRDMetric]] = {}
+) -> Mapping[RRDMetricRef, TimeSeries]:
+    # A pinned metric is fetched with its own consolidation function, a bare one with the request's.
+    # Group the sources in a single pass and fetch one batch per distinct function.
+    metric_by_source_by_function: dict[ConsolidationFunction, dict[RRDOriginal, RRDMetricRef]] = {}
     for metric in request.graph.rrd_metrics():
         source = RRDOriginal(metric_name=metric.metric_name, scale=1.0)
-        metric_by_source_by_function.setdefault(metric.consolidation_function, {})[source] = metric
+        function = _consolidation_function(metric, request)
+        metric_by_source_by_function.setdefault(function, {})[source] = metric
 
-    result: dict[RRDMetric, TimeSeries] = {}
+    result: dict[RRDMetricRef, TimeSeries] = {}
     for consolidation_function, metric_by_source in metric_by_source_by_function.items():
         for source, time_series in rrd.time_series(
             list(metric_by_source),
@@ -62,5 +81,5 @@ def fetch_time_series(
     requests: Sequence[GraphRequest],
     *,
     rrd: FetchRRD,
-) -> Sequence[Mapping[RRDMetric, TimeSeries]]:
+) -> Sequence[Mapping[RRDMetricRef, TimeSeries]]:
     return [_fetch_time_series_per_request(request, rrd) for request in requests]

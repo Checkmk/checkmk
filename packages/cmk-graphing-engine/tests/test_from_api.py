@@ -11,7 +11,6 @@ from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     AutoPrecision,
     Bidirectional,
-    ConsolidationFunction,
     Constant,
     CriticalOf,
     DecimalNotation,
@@ -44,7 +43,6 @@ def _id(s: str) -> str:
 
 
 _SERVICE = ServiceRef(host_name="host", service_name="svc")
-_CF = ConsolidationFunction.AVERAGE
 
 # Every test metric is registered as blue (#28a2f3); only the colour is consulted by parsing now,
 # to colour threshold lines. _rrd() below mirrors the bare metric the parser produces for a curve.
@@ -65,7 +63,6 @@ def _rrd(name: str) -> RRDMetric:
         host_name="host",
         service_name="svc",
         metric_name=MetricName(name),
-        consolidation_function=_CF,
     )
 
 
@@ -79,7 +76,7 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
         optional=["a"],
         conflicting=["d"],
     )
-    assert parse_graph_from_api(graph, _id, _SERVICE, _CF, _METRICS) == Graph(
+    assert parse_graph_from_api(graph, _id, _SERVICE, _METRICS) == Graph(
         name="g",
         title="Title",
         vertical_range=MinimalRange(lower=0, upper=100),
@@ -90,7 +87,7 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
 
 def test_parse_graph_from_api_without_compound_lines_yields_no_stack_groups() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
-    parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, _METRICS)
+    parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
     assert parsed.stack_groups == []
     assert parsed.vertical_range is None
@@ -98,7 +95,7 @@ def test_parse_graph_from_api_without_compound_lines_yields_no_stack_groups() ->
 
 def test_parse_graph_from_api_uses_localizer() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
-    parsed = parse_graph_from_api(graph, lambda s: f"<{s}>", _SERVICE, _CF, _METRICS)
+    parsed = parse_graph_from_api(graph, lambda s: f"<{s}>", _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
     assert parsed.title == "<t>"
 
@@ -111,27 +108,26 @@ def test_parse_graph_from_api_parses_a_metric_valued_minimal_range_bound() -> No
         minimal_range=graphs_v1.MinimalRange("a", 100),
         simple_lines=["a"],
     )
-    parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, _METRICS)
+    parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
     assert parsed.vertical_range == MinimalRange(lower=_rrd("a"), upper=100)
 
 
 def test_parse_graph_from_api_threshold_uses_fallback_color_for_undefined_metric() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=[metrics_v1.WarningOf("u")])
-    parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, {})
+    parsed = parse_graph_from_api(graph, _id, _SERVICE, {})
     assert isinstance(parsed, Graph)
     assert parsed.simple_lines == [WarningOf(metric=_rrd("u"), color="#8c8c8c")]
 
 
 def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
-    # A curve parses to a bare RRDMetric carrying the service's host/service and the consolidation
-    # function; its display attributes (title/unit/color) come from the data layer, not parsing.
+    # A curve parses to a bare RRDMetric carrying the service's host/service; the consolidation
+    # function and display attributes are supplied later (request / data layer), not by parsing.
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
     parsed = parse_graph_from_api(
         graph,
         _id,
         ServiceRef(host_name="my-host", service_name="my-service"),
-        ConsolidationFunction.MAX,
         _METRICS,
     )
     assert isinstance(parsed, Graph)
@@ -140,7 +136,6 @@ def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
             host_name="my-host",
             service_name="my-service",
             metric_name=MetricName("a"),
-            consolidation_function=ConsolidationFunction.MAX,
         )
     ]
 
@@ -170,7 +165,7 @@ def test_parse_graph_from_api_maps_unit_notations_and_precisions() -> None:
             ),
         ],
     )
-    parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, _METRICS)
+    parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
     assert parsed.simple_lines == [
         Constant(
@@ -205,7 +200,7 @@ def test_parse_graph_from_api_maps_warning_critical_minimum_maximum() -> None:
             metrics_v1.MaximumOf("a", metrics_v1.Color.RED),
         ],
     )
-    parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, _METRICS)
+    parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
     assert parsed.simple_lines == [
         # WarningOf/CriticalOf inherit the colour of the referenced metric (#28a2f3).
@@ -226,7 +221,7 @@ def test_parse_graph_from_api_maps_lower_warning_and_critical() -> None:
             metrics_v2_unstable.LowerCriticalOf("a"),
         ],
     )
-    parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, _METRICS)
+    parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
     assert parsed.simple_lines == [
         LowerWarningOf(metric=_rrd("a"), color="#28a2f3"),
@@ -256,7 +251,7 @@ def test_parse_graph_from_api_maps_sum_product_difference_fraction() -> None:
             ),
         ],
     )
-    parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, _METRICS)
+    parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
     assert parsed.simple_lines == [
         Sum(title="s", color="#28a2f3", summands=[_rrd("a"), _rrd("b")]),
@@ -297,7 +292,7 @@ def test_parse_graph_from_api_recurses_into_nested_quantities() -> None:
         ],
     )
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=[nested])
-    parsed = parse_graph_from_api(graph, _id, _SERVICE, _CF, _METRICS)
+    parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
     assert parsed.simple_lines == [
         Sum(
@@ -323,7 +318,7 @@ def test_parse_graph_from_api_handles_bidirectional() -> None:
         lower=graphs_v1.Graph(name="lo", title=Title("lo"), compound_lines=["a"]),
         upper=graphs_v1.Graph(name="up", title=Title("up"), compound_lines=["b"]),
     )
-    assert parse_graph_from_api(bidir, _id, _SERVICE, _CF, _METRICS) == Bidirectional(
+    assert parse_graph_from_api(bidir, _id, _SERVICE, _METRICS) == Bidirectional(
         name="b",
         title="title",
         lower=Graph(

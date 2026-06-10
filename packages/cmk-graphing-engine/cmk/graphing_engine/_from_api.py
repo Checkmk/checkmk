@@ -46,7 +46,7 @@ from ._objects import (
     Unit,
     WarningOf,
 )
-from ._options import ConsolidationFunction, ServiceRef
+from ._options import ServiceRef
 
 type _ApiQuantity = (
     str
@@ -141,15 +141,14 @@ _FALLBACK_COLOR = _COLORS[metrics_v1.Color.GRAY]
 class _ParseContext:
     localizer: Callable[[str], str]
     service: ServiceRef
-    consolidation_function: ConsolidationFunction
     metrics: Mapping[str, metrics_v1.Metric]
 
     def rrd_metric(self, metric_name: str) -> RRDMetric:
+        # Discovery leaves the consolidation function open; the graph request supplies it at fetch.
         return RRDMetric(
             host_name=self.service.host_name,
             service_name=self.service.service_name,
             metric_name=MetricName(metric_name),
-            consolidation_function=self.consolidation_function,
         )
 
     def metric_color(self, metric_name: str) -> str:
@@ -327,13 +326,11 @@ def parse_graph_from_api(
     ),
     localizer: Callable[[str], str],
     service: ServiceRef,
-    consolidation_function: ConsolidationFunction,
     metrics: Mapping[str, metrics_v1.Metric],
 ) -> Graph | Bidirectional:
     context = _ParseContext(
         localizer=localizer,
         service=service,
-        consolidation_function=consolidation_function,
         metrics=metrics,
     )
     match graph:
@@ -348,16 +345,3 @@ def parse_graph_from_api(
             )
         case _:
             assert_never(graph)
-
-
-def metric_from_api(
-    metric_name: str,
-    service: ServiceRef,
-    consolidation_function: ConsolidationFunction,
-) -> RRDMetric:
-    return RRDMetric(
-        host_name=service.host_name,
-        service_name=service.service_name,
-        metric_name=MetricName(metric_name),
-        consolidation_function=consolidation_function,
-    )

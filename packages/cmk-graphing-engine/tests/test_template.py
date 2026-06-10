@@ -67,7 +67,6 @@ def _rrd(name: MetricName) -> RRDMetric:
         host_name="h",
         service_name="svc",
         metric_name=name,
-        consolidation_function=ConsolidationFunction.AVERAGE,
     )
 
 
@@ -198,9 +197,7 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
     discovered = discover_template_graphs(options, rrd=rrd)
 
     assert len(discovered) == 1
-    assert discovered[0].graph == parse_graph_from_api(
-        plugin, _id, service, ConsolidationFunction.AVERAGE, _METRICS
-    )
+    assert discovered[0].graph == parse_graph_from_api(plugin, _id, service, _METRICS)
     # A plain title without expressions is carried through unchanged.
     assert discovered[0].graph_title == "CPU"
     assert discovered[0].metric_data == {
@@ -230,9 +227,7 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
 
     [matched, fallback] = discover_template_graphs(options, rrd=rrd)
 
-    assert matched.graph == parse_graph_from_api(
-        plugin, _id, service, ConsolidationFunction.AVERAGE, _METRICS
-    )
+    assert matched.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
     assert fallback.graph == Graph(
         name=extra, title=extra, stack_groups=[StackGroup(members=[_rrd(extra)])]
     )
@@ -282,9 +277,7 @@ def test_discover_template_graphs_optional_missing_metric_still_matches() -> Non
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
-    assert discovered.graph == parse_graph_from_api(
-        plugin, _id, service, ConsolidationFunction.AVERAGE, _METRICS
-    )
+    assert discovered.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
 
 
 def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() -> None:
@@ -342,9 +335,7 @@ def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
-    assert discovered.graph == parse_graph_from_api(
-        plugin, _id, service, ConsolidationFunction.AVERAGE, _METRICS
-    )
+    assert discovered.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
 
 
 def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
@@ -371,9 +362,7 @@ def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
-    assert discovered.graph == parse_graph_from_api(
-        plugin, _id, service, ConsolidationFunction.AVERAGE, _METRICS
-    )
+    assert discovered.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
 
 
 def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantity() -> None:

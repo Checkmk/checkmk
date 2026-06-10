@@ -17,8 +17,8 @@ from cmk.graphing_engine import (
     FixedRange,
     Graph,
     MetricName,
-    RRDMetric,
     RRDMetricData,
+    RRDMetricWithCF,
     RRDOriginal,
     ServiceRef,
     TemperatureUnit,
@@ -40,8 +40,8 @@ def _service() -> ServiceRef:
     return ServiceRef(host_name="h", service_name="svc")
 
 
-def _rrd(name: MetricName) -> RRDMetric:
-    return RRDMetric(
+def _rrd(name: MetricName) -> RRDMetricWithCF:
+    return RRDMetricWithCF(
         host_name="h",
         service_name="svc",
         metric_name=name,

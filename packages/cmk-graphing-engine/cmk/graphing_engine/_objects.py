@@ -86,46 +86,56 @@ MetricName = NewType("MetricName", str)
 
 
 @dataclass(frozen=True, kw_only=True)
-class RRDMetric:
+class RRDMetricWithCF:
     host_name: str
     service_name: str
     metric_name: MetricName
     consolidation_function: ConsolidationFunction
 
 
+@dataclass(frozen=True, kw_only=True)
+class RRDMetric:
+    host_name: str
+    service_name: str
+    metric_name: MetricName
+
+
+type RRDMetricRef = RRDMetricWithCF | RRDMetric
+
+
 @dataclass(frozen=True)
 class WarningOf:
-    metric: RRDMetric
+    metric: RRDMetricRef
     color: str
 
 
 @dataclass(frozen=True)
 class CriticalOf:
-    metric: RRDMetric
+    metric: RRDMetricRef
     color: str
 
 
 @dataclass(frozen=True)
 class LowerWarningOf:
-    metric: RRDMetric
+    metric: RRDMetricRef
     color: str
 
 
 @dataclass(frozen=True)
 class LowerCriticalOf:
-    metric: RRDMetric
+    metric: RRDMetricRef
     color: str
 
 
 @dataclass(frozen=True)
 class MinimumOf:
-    metric: RRDMetric
+    metric: RRDMetricRef
     color: str
 
 
 @dataclass(frozen=True)
 class MaximumOf:
-    metric: RRDMetric
+    metric: RRDMetricRef
     color: str
 
 
@@ -164,7 +174,7 @@ class Fraction:
 
 
 type Quantity = (
-    RRDMetric
+    RRDMetricRef
     | Constant
     | WarningOf
     | CriticalOf
@@ -202,9 +212,9 @@ class StackGroup:
     members: Sequence[Quantity]
 
 
-def _rrd_metrics_in_quantity(quantity: Quantity) -> Iterable[RRDMetric]:
+def _rrd_metrics_in_quantity(quantity: Quantity) -> Iterable[RRDMetricRef]:
     match quantity:
-        case RRDMetric():
+        case RRDMetricWithCF() | RRDMetric():
             yield quantity
         case Constant():
             return
@@ -255,9 +265,9 @@ class RRDMetricData:
 
 
 def _metric_data_of(
-    rrd_metrics: Iterable[RRDMetric],
+    rrd_metrics: Iterable[RRDMetricRef],
     translated_metrics: Mapping[MetricName, RRDMetricData],
-) -> Mapping[RRDMetric, RRDMetricData]:
+) -> Mapping[RRDMetricRef, RRDMetricData]:
     return {
         metric: translated
         for metric in rrd_metrics
@@ -319,7 +329,7 @@ class Graph:
     stack_groups: Sequence[StackGroup] = ()
     simple_lines: Sequence[Quantity] = ()
 
-    def rrd_metrics(self) -> Sequence[RRDMetric]:
+    def rrd_metrics(self) -> Sequence[RRDMetricRef]:
         return list(
             set(
                 rrd_metric
@@ -334,7 +344,7 @@ class Graph:
     def metric_data(
         self,
         translated_metrics: Mapping[MetricName, RRDMetricData],
-    ) -> Mapping[RRDMetric, RRDMetricData]:
+    ) -> Mapping[RRDMetricRef, RRDMetricData]:
         return _metric_data_of(self.rrd_metrics(), translated_metrics)
 
     def evaluated_title(self, translated_metrics: Mapping[MetricName, RRDMetricData]) -> str:
@@ -348,13 +358,13 @@ class Bidirectional:
     lower: Graph
     upper: Graph
 
-    def rrd_metrics(self) -> Sequence[RRDMetric]:
+    def rrd_metrics(self) -> Sequence[RRDMetricRef]:
         return list(set((*self.lower.rrd_metrics(), *self.upper.rrd_metrics())))
 
     def metric_data(
         self,
         translated_metrics: Mapping[MetricName, RRDMetricData],
-    ) -> Mapping[RRDMetric, RRDMetricData]:
+    ) -> Mapping[RRDMetricRef, RRDMetricData]:
         return _metric_data_of(self.rrd_metrics(), translated_metrics)
 
     def evaluated_title(self, translated_metrics: Mapping[MetricName, RRDMetricData]) -> str:

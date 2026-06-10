@@ -257,7 +257,6 @@ class RRDOriginal:
 class RRDMetricData:
     name: MetricName
     value: float | None
-    scale: float
     originals: Sequence[RRDOriginal]
     title: str
     unit: Unit

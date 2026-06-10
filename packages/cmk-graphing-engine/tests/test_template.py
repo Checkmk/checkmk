@@ -82,7 +82,6 @@ def _metric_data(
     return RRDMetricData(
         name=name,
         value=1.0,
-        scale=1.0,
         originals=[RRDOriginal(metric_name=name, scale=1.0)],
         title="Metric",
         unit=_UNIT,

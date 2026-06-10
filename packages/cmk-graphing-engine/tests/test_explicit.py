@@ -106,7 +106,6 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
         color="#28a2f3",
         warning=80.0,
         critical=90.0,
-        scale=1.0,
         originals=[RRDOriginal(metric_name=cpu_user, scale=1.0)],
     )
     cpu_system_data = RRDMetricData(
@@ -119,7 +118,6 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
         critical=70.0,
         minimum=0.0,
         maximum=100.0,
-        scale=1.0,
         originals=[RRDOriginal(metric_name=cpu_system, scale=1.0)],
     )
     rrd = _FakeFetchRRD(
@@ -166,7 +164,6 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
         unit=_UNIT,
         color="#28a2f3",
         warning=10.0,
-        scale=1.0,
         originals=[RRDOriginal(metric_name=if_in, scale=1.0)],
     )
     if_out_data = RRDMetricData(
@@ -175,7 +172,6 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
         title="If out",
         unit=_UNIT,
         color="#28a2f3",
-        scale=1.0,
         originals=[RRDOriginal(metric_name=if_out, scale=1.0)],
     )
     rrd = _FakeFetchRRD(
@@ -213,7 +209,6 @@ def test_discover_explicit_graphs_keeps_same_metric_name_on_different_services_d
         title="Load A",
         unit=_UNIT,
         color="#28a2f3",
-        scale=1.0,
         originals=[RRDOriginal(metric_name=load, scale=1.0)],
     )
     data_b = RRDMetricData(
@@ -222,7 +217,6 @@ def test_discover_explicit_graphs_keeps_same_metric_name_on_different_services_d
         title="Load B",
         unit=_UNIT,
         color="#28a2f3",
-        scale=1.0,
         originals=[RRDOriginal(metric_name=load, scale=1.0)],
     )
     rrd = _FakeFetchRRD(

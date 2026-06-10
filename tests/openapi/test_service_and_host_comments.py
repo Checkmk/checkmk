@@ -8,6 +8,7 @@ import time
 from typing import Any
 
 import pytest
+import time_machine
 from faker import Faker
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
@@ -130,7 +131,7 @@ def test_get_comment_invalid_id(clients: ClientRegistry) -> None:
         comment_id="invalid_id", site_id=SITE_ID, expect_ok=False
     ).assert_status_code(404)
     assert resp.json["title"] == "Not Found"
-    assert resp.json["detail"] == "These fields have problems: comment_id"
+    assert resp.json["detail"] == "These fields have problems: path.comment_id"
 
 
 def test_get_host_comment_by_id(
@@ -369,7 +370,7 @@ def test_post_service_comment_invalid_query(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
 
-    assert resp.json["detail"] == "These fields have problems: query"
+    assert resp.json["detail"] == "These fields have problems: body.service_by_query.query"
 
 
 def test_post_host_comment_invalid_query(clients: ClientRegistry) -> None:
@@ -379,7 +380,7 @@ def test_post_host_comment_invalid_query(clients: ClientRegistry) -> None:
         query="something that is not a query",
         expect_ok=False,
     )
-    assert resp.json["detail"] == "These fields have problems: query"
+    assert resp.json["detail"] == "These fields have problems: body.host_by_query.query"
 
 
 def test_post_service_comment_invalid_comment_type(clients: ClientRegistry) -> None:
@@ -388,8 +389,8 @@ def test_post_service_comment_invalid_comment_type(clients: ClientRegistry) -> N
     resp = clients.Comment.create_for_service(
         comment_type=comment_type, comment="This is a test comment", expect_ok=False
     )
-    assert resp.json["detail"] == "These fields have problems: comment_type"
-    assert resp.json["fields"]["comment_type"][0] == f"Unsupported value: {comment_type}"
+    assert resp.json["detail"] == "These fields have problems: body"
+    assert comment_type in resp.json["fields"]["body"]["msg"]
 
 
 def test_post_host_comment_invalid_comment_type(clients: ClientRegistry) -> None:
@@ -398,8 +399,8 @@ def test_post_host_comment_invalid_comment_type(clients: ClientRegistry) -> None
     resp = clients.Comment.create_for_host(
         comment_type=comment_type, comment="This is a test comment", expect_ok=False
     )
-    assert resp.json["detail"] == "These fields have problems: comment_type"
-    assert resp.json["fields"]["comment_type"][0] == f"Unsupported value: {comment_type}"
+    assert resp.json["detail"] == "These fields have problems: body"
+    assert comment_type in resp.json["fields"]["body"]["msg"]
 
 
 def test_delete_comment_by_id(
@@ -420,13 +421,12 @@ def test_delete_comment_by_id(
 
 
 def test_delete_invalid_comment_ids(clients: ClientRegistry) -> None:
-    for bad_int in [True, False, "abc"]:
-        resp = clients.Comment.delete(
-            delete_type="by_id", comment_id=bad_int, site_id=SITE_ID, expect_ok=False
-        ).assert_status_code(400)
-        assert resp.json["title"] == "Bad Request"
-        assert resp.json["detail"] == "These fields have problems: comment_id"
-        assert resp.json["fields"]["comment_id"][0] == "Not a valid integer."
+    resp = clients.Comment.delete(
+        delete_type="by_id", comment_id="abc", site_id=SITE_ID, expect_ok=False
+    ).assert_status_code(400)
+    assert resp.json["title"] == "Bad Request"
+    assert resp.json["detail"] == "These fields have problems: body.by_id.comment_id"
+    assert "valid integer" in resp.json["fields"]["body.by_id.comment_id"]["msg"]
 
 
 def test_delete_comments_by_query(
@@ -493,3 +493,38 @@ def test_delete_comments_by_params_service_description(
             host_name="heute",
             service_descriptions=["service_2"],
         )
+
+
+@time_machine.travel("1981-12-19 20:45:00-03:00", tick=False)
+def test_comment_entry_time_is_iso_format(
+    mock_livestatus: MockLiveStatusConnection, clients: ClientRegistry
+) -> None:
+    mock_livestatus.add_table(
+        "comments",
+        [
+            {
+                "host_name": "heute",
+                "id": 1,
+                "author": "testuser",
+                "comment": "test comment",
+                "persistent": 0,
+                "entry_time": time.time(),
+                "service_description": "",
+                "is_service": 0,
+            }
+        ],
+    )
+    mock_livestatus.add_table("hosts", [{"name": "heute"}])
+    mock_livestatus.expect_query(
+        [
+            "GET comments",
+            "Columns: host_name id author comment persistent service_description entry_time is_service",
+            "Filter: id = 1",
+        ],
+        sites=[SITE_ID],
+    )
+
+    with mock_livestatus:
+        resp = clients.Comment.get(comment_id=1, site_id=SITE_ID)
+
+    assert resp.json["extensions"]["entry_time"] == "1981-12-19T23:45:00+00:00"

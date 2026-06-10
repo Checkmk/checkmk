@@ -11,7 +11,6 @@ from cmk.gui.openapi.endpoints import (
     aux_tags,
     broker_connection,
     cert,
-    comment,
     configuration_entity,
     contact_group_config,
     folder_config,
@@ -31,8 +30,17 @@ from cmk.gui.openapi.endpoints import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
-from .api_endpoints import agent_download, custom_host_attributes, host, icon, site_management
+from .api_endpoints import (
+    agent_download,
+    custom_host_attributes,
+    host,
+    icon,
+    site_management,
+)
 from .api_endpoints import background_job as api_background_job
+from .api_endpoints import (
+    comment as api_comment,
+)
 from .api_endpoints import downtime as api_downtime
 from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
@@ -63,7 +71,6 @@ def register(
     audit_log.register(endpoint_registry)
     aux_tags.register(endpoint_registry)
     cert.register(endpoint_registry)
-    comment.register(endpoint_registry)
     contact_group_config.register(endpoint_registry)
     folder_config.register(endpoint_registry)
     configuration_entity.register(endpoint_registry)
@@ -83,6 +90,10 @@ def register(
     broker_connection.register(endpoint_registry)
 
     agent_download.register(versioned_endpoint_registry)
+    api_comment.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
     api_background_job.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,

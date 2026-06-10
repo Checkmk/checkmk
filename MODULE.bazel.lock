@@ -3581,8 +3581,8 @@
             "https://files.pythonhosted.org/packages/fa/6a/f17a367f41d7fca804d16bad850e104f4f441ad67b5c60a07f5889607421/clickhouse_connect-0.15.1-cp314-cp314-win32.whl": "167e674dff8ac12be7796d93190b6fe9097c042940b3c41d87fe4d85970be27d"
           },
           "cmk-werk-zeug": {
-            "https://files.pythonhosted.org/packages/8d/98/fbe95328ae75df03de59ae1b1c48089d6b1e474e3a1ba2cca7d86e297508/cmk_werk_zeug-0.3.2-py3-none-any.whl": "c79cefe217dfd0a4b110202a4c3fdcb71301153972c51075aa4c955b980202a8",
-            "https://files.pythonhosted.org/packages/eb/3a/91d1706370d782cfb145273306bffe57f903565923d7d91decac7471c1aa/cmk_werk_zeug-0.3.2.tar.gz": "485e163ee7905193e32b564fa6df96fac694eecd8ddcc3d747380631da019d08"
+            "https://files.pythonhosted.org/packages/6b/a5/d3f036f6155a6e0bb2af60576228fb0083e40280b1f3dae978f387306365/cmk_werk_zeug-0.3.5.tar.gz": "a738eac8967a965cb0f177896d3f0f0fc2def1f70bf9fb869b7398df773fd009",
+            "https://files.pythonhosted.org/packages/f9/75/e9a43f5240d3c7299c8e8f9a3f7a4aae77dfc5a570e1bf00e22244c1af95/cmk_werk_zeug-0.3.5-py3-none-any.whl": "ab22c271c0c8ae26a53638c2782cce27cda4ad46bed0f3453ce6922e9865439b"
           },
           "colorama": {
             "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl": "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",

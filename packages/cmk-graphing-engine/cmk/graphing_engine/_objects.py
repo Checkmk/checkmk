@@ -246,7 +246,7 @@ class RRDOriginal:
 
 
 @dataclass(frozen=True, kw_only=True)
-class MetricData:
+class RRDMetricData:
     name: MetricName
     value: float | None
     scale: float
@@ -261,8 +261,8 @@ class MetricData:
 
 def _metric_data_of(
     rrd_metrics: Iterable[RRDMetric],
-    translated_metrics: Mapping[MetricName, MetricData],
-) -> Mapping[RRDMetric, MetricData]:
+    translated_metrics: Mapping[MetricName, RRDMetricData],
+) -> Mapping[RRDMetric, RRDMetricData]:
     return {
         metric: translated
         for metric in rrd_metrics
@@ -274,7 +274,7 @@ def _metric_data_of(
 # 'CPU load - _EXPRESSION:{"metric": "load1", "scalar": "max"} CPU cores'.
 _TITLE_EXPRESSION_PREFIX = "_EXPRESSION:"
 _TITLE_EXPRESSION_PATTERN = re.compile(re.escape(_TITLE_EXPRESSION_PREFIX) + r"\{.*?\}")
-_TITLE_SCALARS: Mapping[str, Callable[[MetricData], float | None]] = {
+_TITLE_SCALARS: Mapping[str, Callable[[RRDMetricData], float | None]] = {
     "warn": lambda metric_data: metric_data.warning,
     "crit": lambda metric_data: metric_data.critical,
     "warn_lower": lambda metric_data: metric_data.lower_warning,
@@ -286,7 +286,7 @@ _TITLE_SCALARS: Mapping[str, Callable[[MetricData], float | None]] = {
 
 def _evaluate_title_expression(
     raw: str,
-    translated_metrics: Mapping[MetricName, MetricData],
+    translated_metrics: Mapping[MetricName, RRDMetricData],
 ) -> float | None:
     expression = json.loads(raw[len(_TITLE_EXPRESSION_PREFIX) :])
     if (translated := translated_metrics.get(MetricName(expression["metric"]))) is None:
@@ -303,7 +303,7 @@ def metric_names_in_title(title: str) -> Iterable[MetricName]:
 
 def _evaluate_title(
     title: str,
-    translated_metrics: Mapping[MetricName, MetricData],
+    translated_metrics: Mapping[MetricName, RRDMetricData],
 ) -> str:
     for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
         value = _evaluate_title_expression(raw, translated_metrics)
@@ -338,11 +338,11 @@ class Graph:
 
     def metric_data(
         self,
-        translated_metrics: Mapping[MetricName, MetricData],
-    ) -> Mapping[RRDMetric, MetricData]:
+        translated_metrics: Mapping[MetricName, RRDMetricData],
+    ) -> Mapping[RRDMetric, RRDMetricData]:
         return _metric_data_of(self.rrd_metrics(), translated_metrics)
 
-    def evaluated_title(self, translated_metrics: Mapping[MetricName, MetricData]) -> str:
+    def evaluated_title(self, translated_metrics: Mapping[MetricName, RRDMetricData]) -> str:
         return _evaluate_title(self.title, translated_metrics)
 
 
@@ -358,9 +358,9 @@ class Bidirectional:
 
     def metric_data(
         self,
-        translated_metrics: Mapping[MetricName, MetricData],
-    ) -> Mapping[RRDMetric, MetricData]:
+        translated_metrics: Mapping[MetricName, RRDMetricData],
+    ) -> Mapping[RRDMetric, RRDMetricData]:
         return _metric_data_of(self.rrd_metrics(), translated_metrics)
 
-    def evaluated_title(self, translated_metrics: Mapping[MetricName, MetricData]) -> str:
+    def evaluated_title(self, translated_metrics: Mapping[MetricName, RRDMetricData]) -> str:
         return _evaluate_title(self.title, translated_metrics)

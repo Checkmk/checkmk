@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
-from ._objects import Bidirectional, Graph, MetricData, MetricName, RRDMetric, RRDOriginal
+from ._objects import Bidirectional, Graph, MetricName, RRDMetric, RRDMetricData, RRDOriginal
 from ._options import CommonOptions, ConsolidationFunction, ServiceRef, TimeRange
 
 
@@ -20,7 +20,7 @@ class TimeSeries:
 class FetchRRD(Protocol):
     def translated_metrics(
         self, services: Sequence[ServiceRef]
-    ) -> Mapping[ServiceRef, Mapping[MetricName, MetricData]]: ...
+    ) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]: ...
 
     def time_series(
         self,

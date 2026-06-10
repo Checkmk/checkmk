@@ -17,9 +17,9 @@ from cmk.graphing_engine import (
     FixedRange,
     Graph,
     Metric,
-    MetricData,
     MetricName,
     RRDMetric,
+    RRDMetricData,
     RRDOriginal,
     ServiceRef,
     TemperatureUnit,
@@ -62,7 +62,7 @@ def _metric(name: MetricName) -> Metric:
 class _FakeFetchRRD:
     def __init__(
         self,
-        translated_metrics_response: Mapping[ServiceRef, Mapping[MetricName, MetricData]]
+        translated_metrics_response: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]
         | None = None,
     ) -> None:
         self._translated_metrics_response = translated_metrics_response or {}
@@ -70,7 +70,7 @@ class _FakeFetchRRD:
 
     def translated_metrics(
         self, services: Sequence[ServiceRef]
-    ) -> Mapping[ServiceRef, Mapping[MetricName, MetricData]]:
+    ) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
         self.translated_metrics_calls.append(tuple(services))
         return self._translated_metrics_response
 
@@ -109,7 +109,7 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
         simple_lines=[_metric(cpu_user), WarningOf(metric=_rrd(cpu_system), color="#28a2f3")],
     )
     options = ExplicitDiscoveryOptions(common=_common(), graph=inline)
-    cpu_user_data = MetricData(
+    cpu_user_data = RRDMetricData(
         name=cpu_user,
         value=42.0,
         warning=80.0,
@@ -117,7 +117,7 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
         scale=1.0,
         originals=[RRDOriginal(metric_name=cpu_user, scale=1.0)],
     )
-    cpu_system_data = MetricData(
+    cpu_system_data = RRDMetricData(
         name=cpu_system,
         value=8.0,
         warning=50.0,
@@ -164,14 +164,14 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
         upper=Graph(name="out", title="Out", simple_lines=[_metric(if_out)]),
     )
     options = ExplicitDiscoveryOptions(common=_common(), graph=inline)
-    if_in_data = MetricData(
+    if_in_data = RRDMetricData(
         name=if_in,
         value=1.0,
         warning=10.0,
         scale=1.0,
         originals=[RRDOriginal(metric_name=if_in, scale=1.0)],
     )
-    if_out_data = MetricData(
+    if_out_data = RRDMetricData(
         name=if_out,
         value=2.0,
         scale=1.0,

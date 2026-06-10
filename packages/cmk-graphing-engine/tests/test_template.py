@@ -18,10 +18,10 @@ from cmk.graphing_engine import (
     discover_template_graphs,
     Graph,
     Metric,
-    MetricData,
     MetricName,
     parse_graph_from_api,
     RRDMetric,
+    RRDMetricData,
     RRDOriginal,
     ServiceRef,
     StackGroup,
@@ -90,8 +90,8 @@ def _metric_data(
     critical: float | None = None,
     minimum: float | None = None,
     maximum: float | None = None,
-) -> MetricData:
-    return MetricData(
+) -> RRDMetricData:
+    return RRDMetricData(
         name=name,
         value=1.0,
         scale=1.0,
@@ -108,7 +108,7 @@ def _metric_data(
 class _FakeFetchRRD:
     def __init__(
         self,
-        translated_metrics_response: Mapping[ServiceRef, Mapping[MetricName, MetricData]]
+        translated_metrics_response: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]
         | None = None,
     ) -> None:
         self._translated_metrics_response = translated_metrics_response or {}
@@ -116,7 +116,7 @@ class _FakeFetchRRD:
 
     def translated_metrics(
         self, services: Sequence[ServiceRef]
-    ) -> Mapping[ServiceRef, Mapping[MetricName, MetricData]]:
+    ) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
         self.translated_metrics_calls.append(tuple(services))
         return self._translated_metrics_response
 

@@ -184,25 +184,31 @@ def discover_template_graphs(
 
     discovered: list[DiscoveredGraph[TemplateOptions]] = []
     claimed: set[MetricName] = set()
+
+    def _discover(base: Graph | Bidirectional) -> DiscoveredGraph[TemplateOptions]:
+        # Draw the predictive companions of the graph's metrics, claim them, and build the result.
+        graph, predictive_names = _add_predictive_lines(base, options.service, service_metrics)
+        claimed.update(predictive_names)
+        return DiscoveredGraph(
+            graph=graph,
+            options=post_options,
+            graph_title=graph.evaluated_title(translated_metrics),
+            metric_data=graph.metric_data(translated_metrics),
+        )
+
     for plugin in options.registered_graphs:
         walk = _walk(plugin, service_metrics)
         if not walk.matched:
             continue
         claimed.update(walk.metric_names)
-        graph = parse_graph_from_api(
-            plugin,
-            options.localizer,
-            options.service,
-            options.metrics,
-        )
-        graph, predictive_names = _add_predictive_lines(graph, options.service, service_metrics)
-        claimed.update(predictive_names)
         discovered.append(
-            DiscoveredGraph(
-                graph=graph,
-                options=post_options,
-                graph_title=graph.evaluated_title(translated_metrics),
-                metric_data=graph.metric_data(translated_metrics),
+            _discover(
+                parse_graph_from_api(
+                    plugin,
+                    options.localizer,
+                    options.service,
+                    options.metrics,
+                )
             )
         )
 
@@ -210,31 +216,23 @@ def discover_template_graphs(
         # Predictive metrics are companions of the metric they predict, never graphed on their own.
         if name in claimed or name.startswith(_PREDICT_PREFIX):
             continue
-        single_metric_graph = Graph(
-            name=name,
-            title=name,
-            stack_groups=[
-                StackGroup(
-                    members=[
-                        RRDMetric(
-                            host_name=options.service.host_name,
-                            service_name=options.service.service_name,
-                            metric_name=name,
-                        )
-                    ]
-                )
-            ],
-        )
-        graph, predictive_names = _add_predictive_lines(
-            single_metric_graph, options.service, service_metrics
-        )
-        claimed.update(predictive_names)
         discovered.append(
-            DiscoveredGraph(
-                graph=graph,
-                options=post_options,
-                graph_title=graph.evaluated_title(translated_metrics),
-                metric_data=graph.metric_data(translated_metrics),
+            _discover(
+                Graph(
+                    name=name,
+                    title=name,
+                    stack_groups=[
+                        StackGroup(
+                            members=[
+                                RRDMetric(
+                                    host_name=options.service.host_name,
+                                    service_name=options.service.service_name,
+                                    metric_name=name,
+                                )
+                            ]
+                        )
+                    ],
+                )
             )
         )
 

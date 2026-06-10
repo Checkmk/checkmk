@@ -12,21 +12,35 @@ export const a11yData = [
   {
     keys: ['Tab'],
     description:
-      'Each filterable column header exposes a filter button after its label. It is a regular button, reachable in the natural tab order, and carries an accessible name of the form "Filter <column>".'
+      'Each filterable column header exposes a filter button after its label, reachable in the natural tab order with an accessible name of the form "Filter <column>". The button reports aria-haspopup / aria-expanded.'
   },
   {
-    keys: ['—'],
+    keys: ['↑', '↓', 'Home', 'End'],
     description:
-      'The button is presentational for now. The dropdown it will open and its keyboard interaction (open/close, option navigation, expanded-state announcement) are handled in the follow-up FilterDropdown ticket (CMK-35454).'
+      'While the dropdown is open, arrow keys move the active option (Home/End jump to first/last). The active option is tracked by the parent FilterDropdown and exposed via aria-activedescendant; the option rows only render the highlight.'
+  },
+  {
+    keys: ['Enter', 'Space'],
+    description:
+      'Toggle the active option (or "Select all"). Space types normally while the search field is focused, so it is only treated as a toggle outside the input.'
+  },
+  {
+    keys: ['Esc'],
+    description:
+      'Clears the search field if it has text, otherwise closes the dropdown and returns focus to the filter button.'
   }
 ]
 
 export const panelConfig = {
-  textColumnsOnly: {
-    type: 'boolean' as const,
-    title: 'Only text columns filterable',
-    initialState: true,
-    help: 'When enabled, only the text columns expose a filter button. Disable to make every column filterable (getCanFilter()).'
+  optionCount: {
+    type: 'list' as const,
+    title: 'State option count',
+    options: [
+      { name: 'few', title: 'Few (no search field)' },
+      { name: 'many', title: 'Many (search field shown)' }
+    ],
+    initialState: 'few',
+    help: 'The inline search field appears once the option count exceeds the dropdown threshold.'
   }
 } satisfies PanelConfig
 </script>
@@ -47,6 +61,7 @@ import { computed, ref } from 'vue'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
+import type { CheckboxListFilter } from '@/monitoring/shared/components/filter/types'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -56,46 +71,47 @@ const propState = ref(
   ) as InferPanelState<typeof panelConfig>
 )
 
-const TEXT_COLUMNS = new Set(['name', 'alias', 'ip'])
+const FEW_STATES = ['UP', 'DOWN', 'UNREACHABLE', 'PENDING']
+const MANY_STATES = [
+  ...FEW_STATES,
+  'FLAPPING',
+  'IN DOWNTIME',
+  'ACKNOWLEDGED',
+  'STALE',
+  'NO NOTIFICATIONS',
+  'NO CHECKS',
+  'PASSIVE',
+  'CLUSTERED'
+]
 
-const columns = computed<ColumnDef<HostEntry>[]>(() => {
-  const textOnly = propState.value.textColumnsOnly
-  const filterable = (id: string): boolean => !textOnly || TEXT_COLUMNS.has(id)
-  return [
-    { accessorKey: 'state', header: 'State', minSize: 60, maxSize: 130, enableColumnFilter: false },
-    { accessorKey: 'name', header: 'Host', minSize: 100, maxSize: 320 },
-    { accessorKey: 'alias', header: 'Alias', minSize: 100, maxSize: 320 },
-    { accessorKey: 'ip', header: 'IP address', minSize: 100, maxSize: 160 },
-    {
-      accessorKey: 'num_services_ok',
-      header: 'OK',
-      meta: { justify: 'center' },
-      minSize: 64,
-      maxSize: 90,
-      enableColumnFilter: filterable('num_services_ok')
-    },
-    {
-      accessorKey: 'num_services_warn',
-      header: 'Warn',
-      meta: { justify: 'center' },
-      minSize: 64,
-      maxSize: 90,
-      enableColumnFilter: filterable('num_services_warn')
-    },
-    {
-      accessorKey: 'num_services_crit',
-      header: 'Crit',
-      meta: { justify: 'center' },
-      minSize: 64,
-      maxSize: 90,
-      enableColumnFilter: filterable('num_services_crit')
-    }
-  ]
-})
+const stateFilter = computed<CheckboxListFilter>(() => ({
+  type: 'checkbox-list',
+  options: (propState.value.optionCount === 'many' ? MANY_STATES : FEW_STATES).map((state) => ({
+    value: state,
+    title: state
+  }))
+}))
 
-const filterState = ref<ColumnFiltersState>([{ id: 'name', value: 'demo' }])
+// Only the State column carries a filter dropdown in this demo; the remaining
+// columns are non-filterable so the dropdown stays the focus of the example.
+const columns = computed<ColumnDef<HostEntry>[]>(() => [
+  {
+    accessorKey: 'state',
+    header: 'State',
+    minSize: 60,
+    maxSize: 130,
+    meta: { filter: stateFilter.value }
+  },
+  { accessorKey: 'name', header: 'Host', minSize: 100, maxSize: 320, enableColumnFilter: false },
+  { accessorKey: 'alias', header: 'Alias', minSize: 100, maxSize: 320, enableColumnFilter: false },
+  { accessorKey: 'ip', header: 'IP address', minSize: 100, maxSize: 160, enableColumnFilter: false }
+])
 
-const activeFilters = computed(() => filterState.value.map((entry) => entry.id))
+const filterState = ref<ColumnFiltersState>([])
+
+const activeFilters = computed(() =>
+  filterState.value.map((entry) => `${entry.id}: ${(entry.value as string[]).join(', ')}`)
+)
 
 const rows: HostEntry[] = [
   {
@@ -146,23 +162,40 @@ const rows: HostEntry[] = [
 
     <UclDetailPageComponent>
       <div class="ucl-table-column-filters__stack">
-        <MonitoringTable
-          :rows="rows"
-          :loading="false"
-          :columns="columns"
-          :sort-state="[]"
-          :filter-state="filterState"
-          :get-row-key="(row) => `${row.site_id}/${row.name}`"
-        >
-          <template #row="{ row }">
-            <HostRow :row="row" />
-          </template>
-        </MonitoringTable>
+        <!--
+          The table scrolls its own overflow, so the open dropdown needs vertical
+          room inside the table box; give the viewport enough height that the
+          popover is not clipped in this demo.
+        -->
+        <div class="ucl-table-column-filters__viewport">
+          <MonitoringTable
+            :rows="rows"
+            :loading="false"
+            :columns="columns"
+            :sort-state="[]"
+            :filter-state="filterState"
+            :get-row-key="(row) => `${row.site_id}/${row.name}`"
+            @update:filter-state="filterState = $event"
+          >
+            <template #row="{ row }">
+              <HostRow :row="row" />
+            </template>
+          </MonitoringTable>
+        </div>
 
         <p class="ucl-table-column-filters__readout">
           Active filters:
-          <code v-if="activeFilters.length">{{ activeFilters.join(', ') }}</code>
+          <code v-if="activeFilters.length">{{ activeFilters.join(' · ') }}</code>
           <span v-else>none</span>
+        </p>
+
+        <p class="ucl-table-column-filters__hint">
+          The State column declares a <code>checkbox-list</code> filter via
+          <code>meta.filter</code>. The header button opens the FilterDropdown, which owns the
+          popover and all keyboard handling; the checkbox list only renders the active row. Selected
+          values persist in the table's column-filter state, so they survive closing the dropdown
+          and drive the (server-side) query. Future filter types — numeric range, IP range — plug in
+          as additional dropdown contents without changing this wiring.
         </p>
       </div>
 
@@ -185,6 +218,14 @@ const rows: HostEntry[] = [
   gap: var(--dimension-4);
   width: 100%;
   margin-left: calc(-1 * var(--dimension-10));
+}
+
+.ucl-table-column-filters__viewport {
+  /* The table clips its own overflow, so a definite height (not min-height) is
+     needed for the table's height:100% to resolve and leave room for the open
+     dropdown below the header. */
+  width: 100%;
+  height: 420px;
 }
 
 .ucl-table-column-filters__readout {

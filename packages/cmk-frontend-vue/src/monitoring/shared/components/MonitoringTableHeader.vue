@@ -4,17 +4,31 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts" generic="T">
-import { type ColumnDef, FlexRender, type HeaderGroup } from '@tanstack/vue-table'
+import { type Column, type ColumnDef, FlexRender, type HeaderGroup } from '@tanstack/vue-table'
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-vue-next'
 import { type CSSProperties, inject } from 'vue'
 
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
 import { COLUMN_LAYOUT_KEY } from './MonitoringTableContext'
+import FilterDropdown from './filter/FilterDropdown.vue'
 
 defineProps<{
   headerGroups: HeaderGroup<T>[]
 }>()
+
+function selectedValues(column: Column<T, unknown>): string[] {
+  const value = column.getFilterValue()
+  return Array.isArray(value) ? (value as string[]) : []
+}
+
+function setSelectedValues(column: Column<T, unknown>, values: string[]): void {
+  column.setFilterValue(values.length > 0 ? values : undefined)
+}
+
+function columnLabel(column: Column<T, unknown>): string {
+  return column.columnDef.header?.toString() ?? column.id
+}
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
 
@@ -111,17 +125,33 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
           >
             <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
           </span>
-          <button
-            v-if="!header.isPlaceholder && header.column.getCanFilter()"
-            type="button"
-            class="monitoring-table-header__filter-button"
-            :class="{
-              'monitoring-table-header__filter-button--active': header.column.getIsFiltered()
-            }"
-            :title="`Filter ${header.column.columnDef.header?.toString() ?? ''}`.trim()"
+          <FilterDropdown
+            v-if="
+              !header.isPlaceholder &&
+              header.column.getCanFilter() &&
+              header.column.columnDef.meta?.filter
+            "
+            :definition="header.column.columnDef.meta.filter"
+            :label="columnLabel(header.column)"
+            :selected="selectedValues(header.column)"
+            @update:selected="setSelectedValues(header.column, $event)"
           >
-            <CmkMultitoneIcon name="filter" primary-color="font" />
-          </button>
+            <template #trigger="{ toggle, isOpen, isActive }">
+              <button
+                type="button"
+                class="monitoring-table-header__filter-button"
+                :class="{
+                  'monitoring-table-header__filter-button--active': isActive || isOpen
+                }"
+                :title="`Filter ${header.column.columnDef.header?.toString() ?? ''}`.trim()"
+                aria-haspopup="true"
+                :aria-expanded="isOpen"
+                @click="toggle"
+              >
+                <CmkMultitoneIcon name="filter" primary-color="font" />
+              </button>
+            </template>
+          </FilterDropdown>
         </div>
       </th>
     </tr>

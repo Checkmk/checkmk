@@ -66,6 +66,7 @@ from cmk.checkengine.discovery import (
     get_plugin_parameters,
     HostLabelPlugin,
 )
+from cmk.checkengine.fetcher import FetcherFunction
 from cmk.checkengine.fetchers import (
     AdHocSecrets,
     Fetcher,
@@ -314,7 +315,7 @@ def _summarize_host_sections(
     )
 
 
-class SpecialAgentFetcher:
+class SpecialAgentFetcher(FetcherFunction):
     def __init__(
         self,
         trigger: FetcherTrigger,
@@ -359,7 +360,7 @@ class SpecialAgentFetcher:
         ]
 
 
-class CMKFetcher:
+class CMKFetcher(FetcherFunction):
     def __init__(
         self,
         config_cache: ConfigCache,

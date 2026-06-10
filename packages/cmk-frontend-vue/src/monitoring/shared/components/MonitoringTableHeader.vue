@@ -213,7 +213,10 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
   }
 
   &:disabled {
+    color: inherit;
     cursor: default;
+    background: transparent;
+    filter: none;
   }
 
   &:not(:disabled):hover {
@@ -248,7 +251,10 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
   }
 
   &:disabled {
+    color: inherit;
     cursor: default;
+    background: transparent;
+    filter: none;
   }
 
   &:not(:disabled):hover {

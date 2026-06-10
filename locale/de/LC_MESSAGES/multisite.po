@@ -4,11 +4,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-09 01:53+0000\n"
-"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
-">\n"
+"PO-Revision-Date: 2026-06-10 11:13+0000\n"
+"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
+"de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2739,7 +2739,7 @@ msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
 
 msgid "AES-256-C (Cisco)"
-msgstr ""
+msgstr "AES-256-C (Cisco)"
 
 msgid "AI"
 msgstr "KI"
@@ -7419,9 +7419,8 @@ msgstr ""
 "Es muss mindestens eine Hyper-V Monitoring-Komponente ausgewählt werden. "
 "Bitte wählen Sie aus den verfügbaren Monitoring-Optionen aus."
 
-#, fuzzy
 msgid "At least one contact group must be selected"
-msgstr "Mindestens ein Ziel muss ausgewählt werden."
+msgstr "Mindestens eine Kontaktgruppe muss ausgewählt werden"
 
 msgid "At least one host event must be selected."
 msgstr "Mindestens ein Host-Ereignis muss ausgewählt werden."
@@ -7507,9 +7506,8 @@ msgstr "Attribut"
 msgid "Attribute match value"
 msgstr "Attribut-Match-Wert"
 
-#, fuzzy
 msgid "Attribute match value must not be empty"
-msgstr "Attribut-Match-Wert"
+msgstr "Attribut-Match-Wert darf nicht leer sein"
 
 msgid "Attribute name"
 msgstr "Attribut-Name"
@@ -7587,9 +7585,9 @@ msgstr "Authentifizierungsverbindungen"
 msgid "Authentication context class reference"
 msgstr "Referenz der Klasse des Authentifizierungskontexts"
 
-#, fuzzy
 msgid "Authentication context class reference must not be empty"
-msgstr "Referenz der Klasse des Authentifizierungskontexts"
+msgstr ""
+"Referenz der Klasse des Authentifizierungskontexts darf nicht leer sein"
 
 msgid "Authentication error"
 msgstr "Authentifizierungsfehler"
@@ -9320,9 +9318,8 @@ msgstr ""
 "angewendet. Das beste Ergebnis bestimmt den Gesamtzustand des geclusterten "
 "Services."
 
-#, fuzzy
 msgid "Better"
-msgstr "Buchstabe"
+msgstr "Besser"
 
 msgid "BigQuery table ID"
 msgstr "BigQuery Tabellen-ID"
@@ -11942,9 +11939,8 @@ msgstr ""
 "aktivieren\" ein vollständiger Neustart aller betroffenen Instanzen "
 "ausgelöst."
 
-#, fuzzy
 msgid "Changing your password is not allowed on remote sites."
-msgstr "Login ist auf dieser Instanz nicht erlaubt."
+msgstr "Auf Remote-Instanzen ist es nicht möglich, Ihr Passwort zu ändern."
 
 msgid "Channel"
 msgstr "Kanal"
@@ -13331,9 +13327,8 @@ msgstr "Citrix XenApp (Windows)"
 msgid "City name"
 msgstr "Stadtname"
 
-#, fuzzy
 msgid "Claim name must not be empty"
-msgstr "Jobname darf nicht leer sein."
+msgstr "Claim-Name darf nicht leer sein"
 
 msgid "Class"
 msgstr "Klasse"
@@ -23319,9 +23314,8 @@ msgstr "Jede Woche am..."
 msgid "Evictions"
 msgstr "Räumungen"
 
-#, fuzzy
 msgid "Exact"
-msgstr "Genaue Übereinstimmung"
+msgstr "Genau"
 
 msgid "Exact RWVDMS name or regex"
 msgstr "Genauer RWVDMS-Name oder Regex"
@@ -43404,7 +43398,6 @@ msgstr ""
 "Daher verwenden neuere Versionen diese Konfigurationsvariable nicht mehr und "
 "melden sie auch nicht."
 
-#, fuzzy
 msgid ""
 "Note that specifically for the check <tt>df</tt>, the pattern matches either "
 "the mount point or the combination of volume and mount point, depending on "
@@ -48373,7 +48366,7 @@ msgid "Physical volume status"
 msgstr "Physikalischer Datenträgerstatus"
 
 msgid "Physical volume total partitions"
-msgstr "Gesamt-Partitionen auf physikalischem Datenträger"
+msgstr "Gesamtanzahl an Partitionen auf physikalischem Datenträger"
 
 msgid "Physical volumes"
 msgstr "Physikalische Datenträger"
@@ -53222,9 +53215,8 @@ msgstr "Rolle"
 msgid "Role attribute"
 msgstr "Rollen-Attribut"
 
-#, fuzzy
 msgid "Role attribute must not be empty"
-msgstr "Das Attribut existiert nicht."
+msgstr "Rollenattribut darf nicht leer sein"
 
 msgid "Roles"
 msgstr "Rollen"
@@ -55076,7 +55068,6 @@ msgstr ""
 "Verbindungen ermöglichen die Verbindung über einen Proxy-Server; es werden "
 "nur globale und manuelle Proxy-Konfigurationen unterstützt."
 
-#, fuzzy
 msgid ""
 "Select the connections that are available for login on this site. Choose "
 "<i>Use identity connectors from central site</i> to inherit the central "
@@ -58548,13 +58539,12 @@ msgstr "Spezifische Benutzer"
 msgid "Specific version"
 msgstr "Spezifische Version"
 
-#, fuzzy
 msgid ""
 "Specifies how the <a href='wato.py?"
 "mode=edit_ruleset&varname=discovery_parameters%3Afilesystem_groups'>File "
 "system grouping patterns</a> feature processes this file system."
 msgstr ""
-"Legt fest wie die Funktion <a href='wato.py?"
+"Legt fest, wie die Funktion <a href='wato.py?"
 "mode=edit_ruleset&varname=filesystem_groups'>Dateisystem-Gruppierungs-"
 "Pattern</a> dieses Dateisystem verarbeitet."
 
@@ -63641,9 +63631,8 @@ msgid ""
 msgstr ""
 "Der Verbindungstimeout in Sekunden bei Aufbau einer Verbindung mit dem PLC."
 
-#, fuzzy
 msgid "The connection ID must not be empty"
-msgstr "Die Verbindung %r existiert nicht"
+msgstr "Die Verbindungs-ID darf nicht leer sein"
 
 msgid ""
 "The connection id must consist only of letters, digit and the underscore."
@@ -65193,9 +65182,8 @@ msgstr ""
 "verwenden. Die gebräuchlichsten sind $HOSTNAME$, $HOSTALIAS$ oder "
 "$HOSTADDRESS$."
 
-#, fuzzy
 msgid "The name must not be empty"
-msgstr "Der Metrikname darf nicht leer sein"
+msgstr "Der Name darf nicht leer sein"
 
 msgid "The name of the Datadog monitor."
 msgstr "Der Name des Datadog-Monitors."
@@ -65690,7 +65678,8 @@ msgstr ""
 
 msgid "The password cannot be changed (it is locked by the user connector)."
 msgstr ""
-"Passwortänderung nicht möglich (es ist durch den User Connector gesperrt)."
+"Das Passwort kann nicht geändert werden (es ist durch den User Connector "
+"gesperrt)."
 
 msgid ""
 "The password cannot be deleted because the user does not have the permission "
@@ -65977,7 +65966,7 @@ msgid "The queried Graylog host"
 msgstr "Der abgefragte Graylog-Host"
 
 msgid "The query returned no data."
-msgstr "Der Port, der für den Api-Aufruf verwendet wird."
+msgstr "Die Abfrage hat keine Daten zurückgegeben."
 
 msgid "The rate of requests that were rejected (spillover)"
 msgstr "Die Rate der Anfragen, die abgelehnt wurden (Spillover)"
@@ -69037,14 +69026,13 @@ msgstr "Dieser Name wird bereits von einer anderen Zeitperiode verwendet."
 msgid "This name is already used. Please choose another one."
 msgstr "Dieser Name wird bereits verwendet. Bitte wählen Sie einen andere."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "This name must match the name of the group defined in the <a href=\"%s\">%s</"
 "a> rule set."
 msgstr ""
-"Dieser Name muss mit dem Namen übereinstimmen, der in der Gruppe im "
-"Regelsatz <a href=\"wato.py?mode=edit_ruleset&varname=fileinfo_groups\">%s</"
-"a> definiert ist."
+"Dieser Name muss mit dem Namen der Gruppe übereinstimmen, der im Regelsatz "
+"<a href=\"%s\">%s</a> definiert ist."
 
 msgid ""
 "This name must match the name of the section defined in the mk_filestats "
@@ -69393,8 +69381,9 @@ msgid ""
 "the connect time, header time, time till first byte received and the "
 "transfer time."
 msgstr ""
-"Lässt den HTTP-Check detailliertere Metriken wie Verbindungszeit, Header-"
-"Zeit, Zeit bis zum Empfang des ersten Bytes und Transferzeit generieren."
+"Mit dieser Option liefert der HTTP-Check detailliertere Messwerte wie die "
+"Verbindungszeit, die Header-Zeit, die Zeit bis zum Empfang des ersten Bytes "
+"und die Übertragungszeit."
 
 msgid ""
 "This option quantifies the spread of the error between our model\n"
@@ -70963,7 +70952,7 @@ msgid ""
 "CRIT levels for packet loss, average round trip and standard deviation."
 msgstr ""
 "Dieser Regelsatz kann verwendet werden, um die WARN- und CRIT-Levels von MTR "
-"(Matt's Traceroute) für Paketverluste, durchschnittlicher Paketumlauf und "
+"(Matt's Traceroute) für Paketverluste, durchschnittlichen Paketumlauf und "
 "Standardabweichung zu ändern."
 
 msgid ""
@@ -72461,7 +72450,7 @@ msgid "Time for coverage of sources"
 msgstr "Zeit für die Erfassung von Quellen"
 
 msgid "Time format"
-msgstr "Format des Zeitstempels"
+msgstr "Zeit-Format"
 
 msgid "Time frame"
 msgstr "Zeitrahmen"
@@ -72494,8 +72483,8 @@ msgstr ""
 
 msgid "Time left on battery at or below which a critical state is triggered"
 msgstr ""
-"Verbleibende Batterielaufzeit, bei oder unterhalb dessen ein Zustand "
-"CRITICAL ausgelöst wird"
+"Verbleibende Batterielaufzeit, bei oder unterhalb deren ein Zustand CRITICAL "
+"ausgelöst wird"
 
 msgid "Time left until full"
 msgstr "Verbleibende Zeit bis voll"
@@ -73489,7 +73478,7 @@ msgid "Total duration of SIP/H323 calls"
 msgstr "Gesamtdauer der SIP/H323 Anrufe"
 
 msgid "Total error rate"
-msgstr "Gesamt-Fehlerrate"
+msgstr "Gesamte Fehlerrate"
 
 msgid "Total events count lower levels"
 msgstr "Untergrenzen für Gesamtanzahl der Ereignisse"
@@ -75960,13 +75949,11 @@ msgstr "Überprüfen einer URL"
 msgid "URL from host to remote site"
 msgstr "URL vom Host zur Remote-Instanz"
 
-#, fuzzy
 msgid "URL must not be empty"
-msgstr "Die Eingabe darf nicht leer sein"
+msgstr "URL darf nicht leer sein"
 
-#, fuzzy
 msgid "URL must use HTTPS"
-msgstr "Slack Webhooks erfordern HTTPS."
+msgstr "URL muss HTTPS verwenden"
 
 msgid "URL not allowed"
 msgstr "URL nicht erlaubt"
@@ -77759,9 +77746,8 @@ msgstr "CSV Export verwenden"
 msgid "Use Checkmk Python, if it has been installed"
 msgstr "Verwenden Sie Checkmk Python, wenn es installiert wurde"
 
-#, fuzzy
 msgid "Use Checkmk certificate"
-msgstr "Zertifikat prüfen"
+msgstr "Checkmk-Zertifikat verwenden"
 
 msgid ""
 "Use Checkmk clusters if an item can move from one host to another at runtime."
@@ -77950,9 +77936,8 @@ msgstr "Fettschritt verwenden"
 msgid "Use container name"
 msgstr "Containername verwenden"
 
-#, fuzzy
 msgid "Use custom certificate"
-msgstr "Benutzerdefiniertes CA-Zertifikat"
+msgstr "Benutzerdefiniertes Zertifikat verwenden"
 
 msgid "Use custom path"
 msgstr "Verwende benutzerdefinierten Pfad"
@@ -78026,7 +78011,6 @@ msgstr ""
 msgid "Use fixed width (relative to font size)"
 msgstr "Feste Breite (relativ zur Schriftgröße) verwenden"
 
-#, fuzzy
 msgid "Use following connections"
 msgstr "Die folgenden Verbindungen verwenden"
 
@@ -78048,9 +78032,8 @@ msgstr "Host-Adresse benutzen"
 msgid "Use host name"
 msgstr "Host-Namen benutzen"
 
-#, fuzzy
 msgid "Use identity connectors from central site"
-msgstr "Die gleichen Verbindungen wie die Zentralinstanz nutzen"
+msgstr "Die Identitätsverbindungen der Zentralinstanz nutzen"
 
 msgid "Use in notifications"
 msgstr "In Benachrichtigungen nutzen"
@@ -78804,9 +78787,8 @@ msgstr "Benutzername"
 msgid "User ID attribute"
 msgstr "Attribut der Benutzer-ID"
 
-#, fuzzy
 msgid "User ID attribute must not be empty"
-msgstr "User-ID darf nicht Keiner sein"
+msgstr "Attribut der User-ID darf nicht leer sein"
 
 msgid "User ID for web login"
 msgstr "Benutzer-ID für Web-Login"
@@ -82839,9 +82821,8 @@ msgstr "XDA-Trefferverhältnis"
 msgid "XInetd status"
 msgstr "XInetd-Status"
 
-#, fuzzy
 msgid "XML metadata must not be empty"
-msgstr "Der Metrikname darf nicht leer sein"
+msgstr "XML-Metadaten dürfen nicht leer sein"
 
 msgid "XMPP Failed inbound stream establishes"
 msgstr "XMPP Fehlschläge bei Aufbau eingehender Streams"
@@ -84064,7 +84045,7 @@ msgstr ""
 msgid ""
 "You cannot delete this target because it is used by these backup jobs: %s"
 msgstr ""
-"Sie können dieses Ziel nicht löschen, das es von diesen Sicherungsaufträgen "
+"Sie können dieses Ziel nicht löschen, da es von diesen Sicherungsjobs "
 "verwendet wird: %s"
 
 msgid "You cannot delete this time period."
@@ -84929,6 +84910,8 @@ msgid ""
 "Your password can only be changed on the central site. Please log in to the "
 "central Checkmk site to change your password."
 msgstr ""
+"Ihr Passwort kann nur auf der Zentralinstanz geändert werden. Bitte melden "
+"Sie sich auf der zentralen Checkmk-Instanz an, um Ihr Passwort zu ändern."
 
 msgid "Your password has expired"
 msgstr "Ihr Passwort ist abgelaufen"
@@ -84936,6 +84919,8 @@ msgstr "Ihr Passwort ist abgelaufen"
 msgid ""
 "Your password is managed by another system and cannot be changed in Checkmk."
 msgstr ""
+"Ihr Passwort wird von einem anderen System verwaltet und kann in Checkmk "
+"nicht geändert werden."
 
 msgid "Your personal notification rules"
 msgstr "Ihre persönlichen Benachrichtigungsregeln"
@@ -86060,7 +86045,7 @@ msgid "in ... days"
 msgstr "in ... Tagen"
 
 msgid "in downtime"
-msgstr "In Wartungszeit"
+msgstr "in Wartungszeit"
 
 msgid "in notif. p."
 msgstr "in Benachrichtigungszeit"
@@ -88636,7 +88621,7 @@ msgid "The selected HW/SW inventory property is invalid."
 msgstr "Die gewählte Eigenschaft der HW-/SW-Inventur ist ungültig."
 
 msgid "Inventory single value"
-msgstr "Einzelwert der HW-/SW-Inventur"
+msgstr "Einzelwert der Inventur"
 
 msgid "HW/SW Inventory"
 msgstr "HW-/SW-Inventur"
@@ -89305,13 +89290,11 @@ msgstr "Attribut-Operator"
 msgid "Remove condition"
 msgstr "Bedingung entfernen"
 
-#, fuzzy
 msgid "Add condition after %{key}"
-msgstr "Bedingung hinzufügen"
+msgstr "Bedingung nach %{key} hinzufügen"
 
-#, fuzzy
 msgid "Add condition after previous condition"
-msgstr "Zusätzliche Optionen des Streudiagramms"
+msgstr "Bedingung nach vorheriger Bedingung hinzufügen"
 
 msgid "Attribute filter"
 msgstr "Attribut-Filter"
@@ -90314,7 +90297,7 @@ msgid "Update your settings directly in your code."
 msgstr "Aktualisieren Sie Ihre Einstellungen direkt in Ihrem Code."
 
 msgid "Headers"
-msgstr "Headers"
+msgstr ""
 
 msgid "Set Authorization to \"Basic {base64-encoded-credentials}\""
 msgstr "Die Authorisierung auf \"Basic {base64-encoded-credentials}\" setzen"
@@ -90822,7 +90805,7 @@ msgid "Switch to backup codes"
 msgstr "Zu Sicherungscodes wechseln"
 
 msgid "Use backup code"
-msgstr "Sicherungs-Codes verwenden"
+msgstr "Sicherungs-Code verwenden"
 
 msgid "Switch to security token"
 msgstr "Zum Sicherheits-Token wechseln"

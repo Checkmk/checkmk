@@ -2629,16 +2629,16 @@ def _automation_get_configuration(
     # that could be too much for the command line
     variable_names = ast.literal_eval(sys.stdin.read())
 
-    config.load(
+    base_config = config.load(
         get_builtin_host_labels=app.get_builtin_host_labels,
         edition=app.edition,
         with_conf_d=False,
-    )
+    ).loaded_config
 
     result = {}
     for varname in variable_names:
-        if hasattr(config, varname):
-            value = getattr(config, varname)
+        if hasattr(base_config, varname):
+            value = getattr(base_config, varname)
             if not hasattr(value, "__call__"):
                 result[varname] = value
     return GetConfigurationResult(result)

@@ -38,7 +38,7 @@ def _common() -> CommonOptions:
 
 
 def _service() -> ServiceRef:
-    return ServiceRef(site_id="s", host_name="h", service_name="svc")
+    return ServiceRef(host_name="h", service_name="svc")
 
 
 def _rrd(name: MetricName) -> RRDMetric:
@@ -86,15 +86,14 @@ class _FakeFetchRRD:
 
 def test_discover_explicit_graphs_without_keys_returns_inline_definition_unchanged() -> None:
     inline = Graph(name="g", title="t")
-    service = _service()
-    options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
+    options = ExplicitDiscoveryOptions(common=_common(), graph=inline)
     rrd = _FakeFetchRRD()
 
     rendered = discover_explicit_graphs(options, rrd=rrd)
 
     assert len(rendered) == 1
     assert rendered[0].graph is inline
-    assert rendered[0].options == ExplicitOptions(common=_common(), service=service)
+    assert rendered[0].options == ExplicitOptions(common=_common())
     assert rendered[0].graph_title == "t"
     assert rendered[0].metric_data == {}
 
@@ -109,7 +108,7 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
         # cpu_user as a curve; cpu_system referenced only by a scalar threshold.
         simple_lines=[_metric(cpu_user), WarningOf(metric=_rrd(cpu_system), color="#28a2f3")],
     )
-    options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
+    options = ExplicitDiscoveryOptions(common=_common(), graph=inline)
     cpu_user_data = MetricData(
         name=cpu_user,
         value=42.0,
@@ -146,7 +145,7 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
 def test_discover_explicit_graphs_omits_scalars_for_metrics_not_in_translated_metrics() -> None:
     service = _service()
     inline = Graph(name="g", title="g", simple_lines=[_metric(MetricName("missing_metric"))])
-    options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
+    options = ExplicitDiscoveryOptions(common=_common(), graph=inline)
     rrd = _FakeFetchRRD(translated_metrics_response={service: {}})
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
@@ -164,7 +163,7 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
         lower=Graph(name="in", title="In", simple_lines=[_metric(if_in)]),
         upper=Graph(name="out", title="Out", simple_lines=[_metric(if_out)]),
     )
-    options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
+    options = ExplicitDiscoveryOptions(common=_common(), graph=inline)
     if_in_data = MetricData(
         name=if_in,
         value=1.0,
@@ -195,7 +194,7 @@ def test_discover_explicit_graphs_passes_through_a_fixed_vertical_range() -> Non
         vertical_range=FixedRange(lower=0, upper=100),
         simple_lines=[_metric(MetricName("a"))],
     )
-    options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
+    options = ExplicitDiscoveryOptions(common=_common(), graph=inline)
     rrd = _FakeFetchRRD(translated_metrics_response={service: {}})
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)

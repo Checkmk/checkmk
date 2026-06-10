@@ -35,7 +35,7 @@ def _common() -> CommonOptions:
 
 
 def _service() -> ServiceRef:
-    return ServiceRef(site_id="s", host_name="h", service_name="svc")
+    return ServiceRef(host_name="h", service_name="svc")
 
 
 def _rrd(

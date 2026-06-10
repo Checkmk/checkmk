@@ -33,6 +33,5 @@ class CommonOptions:
 
 @dataclass(frozen=True, kw_only=True)
 class ServiceRef:
-    site_id: str
     host_name: str
     service_name: str

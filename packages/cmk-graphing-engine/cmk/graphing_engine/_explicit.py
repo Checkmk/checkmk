@@ -15,14 +15,12 @@ from ._options import CommonOptions, ServiceRef
 @dataclass(frozen=True, kw_only=True)
 class ExplicitDiscoveryOptions:
     common: CommonOptions
-    service: ServiceRef
     graph: Graph | Bidirectional
 
 
 @dataclass(frozen=True, kw_only=True)
 class ExplicitOptions:
     common: CommonOptions
-    service: ServiceRef
 
 
 def discover_explicit_graphs(
@@ -30,11 +28,20 @@ def discover_explicit_graphs(
     *,
     rrd: FetchRRD,
 ) -> Sequence[DiscoveredGraph[ExplicitOptions]]:
-    translated_metrics = rrd.translated_metrics([options.service]).get(options.service, {})
+    # The graph's metrics carry their own service, so the services to fetch are derived from them.
+    services = {
+        ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
+        for metric in options.graph.rrd_metrics()
+    }
+    translated_metrics = {
+        name: data
+        for per_service in rrd.translated_metrics(list(services)).values()
+        for name, data in per_service.items()
+    }
     return [
         DiscoveredGraph(
             graph=options.graph,
-            options=ExplicitOptions(common=options.common, service=options.service),
+            options=ExplicitOptions(common=options.common),
             graph_title=options.graph.evaluated_title(translated_metrics),
             metric_data=options.graph.metric_data(translated_metrics),
         )

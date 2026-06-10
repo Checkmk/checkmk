@@ -44,7 +44,7 @@ def _id(s: str) -> str:
     return s
 
 
-_SERVICE = ServiceRef(site_id="site", host_name="host", service_name="svc")
+_SERVICE = ServiceRef(host_name="host", service_name="svc")
 _CF = ConsolidationFunction.AVERAGE
 
 # Every test metric shares a uniform definition: the title "Metric", a plain decimal unit and blue
@@ -138,7 +138,7 @@ def test_parse_graph_from_api_bakes_metric_attributes_into_the_leaf() -> None:
     parsed = parse_graph_from_api(
         graph,
         _id,
-        ServiceRef(site_id="s", host_name="my-host", service_name="my-service"),
+        ServiceRef(host_name="my-host", service_name="my-service"),
         ConsolidationFunction.MAX,
         {
             "a": metrics_v1.Metric(

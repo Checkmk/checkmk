@@ -10,7 +10,7 @@ void build(Map args) {
         stage("Download artifacts") {
             if (args.TARGET == "test_integration") {
                 copyArtifacts(
-                    projectName: "${jenkins_base_folder}/winagt-build-modules",
+                    projectName: "${jenkins_base_folder}/winagt-build-modules-linux",
                 )
             }
         }

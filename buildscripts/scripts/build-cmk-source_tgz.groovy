@@ -62,6 +62,7 @@ void main() {
             disable_cache: disable_cache,
             bisect_comment: params.CIPARAM_BISECT_COMMENT,
             artifacts_base_dir: "tmp_artifacts",
+            need_windows_python_cab: true,
         );
     } else {
         smart_stage(name: 'Fake agent binaries') {

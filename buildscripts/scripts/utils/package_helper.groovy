@@ -48,15 +48,15 @@ static LinkedHashMap<String, List> dependency_paths_mapping() {
             "third_party/simpleini",
             "third_party/yaml-cpp",
         ],
-        "winagt-build-modules": [
-            "agents/modules/windows",
-        ],
         "relay-msi": [
             // The MSI is built from the WiX installer sources and bundles
             // omd/non-free/relay/install_relay.sh (see RelayProduct.wxs and
             // build-msi.ps1), so a change in either must rebuild the MSI.
             "non-free/packages/cmk-relay-engine/windows-installer",
             "omd/non-free/relay/install_relay.sh",
+        ],
+        "winagt-build-modules-linux": [
+            "agents/modules/windows",
         ],
     ];
 }
@@ -79,6 +79,7 @@ void provide_agent_binaries(Map args) {
     def move_artifacts = args.move_artifacts == null ? true : args.move_artifacts.asBoolean();
     def all_dependency_paths_hashes = dependency_paths_hashes();
     def test_binaries_only = args.test_binaries_only == null ? false : true;
+    def need_windows_python_cab = args.need_windows_python_cab == null ? false : args.need_windows_python_cab.asBoolean();
 
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
@@ -195,24 +196,6 @@ void provide_agent_binaries(Map args) {
                 )
                 """.stripIndent(),
         ],
-        "winagt-build-modules": [
-            // NOTE: We're stripping of "Testing/..." if present, because
-            //       Windows can't handle long folder names so we take the absolute
-            //       (production) jobs to build our upstream stuff (both Linux and
-            //       Windows for consistency).
-            //       As 'soon' as this problem does not exist anymore we could run
-            //       relatively from 'builders/..'
-            relative_job_name: "${branch_base_folder(false)}/winagt-build-modules",
-            dependency_paths_hash: all_dependency_paths_hashes["winagt-build-modules"],
-            condition: ! test_binaries_only,
-            retry: 3,
-            additional_build_params: [],
-            install_cmd: """\
-                cp \
-                    ./*.cab \
-                    ${checkout_dir}/agents/windows/
-                """.stripIndent(),
-        ],
         "relay-msi": [
             // Windows-built relay MSI. Only the cloud/ultimate/ultimatemt editions ship
             // it (see relay_install_pkg gating in omd/BUILD), so skip the fetch for any
@@ -235,6 +218,26 @@ void provide_agent_binaries(Map args) {
                 cp \
                     CheckmkRelayInstaller.msi \
                     ${checkout_dir}/omd/non-free/relay/
+                """.stripIndent(),
+        ],
+        "winagt-build-modules-linux": [
+            // The deb/rpm/cma package build no longer needs this: it builds
+            // python-3.cab inline via the hermetic Bazel rule (see
+            // agents/windows/BUILD). But `make dist` (source-tgz build) is
+            // driven by artifacts.make, which still expects a real file at
+            // agents/windows/python-3.cab on disk, so that flow alone still
+            // fetches it here. Registered directly under the branch folder
+            // (like winagt-build), not under builders/ - see
+            // winagt-build-modules-linux.groovy.
+            relative_job_name: "${branch_base_folder(false)}/winagt-build-modules-linux",
+            dependency_paths_hash: all_dependency_paths_hashes["winagt-build-modules-linux"],
+            condition: ! test_binaries_only && need_windows_python_cab,
+            retry: 3,
+            additional_build_params: [],
+            install_cmd: """\
+                cp \
+                    python-3.cab \
+                    ${checkout_dir}/agents/windows/
                 """.stripIndent(),
         ],
     ];

@@ -374,8 +374,25 @@ def _evaluate_title(
     return title
 
 
+class _GraphObject:
+    # Shared behaviour of Graph and Bidirectional; both expose a title and their drawn metrics.
+    title: str
+
+    def rrd_metrics(self) -> Sequence[RRDMetricRef]:
+        raise NotImplementedError
+
+    def metric_data(
+        self,
+        translated_metrics: TranslatedMetrics,
+    ) -> Mapping[RRDMetricRef, RRDMetricData]:
+        return _metric_data_of(self.rrd_metrics(), translated_metrics)
+
+    def evaluated_title(self, translated_metrics: TranslatedMetrics) -> str:
+        return _evaluate_title(self.title, _flatten(translated_metrics))
+
+
 @dataclass(frozen=True, kw_only=True)
-class Graph:
+class Graph(_GraphObject):
     name: str
     title: str
     vertical_range: VerticalRange | None = None
@@ -394,18 +411,9 @@ class Graph:
             )
         )
 
-    def metric_data(
-        self,
-        translated_metrics: TranslatedMetrics,
-    ) -> Mapping[RRDMetricRef, RRDMetricData]:
-        return _metric_data_of(self.rrd_metrics(), translated_metrics)
-
-    def evaluated_title(self, translated_metrics: TranslatedMetrics) -> str:
-        return _evaluate_title(self.title, _flatten(translated_metrics))
-
 
 @dataclass(frozen=True, kw_only=True)
-class Bidirectional:
+class Bidirectional(_GraphObject):
     name: str
     title: str
     lower: Graph
@@ -413,12 +421,3 @@ class Bidirectional:
 
     def rrd_metrics(self) -> Sequence[RRDMetricRef]:
         return list(dict.fromkeys((*self.lower.rrd_metrics(), *self.upper.rrd_metrics())))
-
-    def metric_data(
-        self,
-        translated_metrics: TranslatedMetrics,
-    ) -> Mapping[RRDMetricRef, RRDMetricData]:
-        return _metric_data_of(self.rrd_metrics(), translated_metrics)
-
-    def evaluated_title(self, translated_metrics: TranslatedMetrics) -> str:
-        return _evaluate_title(self.title, _flatten(translated_metrics))

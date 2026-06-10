@@ -20,6 +20,7 @@ const value6 = ref<boolean>(false)
 const value7 = ref<boolean>(false)
 const value8 = ref<boolean>(true)
 const value9 = ref<boolean>(false)
+const indeterminateValue = ref<boolean | 'indeterminate'>('indeterminate')
 
 const externalErrors = ref<string[]>([])
 </script>
@@ -45,6 +46,10 @@ const externalErrors = ref<string[]>([])
       <CmkCheckbox v-model="value2" label="some other checkbox with dots" dots />
     </li>
     <li>checkbox without label: <CmkCheckbox v-model="value3" /></li>
+    <li>
+      indeterminate checkbox (click toggles to checked):
+      <CmkCheckbox v-model="indeterminateValue" allow-indeterminate label="select all" />
+    </li>
     <li>
       <!-- testing vertical alignment -->
       two in one large line:<CmkCheckbox v-model="value4" /><span style="font-size: 30px"

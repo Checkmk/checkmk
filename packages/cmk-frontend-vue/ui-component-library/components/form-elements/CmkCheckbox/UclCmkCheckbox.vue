@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
 
 import codeExample from './UclCmkCheckboxCodeExample.vue?raw'
 
@@ -27,10 +28,16 @@ export const a11yData = [
 type CheckboxPadding = 'both' | 'top' | 'bottom'
 
 export const panelConfig = {
-  modelValue: {
-    type: 'boolean' as const,
-    title: 'Checked',
-    initialState: false
+  value: {
+    type: 'list' as const,
+    title: 'Value',
+    help: 'The checkbox supports a mixed state in addition to checked and unchecked, following the ARIA checkbox pattern.',
+    options: [
+      { title: 'Checked', name: 'true' },
+      { title: 'Unchecked', name: 'false' },
+      { title: 'Indeterminate', name: 'indeterminate' }
+    ],
+    initialState: 'indeterminate'
   },
   label: {
     type: 'string' as const,
@@ -69,7 +76,9 @@ export const panelConfig = {
     title: 'External Error Message',
     initialState: ''
   }
-} satisfies PanelConfigFor<typeof CmkCheckbox>
+} satisfies PanelConfigFor<typeof CmkCheckbox, 'allowIndeterminate' | 'modelValue'> & {
+  value: ListPropDef<'true' | 'false' | 'indeterminate'>
+}
 </script>
 
 <script setup lang="ts">
@@ -83,6 +92,7 @@ import {
   UclDetailPageLayout,
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
+import { computed } from 'vue'
 
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
@@ -91,7 +101,19 @@ import UclCmkCheckboxDev from './UclCmkCheckboxDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkCheckbox>().createRef(panelConfig)
+const propState = new PanelStateCreator<
+  typeof CmkCheckbox,
+  'allowIndeterminate' | 'modelValue'
+>().createRef(panelConfig)
+
+const checkboxValue = computed<boolean | 'indeterminate'>({
+  get: () =>
+    propState.value.value === 'indeterminate' ? 'indeterminate' : propState.value.value === 'true',
+  set: (newValue) => {
+    propState.value.value =
+      newValue === 'indeterminate' ? 'indeterminate' : newValue ? 'true' : 'false'
+  }
+})
 </script>
 
 <template>
@@ -102,7 +124,8 @@ const propState = new PanelStateCreator<typeof CmkCheckbox>().createRef(panelCon
       <div class="ucl-cmk-checkbox__stack">
         <CmkParagraph>Preceding text</CmkParagraph>
         <CmkCheckbox
-          v-model="propState.modelValue"
+          v-model="checkboxValue"
+          :allow-indeterminate="true"
           :label="propState.label"
           :help="propState.help"
           :disabled="propState.disabled"

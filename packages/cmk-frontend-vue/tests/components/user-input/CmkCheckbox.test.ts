@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import { defineComponent } from 'vue'
 
@@ -29,6 +30,44 @@ test('CmkCheckbox sets aria-checked', async () => {
   })
 
   screen.getByRole('checkbox', { checked: true })
+})
+
+test('CmkCheckbox exposes the mixed state via aria-checked when indeterminate', async () => {
+  render(CmkCheckbox, {
+    props: {
+      allowIndeterminate: true,
+      modelValue: 'indeterminate'
+    }
+  })
+
+  expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'mixed')
+})
+
+test('CmkCheckbox transitions from indeterminate to checked on click', async () => {
+  const user = userEvent.setup()
+  const { emitted } = render(CmkCheckbox, {
+    props: {
+      allowIndeterminate: true,
+      modelValue: 'indeterminate'
+    }
+  })
+
+  await user.click(screen.getByRole('checkbox'))
+
+  expect(emitted('update:modelValue')).toEqual([[true]])
+})
+
+test('CmkCheckbox toggles between checked and unchecked on click', async () => {
+  const user = userEvent.setup()
+  const { emitted } = render(CmkCheckbox, {
+    props: {
+      modelValue: false
+    }
+  })
+
+  await user.click(screen.getByRole('checkbox'))
+
+  expect(emitted('update:modelValue')).toEqual([[true]])
 })
 
 test('CmkCheckbox renders updated validation', async () => {

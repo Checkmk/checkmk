@@ -3,7 +3,7 @@ Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
+<script setup lang="ts" generic="AllowIndeterminate extends boolean = false">
 import { CheckboxIndicator, CheckboxRoot } from 'reka-ui'
 import { computed } from 'vue'
 
@@ -17,23 +17,24 @@ import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue
 
 defineOptions({ inheritAttrs: false })
 
-const value = defineModel<boolean>({ required: false, default: false })
+type CheckboxValue = AllowIndeterminate extends true ? boolean | 'indeterminate' : boolean
 
-interface CmkCheckboxProps {
-  label?: TranslatedString
-  padding?: 'top' | 'bottom' | 'both'
-  help?: TranslatedString
-  externalErrors?: string[]
-  disabled?: boolean
-  dots?: boolean
-}
+const value = defineModel<CheckboxValue>({ required: false, default: false })
 
 const {
   padding = 'both',
   label,
   disabled = false,
   externalErrors
-} = defineProps<CmkCheckboxProps>()
+} = defineProps<{
+  label?: TranslatedString
+  padding?: 'top' | 'bottom' | 'both'
+  help?: TranslatedString
+  externalErrors?: string[]
+  disabled?: boolean
+  dots?: boolean
+  allowIndeterminate?: AllowIndeterminate
+}>()
 
 const id = useId()
 
@@ -60,7 +61,8 @@ const hasValidationErrors = computed(() => {
         :disabled="disabled"
       >
         <CheckboxIndicator class="cmk-checkbox__indicator">
-          <svg version="1.1" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <span v-if="value === 'indeterminate'" class="cmk-checkbox__dash" />
+          <svg v-else version="1.1" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
             <g transform="rotate(45,9,9)">
               <path d="m18.5 6.5v5h-7v7h-5v-7h-7v-5h7v-7h5v7z" fill="currentcolor" />
             </g>
@@ -120,6 +122,13 @@ span {
 
     svg {
       width: 9px;
+    }
+
+    .cmk-checkbox__dash {
+      width: 8px;
+      height: 2px;
+      background: currentcolor;
+      border-radius: 1px;
     }
   }
 }

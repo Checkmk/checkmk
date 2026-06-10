@@ -12,14 +12,15 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._discovery import DiscoveredGraph
-from ._fetch import fetch_translated_metrics, FetchRRD
+from ._fetch import FetchRRD
 from ._from_api import (
     metric_names_of_graph,
     metric_names_of_title,
     parse_graph_from_api,
 )
-from ._objects import Graph, MetricName, RRDMetric, ServiceRef, StackGroup
+from ._objects import Graph, MetricName, MetricTranslations, RRDMetric, ServiceRef, StackGroup
 from ._options import ConsolidationFunction, TimeRange
+from ._translate import fetch_translated_metrics
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -35,6 +36,7 @@ class TemplateDiscoveryOptions:
         | graphs_v2_unstable.Bidirectional
     ]
     metrics: Mapping[str, metrics_v1.Metric]
+    translations: MetricTranslations
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -95,7 +97,13 @@ def discover_template_graphs(
     *,
     rrd: FetchRRD,
 ) -> Sequence[DiscoveredGraph[TemplateOptions]]:
-    translated_metrics = fetch_translated_metrics([options.service], rrd=rrd)
+    translated_metrics = fetch_translated_metrics(
+        [options.service],
+        rrd=rrd,
+        translations=options.translations,
+        metrics=options.metrics,
+        localizer=options.localizer,
+    )
     service_metrics = translated_metrics.get(options.service, {})
     post_options = TemplateOptions(
         time_range=options.time_range,

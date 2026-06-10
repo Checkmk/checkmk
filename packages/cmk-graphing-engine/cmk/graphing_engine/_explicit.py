@@ -3,20 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import ClassVar, Literal
 
+from cmk.graphing.v1 import metrics as metrics_v1
+
 from ._discovery import DiscoveredGraph
-from ._fetch import fetch_translated_metrics, FetchRRD
-from ._objects import Bidirectional, Graph, ServiceRef
+from ._fetch import FetchRRD
+from ._objects import Bidirectional, Graph, MetricTranslations, ServiceRef
 from ._options import TimeRange
+from ._translate import fetch_translated_metrics
 
 
 @dataclass(frozen=True, kw_only=True)
 class ExplicitDiscoveryOptions:
     time_range: TimeRange
     graph: Graph | Bidirectional
+    localizer: Callable[[str], str]
+    metrics: Mapping[str, metrics_v1.Metric]
+    translations: MetricTranslations
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -37,6 +43,9 @@ def discover_explicit_graphs(
             for metric in options.graph.rrd_metrics()
         ),
         rrd=rrd,
+        translations=options.translations,
+        metrics=options.metrics,
+        localizer=options.localizer,
     )
     return [
         DiscoveredGraph(

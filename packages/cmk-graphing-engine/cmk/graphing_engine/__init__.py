@@ -9,7 +9,7 @@ from ._explicit import (
     ExplicitDiscoveryOptions,
     ExplicitOptions,
 )
-from ._fetch import fetch_time_series, fetch_translated_metrics, FetchRRD, GraphRequest, TimeSeries
+from ._fetch import fetch_time_series, FetchRRD, GraphRequest, TimeSeries
 from ._from_api import parse_graph_from_api
 from ._objects import (
     AutoPrecision,
@@ -64,7 +64,7 @@ from ._template import (
     TemplateDiscoveryOptions,
     TemplateOptions,
 )
-from ._translate import translate_performance_data
+from ._translate import fetch_translated_metrics, translate_performance_data
 
 __all__ = [
     "AutoPrecision",

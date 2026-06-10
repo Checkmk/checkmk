@@ -5,6 +5,8 @@
 
 from collections.abc import Mapping, Sequence
 
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import Title
 from cmk.graphing_engine import (
     AutoPrecision,
     Bidirectional,
@@ -16,6 +18,9 @@ from cmk.graphing_engine import (
     FixedRange,
     Graph,
     MetricName,
+    PerformanceData,
+    PerformanceDataByService,
+    PerformanceValue,
     RRDMetricData,
     RRDMetricRef,
     RRDMetricWithCF,
@@ -28,12 +33,46 @@ from cmk.graphing_engine import (
 )
 
 
+def _id(s: str) -> str:
+    return s
+
+
+def _metric(name: str, title: Title) -> metrics_v1.Metric:
+    return metrics_v1.Metric(
+        name=name,
+        title=title,
+        unit=metrics_v1.Unit(metrics_v1.DecimalNotation("")),
+        color=metrics_v1.Color.BLUE,
+    )
+
+
+_METRICS = {
+    "cpu_user": _metric("cpu_user", Title("CPU user")),
+    "cpu_system": _metric("cpu_system", Title("CPU system")),
+    "if_in": _metric("if_in", Title("If in")),
+    "if_out": _metric("if_out", Title("If out")),
+    "load": _metric("load", Title("Load")),
+}
+
+_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
+
+
 def _time_range() -> TimeRange:
     return TimeRange(start=0, end=60, step=10)
 
 
 def _service() -> ServiceRef:
     return ServiceRef(host_name="h", service_name="svc")
+
+
+def _options(graph: Graph | Bidirectional) -> ExplicitDiscoveryOptions:
+    return ExplicitDiscoveryOptions(
+        time_range=_time_range(),
+        graph=graph,
+        localizer=_id,
+        metrics=_METRICS,
+        translations={},
+    )
 
 
 def _rrd(name: MetricName) -> RRDMetricWithCF:
@@ -45,23 +84,64 @@ def _rrd(name: MetricName) -> RRDMetricWithCF:
     )
 
 
-_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
+def _perf(
+    name: MetricName,
+    *,
+    value: float,
+    warning: float | None = None,
+    critical: float | None = None,
+    minimum: float | None = None,
+    maximum: float | None = None,
+) -> PerformanceValue:
+    return PerformanceValue(
+        metric_name=name,
+        value=value,
+        warning=warning,
+        critical=critical,
+        minimum=minimum,
+        maximum=maximum,
+    )
+
+
+def _perf_data(*values: PerformanceValue) -> PerformanceData:
+    return PerformanceData(check_command="", values=list(values))
+
+
+def _data(
+    name: MetricName,
+    *,
+    title: str,
+    value: float,
+    warning: float | None = None,
+    critical: float | None = None,
+    minimum: float | None = None,
+    maximum: float | None = None,
+) -> RRDMetricData:
+    return RRDMetricData(
+        name=name,
+        value=value,
+        originals=[RRDOriginal(metric_name=name, scale=1.0)],
+        title=title,
+        unit=_UNIT,
+        color="#28a2f3",
+        warning=warning,
+        critical=critical,
+        minimum=minimum,
+        maximum=maximum,
+    )
 
 
 class _FakeFetchRRD:
     def __init__(
         self,
-        translated_metrics_response: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]
-        | None = None,
+        performance_response: PerformanceDataByService | None = None,
     ) -> None:
-        self._translated_metrics_response = translated_metrics_response or {}
-        self.translated_metrics_calls: list[tuple[ServiceRef, ...]] = []
+        self._performance_response = performance_response or {}
+        self.performance_data_calls: list[tuple[ServiceRef, ...]] = []
 
-    def translated_metrics(
-        self, services: Sequence[ServiceRef]
-    ) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
-        self.translated_metrics_calls.append(tuple(services))
-        return self._translated_metrics_response
+    def fetch_performance_data(self, services: Sequence[ServiceRef]) -> PerformanceDataByService:
+        self.performance_data_calls.append(tuple(services))
+        return self._performance_response
 
     def time_series(
         self,
@@ -75,7 +155,7 @@ class _FakeFetchRRD:
 
 def test_discover_explicit_graphs_without_keys_returns_inline_definition_unchanged() -> None:
     inline = Graph(name="g", title="t")
-    options = ExplicitDiscoveryOptions(time_range=_time_range(), graph=inline)
+    options = _options(inline)
     rrd = _FakeFetchRRD()
 
     rendered = discover_explicit_graphs(options, rrd=rrd)
@@ -97,49 +177,40 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
         # cpu_user as a curve; cpu_system referenced only by a scalar threshold.
         simple_lines=[_rrd(cpu_user), WarningOf(metric=_rrd(cpu_system), color="#28a2f3")],
     )
-    options = ExplicitDiscoveryOptions(time_range=_time_range(), graph=inline)
-    cpu_user_data = RRDMetricData(
-        name=cpu_user,
-        value=42.0,
-        title="CPU user",
-        unit=_UNIT,
-        color="#28a2f3",
-        warning=80.0,
-        critical=90.0,
-        originals=[RRDOriginal(metric_name=cpu_user, scale=1.0)],
-    )
-    cpu_system_data = RRDMetricData(
-        name=cpu_system,
-        value=8.0,
-        title="CPU system",
-        unit=_UNIT,
-        color="#28a2f3",
-        warning=50.0,
-        critical=70.0,
-        minimum=0.0,
-        maximum=100.0,
-        originals=[RRDOriginal(metric_name=cpu_system, scale=1.0)],
-    )
+    options = _options(inline)
     rrd = _FakeFetchRRD(
-        translated_metrics_response={
-            service: {cpu_user: cpu_user_data, cpu_system: cpu_system_data}
+        performance_response={
+            service: _perf_data(
+                _perf(cpu_user, value=42.0, warning=80.0, critical=90.0),
+                _perf(
+                    cpu_system, value=8.0, warning=50.0, critical=70.0, minimum=0.0, maximum=100.0
+                ),
+            )
         },
     )
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
     assert rendered.metric_data == {
-        _rrd(cpu_user): cpu_user_data,
-        _rrd(cpu_system): cpu_system_data,
+        _rrd(cpu_user): _data(cpu_user, title="CPU user", value=42.0, warning=80.0, critical=90.0),
+        _rrd(cpu_system): _data(
+            cpu_system,
+            title="CPU system",
+            value=8.0,
+            warning=50.0,
+            critical=70.0,
+            minimum=0.0,
+            maximum=100.0,
+        ),
     }
-    assert rrd.translated_metrics_calls == [(service,)]
+    assert rrd.performance_data_calls == [(service,)]
 
 
 def test_discover_explicit_graphs_omits_scalars_for_metrics_not_in_translated_metrics() -> None:
     service = _service()
     inline = Graph(name="g", title="g", simple_lines=[_rrd(MetricName("missing_metric"))])
-    options = ExplicitDiscoveryOptions(time_range=_time_range(), graph=inline)
-    rrd = _FakeFetchRRD(translated_metrics_response={service: {}})
+    options = _options(inline)
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data()})
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
@@ -156,31 +227,19 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
         lower=Graph(name="in", title="In", simple_lines=[_rrd(if_in)]),
         upper=Graph(name="out", title="Out", simple_lines=[_rrd(if_out)]),
     )
-    options = ExplicitDiscoveryOptions(time_range=_time_range(), graph=inline)
-    if_in_data = RRDMetricData(
-        name=if_in,
-        value=1.0,
-        title="If in",
-        unit=_UNIT,
-        color="#28a2f3",
-        warning=10.0,
-        originals=[RRDOriginal(metric_name=if_in, scale=1.0)],
-    )
-    if_out_data = RRDMetricData(
-        name=if_out,
-        value=2.0,
-        title="If out",
-        unit=_UNIT,
-        color="#28a2f3",
-        originals=[RRDOriginal(metric_name=if_out, scale=1.0)],
-    )
+    options = _options(inline)
     rrd = _FakeFetchRRD(
-        translated_metrics_response={service: {if_in: if_in_data, if_out: if_out_data}}
+        performance_response={
+            service: _perf_data(_perf(if_in, value=1.0, warning=10.0), _perf(if_out, value=2.0))
+        }
     )
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
-    assert rendered.metric_data == {_rrd(if_in): if_in_data, _rrd(if_out): if_out_data}
+    assert rendered.metric_data == {
+        _rrd(if_in): _data(if_in, title="If in", value=1.0, warning=10.0),
+        _rrd(if_out): _data(if_out, title="If out", value=2.0),
+    }
 
 
 def test_discover_explicit_graphs_keeps_same_metric_name_on_different_services_distinct() -> None:
@@ -202,30 +261,21 @@ def test_discover_explicit_graphs_keeps_same_metric_name_on_different_services_d
         consolidation_function=ConsolidationFunction.AVERAGE,
     )
     inline = Graph(name="load", title="Load", simple_lines=[metric_a, metric_b])
-    options = ExplicitDiscoveryOptions(time_range=_time_range(), graph=inline)
-    data_a = RRDMetricData(
-        name=load,
-        value=1.0,
-        title="Load A",
-        unit=_UNIT,
-        color="#28a2f3",
-        originals=[RRDOriginal(metric_name=load, scale=1.0)],
-    )
-    data_b = RRDMetricData(
-        name=load,
-        value=2.0,
-        title="Load B",
-        unit=_UNIT,
-        color="#28a2f3",
-        originals=[RRDOriginal(metric_name=load, scale=1.0)],
-    )
+    options = _options(inline)
     rrd = _FakeFetchRRD(
-        translated_metrics_response={service_a: {load: data_a}, service_b: {load: data_b}}
+        performance_response={
+            service_a: _perf_data(_perf(load, value=1.0)),
+            service_b: _perf_data(_perf(load, value=2.0)),
+        }
     )
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
-    assert rendered.metric_data == {metric_a: data_a, metric_b: data_b}
+    # Same metric name, same title - distinguished by the per-service value.
+    assert rendered.metric_data == {
+        metric_a: _data(load, title="Load", value=1.0),
+        metric_b: _data(load, title="Load", value=2.0),
+    }
 
 
 def test_discover_explicit_graphs_passes_through_a_fixed_vertical_range() -> None:
@@ -236,8 +286,8 @@ def test_discover_explicit_graphs_passes_through_a_fixed_vertical_range() -> Non
         vertical_range=FixedRange(lower=0, upper=100),
         simple_lines=[_rrd(MetricName("a"))],
     )
-    options = ExplicitDiscoveryOptions(time_range=_time_range(), graph=inline)
-    rrd = _FakeFetchRRD(translated_metrics_response={service: {}})
+    options = _options(inline)
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data()})
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 

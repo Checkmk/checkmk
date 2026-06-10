@@ -3,18 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
 from ._objects import (
     Bidirectional,
     Graph,
+    PerformanceDataByService,
     RRDMetric,
     RRDMetricRef,
     RRDMetricWithCF,
     ServiceRef,
-    TranslatedMetrics,
 )
 from ._options import ConsolidationFunction, TimeRange
 
@@ -26,7 +26,9 @@ class TimeSeries:
 
 
 class FetchRRD(Protocol):
-    def translated_metrics(self, services: Sequence[ServiceRef]) -> TranslatedMetrics: ...
+    def fetch_performance_data(
+        self, services: Sequence[ServiceRef]
+    ) -> PerformanceDataByService: ...
 
     def time_series(
         self,
@@ -42,15 +44,6 @@ class GraphRequest:
     time_range: TimeRange
     consolidation_function: ConsolidationFunction
     graph: Graph | Bidirectional
-
-
-def fetch_translated_metrics(
-    services: Iterable[ServiceRef],
-    *,
-    rrd: FetchRRD,
-) -> TranslatedMetrics:
-    # dict.fromkeys dedups the services while keeping a deterministic order.
-    return rrd.translated_metrics(list(dict.fromkeys(services)))
 
 
 def _consolidation_function(metric: RRDMetricRef, request: GraphRequest) -> ConsolidationFunction:

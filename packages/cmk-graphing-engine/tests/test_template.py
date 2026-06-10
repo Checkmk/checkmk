@@ -18,6 +18,9 @@ from cmk.graphing_engine import (
     Graph,
     MetricName,
     parse_graph_from_api,
+    PerformanceData,
+    PerformanceDataByService,
+    PerformanceValue,
     RRDMetric,
     RRDMetricData,
     RRDMetricRef,
@@ -69,6 +72,32 @@ def _rrd(name: MetricName) -> RRDMetric:
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
 
+def _perf(
+    name: MetricName,
+    *,
+    lower_warning: float | None = None,
+    lower_critical: float | None = None,
+    warning: float | None = None,
+    critical: float | None = None,
+    minimum: float | None = None,
+    maximum: float | None = None,
+) -> PerformanceValue:
+    return PerformanceValue(
+        metric_name=name,
+        value=1.0,
+        lower_warning=lower_warning,
+        lower_critical=lower_critical,
+        warning=warning,
+        critical=critical,
+        minimum=minimum,
+        maximum=maximum,
+    )
+
+
+def _perf_data(*values: PerformanceValue) -> PerformanceData:
+    return PerformanceData(check_command="", values=list(values))
+
+
 def _metric_data(
     name: MetricName,
     *,
@@ -79,6 +108,7 @@ def _metric_data(
     minimum: float | None = None,
     maximum: float | None = None,
 ) -> RRDMetricData:
+    # The translated counterpart of _perf() under the identity translation (scale 1.0).
     return RRDMetricData(
         name=name,
         value=1.0,
@@ -98,17 +128,14 @@ def _metric_data(
 class _FakeFetchRRD:
     def __init__(
         self,
-        translated_metrics_response: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]
-        | None = None,
+        performance_response: PerformanceDataByService | None = None,
     ) -> None:
-        self._translated_metrics_response = translated_metrics_response or {}
-        self.translated_metrics_calls: list[tuple[ServiceRef, ...]] = []
+        self._performance_response = performance_response or {}
+        self.performance_data_calls: list[tuple[ServiceRef, ...]] = []
 
-    def translated_metrics(
-        self, services: Sequence[ServiceRef]
-    ) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
-        self.translated_metrics_calls.append(tuple(services))
-        return self._translated_metrics_response
+    def fetch_performance_data(self, services: Sequence[ServiceRef]) -> PerformanceDataByService:
+        self.performance_data_calls.append(tuple(services))
+        return self._performance_response
 
     def time_series(
         self,
@@ -127,10 +154,11 @@ def test_discover_template_graphs_empty_service_returns_no_graphs() -> None:
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["x"])],
     )
-    rrd = _FakeFetchRRD(translated_metrics_response={service: {}})
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data()})
 
     assert discover_template_graphs(options, rrd=rrd) == []
 
@@ -143,13 +171,12 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[],
     )
     rrd = _FakeFetchRRD(
-        translated_metrics_response={
-            service: {cpu_user: _metric_data(cpu_user, warning=80.0, critical=90.0)}
-        }
+        performance_response={service: _perf_data(_perf(cpu_user, warning=80.0, critical=90.0))}
     )
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
@@ -177,16 +204,12 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
     rrd = _FakeFetchRRD(
-        translated_metrics_response={
-            service: {
-                cpu_user: _metric_data(cpu_user, warning=80.0),
-                cpu_system: _metric_data(cpu_system),
-            }
-        }
+        performance_response={service: _perf_data(_perf(cpu_user, warning=80.0), _perf(cpu_system))}
     )
 
     discovered = discover_template_graphs(options, rrd=rrd)
@@ -211,14 +234,11 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
-    rrd = _FakeFetchRRD(
-        translated_metrics_response={
-            service: {cpu_user: _metric_data(cpu_user), extra: _metric_data(extra)}
-        }
-    )
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user), _perf(extra))})
 
     [matched, fallback] = discover_template_graphs(options, rrd=rrd)
 
@@ -239,10 +259,11 @@ def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() 
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
-    rrd = _FakeFetchRRD(translated_metrics_response={service: {cpu_user: _metric_data(cpu_user)}})
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user))})
 
     [fallback] = discover_template_graphs(options, rrd=rrd)
 
@@ -265,10 +286,11 @@ def test_discover_template_graphs_optional_missing_metric_still_matches() -> Non
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
-    rrd = _FakeFetchRRD(translated_metrics_response={service: {cpu_user: _metric_data(cpu_user)}})
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user))})
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
@@ -290,14 +312,11 @@ def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() ->
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
-    rrd = _FakeFetchRRD(
-        translated_metrics_response={
-            service: {cpu_user: _metric_data(cpu_user), util: _metric_data(util)}
-        }
-    )
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user), _perf(util))})
 
     discovered = discover_template_graphs(options, rrd=rrd)
 
@@ -316,16 +335,12 @@ def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
     rrd = _FakeFetchRRD(
-        translated_metrics_response={
-            service: {
-                cpu_user: _metric_data(cpu_user),
-                cpu_system: _metric_data(cpu_system),
-            }
-        }
+        performance_response={service: _perf_data(_perf(cpu_user), _perf(cpu_system))}
     )
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
@@ -348,12 +363,11 @@ def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
-    rrd = _FakeFetchRRD(
-        translated_metrics_response={service: {in_: _metric_data(in_), out: _metric_data(out)}}
-    )
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(in_), _perf(out))})
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
@@ -374,16 +388,12 @@ def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantit
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
     rrd = _FakeFetchRRD(
-        translated_metrics_response={
-            service: {
-                cpu_user: _metric_data(cpu_user),
-                cpu_system: _metric_data(cpu_system, warning=50.0),
-            }
-        }
+        performance_response={service: _perf_data(_perf(cpu_user), _perf(cpu_system, warning=50.0))}
     )
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
@@ -408,16 +418,12 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
     rrd = _FakeFetchRRD(
-        translated_metrics_response={
-            service: {
-                cpu_user: _metric_data(cpu_user),
-                cpu_system: _metric_data(cpu_system, warning=50.0),
-            }
-        }
+        performance_response={service: _perf_data(_perf(cpu_user), _perf(cpu_system, warning=50.0))}
     )
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
@@ -441,12 +447,11 @@ def test_discover_template_graphs_evaluates_the_title_expression() -> None:
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
-    rrd = _FakeFetchRRD(
-        translated_metrics_response={service: {cpu_user: _metric_data(cpu_user, maximum=8.0)}}
-    )
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user, maximum=8.0))})
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
@@ -468,11 +473,12 @@ def test_discover_template_graphs_title_expression_falls_back_when_unresolvable(
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
     # cpu_user is available (so the plugin matches) but carries no maximum scalar.
-    rrd = _FakeFetchRRD(translated_metrics_response={service: {cpu_user: _metric_data(cpu_user)}})
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user))})
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
@@ -493,12 +499,13 @@ def test_discover_template_graphs_requires_a_metric_referenced_only_in_the_title
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
     # cpu_user (referenced by the title) is missing, so the plugin must not match; only the
     # fallback single-metric graph for util is discovered.
-    rrd = _FakeFetchRRD(translated_metrics_response={service: {util: _metric_data(util)}})
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(util))})
 
     discovered = discover_template_graphs(options, rrd=rrd)
 
@@ -519,16 +526,12 @@ def test_discover_template_graphs_claims_a_metric_referenced_only_in_the_title()
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
+        translations={},
         localizer=_id,
         registered_graphs=[plugin],
     )
     rrd = _FakeFetchRRD(
-        translated_metrics_response={
-            service: {
-                util: _metric_data(util),
-                cpu_user: _metric_data(cpu_user, maximum=8.0),
-            }
-        }
+        performance_response={service: _perf_data(_perf(util), _perf(cpu_user, maximum=8.0))}
     )
 
     discovered = discover_template_graphs(options, rrd=rrd)

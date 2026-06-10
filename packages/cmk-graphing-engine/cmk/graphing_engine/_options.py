@@ -14,15 +14,9 @@ class TimeRange:
     step: int
 
 
-class TemperatureUnit(enum.StrEnum):
-    CELSIUS = "celsius"
-    FAHRENHEIT = "fahrenheit"
-
-
 @dataclass(frozen=True, kw_only=True)
 class CommonOptions:
     time_range: TimeRange
-    temperature_unit: TemperatureUnit
 
 
 class ConsolidationFunction(enum.StrEnum):

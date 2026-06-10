@@ -18,17 +18,13 @@ from cmk.graphing_engine import (
     RRDMetricRef,
     RRDMetricWithCF,
     ServiceRef,
-    TemperatureUnit,
     TimeRange,
     TimeSeries,
 )
 
 
 def _common() -> CommonOptions:
-    return CommonOptions(
-        time_range=TimeRange(start=0, end=60, step=10),
-        temperature_unit=TemperatureUnit.CELSIUS,
-    )
+    return CommonOptions(time_range=TimeRange(start=0, end=60, step=10))
 
 
 def _rrd_with_cf(

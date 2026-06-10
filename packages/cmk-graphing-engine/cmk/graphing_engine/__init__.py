@@ -53,7 +53,6 @@ from ._objects import (
 from ._options import (
     CommonOptions,
     ConsolidationFunction,
-    TemperatureUnit,
     TimeRange,
 )
 from ._template import (
@@ -103,7 +102,6 @@ __all__ = [
     "StandardScientificNotation",
     "StrictPrecision",
     "Sum",
-    "TemperatureUnit",
     "TemplateDiscoveryOptions",
     "TemplateOptions",
     "TimeNotation",

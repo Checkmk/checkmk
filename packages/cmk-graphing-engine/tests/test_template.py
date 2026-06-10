@@ -25,7 +25,6 @@ from cmk.graphing_engine import (
     RRDOriginal,
     ServiceRef,
     StackGroup,
-    TemperatureUnit,
     TemplateDiscoveryOptions,
     TemplateOptions,
     TimeRange,
@@ -55,7 +54,6 @@ _METRICS = {
 def _common() -> CommonOptions:
     return CommonOptions(
         time_range=TimeRange(start=0, end=60, step=10),
-        temperature_unit=TemperatureUnit.CELSIUS,
     )
 
 

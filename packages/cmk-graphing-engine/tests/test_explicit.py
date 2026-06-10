@@ -22,7 +22,6 @@ from cmk.graphing_engine import (
     RRDMetricWithCF,
     RRDOriginal,
     ServiceRef,
-    TemperatureUnit,
     TimeRange,
     TimeSeries,
     Unit,
@@ -33,7 +32,6 @@ from cmk.graphing_engine import (
 def _common() -> CommonOptions:
     return CommonOptions(
         time_range=TimeRange(start=0, end=60, step=10),
-        temperature_unit=TemperatureUnit.CELSIUS,
     )
 
 

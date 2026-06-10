@@ -228,10 +228,6 @@ fn get_additional_local_instances(
     auth: &Authentication,
     conn: &Connection,
 ) -> Vec<CustomInstance> {
-    if !conn.is_local() {
-        log::info!("The host is not local - skipping local instances detection");
-        return vec![];
-    }
     get_local_sid_names()
         .into_iter()
         .map(|name| {

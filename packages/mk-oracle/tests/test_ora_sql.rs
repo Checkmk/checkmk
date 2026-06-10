@@ -119,6 +119,8 @@ oracle:
        port: {}
        service_name: "{}"
        timeout: 10
+    discovery:
+       detect: no
 "#,
         credentials.user,
         credentials.password,
@@ -1617,6 +1619,8 @@ oracle:
     authentication: # mandatory
       username: "foo" # mandatory if not using wallet, examples: "mydbuser", "c##multitenantuser"
       password: "bar" # optional
+    discovery:
+       detect: no
     connection: # optional
       service_name: "will not be used"
       hostname: "localhost" # optional, default: "localhost"    "#,

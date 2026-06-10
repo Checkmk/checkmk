@@ -5,8 +5,8 @@
 
 import pytest
 
-from cmk.checkengine.checkresults import MetricTuple
 from cmk.checkengine.submitters import _serialize_metric
+from cmk.utils.metrics import MetricTuple
 
 
 @pytest.mark.parametrize(

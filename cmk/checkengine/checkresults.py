@@ -12,26 +12,14 @@ from typing import Self
 
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.check_utils import worst_service_state
-from cmk.utils.metrics import MetricName
+from cmk.utils.metrics import MetricTuple
 
-__all__ = ["ActiveCheckResult", "MetricTuple", "ServiceCheckResult", "state_markers"]
+__all__ = ["ActiveCheckResult", "ServiceCheckResult", "state_markers"]
 
 
 # Symbolic representations of states in plug-in output
 # TODO(ml): Should probably be of type enum::int -> str
 state_markers = ("", "(!)", "(!!)", "(?)")
-
-
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class MetricTuple:
-    name: MetricName
-    value: float
-    warn: float | None
-    crit: float | None
-    min_: float | None
-    max_: float | None
-    warn_lower: float | None = None
-    crit_lower: float | None = None
 
 
 @dataclasses.dataclass(frozen=True)

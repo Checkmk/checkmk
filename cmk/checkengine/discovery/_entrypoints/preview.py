@@ -16,7 +16,6 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkerplugin import CheckerPlugin, ConfiguredService
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
-    MetricTuple,
     SubmittableServiceCheckResult,
 )
 from cmk.checkengine.discovery._autochecks import AutochecksConfig, AutochecksStore
@@ -55,6 +54,7 @@ from cmk.checkengine.specs.parameters import (
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
+from cmk.utils.metrics import MetricTuple
 from cmk.utils.servicename import Item
 
 __all__ = ["CheckPreview", "CheckPreviewEntry", "get_check_preview"]

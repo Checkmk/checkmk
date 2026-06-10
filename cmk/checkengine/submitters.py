@@ -19,8 +19,9 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.timeout import Timeout
-from cmk.checkengine.checkresults import MetricTuple, ServiceCheckResult
+from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.utils.log import console
+from cmk.utils.metrics import MetricTuple
 from cmk.utils.servicename import ServiceName
 
 _CacheInfo = tuple[int, int]

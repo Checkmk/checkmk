@@ -55,7 +55,6 @@ from cmk.checkengine.checkerplugin import (
 from cmk.checkengine.checking import cluster_mode
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
-    MetricTuple,
     ServiceCheckResult,
     state_markers,
     SubmittableServiceCheckResult,
@@ -121,6 +120,7 @@ from cmk.utils.ip_lookup import (
     IPStackConfig,
 )
 from cmk.utils.log import console
+from cmk.utils.metrics import MetricTuple
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import ServiceName

@@ -1,0 +1,133 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@windows_python_wheels//:requirements.bzl", "REQUIREMENTS")
+load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
+load(":python_cab.bzl", "python_cab")
+
+# Pure-Python CAB writer driver, vendored via @cabarchive (LGPL-2.1-or-later).
+# Replaces the historical gcab/makecab.exe dependency.
+py_binary(
+    name = "pack_cab",
+    srcs = ["pack_cab.py"],
+    main = "pack_cab.py",
+    visibility = ["//visibility:public"],
+    deps = ["@cabarchive"],
+)
+
+# MSI extractor — drives msiinfo (from @msitools) and cabextract (from
+# @cabextract) to unpack a Windows MSI on Linux.  Replaces upstream
+# msitools' Vala-based ``msiextract`` (which doesn't build cleanly against
+# modern glib).
+py_binary(
+    name = "extract_msi",
+    srcs = ["extract_msi.py"],
+    main = "extract_msi.py",
+    visibility = ["//visibility:public"],
+)
+
+# Offline pip driver — runs the sha256-pinned pip wheel from the closure
+# under the repo's hermetic CPython, so the metadata pip writes matches the
+# CAB's Python version instead of the build host's.
+py_binary(
+    name = "pip_offline",
+    srcs = ["pip_offline.py"],
+    main = "pip_offline.py",
+    visibility = ["//visibility:public"],
+)
+
+# Rebuilds the Windows console-script .exe launchers (distlib stub + shebang
+# + zipped __main__.py) that a native Windows pip install would have put
+# into .venv/Scripts.
+py_binary(
+    name = "make_exe_wrappers",
+    srcs = ["make_exe_wrappers.py"],
+    main = "make_exe_wrappers.py",
+    visibility = ["//visibility:public"],
+)
+
+# virtualenv-style activation scripts shipped in .venv/Scripts, with the
+# production install path baked in (the historic Windows build baked the
+# build machine's path instead, breaking them on customer hosts).
+filegroup(
+    name = "venv_scripts",
+    srcs = glob(["venv_scripts/*"]),
+)
+
+# Maintainer tool: regenerates windows_python_wheels.lock.json (the sha256-pinned
+# win_amd64 wheel closure) from the Pipfile.  Run via `bazel run` so the resolving
+# pip matches the build's; writes back to the source tree via
+# BUILD_WORKSPACE_DIRECTORY.  See the bump workflow in its module docstring.
+py_binary(
+    name = "refresh_wheel_pins",
+    srcs = ["refresh_wheel_pins.py"],
+    main = "refresh_wheel_pins.py",
+    visibility = ["//visibility:public"],
+)
+
+# Maintainer tool: recomputes the sha256 hashes for the five python.org
+# per-feature MSIs and prints the http_file(...) blocks for MODULE.bazel.
+# Run after bumping PYTHON_VERSION_WINDOWS in defines.make.
+py_binary(
+    name = "refresh_msi_pins",
+    srcs = ["refresh_msi_pins.py"],
+    main = "refresh_msi_pins.py",
+    visibility = ["//visibility:public"],
+)
+
+# Deprecated legacy-Windows-build helper (patches the Linux Pipfile into the
+# Windows Pipfile). Still invoked directly by the Makefile, not via Bazel; this
+# target exists only to satisfy the "every .py must be declared" linter for now.
+py_binary(
+    name = "patch_pipfile",
+    srcs = ["patch_pipfile.py"],
+    main = "patch_pipfile.py",
+    visibility = ["//visibility:public"],
+)
+
+# Pull msiinfo and libmsi.so out of @msitools' configure_make output groups.
+filegroup(
+    name = "_msiinfo",
+    srcs = ["@msitools"],
+    output_group = "msiinfo",
+)
+
+filegroup(
+    name = "_libmsi",
+    srcs = ["@msitools"],
+    output_group = "libmsi.so.0.0.0",
+)
+
+# cabextract (LZX-capable CAB extractor) from the @cabextract bcr module —
+# needed because cabarchive only supports MSZIP and None compression, while
+# python.org MSIs ship LZX-compressed cabinets.
+filegroup(
+    name = "_cabextract",
+    srcs = ["@cabextract"],
+    output_group = "cabextract",
+)
+
+# Linux-driven build of python-3.cab.  Replaces the historic
+# Windows-only flow under Makefile / build_the_module.cmd.
+#
+# The human source of truth for what the CAB ships is
+# agents/modules/windows/pipfiles/3/Pipfile (+ the pip seed pin in
+# refresh_wheel_pins.py).  REQUIREMENTS is the locked name==version closure
+# generated from windows_python_wheels.lock.json, so the install request and
+# the fetched wheels can never diverge; regenerate the lock with
+# `bazel run //agents/modules/windows:refresh_wheel_pins -- <version>`
+# whenever the Pipfile or python_version below change.
+python_cab(
+    name = "python_3_cab",
+    cabextract = ":_cabextract",
+    extract_msi = ":extract_msi",
+    libmsi = ":_libmsi",
+    make_exe_wrappers = ":make_exe_wrappers",
+    msiinfo = ":_msiinfo",
+    pack_cab = ":pack_cab",
+    pip_offline = ":pip_offline",
+    postinstall_cmd = "postinstall.cmd",
+    python_version = PYTHON_VERSION_WINDOWS,
+    requirements = REQUIREMENTS,
+    venv_scripts = [":venv_scripts"],
+    visibility = ["//visibility:public"],
+    wheels = ["@windows_python_wheels//:wheels"],
+)

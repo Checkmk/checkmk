@@ -183,6 +183,7 @@ IGNORE_SUFFIXES = [
     ".php",
     ".ps1",
     ".state",
+    ".tmpl",
     ".toml",
     ".txt",
     ".yaml",

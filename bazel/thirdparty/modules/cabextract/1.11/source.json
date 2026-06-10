@@ -1,0 +1,9 @@
+{
+  "integrity": "sha256-tVRtsRVeTHGP89SyeFc2BPMN1kw8W/1GV80Im4I6OsY=",
+  "strip_prefix": "cabextract-1.11",
+  "url": "https://www.cabextract.org.uk/cabextract-1.11.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-3vBWCU9zFCoiMIwLnotsYz+jjUZLt1lnEnulDVhM5u0=",
+    "MODULE.bazel": "sha256-Yk3ZoVJSj7yhc9dg/c/m5zGoQ1LsDBNkn9uoPOxyioE="
+  }
+}

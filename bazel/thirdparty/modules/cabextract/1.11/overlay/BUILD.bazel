@@ -1,0 +1,41 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name = "srcs",
+    srcs = glob(
+        ["**/*"],
+    ),
+    tags = ["manual"],
+)
+
+# NOTE: the rule name must differ from the binary name ("cabextract"),
+# otherwise rules_foreign_cc creates BUILD_TMPDIR/cabextract/ as an
+# install-prefix directory and `make cabextract` collides with it when
+# linking the binary.
+configure_make(
+    name = "cabextract_build",
+    args = ["-j4"],
+    configure_options = [
+        # man pages / i18n aren't needed for an MSI build-tool.
+        "--disable-nls",
+    ],
+    # lib_name controls INSTALL_PREFIX inside rules_foreign_cc; must NOT
+    # be "cabextract", or BUILD_TMPDIR/cabextract/ would collide with the
+    # binary target.
+    lib_name = "cabextract_install",
+    lib_source = ":srcs",
+    out_binaries = ["cabextract"],
+    postfix_script = """
+        mkdir -p $${INSTALLDIR}/bin/
+        install -m 755 $${BUILD_TMPDIR}/cabextract $${INSTALLDIR}/bin/
+    """,
+    tags = ["manual"],
+    targets = ["cabextract"],
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "cabextract",
+    actual = ":cabextract_build",
+    visibility = ["//visibility:public"],
+)

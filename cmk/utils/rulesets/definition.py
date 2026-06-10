@@ -18,6 +18,8 @@ class RuleGroupType(enum.Enum):
     SPECIAL_AGENTS = "special_agents"
     STATIC_CHECKS = "static_checks"
     CHECKGROUP_PARAMETERS = "checkgroup_parameters"
+    # Added to handle 3.0 ruleset allow lists:
+    DISCOVERY_PARAMETERS = "discovery_parameters"
 
 
 # I am not sure we need this in the long run, but for now it helps to see the possible values.

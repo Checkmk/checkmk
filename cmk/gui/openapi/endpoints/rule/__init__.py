@@ -176,10 +176,9 @@ def move_rule_to(param: Mapping[str, Any]) -> http.Response:
     source_entry.ruleset.move_to_folder(
         source_entry.rule, dest_folder, index, use_git=active_config.wato_use_git
     )
-    source_entry.folder = dest_folder  # this ensures the correct folder is returned in the response
     all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 
-    return serve_json(_serialize_rule(source_entry))
+    return serve_json(_serialize_rule(_get_rule_by_id(rule_id)))
 
 
 @Endpoint(

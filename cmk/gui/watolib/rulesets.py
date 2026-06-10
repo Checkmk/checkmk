@@ -843,6 +843,9 @@ class Ruleset:
         source_folder = rule.folder
         if source_folder == folder:
             # same folder, use the simpler audit log entry
+            # BOTTOM is a sentinel (-1) that get_index_for_move doesn't handle, so resolve it here
+            if index == Ruleset.BOTTOM:
+                index = len(self._rules.get(folder.path(), [])) - 1
             self.move_rule_to(rule, index=index, use_git=use_git)
             return
 

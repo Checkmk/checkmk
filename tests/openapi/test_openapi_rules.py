@@ -673,3 +673,143 @@ def test_openapi_edit_conditions(clients: ClientRegistry) -> None:
         ),
         value_raw=resp.json["extensions"]["value_raw"],
     )
+
+
+def _rule_order(clients: ClientRegistry, ruleset: str) -> list[str]:
+    """Return rule IDs in their current folder order."""
+    return [entry["id"] for entry in clients.Rule.list(ruleset).json["value"]]
+
+
+def test_move_rule_to_top_of_folder(clients: ClientRegistry) -> None:
+    rule_1 = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+    rule_2 = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+    rule_3 = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+
+    assert _rule_order(clients, DEFAULT_RULESET) == [rule_1, rule_2, rule_3]
+
+    resp = clients.Rule.move(rule_3, {"position": "top_of_folder", "folder": "/"})
+    assert resp.json["extensions"]["folder_index"] == 0
+    assert _rule_order(clients, DEFAULT_RULESET) == [rule_3, rule_1, rule_2]
+
+
+def test_move_rule_to_bottom_of_folder(clients: ClientRegistry) -> None:
+    rule_1 = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+    rule_2 = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+    rule_3 = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+
+    assert _rule_order(clients, DEFAULT_RULESET) == [rule_1, rule_2, rule_3]
+
+    resp = clients.Rule.move(rule_1, {"position": "bottom_of_folder", "folder": "/"})
+    assert resp.json["extensions"]["folder_index"] == 2
+    assert _rule_order(clients, DEFAULT_RULESET) == [rule_2, rule_3, rule_1]
+
+
+def test_move_rule_before_specific_rule(clients: ClientRegistry) -> None:
+    rule_1 = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+    rule_2 = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+    rule_3 = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+
+    assert _rule_order(clients, DEFAULT_RULESET) == [rule_1, rule_2, rule_3]
+
+    resp = clients.Rule.move(rule_3, {"position": "before_specific_rule", "rule_id": rule_1})
+    assert resp.json["extensions"]["folder_index"] == 0
+    assert _rule_order(clients, DEFAULT_RULESET) == [rule_3, rule_1, rule_2]
+
+
+def test_move_rule_after_specific_rule(clients: ClientRegistry) -> None:
+    rule_1 = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+    rule_2 = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+    rule_3 = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+
+    assert _rule_order(clients, DEFAULT_RULESET) == [rule_1, rule_2, rule_3]
+
+    resp = clients.Rule.move(rule_1, {"position": "after_specific_rule", "rule_id": rule_3})
+    assert resp.json["extensions"]["folder_index"] == 2
+    assert _rule_order(clients, DEFAULT_RULESET) == [rule_2, rule_3, rule_1]
+
+
+def test_move_rule_to_different_folder(
+    clients: ClientRegistry, test_folders: tuple[str, str]
+) -> None:
+    folder_1, folder_2 = test_folders
+    rule = clients.Rule.create(
+        DEFAULT_RULESET, folder=f"~{folder_1}", value_raw=DEFAULT_VALUE_RAW
+    ).json["id"]
+
+    resp = clients.Rule.move(rule, {"position": "top_of_folder", "folder": f"~{folder_2}"})
+    assert resp.json["extensions"]["folder_index"] == 0
+    assert folder_2 in resp.json["extensions"]["folder"]
+
+
+def test_move_rule_to_top_of_folder_with_locked_rule(
+    clients: ClientRegistry, locked_rule_id: str
+) -> None:
+    """top_of_folder places a regular rule after all Quick Setup rules, not at true index 0."""
+    rule_1 = clients.Rule.create("host_label_rules", value_raw='{"foo": "bar"}').json["id"]
+    rule_2 = clients.Rule.create("host_label_rules", value_raw='{"baz": "qux"}').json["id"]
+
+    assert _rule_order(clients, "host_label_rules") == [locked_rule_id, rule_1, rule_2]
+
+    resp = clients.Rule.move(rule_2, {"position": "top_of_folder", "folder": "/"})
+    assert resp.json["extensions"]["folder_index"] == 1
+    assert _rule_order(clients, "host_label_rules") == [locked_rule_id, rule_2, rule_1]
+
+
+def test_move_rule_after_last_locked_rule(clients: ClientRegistry, locked_rule_id: str) -> None:
+    """Moving after the only Quick Setup rule succeeds — it places the rule right after it."""
+    rule_1 = clients.Rule.create("host_label_rules", value_raw='{"foo": "bar"}').json["id"]
+    rule_2 = clients.Rule.create("host_label_rules", value_raw='{"baz": "qux"}').json["id"]
+
+    assert _rule_order(clients, "host_label_rules") == [locked_rule_id, rule_1, rule_2]
+
+    resp = clients.Rule.move(rule_2, {"position": "after_specific_rule", "rule_id": locked_rule_id})
+    assert resp.json["extensions"]["folder_index"] == 1
+    assert _rule_order(clients, "host_label_rules") == [locked_rule_id, rule_2, rule_1]
+
+
+def test_move_rule_before_locked_rule(clients: ClientRegistry, locked_rule_id: str) -> None:
+    """Moving before the only Quick Setup rule fails — it is not allowed."""
+    rule_1 = clients.Rule.create("host_label_rules", value_raw='{"foo": "bar"}').json["id"]
+    rule_2 = clients.Rule.create("host_label_rules", value_raw='{"baz": "qux"}').json["id"]
+
+    assert _rule_order(clients, "host_label_rules") == [locked_rule_id, rule_1, rule_2]
+
+    resp = clients.Rule.move(
+        rule_2,
+        {"position": "before_specific_rule", "rule_id": locked_rule_id},
+        expect_ok=False,
+    ).assert_status_code(400)
+    assert resp.json["detail"] == "Cannot move before a rule managed by Quick setup."
+
+
+def test_move_rule_before_itself_fails(clients: ClientRegistry) -> None:
+    rule = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json["id"]
+
+    resp = clients.Rule.move(
+        rule, {"position": "before_specific_rule", "rule_id": rule}, expect_ok=False
+    ).assert_status_code(400)
+    assert resp.json["detail"] == "You cannot move a rule before/after itself."

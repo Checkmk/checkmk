@@ -167,7 +167,9 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
     assert discovered.graph == Graph(
         name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[_metric(cpu_user)])]
     )
-    assert discovered.options == TemplateOptions(common=_common(), service=service)
+    assert discovered.options == TemplateOptions(
+        common=_common(), consolidation_function=ConsolidationFunction.AVERAGE
+    )
     assert discovered.metric_data == {
         _rrd(cpu_user): _metric_data(cpu_user, warning=80.0, critical=90.0)
     }

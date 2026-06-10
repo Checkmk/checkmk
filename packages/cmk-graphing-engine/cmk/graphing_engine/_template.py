@@ -5,6 +5,7 @@
 
 from collections.abc import Callable, Container, Mapping, Sequence
 from dataclasses import dataclass
+from typing import ClassVar, Literal
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
@@ -39,8 +40,9 @@ class TemplateDiscoveryOptions:
 
 @dataclass(frozen=True, kw_only=True)
 class TemplateOptions:
+    kind: ClassVar[Literal["template"]] = "template"
     common: CommonOptions
-    service: ServiceRef
+    consolidation_function: ConsolidationFunction
 
 
 def _matches(
@@ -95,7 +97,10 @@ def discover_template_graphs(
     rrd: FetchRRD,
 ) -> Sequence[DiscoveredGraph[TemplateOptions]]:
     translated_metrics = rrd.translated_metrics([options.service]).get(options.service, {})
-    post_options = TemplateOptions(common=options.common, service=options.service)
+    post_options = TemplateOptions(
+        common=options.common,
+        consolidation_function=options.consolidation_function,
+    )
 
     discovered: list[DiscoveredGraph[TemplateOptions]] = []
     claimed: set[MetricName] = set()

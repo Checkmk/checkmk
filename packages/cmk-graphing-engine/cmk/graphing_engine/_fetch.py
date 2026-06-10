@@ -34,7 +34,6 @@ class FetchRRD(Protocol):
 @dataclass(frozen=True, kw_only=True)
 class GraphRequest:
     common: CommonOptions
-    service: ServiceRef
     graph: Graph | Bidirectional
 
 

@@ -5,6 +5,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import ClassVar, Literal
 
 from ._discovery import DiscoveredGraph
 from ._fetch import FetchRRD
@@ -20,6 +21,7 @@ class ExplicitDiscoveryOptions:
 
 @dataclass(frozen=True, kw_only=True)
 class ExplicitOptions:
+    kind: ClassVar[Literal["explicit"]] = "explicit"
     common: CommonOptions
 
 

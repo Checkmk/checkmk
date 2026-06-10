@@ -34,10 +34,6 @@ def _common() -> CommonOptions:
     )
 
 
-def _service() -> ServiceRef:
-    return ServiceRef(host_name="h", service_name="svc")
-
-
 def _rrd(
     name: str,
     consolidation_function: ConsolidationFunction = ConsolidationFunction.AVERAGE,
@@ -103,7 +99,6 @@ def test_empty_requests_returns_empty_list() -> None:
 
 
 def test_returns_one_data_mapping_per_request_keyed_by_rrd_metric() -> None:
-    service = _service()
     cpu_user = _rrd("cpu_user")
     cpu_system = _rrd("cpu_system")
     cpu_user_key = RRDOriginal(metric_name=cpu_user.metric_name, scale=1.0)
@@ -111,7 +106,7 @@ def test_returns_one_data_mapping_per_request_keyed_by_rrd_metric() -> None:
     cpu_user_series = _series(1.0)
     cpu_system_series = _series(2.0)
     graph = Graph(name="cpu", title="CPU", simple_lines=[_line(cpu_user), _line(cpu_system)])
-    request = GraphRequest(graph=graph, common=_common(), service=service)
+    request = GraphRequest(graph=graph, common=_common())
     rrd = _FakeFetchRRD(
         time_series_response={
             cpu_user_key: cpu_user_series,
@@ -129,7 +124,6 @@ def test_returns_one_data_mapping_per_request_keyed_by_rrd_metric() -> None:
 
 
 def test_fetches_one_batch_per_consolidation_function() -> None:
-    service = _service()
     avg_metric = _rrd("a", ConsolidationFunction.AVERAGE)
     max_metric = _rrd("b", ConsolidationFunction.MAX)
     avg_key = RRDOriginal(metric_name=MetricName("a"), scale=1.0)
@@ -137,7 +131,7 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
     avg_series = _series(1.0)
     max_series = _series(2.0)
     graph = Graph(name="g", title="g", simple_lines=[_line(avg_metric), _line(max_metric)])
-    request = GraphRequest(graph=graph, common=_common(), service=service)
+    request = GraphRequest(graph=graph, common=_common())
     rrd = _FakeFetchRRD(time_series_response={avg_key: avg_series, max_key: max_series})
 
     [data] = fetch_time_series([request], rrd=rrd)
@@ -152,7 +146,6 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
 
 
 def test_multiple_requests_yield_one_mapping_each_in_order() -> None:
-    service = _service()
     x = _rrd("x")
     y = _rrd("y")
     x_key = RRDOriginal(metric_name=x.metric_name, scale=1.0)
@@ -161,8 +154,8 @@ def test_multiple_requests_yield_one_mapping_each_in_order() -> None:
     y_series = _series(2.0)
     graph_x = Graph(name="x", title="x", simple_lines=[_line(x)])
     graph_y = Graph(name="y", title="y", simple_lines=[_line(y)])
-    request_x = GraphRequest(graph=graph_x, common=_common(), service=service)
-    request_y = GraphRequest(graph=graph_y, common=_common(), service=service)
+    request_x = GraphRequest(graph=graph_x, common=_common())
+    request_y = GraphRequest(graph=graph_y, common=_common())
     rrd = _FakeFetchRRD(time_series_response={x_key: x_series, y_key: y_series})
 
     results = fetch_time_series([request_x, request_y], rrd=rrd)
@@ -171,7 +164,6 @@ def test_multiple_requests_yield_one_mapping_each_in_order() -> None:
 
 
 def test_fetches_metrics_from_both_halves_of_a_bidirectional() -> None:
-    service = _service()
     in_ = _rrd("if_in")
     out = _rrd("if_out")
     in_key = RRDOriginal(metric_name=in_.metric_name, scale=1.0)
@@ -184,7 +176,7 @@ def test_fetches_metrics_from_both_halves_of_a_bidirectional() -> None:
         lower=Graph(name="in", title="In", simple_lines=[_line(in_)]),
         upper=Graph(name="out", title="Out", simple_lines=[_line(out)]),
     )
-    request = GraphRequest(graph=graph, common=_common(), service=service)
+    request = GraphRequest(graph=graph, common=_common())
     rrd = _FakeFetchRRD(time_series_response={in_key: in_series, out_key: out_series})
 
     [data] = fetch_time_series([request], rrd=rrd)

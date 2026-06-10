@@ -177,64 +177,57 @@ void main() {
     package_helper.cleanup_provided_agent_binaries("tmp_artifacts");
 
     stage("Build package") {
-        def lock_label = "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}";
-        if (kubernetes_inherit_from != "UNSET") {
-            lock_label = "bzl_lock_k8s";
-        }
+        dir("${checkout_dir}") {
+            // supplying the registry explicitly might not be needed but it looks like
+            // image.inside() will first try to use the image without registry and only
+            // if that didn't work falls back to the fully qualified name
+            inside_container(
+                image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
+                pull: true,
+                args: [
+                    "--name ${container_name}",
+                    " --hostname ${distro}",
+                ],
+            ) {
+                versioning.print_image_tag();
 
-        lock(label: lock_label, quantity: 1, resource : null) {
-            dir("${checkout_dir}") {
-                // supplying the registry explicitly might not be needed but it looks like
-                // image.inside() will first try to use the image without registry and only
-                // if that didn't work falls back to the fully qualified name
-                inside_container(
-                    image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
-                    pull: true,
-                    args: [
-                        "--name ${container_name}",
-                        " --hostname ${distro}",
-                    ],
-                ) {
-                    versioning.print_image_tag();
-
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'nexus',
-                            passwordVariable: 'NEXUS_PASSWORD',
-                            usernameVariable: 'NEXUS_USERNAME'),
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'nexus',
+                        passwordVariable: 'NEXUS_PASSWORD',
+                        usernameVariable: 'NEXUS_USERNAME'),
+                ]) {
+                    /// Don't use withEnv, see
+                    /// https://issues.jenkins.io/browse/JENKINS-43632
+                    artifacts_helper.withHotCache([
+                        download_dest: "~",
+                        remove_existing_cache: true,
+                        target_name: "build-omd-${package_type}",
+                        cache_prefix: versioning.distro_code(),
+                        // When we mount the shared repository cache, we won't pack the repository cache under ~/.cache
+                        // into the hot cache and therefore we dont need to consider WORKSPACE and MODULE.bazel.lock
+                        files_to_consider: [
+                            '.bazelversion',
+                            'requirements.txt',
+                            'bazel/tools/package.json',
+                        ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
+                        disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER_CMK_DISTRO_BUILD == "0",
                     ]) {
-                        /// Don't use withEnv, see
-                        /// https://issues.jenkins.io/browse/JENKINS-43632
-                        artifacts_helper.withHotCache([
-                            download_dest: "~",
-                            remove_existing_cache: true,
-                            target_name: "build-omd-${package_type}",
-                            cache_prefix: versioning.distro_code(),
-                            // When we mount the shared repository cache, we won't pack the repository cache under ~/.cache
-                            // into the hot cache and therefore we dont need to consider WORKSPACE and MODULE.bazel.lock
-                            files_to_consider: [
-                                '.bazelversion',
-                                'requirements.txt',
-                                'bazel/tools/package.json',
-                            ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
-                            disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER_CMK_DISTRO_BUILD == "0",
-                        ]) {
-                            sh("""
-                                bazel build \
-                                    ${enable_compression} \
-                                    --cmk_version=${cmk_version} \
-                                    --cmk_edition=${edition} \
-                                    ${license_flag} \
-                                    --execution_log_json_file="${checkout_dir}/deps_install.json" \
-                            //omd:${package_type}_${edition}
-                            """);
-                        }
-                        sh("cp --no-preserve=mode ${checkout_dir}/bazel-bin/omd/check-mk*.${package_type} ${checkout_dir}");
+                        sh("""
+                            bazel build \
+                                ${enable_compression} \
+                                --cmk_version=${cmk_version} \
+                                --cmk_edition=${edition} \
+                                ${license_flag} \
+                                --execution_log_json_file="${checkout_dir}/deps_install.json" \
+                        //omd:${package_type}_${edition}
+                        """);
                     }
-                    package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");
-                    if (!package_type) {
-                        error("No package 'check-mk-${edition}-${cmk_version}*.${package_type}' found in ${checkout_dir}");
-                    }
+                    sh("cp --no-preserve=mode ${checkout_dir}/bazel-bin/omd/check-mk*.${package_type} ${checkout_dir}");
+                }
+                package_name = cmd_output("ls check-mk-${edition}-${cmk_version}*.${package_type}");
+                if (!package_type) {
+                    error("No package 'check-mk-${edition}-${cmk_version}*.${package_type}' found in ${checkout_dir}");
                 }
             }
         }

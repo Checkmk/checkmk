@@ -16,17 +16,11 @@ void main() {
         stage("Create") {
             def container_name = "testing-ubuntu-2204-checkmk-${safe_branch_name.replace('.', '-')}";
 
-            def lock_label = "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}";
-            if (kubernetes_inherit_from != "UNSET") {
-                lock_label = "bzl_lock_k8s";
-            }
-            lock(label: lock_label, quantity: 1, resource : null) {
-                helper.execute_test([
-                    name       : "documentation",
-                    cmd        : "make -C doc/documentation ${sphinx_builder}",
-                    container_name: container_name,
-                ]);
-            }
+            helper.execute_test([
+                name       : "documentation",
+                cmd        : "make -C doc/documentation ${sphinx_builder}",
+                container_name: container_name,
+            ]);
         }
 
         stage("Deploy") {

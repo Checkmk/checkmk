@@ -80,23 +80,17 @@ void this_call_site(String safe_branch_name, String output_file) {
     if (params.PACKAGE_PATH == "packages/mk-oracle" && params.DISTRO == "almalinux-8") {
         container_name = "this-distro-container";
     }
-    def lock_label = "bzl_lock_${env.NODE_NAME.split('\\.')[0].split('-')[-1]}";
-    if (kubernetes_inherit_from != "UNSET") {
-        lock_label = "bzl_lock_k8s";
+    withCredentials(secret_list(params.SECRET_VARS).collect {
+        string(credentialsId: it, variable: it)
+    }) {
+        helper.execute_test([
+            name       : params.PACKAGE_PATH,
+            cmd        : "cd ${params.PACKAGE_PATH}; ${params.COMMAND_LINE}",
+            output_file: output_file,
+            container_name: container_name,
+        ]);
     }
-    lock(label: lock_label, quantity: 1, resource : null) {
-        withCredentials(secret_list(params.SECRET_VARS).collect {
-            string(credentialsId: it, variable: it)
-        }) {
-            helper.execute_test([
-                name       : params.PACKAGE_PATH,
-                cmd        : "cd ${params.PACKAGE_PATH}; ${params.COMMAND_LINE}",
-                output_file: output_file,
-                container_name: container_name,
-            ]);
-        }
-        sh("mv ${params.PACKAGE_PATH}/${output_file} ${checkout_dir}");
-    }
+    sh("mv ${params.PACKAGE_PATH}/${output_file} ${checkout_dir}");
 }
 
 return this;

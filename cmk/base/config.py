@@ -162,6 +162,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RuleSpec,
     SingleHostRulesetMatcher,
     SingleHostRulesetMatcherMerge,
+    SingleServiceRulesetMatcher,
     SingleServiceRulesetMatcherFirstParsed,
 )
 from cmk.utils.servicename import Item, ServiceName
@@ -358,7 +359,7 @@ class _ServiceFilter:
         should be displayed on the cluster host's service overview.
         """
         return (
-            self._config_cache.effective_host(
+            self._config_cache.clustering.effective_host(
                 self._host_name,
                 service.description,
                 service.labels,
@@ -404,7 +405,8 @@ def _get_services_from_cluster_nodes(
                 enforced_services_table,
                 plugins,
             )
-            if config_cache.effective_host(node_name, s.description, s.labels) != node_name
+            if config_cache.clustering.effective_host(node_name, s.description, s.labels)
+            != node_name
         )
 
 
@@ -447,7 +449,8 @@ def _get_clustered_services(
             )
 
             return not config_cache.service_ignored(node_name, service_name, service_labels) and (
-                config_cache.effective_host(node_name, service_name, service_labels) == cluster_name
+                config_cache.clustering.effective_host(node_name, service_name, service_labels)
+                == cluster_name
             )
 
         yield from configure_autochecks(
@@ -462,7 +465,7 @@ def _get_clustered_services(
         {node_name: enforced_services_table(node_name) for node_name in nodes},
         # similiar to appears_on_cluster, but we don't check for ignored services
         lambda node_name, service_name, discovered_labels: (
-            config_cache.effective_host(
+            config_cache.clustering.effective_host(
                 node_name,
                 service_name,
                 config_cache.label_manager.labels_of_service(
@@ -1391,7 +1394,7 @@ class AutochecksConfigurer:
         service_labels = self._label_manager.labels_of_service(
             host_name, service_name, entry.service_labels
         )
-        return self._config_cache.effective_host(host_name, service_name, service_labels)
+        return self._config_cache.clustering.effective_host(host_name, service_name, service_labels)
 
     def service_description(self, host_name: HostName, entry: AutocheckEntry) -> ServiceName:
         return self.service_name_config(
@@ -1472,10 +1475,6 @@ class ConfigCache:
         # AutochecksMemoizer to check_table and friends) so the dir can flow in
         # as a function argument instead of being stored on the cache.
         self.autochecks_memoizer = AutochecksMemoizer(self._autochecks_dir)
-        self._effective_host_cache: dict[
-            tuple[HostName, ServiceName, tuple[tuple[str, str], ...]],
-            HostName,
-        ] = {}
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             host_tags=self._host_tags.host_tags_maps,
@@ -1498,6 +1497,12 @@ class ConfigCache:
             self._loaded_config.host_labels,
             builtin_host_labels=builtin_host_labels,
             discovered_host_labels_dir=self._discovered_host_labels_dir,
+        )
+        self.clustering = make_clustering_config(
+            self._loaded_config,
+            self._hosts_config,
+            self.ruleset_matcher,
+            self.label_manager,
         )
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
@@ -1553,7 +1558,7 @@ class ConfigCache:
             ),
             check_plugins,
             _make_service_description_cb(passive_service_name_config, check_plugins),
-            self.effective_host,
+            self.clustering.effective_host,
             self.label_manager.labels_of_service,
         )
 
@@ -3175,6 +3180,41 @@ class ConfigCache:
             )
         )
 
+
+class ClusteringConfig:
+    """Resolve the effective host of a service and the cluster topology.
+
+    Owns the bidirectional cluster/node maps and the logic that decides, for a
+    service found on a node, whether it is clustered and thus shown on (and
+    checked by) a cluster host instead of the node itself.
+    """
+
+    def __init__(
+        self,
+        *,
+        hosts_config: Hosts,
+        clustered_services_mapping: Callable[
+            [HostName, ServiceName, Labels], Sequence[HostAddress]
+        ],
+        clustered_services_of: Mapping[
+            HostAddress, Callable[[HostName, ServiceName, Labels], bool]
+        ],
+        clustered_services: Callable[[HostName, ServiceName, Labels], bool],
+        clustered_services_configuration: Callable[
+            [HostName, ServiceName, Labels],
+            Sequence[Sequence[Mapping[str, Mapping[object, object]]]],
+        ],
+    ) -> None:
+        self._hosts_config = hosts_config
+        self._clustered_services = clustered_services
+        self._clustered_services_of = clustered_services_of
+        self._clustered_services_mapping = clustered_services_mapping
+        self._clustered_services_configuration = clustered_services_configuration
+        self._effective_host_cache: dict[
+            tuple[HostName, ServiceName, tuple[tuple[str, str], ...]],
+            HostName,
+        ] = {}
+
     def effective_host(
         self,
         host_name: HostName,
@@ -3204,43 +3244,29 @@ class ConfigCache:
         service_name: ServiceName,
         service_labels: Labels,
     ) -> HostName:
-        if not (the_clusters := self._hosts_config.clusters_of_nodes.get(node_name, ())):
+        if not (the_clusters := self._hosts_config.clusters_of_nodes.get(node_name)):
             return node_name
 
-        cluster_mapping = self.ruleset_matcher.get_service_values_all(
-            node_name,
-            service_name,
-            service_labels,
-            self._loaded_config.clustered_services_mapping,
-            self.label_manager.labels_of_host,
-        )
+        cluster_mapping = self._clustered_services_mapping(node_name, service_name, service_labels)
         for cluster in cluster_mapping:
             # Check if the host is in this cluster
             if cluster in the_clusters:
                 return cluster
 
         # 1. New style: explicitly assigned services
-        for cluster, conf in self._loaded_config.clustered_services_of.items():
+        for cluster, is_clustered_service in self._clustered_services_of.items():
             if cluster not in self._hosts_config.clusters:
                 raise MKGeneralException(
                     f"Invalid entry clustered_services_of['{cluster}']: {cluster} is not a cluster."
                 )
-            if node_name in self._hosts_config.clusters.get(
-                cluster, ()
-            ) and self.ruleset_matcher.get_service_bool_value(
-                node_name, service_name, service_labels, conf, self.label_manager.labels_of_host
+            if node_name in self._hosts_config.clusters[cluster] and is_clustered_service(
+                node_name, service_name, service_labels
             ):
                 return cluster
 
         # 1. Old style: clustered_services assumes that each host belong to
         #    exactly on cluster
-        if self.ruleset_matcher.get_service_bool_value(
-            node_name,
-            service_name,
-            service_labels,
-            self._loaded_config.clustered_services,
-            self.label_manager.labels_of_host,
-        ):
+        if self._clustered_services(node_name, service_name, service_labels):
             return the_clusters[0]
 
         return node_name
@@ -3248,12 +3274,8 @@ class ConfigCache:
     def get_clustered_service_configuration(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> tuple[ClusterMode, Mapping[str, Any]]:
-        matching_rules = self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            self._loaded_config.clustered_services_configuration,
-            self.label_manager.labels_of_host,
+        matching_rules = self._clustered_services_configuration(
+            host_name, service_name, service_labels
         )
 
         effective_mode = matching_rules[0][0] if matching_rules else "native"
@@ -3278,6 +3300,33 @@ class ConfigCache:
             return "best", merged_cfg
 
         raise NotImplementedError(effective_mode)
+
+
+def make_clustering_config(
+    loaded_config: BaseConfig,
+    hosts_config: Hosts,
+    matcher: RulesetMatcher,
+    label_manager: LabelManager,
+) -> ClusteringConfig:
+    labels_of_host = label_manager.labels_of_host
+    return ClusteringConfig(
+        hosts_config=hosts_config,
+        clustered_services_mapping=SingleServiceRulesetMatcher(
+            loaded_config.clustered_services_mapping, matcher, labels_of_host
+        ),
+        clustered_services_of={
+            cluster: SingleServiceRulesetMatcherFirstParsed(
+                conf, False, matcher, labels_of_host, parser=bool
+            )
+            for cluster, conf in loaded_config.clustered_services_of.items()
+        },
+        clustered_services=SingleServiceRulesetMatcherFirstParsed(
+            loaded_config.clustered_services, False, matcher, labels_of_host, parser=bool
+        ),
+        clustered_services_configuration=SingleServiceRulesetMatcher(
+            loaded_config.clustered_services_configuration, matcher, labels_of_host
+        ),
+    )
 
 
 class CoreObjectsConfig:

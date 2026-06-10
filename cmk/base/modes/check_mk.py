@@ -2927,9 +2927,9 @@ def run_checking(
     checker_config = CheckerConfig(
         only_from=config_cache.only_from,
         effective_service_level=config_cache.effective_service_level,
-        get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
+        get_clustered_service_configuration=config_cache.clustering.get_clustered_service_configuration,
         nodes=lambda hn: hosts_config.clusters.get(hn, ()),
-        effective_host=config_cache.effective_host,
+        effective_host=config_cache.clustering.effective_host,
         get_snmp_backend=config_cache.get_snmp_backend,
         timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, logger.warning

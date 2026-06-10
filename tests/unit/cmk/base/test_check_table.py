@@ -120,7 +120,7 @@ def test_cluster_ignores_nodes_parameters(
         CheckingConfigTest({node: [{"levels_for_node": (1, 2)}]}),
         plugins=_TEST_CHECK_PLUGINS,
         get_service_description=service_description_callback,
-        get_effective_host=config_cache.effective_host,
+        get_effective_host=config_cache.clustering.effective_host,
         get_service_labels=config_cache.label_manager.labels_of_service,
     )
 

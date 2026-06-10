@@ -1127,7 +1127,7 @@ def _skip_service(
 ) -> bool:
     if config_cache.service_ignored(host_name, service_name, service_labels):
         return True
-    if host_name != config_cache.effective_host(host_name, service_name, service_labels):
+    if host_name != config_cache.clustering.effective_host(host_name, service_name, service_labels):
         return True
     return False
 

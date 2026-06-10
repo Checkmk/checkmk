@@ -881,9 +881,9 @@ def _execute_discovery(
     checker_config = CheckerConfig(
         only_from=config_cache.only_from,
         effective_service_level=config_cache.effective_service_level,
-        get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
+        get_clustered_service_configuration=config_cache.clustering.get_clustered_service_configuration,
         nodes=lambda host_name: hosts_config.clusters.get(host_name, ()),
-        effective_host=config_cache.effective_host,
+        effective_host=config_cache.clustering.effective_host,
         get_snmp_backend=config_cache.get_snmp_backend,
         timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, logger.warning
@@ -1385,7 +1385,7 @@ def _make_get_effective_host_of_autocheck_callback(
                 else p.service_name
             ),
         )
-        return config_cache.effective_host(
+        return config_cache.clustering.effective_host(
             host,
             service_name,
             config_cache.label_manager.labels_of_service(host, service_name, entry.service_labels),
@@ -2064,7 +2064,7 @@ class AutomationAnalyseServices:
                     node, config_cache.autochecks_memoizer.read(node)
                 )
                 if host_name
-                == config_cache.effective_host(node, service.description, service.labels)
+                == config_cache.clustering.effective_host(node, service.description, service.labels)
             ]
             if host_name in hosts_config.clusters
             else service_configurer.configure_autochecks(

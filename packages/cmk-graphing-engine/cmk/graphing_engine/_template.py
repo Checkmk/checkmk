@@ -12,7 +12,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._discovery import DiscoveredGraph
-from ._fetch import FetchRRD
+from ._fetch import fetch_translated_metrics, FetchRRD
 from ._from_api import (
     metric_names_of_graph,
     metric_names_of_title,
@@ -95,7 +95,7 @@ def discover_template_graphs(
     *,
     rrd: FetchRRD,
 ) -> Sequence[DiscoveredGraph[TemplateOptions]]:
-    translated_metrics = rrd.translated_metrics([options.service])
+    translated_metrics = fetch_translated_metrics([options.service], rrd=rrd)
     service_metrics = translated_metrics.get(options.service, {})
     post_options = TemplateOptions(
         common=options.common,

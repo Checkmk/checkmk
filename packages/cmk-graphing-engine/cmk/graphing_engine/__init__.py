@@ -9,7 +9,7 @@ from ._explicit import (
     ExplicitDiscoveryOptions,
     ExplicitOptions,
 )
-from ._fetch import fetch_time_series, FetchRRD, GraphRequest, TimeSeries
+from ._fetch import fetch_time_series, fetch_translated_metrics, FetchRRD, GraphRequest, TimeSeries
 from ._from_api import parse_graph_from_api
 from ._objects import (
     AutoPrecision,
@@ -115,5 +115,6 @@ __all__ = [
     "discover_explicit_graphs",
     "discover_template_graphs",
     "fetch_time_series",
+    "fetch_translated_metrics",
     "parse_graph_from_api",
 ]

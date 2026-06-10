@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import ClassVar, Literal
 
 from ._discovery import DiscoveredGraph
-from ._fetch import FetchRRD
+from ._fetch import fetch_translated_metrics, FetchRRD
 from ._objects import Bidirectional, Graph
 from ._options import CommonOptions, ServiceRef
 
@@ -31,11 +31,13 @@ def discover_explicit_graphs(
     rrd: FetchRRD,
 ) -> Sequence[DiscoveredGraph[ExplicitOptions]]:
     # The graph's metrics carry their own service, so the services to fetch are derived from them.
-    services = {
-        ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
-        for metric in options.graph.rrd_metrics()
-    }
-    translated_metrics = rrd.translated_metrics(list(services))
+    translated_metrics = fetch_translated_metrics(
+        (
+            ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
+            for metric in options.graph.rrd_metrics()
+        ),
+        rrd=rrd,
+    )
     return [
         DiscoveredGraph(
             graph=options.graph,

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -41,6 +41,15 @@ class GraphRequest:
     common: CommonOptions
     consolidation_function: ConsolidationFunction
     graph: Graph | Bidirectional
+
+
+def fetch_translated_metrics(
+    services: Iterable[ServiceRef],
+    *,
+    rrd: FetchRRD,
+) -> TranslatedMetrics:
+    # dict.fromkeys dedups the services while keeping a deterministic order.
+    return rrd.translated_metrics(list(dict.fromkeys(services)))
 
 
 def _consolidation_function(metric: RRDMetricRef, request: GraphRequest) -> ConsolidationFunction:

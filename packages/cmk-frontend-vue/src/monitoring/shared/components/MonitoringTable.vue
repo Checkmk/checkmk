@@ -40,6 +40,8 @@ const emit = defineEmits<{
 
 const monitoringService = inject(MONITORING_SERVICE)
 
+const showEmptyState = computed(() => !props.loading && props.rows.length === 0)
+
 function resolveUpdater<S>(updater: Updater<S>, current: S): S {
   return typeof updater === 'function' ? (updater as (old: S) => S)(current) : updater
 }
@@ -237,10 +239,16 @@ provide(COLUMN_LAYOUT_KEY, columnInfos)
       <colgroup v-if="pinningEnabled">
         <col v-for="entry in columnLayout" :key="entry.id" :style="{ width: `${entry.width}px` }" />
       </colgroup>
-      <MonitoringTableHeader :header-groups="table.getHeaderGroups()" />
+      <MonitoringTableHeader :header-groups="table.getHeaderGroups()" :disabled="showEmptyState" />
       <tbody>
+        <tr v-if="showEmptyState" class="monitoring-table__row">
+          <td :colspan="columnLayout.length" class="monitoring-table__empty-cell">
+            <slot name="empty-state" />
+          </td>
+        </tr>
         <tr
           v-for="(row, index) in rows"
+          v-else
           :key="getRowKey ? getRowKey(row, index) : index"
           class="monitoring-table__row"
         >

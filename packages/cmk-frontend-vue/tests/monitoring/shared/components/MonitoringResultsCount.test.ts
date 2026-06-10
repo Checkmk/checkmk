@@ -38,10 +38,22 @@ test('uses the same wording for a single match', () => {
   expect(screen.getByText('Rows found: 1')).toBeInTheDocument()
 })
 
-test('shows zero matches', () => {
+test('shows no count text when there are no matches', () => {
   renderCount(makeServiceStub(0))
 
-  expect(screen.getByText('Rows found: 0')).toBeInTheDocument()
+  expect(screen.queryByText('Rows found: 0')).not.toBeInTheDocument()
+})
+
+test('shows no count text when a search yields no matches', () => {
+  renderCount(makeServiceStub(0, 'web'))
+
+  expect(screen.queryByText('Rows matching your search: 0')).not.toBeInTheDocument()
+})
+
+test('keeps the line in the layout so the table does not jump', () => {
+  const { container } = renderCount(makeServiceStub(0))
+
+  expect(container.querySelector('.monitoring-results-count')).toBeInTheDocument()
 })
 
 test('reacts to the total changing', async () => {

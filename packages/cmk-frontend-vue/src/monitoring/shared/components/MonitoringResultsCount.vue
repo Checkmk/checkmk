@@ -18,6 +18,8 @@ const props = defineProps<{
 
 const monitoringService = inject(MONITORING_SERVICE)
 
+const visible = computed(() => (monitoringService?.total.value ?? 0) > 0)
+
 const label = computed(() => {
   const count = monitoringService?.total.value ?? 0
   const hasSearch = (monitoringService?.searchQuery.value ?? '') !== ''
@@ -46,7 +48,7 @@ const label = computed(() => {
 </script>
 
 <template>
-  <p class="monitoring-results-count" aria-live="polite">{{ label }}</p>
+  <p class="monitoring-results-count" aria-live="polite">{{ visible ? label : '\xa0' }}</p>
 </template>
 
 <style scoped>

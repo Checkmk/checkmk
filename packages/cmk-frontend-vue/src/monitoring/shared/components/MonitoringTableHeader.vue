@@ -15,6 +15,7 @@ import FilterDropdown from './filter/FilterDropdown.vue'
 
 defineProps<{
   headerGroups: HeaderGroup<T>[]
+  disabled?: boolean
 }>()
 
 function selectedValues(column: Column<T, unknown>): string[] {
@@ -94,6 +95,7 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
             type="button"
             class="monitoring-table-header__header-button"
             :title="header.column.columnDef.header?.toString()"
+            :disabled="disabled"
             @click="header.column.getToggleSortingHandler()?.($event)"
           >
             <ChevronUp
@@ -144,6 +146,7 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
                   'monitoring-table-header__filter-button--active': isActive || isOpen
                 }"
                 :title="`Filter ${header.column.columnDef.header?.toString() ?? ''}`.trim()"
+                :disabled="disabled"
                 aria-haspopup="true"
                 :aria-expanded="isOpen"
                 @click="toggle"
@@ -204,7 +207,16 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
   border-radius: 0;
   padding: var(--dimension-2) var(--dimension-4);
 
-  &:hover {
+  &:focus-visible {
+    outline: 1px solid var(--success);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:not(:disabled):hover {
     background-color: var(--ux-theme-3);
   }
 }
@@ -214,11 +226,6 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.monitoring-table-header__header-button:focus-visible {
-  outline: 1px solid var(--success);
-  outline-offset: 2px;
 }
 
 .monitoring-table-header__filter-button {
@@ -235,14 +242,18 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
   border-radius: 0;
   opacity: 0.5;
 
-  &:hover {
-    background-color: var(--ux-theme-3);
-    opacity: 1;
-  }
-
   &:focus-visible {
     outline: 1px solid var(--success);
     outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:not(:disabled):hover {
+    background-color: var(--ux-theme-3);
+    opacity: 1;
   }
 }
 

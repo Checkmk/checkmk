@@ -19,6 +19,7 @@ import CmkSearchInput from '@/components/CmkSearchInput.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 
+import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
 import MonitoringTable from '../shared/components/MonitoringTable.vue'
 import { HostApi } from './api/hosts'
@@ -114,6 +115,9 @@ function rowKey(row: HostEntry): string {
   >
     <template #row="{ row }">
       <HostRow :row="row" />
+    </template>
+    <template #empty-state>
+      <MonitoringEmptyState />
     </template>
   </MonitoringTable>
 </template>

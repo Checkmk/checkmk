@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table'
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { defineComponent, h, provide, ref } from 'vue'
 
@@ -18,8 +19,20 @@ interface Row {
 }
 
 const COLUMNS: ColumnDef<Row>[] = [
-  { id: 'name', accessorKey: 'name', header: 'Name', enableSorting: true },
-  { id: 'state', accessorKey: 'state', header: 'State', enableSorting: true },
+  {
+    id: 'name',
+    accessorKey: 'name',
+    header: 'Name',
+    enableSorting: true,
+    meta: { filter: { type: 'checkbox-list', options: [] } }
+  },
+  {
+    id: 'state',
+    accessorKey: 'state',
+    header: 'State',
+    enableSorting: true,
+    meta: { filter: { type: 'checkbox-list', options: [] } }
+  },
   { id: 'actions', header: 'Actions', enableSorting: false }
 ]
 
@@ -79,7 +92,8 @@ function mountTable(overrides: {
           },
           {
             row: ({ row, index }: { row: Row; index: number }) =>
-              h('td', { 'data-testid': `row-${row.id}` }, `${index}:${row.name}`)
+              h('td', { 'data-testid': `row-${row.id}` }, `${index}:${row.name}`),
+            'empty-state': () => h('div', { 'data-testid': 'empty-state' }, 'nothing here')
           }
         )
       }
@@ -152,4 +166,59 @@ test('uses getRowKey for row keying when provided', () => {
 
   expect(screen.getByTestId('row-row-0')).toBeInTheDocument()
   expect(screen.getByTestId('row-row-1')).toBeInTheDocument()
+})
+
+test('renders the empty-state slot when there are no rows and not loading', () => {
+  mountTable({ rows: [] })
+
+  expect(screen.getByTestId('empty-state')).toBeInTheDocument()
+})
+
+test('does not render the empty-state slot while loading', () => {
+  mountTable({ rows: [], loading: true })
+
+  expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument()
+})
+
+test('does not render the empty-state slot when there are rows', () => {
+  mountTable({ rows: makeRows(3) })
+
+  expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument()
+})
+
+test('disables the sort buttons in the empty state', () => {
+  mountTable({ rows: [] })
+
+  expect(screen.getByRole('button', { name: 'Name' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'State' })).toBeDisabled()
+})
+
+test('keeps the sort buttons enabled when there are rows', () => {
+  mountTable({ rows: makeRows(3) })
+
+  expect(screen.getByRole('button', { name: 'Name' })).toBeEnabled()
+})
+
+test('disables the filter buttons in the empty state', () => {
+  mountTable({ rows: [] })
+
+  expect(screen.getByRole('button', { name: 'Filter Name' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Filter State' })).toBeDisabled()
+})
+
+test('keeps the filter buttons enabled when there are rows', () => {
+  mountTable({ rows: makeRows(3) })
+
+  expect(screen.getByRole('button', { name: 'Filter Name' })).toBeEnabled()
+})
+
+test('clicking a disabled header in the empty state does not sort', async () => {
+  const onSortUpdate = vi.fn()
+  mountTable({ rows: [], onSortUpdate })
+
+  // userEvent honours the disabled attribute (a real click is suppressed),
+  // unlike fireEvent which dispatches the event regardless.
+  await userEvent.click(screen.getByRole('button', { name: 'Name' }))
+
+  expect(onSortUpdate).not.toHaveBeenCalled()
 })

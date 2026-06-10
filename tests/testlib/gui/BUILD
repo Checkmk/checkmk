@@ -22,7 +22,7 @@ py_library(
         "//cmk/gui/search",
         "//cmk/gui/userdb",
         "//cmk/gui/watolib:password_store",
-        "//tests:rest_api_client",
+        "//tests/testlib:rest_api_client",
         "//tests/testlib/common:empty_config",
         "//tests/testlib/common:repo",
         "//tests/testlib/common:utils",

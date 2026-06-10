@@ -6,61 +6,10 @@ package(default_visibility = [":__subpackages__"])
 exports_files(["dev-requirements.in"])
 
 py_library(
-    name = "testlib",
-    srcs = ["__init__.py"] + glob(
-        include = ["testlib/**/*.py"],
-        exclude = [
-            "testlib/fake_site.py",
-        ],
-    ),
-    data = glob(
-        include = ["testlib/**"],
-        allow_empty = True,
-        exclude = ["testlib/**/*.py"],
-    ),
+    name = "pkg_marker",
+    srcs = ["__init__.py"],
     imports = [".."],
     visibility = ["//:__subpackages__"],
-    deps = [
-        "//cmk/base",
-        "//cmk/checkengine",
-        "//cmk/gui:app",
-        "//cmk/gui:config",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui/graphing",
-        "//cmk/gui/mkeventd",
-        "//cmk/gui/nodevis:utils",
-        "//cmk/gui/openapi:openapi_init",
-        "//cmk/gui/openapi/endpoints",
-        "//cmk/gui/openapi/framework",
-        "//cmk/gui/openapi/restful_objects:type_defs",
-        "//cmk/gui/openapi/spec/editions",
-        "//cmk/gui/rest_api_types:notifications",
-        "//cmk/gui/userdb",
-        "//cmk/gui/watolib",
-        "//cmk/gui/watolib:config_infra",
-        "//cmk/gui/watolib:password_store",
-        "//cmk/utils",
-        "//packages/cmk-ccc:version",
-        "//packages/cmk-relay-protocols",
-        "//tests/testlib/common:repo",
-        "//tests/testlib/common:utils",
-        requirement("beautifulsoup4"),
-        requirement("clickhouse-connect"),
-        requirement("cryptography"),
-        requirement("docker"),
-        requirement("dockerpty"),
-        requirement("fastapi"),
-        requirement("flask"),
-        requirement("pexpect"),
-        requirement("playwright"),
-        requirement("psutil"),
-        requirement("pyjwt"),
-        requirement("pyyaml"),
-        requirement("pytest"),
-        requirement("pytest-check"),
-        requirement("pytest-mock"),
-        requirement("requests"),
-    ],
 )
 
 py_library(
@@ -74,108 +23,7 @@ py_library(
         requirement("pytest"),
         requirement("pytest-check"),
         requirement("pytest-metadata"),
-        ":testlib",
-    ],
-)
-
-py_library(
-    name = "rest_api_client",
-    testonly = True,
-    srcs = ["testlib/rest_api_client.py"],
-    imports = [".."],
-    visibility = ["//:__subpackages__"],
-    deps = [
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui/graphing",
-        "//cmk/gui/openapi:openapi_init",
-        "//cmk/gui/openapi/endpoints",
-        "//cmk/gui/openapi/framework",
-        "//cmk/gui/openapi/restful_objects:type_defs",
-        "//cmk/gui/openapi/spec/editions",
-        "//cmk/gui/rest_api_types:notifications",
-        "//packages/cmk-ccc:crash-reporting",
-        requirement("requests"),
-    ],
-)
-
-py_library(
-    name = "fake_site",
-    testonly = True,
-    srcs = [
-        "__init__.py",
-        "testlib/fake_site.py",
-    ],
-    imports = [".."],
-    visibility = ["//:__subpackages__"],
-    deps = [
-        "//cmk/utils",
-        "//cmk/utils:redis",
-        "//packages/cmk-ccc:crash-reporting",
-        "//packages/cmk-ccc:debug",
-        "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:version",
-        "//packages/cmk-crypto",
-        "//packages/cmk-livestatus-client:py_livestatus",
-        "//tests/testlib/common:repo",
-        requirement("fakeredis"),
-        requirement("pytest"),
-    ],
-)
-
-py_library(
-    name = "testlib_system_level",
-    testonly = True,
-    srcs = ["__init__.py"] + glob(
-        include = ["testlib/**/*.py"],
-        exclude = [
-            "testlib/fake_site.py",
-            "testlib/unit/**",
-        ],
-    ),
-    data = glob(
-        include = ["testlib/**"],
-        allow_empty = True,
-        exclude = ["testlib/**/*.py"],
-    ),
-    imports = [".."],
-    deps = [
-        "//cmk/base",
-        "//cmk/checkengine",
-        "//cmk/gui:app",
-        "//cmk/gui:config",
-        "//cmk/gui:core_toolkit",
-        "//cmk/gui/graphing",
-        "//cmk/gui/mkeventd",
-        "//cmk/gui/nodevis:utils",
-        "//cmk/gui/openapi:openapi_init",
-        "//cmk/gui/openapi/endpoints",
-        "//cmk/gui/openapi/framework",
-        "//cmk/gui/openapi/restful_objects:type_defs",
-        "//cmk/gui/openapi/spec/editions",
-        "//cmk/gui/rest_api_types:notifications",
-        "//cmk/gui/userdb",
-        "//cmk/gui/watolib",
-        "//cmk/gui/watolib:config_infra",
-        "//cmk/gui/watolib:password_store",
-        "//cmk/utils",
-        "//packages/cmk-ccc:version",
-        "//packages/cmk-relay-protocols",
-        "//tests/testlib/common:repo",
-        "//tests/testlib/common:utils",
-        requirement("beautifulsoup4"),
-        requirement("clickhouse-connect"),
-        requirement("cryptography"),
-        requirement("docker"),
-        requirement("dockerpty"),
-        requirement("fastapi"),
-        requirement("pexpect"),
-        requirement("playwright"),
-        requirement("psutil"),
-        requirement("pyjwt"),
-        requirement("pytest"),
-        requirement("pytest-check"),
-        requirement("pyyaml"),
-        requirement("requests"),
+        "//tests/testlib",
     ],
 )
 
@@ -203,7 +51,7 @@ py_library(
     ),
     imports = [".."],
     deps = [
-        ":testlib",
+        "//tests/testlib",
         "//tests/testlib/common:repo",
         "//tests/testlib/common:utils",
         requirement("docker"),
@@ -218,7 +66,7 @@ py_library(
         include = ["bandit-nosec-markers/**/*.py"],
     ),
     imports = [".."],
-    deps = [":testlib"],
+    deps = ["//tests/testlib"],
 )
 
 py_library(
@@ -237,7 +85,7 @@ py_library(
     imports = [".."],
     deps = [
         ":scripts",
-        ":testlib",
+        "//tests/testlib",
         "//tests/testlib/common:utils",
         requirement("clickhouse_connect"),
         requirement("pytest"),
@@ -266,7 +114,7 @@ py_library(
         requirement("docker"),
         requirement("pytest"),
         requirement("requests"),
-        ":testlib",
+        "//tests/testlib",
     ],
 )
 
@@ -300,7 +148,7 @@ py_library(
         requirement("lxml"),
         requirement("pytest"),
         requirement("beautifulsoup4"),
-        ":testlib",
+        "//tests/testlib",
     ],
 )
 
@@ -328,7 +176,7 @@ py_library(
         requirement("pyyaml"),
         requirement("pytest_playwright"),
         requirement("clickhouse_connect"),
-        ":testlib",
+        "//tests/testlib",
     ] + select({
         "//:gpl+nonfree_repo": [
             "//non-free/tests/testlib/system:metric_backend",
@@ -373,11 +221,11 @@ py_library(
         requirement("protobuf"),
         requirement("pyopenssl"),
         ":scripts",
-        ":testlib",
         "//cmk/post_rename_site",
         "//cmk/utils:msi_patch",
         "//cmk/utils:redis",
         "//packages/cmk-agent-receiver",
+        "//tests/testlib",
         "//tests/testlib/common:utils",
     ] + select({
         "//:gpl+nonfree_repo": [
@@ -404,7 +252,7 @@ py_library(
         requirement("grequests"),
         requirement("multipart"),
         requirement("opentelemetry-instrumentation-requests"),
-        ":testlib",
+        "//tests/testlib",
     ],
 )
 
@@ -416,7 +264,7 @@ py_library(
     ),
     imports = [".."],
     deps = [
-        ":testlib",
+        "//tests/testlib",
         "//tests/testlib/common:utils",
         requirement("pytest"),
     ],
@@ -439,7 +287,7 @@ py_library(
         requirement("requests"),
         requirement("playwright"),
         requirement("pytest_benchmark"),
-        ":testlib",
+        "//tests/testlib",
         "//tests/testlib/common:repo",
         "//tests/testlib/common:utils",
     ],
@@ -461,7 +309,7 @@ py_library(
     imports = [".."],
     deps = [
         requirement("pytest"),
-        ":testlib",
+        "//tests/testlib",
     ] + select({
         "//:gpl+nonfree_repo": [
             "//non-free/tests/testlib/system/licensing",
@@ -483,7 +331,6 @@ py_library(
     }),
     imports = [".."],
     deps = [
-        ":testlib",
         "//packages/cmk-plugins:bazel",
         "//packages/cmk-plugins:cisco_prime",
         "//packages/cmk-plugins:elasticsearch",
@@ -497,6 +344,7 @@ py_library(
         "//packages/cmk-plugins:rabbitmq",
         "//packages/cmk-plugins:redfish",
         "//packages/cmk-plugins:splunk",
+        "//tests/testlib",
         "//tests/testlib/unit",
         requirement("pytest"),
     ],
@@ -526,7 +374,7 @@ py_library(
         requirement("prometheus-client"),
         requirement("opentelemetry-sdk"),
         requirement("opentelemetry-exporter-otlp"),
-        ":testlib",
+        "//tests/testlib",
     ],
 )
 
@@ -556,7 +404,7 @@ py_library(
     imports = [".."],
     deps = [
         ":scripts",
-        ":testlib",
+        "//tests/testlib",
         "//tests/testlib/common:utils",
         requirement("pytest"),
     ] + select({

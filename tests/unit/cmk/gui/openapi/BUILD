@@ -10,7 +10,7 @@ py_library(
     ],
     visibility = ["//tests/unit/cmk/gui/openapi:__subpackages__"],
     deps = [
-        "//tests:rest_api_client",
+        "//tests/testlib:rest_api_client",
         "//tests/testlib/gui",
         requirement("pytest"),
     ],
@@ -63,7 +63,7 @@ py_test(
         "//cmk/gui/utils:roles",
         "//cmk/gui/watolib",
         "//packages/cmk-ccc:version",
-        "//tests:testlib",
+        "//tests/testlib",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
         "//tests/unit/cmk/gui:init_py",

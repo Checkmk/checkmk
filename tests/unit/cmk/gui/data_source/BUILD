@@ -21,7 +21,7 @@ py_test(
     deps = [
         ":__test__",
         "//cmk/gui/data_source",
-        "//tests:rest_api_client",
+        "//tests/testlib:rest_api_client",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
     ],

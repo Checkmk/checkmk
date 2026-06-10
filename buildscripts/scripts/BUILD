@@ -16,7 +16,7 @@ py_library(
         requirement("docker"),
         requirement("requests"),
         "//packages/cmk-ccc:version",
-        "//tests:testlib",
+        "//tests/testlib",
     ],
 )
 
@@ -25,7 +25,7 @@ py_binary(
     srcs = ["assert_build_artifacts.py"],
     deps = [
         ":lib",
-        "//tests:testlib",
+        "//tests/testlib",
         requirement("requests"),
     ],
 )

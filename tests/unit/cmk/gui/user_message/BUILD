@@ -17,7 +17,7 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
-        "//tests:rest_api_client",
+        "//tests/testlib:rest_api_client",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
     ],

@@ -22,7 +22,7 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-plugin-apis:agent_based",
-        "//tests:fake_site",
+        "//tests/testlib:fake_site",
         "//tests/testlib/common:repo",
         requirement("pytest_metadata"),
     ],
@@ -64,7 +64,7 @@ py_test(
     deps = [
         ":__test__",
         ":conftest",
-        "//tests:testlib",
+        "//tests/testlib",
     ],
 )
 

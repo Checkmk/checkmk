@@ -94,6 +94,8 @@ fn _make_mini_config(
 ---
 oracle:
   main:
+    discovery:
+       detect: no
     authentication:
        username: "{}"
        password: "{}"
@@ -234,6 +236,8 @@ oracle:
        hostname: {}
        port: {}
        timeout: 10
+    discovery:
+       detect: no
     sections:
        - instance:
     instances:
@@ -275,6 +279,8 @@ oracle:
        hostname: {}
        service_name: {}
        instance_name: FREE
+    discovery:
+       detect: no
     sections:
       - instance:
 "#,

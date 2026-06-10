@@ -3,43 +3,55 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.bvip.lib import DETECT_BVIP
-
-check_info = {}
-
-
-def discover_bvip_poe(info):
-    if not info:
-        return []
-    if info[0][0] != "0":
-        return [(None, {})]
-    return []
-
-
-def check_bvip_poe(_no_item, params, info):
-    watt = float(info[0][0]) / 10
-    return check_levels(
-        watt, "power", params.get("levels"), human_readable_func=lambda x: f"{x:.2f} W"
-    )
 
 
 def parse_bvip_poe(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["bvip_poe"] = LegacyCheckDefinition(
+def discover_bvip_poe(section: StringTable) -> DiscoveryResult:
+    if section and section[0][0] != "0":
+        yield Service()
+
+
+def check_bvip_poe(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    watt = float(section[0][0]) / 10
+    yield from check_levels(
+        watt,
+        levels_upper=("no_levels", None) if (l := params["levels"]) is None else ("fixed", l),
+        metric_name="power",
+        render_func=lambda x: f"{x:.2f} W",
+    )
+
+
+snmp_section_bvip_poe = SimpleSNMPSection(
     name="bvip_poe",
-    parse_function=parse_bvip_poe,
     detect=DETECT_BVIP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1.1",
         oids=["10"],
     ),
+    parse_function=parse_bvip_poe,
+)
+
+
+check_plugin_bvip_poe = CheckPlugin(
+    name="bvip_poe",
     service_name="POE Power",
     discovery_function=discover_bvip_poe,
     check_function=check_bvip_poe,

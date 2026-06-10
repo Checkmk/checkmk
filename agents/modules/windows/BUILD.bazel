@@ -73,16 +73,6 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
-# Deprecated legacy-Windows-build helper (patches the Linux Pipfile into the
-# Windows Pipfile). Still invoked directly by the Makefile, not via Bazel; this
-# target exists only to satisfy the "every .py must be declared" linter for now.
-py_binary(
-    name = "patch_pipfile",
-    srcs = ["patch_pipfile.py"],
-    main = "patch_pipfile.py",
-    visibility = ["//visibility:public"],
-)
-
 # Pull msiinfo and libmsi.so out of @msitools' configure_make output groups.
 filegroup(
     name = "_msiinfo",

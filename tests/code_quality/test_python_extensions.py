@@ -132,7 +132,6 @@ IGNORE_PATHS = [
     r".*BUILD$",
     r".*WORKSPACE$",
     r".*README$",
-    r"agents/modules/windows/BUILD_NUM$",
     r"\.site$",
     r".*\.gitignore$",
     r".*\.gitkeep$",

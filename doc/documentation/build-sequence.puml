@@ -38,20 +38,13 @@ group Nightly 0. Master (nightly-trigger.jenkins)
             dc4 <- winnode: **copy artifacts: check_mk_agent.{msi|exe}**
             end
 
-            group Windows Python Build
-            dc4 -> winnode: trigger
-                winnode <-> git: ""git checkout""
-                winnode <-> winnode: ""make -C agents/wnx setversion""
-                group cached build
-                winnode <-> winnode: ""call build_the_module.cmd cached""
-                alt cache available?
-                winnode <- artifacts: **""curl *.cab""**
-                else
-                winnode <-> winnode: "make build || make python_344"
-                winnode <-> pypi: pip install
-                winnode -> artifacts: **""curl *.cab""**
-                end
-            dc4 <- winnode: **copy artifacts: *.cab**
+            group Windows Python Build (Linux-driven)
+            dc4 -> dc4: trigger winagt-build-modules-linux on Linux node
+                dc4 <-> git: ""git checkout""
+                dc4 <-> dc4: ""bazel build //agents/modules/windows:python_3_cab""
+                dc4 <-> pypi: fetch sha256-pinned win_amd64 wheels (Bazel fetch phase)
+                dc4 <-> artifacts: **""curl python-3.cab""** (Bazel remote cache)
+            dc4 <- dc4: **archive artifacts: python-3.cab**
             end
 
             group Linux Agent Updater Build

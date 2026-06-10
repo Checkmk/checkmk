@@ -14,7 +14,7 @@ bazel build //agents/modules/windows:python_3_cab
 ls   bazel-bin/agents/modules/windows/python_3_cab.cab
 ```
 
-The CI entry point is `buildscripts/scripts/winagt-build-modules.groovy`,
+The CI entry point is `buildscripts/scripts/winagt-build-modules-linux.groovy`,
 which runs on a Linux build node and pushes the resulting cab to
 `agents/modules/windows/artefacts/python-3.cab`.
 

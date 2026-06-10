@@ -12,7 +12,7 @@ import pytest
 
 from cmk.crypto.password import PasswordPolicy
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.openapi.endpoints.user_config import _auth_options_to_internal_format
+from cmk.gui.openapi.api_endpoints.user_config._utils import _auth_options_to_internal_format
 
 
 @patch("time.time", return_value=1234567890)

@@ -13,7 +13,7 @@ import random
 import string
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -30,10 +30,14 @@ from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import LoggedInSuperUser, user
-from cmk.gui.openapi.endpoints.user_config import (
-    _api_to_internal_format,
+from cmk.gui.openapi.api_endpoints.user_config._utils import (
     _internal_to_api_format,
-    _load_user,
+)
+from cmk.gui.openapi.api_endpoints.user_config._utils import (
+    api_to_internal_format as _api_to_internal_format,
+)
+from cmk.gui.openapi.api_endpoints.user_config._utils import (
+    load_user as _load_user,
 )
 from cmk.gui.openapi.endpoints.utils import complement_customer
 from cmk.gui.type_defs import CustomUserAttrSpec, Users, UserSpec
@@ -207,7 +211,7 @@ def test_openapi_all_users(clients: ClientRegistry) -> None:
     users = resp.json["value"]
     assert len(users) == 1
 
-    user = clients.User.get(url=users[0]["links"][0]["href"])
+    user = clients.User.get(username=users[0]["id"])
     assert user.json == users[0]
 
 
@@ -236,8 +240,8 @@ def test_openapi_user_config(
     extensions = resp.json["extensions"]
     assert extensions["disable_notifications"] == {
         "timerange": {
-            "end_time": "2020-01-02T00:00:00+00:00",
-            "start_time": "2020-01-01T00:00:00+00:00",
+            "end_time": "2020-01-02T00:00:00Z",
+            "start_time": "2020-01-01T00:00:00Z",
         }
     }
 
@@ -397,7 +401,7 @@ def fixture_password_policy(set_config: SetConfig) -> Iterator[None]:
         ("short", "configured password policy"),
         # Fail because the AUTH_PASSWORD schema requires minLength=1. (It also doesn't comply with
         # the policy but we never get to checking that.)
-        ("", "These fields have problems: auth_option"),
+        ("", "These fields have problems: body.auth_option.password.password"),
         # Fail when trying to instantiate the Password object (null bytes not allowed).
         ("\0" * 21, "Password must not contain null bytes"),
     ],
@@ -437,8 +441,12 @@ def test_openapi_automation_enforce_pw_change(clients: ClientRegistry) -> None:
     )
 
     response = clients.User.create(**user_detail, expect_ok=False)
+    response.assert_status_code(400)
 
-    assert "Unknown field." in response.json["fields"]["auth_option"]["enforce_password_change"]
+    assert (
+        "Unexpected keyword argument"
+        in response.json["fields"]["body.auth_option.automation.enforce_password_change"]["msg"]
+    )
 
 
 @pytest.mark.parametrize("auth_type", ["password", "automation"])
@@ -516,7 +524,7 @@ def test_openapi_user_internal_auth_handling(
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:00:00Z")):
         updated_internal_attributes = _api_to_internal_format(
-            _load_user(name),
+            dict(_load_user(name)),
             {"auth_option": {"secret": "QWXWBFUCSUOXNCPJUMS@", "auth_type": "automation"}},
             PasswordPolicy(
                 12,
@@ -527,7 +535,7 @@ def test_openapi_user_internal_auth_handling(
         )
         edit_user(
             name,
-            updated_internal_attributes,
+            cast(UserSpec, updated_internal_attributes),
             default_sites,
             get_user_attributes([]),
             [],
@@ -546,7 +554,7 @@ def test_openapi_user_internal_auth_handling(
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:30:00Z")):
         updated_internal_attributes = _api_to_internal_format(
-            _load_user(name),
+            dict(_load_user(name)),
             {"auth_option": {"auth_type": "remove"}},
             PasswordPolicy(
                 12,
@@ -557,7 +565,7 @@ def test_openapi_user_internal_auth_handling(
         )
         edit_user(
             name,
-            updated_internal_attributes,
+            cast(UserSpec, updated_internal_attributes),
             default_sites,
             get_user_attributes([]),
             [],
@@ -1034,8 +1042,7 @@ def test_create_user_with_non_existing_custom_attribute(
     )
 
     assert result.json["status"] == 400
-    assert len(result.json["fields"]["_schema"]) == 1
-    assert result.json["fields"]["_schema"][0] == "Unknown Attribute: 'i_do_not'"
+    assert "Unknown Attribute: 'i_do_not'" in result.json["fields"]["body"]["msg"]
 
 
 @pytest.mark.parametrize(
@@ -1093,7 +1100,9 @@ def fixture_mock_users_config(mocker: MockerFixture) -> None:
     )
 
     mocker.patch("cmk.gui.fields.definitions.load_users", return_value=user_cfg)
-    mocker.patch("cmk.gui.openapi.endpoints.user_config.load_users", return_value=user_cfg)
+    mocker.patch(
+        "cmk.gui.openapi.api_endpoints.user_config._utils.load_users", return_value=user_cfg
+    )
 
 
 @pytest.fixture(name="mock_user_connections_config")
@@ -1105,7 +1114,7 @@ def fixture_mock_user_connections_config(mocker: MockerFixture) -> MagicMock:
 
     """
     return mocker.patch(
-        "cmk.gui.openapi.endpoints.user_config.load_connection_config",
+        "cmk.gui.openapi.api_endpoints.user_config._utils.load_connection_config",
         # not reflective of actual SAML connector
         return_value=[{"id": MOCK_SAML_CONNECTOR_NAME, "name": "bla", "type": "saml2"}],
     )

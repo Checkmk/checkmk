@@ -48,6 +48,7 @@ py_library(
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-crypto",
         "//packages/cmk-livestatus-client",
         requirement("python-dateutil"),
     ],

@@ -25,7 +25,6 @@ from cmk.gui.openapi.endpoints import (
     service,
     service_group_config,
     time_periods,
-    user_config,
     version,
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -87,7 +86,6 @@ def register(
     service.register(endpoint_registry)
     service_group_config.register(endpoint_registry)
     time_periods.register(endpoint_registry)
-    user_config.register(endpoint_registry)
     version.register(endpoint_registry)
     broker_connection.register(endpoint_registry)
 

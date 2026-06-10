@@ -25,6 +25,7 @@ from cmk.gui.type_defs import (
     PasswordPolicy,
     UserSpec,
 )
+from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.tags import TagGroup
 
@@ -94,6 +95,7 @@ class ApiConfig:
     wato_user_attrs: Sequence[CustomUserAttrSpec]
     multisite_users: Mapping[str, UserSpec]
     default_user_profile: UserSpec
+    user_connections: Sequence[ConfigurableUserConnectionSpec]
 
     @classmethod
     def from_config(cls, config: Config) -> Self:
@@ -114,6 +116,7 @@ class ApiConfig:
             wato_user_attrs=config.wato_user_attrs,
             multisite_users=config.multisite_users,
             default_user_profile=config.default_user_profile,
+            user_connections=config.user_connections,
         )
 
     def user_permissions(self) -> "UserPermissions":

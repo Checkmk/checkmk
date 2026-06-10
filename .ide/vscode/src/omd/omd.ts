@@ -10,7 +10,7 @@ import * as vscode from 'vscode'
 
 import { shellEscape } from '../core/config'
 import { type Edition, availableEditions } from '../core/editions'
-import { error, log } from '../core/log'
+import { error, log, notifyError } from '../core/log'
 import { safeExecAsync } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
 import { promptSocketProxy, registerProxyCleanup } from './proxy'
@@ -53,32 +53,53 @@ export interface OmdSiteWithStatus extends OmdSite {
 
 const STATUS_DIR = path.join(os.tmpdir(), 'cmk-omd-status')
 
-/** Build a `sudo sh -c "..."` command. Arguments are NOT shell-escaped
- *  inside the inner string — callers must only pass safe values (alphanumeric
- *  site names, controlled paths). */
+/** Dedicated output channel for OMD action output (start/stop/restart/rm/…).
+ *  Bridge-tunneled actions capture their stdout/stderr to sentinel files; we
+ *  mirror that here so failures aren't silently swallowed (CMK-35579). */
+const _omdOut = vscode.window.createOutputChannel('CMK OMD')
+
+/** Append a captured action's output to the CMK OMD channel. */
+function recordOmdOutput(label: string, output: string, rc: number): void {
+  _omdOut.appendLine(`── ${label} (exit ${rc}) ──`)
+  const trimmed = output.trimEnd()
+  if (trimmed) _omdOut.appendLine(trimmed)
+  _omdOut.appendLine('')
+}
+
+/** Build a `sudo sh -c "..."` command. Backslashes, double quotes, and `$`
+ *  are escaped so the inner command is evaluated by the inner `sh` rather than
+ *  the wrapping shell (matching the sudo-bridge escaping). Callers must still
+ *  only pass safe values for unescaped tokens (alphanumeric site names,
+ *  controlled paths). */
 function sudoSh(inner: string): string {
-  return `sudo sh -c "${inner.replace(/"/g, '\\"')}"`
+  const escaped = inner.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '\\$')
+  return `sudo sh -c "${escaped}"`
 }
 
 /**
  * Run a sudo-requiring OMD command through the authenticated keepalive
  * terminal. If no keepalive session is active, auto-prompts the user to
  * authenticate first. Falls back to a dedicated task terminal only if the
- * bridge times out. Returns the exit code, or -1 if the command could not
- * be launched (or the user declined to authenticate).
+ * bridge times out. Returns the exit code plus any captured output, or
+ * exit code -1 if the command could not be launched (or the user declined
+ * to authenticate). The fallback task path streams to a visible terminal,
+ * so its `output` is empty.
  */
-export async function runOmdSudo(label: string, inner: string): Promise<number> {
+export async function runOmdSudo(
+  label: string,
+  inner: string
+): Promise<{ exitCode: number; output: string }> {
   if (!hasKeepalive()) {
     const authed = await ensureKeepaliveAuth()
-    if (!authed) return -1
+    if (!authed) return { exitCode: -1, output: '' }
   }
   const bridged = await runInKeepaliveTerminal(inner, 300_000)
-  if (bridged) return bridged.exitCode
+  if (bridged) return { exitCode: bridged.exitCode, output: bridged.output }
   const exec = runCommand(label, sudoSh(inner))
-  if (!exec) return -1
+  if (!exec) return { exitCode: -1, output: '' }
   const execution = await (exec as unknown as Promise<vscode.TaskExecution>)
   const rc = await waitForTask(execution)
-  return rc ?? -1
+  return { exitCode: rc ?? -1, output: '' }
 }
 
 // ── Site discovery (no sudo required) ──
@@ -320,6 +341,7 @@ export function registerOmd(
   vscode.commands.executeCommand('setContext', 'cmk.omdAvailable', initialSites.length > 0)
 
   registerProxyCleanup(context, onRefresh)
+  context.subscriptions.push(_omdOut)
 
   try {
     fs.mkdirSync(STATUS_DIR, { recursive: true })
@@ -486,6 +508,27 @@ export async function omdServiceCommand(
     omdAction = `omd ${action} ${siteName}`
   }
   const statusFile = path.join(STATUS_DIR, `${siteName}.status`)
-  const inner = `${omdAction} ; omd status --bare ${siteName} > ${statusFile} 2>&1 || true`
-  return runOmdSudo(label, inner)
+  // Preserve the action's own exit status: capture it before the status
+  // refresh, then make the command group exit with it. Otherwise the trailing
+  // `omd status … || true` would always report success and mask a failed
+  // action (CMK-35579).
+  const inner =
+    `${omdAction}; __rc=$?; ` +
+    `omd status --bare ${siteName} > ${statusFile} 2>&1 || true; ` +
+    `(exit $__rc)`
+  const { exitCode, output } = await runOmdSudo(label, inner)
+
+  if (output.trim() || exitCode !== 0) recordOmdOutput(label, output, exitCode)
+
+  if (exitCode !== 0) {
+    const tail = output.trim().split('\n').slice(-4).join('\n')
+    void notifyError(
+      `${label} failed (exit ${exitCode})`,
+      tail || 'See the CMK OMD output channel for details.',
+      'Show Output'
+    ).then((pick) => {
+      if (pick === 'Show Output') _omdOut.show(true)
+    })
+  }
+  return exitCode
 }

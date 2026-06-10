@@ -101,26 +101,6 @@ class Metric:
     color: str
 
 
-@dataclass(frozen=True, kw_only=True)
-class RRDOriginal:
-    metric_name: MetricName
-    scale: float
-
-
-@dataclass(frozen=True, kw_only=True)
-class MetricData:
-    name: MetricName
-    value: float | None
-    scale: float
-    originals: Sequence[RRDOriginal]
-    lower_warning: float | None = None
-    lower_critical: float | None = None
-    warning: float | None = None
-    critical: float | None = None
-    minimum: float | None = None
-    maximum: float | None = None
-
-
 @dataclass(frozen=True)
 class WarningOf:
     metric: RRDMetric
@@ -257,6 +237,26 @@ def _rrd_metrics_in_quantity(quantity: Quantity) -> Iterable[RRDMetric]:
         case Fraction():
             yield from _rrd_metrics_in_quantity(quantity.dividend)
             yield from _rrd_metrics_in_quantity(quantity.divisor)
+
+
+@dataclass(frozen=True, kw_only=True)
+class RRDOriginal:
+    metric_name: MetricName
+    scale: float
+
+
+@dataclass(frozen=True, kw_only=True)
+class MetricData:
+    name: MetricName
+    value: float | None
+    scale: float
+    originals: Sequence[RRDOriginal]
+    lower_warning: float | None = None
+    lower_critical: float | None = None
+    warning: float | None = None
+    critical: float | None = None
+    minimum: float | None = None
+    maximum: float | None = None
 
 
 def _metric_data_of(

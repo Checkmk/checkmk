@@ -946,7 +946,6 @@ def _read_legacy_stash_file(paths: Paths) -> Sequence[int]:
 
 
 def migrate_werk_ids_file(paths: Paths) -> None:
-    sys.stderr.write("Migrate legacy werk IDs file\n")
     assert paths.secret_file.exists()
 
     stash = (
@@ -959,7 +958,6 @@ def migrate_werk_ids_file(paths: Paths) -> None:
     paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
     paths.stash_file.write_text(stash.model_dump_json(by_alias=True) + "\n", encoding="utf-8")
     paths.legacy_stash_file.unlink(missing_ok=True)
-    sys.stderr.write(f"Migrated werk IDs from {paths.legacy_stash_file} to {paths.stash_file}\n")
 
 
 def load_stash_from_file(paths: Paths) -> "LegacyStash | Stash":
@@ -976,11 +974,9 @@ class WerkIDsClient:
     URL: Final = "https://werk-ids.lan.checkmk.net"
 
     def ensure_connection(self) -> bool:
-        sys.stderr.write("Ensure connection to werk IDs server\n")
         try:
             response = requests.get(self.URL, timeout=5)
             response.raise_for_status()
-            sys.stderr.write(f"OK: {response.status_code}\n")
             return True
         except requests.exceptions.RequestException:
             traceback.print_exc(file=sys.stderr)
@@ -988,7 +984,6 @@ class WerkIDsClient:
             return False
 
     def test_connection(self, secret_file_path: Path) -> bool:
-        sys.stderr.write("Test connection to werk IDs server\n")
         secret = secret_file_path.read_text(encoding="utf-8").strip()
         try:
             response = requests.get(
@@ -998,7 +993,6 @@ class WerkIDsClient:
                 timeout=5,
             )
             response.raise_for_status()
-            sys.stderr.write(f"OK: {response.status_code}\n")
             return True
         except requests.exceptions.RequestException:
             traceback.print_exc(file=sys.stderr)
@@ -1006,7 +1000,6 @@ class WerkIDsClient:
             return False
 
     def reserve_werk_ids(self, secret_file_path: Path, local_werk_ids_count: int) -> Sequence[int]:
-        sys.stderr.write("Reserve werk IDs\n")
         secret = secret_file_path.read_text(encoding="utf-8").strip()
         try:
             response = requests.post(
@@ -1023,7 +1016,6 @@ class WerkIDsClient:
 
         if response.status_code == 200:
             reserved_werk_ids = response.json()["reserved_werk_ids"]
-            sys.stderr.write(f"Got {len(reserved_werk_ids)} new werk IDs\n")
             return [int(i) for i in reserved_werk_ids]
 
         sys.stderr.write(

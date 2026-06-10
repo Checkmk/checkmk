@@ -5,6 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
+
+import { type PresetName, presetOptions } from './attributeFilterPresets'
 
 export const a11yData = [
   {
@@ -18,20 +21,29 @@ export const a11yData = [
   }
 ]
 
-export const panelConfig = {} satisfies PanelConfigFor<
+export const panelConfig = {
+  preset: {
+    type: 'list',
+    title: 'Preset',
+    options: presetOptions,
+    initialState: 'empty'
+  }
+} satisfies PanelConfigFor<
   typeof FormAttributeFilter,
   'modelValue' | 'querySuggestions' | 'queryValueSuggestions' | 'resolveAttributeType' | 'ariaLabel'
->
+> & { preset: ListPropDef<PresetName> }
 </script>
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageComponent,
   UclDetailPageHeader,
-  UclDetailPageLayout
+  UclDetailPageLayout,
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 import { Response } from '@/components/CmkSuggestions/suggestions'
 import type { Section } from '@/components/CmkSuggestions/types'
@@ -43,9 +55,9 @@ import type {
   AttributeType
 } from '@/metric-backend/attribute-filter/types'
 
-defineProps<{ screenshotMode: boolean }>()
+import { filterPresets } from './attributeFilterPresets'
 
-const filters = ref<AttributeFilterModel>([])
+defineProps<{ screenshotMode: boolean }>()
 
 interface TypedSection extends Section {
   attributeType: Exclude<AttributeType, null>
@@ -134,6 +146,24 @@ async function queryValueSuggestions(
   }
   return new Response(matches)
 }
+
+const propState = new PanelStateCreator<
+  typeof FormAttributeFilter,
+  'modelValue' | 'querySuggestions' | 'queryValueSuggestions' | 'resolveAttributeType' | 'ariaLabel'
+>().createRef(panelConfig)
+
+function clonePreset(name: PresetName): AttributeFilterModel {
+  return structuredClone(filterPresets[name])
+}
+
+const filters = ref<AttributeFilterModel>(clonePreset(propState.value.preset))
+
+watch(
+  () => propState.value.preset,
+  (name) => {
+    filters.value = clonePreset(name)
+  }
+)
 </script>
 
 <template>
@@ -147,6 +177,10 @@ async function queryValueSuggestions(
         :query-value-suggestions="queryValueSuggestions"
         :resolve-attribute-type="resolveAttributeType"
       />
+
+      <template #properties>
+        <UclPropertiesPanel v-model="propState" :config="panelConfig" />
+      </template>
     </UclDetailPageComponent>
 
     <UclDetailPageAccessibility :data="a11yData" />

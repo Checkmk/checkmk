@@ -86,6 +86,13 @@ MetricName = NewType("MetricName", str)
 
 
 @dataclass(frozen=True, kw_only=True)
+class RRDMetric:
+    host_name: str
+    service_name: str
+    metric_name: MetricName
+
+
+@dataclass(frozen=True, kw_only=True)
 class RRDMetricWithCF:
     host_name: str
     service_name: str
@@ -93,14 +100,7 @@ class RRDMetricWithCF:
     consolidation_function: ConsolidationFunction
 
 
-@dataclass(frozen=True, kw_only=True)
-class RRDMetric:
-    host_name: str
-    service_name: str
-    metric_name: MetricName
-
-
-type RRDMetricRef = RRDMetricWithCF | RRDMetric
+type RRDMetricRef = RRDMetric | RRDMetricWithCF
 
 
 @dataclass(frozen=True)
@@ -214,7 +214,7 @@ class StackGroup:
 
 def _rrd_metrics_in_quantity(quantity: Quantity) -> Iterable[RRDMetricRef]:
     match quantity:
-        case RRDMetricWithCF() | RRDMetric():
+        case RRDMetric() | RRDMetricWithCF():
             yield quantity
         case Constant():
             return

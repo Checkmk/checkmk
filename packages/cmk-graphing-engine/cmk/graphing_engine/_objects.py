@@ -345,7 +345,7 @@ class Graph:
 
     def rrd_metrics(self) -> Sequence[RRDMetricRef]:
         return list(
-            set(
+            dict.fromkeys(
                 rrd_metric
                 for quantity in itertools.chain(
                     (m for g in self.stack_groups for m in g.members),
@@ -373,7 +373,7 @@ class Bidirectional:
     upper: Graph
 
     def rrd_metrics(self) -> Sequence[RRDMetricRef]:
-        return list(set((*self.lower.rrd_metrics(), *self.upper.rrd_metrics())))
+        return list(dict.fromkeys((*self.lower.rrd_metrics(), *self.upper.rrd_metrics())))
 
     def metric_data(
         self,

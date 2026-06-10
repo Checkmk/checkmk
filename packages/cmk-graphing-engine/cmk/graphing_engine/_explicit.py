@@ -9,9 +9,8 @@ from typing import ClassVar, Literal
 
 from cmk.graphing.v1 import metrics as metrics_v1
 
-from ._discovery import DiscoveredGraph
 from ._fetch import FetchRRD
-from ._objects import Graph, MetricTranslations, ServiceRef
+from ._objects import DiscoveredGraph, Graph, MetricTranslations, ServiceRef
 from ._options import TimeRange
 from ._translate import fetch_translated_metrics
 

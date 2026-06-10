@@ -11,7 +11,6 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
-from ._discovery import DiscoveredGraph
 from ._fetch import FetchRRD
 from ._from_api import (
     metric_names_of_graph,
@@ -19,6 +18,7 @@ from ._from_api import (
     parse_graph_from_api,
 )
 from ._objects import (
+    DiscoveredGraph,
     Graph,
     Line,
     MetricName,

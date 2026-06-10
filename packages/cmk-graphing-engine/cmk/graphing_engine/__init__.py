@@ -9,7 +9,7 @@ from ._explicit import (
     ExplicitDiscoveryOptions,
     ExplicitOptions,
 )
-from ._fetch import FetchRRD, TimeSeries
+from ._fetch import fetch_time_series, FetchRRD, GraphRequest, TimeSeries
 from ._from_api import parse_graph_from_api
 from ._objects import (
     AutoPrecision,
@@ -60,7 +60,6 @@ from ._template import (
     TemplateDiscoveryOptions,
     TemplateOptions,
 )
-from ._time_series import fetch_time_series, GraphRequest
 
 __all__ = [
     "AutoPrecision",

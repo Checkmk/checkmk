@@ -248,6 +248,38 @@ class ServiceRef:
 
 
 @dataclass(frozen=True, kw_only=True)
+class PerformanceValue:
+    metric_name: MetricName
+    value: float
+    warning: float | None = None
+    critical: float | None = None
+    lower_warning: float | None = None
+    lower_critical: float | None = None
+    minimum: float | None = None
+    maximum: float | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class PerformanceData:
+    check_command: str
+    values: Sequence[PerformanceValue]
+
+
+type PerformanceDataByService = Mapping[ServiceRef, PerformanceData]
+
+
+@dataclass(frozen=True, kw_only=True)
+class MetricTranslation:
+    name: MetricName
+    scale: float = 1.0
+
+
+# Rename/scale table keyed by check command, then by the raw (perf-data) metric name. A key may be
+# a literal name or a "~<regex>" pattern matched against the raw name.
+type MetricTranslations = Mapping[str, Mapping[MetricName, MetricTranslation]]
+
+
+@dataclass(frozen=True, kw_only=True)
 class RRDOriginal:
     metric_name: MetricName
     scale: float

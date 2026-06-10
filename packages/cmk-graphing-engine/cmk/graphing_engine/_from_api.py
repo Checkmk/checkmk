@@ -135,6 +135,22 @@ def _parse_unit(unit: metrics_v1.Unit) -> Unit:
 
 # Defaults for metrics that have no registered definition.
 _FALLBACK_COLOR = _COLORS[metrics_v1.Color.GRAY]
+_FALLBACK_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
+
+
+def metric_display_attributes(
+    metric_name: str,
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
+) -> tuple[str, Unit, str]:
+    """Title, unit and color of a (translated) metric, falling back to sensible defaults."""
+    if (definition := metrics.get(metric_name)) is None:
+        return metric_name, _FALLBACK_UNIT, _FALLBACK_COLOR
+    return (
+        definition.title.localize(localizer),
+        _parse_unit(definition.unit),
+        _parse_color(definition.color),
+    )
 
 
 @dataclass(frozen=True)

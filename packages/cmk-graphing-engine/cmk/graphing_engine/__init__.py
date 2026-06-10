@@ -28,9 +28,14 @@ from ._objects import (
     LowerWarningOf,
     MaximumOf,
     MetricName,
+    MetricTranslation,
+    MetricTranslations,
     MinimalRange,
     MinimumOf,
     Notation,
+    PerformanceData,
+    PerformanceDataByService,
+    PerformanceValue,
     Precision,
     Product,
     Quantity,
@@ -59,6 +64,7 @@ from ._template import (
     TemplateDiscoveryOptions,
     TemplateOptions,
 )
+from ._translate import translate_performance_data
 
 __all__ = [
     "AutoPrecision",
@@ -83,9 +89,14 @@ __all__ = [
     "LowerWarningOf",
     "MaximumOf",
     "MetricName",
+    "MetricTranslation",
+    "MetricTranslations",
     "MinimalRange",
     "MinimumOf",
     "Notation",
+    "PerformanceData",
+    "PerformanceDataByService",
+    "PerformanceValue",
     "Precision",
     "Product",
     "Quantity",
@@ -113,4 +124,5 @@ __all__ = [
     "fetch_time_series",
     "fetch_translated_metrics",
     "parse_graph_from_api",
+    "translate_performance_data",
 ]

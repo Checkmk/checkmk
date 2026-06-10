@@ -63,7 +63,7 @@ def load_stash_from_file(paths: Paths) -> LegacyStash | Stash:
 
 
 def dump_stash_to_file(paths: Paths, stash: LegacyStash | Stash) -> None:
-    raw_stash = stash.model_dump_json(by_alias=True)
+    raw_stash = stash.model_dump_json(by_alias=True) + "\n"
     match stash:
         case LegacyStash():
             paths.legacy_stash_file.write_text(raw_stash, encoding="utf-8")
@@ -103,7 +103,7 @@ def migrate_werk_ids_file(paths: Paths) -> None:
     stash.add_ids([WerkId(id_) for id_ in _read_legacy_stash_file(paths)])
 
     paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
-    paths.stash_file.write_text(stash.model_dump_json(by_alias=True), encoding="utf-8")
+    paths.stash_file.write_text(stash.model_dump_json(by_alias=True) + "\n", encoding="utf-8")
     paths.legacy_stash_file.unlink(missing_ok=True)
     sys.stderr.write(f"Migrated werk IDs from {paths.legacy_stash_file} to {paths.stash_file}\n")
 

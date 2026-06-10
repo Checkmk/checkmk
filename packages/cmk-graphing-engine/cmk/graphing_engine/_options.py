@@ -14,11 +14,6 @@ class TimeRange:
     step: int
 
 
-@dataclass(frozen=True, kw_only=True)
-class CommonOptions:
-    time_range: TimeRange
-
-
 class ConsolidationFunction(enum.StrEnum):
     MIN = "min"
     MAX = "max"

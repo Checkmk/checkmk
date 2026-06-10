@@ -10,19 +10,19 @@ from typing import ClassVar, Literal
 from ._discovery import DiscoveredGraph
 from ._fetch import fetch_translated_metrics, FetchRRD
 from ._objects import Bidirectional, Graph, ServiceRef
-from ._options import CommonOptions
+from ._options import TimeRange
 
 
 @dataclass(frozen=True, kw_only=True)
 class ExplicitDiscoveryOptions:
-    common: CommonOptions
+    time_range: TimeRange
     graph: Graph | Bidirectional
 
 
 @dataclass(frozen=True, kw_only=True)
 class ExplicitOptions:
     kind: ClassVar[Literal["explicit"]] = "explicit"
-    common: CommonOptions
+    time_range: TimeRange
 
 
 def discover_explicit_graphs(
@@ -41,7 +41,7 @@ def discover_explicit_graphs(
     return [
         DiscoveredGraph(
             graph=options.graph,
-            options=ExplicitOptions(common=options.common),
+            options=ExplicitOptions(time_range=options.time_range),
             graph_title=options.graph.evaluated_title(translated_metrics),
             metric_data=options.graph.metric_data(translated_metrics),
         )

@@ -7,7 +7,6 @@ from collections.abc import Mapping, Sequence
 
 from cmk.graphing_engine import (
     Bidirectional,
-    CommonOptions,
     ConsolidationFunction,
     fetch_time_series,
     Graph,
@@ -23,8 +22,8 @@ from cmk.graphing_engine import (
 )
 
 
-def _common() -> CommonOptions:
-    return CommonOptions(time_range=TimeRange(start=0, end=60, step=10))
+def _time_range() -> TimeRange:
+    return TimeRange(start=0, end=60, step=10)
 
 
 def _rrd_with_cf(
@@ -91,7 +90,7 @@ def test_returns_one_data_mapping_per_request_keyed_by_rrd_metric() -> None:
     cpu_system_series = _series(2.0)
     graph = Graph(name="cpu", title="CPU", simple_lines=[cpu_user, cpu_system])
     request = GraphRequest(
-        graph=graph, common=_common(), consolidation_function=ConsolidationFunction.MAX
+        graph=graph, time_range=_time_range(), consolidation_function=ConsolidationFunction.MAX
     )
     rrd = _FakeFetchRRD(
         time_series_response={
@@ -116,7 +115,7 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
     max_series = _series(2.0)
     graph = Graph(name="g", title="g", simple_lines=[avg_metric, max_metric])
     request = GraphRequest(
-        graph=graph, common=_common(), consolidation_function=ConsolidationFunction.MAX
+        graph=graph, time_range=_time_range(), consolidation_function=ConsolidationFunction.MAX
     )
     rrd = _FakeFetchRRD(time_series_response={avg_metric: avg_series, max_metric: max_series})
 
@@ -139,10 +138,10 @@ def test_multiple_requests_yield_one_mapping_each_in_order() -> None:
     graph_x = Graph(name="x", title="x", simple_lines=[x])
     graph_y = Graph(name="y", title="y", simple_lines=[y])
     request_x = GraphRequest(
-        graph=graph_x, common=_common(), consolidation_function=ConsolidationFunction.MAX
+        graph=graph_x, time_range=_time_range(), consolidation_function=ConsolidationFunction.MAX
     )
     request_y = GraphRequest(
-        graph=graph_y, common=_common(), consolidation_function=ConsolidationFunction.MAX
+        graph=graph_y, time_range=_time_range(), consolidation_function=ConsolidationFunction.MAX
     )
     rrd = _FakeFetchRRD(time_series_response={x: x_series, y: y_series})
 
@@ -163,7 +162,7 @@ def test_fetches_metrics_from_both_halves_of_a_bidirectional() -> None:
         upper=Graph(name="out", title="Out", simple_lines=[out]),
     )
     request = GraphRequest(
-        graph=graph, common=_common(), consolidation_function=ConsolidationFunction.MAX
+        graph=graph, time_range=_time_range(), consolidation_function=ConsolidationFunction.MAX
     )
     rrd = _FakeFetchRRD(time_series_response={in_: in_series, out: out_series})
 
@@ -180,7 +179,7 @@ def test_bare_metric_adopts_the_request_consolidation_function() -> None:
     peak_series = _series(2.0)
     graph = Graph(name="g", title="g", simple_lines=[bare, pinned])
     request = GraphRequest(
-        graph=graph, common=_common(), consolidation_function=ConsolidationFunction.AVERAGE
+        graph=graph, time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
     )
     rrd = _FakeFetchRRD(time_series_response={bare: bare_series, pinned: peak_series})
 

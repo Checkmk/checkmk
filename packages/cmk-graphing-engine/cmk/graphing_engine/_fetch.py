@@ -16,7 +16,7 @@ from ._objects import (
     ServiceRef,
     TranslatedMetrics,
 )
-from ._options import CommonOptions, ConsolidationFunction, TimeRange
+from ._options import ConsolidationFunction, TimeRange
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -39,7 +39,7 @@ class FetchRRD(Protocol):
 
 @dataclass(frozen=True, kw_only=True)
 class GraphRequest:
-    common: CommonOptions
+    time_range: TimeRange
     consolidation_function: ConsolidationFunction
     graph: Graph | Bidirectional
 
@@ -75,7 +75,7 @@ def _fetch_time_series_per_request(
         result.update(
             rrd.time_series(
                 metrics,
-                time_range=request.common.time_range,
+                time_range=request.time_range,
                 consolidation_function=consolidation_function,
             )
         )

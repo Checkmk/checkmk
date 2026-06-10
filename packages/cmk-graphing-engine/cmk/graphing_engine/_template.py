@@ -19,12 +19,12 @@ from ._from_api import (
     parse_graph_from_api,
 )
 from ._objects import Graph, MetricName, RRDMetric, ServiceRef, StackGroup
-from ._options import CommonOptions, ConsolidationFunction
+from ._options import ConsolidationFunction, TimeRange
 
 
 @dataclass(frozen=True, kw_only=True)
 class TemplateDiscoveryOptions:
-    common: CommonOptions
+    time_range: TimeRange
     service: ServiceRef
     consolidation_function: ConsolidationFunction
     localizer: Callable[[str], str]
@@ -40,7 +40,7 @@ class TemplateDiscoveryOptions:
 @dataclass(frozen=True, kw_only=True)
 class TemplateOptions:
     kind: ClassVar[Literal["template"]] = "template"
-    common: CommonOptions
+    time_range: TimeRange
     consolidation_function: ConsolidationFunction
 
 
@@ -98,7 +98,7 @@ def discover_template_graphs(
     translated_metrics = fetch_translated_metrics([options.service], rrd=rrd)
     service_metrics = translated_metrics.get(options.service, {})
     post_options = TemplateOptions(
-        common=options.common,
+        time_range=options.time_range,
         consolidation_function=options.consolidation_function,
     )
 

@@ -51,7 +51,6 @@ from ._objects import (
     WarningOf,
 )
 from ._options import (
-    CommonOptions,
     ConsolidationFunction,
     TimeRange,
 )
@@ -65,7 +64,6 @@ __all__ = [
     "AutoPrecision",
     "Bidirectional",
     "Bound",
-    "CommonOptions",
     "ConsolidationFunction",
     "Constant",
     "CriticalOf",

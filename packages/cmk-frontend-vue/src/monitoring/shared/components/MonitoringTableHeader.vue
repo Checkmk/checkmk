@@ -8,6 +8,8 @@ import { type ColumnDef, FlexRender, type HeaderGroup } from '@tanstack/vue-tabl
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-vue-next'
 import { type CSSProperties, inject } from 'vue'
 
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
+
 import { COLUMN_LAYOUT_KEY } from './MonitoringTableContext'
 
 defineProps<{
@@ -72,42 +74,55 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
         :style="[columnStyle(header.column.columnDef), stickyStyle(header.column.id)]"
         :aria-sort="ariaSortFor(header.column.getIsSorted())"
       >
-        <button
-          v-if="!header.isPlaceholder && header.column.getCanSort()"
-          type="button"
-          class="monitoring-table-header__header-button"
-          :title="header.column.columnDef.header?.toString()"
-          @click="header.column.getToggleSortingHandler()?.($event)"
-        >
-          <ChevronUp
-            v-if="header.column.getIsSorted() === 'asc'"
-            class="monitoring-table-header__sort-icon"
-            :size="14"
-            aria-hidden="true"
-          />
-          <ChevronDown
-            v-else-if="header.column.getIsSorted() === 'desc'"
-            class="monitoring-table-header__sort-icon"
-            :size="14"
-            aria-hidden="true"
-          />
-          <ChevronsUpDown
-            v-else
-            class="monitoring-table-header__sort-icon monitoring-table-header__sort-icon--inactive"
-            :size="14"
-            aria-hidden="true"
-          />
-          <span class="monitoring-table-header__label">
+        <div class="monitoring-table-header__cell-content">
+          <button
+            v-if="!header.isPlaceholder && header.column.getCanSort()"
+            type="button"
+            class="monitoring-table-header__header-button"
+            :title="header.column.columnDef.header?.toString()"
+            @click="header.column.getToggleSortingHandler()?.($event)"
+          >
+            <ChevronUp
+              v-if="header.column.getIsSorted() === 'asc'"
+              class="monitoring-table-header__sort-icon"
+              :size="14"
+              aria-hidden="true"
+            />
+            <ChevronDown
+              v-else-if="header.column.getIsSorted() === 'desc'"
+              class="monitoring-table-header__sort-icon"
+              :size="14"
+              aria-hidden="true"
+            />
+            <ChevronsUpDown
+              v-else
+              class="monitoring-table-header__sort-icon monitoring-table-header__sort-icon--inactive"
+              :size="14"
+              aria-hidden="true"
+            />
+            <span class="monitoring-table-header__label">
+              <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
+            </span>
+          </button>
+          <span
+            v-else-if="!header.isPlaceholder"
+            class="monitoring-table-header__label"
+            :title="header.column.columnDef.header?.toString()"
+          >
             <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
           </span>
-        </button>
-        <span
-          v-else-if="!header.isPlaceholder"
-          class="monitoring-table-header__label"
-          :title="header.column.columnDef.header?.toString()"
-        >
-          <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
-        </span>
+          <button
+            v-if="!header.isPlaceholder && header.column.getCanFilter()"
+            type="button"
+            class="monitoring-table-header__filter-button"
+            :class="{
+              'monitoring-table-header__filter-button--active': header.column.getIsFiltered()
+            }"
+            :title="`Filter ${header.column.columnDef.header?.toString() ?? ''}`.trim()"
+          >
+            <CmkMultitoneIcon name="filter" primary-color="font" />
+          </button>
+        </div>
       </th>
     </tr>
   </thead>
@@ -133,6 +148,12 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
   transform: translateX(100%);
   pointer-events: none;
   background: linear-gradient(to right, rgb(0 0 0 / 30%), rgb(0 0 0 / 0%));
+}
+
+.monitoring-table-header__cell-content {
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 .monitoring-table-header__header-button {
@@ -165,6 +186,35 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
 .monitoring-table-header__header-button:focus-visible {
   outline: 1px solid var(--success);
   outline-offset: 2px;
+}
+
+.monitoring-table-header__filter-button {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 100%;
+  padding: var(--dimension-2);
+  background: transparent;
+  border: none;
+  margin: 0;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 0;
+  opacity: 0.5;
+
+  &:hover {
+    background-color: var(--ux-theme-3);
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--success);
+    outline-offset: 2px;
+  }
+}
+
+.monitoring-table-header__filter-button--active {
+  opacity: 1;
 }
 
 .monitoring-table-header__sort-icon {

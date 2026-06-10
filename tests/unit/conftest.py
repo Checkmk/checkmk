@@ -16,6 +16,8 @@ import pytest
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 from cmk.ccc import tty
+
+# TODO: Can we remove the layer violation suppression?
 from cmk.checkengine.plugins import (  # astrein: disable=cmk-module-layer-violation
     AgentBasedPlugins,
 )

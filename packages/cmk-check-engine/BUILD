@@ -221,6 +221,7 @@ py_wheel(
         ":snmp-backends",
         ":snmplib",
         ":specs",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
     ],
 )
 
@@ -258,6 +259,7 @@ py_requirements_test(
         ":helper-interface",
         ":snmplib",
         ":specs",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
     ],
     requirements_in = "requirements.in",
 )

@@ -20,10 +20,10 @@ from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPlugin,
     CheckPluginName,
+    LegacyPluginLocation,
     ParsedSectionName,
     ServiceID,
 )
-from cmk.checkengine.plugins._common import LegacyPluginLocation
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher
 from cmk.utils.servicename import ServiceName

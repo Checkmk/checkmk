@@ -188,7 +188,11 @@ defineExpose({
     setTimeout(() => {
       suppressNextClickOutside.value = false
     }, 0)
-  }
+  },
+  focus: () => {
+    comboboxButtonRef.value?.focus()
+  },
+  isOpen: () => suggestionsShown.value
 })
 
 function showSuggestions(): void {

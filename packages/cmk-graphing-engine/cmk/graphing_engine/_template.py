@@ -95,7 +95,8 @@ def discover_template_graphs(
     *,
     rrd: FetchRRD,
 ) -> Sequence[DiscoveredGraph[TemplateOptions]]:
-    translated_metrics = rrd.translated_metrics([options.service]).get(options.service, {})
+    translated_metrics = rrd.translated_metrics([options.service])
+    service_metrics = translated_metrics.get(options.service, {})
     post_options = TemplateOptions(
         common=options.common,
         consolidation_function=options.consolidation_function,
@@ -104,7 +105,7 @@ def discover_template_graphs(
     discovered: list[DiscoveredGraph[TemplateOptions]] = []
     claimed: set[MetricName] = set()
     for plugin in options.registered_graphs:
-        walk = _walk(plugin, translated_metrics)
+        walk = _walk(plugin, service_metrics)
         if not walk.matched:
             continue
         claimed.update(walk.metric_names)
@@ -123,7 +124,7 @@ def discover_template_graphs(
             )
         )
 
-    for name in translated_metrics:
+    for name in service_metrics:
         if name in claimed:
             continue
         graph = Graph(

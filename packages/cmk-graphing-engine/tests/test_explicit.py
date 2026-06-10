@@ -192,6 +192,53 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
     assert rendered.metric_data == {_rrd(if_in): if_in_data, _rrd(if_out): if_out_data}
 
 
+def test_discover_explicit_graphs_keeps_same_metric_name_on_different_services_distinct() -> None:
+    # Two services expose a metric with the same name; each curve must resolve to its own service's
+    # data rather than colliding on the bare metric name.
+    service_a = ServiceRef(host_name="host-a", service_name="svc")
+    service_b = ServiceRef(host_name="host-b", service_name="svc")
+    load = MetricName("load")
+    metric_a = RRDMetricWithCF(
+        host_name="host-a",
+        service_name="svc",
+        metric_name=load,
+        consolidation_function=ConsolidationFunction.AVERAGE,
+    )
+    metric_b = RRDMetricWithCF(
+        host_name="host-b",
+        service_name="svc",
+        metric_name=load,
+        consolidation_function=ConsolidationFunction.AVERAGE,
+    )
+    inline = Graph(name="load", title="Load", simple_lines=[metric_a, metric_b])
+    options = ExplicitDiscoveryOptions(common=_common(), graph=inline)
+    data_a = RRDMetricData(
+        name=load,
+        value=1.0,
+        title="Load A",
+        unit=_UNIT,
+        color="#28a2f3",
+        scale=1.0,
+        originals=[RRDOriginal(metric_name=load, scale=1.0)],
+    )
+    data_b = RRDMetricData(
+        name=load,
+        value=2.0,
+        title="Load B",
+        unit=_UNIT,
+        color="#28a2f3",
+        scale=1.0,
+        originals=[RRDOriginal(metric_name=load, scale=1.0)],
+    )
+    rrd = _FakeFetchRRD(
+        translated_metrics_response={service_a: {load: data_a}, service_b: {load: data_b}}
+    )
+
+    [rendered] = discover_explicit_graphs(options, rrd=rrd)
+
+    assert rendered.metric_data == {metric_a: data_a, metric_b: data_b}
+
+
 def test_discover_explicit_graphs_passes_through_a_fixed_vertical_range() -> None:
     service = _service()
     inline = Graph(

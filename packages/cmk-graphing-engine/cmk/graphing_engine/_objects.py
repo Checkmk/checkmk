@@ -12,7 +12,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
 from typing import NewType
 
-from ._options import ConsolidationFunction
+from ._options import ConsolidationFunction, ServiceRef
 
 
 @dataclass(frozen=True)
@@ -264,14 +264,28 @@ class RRDMetricData:
     maximum: float | None = None
 
 
+type TranslatedMetrics = Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]
+
+
 def _metric_data_of(
     rrd_metrics: Iterable[RRDMetricRef],
-    translated_metrics: Mapping[MetricName, RRDMetricData],
+    translated_metrics: TranslatedMetrics,
 ) -> Mapping[RRDMetricRef, RRDMetricData]:
+    # Each metric carries its own service, so the data is looked up per service: two services that
+    # expose the same metric name must not collide.
+    result: dict[RRDMetricRef, RRDMetricData] = {}
+    for metric in rrd_metrics:
+        service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
+        if (translated := translated_metrics.get(service, {}).get(metric.metric_name)) is not None:
+            result[metric] = translated
+    return result
+
+
+def _flatten(translated_metrics: TranslatedMetrics) -> Mapping[MetricName, RRDMetricData]:
     return {
-        metric: translated
-        for metric in rrd_metrics
-        if (translated := translated_metrics.get(metric.metric_name)) is not None
+        name: data
+        for per_service in translated_metrics.values()
+        for name, data in per_service.items()
     }
 
 
@@ -343,12 +357,12 @@ class Graph:
 
     def metric_data(
         self,
-        translated_metrics: Mapping[MetricName, RRDMetricData],
+        translated_metrics: TranslatedMetrics,
     ) -> Mapping[RRDMetricRef, RRDMetricData]:
         return _metric_data_of(self.rrd_metrics(), translated_metrics)
 
-    def evaluated_title(self, translated_metrics: Mapping[MetricName, RRDMetricData]) -> str:
-        return _evaluate_title(self.title, translated_metrics)
+    def evaluated_title(self, translated_metrics: TranslatedMetrics) -> str:
+        return _evaluate_title(self.title, _flatten(translated_metrics))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -363,9 +377,9 @@ class Bidirectional:
 
     def metric_data(
         self,
-        translated_metrics: Mapping[MetricName, RRDMetricData],
+        translated_metrics: TranslatedMetrics,
     ) -> Mapping[RRDMetricRef, RRDMetricData]:
         return _metric_data_of(self.rrd_metrics(), translated_metrics)
 
-    def evaluated_title(self, translated_metrics: Mapping[MetricName, RRDMetricData]) -> str:
-        return _evaluate_title(self.title, translated_metrics)
+    def evaluated_title(self, translated_metrics: TranslatedMetrics) -> str:
+        return _evaluate_title(self.title, _flatten(translated_metrics))

@@ -35,11 +35,7 @@ def discover_explicit_graphs(
         ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
         for metric in options.graph.rrd_metrics()
     }
-    translated_metrics = {
-        name: data
-        for per_service in rrd.translated_metrics(list(services)).values()
-        for name, data in per_service.items()
-    }
+    translated_metrics = rrd.translated_metrics(list(services))
     return [
         DiscoveredGraph(
             graph=options.graph,

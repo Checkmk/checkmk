@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 
 from cmk.gui.form_specs.unstable.validators import HostAddress
 from cmk.gui.quick_setup.config_setups.aws.ruleset_helper import formspec_aws_tags
@@ -234,14 +234,32 @@ def quick_setup_stage_2(max_regions: int | None = None) -> Mapping[str, DictElem
     }
 
 
+def _get_edition_specific_choices(
+    valid_service_choices: Iterable[str],
+) -> Callable[[object], Sequence[str]]:
+    def inner(value: object) -> Sequence[str]:
+        if not isinstance(value, Iterable):
+            raise TypeError(value)
+
+        # silently cut off invalid extended-edition choices if aws_extended is off now
+        # (e.g. after a license downgrade to Pro).
+        return [s for s in value if s in valid_service_choices]
+
+    return inner
+
+
 def quick_setup_stage_3() -> Mapping[str, DictElement]:
-    valid_service_choices = {c.name for c in service_choices.regional_services}
+    valid_regional_choices = {c.name for c in service_choices.regional_services}
+    valid_global_choices = {c.name for c in service_choices.global_services}
     return {
         "services": DictElement(
             parameter_form=MultipleChoice(
                 title=Title("Services per region"),
                 elements=service_choices.regional_services,
-                prefill=DefaultValue(list(valid_service_choices)),
+                prefill=DefaultValue(list(valid_regional_choices)),
+                # not a real migration: implements edition-specific choice filtering, so a
+                # config from a higher edition does not break when those choices are gone.
+                migrate=_get_edition_specific_choices(valid_regional_choices),
             ),
             required=True,
         ),
@@ -250,6 +268,7 @@ def quick_setup_stage_3() -> Mapping[str, DictElement]:
                 title=Title("Global services"),
                 elements=service_choices.global_services,
                 prefill=DefaultValue([]),
+                migrate=_get_edition_specific_choices(valid_global_choices),
             ),
             required=True,
         ),

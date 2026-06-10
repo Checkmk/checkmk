@@ -6,6 +6,7 @@
 import 'element-closest-polyfill'
 import $ from 'jquery'
 
+import { call_ajax } from './ajax'
 import { persist_tree_state } from './foldable_container'
 import { confirm_dialog } from './forms'
 import { close_popup as popup_menu_close_popup } from './popup_menu'
@@ -119,6 +120,21 @@ export function enable_menu_entry(id: string, enabled: boolean) {
 
   const oSuggestion = document.getElementById('menu_suggestion_' + id)
   if (oSuggestion) change_class(oSuggestion.parentElement, from, to)
+}
+
+// Used to keep a potentially slow check out of the page rendering.
+export function fetch_hot_menu_entries(url: string, entry_names: string[]) {
+  call_ajax(url, {
+    method: 'GET',
+    response_handler: (_handler_data: unknown, raw: string) => {
+      const response = JSON.parse(raw)
+      if (response.result_code !== 0 || !response.result.hot) return
+      for (const name of entry_names) {
+        document.getElementById('menu_entry_' + name)?.classList.add('hot')
+        document.getElementById('menu_suggestion_' + name)?.parentElement?.classList.add('hot')
+      }
+    }
+  })
 }
 
 export function enable_menu_entries(css_class: string, enabled: boolean) {

@@ -10,7 +10,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
 from typing import NewType
 
-from ._options import ConsolidationFunction
+from ._options import ConsolidationFunction, TimeRange
 
 
 @dataclass(frozen=True)
@@ -297,6 +297,12 @@ class RRDMetricData:
     critical: float | None = None
     minimum: float | None = None
     maximum: float | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class TimeSeries:
+    time_range: TimeRange
+    values: Sequence[float | None]
 
 
 @dataclass(frozen=True, kw_only=True)

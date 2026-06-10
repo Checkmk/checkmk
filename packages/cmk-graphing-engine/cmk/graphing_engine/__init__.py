@@ -3,13 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._evaluate import evaluate_time_series, evaluate_value
+from ._evaluate import (
+    evaluate_graph,
+    evaluate_time_series,
+    evaluate_value,
+    EvaluatedCurve,
+    EvaluatedGraph,
+    EvaluatedLine,
+    EvaluatedStack,
+)
 from ._explicit import (
     discover_explicit_graphs,
     ExplicitDiscoveryOptions,
     ExplicitOptions,
 )
-from ._fetch import fetch_time_series, fetch_translated_metrics, FetchRRD, GraphRequest, TimeSeries
+from ._fetch import fetch_time_series, fetch_translated_metrics, FetchRRD, GraphRequest
 from ._from_api import parse_graph_from_api
 from ._objects import (
     AutoPrecision,
@@ -50,6 +58,7 @@ from ._objects import (
     StrictPrecision,
     Sum,
     TimeNotation,
+    TimeSeries,
     Unit,
     VerticalRange,
     WarningOf,
@@ -75,6 +84,10 @@ __all__ = [
     "Difference",
     "DiscoveredGraph",
     "EngineeringScientificNotation",
+    "EvaluatedCurve",
+    "EvaluatedGraph",
+    "EvaluatedLine",
+    "EvaluatedStack",
     "ExplicitDiscoveryOptions",
     "ExplicitOptions",
     "FetchRRD",
@@ -118,6 +131,7 @@ __all__ = [
     "WarningOf",
     "discover_explicit_graphs",
     "discover_template_graphs",
+    "evaluate_graph",
     "evaluate_time_series",
     "evaluate_value",
     "fetch_time_series",

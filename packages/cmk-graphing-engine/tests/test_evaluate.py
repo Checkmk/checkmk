@@ -8,14 +8,22 @@ from cmk.graphing_engine import (
     Constant,
     DecimalNotation,
     Difference,
+    evaluate_graph,
     evaluate_time_series,
     evaluate_value,
+    EvaluatedCurve,
+    EvaluatedGraph,
+    EvaluatedLine,
+    EvaluatedStack,
     Fraction,
+    Graph,
+    Line,
     MetricName,
     Product,
     RRDMetric,
     RRDMetricData,
     RRDMetricRef,
+    Stack,
     Sum,
     TimeRange,
     TimeSeries,
@@ -198,3 +206,66 @@ def test_evaluate_time_series_of_a_fraction_guards_zero_and_gaps() -> None:
         _TR,
     )
     assert result == _time_series(5.0, None, None)
+
+
+# --- evaluate_graph -----------------------------------------------------------------------------
+
+
+def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
+    a, b = _metric("a"), _metric("b")
+    graph = Graph(
+        name="g",
+        title="g",
+        stacks=[Stack(members=[a], inverse=True)],
+        lines=[Line(quantity=b, inverse=False)],
+    )
+    time_series = {a: _time_series(1.0, 2.0, 3.0), b: _time_series(4.0, 5.0, 6.0)}
+    metric_data = {a: _data("a", value=3.0), b: _data("b", value=6.0)}
+
+    # Stacks (filled areas) and lines stay separate, each keeping its direction; curves carry
+    # their resolved title/unit/colour.
+    assert evaluate_graph(graph, time_series, metric_data, _TR) == EvaluatedGraph(
+        title="g",
+        stacks=[
+            EvaluatedStack(
+                members=[
+                    EvaluatedCurve(
+                        title="a",
+                        unit=_UNIT,
+                        color="#28a2f3",
+                        value=3.0,
+                        time_series=_time_series(1.0, 2.0, 3.0),
+                    )
+                ],
+                inverse=True,
+            )
+        ],
+        lines=[
+            EvaluatedLine(
+                curve=EvaluatedCurve(
+                    title="b",
+                    unit=_UNIT,
+                    color="#28a2f3",
+                    value=6.0,
+                    time_series=_time_series(4.0, 5.0, 6.0),
+                ),
+                inverse=False,
+            )
+        ],
+    )
+
+
+def test_evaluate_graph_drops_curves_of_missing_metrics() -> None:
+    a = _metric("a")
+    graph = Graph(
+        name="g",
+        title="g",
+        stacks=[Stack(members=[_metric("gone")], inverse=False)],
+        lines=[Line(quantity=a, inverse=False)],
+    )
+    # "gone" has no metric data, so its stack is dropped; only the line for "a" remains.
+    result = evaluate_graph(
+        graph, {a: _time_series(1.0, 2.0, 3.0)}, {a: _data("a", value=3.0)}, _TR
+    )
+    assert result.stacks == []
+    assert [line.curve.title for line in result.lines] == ["a"]

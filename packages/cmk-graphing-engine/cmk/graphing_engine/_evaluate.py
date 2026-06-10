@@ -5,17 +5,19 @@
 
 import math
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from typing import assert_never
 
-from ._fetch import TimeSeries
 from ._objects import (
     Constant,
     CriticalOf,
     Difference,
     Fraction,
+    Graph,
     LowerCriticalOf,
     LowerWarningOf,
     MaximumOf,
+    MetricName,
     MinimumOf,
     Product,
     Quantity,
@@ -23,12 +25,16 @@ from ._objects import (
     RRDMetricData,
     RRDMetricRef,
     RRDMetricWithCF,
+    ServiceRef,
     Sum,
+    TimeSeries,
+    Unit,
     WarningOf,
 )
 from ._options import TimeRange
+from ._title import evaluate_title
 
-# The arithmetic of the four operations, shared by the scalar and the time-time_series evaluation. Each
+# The arithmetic of the four operations, shared by the scalar and the time-series evaluation. Each
 # takes one "point" (the operands' values at one instant) and combines them; None means "no value".
 type _Operator = Callable[[Sequence[float | None]], float | None]
 
@@ -149,7 +155,7 @@ def evaluate_time_series(
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
     time_range: TimeRange,
 ) -> TimeSeries:
-    """The time time_series of a quantity, evaluating constants and operations point by point."""
+    """The time series of a quantity, evaluating constants and operations point by point."""
     match quantity:
         case RRDMetric() | RRDMetricWithCF():
             existing = time_series.get(quantity)
@@ -191,3 +197,133 @@ def evaluate_time_series(
             )
         case _:
             assert_never(quantity)
+
+
+def _attributes(
+    quantity: Quantity,
+    metric_data: Mapping[RRDMetricRef, RRDMetricData],
+) -> tuple[str, Unit, str] | None:
+    """Title, unit and colour of a drawn quantity, or None if it cannot be resolved."""
+    match quantity:
+        case RRDMetric() | RRDMetricWithCF():
+            return (
+                None
+                if (data := metric_data.get(quantity)) is None
+                else (
+                    data.title,
+                    data.unit,
+                    data.color,
+                )
+            )
+        case Constant():
+            return quantity.title, quantity.unit, quantity.color
+        case Product():
+            return quantity.title, quantity.unit, quantity.color
+        case Fraction():
+            return quantity.title, quantity.unit, quantity.color
+        case (
+            WarningOf()
+            | CriticalOf()
+            | LowerWarningOf()
+            | LowerCriticalOf()
+            | MinimumOf()
+            | MaximumOf()
+        ):
+            # A threshold line takes the unit (and title) of the metric it refers to, its own colour.
+            data = metric_data.get(quantity.metric)
+            return None if data is None else (data.title, data.unit, quantity.color)
+        case Sum():
+            # A sum has no unit of its own; it takes the unit of its first summand.
+            first = _attributes(quantity.summands[0], metric_data) if quantity.summands else None
+            return None if first is None else (quantity.title, first[1], quantity.color)
+        case Difference():
+            minuend = _attributes(quantity.minuend, metric_data)
+            return None if minuend is None else (quantity.title, minuend[1], quantity.color)
+        case _:
+            assert_never(quantity)
+
+
+@dataclass(frozen=True, kw_only=True)
+class EvaluatedCurve:
+    title: str
+    unit: Unit
+    color: str
+    value: float | None
+    time_series: TimeSeries
+
+
+@dataclass(frozen=True, kw_only=True)
+class EvaluatedStack:
+    # A group of curves drawn as filled areas, stacked cumulatively (was compound lines).
+    members: Sequence[EvaluatedCurve]
+    inverse: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class EvaluatedLine:
+    # A single curve drawn as a line (was a simple line).
+    curve: EvaluatedCurve
+    inverse: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class EvaluatedGraph:
+    title: str
+    stacks: Sequence[EvaluatedStack]
+    lines: Sequence[EvaluatedLine]
+
+
+def _evaluate_curve(
+    quantity: Quantity,
+    time_series: Mapping[RRDMetricRef, TimeSeries],
+    metric_data: Mapping[RRDMetricRef, RRDMetricData],
+    time_range: TimeRange,
+) -> EvaluatedCurve | None:
+    if (attributes := _attributes(quantity, metric_data)) is None:
+        return None
+    title, unit, color = attributes
+    return EvaluatedCurve(
+        title=title,
+        unit=unit,
+        color=color,
+        value=evaluate_value(quantity, metric_data),
+        time_series=evaluate_time_series(quantity, time_series, metric_data, time_range),
+    )
+
+
+def evaluate_graph(
+    graph: Graph,
+    time_series: Mapping[RRDMetricRef, TimeSeries],
+    metric_data: Mapping[RRDMetricRef, RRDMetricData],
+    time_range: TimeRange,
+) -> EvaluatedGraph:
+    """Evaluate a graph, keeping its stacks and lines so line type and stacking are preserved.
+
+    Curves whose display attributes cannot be resolved (e.g. a missing metric) are dropped; an
+    empty stack is dropped along with them.
+    """
+    stacks = []
+    for group in graph.stacks:
+        members = [
+            curve
+            for member in group.members
+            if (curve := _evaluate_curve(member, time_series, metric_data, time_range)) is not None
+        ]
+        if members:
+            stacks.append(EvaluatedStack(members=members, inverse=group.inverse))
+    lines = [
+        EvaluatedLine(curve=curve, inverse=line.inverse)
+        for line in graph.lines
+        if (curve := _evaluate_curve(line.quantity, time_series, metric_data, time_range))
+        is not None
+    ]
+    # Group the metric data per service to evaluate the title's expressions against it.
+    translated_metrics: dict[ServiceRef, dict[MetricName, RRDMetricData]] = {}
+    for metric, data in metric_data.items():
+        service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
+        translated_metrics.setdefault(service, {})[metric.metric_name] = data
+    return EvaluatedGraph(
+        title=evaluate_title(graph.title, translated_metrics),
+        stacks=stacks,
+        lines=lines,
+    )

@@ -32,6 +32,7 @@ import urllib.parse
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext, suppress
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from pprint import pformat
 from typing import Any, Final, Literal, overload
@@ -586,11 +587,26 @@ class Site:
     ) -> None:
         logger.debug("processing check result took %0.2f seconds", time.time() - command_timestamp)
         if not last_check > last_check_before:
-            raise TimeoutError(
-                f"Check result not processed within {wait_timeout or self.check_wait_timeout} seconds "
-                f"(last check before reschedule: {last_check_before:.0f}, "
-                f"scheduled at: {command_timestamp:.0f}, last check: {last_check:.0f})"
-            )
+            timeout_ = wait_timeout or self.check_wait_timeout
+            exc_msg = [
+                f"Check result not processed within {timeout_} seconds.",
+                f"Scheduled at: {datetime.fromtimestamp(command_timestamp)}",
+            ]
+            if last_check == 0:
+                exc_msg.append("Service discovery has not started yet!")
+            else:
+                last_check_before_ = (
+                    last_check_before
+                    if last_check_before == 0
+                    else datetime.fromtimestamp(last_check_before)
+                )
+                exc_msg.extend(
+                    [
+                        f"Latest check: {datetime.fromtimestamp(last_check)}",
+                        f"Previous check: {last_check_before_}",
+                    ]
+                )
+            raise TimeoutError("\n".join(exc_msg))
         if expected_state is None:
             return
         assert state == expected_state, (

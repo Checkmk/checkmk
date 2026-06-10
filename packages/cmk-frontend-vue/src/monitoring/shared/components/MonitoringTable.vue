@@ -232,12 +232,7 @@ provide(COLUMN_LAYOUT_KEY, columnInfos)
 </script>
 
 <template>
-  <div
-    ref="wrapperRef"
-    class="monitoring-table"
-    :class="{ 'monitoring-table--pinnable': pinningEnabled }"
-    :aria-busy="loading"
-  >
+  <div ref="wrapperRef" class="monitoring-table" :aria-busy="loading">
     <table class="monitoring-table__table">
       <colgroup v-if="pinningEnabled">
         <col v-for="entry in columnLayout" :key="entry.id" :style="{ width: `${entry.width}px` }" />
@@ -259,10 +254,8 @@ provide(COLUMN_LAYOUT_KEY, columnInfos)
 <style scoped>
 .monitoring-table {
   width: 100%;
-}
-
-.monitoring-table--pinnable {
-  overflow-x: auto;
+  height: 100%;
+  overflow: auto;
 }
 
 .monitoring-table__table {

@@ -55,7 +55,7 @@ def page_monitor_all_hosts(ctx: PageContext) -> None:
         user_role_ids=user.role_ids,
     )
 
-    html.begin_page_content()
+    html.begin_page_content(enable_scrollbar=False)
     html.vue_component(
         "cmk-monitoring-all-hosts",
         data=asdict(

@@ -136,6 +136,9 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
   background: var(--ux-theme-2);
   white-space: nowrap;
   text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .monitoring-table-header__header-cell--last-pinned::after {

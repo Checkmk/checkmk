@@ -51,6 +51,27 @@ class _ServiceChoices:
 service_choices = _ServiceChoices()
 
 
+# Extended AWS Quick Setup service choices, gated behind the aws_extended license flag
+# (CMK-35480). With the flag off (e.g. a Pro-licensed Ultimate site) these are not offered,
+# so users cannot select services whose check plugins are unavailable.
+_AWS_EXTENDED_GLOBAL_SERVICES = [
+    MultipleChoiceElement(name="route53", title=Title("Route53")),
+    MultipleChoiceElement(name="cloudfront", title=Title("CloudFront")),
+]
+_AWS_EXTENDED_REGIONAL_SERVICES = [
+    MultipleChoiceElement(name="aws_lambda", title=Title("Lambda")),
+    MultipleChoiceElement(name="sns", title=Title("Simple Notification Service (SNS)")),
+    MultipleChoiceElement(name="ecs", title=Title("Elastic Container Service (ECS)")),
+    MultipleChoiceElement(name="elasticache", title=Title("ElastiCache")),
+]
+
+
+def register_extended_aws_service_choices(choices: _ServiceChoices) -> None:
+    """Add the extended AWS service choices to the Quick Setup."""
+    choices.global_services.extend(_AWS_EXTENDED_GLOBAL_SERVICES)
+    choices.regional_services.extend(_AWS_EXTENDED_REGIONAL_SERVICES)
+
+
 def _formspec_aws_api_access() -> dict[str, DictElement]:
     return {
         "access": DictElement(

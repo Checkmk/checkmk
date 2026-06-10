@@ -318,3 +318,41 @@ def test_parse_lldp_cache_ipv4_reported_as_ipv6() -> None:
     assert parsed is not None
     assert len(parsed.lldp_neighbors) == 1
     assert parsed.lldp_neighbors[0].neighbor_address == "192.168.42.254"
+
+
+# Crash report 9a097a6d-63d8-11f1-b83b-8dc04b16045e (group 4606): a neighbour advertises a
+# network-address port-id sub-type ("5") but an empty port-id ([]), which crashed the parser
+# with IndexError in _render_networkaddress.
+STRING_TABLE_EMPTY_NETWORK_ADDRESS_PORT_ID: Sequence[StringByteTable] = [
+    [  # lldp_rem_entry
+        [
+            "1",
+            "4",  # lldpRemChassisIdSubtype: mac-address
+            [99, 160, 210, 120, 34, 200],  # lldpRemChassisId
+            "5",  # lldpRemPortIdSubtype: network-address
+            [],  # lldpRemPortId: empty
+            "port desc",
+            "sys name",
+            "sys desc",
+            "01 00",
+            "01 00",
+        ]
+    ],
+    [  # lldp_local_port_entry
+        ["1", "3", [55, 56, 49, 56, 46, 101, 99, 50, 101, 46, 98, 97, 56, 97]]
+    ],
+    [  # lldp_local_info
+        ["4", [0, 4, 96, 155, 189, 79], "Local Sys Name", "Local Sys Desc", "28 00 ", "28 00 "]
+    ],
+    [  # lldp_rem_man_addr_entry
+        ["1", "3"]
+    ],
+]
+
+
+def test_parse_lldp_cache_empty_network_address_port_id() -> None:
+    """An empty network-address port-id must not crash the parser; it renders as ''."""
+    parsed = parse_lldp_cache(string_table=STRING_TABLE_EMPTY_NETWORK_ADDRESS_PORT_ID)
+    assert parsed is not None
+    assert len(parsed.lldp_neighbors) == 1
+    assert parsed.lldp_neighbors[0].neighbor_port == "n/a"

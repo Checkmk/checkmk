@@ -30,7 +30,7 @@ from cmk.graphing_engine import (
     RRDMetric,
     ServiceRef,
     SINotation,
-    StackGroup,
+    Stack,
     StrictPrecision,
     Sum,
     TimeNotation,
@@ -71,8 +71,8 @@ def _line(quantity: Quantity) -> Line:
     return Line(quantity=quantity, inverse=False)
 
 
-def _stack(*members: Quantity) -> StackGroup:
-    return StackGroup(members=list(members), inverse=False)
+def _stack(*members: Quantity) -> Stack:
+    return Stack(members=list(members), inverse=False)
 
 
 def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group() -> None:
@@ -89,16 +89,16 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
         name="g",
         title="Title",
         vertical_range=MinimalRange(lower=0, upper=100),
-        stack_groups=[_stack(_rrd("a"), _rrd("b"))],
-        simple_lines=[_line(_rrd("c")), _line(WarningOf(metric=_rrd("a"), color="#28a2f3"))],
+        stacks=[_stack(_rrd("a"), _rrd("b"))],
+        lines=[_line(_rrd("c")), _line(WarningOf(metric=_rrd("a"), color="#28a2f3"))],
     )
 
 
-def test_parse_graph_from_api_without_compound_lines_yields_no_stack_groups() -> None:
+def test_parse_graph_from_api_without_compound_lines_yields_no_stacks() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
     parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
-    assert parsed.stack_groups == []
+    assert parsed.stacks == []
     assert parsed.vertical_range is None
 
 
@@ -126,7 +126,7 @@ def test_parse_graph_from_api_threshold_uses_fallback_color_for_undefined_metric
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=[metrics_v1.WarningOf("u")])
     parsed = parse_graph_from_api(graph, _id, _SERVICE, {})
     assert isinstance(parsed, Graph)
-    assert parsed.simple_lines == [_line(WarningOf(metric=_rrd("u"), color="#8c8c8c"))]
+    assert parsed.lines == [_line(WarningOf(metric=_rrd("u"), color="#8c8c8c"))]
 
 
 def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
@@ -140,7 +140,7 @@ def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
         _METRICS,
     )
     assert isinstance(parsed, Graph)
-    assert parsed.simple_lines == [
+    assert parsed.lines == [
         _line(
             RRDMetric(
                 host_name="my-host",
@@ -178,7 +178,7 @@ def test_parse_graph_from_api_maps_unit_notations_and_precisions() -> None:
     )
     parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
-    assert parsed.simple_lines == [
+    assert parsed.lines == [
         _line(
             Constant(
                 title="c1",
@@ -219,7 +219,7 @@ def test_parse_graph_from_api_maps_warning_critical_minimum_maximum() -> None:
     )
     parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
-    assert parsed.simple_lines == [
+    assert parsed.lines == [
         # WarningOf/CriticalOf inherit the colour of the referenced metric (#28a2f3).
         _line(WarningOf(metric=_rrd("a"), color="#28a2f3")),
         _line(CriticalOf(metric=_rrd("a"), color="#28a2f3")),
@@ -240,7 +240,7 @@ def test_parse_graph_from_api_maps_lower_warning_and_critical() -> None:
     )
     parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
-    assert parsed.simple_lines == [
+    assert parsed.lines == [
         _line(LowerWarningOf(metric=_rrd("a"), color="#28a2f3")),
         _line(LowerCriticalOf(metric=_rrd("a"), color="#28a2f3")),
     ]
@@ -270,7 +270,7 @@ def test_parse_graph_from_api_maps_sum_product_difference_fraction() -> None:
     )
     parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
-    assert parsed.simple_lines == [
+    assert parsed.lines == [
         _line(Sum(title="s", color="#28a2f3", summands=[_rrd("a"), _rrd("b")])),
         _line(
             Product(
@@ -317,7 +317,7 @@ def test_parse_graph_from_api_recurses_into_nested_quantities() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=[nested])
     parsed = parse_graph_from_api(graph, _id, _SERVICE, _METRICS)
     assert isinstance(parsed, Graph)
-    assert parsed.simple_lines == [
+    assert parsed.lines == [
         _line(
             Sum(
                 title="outer",
@@ -347,9 +347,9 @@ def test_parse_graph_from_api_collapses_bidirectional_into_one_graph() -> None:
     assert parse_graph_from_api(bidir, _id, _SERVICE, _METRICS) == Graph(
         name="b",
         title="title",
-        stack_groups=[
-            StackGroup(members=[_rrd("b")], inverse=False),
-            StackGroup(members=[_rrd("a")], inverse=True),
+        stacks=[
+            Stack(members=[_rrd("b")], inverse=False),
+            Stack(members=[_rrd("a")], inverse=True),
         ],
-        simple_lines=[],
+        lines=[],
     )

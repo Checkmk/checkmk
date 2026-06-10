@@ -39,7 +39,7 @@ from ._objects import (
     RRDMetric,
     ServiceRef,
     SINotation,
-    StackGroup,
+    Stack,
     StandardScientificNotation,
     StrictPrecision,
     Sum,
@@ -326,10 +326,10 @@ def _parse_lines(
     context: _ParseContext,
     *,
     inverse: bool,
-) -> tuple[list[StackGroup], list[Line]]:
-    stack_groups = (
+) -> tuple[list[Stack], list[Line]]:
+    stacks = (
         [
-            StackGroup(
+            Stack(
                 members=[_parse_quantity(q, context) for q in graph.compound_lines],
                 inverse=inverse,
             )
@@ -337,10 +337,10 @@ def _parse_lines(
         if graph.compound_lines
         else []
     )
-    simple_lines = [
+    lines = [
         Line(quantity=_parse_quantity(q, context), inverse=inverse) for q in graph.simple_lines
     ]
-    return stack_groups, simple_lines
+    return stacks, lines
 
 
 def parse_graph_from_api(
@@ -361,30 +361,26 @@ def parse_graph_from_api(
     )
     match graph:
         case graphs_v1.Graph() | graphs_v2_unstable.Graph():
-            stack_groups, simple_lines = _parse_lines(graph, context, inverse=False)
+            stacks, lines = _parse_lines(graph, context, inverse=False)
             return Graph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
                 vertical_range=_parse_range(graph, context),
-                stack_groups=stack_groups,
-                simple_lines=simple_lines,
+                stacks=stacks,
+                lines=lines,
             )
         case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
             # A bidirectional collapses into one graph: the upper half drawn normally, the lower
             # half mirrored below the x-axis (inverse).
-            upper_stack_groups, upper_simple_lines = _parse_lines(
-                graph.upper, context, inverse=False
-            )
-            lower_stack_groups, lower_simple_lines = _parse_lines(
-                graph.lower, context, inverse=True
-            )
+            upper_stacks, upper_lines = _parse_lines(graph.upper, context, inverse=False)
+            lower_stacks, lower_lines = _parse_lines(graph.lower, context, inverse=True)
             return Graph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
                 vertical_range=_parse_range(graph.upper, context)
                 or _parse_range(graph.lower, context),
-                stack_groups=[*upper_stack_groups, *lower_stack_groups],
-                simple_lines=[*upper_simple_lines, *lower_simple_lines],
+                stacks=[*upper_stacks, *lower_stacks],
+                lines=[*upper_lines, *lower_lines],
             )
         case _:
             assert_never(graph)

@@ -26,7 +26,7 @@ from ._objects import (
     RRDMetric,
     RRDMetricData,
     ServiceRef,
-    StackGroup,
+    Stack,
 )
 from ._options import ConsolidationFunction, TimeRange
 from ._translate import fetch_translated_metrics
@@ -142,8 +142,8 @@ def _add_predictive_lines(
             name=graph.name,
             title=graph.title,
             vertical_range=graph.vertical_range,
-            stack_groups=graph.stack_groups,
-            simple_lines=[*graph.simple_lines, *added],
+            stacks=graph.stacks,
+            lines=[*graph.lines, *added],
         ),
         names,
     )
@@ -206,8 +206,8 @@ def discover_template_graphs(
                 Graph(
                     name=name,
                     title=name,
-                    stack_groups=[
-                        StackGroup(
+                    stacks=[
+                        Stack(
                             members=[
                                 RRDMetric(
                                     host_name=options.service.host_name,

@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import random
-import shutil
-import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
+
+from cmk.utils import store
 
 from cmk.product_usage.exceptions import InvalidTimestampError
 
@@ -55,6 +55,4 @@ def create_next_ts(dt: datetime) -> int:
 def store_next_run_ts(file_path: Path, timestamp: int) -> None:
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
-        f.write(str(timestamp))
-        shutil.move(f.name, file_path)
+    store.save_text_to_file(file_path, str(timestamp))

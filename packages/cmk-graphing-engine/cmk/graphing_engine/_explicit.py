@@ -36,6 +36,6 @@ def discover_explicit_graphs(
             graph=options.graph,
             options=ExplicitOptions(common=options.common, service=options.service),
             graph_title=options.graph.evaluated_title(translated_metrics),
-            scalars=options.graph.scalars(translated_metrics),
+            metric_data=options.graph.metric_data(translated_metrics),
         )
     ]

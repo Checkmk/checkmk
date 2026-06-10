@@ -116,7 +116,7 @@ def discover_template_graphs(
                 graph=graph,
                 options=post_options,
                 graph_title=graph.evaluated_title(translated_metrics),
-                scalars=graph.scalars(translated_metrics),
+                metric_data=graph.metric_data(translated_metrics),
             )
         )
 
@@ -145,7 +145,7 @@ def discover_template_graphs(
                 graph=graph,
                 options=post_options,
                 graph_title=graph.evaluated_title(translated_metrics),
-                scalars=graph.scalars(translated_metrics),
+                metric_data=graph.metric_data(translated_metrics),
             )
         )
 

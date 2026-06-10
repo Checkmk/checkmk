@@ -17,15 +17,14 @@ from cmk.graphing_engine import (
     FixedRange,
     Graph,
     Metric,
+    MetricData,
     MetricName,
     RRDMetric,
-    RRDSource,
-    Scalars,
+    RRDOriginal,
     ServiceRef,
     TemperatureUnit,
     TimeRange,
     TimeSeries,
-    TranslatedMetric,
     Unit,
     WarningOf,
 )
@@ -63,7 +62,7 @@ def _metric(name: MetricName) -> Metric:
 class _FakeFetchRRD:
     def __init__(
         self,
-        translated_metrics_response: Mapping[ServiceRef, Mapping[MetricName, TranslatedMetric]]
+        translated_metrics_response: Mapping[ServiceRef, Mapping[MetricName, MetricData]]
         | None = None,
     ) -> None:
         self._translated_metrics_response = translated_metrics_response or {}
@@ -71,17 +70,17 @@ class _FakeFetchRRD:
 
     def translated_metrics(
         self, services: Sequence[ServiceRef]
-    ) -> Mapping[ServiceRef, Mapping[MetricName, TranslatedMetric]]:
+    ) -> Mapping[ServiceRef, Mapping[MetricName, MetricData]]:
         self.translated_metrics_calls.append(tuple(services))
         return self._translated_metrics_response
 
     def time_series(
         self,
-        keys: Sequence[RRDSource],
+        keys: Sequence[RRDOriginal],
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
-    ) -> Mapping[RRDSource, TimeSeries]:
+    ) -> Mapping[RRDOriginal, TimeSeries]:
         raise NotImplementedError
 
 
@@ -97,7 +96,7 @@ def test_discover_explicit_graphs_without_keys_returns_inline_definition_unchang
     assert rendered[0].graph is inline
     assert rendered[0].options == ExplicitOptions(common=_common(), service=service)
     assert rendered[0].graph_title == "t"
-    assert rendered[0].scalars == {}
+    assert rendered[0].metric_data == {}
 
 
 def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> None:
@@ -111,33 +110,35 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
         simple_lines=[_metric(cpu_user), WarningOf(metric=_rrd(cpu_system), color="#28a2f3")],
     )
     options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
-    cpu_user_bounds = Scalars(warning=80.0, critical=90.0)
-    cpu_system_bounds = Scalars(warning=50.0, critical=70.0, minimum=0.0, maximum=100.0)
-    cpu_user_key = RRDSource(service=service, metric_name=cpu_user, scale=1.0)
+    cpu_user_data = MetricData(
+        name=cpu_user,
+        value=42.0,
+        warning=80.0,
+        critical=90.0,
+        scale=1.0,
+        originals=[RRDOriginal(metric_name=cpu_user, scale=1.0)],
+    )
+    cpu_system_data = MetricData(
+        name=cpu_system,
+        value=8.0,
+        warning=50.0,
+        critical=70.0,
+        minimum=0.0,
+        maximum=100.0,
+        scale=1.0,
+        originals=[RRDOriginal(metric_name=cpu_system, scale=1.0)],
+    )
     rrd = _FakeFetchRRD(
         translated_metrics_response={
-            service: {
-                cpu_user: TranslatedMetric(
-                    name=cpu_user,
-                    value=42.0,
-                    scalars=cpu_user_bounds,
-                    originals=[cpu_user_key],
-                ),
-                cpu_system: TranslatedMetric(
-                    name=cpu_system,
-                    value=8.0,
-                    scalars=cpu_system_bounds,
-                    originals=[RRDSource(service=service, metric_name=cpu_system, scale=1.0)],
-                ),
-            }
+            service: {cpu_user: cpu_user_data, cpu_system: cpu_system_data}
         },
     )
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
-    assert rendered.scalars == {
-        _rrd(cpu_user): cpu_user_bounds,
-        _rrd(cpu_system): cpu_system_bounds,
+    assert rendered.metric_data == {
+        _rrd(cpu_user): cpu_user_data,
+        _rrd(cpu_system): cpu_system_data,
     }
     assert rrd.translated_metrics_calls == [(service,)]
 
@@ -150,7 +151,7 @@ def test_discover_explicit_graphs_omits_scalars_for_metrics_not_in_translated_me
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
-    assert rendered.scalars == {}
+    assert rendered.metric_data == {}
 
 
 def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> None:
@@ -164,30 +165,26 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
         upper=Graph(name="out", title="Out", simple_lines=[_metric(if_out)]),
     )
     options = ExplicitDiscoveryOptions(common=_common(), service=service, graph=inline)
-    if_in_bounds = Scalars(warning=10.0)
+    if_in_data = MetricData(
+        name=if_in,
+        value=1.0,
+        warning=10.0,
+        scale=1.0,
+        originals=[RRDOriginal(metric_name=if_in, scale=1.0)],
+    )
+    if_out_data = MetricData(
+        name=if_out,
+        value=2.0,
+        scale=1.0,
+        originals=[RRDOriginal(metric_name=if_out, scale=1.0)],
+    )
     rrd = _FakeFetchRRD(
-        translated_metrics_response={
-            service: {
-                if_in: TranslatedMetric(
-                    name=if_in,
-                    value=1.0,
-                    scalars=if_in_bounds,
-                    originals=[RRDSource(service=service, metric_name=if_in, scale=1.0)],
-                ),
-                # if_out has no bounds, so it contributes no scalars.
-                if_out: TranslatedMetric(
-                    name=if_out,
-                    value=2.0,
-                    scalars=Scalars(),
-                    originals=[RRDSource(service=service, metric_name=if_out, scale=1.0)],
-                ),
-            }
-        }
+        translated_metrics_response={service: {if_in: if_in_data, if_out: if_out_data}}
     )
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
-    assert rendered.scalars == {_rrd(if_in): if_in_bounds}
+    assert rendered.metric_data == {_rrd(if_in): if_in_data, _rrd(if_out): if_out_data}
 
 
 def test_discover_explicit_graphs_passes_through_a_fixed_vertical_range() -> None:

@@ -12,7 +12,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
 from typing import NewType
 
-from ._options import ConsolidationFunction, ServiceRef
+from ._options import ConsolidationFunction
 
 
 @dataclass(frozen=True)
@@ -102,41 +102,23 @@ class Metric:
 
 
 @dataclass(frozen=True, kw_only=True)
-class Scalars:
+class RRDOriginal:
+    metric_name: MetricName
+    scale: float
+
+
+@dataclass(frozen=True, kw_only=True)
+class MetricData:
+    name: MetricName
+    value: float | None
+    scale: float
+    originals: Sequence[RRDOriginal]
     lower_warning: float | None = None
     lower_critical: float | None = None
     warning: float | None = None
     critical: float | None = None
     minimum: float | None = None
     maximum: float | None = None
-
-    def __bool__(self) -> bool:
-        return any(
-            value is not None
-            for value in (
-                self.lower_warning,
-                self.lower_critical,
-                self.warning,
-                self.critical,
-                self.minimum,
-                self.maximum,
-            )
-        )
-
-
-@dataclass(frozen=True, kw_only=True)
-class RRDSource:
-    service: ServiceRef
-    metric_name: MetricName
-    scale: float
-
-
-@dataclass(frozen=True, kw_only=True)
-class TranslatedMetric:
-    name: MetricName
-    value: float | None
-    scalars: Scalars
-    originals: Sequence[RRDSource]
 
 
 @dataclass(frozen=True)
@@ -277,15 +259,14 @@ def _rrd_metrics_in_quantity(quantity: Quantity) -> Iterable[RRDMetric]:
             yield from _rrd_metrics_in_quantity(quantity.divisor)
 
 
-def _scalars_of(
+def _metric_data_of(
     rrd_metrics: Iterable[RRDMetric],
-    translated_metrics: Mapping[MetricName, TranslatedMetric],
-) -> Mapping[RRDMetric, Scalars]:
+    translated_metrics: Mapping[MetricName, MetricData],
+) -> Mapping[RRDMetric, MetricData]:
     return {
-        metric: scalars
+        metric: translated
         for metric in rrd_metrics
-        if (translated := translated_metrics.get(metric.metric_name))
-        and (scalars := translated.scalars)
+        if (translated := translated_metrics.get(metric.metric_name)) is not None
     }
 
 
@@ -293,26 +274,26 @@ def _scalars_of(
 # 'CPU load - _EXPRESSION:{"metric": "load1", "scalar": "max"} CPU cores'.
 _TITLE_EXPRESSION_PREFIX = "_EXPRESSION:"
 _TITLE_EXPRESSION_PATTERN = re.compile(re.escape(_TITLE_EXPRESSION_PREFIX) + r"\{.*?\}")
-_TITLE_SCALARS: Mapping[str, Callable[[Scalars], float | None]] = {
-    "warn": lambda scalars: scalars.warning,
-    "crit": lambda scalars: scalars.critical,
-    "warn_lower": lambda scalars: scalars.lower_warning,
-    "crit_lower": lambda scalars: scalars.lower_critical,
-    "min": lambda scalars: scalars.minimum,
-    "max": lambda scalars: scalars.maximum,
+_TITLE_SCALARS: Mapping[str, Callable[[MetricData], float | None]] = {
+    "warn": lambda metric_data: metric_data.warning,
+    "crit": lambda metric_data: metric_data.critical,
+    "warn_lower": lambda metric_data: metric_data.lower_warning,
+    "crit_lower": lambda metric_data: metric_data.lower_critical,
+    "min": lambda metric_data: metric_data.minimum,
+    "max": lambda metric_data: metric_data.maximum,
 }
 
 
 def _evaluate_title_expression(
     raw: str,
-    translated_metrics: Mapping[MetricName, TranslatedMetric],
+    translated_metrics: Mapping[MetricName, MetricData],
 ) -> float | None:
     expression = json.loads(raw[len(_TITLE_EXPRESSION_PREFIX) :])
     if (translated := translated_metrics.get(MetricName(expression["metric"]))) is None:
         return None
     if (scalar := _TITLE_SCALARS.get(expression["scalar"])) is None:
         return None
-    return scalar(translated.scalars)
+    return scalar(translated)
 
 
 def metric_names_in_title(title: str) -> Iterable[MetricName]:
@@ -322,7 +303,7 @@ def metric_names_in_title(title: str) -> Iterable[MetricName]:
 
 def _evaluate_title(
     title: str,
-    translated_metrics: Mapping[MetricName, TranslatedMetric],
+    translated_metrics: Mapping[MetricName, MetricData],
 ) -> str:
     for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
         value = _evaluate_title_expression(raw, translated_metrics)
@@ -355,13 +336,13 @@ class Graph:
             )
         )
 
-    def scalars(
+    def metric_data(
         self,
-        translated_metrics: Mapping[MetricName, TranslatedMetric],
-    ) -> Mapping[RRDMetric, Scalars]:
-        return _scalars_of(self.rrd_metrics(), translated_metrics)
+        translated_metrics: Mapping[MetricName, MetricData],
+    ) -> Mapping[RRDMetric, MetricData]:
+        return _metric_data_of(self.rrd_metrics(), translated_metrics)
 
-    def evaluated_title(self, translated_metrics: Mapping[MetricName, TranslatedMetric]) -> str:
+    def evaluated_title(self, translated_metrics: Mapping[MetricName, MetricData]) -> str:
         return _evaluate_title(self.title, translated_metrics)
 
 
@@ -375,11 +356,11 @@ class Bidirectional:
     def rrd_metrics(self) -> Sequence[RRDMetric]:
         return list(set((*self.lower.rrd_metrics(), *self.upper.rrd_metrics())))
 
-    def scalars(
+    def metric_data(
         self,
-        translated_metrics: Mapping[MetricName, TranslatedMetric],
-    ) -> Mapping[RRDMetric, Scalars]:
-        return _scalars_of(self.rrd_metrics(), translated_metrics)
+        translated_metrics: Mapping[MetricName, MetricData],
+    ) -> Mapping[RRDMetric, MetricData]:
+        return _metric_data_of(self.rrd_metrics(), translated_metrics)
 
-    def evaluated_title(self, translated_metrics: Mapping[MetricName, TranslatedMetric]) -> str:
+    def evaluated_title(self, translated_metrics: Mapping[MetricName, MetricData]) -> str:
         return _evaluate_title(self.title, translated_metrics)

@@ -18,11 +18,11 @@ from cmk.graphing_engine import (
     discover_template_graphs,
     Graph,
     Metric,
+    MetricData,
     MetricName,
     parse_graph_from_api,
     RRDMetric,
-    RRDSource,
-    Scalars,
+    RRDOriginal,
     ServiceRef,
     StackGroup,
     TemperatureUnit,
@@ -30,7 +30,6 @@ from cmk.graphing_engine import (
     TemplateOptions,
     TimeRange,
     TimeSeries,
-    TranslatedMetric,
     Unit,
 )
 
@@ -82,19 +81,34 @@ def _metric(name: MetricName) -> Metric:
     )
 
 
-def _translated(name: MetricName, *, bounds: Scalars = Scalars()) -> TranslatedMetric:
-    return TranslatedMetric(
+def _metric_data(
+    name: MetricName,
+    *,
+    lower_warning: float | None = None,
+    lower_critical: float | None = None,
+    warning: float | None = None,
+    critical: float | None = None,
+    minimum: float | None = None,
+    maximum: float | None = None,
+) -> MetricData:
+    return MetricData(
         name=name,
         value=1.0,
-        scalars=bounds,
-        originals=[RRDSource(service=_service(), metric_name=name, scale=1.0)],
+        scale=1.0,
+        originals=[RRDOriginal(metric_name=name, scale=1.0)],
+        lower_warning=lower_warning,
+        lower_critical=lower_critical,
+        warning=warning,
+        critical=critical,
+        minimum=minimum,
+        maximum=maximum,
     )
 
 
 class _FakeFetchRRD:
     def __init__(
         self,
-        translated_metrics_response: Mapping[ServiceRef, Mapping[MetricName, TranslatedMetric]]
+        translated_metrics_response: Mapping[ServiceRef, Mapping[MetricName, MetricData]]
         | None = None,
     ) -> None:
         self._translated_metrics_response = translated_metrics_response or {}
@@ -102,17 +116,17 @@ class _FakeFetchRRD:
 
     def translated_metrics(
         self, services: Sequence[ServiceRef]
-    ) -> Mapping[ServiceRef, Mapping[MetricName, TranslatedMetric]]:
+    ) -> Mapping[ServiceRef, Mapping[MetricName, MetricData]]:
         self.translated_metrics_calls.append(tuple(services))
         return self._translated_metrics_response
 
     def time_series(
         self,
-        keys: Sequence[RRDSource],
+        keys: Sequence[RRDOriginal],
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
-    ) -> Mapping[RRDSource, TimeSeries]:
+    ) -> Mapping[RRDOriginal, TimeSeries]:
         raise NotImplementedError
 
 
@@ -134,7 +148,6 @@ def test_discover_template_graphs_empty_service_returns_no_graphs() -> None:
 def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaimed_metrics() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
-    cpu_user_bounds = Scalars(warning=80.0, critical=90.0)
     options = TemplateDiscoveryOptions(
         common=_common(),
         service=service,
@@ -145,7 +158,7 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
     )
     rrd = _FakeFetchRRD(
         translated_metrics_response={
-            service: {cpu_user: _translated(cpu_user, bounds=cpu_user_bounds)}
+            service: {cpu_user: _metric_data(cpu_user, warning=80.0, critical=90.0)}
         }
     )
 
@@ -155,7 +168,9 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
         name=cpu_user, title=cpu_user, stack_groups=[StackGroup(members=[_metric(cpu_user)])]
     )
     assert discovered.options == TemplateOptions(common=_common(), service=service)
-    assert discovered.scalars == {_rrd(cpu_user): cpu_user_bounds}
+    assert discovered.metric_data == {
+        _rrd(cpu_user): _metric_data(cpu_user, warning=80.0, critical=90.0)
+    }
 
 
 def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
@@ -173,12 +188,11 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
         localizer=_id,
         registered_graphs=[plugin],
     )
-    cpu_user_bounds = Scalars(warning=80.0)
     rrd = _FakeFetchRRD(
         translated_metrics_response={
             service: {
-                cpu_user: _translated(cpu_user, bounds=cpu_user_bounds),
-                cpu_system: _translated(cpu_system),
+                cpu_user: _metric_data(cpu_user, warning=80.0),
+                cpu_system: _metric_data(cpu_system),
             }
         }
     )
@@ -191,7 +205,10 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
     )
     # A plain title without expressions is carried through unchanged.
     assert discovered[0].graph_title == "CPU"
-    assert discovered[0].scalars == {_rrd(cpu_user): cpu_user_bounds}
+    assert discovered[0].metric_data == {
+        _rrd(cpu_user): _metric_data(cpu_user, warning=80.0),
+        _rrd(cpu_system): _metric_data(cpu_system),
+    }
 
 
 def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() -> None:
@@ -209,7 +226,7 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
     )
     rrd = _FakeFetchRRD(
         translated_metrics_response={
-            service: {cpu_user: _translated(cpu_user), extra: _translated(extra)}
+            service: {cpu_user: _metric_data(cpu_user), extra: _metric_data(extra)}
         }
     )
 
@@ -237,7 +254,7 @@ def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() 
         localizer=_id,
         registered_graphs=[plugin],
     )
-    rrd = _FakeFetchRRD(translated_metrics_response={service: {cpu_user: _translated(cpu_user)}})
+    rrd = _FakeFetchRRD(translated_metrics_response={service: {cpu_user: _metric_data(cpu_user)}})
 
     [fallback] = discover_template_graphs(options, rrd=rrd)
 
@@ -263,7 +280,7 @@ def test_discover_template_graphs_optional_missing_metric_still_matches() -> Non
         localizer=_id,
         registered_graphs=[plugin],
     )
-    rrd = _FakeFetchRRD(translated_metrics_response={service: {cpu_user: _translated(cpu_user)}})
+    rrd = _FakeFetchRRD(translated_metrics_response={service: {cpu_user: _metric_data(cpu_user)}})
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
@@ -292,7 +309,7 @@ def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() ->
     )
     rrd = _FakeFetchRRD(
         translated_metrics_response={
-            service: {cpu_user: _translated(cpu_user), util: _translated(util)}
+            service: {cpu_user: _metric_data(cpu_user), util: _metric_data(util)}
         }
     )
 
@@ -319,8 +336,8 @@ def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
     rrd = _FakeFetchRRD(
         translated_metrics_response={
             service: {
-                cpu_user: _translated(cpu_user),
-                cpu_system: _translated(cpu_system),
+                cpu_user: _metric_data(cpu_user),
+                cpu_system: _metric_data(cpu_system),
             }
         }
     )
@@ -351,7 +368,7 @@ def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
         registered_graphs=[plugin],
     )
     rrd = _FakeFetchRRD(
-        translated_metrics_response={service: {in_: _translated(in_), out: _translated(out)}}
+        translated_metrics_response={service: {in_: _metric_data(in_), out: _metric_data(out)}}
     )
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
@@ -378,19 +395,21 @@ def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantit
         localizer=_id,
         registered_graphs=[plugin],
     )
-    cpu_system_bounds = Scalars(warning=50.0)
     rrd = _FakeFetchRRD(
         translated_metrics_response={
             service: {
-                cpu_user: _translated(cpu_user),
-                cpu_system: _translated(cpu_system, bounds=cpu_system_bounds),
+                cpu_user: _metric_data(cpu_user),
+                cpu_system: _metric_data(cpu_system, warning=50.0),
             }
         }
     )
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
-    assert discovered.scalars == {_rrd(cpu_system): cpu_system_bounds}
+    assert discovered.metric_data == {
+        _rrd(cpu_user): _metric_data(cpu_user),
+        _rrd(cpu_system): _metric_data(cpu_system, warning=50.0),
+    }
 
 
 def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics() -> None:
@@ -410,19 +429,21 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
         localizer=_id,
         registered_graphs=[plugin],
     )
-    cpu_system_bounds = Scalars(warning=50.0)
     rrd = _FakeFetchRRD(
         translated_metrics_response={
             service: {
-                cpu_user: _translated(cpu_user),
-                cpu_system: _translated(cpu_system, bounds=cpu_system_bounds),
+                cpu_user: _metric_data(cpu_user),
+                cpu_system: _metric_data(cpu_system, warning=50.0),
             }
         }
     )
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
-    assert discovered.scalars == {_rrd(cpu_system): cpu_system_bounds}
+    assert discovered.metric_data == {
+        _rrd(cpu_user): _metric_data(cpu_user),
+        _rrd(cpu_system): _metric_data(cpu_system, warning=50.0),
+    }
 
 
 def test_discover_template_graphs_evaluates_the_title_expression() -> None:
@@ -442,9 +463,7 @@ def test_discover_template_graphs_evaluates_the_title_expression() -> None:
         registered_graphs=[plugin],
     )
     rrd = _FakeFetchRRD(
-        translated_metrics_response={
-            service: {cpu_user: _translated(cpu_user, bounds=Scalars(maximum=8.0))}
-        }
+        translated_metrics_response={service: {cpu_user: _metric_data(cpu_user, maximum=8.0)}}
     )
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
@@ -471,7 +490,7 @@ def test_discover_template_graphs_title_expression_falls_back_when_unresolvable(
         registered_graphs=[plugin],
     )
     # cpu_user is available (so the plugin matches) but carries no maximum scalar.
-    rrd = _FakeFetchRRD(translated_metrics_response={service: {cpu_user: _translated(cpu_user)}})
+    rrd = _FakeFetchRRD(translated_metrics_response={service: {cpu_user: _metric_data(cpu_user)}})
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
@@ -497,7 +516,7 @@ def test_discover_template_graphs_requires_a_metric_referenced_only_in_the_title
     )
     # cpu_user (referenced by the title) is missing, so the plugin must not match; only the
     # fallback single-metric graph for util is discovered.
-    rrd = _FakeFetchRRD(translated_metrics_response={service: {util: _translated(util)}})
+    rrd = _FakeFetchRRD(translated_metrics_response={service: {util: _metric_data(util)}})
 
     discovered = discover_template_graphs(options, rrd=rrd)
 
@@ -524,8 +543,8 @@ def test_discover_template_graphs_claims_a_metric_referenced_only_in_the_title()
     rrd = _FakeFetchRRD(
         translated_metrics_response={
             service: {
-                util: _translated(util),
-                cpu_user: _translated(cpu_user, bounds=Scalars(maximum=8.0)),
+                util: _metric_data(util),
+                cpu_user: _metric_data(cpu_user, maximum=8.0),
             }
         }
     )

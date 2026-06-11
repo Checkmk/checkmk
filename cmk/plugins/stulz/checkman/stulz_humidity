@@ -8,7 +8,7 @@ description:
  It is possible to define levels for high and low warning/ critical.
 
 item:
- Name of the unit
+ The bus and the unit number, e.g. {{2-1}}
 
 discovery:
  One service is created for each device.

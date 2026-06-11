@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
+
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -19,36 +21,40 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.stulz.lib import DETECT_STULZ
 
-
-def parse_stulz_powerstate(string_table: StringTable) -> StringTable:
-    return string_table
+Section = Mapping[str, str]
 
 
-def discover_stulz_powerstate(section: StringTable) -> DiscoveryResult:
-    yield from (Service(item=line[0]) for line in section)
+def parse_stulz_powerstate(string_table: StringTable) -> Section:
+    parsed: dict[str, str] = {}
+    for oidend, value in string_table:
+        bus, unit = oidend.split(".")[0:2]
+        parsed.setdefault(f"{bus}-{unit}", value)
+    return parsed
 
 
-def check_stulz_powerstate(item: str, section: StringTable) -> CheckResult:
-    for line in section:
-        if line[0] == item:
-            if line[1] != "1":
-                message = "Device powered off"
-                power_state = 2
-            else:
-                message = "Device powered on"
-                power_state = 6
+def discover_stulz_powerstate(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
-            yield Result(state=State.OK, summary=message)
-            yield Metric("state", power_state)
-            return
+
+def check_stulz_powerstate(item: str, section: Section) -> CheckResult:
+    if item in section:
+        if section[item] != "1":
+            message = "Device powered off"
+            power_state = 2
+        else:
+            message = "Device powered on"
+            power_state = 6
+
+        yield Result(state=State.OK, summary=message)
+        yield Metric("state", power_state)
 
 
 snmp_section_stulz_powerstate = SimpleSNMPSection(
     name="stulz_powerstate",
     detect=DETECT_STULZ,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.29462.10.2.1.4.1.1.1.1013",
-        oids=[OIDEnd(), "1"],
+        base=".1.3.6.1.4.1.29462.10.2.1.4.1.1.1",
+        oids=[OIDEnd(), "1013"],
     ),
     parse_function=parse_stulz_powerstate,
 )

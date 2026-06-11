@@ -16,17 +16,22 @@ from cmk.plugins.stulz.agent_based.stulz_powerstate import (
     parse_stulz_powerstate,
 )
 
+# OIDEnd is "{bus}.{unit}.{subindex}"; the device exposes units on two buses.
 _STRING_TABLE: list[list[str]] = [
-    ["1013.1.1.1", "1"],
-    ["1013.1.2.1", "0"],
+    ["1.1.1", "1"],
+    ["1.2.1", "0"],
+    ["2.1.1", "1"],
+    ["2.2.1", "1"],
 ]
 
 
 def test_discover_stulz_powerstate() -> None:
     parsed = parse_stulz_powerstate(_STRING_TABLE)
     assert list(discover_stulz_powerstate(parsed)) == [
-        Service(item="1013.1.1.1"),
-        Service(item="1013.1.2.1"),
+        Service(item="1-1"),
+        Service(item="1-2"),
+        Service(item="2-1"),
+        Service(item="2-2"),
     ]
 
 
@@ -34,14 +39,14 @@ def test_discover_stulz_powerstate() -> None:
     "item, expected_results",
     [
         (
-            "1013.1.1.1",
+            "1-1",
             [
                 Result(state=State.OK, summary="Device powered on"),
                 Metric("state", 6),
             ],
         ),
         (
-            "1013.1.2.1",
+            "1-2",
             [
                 Result(state=State.OK, summary="Device powered off"),
                 Metric("state", 2),

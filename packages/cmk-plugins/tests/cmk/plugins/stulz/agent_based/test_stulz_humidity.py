@@ -17,9 +17,13 @@ from cmk.plugins.stulz.agent_based.stulz_humidity import (
     parse_stulz_humidity,
 )
 
+# OIDEnd is "{bus}.{unit}.{subindex}"; the device exposes units on two buses.
+# Readings are in per-mille and divided by 10 by the check.
 _STRING_TABLE: list[list[str]] = [
-    ["MICOS11Q", "12", "229376", "15221", "15221", "NO"],
-    ["MICOS11Q", "12", "229376", "15221", "15221"],
+    ["1.1.1", "339"],
+    ["1.2.1", "332"],
+    ["2.1.1", "500"],
+    ["2.2.1", "308"],
 ]
 
 
@@ -28,7 +32,12 @@ _STRING_TABLE: list[list[str]] = [
     [
         (
             _STRING_TABLE,
-            [Service(item="MICOS11Q"), Service(item="MICOS11Q")],
+            [
+                Service(item="1-1"),
+                Service(item="1-2"),
+                Service(item="2-1"),
+                Service(item="2-2"),
+            ],
         ),
     ],
 )
@@ -44,15 +53,24 @@ def test_discover_stulz_humidity(
     "item, params, string_table, expected_results",
     [
         (
-            "MICOS11Q",
+            "1-1",
             {"levels_lower": (40.0, 35.0), "levels": (60.0, 65.0)},
             _STRING_TABLE,
             [
                 Result(
                     state=State.CRIT,
-                    summary="1.20% (warn/crit below 40.00%/35.00%)",
+                    summary="33.90% (warn/crit below 40.00%/35.00%)",
                 ),
-                Metric("humidity", 1.2, levels=(60.0, 65.0), boundaries=(0.0, 100.0)),
+                Metric("humidity", 33.9, levels=(60.0, 65.0), boundaries=(0.0, 100.0)),
+            ],
+        ),
+        (
+            "2-1",
+            {"levels_lower": (40.0, 35.0), "levels": (60.0, 65.0)},
+            _STRING_TABLE,
+            [
+                Result(state=State.OK, summary="50.00%"),
+                Metric("humidity", 50.0, levels=(60.0, 65.0), boundaries=(0.0, 100.0)),
             ],
         ),
     ],

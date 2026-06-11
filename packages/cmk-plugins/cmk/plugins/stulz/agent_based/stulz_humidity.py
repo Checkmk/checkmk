@@ -28,27 +28,32 @@ def _savefloat(f: str) -> float:
         return 0.0
 
 
-def parse_stulz_humidity(string_table: StringTable) -> StringTable:
-    return string_table
+Section = Mapping[str, str]
 
 
-def discover_stulz_humidity(section: StringTable) -> DiscoveryResult:
-    yield from (Service(item=line[0]) for line in section)
+def parse_stulz_humidity(string_table: StringTable) -> Section:
+    parsed: dict[str, str] = {}
+    for oidend, value in string_table:
+        bus, unit = oidend.split(".")[0:2]
+        parsed.setdefault(f"{bus}-{unit}", value)
+    return parsed
 
 
-def check_stulz_humidity(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
-    for line in section:
-        if line[0] == item:
-            yield from check_humidity(_savefloat(line[1]) / 10, params)
-            return
+def discover_stulz_humidity(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_stulz_humidity(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if item in section:
+        yield from check_humidity(_savefloat(section[item]) / 10, params)
 
 
 snmp_section_stulz_humidity = SimpleSNMPSection(
     name="stulz_humidity",
     detect=DETECT_STULZ,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.2.1.1.1194",
-        oids=[OIDEnd(), "1"],
+        base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.2.1.1",
+        oids=[OIDEnd(), "1194"],
     ),
     parse_function=parse_stulz_humidity,
 )

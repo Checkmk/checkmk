@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
+
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -18,31 +20,35 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.stulz.lib import DETECT_STULZ
 
-
-def parse_stulz_alerts(string_table: StringTable) -> StringTable:
-    return string_table
+Section = Mapping[str, str]
 
 
-def discover_stulz_alerts(section: StringTable) -> DiscoveryResult:
-    yield from (Service(item=line[0]) for line in section)
+def parse_stulz_alerts(string_table: StringTable) -> Section:
+    parsed: dict[str, str] = {}
+    for oidend, value in string_table:
+        bus, unit = oidend.split(".")[0:2]
+        parsed.setdefault(f"{bus}-{unit}", value)
+    return parsed
 
 
-def check_stulz_alerts(item: str, section: StringTable) -> CheckResult:
-    for line in section:
-        if line[0] == item:
-            if line[1] != "0":
-                yield Result(state=State.CRIT, summary="Device is in alert state")
-            else:
-                yield Result(state=State.OK, summary="No alerts on device")
-            return
+def discover_stulz_alerts(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_stulz_alerts(item: str, section: Section) -> CheckResult:
+    if item in section:
+        if section[item] != "0":
+            yield Result(state=State.CRIT, summary="Device is in alert state")
+        else:
+            yield Result(state=State.OK, summary="No alerts on device")
 
 
 snmp_section_stulz_alerts = SimpleSNMPSection(
     name="stulz_alerts",
     detect=DETECT_STULZ,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.29462.10.2.1.4.4.1.1.1.1010",
-        oids=[OIDEnd(), "1"],
+        base=".1.3.6.1.4.1.29462.10.2.1.4.4.1.1.1",
+        oids=[OIDEnd(), "1010"],
     ),
     parse_function=parse_stulz_alerts,
 )

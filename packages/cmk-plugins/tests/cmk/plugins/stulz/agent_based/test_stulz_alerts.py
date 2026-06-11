@@ -16,25 +16,30 @@ from cmk.plugins.stulz.agent_based.stulz_alerts import (
     parse_stulz_alerts,
 )
 
+# OIDEnd is "{bus}.{unit}.{subindex}"; the device exposes units on two buses.
 _STRING_TABLE: list[list[str]] = [
-    ["1010.1.1.1", "0"],
-    ["1010.1.2.1", "2"],
+    ["1.1.1", "0"],
+    ["1.2.1", "0"],
+    ["2.1.1", "1"],
+    ["2.2.1", "0"],
 ]
 
 
 def test_discover_stulz_alerts() -> None:
     parsed = parse_stulz_alerts(_STRING_TABLE)
     assert list(discover_stulz_alerts(parsed)) == [
-        Service(item="1010.1.1.1"),
-        Service(item="1010.1.2.1"),
+        Service(item="1-1"),
+        Service(item="1-2"),
+        Service(item="2-1"),
+        Service(item="2-2"),
     ]
 
 
 @pytest.mark.parametrize(
     "item, expected_results",
     [
-        ("1010.1.1.1", [Result(state=State.OK, summary="No alerts on device")]),
-        ("1010.1.2.1", [Result(state=State.CRIT, summary="Device is in alert state")]),
+        ("1-1", [Result(state=State.OK, summary="No alerts on device")]),
+        ("2-1", [Result(state=State.CRIT, summary="Device is in alert state")]),
         ("does-not-exist", []),
     ],
 )

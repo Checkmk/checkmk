@@ -6,8 +6,7 @@
 from typing import Literal
 
 from cmk.gui.monitor.hosts._models import StateLabel
-from cmk.gui.openapi.framework.model._api_field import api_field
-from cmk.gui.openapi.framework.model._api_model import api_model
+from cmk.gui.openapi.framework.model import api_field, api_model
 
 # TODO: look into whether we can utilize generics when generating our shared typing. It's not great
 # that this functionality is tied to the field names or the state choice enum. This information

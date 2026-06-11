@@ -107,8 +107,13 @@ async function enterEditMode(pill: HTMLElement): Promise<void> {
 
 async function pickKey(pill: HTMLElement, name: string): Promise<void> {
   await enterEditMode(pill)
+  // Let the empty-key auto-open (deferred to nextTick) settle so the click
+  // below cannot toggle a just-opened dropdown closed again.
+  await new Promise((resolve) => setTimeout(resolve, 0))
   const keyCombobox = within(pill).getByRole('combobox', { name: 'Attribute key' })
-  await userEvent.click(keyCombobox)
+  if (keyCombobox.getAttribute('aria-expanded') !== 'true') {
+    await userEvent.click(keyCombobox)
+  }
   const filter = screen.getByRole('textbox', { name: 'filter' })
   // In callback-filtered mode the filter is pre-populated with the current
   // selection's title; clear it so the typed query starts from scratch.
@@ -202,6 +207,27 @@ test('picking a key with a resolver hit does not auto-open the type dropdown', a
   // Give the watcher's nextTick a chance to run; aria-expanded must stay 'false'.
   await new Promise((resolve) => setTimeout(resolve, 0))
   expect(typeCombobox.getAttribute('aria-expanded')).toBe('false')
+})
+
+test('a newly added pill auto-opens the key dropdown', async () => {
+  renderForm([])
+  await userEvent.click(screen.getByRole('button', { name: 'Add condition' }))
+
+  const keyCombobox = within(pillsInOrder()[0]!).getByRole('combobox', { name: 'Attribute key' })
+  await waitFor(() => {
+    expect(keyCombobox.getAttribute('aria-expanded')).toBe('true')
+  })
+})
+
+test('editing an existing pill does not auto-open the key dropdown', async () => {
+  renderForm(singlePill())
+  const pill = pillsInOrder()[0]!
+  await enterEditMode(pill)
+
+  const keyCombobox = within(pill).getByRole('combobox', { name: 'Attribute key' })
+  // Give the watcher's nextTick a chance to run; aria-expanded must stay 'false'.
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  expect(keyCombobox.getAttribute('aria-expanded')).toBe('false')
 })
 
 test('removing the head drops it by id, promotes the next row and nulls its connector', async () => {

@@ -339,11 +339,17 @@ _TITLE_SCALARS: Mapping[str, Callable[[RRDMetricData], float | None]] = {
 }
 
 
+def _parse_title_expression(raw: str) -> Mapping[str, str]:
+    # raw is an '_EXPRESSION:{"metric": ..., "scalar": ...}' match.
+    expression: Mapping[str, str] = json.loads(raw[len(_TITLE_EXPRESSION_PREFIX) :])
+    return expression
+
+
 def _evaluate_title_expression(
     raw: str,
     translated_metrics: Mapping[MetricName, RRDMetricData],
 ) -> float | None:
-    expression = json.loads(raw[len(_TITLE_EXPRESSION_PREFIX) :])
+    expression = _parse_title_expression(raw)
     if (translated := translated_metrics.get(MetricName(expression["metric"]))) is None:
         return None
     if (scalar := _TITLE_SCALARS.get(expression["scalar"])) is None:
@@ -353,7 +359,7 @@ def _evaluate_title_expression(
 
 def metric_names_in_title(title: str) -> Iterable[MetricName]:
     for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
-        yield MetricName(json.loads(raw[len(_TITLE_EXPRESSION_PREFIX) :])["metric"])
+        yield MetricName(_parse_title_expression(raw)["metric"])
 
 
 def _evaluate_title(

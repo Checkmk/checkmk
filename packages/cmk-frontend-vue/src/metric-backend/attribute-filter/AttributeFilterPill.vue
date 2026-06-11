@@ -65,6 +65,7 @@ const attributeTypeEmpty = computed(() => props.condition.attributeType === null
 const keyEmpty = computed(() => !props.condition.key)
 const valueEmpty = computed(() => props.condition.value === '')
 
+const keyDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('keyDropdownRef')
 const valueDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('valueDropdownRef')
 const pendingValueOpen = ref(false)
 
@@ -91,6 +92,9 @@ watch(
   (now) => {
     if (now) {
       armOutsideNextTask()
+      if (!props.condition.key) {
+        void nextTick(() => keyDropdownRef.value?.open())
+      }
     } else {
       outsideArmed = false
       if (armTimer !== null) {
@@ -277,6 +281,7 @@ defineExpose({
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--key"
       >
         <CmkDropdown
+          ref="keyDropdownRef"
           :selected-option="condition.key || null"
           :options="{ type: 'callback-filtered', querySuggestions }"
           :label="_t('Attribute key')"

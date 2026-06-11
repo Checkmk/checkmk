@@ -5,7 +5,7 @@
 
 from collections import Counter
 
-from cmk.gui.monitor.hosts._models import HostSort, HostSortColumn, HostSortDirection
+from .._models import HostSort, HostSortColumn, HostSortDirection
 
 
 def parse_host_search_query(value: object) -> str:

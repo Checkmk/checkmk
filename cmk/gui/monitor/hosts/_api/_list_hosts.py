@@ -10,15 +10,6 @@ from pydantic import PlainValidator
 
 from cmk.gui import sites
 from cmk.gui.logged_in import user
-from cmk.gui.monitor.hosts._impl import LiveStatusHostRepository
-from cmk.gui.monitor.hosts._models import (
-    Host,
-    HostSort,
-    HostSortColumn,
-    HostSortDirection,
-    StateLabel,
-)
-from cmk.gui.monitor.hosts._repositories import HostRepository
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.versioned_endpoint import (
@@ -30,6 +21,15 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
 )
 from cmk.gui.utils import permission_verification as permissions
 
+from .._impl import LiveStatusHostRepository
+from .._models import (
+    Host,
+    HostSort,
+    HostSortColumn,
+    HostSortDirection,
+    StateLabel,
+)
+from .._repositories import HostRepository
 from ._family import MONITOR_HOSTS_FAMILY
 from ._filters import FilterNode
 from ._validators import parse_host_search_query, parse_host_sort_options

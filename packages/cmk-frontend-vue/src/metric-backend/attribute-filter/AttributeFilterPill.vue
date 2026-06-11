@@ -87,6 +87,9 @@ function armOutsideNextTask(): void {
     armTimer = null
   }, 0)
 }
+
+// Guided edit chain: each watcher auto-opens the next dropdown that still
+// needs input, minimizing clicks on the common path.
 watch(
   () => props.editing,
   (now) => {
@@ -165,9 +168,6 @@ const attributeTypeDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>
   'attributeTypeDropdownRef'
 )
 
-// On a fresh key with no type yet, auto-open the type dropdown. Deferred to
-// nextTick so the `v-if` gate has mounted the dropdown and the inferred type
-// has propagated before we read it.
 watch(
   () => props.condition.key,
   (next, prev) => {
@@ -175,11 +175,31 @@ watch(
       return
     }
     void nextTick(() => {
-      if (props.condition.attributeType !== null) {
+      if (props.condition.attributeType === null) {
+        attributeTypeDropdownRef.value?.open()
         return
       }
-      attributeTypeDropdownRef.value?.open()
+      if (showValue.value && props.condition.value === '') {
+        valueDropdownRef.value?.open()
+      }
     })
+  }
+)
+
+watch(
+  () => props.condition.attributeType,
+  (next, prev) => {
+    if (
+      !props.editing ||
+      next === null ||
+      prev !== null ||
+      !props.condition.key ||
+      !showValue.value ||
+      props.condition.value !== ''
+    ) {
+      return
+    }
+    void nextTick(() => valueDropdownRef.value?.open())
   }
 )
 

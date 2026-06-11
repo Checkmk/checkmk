@@ -131,8 +131,13 @@ async function pickOperator(pill: HTMLElement, phrase: string): Promise<void> {
 
 async function pickAttributeType(pill: HTMLElement, label: string): Promise<void> {
   await enterEditMode(pill)
+  // Let any pending auto-open settle so the click below cannot toggle a
+  // just-opened dropdown closed again.
+  await new Promise((resolve) => setTimeout(resolve, 0))
   const typeCombobox = within(pill).getByRole('combobox', { name: 'Attribute type' })
-  await userEvent.click(typeCombobox)
+  if (typeCombobox.getAttribute('aria-expanded') !== 'true') {
+    await userEvent.click(typeCombobox)
+  }
   await userEvent.click(await screen.findByRole('option', { name: label }))
 }
 
@@ -207,6 +212,29 @@ test('picking a key with a resolver hit does not auto-open the type dropdown', a
   // Give the watcher's nextTick a chance to run; aria-expanded must stay 'false'.
   await new Promise((resolve) => setTimeout(resolve, 0))
   expect(typeCombobox.getAttribute('aria-expanded')).toBe('false')
+})
+
+test('picking a key with a resolver hit auto-opens the value dropdown', async () => {
+  renderForm(makeModel(), (key) => (key === 'http.method' ? 'datapoint' : null))
+  const pillA = pillsInOrder()[0]!
+  await pickKey(pillA, 'http.method')
+
+  const valueCombobox = within(pillA).getByRole('combobox', { name: 'Attribute value' })
+  await waitFor(() => {
+    expect(valueCombobox.getAttribute('aria-expanded')).toBe('true')
+  })
+})
+
+test('picking the type after a no-hit key auto-opens the value dropdown', async () => {
+  renderForm(makeModel(), () => null)
+  const pillA = pillsInOrder()[0]!
+  await pickKey(pillA, 'foo.bar')
+  await pickAttributeType(pillA, 'Resource')
+
+  const valueCombobox = within(pillA).getByRole('combobox', { name: 'Attribute value' })
+  await waitFor(() => {
+    expect(valueCombobox.getAttribute('aria-expanded')).toBe('true')
+  })
 })
 
 test('a newly added pill auto-opens the key dropdown', async () => {

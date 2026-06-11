@@ -70,6 +70,17 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
   }
   return style
 }
+
+function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
+  const justify = columnDef.meta?.justify
+  if (justify === 'right') {
+    return { justifyContent: 'flex-end' }
+  }
+  if (justify === 'center') {
+    return { justifyContent: 'center' }
+  }
+  return {}
+}
 </script>
 
 <template>
@@ -89,7 +100,10 @@ function columnStyle(columnDef: ColumnDef<T>): CSSProperties {
         :style="[columnStyle(header.column.columnDef), stickyStyle(header.column.id)]"
         :aria-sort="ariaSortFor(header.column.getIsSorted())"
       >
-        <div class="monitoring-table-header__cell-content">
+        <div
+          class="monitoring-table-header__cell-content"
+          :style="contentStyle(header.column.columnDef)"
+        >
           <button
             v-if="!header.isPlaceholder && header.column.getCanSort()"
             type="button"

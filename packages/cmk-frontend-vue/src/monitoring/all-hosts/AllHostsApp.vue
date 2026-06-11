@@ -47,7 +47,7 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_ok',
     header: _t('OK'),
     sortDescFirst: true,
-    meta: { justify: 'center' },
+    meta: { justify: 'right' },
     minSize: 64,
     maxSize: 90
   },
@@ -55,7 +55,7 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_warn',
     header: _t('Warn'),
     sortDescFirst: true,
-    meta: { justify: 'center' },
+    meta: { justify: 'right' },
     minSize: 64,
     maxSize: 90
   },
@@ -63,7 +63,7 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_crit',
     header: _t('Crit'),
     sortDescFirst: true,
-    meta: { justify: 'center' },
+    meta: { justify: 'right' },
     minSize: 64,
     maxSize: 90
   },
@@ -71,7 +71,7 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_unknown',
     header: _t('Unknown'),
     sortDescFirst: true,
-    meta: { justify: 'center' },
+    meta: { justify: 'right' },
     minSize: 92,
     maxSize: 130
   },
@@ -79,7 +79,7 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_pending',
     header: _t('Pending'),
     sortDescFirst: true,
-    meta: { justify: 'center' },
+    meta: { justify: 'right' },
     minSize: 92,
     maxSize: 120
   }

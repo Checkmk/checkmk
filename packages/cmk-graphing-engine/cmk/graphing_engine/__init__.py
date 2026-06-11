@@ -6,8 +6,6 @@
 from ._evaluate import (
     DiscoveredGraph,
     evaluate_graph,
-    evaluate_time_series,
-    evaluate_value,
     EvaluatedCurve,
     EvaluatedGraph,
     EvaluatedLine,
@@ -133,8 +131,6 @@ __all__ = [
     "discover_template_graphs",
     "evaluate_graph",
     "evaluate_graphs",
-    "evaluate_time_series",
-    "evaluate_value",
     "fetch_translated_metrics",
     "parse_graph_from_api",
     "translate_performance_data",

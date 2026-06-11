@@ -70,13 +70,13 @@ def _evaluate_value_op(
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
 ) -> float | None:
     # An operation needs every operand: a missing one makes the whole expression unevaluable.
-    values = [evaluate_value(operand, metric_data) for operand in operands]
+    values = [_evaluate_value(operand, metric_data) for operand in operands]
     if any(value is None for value in values):
         return None
     return operator(values)
 
 
-def evaluate_value(
+def _evaluate_value(
     quantity: Quantity,
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
 ) -> float | None:
@@ -132,7 +132,7 @@ def _evaluate_time_series_op(
     time_range: TimeRange,
 ) -> TimeSeries:
     evaluated = [
-        evaluate_time_series(operand, time_series, metric_data, time_range) for operand in operands
+        _evaluate_time_series(operand, time_series, metric_data, time_range) for operand in operands
     ]
     return TimeSeries(
         time_range=time_range,
@@ -150,7 +150,7 @@ def _constant_time_series(value: float | None, time_range: TimeRange) -> TimeSer
     return TimeSeries(time_range=time_range, values=[value] * _num_points(time_range))
 
 
-def evaluate_time_series(
+def _evaluate_time_series(
     quantity: Quantity,
     time_series: Mapping[RRDMetricRef, TimeSeries],
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
@@ -171,7 +171,7 @@ def evaluate_time_series(
             | MinimumOf()
             | MaximumOf()
         ):
-            return _constant_time_series(evaluate_value(quantity, metric_data), time_range)
+            return _constant_time_series(_evaluate_value(quantity, metric_data), time_range)
         case Sum():
             return _evaluate_time_series_op(
                 _op_sum, quantity.summands, time_series, metric_data, time_range
@@ -307,8 +307,8 @@ def _evaluate_curve(
         title=attributes.title,
         unit=attributes.unit,
         color=attributes.color,
-        value=evaluate_value(quantity, metric_data),
-        time_series=evaluate_time_series(quantity, time_series, metric_data, time_range),
+        value=_evaluate_value(quantity, metric_data),
+        time_series=_evaluate_time_series(quantity, time_series, metric_data, time_range),
     )
 
 

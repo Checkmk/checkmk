@@ -379,7 +379,7 @@ defineExpose({
 }
 
 .metric-backend-attribute-filter-pill__main:hover {
-  background: var(--ux-theme-4);
+  background-color: var(--default-form-element-bg-color);
 }
 
 .metric-backend-attribute-filter-pill__main:focus-visible {
@@ -404,5 +404,9 @@ defineExpose({
   display: inline-flex;
   align-items: center;
   padding: 0 var(--dimension-2);
+}
+
+.metric-backend-attribute-filter-pill__remove:hover {
+  background-color: var(--default-form-element-bg-color);
 }
 </style>

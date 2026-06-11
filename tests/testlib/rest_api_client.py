@@ -552,6 +552,19 @@ class ActivateChangesClient(RestApiClient):
 class UserClient(RestApiClient):
     domain: DomainType = "user_config"
 
+    def trigger_user_sync(
+        self,
+        expect_ok: bool = True,
+        follow_redirects: bool = False,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/sync/invoke",
+            expect_ok=expect_ok,
+            follow_redirects=follow_redirects,
+            api_version=APIVersion.UNSTABLE,
+        )
+
     def create(
         self,
         username: str,

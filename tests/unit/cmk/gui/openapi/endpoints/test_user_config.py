@@ -6,8 +6,12 @@
 from collections.abc import Iterator
 
 import pytest
+from pytest_mock import MockerFixture
 
+import cmk.ccc.resulttype as result
 import cmk.utils.paths
+from cmk.gui.background_job.job import AlreadyRunningError
+from cmk.gui.userdb.user_sync_job import UserSyncBackgroundJob
 from tests.testlib.rest_api_client import ClientRegistry
 
 
@@ -80,3 +84,23 @@ def test_edit_user_non_credential_attribute_allowed_on_remote_site(
         fullname="Renamed User",
         customer=None,
     )
+
+
+def test_trigger_user_sync(clients: ClientRegistry, mocker: MockerFixture) -> None:
+    start_mock = mocker.patch.object(UserSyncBackgroundJob, "start", return_value=result.OK(None))
+
+    resp = clients.User.trigger_user_sync()
+    assert resp.status_code == 303
+    assert "/objects/background_job/" in resp.headers["Location"]
+    start_mock.assert_called_once()
+
+
+def test_trigger_user_sync_already_running(clients: ClientRegistry, mocker: MockerFixture) -> None:
+    mocker.patch.object(
+        UserSyncBackgroundJob,
+        "start",
+        return_value=result.Error(AlreadyRunningError("Job already running")),
+    )
+
+    resp = clients.User.trigger_user_sync(expect_ok=False)
+    assert resp.status_code == 409

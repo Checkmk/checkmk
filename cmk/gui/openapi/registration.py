@@ -47,6 +47,7 @@ from .api_endpoints import host_config_internal as api_host_config_internal
 from .api_endpoints import master_control as api_master_control
 from .api_endpoints import quick_setup as api_quick_setup
 from .api_endpoints import service_discovery as api_service_discovery
+from .api_endpoints import user_config as api_user_config
 from .api_endpoints.graph_timerange import registration as api_graph_timerange
 from .api_endpoints.password import registration as api_password
 from .api_endpoints.user_role import registration as api_user_role
@@ -142,6 +143,10 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     api_quick_setup.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
+    api_user_config.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

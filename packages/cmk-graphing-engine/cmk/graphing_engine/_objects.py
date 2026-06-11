@@ -280,10 +280,6 @@ class MetricTranslation:
     scale: float = 1.0
 
 
-# Rename/scale table keyed by check command, then by the raw (perf-data) metric name. A key may be
-# a literal name or a "~<regex>" pattern matched against the raw name.
-
-
 @dataclass(frozen=True, kw_only=True)
 class RRDOriginal:
     metric_name: MetricName

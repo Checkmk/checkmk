@@ -6,6 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 import contextlib
+import http.client
 import json
 import types
 from inspect import BoundArguments
@@ -16,6 +17,7 @@ from werkzeug.http import parse_accept_header
 
 from cmk import trace
 from cmk.ccc import store
+from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
 from cmk.gui.fields.fields_filter import FieldsFilter
 from cmk.gui.http import FILE_EXTENSIONS as CONTENT_TYPE_FILE_EXTENSIONS
 from cmk.gui.http import HTTPMethod, Response
@@ -26,7 +28,12 @@ from cmk.gui.openapi.restful_objects.validators import (
     PermissionValidator,
     ResponseValidator,
 )
-from cmk.gui.openapi.utils import EXT, RestAPIResponseException, RestAPIWatoDisabledException
+from cmk.gui.openapi.utils import (
+    EXT,
+    RestAPIForbiddenException,
+    RestAPIResponseException,
+    RestAPIWatoDisabledException,
+)
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.utils.paths import configuration_lockfile
@@ -196,19 +203,30 @@ def handle_endpoint_request(
     # Step 4: Validate the request parameters and call the handler function
     # NOTE: exceptions will be caught in the WSGI app (including the other validation exceptions)
     # We probably don't want permission tracking for tokens, do we?
-    with (
-        permission_validator.track_permissions(),
-        _optional_config_lock(endpoint.skip_locking, endpoint.method),
-    ):
-        bound_arguments = model.validate_request_and_identify_args(
-            request_data, content_type, api_context
-        )
-        with tracer.span("endpoint-body-call"):
-            try:
-                raw_response = endpoint.handler(*bound_arguments.args, **bound_arguments.kwargs)
-            except RedirectException as exc:
-                raw_response = Response(status=exc.status_code)
-                raw_response.location = exc.location
+    try:
+        with (
+            permission_validator.track_permissions(),
+            _optional_config_lock(endpoint.skip_locking, endpoint.method),
+        ):
+            bound_arguments = model.validate_request_and_identify_args(
+                request_data, content_type, api_context
+            )
+            with tracer.span("endpoint-body-call"):
+                try:
+                    raw_response = endpoint.handler(*bound_arguments.args, **bound_arguments.kwargs)
+                except RedirectException as exc:
+                    raw_response = Response(status=exc.status_code)
+                    raw_response.location = exc.location
+    except MKUnauthenticatedException:
+        raise
+    except MKAuthException as exc:
+        # At this point the request is already authenticated, so a failed permission check means
+        # the user lacks a permission -> forbidden (403), not unauthorized (401). Without this
+        # remap, `MKAuthException.status` (401) would end up in the response.
+        raise RestAPIForbiddenException(
+            title=http.client.responses[403],
+            detail=str(exc),
+        ) from exc
 
     # Step 5: Create the response object
     with tracer.span("create-response"):

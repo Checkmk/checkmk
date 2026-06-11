@@ -33,7 +33,7 @@ class TestMonitorHostsAuth:
 
         resp = client.list_all(limit=100, expect_ok=False)
 
-        assert resp.status_code == 401
+        assert resp.status_code == 403
         assert "permission" in resp.json["detail"]
 
 

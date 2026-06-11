@@ -17,6 +17,7 @@ from pydantic import PlainSerializer
 from werkzeug.datastructures import ETags, Headers
 
 from cmk.gui.config import Config
+from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -32,6 +33,7 @@ from cmk.gui.openapi.framework.model.common_fields import FieldsFilterType
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.validators import PermissionValidator
 from cmk.gui.openapi.utils import (
+    RestAPIForbiddenException,
     RestAPIHeaderValidationException,
     RestAPIPermissionException,
     RestAPIRequestGeneralException,
@@ -510,6 +512,58 @@ def test_handle_endpoint_request_permissions_not_checked() -> None:
         headers=Headers({"Accept": request_endpoint.content_type})
     )
     with pytest.raises(RestAPIPermissionException):
+        handle_endpoint_request(
+            request_endpoint,
+            request_data,
+            _api_context(),
+            permission_validator,
+            wato_enabled=True,
+            wato_use_git=False,
+            is_testing=False,
+        )
+
+
+def test_handle_endpoint_request_permission_denied_is_forbidden(
+    permission_validator: PermissionValidator,
+) -> None:
+    """A failed permission check of an authenticated user must result in a 403, not a 401."""
+
+    def _denied_handler() -> None:
+        raise MKAuthException("We are sorry, but you lack the permission for this operation.")
+
+    request_endpoint = RequestEndpointFactory.build(handler=_denied_handler)
+    request_data = RawRequestDataFactory.build(
+        headers=Headers({"Accept": request_endpoint.content_type})
+    )
+    with pytest.raises(RestAPIForbiddenException) as exc_info:
+        handle_endpoint_request(
+            request_endpoint,
+            request_data,
+            _api_context(),
+            permission_validator,
+            wato_enabled=True,
+            wato_use_git=False,
+            is_testing=False,
+        )
+
+    response = exc_info.value.to_problem()
+    assert response.status_code == 403, response.get_data(as_text=True)
+    assert "lack the permission" in response.get_json()["detail"]
+
+
+def test_handle_endpoint_request_unauthenticated_stays_unauthorized(
+    permission_validator: PermissionValidator,
+) -> None:
+    """Missing authentication must not be remapped to a 403."""
+
+    def _unauthenticated_handler() -> None:
+        raise MKUnauthenticatedException("You are not authenticated.")
+
+    request_endpoint = RequestEndpointFactory.build(handler=_unauthenticated_handler)
+    request_data = RawRequestDataFactory.build(
+        headers=Headers({"Accept": request_endpoint.content_type})
+    )
+    with pytest.raises(MKUnauthenticatedException):
         handle_endpoint_request(
             request_endpoint,
             request_data,

@@ -123,7 +123,7 @@ def test_create_token_requires_publish_permission(
     }
     with set_config(roles=roles):
         resp = clients.DashboardClient.create_dashboard_token(payload, expect_ok=False)
-    assert resp.status_code == 401, f"Expected 401, got {resp.status_code} {resp.json!r}"
+    assert resp.status_code == 403, f"Expected 403, got {resp.status_code} {resp.json!r}"
 
 
 def test_create_token_expiration_in_past(

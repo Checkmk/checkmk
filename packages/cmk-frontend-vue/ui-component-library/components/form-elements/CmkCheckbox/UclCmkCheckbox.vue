@@ -31,13 +31,13 @@ export const panelConfig = {
   value: {
     type: 'list' as const,
     title: 'Value',
-    help: 'The checkbox supports a mixed state in addition to checked and unchecked, following the ARIA checkbox pattern.',
+    help: 'The checkbox optionally supports a mixed state in addition to checked and unchecked, following the ARIA checkbox pattern.',
     options: [
-      { title: 'Checked', name: 'true' },
       { title: 'Unchecked', name: 'false' },
+      { title: 'Checked', name: 'true' },
       { title: 'Indeterminate', name: 'indeterminate' }
     ],
-    initialState: 'indeterminate'
+    initialState: 'false' as const
   },
   label: {
     type: 'string' as const,

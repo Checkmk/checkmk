@@ -38,7 +38,7 @@ export const panelConfig = {
   help: {
     type: 'string' as const,
     title: 'Help Text',
-    initialState: ''
+    initialState: 'Example help text'
   }
 } satisfies PanelConfigFor<typeof CmkLabel, 'for'>
 </script>
@@ -66,7 +66,12 @@ const propState = new PanelStateCreator<typeof CmkLabel, 'for'>().createRef(pane
     <UclDetailPageHeader>CmkLabel</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkLabel :variant="propState.variant" :dots="propState.dots" :cursor="propState.cursor">
+      <CmkLabel
+        :variant="propState.variant"
+        :dots="propState.dots"
+        :cursor="propState.cursor"
+        :help="propState.help"
+      >
         Form Field
       </CmkLabel>
 

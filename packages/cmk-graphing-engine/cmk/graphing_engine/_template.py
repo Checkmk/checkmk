@@ -11,14 +11,14 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
-from ._fetch import fetch_translated_metrics, FetchRRD
+from ._evaluate import DiscoveredGraph
+from ._fetch import fetch_translated_metrics, FetchRRD, GraphRequest, update_graph_data
 from ._from_api import (
     metric_names_of_graph,
     metric_names_of_title,
     parse_graph_from_api,
 )
 from ._objects import (
-    DiscoveredGraph,
     Graph,
     Line,
     metric_data_of,
@@ -175,11 +175,23 @@ def discover_template_graphs(
         # Draw the predictive companions of the graph's metrics, claim them, and build the result.
         graph, predictive_names = _add_predictive_lines(base, options.service, service_metrics)
         claimed.update(predictive_names)
+        [evaluated] = update_graph_data(
+            [
+                GraphRequest(
+                    time_range=options.time_range,
+                    consolidation_function=options.consolidation_function,
+                    graph=graph,
+                    metric_data=metric_data_of(graph, translated_metrics),
+                )
+            ],
+            rrd=rrd,
+        )
         return DiscoveredGraph(
             graph=graph,
             options=post_options,
-            graph_title=evaluate_title(graph.title, translated_metrics),
-            metric_data=metric_data_of(graph, translated_metrics),
+            title=evaluate_title(graph.title, translated_metrics),
+            stacks=evaluated.stacks,
+            lines=evaluated.lines,
         )
 
     for plugin in options.registered_graphs:

@@ -284,6 +284,17 @@ class EvaluatedGraph:
     lines: Sequence[EvaluatedLine]
 
 
+@dataclass(frozen=True, kw_only=True)
+class DiscoveredGraph[Options]:
+    graph: Graph
+    options: Options
+    # The graph's title with its expressions evaluated against the translated metrics; graph.title
+    # still carries the original, unevaluated title.
+    title: str
+    stacks: Sequence[EvaluatedStack]
+    lines: Sequence[EvaluatedLine]
+
+
 def _evaluate_curve(
     quantity: Quantity,
     time_series: Mapping[RRDMetricRef, TimeSeries],

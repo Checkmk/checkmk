@@ -11,9 +11,7 @@ from cmk.graphing.v1 import Title
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
-    AutoPrecision,
     ConsolidationFunction,
-    DecimalNotation,
     discover_template_graphs,
     Graph,
     Line,
@@ -23,15 +21,12 @@ from cmk.graphing_engine import (
     PerformanceValue,
     Quantity,
     RRDMetric,
-    RRDMetricData,
-    RRDOriginal,
     ServiceRef,
     Stack,
     TemplateDiscoveryOptions,
     TemplateOptions,
     TimeRange,
     TimeSeries,
-    Unit,
 )
 
 
@@ -77,9 +72,6 @@ def _stack(*members: Quantity) -> Stack:
     return Stack(members=list(members), inverse=False)
 
 
-_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
-
-
 def _perf(
     name: MetricName,
     *,
@@ -106,39 +98,18 @@ def _perf_data(*values: PerformanceValue) -> PerformanceData:
     return PerformanceData(check_command="", values=list(values))
 
 
-def _metric_data(
-    name: MetricName,
-    *,
-    lower_warning: float | None = None,
-    lower_critical: float | None = None,
-    warning: float | None = None,
-    critical: float | None = None,
-    minimum: float | None = None,
-    maximum: float | None = None,
-) -> RRDMetricData:
-    # The translated counterpart of _perf() under the identity translation (scale 1.0).
-    return RRDMetricData(
-        value=1.0,
-        originals=[RRDOriginal(metric_name=name, scale=1.0)],
-        title="Metric",
-        unit=_UNIT,
-        color="#28a2f3",
-        lower_warning=lower_warning,
-        lower_critical=lower_critical,
-        warning=warning,
-        critical=critical,
-        minimum=minimum,
-        maximum=maximum,
-    )
-
-
 class _FakeFetchRRD:
     def __init__(
         self,
         performance_response: Mapping[ServiceRef, PerformanceData] | None = None,
+        time_series_response: Mapping[RRDMetric, TimeSeries] | None = None,
     ) -> None:
         self._performance_response = performance_response or {}
+        self._time_series_response = time_series_response or {}
         self.performance_data_calls: list[tuple[ServiceRef, ...]] = []
+        self.time_series_calls: list[
+            tuple[tuple[RRDMetric, ...], TimeRange, ConsolidationFunction]
+        ] = []
 
     def fetch_performance_data(
         self, services: Sequence[ServiceRef]
@@ -153,7 +124,12 @@ class _FakeFetchRRD:
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
     ) -> Mapping[RRDMetric, TimeSeries]:
-        raise NotImplementedError
+        self.time_series_calls.append((tuple(rrd_metrics), time_range, consolidation_function))
+        return {
+            metric: self._time_series_response[metric]
+            for metric in rrd_metrics
+            if metric in self._time_series_response
+        }
 
 
 def test_discover_template_graphs_empty_service_returns_no_graphs() -> None:
@@ -194,9 +170,9 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
     assert discovered.options == TemplateOptions(
         time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
     )
-    assert discovered.metric_data == {
-        _rrd(cpu_user): _metric_data(cpu_user, warning=80.0, critical=90.0)
-    }
+    # The single metric is drawn as a stacked curve carrying its value.
+    assert [curve.value for stack in discovered.stacks for curve in stack.members] == [1.0]
+    assert discovered.lines == []
 
 
 def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
@@ -224,11 +200,8 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
     assert len(discovered) == 1
     assert discovered[0].graph == parse_graph_from_api(plugin, _id, service, _METRICS)
     # A plain title without expressions is carried through unchanged.
-    assert discovered[0].graph_title == "CPU"
-    assert discovered[0].metric_data == {
-        _rrd(cpu_user): _metric_data(cpu_user, warning=80.0),
-        _rrd(cpu_system): _metric_data(cpu_system),
-    }
+    assert discovered[0].title == "CPU"
+    assert [line.curve.value for line in discovered[0].lines] == [1.0, 1.0]
 
 
 def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() -> None:
@@ -396,15 +369,15 @@ def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantit
         registered_graphs=[plugin],
     )
     rrd = _FakeFetchRRD(
-        performance_response={service: _perf_data(_perf(cpu_user), _perf(cpu_system, warning=50.0))}
+        performance_response={
+            service: _perf_data(_perf(cpu_user), _perf(cpu_system, lower_warning=50.0))
+        }
     )
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
-    assert discovered.metric_data == {
-        _rrd(cpu_user): _metric_data(cpu_user),
-        _rrd(cpu_system): _metric_data(cpu_system, warning=50.0),
-    }
+    # cpu_user is drawn with its value; the scalar reference draws cpu_system's lower warning.
+    assert [line.curve.value for line in discovered.lines] == [1.0, 50.0]
 
 
 def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics() -> None:
@@ -431,10 +404,8 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
-    assert discovered.metric_data == {
-        _rrd(cpu_user): _metric_data(cpu_user),
-        _rrd(cpu_system): _metric_data(cpu_system, warning=50.0),
-    }
+    # cpu_user is drawn with its value; the scalar reference draws cpu_system's warning.
+    assert [line.curve.value for line in discovered.lines] == [1.0, 50.0]
 
 
 def test_discover_template_graphs_evaluates_the_title_expression() -> None:
@@ -458,8 +429,8 @@ def test_discover_template_graphs_evaluates_the_title_expression() -> None:
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
-    # The evaluated title is exposed via graph_title; the graph keeps its raw title.
-    assert discovered.graph_title == "CPU - 8 cores"
+    # The evaluated title is exposed via title; the graph keeps its raw title.
+    assert discovered.title == "CPU - 8 cores"
     assert "_EXPRESSION:" in discovered.graph.title
 
 
@@ -485,7 +456,7 @@ def test_discover_template_graphs_title_expression_falls_back_when_unresolvable(
 
     [discovered] = discover_template_graphs(options, rrd=rrd)
 
-    assert discovered.graph_title == "CPU"
+    assert discovered.title == "CPU"
 
 
 def test_discover_template_graphs_requires_a_metric_referenced_only_in_the_title() -> None:
@@ -542,7 +513,7 @@ def test_discover_template_graphs_claims_a_metric_referenced_only_in_the_title()
     # The plugin matches and claims cpu_user via its title, so cpu_user is not emitted separately.
     assert len(discovered) == 1
     assert discovered[0].graph.name == "cpu"
-    assert discovered[0].graph_title == "CPU - 8 cores"
+    assert discovered[0].title == "CPU - 8 cores"
 
 
 def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> None:
@@ -568,7 +539,8 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> 
     graph = discovered[0].graph
     assert isinstance(graph, Graph)
     assert _line(_rrd(predict)) in graph.lines
-    assert _rrd(predict) in discovered[0].metric_data
+    # cpu_user and its predictive companion are both drawn (neither dropped for missing data).
+    assert len(discovered[0].lines) == 2
 
 
 def test_discover_template_graphs_adds_predictive_lines_to_a_fallback_graph() -> None:

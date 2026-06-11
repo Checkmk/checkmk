@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._evaluate import (
+    DiscoveredGraph,
     evaluate_graph,
     evaluate_time_series,
     evaluate_value,
@@ -26,7 +27,6 @@ from ._objects import (
     CriticalOf,
     DecimalNotation,
     Difference,
-    DiscoveredGraph,
     DrawnMetric,
     EngineeringScientificNotation,
     FixedRange,

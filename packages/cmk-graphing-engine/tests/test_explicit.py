@@ -8,9 +8,7 @@ from collections.abc import Mapping, Sequence
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
 from cmk.graphing_engine import (
-    AutoPrecision,
     ConsolidationFunction,
-    DecimalNotation,
     discover_explicit_graphs,
     ExplicitDiscoveryOptions,
     ExplicitOptions,
@@ -22,13 +20,10 @@ from cmk.graphing_engine import (
     PerformanceValue,
     Quantity,
     RRDMetric,
-    RRDMetricData,
     RRDMetricWithCF,
-    RRDOriginal,
     ServiceRef,
     TimeRange,
     TimeSeries,
-    Unit,
     WarningOf,
 )
 
@@ -53,8 +48,6 @@ _METRICS = {
     "if_out": _metric("if_out", Title("If out")),
     "load": _metric("load", Title("Load")),
 }
-
-_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
 
 def _time_range() -> TimeRange:
@@ -111,36 +104,18 @@ def _perf_data(*values: PerformanceValue) -> PerformanceData:
     return PerformanceData(check_command="", values=list(values))
 
 
-def _data(
-    name: MetricName,
-    *,
-    title: str,
-    value: float,
-    warning: float | None = None,
-    critical: float | None = None,
-    minimum: float | None = None,
-    maximum: float | None = None,
-) -> RRDMetricData:
-    return RRDMetricData(
-        value=value,
-        originals=[RRDOriginal(metric_name=name, scale=1.0)],
-        title=title,
-        unit=_UNIT,
-        color="#28a2f3",
-        warning=warning,
-        critical=critical,
-        minimum=minimum,
-        maximum=maximum,
-    )
-
-
 class _FakeFetchRRD:
     def __init__(
         self,
         performance_response: Mapping[ServiceRef, PerformanceData] | None = None,
+        time_series_response: Mapping[RRDMetric, TimeSeries] | None = None,
     ) -> None:
         self._performance_response = performance_response or {}
+        self._time_series_response = time_series_response or {}
         self.performance_data_calls: list[tuple[ServiceRef, ...]] = []
+        self.time_series_calls: list[
+            tuple[tuple[RRDMetric, ...], TimeRange, ConsolidationFunction]
+        ] = []
 
     def fetch_performance_data(
         self, services: Sequence[ServiceRef]
@@ -155,7 +130,12 @@ class _FakeFetchRRD:
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
     ) -> Mapping[RRDMetric, TimeSeries]:
-        raise NotImplementedError
+        self.time_series_calls.append((tuple(rrd_metrics), time_range, consolidation_function))
+        return {
+            metric: self._time_series_response[metric]
+            for metric in rrd_metrics
+            if metric in self._time_series_response
+        }
 
 
 def test_discover_explicit_graphs_without_keys_returns_inline_definition_unchanged() -> None:
@@ -168,8 +148,9 @@ def test_discover_explicit_graphs_without_keys_returns_inline_definition_unchang
     assert len(rendered) == 1
     assert rendered[0].graph is inline
     assert rendered[0].options == ExplicitOptions(time_range=_time_range())
-    assert rendered[0].graph_title == "t"
-    assert rendered[0].metric_data == {}
+    assert rendered[0].title == "t"
+    assert rendered[0].stacks == []
+    assert rendered[0].lines == []
 
 
 def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> None:
@@ -199,18 +180,11 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
-    assert rendered.metric_data == {
-        _rrd(cpu_user): _data(cpu_user, title="CPU user", value=42.0, warning=80.0, critical=90.0),
-        _rrd(cpu_system): _data(
-            cpu_system,
-            title="CPU system",
-            value=8.0,
-            warning=50.0,
-            critical=70.0,
-            minimum=0.0,
-            maximum=100.0,
-        ),
-    }
+    # cpu_user is drawn with its value; the threshold curve takes cpu_system's warning as its value.
+    assert [(line.curve.title, line.curve.value) for line in rendered.lines] == [
+        ("CPU user", 42.0),
+        ("CPU system", 50.0),
+    ]
     assert rrd.performance_data_calls == [(service,)]
 
 
@@ -222,7 +196,10 @@ def test_discover_explicit_graphs_omits_scalars_for_metrics_not_in_translated_me
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
-    assert rendered.metric_data == {}
+    # The metric has no data, so its curve is dropped from the evaluated graph.
+    assert rendered.title == "g"
+    assert rendered.stacks == []
+    assert rendered.lines == []
 
 
 def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> None:
@@ -243,10 +220,11 @@ def test_discover_explicit_graphs_carries_scalars_across_a_bidirectional() -> No
 
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
-    assert rendered.metric_data == {
-        _rrd(if_in): _data(if_in, title="If in", value=1.0, warning=10.0),
-        _rrd(if_out): _data(if_out, title="If out", value=2.0),
-    }
+    # Upper line normal, lower line inverse; each curve carries its metric's value.
+    assert [(line.curve.title, line.curve.value, line.inverse) for line in rendered.lines] == [
+        ("If out", 2.0, False),
+        ("If in", 1.0, True),
+    ]
 
 
 def test_discover_explicit_graphs_keeps_same_metric_name_on_different_services_distinct() -> None:
@@ -279,10 +257,10 @@ def test_discover_explicit_graphs_keeps_same_metric_name_on_different_services_d
     [rendered] = discover_explicit_graphs(options, rrd=rrd)
 
     # Same metric name, same title - distinguished by the per-service value.
-    assert rendered.metric_data == {
-        metric_a: _data(load, title="Load", value=1.0),
-        metric_b: _data(load, title="Load", value=2.0),
-    }
+    assert [(line.curve.title, line.curve.value) for line in rendered.lines] == [
+        ("Load", 1.0),
+        ("Load", 2.0),
+    ]
 
 
 def test_discover_explicit_graphs_passes_through_a_fixed_vertical_range() -> None:

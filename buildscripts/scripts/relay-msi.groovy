@@ -19,19 +19,15 @@ void main() {
     def cmk_vers_rc_aware = versioning.get_cmk_version(branch_name, branch_version, version);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_vers_rc_aware);
 
-    // MSI requires strict x.x.x.x numeric version. Extract the numeric base
-    // (e.g. "2.6.0") from whatever form cmk_version takes (e.g. "'2.6.0'-2026.05.20")
-    // and pad to four components.
-    def match = (cmk_version =~ /(\d+\.\d+\.\d+)/);
-    def msi_version = match ? match[0][1] + ".0" : "0.0.0.0";
-
     // When FORCE_SIGN parameter is present we honour it. Otherwise we sign the MSI.
     def should_sign = (params.FORCE_SIGN == null) || (params.FORCE_SIGN == true);
 
+    // Forward the pipeline version unchanged (like winagt-build does for the agent);
+    // build-msi.ps1 normalises it into the strict x.x.x.x WiX requires.
     dir("${checkout_dir}") {
         windows.build(
             TARGET: should_sign ? 'relay_msi_with_sign' : 'relay_msi_no_sign',
-            VERSION: msi_version,
+            VERSION: cmk_version,
         );
     }
 }

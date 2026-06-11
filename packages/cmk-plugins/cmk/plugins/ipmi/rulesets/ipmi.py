@@ -8,6 +8,7 @@
 # mypy: disable-error-code="unreachable"
 
 from collections.abc import Mapping
+from dataclasses import asdict
 from typing import Any, assert_never, Literal
 
 from cmk.plugins.ipmi.lib.ipmi import DiscoveryMode, StateMapping, UserLevels
@@ -180,18 +181,20 @@ def _migrate_sensor_states(value: object) -> list[StateMapping]:
     return [_migrate_inner(x) for x in value]
 
 
-def _migrate_sensor_limits(value: object) -> list[UserLevels]:
+def _migrate_sensor_limits(value: object) -> list[dict[str, object]]:
     def _migrate_inner(
-        x: UserLevels | tuple[str, dict[str, tuple[float, float]]],
-    ) -> UserLevels:
+        x: dict[str, object] | tuple[str, dict[str, tuple[float, float]]],
+    ) -> dict[str, object]:
         match x:
             case dict():
                 return x
             case tuple():
-                return UserLevels(
-                    sensor_name=x[0],
-                    lower=migrate_to_float_simple_levels(x[1].get("lower", None)),
-                    upper=migrate_to_float_simple_levels(x[1].get("upper", None)),
+                return asdict(
+                    UserLevels(
+                        sensor_name=x[0],
+                        lower=migrate_to_float_simple_levels(x[1].get("lower", None)),
+                        upper=migrate_to_float_simple_levels(x[1].get("upper", None)),
+                    )
                 )
             case _:
                 raise TypeError(f"Unexpected type {type(x)}")

@@ -149,13 +149,14 @@ class MetricsAssociationConfig(BaseSchema):
         required=True,
         description="List of filters to apply",
     )
-    host_name_resource_attribute_key = fields.String(
+    host_name_template = fields.String(
         required=False,
         minLength=1,
-        example="service.name",
-        description="Optional. For manually configured hosts: the resource attribute whose value "
-        "equals the host name. Left unset for hosts created by the Dynamic Host Management "
-        "connection.",
+        example="$RESOURCE_ATTR.service.name$",
+        description="Optional. For manually configured hosts: a host name template using the macros "
+        "$RESOURCE_ATTR.<key>$, $SCOPE_ATTR.<key>$ and $DATA_POINT_ATTR.<key>$, resolved at query "
+        "time to select this host's series. Left unset for hosts created by the Dynamic Host "
+        "Management connection.",
     )
 
 

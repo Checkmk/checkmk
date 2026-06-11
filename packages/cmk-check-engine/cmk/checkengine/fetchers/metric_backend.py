@@ -34,6 +34,13 @@ class MetricBackendFetcherConfig:
     scope_attribute_filters: Sequence[AttributeFilter]
     data_point_attribute_filters: Sequence[AttributeFilter]
     check_interval: float
+    host_name: str
+    # A free-form host name template (e.g. "$RESOURCE_ATTR.service.name$") that, by convention,
+    # resolves to this host's own name. It is carried through verbatim and resolved into concrete
+    # attribute filters by the telemetry fetcher (which has backend access and the template logic).
+    # Hosts created by the DCD connector instead carry the resolved values directly in the
+    # attribute filters and leave this empty.
+    host_name_template: str | None
 
     @classmethod
     def from_serialized(
@@ -43,28 +50,20 @@ class MetricBackendFetcherConfig:
 
         attribute_filters = metrics_association["attribute_filters"]
 
-        # Manual convenience: a host may carry a single resource attribute key whose value is, by
-        # convention, the host's own name (e.g. "service.name"). Expand it into a concrete resource
-        # attribute filter so a manually configured host's series can be selected. Hosts created by
-        # the DCD connector instead carry the resolved values directly in the attribute filters and
-        # leave this empty.
-        host_name_filters = (
-            [AttributeFilter(key=host_name_resource_attribute_key, value=host_name)]
-            if (
-                host_name_resource_attribute_key := metrics_association.get(
-                    "host_name_resource_attribute_key"
-                )
-            )
-            else []
-        )
+        host_name_template = metrics_association.get("host_name_template")
+        if host_name_template is None and (
+            legacy_key := metrics_association.get("host_name_resource_attribute_key")
+        ):
+            # Backward compatibility: a host configured before the template feature carries a single
+            # resource attribute key whose value, by convention, equals the host's own name. Map it
+            # to the equivalent template so it keeps working regardless of when the config migration
+            # runs. Mirrors cmk.telemetry.host_name_template.macro_for_key.
+            host_name_template = f"$RESOURCE_ATTR.{legacy_key}$"
 
         return cls(
             resource_attribute_filters=[
-                *host_name_filters,
-                *(
-                    AttributeFilter(key=attribute_filter["key"], value=attribute_filter["value"])
-                    for attribute_filter in attribute_filters["resource_attributes"]
-                ),
+                AttributeFilter(key=attribute_filter["key"], value=attribute_filter["value"])
+                for attribute_filter in attribute_filters["resource_attributes"]
             ],
             scope_attribute_filters=[
                 AttributeFilter(key=attribute_filter["key"], value=attribute_filter["value"])
@@ -75,6 +74,8 @@ class MetricBackendFetcherConfig:
                 for attribute_filter in attribute_filters["data_point_attributes"]
             ],
             check_interval=check_interval,
+            host_name=host_name,
+            host_name_template=host_name_template,
         )
 
 

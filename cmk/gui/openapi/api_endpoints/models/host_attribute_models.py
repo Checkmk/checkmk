@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Annotated, Literal
 
 from pydantic import AfterValidator, WithJsonSchema
@@ -354,9 +354,7 @@ class HostViewAttributeModel(
                             ]
                         ],
                     ),
-                    host_name_resource_attribute_key=metrics_assoc[1].get(
-                        "host_name_resource_attribute_key", ApiOmitted()
-                    ),
+                    host_name_template=_metrics_association_host_name_template(metrics_assoc[1]),
                 )
             )
             if (metrics_assoc := value.get("metrics_association"))
@@ -474,6 +472,16 @@ class HostUpdateAttributeModel(
         return attributes
 
 
+def _metrics_association_host_name_template(enabled: Mapping[str, object]) -> str | ApiOmitted:
+    if "host_name_template" in enabled:
+        return str(enabled["host_name_template"])
+    # Backward compatibility: map the legacy single key to its template form.
+    # Mirrors cmk.telemetry.host_name_template.macro_for_key.
+    if "host_name_resource_attribute_key" in enabled:
+        return f"$RESOURCE_ATTR.{enabled['host_name_resource_attribute_key']}$"
+    return ApiOmitted()
+
+
 def _metrics_association_to_internal(
     model: MetricsAssociationModel,
 ) -> tuple[Literal["disabled"], None] | tuple[Literal["enabled"], MetricsAssociationEnabled]:
@@ -495,7 +503,7 @@ def _metrics_association_to_internal(
             ],
         ),
     )
-    # Optional manual convenience key; absent for hosts created by the DCD connector.
-    if not isinstance(model.host_name_resource_attribute_key, ApiOmitted):
-        enabled["host_name_resource_attribute_key"] = model.host_name_resource_attribute_key
+    # Optional manual host name template; absent for hosts created by the DCD connector.
+    if not isinstance(model.host_name_template, ApiOmitted):
+        enabled["host_name_template"] = model.host_name_template
     return ("enabled", enabled)

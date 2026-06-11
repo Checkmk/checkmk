@@ -204,6 +204,7 @@ allows = [
   "cmk.gui",
   "cmk.metric_backend",
   "cmk.telemetry.gui",
+  "cmk.telemetry.host_name_template",
   "cmk.shared_typing.vue_formspec_components",
   "cmk.utils",
 ]
@@ -1089,6 +1090,7 @@ allows = [
   "cmk.metric_backend.gui",
   "cmk.otel_collector",
   "cmk.robotmk",
+  "cmk.telemetry.host_name_template",
   "cmk.update_config",
   "cmk.utils",
   "cmk.validate_config",

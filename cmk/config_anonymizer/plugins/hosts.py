@@ -367,6 +367,12 @@ def _anonymize_metrics_association(
             ],
         },
     }
+    if "host_name_template" in value:
+        anonymized["host_name_template"] = anon_interface.get_generic_mapping(
+            value["host_name_template"],
+            "metrics_association",
+        )
+    # Backward compatibility: anonymize the legacy single-key field on un-migrated configs too.
     if "host_name_resource_attribute_key" in value:
         anonymized["host_name_resource_attribute_key"] = anon_interface.get_generic_mapping(
             value["host_name_resource_attribute_key"],

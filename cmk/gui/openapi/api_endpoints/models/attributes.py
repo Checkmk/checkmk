@@ -800,10 +800,11 @@ class MetricsAssociationEnabledModel:
         "The resource attributes that the host name template resolved to are included here, "
         "so the host's series can be selected by filtering on exactly these values."
     )
-    host_name_resource_attribute_key: str | ApiOmitted = api_field(
-        description="Optional. For manually configured hosts: the resource attribute whose value "
-        "equals this host's name. Expanded to a resource attribute filter at query time. Left "
-        "unset for hosts created by the Dynamic Host Management connection.",
+    host_name_template: str | ApiOmitted = api_field(
+        description="Optional. For manually configured hosts: a host name template (e.g. "
+        "$RESOURCE_ATTR.service.name$) using the macros $RESOURCE_ATTR.<key>$, $SCOPE_ATTR.<key>$ "
+        "and $DATA_POINT_ATTR.<key>$. Resolved at query time to select the series belonging to "
+        "this host. Left unset for hosts created by the Dynamic Host Management connection.",
         default_factory=ApiOmitted,
     )
 

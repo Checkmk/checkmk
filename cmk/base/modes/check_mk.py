@@ -131,6 +131,7 @@ from cmk.inventory.structured_data import (
     RawIntervalFromConfig,
     SDPath,
 )
+from cmk.licensing.basics.finder import blocked_feature_files
 from cmk.piggyback import backend as piggyback_backend
 from cmk.server_side_calls_backend import (
     ExecutableFinder,
@@ -144,6 +145,7 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.log import console, section
+from cmk.utils.paths import omd_root
 from cmk.utils.rulesets.ruleset_matcher import (
     BundledHostRulesetMatcher,
     RulesetMatcher,
@@ -1940,6 +1942,7 @@ def _mode_man(app: CheckmkBaseApp, options: Mapping[str, str], args: list[str]) 
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=cmk.ccc.debug.enabled()),
         PluginGroup.CHECKMAN.value,
+        blocked_paths=blocked_feature_files(omd_root),
     )
     if not args:
         man_pages.print_man_page_table(man_page_path_map)
@@ -2008,6 +2011,7 @@ def _mode_browse_man(app: CheckmkBaseApp) -> None:
         man_pages.load_man_page_catalog(
             discover_families(raise_errors=cmk.ccc.debug.enabled()),
             PluginGroup.CHECKMAN.value,
+            blocked_paths=blocked_feature_files(omd_root),
         )
     )
 

@@ -372,6 +372,30 @@ importers:
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
+      d3-array:
+        specifier: ^3.2.4
+        version: 3.2.4
+      d3-axis:
+        specifier: ^3.0.0
+        version: 3.0.0
+      d3-scale:
+        specifier: ^4.0.2
+        version: 4.0.2
+      d3-selection:
+        specifier: ^3.0.0
+        version: 3.0.0
+      d3-shape:
+        specifier: ^3.2.0
+        version: 3.2.0
+      d3-time-format:
+        specifier: ^4.1.0
+        version: 4.1.0
+      d3-transition:
+        specifier: ^3.0.1
+        version: 3.0.1(d3-selection@3.0.0)
+      d3-zoom:
+        specifier: ^3.0.0
+        version: 3.0.0
       grid-layout-plus:
         specifier: ^1.1.1
         version: 1.1.1(vue@3.5.32(typescript@6.0.3))
@@ -421,6 +445,30 @@ importers:
       '@tsconfig/node22':
         specifier: ^22.0.5
         version: 22.0.5
+      '@types/d3-array':
+        specifier: ^3.2.1
+        version: 3.2.2
+      '@types/d3-axis':
+        specifier: ^3.0.6
+        version: 3.0.6
+      '@types/d3-scale':
+        specifier: ^4.0.8
+        version: 4.0.9
+      '@types/d3-selection':
+        specifier: ^3.0.11
+        version: 3.0.11
+      '@types/d3-shape':
+        specifier: ^3.1.6
+        version: 3.1.8
+      '@types/d3-time-format':
+        specifier: ^4.0.3
+        version: 4.0.3
+      '@types/d3-transition':
+        specifier: ^3.0.9
+        version: 3.0.9
+      '@types/d3-zoom':
+        specifier: ^3.0.8
+        version: 3.0.8
       '@types/node':
         specifier: ^22.19.17
         version: 22.19.17
@@ -1875,6 +1923,7 @@ packages:
 
   '@ranfdev/deepobj@1.0.2':
     resolution: {integrity: sha512-FM3y6kfJaj5MCoAjdv24EDCTDbuFz+4+pgAunbjYfugwIE4O/xx8mPNji1n/ouG8pHCntSnBr1xwTOensF23Gg==}
+    deprecated: This library is unmaintained
 
   '@redocly/ajv@8.11.2':
     resolution: {integrity: sha512-io1JpnwtIcvojV7QKDUSIuMN/ikdOUd1ReEnUnMKGfDVridQZ31J0MmIuqwuRjWDZfmvr+Q0MqCcfHM2gTivOg==}

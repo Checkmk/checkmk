@@ -13,11 +13,6 @@ from ._evaluate import (
     EvaluatedLine,
     EvaluatedStack,
 )
-from ._explicit import (
-    discover_explicit_graphs,
-    ExplicitDiscoveryOptions,
-    ExplicitOptions,
-)
 from ._fetch import (
     evaluate_graphs,
     fetch_translated_metrics,
@@ -96,8 +91,6 @@ __all__ = [
     "EvaluatedGraph",
     "EvaluatedLine",
     "EvaluatedStack",
-    "ExplicitDiscoveryOptions",
-    "ExplicitOptions",
     "FixedRange",
     "Fraction",
     "Graph",
@@ -137,7 +130,6 @@ __all__ = [
     "Unit",
     "VerticalRange",
     "WarningOf",
-    "discover_explicit_graphs",
     "discover_template_graphs",
     "evaluate_graph",
     "evaluate_graphs",

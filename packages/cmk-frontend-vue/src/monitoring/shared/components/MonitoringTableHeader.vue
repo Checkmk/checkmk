@@ -177,15 +177,15 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
 
 <style scoped>
 .monitoring-table-header__header-cell {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   vertical-align: middle;
   height: 24px;
   font-weight: var(--font-weight-bold);
   background: var(--ux-theme-2);
   white-space: nowrap;
   text-align: left;
-  position: sticky;
-  top: 0;
-  z-index: 2;
 }
 
 .monitoring-table-header__header-cell--last-pinned::after {

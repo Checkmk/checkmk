@@ -6,11 +6,28 @@
 import type { ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
-import { defineComponent, h, provide, ref } from 'vue'
+import { defineComponent, h, nextTick, provide, ref } from 'vue'
 
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
+
+const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
+const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
+  Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
+})
+
+afterAll(() => {
+  if (originalOffsetHeight) {
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight)
+  }
+  if (originalOffsetWidth) {
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', originalOffsetWidth)
+  }
+})
 
 interface Row {
   id: string
@@ -109,8 +126,14 @@ test('renders all columns in the header', () => {
   expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument()
 })
 
-test('renders one row per item via the row slot', () => {
+async function flushVirtualizer(): Promise<void> {
+  await nextTick()
+  await nextTick()
+}
+
+test('renders one row per item via the row slot', async () => {
   mountTable({ rows: makeRows(3) })
+  await flushVirtualizer()
 
   expect(screen.getByTestId('row-row-0')).toHaveTextContent('0:host-0')
   expect(screen.getByTestId('row-row-1')).toHaveTextContent('1:host-1')
@@ -158,11 +181,12 @@ test('aria-busy is false when not loading', () => {
   expect(container.querySelector('.monitoring-table')).toHaveAttribute('aria-busy', 'false')
 })
 
-test('uses getRowKey for row keying when provided', () => {
+test('uses getRowKey for row keying when provided', async () => {
   mountTable({
     rows: makeRows(2),
     getRowKey: (row) => row.id
   })
+  await flushVirtualizer()
 
   expect(screen.getByTestId('row-row-0')).toBeInTheDocument()
   expect(screen.getByTestId('row-row-1')).toBeInTheDocument()

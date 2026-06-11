@@ -366,6 +366,9 @@ importers:
       '@tanstack/vue-table':
         specifier: ^8.21.3
         version: 8.21.3(vue@3.5.32(typescript@6.0.3))
+      '@tanstack/vue-virtual':
+        specifier: ^3.13.24
+        version: 3.13.24(vue@3.5.32(typescript@6.0.3))
       axios:
         specifier: ^1.15.0
         version: 1.15.1(debug@4.4.3)

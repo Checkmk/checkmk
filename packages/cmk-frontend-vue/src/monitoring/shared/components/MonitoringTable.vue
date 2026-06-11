@@ -12,7 +12,16 @@ import {
   getCoreRowModel,
   useVueTable
 } from '@tanstack/vue-table'
-import { computed, inject, onBeforeUnmount, provide, ref, watch } from 'vue'
+import { useVirtualizer } from '@tanstack/vue-virtual'
+import {
+  type ComponentPublicInstance,
+  computed,
+  inject,
+  onBeforeUnmount,
+  provide,
+  ref,
+  watch
+} from 'vue'
 
 import {
   COLUMN_LAYOUT_KEY,
@@ -82,19 +91,27 @@ const pinningEnabled = computed(() => (props.columnPinning?.left?.length ?? 0) >
 
 const wrapperRef = ref<HTMLElement | null>(null)
 const containerWidth = ref<number | null>(null)
+const headerHeight = ref(0)
 let observer: ResizeObserver | null = null
 
 watch(wrapperRef, (el) => {
   observer?.disconnect()
   observer = null
   if (el && typeof ResizeObserver !== 'undefined') {
+    const thead = el.querySelector('thead')
+    const measure = (width: number): void => {
+      containerWidth.value = width
+      if (thead) {
+        headerHeight.value = thead.getBoundingClientRect().height
+      }
+    }
     observer = new ResizeObserver((entries) => {
       const entry = entries[0]
       if (entry) {
-        containerWidth.value = entry.contentRect.width
+        measure(entry.contentRect.width)
       }
     })
-    containerWidth.value = el.getBoundingClientRect().width
+    measure(el.getBoundingClientRect().width)
     observer.observe(el)
   }
 })
@@ -231,6 +248,45 @@ const columnInfos = computed<Map<string, ColumnLayoutInfo>>(() => {
   return infos
 })
 provide(COLUMN_LAYOUT_KEY, columnInfos)
+
+const leafColumnCount = computed(() => columnMetrics.value.length)
+
+function rowKeyOf(index: number): string | number {
+  return props.getRowKey ? props.getRowKey(props.rows[index]!, index) : index
+}
+
+const rowVirtualizer = useVirtualizer(
+  computed(() => ({
+    count: props.rows.length,
+    getScrollElement: () => wrapperRef.value,
+    estimateSize: () => 33,
+    overscan: 12,
+    scrollMargin: headerHeight.value,
+    getItemKey: rowKeyOf
+  }))
+)
+
+const virtualRows = computed(() => rowVirtualizer.value.getVirtualItems())
+const totalSize = computed(() => rowVirtualizer.value.getTotalSize())
+
+const paddingTop = computed(() => {
+  const first = virtualRows.value[0]
+  return first ? Math.max(0, first.start - headerHeight.value) : 0
+})
+const paddingBottom = computed(() => {
+  const last = virtualRows.value[virtualRows.value.length - 1]
+  return last ? Math.max(0, totalSize.value - last.end + headerHeight.value) : 0
+})
+
+function measureRowElement(el: Element | ComponentPublicInstance | null): void {
+  if (el instanceof HTMLElement) {
+    rowVirtualizer.value.measureElement(el)
+  }
+}
+
+function rowAt(index: number): T {
+  return props.rows[index]!
+}
 </script>
 
 <template>
@@ -246,14 +302,24 @@ provide(COLUMN_LAYOUT_KEY, columnInfos)
             <slot name="empty-state" />
           </td>
         </tr>
-        <tr
-          v-for="(row, index) in rows"
-          v-else
-          :key="getRowKey ? getRowKey(row, index) : index"
-          class="monitoring-table__row"
-        >
-          <slot name="row" :row="row" :index="index" />
-        </tr>
+        <template v-else>
+          <tr v-if="paddingTop > 0" class="monitoring-table__spacer" aria-hidden="true">
+            <td :colspan="leafColumnCount" :style="{ height: `${paddingTop}px` }"></td>
+          </tr>
+          <tr
+            v-for="virtualRow in virtualRows"
+            :key="rowKeyOf(virtualRow.index)"
+            :ref="measureRowElement"
+            :data-index="virtualRow.index"
+            class="monitoring-table__row"
+            :class="{ 'monitoring-table__row--alt': virtualRow.index % 2 === 1 }"
+          >
+            <slot name="row" :row="rowAt(virtualRow.index)" :index="virtualRow.index" />
+          </tr>
+          <tr v-if="paddingBottom > 0" class="monitoring-table__spacer" aria-hidden="true">
+            <td :colspan="leafColumnCount" :style="{ height: `${paddingBottom}px` }"></td>
+          </tr>
+        </template>
       </tbody>
     </table>
   </div>
@@ -262,7 +328,7 @@ provide(COLUMN_LAYOUT_KEY, columnInfos)
 <style scoped>
 .monitoring-table {
   width: 100%;
-  height: 100%;
+  max-height: 100%;
   overflow: auto;
 }
 
@@ -273,11 +339,20 @@ provide(COLUMN_LAYOUT_KEY, columnInfos)
   border-spacing: 0;
 }
 
-.monitoring-table__row:nth-child(even) {
+.monitoring-table__row {
+  background: var(--ux-theme-4);
+}
+
+.monitoring-table__row--alt {
   background: var(--ux-theme-3);
 }
 
-.monitoring-table__row:nth-child(odd) {
-  background: var(--ux-theme-4);
+.monitoring-table__spacer {
+  background: transparent;
+}
+
+.monitoring-table__spacer td {
+  padding: 0;
+  border: 0;
 }
 </style>

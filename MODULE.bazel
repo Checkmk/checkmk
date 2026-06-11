@@ -134,6 +134,8 @@ single_version_override(
     patches = [
         "//bazel/patches:rules_lint-groovy.patch",
         "//bazel/patches:rules_lint-groovy-lint.patch",
+        # Carried locally — no upstream PR yet.
+        "//bazel/patches:rules_lint-add-powershell-formatter.patch",
         "//bazel/patches:rules_lint-include-files-with-bazel-extension.patch",
         # https://github.com/aspect-build/rules_lint/issues/690
         "//bazel/patches:rules_lint-fix-ruff-sarif-output.patch",

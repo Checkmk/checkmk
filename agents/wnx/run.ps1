@@ -9,7 +9,7 @@
 # -documentation
 # -setup
 
-if ((get-host).version.major -lt 7) {
+if ((Get-Host).version.major -lt 7) {
     Write-Host "PowerShell version 7 or higher is required." -ForegroundColor Red
     exit
 }
@@ -31,13 +31,14 @@ $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.e
 if (Test-Path $vswhere) {
     $msbuild_exe = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
     Write-Host "msbuild is $msbuild_exe" -Fore White
-} else {
+}
+else {
     $msbuild_exe = $null
     Write-Host "vswhere is absent, please, install MSVC" -Fore Red
     exit 33   
 }
 
-$repo_root = (get-item $pwd).parent.parent.FullName
+$repo_root = (Get-Item $pwd).parent.parent.FullName
 $results_dir = "$repo_root\artefacts"
 $build_dir = "$pwd\build"
 $env:ExternalCompilerOptions = "/DDECREASE_COMPILE_TIME"
@@ -137,7 +138,7 @@ function Invoke-CheckApp( [String]$title, [String]$cmdline ) {
     }
     catch {
         Write-Host "[-] $title :$_" -Fore Red
-        Exit 55
+        exit 55
     }
 }
 
@@ -146,7 +147,7 @@ function Add-HashLine($file_to_hash, $out_file) {
 
     try {
         $file_to_hash_name = Get-ChildItem -Path $file_to_hash | Select-Object Name -ExpandProperty Name
-        Add-Content -Path $out_file -Value ($file_to_hash_name + " ") -NoNewLine
+        Add-Content -Path $out_file -Value ($file_to_hash_name + " ") -NoNewline
         Get-FileHash $file_to_hash -Algorithm SHA256 -ErrorAction Stop | Select-Object Hash -ExpandProperty Hash | Add-Content -Path $out_file
     }
     catch {
@@ -175,7 +176,7 @@ function Build-Agent {
     $env:make_exe = $make_exe.trim()
     $env:wnx_version = Get-Version
     Write-Host "Used version: $env:wnx_version"
-    Write-Host make is $env:make_exe 
+    Write-Host make is $env:make_exe
     & $env:make_exe install_extlibs
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to install extlibs, error code is $LASTEXITCODE" -ErrorAction Stop
@@ -240,7 +241,7 @@ function Build-MSI {
 
 
 function Invoke-ChangeMsiProperties([string]$file, $version) {
-    $Installer = new-object -comobject WindowsInstaller.Installer
+    $Installer = New-Object -comobject WindowsInstaller.Installer
     $MSIOpenDatabaseModeTransact = 2
     $MsiFilePath = $file
 
@@ -351,12 +352,12 @@ function Invoke-Attach($usbip, $addr, $port) {
         throw "Attach to the signing key is not possible. Signing can't be done"
     }
     Write-Host "Attached USB, waiting a bit" -ForegroundColor Green
-    Start-Sleep -Seconds 5 
+    Start-Sleep -Seconds 5
     Test-SigningQuickly
     return
 }
 
-function Test-Administrator {  
+function Test-Administrator {
     [OutputType([bool])]
     param()
     process {
@@ -374,7 +375,7 @@ function Invoke-TestSigning($usbip) {
     if (-not(Test-Path -Path $usbip -PathType Leaf)) {
         $argSign = $False
         Write-Host "$usbip doesn't exist" -ForegroundColor Red
-        throw 
+        throw
     }
 
     if (-not (Test-Administrator)) {
@@ -388,7 +389,7 @@ function Invoke-TestSigning($usbip) {
     if ($LastExitCode -eq 3) {
         $argSign = $False
         Write-Host "No chance"
-        throw 
+        throw
     }
     Write-Host "try to detach"
 
@@ -598,7 +599,7 @@ function Clear-All() {
 }
 
 function Update-ArtefactDirs() {
-    If (Test-Path -PathType container $results_dir) {
+    if (Test-Path -PathType container $results_dir) {
         Write-Host "Using results dir: '$results_dir'" -ForegroundColor White
     }
     else {
@@ -616,7 +617,7 @@ function Test-MsiSigning($file) {
 
     Write-Host "Validate signing $file ..." -ForegroundColor White
     $random_dir = Join-Path $Env:Temp $(New-Guid); New-Item -Type Directory -Path $random_dir | Out-Null
-    try{
+    try {
         & 7z x "$results_dir\$file" -aoa -o"$random_dir\" *.cab > nul
         & 7z x "$random_dir\fixed.cab" -aoa -o"$random_dir\" *.exe > nul
 
@@ -654,9 +655,10 @@ Invoke-CheckApp "perl" "perl -v"
 Invoke-CheckApp "make" "make -v"
 if ($msbuild_exe) {
     Invoke-CheckApp "msvc" "& ""$msbuild_exe"" --version"
-} else {
+}
+else {
     Write-Host "[-] msvc :vswhere.exe not found or Visual Studio not installed" -Fore Red
-    Exit 55
+    exit 55
 }
 Invoke-CheckApp "is_crlf" "python .\scripts\check_crlf.py"
 
@@ -686,11 +688,10 @@ try {
 
     # BUILDING
     Build-Agent
-    if ($argBuildOnly){
+    if ($argBuildOnly) {
         $build_arg = "--build"
     }
-    else
-    {
+    else {
         $build_arg = ""
     }
 

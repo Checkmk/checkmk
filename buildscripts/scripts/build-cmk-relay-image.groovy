@@ -23,7 +23,6 @@ void main() {
     def push_to_registry = params.PUSH_TO_REGISTRY == true;
 
     def artifact_directory = "${checkout_dir}/artifacts"
-    def is_release_candidate = cmk_version_rc_aware.contains("-rc")
 
     def tarball_name = "check-mk-relay-${cmk_version}.tar"
 
@@ -83,7 +82,7 @@ void main() {
 
             smart_stage(
                 name: "Push image to docker hub",
-                condition: push_to_registry && !is_release_candidate,
+                condition: push_to_registry,
             ) {
                 withCredentials([
                     usernamePassword(
@@ -108,7 +107,7 @@ void main() {
             // RC builds are only pushed to nexus. never to dockerhub
             smart_stage(
                 name: "Push image to Nexus",
-                condition: push_to_registry && is_release_candidate,
+                condition: push_to_registry,
             ) {
                 withCredentials([
                     usernamePassword(

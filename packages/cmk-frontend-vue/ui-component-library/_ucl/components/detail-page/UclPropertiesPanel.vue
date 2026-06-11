@@ -129,7 +129,10 @@ onMounted(() => {
         v-else-if="def.type === 'list'"
         :component-id="`${uid}-${key}`"
         :label="def.title"
-        :options="{ type: 'fixed', suggestions: (def as ListPropDef).options }"
+        :options="{
+          type: (def as ListPropDef).options.length > 5 ? 'filtered' : 'fixed',
+          suggestions: (def as ListPropDef).options
+        }"
         :model-value="state[key] as string"
         @update:model-value="$event !== null && (state[key] = $event)"
       />

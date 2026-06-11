@@ -212,6 +212,7 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
   gap: var(--dimension-2);
   max-width: 100%;
   height: 100%;
+  width: 100%;
   background: transparent;
   border: none;
   margin: 0;

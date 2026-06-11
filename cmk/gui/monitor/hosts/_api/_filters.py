@@ -88,7 +88,13 @@ class AndNode:
     type: Literal["and"] = api_field(
         description="Logical AND: all children must match", example="and"
     )
-    children: list["FilterNode"] = api_field(description="Child filter nodes", example=[])
+    children: Annotated[list["FilterNode"], MinLen(2)] = api_field(
+        description="Child filter nodes",
+        example=[
+            StringCondition(type="condition", field="name", op="matches", value="heute"),
+            NumericCondition(type="condition", field="num_services", op="eq", value=42),
+        ],
+    )
 
 
 @api_model(slots=False)
@@ -96,7 +102,13 @@ class OrNode:
     type: Literal["or"] = api_field(
         description="Logical OR: at least one child must match", example="or"
     )
-    children: list["FilterNode"] = api_field(description="Child filter nodes", example=[])
+    children: Annotated[list["FilterNode"], MinLen(2)] = api_field(
+        description="Child filter nodes",
+        example=[
+            StringCondition(type="condition", field="name", op="matches", value="heute"),
+            NumericCondition(type="condition", field="num_services", op="eq", value=42),
+        ],
+    )
 
 
 @api_model(slots=False)

@@ -345,6 +345,11 @@ function onEditDone(id: string): void {
   transition: opacity 0.15s ease-in-out;
 }
 
+.metric-backend-form-attribute-filter__add:hover,
+.metric-backend-form-attribute-filter__remove-group:hover {
+  background-color: var(--input-hover-bg-color);
+}
+
 .metric-backend-form-attribute-filter__group:hover
   .metric-backend-form-attribute-filter__remove-group,
 .metric-backend-form-attribute-filter__group:focus-within

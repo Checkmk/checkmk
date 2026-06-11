@@ -52,7 +52,8 @@ def cloned_linux_hosts_dashboard(
     yield cloned_linux_hosts_dashboard
     # Cleanup: delete the cloned dashboard after the test
     if is_cleanup_enabled():
-        edit_dashboards = EditDashboards(dashboard_page.page)
+        dashboard_page.go("edit_dashboards.py", wait_until="load")
+        edit_dashboards = EditDashboards(dashboard_page.page, navigate_to_page=False)
         edit_dashboards.delete_dashboard(cloned_linux_hosts_dashboard.page_title)
 
 

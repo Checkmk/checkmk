@@ -108,7 +108,7 @@ class _FakeFetchRRD:
     ) -> Mapping[ServiceRef, PerformanceData]:
         raise NotImplementedError
 
-    def time_series(
+    def fetch_time_series(
         self,
         rrd_metrics: Sequence[RRDMetric],
         *,

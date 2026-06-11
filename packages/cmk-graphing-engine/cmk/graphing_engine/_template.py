@@ -12,7 +12,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._evaluate import DiscoveredGraph
-from ._fetch import fetch_translated_metrics, FetchRRD, GraphRequest, update_graph_data
+from ._fetch import fetch_translated_metrics, GraphRequest, RRDSource, update_graph_data
 from ._from_api import (
     metric_names_of_graph,
     metric_names_of_title,
@@ -153,7 +153,7 @@ def _add_predictive_lines(
 def discover_template_graphs(
     options: TemplateDiscoveryOptions,
     *,
-    rrd: FetchRRD,
+    rrd: RRDSource,
 ) -> Sequence[DiscoveredGraph[TemplateOptions]]:
     translated_metrics = fetch_translated_metrics(
         [options.service],

@@ -26,12 +26,12 @@ from ._options import ConsolidationFunction, TimeRange
 from ._translate import translate_performance_data
 
 
-class FetchRRD(Protocol):
+class RRDSource(Protocol):
     def fetch_performance_data(
         self, services: Sequence[ServiceRef]
     ) -> Mapping[ServiceRef, PerformanceData]: ...
 
-    def time_series(
+    def fetch_time_series(
         self,
         rrd_metrics: Sequence[RRDMetric],
         *,
@@ -82,7 +82,7 @@ def _merge(series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
     )
 
 
-def _fetch_series(request: GraphRequest, rrd: FetchRRD) -> Mapping[RRDMetricRef, TimeSeries]:
+def _fetch_series(request: GraphRequest, rrd: RRDSource) -> Mapping[RRDMetricRef, TimeSeries]:
     # A metric's originals are the raw RRD metrics to read (with per-metric scale). Fetch them
     # batched by consolidation function (a pinned metric uses its own, a bare one the request's),
     # then scale each one and merge a metric's series point by point.
@@ -112,7 +112,7 @@ def _fetch_series(request: GraphRequest, rrd: FetchRRD) -> Mapping[RRDMetricRef,
         )
 
     raw_per_function = {
-        consolidation_function: rrd.time_series(
+        consolidation_function: rrd.fetch_time_series(
             list(dict.fromkeys(rrd_metrics)),
             time_range=request.time_range,
             consolidation_function=consolidation_function,
@@ -133,7 +133,7 @@ def _fetch_series(request: GraphRequest, rrd: FetchRRD) -> Mapping[RRDMetricRef,
     return result
 
 
-def _fetch_and_evaluate(request: GraphRequest, rrd: FetchRRD) -> EvaluatedGraph:
+def _fetch_and_evaluate(request: GraphRequest, rrd: RRDSource) -> EvaluatedGraph:
     return evaluate_graph(
         request.graph,
         _fetch_series(request, rrd),
@@ -159,7 +159,7 @@ def _validate_consolidation_function(request: GraphRequest) -> None:
 def update_graph_data(
     requests: Sequence[GraphRequest],
     *,
-    rrd: FetchRRD,
+    rrd: RRDSource,
 ) -> Sequence[EvaluatedGraph]:
     for request in requests:
         _validate_consolidation_function(request)
@@ -169,7 +169,7 @@ def update_graph_data(
 def fetch_translated_metrics(
     services: Iterable[ServiceRef],
     *,
-    rrd: FetchRRD,
+    rrd: RRDSource,
     translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],

@@ -10,7 +10,7 @@ from typing import ClassVar, Literal
 from cmk.graphing.v1 import metrics as metrics_v1
 
 from ._evaluate import DiscoveredGraph
-from ._fetch import fetch_translated_metrics, FetchRRD, GraphRequest, update_graph_data
+from ._fetch import fetch_translated_metrics, GraphRequest, RRDSource, update_graph_data
 from ._objects import (
     Graph,
     metric_data_of,
@@ -40,7 +40,7 @@ class ExplicitOptions:
 def discover_explicit_graphs(
     options: ExplicitDiscoveryOptions,
     *,
-    rrd: FetchRRD,
+    rrd: RRDSource,
 ) -> Sequence[DiscoveredGraph[ExplicitOptions]]:
     # The graph's metrics carry their own service, so the services to fetch are derived from them.
     translated_metrics = fetch_translated_metrics(

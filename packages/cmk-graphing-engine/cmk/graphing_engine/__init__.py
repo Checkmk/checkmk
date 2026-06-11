@@ -18,7 +18,7 @@ from ._explicit import (
     ExplicitDiscoveryOptions,
     ExplicitOptions,
 )
-from ._fetch import fetch_translated_metrics, FetchRRD, GraphRequest, update_graph_data
+from ._fetch import fetch_translated_metrics, GraphRequest, RRDSource, update_graph_data
 from ._from_api import parse_graph_from_api
 from ._objects import (
     AutoPrecision,
@@ -92,7 +92,6 @@ __all__ = [
     "EvaluatedStack",
     "ExplicitDiscoveryOptions",
     "ExplicitOptions",
-    "FetchRRD",
     "FixedRange",
     "Fraction",
     "Graph",
@@ -117,6 +116,7 @@ __all__ = [
     "RRDMetricRef",
     "RRDMetricWithCF",
     "RRDOriginal",
+    "RRDSource",
     "SINotation",
     "ServiceRef",
     "Stack",

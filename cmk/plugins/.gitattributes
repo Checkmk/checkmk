@@ -1,0 +1,2 @@
+# Force crlf for Windows agent plugins
+*.ps1 text eol=crlf

@@ -72,6 +72,14 @@ class Unit:
     precision: Precision
 
 
+@dataclass(frozen=True, kw_only=True)
+class DisplayAttributes:
+    # How a metric or quantity is rendered: its title, unit and colour.
+    title: str
+    unit: Unit
+    color: str
+
+
 @dataclass(frozen=True)
 class Constant:
     title: str
@@ -306,6 +314,13 @@ class TimeSeries:
 
 
 @dataclass(frozen=True, kw_only=True)
+class DrawnMetric:
+    # A metric drawn by a graph, paired with the direction (inverse) of the line drawing it.
+    metric: RRDMetricRef
+    inverse: bool
+
+
+@dataclass(frozen=True, kw_only=True)
 class Graph:
     name: str
     title: str
@@ -313,15 +328,14 @@ class Graph:
     stacks: Sequence[Stack] = ()
     lines: Sequence[Line] = ()
 
-    def drawn_metrics(self) -> Iterable[tuple[RRDMetricRef, bool]]:
-        # Each drawn metric paired with the direction (inverse) of the line drawing it.
+    def drawn_metrics(self) -> Iterable[DrawnMetric]:
         for group in self.stacks:
             for member in group.members:
                 for rrd_metric in _rrd_metrics_in_quantity(member):
-                    yield rrd_metric, group.inverse
+                    yield DrawnMetric(metric=rrd_metric, inverse=group.inverse)
         for line in self.lines:
             for rrd_metric in _rrd_metrics_in_quantity(line.quantity):
-                yield rrd_metric, line.inverse
+                yield DrawnMetric(metric=rrd_metric, inverse=line.inverse)
 
     def rrd_metrics(self) -> Sequence[RRDMetricRef]:
         return list(

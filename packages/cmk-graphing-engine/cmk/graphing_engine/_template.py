@@ -114,8 +114,8 @@ def _add_predictive_lines(
     """Augment a template graph with the predictive companions of its metrics (new graph object)."""
     # A predictive companion is drawn in the same direction as the line of the metric it predicts.
     inverse_by_metric: dict[MetricName, bool] = {}
-    for rrd_metric, inverse in graph.drawn_metrics():
-        inverse_by_metric.setdefault(rrd_metric.metric_name, inverse)
+    for drawn in graph.drawn_metrics():
+        inverse_by_metric.setdefault(drawn.metric.metric_name, drawn.inverse)
 
     added: list[Line] = []
     names: set[MetricName] = set()

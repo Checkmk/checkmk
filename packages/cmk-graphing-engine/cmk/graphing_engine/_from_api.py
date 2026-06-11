@@ -20,6 +20,7 @@ from ._objects import (
     CriticalOf,
     DecimalNotation,
     Difference,
+    DisplayAttributes,
     EngineeringScientificNotation,
     Fraction,
     Graph,
@@ -142,14 +143,14 @@ def metric_display_attributes(
     metric_name: str,
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
-) -> tuple[str, Unit, str]:
+) -> DisplayAttributes:
     """Title, unit and color of a (translated) metric, falling back to sensible defaults."""
     if (definition := metrics.get(metric_name)) is None:
-        return metric_name, _FALLBACK_UNIT, _FALLBACK_COLOR
-    return (
-        definition.title.localize(localizer),
-        _parse_unit(definition.unit),
-        _parse_color(definition.color),
+        return DisplayAttributes(title=metric_name, unit=_FALLBACK_UNIT, color=_FALLBACK_COLOR)
+    return DisplayAttributes(
+        title=definition.title.localize(localizer),
+        unit=_parse_unit(definition.unit),
+        color=_parse_color(definition.color),
     )
 
 

@@ -78,15 +78,15 @@ def translate_performance_data(
             return None if value is None else value * scale
 
         original = RRDOriginal(metric_name=perf_value.metric_name, scale=scale)
-        title, unit, color = metric_display_attributes(name, metrics, localizer)
+        attributes = metric_display_attributes(name, metrics, localizer)
         # A later raw metric renaming to the same target overrides the values; originals accumulate.
         originals = [*result[name].originals, original] if name in result else [original]
         result[name] = RRDMetricData(
             value=_scaled(perf_value.value),
             originals=originals,
-            title=title,
-            unit=unit,
-            color=color,
+            title=attributes.title,
+            unit=attributes.unit,
+            color=attributes.color,
             lower_warning=_scaled(perf_value.lower_warning),
             lower_critical=_scaled(perf_value.lower_critical),
             warning=_scaled(perf_value.warning),

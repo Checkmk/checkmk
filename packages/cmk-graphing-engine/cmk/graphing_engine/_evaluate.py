@@ -12,6 +12,7 @@ from ._objects import (
     Constant,
     CriticalOf,
     Difference,
+    DisplayAttributes,
     Fraction,
     Graph,
     LowerCriticalOf,
@@ -202,25 +203,21 @@ def evaluate_time_series(
 def _attributes(
     quantity: Quantity,
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
-) -> tuple[str, Unit, str] | None:
+) -> DisplayAttributes | None:
     """Title, unit and colour of a drawn quantity, or None if it cannot be resolved."""
     match quantity:
         case RRDMetric() | RRDMetricWithCF():
             return (
                 None
                 if (data := metric_data.get(quantity)) is None
-                else (
-                    data.title,
-                    data.unit,
-                    data.color,
-                )
+                else DisplayAttributes(title=data.title, unit=data.unit, color=data.color)
             )
         case Constant():
-            return quantity.title, quantity.unit, quantity.color
+            return DisplayAttributes(title=quantity.title, unit=quantity.unit, color=quantity.color)
         case Product():
-            return quantity.title, quantity.unit, quantity.color
+            return DisplayAttributes(title=quantity.title, unit=quantity.unit, color=quantity.color)
         case Fraction():
-            return quantity.title, quantity.unit, quantity.color
+            return DisplayAttributes(title=quantity.title, unit=quantity.unit, color=quantity.color)
         case (
             WarningOf()
             | CriticalOf()
@@ -231,14 +228,28 @@ def _attributes(
         ):
             # A threshold line takes the unit (and title) of the metric it refers to, its own colour.
             data = metric_data.get(quantity.metric)
-            return None if data is None else (data.title, data.unit, quantity.color)
+            return (
+                None
+                if data is None
+                else DisplayAttributes(title=data.title, unit=data.unit, color=quantity.color)
+            )
         case Sum():
             # A sum has no unit of its own; it takes the unit of its first summand.
             first = _attributes(quantity.summands[0], metric_data) if quantity.summands else None
-            return None if first is None else (quantity.title, first[1], quantity.color)
+            return (
+                None
+                if first is None
+                else DisplayAttributes(title=quantity.title, unit=first.unit, color=quantity.color)
+            )
         case Difference():
             minuend = _attributes(quantity.minuend, metric_data)
-            return None if minuend is None else (quantity.title, minuend[1], quantity.color)
+            return (
+                None
+                if minuend is None
+                else DisplayAttributes(
+                    title=quantity.title, unit=minuend.unit, color=quantity.color
+                )
+            )
         case _:
             assert_never(quantity)
 
@@ -281,11 +292,10 @@ def _evaluate_curve(
 ) -> EvaluatedCurve | None:
     if (attributes := _attributes(quantity, metric_data)) is None:
         return None
-    title, unit, color = attributes
     return EvaluatedCurve(
-        title=title,
-        unit=unit,
-        color=color,
+        title=attributes.title,
+        unit=attributes.unit,
+        color=attributes.color,
         value=evaluate_value(quantity, metric_data),
         time_series=evaluate_time_series(quantity, time_series, metric_data, time_range),
     )

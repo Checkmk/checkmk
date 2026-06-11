@@ -57,22 +57,6 @@ def _find_translation(
     return MetricTranslation(name=metric_name)
 
 
-def fetch_translated_metrics(
-    services: Iterable[ServiceRef],
-    *,
-    rrd: FetchRRD,
-    translations: MetricTranslations,
-    metrics: Mapping[str, metrics_v1.Metric],
-    localizer: Callable[[str], str],
-) -> TranslatedMetrics:
-    # dict.fromkeys dedups the services while keeping a deterministic order.
-    performance_data = rrd.fetch_performance_data(list(dict.fromkeys(services)))
-    return {
-        service: translate_performance_data(perf, translations, metrics, localizer)
-        for service, perf in performance_data.items()
-    }
-
-
 def translate_performance_data(
     performance_data: PerformanceData,
     translations: MetricTranslations,
@@ -116,3 +100,19 @@ def translate_performance_data(
             maximum=_scaled(perf_value.maximum),
         )
     return result
+
+
+def fetch_translated_metrics(
+    services: Iterable[ServiceRef],
+    *,
+    rrd: FetchRRD,
+    translations: MetricTranslations,
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
+) -> TranslatedMetrics:
+    # dict.fromkeys dedups the services while keeping a deterministic order.
+    performance_data = rrd.fetch_performance_data(list(dict.fromkeys(services)))
+    return {
+        service: translate_performance_data(perf, translations, metrics, localizer)
+        for service, perf in performance_data.items()
+    }

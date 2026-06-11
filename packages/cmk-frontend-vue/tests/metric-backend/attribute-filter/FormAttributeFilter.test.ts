@@ -322,16 +322,17 @@ describe('pill required-field validation', () => {
     renderForm(makeModel())
     const pill = pillsInOrder()[0]!
     await enterEditMode(pill)
-    for (const label of FIELD_LABELS) {
+    // 'Attribute type' is excluded: it is hidden while the key is empty.
+    for (const label of ['Attribute key', 'Attribute operator', 'Attribute value']) {
       expect(field(pill, label)).not.toHaveClass(ERROR_CLASS)
     }
   })
 
-  test('the disabled type dropdown drops its required hint', async () => {
+  test('the type dropdown is hidden until a key is chosen', async () => {
     renderForm(makeModel())
     const pill = pillsInOrder()[0]!
     await enterEditMode(pill)
-    expect(field(pill, 'Attribute type')).not.toHaveTextContent('(required)')
+    expect(within(pill).queryByRole('combobox', { name: 'Attribute type' })).toBeNull()
   })
 
   test('a partly-filled but uncommitted pill flags nothing', async () => {

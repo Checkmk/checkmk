@@ -46,9 +46,27 @@ void main() {
     }
 
     def trigger_fips_chain = false;
+    def fips_job_name = "${branch_base_folder}/trigger-fips-chain";
     // The time 1100 has been chosen to not collide with the CI maintenance window
     if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) == 11) {
+        // it is the timeframe to trigger the FIPS jobs
         trigger_fips_chain = true;
+
+        try {
+            def job = Jenkins.instance.getItemByFullName(fips_job_name);
+            def build = job.getLastBuild();
+
+            def buildStartTime = build.getStartTimeInMillis();
+            def now = System.currentTimeMillis();
+
+            if ((now - buildStartTime) <= 60 * 60 * 1000) {
+                // Build started within the last 60 minutes, do not build again
+                trigger_fips_chain = false;
+            }
+        }
+        catch (Exception e) {
+            println("Error: Failed to check if the ${fips_job_name} ran within the last 60min, better build it twice than never");
+        }
     }
 
     print(
@@ -217,7 +235,7 @@ void main() {
         condition: trigger_fips_chain && currentBuild.result == "SUCCESS",
     ) {
         build(
-            job: "${branch_base_folder}/trigger-fips-chain",
+            job: fips_job_name,
             parameters: [
                 stringParam(name: "EDITION", value: "pro"),
                 stringParam(name: "CUSTOM_GIT_REF", value: effective_git_ref),

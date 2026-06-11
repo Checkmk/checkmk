@@ -18,16 +18,27 @@ from cmk.base.legacy_checks.stulz_humidity import (
     parse_stulz_humidity,
 )
 
+# OIDEnd is "{bus}.{unit}.{subindex}"; the device exposes units on two buses.
+# Readings are in per-mille and divided by 10 by the check.
+_STRING_TABLE: StringTable = [
+    ["1.1.1", "339"],
+    ["1.2.1", "332"],
+    ["2.1.1", "500"],
+    ["2.2.1", "308"],
+]
+
 
 @pytest.mark.parametrize(
     "string_table, expected_discoveries",
     [
         (
+            _STRING_TABLE,
             [
-                ["MICOS11Q", "12", "229376", "15221", "15221", "NO"],
-                ["MICOS11Q", "12", "229376", "15221", "15221"],
+                ("1-1", {}),
+                ("1-2", {}),
+                ("2-1", {}),
+                ("2-2", {}),
             ],
-            [("MICOS11Q", {}), ("MICOS11Q", {})],
         ),
     ],
 )
@@ -44,22 +55,16 @@ def test_inventory_stulz_humidity(
     "item, params, string_table, expected_results",
     [
         (
-            "MICOS11Q",
+            "1-1",
             {"levels_lower": (40.0, 35.0), "levels": (60.0, 65.0)},
-            [
-                ["MICOS11Q", "12", "229376", "15221", "15221", "NO"],
-                ["MICOS11Q", "12", "229376", "15221", "15221"],
-            ],
-            [2, "1.20% (warn/crit below 40.00%/35.00%)", [("humidity", 1.2, 60.0, 65.0, 0, 100)]],
+            _STRING_TABLE,
+            [2, "33.90% (warn/crit below 40.00%/35.00%)", [("humidity", 33.9, 60.0, 65.0, 0, 100)]],
         ),
         (
-            "MICOS11Q",
+            "2-1",
             {"levels_lower": (40.0, 35.0), "levels": (60.0, 65.0)},
-            [
-                ["MICOS11Q", "12", "229376", "15221", "15221", "NO"],
-                ["MICOS11Q", "12", "229376", "15221", "15221"],
-            ],
-            [2, "1.20% (warn/crit below 40.00%/35.00%)", [("humidity", 1.2, 60.0, 65.0, 0, 100)]],
+            _STRING_TABLE,
+            [0, "50.00%", [("humidity", 50.0, 60.0, 65.0, 0, 100)]],
         ),
     ],
 )

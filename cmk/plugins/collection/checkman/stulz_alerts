@@ -8,7 +8,7 @@ description:
  If the state not equal to zero, {CRIT} will be returned. No configuration is needed.
 
 item:
- Name of the unit
+ The bus and the unit number, e.g. {{2-1}}
 
 discovery:
  One service is created for each device.

@@ -6,6 +6,7 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
@@ -13,6 +14,8 @@ from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.plugins.stulz.lib import DETECT_STULZ
 
 check_info = {}
+
+Section = Mapping[str, str]
 
 
 def savefloat(f: str) -> float:
@@ -28,19 +31,22 @@ def savefloat(f: str) -> float:
         return 0.0
 
 
-def inventory_stulz_humidity(info):
-    return [(x[0], {}) for x in info]
+def parse_stulz_humidity(string_table: StringTable) -> Section:
+    parsed: dict[str, str] = {}
+    for oidend, value in string_table:
+        bus, unit = oidend.split(".")[0:2]
+        parsed.setdefault(f"{bus}-{unit}", value)
+    return parsed
 
 
-def check_stulz_humidity(item, params, info):
-    for line in info:
-        if line[0] == item:
-            return check_humidity(savefloat(line[1]) / 10, params)
+def inventory_stulz_humidity(section):
+    return [(item, {}) for item in section]
+
+
+def check_stulz_humidity(item, params, section):
+    if item in section:
+        return check_humidity(savefloat(section[item]) / 10, params)
     return None
-
-
-def parse_stulz_humidity(string_table: StringTable) -> StringTable:
-    return string_table
 
 
 check_info["stulz_humidity"] = LegacyCheckDefinition(
@@ -48,8 +54,8 @@ check_info["stulz_humidity"] = LegacyCheckDefinition(
     parse_function=parse_stulz_humidity,
     detect=DETECT_STULZ,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.2.1.1.1194",
-        oids=[OIDEnd(), "1"],
+        base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.2.1.1",
+        oids=[OIDEnd(), "1194"],
     ),
     service_name="Humidity %s ",
     discovery_function=inventory_stulz_humidity,

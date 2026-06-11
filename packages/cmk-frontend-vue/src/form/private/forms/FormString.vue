@@ -5,13 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { X } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
 import useId from '@/lib/useId'
 
 import CmkDropdownButton from '@/components/CmkDropdown/CmkDropdownButton.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
@@ -69,7 +69,7 @@ const autoCompleterValue = computed<string | null>({
           >
             <template #buttons-end>
               <CmkDropdownButton class="form-string__button-clear" group="end" @click="value = ''">
-                <X class="form-string__button-clear-x" />
+                <CmkIcon name="close" size="small" />
               </CmkDropdownButton>
             </template>
           </FormAutocompleter>
@@ -108,10 +108,8 @@ const autoCompleterValue = computed<string | null>({
 .form-string__button-clear {
   vertical-align: bottom;
   margin-left: 1px;
-}
-
-.form-string__button-clear-x {
-  width: 13px;
-  height: 14px;
+  align-items: center;
+  padding-top: 0;
+  padding-bottom: 1px;
 }
 </style>

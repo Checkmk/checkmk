@@ -5,11 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Regex } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { X } from 'lucide-vue-next'
 import { computed, nextTick, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
+
+import CmkIcon from '@/components/CmkIcon'
 
 import type { ValidationMessages } from '@/form/private/validation'
 
@@ -119,7 +120,7 @@ function onKeyEnter(e: KeyboardEvent) {
           @keydown.enter.prevent="onKeyEnter"
         />
         <button v-if="data" type="button" class="form-regex__clear-btn" @click="data = ''">
-          <X style="width: 1em; height: 1em" />
+          <CmkIcon name="close" size="small" />
         </button>
       </div>
       <FormSuggestions

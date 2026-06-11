@@ -44,7 +44,7 @@ class FetchRRD(Protocol):
 class GraphRequest:
     time_range: TimeRange
     # The fallback consolidation function for bare RRDMetric columns. May be omitted only when every
-    # metric pins its own (RRDMetricWithCF); fetch_time_series enforces this.
+    # metric pins its own (RRDMetricWithCF); update_graph_data enforces this.
     consolidation_function: ConsolidationFunction | None = None
     graph: Graph
     # The translated metric data of the graph's metrics, as produced by discovery. It carries the
@@ -57,7 +57,7 @@ def _consolidation_function(metric: RRDMetricRef, request: GraphRequest) -> Cons
         case RRDMetricWithCF():
             return metric.consolidation_function
         case RRDMetric():
-            # A bare metric uses the request's function; fetch_time_series guarantees it is set.
+            # A bare metric uses the request's function; update_graph_data guarantees it is set.
             assert request.consolidation_function is not None
             return request.consolidation_function
 
@@ -152,7 +152,7 @@ def _validate_consolidation_function(request: GraphRequest) -> None:
         )
 
 
-def fetch_time_series(
+def update_graph_data(
     requests: Sequence[GraphRequest],
     *,
     rrd: FetchRRD,

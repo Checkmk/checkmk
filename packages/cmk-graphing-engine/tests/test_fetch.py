@@ -11,7 +11,6 @@ from cmk.graphing_engine import (
     AutoPrecision,
     ConsolidationFunction,
     DecimalNotation,
-    fetch_time_series,
     Graph,
     GraphRequest,
     Line,
@@ -27,6 +26,7 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
     Unit,
+    update_graph_data,
 )
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
@@ -123,7 +123,7 @@ class _FakeFetchRRD:
 
 def test_empty_requests_returns_empty_list() -> None:
     rrd = _FakeFetchRRD()
-    assert fetch_time_series([], rrd=rrd) == []
+    assert update_graph_data([], rrd=rrd) == []
     assert rrd.time_series_calls == []
 
 
@@ -141,7 +141,7 @@ def test_returns_one_evaluated_graph_per_request() -> None:
         }
     )
 
-    [evaluated] = fetch_time_series([request], rrd=rrd)
+    [evaluated] = update_graph_data([request], rrd=rrd)
 
     assert evaluated.stacks == []
     assert [line.curve.time_series for line in evaluated.lines] == [
@@ -164,7 +164,7 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
         time_series_response={_source("a"): _time_series(1.0), _source("b"): _time_series(2.0)}
     )
 
-    fetch_time_series([request], rrd=rrd)
+    update_graph_data([request], rrd=rrd)
 
     # One time-series fetch per distinct consolidation function.
     columns_by_cf = {cf: columns for columns, _tr, cf in rrd.time_series_calls}
@@ -185,7 +185,7 @@ def test_multiple_requests_yield_one_evaluated_graph_each_in_order() -> None:
         time_series_response={_source("x"): x_time_series, _source("y"): y_time_series}
     )
 
-    results = fetch_time_series([request_x, request_y], rrd=rrd)
+    results = update_graph_data([request_x, request_y], rrd=rrd)
 
     assert [[line.curve.time_series for line in graph.lines] for graph in results] == [
         [x_time_series],
@@ -209,7 +209,7 @@ def test_evaluates_lines_in_both_directions() -> None:
         time_series_response={_source("if_in"): in_time_series, _source("if_out"): out_time_series}
     )
 
-    [evaluated] = fetch_time_series([request], rrd=rrd)
+    [evaluated] = update_graph_data([request], rrd=rrd)
 
     assert [(line.curve.time_series, line.inverse) for line in evaluated.lines] == [
         (out_time_series, False),
@@ -223,7 +223,7 @@ def test_scales_each_column_by_its_scale() -> None:
     request = _request(graph, {temp: _data(temp, scale=2.0)})
     rrd = _FakeFetchRRD(time_series_response={_source("temp"): _time_series(10.0)})
 
-    [evaluated] = fetch_time_series([request], rrd=rrd)
+    [evaluated] = update_graph_data([request], rrd=rrd)
 
     # The raw values (10.0) are scaled by the column's scale (2.0).
     [line] = evaluated.lines
@@ -246,7 +246,7 @@ def test_fetches_a_renamed_metric_by_its_raw_column() -> None:
     time_series = _time_series(5.0)
     rrd = _FakeFetchRRD(time_series_response={_source("temperature"): time_series})
 
-    [evaluated] = fetch_time_series([_request(graph, metric_data)], rrd=rrd)
+    [evaluated] = update_graph_data([_request(graph, metric_data)], rrd=rrd)
 
     [line] = evaluated.lines
     assert line.curve.time_series == time_series
@@ -277,7 +277,7 @@ def test_merges_a_metrics_originals_taking_the_first_present_value() -> None:
         }
     )
 
-    [evaluated] = fetch_time_series([_request(graph, metric_data)], rrd=rrd)
+    [evaluated] = update_graph_data([_request(graph, metric_data)], rrd=rrd)
 
     # Per point, the first present value wins: a where it has data, otherwise b.
     [line] = evaluated.lines
@@ -301,7 +301,7 @@ def test_bare_metric_adopts_the_request_consolidation_function() -> None:
         }
     )
 
-    fetch_time_series([request], rrd=rrd)
+    update_graph_data([request], rrd=rrd)
 
     columns_by_cf = {cf: columns for columns, _tr, cf in rrd.time_series_calls}
     assert columns_by_cf == {
@@ -317,7 +317,7 @@ def test_evaluates_without_a_request_consolidation_function_when_every_metric_pi
     request = _request(graph, {pinned: _data(pinned)})
     rrd = _FakeFetchRRD(time_series_response={_source("temp"): _time_series(1.0)})
 
-    [evaluated] = fetch_time_series([request], rrd=rrd)
+    [evaluated] = update_graph_data([request], rrd=rrd)
 
     assert [line.curve.time_series for line in evaluated.lines] == [_time_series(1.0)]
     [(_columns, _tr, consolidation_function)] = rrd.time_series_calls
@@ -330,4 +330,4 @@ def test_rejects_a_bare_metric_without_a_request_consolidation_function() -> Non
     request = _request(graph, {bare: _data(bare)})
 
     with pytest.raises(ValueError, match="load"):
-        fetch_time_series([request], rrd=_FakeFetchRRD())
+        update_graph_data([request], rrd=_FakeFetchRRD())

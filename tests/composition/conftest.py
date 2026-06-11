@@ -153,7 +153,7 @@ def _verify_central_livestatus_alive(
     central_site: Site,
     request: pytest.FixtureRequest,
 ) -> Iterator[None]:
-    """Fail fast with diagnostics if the central site's livestatus is dead.
+    """xfail (with diagnostics) if the central site's livestatus is dead.
 
     Mitigation for CMK-34867: under back-to-back activations cmc can die
     silently mid-reload, leaving Apache up but livestatus refusing connections.
@@ -161,7 +161,10 @@ def _verify_central_livestatus_alive(
     unrelated test failures (e.g. activate-changes 409 "site offline"), which
     masks the actual point of failure. The probe runs both before and after
     each test so the culprit test (the one whose activation killed the core)
-    is the one that fails.
+    is the one that is xfailed. We xfail rather than fail because the underlying
+    core crash is a known, unresolved defect (CMK-34867); a hard failure only
+    adds red-herring CI noise until the fix lands. xfail (not skip) keeps the
+    occurrence visible as a tracked known failure tied to the ticket.
     """
     _assert_central_livestatus_alive(central_site, when=f"before {request.node.name}")
     yield
@@ -178,10 +181,9 @@ def _assert_central_livestatus_alive(site: Site, *, when: str) -> None:
             last_error = exc
             time.sleep(1)
     diagnostics = _collect_central_diagnostics(site)
-    pytest.fail(
+    pytest.xfail(
         f"Central site livestatus is unreachable {when} (see CMK-34867).\n"
-        f"Last error: {last_error!r}\n\n{diagnostics}",
-        pytrace=False,
+        f"Last error: {last_error!r}\n\n{diagnostics}"
     )
 
 

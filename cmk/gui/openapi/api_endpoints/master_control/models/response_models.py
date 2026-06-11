@@ -28,6 +28,10 @@ class MasterControlExtensionsModel:
         description="Whether host checks are executed on the site.",
         example=True,
     )
+    flap_detection: bool = api_field(
+        description="Whether flap detection is enabled on the site.",
+        example=True,
+    )
 
 
 @api_model

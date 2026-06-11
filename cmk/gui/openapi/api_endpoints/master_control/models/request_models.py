@@ -23,6 +23,11 @@ class UpdateMasterControlModel:
         description="Enable or disable host checks on the site.",
         example=True,
     )
+    flap_detection: bool | None = api_field(
+        default=None,
+        description="Enable or disable flap detection on the site.",
+        example=True,
+    )
 
     def to_changes(self) -> dict[str, bool]:
         """Return only the settings that were explicitly provided, keyed by API field name."""
@@ -33,4 +38,6 @@ class UpdateMasterControlModel:
             changes["service_checks"] = self.service_checks
         if self.host_checks is not None:
             changes["host_checks"] = self.host_checks
+        if self.flap_detection is not None:
+            changes["flap_detection"] = self.flap_detection
         return changes

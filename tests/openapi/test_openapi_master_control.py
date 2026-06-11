@@ -23,7 +23,9 @@ _CONNECTION_COLUMNS: Mapping[str, object] = {
 }
 
 # The columns are queried in the order the toggles are defined in _utils.MASTER_CONTROL_TOGGLES.
-_STATUS_COLUMNS = "Columns: enable_notifications execute_service_checks execute_host_checks"
+_STATUS_COLUMNS = (
+    "Columns: enable_notifications execute_service_checks execute_host_checks enable_flap_detection"
+)
 
 
 def _setup_status(
@@ -32,6 +34,7 @@ def _setup_status(
     notifications: int = 1,
     service_checks: int = 1,
     host_checks: int = 1,
+    flap_detection: int = 1,
 ) -> None:
     mock_livestatus.add_table(
         "status",
@@ -41,6 +44,7 @@ def _setup_status(
                 "enable_notifications": notifications,
                 "execute_service_checks": service_checks,
                 "execute_host_checks": host_checks,
+                "enable_flap_detection": flap_detection,
             }
         ],
         "NO_SITE",
@@ -51,7 +55,9 @@ def test_openapi_list_master_control(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    _setup_status(mock_livestatus, notifications=1, service_checks=0, host_checks=1)
+    _setup_status(
+        mock_livestatus, notifications=1, service_checks=0, host_checks=1, flap_detection=0
+    )
     mock_livestatus.expect_query(["GET status", _STATUS_COLUMNS])
 
     with mock_livestatus:
@@ -65,6 +71,7 @@ def test_openapi_list_master_control(
         "notifications": True,
         "service_checks": False,
         "host_checks": True,
+        "flap_detection": False,
     }
 
 
@@ -72,7 +79,9 @@ def test_openapi_show_master_control(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    _setup_status(mock_livestatus, notifications=0, service_checks=1, host_checks=0)
+    _setup_status(
+        mock_livestatus, notifications=0, service_checks=1, host_checks=0, flap_detection=1
+    )
     mock_livestatus.expect_query(["GET status", _STATUS_COLUMNS], sites=["NO_SITE"])
 
     with mock_livestatus:
@@ -83,6 +92,7 @@ def test_openapi_show_master_control(
         "notifications": False,
         "service_checks": True,
         "host_checks": False,
+        "flap_detection": True,
     }
 
 
@@ -130,6 +140,18 @@ def test_openapi_disable_host_checks(
 
     with mock_livestatus:
         resp = clients.MasterControl.edit("NO_SITE", {"host_checks": False})
+
+    assert resp.status_code == 204
+
+
+def test_openapi_disable_flap_detection(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.expect_query("COMMAND [...] DISABLE_FLAP_DETECTION;", match_type="ellipsis")
+
+    with mock_livestatus:
+        resp = clients.MasterControl.edit("NO_SITE", {"flap_detection": False})
 
     assert resp.status_code == 204
 

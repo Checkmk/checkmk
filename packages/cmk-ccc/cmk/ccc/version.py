@@ -606,6 +606,7 @@ def versions_compatible(
     # - Until 1.6.0 we only increased the 2nd number
     # - With 2.0.0 we once increased the 1st number
     # - With 2.1.0 we will again only increase the 2nd number
+    # - With 3.0.0 we increased the 1st number again after 2.5.0
     # - Increasing of the 1st number may happen again
     #
     # Seems we need to handle these cases for:
@@ -636,6 +637,7 @@ def versions_compatible(
 
     last_major_releases = {
         1: _BaseVersion(1, 6, 0),
+        2: _BaseVersion(2, 5, 0),
     }
 
     if to_v.base.major - from_v.base.major == 1 and to_v.base.minor == 0:

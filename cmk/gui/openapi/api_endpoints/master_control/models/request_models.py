@@ -28,6 +28,15 @@ class UpdateMasterControlModel:
         description="Enable or disable flap detection on the site.",
         example=True,
     )
+    event_handlers: bool | None = api_field(
+        default=None,
+        description=(
+            "Enable or disable event handlers on the site. This is the same setting regardless "
+            'of edition; editions other than Checkmk Community label it "alert handlers" in the '
+            "user interface."
+        ),
+        example=True,
+    )
 
     def to_changes(self) -> dict[str, bool]:
         """Return only the settings that were explicitly provided, keyed by API field name."""
@@ -40,4 +49,6 @@ class UpdateMasterControlModel:
             changes["host_checks"] = self.host_checks
         if self.flap_detection is not None:
             changes["flap_detection"] = self.flap_detection
+        if self.event_handlers is not None:
+            changes["event_handlers"] = self.event_handlers
         return changes

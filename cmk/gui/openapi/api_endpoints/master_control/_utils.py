@@ -12,8 +12,10 @@ from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.utils import permission_verification as permissions
 from cmk.livestatus_client import (
     Command,
+    DisableEventHandlers,
     DisableFlapDetection,
     DisableNotifications,
+    EnableEventHandlers,
     EnableFlapDetection,
     EnableNotifications,
     LivestatusClient,
@@ -81,6 +83,11 @@ MASTER_CONTROL_TOGGLES: Mapping[str, _MasterControlToggle] = {
         enable=EnableFlapDetection(),
         disable=DisableFlapDetection(),
     ),
+    "event_handlers": _MasterControlToggle(
+        column=Status.enable_event_handlers,
+        enable=EnableEventHandlers(),
+        disable=DisableEventHandlers(),
+    ),
 }
 
 
@@ -100,6 +107,7 @@ def serialize_master_control(site_id: SiteId, row: ResultRow) -> MasterControlMo
             service_checks=bool(row[Status.execute_service_checks.name]),
             host_checks=bool(row[Status.execute_host_checks.name]),
             flap_detection=bool(row[Status.enable_flap_detection.name]),
+            event_handlers=bool(row[Status.enable_event_handlers.name]),
         ),
     )
 

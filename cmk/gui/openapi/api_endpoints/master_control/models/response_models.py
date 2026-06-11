@@ -32,6 +32,14 @@ class MasterControlExtensionsModel:
         description="Whether flap detection is enabled on the site.",
         example=True,
     )
+    event_handlers: bool = api_field(
+        description=(
+            "Whether event handlers are enabled on the site. This is the same setting regardless "
+            'of edition; editions other than Checkmk Community label it "alert handlers" in the '
+            "user interface."
+        ),
+        example=True,
+    )
 
 
 @api_model

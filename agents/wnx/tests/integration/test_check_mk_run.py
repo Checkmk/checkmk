@@ -89,7 +89,7 @@ def test_check_mk_base(
     # Validate controller status is the expected one.
     ctl_status = _get_ctl_status_line(output)
     assert isinstance(ctl_status["version"], str)
-    assert ctl_status["version"].startswith("2.")
+    assert ctl_status["version"].startswith("3.")
     assert ctl_status["agent_socket_operational"] is True
     assert ctl_status["ip_allowlist"] == only_from
     assert ctl_status["allow_legacy_pull"] is True

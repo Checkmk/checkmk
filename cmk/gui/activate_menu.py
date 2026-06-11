@@ -14,7 +14,7 @@ from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import ConfigurableMainMenuItem, MainMenuItem, MainMenuLinkItem
 from cmk.gui.userdb.store import load_custom_attr
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.backup_snapshots import get_last_wato_snapshot_file
 from cmk.shared_typing.changes import ChangesProps, NavbarChangesActionChoices
 from cmk.shared_typing.main_menu import (
@@ -43,11 +43,17 @@ def _get_changes_app(request: Request) -> NavItemVueApp:
         id=NavVueAppIdEnum.cmk_activate_changes,
         data=asdict(
             ChangesProps(
-                activate_changes_url=makeuri(
+                # Build the changelog URL contextlessly. The changes menu now
+                # renders per page (post-iframe-removal) instead of once in the
+                # sidebar, so makeuri() would inherit the current page's vars
+                # (e.g. folder=, selection=) and yield
+                # wato.py?folder=&mode=changelog&selection=... rather than the
+                # canonical activate-changes URL. Always link to the clean
+                # changelog page regardless of the page it is rendered on.
+                activate_changes_url=makeuri_contextless(
                     request,
-                    addvars=[("mode", "changelog")],
+                    [("mode", "changelog")],
                     filename="wato.py",
-                    delvars="start_url",
                 ),
                 user_has_activate_foreign=user.may("wato.activateforeign"),
                 new_installation=get_last_wato_snapshot_file(debug=False) is None,

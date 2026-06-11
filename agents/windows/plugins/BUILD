@@ -30,6 +30,7 @@ TO_SIGN_SCRIPTS = [
     "iis_app_pool_state.ps1",
     "kaspersky_av_client.ps1",
     "mk_msoffice.ps1",
+    "mk_mysql.ps1",
     "mk_oracle.ps1",
     "msexch_dag.ps1",
     "msexch_database.ps1",

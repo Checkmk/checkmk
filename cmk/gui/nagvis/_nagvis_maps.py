@@ -8,13 +8,24 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
 from cmk.gui.sidebar import footnotelinks, PageHandlers, SidebarSnapin
+from cmk.gui.utils.urls import makeuri_contextless
+
+_NAGVIS_URL_PREFIX = "../nagvis/"
+
+
+def _nagvis_page_url(nagvis_url: str) -> str:
+    return makeuri_contextless(request, [("url", nagvis_url)], filename="nagvis.py")
 
 
 class NagVisMaps(SidebarSnapin):
@@ -41,7 +52,33 @@ class NagVisMaps(SidebarSnapin):
     def page_handlers(self) -> PageHandlers:
         return {
             "ajax_nagvis_maps_snapin": self._ajax_show_nagvis_maps_snapin,
+            "nagvis": self._show_nagvis_page,
         }
+
+    def _show_nagvis_page(self, ctx: PageContext) -> None:
+        """Embed a NagVis page into the Checkmk chrome."""
+        nagvis_url = ctx.request.get_url_input("url", _NAGVIS_URL_PREFIX)
+        if not nagvis_url.startswith(_NAGVIS_URL_PREFIX):
+            raise MKUserError("url", _("Not a NagVis URL"))
+
+        make_header(
+            html,
+            _("NagVis"),
+            breadcrumb=Breadcrumb(),
+            show_top_heading=False,
+            enable_main_page_scrollbar=False,
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
+        html.iframe("", src=nagvis_url, class_="fullpage")
+        html.footer()
 
     def _ajax_show_nagvis_maps_snapin(self, ctx: PageContext) -> None:
         api_request = ctx.request.get_request()
@@ -73,7 +110,7 @@ class NagVisMaps(SidebarSnapin):
                 + self._stale_class(map_cfg),
                 title=self._state_title(map_cfg),
             )
-            html.a(map_cfg["alias"], href=map_cfg["url"], class_="link")
+            html.a(map_cfg["alias"], href=_nagvis_page_url(map_cfg["url"]), class_="link")
             html.close_td()
             html.close_tr()
 
@@ -121,8 +158,7 @@ class NagVisMaps(SidebarSnapin):
         return title
 
     def _show_footnote_links(self) -> None:
-        edit_url = "../nagvis/"
-        footnotelinks([(_("Edit"), edit_url)])
+        footnotelinks([(_("Edit"), _nagvis_page_url(_NAGVIS_URL_PREFIX))])
 
     def _show_tree(self, api_request: Mapping[str, Any]) -> None:
         html.open_ul()
@@ -142,10 +178,10 @@ class NagVisMaps(SidebarSnapin):
                     id_=map_name,
                     isopen=user.get_tree_state("nagvis", map_name, False),
                     title=map_cfg["alias"],
-                    title_url=map_cfg["url"],
+                    title_url=_nagvis_page_url(map_cfg["url"]),
                     indent=False,
                 ):
                     self._show_tree_nodes(children[map_name], children)
             else:
-                html.a(map_cfg["alias"], href=map_cfg["url"], class_="link")
+                html.a(map_cfg["alias"], href=_nagvis_page_url(map_cfg["url"]), class_="link")
             html.close_li()

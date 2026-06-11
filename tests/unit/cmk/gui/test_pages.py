@@ -103,6 +103,7 @@ def test_registered_pages() -> None:
         "logwatch",
         "mobile",
         "mobile_view",
+        "nagvis",
         "noauth:automation",
         "message",
         "prediction_graph",

@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="type-arg"
 
+import ipaddress
 import re
 
 from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
@@ -19,7 +20,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Filesize,
     FixedValue,
-    HostAddress,
     ID,
     Integer,
     ListOf,
@@ -42,6 +42,25 @@ def _validate_patterns(value: tuple[str, str], varprefix: str) -> None:
         raise MKUserError(varprefix, _("Invalid regular expression: %s") % e)
 
 
+def _validate_ip_address_or_network(value: str, varprefix: str) -> None:
+    # The agent plug-in only understands plain IP addresses and subnets with a
+    # prefix length ("192.168.1.0/24"), not netmask notation ("/255.255.255.0").
+    address, slash, prefixlen = value.partition("/")
+    try:
+        if slash:
+            ipaddress.ip_network((address, int(prefixlen)), strict=False)
+        else:
+            ipaddress.ip_address(value)
+    except ValueError:
+        raise MKUserError(
+            varprefix,
+            _(
+                "Invalid entry. You need to specify an IPv4/IPv6 address or a "
+                "subnet in CIDR notation (e.g. 192.168.1.0/24)."
+            ),
+        )
+
+
 def _agent_config_mk_logwatch_valuespec_cluster_section() -> ListOf:
     return ListOf(
         valuespec=Dictionary(
@@ -57,11 +76,12 @@ def _agent_config_mk_logwatch_valuespec_cluster_section() -> ListOf:
                 (
                     "ips",
                     ListOfStrings(
-                        title=_("Cluster node IPs"),
-                        valuespec=HostAddress(
-                            title=_("IPv4/IPv6 address"),
-                            allow_host_name=False,
+                        title=_("Cluster node IPs or subnets"),
+                        valuespec=TextInput(
+                            title=_("IPv4/IPv6 address or subnet (CIDR notation)"),
+                            size=64,
                             allow_empty=False,
+                            validate=_validate_ip_address_or_network,
                         ),
                         orientation="horizontal",
                         allow_empty=False,
@@ -73,7 +93,9 @@ def _agent_config_mk_logwatch_valuespec_cluster_section() -> ListOf:
         title=_("Specify mappings of remote IPs to cluster names"),
         help=_(
             "With this option activated cluster node IPs "
-            "may be mapped to a cluster. In case the monitoring site "
+            "may be mapped to a cluster. Nodes can be specified as single "
+            "IPv4/IPv6 addresses or as subnets in CIDR notation "
+            "(e.g. 192.168.1.0/24). In case the monitoring site "
             "is operated in a failover cluster configuration this option "
             "is required to prevent from potentially duplicated log entries."
         ),

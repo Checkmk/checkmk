@@ -4,8 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import Counter
+from collections.abc import Sequence
 
 from .._models import HostSort, HostSortColumn, HostSortDirection
+
+
+def validate_uniqueness[T](values: Sequence[T]) -> Sequence[T]:
+    if len(values) != len(set(values)):
+        raise ValueError("Duplicate values are not allowed.")
+    return values
 
 
 def parse_host_search_query(value: object) -> str:

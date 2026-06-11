@@ -8,8 +8,14 @@ import pytest
 from cmk.gui.monitor.hosts._api._validators import (
     parse_host_search_query,
     parse_host_sort_options,
+    validate_uniqueness,
 )
 from cmk.gui.monitor.hosts._models import HostSort, HostSortColumn, HostSortDirection
+
+
+def test_validate_uniqueness() -> None:
+    with pytest.raises(ValueError, match="Duplicate values are not allowed."):
+        validate_uniqueness(["UP", "UP", "DOWN"])
 
 
 class TestHostSearchQuery:

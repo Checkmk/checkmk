@@ -3,11 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal
+from typing import Annotated, Literal
+
+from annotated_types import MinLen
+from pydantic import AfterValidator
 
 from cmk.gui.openapi.framework.model import api_field, api_model
 
 from .._models import StateLabel
+from ._validators import validate_uniqueness
 
 # TODO: look into whether we can utilize generics when generating our shared typing. It's not great
 # that this functionality is tied to the field names or the state choice enum. This information
@@ -46,7 +50,10 @@ class StateChoiceCondition:
     )
     field: Literal["state"] = api_field(description="Host state field", example="state")
     op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
-    value: list[StateLabel] = api_field(description="Host states to match", example=["UP"])
+    value: Annotated[list[StateLabel], MinLen(1), AfterValidator(validate_uniqueness)] = api_field(
+        description="Host states to match",
+        example=["UP", "DOWN"],
+    )
 
 
 @api_model

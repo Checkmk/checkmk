@@ -33,7 +33,7 @@ class FetchRRD(Protocol):
 
     def time_series(
         self,
-        rrd_columns: Sequence[RRDMetric],
+        rrd_metrics: Sequence[RRDMetric],
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
@@ -83,19 +83,19 @@ def _merge(series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
 
 
 def _fetch_series(request: GraphRequest, rrd: FetchRRD) -> Mapping[RRDMetricRef, TimeSeries]:
-    # A metric's originals are the raw RRD columns to read (with per-column scale). Fetch the
-    # columns batched by consolidation function (a pinned metric uses its own, a bare one the
-    # request's), then scale each column and merge a metric's columns point by point.
-    columns_per_metric: dict[
+    # A metric's originals are the raw RRD metrics to read (with per-metric scale). Fetch them
+    # batched by consolidation function (a pinned metric uses its own, a bare one the request's),
+    # then scale each one and merge a metric's series point by point.
+    rrd_metrics_per_metric: dict[
         RRDMetricRef, tuple[ConsolidationFunction, list[tuple[RRDMetric, float]]]
     ]
-    columns_per_metric = {}
-    columns_per_function: dict[ConsolidationFunction, list[RRDMetric]] = {}
+    rrd_metrics_per_metric = {}
+    rrd_metrics_per_function: dict[ConsolidationFunction, list[RRDMetric]] = {}
     for metric in request.graph.rrd_metrics():
         if (data := request.metric_data.get(metric)) is None:
             continue
         consolidation_function = _consolidation_function(metric, request)
-        columns = [
+        rrd_metrics = [
             (
                 RRDMetric(
                     host_name=metric.host_name,
@@ -106,24 +106,28 @@ def _fetch_series(request: GraphRequest, rrd: FetchRRD) -> Mapping[RRDMetricRef,
             )
             for original in data.originals
         ]
-        columns_per_metric[metric] = (consolidation_function, columns)
-        columns_per_function.setdefault(consolidation_function, []).extend(
-            column for column, _scale in columns
+        rrd_metrics_per_metric[metric] = (consolidation_function, rrd_metrics)
+        rrd_metrics_per_function.setdefault(consolidation_function, []).extend(
+            rrd_metric for rrd_metric, _scale in rrd_metrics
         )
 
     raw_per_function = {
         consolidation_function: rrd.time_series(
-            list(dict.fromkeys(columns)),
+            list(dict.fromkeys(rrd_metrics)),
             time_range=request.time_range,
             consolidation_function=consolidation_function,
         )
-        for consolidation_function, columns in columns_per_function.items()
+        for consolidation_function, rrd_metrics in rrd_metrics_per_function.items()
     }
 
     result: dict[RRDMetricRef, TimeSeries] = {}
-    for metric, (consolidation_function, columns) in columns_per_metric.items():
+    for metric, (consolidation_function, rrd_metrics) in rrd_metrics_per_metric.items():
         raw = raw_per_function[consolidation_function]
-        scaled = [_scaled(raw[column], scale) for column, scale in columns if column in raw]
+        scaled = [
+            _scaled(raw[rrd_metric], scale)
+            for rrd_metric, scale in rrd_metrics
+            if rrd_metric in raw
+        ]
         if scaled:
             result[metric] = _merge(scaled, request.time_range)
     return result

@@ -150,7 +150,7 @@ class _FakeFetchRRD:
 
     def time_series(
         self,
-        rrd_columns: Sequence[RRDMetric],
+        rrd_metrics: Sequence[RRDMetric],
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,

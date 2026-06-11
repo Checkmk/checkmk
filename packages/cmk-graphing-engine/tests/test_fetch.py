@@ -110,14 +110,16 @@ class _FakeFetchRRD:
 
     def time_series(
         self,
-        rrd_columns: Sequence[RRDMetric],
+        rrd_metrics: Sequence[RRDMetric],
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
     ) -> Mapping[RRDMetric, TimeSeries]:
-        self.time_series_calls.append((tuple(rrd_columns), time_range, consolidation_function))
+        self.time_series_calls.append((tuple(rrd_metrics), time_range, consolidation_function))
         return {
-            column: self._response[column] for column in rrd_columns if column in self._response
+            rrd_metric: self._response[rrd_metric]
+            for rrd_metric in rrd_metrics
+            if rrd_metric in self._response
         }
 
 
@@ -149,8 +151,8 @@ def test_returns_one_evaluated_graph_per_request() -> None:
         cpu_system_time_series,
     ]
     # The metrics are pinned to AVERAGE, so their columns are fetched in one batch with it.
-    [(columns, time_range, consolidation_function)] = rrd.time_series_calls
-    assert set(columns) == {_source("cpu_user"), _source("cpu_system")}
+    [(rrd_metrics, time_range, consolidation_function)] = rrd.time_series_calls
+    assert set(rrd_metrics) == {_source("cpu_user"), _source("cpu_system")}
     assert time_range == TimeRange(start=0, end=60, step=10)
     assert consolidation_function is ConsolidationFunction.AVERAGE
 
@@ -167,8 +169,8 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
     update_graph_data([request], rrd=rrd)
 
     # One time-series fetch per distinct consolidation function.
-    columns_by_cf = {cf: columns for columns, _tr, cf in rrd.time_series_calls}
-    assert columns_by_cf == {
+    rrd_metrics_by_cf = {cf: rrd_metrics for rrd_metrics, _tr, cf in rrd.time_series_calls}
+    assert rrd_metrics_by_cf == {
         ConsolidationFunction.AVERAGE: (_source("a"),),
         ConsolidationFunction.MAX: (_source("b"),),
     }
@@ -251,8 +253,8 @@ def test_fetches_a_renamed_metric_by_its_raw_column() -> None:
     [line] = evaluated.lines
     assert line.curve.time_series == time_series
     # The raw column is fetched, not the translated name.
-    [(columns, _tr, _cf)] = rrd.time_series_calls
-    assert columns == (_source("temperature"),)
+    [(rrd_metrics, _tr, _cf)] = rrd.time_series_calls
+    assert rrd_metrics == (_source("temperature"),)
 
 
 def test_merges_a_metrics_originals_taking_the_first_present_value() -> None:
@@ -303,8 +305,8 @@ def test_bare_metric_adopts_the_request_consolidation_function() -> None:
 
     update_graph_data([request], rrd=rrd)
 
-    columns_by_cf = {cf: columns for columns, _tr, cf in rrd.time_series_calls}
-    assert columns_by_cf == {
+    rrd_metrics_by_cf = {cf: rrd_metrics for rrd_metrics, _tr, cf in rrd.time_series_calls}
+    assert rrd_metrics_by_cf == {
         ConsolidationFunction.AVERAGE: (_source("load"),),
         ConsolidationFunction.MAX: (_source("peak"),),
     }
@@ -320,7 +322,7 @@ def test_evaluates_without_a_request_consolidation_function_when_every_metric_pi
     [evaluated] = update_graph_data([request], rrd=rrd)
 
     assert [line.curve.time_series for line in evaluated.lines] == [_time_series(1.0)]
-    [(_columns, _tr, consolidation_function)] = rrd.time_series_calls
+    [(_rrd_metrics, _tr, consolidation_function)] = rrd.time_series_calls
     assert consolidation_function is ConsolidationFunction.MAX
 
 

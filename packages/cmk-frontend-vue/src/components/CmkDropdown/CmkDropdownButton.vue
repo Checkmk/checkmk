@@ -94,6 +94,7 @@ defineEmits(['click'])
   border: none;
   justify-content: flex-start;
   font-weight: var(--font-weight-default);
+  color: var(--font-color);
   cursor: pointer;
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

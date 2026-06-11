@@ -474,6 +474,7 @@ defineExpose({
     max-width: 100%;
     padding: 10px 4px;
     margin: 0;
+    color: var(--font-color);
     background: var(--ux-theme-3);
   }
 

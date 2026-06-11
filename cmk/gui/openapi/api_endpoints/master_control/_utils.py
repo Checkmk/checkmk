@@ -15,9 +15,11 @@ from cmk.livestatus_client import (
     DisableEventHandlers,
     DisableFlapDetection,
     DisableNotifications,
+    DisablePerformanceData,
     EnableEventHandlers,
     EnableFlapDetection,
     EnableNotifications,
+    EnablePerformanceData,
     LivestatusClient,
     StartExecutingHostChecks,
     StartExecutingServiceChecks,
@@ -88,6 +90,11 @@ MASTER_CONTROL_TOGGLES: Mapping[str, _MasterControlToggle] = {
         enable=EnableEventHandlers(),
         disable=DisableEventHandlers(),
     ),
+    "performance_data": _MasterControlToggle(
+        column=Status.process_performance_data,
+        enable=EnablePerformanceData(),
+        disable=DisablePerformanceData(),
+    ),
 }
 
 
@@ -108,6 +115,7 @@ def serialize_master_control(site_id: SiteId, row: ResultRow) -> MasterControlMo
             host_checks=bool(row[Status.execute_host_checks.name]),
             flap_detection=bool(row[Status.enable_flap_detection.name]),
             event_handlers=bool(row[Status.enable_event_handlers.name]),
+            performance_data=bool(row[Status.process_performance_data.name]),
         ),
     )
 

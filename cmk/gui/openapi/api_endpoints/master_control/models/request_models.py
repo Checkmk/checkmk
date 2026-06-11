@@ -37,6 +37,14 @@ class UpdateMasterControlModel:
         ),
         example=True,
     )
+    performance_data: bool | None = api_field(
+        default=None,
+        description=(
+            'Enable or disable performance data processing on the site. This is named "Metrics" '
+            "in the user interface."
+        ),
+        example=True,
+    )
 
     def to_changes(self) -> dict[str, bool]:
         """Return only the settings that were explicitly provided, keyed by API field name."""
@@ -51,4 +59,6 @@ class UpdateMasterControlModel:
             changes["flap_detection"] = self.flap_detection
         if self.event_handlers is not None:
             changes["event_handlers"] = self.event_handlers
+        if self.performance_data is not None:
+            changes["performance_data"] = self.performance_data
         return changes

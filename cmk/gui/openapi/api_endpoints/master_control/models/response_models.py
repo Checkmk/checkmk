@@ -40,6 +40,13 @@ class MasterControlExtensionsModel:
         ),
         example=True,
     )
+    performance_data: bool = api_field(
+        description=(
+            'Whether performance data processing is enabled on the site. This is named "Metrics" '
+            "in the user interface."
+        ),
+        example=True,
+    )
 
 
 @api_model

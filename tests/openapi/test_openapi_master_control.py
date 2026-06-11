@@ -25,7 +25,7 @@ _CONNECTION_COLUMNS: Mapping[str, object] = {
 # The columns are queried in the order the toggles are defined in _utils.MASTER_CONTROL_TOGGLES.
 _STATUS_COLUMNS = (
     "Columns: enable_notifications execute_service_checks execute_host_checks "
-    "enable_flap_detection enable_event_handlers"
+    "enable_flap_detection enable_event_handlers process_performance_data"
 )
 
 
@@ -37,6 +37,7 @@ def _setup_status(
     host_checks: int = 1,
     flap_detection: int = 1,
     event_handlers: int = 1,
+    performance_data: int = 1,
 ) -> None:
     mock_livestatus.add_table(
         "status",
@@ -48,6 +49,7 @@ def _setup_status(
                 "execute_host_checks": host_checks,
                 "enable_flap_detection": flap_detection,
                 "enable_event_handlers": event_handlers,
+                "process_performance_data": performance_data,
             }
         ],
         "NO_SITE",
@@ -65,6 +67,7 @@ def test_openapi_list_master_control(
         host_checks=1,
         flap_detection=0,
         event_handlers=1,
+        performance_data=0,
     )
     mock_livestatus.expect_query(["GET status", _STATUS_COLUMNS])
 
@@ -81,6 +84,7 @@ def test_openapi_list_master_control(
         "host_checks": True,
         "flap_detection": False,
         "event_handlers": True,
+        "performance_data": False,
     }
 
 
@@ -95,6 +99,7 @@ def test_openapi_show_master_control(
         host_checks=0,
         flap_detection=1,
         event_handlers=0,
+        performance_data=1,
     )
     mock_livestatus.expect_query(["GET status", _STATUS_COLUMNS], sites=["NO_SITE"])
 
@@ -108,6 +113,7 @@ def test_openapi_show_master_control(
         "host_checks": False,
         "flap_detection": True,
         "event_handlers": False,
+        "performance_data": True,
     }
 
 
@@ -179,6 +185,18 @@ def test_openapi_disable_event_handlers(
 
     with mock_livestatus:
         resp = clients.MasterControl.edit("NO_SITE", {"event_handlers": False})
+
+    assert resp.status_code == 204
+
+
+def test_openapi_disable_performance_data(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.expect_query("COMMAND [...] DISABLE_PERFORMANCE_DATA;", match_type="ellipsis")
+
+    with mock_livestatus:
+        resp = clients.MasterControl.edit("NO_SITE", {"performance_data": False})
 
     assert resp.status_code == 204
 

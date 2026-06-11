@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Mapping
 
 from cmk.graphing.v1 import metrics as metrics_v1
 
-from ._fetch import FetchRRD
 from ._from_api import metric_display_attributes
 from ._objects import (
     MetricName,
@@ -16,7 +15,6 @@ from ._objects import (
     PerformanceData,
     RRDMetricData,
     RRDOriginal,
-    ServiceRef,
 )
 
 # A predictive metric keeps its prefix on the translated name but is matched by the bare name.
@@ -97,19 +95,3 @@ def translate_performance_data(
             maximum=_scaled(perf_value.maximum),
         )
     return result
-
-
-def fetch_translated_metrics(
-    services: Iterable[ServiceRef],
-    *,
-    rrd: FetchRRD,
-    translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
-    metrics: Mapping[str, metrics_v1.Metric],
-    localizer: Callable[[str], str],
-) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
-    # dict.fromkeys dedups the services while keeping a deterministic order.
-    performance_data = rrd.fetch_performance_data(list(dict.fromkeys(services)))
-    return {
-        service: translate_performance_data(perf, translations, metrics, localizer)
-        for service, perf in performance_data.items()
-    }

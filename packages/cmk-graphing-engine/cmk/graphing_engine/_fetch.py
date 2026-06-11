@@ -3,19 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
+from cmk.graphing.v1 import metrics as metrics_v1
+
 from ._objects import (
     Graph,
+    MetricName,
+    MetricTranslation,
     PerformanceData,
     RRDMetric,
+    RRDMetricData,
     RRDMetricRef,
     RRDMetricWithCF,
     ServiceRef,
 )
 from ._options import ConsolidationFunction, TimeRange
+from ._translate import translate_performance_data
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -80,3 +86,19 @@ def fetch_time_series(
     rrd: FetchRRD,
 ) -> Sequence[Mapping[RRDMetricRef, TimeSeries]]:
     return [_fetch_time_series_per_request(request, rrd) for request in requests]
+
+
+def fetch_translated_metrics(
+    services: Iterable[ServiceRef],
+    *,
+    rrd: FetchRRD,
+    translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
+) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
+    # dict.fromkeys dedups the services while keeping a deterministic order.
+    performance_data = rrd.fetch_performance_data(list(dict.fromkeys(services)))
+    return {
+        service: translate_performance_data(perf, translations, metrics, localizer)
+        for service, perf in performance_data.items()
+    }

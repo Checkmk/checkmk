@@ -11,7 +11,7 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
-from ._fetch import FetchRRD
+from ._fetch import fetch_translated_metrics, FetchRRD
 from ._from_api import (
     metric_names_of_graph,
     metric_names_of_title,
@@ -29,7 +29,6 @@ from ._objects import (
     Stack,
 )
 from ._options import ConsolidationFunction, TimeRange
-from ._translate import fetch_translated_metrics
 
 # A predictive metric (predict_<name> / predict_lower_<name>) is drawn alongside the metric it
 # predicts; predict_lower_ also starts with this prefix.

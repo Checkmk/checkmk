@@ -8,7 +8,7 @@ import type { HostEntry } from '@/monitoring/shared/api/types'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
-import type { CellHighlight } from '@/monitoring/shared/components/cell/base/HighlightWrapper.vue'
+import type { CellHighlight } from '@/monitoring/shared/components/cell/base/highlight'
 
 defineProps<{
   row: HostEntry

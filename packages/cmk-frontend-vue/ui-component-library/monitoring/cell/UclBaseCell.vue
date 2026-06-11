@@ -110,7 +110,7 @@ import { computed, ref } from 'vue'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
 import BaseCell from '@/monitoring/shared/components/cell/BaseCell.vue'
-import type { CellHighlight } from '@/monitoring/shared/components/cell/base/HighlightWrapper.vue'
+import type { CellHighlight } from '@/monitoring/shared/components/cell/base/highlight'
 
 defineProps<{ screenshotMode: boolean }>()
 

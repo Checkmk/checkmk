@@ -52,7 +52,7 @@ const display = computed(() => {
 
 /* stylelint-disable selector-pseudo-class-no-unknown */
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.monitoring-string-cell :deep(.monitoring-highlight-wrapper) {
+.monitoring-string-cell :deep(.monitoring-base-cell__highlight) {
   flex: 1 1 auto;
   min-width: 0;
 }

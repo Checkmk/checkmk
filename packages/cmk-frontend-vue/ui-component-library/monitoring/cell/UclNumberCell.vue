@@ -120,7 +120,7 @@ import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import type { ColumnJustify } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
-import type { CellHighlight } from '@/monitoring/shared/components/cell/base/HighlightWrapper.vue'
+import type { CellHighlight } from '@/monitoring/shared/components/cell/base/highlight'
 
 defineProps<{ screenshotMode: boolean }>()
 

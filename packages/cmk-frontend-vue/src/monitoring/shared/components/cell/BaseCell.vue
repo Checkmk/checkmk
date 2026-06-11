@@ -15,7 +15,7 @@ import {
   justifyToFlex,
   resolveBreakpoint
 } from '../MonitoringTableContext'
-import HighlightWrapper, { type CellHighlight } from './base/HighlightWrapper.vue'
+import type { CellHighlight } from './base/highlight'
 
 export interface CellLink {
   href: string
@@ -65,6 +65,23 @@ const activeSlot = computed<string>(() => {
   }
   return 'default'
 })
+
+const highlightClasses = computed<string[]>(() => {
+  const classes = ['monitoring-base-cell__highlight']
+  if (props.highlight) {
+    classes.push(
+      `monitoring-base-cell__highlight--${props.highlight.type}`,
+      `monitoring-base-cell__highlight--color-${props.highlight.color}`
+    )
+  }
+  return classes
+})
+
+const linkedHighlightClasses = computed<string[]>(() =>
+  props.highlight
+    ? [...highlightClasses.value, 'monitoring-base-cell__highlight--hover']
+    : highlightClasses.value
+)
 </script>
 
 <template>
@@ -82,14 +99,14 @@ const activeSlot = computed<string>(() => {
       :href="linkedTo.href"
       :target="linkedTo.target"
     >
-      <HighlightWrapper :highlight="highlight" :justify="effectiveJustify" :is-linked="true">
+      <div :class="linkedHighlightClasses">
         <slot :name="activeSlot" />
-      </HighlightWrapper>
+      </div>
     </a>
     <div v-else class="monitoring-base-cell__wrapper">
-      <HighlightWrapper :highlight="highlight" :justify="effectiveJustify">
+      <div :class="highlightClasses">
         <slot :name="activeSlot" />
-      </HighlightWrapper>
+      </div>
       <a
         v-if="linkedTo && linkedTo.variant === 'icon'"
         :href="linkedTo.href"
@@ -148,5 +165,93 @@ const activeSlot = computed<string>(() => {
   transform: translateX(100%);
   pointer-events: none;
   background: linear-gradient(to right, rgb(0 0 0 / 30%), rgb(0 0 0 / 0%));
+}
+
+.monitoring-base-cell__highlight {
+  margin: var(--dimension-2) var(--dimension-3);
+  padding: var(--dimension-2) var(--dimension-4);
+  border-radius: var(--border-radius);
+  border-width: 1px;
+  border-style: solid;
+  box-sizing: border-box;
+  border-color: transparent;
+  width: fit-content;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-content: center;
+  gap: var(--dimension-3);
+
+  &.monitoring-base-cell__highlight--full {
+    margin: 0;
+    width: 100%;
+    padding: var(--dimension-3) var(--dimension-3);
+    border-radius: 0;
+    justify-content: v-bind(justifyContent);
+  }
+
+  &.monitoring-base-cell__highlight--color-default {
+    border-color: var(--color-midnight-grey-50);
+    background-color: var(--color-midnight-grey-50);
+    color: var(--white);
+    text-decoration-color: var(--white);
+  }
+
+  &.monitoring-base-cell__highlight--color-success {
+    border-color: var(--success);
+    background-color: var(--success);
+    color: var(--black);
+    text-decoration-color: var(--black) !important;
+  }
+
+  &.monitoring-base-cell__highlight--color-warning {
+    border-color: var(--color-warning);
+    background-color: var(--color-warning);
+    color: var(--black);
+    text-decoration-color: var(--black);
+  }
+
+  &.monitoring-base-cell__highlight--color-danger {
+    border-color: var(--color-danger);
+    background-color: var(--color-danger);
+    color: var(--white);
+    text-decoration-color: var(--white);
+  }
+
+  &.monitoring-base-cell__highlight--color-info {
+    border-color: var(--color-dark-blue-50);
+    background-color: var(--color-dark-blue-50);
+    color: var(--white);
+    text-decoration-color: var(--white);
+  }
+
+  &.monitoring-base-cell__highlight--outline {
+    background-color: transparent;
+    color: var(--font-color) !important;
+  }
+
+  &.monitoring-base-cell__highlight--hover {
+    position: relative;
+    overflow: hidden;
+    text-decoration: underline;
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0.1;
+      left: 0;
+      top: 0;
+    }
+
+    &:hover {
+      text-decoration: none;
+
+      &::after {
+        background: var(--white);
+      }
+    }
+  }
 }
 </style>

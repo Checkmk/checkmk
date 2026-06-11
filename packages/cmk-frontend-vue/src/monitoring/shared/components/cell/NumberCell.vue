@@ -10,7 +10,7 @@ import { computed } from 'vue'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import BaseCell, { type CellLink } from './BaseCell.vue'
-import { type CellHighlight } from './base/HighlightWrapper.vue'
+import type { CellHighlight } from './base/highlight'
 
 export interface NumberCellProps {
   value: number

@@ -27,7 +27,7 @@ const value = defineModel<boolean>({ required: false, default: false })
 <style scoped>
 /* stylelint-disable selector-pseudo-class-no-unknown */
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.monitoring-checkbox-cell :deep(.monitoring-highlight-wrapper) {
+.monitoring-checkbox-cell :deep(.monitoring-base-cell__highlight) {
   margin: 0;
   padding: var(--dimension-2) var(--dimension-3);
 }

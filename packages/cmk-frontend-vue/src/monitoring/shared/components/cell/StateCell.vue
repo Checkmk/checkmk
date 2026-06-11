@@ -15,7 +15,7 @@ import type { CmkMultitoneIconNames, CustomIconColor } from '@/components/CmkIco
 
 import type { HostState } from '../../api/types.ts'
 import BaseCell from './BaseCell.vue'
-import type { CellHighlight } from './base/HighlightWrapper.vue'
+import type { CellHighlight } from './base/highlight'
 
 export interface StateCellProps {
   state: HostState

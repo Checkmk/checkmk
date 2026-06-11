@@ -3,50 +3,57 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    rulespec_registry,
-    RulespecGroupMonitoringAgentsGenericOptions,
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    MultipleChoice,
+    MultipleChoiceElement,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, ListChoice
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_bakery_packages() -> Dictionary:
+def _form_spec() -> Dictionary:
     return Dictionary(
-        title=_("Agent Bakery packages"),
-        help=_(
+        help_text=Help(
             "You can use these options to tune the way packages are baked for your hosts which may "
             "have a positive impact on the performance of the baking procedure. "
             "Defaults to bake for all platforms with no compression."
         ),
-        elements=[
-            (
-                "selection",
-                ListChoice(
-                    title=_("Select packages"),
-                    help=_(
+        elements={
+            "selection": DictElement(
+                parameter_form=MultipleChoice(
+                    title=Title("Select packages"),
+                    help_text=Help(
                         "Explicitly select packages to be baked. "
                         "If this rule entry is not activated, all packages are baked."
                     ),
-                    choices=[
-                        ("linux_deb", _("Linux: DPKG (.deb)")),
-                        ("linux_rpm", _("Linux: RPM (.rpm)")),
-                        ("linux_tgz", _("Linux: TGZ (.tar.gz)")),
-                        ("solaris_pkg", _("Solaris: PKG (.pkg)")),
-                        ("solaris_tgz", _("Solaris: TGZ (.tar.gz)")),
-                        ("aix_tgz", _("AIX: TGZ (.tar.gz)")),
-                        ("windows_msi", _("Windows: MSI (.msi)")),
+                    elements=[
+                        MultipleChoiceElement(name="linux_deb", title=Title("Linux: DPKG (.deb)")),
+                        MultipleChoiceElement(name="linux_rpm", title=Title("Linux: RPM (.rpm)")),
+                        MultipleChoiceElement(
+                            name="linux_tgz", title=Title("Linux: TGZ (.tar.gz)")
+                        ),
+                        MultipleChoiceElement(
+                            name="solaris_pkg", title=Title("Solaris: PKG (.pkg)")
+                        ),
+                        MultipleChoiceElement(
+                            name="solaris_tgz", title=Title("Solaris: TGZ (.tar.gz)")
+                        ),
+                        MultipleChoiceElement(name="aix_tgz", title=Title("AIX: TGZ (.tar.gz)")),
+                        MultipleChoiceElement(
+                            name="windows_msi", title=Title("Windows: MSI (.msi)")
+                        ),
                     ],
-                    toggle_all=True,
+                    show_toggle_all=True,
                 ),
             ),
-            (
-                "compression",
-                DropdownChoice(
-                    title=_("Apply compression to agent packages"),
-                    help=_(
+            "compression": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("Apply compression to agent packages"),
+                    help_text=Help(
                         "When activated, the Agent Bakery will compress most of the agent packages. "
                         "The compression applies to .deb packages, .rpm packages and to all "
                         ".tar.gz packages that result from baking agents. "
@@ -59,21 +66,17 @@ def _valuespec_bakery_packages() -> Dictionary:
                         "agent controller) provided by Checkmk are precompressed and won't benefit "
                         "from enabling compression."
                     ),
-                    choices=[
-                        (True, _("Apply compression")),
-                        (False, _("Don't apply compression")),
-                    ],
+                    label=Label("Apply compression"),
+                    prefill=DefaultValue(False),
                 ),
             ),
-        ],
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsGenericOptions,
-        name=RuleGroup.AgentConfig("bakery_packages"),
-        match_type="dict",
-        valuespec=_valuespec_bakery_packages,
-    )
+rule_spec_bakery_packages = AgentConfig(
+    name="bakery_packages",
+    title=Title("Agent Bakery packages"),
+    topic=Topic.GENERAL,
+    parameter_form=_form_spec,
 )

@@ -14,7 +14,7 @@ from typing import override
 
 from cmk.backup.gui.formspec_adapter import FormspecAdapter
 from cmk.backup.utils.config import Config
-from cmk.gui.form_specs import is_formspec_password
+from cmk.gui.form_specs.unstable.legacy_converter import is_formspec_password
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.log import VERBOSE

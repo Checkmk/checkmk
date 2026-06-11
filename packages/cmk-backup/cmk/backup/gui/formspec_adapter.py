@@ -2,12 +2,9 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Explicit boundary between the on-disk ``TargetConfig`` and the setup form's ``Password``
-FormSpec representation.
+"""Explicit boundary between the on-disk ``TargetConfig`` and the WatoMode's form specs.
 
-The setup form speaks the FormSpec password shape; the on-disk ``TargetConfig`` (shared with the
-CMA appliance tool) stores secrets as a ``PasswordId``. This adapter converts in both directions
-so the form does not depend on a ``migrate=`` callback to do the steady-state transform.
+We mustn't touch the on-disk ``TargetConfig`` as it is shared with the CMA.
 """
 
 from collections.abc import Mapping
@@ -21,17 +18,17 @@ from cmk.backup.utils.targets.azure_blob_storage import (
 from cmk.backup.utils.targets.config import TargetConfig
 from cmk.backup.utils.targets.local import LocalTargetParams
 from cmk.backup.utils.targets.remote_interface import RemoteTargetParams
-from cmk.gui.form_specs import (
+from cmk.gui.form_specs import RawDiskData
+from cmk.gui.form_specs.unstable.legacy_converter import (
     formspec_to_password_id,
     password_id_to_formspec,
-    RawDiskData,
 )
 
 
 class FormspecAdapter:
     @staticmethod
     def from_form_spec(raw: Mapping[str, object]) -> TargetConfig:
-        """Convert the setup form's output to the on-disk ``TargetConfig`` (secrets -> PasswordId)."""
+        """Convert the form spec output to the on-disk ``TargetConfig`` (secrets -> PasswordId)."""
         match raw:
             case {
                 "title": str(title),

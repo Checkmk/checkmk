@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.gui.form_specs import (
+from cmk.gui.form_specs.unstable.legacy_converter import (
     formspec_to_password_id,
     is_formspec_password,
     password_id_to_formspec,

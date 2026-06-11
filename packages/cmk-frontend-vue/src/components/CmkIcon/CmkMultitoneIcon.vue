@@ -4,9 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup generic="IconName extends CmkMultitoneIconNames" lang="ts">
-import { computed, ref } from 'vue'
-
-import { immediateWatch } from '@/lib/watch'
+import { computed } from 'vue'
 
 import { cmkMultitoneIconVariants, oneColorIcons, twoColorIcons } from './icons.constants.ts'
 import type {
@@ -69,21 +67,18 @@ function getColorClasses(name: OneColorIcons | TwoColorIcons): string[] {
   }
   return []
 }
-function getIconFileName(iconName: CmkMultitoneIconNames): string {
-  return `icon-${iconName}`
-}
-const svg = ref<string | null>(null)
 
-async function loadSvg() {
-  svg.value = (await import(`@/assets/icons/${getIconFileName(props.name)}.svg?raw`)).default
-}
-
-immediateWatch(
-  () => ({ newName: props.name }),
-  async () => {
-    await loadSvg()
-  }
+const iconSvgByName: Record<string, string> = Object.fromEntries(
+  Object.entries(
+    import.meta.glob<string>('../../assets/icons/*.svg', {
+      query: '?raw',
+      import: 'default',
+      eager: true
+    })
+  ).map(([path, content]) => [path.replace(/^.*\/icon-(.+)\.svg$/, '$1'), content])
 )
+
+const svg = computed<string | null>(() => iconSvgByName[props.name] ?? null)
 </script>
 
 <template>

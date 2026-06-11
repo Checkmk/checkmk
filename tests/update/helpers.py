@@ -302,10 +302,10 @@ class BaseVersions:
         return list(dict.fromkeys(earliest_versions + latest_versions))
 
     min_version = get_min_version()
-    _base_packages: list[CMKPackageInfoOld] | None = None
+    _base_packages: list[CMKPackageInfoOld | CMKPackageInfo] | None = None
 
     @classmethod
-    def get_base_packages(cls) -> list[CMKPackageInfoOld]:
+    def get_base_packages(cls) -> list[CMKPackageInfoOld | CMKPackageInfo]:
         if cls._base_packages is None:
             base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
             if not base_versions_pb_file.exists():
@@ -323,16 +323,18 @@ class BaseVersions:
                 if base_versions_cb_file.exists()
                 else []
             )
-
             cls._base_packages = [
                 CMKPackageInfoOld(CMKVersion(base_version_str), edition_from_env_old())
-                for base_version_str in base_versions_pb + base_versions_cb
+                for base_version_str in base_versions_pb
+            ] + [
+                CMKPackageInfo(CMKVersion(base_version_str), edition_from_env())
+                for base_version_str in base_versions_cb
             ]
         assert cls._base_packages, "No base packages found for the test!"
         return cls._base_packages
 
     @classmethod
-    def get_latest_base_package(cls) -> CMKPackageInfoOld:
+    def get_latest_base_package(cls) -> CMKPackageInfoOld | CMKPackageInfo:
         """Get the latest base package used for the test."""
         return cls.get_base_packages()[-1]
 

@@ -44,6 +44,7 @@ from .api_endpoints import (
 from .api_endpoints import downtime as api_downtime
 from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
+from .api_endpoints import master_control as api_master_control
 from .api_endpoints import quick_setup as api_quick_setup
 from .api_endpoints import service_discovery as api_service_discovery
 from .api_endpoints.graph_timerange import registration as api_graph_timerange
@@ -104,6 +105,10 @@ def register(
     )
     api_host_config.register(versioned_endpoint_registry)
     api_host_config_internal.register(versioned_endpoint_registry)
+    api_master_control.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
     api_service_discovery.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,

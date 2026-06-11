@@ -1167,6 +1167,37 @@ class AuxTagClient(RestApiClient):
         )
 
 
+class MasterControlClient(RestApiClient):
+    domain: DomainType = "master_control"
+
+    def get(self, site_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{site_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self,
+        site_id: str,
+        settings: dict[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "patch",
+            url=f"/objects/{self.domain}/{site_id}",
+            body=settings,
+            expect_ok=expect_ok,
+        )
+
+
 class GraphTimerangeClient(RestApiClient):
     domain: DomainType = "graph_timerange"
     default_version = APIVersion.UNSTABLE
@@ -4290,6 +4321,7 @@ class ClientRegistry:
     AuxTag: AuxTagClient
     TimePeriod: TimePeriodClient
     GraphTimerange: GraphTimerangeClient
+    MasterControl: MasterControlClient
     Rule: RuleClient
     Ruleset: RulesetClient
     HostTagGroup: HostTagGroupClient
@@ -4352,6 +4384,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Host=HostClient(request_handler, url_prefix),
         Folder=FolderClient(request_handler, url_prefix),
         GraphTimerange=GraphTimerangeClient(request_handler, url_prefix),
+        MasterControl=MasterControlClient(request_handler, url_prefix),
         AuxTag=AuxTagClient(request_handler, url_prefix),
         TimePeriod=TimePeriodClient(request_handler, url_prefix),
         Rule=RuleClient(request_handler, url_prefix),

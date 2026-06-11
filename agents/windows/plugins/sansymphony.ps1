@@ -29,9 +29,9 @@ $CMK_VERSION = "3.0.0b1"
 
 #configuration:
 
-$ssvusername = "Username"
-$ssvpassword = "Password"
-$ssvhostname = "Hostname"
+$ssvusername="Username"
+$ssvpassword="Password"
+$ssvhostname="Hostname"
 
 # import Datacore cmdlets (maybe we should do this persistently to speed up the check runtime
 
@@ -41,95 +41,98 @@ Import-Module "C:\Program Files\DataCore\SANsymphony\DataCore.Executive.Cmdlets.
 
 Connect-DcsServer -Server $ssvhostname -UserName $ssvusername -Password $ssvpassword -Connection check_mk | Out-Null
 
-# if the connection was succesfull, weï¿½ll go on
+# if the connection was succesfull, we´ll go on
 
-if ($?) {
-    # Gather all the information we need
+if($?)  {
+	# Gather all the information we need
 
-    $volumes = @(Get-DcsVirtualDisk -Server $ssvhostname)
-    $poolstatus = @(Get-DcsPool -Server $ssvhostname)
-    $poolinfo = @(Get-DcsPool -Server $ssvhostname | Get-DcsPerformanceCounter)
-    $ssvalerts = @(Get-DcsAlert)
-    $serverinfo = @(get-dcsserver -server $ssvhostname)
-    $dcsports = @(get-dcsport -Machine $ssvhostname)
+	$volumes=@(Get-DcsVirtualDisk -Server $ssvhostname)
+	$poolstatus=@(Get-DcsPool -Server $ssvhostname)
+	$poolinfo=@(Get-DcsPool -Server $ssvhostname| Get-DcsPerformanceCounter)
+	$ssvalerts=@(Get-DcsAlert)
+	$serverinfo=@(get-dcsserver -server $ssvhostname)
+	$dcsports=@(get-dcsport -Machine $ssvhostname)
 
-    # Now disconnect, weï¿½ve got everything we need
+	# Now disconnect, we´ve got everything we need
 
-    Disconnect-DcsServer -Connection check_mk
+	Disconnect-DcsServer -Connection check_mk
 
 
 
-    # Output state of all Volumes
+	# Output state of all Volumes
 
-    Write-Host "<<<sansymphony_virtualdiskstatus>>>"
-    foreach ($Item in $volumes) {
-        $virtualdiskalias = $Item.Alias -replace '\s+', '_'
-        Write-Host $virtualdiskalias $Item.DiskStatus
-    }
+	write-host "<<<sansymphony_virtualdiskstatus>>>"
+	foreach ($Item in $volumes) {
+	$virtualdiskalias=$Item.Alias -replace '\s+', '_'
+	write-host $virtualdiskalias $Item.DiskStatus
+	}
 
-    # Output amount of unacknowlegded alerts
+	# Output amount of unacknowlegded alerts
 
-    Write-Host "<<<sansymphony_alerts>>>"
-    $amountofalerts = $ssvalerts.length
-    Write-Host $amountofalerts
+	write-host "<<<sansymphony_alerts>>>"
+	$amountofalerts=$ssvalerts.length
+	write-host $amountofalerts
 
-    # Output type and status of ports
+	# Output type and status of ports
 
-    Write-Host "<<<sansymphony_ports>>>"
-    foreach ($Item in $dcsports) {
-        if ($Item.Alias -ne "Loopback Port") {
-            $portalias = $Item.Alias -replace '\s+', '_'
-            Write-Host $portalias $Item.PortType $Item.Connected
-        }
-    }
+	write-host "<<<sansymphony_ports>>>"
+	foreach ($Item in $dcsports) {
+	if ($Item.Alias -ne "Loopback Port")
+		{
+		$portalias=$Item.Alias -replace '\s+', '_'
+		write-host $portalias $Item.PortType $Item.Connected
+		}
+	}
 
-    # output server and cachestate information
+	# output server and cachestate information
 
-    Write-Host "<<<sansymphony_serverstatus>>>"
-    foreach ($Item in $serverinfo) {
-        Write-Host $Item.State $Item.Cachestate
-    }
+	write-host "<<<sansymphony_serverstatus>>>"
+	foreach ($Item in $serverinfo) {
+		write-host $Item.State $Item.Cachestate
+		}
 
-    # output allocation of disk pools
+	# output allocation of disk pools
 
-    Write-Host "<<<sansymphony_pool_v2>>>"
+	write-host "<<<sansymphony_pool_v2>>>"
 
-    $a = @()
-    foreach ($Item in $poolstatus) {
-        $poolalias = $Item.Alias -replace '\s+', '_'
-        $a += $poolalias
-    }
+	$a = @()
+	foreach ($Item in $poolstatus) {
+	    $poolalias=$Item.Alias -replace '\s+', '_'
+	    $a += $poolalias
+	}
 
-    $b = @()
-    $bytes_allocated = @()
-    $bytes_available = @()
-    $bytes_total = @()
-    foreach ($Item in $poolinfo) {
-        $poolallocation = $Item.PercentAllocated
-        $b += $poolallocation
-        $bytes_allocated += $Item.BytesAllocated
-        $bytes_available += $Item.BytesAvailable
-        $bytes_total += $Item.BytesTotal
-    }
+	$b = @()
+	$bytes_allocated = @()
+	$bytes_available = @()
+	$bytes_total = @()
+	foreach ($Item in $poolinfo) {
+	    $poolallocation=$Item.PercentAllocated
+	    $b += $poolallocation
+	    $bytes_allocated += $Item.BytesAllocated
+	    $bytes_available += $Item.BytesAvailable
+	    $bytes_total += $Item.BytesTotal
+	}
 
-    $c = @()
-    $d = @()
-    $e = @()
-    foreach ($Item in $poolstatus) {
-        $c += $Item.PoolStatus
-        $d += $Item.PoolMode
-        $e += $Item.Type
-    }
+        $c = @()
+        $d = @()
+        $e = @()
+	foreach ($Item in $poolstatus) {
+            $c += $Item.PoolStatus
+            $d += $Item.PoolMode
+            $e += $Item.Type
+	}
 
-    $i = 0
-    do {
-        Write-Host $a[$i] $b[$i] $c[$i] $d[$i] $e[$i] $bytes_allocated[$i] $bytes_available[$i] $bytes_total[$i]; $i++
-    }while ($i -le $poolinfo.length - 1)
+	$i=0
+	do {
+            Write-Host $a[$i] $b[$i] $c[$i] $d[$i] $e[$i] $bytes_allocated[$i] $bytes_available[$i] $bytes_total[$i]; $i++
+           }while ($i -le $poolinfo.length-1)
 
-    exit 0
+	exit 0
 
-}
+	}
 
-else {
+else
+	{
    	exit 2
-}
+	}
+

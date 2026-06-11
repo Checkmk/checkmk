@@ -15,7 +15,7 @@
 
 Write-Host "run script starts" -ForegroundColor Gray
 
-if ((Get-Host).version.major -lt 7) {
+if ((get-host).version.major -lt 7) {
     Write-Host "PowerShell version 7 or higher is required." -ForegroundColor Red
     exit
 }
@@ -94,9 +94,9 @@ else {
             "--var" {
                 [Environment]::SetEnvironmentVariable($args[++$i], $args[++$i])
             }
-            "--shorten" {
-                $shortenLink = $args[++$i]
-                $shortenPath = $args[++$i]
+            "--shorten" { 
+                $shortenLink = $args[++$i] 
+                $shortenPath = $args[++$i] 
             }
         }
     }
@@ -137,13 +137,13 @@ function Start-ShortenPath($tgt_link, $path) {
 function Invoke-Cargo-With-Explicit-Package {
     param(
         [Parameter(
-            Mandatory = $True,
+            Mandatory=$True,
             Position = 0
         )]
         $cmd,
         [Parameter(
-            Mandatory = $False,
-            ValueFromRemainingArguments = $true,
+            Mandatory=$False,
+            ValueFromRemainingArguments=$true,
             Position = 1
         )]
         $further_args
@@ -157,7 +157,7 @@ function Invoke-Cargo-With-Explicit-Package {
     }
 }
 
-function Test-Administrator {
+function Test-Administrator {  
     [OutputType([bool])]
     param()
     process {
@@ -168,7 +168,7 @@ function Test-Administrator {
 
 function Update-Dirs() {
     $root_dir = "$pwd"
-    while (!(Test-Path "$root_dir/.werks" -ErrorAction SilentlyContinue)) {
+    While (!(Test-Path "$root_dir/.werks" -ErrorAction SilentlyContinue)) {
         $root_dir = Split-Path -Parent $root_dir -ErrorAction Stop
         if ($root_dir -eq "") {
             Write-Error "Not found repo root"  -ErrorAction Stop
@@ -178,7 +178,7 @@ function Update-Dirs() {
     Write-Host "Found root dir: '$global:root_dir'" -ForegroundColor White
 
     $arte_dir = "$root_dir/artefacts"
-    if (!(Test-Path -PathType container $arte_dir)) {
+    If (!(Test-Path -PathType container $arte_dir)) {
         Remove-Item $arte_dir -ErrorAction SilentlyContinue     # we may have find strange files from bad scripts
         Write-Host "Creating arte dir: '$arte_dir'" -ForegroundColor White
         New-Item -ItemType Directory -Path $arte_dir -ErrorAction Stop > nul
@@ -210,11 +210,11 @@ try {
     }
     if ($packBuild) {
         $cwd = Get-Location
-        $target_dir = Join-Path (cargo metadata --no-deps | ConvertFrom-Json).target_directory "$cargo_target"
+        $target_dir = Join-Path (cargo metadata --no-deps | ConvertFrom-json).target_directory "$cargo_target"
         Write-Host "Killing processes in $target_dir" -ForegroundColor White
         Get-Process | Where-Object { $_.path -and ($_.path -like "$target_dir\*") } | Stop-Process -Force
         Invoke-Cargo-With-Explicit-Package "build" "--release" "--target" $cargo_target
-        $exe_dir = Join-Path (cargo metadata --no-deps | ConvertFrom-Json).target_directory "$cargo_target" "release"
+        $exe_dir = Join-Path (cargo metadata --no-deps | ConvertFrom-json).target_directory "$cargo_target" "release"
         Write-Host "Uploading artifacts: [ $exe_dir/$exe_name -> $arte_dir/$exe_name ] ..." -Foreground White
         Copy-Item $exe_dir/$exe_name $arte_dir/$exe_name -Force -ErrorAction Stop
     }

@@ -96,8 +96,8 @@ function GetWmiObject {
     $entries = Get-CimInstance -ClassName $strClass -Namespace "root\cimv2"
     foreach ($entry in $entries) {
         $sortedProperties = $entry.PSObject.Properties |
-            Where-Object { $_.Name -in $arrVars } |
-            Sort-Object Name
+        Where-Object { $_.Name -in $arrVars } |
+        Sort-Object Name
 
         foreach ($property in  $sortedProperties) {
             if ($arrVars -contains $property.Name) {
@@ -160,8 +160,8 @@ function GetNetworkAdapter {
         # Only handle Adapters with a MAC address and exclude AsyncMac
         if ($adapter.ServiceName -ne "AsyncMac" -and -not [string]::IsNullOrEmpty($adapter.MACAddress)) {
             $sortedProperties = $adapter.PSObject.Properties |
-                Where-Object { $_.Name -in $arrVars } |
-                Sort-Object Name
+            Where-Object { $_.Name -in $arrVars } |
+            Sort-Object Name
             foreach ($property in $sortedProperties) {
                 if ($arrVars -contains $property.Name) {
                     if ($property.Value -is [array]) {
@@ -228,7 +228,7 @@ function GetSoftwareFromInstaller {
     if (-not $installer) {
         $installer = New-Object -ComObject WindowsInstaller.Installer
     }
-
+    
     # Try getting products using ProductsEx
     try {
         $products = $installer.ProductsEx("", $WI_SID_EVERYONE, $WI_ALL_CONTEXTS)
@@ -377,8 +377,7 @@ function GetIpParametersTable {
 
     if ($items) {
         "Parameters: {0}" -f ($items -join ",")
-    }
-    else {
+    } else {
         "Parameters:"
     }
 }

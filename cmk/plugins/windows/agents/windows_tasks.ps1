@@ -9,22 +9,20 @@ try {
     foreach ($task in $tasks) {
         $task_name = "$($task.TaskPath.ToString())$($task.TaskName.ToString())"
         $task_info = $task | Get-ScheduledTaskInfo
-        if (!$task.TaskPath.StartsWith("\Microsoft")) {
+        if (!$task.TaskPath.StartsWith("\Microsoft")){
             Write-Host "TaskName `t: "$task_name
             Write-Host "Last Run Time `t: "$task_info.LastRunTime
             Write-Host "Next Run Time `t: "$task_info.NextRunTime
             Write-Host "Last Result `t: "$task_info.LastTaskResult
-            if ($task.'State' -eq 'Disabled') {
+            if ($task.'State' -eq 'Disabled'){
                 Write-Host "Scheduled Task State `t: Disabled"
-            }
-            else {
+            } else {
                 Write-Host "Scheduled Task State `t: Enabled"
             }
             Write-Host ""
         }
     }
-}
-catch {
+} Catch {
     ## Functionality related to Windows 7 or older. We keep this for compatibility. Do not update
     ## this. We don't support these versions of Windows.
     $lang = Get-UICulture | select -expand LCID
@@ -39,7 +37,7 @@ catch {
     ## Z_Z    -> ''
 
     ## encoding "\n and "
-    $raw = (schtasks /query /fo csv -v | Out-String) -replace '\r\n', 'Z_Z'
+    $raw = (schtasks /query /fo csv -v | out-string) -replace '\r\n', 'Z_Z'
     $l = $raw -replace '\"', 'o_o'
     ## decoding
     $d = $l -replace 'o_oZ_Z', "`"`r`n"
@@ -47,27 +45,24 @@ catch {
     $d = $d -replace 'Z_Z', ''
     $tasks = $d | ConvertFrom-Csv
 
-    if ($lang -eq 1031) {
-        foreach ($task in $tasks) {
-            if (($task.HostName -match "^$($Env:Computername)$") -and ($task.AufgabenName -notlike '\Microsoft\*')) {
-                Write-Host "TaskName `t: "$task.AufgabenName
-                Write-Host "Last Run Time `t: "$task.'Letzte Laufzeit'
-                Write-Host "Next Run Time `t: "$task.'Nächste Laufzeit'
-                Write-Host "Last Result `t: "$task.'Letztes Ergebnis'
-                if ($task.'Status der geplanten Aufgabe' -eq 'Aktiviert') {
-                    Write-Host "Scheduled Task State `t: Enabled"
-                }
-                else {
-                    Write-Host "Scheduled Task State `t: "$task.'Status der geplanten Aufgabe'
-                }
-                Write-Host ""
+    if ($lang -eq 1031){
+            foreach ($task in $tasks){
+                    if (($task.HostName -match "^$($Env:Computername)$") -and ($task.AufgabenName -notlike '\Microsoft\*')){
+                            Write-Host "TaskName `t: "$task.AufgabenName
+                            Write-Host "Last Run Time `t: "$task.'Letzte Laufzeit'
+                            Write-Host "Next Run Time `t: "$task.'Nächste Laufzeit'
+                            Write-Host "Last Result `t: "$task.'Letztes Ergebnis'
+                            if ($task.'Status der geplanten Aufgabe' -eq 'Aktiviert'){
+                                    Write-Host "Scheduled Task State `t: Enabled"
+                            } else {
+                                    Write-Host "Scheduled Task State `t: "$task.'Status der geplanten Aufgabe'
+                            }
+                            Write-Host ""
+                    }
             }
-        }
+    } elseif ($lang -eq 1033 -or $lang -eq 2057){
+            $tasks | ? {$_.HostName -match "^$($Env:Computername)$" -and $_.TaskName -notlike '\Microsoft\*'} | fl taskname,"last run time","next run time","last result","scheduled task state" | out-string -width 4096
     }
-    elseif ($lang -eq 1033 -or $lang -eq 2057) {
-        $tasks | ? { $_.HostName -match "^$($Env:Computername)$" -and $_.TaskName -notlike '\Microsoft\*' } | fl taskname, "last run time", "next run time", "last result", "scheduled task state" | Out-String -Width 4096
-    }
-}
-finally {
-    $ErrorActionPreference = $oldPreference
+} Finally {
+    $ErrorActionPreference=$oldPreference
 }

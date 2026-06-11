@@ -21,5 +21,5 @@ Write-Host "<<<windows_multipath>>>"
 $mpioPaths = Get-CimInstance -Namespace "Root\WMI" -ClassName "MPIO_PATH_INFORMATION" -ComputerName $computerName
 
 foreach ($path in $mpioPaths) {
-    Write-Host $path.NumberPaths
+  Write-Host $path.NumberPaths
 }

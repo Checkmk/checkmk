@@ -41,8 +41,7 @@ function Generate-PerDeviceReport {
     $NameSpace = "root\cimv2"
     try {
         $ObjWMIService = Get-CimInstance -Namespace $NameSpace -ComputerName $ServerName -ClassName "Win32_TSLicenseKeyPack" -ErrorAction Stop
-    }
-    catch {
+    } catch {
         Write-Host "Unable to connect to the Namespace" -ForegroundColor Red
         exit 2
     }
@@ -66,12 +65,10 @@ if ($args.Count -eq 1) {
 if ($args.Count -eq 2) {
     if ($args[0] -ieq "-server") {
         $ServerName = $args[1]
-    }
-    else {
+    } else {
         Show-Help
     }
-}
-else {
+} else {
     $ServerName = "."
 }
 Generate-PerDeviceReport -ServerName $ServerName

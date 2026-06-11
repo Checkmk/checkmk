@@ -25,16 +25,20 @@ $WriteFileOutput = $false
 # DO NOT CHANGE ANYTHING BELOW THIS LINE!
 #-------------------------------------------------------------------------------
 
-function Script-Output {
-    param([Parameter(Mandatory = $true)][string]$String, [Parameter(Mandatory = $true)][string]$File, [Parameter(Mandatory = $false)][bool]$FileOut = $false, [Parameter(Mandatory = $false)][bool]$Append = $true)
+function Script-Output
+{
+    param([Parameter(Mandatory = $true)][string]$String,[Parameter(Mandatory = $true)][string]$File,[Parameter(Mandatory = $false)][bool]$FileOut=$false,[Parameter(Mandatory = $false)][bool]$Append=$true)
 
     Write-Host $String
 
-    if ($FileOut) {
-        if ($Append) {
+    If($FileOut)
+    {
+        If($Append)
+        {
             Out-File -FilePath $File -Encoding unicode -Append -InputObject $OutputString
         }
-        else {
+        Else
+        {
             Out-File -FilePath $OutputFile -Encoding unicode -Force -InputObject $OutputString
         }
     }
@@ -42,7 +46,8 @@ function Script-Output {
 
 # Open / overwrite file output
 
-if ($WriteFileOutput) {
+If($WriteFileOutput)
+{
     $OutputString = Get-Date -Format yyyy-MM-dd_hh-mm-ss
     Script-Output -String $OutputString -File $OutputFile -FileOut $WriteFileOutput -Append $false
 }
@@ -52,7 +57,8 @@ if ($WriteFileOutput) {
 $VMList = Get-VM
 $now = Get-Date
 
-foreach ($VM in $VMList) {
+Foreach ($VM in $VMList)
+{
     $OutputString = "<<<<" + $VM.name + ">>>>"
     Script-Output -String $OutputString -File $OutputFile -FileOut $WriteFileOutput -Append $true
     $OutputString = "<<<hyperv_vmstatus>>>"
@@ -61,13 +67,15 @@ foreach ($VM in $VMList) {
     # Integration Services
 
     $VMI = Get-VMIntegrationService -VMName $VM.name
-    $VMIStat = $VMI | where { $_.OperationalStatus -match "ProtocolMismatch" }
+    $VMIStat = $VMI | where {$_.OperationalStatus -match "ProtocolMismatch"}
 
-    if ($VMIStat.Count -gt 0) {
+    If($VMIStat.Count -gt 0)
+    {
         $OutputString = "Integration_Services Protocol_Mismatch"
         Script-Output -String $OutputString -File $OutputFile -FileOut $WriteFileOutput -Append $true
     }
-    else {
+    Else
+    {
         $OutputString = "Integration_Services Ok"
         Script-Output -String $OutputString -File $OutputFile -FileOut $WriteFileOutput -Append $true
     }
@@ -85,13 +93,16 @@ foreach ($VM in $VMList) {
     $OutputString = "<<<hyperv_checkpoints>>>"
     Script-Output -String $OutputString -File $OutputFile -FileOut $WriteFileOutput -Append $true
 
-    if ($VMCP) {
-        foreach ($CP in $VMCP) {
+    If ($VMCP)
+    {
+        Foreach($CP in $VMCP)
+        {
             $OutputString = [string]$CP.Id + " " + [string][System.Math]::Round((($now - $CP.CreationTime).TotalSeconds), 0)
             Script-Output -String $OutputString -File $OutputFile -FileOut $WriteFileOutput -Append $true
         }
     }
-    else {
+    Else
+    {
         $OutputString = "No_Checkpoints"
         Script-Output -String $OutputString -File $OutputFile -FileOut $WriteFileOutput -Append $true
     }

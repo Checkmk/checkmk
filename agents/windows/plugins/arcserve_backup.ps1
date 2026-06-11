@@ -24,34 +24,34 @@ $sqlServer = "SATURN\ARCSERVE_DB"
 # GetLatestJobId #
 ##################
 function GetLatestJobId($sqlCmd) {
-    # Put the command in our sqlCmd
-    # Please adapt description if english translation is used
-    $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%Ausführung von Job Sichern%' ORDER BY jobid DESC"
+   # Put the command in our sqlCmd
+   # Please adapt description if english translation is used
+   $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%Ausführung von Job Sichern%' ORDER BY jobid DESC"
 
-    # Create an adapter to put the data we get from SQL and get the data
-    $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter
-    $sqlAdapter.SelectCommand = $sqlCmd
-    $dataSet = New-Object System.Data.DataSet
-    $sqlAdapter.Fill($dataSet)
+   # Create an adapter to put the data we get from SQL and get the data
+   $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter
+   $sqlAdapter.SelectCommand = $sqlCmd
+   $dataSet = New-Object System.Data.DataSet
+   $sqlAdapter.Fill($dataSet)
 
-    return $dataSet.Tables[0].Rows[0][0]
+   return $dataSet.Tables[0].Rows[0][0]
 }
 
 #####################
 # GetPreLatestJobId #
 #####################
 function GetPreLatestJobId($sqlCmd, $jobId) {
-    # Put the command in our sqlCmd
-    # Please adapt description if english translation is used
-    $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%Ausführung von Job Sichern%' AND jobid < " + $jobId + " ORDER BY jobid DESC"
+   # Put the command in our sqlCmd
+   # Please adapt description if english translation is used
+   $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%Ausführung von Job Sichern%' AND jobid < " + $jobId + " ORDER BY jobid DESC"
 
-    # Create an adapter to put the data we get from SQL and get the data
-    $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter
-    $sqlAdapter.SelectCommand = $sqlCmd
-    $dataSet = New-Object System.Data.DataSet
-    $sqlAdapter.Fill($dataSet)
+   # Create an adapter to put the data we get from SQL and get the data
+   $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter
+   $sqlAdapter.SelectCommand = $sqlCmd
+   $dataSet = New-Object System.Data.DataSet
+   $sqlAdapter.Fill($dataSet)
 
-    return $dataSet.Tables[0].Rows[0][0]
+   return $dataSet.Tables[0].Rows[0][0]
 }
 
 #############
@@ -59,19 +59,19 @@ function GetPreLatestJobId($sqlCmd, $jobId) {
 #############
 function GetStatus($sqlCmd, $jobId) {
 
-    # Put the command in our sqlCmd
-    # Please adapt description if english translation is used
-    $sqlCmd.CommandText = "SELECT top 1 msgtext FROM dbo.aslogw WHERE msgtext LIKE '%Vorgang Sichern%' AND jobid = " + $jobid + " ORDER BY id DESC"
+      # Put the command in our sqlCmd
+      # Please adapt description if english translation is used
+      $sqlCmd.CommandText = "SELECT top 1 msgtext FROM dbo.aslogw WHERE msgtext LIKE '%Vorgang Sichern%' AND jobid = " + $jobid + " ORDER BY id DESC"
 
-    # Create an adapter to put the data we get from SQL and get the data
-    $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter
-    $sqlAdapter.SelectCommand = $sqlCmd
-    $dataSet = New-Object System.Data.DataSet
-    $sqlAdapter.Fill($dataSet)
+      # Create an adapter to put the data we get from SQL and get the data
+      $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter
+      $sqlAdapter.SelectCommand = $sqlCmd
+      $dataSet = New-Object System.Data.DataSet
+      $sqlAdapter.Fill($dataSet)
 
-    $temp = $dataSet.Tables[0].Rows[0][0]
+      $temp = $dataSet.Tables[0].Rows[0][0]
 
-    return $temp
+      return $temp
 }
 
 ##################
@@ -79,19 +79,19 @@ function GetStatus($sqlCmd, $jobId) {
 ##################
 function GetBackupFiles($sqlCmd, $jobId) {
 
-    # Put the command in our sqlCmd
-    # Please adapt description if english translation is used
-    $sqlCmd.CommandText = "SELECT msgtext FROM dbo.aslogw WHERE msgtext LIKE '%Verzeichnis(se)%' AND jobid = " + $jobId + " ORDER BY id DESC"
+      # Put the command in our sqlCmd
+      # Please adapt description if english translation is used
+      $sqlCmd.CommandText = "SELECT msgtext FROM dbo.aslogw WHERE msgtext LIKE '%Verzeichnis(se)%' AND jobid = " + $jobId + " ORDER BY id DESC"
 
-    # Create an adapter to put the data we get from SQL and get the data
-    $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter
-    $sqlAdapter.SelectCommand = $sqlCmd
-    $dataSet = New-Object System.Data.DataSet
-    $sqlAdapter.Fill($dataSet)
+      # Create an adapter to put the data we get from SQL and get the data
+      $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter
+      $sqlAdapter.SelectCommand = $sqlCmd
+      $dataSet = New-Object System.Data.DataSet
+      $sqlAdapter.Fill($dataSet)
 
-    $temp = $dataSet.Tables[0].Rows[0][0]
+      $temp = $dataSet.Tables[0].Rows[0][0]
 
-    return $temp
+      return $temp
 }
 
 ##################
@@ -99,19 +99,19 @@ function GetBackupFiles($sqlCmd, $jobId) {
 ##################
 function GetDescription($sqlCmd, $jobId) {
 
-    # Put the command in our sqlCmd
-    # Please adapt description if english translation is used
-    $sqlCmd.CommandText = "SELECT msgtext + ' (' + convert(varchar(10), logtime, 104) + ')' FROM dbo.aslogw WHERE msgtext LIKE '%Beschreibung:%' AND jobid = " + $jobId + " ORDER BY id DESC"
+      # Put the command in our sqlCmd
+      # Please adapt description if english translation is used
+      $sqlCmd.CommandText = "SELECT msgtext + ' (' + convert(varchar(10), logtime, 104) + ')' FROM dbo.aslogw WHERE msgtext LIKE '%Beschreibung:%' AND jobid = " + $jobId + " ORDER BY id DESC"
 
-    # Create an adapter to put the data we get from SQL and get the data
-    $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter
-    $sqlAdapter.SelectCommand = $sqlCmd
-    $dataSet = New-Object System.Data.DataSet
-    $sqlAdapter.Fill($dataSet)
+      # Create an adapter to put the data we get from SQL and get the data
+      $sqlAdapter = New-Object System.Data.SqlClient.SqlDataAdapter
+      $sqlAdapter.SelectCommand = $sqlCmd
+      $dataSet = New-Object System.Data.DataSet
+      $sqlAdapter.Fill($dataSet)
 
-    $temp = $dataSet.Tables[0].Rows[0][0]
+      $temp = $dataSet.Tables[0].Rows[0][0]
 
-    return $temp
+      return $temp
 }
 
 
@@ -136,43 +136,43 @@ $j = $temp[1]
 
 $temp = GetDescription $sqlCmd $j
 $desc = $temp[1]
-Write-Output "<<<arcserve_backup>>>"
-Write-Output "Job: " $j $desc
+write-output "<<<arcserve_backup>>>"
+write-output "Job: " $j $desc
 
 $temp = GetBackupFiles $sqlCmd $j
-Write-Output $temp[1]
+write-output $temp[1]
 
 $temp = GetStatus $sqlCmd $j
-Write-Output $temp[1]
+write-output $temp[1]
 
-Write-Output ""
+write-output ""
 
 # Please adapt job description
 if ( $desc.contains("Wochensicherung") ) {
 
-    $temp = GetPreLatestJobId $sqlCmd $j
-    $j = $temp[1]
-    $temp = GetDescription $sqlCmd $j
-    $desc = $temp[1]
+   $temp = GetPreLatestJobId $sqlCmd $j
+   $j = $temp[1]
+   $temp = GetDescription $sqlCmd $j
+   $desc = $temp[1]
 }
 else {
-    while ( ! $desc.contains("Wochensicherung") ) {
-        $temp = GetPreLatestJobId $sqlCmd $j
-        $j = $temp[1]
-        $temp = GetDescription $sqlCmd $j
-        $desc = $temp[1]
-    }
+   while ( ! $desc.contains("Wochensicherung") ) {
+      $temp = GetPreLatestJobId $sqlCmd $j
+      $j = $temp[1]
+      $temp = GetDescription $sqlCmd $j
+      $desc = $temp[1]
+   }
 }
 
-Write-Output "Job: " $j $desc
+write-output "Job: " $j $desc
 
 $temp = GetBackupFiles $sqlCmd $j
-Write-Output $temp[1]
+write-output $temp[1]
 
 $temp = GetStatus $sqlCmd $j
-Write-Output $temp[1]
+write-output $temp[1]
 
-Write-Output ""
+write-output ""
 
 
 # Close the SQL-connection

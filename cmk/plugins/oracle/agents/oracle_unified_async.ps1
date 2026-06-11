@@ -9,7 +9,7 @@ if (-not $env:MK_LIBDIR -or -not (Test-Path -Path $env:MK_LIBDIR -PathType Conta
     exit 1
 }
 
-$bin_exe = (Join-Path $env:MK_PLUGINSDIR/packages/mk-oracle 'mk-oracle.exe')
+$bin_exe=(Join-Path $env:MK_PLUGINSDIR/packages/mk-oracle 'mk-oracle.exe')
 
 if (-not (Test-Path -Path $bin_exe -PathType Leaf)) {
     Write-Host "$bin_exe is not executable or not found"

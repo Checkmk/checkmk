@@ -28,7 +28,6 @@ from ._objects import (
     LowerCriticalOf,
     LowerWarningOf,
     MaximumOf,
-    metric_names_in_title,
     MetricName,
     MinimalRange,
     MinimumOf,
@@ -47,6 +46,7 @@ from ._objects import (
     Unit,
     WarningOf,
 )
+from ._title import metric_names_in_title
 
 type _ApiQuantity = (
     str

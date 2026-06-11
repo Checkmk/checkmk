@@ -21,6 +21,7 @@ py_library(
         "cmk/graphing_engine/_objects.py",
         "cmk/graphing_engine/_options.py",
         "cmk/graphing_engine/_template.py",
+        "cmk/graphing_engine/_title.py",
         "cmk/graphing_engine/_translate.py",
     ],
     data = [":py_typed"],

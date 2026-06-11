@@ -10,8 +10,16 @@ from typing import ClassVar, Literal
 from cmk.graphing.v1 import metrics as metrics_v1
 
 from ._fetch import fetch_translated_metrics, FetchRRD
-from ._objects import DiscoveredGraph, Graph, MetricName, MetricTranslation, ServiceRef
+from ._objects import (
+    DiscoveredGraph,
+    Graph,
+    metric_data_of,
+    MetricName,
+    MetricTranslation,
+    ServiceRef,
+)
 from ._options import TimeRange
+from ._title import evaluate_title
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,7 +57,7 @@ def discover_explicit_graphs(
         DiscoveredGraph(
             graph=options.graph,
             options=ExplicitOptions(time_range=options.time_range),
-            graph_title=options.graph.evaluated_title(translated_metrics),
-            metric_data=options.graph.metric_data(translated_metrics),
+            graph_title=evaluate_title(options.graph.title, translated_metrics),
+            metric_data=metric_data_of(options.graph, translated_metrics),
         )
     ]

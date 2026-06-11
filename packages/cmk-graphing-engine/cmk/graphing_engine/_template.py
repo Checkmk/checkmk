@@ -21,6 +21,7 @@ from ._objects import (
     DiscoveredGraph,
     Graph,
     Line,
+    metric_data_of,
     MetricName,
     MetricTranslation,
     RRDMetric,
@@ -29,6 +30,7 @@ from ._objects import (
     Stack,
 )
 from ._options import ConsolidationFunction, TimeRange
+from ._title import evaluate_title
 
 # A predictive metric (predict_<name> / predict_lower_<name>) is drawn alongside the metric it
 # predicts; predict_lower_ also starts with this prefix.
@@ -176,8 +178,8 @@ def discover_template_graphs(
         return DiscoveredGraph(
             graph=graph,
             options=post_options,
-            graph_title=graph.evaluated_title(translated_metrics),
-            metric_data=graph.metric_data(translated_metrics),
+            graph_title=evaluate_title(graph.title, translated_metrics),
+            metric_data=metric_data_of(graph, translated_metrics),
         )
 
     for plugin in options.registered_graphs:

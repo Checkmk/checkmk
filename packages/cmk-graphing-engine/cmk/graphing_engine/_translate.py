@@ -84,7 +84,6 @@ def translate_performance_data(
         # A later raw metric renaming to the same target overrides the values; originals accumulate.
         originals = [*result[name].originals, original] if name in result else [original]
         result[name] = RRDMetricData(
-            name=name,
             value=_scaled(perf_value.value),
             originals=originals,
             title=title,

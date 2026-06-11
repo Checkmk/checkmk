@@ -65,7 +65,6 @@ def test_translate_carries_display_attributes_and_scales_value_and_scalars() -> 
 
     assert translate_performance_data(perf, translations, _METRICS, _id) == {
         MetricName("cpu_user"): RRDMetricData(
-            name=MetricName("cpu_user"),
             value=42.0,
             originals=[RRDOriginal(metric_name=MetricName("cpu_user"), scale=2.0)],
             title="CPU user",
@@ -90,7 +89,6 @@ def test_translate_renames_metric_and_takes_attributes_of_the_target() -> None:
 
     assert translate_performance_data(perf, translations, _METRICS, _id) == {
         MetricName("temp"): RRDMetricData(
-            name=MetricName("temp"),
             value=20.0,
             # The original keeps the raw (pre-rename) metric name.
             originals=[RRDOriginal(metric_name=MetricName("temperature"), scale=1.0)],
@@ -110,8 +108,8 @@ def test_translate_matches_regex_translation_entries() -> None:
         "check_mk-if": {MetricName("~if_.*_octets"): MetricTranslation(name=MetricName("cpu_user"))}
     }
 
-    [data] = translate_performance_data(perf, translations, _METRICS, _id).values()
-    assert data.name == MetricName("cpu_user")
+    [(name, data)] = translate_performance_data(perf, translations, _METRICS, _id).items()
+    assert name == MetricName("cpu_user")
     assert data.originals == [RRDOriginal(metric_name=MetricName("if_in_octets"), scale=1.0)]
 
 
@@ -123,7 +121,6 @@ def test_translate_falls_back_to_defaults_for_unregistered_metric() -> None:
 
     assert translate_performance_data(perf, {}, _METRICS, _id) == {
         MetricName("unknown"): RRDMetricData(
-            name=MetricName("unknown"),
             value=1.0,
             originals=[RRDOriginal(metric_name=MetricName("unknown"), scale=1.0)],
             title="unknown",

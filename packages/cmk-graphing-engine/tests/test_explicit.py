@@ -122,7 +122,6 @@ def _data(
     maximum: float | None = None,
 ) -> RRDMetricData:
     return RRDMetricData(
-        name=name,
         value=value,
         originals=[RRDOriginal(metric_name=name, scale=1.0)],
         title=title,

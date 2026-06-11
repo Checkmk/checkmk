@@ -288,7 +288,6 @@ class RRDOriginal:
 
 @dataclass(frozen=True, kw_only=True)
 class RRDMetricData:
-    name: MetricName
     value: float | None
     originals: Sequence[RRDOriginal]
     title: str

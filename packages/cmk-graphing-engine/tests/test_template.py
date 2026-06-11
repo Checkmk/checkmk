@@ -119,7 +119,6 @@ def _metric_data(
 ) -> RRDMetricData:
     # The translated counterpart of _perf() under the identity translation (scale 1.0).
     return RRDMetricData(
-        name=name,
         value=1.0,
         originals=[RRDOriginal(metric_name=name, scale=1.0)],
         title="Metric",

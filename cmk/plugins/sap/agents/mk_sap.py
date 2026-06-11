@@ -147,12 +147,50 @@ if os.path.exists(config_file):
 else:
     cfg = [local_cfg]
 
+
+def _convert_state_node(node):
+    # restricted evaluator: literals plus legacy datetime.datetime(<literals>) calls
+    if isinstance(node, ast.Dict):
+        return {
+            _convert_state_node(k): _convert_state_node(v) for k, v in zip(node.keys, node.values)
+        }
+    if isinstance(node, ast.Tuple):
+        return tuple(_convert_state_node(e) for e in node.elts)
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "datetime"
+        and node.func.attr == "datetime"
+    ):
+        if node.keywords:
+            raise ValueError("unexpected keyword arguments in state file")
+        return datetime.datetime(*(_convert_state_node(a) for a in node.args))
+    return ast.literal_eval(node)
+
+
+def load_state_file():
+    try:
+        with open(STATE_FILE) as opened_file:
+            tree = ast.parse(opened_file.read().strip(), mode="eval")
+        states = {}
+        for key, value in _convert_state_node(tree.body).items():
+            if isinstance(value, tuple):
+                value = datetime.datetime(*value)
+            if not isinstance(value, datetime.datetime):
+                raise ValueError("unexpected value in state file: %r" % (value,))
+            states[key] = value
+        return states
+    except (OSError, ValueError, TypeError, SyntaxError, AttributeError):
+        return {}
+
+
+def serialize_states(states):
+    return repr({key: value.timetuple()[:6] for key, value in states.items()})
+
+
 # Load the state file into memory
-try:
-    with open(STATE_FILE) as opened_file:
-        states = ast.literal_eval(opened_file.read())
-except OSError:
-    states = {}
+states = load_state_file()
 
 # index of all logfiles which have been found in a run. This is used to
 # remove logfiles which are not available anymore from the states dict.
@@ -513,7 +551,7 @@ def main():
         # be done this way, when all hosts have been reached. Otherwise the cleanup
         # is skipped.
         if processed_all:
-            for key in states.keys():
+            for key in list(states):
                 if key not in logfiles:
                     state_file_changed = True
                     del states[key]
@@ -521,9 +559,9 @@ def main():
         # Only write the state file once per run. And only when it has been changed
         if state_file_changed:
             new_file = STATE_FILE + ".new"
-            state_fd = os.open(new_file, os.O_WRONLY | os.O_CREAT)
+            state_fd = os.open(new_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
             fcntl.flock(state_fd, fcntl.LOCK_EX)
-            os.write(state_fd, repr(states).encode("utf-8"))
+            os.write(state_fd, serialize_states(states).encode("utf-8"))
             os.close(state_fd)
             os.rename(STATE_FILE + ".new", STATE_FILE)
 

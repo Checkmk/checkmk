@@ -23,7 +23,7 @@ _CONNECTION_COLUMNS: Mapping[str, object] = {
 }
 
 # The columns are queried in the order the toggles are defined in _utils.MASTER_CONTROL_TOGGLES.
-_STATUS_COLUMNS = "Columns: enable_notifications execute_service_checks"
+_STATUS_COLUMNS = "Columns: enable_notifications execute_service_checks execute_host_checks"
 
 
 def _setup_status(
@@ -31,6 +31,7 @@ def _setup_status(
     *,
     notifications: int = 1,
     service_checks: int = 1,
+    host_checks: int = 1,
 ) -> None:
     mock_livestatus.add_table(
         "status",
@@ -39,6 +40,7 @@ def _setup_status(
                 **_CONNECTION_COLUMNS,
                 "enable_notifications": notifications,
                 "execute_service_checks": service_checks,
+                "execute_host_checks": host_checks,
             }
         ],
         "NO_SITE",
@@ -49,7 +51,7 @@ def test_openapi_list_master_control(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    _setup_status(mock_livestatus, notifications=1, service_checks=0)
+    _setup_status(mock_livestatus, notifications=1, service_checks=0, host_checks=1)
     mock_livestatus.expect_query(["GET status", _STATUS_COLUMNS])
 
     with mock_livestatus:
@@ -59,21 +61,29 @@ def test_openapi_list_master_control(
     entry = resp.json["value"][0]
     assert entry["domainType"] == "master_control"
     assert entry["id"] == "NO_SITE"
-    assert entry["extensions"] == {"notifications": True, "service_checks": False}
+    assert entry["extensions"] == {
+        "notifications": True,
+        "service_checks": False,
+        "host_checks": True,
+    }
 
 
 def test_openapi_show_master_control(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    _setup_status(mock_livestatus, notifications=1, service_checks=1)
+    _setup_status(mock_livestatus, notifications=0, service_checks=1, host_checks=0)
     mock_livestatus.expect_query(["GET status", _STATUS_COLUMNS], sites=["NO_SITE"])
 
     with mock_livestatus:
         resp = clients.MasterControl.get("NO_SITE")
 
     assert resp.json["id"] == "NO_SITE"
-    assert resp.json["extensions"] == {"notifications": True, "service_checks": True}
+    assert resp.json["extensions"] == {
+        "notifications": False,
+        "service_checks": True,
+        "host_checks": False,
+    }
 
 
 def test_openapi_disable_notifications(
@@ -108,6 +118,18 @@ def test_openapi_disable_service_checks(
 
     with mock_livestatus:
         resp = clients.MasterControl.edit("NO_SITE", {"service_checks": False})
+
+    assert resp.status_code == 204
+
+
+def test_openapi_disable_host_checks(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.expect_query("COMMAND [...] STOP_EXECUTING_HOST_CHECKS;", match_type="ellipsis")
+
+    with mock_livestatus:
+        resp = clients.MasterControl.edit("NO_SITE", {"host_checks": False})
 
     assert resp.status_code == 204
 

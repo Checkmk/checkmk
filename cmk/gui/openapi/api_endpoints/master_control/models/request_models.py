@@ -18,6 +18,11 @@ class UpdateMasterControlModel:
         description="Enable or disable active service checks on the site.",
         example=True,
     )
+    host_checks: bool | None = api_field(
+        default=None,
+        description="Enable or disable host checks on the site.",
+        example=True,
+    )
 
     def to_changes(self) -> dict[str, bool]:
         """Return only the settings that were explicitly provided, keyed by API field name."""
@@ -26,4 +31,6 @@ class UpdateMasterControlModel:
             changes["notifications"] = self.notifications
         if self.service_checks is not None:
             changes["service_checks"] = self.service_checks
+        if self.host_checks is not None:
+            changes["host_checks"] = self.host_checks
         return changes

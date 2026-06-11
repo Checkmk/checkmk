@@ -15,7 +15,9 @@ from cmk.livestatus_client import (
     DisableNotifications,
     EnableNotifications,
     LivestatusClient,
+    StartExecutingHostChecks,
     StartExecutingServiceChecks,
+    StopExecutingHostChecks,
     StopExecutingServiceChecks,
 )
 from cmk.livestatus_client._connection import MultiSiteConnection
@@ -67,6 +69,11 @@ MASTER_CONTROL_TOGGLES: Mapping[str, _MasterControlToggle] = {
         enable=StartExecutingServiceChecks(),
         disable=StopExecutingServiceChecks(),
     ),
+    "host_checks": _MasterControlToggle(
+        column=Status.execute_host_checks,
+        enable=StartExecutingHostChecks(),
+        disable=StopExecutingHostChecks(),
+    ),
 }
 
 
@@ -84,6 +91,7 @@ def serialize_master_control(site_id: SiteId, row: ResultRow) -> MasterControlMo
         extensions=MasterControlExtensionsModel(
             notifications=bool(row[Status.enable_notifications.name]),
             service_checks=bool(row[Status.execute_service_checks.name]),
+            host_checks=bool(row[Status.execute_host_checks.name]),
         ),
     )
 

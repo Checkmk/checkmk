@@ -24,6 +24,10 @@ class MasterControlExtensionsModel:
         description="Whether active service checks are executed on the site.",
         example=True,
     )
+    host_checks: bool = api_field(
+        description="Whether host checks are executed on the site.",
+        example=True,
+    )
 
 
 @api_model

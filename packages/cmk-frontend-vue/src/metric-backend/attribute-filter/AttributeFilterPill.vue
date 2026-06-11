@@ -162,8 +162,8 @@ const attributeTypeDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>
 )
 
 // On a fresh key with no type yet, auto-open the type dropdown. Deferred to
-// nextTick so the `:disabled` gate has re-rendered and the inferred type has
-// propagated before we read it.
+// nextTick so the `v-if` gate has mounted the dropdown and the inferred type
+// has propagated before we read it.
 watch(
   () => props.condition.key,
   (next, prev) => {
@@ -260,17 +260,17 @@ defineExpose({
       :title="fullLabel"
     >
       <span
+        v-if="condition.key"
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--attribute-type"
       >
         <CmkDropdown
           ref="attributeTypeDropdownRef"
           v-model="attributeTypeInput"
           :options="attributeTypeOptions"
-          :disabled="!condition.key"
           :input-hint="_t('Attribute type')"
           :label="_t('Attribute type')"
-          :required="!!condition.key && validationVisible"
-          :form-validation="!!condition.key && validationVisible && attributeTypeEmpty"
+          :required="validationVisible"
+          :form-validation="validationVisible && attributeTypeEmpty"
         />
       </span>
       <span

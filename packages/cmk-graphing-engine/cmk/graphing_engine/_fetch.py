@@ -43,7 +43,9 @@ class FetchRRD(Protocol):
 @dataclass(frozen=True, kw_only=True)
 class GraphRequest:
     time_range: TimeRange
-    consolidation_function: ConsolidationFunction
+    # The fallback consolidation function for bare RRDMetric columns. May be omitted only when every
+    # metric pins its own (RRDMetricWithCF); fetch_time_series enforces this.
+    consolidation_function: ConsolidationFunction | None = None
     graph: Graph
     # The translated metric data of the graph's metrics, as produced by discovery. It carries the
     # originals (raw column + scale) used to fetch the time series and the display attributes.
@@ -55,6 +57,8 @@ def _consolidation_function(metric: RRDMetricRef, request: GraphRequest) -> Cons
         case RRDMetricWithCF():
             return metric.consolidation_function
         case RRDMetric():
+            # A bare metric uses the request's function; fetch_time_series guarantees it is set.
+            assert request.consolidation_function is not None
             return request.consolidation_function
 
 
@@ -134,11 +138,27 @@ def _fetch_and_evaluate(request: GraphRequest, rrd: FetchRRD) -> EvaluatedGraph:
     )
 
 
+def _validate_consolidation_function(request: GraphRequest) -> None:
+    # Without a request-level consolidation function, every metric must pin its own.
+    if request.consolidation_function is not None:
+        return
+    bare = [
+        metric for metric in request.graph.rrd_metrics() if not isinstance(metric, RRDMetricWithCF)
+    ]
+    if bare:
+        raise ValueError(
+            "No consolidation function given and these metrics do not pin one: "
+            f"{', '.join(metric.metric_name for metric in bare)}"
+        )
+
+
 def fetch_time_series(
     requests: Sequence[GraphRequest],
     *,
     rrd: FetchRRD,
 ) -> Sequence[EvaluatedGraph]:
+    for request in requests:
+        _validate_consolidation_function(request)
     return [_fetch_and_evaluate(request, rrd) for request in requests]
 
 

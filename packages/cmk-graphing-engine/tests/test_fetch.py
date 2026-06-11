@@ -5,6 +5,8 @@
 
 from collections.abc import Mapping, Sequence
 
+import pytest
+
 from cmk.graphing_engine import (
     AutoPrecision,
     ConsolidationFunction,
@@ -69,7 +71,7 @@ def _request(
     graph: Graph,
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
     *,
-    consolidation_function: ConsolidationFunction = ConsolidationFunction.MAX,
+    consolidation_function: ConsolidationFunction | None = None,
 ) -> GraphRequest:
     return GraphRequest(
         graph=graph,
@@ -306,3 +308,26 @@ def test_bare_metric_adopts_the_request_consolidation_function() -> None:
         ConsolidationFunction.AVERAGE: (_source("load"),),
         ConsolidationFunction.MAX: (_source("peak"),),
     }
+
+
+def test_evaluates_without_a_request_consolidation_function_when_every_metric_pins_one() -> None:
+    # No request-level function is needed: the pinned metric carries its own.
+    pinned = _rrd_with_cf("temp", ConsolidationFunction.MAX)
+    graph = Graph(name="g", title="g", lines=[_line(pinned)])
+    request = _request(graph, {pinned: _data(pinned)})
+    rrd = _FakeFetchRRD(time_series_response={_source("temp"): _time_series(1.0)})
+
+    [evaluated] = fetch_time_series([request], rrd=rrd)
+
+    assert [line.curve.time_series for line in evaluated.lines] == [_time_series(1.0)]
+    [(_columns, _tr, consolidation_function)] = rrd.time_series_calls
+    assert consolidation_function is ConsolidationFunction.MAX
+
+
+def test_rejects_a_bare_metric_without_a_request_consolidation_function() -> None:
+    bare = RRDMetric(host_name="h", service_name="svc", metric_name=MetricName("load"))
+    graph = Graph(name="g", title="g", lines=[_line(bare)])
+    request = _request(graph, {bare: _data(bare)})
+
+    with pytest.raises(ValueError, match="load"):
+        fetch_time_series([request], rrd=_FakeFetchRRD())

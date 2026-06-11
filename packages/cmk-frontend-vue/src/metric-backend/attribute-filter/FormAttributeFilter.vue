@@ -234,14 +234,11 @@ function onEditDone(id: string): void {
         {{ untranslated(group.entries[0]!.connector!) }}
       </button>
       <div
+        v-if="group.entries.length > 1"
         class="metric-backend-form-attribute-filter__group"
-        :class="{
-          'metric-backend-form-attribute-filter__group--singleton': group.entries.length === 1
-        }"
-        :data-testid="group.entries.length > 1 ? 'attribute-filter-group' : undefined"
+        data-testid="attribute-filter-group"
       >
         <CmkIconButton
-          v-if="group.entries.length > 1"
           class="metric-backend-form-attribute-filter__remove-group"
           name="close"
           size="small"
@@ -282,7 +279,6 @@ function onEditDone(id: string): void {
             @update:value="(value) => updateValue(entry, value)"
           />
           <CmkIconButton
-            v-if="group.entries.length > 1"
             class="metric-backend-form-attribute-filter__add"
             name="add"
             size="large"
@@ -293,6 +289,22 @@ function onEditDone(id: string): void {
           />
         </template>
       </div>
+      <AttributeFilterPill
+        v-else
+        :ref="pillRefSetter(group.entries[0]!.id)"
+        :condition="group.entries[0]!"
+        :query-suggestions="querySuggestions"
+        :query-value-suggestions="queryValueSuggestions"
+        removable
+        :editing="group.entries[0]!.id === editingId"
+        @remove="removeCondition(group.entries[0]!)"
+        @edit="startEditing(group.entries[0]!.id)"
+        @done="onEditDone(group.entries[0]!.id)"
+        @update:key="(value) => updateKey(group.entries[0]!, value)"
+        @update:attribute-type="(value) => updateAttributeType(group.entries[0]!, value)"
+        @update:operator="(value) => updateOperator(group.entries[0]!, value)"
+        @update:value="(value) => updateValue(group.entries[0]!, value)"
+      />
       <CmkIconButton
         class="metric-backend-form-attribute-filter__add"
         name="add"
@@ -327,11 +339,6 @@ function onEditDone(id: string): void {
   border: 1px solid var(--success);
   border-radius: 5px;
   position: relative;
-}
-
-/* Keep the wrapper in the DOM (so the group structure is uniform) but flatten layout. */
-.metric-backend-form-attribute-filter__group--singleton {
-  display: contents;
 }
 
 /* Anchored top-left to keep the destructive remove far from the right-edge `+` controls. */

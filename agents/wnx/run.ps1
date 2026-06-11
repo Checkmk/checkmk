@@ -30,8 +30,11 @@ $argSkipSqlTest = $false
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 if (Test-Path $vswhere) {
     $msbuild_exe = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
+    Write-Host "msbuild is $msbuild_exe" -Fore White
 } else {
     $msbuild_exe = $null
+    Write-Host "vswhere is absent, please, install MSVC" -Fore Red
+    exit 33   
 }
 
 $repo_root = (get-item $pwd).parent.parent.FullName

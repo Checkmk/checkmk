@@ -10,10 +10,9 @@ from typing import ClassVar, Literal
 from cmk.graphing.v1 import metrics as metrics_v1
 
 from ._evaluate import DiscoveredGraph
-from ._fetch import fetch_translated_metrics, GraphRequest, RRDSource, update_graph_data
+from ._fetch import evaluate_graphs, fetch_translated_metrics, GraphRequest, RRDSource
 from ._objects import (
     Graph,
-    metric_data_of,
     MetricName,
     MetricTranslation,
     ServiceRef,
@@ -53,14 +52,10 @@ def discover_explicit_graphs(
         metrics=options.metrics,
         localizer=options.localizer,
     )
-    [evaluated] = update_graph_data(
-        [
-            GraphRequest(
-                time_range=options.time_range,
-                graph=options.graph,
-                metric_data=metric_data_of(options.graph, translated_metrics),
-            )
-        ],
+    [evaluated] = evaluate_graphs(
+        [GraphRequest(graph=options.graph)],
+        translated_metrics,
+        time_range=options.time_range,
         rrd=rrd,
     )
     return [

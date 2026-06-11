@@ -12,6 +12,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from ._evaluate import evaluate_graph, EvaluatedGraph
 from ._objects import (
     Graph,
+    metric_data_of,
     MetricName,
     MetricTranslation,
     PerformanceData,
@@ -42,24 +43,22 @@ class RRDSource(Protocol):
 
 @dataclass(frozen=True, kw_only=True)
 class GraphRequest:
-    time_range: TimeRange
-    # The fallback consolidation function for bare RRDMetric columns. May be omitted only when every
-    # metric pins its own (RRDMetricWithCF); update_graph_data enforces this.
-    consolidation_function: ConsolidationFunction | None = None
     graph: Graph
-    # The translated metric data of the graph's metrics, as produced by discovery. It carries the
-    # originals (raw column + scale) used to fetch the time series and the display attributes.
-    metric_data: Mapping[RRDMetricRef, RRDMetricData]
+    # The fallback consolidation function for the graph's bare RRDMetric columns. May be omitted
+    # only when every metric pins its own (RRDMetricWithCF); update_graph_data enforces this.
+    consolidation_function: ConsolidationFunction | None = None
 
 
-def _consolidation_function(metric: RRDMetricRef, request: GraphRequest) -> ConsolidationFunction:
+def _consolidation_function(
+    metric: RRDMetricRef, consolidation_function: ConsolidationFunction | None
+) -> ConsolidationFunction:
     match metric:
         case RRDMetricWithCF():
             return metric.consolidation_function
         case RRDMetric():
-            # A bare metric uses the request's function; update_graph_data guarantees it is set.
-            assert request.consolidation_function is not None
-            return request.consolidation_function
+            # A bare metric uses the fallback; update_graph_data guarantees it is set.
+            assert consolidation_function is not None
+            return consolidation_function
 
 
 def _scaled(time_series: TimeSeries, scale: float) -> TimeSeries:
@@ -82,19 +81,26 @@ def _merge(series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
     )
 
 
-def _fetch_series(request: GraphRequest, rrd: RRDSource) -> Mapping[RRDMetricRef, TimeSeries]:
+def _fetch_series(
+    graph: Graph,
+    metric_data: Mapping[RRDMetricRef, RRDMetricData],
+    *,
+    time_range: TimeRange,
+    consolidation_function: ConsolidationFunction | None,
+    rrd: RRDSource,
+) -> Mapping[RRDMetricRef, TimeSeries]:
     # A metric's originals are the raw RRD metrics to read (with per-metric scale). Fetch them
-    # batched by consolidation function (a pinned metric uses its own, a bare one the request's),
+    # batched by consolidation function (a pinned metric uses its own, a bare one the fallback),
     # then scale each one and merge a metric's series point by point.
     rrd_metrics_per_metric: dict[
         RRDMetricRef, tuple[ConsolidationFunction, list[tuple[RRDMetric, float]]]
     ]
     rrd_metrics_per_metric = {}
     rrd_metrics_per_function: dict[ConsolidationFunction, list[RRDMetric]] = {}
-    for metric in request.graph.rrd_metrics():
-        if (data := request.metric_data.get(metric)) is None:
+    for metric in graph.rrd_metrics():
+        if (data := metric_data.get(metric)) is None:
             continue
-        consolidation_function = _consolidation_function(metric, request)
+        function = _consolidation_function(metric, consolidation_function)
         rrd_metrics = [
             (
                 RRDMetric(
@@ -106,64 +112,45 @@ def _fetch_series(request: GraphRequest, rrd: RRDSource) -> Mapping[RRDMetricRef
             )
             for original in data.originals
         ]
-        rrd_metrics_per_metric[metric] = (consolidation_function, rrd_metrics)
-        rrd_metrics_per_function.setdefault(consolidation_function, []).extend(
+        rrd_metrics_per_metric[metric] = (function, rrd_metrics)
+        rrd_metrics_per_function.setdefault(function, []).extend(
             rrd_metric for rrd_metric, _scale in rrd_metrics
         )
 
     raw_per_function = {
-        consolidation_function: rrd.fetch_time_series(
+        function: rrd.fetch_time_series(
             list(dict.fromkeys(rrd_metrics)),
-            time_range=request.time_range,
-            consolidation_function=consolidation_function,
+            time_range=time_range,
+            consolidation_function=function,
         )
-        for consolidation_function, rrd_metrics in rrd_metrics_per_function.items()
+        for function, rrd_metrics in rrd_metrics_per_function.items()
     }
 
     result: dict[RRDMetricRef, TimeSeries] = {}
-    for metric, (consolidation_function, rrd_metrics) in rrd_metrics_per_metric.items():
-        raw = raw_per_function[consolidation_function]
+    for metric, (function, rrd_metrics) in rrd_metrics_per_metric.items():
+        raw = raw_per_function[function]
         scaled = [
             _scaled(raw[rrd_metric], scale)
             for rrd_metric, scale in rrd_metrics
             if rrd_metric in raw
         ]
         if scaled:
-            result[metric] = _merge(scaled, request.time_range)
+            result[metric] = _merge(scaled, time_range)
     return result
 
 
-def _fetch_and_evaluate(request: GraphRequest, rrd: RRDSource) -> EvaluatedGraph:
-    return evaluate_graph(
-        request.graph,
-        _fetch_series(request, rrd),
-        request.metric_data,
-        request.time_range,
-    )
-
-
-def _validate_consolidation_function(request: GraphRequest) -> None:
-    # Without a request-level consolidation function, every metric must pin its own.
-    if request.consolidation_function is not None:
+def _validate_consolidation_function(
+    graph: Graph, consolidation_function: ConsolidationFunction | None
+) -> None:
+    # Without a fallback consolidation function, every metric must pin its own.
+    if consolidation_function is not None:
         return
-    bare = [
-        metric for metric in request.graph.rrd_metrics() if not isinstance(metric, RRDMetricWithCF)
-    ]
+    bare = [metric for metric in graph.rrd_metrics() if not isinstance(metric, RRDMetricWithCF)]
     if bare:
         raise ValueError(
             "No consolidation function given and these metrics do not pin one: "
             f"{', '.join(metric.metric_name for metric in bare)}"
         )
-
-
-def update_graph_data(
-    requests: Sequence[GraphRequest],
-    *,
-    rrd: RRDSource,
-) -> Sequence[EvaluatedGraph]:
-    for request in requests:
-        _validate_consolidation_function(request)
-    return [_fetch_and_evaluate(request, rrd) for request in requests]
 
 
 def fetch_translated_metrics(
@@ -180,3 +167,63 @@ def fetch_translated_metrics(
         service: translate_performance_data(perf, translations, metrics, localizer)
         for service, perf in performance_data.items()
     }
+
+
+def evaluate_graphs(
+    requests: Sequence[GraphRequest],
+    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
+    *,
+    time_range: TimeRange,
+    rrd: RRDSource,
+) -> Sequence[EvaluatedGraph]:
+    """Fetch the time series of the requested graphs (given their already translated metrics).
+
+    Each request pairs a graph with the fallback consolidation function for its bare RRDMetric
+    columns. Without one, every metric of that graph must pin its own (RRDMetricWithCF); a bare
+    RRDMetric without one raises ValueError.
+    """
+    for request in requests:
+        _validate_consolidation_function(request.graph, request.consolidation_function)
+    evaluated = []
+    for request in requests:
+        metric_data = metric_data_of(request.graph, translated_metrics)
+        evaluated.append(
+            evaluate_graph(
+                request.graph,
+                _fetch_series(
+                    request.graph,
+                    metric_data,
+                    time_range=time_range,
+                    consolidation_function=request.consolidation_function,
+                    rrd=rrd,
+                ),
+                metric_data,
+                time_range,
+            )
+        )
+    return evaluated
+
+
+def update_graph_data(
+    requests: Sequence[GraphRequest],
+    *,
+    time_range: TimeRange,
+    translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
+    rrd: RRDSource,
+) -> Sequence[EvaluatedGraph]:
+    """Fetch and evaluate the current performance data and time series of the requested graphs."""
+    # Each metric carries its own service; fetch and translate the performance data of all of them.
+    translated_metrics = fetch_translated_metrics(
+        (
+            ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
+            for request in requests
+            for metric in request.graph.rrd_metrics()
+        ),
+        rrd=rrd,
+        translations=translations,
+        metrics=metrics,
+        localizer=localizer,
+    )
+    return evaluate_graphs(requests, translated_metrics, time_range=time_range, rrd=rrd)

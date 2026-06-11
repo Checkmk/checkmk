@@ -12,7 +12,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._evaluate import DiscoveredGraph
-from ._fetch import fetch_translated_metrics, GraphRequest, RRDSource, update_graph_data
+from ._fetch import evaluate_graphs, fetch_translated_metrics, GraphRequest, RRDSource
 from ._from_api import (
     metric_names_of_graph,
     metric_names_of_title,
@@ -21,7 +21,6 @@ from ._from_api import (
 from ._objects import (
     Graph,
     Line,
-    metric_data_of,
     MetricName,
     MetricTranslation,
     RRDMetric,
@@ -168,71 +167,66 @@ def discover_template_graphs(
         consolidation_function=options.consolidation_function,
     )
 
-    discovered: list[DiscoveredGraph[TemplateOptions]] = []
+    # Match the registered plugins and collect the graphs to draw (matched plugins first, then a
+    # fallback single-metric graph for each still-unclaimed metric), claiming their metrics. Drawing
+    # and evaluating happens afterwards in one batch, so the performance data is fetched only once.
+    graphs: list[Graph] = []
     claimed: set[MetricName] = set()
 
-    def _discover(base: Graph) -> DiscoveredGraph[TemplateOptions]:
-        # Draw the predictive companions of the graph's metrics, claim them, and build the result.
+    def _collect(base: Graph) -> None:
+        # Draw the predictive companions of the graph's metrics and claim them.
         graph, predictive_names = _add_predictive_lines(base, options.service, service_metrics)
         claimed.update(predictive_names)
-        [evaluated] = update_graph_data(
-            [
-                GraphRequest(
-                    time_range=options.time_range,
-                    consolidation_function=options.consolidation_function,
-                    graph=graph,
-                    metric_data=metric_data_of(graph, translated_metrics),
-                )
-            ],
-            rrd=rrd,
-        )
-        return DiscoveredGraph(
-            graph=graph,
-            options=post_options,
-            title=evaluate_title(graph.title, translated_metrics),
-            stacks=evaluated.stacks,
-            lines=evaluated.lines,
-        )
+        graphs.append(graph)
 
     for plugin in options.registered_graphs:
         walk = _walk(plugin, service_metrics)
         if not walk.matched:
             continue
         claimed.update(walk.metric_names)
-        discovered.append(
-            _discover(
-                parse_graph_from_api(
-                    plugin,
-                    options.localizer,
-                    options.service,
-                    options.metrics,
-                )
-            )
-        )
+        _collect(parse_graph_from_api(plugin, options.localizer, options.service, options.metrics))
 
     for name in service_metrics:
         # Predictive metrics are companions of the metric they predict, never graphed on their own.
         if name in claimed or name.startswith(_PREDICT_PREFIX):
             continue
-        discovered.append(
-            _discover(
-                Graph(
-                    name=name,
-                    title=name,
-                    stacks=[
-                        Stack(
-                            members=[
-                                RRDMetric(
-                                    host_name=options.service.host_name,
-                                    service_name=options.service.service_name,
-                                    metric_name=name,
-                                )
-                            ],
-                            inverse=False,
-                        )
-                    ],
-                )
+        _collect(
+            Graph(
+                name=name,
+                title=name,
+                stacks=[
+                    Stack(
+                        members=[
+                            RRDMetric(
+                                host_name=options.service.host_name,
+                                service_name=options.service.service_name,
+                                metric_name=name,
+                            )
+                        ],
+                        inverse=False,
+                    )
+                ],
             )
         )
 
-    return discovered
+    # Reuse the already translated metrics so the performance data is not fetched a second time.
+    evaluated_graphs = evaluate_graphs(
+        [
+            GraphRequest(graph=graph, consolidation_function=options.consolidation_function)
+            for graph in graphs
+        ],
+        translated_metrics,
+        time_range=options.time_range,
+        rrd=rrd,
+    )
+
+    return [
+        DiscoveredGraph(
+            graph=graph,
+            options=post_options,
+            title=evaluate_title(graph.title, translated_metrics),
+            stacks=evaluated.stacks,
+            lines=evaluated.lines,
+        )
+        for graph, evaluated in zip(graphs, evaluated_graphs)
+    ]

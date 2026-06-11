@@ -18,7 +18,13 @@ from ._explicit import (
     ExplicitDiscoveryOptions,
     ExplicitOptions,
 )
-from ._fetch import fetch_translated_metrics, GraphRequest, RRDSource, update_graph_data
+from ._fetch import (
+    evaluate_graphs,
+    fetch_translated_metrics,
+    GraphRequest,
+    RRDSource,
+    update_graph_data,
+)
 from ._from_api import parse_graph_from_api
 from ._objects import (
     AutoPrecision,
@@ -134,6 +140,7 @@ __all__ = [
     "discover_explicit_graphs",
     "discover_template_graphs",
     "evaluate_graph",
+    "evaluate_graphs",
     "evaluate_time_series",
     "evaluate_value",
     "fetch_translated_metrics",

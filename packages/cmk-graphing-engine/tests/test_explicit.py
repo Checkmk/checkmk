@@ -185,6 +185,7 @@ def test_discover_explicit_graphs_carries_scalars_for_referenced_metrics() -> No
         ("CPU user", 42.0),
         ("CPU system", 50.0),
     ]
+    # The performance data is fetched only once and reused for the title and the curves.
     assert rrd.performance_data_calls == [(service,)]
 
 

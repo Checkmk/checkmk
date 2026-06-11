@@ -8,32 +8,31 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.graphing_engine import (
-    AutoPrecision,
     ConsolidationFunction,
-    DecimalNotation,
+    EvaluatedGraph,
     Graph,
     GraphRequest,
     Line,
     MetricName,
+    MetricTranslation,
     PerformanceData,
+    PerformanceValue,
     Quantity,
     RRDMetric,
-    RRDMetricData,
-    RRDMetricRef,
     RRDMetricWithCF,
-    RRDOriginal,
     ServiceRef,
     TimeRange,
     TimeSeries,
-    Unit,
     update_graph_data,
 )
 
-_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
+
+def _id(text: str) -> str:
+    return text
 
 
-def _line(quantity: Quantity) -> Line:
-    return Line(quantity=quantity, inverse=False)
+def _service() -> ServiceRef:
+    return ServiceRef(host_name="h", service_name="svc")
 
 
 def _time_range() -> TimeRange:
@@ -53,60 +52,51 @@ def _rrd_with_cf(
 
 
 def _source(name: str) -> RRDMetric:
-    # The raw RRD column the engine fetches (built from a metric's originals).
+    # The raw RRD column the engine reads (built from a metric's originals).
     return RRDMetric(host_name="h", service_name="svc", metric_name=MetricName(name))
 
 
-def _data(metric: RRDMetricRef, *, scale: float = 1.0) -> RRDMetricData:
-    return RRDMetricData(
-        value=1.0,
-        originals=[RRDOriginal(metric_name=metric.metric_name, scale=scale)],
-        title=str(metric.metric_name),
-        unit=_UNIT,
-        color="#28a2f3",
-    )
+def _line(quantity: Quantity) -> Line:
+    return Line(quantity=quantity, inverse=False)
 
 
 def _request(
-    graph: Graph,
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
-    *,
-    consolidation_function: ConsolidationFunction | None = None,
+    graph: Graph, consolidation_function: ConsolidationFunction | None = None
 ) -> GraphRequest:
-    return GraphRequest(
-        graph=graph,
-        time_range=_time_range(),
-        consolidation_function=consolidation_function,
-        metric_data=metric_data,
-    )
+    return GraphRequest(graph=graph, consolidation_function=consolidation_function)
+
+
+def _perf(name: str, *, value: float = 1.0) -> PerformanceValue:
+    return PerformanceValue(metric_name=MetricName(name), value=value)
+
+
+def _perf_data(*values: PerformanceValue) -> PerformanceData:
+    return PerformanceData(check_command="check_mk-test", values=list(values))
 
 
 def _ts(*values: float | None) -> TimeSeries:
     return TimeSeries(time_range=_time_range(), values=list(values))
 
 
-def _time_series(value: float) -> TimeSeries:
-    return _ts(*([value] * 6))
-
-
-class _FakeFetchRRD:
+class _FakeRRDSource:
     def __init__(
         self,
+        *,
+        performance_response: Mapping[ServiceRef, PerformanceData] | None = None,
         time_series_response: Mapping[RRDMetric, TimeSeries] | None = None,
     ) -> None:
-        self._response = time_series_response or {}
+        self._performance_response = performance_response or {}
+        self._time_series_response = time_series_response or {}
+        self.performance_data_calls: list[tuple[ServiceRef, ...]] = []
         self.time_series_calls: list[
-            tuple[
-                tuple[RRDMetric, ...],
-                TimeRange,
-                ConsolidationFunction,
-            ]
+            tuple[tuple[RRDMetric, ...], TimeRange, ConsolidationFunction]
         ] = []
 
     def fetch_performance_data(
         self, services: Sequence[ServiceRef]
     ) -> Mapping[ServiceRef, PerformanceData]:
-        raise NotImplementedError
+        self.performance_data_calls.append(tuple(services))
+        return self._performance_response
 
     def fetch_time_series(
         self,
@@ -117,141 +107,121 @@ class _FakeFetchRRD:
     ) -> Mapping[RRDMetric, TimeSeries]:
         self.time_series_calls.append((tuple(rrd_metrics), time_range, consolidation_function))
         return {
-            rrd_metric: self._response[rrd_metric]
-            for rrd_metric in rrd_metrics
-            if rrd_metric in self._response
+            metric: self._time_series_response[metric]
+            for metric in rrd_metrics
+            if metric in self._time_series_response
         }
+
+
+def _update(
+    *requests: GraphRequest,
+    rrd: _FakeRRDSource,
+    translations: Mapping[str, Mapping[MetricName, MetricTranslation]] | None = None,
+) -> Sequence[EvaluatedGraph]:
+    return update_graph_data(
+        requests,
+        time_range=_time_range(),
+        translations=translations or {},
+        metrics={},
+        localizer=_id,
+        rrd=rrd,
+    )
 
 
 def test_empty_requests_returns_empty_list() -> None:
-    rrd = _FakeFetchRRD()
-    assert update_graph_data([], rrd=rrd) == []
+    rrd = _FakeRRDSource()
+    assert _update(rrd=rrd) == []
     assert rrd.time_series_calls == []
 
 
-def test_returns_one_evaluated_graph_per_request() -> None:
+def test_fetches_performance_data_and_time_series() -> None:
     cpu_user = _rrd_with_cf("cpu_user")
-    cpu_system = _rrd_with_cf("cpu_system")
-    cpu_user_time_series = _time_series(1.0)
-    cpu_system_time_series = _time_series(2.0)
-    graph = Graph(name="cpu", title="CPU", lines=[_line(cpu_user), _line(cpu_system)])
-    request = _request(graph, {cpu_user: _data(cpu_user), cpu_system: _data(cpu_system)})
-    rrd = _FakeFetchRRD(
-        time_series_response={
-            _source("cpu_user"): cpu_user_time_series,
-            _source("cpu_system"): cpu_system_time_series,
-        }
+    graph = Graph(name="cpu", title="CPU", lines=[_line(cpu_user)])
+    series = _ts(1.0, 2.0, 3.0)
+    rrd = _FakeRRDSource(
+        performance_response={_service(): _perf_data(_perf("cpu_user", value=42.0))},
+        time_series_response={_source("cpu_user"): series},
     )
 
-    [evaluated] = update_graph_data([request], rrd=rrd)
+    [evaluated] = _update(_request(graph), rrd=rrd)
 
-    assert evaluated.stacks == []
-    assert [line.curve.time_series for line in evaluated.lines] == [
-        cpu_user_time_series,
-        cpu_system_time_series,
-    ]
-    # The metrics are pinned to AVERAGE, so their columns are fetched in one batch with it.
-    [(rrd_metrics, time_range, consolidation_function)] = rrd.time_series_calls
-    assert set(rrd_metrics) == {_source("cpu_user"), _source("cpu_system")}
-    assert time_range == TimeRange(start=0, end=60, step=10)
-    assert consolidation_function is ConsolidationFunction.AVERAGE
+    [line] = evaluated.lines
+    assert line.curve.value == 42.0
+    assert line.curve.time_series == series
+    assert rrd.performance_data_calls == [(_service(),)]
 
 
-def test_fetches_one_batch_per_consolidation_function() -> None:
-    avg_metric = _rrd_with_cf("a", ConsolidationFunction.AVERAGE)
-    max_metric = _rrd_with_cf("b", ConsolidationFunction.MAX)
-    graph = Graph(name="g", title="g", lines=[_line(avg_metric), _line(max_metric)])
-    request = _request(graph, {avg_metric: _data(avg_metric), max_metric: _data(max_metric)})
-    rrd = _FakeFetchRRD(
-        time_series_response={_source("a"): _time_series(1.0), _source("b"): _time_series(2.0)}
-    )
-
-    update_graph_data([request], rrd=rrd)
-
-    # One time-series fetch per distinct consolidation function.
-    rrd_metrics_by_cf = {cf: rrd_metrics for rrd_metrics, _tr, cf in rrd.time_series_calls}
-    assert rrd_metrics_by_cf == {
-        ConsolidationFunction.AVERAGE: (_source("a"),),
-        ConsolidationFunction.MAX: (_source("b"),),
-    }
-
-
-def test_multiple_requests_yield_one_evaluated_graph_each_in_order() -> None:
+def test_returns_one_evaluated_graph_per_request_in_order() -> None:
     x = _rrd_with_cf("x")
     y = _rrd_with_cf("y")
-    x_time_series = _time_series(1.0)
-    y_time_series = _time_series(2.0)
-    request_x = _request(Graph(name="x", title="x", lines=[_line(x)]), {x: _data(x)})
-    request_y = _request(Graph(name="y", title="y", lines=[_line(y)]), {y: _data(y)})
-    rrd = _FakeFetchRRD(
-        time_series_response={_source("x"): x_time_series, _source("y"): y_time_series}
+    graph_x = Graph(name="x", title="x", lines=[_line(x)])
+    graph_y = Graph(name="y", title="y", lines=[_line(y)])
+    rrd = _FakeRRDSource(
+        performance_response={_service(): _perf_data(_perf("x", value=1.0), _perf("y", value=2.0))},
+        time_series_response={_source("x"): _ts(1.0), _source("y"): _ts(2.0)},
     )
 
-    results = update_graph_data([request_x, request_y], rrd=rrd)
+    results = _update(_request(graph_x), _request(graph_y), rrd=rrd)
 
-    assert [[line.curve.time_series for line in graph.lines] for graph in results] == [
-        [x_time_series],
-        [y_time_series],
-    ]
+    assert [[line.curve.value for line in graph.lines] for graph in results] == [[1.0], [2.0]]
 
 
 def test_evaluates_lines_in_both_directions() -> None:
-    # A collapsed bidirectional: the upper line normal, the lower line inverse.
     in_ = _rrd_with_cf("if_in")
     out = _rrd_with_cf("if_out")
-    in_time_series = _time_series(1.0)
-    out_time_series = _time_series(2.0)
     graph = Graph(
         name="if",
         title="Interface",
         lines=[_line(out), Line(quantity=in_, inverse=True)],
     )
-    request = _request(graph, {in_: _data(in_), out: _data(out)})
-    rrd = _FakeFetchRRD(
-        time_series_response={_source("if_in"): in_time_series, _source("if_out"): out_time_series}
+    rrd = _FakeRRDSource(
+        performance_response={_service(): _perf_data(_perf("if_in"), _perf("if_out"))},
+        time_series_response={_source("if_in"): _ts(1.0), _source("if_out"): _ts(2.0)},
     )
 
-    [evaluated] = update_graph_data([request], rrd=rrd)
+    [evaluated] = _update(_request(graph), rrd=rrd)
 
     assert [(line.curve.time_series, line.inverse) for line in evaluated.lines] == [
-        (out_time_series, False),
-        (in_time_series, True),
+        (_ts(2.0), False),
+        (_ts(1.0), True),
     ]
 
 
-def test_scales_each_column_by_its_scale() -> None:
+def test_scales_the_series_by_the_translation_scale() -> None:
     temp = _rrd_with_cf("temp")
     graph = Graph(name="g", title="g", lines=[_line(temp)])
-    request = _request(graph, {temp: _data(temp, scale=2.0)})
-    rrd = _FakeFetchRRD(time_series_response={_source("temp"): _time_series(10.0)})
+    rrd = _FakeRRDSource(
+        performance_response={_service(): _perf_data(_perf("temp", value=10.0))},
+        time_series_response={_source("temp"): _ts(10.0, 20.0)},
+    )
+    # A translation scale of 2.0 is applied to both the value and the fetched series.
+    translations = {
+        "check_mk-test": {MetricName("temp"): MetricTranslation(name=MetricName("temp"), scale=2.0)}
+    }
 
-    [evaluated] = update_graph_data([request], rrd=rrd)
+    [evaluated] = _update(_request(graph), rrd=rrd, translations=translations)
 
-    # The raw values (10.0) are scaled by the column's scale (2.0).
     [line] = evaluated.lines
-    assert line.curve.time_series == _time_series(20.0)
+    assert line.curve.value == 20.0
+    assert line.curve.time_series == _ts(20.0, 40.0)
 
 
 def test_fetches_a_renamed_metric_by_its_raw_column() -> None:
     # The metric is named "temp" but its data comes from the raw column "temperature".
     temp = _rrd_with_cf("temp")
     graph = Graph(name="g", title="g", lines=[_line(temp)])
-    metric_data: Mapping[RRDMetricRef, RRDMetricData] = {
-        temp: RRDMetricData(
-            value=1.0,
-            originals=[RRDOriginal(metric_name=MetricName("temperature"), scale=1.0)],
-            title="temp",
-            unit=_UNIT,
-            color="#28a2f3",
-        )
+    rrd = _FakeRRDSource(
+        performance_response={_service(): _perf_data(_perf("temperature", value=5.0))},
+        time_series_response={_source("temperature"): _ts(5.0)},
+    )
+    translations = {
+        "check_mk-test": {MetricName("temperature"): MetricTranslation(name=MetricName("temp"))}
     }
-    time_series = _time_series(5.0)
-    rrd = _FakeFetchRRD(time_series_response={_source("temperature"): time_series})
 
-    [evaluated] = update_graph_data([_request(graph, metric_data)], rrd=rrd)
+    [evaluated] = _update(_request(graph), rrd=rrd, translations=translations)
 
     [line] = evaluated.lines
-    assert line.curve.time_series == time_series
+    assert line.curve.time_series == _ts(5.0)
     # The raw column is fetched, not the translated name.
     [(rrd_metrics, _tr, _cf)] = rrd.time_series_calls
     assert rrd_metrics == (_source("temperature"),)
@@ -260,76 +230,65 @@ def test_fetches_a_renamed_metric_by_its_raw_column() -> None:
 def test_merges_a_metrics_originals_taking_the_first_present_value() -> None:
     metric = _rrd_with_cf("m")
     graph = Graph(name="g", title="g", lines=[_line(metric)])
-    metric_data: Mapping[RRDMetricRef, RRDMetricData] = {
-        metric: RRDMetricData(
-            value=1.0,
-            originals=[
-                RRDOriginal(metric_name=MetricName("a"), scale=1.0),
-                RRDOriginal(metric_name=MetricName("b"), scale=1.0),
-            ],
-            title="m",
-            unit=_UNIT,
-            color="#28a2f3",
-        )
-    }
-    rrd = _FakeFetchRRD(
-        time_series_response={
-            _source("a"): _ts(1.0, None, 3.0),
-            _source("b"): _ts(None, 2.0, 4.0),
-        }
+    rrd = _FakeRRDSource(
+        performance_response={_service(): _perf_data(_perf("a"), _perf("b"))},
+        time_series_response={_source("a"): _ts(1.0, None, 3.0), _source("b"): _ts(None, 2.0, 4.0)},
     )
+    # Both raw metrics translate to "m", so its data merges their originals.
+    translations = {
+        "check_mk-test": {
+            MetricName("a"): MetricTranslation(name=MetricName("m")),
+            MetricName("b"): MetricTranslation(name=MetricName("m")),
+        }
+    }
 
-    [evaluated] = update_graph_data([_request(graph, metric_data)], rrd=rrd)
+    [evaluated] = _update(_request(graph), rrd=rrd, translations=translations)
 
     # Per point, the first present value wins: a where it has data, otherwise b.
     [line] = evaluated.lines
     assert line.curve.time_series == _ts(1.0, 2.0, 3.0)
 
 
-def test_bare_metric_adopts_the_request_consolidation_function() -> None:
+def test_fetches_one_batch_per_consolidation_function() -> None:
+    avg_metric = _rrd_with_cf("a", ConsolidationFunction.AVERAGE)
+    max_metric = _rrd_with_cf("b", ConsolidationFunction.MAX)
+    graph = Graph(name="g", title="g", lines=[_line(avg_metric), _line(max_metric)])
+    rrd = _FakeRRDSource(
+        performance_response={_service(): _perf_data(_perf("a"), _perf("b"))},
+        time_series_response={_source("a"): _ts(1.0), _source("b"): _ts(2.0)},
+    )
+
+    _update(_request(graph), rrd=rrd)
+
+    columns_by_cf = {cf: rrd_metrics for rrd_metrics, _tr, cf in rrd.time_series_calls}
+    assert columns_by_cf == {
+        ConsolidationFunction.AVERAGE: (_source("a"),),
+        ConsolidationFunction.MAX: (_source("b"),),
+    }
+
+
+def test_bare_metric_uses_the_request_consolidation_function() -> None:
     # A bare RRDMetric uses the request's function; a pinned RRDMetricWithCF keeps its own.
     bare = RRDMetric(host_name="h", service_name="svc", metric_name=MetricName("load"))
     pinned = _rrd_with_cf("peak", ConsolidationFunction.MAX)
     graph = Graph(name="g", title="g", lines=[_line(bare), _line(pinned)])
-    request = _request(
-        graph,
-        {bare: _data(bare), pinned: _data(pinned)},
-        consolidation_function=ConsolidationFunction.AVERAGE,
-    )
-    rrd = _FakeFetchRRD(
-        time_series_response={
-            _source("load"): _time_series(1.0),
-            _source("peak"): _time_series(2.0),
-        }
+    rrd = _FakeRRDSource(
+        performance_response={_service(): _perf_data(_perf("load"), _perf("peak"))},
+        time_series_response={_source("load"): _ts(1.0), _source("peak"): _ts(2.0)},
     )
 
-    update_graph_data([request], rrd=rrd)
+    _update(_request(graph, ConsolidationFunction.AVERAGE), rrd=rrd)
 
-    rrd_metrics_by_cf = {cf: rrd_metrics for rrd_metrics, _tr, cf in rrd.time_series_calls}
-    assert rrd_metrics_by_cf == {
+    columns_by_cf = {cf: rrd_metrics for rrd_metrics, _tr, cf in rrd.time_series_calls}
+    assert columns_by_cf == {
         ConsolidationFunction.AVERAGE: (_source("load"),),
         ConsolidationFunction.MAX: (_source("peak"),),
     }
 
 
-def test_evaluates_without_a_request_consolidation_function_when_every_metric_pins_one() -> None:
-    # No request-level function is needed: the pinned metric carries its own.
-    pinned = _rrd_with_cf("temp", ConsolidationFunction.MAX)
-    graph = Graph(name="g", title="g", lines=[_line(pinned)])
-    request = _request(graph, {pinned: _data(pinned)})
-    rrd = _FakeFetchRRD(time_series_response={_source("temp"): _time_series(1.0)})
-
-    [evaluated] = update_graph_data([request], rrd=rrd)
-
-    assert [line.curve.time_series for line in evaluated.lines] == [_time_series(1.0)]
-    [(_rrd_metrics, _tr, consolidation_function)] = rrd.time_series_calls
-    assert consolidation_function is ConsolidationFunction.MAX
-
-
-def test_rejects_a_bare_metric_without_a_request_consolidation_function() -> None:
+def test_rejects_a_bare_metric_without_a_consolidation_function() -> None:
     bare = RRDMetric(host_name="h", service_name="svc", metric_name=MetricName("load"))
     graph = Graph(name="g", title="g", lines=[_line(bare)])
-    request = _request(graph, {bare: _data(bare)})
 
     with pytest.raises(ValueError, match="load"):
-        update_graph_data([request], rrd=_FakeFetchRRD())
+        _update(_request(graph), rrd=_FakeRRDSource())

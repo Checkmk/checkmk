@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # ruff: noqa: RUF100
 # ruff: noqa: I001
 
+import datetime
 from collections import namedtuple
 
 import pytest
@@ -102,3 +104,52 @@ def test_recursion(monkeypatch):
     with pytest.raises(mk_sap.SapError) as exception:
         mk_sap.mon_tree(fake_connection_tree, {"user": "apu_user"}, "apu_ms_name", "apu_mon_name")
         assert "01" in str(exception.value)
+
+
+STATES = {
+    ("PRD", "Other/SAP CCMS Monitor Templates/Dialog Overview/Syslog"): datetime.datetime(
+        2026, 6, 10, 9, 30, 0
+    )
+}
+
+
+def test_state_file_round_trip(monkeypatch, tmp_path):
+    state_file = tmp_path / "sap.state"
+    state_file.write_text(mk_sap.serialize_states(STATES))
+    monkeypatch.setattr(mk_sap, "STATE_FILE", str(state_file))
+    assert mk_sap.load_state_file() == STATES
+
+
+def test_state_file_legacy_datetime_format(monkeypatch, tmp_path):
+    state_file = tmp_path / "sap.state"
+    state_file.write_text(repr(STATES))
+    monkeypatch.setattr(mk_sap, "STATE_FILE", str(state_file))
+    assert mk_sap.load_state_file() == STATES
+
+
+def test_state_file_missing(monkeypatch, tmp_path):
+    monkeypatch.setattr(mk_sap, "STATE_FILE", str(tmp_path / "sap.state"))
+    assert mk_sap.load_state_file() == {}
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "foo(",
+        "__import__('os').system('true')",
+        "{('PRD', 'logfile'): open('/etc/passwd')}",
+        "",
+        # tz-aware datetimes cannot be written by the plugin; keyword
+        # arguments are rejected instead of silently dropping the tzinfo
+        "{('PRD', 'logfile'): datetime.datetime(2026, 6, 10, 9, 30, tzinfo=datetime.timezone.utc)}",
+        # values must be datetimes, anything else would break alert
+        # processing later on
+        "{('PRD', 'logfile'): 5}",
+        "{('PRD', 'logfile'): (2026, 6, 10, 9, 30, 0), ('PRD', 'other'): 'bogus'}",
+    ],
+)
+def test_state_file_corrupt(monkeypatch, tmp_path, content):
+    state_file = tmp_path / "sap.state"
+    state_file.write_text(content)
+    monkeypatch.setattr(mk_sap, "STATE_FILE", str(state_file))
+    assert mk_sap.load_state_file() == {}

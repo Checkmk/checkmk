@@ -17,7 +17,7 @@ import re
 import subprocess
 import sys
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
 from io import StringIO
@@ -334,6 +334,8 @@ def _is_valid_basename(name: str) -> bool:
 def make_man_page_path_map(
     plugin_families: Mapping[str, Sequence[str]],
     group_subdir: str,
+    *,
+    blocked_paths: Container[str] = frozenset(),
 ) -> Mapping[str, Path]:
     families_man_paths = [
         os.path.join(p, group_subdir) for _family, paths in plugin_families.items() for p in paths
@@ -343,7 +345,7 @@ def make_man_page_path_map(
         for source in reversed(families_man_paths)
         for dir, _subdirs, files in os.walk(source)
         for name in files
-        if _is_valid_basename(name)
+        if _is_valid_basename(name) and os.path.realpath(Path(dir, name)) not in blocked_paths
     }
 
 
@@ -367,9 +369,16 @@ def get_title_from_man_page(path: Path) -> str:
 
 
 def load_man_page_catalog(
-    plugin_families: Mapping[str, Sequence[str]], group_subdir: str
+    plugin_families: Mapping[str, Sequence[str]],
+    group_subdir: str,
+    *,
+    blocked_paths: Container[str] = frozenset(),
 ) -> ManPageCatalog:
-    man_page_path_map = make_man_page_path_map(plugin_families, group_subdir)
+    man_page_path_map = make_man_page_path_map(
+        plugin_families,
+        group_subdir,
+        blocked_paths=blocked_paths,
+    )
     catalog: dict[ManPageCatalogPath, list[ManPage]] = defaultdict(list)
     for name, path in man_page_path_map.items():
         parsed = parse_man_page(name, path)

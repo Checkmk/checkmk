@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from collections.abc import Iterable, Sequence
 from importlib.machinery import ModuleSpec
 from importlib.metadata import Distribution, distributions
@@ -71,6 +72,17 @@ def files_for_disabled_features(disabled_features: set[str]) -> set[str]:
         if (tags := _tags_of(dist)) and tags.issubset(disabled_features)
         for file in (dist.files or ())
     }
+
+
+def blocked_feature_files(omd_root: Path) -> frozenset[str]:
+    """Realpath-normalized files belonging to features disabled by the current license.
+
+    Convenience wrapper around `files_for_disabled_features` for callers (e.g. the man-page
+    catalog) that need to exclude license-gated files by path — consistent with the import
+    filter above.
+    """
+    disabled = get_license_options(omd_root, edition(omd_root)).disabled()
+    return frozenset(os.path.realpath(p) for p in files_for_disabled_features(disabled))
 
 
 def _tags_of(dist: Distribution) -> set[str]:

@@ -52,8 +52,9 @@ from cmk.gui.watolib.check_mk_automations import get_check_information
 from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.licensing.basics.finder import blocked_feature_files
 from cmk.rulesets.v1.form_specs import FormSpec
-from cmk.utils import man_pages
+from cmk.utils import man_pages, paths
 from cmk.utils.rulesets.definition import RuleGroup
 
 from ._tile_menu import TileMenuRenderer
@@ -99,7 +100,11 @@ class ModeCheckPlugins(WatoMode):
         return ["check_plugins"]
 
     def _from_vars(self) -> None:
-        self._manpages = _get_check_catalog(discover_families(raise_errors=False), only_path=())
+        self._manpages = _get_check_catalog(
+            discover_families(raise_errors=False),
+            only_path=(),
+            blocked_paths=blocked_feature_files(paths.omd_root),
+        )
         self._titles = man_pages.CATALOG_TITLES
 
     def title(self) -> str:
@@ -153,7 +158,11 @@ class ModeCheckPluginSearch(WatoMode):
 
     def _from_vars(self) -> None:
         self._search = get_search_expression()
-        self._manpages = _get_check_catalog(discover_families(raise_errors=False), only_path=())
+        self._manpages = _get_check_catalog(
+            discover_families(raise_errors=False),
+            only_path=(),
+            blocked_paths=blocked_feature_files(paths.omd_root),
+        )
         self._titles = man_pages.CATALOG_TITLES
 
     def title(self) -> str:
@@ -268,7 +277,11 @@ class ModeCheckPluginTopic(WatoMode):
         for comp in self._path:
             ID().validate_value(comp, "")  # Beware against code injection!
 
-        self._manpages = _get_check_catalog(discover_families(raise_errors=False), self._path)
+        self._manpages = _get_check_catalog(
+            discover_families(raise_errors=False),
+            self._path,
+            blocked_paths=blocked_feature_files(paths.omd_root),
+        )
         self._titles = man_pages.CATALOG_TITLES
 
         self._has_second_level = None
@@ -463,6 +476,8 @@ def _man_page_catalog_topics() -> list[tuple[str, bool, str, str]]:
 def _get_check_catalog(
     plugin_families: Mapping[str, Sequence[str]],
     only_path: tuple[str, ...],
+    *,
+    blocked_paths: frozenset[str] = frozenset(),
 ) -> CatalogTree:
     def path_prefix_matches(p: tuple[str, ...]) -> bool:
         return p[: len(only_path)] == only_path
@@ -470,7 +485,7 @@ def _get_check_catalog(
     tree: CatalogTree = {}
 
     for path, entries in man_pages.load_man_page_catalog(
-        plugin_families, PluginGroup.CHECKMAN.value
+        plugin_families, PluginGroup.CHECKMAN.value, blocked_paths=blocked_paths
     ).items():
         if not path_prefix_matches(path):
             continue
@@ -548,7 +563,9 @@ class ModeCheckManPage(WatoMode):
             raise MKUserError("check_type", _("Invalid check type"))
 
         man_page_paths = man_pages.make_man_page_path_map(
-            discover_families(raise_errors=False), PluginGroup.CHECKMAN.value
+            discover_families(raise_errors=False),
+            PluginGroup.CHECKMAN.value,
+            blocked_paths=blocked_feature_files(paths.omd_root),
         )
 
         try:

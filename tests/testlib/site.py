@@ -169,6 +169,11 @@ class Site:
     def package(self) -> CMKPackageInfo:
         return self._package
 
+    @package.setter
+    def package(self, package: CMKPackageInfo) -> None:
+        self._package = package
+        self._package_was_preinstalled = self._package.is_installed()
+
     @property
     def apache_port(self) -> int:
         if self._apache_port is None:
@@ -2365,6 +2370,7 @@ class SiteFactory:
         with open(logfile_path) as logfile:
             logger.debug("OMD automation logfile: %s", logfile.read())
 
+        test_site.package = target_package
         # refresh the site object after creating the site
         site = self.get_existing_site(test_site.id)
 
@@ -2463,6 +2469,7 @@ class SiteFactory:
         ):
             _ = site.run(cmd)
 
+        test_site.package = target_package
         # refresh the site object after creating the site
         site = self.get_existing_site(site.id)
 

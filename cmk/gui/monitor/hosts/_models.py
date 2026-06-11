@@ -17,19 +17,6 @@ from typing import assert_never, Literal
 
 type StateLabel = Literal["UP", "DOWN", "UNREACHABLE"]
 
-type StringOp = Literal["contains", "matches"]
-
-type NumericOp = Literal["lt", "lte", "eq", "gt", "gte"]
-
-type NumericField = Literal[
-    "num_services",
-    "num_services_crit",
-    "num_services_ok",
-    "num_services_pending",
-    "num_services_unknown",
-    "num_services_warn",
-]
-
 
 class HostState(enum.IntEnum):
     UP = 0

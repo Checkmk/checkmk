@@ -16,10 +16,7 @@ from cmk.gui.monitor.hosts._models import (
     HostSort,
     HostSortColumn,
     HostSortDirection,
-    NumericField,
-    NumericOp,
     StateLabel,
-    StringOp,
 )
 from cmk.gui.monitor.hosts._repositories import HostRepository
 from cmk.gui.openapi.framework.api_config import APIVersion
@@ -43,6 +40,20 @@ _MAX_NUMBER_OF_HOSTS = 5_000
 _DEFAULT_LIMIT = 1_000
 
 _DEFAULT_SORT = (HostSort(column=HostSortColumn.NAME, direction=HostSortDirection.ASC),)
+
+
+type StringOp = Literal["contains", "matches"]
+
+type NumericOp = Literal["lt", "lte", "eq", "gt", "gte"]
+
+type NumericField = Literal[
+    "num_services",
+    "num_services_crit",
+    "num_services_ok",
+    "num_services_pending",
+    "num_services_unknown",
+    "num_services_warn",
+]
 
 
 @api_model

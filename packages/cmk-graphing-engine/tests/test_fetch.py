@@ -12,7 +12,7 @@ from cmk.graphing_engine import (
     GraphRequest,
     Line,
     MetricName,
-    PerformanceDataByService,
+    PerformanceData,
     Quantity,
     RRDMetric,
     RRDMetricRef,
@@ -64,7 +64,9 @@ class _FakeFetchRRD:
             ]
         ] = []
 
-    def fetch_performance_data(self, services: Sequence[ServiceRef]) -> PerformanceDataByService:
+    def fetch_performance_data(
+        self, services: Sequence[ServiceRef]
+    ) -> Mapping[ServiceRef, PerformanceData]:
         raise NotImplementedError
 
     def time_series(

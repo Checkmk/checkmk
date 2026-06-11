@@ -20,7 +20,6 @@ from cmk.graphing_engine import (
     MetricName,
     parse_graph_from_api,
     PerformanceData,
-    PerformanceDataByService,
     PerformanceValue,
     Quantity,
     RRDMetric,
@@ -138,12 +137,14 @@ def _metric_data(
 class _FakeFetchRRD:
     def __init__(
         self,
-        performance_response: PerformanceDataByService | None = None,
+        performance_response: Mapping[ServiceRef, PerformanceData] | None = None,
     ) -> None:
         self._performance_response = performance_response or {}
         self.performance_data_calls: list[tuple[ServiceRef, ...]] = []
 
-    def fetch_performance_data(self, services: Sequence[ServiceRef]) -> PerformanceDataByService:
+    def fetch_performance_data(
+        self, services: Sequence[ServiceRef]
+    ) -> Mapping[ServiceRef, PerformanceData]:
         self.performance_data_calls.append(tuple(services))
         return self._performance_response
 

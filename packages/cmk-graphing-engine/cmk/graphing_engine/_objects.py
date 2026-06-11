@@ -274,9 +274,6 @@ class PerformanceData:
     values: Sequence[PerformanceValue]
 
 
-type PerformanceDataByService = Mapping[ServiceRef, PerformanceData]
-
-
 @dataclass(frozen=True, kw_only=True)
 class MetricTranslation:
     name: MetricName
@@ -285,7 +282,6 @@ class MetricTranslation:
 
 # Rename/scale table keyed by check command, then by the raw (perf-data) metric name. A key may be
 # a literal name or a "~<regex>" pattern matched against the raw name.
-type MetricTranslations = Mapping[str, Mapping[MetricName, MetricTranslation]]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -310,12 +306,9 @@ class RRDMetricData:
     maximum: float | None = None
 
 
-type TranslatedMetrics = Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]
-
-
 def _metric_data_of(
     rrd_metrics: Iterable[RRDMetricRef],
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
 ) -> Mapping[RRDMetricRef, RRDMetricData]:
     # Each metric carries its own service, so the data is looked up per service: two services that
     # expose the same metric name must not collide.
@@ -328,7 +321,7 @@ def _metric_data_of(
 
 
 def _flatten(
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
 ) -> Mapping[MetricName, RRDMetricData]:
     return {
         name: data
@@ -415,11 +408,13 @@ class Graph:
 
     def metric_data(
         self,
-        translated_metrics: TranslatedMetrics,
+        translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     ) -> Mapping[RRDMetricRef, RRDMetricData]:
         return _metric_data_of(self.rrd_metrics(), translated_metrics)
 
-    def evaluated_title(self, translated_metrics: TranslatedMetrics) -> str:
+    def evaluated_title(
+        self, translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]
+    ) -> str:
         return _evaluate_title(self.title, _flatten(translated_metrics))
 
 

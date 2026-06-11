@@ -10,7 +10,7 @@ from typing import ClassVar, Literal
 from cmk.graphing.v1 import metrics as metrics_v1
 
 from ._fetch import FetchRRD
-from ._objects import DiscoveredGraph, Graph, MetricTranslations, ServiceRef
+from ._objects import DiscoveredGraph, Graph, MetricName, MetricTranslation, ServiceRef
 from ._options import TimeRange
 from ._translate import fetch_translated_metrics
 
@@ -21,7 +21,7 @@ class ExplicitDiscoveryOptions:
     graph: Graph
     localizer: Callable[[str], str]
     metrics: Mapping[str, metrics_v1.Metric]
-    translations: MetricTranslations
+    translations: Mapping[str, Mapping[MetricName, MetricTranslation]]
 
 
 @dataclass(frozen=True, kw_only=True)

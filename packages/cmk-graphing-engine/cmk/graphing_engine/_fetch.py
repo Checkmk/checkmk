@@ -9,7 +9,7 @@ from typing import Protocol
 
 from ._objects import (
     Graph,
-    PerformanceDataByService,
+    PerformanceData,
     RRDMetric,
     RRDMetricRef,
     RRDMetricWithCF,
@@ -27,7 +27,7 @@ class TimeSeries:
 class FetchRRD(Protocol):
     def fetch_performance_data(
         self, services: Sequence[ServiceRef]
-    ) -> PerformanceDataByService: ...
+    ) -> Mapping[ServiceRef, PerformanceData]: ...
 
     def time_series(
         self,

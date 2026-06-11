@@ -22,7 +22,7 @@ from ._objects import (
     Graph,
     Line,
     MetricName,
-    MetricTranslations,
+    MetricTranslation,
     RRDMetric,
     RRDMetricData,
     ServiceRef,
@@ -49,7 +49,7 @@ class TemplateDiscoveryOptions:
         | graphs_v2_unstable.Bidirectional
     ]
     metrics: Mapping[str, metrics_v1.Metric]
-    translations: MetricTranslations
+    translations: Mapping[str, Mapping[MetricName, MetricTranslation]]
 
 
 @dataclass(frozen=True, kw_only=True)

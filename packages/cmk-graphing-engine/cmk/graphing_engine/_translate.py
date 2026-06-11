@@ -13,12 +13,10 @@ from ._from_api import metric_display_attributes
 from ._objects import (
     MetricName,
     MetricTranslation,
-    MetricTranslations,
     PerformanceData,
     RRDMetricData,
     RRDOriginal,
     ServiceRef,
-    TranslatedMetrics,
 )
 
 # A predictive metric keeps its prefix on the translated name but is matched by the bare name.
@@ -33,7 +31,7 @@ def _split_predict_prefix(metric_name: str) -> tuple[str, str]:
 
 
 def _translations_for_command(
-    translations: MetricTranslations,
+    translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
     check_command: str,
 ) -> Mapping[MetricName, MetricTranslation]:
     if not check_command:
@@ -59,7 +57,7 @@ def _find_translation(
 
 def translate_performance_data(
     performance_data: PerformanceData,
-    translations: MetricTranslations,
+    translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
 ) -> Mapping[MetricName, RRDMetricData]:
@@ -106,10 +104,10 @@ def fetch_translated_metrics(
     services: Iterable[ServiceRef],
     *,
     rrd: FetchRRD,
-    translations: MetricTranslations,
+    translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
-) -> TranslatedMetrics:
+) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
     # dict.fromkeys dedups the services while keeping a deterministic order.
     performance_data = rrd.fetch_performance_data(list(dict.fromkeys(services)))
     return {

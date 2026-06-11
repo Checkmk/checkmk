@@ -171,6 +171,14 @@ def test_werk_versions(werks_loaded: dict[int, WerkV3]) -> None:
         )
 
 
+def test_no_werk_has_version_2_6_0b1(werks_loaded: dict[int, WerkV3]) -> None:
+    for werk_id, werk in werks_loaded.items():
+        assert werk.version != "2.6.0b1", (
+            f"Werk #{werk_id} has version 2.6.0b1, which will never exists. "
+            "The major version after 2.5.0 will be 3.0.0b1."
+        )
+
+
 def test_secwerk_has_cvss(werks_loaded: dict[int, WerkV3]) -> None:
     # The CVSS in Sec Werks is only mandatory for new Werks, so we start with 14485
     skip_lower = 14485

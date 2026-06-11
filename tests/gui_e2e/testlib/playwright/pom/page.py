@@ -457,7 +457,7 @@ class MainArea(LocatorHelper):
     ) -> Locator:
         if not selector:
             selector = ":scope"
-        _loc = self._iframe_locator.locator(selector)
+        _loc = self.page.locator("#content_area").locator(selector)
         kwargs = self._build_locator_kwargs(
             has_text=has_text,
             has_not_text=has_not_text,

@@ -41,8 +41,12 @@ def fixture_host(dashboard_page: MainDashboard, test_site: Site) -> Iterator[Hos
 
 def test_navigate_to_host_properties(host: HostProperties) -> None:
     # - sanity checks
-    for link in HostProperties.dropdown_buttons + HostProperties.links + HostProperties.properties:
-        locator = host.main_area.get_text(text=link, first=False)
+    # Dropdown names are checked within the page-menu bar: the main menu in
+    # the shared document also carries a "Help" entry.
+    for name in HostProperties.dropdown_buttons:
+        expect(host.main_area.dropdown_button(name)).to_have_count(1)
+    for text in HostProperties.links + HostProperties.properties:
+        locator = host.main_area.get_text(text=text, first=False)
         expect(locator).to_have_count(1)
 
     # - check absence of errors and warnings

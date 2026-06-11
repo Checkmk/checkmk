@@ -13,10 +13,17 @@ class UpdateMasterControlModel:
         description="Enable or disable notifications on the site.",
         example=True,
     )
+    service_checks: bool | None = api_field(
+        default=None,
+        description="Enable or disable active service checks on the site.",
+        example=True,
+    )
 
     def to_changes(self) -> dict[str, bool]:
         """Return only the settings that were explicitly provided, keyed by API field name."""
         changes: dict[str, bool] = {}
         if self.notifications is not None:
             changes["notifications"] = self.notifications
+        if self.service_checks is not None:
+            changes["service_checks"] = self.service_checks
         return changes

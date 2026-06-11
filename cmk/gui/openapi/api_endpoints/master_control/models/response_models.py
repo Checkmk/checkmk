@@ -20,6 +20,10 @@ class MasterControlExtensionsModel:
         description="Whether notifications are enabled on the site.",
         example=True,
     )
+    service_checks: bool = api_field(
+        description="Whether active service checks are executed on the site.",
+        example=True,
+    )
 
 
 @api_model

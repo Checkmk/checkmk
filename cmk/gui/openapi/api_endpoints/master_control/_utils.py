@@ -15,6 +15,8 @@ from cmk.livestatus_client import (
     DisableNotifications,
     EnableNotifications,
     LivestatusClient,
+    StartExecutingServiceChecks,
+    StopExecutingServiceChecks,
 )
 from cmk.livestatus_client._connection import MultiSiteConnection
 from cmk.livestatus_client.queries import Query, ResultRow
@@ -60,6 +62,11 @@ MASTER_CONTROL_TOGGLES: Mapping[str, _MasterControlToggle] = {
         enable=EnableNotifications(),
         disable=DisableNotifications(),
     ),
+    "service_checks": _MasterControlToggle(
+        column=Status.execute_service_checks,
+        enable=StartExecutingServiceChecks(),
+        disable=StopExecutingServiceChecks(),
+    ),
 }
 
 
@@ -76,6 +83,7 @@ def serialize_master_control(site_id: SiteId, row: ResultRow) -> MasterControlMo
         links=generate_links("master_control", site_id, editable=False, deletable=False),
         extensions=MasterControlExtensionsModel(
             notifications=bool(row[Status.enable_notifications.name]),
+            service_checks=bool(row[Status.execute_service_checks.name]),
         ),
     )
 

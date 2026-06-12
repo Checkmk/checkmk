@@ -39,8 +39,9 @@ const props = withDefaults(
     ariaLabel?: string | undefined
     removable?: boolean
     editing?: boolean
+    tabFocusable?: boolean
   }>(),
-  { removable: false, editing: false }
+  { removable: false, editing: false, tabFocusable: true }
 )
 
 const emit = defineEmits<{
@@ -292,6 +293,9 @@ function onEditEscape(): void {
 defineExpose({
   revealValidationErrors: () => {
     showValidationErrors.value = true
+  },
+  focus: () => {
+    closedPillRef.value?.focus()
   }
 })
 </script>
@@ -310,7 +314,7 @@ defineExpose({
       :title="fullLabel"
       @keydown.tab.capture.stop
       @keydown.esc.capture="onEditEscapeCapture"
-      @keydown.esc="onEditEscape"
+      @keydown.esc.stop="onEditEscape"
     >
       <span
         v-if="condition.key"
@@ -380,7 +384,7 @@ defineExpose({
       v-else
       ref="closedPillRef"
       class="metric-backend-attribute-filter-pill__closed"
-      tabindex="0"
+      :tabindex="tabFocusable ? 0 : -1"
       @keydown.enter.prevent="emit('edit')"
       @keydown.space.prevent="emit('edit')"
       @keydown.delete.prevent="emit('remove')"

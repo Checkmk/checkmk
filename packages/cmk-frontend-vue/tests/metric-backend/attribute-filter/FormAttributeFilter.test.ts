@@ -648,7 +648,7 @@ describe('combined group keyboard stop', () => {
     return group
   }
 
-  test.skip('closed: tabbing into a multi-pill group lands on a single stop that wraps the chips, +s, connector, and the remove X', async () => {
+  test('closed: tabbing into a multi-pill group lands on a single stop that wraps the chips, +s, connector, and the remove X', async () => {
     renderForm(TWO_PILL_AND)
     const group = groupWrapper()
 
@@ -668,7 +668,7 @@ describe('combined group keyboard stop', () => {
     ).toBeInTheDocument()
   })
 
-  test.skip.each([
+  test.each([
     ['Backspace', '{Backspace}'],
     ['Delete', '{Delete}']
   ])('%s on the focused group removes the group', async (_name, key) => {
@@ -680,7 +680,7 @@ describe('combined group keyboard stop', () => {
     expect(model.value).toEqual([])
   })
 
-  test.skip.each([
+  test.each([
     ['Space', ' '],
     ['Enter', '{Enter}']
   ])('%s on the focused group expands it and focuses the first pill', async (_name, key) => {
@@ -695,7 +695,7 @@ describe('combined group keyboard stop', () => {
     expect(document.activeElement).toHaveAttribute('tabindex', '0')
   })
 
-  test.skip('expanded: shift-tabbing from the first pill focuses the remove group X on its own', async () => {
+  test('expanded: shift-tabbing from the first pill focuses the remove group X on its own', async () => {
     renderForm(TWO_PILL_AND)
     const group = await expandGroup()
     const removeX = within(group).getByRole('button', { name: 'Remove group' })
@@ -705,7 +705,7 @@ describe('combined group keyboard stop', () => {
     expect(document.activeElement).toBe(removeX)
   })
 
-  test.skip('expanded: tabbing out of the group does not collapse it', async () => {
+  test('expanded: tabbing out of the group does not collapse it', async () => {
     renderForm(TWO_PILL_AND)
     const group = await expandGroup()
     const removeX = within(group).getByRole('button', { name: 'Remove group' })
@@ -719,7 +719,7 @@ describe('combined group keyboard stop', () => {
     expect(removeX).toHaveAttribute('tabindex', '0')
   })
 
-  test.skip('expanded: clicking outside the group collapses it back to one Tab stop', async () => {
+  test('expanded: clicking outside the group collapses it back to one Tab stop', async () => {
     renderForm(TWO_PILL_AND)
     const group = await expandGroup()
 
@@ -732,7 +732,7 @@ describe('combined group keyboard stop', () => {
     )
   })
 
-  test.skip('expanded: Escape on the focused pill collapses the group and refocuses the wrapper', async () => {
+  test('expanded: Escape on the focused pill collapses the group and refocuses the wrapper', async () => {
     renderForm(TWO_PILL_AND)
     const group = await expandGroup()
 
@@ -742,7 +742,7 @@ describe('combined group keyboard stop', () => {
     expect(group).toHaveFocus()
   })
 
-  test.skip('expanded: Escape on an editing pill closes the pill but keeps the group entered', async () => {
+  test('expanded: Escape on an editing pill closes the pill but keeps the group entered', async () => {
     // Pre-fill the pills so entering edit mode does not auto-open the key
     // dropdown; otherwise the first Escape would just close that dropdown.
     renderForm([

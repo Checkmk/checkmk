@@ -15,6 +15,7 @@ from cmk.gui.watolib.sample_config._constants import _PS_COMMON_OPTS
 from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     add_ps_discovery_rules,
     AUTOMATION_HELPER_RULE_ID,
+    EVENT_CONSOLE_RULE_ID,
     overwrite_ps_discovery_rules,
     PS_DISCOVERY_RULE_NAME,
     RABBITMQ_RULE_ID,
@@ -51,6 +52,48 @@ def test_update_with_preexisting_rulesets() -> None:
 
     add_ps_discovery_rules(logging.getLogger(), rulesets)
     assert rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == 1
+
+
+def _event_console_default_match() -> str:
+    rule = next(r for r in PS_DISCOVERY_RULES if r["id"] == EVENT_CONSOLE_RULE_ID)
+    match = rule["value"]["match"]
+    assert isinstance(match, str)
+    return match
+
+
+def _make_ruleset_with_event_console_match(match: str) -> Ruleset:
+    ruleset = Ruleset(PS_DISCOVERY_RULE_NAME, {})
+    folder = folder_tree().root_folder()
+    rule = Rule.from_ruleset_defaults(folder, ruleset)
+    rule.id = EVENT_CONSOLE_RULE_ID
+    rule.value = {"match": match}
+    ruleset.append_rule(folder, rule)
+    return ruleset
+
+
+@pytest.mark.usefixtures("request_context")
+def test_overwrite_migrates_untouched_event_console_rule() -> None:
+    ruleset = _make_ruleset_with_event_console_match("~python3 /omd/sites/[^/]+/bin/mkeventd$")
+
+    overwrite_ps_discovery_rules(
+        logging.getLogger(), RulesetCollection({PS_DISCOVERY_RULE_NAME: ruleset})
+    )
+
+    rule = ruleset.get_rule_by_id(EVENT_CONSOLE_RULE_ID)
+    assert rule.value["match"] == _event_console_default_match()
+
+
+@pytest.mark.usefixtures("request_context")
+def test_overwrite_keeps_customized_event_console_rule() -> None:
+    customized = "~python3 /omd/sites/[^/]+/bin/mkeventd --my-custom-flag"
+    ruleset = _make_ruleset_with_event_console_match(customized)
+
+    overwrite_ps_discovery_rules(
+        logging.getLogger(), RulesetCollection({PS_DISCOVERY_RULE_NAME: ruleset})
+    )
+
+    rule = ruleset.get_rule_by_id(EVENT_CONSOLE_RULE_ID)
+    assert rule.value["match"] == customized
 
 
 @pytest.mark.usefixtures("request_context")

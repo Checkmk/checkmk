@@ -14,6 +14,7 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 PS_DISCOVERY_RULE_NAME = "inventory_processes_rules"
 RABBITMQ_RULE_ID = "65a3dca4-8d71-45d8-8887-53ef0c63d06f"
 AUTOMATION_HELPER_RULE_ID = "94190e27-2836-488a-b6b4-f23f694a455e"
+EVENT_CONSOLE_RULE_ID = "2105c8a7-5672-4242-98f6-fd6ce8b8f3a7"
 
 
 class UpdatePSDiscovery(UpdateAction):
@@ -81,6 +82,14 @@ def overwrite_ps_discovery_rules(logger: Logger, all_rulesets: RulesetCollection
         AUTOMATION_HELPER_RULE_ID,
         automation_helper_old_rule_match,
         automation_helper_logging_id,
+    )
+
+    overwrite_ps_discovery_rule(
+        logger,
+        ps_discovery_rules,
+        EVENT_CONSOLE_RULE_ID,
+        "~python3 /omd/sites/[^/]+/bin/mkeventd$",
+        "self-monitoring of the event console",
     )
 
 

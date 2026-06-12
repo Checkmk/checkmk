@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -24,6 +25,8 @@ from cmk.helper_interface import SourceType
 from cmk.utils.labels import HostLabel as _HostLabel
 from cmk.utils.labels import merge_cluster_labels
 from cmk.utils.log import console
+
+_logger = logging.getLogger("cmk.base.discovery")
 
 __all__ = [
     "analyse_cluster_labels",
@@ -135,6 +138,7 @@ def _discover_host_labels_for_source_type(
 
         names = ", ".join(str(r.section_name) for r in parsed_results)
         console.debug(f"Trying host label discovery with: {names}")
+        _logger.debug(f"Trying host label discovery with: {names}")
         for section_name, section_data, _cache_info in _sort_sections_by_label_priority(
             parsed_results
         ):
@@ -148,6 +152,7 @@ def _discover_host_labels_for_source_type(
             try:
                 for label in host_label_plugin.function(**kwargs):
                     console.debug(f"  {label.name}: {label.value} ({section_name})")
+                    _logger.debug(f"  {label.name}: {label.value} ({section_name})")
                     host_labels[label.name] = _HostLabel(label.name, label.value, section_name)
             except (KeyboardInterrupt, MKTimeout):
                 raise
@@ -159,6 +164,7 @@ def _discover_host_labels_for_source_type(
                         f"Host label discovery of '{section_name}' failed: {exc}",
                         file=sys.stderr,
                     )
+                    _logger.warning("Host label discovery of '%s' failed: %s", section_name, exc)
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

@@ -1117,10 +1117,12 @@ def _execute_autodiscovery(
     ab_plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> tuple[Mapping[HostName, DiscoveryReport], bool]:
+    _logger = logging.getLogger("cmk.base.discovery")
     file_cache_options = FileCacheOptions(use_outdated=True)
 
     if not (autodiscovery_queue := AutoQueue(autodiscovery_dir)):
         console.verbose("No hosts to discover, returning.")
+        _logger.debug("No hosts to discover, returning.")
         return {}, False
 
     # Note: we can't resolve the `latest` link here, because the core might
@@ -1262,16 +1264,21 @@ def _execute_autodiscovery(
     for host_name in autodiscovery_queue:
         if host_name in hosts_config.clusters:
             console.verbose(f"  Removing mark '{host_name}' (host is a cluster)")
+            _logger.debug(f"  Removing mark '{host_name}' (host is a cluster)")
             (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
         elif host_name not in all_hosts:
             console.verbose(f"  Removing mark '{host_name}' (host not configured)")
+            _logger.debug(f"  Removing mark '{host_name}' (host not configured)")
             (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
 
     if (oldest_queued := autodiscovery_queue.oldest()) is None:
         console.verbose("Autodiscovery: No hosts marked by discovery check")
+        _logger.debug("Autodiscovery: No hosts marked by discovery check")
         return {}, False
 
+    queue_size_at_start = len(autodiscovery_queue)
     console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:")
+    _logger.debug("Autodiscovery: Discovering all hosts marked by discovery check:")
 
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
     passive_service_name_config = config_cache.make_passive_service_name_config(
@@ -1312,7 +1319,9 @@ def _execute_autodiscovery(
                 params = config_cache.discovery_check_parameters(host_name)
                 if params.commandline_only:
                     console.verbose("  failed: discovery check disabled")
+                    _logger.debug(f"autodiscovery: {host_name} failed: discovery check disabled")
                 else:
+                    _logger.debug(f"autodiscovery: processing {host_name}")
                     hosts_config = config_cache.hosts_config
                     autodiscovery_result = autodiscovery(
                         host_name,
@@ -1349,6 +1358,10 @@ def _execute_autodiscovery(
                         (autodiscovery_queue.path / str(host_name)).unlink(
                             missing_ok=True
                         )  # TODO: should be a method of autodiscovery_queue
+                    else:
+                        _logger.debug(
+                            "Autodiscovery: host %s retained in queue for next run", host_name
+                        )
 
                     if autodiscovery_result.discovery_result:
                         discovery_results[host_name] = autodiscovery_result.discovery_result
@@ -1356,6 +1369,27 @@ def _execute_autodiscovery(
 
     except (MKTimeout, TimeoutError) as exc:
         console.verbose_no_lf(str(exc))
+        elapsed = time.monotonic() - start
+        remaining_hosts = list(autodiscovery_queue)
+        _logger.warning(
+            "Autodiscovery: timed out after %.1fs (limit: %ds). "
+            "Processed %d host(s), %d host(s) remaining in queue: %s",
+            elapsed,
+            limit,
+            len(hosts_processed),
+            len(remaining_hosts),
+            ", ".join(remaining_hosts) if remaining_hosts else "none",
+        )
+
+    _logger.debug(
+        "Autodiscovery: run complete: queue_start=%d queue_end=%d processed=%d "
+        "results=%d activation_required=%s",
+        queue_size_at_start,
+        len(autodiscovery_queue),
+        len(hosts_processed),
+        len(discovery_results),
+        activation_required,
+    )
 
     if not activation_required:
         return discovery_results, False

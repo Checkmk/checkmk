@@ -9,6 +9,8 @@ import { type CSSProperties, inject } from 'vue'
 
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
+import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
+
 import { COLUMN_LAYOUT_KEY } from './MonitoringTableContext'
 import FilterDropdown from './filter/FilterDropdown.vue'
 
@@ -17,13 +19,15 @@ defineProps<{
   disabled?: boolean
 }>()
 
-function selectedValues(column: Column<T, unknown>): string[] {
-  const value = column.getFilterValue()
-  return Array.isArray(value) ? (value as string[]) : []
+function filterValue(column: Column<T, unknown>): ColumnFilterNode<FilterField> | undefined {
+  return column.getFilterValue() as ColumnFilterNode<FilterField> | undefined
 }
 
-function setSelectedValues(column: Column<T, unknown>, values: string[]): void {
-  column.setFilterValue(values.length > 0 ? values : undefined)
+function setFilterValue(
+  column: Column<T, unknown>,
+  node: ColumnFilterNode<FilterField> | undefined
+): void {
+  column.setFilterValue(node)
 }
 
 function columnLabel(column: Column<T, unknown>): string {
@@ -163,8 +167,8 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
             "
             :definition="header.column.columnDef.meta.filter"
             :label="columnLabel(header.column)"
-            :selected="selectedValues(header.column)"
-            @update:selected="setSelectedValues(header.column, $event)"
+            :model-value="filterValue(header.column)"
+            @update:model-value="setFilterValue(header.column, $event)"
           >
             <template #trigger="{ toggle, isOpen, isActive }">
               <button

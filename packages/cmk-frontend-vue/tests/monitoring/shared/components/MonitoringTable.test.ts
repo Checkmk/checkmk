@@ -41,14 +41,14 @@ const COLUMNS: ColumnDef<Row>[] = [
     accessorKey: 'name',
     header: 'Name',
     enableSorting: true,
-    meta: { filter: { type: 'checkbox-list', options: [] } }
+    meta: { filter: { type: 'checkbox-list', field: 'name', options: [] } }
   },
   {
     id: 'state',
     accessorKey: 'state',
     header: 'State',
     enableSorting: true,
-    meta: { filter: { type: 'checkbox-list', options: [] } }
+    meta: { filter: { type: 'checkbox-list', field: 'state', options: [] } }
   },
   { id: 'actions', header: 'Actions', enableSorting: false }
 ]

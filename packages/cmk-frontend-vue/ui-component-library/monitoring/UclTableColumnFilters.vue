@@ -59,7 +59,7 @@ import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { computed, ref } from 'vue'
 
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
-import type { HostEntry } from '@/monitoring/shared/api/types'
+import type { ColumnFilterNode, FilterField, HostEntry } from '@/monitoring/shared/api/types'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import type { CheckboxListFilter } from '@/monitoring/shared/components/filter/types'
 
@@ -86,6 +86,7 @@ const MANY_STATES = [
 
 const stateFilter = computed<CheckboxListFilter>(() => ({
   type: 'checkbox-list',
+  field: 'state',
   options: (propState.value.optionCount === 'many' ? MANY_STATES : FEW_STATES).map((state) => ({
     value: state,
     title: state
@@ -110,7 +111,14 @@ const columns = computed<ColumnDef<HostEntry>[]>(() => [
 const filterState = ref<ColumnFiltersState>([])
 
 const activeFilters = computed(() =>
-  filterState.value.map((entry) => `${entry.id}: ${(entry.value as string[]).join(', ')}`)
+  filterState.value.map((entry) => {
+    const node = entry.value as ColumnFilterNode<FilterField>
+    const values =
+      node && 'value' in node && Array.isArray(node.value)
+        ? (node.value as string[]).join(', ')
+        : ''
+    return `${entry.id}: ${values}`
+  })
 )
 
 const rows: HostEntry[] = [

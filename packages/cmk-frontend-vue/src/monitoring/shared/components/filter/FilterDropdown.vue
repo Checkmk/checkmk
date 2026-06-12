@@ -8,14 +8,17 @@ Generic popover shell for a column filter. It owns only shell concerns:
 open/close, positioning, click-outside and keyboard navigation between the
 focusable rows (via the shared KeyShortcutService). The actual filter UI is
 mounted from a per-type registry; each filter component owns its own state and
-the selection through `v-model:selected`. New filter types (numeric range, IP
-range, ...) register in FILTER_COMPONENTS without touching this shell.
+communicates via v-model (a `ColumnFilterNode` or undefined). New filter types
+(numeric range, IP range, ...) register in FILTER_COMPONENTS without touching
+this shell.
 -->
 <script setup lang="ts">
 import { type Component, computed, nextTick, onBeforeUnmount, ref } from 'vue'
 
 import { getKeyShortcutServiceInstance } from '@/lib/keyShortcuts'
 import useClickOutside from '@/lib/useClickOutside'
+
+import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 
 import FilterCheckboxList from './FilterCheckboxList.vue'
 import type { ColumnFilterDefinition } from './types'
@@ -30,7 +33,7 @@ const props = defineProps<{
   label: string
 }>()
 
-const selected = defineModel<string[]>('selected', { default: () => [] })
+const model = defineModel<ColumnFilterNode<FilterField> | undefined>({ default: undefined })
 
 const vClickOutside = useClickOutside()
 const shortcuts = getKeyShortcutServiceInstance()
@@ -44,7 +47,7 @@ const suppressNextClickOutside = ref(false)
 const panel = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLElement | null>(null)
 
-const isActive = computed(() => selected.value.length > 0)
+const isActive = computed(() => model.value !== undefined)
 
 const filterComponent = computed(() => FILTER_COMPONENTS[props.definition.type])
 
@@ -173,7 +176,7 @@ onBeforeUnmount(removeShortcuts)
       :aria-label="`Filter ${label}`"
       @focusout="onFocusOut"
     >
-      <component :is="filterComponent" v-model:selected="selected" :definition="definition" />
+      <component :is="filterComponent" v-model="model" :definition="definition" />
     </div>
   </span>
 </template>

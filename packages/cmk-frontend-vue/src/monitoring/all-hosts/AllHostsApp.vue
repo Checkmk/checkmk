@@ -18,7 +18,7 @@ import CmkSearchInput from '@/components/CmkSearchInput.vue'
 
 import type { HostEntry, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type { ColumnFilterDefinition } from '@/monitoring/shared/components/filter/types'
+import type { CheckboxListFilter } from '@/monitoring/shared/components/filter/types'
 
 import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
@@ -39,8 +39,9 @@ onBeforeUnmount(() => {
 
 provide(MONITORING_SERVICE, hostService)
 
-const stateFilter: ColumnFilterDefinition = {
+const stateFilter: CheckboxListFilter<'state'> = {
   type: 'checkbox-list',
+  field: 'state',
   options: [
     { value: 'UP', title: _t('UP') },
     { value: 'DOWN', title: _t('DOWN') },

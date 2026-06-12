@@ -6,15 +6,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 <!--
 Content component for the "checkbox-list" filter type. It owns all of its own
 state — search text, visible options, the tri-state "select all" and the
-selection itself (via `v-model:selected`). The parent `FilterDropdown` only
-provides the popover shell and keyboard navigation between focusable rows.
+selection itself (via v-model). The parent `FilterDropdown` only provides the
+popover shell and keyboard navigation between focusable rows.
+
+The v-model is a `ColumnFilterNode<F>` (or undefined for "no filter"). Internally
+the component works with the extracted string array for checkbox rendering and
+produces a typed `one_of` condition when the selection changes.
 -->
-<script setup lang="ts">
+<script setup lang="ts" generic="F extends FilterField">
 import { computed, ref } from 'vue'
 
 import usei18n, { untranslated } from '@/lib/i18n'
 
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+
+import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 
 import type { CheckboxListFilter } from './types'
 
@@ -28,15 +34,23 @@ const SELECT_ALL_MODEL_VALUE: Record<SelectAllState, boolean | 'indeterminate'> 
   unchecked: false
 }
 
-const props = defineProps<{ definition: CheckboxListFilter }>()
+const props = defineProps<{ definition: CheckboxListFilter<F> }>()
 
-const selected = defineModel<string[]>('selected', { default: () => [] })
+const model = defineModel<ColumnFilterNode<F> | undefined>({ default: undefined })
 
 const { _t } = usei18n()
 
 const searchText = ref('')
 
-const selectedSet = computed(() => new Set(selected.value))
+function extractValues(node: ColumnFilterNode<F> | undefined): string[] {
+  if (!node || node.type !== 'condition') {
+    return []
+  }
+  return Array.isArray(node.value) ? (node.value as string[]) : []
+}
+
+const selectedValues = computed(() => extractValues(model.value))
+const selectedSet = computed(() => new Set(selectedValues.value))
 
 const showSearch = computed(
   () =>
@@ -68,6 +82,19 @@ const selectAllState = computed<SelectAllState>(() => {
 
 const selectAllModelValue = computed(() => SELECT_ALL_MODEL_VALUE[selectAllState.value])
 
+function setValues(values: string[]): void {
+  if (values.length === 0) {
+    model.value = undefined
+  } else {
+    model.value = {
+      type: 'condition',
+      field: props.definition.field,
+      op: 'one_of',
+      value: values
+    } as ColumnFilterNode<F>
+  }
+}
+
 function toggleOption(value: string): void {
   const next = new Set(selectedSet.value)
   if (next.has(value)) {
@@ -75,7 +102,7 @@ function toggleOption(value: string): void {
   } else {
     next.add(value)
   }
-  selected.value = [...next]
+  setValues([...next])
 }
 
 function toggleAll(): void {
@@ -85,7 +112,7 @@ function toggleAll(): void {
   } else {
     visibleOptions.value.forEach((option) => next.add(option.value))
   }
-  selected.value = [...next]
+  setValues([...next])
 }
 
 // Escape clears a non-empty search field but keeps the dropdown open; an empty

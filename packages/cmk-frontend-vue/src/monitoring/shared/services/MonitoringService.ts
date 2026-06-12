@@ -6,7 +6,7 @@
 import type { ColumnFiltersState, SortingState } from '@tanstack/vue-table'
 import { type Ref, ref, shallowRef } from 'vue'
 
-import type { FilterNode, HostState } from '@/monitoring/shared/api/types'
+import type { FilterNode } from '@/monitoring/shared/api/types'
 import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
 
 export interface PagedResponse<T> {
@@ -55,32 +55,17 @@ export abstract class MonitoringService<T> {
   }
 
   private buildFilter(columnFilters: ColumnFiltersState): FilterNode | undefined {
-    const conditions = columnFilters
-      .map((filter) => this.columnFilterToNode(filter))
-      .filter((node): node is FilterNode => node !== undefined)
-    if (conditions.length === 0) {
+    const nodes = columnFilters.flatMap((f) => {
+      const node = f.value as FilterNode | undefined
+      return node ? [node] : []
+    })
+    if (nodes.length === 0) {
       return undefined
     }
-    if (conditions.length === 1) {
-      return conditions[0]
+    if (nodes.length === 1) {
+      return nodes[0]!
     }
-    return { type: 'and', children: conditions }
-  }
-
-  private columnFilterToNode(filter: { id: string; value: unknown }): FilterNode | undefined {
-    switch (filter.id) {
-      case 'state':
-        return this.stateCondition(filter.value)
-      default:
-        return undefined
-    }
-  }
-
-  private stateCondition(value: unknown): FilterNode | undefined {
-    if (!Array.isArray(value) || value.length === 0) {
-      return undefined
-    }
-    return { type: 'condition', field: 'state', op: 'one_of', value: value as HostState[] }
+    return { type: 'and', children: nodes }
   }
 
   stopPolling(): void {

@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: build-relay-msi.groovy
+/// file: relay-msi.groovy
 
 void main() {
     def edition = params.EDITION ?: "cloud";

@@ -63,3 +63,7 @@ class ManifestBuildError(DeployError):
 
 class OverlayError(DeployError):
     """Raised when OverlayFS mount or unmount operations fail."""
+
+
+class SudoersError(DeployError):
+    """Raised when the per-site sudoers rule is missing or cannot be managed."""

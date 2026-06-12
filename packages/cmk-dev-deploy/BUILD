@@ -47,6 +47,7 @@ py_library(
         "cmk/dev_deploy/site/privilege.py",
         "cmk/dev_deploy/site/site_config.py",
         "cmk/dev_deploy/site/site_resolver.py",
+        "cmk/dev_deploy/site/sudoers.py",
         "cmk/dev_deploy/site/warnings.py",
         "cmk/dev_deploy/state/__init__.py",
         "cmk/dev_deploy/state/change_detector.py",

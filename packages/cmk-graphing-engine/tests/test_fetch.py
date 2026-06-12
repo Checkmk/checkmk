@@ -5,8 +5,6 @@
 
 from collections.abc import Mapping, Sequence
 
-import pytest
-
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
     ConsolidationFunction,
@@ -109,7 +107,7 @@ class _FakeRRDSource:
 def _update(
     *graphs: Graph,
     rrd: _FakeRRDSource,
-    consolidation_function: ConsolidationFunction | None = None,
+    consolidation_function: ConsolidationFunction = ConsolidationFunction.AVERAGE,
     translations: Sequence[translations_v1.Translation] | None = None,
 ) -> Sequence[EvaluatedGraph]:
     return update_graph_data(
@@ -312,11 +310,3 @@ def test_bare_metric_uses_the_fallback_consolidation_function() -> None:
         ConsolidationFunction.AVERAGE: (_source("load"),),
         ConsolidationFunction.MAX: (_source("peak"),),
     }
-
-
-def test_rejects_a_bare_metric_without_a_consolidation_function() -> None:
-    bare = RRDMetric(host_name="h", service_name="svc", metric_name=MetricName("load"))
-    graph = Graph(name="g", title="g", lines=[_line(bare)])
-
-    with pytest.raises(ValueError, match="load"):
-        _update(graph, rrd=_FakeRRDSource())

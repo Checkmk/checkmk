@@ -50,14 +50,13 @@ class RRDSource(Protocol):
 
 
 def _consolidation_function(
-    metric: RRDMetricRef, consolidation_function: ConsolidationFunction | None
+    metric: RRDMetricRef, consolidation_function: ConsolidationFunction
 ) -> ConsolidationFunction:
     match metric:
         case RRDMetricWithCF():
             return metric.consolidation_function
         case RRDMetric():
-            # A bare metric uses the fallback; update_graph_data guarantees it is set.
-            assert consolidation_function is not None
+            # A bare metric uses the fallback.
             return consolidation_function
 
 
@@ -86,7 +85,7 @@ def _fetch_series(
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
     *,
     time_range: TimeRange,
-    consolidation_function: ConsolidationFunction | None,
+    consolidation_function: ConsolidationFunction,
     rrd: RRDSource,
 ) -> Mapping[RRDMetricRef, TimeSeries]:
     # A metric's originals are the raw RRD metrics to read (with per-metric scale). Fetch them
@@ -94,8 +93,7 @@ def _fetch_series(
     # then scale each one and merge a metric's series point by point.
     rrd_metrics_per_metric: dict[
         RRDMetricRef, tuple[ConsolidationFunction, list[tuple[RRDMetric, float]]]
-    ]
-    rrd_metrics_per_metric = {}
+    ] = {}
     rrd_metrics_per_function: dict[ConsolidationFunction, list[RRDMetric]] = {}
     for metric in graph.rrd_metrics():
         if (data := metric_data.get(metric)) is None:
@@ -141,20 +139,6 @@ def _fetch_series(
     return result
 
 
-def _validate_consolidation_function(
-    graph: Graph, consolidation_function: ConsolidationFunction | None
-) -> None:
-    # Without a fallback consolidation function, every metric must pin its own.
-    if consolidation_function is not None:
-        return
-    bare = [metric for metric in graph.rrd_metrics() if not isinstance(metric, RRDMetricWithCF)]
-    if bare:
-        raise ValueError(
-            "No consolidation function given and these metrics do not pin one: "
-            f"{', '.join(metric.metric_name for metric in bare)}"
-        )
-
-
 def fetch_translated_metrics(
     *,
     # subject
@@ -182,19 +166,16 @@ def evaluate_graphs(
     graphs: Sequence[Graph],
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     # runtime
-    consolidation_function: ConsolidationFunction | None,
+    consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
     # source
     rrd: RRDSource,
 ) -> Sequence[EvaluatedGraph]:
     """Fetch the time series of the given graphs (given their already translated metrics).
 
-    The consolidation function is the fallback for the graphs' bare RRDMetric columns. Without one,
-    every metric of a graph must pin its own (RRDMetricWithCF); a bare RRDMetric without one raises
-    ValueError.
+    The consolidation function is the fallback for the graphs' bare RRDMetric columns; metrics that
+    pin their own (RRDMetricWithCF) keep it.
     """
-    for graph in graphs:
-        _validate_consolidation_function(graph, consolidation_function)
     evaluated = []
     for graph in graphs:
         metric_data = metric_data_of(graph, translated_metrics)
@@ -224,15 +205,15 @@ def update_graph_data(
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
     # runtime
-    consolidation_function: ConsolidationFunction | None = None,
+    consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
     # source
     rrd: RRDSource,
 ) -> Sequence[EvaluatedGraph]:
     """Fetch and evaluate the current performance data and time series of the given graphs.
 
-    The consolidation function is the fallback for the graphs' bare RRDMetric columns; without one,
-    every metric must pin its own (RRDMetricWithCF) or a ValueError is raised.
+    The consolidation function is the fallback for the graphs' bare RRDMetric columns; metrics that
+    pin their own (RRDMetricWithCF) keep it.
     """
     # Each metric carries its own service; fetch and translate the performance data of all of them.
     translated_metrics = fetch_translated_metrics(

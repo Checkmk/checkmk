@@ -11,13 +11,18 @@ import { type PresetName, presetOptions } from './attributeFilterPresets'
 
 export const a11yData = [
   {
-    keys: ['Click'],
-    description: 'Opens the read-only pill for editing. Only one pill is editable at a time.'
+    keys: ['Tab'],
+    description:
+      'Moves focus forward through the filter chips and through the inputs of the currently open pill.'
   },
   {
-    keys: ['Click outside'],
+    keys: [['Shift', 'Tab']],
+    description: 'Moves focus backward through the same elements.'
+  },
+  {
+    keys: ['Enter', 'Space', 'Click'],
     description:
-      'Closes the open pill back to its read-only chip. A pill with any required field empty stays open so an unfinished condition is not lost.'
+      'Activates the focused element — opens a pill for editing or triggers a button. Only one pill is editable at a time; activating another control commits the open pill if valid, otherwise the pill stays open and its validation errors are revealed.'
   }
 ]
 

@@ -374,3 +374,99 @@ class TestWatchLoopHeartbeat:
 
         assert result == 0
         mock_output.print_watch_heartbeat.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# TestWatchLoopMidDeployEdits
+# ---------------------------------------------------------------------------
+
+
+def _cycle_result(exit_code: int = 0) -> object:
+    from cmk.dev_deploy.types import DeployCycleResult
+
+    return DeployCycleResult(
+        exit_code=exit_code,
+        deployed=("wheels",),
+        skipped=(),
+        skipped_reasons={},
+        services_restarted=0,
+        all_skipped=False,
+    )
+
+
+def _run_watch_loop(hash_sequence: list[str], deploy_fn: MagicMock) -> None:
+    """Drive watch_loop with a scripted _get_content_hash sequence.
+
+    The loop is terminated by raising KeyboardInterrupt once the
+    sequence is exhausted (clean shutdown path, exit code 0).
+    """
+    from cmk.dev_deploy import watcher
+
+    hashes = iter(hash_sequence)
+
+    def _scripted_hash(_base: object, _repo_root: object) -> str:
+        try:
+            return next(hashes)
+        except StopIteration:
+            raise KeyboardInterrupt from None
+
+    with (
+        patch.object(watcher, "_get_content_hash", side_effect=_scripted_hash),
+        patch.object(watcher, "_get_state_diff_base", return_value="a" * 40),
+        patch("cmk.dev_deploy.watcher.time.sleep"),
+    ):
+        rc = watcher.watch_loop(MagicMock(), Path("/repo"), deploy_fn)
+    assert rc == 0
+
+
+class TestWatchLoopMidDeployEdits:
+    """Files edited while a deploy runs must trigger the next cycle."""
+
+    def test_edit_during_deploy_triggers_second_cycle(self) -> None:
+        deploy_fn = MagicMock(return_value=_cycle_result())
+        _run_watch_loop(
+            [
+                "h0",  # initial baseline
+                "h1",  # poll: change detected
+                "h1",  # debounce re-hash
+                # deploy 1 runs; the file is edited meanwhile:
+                "h2",  # post-deploy snapshot != pre-deploy -> force next cycle
+                "h2",  # poll: differs from forced "" baseline -> cycle 2
+                "h2",  # debounce re-hash
+                "h2",  # post-deploy snapshot == pre-deploy -> settle
+                "h2",  # baseline against updated diff base
+                # poll: sequence exhausted -> Ctrl-C
+            ],
+            deploy_fn,
+        )
+        assert deploy_fn.call_count == 2
+
+    def test_unchanged_tree_deploys_once(self) -> None:
+        deploy_fn = MagicMock(return_value=_cycle_result())
+        _run_watch_loop(
+            [
+                "h0",  # initial baseline
+                "h1",  # poll: change detected
+                "h1",  # debounce re-hash
+                "h1",  # post-deploy snapshot == pre-deploy
+                "h9",  # baseline against updated diff base (absorbed)
+                "h9",  # poll: no change
+                # poll: sequence exhausted -> Ctrl-C
+            ],
+            deploy_fn,
+        )
+        assert deploy_fn.call_count == 1
+
+    def test_change_reverted_within_debounce_skips_deploy(self) -> None:
+        deploy_fn = MagicMock(return_value=_cycle_result())
+        _run_watch_loop(
+            [
+                "h0",  # initial baseline
+                "h1",  # poll: change detected
+                "h0",  # debounce re-hash: back to baseline -> no deploy
+                "h0",  # poll: no change
+                # poll: sequence exhausted -> Ctrl-C
+            ],
+            deploy_fn,
+        )
+        deploy_fn.assert_not_called()

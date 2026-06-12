@@ -441,6 +441,18 @@ def _run_deploy_cycle(
     if output.get_verbosity() >= output.Verbosity.VERBOSE:
         output.print_blank()
         output.info(f"Deploying ({len(steps)} step(s), max {args.jobs} worker(s))...")
+    # Snapshot per-deployer dirty-file hashes BEFORE deploying: a file
+    # edited while the deploy runs must compare as changed on the next
+    # cycle instead of being recorded as already deployed.
+    _deployer_dirty: dict[str, dict[str, str]] = {}
+    for dep_name in ("config_spec", "install_spec", "wheel_spec"):
+        paths = resolve_source_paths(dep_name)
+        if paths is not None and len(paths) > 0:
+            _deployer_dirty[dep_name] = compute_dirty_hashes(repo_root, path_prefixes=paths)
+        else:
+            # No source paths: use global dirty hashes (backward compat)
+            _deployer_dirty[dep_name] = compute_dirty_hashes(repo_root)
+
     results = execute_parallel(steps, max_workers=args.jobs)
     output.print_parallel_result(results)
 
@@ -453,18 +465,6 @@ def _run_deploy_cycle(
             successful_deployers.add(result_deployer)
             if r.name in STEP_DISPLAY_NAMES:
                 deployed_names.append(STEP_DISPLAY_NAMES[r.name])
-
-    # Compute per-deployer path-filtered dirty hashes for state saving
-    # Done AFTER deploy completes so hashes reflect post-deploy state
-    _deployer_dirty: dict[str, dict[str, str]] = {}
-    for dep_name in ("config_spec", "install_spec", "wheel_spec"):
-        if dep_name in successful_deployers:
-            paths = resolve_source_paths(dep_name)
-            if paths is not None and len(paths) > 0:
-                _deployer_dirty[dep_name] = compute_dirty_hashes(repo_root, path_prefixes=paths)
-            else:
-                # No source paths: use global dirty hashes (backward compat)
-                _deployer_dirty[dep_name] = compute_dirty_hashes(repo_root)
 
     # Check for deploy failures (before service restarts)
     failed = [r for r in results if not r.success]

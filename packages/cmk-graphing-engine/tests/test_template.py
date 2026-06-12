@@ -139,7 +139,7 @@ def test_discover_template_graphs_empty_service_returns_no_graphs() -> None:
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["x"])],
     )
@@ -156,7 +156,7 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[],
     )
@@ -187,7 +187,7 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -214,7 +214,7 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -237,7 +237,7 @@ def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() 
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -262,7 +262,7 @@ def test_discover_template_graphs_optional_missing_metric_still_matches() -> Non
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -288,7 +288,7 @@ def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() ->
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -311,7 +311,7 @@ def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -339,7 +339,7 @@ def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -364,7 +364,7 @@ def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantit
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -394,7 +394,7 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -421,7 +421,7 @@ def test_discover_template_graphs_evaluates_the_title_expression() -> None:
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -447,7 +447,7 @@ def test_discover_template_graphs_title_expression_falls_back_when_unresolvable(
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -473,7 +473,7 @@ def test_discover_template_graphs_requires_a_metric_referenced_only_in_the_title
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -500,7 +500,7 @@ def test_discover_template_graphs_claims_a_metric_referenced_only_in_the_title()
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -526,7 +526,7 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> 
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[plugin],
     )
@@ -552,7 +552,7 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_fallback_graph() ->
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[],
     )
@@ -575,7 +575,7 @@ def test_discover_template_graphs_ignores_a_predictive_metric_without_its_base()
         service=service,
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
-        translations={},
+        translations=[],
         localizer=_id,
         registered_graphs=[],
     )

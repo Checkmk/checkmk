@@ -9,6 +9,7 @@ from typing import ClassVar, Literal
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._evaluate import DiscoveredGraph
@@ -22,7 +23,6 @@ from ._objects import (
     Graph,
     Line,
     MetricName,
-    MetricTranslation,
     RRDMetric,
     RRDMetricData,
     ServiceRef,
@@ -49,7 +49,7 @@ class TemplateDiscoveryOptions:
         | graphs_v2_unstable.Bidirectional
     ]
     metrics: Mapping[str, metrics_v1.Metric]
-    translations: Mapping[str, Mapping[MetricName, MetricTranslation]]
+    translations: Sequence[translations_v1.Translation]
 
 
 @dataclass(frozen=True, kw_only=True)

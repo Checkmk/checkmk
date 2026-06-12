@@ -7,6 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
+from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
     ConsolidationFunction,
     EvaluatedGraph,
@@ -14,7 +15,6 @@ from cmk.graphing_engine import (
     GraphRequest,
     Line,
     MetricName,
-    MetricTranslation,
     PerformanceData,
     PerformanceValue,
     Quantity,
@@ -116,12 +116,12 @@ class _FakeRRDSource:
 def _update(
     *requests: GraphRequest,
     rrd: _FakeRRDSource,
-    translations: Mapping[str, Mapping[MetricName, MetricTranslation]] | None = None,
+    translations: Sequence[translations_v1.Translation] | None = None,
 ) -> Sequence[EvaluatedGraph]:
     return update_graph_data(
         requests,
         time_range=_time_range(),
-        translations=translations or {},
+        translations=translations or [],
         metrics={},
         localizer=_id,
         rrd=rrd,
@@ -195,9 +195,13 @@ def test_scales_the_series_by_the_translation_scale() -> None:
         time_series_response={_source("temp"): _ts(10.0, 20.0)},
     )
     # A translation scale of 2.0 is applied to both the value and the fetched series.
-    translations = {
-        "check_mk-test": {MetricName("temp"): MetricTranslation(name=MetricName("temp"), scale=2.0)}
-    }
+    translations = [
+        translations_v1.Translation(
+            name="t",
+            check_commands=[translations_v1.PassiveCheck("test")],
+            translations={"temp": translations_v1.ScaleBy(2.0)},
+        )
+    ]
 
     [evaluated] = _update(_request(graph), rrd=rrd, translations=translations)
 
@@ -214,9 +218,13 @@ def test_fetches_a_renamed_metric_by_its_raw_column() -> None:
         performance_response={_service(): _perf_data(_perf("temperature", value=5.0))},
         time_series_response={_source("temperature"): _ts(5.0)},
     )
-    translations = {
-        "check_mk-test": {MetricName("temperature"): MetricTranslation(name=MetricName("temp"))}
-    }
+    translations = [
+        translations_v1.Translation(
+            name="t",
+            check_commands=[translations_v1.PassiveCheck("test")],
+            translations={"temperature": translations_v1.RenameTo("temp")},
+        )
+    ]
 
     [evaluated] = _update(_request(graph), rrd=rrd, translations=translations)
 
@@ -235,12 +243,16 @@ def test_merges_a_metrics_originals_taking_the_first_present_value() -> None:
         time_series_response={_source("a"): _ts(1.0, None, 3.0), _source("b"): _ts(None, 2.0, 4.0)},
     )
     # Both raw metrics translate to "m", so its data merges their originals.
-    translations = {
-        "check_mk-test": {
-            MetricName("a"): MetricTranslation(name=MetricName("m")),
-            MetricName("b"): MetricTranslation(name=MetricName("m")),
-        }
-    }
+    translations = [
+        translations_v1.Translation(
+            name="t",
+            check_commands=[translations_v1.PassiveCheck("test")],
+            translations={
+                "a": translations_v1.RenameTo("m"),
+                "b": translations_v1.RenameTo("m"),
+            },
+        )
+    ]
 
     [evaluated] = _update(_request(graph), rrd=rrd, translations=translations)
 

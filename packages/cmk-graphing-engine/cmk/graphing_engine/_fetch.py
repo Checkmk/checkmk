@@ -8,13 +8,14 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import translations as translations_v1
 
 from ._evaluate import evaluate_graph, EvaluatedGraph
+from ._from_api import parse_translations_from_api
 from ._objects import (
     Graph,
     metric_data_of,
     MetricName,
-    MetricTranslation,
     PerformanceData,
     RRDMetric,
     RRDMetricData,
@@ -167,14 +168,16 @@ def fetch_translated_metrics(
     services: Iterable[ServiceRef],
     *,
     rrd: RRDSource,
-    translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
+    translations: Iterable[translations_v1.Translation],
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
 ) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
+    # Parse the registered translation plugins once into the per-check-command lookup.
+    parsed_translations = parse_translations_from_api(translations)
     # dict.fromkeys dedups the services while keeping a deterministic order.
     performance_data = rrd.fetch_performance_data(list(dict.fromkeys(services)))
     return {
-        service: translate_performance_data(perf, translations, metrics, localizer)
+        service: translate_performance_data(perf, parsed_translations, metrics, localizer)
         for service, perf in performance_data.items()
     }
 
@@ -218,7 +221,7 @@ def update_graph_data(
     requests: Sequence[GraphRequest],
     *,
     time_range: TimeRange,
-    translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
+    translations: Iterable[translations_v1.Translation],
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
     rrd: RRDSource,

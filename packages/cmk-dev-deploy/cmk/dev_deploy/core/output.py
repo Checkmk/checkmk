@@ -481,7 +481,9 @@ def print_change_summary(changes: ChangeSet) -> None:
             label = _CATEGORY_LABELS[category]
             _print_locked(f"  {label}: {len(files)} file(s)")
 
-    if changes.has_python_only:
+    # has_python_only is also (vacuously) true when nothing deployable
+    # changed at all -- only claim "Python only" when Python files exist.
+    if changes.has_python_only and changes.categories.get(ChangeCategory.PYTHON):
         _print_locked(f"  {DIM}Fast path eligible (Python only){RESET}")
 
 
@@ -541,9 +543,9 @@ def print_target_summary(targets: BazelTargetSet) -> None:
 def print_build_path(build_path: str) -> None:
     """Display the chosen deployment strategy (fast/full)."""
     if build_path == "fast":
-        _print_locked(f"{DIM}Build path: Python fast path (skip Bazel){RESET}")
+        _print_locked(f"{DIM}Build path: fast (no compiled artifacts affected){RESET}")
     elif build_path == "full":
-        info("Build path: Bazel build required")
+        info("Build path: full (Bazel build of compiled artifacts)")
 
 
 # --- Build result display ---
@@ -649,6 +651,8 @@ def print_verbose_changes(
     else:
         _fs_prefixes = frozenset()
     for category in ChangeCategory:
+        if category == ChangeCategory.IGNORED:
+            continue  # non-actionable; the summary count is enough
         files = changes.categories.get(category)
         if files:
             label = _CATEGORY_LABELS[category]

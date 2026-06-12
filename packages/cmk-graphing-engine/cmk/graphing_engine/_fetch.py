@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass
 from typing import Protocol
 
 from cmk.graphing.v1 import metrics as metrics_v1
@@ -48,14 +47,6 @@ class RRDSource(Protocol):
         omitted from the result.
         """
         ...
-
-
-@dataclass(frozen=True, kw_only=True)
-class GraphRequest:
-    graph: Graph
-    # The fallback consolidation function for the graph's bare RRDMetric columns. May be omitted
-    # only when every metric pins its own (RRDMetricWithCF); update_graph_data enforces this.
-    consolidation_function: ConsolidationFunction | None = None
 
 
 def _consolidation_function(
@@ -165,12 +156,15 @@ def _validate_consolidation_function(
 
 
 def fetch_translated_metrics(
-    services: Iterable[ServiceRef],
     *,
-    rrd: RRDSource,
+    # subject
+    services: Iterable[ServiceRef],
+    # environment
     translations: Iterable[translations_v1.Translation],
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
+    # source
+    rrd: RRDSource,
 ) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
     # Parse the registered translation plugins once into the per-check-command lookup.
     parsed_translations = parse_translations_from_api(translations)
@@ -183,31 +177,35 @@ def fetch_translated_metrics(
 
 
 def evaluate_graphs(
-    requests: Sequence[GraphRequest],
-    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     *,
+    # subject
+    graphs: Sequence[Graph],
+    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
+    # runtime
+    consolidation_function: ConsolidationFunction | None,
     time_range: TimeRange,
+    # source
     rrd: RRDSource,
 ) -> Sequence[EvaluatedGraph]:
-    """Fetch the time series of the requested graphs (given their already translated metrics).
+    """Fetch the time series of the given graphs (given their already translated metrics).
 
-    Each request pairs a graph with the fallback consolidation function for its bare RRDMetric
-    columns. Without one, every metric of that graph must pin its own (RRDMetricWithCF); a bare
-    RRDMetric without one raises ValueError.
+    The consolidation function is the fallback for the graphs' bare RRDMetric columns. Without one,
+    every metric of a graph must pin its own (RRDMetricWithCF); a bare RRDMetric without one raises
+    ValueError.
     """
-    for request in requests:
-        _validate_consolidation_function(request.graph, request.consolidation_function)
+    for graph in graphs:
+        _validate_consolidation_function(graph, consolidation_function)
     evaluated = []
-    for request in requests:
-        metric_data = metric_data_of(request.graph, translated_metrics)
+    for graph in graphs:
+        metric_data = metric_data_of(graph, translated_metrics)
         evaluated.append(
             evaluate_graph(
-                request.graph,
+                graph,
                 _fetch_series(
-                    request.graph,
+                    graph,
                     metric_data,
                     time_range=time_range,
-                    consolidation_function=request.consolidation_function,
+                    consolidation_function=consolidation_function,
                     rrd=rrd,
                 ),
                 metric_data,
@@ -218,25 +216,40 @@ def evaluate_graphs(
 
 
 def update_graph_data(
-    requests: Sequence[GraphRequest],
     *,
-    time_range: TimeRange,
+    # subject
+    graphs: Sequence[Graph],
+    # environment
     translations: Iterable[translations_v1.Translation],
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
+    # runtime
+    consolidation_function: ConsolidationFunction | None = None,
+    time_range: TimeRange,
+    # source
     rrd: RRDSource,
 ) -> Sequence[EvaluatedGraph]:
-    """Fetch and evaluate the current performance data and time series of the requested graphs."""
+    """Fetch and evaluate the current performance data and time series of the given graphs.
+
+    The consolidation function is the fallback for the graphs' bare RRDMetric columns; without one,
+    every metric must pin its own (RRDMetricWithCF) or a ValueError is raised.
+    """
     # Each metric carries its own service; fetch and translate the performance data of all of them.
     translated_metrics = fetch_translated_metrics(
-        (
+        services=(
             ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
-            for request in requests
-            for metric in request.graph.rrd_metrics()
+            for graph in graphs
+            for metric in graph.rrd_metrics()
         ),
-        rrd=rrd,
         translations=translations,
         metrics=metrics,
         localizer=localizer,
+        rrd=rrd,
     )
-    return evaluate_graphs(requests, translated_metrics, time_range=time_range, rrd=rrd)
+    return evaluate_graphs(
+        graphs=graphs,
+        translated_metrics=translated_metrics,
+        consolidation_function=consolidation_function,
+        time_range=time_range,
+        rrd=rrd,
+    )

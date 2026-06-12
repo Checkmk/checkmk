@@ -13,6 +13,7 @@ from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     ConsolidationFunction,
     discover_template_graphs,
+    DiscoveredGraph,
     Graph,
     Line,
     MetricName,
@@ -22,7 +23,6 @@ from cmk.graphing_engine import (
     RRDMetric,
     ServiceRef,
     Stack,
-    TemplateDiscoveryOptions,
     TemplateOptions,
     TimeRange,
     TimeSeries,
@@ -132,39 +132,50 @@ class _FakeFetchRRD:
         }
 
 
+def _discover(
+    service: ServiceRef,
+    registered_graphs: Sequence[
+        graphs_v1.Graph
+        | graphs_v1.Bidirectional
+        | graphs_v2_unstable.Graph
+        | graphs_v2_unstable.Bidirectional
+    ],
+    *,
+    rrd: _FakeFetchRRD,
+) -> Sequence[DiscoveredGraph[TemplateOptions]]:
+    return discover_template_graphs(
+        # subject
+        service=service,
+        registered_graphs=registered_graphs,
+        # environment
+        translations=[],
+        metrics=_METRICS,
+        localizer=_id,
+        # runtime
+        consolidation_function=ConsolidationFunction.AVERAGE,
+        time_range=_time_range(),
+        # source
+        rrd=rrd,
+    )
+
+
 def test_discover_template_graphs_empty_service_returns_no_graphs() -> None:
     service = _service()
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["x"])],
-    )
+    registered_graphs = [graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["x"])]
     rrd = _FakeFetchRRD(performance_response={service: _perf_data()})
 
-    assert discover_template_graphs(options, rrd=rrd) == []
+    assert _discover(service, registered_graphs, rrd=rrd) == []
 
 
 def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaimed_metrics() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[],
-    )
+    registered_graphs: list[graphs_v1.Graph] = []
     rrd = _FakeFetchRRD(
         performance_response={service: _perf_data(_perf(cpu_user, warning=80.0, critical=90.0))}
     )
 
-    [discovered] = discover_template_graphs(options, rrd=rrd)
+    [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     assert discovered.graph == Graph(name=cpu_user, title=cpu_user, stacks=[_stack(_rrd(cpu_user))])
     assert discovered.options == TemplateOptions(
@@ -182,20 +193,12 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
     plugin = graphs_v1.Graph(
         name="cpu", title=Title("CPU"), simple_lines=["cpu_user", "cpu_system"]
     )
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     rrd = _FakeFetchRRD(
         performance_response={service: _perf_data(_perf(cpu_user, warning=80.0), _perf(cpu_system))}
     )
 
-    discovered = discover_template_graphs(options, rrd=rrd)
+    discovered = _discover(service, registered_graphs, rrd=rrd)
 
     assert len(discovered) == 1
     assert discovered[0].graph == parse_graph_from_api(plugin, _id, service, _METRICS)
@@ -209,18 +212,10 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
     cpu_user = MetricName("cpu_user")
     extra = MetricName("extra")
     plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user), _perf(extra))})
 
-    [matched, fallback] = discover_template_graphs(options, rrd=rrd)
+    [matched, fallback] = _discover(service, registered_graphs, rrd=rrd)
 
     assert matched.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
     assert fallback.graph == Graph(name=extra, title=extra, stacks=[_stack(_rrd(extra))])
@@ -232,18 +227,10 @@ def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() 
     plugin = graphs_v1.Graph(
         name="cpu", title=Title("CPU"), simple_lines=["cpu_user", "cpu_system"]
     )
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user))})
 
-    [fallback] = discover_template_graphs(options, rrd=rrd)
+    [fallback] = _discover(service, registered_graphs, rrd=rrd)
 
     assert fallback.graph == Graph(name=cpu_user, title=cpu_user, stacks=[_stack(_rrd(cpu_user))])
 
@@ -257,18 +244,10 @@ def test_discover_template_graphs_optional_missing_metric_still_matches() -> Non
         simple_lines=["cpu_user", "cpu_iowait"],
         optional=["cpu_iowait"],
     )
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user))})
 
-    [discovered] = discover_template_graphs(options, rrd=rrd)
+    [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     assert discovered.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
 
@@ -283,18 +262,10 @@ def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() ->
         simple_lines=["cpu_user"],
         conflicting=["util"],
     )
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user), _perf(util))})
 
-    discovered = discover_template_graphs(options, rrd=rrd)
+    discovered = _discover(service, registered_graphs, rrd=rrd)
 
     assert all(d.graph.name != "cpu" for d in discovered)
 
@@ -306,20 +277,12 @@ def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
     plugin = graphs_v2_unstable.Graph(
         name="cpu", title=Title("CPU"), simple_lines=["cpu_user", "cpu_system"]
     )
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     rrd = _FakeFetchRRD(
         performance_response={service: _perf_data(_perf(cpu_user), _perf(cpu_system))}
     )
 
-    [discovered] = discover_template_graphs(options, rrd=rrd)
+    [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     assert discovered.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
 
@@ -334,18 +297,10 @@ def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
         lower=graphs_v2_unstable.Graph(name="in", title=Title("In"), simple_lines=["if_in"]),
         upper=graphs_v2_unstable.Graph(name="out", title=Title("Out"), simple_lines=["if_out"]),
     )
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(in_), _perf(out))})
 
-    [discovered] = discover_template_graphs(options, rrd=rrd)
+    [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     assert discovered.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
 
@@ -359,22 +314,14 @@ def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantit
         title=Title("CPU"),
         simple_lines=["cpu_user", metrics_v2_unstable.LowerWarningOf("cpu_system")],
     )
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     rrd = _FakeFetchRRD(
         performance_response={
             service: _perf_data(_perf(cpu_user), _perf(cpu_system, lower_warning=50.0))
         }
     )
 
-    [discovered] = discover_template_graphs(options, rrd=rrd)
+    [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     # cpu_user is drawn with its value; the scalar reference draws cpu_system's lower warning.
     assert [line.curve.value for line in discovered.lines] == [1.0, 50.0]
@@ -389,20 +336,12 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
         title=Title("CPU"),
         simple_lines=["cpu_user", metrics_v1.WarningOf("cpu_system")],
     )
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     rrd = _FakeFetchRRD(
         performance_response={service: _perf_data(_perf(cpu_user), _perf(cpu_system, warning=50.0))}
     )
 
-    [discovered] = discover_template_graphs(options, rrd=rrd)
+    [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     # cpu_user is drawn with its value; the scalar reference draws cpu_system's warning.
     assert [line.curve.value for line in discovered.lines] == [1.0, 50.0]
@@ -416,18 +355,10 @@ def test_discover_template_graphs_evaluates_the_title_expression() -> None:
         title=Title('CPU - _EXPRESSION:{"metric": "cpu_user", "scalar": "max"} cores'),
         simple_lines=["cpu_user"],
     )
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user, maximum=8.0))})
 
-    [discovered] = discover_template_graphs(options, rrd=rrd)
+    [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     # The evaluated title is exposed via title; the graph keeps its raw title.
     assert discovered.title == "CPU - 8 cores"
@@ -442,19 +373,11 @@ def test_discover_template_graphs_title_expression_falls_back_when_unresolvable(
         title=Title('CPU - _EXPRESSION:{"metric": "cpu_user", "scalar": "max"} cores'),
         simple_lines=["cpu_user"],
     )
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     # cpu_user is available (so the plugin matches) but carries no maximum scalar.
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user))})
 
-    [discovered] = discover_template_graphs(options, rrd=rrd)
+    [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     assert discovered.title == "CPU"
 
@@ -468,20 +391,12 @@ def test_discover_template_graphs_requires_a_metric_referenced_only_in_the_title
         title=Title('CPU - _EXPRESSION:{"metric": "cpu_user", "scalar": "max"} cores'),
         simple_lines=["util"],
     )
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     # cpu_user (referenced by the title) is missing, so the plugin must not match; only the
     # fallback single-metric graph for util is discovered.
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(util))})
 
-    discovered = discover_template_graphs(options, rrd=rrd)
+    discovered = _discover(service, registered_graphs, rrd=rrd)
 
     assert [d.graph.name for d in discovered] == ["util"]
 
@@ -495,20 +410,12 @@ def test_discover_template_graphs_claims_a_metric_referenced_only_in_the_title()
         title=Title('CPU - _EXPRESSION:{"metric": "cpu_user", "scalar": "max"} cores'),
         simple_lines=["util"],
     )
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     rrd = _FakeFetchRRD(
         performance_response={service: _perf_data(_perf(util), _perf(cpu_user, maximum=8.0))}
     )
 
-    discovered = discover_template_graphs(options, rrd=rrd)
+    discovered = _discover(service, registered_graphs, rrd=rrd)
 
     # The plugin matches and claims cpu_user via its title, so cpu_user is not emitted separately.
     assert len(discovered) == 1
@@ -521,18 +428,10 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> 
     cpu_user = MetricName("cpu_user")
     predict = MetricName("predict_cpu_user")
     plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[plugin],
-    )
+    registered_graphs = [plugin]
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user), _perf(predict))})
 
-    discovered = discover_template_graphs(options, rrd=rrd)
+    discovered = _discover(service, registered_graphs, rrd=rrd)
 
     # The predictive metric is drawn alongside cpu_user, not as a graph of its own.
     assert len(discovered) == 1
@@ -547,18 +446,10 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_fallback_graph() ->
     service = _service()
     cpu_user = MetricName("cpu_user")
     predict = MetricName("predict_cpu_user")
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[],
-    )
+    registered_graphs: list[graphs_v1.Graph] = []
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user), _perf(predict))})
 
-    discovered = discover_template_graphs(options, rrd=rrd)
+    discovered = _discover(service, registered_graphs, rrd=rrd)
 
     # Only the cpu_user fallback graph is emitted; its predictive companion is added as a line.
     assert [d.graph.name for d in discovered] == ["cpu_user"]
@@ -570,15 +461,7 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_fallback_graph() ->
 def test_discover_template_graphs_ignores_a_predictive_metric_without_its_base() -> None:
     service = _service()
     predict = MetricName("predict_cpu_user")
-    options = TemplateDiscoveryOptions(
-        service=service,
-        time_range=_time_range(),
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        metrics=_METRICS,
-        translations=[],
-        localizer=_id,
-        registered_graphs=[],
-    )
+    registered_graphs: list[graphs_v1.Graph] = []
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(predict))})
 
-    assert discover_template_graphs(options, rrd=rrd) == []
+    assert _discover(service, registered_graphs, rrd=rrd) == []

@@ -18,7 +18,6 @@ from ._evaluate import (
     EvaluatedVerticalRange,
 )
 from ._fetch import (
-    GraphRequest,
     RRDSource,
     update_graph_data,
 )
@@ -68,7 +67,6 @@ from ._options import (
 )
 from ._template import (
     discover_template_graphs,
-    TemplateDiscoveryOptions,
     TemplateOptions,
 )
 
@@ -92,7 +90,6 @@ __all__ = [
     "FixedRange",
     "Fraction",
     "Graph",
-    "GraphRequest",
     "IECNotation",
     "Line",
     "LowerCriticalOf",
@@ -117,7 +114,6 @@ __all__ = [
     "StandardScientificNotation",
     "StrictPrecision",
     "Sum",
-    "TemplateDiscoveryOptions",
     "TemplateOptions",
     "TimeNotation",
     "TimeRange",

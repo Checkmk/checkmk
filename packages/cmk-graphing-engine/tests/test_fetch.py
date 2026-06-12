@@ -12,7 +12,6 @@ from cmk.graphing_engine import (
     ConsolidationFunction,
     EvaluatedGraph,
     Graph,
-    GraphRequest,
     Line,
     MetricName,
     PerformanceData,
@@ -58,12 +57,6 @@ def _source(name: str) -> RRDMetric:
 
 def _line(quantity: Quantity) -> Line:
     return Line(quantity=quantity, inverse=False)
-
-
-def _request(
-    graph: Graph, consolidation_function: ConsolidationFunction | None = None
-) -> GraphRequest:
-    return GraphRequest(graph=graph, consolidation_function=consolidation_function)
 
 
 def _perf(name: str, *, value: float = 1.0) -> PerformanceValue:
@@ -114,21 +107,23 @@ class _FakeRRDSource:
 
 
 def _update(
-    *requests: GraphRequest,
+    *graphs: Graph,
     rrd: _FakeRRDSource,
+    consolidation_function: ConsolidationFunction | None = None,
     translations: Sequence[translations_v1.Translation] | None = None,
 ) -> Sequence[EvaluatedGraph]:
     return update_graph_data(
-        requests,
-        time_range=_time_range(),
+        graphs=graphs,
         translations=translations or [],
         metrics={},
         localizer=_id,
+        consolidation_function=consolidation_function,
+        time_range=_time_range(),
         rrd=rrd,
     )
 
 
-def test_empty_requests_returns_empty_list() -> None:
+def test_empty_graphs_returns_empty_list() -> None:
     rrd = _FakeRRDSource()
     assert _update(rrd=rrd) == []
     assert rrd.time_series_calls == []
@@ -143,7 +138,7 @@ def test_fetches_performance_data_and_time_series() -> None:
         time_series_response={_source("cpu_user"): series},
     )
 
-    [evaluated] = _update(_request(graph), rrd=rrd)
+    [evaluated] = _update(graph, rrd=rrd)
 
     [line] = evaluated.lines
     assert line.curve.value == 42.0
@@ -151,7 +146,7 @@ def test_fetches_performance_data_and_time_series() -> None:
     assert rrd.performance_data_calls == [(_service(),)]
 
 
-def test_returns_one_evaluated_graph_per_request_in_order() -> None:
+def test_returns_one_evaluated_graph_per_graph_in_order() -> None:
     x = _rrd_with_cf("x")
     y = _rrd_with_cf("y")
     graph_x = Graph(name="x", title="x", lines=[_line(x)])
@@ -161,7 +156,7 @@ def test_returns_one_evaluated_graph_per_request_in_order() -> None:
         time_series_response={_source("x"): _ts(1.0), _source("y"): _ts(2.0)},
     )
 
-    results = _update(_request(graph_x), _request(graph_y), rrd=rrd)
+    results = _update(graph_x, graph_y, rrd=rrd)
 
     assert [[line.curve.value for line in graph.lines] for graph in results] == [[1.0], [2.0]]
 
@@ -179,7 +174,7 @@ def test_evaluates_lines_in_both_directions() -> None:
         time_series_response={_source("if_in"): _ts(1.0), _source("if_out"): _ts(2.0)},
     )
 
-    [evaluated] = _update(_request(graph), rrd=rrd)
+    [evaluated] = _update(graph, rrd=rrd)
 
     assert [(line.curve.time_series, line.inverse) for line in evaluated.lines] == [
         (_ts(2.0), False),
@@ -203,7 +198,7 @@ def test_scales_the_series_by_the_translation_scale() -> None:
         )
     ]
 
-    [evaluated] = _update(_request(graph), rrd=rrd, translations=translations)
+    [evaluated] = _update(graph, rrd=rrd, translations=translations)
 
     [line] = evaluated.lines
     assert line.curve.value == 20.0
@@ -226,7 +221,7 @@ def test_fetches_a_renamed_metric_by_its_raw_column() -> None:
         )
     ]
 
-    [evaluated] = _update(_request(graph), rrd=rrd, translations=translations)
+    [evaluated] = _update(graph, rrd=rrd, translations=translations)
 
     [line] = evaluated.lines
     assert line.curve.time_series == _ts(5.0)
@@ -254,7 +249,7 @@ def test_merges_a_metrics_originals_taking_the_first_present_value() -> None:
         )
     ]
 
-    [evaluated] = _update(_request(graph), rrd=rrd, translations=translations)
+    [evaluated] = _update(graph, rrd=rrd, translations=translations)
 
     # Per point, the first present value wins: a where it has data, otherwise b.
     [line] = evaluated.lines
@@ -275,7 +270,7 @@ def test_aligns_a_natively_gridded_series_to_the_requested_range() -> None:
         time_series_response={_source("m"): native},
     )
 
-    [evaluated] = _update(_request(graph), rrd=rrd)
+    [evaluated] = _update(graph, rrd=rrd)
 
     [line] = evaluated.lines
     assert line.curve.time_series.time_range == _time_range()
@@ -291,7 +286,7 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
         time_series_response={_source("a"): _ts(1.0), _source("b"): _ts(2.0)},
     )
 
-    _update(_request(graph), rrd=rrd)
+    _update(graph, rrd=rrd)
 
     columns_by_cf = {cf: rrd_metrics for rrd_metrics, _tr, cf in rrd.time_series_calls}
     assert columns_by_cf == {
@@ -300,8 +295,8 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
     }
 
 
-def test_bare_metric_uses_the_request_consolidation_function() -> None:
-    # A bare RRDMetric uses the request's function; a pinned RRDMetricWithCF keeps its own.
+def test_bare_metric_uses_the_fallback_consolidation_function() -> None:
+    # A bare RRDMetric uses the fallback function; a pinned RRDMetricWithCF keeps its own.
     bare = RRDMetric(host_name="h", service_name="svc", metric_name=MetricName("load"))
     pinned = _rrd_with_cf("peak", ConsolidationFunction.MAX)
     graph = Graph(name="g", title="g", lines=[_line(bare), _line(pinned)])
@@ -310,7 +305,7 @@ def test_bare_metric_uses_the_request_consolidation_function() -> None:
         time_series_response={_source("load"): _ts(1.0), _source("peak"): _ts(2.0)},
     )
 
-    _update(_request(graph, ConsolidationFunction.AVERAGE), rrd=rrd)
+    _update(graph, rrd=rrd, consolidation_function=ConsolidationFunction.AVERAGE)
 
     columns_by_cf = {cf: rrd_metrics for rrd_metrics, _tr, cf in rrd.time_series_calls}
     assert columns_by_cf == {
@@ -324,4 +319,4 @@ def test_rejects_a_bare_metric_without_a_consolidation_function() -> None:
     graph = Graph(name="g", title="g", lines=[_line(bare)])
 
     with pytest.raises(ValueError, match="load"):
-        _update(_request(graph), rrd=_FakeRRDSource())
+        _update(graph, rrd=_FakeRRDSource())

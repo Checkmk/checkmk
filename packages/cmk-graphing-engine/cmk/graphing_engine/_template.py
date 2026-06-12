@@ -13,7 +13,7 @@ from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._evaluate import DiscoveredGraph
-from ._fetch import evaluate_graphs, fetch_translated_metrics, GraphRequest, RRDSource
+from ._fetch import evaluate_graphs, fetch_translated_metrics, RRDSource
 from ._from_api import (
     metric_names_of_graph,
     metric_names_of_title,
@@ -34,22 +34,6 @@ from ._title import evaluate_title
 # A predictive metric (predict_<name> / predict_lower_<name>) is drawn alongside the metric it
 # predicts; predict_lower_ also starts with this prefix.
 _PREDICT_PREFIX = "predict_"
-
-
-@dataclass(frozen=True, kw_only=True)
-class TemplateDiscoveryOptions:
-    service: ServiceRef
-    time_range: TimeRange
-    consolidation_function: ConsolidationFunction
-    localizer: Callable[[str], str]
-    registered_graphs: Sequence[
-        graphs_v1.Graph
-        | graphs_v1.Bidirectional
-        | graphs_v2_unstable.Graph
-        | graphs_v2_unstable.Bidirectional
-    ]
-    metrics: Mapping[str, metrics_v1.Metric]
-    translations: Sequence[translations_v1.Translation]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -150,21 +134,36 @@ def _add_predictive_lines(
 
 
 def discover_template_graphs(
-    options: TemplateDiscoveryOptions,
     *,
+    # subject
+    service: ServiceRef,
+    registered_graphs: Sequence[
+        graphs_v1.Graph
+        | graphs_v1.Bidirectional
+        | graphs_v2_unstable.Graph
+        | graphs_v2_unstable.Bidirectional
+    ],
+    # environment
+    translations: Sequence[translations_v1.Translation],
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
+    # runtime
+    consolidation_function: ConsolidationFunction,
+    time_range: TimeRange,
+    # source
     rrd: RRDSource,
 ) -> Sequence[DiscoveredGraph[TemplateOptions]]:
     translated_metrics = fetch_translated_metrics(
-        [options.service],
+        services=[service],
+        translations=translations,
+        metrics=metrics,
+        localizer=localizer,
         rrd=rrd,
-        translations=options.translations,
-        metrics=options.metrics,
-        localizer=options.localizer,
     )
-    service_metrics = translated_metrics.get(options.service, {})
+    service_metrics = translated_metrics.get(service, {})
     post_options = TemplateOptions(
-        time_range=options.time_range,
-        consolidation_function=options.consolidation_function,
+        time_range=time_range,
+        consolidation_function=consolidation_function,
     )
 
     # Match the registered plugins and collect the graphs to draw (matched plugins first, then a
@@ -175,16 +174,16 @@ def discover_template_graphs(
 
     def _collect(base: Graph) -> None:
         # Draw the predictive companions of the graph's metrics and claim them.
-        graph, predictive_names = _add_predictive_lines(base, options.service, service_metrics)
+        graph, predictive_names = _add_predictive_lines(base, service, service_metrics)
         claimed.update(predictive_names)
         graphs.append(graph)
 
-    for plugin in options.registered_graphs:
+    for plugin in registered_graphs:
         walk = _walk(plugin, service_metrics)
         if not walk.matched:
             continue
         claimed.update(walk.metric_names)
-        _collect(parse_graph_from_api(plugin, options.localizer, options.service, options.metrics))
+        _collect(parse_graph_from_api(plugin, localizer, service, metrics))
 
     for name in service_metrics:
         # Predictive metrics are companions of the metric they predict, never graphed on their own.
@@ -198,8 +197,8 @@ def discover_template_graphs(
                     Stack(
                         members=[
                             RRDMetric(
-                                host_name=options.service.host_name,
-                                service_name=options.service.service_name,
+                                host_name=service.host_name,
+                                service_name=service.service_name,
                                 metric_name=name,
                             )
                         ],
@@ -211,12 +210,10 @@ def discover_template_graphs(
 
     # Reuse the already translated metrics so the performance data is not fetched a second time.
     evaluated_graphs = evaluate_graphs(
-        [
-            GraphRequest(graph=graph, consolidation_function=options.consolidation_function)
-            for graph in graphs
-        ],
-        translated_metrics,
-        time_range=options.time_range,
+        graphs=graphs,
+        translated_metrics=translated_metrics,
+        consolidation_function=consolidation_function,
+        time_range=time_range,
         rrd=rrd,
     )
 

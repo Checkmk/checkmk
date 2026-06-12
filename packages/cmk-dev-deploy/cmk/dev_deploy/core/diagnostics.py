@@ -268,6 +268,7 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, Any]:
 def _collect_site_info(site: SiteInfo) -> dict[str, Any]:
     """Collect site information."""
     from cmk.dev_deploy.site.overlay import is_overlay_active
+    from cmk.dev_deploy.site.version_clone import is_clone_active
 
     info: dict[str, Any] = {
         "site_name": site.name,
@@ -277,6 +278,10 @@ def _collect_site_info(site: SiteInfo) -> dict[str, Any]:
         info["overlay_mounted"] = is_overlay_active(site.root)
     except Exception:
         info["overlay_mounted"] = "unknown"
+    try:
+        info["clone_active"] = is_clone_active(site.root)
+    except Exception:
+        info["clone_active"] = "unknown"
     return info
 
 

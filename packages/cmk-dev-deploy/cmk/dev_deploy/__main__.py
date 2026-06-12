@@ -781,20 +781,27 @@ def main(argv: list[str] | None = None) -> int:
         site_name = resolve_site_name(args.site, repo_root, Path.cwd())
         site_root = find_site_root(site_name)
 
-        # Last resort: scan overlay base dir for orphaned site overlays.
+        # Last resort: scan the deploy data dirs for orphaned site data
+        # (overlay upper layers / deploy state, version clones).
         if site_root is None:
+            from cmk.dev_deploy.site.sudoers import DEV_VERSIONS_DIR
+
             overlay_base = Path("/var/tmp/cmk-dev-deploy")  # nosec B108 # BNS:59d87e
-            if overlay_base.is_dir():
-                candidates = [d.name for d in overlay_base.iterdir() if d.is_dir()]
-                if len(candidates) == 1:
-                    site_root = Path("/omd/sites") / candidates[0]
-                    output.info(f"Site deleted but overlay data found for '{candidates[0]}'")
-                elif len(candidates) > 1:
-                    output.error(
-                        f"Multiple orphaned overlays found: {', '.join(sorted(candidates))}\n"
-                        "  Specify which to purge: cmk-dev-deploy --purge --site SITENAME"
-                    )
-                    return 1
+            candidates: set[str] = set()
+            for base in (overlay_base, DEV_VERSIONS_DIR):
+                if base.is_dir():
+                    candidates.update(d.name for d in base.iterdir() if d.is_dir())
+            if len(candidates) == 1:
+                orphan = next(iter(candidates))
+                site_root = Path("/omd/sites") / orphan
+                output.info(f"Site deleted but deploy data found for '{orphan}'")
+            elif len(candidates) > 1:
+                output.error(
+                    f"Orphaned deploy data found for several sites: "
+                    f"{', '.join(sorted(candidates))}\n"
+                    "  Specify which to purge: cmk-dev-deploy --purge --site SITENAME"
+                )
+                return 1
 
         if site_root is None:
             output.error(
@@ -815,6 +822,10 @@ def main(argv: list[str] | None = None) -> int:
         except DeployError as e:
             output.error(str(e))
             return 1
+        # The site is back on pristine code; stale incremental state must
+        # not survive. (The overlay teardown already removed the whole
+        # state dir; for the clone backend this deletes the state file.)
+        delete_state(site_root)
         output.success(
             f"{backend.name.capitalize()} purged. Site reverted to original state (stopped)."
         )
@@ -900,6 +911,13 @@ def _main_with_site(args: argparse.Namespace, repo_root: Path, site: SiteInfo) -
         # Missing consent is not a crash — no diagnostic bundle.
         output.error(str(e))
         return 1
+
+    if backend.name == "clone":
+        # The clone backend injects no SSH key. Pre-seed the SSH cache so
+        # run_as_site_user() (service restarts, frontend override writes)
+        # skips the SSH probe and goes straight to its sudo fallback, which
+        # the just-probed sudoers rule makes passwordless.
+        ssh_state.ssh_available[site.name] = False
 
     # Manifest must be ready before site preparation because capability
     # restoration during ensure() reads it.

@@ -13,6 +13,7 @@ from pathlib import Path
 
 from cmk.dev_deploy.core import output
 from cmk.dev_deploy.errors import RepoNotFoundError, SiteError, SiteNotFoundError
+from cmk.dev_deploy.site.sudoers import DEV_VERSIONS_DIR
 from cmk.dev_deploy.types import Edition, SiteInfo
 
 
@@ -53,10 +54,11 @@ def find_site_root(site_name: str | None) -> Path | None:
     site_root = Path("/omd/sites") / site_name
     if site_root.exists():
         return site_root
-    # Site dir gone but overlay data may still exist — return the path
-    # so teardown_overlay can clean up.
+    # Site dir gone but deploy data (overlay upper layer / deploy state,
+    # version clone) may still exist — return the path so teardown can
+    # clean up.
     overlay_dir = Path("/var/tmp/cmk-dev-deploy") / site_name  # nosec B108 # BNS:59d87e
-    if overlay_dir.exists():
+    if overlay_dir.exists() or (DEV_VERSIONS_DIR / site_name).exists():
         return site_root
     return None
 

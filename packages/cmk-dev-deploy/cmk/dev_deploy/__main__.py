@@ -278,7 +278,8 @@ def _run_deploy_cycle(
             output.warn(
                 f"{len(uncovered)} changed file(s) not covered by any deploy spec:\n"
                 + "".join(f"  {f}\n" for f in uncovered)
-                + "These changes will NOT be deployed."
+                + "These changes will NOT be deployed (warning shown once; "
+                "the deploy baseline advances past these files)."
             )
 
     # Bazel target resolution

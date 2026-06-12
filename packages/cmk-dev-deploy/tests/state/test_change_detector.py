@@ -241,6 +241,10 @@ class TestCategorizeFile:
             # Tests (NOT Python, despite .py extension)
             ("tests/unit/test_foo.py", ChangeCategory.TEST),
             ("tests/integration/test_bar.py", ChangeCategory.TEST),
+            # The deploy tool itself is never deployed to a site
+            ("packages/cmk-dev-deploy/cmk/dev_deploy/site/sudoers.py", ChangeCategory.IGNORED),
+            ("packages/cmk-dev-deploy/tests/site/test_sudoers.py", ChangeCategory.IGNORED),
+            ("packages/cmk-dev-deploy/README.md", ChangeCategory.IGNORED),
             # Build (prefix-based)
             ("MODULE.bazel", ChangeCategory.BUILD),
             ("bazel/deps.bzl", ChangeCategory.BUILD),
@@ -459,8 +463,8 @@ class TestCategorizationRules:
     def test_structural_rules_is_tuple(self) -> None:
         """_STRUCTURAL_RULES is a tuple of CategorizationRule instances."""
         assert isinstance(_STRUCTURAL_RULES, tuple)
-        # 1 TEST + 2 BUILD + 15 IGNORED
-        assert len(_STRUCTURAL_RULES) == 18
+        # 1 TEST + 2 BUILD + 16 IGNORED
+        assert len(_STRUCTURAL_RULES) == 19
 
     def test_each_structural_rule_is_categorization_rule(self) -> None:
         """Each structural rule is a CategorizationRule dataclass."""
@@ -516,7 +520,7 @@ class TestCategorizationRegression:
             ("packages/cmk-ccc/cmk/ccc/version.py", ChangeCategory.PYTHON),
             ("non-free/packages/cmk-bakery/cmk/bakery/foo.py", ChangeCategory.PYTHON),
             # Catch-all packages/ for packages without their own wheel spec
-            ("packages/cmk-dev-deploy/cmk/dev_deploy/foo.py", ChangeCategory.PYTHON),
+            ("packages/cmk-dev-deploy/cmk/dev_deploy/foo.py", ChangeCategory.IGNORED),
             ("non-free/packages/some-unknown/lib.py", ChangeCategory.PYTHON),
             # Config
             ("agents/plugins/my_agent", ChangeCategory.CONFIG),

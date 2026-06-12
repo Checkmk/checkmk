@@ -39,6 +39,10 @@ logger = logging.getLogger(__name__)
 # miscategorization is harmless in practice.
 _STRUCTURAL_RULES: tuple[CategorizationRule, ...] = (
     CategorizationRule("tests/", None, ChangeCategory.TEST),
+    # cmk-dev-deploy is the deploy tool itself: it runs from the repo and
+    # is never installed into a site.  Must precede the manifest-derived
+    # "packages/" rule (structural rules are applied first).
+    CategorizationRule("packages/cmk-dev-deploy/", None, ChangeCategory.IGNORED),
     CategorizationRule("MODULE.bazel", None, ChangeCategory.BUILD),
     CategorizationRule("bazel/", None, ChangeCategory.BUILD),
     CategorizationRule("werks/", None, ChangeCategory.IGNORED),
@@ -103,10 +107,10 @@ def _load_rules() -> tuple[CategorizationRule, ...]:
     The combined result is cached in the module-level _cached_rules variable
     to avoid repeated tuple concatenation on every categorize_file() call.
 
-    Structural rules have unconditional priority (applied first). They match
-    disjoint path prefixes (tests/, MODULE.bazel, bazel/) that never overlap
-    with manifest-derived prefixes (packages/, cmk/, agents/, etc.), so the
-    ordering between the two groups does not affect correctness.
+    Structural rules have unconditional priority (applied first).  Most
+    match path prefixes disjoint from the manifest-derived ones (tests/,
+    MODULE.bazel, bazel/); where they overlap (packages/cmk-dev-deploy/
+    inside packages/), the structural rule deliberately wins.
 
     Within manifest-derived rules, ordering is longest-prefix-first.
     """

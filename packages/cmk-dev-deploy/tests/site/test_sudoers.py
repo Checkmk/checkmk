@@ -284,6 +284,16 @@ class TestRemoveSetup:
         sudoers.remove_setup("v260")  # must not raise
 
     @pytest.mark.usefixtures("shim_bin")
+    def test_absent_drop_in_with_working_sudo_does_not_claim_removal(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Cached-timestamp sudo must not produce a false 'removed' success."""
+        monkeypatch.setattr(sudoers, "SUDOERS_DIR", tmp_path / "sudoers.d")
+        sudoers.remove_setup("v260")  # must not raise
+        log = "\n".join(_sudo_log(tmp_path))
+        assert "rm" not in log  # nothing was removed
+
+    @pytest.mark.usefixtures("shim_bin")
     def test_removes_drop_in(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         sudoers_dir = tmp_path / "sudoers.d"
         sudoers_dir.mkdir()

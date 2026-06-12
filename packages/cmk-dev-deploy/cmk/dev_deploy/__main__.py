@@ -133,16 +133,16 @@ def _warn_uncovered_files(
         fresh = uncovered_changed_files(deployable)
 
     uncovered: dict[str, str] = {}
-    for path, recorded_hash in (state.uncovered_files if state else {}).items():
-        if path in fresh:
-            continue  # re-recorded below with the current hash
-        abs_path = repo_root / path
-        if (
-            abs_path.is_file()
-            and compute_file_hash(abs_path) == recorded_hash
-            and uncovered_changed_files((path,))
-        ):
-            uncovered[path] = recorded_hash
+    candidates = {
+        path: recorded_hash
+        for path, recorded_hash in (state.uncovered_files if state else {}).items()
+        if path not in fresh  # re-recorded below with the current hash
+        and (repo_root / path).is_file()
+        and compute_file_hash(repo_root / path) == recorded_hash
+    }
+    # One batched registry check for all recorded entries
+    for path in uncovered_changed_files(tuple(candidates)):
+        uncovered[path] = candidates[path]
     for path in fresh:
         abs_path = repo_root / path
         if abs_path.is_file():

@@ -119,7 +119,11 @@ def ensure_clone(site_root: Path) -> None:
         # Leftovers from interrupted builds are ours and safe to drop.
         for partial in clone.parent.glob(".partial-*"):
             _rmtree(partial, ignore_errors=True)
-        stale = sorted(d.name for d in clone.parent.iterdir() if d.is_dir() and d.name != version)
+        stale = sorted(
+            d.name
+            for d in clone.parent.iterdir()
+            if d.is_dir() and d.name != version and not d.name.startswith(".")
+        )
         if stale:
             raise CloneError(
                 f"Site {site_name} runs version {version}, but stale clone(s) exist "

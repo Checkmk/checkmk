@@ -173,6 +173,10 @@ def _get_state_diff_base(site: SiteInfo) -> str | None:
         nor build commit is available.
     """
     state = load_state(site.root)
+    if state is not None and state.diff_base_commit:
+        # The global diff base is advanced to HEAD after every cycle
+        # (including all-skipped ones); per-deployer commits can lag.
+        return state.diff_base_commit
     if state is not None and state.deployers:
         first_deployer = next(iter(state.deployers.values()))
         return first_deployer.git_commit

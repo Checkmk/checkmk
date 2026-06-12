@@ -175,6 +175,13 @@ class TestEnsureClone:
         assert (omd.clone / "bin" / "cmc").read_text() == "binary"
         assert omd.omd_calls() == ["stop", "start"]
 
+    def test_hidden_dirs_are_not_stale_clones(self, omd: FakeOmd) -> None:
+        (omd.dev_versions / "v260" / ".some-tool-data").mkdir(parents=True)
+
+        ensure_clone(omd.site_root)  # must not raise a stale-clone error
+
+        assert (omd.clone / "bin" / "cmc").read_text() == "binary"
+
     def test_stale_clone_after_version_change_fails_loudly(self, omd: FakeOmd) -> None:
         stale = omd.dev_versions / "v260" / "2.5.0-old"
         stale.mkdir(parents=True)

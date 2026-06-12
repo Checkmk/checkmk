@@ -247,8 +247,14 @@ def remove_setup(site_name: str) -> None:
         SudoersError: If the drop-in cannot be removed.
     """
     path = drop_in_path(site_name)
-    if not path.exists() and not probe(site_name):
-        output.info(f"No sudoers rule installed for site '{site_name}'.")
+    if not path.exists():
+        if probe(site_name):
+            output.info(
+                f"No drop-in at {path} -- nothing to remove. Site access works "
+                "via another sudo rule or a still-cached sudo timestamp."
+            )
+        else:
+            output.info(f"No sudoers rule installed for site '{site_name}'.")
         return
     output.info(f"Removing sudoers drop-in {path} (asks for your sudo password)")
     _authenticate_sudo()

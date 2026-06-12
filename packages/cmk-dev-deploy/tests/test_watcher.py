@@ -470,3 +470,55 @@ class TestWatchLoopMidDeployEdits:
             deploy_fn,
         )
         deploy_fn.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# TestGetStateDiffBase
+# ---------------------------------------------------------------------------
+
+
+class TestGetStateDiffBase:
+    """The watcher must poll against the same diff base the cycle maintains."""
+
+    def test_prefers_global_diff_base(self) -> None:
+        from cmk.dev_deploy.state.deploy_state import DeployerState, DeployState
+        from cmk.dev_deploy.watcher import _get_state_diff_base
+
+        state = DeployState(
+            diff_base_commit="d" * 40,
+            deployers={
+                "config_spec": DeployerState(
+                    deployer="config_spec",
+                    git_commit="0" * 40,  # stale per-deployer commit
+                    dirty_file_hashes={},
+                    deployed_at=0.0,
+                )
+            },
+        )
+        with patch("cmk.dev_deploy.watcher.load_state", return_value=state):
+            assert _get_state_diff_base(MagicMock()) == "d" * 40
+
+    def test_falls_back_to_deployer_commit(self) -> None:
+        from cmk.dev_deploy.state.deploy_state import DeployerState, DeployState
+        from cmk.dev_deploy.watcher import _get_state_diff_base
+
+        state = DeployState(
+            deployers={
+                "config_spec": DeployerState(
+                    deployer="config_spec",
+                    git_commit="0" * 40,
+                    dirty_file_hashes={},
+                    deployed_at=0.0,
+                )
+            },
+        )
+        with patch("cmk.dev_deploy.watcher.load_state", return_value=state):
+            assert _get_state_diff_base(MagicMock()) == "0" * 40
+
+    def test_falls_back_to_site_build_commit(self) -> None:
+        from cmk.dev_deploy.watcher import _get_state_diff_base
+
+        site = MagicMock()
+        site.build_commit = "b" * 40
+        with patch("cmk.dev_deploy.watcher.load_state", return_value=None):
+            assert _get_state_diff_base(site) == "b" * 40

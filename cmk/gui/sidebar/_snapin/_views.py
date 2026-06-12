@@ -125,8 +125,11 @@ def view_menu_items(user_permissions: UserPermissions) -> list[VisualMenuItem]:
                 else:
                     raise TypeError(f"Unsupported visual menu type name: {visual_menu_type_name}")
 
-    network_topology_visual_spec = ParentChildTopologyPage.visual_spec()
-    pages_to_show = [(network_topology_visual_spec["name"], network_topology_visual_spec)]
+    pages_to_show = []
+
+    if user.may("general.parent_child_topology"):
+        network_topology_visual_spec = ParentChildTopologyPage.visual_spec()
+        pages_to_show.append((network_topology_visual_spec["name"], network_topology_visual_spec))
 
     visuals_to_show: list[VisualMenuItem] = [
         VisualMenuItem("views", VisualItem(k, v)) for k, v in get_permitted_views().items()

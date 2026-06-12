@@ -494,23 +494,40 @@ describe('Escape in edit mode', () => {
     within(pill).getByRole('combobox', { name: 'Attribute operator' }).focus()
   }
 
-  test('Escape on a valid editing pill commits and focuses the chip', async () => {
-    renderForm([
-      pill('pill-a', null, { attributeType: 'scope', key: 'otel.library.name', value: 'foo' })
-    ])
-    const pillA = pillsInOrder()[0]!
-    await enterEditMode(pillA)
-    focusOperator(pillA)
+  function focusRemoveX(pill: HTMLElement): void {
+    within(pill).getByRole('button', { name: 'Remove condition' }).focus()
+  }
 
-    await userEvent.keyboard('{Escape}')
+  test.each([
+    ['the operator combobox', focusOperator],
+    ['the remove X', focusRemoveX]
+  ])(
+    'Escape on a valid editing pill from %s commits and focuses the combined Tab stop',
+    async (_name, focusFn) => {
+      renderForm([
+        pill('pill-a', null, { attributeType: 'scope', key: 'otel.library.name', value: 'foo' })
+      ])
+      const pillA = pillsInOrder()[0]!
+      await enterEditMode(pillA)
+      focusFn(pillA)
 
-    await waitFor(() => {
-      expect(within(pillA).queryByRole('combobox', { name: 'Attribute operator' })).toBeNull()
-    })
-    await waitFor(() =>
-      expect(within(pillA).getByRole('button', { name: /^Edit condition:/ })).toHaveFocus()
-    )
-  })
+      await userEvent.keyboard('{Escape}')
+
+      await waitFor(() => {
+        expect(within(pillA).queryByRole('combobox', { name: 'Attribute operator' })).toBeNull()
+      })
+      await waitFor(() => {
+        const focused = document.activeElement as HTMLElement
+        expect(pillA.contains(focused)).toBe(true)
+        expect(
+          within(focused).getByRole('button', { name: /^Edit condition:/ })
+        ).toBeInTheDocument()
+        expect(
+          within(focused).getByRole('button', { name: 'Remove condition' })
+        ).toBeInTheDocument()
+      })
+    }
+  )
 
   test('Escape on an invalid editing pill keeps it open and reveals errors', async () => {
     renderForm(singlePill({ key: 'service.name', value: '' }))
@@ -552,7 +569,7 @@ describe('combined pill keyboard stop', () => {
     return within(pill).getByRole('button', { name: /^Edit condition:/ })
   }
 
-  test.skip('closed: tabbing into the pill lands on a single stop that wraps the chip and the remove X', async () => {
+  test('closed: tabbing into the pill lands on a single stop that wraps the chip and the remove X', async () => {
     renderForm(makeModel())
     const pillA = pillsInOrder()[0]!
 
@@ -566,7 +583,7 @@ describe('combined pill keyboard stop', () => {
     expect(within(focused).getByRole('button', { name: 'Remove condition' })).toBeInTheDocument()
   })
 
-  test.skip('edit mode: tabbing forward eventually focuses the remove X on its own', async () => {
+  test('edit mode: tabbing forward eventually focuses the remove X on its own', async () => {
     renderForm(makeModel())
     const pillA = pillsInOrder()[0]!
     await enterEditMode(pillA)
@@ -579,7 +596,7 @@ describe('combined pill keyboard stop', () => {
     expect(document.activeElement).toBe(removeX)
   })
 
-  test.skip.each([
+  test.each([
     ['Backspace', '{Backspace}'],
     ['Delete', '{Delete}']
   ])('%s on a focused chip removes the pill', async (_name, key) => {
@@ -592,7 +609,7 @@ describe('combined pill keyboard stop', () => {
     expect(model.value![0]!.id).toBe('pill-b')
   })
 
-  test.skip.each([
+  test.each([
     ['Space', ' '],
     ['Enter', '{Enter}']
   ])('%s on a focused chip enters edit mode', async (_name, key) => {
@@ -605,7 +622,7 @@ describe('combined pill keyboard stop', () => {
     expect(within(pillA).getByRole('combobox', { name: 'Attribute operator' })).toBeInTheDocument()
   })
 
-  test.skip('Tab from a chip lands on the per-pill +, skipping the remove X', async () => {
+  test('Tab from a chip lands on the per-pill +, skipping the remove X', async () => {
     renderForm(makeModel())
     chipOf(pillsInOrder()[0]!).focus()
 

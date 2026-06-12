@@ -73,8 +73,8 @@ const showValidationErrors = ref(false)
 
 const validationVisible = computed(() => showValidationErrors.value)
 
-const chipButtonRef = useTemplateRef<HTMLButtonElement>('chipButtonRef')
-let returnFocusToChip = false
+const closedPillRef = useTemplateRef<HTMLElement>('closedPillRef')
+let returnFocusToClosedPill = false
 
 // The click that creates a pill in edit mode keeps bubbling after Vue mounts
 // the new edit branch. Defer arming the outside-click handler by one task so
@@ -108,9 +108,9 @@ watch(
         armTimer = null
       }
       showValidationErrors.value = false
-      if (returnFocusToChip) {
-        returnFocusToChip = false
-        void nextTick(() => chipButtonRef.value?.focus())
+      if (returnFocusToClosedPill) {
+        returnFocusToClosedPill = false
+        void nextTick(() => closedPillRef.value?.focus())
       }
     }
   },
@@ -285,7 +285,7 @@ function onEditEscape(): void {
     showValidationErrors.value = true
     return
   }
-  returnFocusToChip = true
+  returnFocusToClosedPill = true
   emit('done')
 }
 
@@ -308,6 +308,7 @@ defineExpose({
       v-click-outside="onOutside"
       class="metric-backend-attribute-filter-pill__edit"
       :title="fullLabel"
+      @keydown.tab.capture.stop
       @keydown.esc.capture="onEditEscapeCapture"
       @keydown.esc="onEditEscape"
     >
@@ -364,46 +365,67 @@ defineExpose({
           @update:model-value="onValueUpdate"
         />
       </span>
+      <CmkIconButton
+        v-if="removable"
+        class="metric-backend-attribute-filter-pill__remove"
+        name="close"
+        size="small"
+        :title="_t('Remove condition')"
+        :aria-label="_t('Remove condition')"
+        @mousedown.prevent
+        @click.stop="emit('remove')"
+      />
     </span>
-    <button
+    <span
       v-else
-      ref="chipButtonRef"
-      type="button"
-      class="metric-backend-attribute-filter-pill__main"
-      :title="fullLabel"
-      :aria-label="`${_t('Edit condition')}: ${fullLabel}`"
-      @mousedown.prevent
-      @click.stop="emit('edit')"
+      ref="closedPillRef"
+      class="metric-backend-attribute-filter-pill__closed"
+      tabindex="0"
+      @keydown.enter.prevent="emit('edit')"
+      @keydown.space.prevent="emit('edit')"
+      @keydown.delete.prevent="emit('remove')"
     >
-      <span
-        v-if="attributeTypeText !== ''"
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--attribute-type"
-        >{{ attributeTypeText }}</span
+      <button
+        type="button"
+        class="metric-backend-attribute-filter-pill__main"
+        tabindex="-1"
+        :title="fullLabel"
+        :aria-label="`${_t('Edit condition')}: ${fullLabel}`"
+        @mousedown.prevent
+        @click.stop="emit('edit')"
+        @keydown.delete.prevent="emit('remove')"
       >
-      <span
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--key"
-        >{{ condition.key }}</span
-      >
-      <span
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator"
-        >{{ operatorText }}</span
-      >
-      <span
-        v-if="showValue"
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--value"
-        >{{ condition.value }}</span
-      >
-    </button>
-    <CmkIconButton
-      v-if="removable"
-      class="metric-backend-attribute-filter-pill__remove"
-      name="close"
-      size="small"
-      :title="_t('Remove condition')"
-      :aria-label="_t('Remove condition')"
-      @mousedown.prevent
-      @click.stop="emit('remove')"
-    />
+        <span
+          v-if="attributeTypeText !== ''"
+          class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--attribute-type"
+          >{{ attributeTypeText }}</span
+        >
+        <span
+          class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--key"
+          >{{ condition.key }}</span
+        >
+        <span
+          class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator"
+          >{{ operatorText }}</span
+        >
+        <span
+          v-if="showValue"
+          class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--value"
+          >{{ condition.value }}</span
+        >
+      </button>
+      <CmkIconButton
+        v-if="removable"
+        class="metric-backend-attribute-filter-pill__remove"
+        name="close"
+        size="small"
+        tabindex="-1"
+        :title="_t('Remove condition')"
+        :aria-label="_t('Remove condition')"
+        @mousedown.prevent
+        @click.stop="emit('remove')"
+      />
+    </span>
   </span>
 </template>
 
@@ -419,6 +441,15 @@ defineExpose({
 
 .metric-backend-attribute-filter-pill__edit {
   display: inline-flex;
+}
+
+.metric-backend-attribute-filter-pill__closed {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.metric-backend-attribute-filter-pill__closed:focus-visible {
+  outline: revert;
 }
 
 .metric-backend-attribute-filter-pill__main {

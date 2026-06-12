@@ -5,9 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import usei18n, { untranslated } from '@/lib/i18n'
+import useClickOutside from '@/lib/useClickOutside'
 
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import type { QuerySuggestionsFn } from '@/components/CmkSuggestions/types'
@@ -27,6 +28,8 @@ type FilterGroup = { entries: ConnectedCondition[]; startIndex: number }
 
 const { _t } = usei18n()
 
+const vClickOutside = useClickOutside()
+
 const props = withDefaults(
   defineProps<{
     querySuggestions: QuerySuggestionsFn
@@ -43,6 +46,7 @@ const props = withDefaults(
 const model = defineModel<AttributeFilterModel>({ default: () => [] })
 
 const editingId = ref<string | null>(null)
+const enteredGroupId = ref<string | null>(null)
 const pillRefs = new Map<string, InstanceType<typeof AttributeFilterPill>>()
 
 // Cache one setter per pill id so :ref does not see a new function every render
@@ -197,6 +201,59 @@ function onEditDone(id: string): void {
     editingId.value = null
   }
 }
+
+function isEntered(group: FilterGroup): boolean {
+  return enteredGroupId.value === group.entries[0]!.id
+}
+
+// Drop the entered marker when the model mutation removed or split the group it pointed at.
+watch(
+  () => groups.value,
+  (next) => {
+    if (enteredGroupId.value === null) {
+      return
+    }
+    const stillEnterable = next.some(
+      (g) => g.entries[0]!.id === enteredGroupId.value && g.entries.length > 1
+    )
+    if (!stillEnterable) {
+      enteredGroupId.value = null
+    }
+  }
+)
+
+function onGroupKeydown(event: KeyboardEvent, group: FilterGroup): void {
+  if (event.target !== event.currentTarget) {
+    return
+  }
+  if (event.key === 'Backspace' || event.key === 'Delete') {
+    event.preventDefault()
+    removeGroup(group)
+    return
+  }
+  if (event.key === ' ' || event.key === 'Enter') {
+    event.preventDefault()
+    enteredGroupId.value = group.entries[0]!.id
+    void nextTick(() => pillRefs.get(group.entries[0]!.id)?.focus())
+  }
+}
+
+function onGroupEscape(event: KeyboardEvent, group: FilterGroup): void {
+  if (!isEntered(group)) {
+    return
+  }
+  event.preventDefault()
+  const wrapper = event.currentTarget as HTMLElement | null
+  enteredGroupId.value = null
+  void nextTick(() => wrapper?.focus())
+}
+
+function onGroupClickOutside(group: FilterGroup): void {
+  if (!isEntered(group)) {
+    return
+  }
+  enteredGroupId.value = null
+}
 </script>
 
 <template>
@@ -235,13 +292,19 @@ function onEditDone(id: string): void {
       </button>
       <div
         v-if="group.entries.length > 1"
+        v-click-outside="() => onGroupClickOutside(group)"
         class="metric-backend-form-attribute-filter__group"
         data-testid="attribute-filter-group"
+        :tabindex="isEntered(group) ? -1 : 0"
+        :aria-label="_t('AND group of %{count} conditions', { count: group.entries.length })"
+        @keydown="(e) => onGroupKeydown(e, group)"
+        @keydown.escape="(e) => onGroupEscape(e, group)"
       >
         <CmkIconButton
           class="metric-backend-form-attribute-filter__remove-group"
           name="close"
           size="small"
+          :tabindex="isEntered(group) ? 0 : -1"
           :title="_t('Remove group')"
           :aria-label="_t('Remove group')"
           @mousedown.prevent
@@ -252,6 +315,7 @@ function onEditDone(id: string): void {
             v-if="entryIndex > 0"
             type="button"
             class="metric-backend-form-attribute-filter__connector"
+            :tabindex="isEntered(group) ? 0 : -1"
             :aria-label="
               _t('Toggle connector, currently %{connector}', {
                 connector: entry.connector!
@@ -270,6 +334,7 @@ function onEditDone(id: string): void {
             :query-value-suggestions="queryValueSuggestions"
             removable
             :editing="entry.id === editingId"
+            :tab-focusable="isEntered(group)"
             @remove="removeCondition(entry)"
             @edit="startEditing(entry.id)"
             @done="onEditDone(entry.id)"
@@ -282,6 +347,7 @@ function onEditDone(id: string): void {
             class="metric-backend-form-attribute-filter__add"
             name="add"
             size="large"
+            :tabindex="isEntered(group) ? 0 : -1"
             :title="_t('Add condition')"
             :aria-label="addConditionLabel(entry)"
             @mousedown.prevent

@@ -4,12 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
+from types import SimpleNamespace
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
 
 import cmk.utils.paths
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.wato.pages.user_profile import change_password as change_password_mod
+from cmk.gui.wato.pages.user_profile.change_password import UserChangePasswordPage
 from cmk.gui.wato.pages.user_profile.main_menu import default_user_menu_topics
 
 
@@ -47,3 +52,13 @@ def test_main_menu_omits_change_password_on_remote_site() -> None:
     topics = default_user_menu_topics(UserPermissions({}, {}, {}, []))
     user_profile_topic = next(t for t in topics if t.id == "user_profile")
     assert "change_password" not in [e.id for e in user_profile_topic.entries]
+
+
+def test_change_password_action_blocked_on_remote_site(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The change-password action raises ``MKAuthException`` on a remote site before reading or writing any password."""
+    monkeypatch.setattr(
+        change_password_mod, "is_distributed_setup_remote_site", lambda _sites: True
+    )
+    page = UserChangePasswordPage(cast(Any, None))  # edition is irrelevant to the guard
+    with pytest.raises(MKAuthException, match="remote sites"):
+        page._action(request=cast(Any, None), config=cast(Any, SimpleNamespace(sites={})))

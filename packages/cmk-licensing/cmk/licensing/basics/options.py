@@ -26,6 +26,7 @@ class OptionName(StrEnum):
     AWS_EXTENDED = auto()
     GCP_EXTENDED = auto()
     AZURE_EXTENDED = auto()
+    AGENT_REGISTRATION = auto()
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,7 @@ class LicenseOptions:
     aws_extended: LicenseFlag
     gcp_extended: LicenseFlag
     azure_extended: LicenseFlag
+    agent_registration: LicenseFlag
 
     def get_flag(self, name: OptionName) -> LicenseFlag:
         match name:
@@ -54,6 +56,8 @@ class LicenseOptions:
                 return self.gcp_extended
             case OptionName.AZURE_EXTENDED:
                 return self.azure_extended
+            case OptionName.AGENT_REGISTRATION:
+                return self.agent_registration
 
     def disabled(self) -> set[str]:
         return {f.name for f in fields(self) if not getattr(self, f.name).enabled}
@@ -78,6 +82,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 aws_extended=LicenseFlag(enabled=False),
                 gcp_extended=LicenseFlag(enabled=False),
                 azure_extended=LicenseFlag(enabled=False),
+                agent_registration=LicenseFlag(enabled=False),
             )
 
         case Edition.PRO:
@@ -99,6 +104,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 aws_extended=LicenseFlag(enabled=True),
                 gcp_extended=LicenseFlag(enabled=True),
                 azure_extended=LicenseFlag(enabled=True),
+                agent_registration=LicenseFlag(enabled=True),
             )
 
         case Edition.ULTIMATEMT:
@@ -110,6 +116,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 aws_extended=LicenseFlag(enabled=True),
                 gcp_extended=LicenseFlag(enabled=True),
                 azure_extended=LicenseFlag(enabled=True),
+                agent_registration=LicenseFlag(enabled=True),
             )
 
         case Edition.CLOUD:
@@ -121,6 +128,7 @@ def get_license_options(omd_root: Path, edition: Edition) -> LicenseOptions:
                 aws_extended=LicenseFlag(enabled=True),
                 gcp_extended=LicenseFlag(enabled=True),
                 azure_extended=LicenseFlag(enabled=True),
+                agent_registration=LicenseFlag(enabled=True),
             )
 
 
@@ -133,4 +141,5 @@ def _make_pro_options() -> LicenseOptions:
         aws_extended=LicenseFlag(enabled=False),
         gcp_extended=LicenseFlag(enabled=False),
         azure_extended=LicenseFlag(enabled=False),
+        agent_registration=LicenseFlag(enabled=False),
     )

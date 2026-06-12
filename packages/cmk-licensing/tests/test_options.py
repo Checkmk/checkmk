@@ -20,6 +20,7 @@ def test_community() -> None:
         aws_extended=LicenseFlag(enabled=False),
         gcp_extended=LicenseFlag(enabled=False),
         azure_extended=LicenseFlag(enabled=False),
+        agent_registration=LicenseFlag(enabled=False),
     )
 
 
@@ -32,6 +33,7 @@ def test_pro() -> None:
         aws_extended=LicenseFlag(enabled=False),
         gcp_extended=LicenseFlag(enabled=False),
         azure_extended=LicenseFlag(enabled=False),
+        agent_registration=LicenseFlag(enabled=False),
     )
 
 
@@ -48,4 +50,5 @@ def test_commercial(edition: Edition) -> None:
         aws_extended=LicenseFlag(enabled=True),
         gcp_extended=LicenseFlag(enabled=True),
         azure_extended=LicenseFlag(enabled=True),
+        agent_registration=LicenseFlag(enabled=True),
     )

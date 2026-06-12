@@ -1596,8 +1596,6 @@
   "pkg:npm/lru-cache@11.2.2": "ISC",
   "pkg:npm/lru-cache@11.3.2": "BlueOak-1.0.0",
   "pkg:npm/lru-cache@11.3.5": "BlueOak-1.0.0",
-  "pkg:npm/lucide-vue-next@0.487.0": "ISC",
-  "pkg:npm/lucide-vue-next@1.0.0": "ISC",
   "pkg:npm/magic-string-ast@1.0.3": "MIT",
   "pkg:npm/magic-string@0.30.21": "MIT",
   "pkg:npm/marked@16.4.1": "MIT",

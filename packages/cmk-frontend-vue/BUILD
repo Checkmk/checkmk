@@ -230,7 +230,6 @@ SRCS = [
     ":node_modules/d3-transition",
     ":node_modules/d3-zoom",
     ":node_modules/grid-layout-plus",
-    ":node_modules/lucide-vue-next",
     ":node_modules/marked",
     ":node_modules/msw",
     ":node_modules/openapi-fetch",

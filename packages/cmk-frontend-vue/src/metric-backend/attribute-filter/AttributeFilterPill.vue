@@ -68,6 +68,9 @@ const valueEmpty = computed(() => props.condition.value === '')
 
 const keyDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('keyDropdownRef')
 const valueDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('valueDropdownRef')
+const attributeTypeDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>(
+  'attributeTypeDropdownRef'
+)
 const pendingValueOpen = ref(false)
 
 const showValidationErrors = ref(false)
@@ -101,6 +104,8 @@ watch(
       armOutsideNextTask()
       if (!props.condition.key) {
         void nextTick(() => keyDropdownRef.value?.open())
+      } else {
+        void nextTick(() => attributeTypeDropdownRef.value?.focus())
       }
     } else {
       outsideArmed = false
@@ -171,10 +176,6 @@ const attributeTypeInput = computed<string | null>({
     emit('update:attributeType', valid)
   }
 })
-
-const attributeTypeDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>(
-  'attributeTypeDropdownRef'
-)
 
 watch(
   () => props.condition.key,

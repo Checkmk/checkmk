@@ -622,6 +622,27 @@ describe('combined pill keyboard stop', () => {
     expect(within(pillA).getByRole('combobox', { name: 'Attribute operator' })).toBeInTheDocument()
   })
 
+  test.each([
+    ['Space', ' '],
+    ['Enter', '{Enter}']
+  ])(
+    '%s on a focused chip of a populated pill focuses the first inline dropdown without opening it',
+    async (_name, key) => {
+      // pill-b is the populated read-only pill in the standard fixture: it has
+      // both attributeType and key set, so the attribute-type dropdown is
+      // visible and is the first dropdown in DOM order.
+      renderForm(makeModel())
+      const pillB = pillsInOrder()[1]!
+      chipOf(pillB).focus()
+
+      await userEvent.keyboard(key)
+
+      const firstDropdown = within(pillB).getByRole('combobox', { name: 'Attribute type' })
+      await waitFor(() => expect(document.activeElement).toBe(firstDropdown))
+      expect(firstDropdown).toHaveAttribute('aria-expanded', 'false')
+    }
+  )
+
   test('Tab from a chip lands on the per-pill +, skipping the remove X', async () => {
     renderForm(makeModel())
     chipOf(pillsInOrder()[0]!).focus()

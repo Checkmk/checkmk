@@ -2881,6 +2881,9 @@ msgstr "AES-256"
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
 
+msgid "AES-256-C (Cisco)"
+msgstr ""
+
 #, fuzzy
 msgid "AI"
 msgstr "AIX"
@@ -96426,8 +96429,12 @@ msgid "Copied!"
 msgstr "Code Grootte"
 
 #, fuzzy
-msgid "Copy response"
+msgid "Copy answer"
 msgstr "Hop responstijden"
+
+#, fuzzy
+msgid "Regenerate answer"
+msgstr "Back-upcodes opnieuw genereren"
 
 #, fuzzy
 msgid "Feature temporarily unavailable"
@@ -99241,6 +99248,10 @@ msgstr "Nieuw wachtwoord"
 #, fuzzy
 msgid "No passwords available"
 msgstr "Beschikbare poorten"
+
+#, fuzzy
+msgid "Creating a new password is not available for your account. "
+msgstr "Het nieuwe wachtwoord moet verschillen van uw huidige wachtwoord."
 
 #, fuzzy
 msgid "Send log messages to event console"

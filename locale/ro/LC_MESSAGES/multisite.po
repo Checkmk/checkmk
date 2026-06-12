@@ -2911,6 +2911,9 @@ msgstr "AES-256"
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
 
+msgid "AES-256-C (Cisco)"
+msgstr ""
+
 #, fuzzy
 msgid "AI"
 msgstr "AIX"
@@ -96736,8 +96739,12 @@ msgid "Copied!"
 msgstr "Coduri copiate"
 
 #, fuzzy
-msgid "Copy response"
+msgid "Copy answer"
 msgstr "Timpii de răspuns la hopuri"
+
+#, fuzzy
+msgid "Regenerate answer"
+msgstr "Regenerarea codurilor"
 
 #, fuzzy
 msgid "Feature temporarily unavailable"
@@ -99564,6 +99571,10 @@ msgstr "Parolă nouă"
 #, fuzzy
 msgid "No passwords available"
 msgstr "Porturi disponibile"
+
+#, fuzzy
+msgid "Creating a new password is not available for your account. "
+msgstr "Noua parolă trebuie să fie diferită de cea actuală."
 
 #, fuzzy
 msgid "Send log messages to event console"

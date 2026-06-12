@@ -2898,6 +2898,9 @@ msgstr "AES-256"
 msgid "AES-256-Blumenthal"
 msgstr "AES-256-Blumenthal"
 
+msgid "AES-256-C (Cisco)"
+msgstr ""
+
 #, fuzzy
 msgid "AI"
 msgstr "AIX"
@@ -97138,8 +97141,12 @@ msgid "Copied!"
 msgstr "Código Tamaño"
 
 #, fuzzy
-msgid "Copy response"
+msgid "Copy answer"
 msgstr "Tiempos de respuesta de los saltos"
+
+#, fuzzy
+msgid "Regenerate answer"
+msgstr "Regenerar los códigos de seguridad"
 
 #, fuzzy
 msgid "Feature temporarily unavailable"
@@ -99958,6 +99965,10 @@ msgstr "Nueva contraseña"
 #, fuzzy
 msgid "No passwords available"
 msgstr "Puertos disponibles"
+
+#, fuzzy
+msgid "Creating a new password is not available for your account. "
+msgstr "La nueva contraseña debe ser diferente de la actual."
 
 #, fuzzy
 msgid "Send log messages to event console"

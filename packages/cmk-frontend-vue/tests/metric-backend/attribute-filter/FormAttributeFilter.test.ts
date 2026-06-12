@@ -634,6 +634,139 @@ describe('combined pill keyboard stop', () => {
   })
 })
 
+describe('combined group keyboard stop', () => {
+  const TWO_PILL_AND = [pill('pill-a', null), pill('pill-b', 'AND')]
+
+  function groupWrapper(): HTMLElement {
+    return screen.getByTestId(GROUP_TESTID)
+  }
+
+  async function expandGroup(): Promise<HTMLElement> {
+    const group = groupWrapper()
+    group.focus()
+    await userEvent.keyboard(' ')
+    return group
+  }
+
+  test.skip('closed: tabbing into a multi-pill group lands on a single stop that wraps the chips, +s, connector, and the remove X', async () => {
+    renderForm(TWO_PILL_AND)
+    const group = groupWrapper()
+
+    for (let i = 0; i < 20 && !group.contains(document.activeElement); i++) {
+      await userEvent.tab()
+    }
+
+    const focused = document.activeElement as HTMLElement
+    expect(group.contains(focused)).toBe(true)
+    expect(within(focused).getByRole('button', { name: 'Remove group' })).toBeInTheDocument()
+    expect(within(focused).getAllByRole('button', { name: /^Edit condition:/ })).toHaveLength(2)
+    expect(
+      within(focused).getAllByRole('button', { name: /^Add condition after / }).length
+    ).toBeGreaterThan(0)
+    expect(
+      within(focused).getByRole('button', { name: /^Toggle connector, currently / })
+    ).toBeInTheDocument()
+  })
+
+  test.skip.each([
+    ['Backspace', '{Backspace}'],
+    ['Delete', '{Delete}']
+  ])('%s on the focused group removes the group', async (_name, key) => {
+    const { model } = renderForm(TWO_PILL_AND)
+    groupWrapper().focus()
+
+    await userEvent.keyboard(key)
+
+    expect(model.value).toEqual([])
+  })
+
+  test.skip.each([
+    ['Space', ' '],
+    ['Enter', '{Enter}']
+  ])('%s on the focused group expands it and focuses the first pill', async (_name, key) => {
+    renderForm(TWO_PILL_AND)
+    const group = groupWrapper()
+    group.focus()
+
+    await userEvent.keyboard(key)
+
+    const firstPill = within(group).getAllByRole('group')[0]!
+    expect(firstPill.contains(document.activeElement)).toBe(true)
+    expect(document.activeElement).toHaveAttribute('tabindex', '0')
+  })
+
+  test.skip('expanded: shift-tabbing from the first pill focuses the remove group X on its own', async () => {
+    renderForm(TWO_PILL_AND)
+    const group = await expandGroup()
+    const removeX = within(group).getByRole('button', { name: 'Remove group' })
+
+    await userEvent.tab({ shift: true })
+
+    expect(document.activeElement).toBe(removeX)
+  })
+
+  test.skip('expanded: tabbing out of the group does not collapse it', async () => {
+    renderForm(TWO_PILL_AND)
+    const group = await expandGroup()
+    const removeX = within(group).getByRole('button', { name: 'Remove group' })
+
+    for (let i = 0; i < 20 && group.contains(document.activeElement); i++) {
+      await userEvent.tab()
+    }
+
+    expect(group.contains(document.activeElement)).toBe(false)
+    expect(group).toHaveAttribute('tabindex', '-1')
+    expect(removeX).toHaveAttribute('tabindex', '0')
+  })
+
+  test.skip('expanded: clicking outside the group collapses it back to one Tab stop', async () => {
+    renderForm(TWO_PILL_AND)
+    const group = await expandGroup()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add condition after this group' }))
+
+    expect(group).toHaveAttribute('tabindex', '0')
+    expect(within(group).getByRole('button', { name: 'Remove group' })).toHaveAttribute(
+      'tabindex',
+      '-1'
+    )
+  })
+
+  test.skip('expanded: Escape on the focused pill collapses the group and refocuses the wrapper', async () => {
+    renderForm(TWO_PILL_AND)
+    const group = await expandGroup()
+
+    await userEvent.keyboard('{Escape}')
+
+    expect(group).toHaveAttribute('tabindex', '0')
+    expect(group).toHaveFocus()
+  })
+
+  test.skip('expanded: Escape on an editing pill closes the pill but keeps the group entered', async () => {
+    // Pre-fill the pills so entering edit mode does not auto-open the key
+    // dropdown; otherwise the first Escape would just close that dropdown.
+    renderForm([
+      pill('pill-a', null, { attributeType: 'resource', key: 'service.name', value: 'x' }),
+      pill('pill-b', 'AND', { attributeType: 'resource', key: 'foo.bar', value: 'y' })
+    ])
+    const group = await expandGroup()
+    const pillA = pillsInOrder()[0]!
+    await enterEditMode(pillA)
+    within(pillA).getByRole('combobox', { name: 'Attribute operator' }).focus()
+
+    await userEvent.keyboard('{Escape}')
+
+    await waitFor(() => {
+      expect(within(pillA).queryByRole('combobox', { name: 'Attribute operator' })).toBeNull()
+    })
+    expect(group).toHaveAttribute('tabindex', '-1')
+    expect(within(group).getByRole('button', { name: 'Remove group' })).toHaveAttribute(
+      'tabindex',
+      '0'
+    )
+  })
+})
+
 test("clicking another pill's chip while the editing pill is invalid is a no-op and reveals errors", async () => {
   renderForm(makeModel())
   const pillA = pillsInOrder()[0]!

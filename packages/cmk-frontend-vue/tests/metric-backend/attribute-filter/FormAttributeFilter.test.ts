@@ -489,6 +489,64 @@ test('click outside on a pristine invalid pill keeps it open and reveals errors'
   expect(field(pillA, 'Attribute value')).toHaveClass(ERROR_CLASS)
 })
 
+describe('Escape in edit mode', () => {
+  function focusOperator(pill: HTMLElement): void {
+    within(pill).getByRole('combobox', { name: 'Attribute operator' }).focus()
+  }
+
+  test.skip('Escape on a valid editing pill commits and focuses the chip', async () => {
+    renderForm([
+      pill('pill-a', null, { attributeType: 'scope', key: 'otel.library.name', value: 'foo' })
+    ])
+    const pillA = pillsInOrder()[0]!
+    await enterEditMode(pillA)
+    focusOperator(pillA)
+
+    await userEvent.keyboard('{Escape}')
+
+    await waitFor(() => {
+      expect(within(pillA).queryByRole('combobox', { name: 'Attribute operator' })).toBeNull()
+    })
+    await waitFor(() =>
+      expect(within(pillA).getByRole('button', { name: /^Edit condition:/ })).toHaveFocus()
+    )
+  })
+
+  test.skip('Escape on an invalid editing pill keeps it open and reveals errors', async () => {
+    renderForm(singlePill({ key: 'service.name', value: '' }))
+    const pillA = pillsInOrder()[0]!
+    await enterEditMode(pillA)
+    focusOperator(pillA)
+
+    await userEvent.keyboard('{Escape}')
+
+    expect(within(pillA).getByRole('combobox', { name: 'Attribute operator' })).toBeInTheDocument()
+    await waitFor(() => {
+      expect(field(pillA, 'Attribute value')).toHaveClass(ERROR_CLASS)
+    })
+  })
+
+  test.skip('Escape with a dropdown open only closes the dropdown', async () => {
+    renderForm([
+      pill('pill-a', null, { attributeType: 'scope', key: 'otel.library.name', value: 'foo' })
+    ])
+    const pillA = pillsInOrder()[0]!
+    await enterEditMode(pillA)
+    const operatorCombobox = within(pillA).getByRole('combobox', { name: 'Attribute operator' })
+    await userEvent.click(operatorCombobox)
+    await waitFor(() => {
+      expect(operatorCombobox).toHaveAttribute('aria-expanded', 'true')
+    })
+
+    await userEvent.keyboard('{Escape}')
+
+    await waitFor(() => {
+      expect(operatorCombobox).toHaveAttribute('aria-expanded', 'false')
+    })
+    expect(within(pillA).getByRole('combobox', { name: 'Attribute operator' })).toBeInTheDocument()
+  })
+})
+
 test("clicking another pill's chip while the editing pill is invalid is a no-op and reveals errors", async () => {
   renderForm(makeModel())
   const pillA = pillsInOrder()[0]!

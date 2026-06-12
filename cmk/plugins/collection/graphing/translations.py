@@ -201,10 +201,7 @@ translation_apc_symmetra = translations.Translation(
         "OutputLoad": translations.RenameTo("output_load"),
         "batcurr": translations.RenameTo("battery_current"),
         "capacity": translations.RenameTo("battery_capacity"),
-        "runtime": translations.RenameToAndScaleBy(
-            "lifetime_remaining",
-            60,
-        ),
+        "runtime": translations.RenameTo("lifetime_remaining"),
         "systemp": translations.RenameTo("battery_temp"),
     },
 )

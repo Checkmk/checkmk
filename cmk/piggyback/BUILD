@@ -8,6 +8,7 @@ py_library(
         "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-dcd:__pkg__",
+        "//packages/cmk-check-engine:__subpackages__",
     ],
     deps = [
         "//packages/cmk-ccc:hostaddress",

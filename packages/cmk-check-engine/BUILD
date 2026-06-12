@@ -207,6 +207,21 @@ py_test(
     ],
 )
 
+py_test(
+    name = "parser-tests",
+    size = "small",
+    srcs = [
+        "tests/cmk/checkengine/test_parser.py",
+        ":__test__.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "//packages/cmk-check-engine/cmk/checkengine/parser",
+        requirement("pytest"),
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-check-engine",
@@ -221,6 +236,7 @@ py_wheel(
         ":snmp-backends",
         ":snmplib",
         ":specs",
+        "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
     ],
 )
@@ -260,6 +276,7 @@ py_requirements_test(
         ":snmplib",
         ":specs",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-check-engine/cmk/checkengine/parser",
     ],
     requirements_in = "requirements.in",
 )

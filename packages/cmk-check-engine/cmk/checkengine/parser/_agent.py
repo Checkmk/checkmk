@@ -268,7 +268,7 @@ class ParserState(abc.ABC):
 
 
 class NOOPParser(ParserState):
-    def do_action(self, line: bytes) -> ParserState:
+    def do_action(self, line: bytes) -> ParserState:  # noqa: ARG002
         return self
 
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
@@ -309,7 +309,7 @@ class PiggybackParser(ParserState):
         )
         self.current_host: Final = current_host
 
-    def do_action(self, line: bytes) -> ParserState:
+    def do_action(self, line: bytes) -> ParserState:  # noqa: ARG002
         # We are not in a section -> ignore line.
         return self
 
@@ -395,7 +395,7 @@ class PiggybackNOOPParser(ParserState):
         )
         self.current_host: Final = current_host
 
-    def do_action(self, line: bytes) -> PiggybackNOOPParser:
+    def do_action(self, line: bytes) -> PiggybackNOOPParser:  # noqa: ARG002
         return self
 
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
@@ -415,7 +415,7 @@ class PiggybackNOOPParser(ParserState):
 
 
 class PiggybackIgnoreParser(ParserState):
-    def do_action(self, line: bytes) -> PiggybackIgnoreParser:
+    def do_action(self, line: bytes) -> PiggybackIgnoreParser:  # noqa: ARG002
         return self
 
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
@@ -426,7 +426,7 @@ class PiggybackIgnoreParser(ParserState):
     def on_piggyback_footer(self) -> ParserState:
         return self.to_noop_parser()
 
-    def on_section_header(self, section_header: SectionMarker) -> PiggybackIgnoreParser:
+    def on_section_header(self, section_header: SectionMarker) -> PiggybackIgnoreParser:  # noqa: ARG002
         return self
 
     def on_section_footer(self) -> PiggybackIgnoreParser:

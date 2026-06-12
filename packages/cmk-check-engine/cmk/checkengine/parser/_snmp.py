@@ -21,7 +21,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPParsedData]):
         *,
         # The selection argument is ignored: Selection is done
         # in the fetcher for SNMP.
-        selection: object,
+        selection: object,  # noqa: ARG002
     ) -> HostSections[SNMPParsedData]:
         marked_sections = {SectionMarker.from_header(n): content for n, content in raw_data.items()}
         return HostSections[SNMPParsedData](

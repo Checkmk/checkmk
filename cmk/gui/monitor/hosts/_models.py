@@ -13,7 +13,7 @@ logic.
 
 import dataclasses
 import enum
-from typing import assert_never, Literal
+from typing import assert_never, Literal, NewType
 
 type StateLabel = Literal["UP", "DOWN", "UNREACHABLE"]
 
@@ -95,3 +95,9 @@ class HostSort:
 
     def __str__(self) -> str:
         return f"{self.column.value}:{self.direction.value}"
+
+
+# NOTE: this is intended to indicate that a stringified filter has been properly parsed into a
+# specific query implementation. For now, we are only supporting Livestatus queries, but this would
+# allow us to easily swap out for an alternative filter parser, e.g. SQL.
+HostFilter = NewType("HostFilter", str)

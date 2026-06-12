@@ -9,8 +9,9 @@ from annotated_types import MinLen
 from pydantic import AfterValidator
 
 from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.livestatus_client.expressions import LqSafe
 
-from .._models import StateLabel
+from .._models import HostFilter, HostState, StateLabel
 from ._validators import validate_uniqueness
 
 # TODO: look into whether we can utilize generics when generating our shared typing. It's not great
@@ -124,3 +125,56 @@ class NotNode:
 
 
 type FilterNode = AndNode | OrNode | NotNode | ConditionNode
+
+
+def parse_as_livestatus_filter(node: FilterNode) -> HostFilter:
+    filters: list[str] = []
+    _accumulate_filters(node, filters)
+    return HostFilter("\n".join(str(LqSafe(f)) for f in filters))
+
+
+def _accumulate_filters(node: FilterNode, filters: list[str]) -> None:
+    match node:
+        case StringCondition():
+            filters.append(f"Filter: {node.field} {_STRING_OP_TO_LS[node.op]} {node.value}")
+
+        case NumericCondition():
+            filters.append(f"Filter: {node.field} {_NUMERIC_OP_TO_LS[node.op]} {node.value}")
+
+        case BooleanCondition():
+            filters.append(f"Filter: {node.field} = {int(node.value)}")
+
+        case StateChoiceCondition():
+            for value in node.value:
+                filters.append(f"Filter: {node.field} = {HostState[value]}")
+
+            match node.op:
+                case "one_of" if len(node.value) > 1:
+                    filters.append(f"Or: {len(node.value)}")
+
+        case AndNode() | OrNode():
+            for child in node.children:
+                _accumulate_filters(child, filters)
+
+            match node.type:
+                case "and":
+                    filters.append(f"And: {len(node.children)}")
+                case "or":
+                    filters.append(f"Or: {len(node.children)}")
+
+        case NotNode():
+            _accumulate_filters(node.child, filters)
+            filters.append("Negate:")
+
+
+_NUMERIC_OP_TO_LS = {
+    "eq": "=",
+    "gt": ">",
+    "gte": ">=",
+    "lt": "<",
+    "lte": "<=",
+}
+_STRING_OP_TO_LS = {
+    "contains": "~~",
+    "matches": "~",
+}

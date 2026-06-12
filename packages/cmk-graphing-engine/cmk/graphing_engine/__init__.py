@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Public interface of the package: the discovery and update entry points, the objects they take
+# and return, and the objects for constructing a graph. Everything else is an implementation
+# detail and must not be imported from outside the package.
+
 from ._evaluate import (
     DiscoveredGraph,
-    evaluate_graph,
     EvaluatedCurve,
     EvaluatedFixedRange,
     EvaluatedGraph,
@@ -15,13 +18,10 @@ from ._evaluate import (
     EvaluatedVerticalRange,
 )
 from ._fetch import (
-    evaluate_graphs,
-    fetch_translated_metrics,
     GraphRequest,
     RRDSource,
     update_graph_data,
 )
-from ._from_api import parse_graph_from_api
 from ._objects import (
     AutoPrecision,
     Bound,
@@ -29,7 +29,6 @@ from ._objects import (
     CriticalOf,
     DecimalNotation,
     Difference,
-    DrawnMetric,
     EngineeringScientificNotation,
     FixedRange,
     Fraction,
@@ -40,7 +39,6 @@ from ._objects import (
     LowerWarningOf,
     MaximumOf,
     MetricName,
-    MetricTranslation,
     MinimalRange,
     MinimumOf,
     Notation,
@@ -50,10 +48,8 @@ from ._objects import (
     Product,
     Quantity,
     RRDMetric,
-    RRDMetricData,
     RRDMetricRef,
     RRDMetricWithCF,
-    RRDOriginal,
     ServiceRef,
     SINotation,
     Stack,
@@ -75,7 +71,6 @@ from ._template import (
     TemplateDiscoveryOptions,
     TemplateOptions,
 )
-from ._translate import translate_performance_data
 
 __all__ = [
     "AutoPrecision",
@@ -86,7 +81,6 @@ __all__ = [
     "DecimalNotation",
     "Difference",
     "DiscoveredGraph",
-    "DrawnMetric",
     "EngineeringScientificNotation",
     "EvaluatedCurve",
     "EvaluatedFixedRange",
@@ -105,7 +99,6 @@ __all__ = [
     "LowerWarningOf",
     "MaximumOf",
     "MetricName",
-    "MetricTranslation",
     "MinimalRange",
     "MinimumOf",
     "Notation",
@@ -115,10 +108,8 @@ __all__ = [
     "Product",
     "Quantity",
     "RRDMetric",
-    "RRDMetricData",
     "RRDMetricRef",
     "RRDMetricWithCF",
-    "RRDOriginal",
     "RRDSource",
     "SINotation",
     "ServiceRef",
@@ -135,10 +126,5 @@ __all__ = [
     "VerticalRange",
     "WarningOf",
     "discover_template_graphs",
-    "evaluate_graph",
-    "evaluate_graphs",
-    "fetch_translated_metrics",
-    "parse_graph_from_api",
-    "translate_performance_data",
     "update_graph_data",
 ]

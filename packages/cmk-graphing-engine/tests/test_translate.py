@@ -9,15 +9,13 @@ from cmk.graphing_engine import (
     AutoPrecision,
     DecimalNotation,
     MetricName,
-    MetricTranslation,
     PerformanceData,
     PerformanceValue,
-    RRDMetricData,
-    RRDOriginal,
     SINotation,
-    translate_performance_data,
     Unit,
 )
+from cmk.graphing_engine._objects import MetricTranslation, RRDMetricData, RRDOriginal
+from cmk.graphing_engine._translate import translate_performance_data
 
 
 def _id(s: str) -> str:

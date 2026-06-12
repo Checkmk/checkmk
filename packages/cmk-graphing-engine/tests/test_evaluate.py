@@ -8,7 +8,6 @@ from cmk.graphing_engine import (
     Constant,
     DecimalNotation,
     Difference,
-    evaluate_graph,
     EvaluatedCurve,
     EvaluatedFixedRange,
     EvaluatedGraph,
@@ -23,7 +22,6 @@ from cmk.graphing_engine import (
     MinimalRange,
     Product,
     RRDMetric,
-    RRDMetricData,
     RRDMetricRef,
     Stack,
     Sum,
@@ -32,7 +30,8 @@ from cmk.graphing_engine import (
     Unit,
     WarningOf,
 )
-from cmk.graphing_engine._evaluate import _evaluate_time_series, _evaluate_value
+from cmk.graphing_engine._evaluate import _evaluate_time_series, _evaluate_value, evaluate_graph
+from cmk.graphing_engine._objects import RRDMetricData
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TR = TimeRange(start=0, end=30, step=10)  # three data points

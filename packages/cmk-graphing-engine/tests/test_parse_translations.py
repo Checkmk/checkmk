@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.graphing.v1 import translations as translations_v1
-from cmk.graphing_engine import MetricName, MetricTranslation
+from cmk.graphing_engine import MetricName
 from cmk.graphing_engine._from_api import parse_translations_from_api
+from cmk.graphing_engine._objects import MetricTranslation
 
 
 def test_parses_rename_scale_and_rename_and_scale() -> None:

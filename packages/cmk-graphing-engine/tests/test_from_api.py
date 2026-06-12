@@ -24,7 +24,6 @@ from cmk.graphing_engine import (
     MetricName,
     MinimalRange,
     MinimumOf,
-    parse_graph_from_api,
     Product,
     Quantity,
     RRDMetric,
@@ -37,6 +36,7 @@ from cmk.graphing_engine import (
     Unit,
     WarningOf,
 )
+from cmk.graphing_engine._from_api import parse_graph_from_api
 
 
 def _id(s: str) -> str:

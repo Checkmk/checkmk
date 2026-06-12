@@ -249,6 +249,27 @@ def test_merges_a_metrics_originals_taking_the_first_present_value() -> None:
     assert line.curve.time_series == _ts(1.0, 2.0, 3.0)
 
 
+def test_aligns_a_natively_gridded_series_to_the_requested_range() -> None:
+    metric = _rrd_with_cf("m")
+    graph = Graph(name="g", title="g", lines=[_line(metric)])
+    # The backend returns the series on its own finer grid (12 five-second points); the engine
+    # downsamples it onto the requested 10-second grid (six points) before evaluating.
+    native = TimeSeries(
+        time_range=TimeRange(start=0, end=60, step=5),
+        values=[float(value) for value in range(1, 13)],
+    )
+    rrd = _FakeRRDSource(
+        performance_response={_service(): _perf_data(_perf("m"))},
+        time_series_response={_source("m"): native},
+    )
+
+    [evaluated] = _update(_request(graph), rrd=rrd)
+
+    [line] = evaluated.lines
+    assert line.curve.time_series.time_range == _time_range()
+    assert len(line.curve.time_series.values) == 6
+
+
 def test_fetches_one_batch_per_consolidation_function() -> None:
     avg_metric = _rrd_with_cf("a", ConsolidationFunction.AVERAGE)
     max_metric = _rrd_with_cf("b", ConsolidationFunction.MAX)

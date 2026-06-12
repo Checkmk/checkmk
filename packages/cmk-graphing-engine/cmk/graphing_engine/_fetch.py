@@ -24,6 +24,7 @@ from ._objects import (
     TimeSeries,
 )
 from ._options import ConsolidationFunction, TimeRange
+from ._resample import resample
 from ._translate import translate_performance_data
 
 
@@ -38,7 +39,14 @@ class RRDSource(Protocol):
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
-    ) -> Mapping[RRDMetric, TimeSeries]: ...
+    ) -> Mapping[RRDMetric, TimeSeries]:
+        """Read the raw RRD series of the given metrics.
+
+        The series may be returned on their native RRD grid (whatever start/end/step RRDTool
+        serves); the engine aligns them to the requested time_range itself. Missing metrics are
+        omitted from the result.
+        """
+        ...
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -129,8 +137,10 @@ def _fetch_series(
     result: dict[RRDMetricRef, TimeSeries] = {}
     for metric, (function, rrd_metrics) in rrd_metrics_per_metric.items():
         raw = raw_per_function[function]
+        # Align every fetched series to the requested grid before scaling and merging: the source
+        # may return its own RRD grid, but the originals are merged point by point.
         scaled = [
-            _scaled(raw[rrd_metric], scale)
+            _scaled(resample(raw[rrd_metric], time_range, function), scale)
             for rrd_metric, scale in rrd_metrics
             if rrd_metric in raw
         ]

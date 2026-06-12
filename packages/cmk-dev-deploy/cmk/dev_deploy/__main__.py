@@ -54,6 +54,7 @@ from cmk.dev_deploy.state.change_detector import (
 from cmk.dev_deploy.state.deploy_state import (
     build_and_save_state,
     compute_dirty_hashes,
+    compute_file_hash,
     delete_state,
     DeployState,
     get_current_branch,
@@ -102,6 +103,58 @@ def _compute_skip_results(
 def _maybe_print_frontend_hint(changes: ChangeSet, frontend_supervised: bool) -> None:
     if not frontend_supervised:
         output.print_frontend_hint(changes)
+
+
+def _warn_uncovered_files(
+    state: DeployState | None,
+    changes: ChangeSet | None,
+    repo_root: Path,
+) -> dict[str, str]:
+    """Warn about changed files no deploy spec covers; the warning persists.
+
+    Newly detected uncovered files are recorded (path -> content hash) in
+    the deploy state, because the diff base advances past them after the
+    cycle.  A recorded file keeps warning on every run until it is
+    reverted or edited again (normal change detection then re-evaluates
+    it) or a deploy spec starts covering it.  Files we know are never
+    deployed (TEST/BUILD/IGNORED) are exempt; OTHER means "no rule
+    matched", exactly where the registry coverage check is informative.
+    """
+    fresh: list[str] = []
+    if changes is not None and not changes.is_empty:
+        non_deploy_files: set[str] = set()
+        for cat in (
+            ChangeCategory.TEST,
+            ChangeCategory.BUILD,
+            ChangeCategory.IGNORED,
+        ):
+            non_deploy_files.update(changes.categories.get(cat, ()))
+        deployable = tuple(f for f in changes.files if f not in non_deploy_files)
+        fresh = uncovered_changed_files(deployable)
+
+    uncovered: dict[str, str] = {}
+    for path, recorded_hash in (state.uncovered_files if state else {}).items():
+        if path in fresh:
+            continue  # re-recorded below with the current hash
+        abs_path = repo_root / path
+        if (
+            abs_path.is_file()
+            and compute_file_hash(abs_path) == recorded_hash
+            and uncovered_changed_files((path,))
+        ):
+            uncovered[path] = recorded_hash
+    for path in fresh:
+        abs_path = repo_root / path
+        if abs_path.is_file():
+            uncovered[path] = compute_file_hash(abs_path)
+
+    if uncovered:
+        output.warn(
+            f"{len(uncovered)} changed file(s) not covered by any deploy spec:\n"
+            + "".join(f"  {f}\n" for f in sorted(uncovered))
+            + "These changes will NOT be deployed."
+        )
+    return uncovered
 
 
 def _print_timing_display(
@@ -216,6 +269,10 @@ def _run_deploy_cycle(
     target_commit = args.commit
     changes = detect_changes(diff_base, repo_root, target_commit=target_commit)
 
+    # Coverage warning (persists across runs via the deploy state); also
+    # fires on cycles that end in an early "nothing to deploy" return.
+    uncovered_files = _warn_uncovered_files(state, changes, repo_root)
+
     if changes is None:
         output.warn(
             "Site has no build commit (COMMIT file missing).\n"
@@ -258,29 +315,6 @@ def _run_deploy_cycle(
     edition_warning = check_edition_mismatch(changes, site)
     if edition_warning:
         output.warn(edition_warning)
-
-    # Check for unregistered changed files.  We suppress files we know are
-    # not deployed (TEST/BUILD/IGNORED).  OTHER means "no rule matched" --
-    # exactly the case where the registry coverage check is informative,
-    # so we run it through the check and let the warning fire if no spec
-    # covers the file.
-    if changes is not None and not changes.is_empty:
-        non_deploy_files: set[str] = set()
-        for cat in (
-            ChangeCategory.TEST,
-            ChangeCategory.BUILD,
-            ChangeCategory.IGNORED,
-        ):
-            non_deploy_files.update(changes.categories.get(cat, ()))
-        deployable = tuple(f for f in changes.files if f not in non_deploy_files)
-        uncovered = uncovered_changed_files(deployable)
-        if uncovered:
-            output.warn(
-                f"{len(uncovered)} changed file(s) not covered by any deploy spec:\n"
-                + "".join(f"  {f}\n" for f in uncovered)
-                + "These changes will NOT be deployed (warning shown once; "
-                "the deploy baseline advances past these files)."
-            )
 
     # Bazel target resolution
     targets: BazelTargetSet | None = None
@@ -432,6 +466,7 @@ def _run_deploy_cycle(
             successful_deployers=set(),
             previous_state=state,
             backend=args.backend or "",
+            uncovered_files=uncovered_files,
         )
         return _make_result(0, all_skipped=True)
 
@@ -485,6 +520,7 @@ def _run_deploy_cycle(
             deployer_dirty_hashes=_deployer_dirty,
             all_succeeded=False,
             backend=args.backend or "",
+            uncovered_files=uncovered_files,
         )
         return _make_result(1)
 
@@ -530,6 +566,7 @@ def _run_deploy_cycle(
         state,
         deployer_dirty_hashes=_deployer_dirty,
         backend=args.backend or "",
+        uncovered_files=uncovered_files,
     )
 
     # Total deploy time and optional verbose timing table

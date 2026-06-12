@@ -42,6 +42,11 @@ class DeployState:
     """Set to HEAD after each deploy cycle; used as the diff base on next run."""
     backend: str = ""
     """Site preparation backend that prepared the site ("overlay" or "clone")."""
+    uncovered_files: dict[str, str] = field(default_factory=dict)
+    """Changed files no deploy spec covers (path -> content hash at detection).
+
+    Kept so the "will NOT be deployed" warning persists across runs even
+    though the diff base advances past these files."""
 
 
 def state_file_path(site_root: Path) -> Path:
@@ -75,6 +80,7 @@ def load_state(site_root: Path) -> DeployState | None:
             created_at=raw.get("created_at", 0.0),
             diff_base_commit=raw.get("diff_base_commit", ""),
             backend=raw.get("backend", ""),
+            uncovered_files=raw.get("uncovered_files", {}),
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError):
         return None
@@ -91,6 +97,7 @@ def save_state(state: DeployState, site_root: Path) -> None:
         "created_at": state.created_at,
         "diff_base_commit": state.diff_base_commit,
         "backend": state.backend,
+        "uncovered_files": state.uncovered_files,
         "deployers": {
             key: {
                 "deployer": ds.deployer,
@@ -242,6 +249,7 @@ def build_and_save_state(
     deployer_dirty_hashes: dict[str, dict[str, str]] | None = None,
     all_succeeded: bool = True,
     backend: str = "",
+    uncovered_files: dict[str, str] | None = None,
 ) -> None:
     """Assemble and persist deploy state with partial-failure support.
 
@@ -279,6 +287,11 @@ def build_and_save_state(
         created_at=now,
         diff_base_commit=diff_base,
         backend=backend or (previous_state.backend if previous_state else ""),
+        uncovered_files=(
+            dict(uncovered_files)
+            if uncovered_files is not None
+            else (dict(previous_state.uncovered_files) if previous_state else {})
+        ),
     )
 
     all_deployer_names = ["install_spec", "config_spec", "wheel_spec"]

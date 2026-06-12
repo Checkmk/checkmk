@@ -153,6 +153,15 @@ class TestLoadState:
         assert loaded is not None
         assert loaded.backend == "clone"
 
+    def test_load_state_uncovered_files_round_trip(self, tmp_path: Path) -> None:
+        """Recorded uncovered files are persisted and restored."""
+        state = _make_state(branch="master")
+        state.uncovered_files = {"some/file.py": "abc123"}
+        save_state(state, tmp_path)
+        loaded = load_state(tmp_path)
+        assert loaded is not None
+        assert loaded.uncovered_files == {"some/file.py": "abc123"}
+
     def test_load_state_missing_backend_defaults_empty(self, tmp_path: Path) -> None:
         """State files written before the backend field default to empty string."""
         sf = state_file_path(tmp_path)

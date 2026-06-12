@@ -225,6 +225,7 @@ def discover_template_graphs(
             graph=graph,
             options=post_options,
             title=evaluate_title(graph.title, translated_metrics),
+            vertical_range=evaluated.vertical_range,
             stacks=evaluated.stacks,
             lines=evaluated.lines,
         )

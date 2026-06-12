@@ -9,16 +9,19 @@ from dataclasses import dataclass
 from typing import assert_never
 
 from ._objects import (
+    Bound,
     Constant,
     CriticalOf,
     Difference,
     DisplayAttributes,
+    FixedRange,
     Fraction,
     Graph,
     LowerCriticalOf,
     LowerWarningOf,
     MaximumOf,
     MetricName,
+    MinimalRange,
     MinimumOf,
     Product,
     Quantity,
@@ -30,6 +33,7 @@ from ._objects import (
     Sum,
     TimeSeries,
     Unit,
+    VerticalRange,
     WarningOf,
 )
 from ._options import TimeRange
@@ -278,8 +282,27 @@ class EvaluatedLine:
 
 
 @dataclass(frozen=True, kw_only=True)
+class EvaluatedMinimalRange:
+    # The axis covers at least [lower, upper]; it may grow to fit the curves.
+    lower: float | None
+    upper: float | None
+
+
+@dataclass(frozen=True, kw_only=True)
+class EvaluatedFixedRange:
+    # The axis is pinned to exactly [lower, upper].
+    lower: float | None
+    upper: float | None
+
+
+type EvaluatedVerticalRange = EvaluatedMinimalRange | EvaluatedFixedRange
+
+
+@dataclass(frozen=True, kw_only=True)
 class EvaluatedGraph:
+    name: str
     title: str
+    vertical_range: EvaluatedVerticalRange | None
     stacks: Sequence[EvaluatedStack]
     lines: Sequence[EvaluatedLine]
 
@@ -291,8 +314,39 @@ class DiscoveredGraph[Options]:
     # The graph's title with its expressions evaluated against the translated metrics; graph.title
     # still carries the original, unevaluated title.
     title: str
+    vertical_range: EvaluatedVerticalRange | None
     stacks: Sequence[EvaluatedStack]
     lines: Sequence[EvaluatedLine]
+
+
+def _evaluate_bound(
+    bound: Bound,
+    metric_data: Mapping[RRDMetricRef, RRDMetricData],
+) -> float | None:
+    if isinstance(bound, int | float):
+        return float(bound)
+    return _evaluate_value(bound, metric_data)
+
+
+def _evaluate_vertical_range(
+    vertical_range: VerticalRange | None,
+    metric_data: Mapping[RRDMetricRef, RRDMetricData],
+) -> EvaluatedVerticalRange | None:
+    match vertical_range:
+        case None:
+            return None
+        case MinimalRange():
+            return EvaluatedMinimalRange(
+                lower=_evaluate_bound(vertical_range.lower, metric_data),
+                upper=_evaluate_bound(vertical_range.upper, metric_data),
+            )
+        case FixedRange():
+            return EvaluatedFixedRange(
+                lower=_evaluate_bound(vertical_range.lower, metric_data),
+                upper=_evaluate_bound(vertical_range.upper, metric_data),
+            )
+        case _:
+            assert_never(vertical_range)
 
 
 def _evaluate_curve(
@@ -344,7 +398,9 @@ def evaluate_graph(
         service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
         translated_metrics.setdefault(service, {})[metric.metric_name] = data
     return EvaluatedGraph(
+        name=graph.name,
         title=evaluate_title(graph.title, translated_metrics),
+        vertical_range=_evaluate_vertical_range(graph.vertical_range, metric_data),
         stacks=stacks,
         lines=lines,
     )

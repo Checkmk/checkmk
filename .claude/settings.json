@@ -93,6 +93,8 @@
       "Bash(/tmp/cmk-master-venv/.venv/bin/werk *)",
       "Bash(gerrit-change-log *)",
       "Bash(jenkins_build_data.py *)",
+      "Bash(/home/*/.claude/plugins/cache/checkmk-marketplace/checkmk-core/*/skills/gerrit/bin/gerrit-change-log *)",
+      "Bash(/home/*/.claude/plugins/cache/checkmk-marketplace/checkmk-core/*/skills/jenkins/bin/jenkins_build_data.py *)",
       "Bash(mkdir -p /tmp/jenkins-artifacts)",
       "Bash(mkdir /tmp/jenkins-artifacts)",
       "Bash(tar -xf /tmp/jenkins-artifacts/*)",

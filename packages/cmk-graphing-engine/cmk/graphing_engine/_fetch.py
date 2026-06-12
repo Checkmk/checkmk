@@ -190,6 +190,7 @@ def evaluate_graphs(
                     rrd=rrd,
                 ),
                 metric_data,
+                translated_metrics,
                 time_range,
             )
         )

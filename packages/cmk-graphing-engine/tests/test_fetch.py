@@ -310,3 +310,27 @@ def test_bare_metric_uses_the_fallback_consolidation_function() -> None:
         ConsolidationFunction.AVERAGE: (_source("load"),),
         ConsolidationFunction.MAX: (_source("peak"),),
     }
+
+
+def test_resolves_a_title_expression_against_a_non_drawn_metric() -> None:
+    # The title references "cores", which is not drawn; it must still resolve against the service's
+    # performance data (the same metric the discovery step rendered the title from).
+    load = _rrd_with_cf("load")
+    graph = Graph(
+        name="g",
+        title='Load - _EXPRESSION:{"metric": "cores", "scalar": "max"} cores',
+        lines=[_line(load)],
+    )
+    rrd = _FakeRRDSource(
+        performance_response={
+            _service(): _perf_data(
+                _perf("load"),
+                PerformanceValue(metric_name=MetricName("cores"), value=4.0, maximum=8.0),
+            )
+        },
+        time_series_response={_source("load"): _ts(1.0)},
+    )
+
+    [evaluated] = _update(graph, rrd=rrd)
+
+    assert evaluated.title == "Load - 8 cores"

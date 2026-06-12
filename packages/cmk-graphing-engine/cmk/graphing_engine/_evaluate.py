@@ -366,10 +366,28 @@ def _evaluate_curve(
     )
 
 
+def _title_metrics(
+    graph: Graph,
+    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
+) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
+    # A title expression may reference any metric of the graph's services, drawn or not, so the
+    # title is resolved against those services' full metric maps rather than only the drawn metrics.
+    services = {
+        ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
+        for metric in graph.rrd_metrics()
+    }
+    return {
+        service: translated_metrics[service]
+        for service in services
+        if service in translated_metrics
+    }
+
+
 def evaluate_graph(
     graph: Graph,
     time_series: Mapping[RRDMetricRef, TimeSeries],
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
+    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     time_range: TimeRange,
 ) -> EvaluatedGraph:
     """Evaluate a graph, keeping its stacks and lines so line type and stacking are preserved.
@@ -392,14 +410,9 @@ def evaluate_graph(
         if (curve := _evaluate_curve(line.quantity, time_series, metric_data, time_range))
         is not None
     ]
-    # Group the metric data per service to evaluate the title's expressions against it.
-    translated_metrics: dict[ServiceRef, dict[MetricName, RRDMetricData]] = {}
-    for metric, data in metric_data.items():
-        service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
-        translated_metrics.setdefault(service, {})[metric.metric_name] = data
     return EvaluatedGraph(
         name=graph.name,
-        title=evaluate_title(graph.title, translated_metrics),
+        title=evaluate_title(graph.title, _title_metrics(graph, translated_metrics)),
         vertical_range=_evaluate_vertical_range(graph.vertical_range, metric_data),
         stacks=stacks,
         lines=lines,

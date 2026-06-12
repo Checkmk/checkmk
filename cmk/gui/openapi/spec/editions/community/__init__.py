@@ -24,6 +24,7 @@ from cmk.gui.default_permissions import register as default_permissions_register
 from cmk.gui.i18n import _
 from cmk.gui.inventory._openapi import register as inventory_register
 from cmk.gui.ldap_integration._openapi import register as ldap_register
+from cmk.gui.ldap_integration.api import register as ldap_api_register
 from cmk.gui.mkeventd._openapi.current_events._registration import (
     register as mkeventd_current_events_register,
 )
@@ -103,6 +104,10 @@ def register_for_community() -> None:
         endpoint_family_registry,
     )
     availability_register(versioned_endpoint_registry, endpoint_family_registry)
+    ldap_api_register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
     ldap_register(endpoint_registry)
     visuals_filter_register(endpoint_family_registry, versioned_endpoint_registry)
     visuals_info_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)

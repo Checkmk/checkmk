@@ -3271,6 +3271,18 @@ class LDAPConnectionClient(RestApiClient):
             return {"If-Match": self.get(ldap_connection_id).headers["ETag"]}
         return set_if_match_header(etag)
 
+    def test_connection(
+        self,
+        ldap_connection_id: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{ldap_connection_id}/actions/test/invoke",
+            expect_ok=expect_ok,
+            api_version=APIVersion.UNSTABLE,
+        )
+
 
 class ParentScanClient(RestApiClient):
     domain: DomainType = "parent_scan"

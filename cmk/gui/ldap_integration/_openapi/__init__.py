@@ -2,22 +2,6 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""LDAP Connections
-
-Checkmk provides a facility for using LDAP-based services for managing users, automatically
-synchronizing users from the home directories, and for assigning contact groups, roles and
-other attributes to these users in Checkmk automatically. Checkmk is not restricted to a
-single LDAP source, and it can also distribute the users to other connected sites if required.
-
-The following endpoints provide a way to manage LDAP connections via the REST-API in the
-same way the user interface does.  This includes creating, updating, deleting and listing LDAP
-connections.
-
-If you need help during configuration or experience problems, please refer to the LDAP
-Documentation: https://docs.checkmk.com/latest/en/ldap.html.
-
-"""
-
 # mypy: disable-error-code="comparison-overlap"
 
 from collections.abc import Mapping
@@ -60,6 +44,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
+from cmk.gui.openapi.shared_endpoint_families.ldap_connection import LDAP_CONNECTION_FAMILY
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.user_connection_config_types import (
     ConfigurableUserConnectionSpec,
@@ -110,6 +95,7 @@ LDAP_CONNECTION_ID_EXISTS = {
     response_schema=LDAPConnectionResponse,
     error_schemas={404: GETLdapConnection404},
     permissions_required=RO_PERMISSIONS,
+    family_name=LDAP_CONNECTION_FAMILY.name,
 )
 def show_ldap_connection(params: Mapping[str, Any]) -> Response:
     """Show an LDAP connection"""
@@ -134,6 +120,7 @@ def show_ldap_connection(params: Mapping[str, Any]) -> Response:
     tag_group="Setup",
     response_schema=LDAPConnectionResponseCollection,
     permissions_required=RO_PERMISSIONS,
+    family_name=LDAP_CONNECTION_FAMILY.name,
 )
 def show_ldap_connections(params: Mapping[str, Any]) -> Response:
     """Show all LDAP connections"""
@@ -155,6 +142,7 @@ def show_ldap_connections(params: Mapping[str, Any]) -> Response:
     path_params=[LDAP_CONNECTION_ID_EXISTS],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    family_name=LDAP_CONNECTION_FAMILY.name,
 )
 def delete_ldap_connection(params: Mapping[str, Any]) -> Response:
     """Delete an LDAP connection"""
@@ -196,6 +184,7 @@ def _get_affected_sites(connection: ConfigurableUserConnectionSpec) -> list[Site
     request_schema=LDAPConnectionConfigCreateRequest,
     response_schema=LDAPConnectionResponse,
     permissions_required=RW_PERMISSIONS,
+    family_name=LDAP_CONNECTION_FAMILY.name,
 )
 def create_ldap_connection(params: Mapping[str, Any]) -> Response:
     """Create an LDAP connection"""
@@ -235,6 +224,7 @@ def create_ldap_connection(params: Mapping[str, Any]) -> Response:
     response_schema=LDAPConnectionResponse,
     error_schemas={404: GETLdapConnection404},
     permissions_required=RW_PERMISSIONS,
+    family_name=LDAP_CONNECTION_FAMILY.name,
 )
 def edit_ldap_connection(params: Mapping[str, Any]) -> Response:
     """Update an ldap connection"""

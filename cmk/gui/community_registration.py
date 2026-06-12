@@ -207,6 +207,8 @@ def register(
     ldap_registration(
         mode_registry,
         endpoint_registry,
+        versioned_endpoint_registry,
+        endpoint_family_registry,
         ac_test_registry,
         user_connector_registry,
     )

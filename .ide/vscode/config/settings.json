@@ -152,7 +152,9 @@
       "prettier.configPath": "bazel/tools/prettier.config.cjs",
       "prettier.prettierPath": "./node_modules/prettier",
       "vue.complete.casing.tags": "pascal",
-      "vue.complete.casing.props": "camel"
+      "vue.complete.casing.props": "camel",
+      "typescript.preferences.preferTypeOnlyAutoImports": true,
+      "javascript.preferences.preferTypeOnlyAutoImports": true
     },
     "workspace": {
       "js/ts.tsdk.path": "packages/cmk-frontend-vue/node_modules/typescript/lib"

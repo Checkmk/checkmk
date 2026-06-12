@@ -19,6 +19,10 @@ class AgentBakeryPage(CmkPage):
     page_title = "Windows, Linux, Solaris, AIX"
 
     @property
+    def bake_agents_button(self) -> Locator:
+        return self.main_area.get_suggestion("Bake agents")
+
+    @property
     def bake_and_sign_agents_button(self) -> Locator:
         return self.main_area.get_suggestion("Bake and sign agents")
 

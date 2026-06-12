@@ -16,8 +16,12 @@ file in ``/etc/sudoers.d/`` makes sudo fail closed system-wide).  After
 bootstrap, no deploy, restart, ``--full``, or ``--purge`` ever prompts
 for a password again.
 
-There is deliberately no SSH path and no fallback chain here — the overlay
-backend keeps using :mod:`cmk.dev_deploy.site.privilege` unchanged.
+Declining the rule still deploys: the run then authenticates sudo
+interactively once, and the cached timestamp carries the run's
+``sudo -n`` calls.  Nothing persistent is installed, so the consent
+prompt returns on the next run.  There is deliberately no SSH path
+here — the overlay backend keeps using
+:mod:`cmk.dev_deploy.site.privilege` unchanged.
 """
 
 from __future__ import annotations
@@ -127,11 +131,14 @@ def _admin_recovery(site_name: str) -> str:
 def bootstrap(site_name: str) -> None:
     """Install the per-site sudoers rule after explicit user consent.
 
-    Non-interactive runs and declined prompts raise :class:`SudoersError`
+    Declining the rule falls back to a one-off sudo session: interactive
+    authentication caches the sudo timestamp, which carries this run's
+    ``sudo -n`` calls.  Non-interactive runs raise :class:`SudoersError`
     carrying the manual setup instructions.
 
     Raises:
-        SudoersError: No TTY, consent declined, validation or install failed.
+        SudoersError: No TTY, install failed, or (after declining) the
+            user's own sudo rights cannot run commands as the site user.
     """
     rule = rule_content(site_name)
     path = drop_in_path(site_name)
@@ -146,9 +153,18 @@ def bootstrap(site_name: str) -> None:
     output.info("The clone backend runs site commands via a per-site sudoers rule.")
     output.info(f"  Required drop-in {path}:")
     output.info(f"    {rule.strip()}")
-    answer = input("Install this rule now (asks for your sudo password)? [y/N] ")
+    output.info("  Declining uses your sudo password for this run only (and asks again next time).")
+    answer = input("Install this rule now? [y/N] ")
     if answer.strip().lower() not in ("y", "yes"):
-        raise SudoersError("Sudoers setup declined.", recovery=_admin_recovery(site_name))
+        output.info("Rule not installed -- using a one-off sudo session for this run.")
+        _authenticate_sudo()
+        if not probe(site_name):
+            raise SudoersError(
+                "Sudoers rule declined, and your own sudo rights cannot run "
+                f"commands as site user '{site_name}'.",
+                recovery=_admin_recovery(site_name),
+            )
+        return
 
     _install_rule(rule, path, site_name)
     ensure_dev_versions_dir()

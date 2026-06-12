@@ -153,7 +153,10 @@ it non-interactively; if missing, the tool shows the exact rule and asks for
 one-time permission to install it (`visudo -cf` validated). `--print-setup`
 emits the manual commands for an admin instead; `--remove-setup` deletes the
 drop-in. After bootstrap, no deploy, restart, reboot, `--full`, or `--purge`
-ever needs sudo again.
+ever needs sudo again. Declining the rule still deploys: the run then asks
+for your sudo password directly (cached for the sudo timestamp duration, so
+service restarts late in a long watch session may fail), and the consent
+prompt returns on the next run.
 
 | Event              | What happens                                                                      |
 | ------------------ | --------------------------------------------------------------------------------- |

@@ -157,12 +157,29 @@ class TestBootstrap:
             sudoers.bootstrap("v260")
         assert "testuser ALL=(v260) NOPASSWD: ALL" in str(excinfo.value)
 
-    def test_declined_raises_with_admin_instructions(self) -> None:
+    @pytest.mark.usefixtures("shim_bin")
+    def test_declined_falls_back_to_session_sudo(self, tmp_path: Path) -> None:
+        """Declining the rule authenticates sudo for this run instead."""
+        tty, consent = _interactive("n")
+        with tty, consent:
+            sudoers.bootstrap("v260")  # must not raise
+        log = "\n".join(_sudo_log(tmp_path))
+        assert "-v" in log  # interactive authentication
+        assert "-u v260" in log  # probe rides the cached timestamp
+        assert "install" not in log  # nothing persistent installed
+
+    def test_declined_without_sudo_rights_raises(self, shim_bin: Path) -> None:
+        # sudo shim that authenticates (-v) but refuses to run as the site user
+        _write_shim(
+            shim_bin,
+            "sudo",
+            '#!/bin/sh\ncase "$*" in *" -u "*) exit 1 ;; esac\nexit 0\n',
+        )
         tty, consent = _interactive("n")
         with tty, consent, pytest.raises(SudoersError) as excinfo:
             sudoers.bootstrap("v260")
         assert "declined" in str(excinfo.value)
-        assert "visudo -cf" in str(excinfo.value)
+        assert "visudo -cf" in str(excinfo.value)  # admin instructions
 
     def test_consent_installs_validated_rule(
         self, shim_bin: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

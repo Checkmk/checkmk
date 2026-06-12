@@ -18,6 +18,7 @@ RABBITMQ_RULE_ID = "65a3dca4-8d71-45d8-8887-53ef0c63d06f"
 AUTOMATION_HELPER_RULE_ID = "94190e27-2836-488a-b6b4-f23f694a455e"
 UI_JOB_SCHEDULER_RULE_ID = "8b5616fb-a457-404e-a136-24065da7f170"
 OTEL_COLLECTOR_RULE_ID = "a0a69c72-d9ba-412a-a8cb-7a9a6abb4c6b"
+EVENT_CONSOLE_RULE_ID = "2105c8a7-5672-4242-98f6-fd6ce8b8f3a7"
 PROXMOX_RULE_IDS = frozenset(
     {
         "c7850d9b-847b-4ae6-b1a7-dc7b1d82a04e",
@@ -119,6 +120,14 @@ def overwrite_ps_discovery_rules(logger: Logger, all_rulesets: RulesetCollection
         AUTOMATION_HELPER_RULE_ID,
         automation_helper_old_rule_match,
         automation_helper_logging_id,
+    )
+
+    overwrite_ps_discovery_rule(
+        logger,
+        ps_discovery_rules,
+        EVENT_CONSOLE_RULE_ID,
+        "~python3 /omd/sites/[^/]+/bin/mkeventd$",
+        "self-monitoring of the event console",
     )
 
 

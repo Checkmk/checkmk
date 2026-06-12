@@ -31,6 +31,12 @@ You'll likely want a shell alias:
 alias cdd='bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin --'
 ```
 
+Deploys always build the site's edition: the tool pins `--cmk_edition=<site edition>` on every bazel command it runs, no matter how cdd is invoked. The `bazel run` in the alias is its own bazel command though, and it uses the flag's default value (`community`). When the site has any other edition, each cdd invocation therefore switches the bazel server between two configurations, and every switch discards the analysis cache (a few seconds of re-analysis). This costs time, not correctness. To avoid it, give the alias the edition of the site you deploy to:
+
+```bash
+alias cdd='bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin --cmk_edition=pro --'
+```
+
 Then:
 
 ```bash

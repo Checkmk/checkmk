@@ -60,10 +60,10 @@ def specs_for_packages(
     return tuple(s for s in all_specs if s.package in packages)
 
 
-def _get_bazel_info(key: str, repo_root: Path) -> str:
-    """Retrieve a value from ``bazel info``."""
+def _get_bazel_info(key: str, repo_root: Path, edition: str) -> str:
+    """Retrieve a value from ``bazel info`` (in the site's configuration)."""
     return run_checked(
-        ["bazel", "info", key],
+        ["bazel", "info", f"--cmk_edition={edition}", key],
         cwd=repo_root,
         timeout=BAZEL_INFO,
         error_cls=BazelBuildError,
@@ -88,11 +88,18 @@ def _build_targets(
     targets: Sequence[str],
     repo_root: Path,
     version: str | None,
+    edition: str,
     *,
     verbose: bool = False,
 ) -> None:
-    """Invoke ``bazel build`` with all target labels in a single invocation."""
-    cmd: list[str] = ["bazel", "build"]
+    """Invoke ``bazel build`` with all target labels in a single invocation.
+
+    The site's edition is pinned on every configuration-creating bazel
+    command the tool runs: select()s resolve for the deployed edition,
+    and alternating flag values between invocations would discard
+    Bazel's analysis cache (seconds of re-analysis each time).
+    """
+    cmd: list[str] = ["bazel", "build", f"--cmk_edition={edition}"]
     if version is not None:
         cmd.append(f"--cmk_version={version}")
     cmd.extend(targets)
@@ -141,6 +148,7 @@ def _find_artifact_cquery(
     output_basename: str,
     execution_root: Path,
     repo_root: Path,
+    edition: str,
 ) -> Path:
     """Locate a C++ build artifact via ``bazel cquery --output=files``.
 
@@ -148,7 +156,7 @@ def _find_artifact_cquery(
     names, so cquery is needed to find the actual output path.
     """
     result = run_checked(
-        ["bazel", "cquery", "--output=files", label],
+        ["bazel", "cquery", f"--cmk_edition={edition}", "--output=files", label],
         cwd=repo_root,
         timeout=BAZEL_CQUERY,
         error_cls=BazelBuildError,
@@ -373,11 +381,12 @@ def build_and_install(
             labels.append(spec.package_target)
 
     # 5. Single bazel build invocation for all targets
-    _build_targets(labels, repo_root, version, verbose=verbose)
+    edition = site.edition.value
+    _build_targets(labels, repo_root, version, edition, verbose=verbose)
 
     # 6. Get info paths for artifact discovery
-    execution_root = Path(_get_bazel_info("execution_root", repo_root))
-    bazel_bin = Path(_get_bazel_info("bazel-bin", repo_root))
+    execution_root = Path(_get_bazel_info("execution_root", repo_root, edition))
+    bazel_bin = Path(_get_bazel_info("bazel-bin", repo_root, edition))
 
     # 7. Locate and install each artifact
     installed_count = 0
@@ -399,6 +408,7 @@ def build_and_install(
                 spec.output_basename,
                 execution_root,
                 repo_root,
+                edition,
             )
 
         installed_path = site.root / spec.install_dest

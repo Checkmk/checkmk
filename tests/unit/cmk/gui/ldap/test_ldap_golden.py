@@ -1468,3 +1468,66 @@ def test_fetch_needed_groups_for_groups_to_roles_empty_group_list(
     )
 
     assert ldap_groups == {}
+
+
+def _fetched(name: str) -> FetchedLDAPUser:
+    return FetchedLDAPUser(
+        dn=name,
+        ldap_user_name=LdapUsername(name),
+        ldap_user_spec={"dn": [name], "uid": [name.upper()]},
+    )
+
+
+def _sync_user_result_for(fetched: FetchedLDAPUser) -> SyncUsersResult:
+    return SyncUsersResult(
+        sync_start_time=time(),
+        fetched_users={fetched.ldap_user_name: fetched},
+    )
+
+
+_SYNC_USER_ATTRIBUTES = [
+    ("start_url", StartURLUserAttribute()),
+    ("temperature_unit", TemperatureUnitUserAttribute()),
+]
+_SYNC_DEFAULT_PROFILE = UserSpec(contactgroups=[], roles=["user"], force_authuser=False)
+
+
+def test_ldap_sync_create_only_on_login_skips_creation_during_sync(
+    mocker: MockerFixture,
+) -> None:
+    """``create_only_on_login`` defers creation — a periodic sync skips a new user (returns ``None``, no change), while a login creates it."""
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    config = LDAPUserConnectionConfig({**_test_config, "create_only_on_login": True})
+    connector = LDAPUserConnector(config)
+    fetched = _fetched("carol")
+
+    sync_result = _sync_user_result_for(fetched)
+    users: Users = Users({})
+    skipped = _sync_ldap_user(
+        fetched_ldap_user=fetched,
+        ldap_user_connector=connector,
+        users=users,
+        sync_users_result=sync_result,
+        user_attributes=_SYNC_USER_ATTRIBUTES,
+        default_user_profile=_SYNC_DEFAULT_PROFILE,
+        login_attempt=False,
+    )
+    assert skipped is None
+    assert users == {}
+    assert sync_result.changes == []
+    assert sync_result.security_events == []
+
+    # Same fetched user, but now as part of a login: the gate opens.
+    login_result = _sync_user_result_for(fetched)
+    created = _sync_ldap_user(
+        fetched_ldap_user=fetched,
+        ldap_user_connector=connector,
+        users=users,
+        sync_users_result=login_result,
+        user_attributes=_SYNC_USER_ATTRIBUTES,
+        default_user_profile=_SYNC_DEFAULT_PROFILE,
+        login_attempt=True,
+    )
+    assert created == UserId("carol")
+    assert UserId("carol") in users
+    assert users[UserId("carol")]["connector"] == connector.id

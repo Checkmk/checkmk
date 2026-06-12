@@ -41,6 +41,25 @@ mounting over a live site.
 
 ---
 
+### Clone backend: `omd stop` failure only warns before the symlink swap
+
+**File:** `site/version_clone.py` — `_run_omd()`
+
+Same class as the overlay entry above: a failing or timing-out `omd stop`
+produces a warning, and the `version` symlink is swapped anyway. Unlike the
+overlay there is no mount-level split view — surviving processes keep their
+open file handles into the old version tree and run undisturbed until
+restarted — but the site is then only partially on the deployed code.
+
+**Trigger:** Any site with a stuck service (CMC, Apache with hung workers).
+
+**Workaround:** Manually `omd stop <site>` before running cmk-dev-deploy.
+
+**Fix:** Check the `omd stop` exit status and abort the swap with a clear
+message.
+
+---
+
 ### `.mo` files pollute the source tree
 
 **File:** `deployers/config_deployer.py` — `_compile_and_deploy_locale()`

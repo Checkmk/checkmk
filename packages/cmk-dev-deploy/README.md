@@ -122,6 +122,52 @@ Every deployment goes through an OverlayFS mounted on the site directory. This m
 | `--full`           | Tear down overlay, recreate from scratch, then deploy                                   |
 | `--purge`          | Tear down overlay, delete upper layer, site reverts to original state (stopped)         |
 
+## Experimental: Clone Backend
+
+`--backend clone` replaces the OverlayFS mount with a **writable per-site
+clone of the OMD version directory**. The overlay stays the default; the
+clone backend is an experiment towards removing the overlay's inherent
+failure modes (reboot windows, copy-up semantics, `etc/`/`var/`
+entanglement) and its permanent sudo requirement.
+
+```
+/omd/sites/<site>/version -> /omd/dev-versions/<site>/<ver>   (clone, deploy-user owned)
+                          -> ../../versions/<ver>             (pristine, after --purge)
+```
+
+The clone keeps the same directory basename as the original version, so
+`omd` management tooling (which derives the version from the symlink
+basename and reconstructs `/omd/versions/<ver>/...` paths) keeps operating
+against the pristine install, while the site runtime follows the symlink
+into the clone.
+
+**Privilege model.** One mechanism, no SSH, no fallback chain: a per-site
+sudoers drop-in (`<user> ALL=(<site>) NOPASSWD: ALL`). Every run probes for
+it non-interactively; if missing, the tool shows the exact rule and asks for
+one-time permission to install it (`visudo -cf` validated). `--print-setup`
+emits the manual commands for an admin instead; `--remove-setup` deletes the
+drop-in. After bootstrap, no deploy, restart, reboot, `--full`, or `--purge`
+ever needs sudo again.
+
+| Event              | What happens                                                                      |
+| ------------------ | --------------------------------------------------------------------------------- |
+| First deploy       | one consented sudo bootstrap per site, clone version dir, swap symlink, restart   |
+| Subsequent deploys | write into the clone directly (plain file ops)                                    |
+| Reboot             | nothing to do — the symlink persists, the site starts with the **deployed** code  |
+| `--full`           | delete + recreate clone, swap, restart (no sudo)                                  |
+| `--purge`          | revert symlink to the pristine version, delete clone (no sudo); site left stopped |
+| `omd update`       | detected via a symlink guard → refuses loudly, instructs `--purge` first          |
+
+**`--purge` semantics differ deliberately from the overlay:** it reverts
+**code only**. Site configuration (`etc/`) and runtime state (`var/`) are
+real directories that deploys never touch, so purging cannot eat WATO
+changes — the overlay's "revert everything" behavior is one of the
+surprises this experiment removes.
+
+Backends refuse to mix: switching between `overlay` and `clone` on the same
+site requires a `--purge` of the active backend first. The backend used for
+a site is recorded in the deploy state, so plain `cdd` runs keep using it.
+
 ## Modes of Operation
 
 ### One-Shot Deploy (default)
@@ -223,7 +269,10 @@ echo 'v260' > .site
 | `--jobs N`           | `-j`  | 4           | Max parallel deployment workers                                                                                                                                                                                   |
 | `--no-restart`       |       |             | Deploy files only, skip service restarts                                                                                                                                                                          |
 | `--rebuild-manifest` |       |             | Force manifest regeneration before deploying                                                                                                                                                                      |
-| `--purge`            |       |             | Remove overlay and revert site to original state, then exit (no deploy)                                                                                                                                           |
+| `--purge`            |       |             | Revert site to original state and remove deploy data, then exit (no deploy)                                                                                                                                       |
+| `--backend NAME`     |       | recorded    | Site preparation backend: `overlay` or `clone` (experimental). Defaults to the backend recorded for the site, else `overlay`                                                                                      |
+| `--print-setup`      |       |             | Print the admin commands that set up the clone backend, then exit                                                                                                                                                 |
+| `--remove-setup`     |       |             | Remove the clone backend's sudoers rule, then exit                                                                                                                                                                |
 | `--json-errors`      |       |             | On error, output a JSON diagnostic bundle to stdout (for automation)                                                                                                                                              |
 
 ### Flag Combinations
@@ -235,6 +284,7 @@ Some flags cannot be combined:
 - `--commit` cannot be used with `--watch` or `--info`
 - `--full` cannot be used with `--info`
 - `--purge` cannot be used with any other mode flag
+- `--print-setup` / `--remove-setup` combine only with `--site`
 
 ## Deploy Pipeline
 
@@ -278,6 +328,8 @@ The codebase supports five editions: `community`, `pro`, `ultimate`, `ultimatemt
 - Skips edition-gated service restarts (e.g. CMC and DCD only on pro+ editions)
 
 ## SSH Key Setup
+
+SSH keys are used by the **overlay backend only** -- the clone backend runs all site-user commands through its sudoers rule instead.
 
 After the overlay is mounted, the tool injects your SSH public key into the site user's `authorized_keys` on the overlay. This lets subsequent `omd restart` commands run via SSH instead of sudo, which is faster and doesn't require a cached sudo timestamp.
 

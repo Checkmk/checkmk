@@ -651,7 +651,12 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                     content_type="application/json",
                     version=version,
                 )
-
+                self._add_versioned_rule(
+                    path_entries=["/ui/openapi-swagger-ui.yaml"],
+                    endpoint=ServeSpec("swagger-ui", "yaml", version=version),
+                    content_type="application/yaml",
+                    version=version,
+                )
                 self._add_versioned_rule(
                     path_entries=["/ui/", "/ui/<path:path>"],
                     endpoint=ServeSwaggerUI(prefix="/[^/]+/check_mk/api/[^/]+/ui"),

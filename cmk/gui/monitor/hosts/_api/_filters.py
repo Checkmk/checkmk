@@ -17,6 +17,8 @@ from ._validators import validate_uniqueness
 # that this functionality is tied to the field names or the state choice enum. This information
 # would be ideally passed in the respective endpoint definitions.
 
+_NO_NEWLINES_REGEX = r"^[^\n]*$"
+
 type StringOp = Literal["contains", "matches"]
 
 type NumericOp = Literal["lt", "lte", "eq", "gt", "gte"]
@@ -40,7 +42,9 @@ class StringCondition:
         description="String host field to filter on", example="name"
     )
     op: StringOp = api_field(description="String match operation", example="contains")
-    value: str = api_field(description="Value to match against the field", example="web")
+    value: str = api_field(
+        description="Value to match against the field", example="web", pattern=_NO_NEWLINES_REGEX
+    )
 
 
 @api_model

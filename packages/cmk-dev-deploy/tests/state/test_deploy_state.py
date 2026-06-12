@@ -144,6 +144,34 @@ class TestLoadState:
         assert d.dirty_file_hashes == {"cmk/foo.py": "abc123"}
         assert d.deployed_at == now
 
+    def test_load_state_backend_round_trip(self, tmp_path: Path) -> None:
+        """The site preparation backend is persisted and restored."""
+        state = _make_state(branch="master")
+        state.backend = "clone"
+        save_state(state, tmp_path)
+        loaded = load_state(tmp_path)
+        assert loaded is not None
+        assert loaded.backend == "clone"
+
+    def test_load_state_missing_backend_defaults_empty(self, tmp_path: Path) -> None:
+        """State files written before the backend field default to empty string."""
+        sf = state_file_path(tmp_path)
+        sf.parent.mkdir(parents=True, exist_ok=True)
+        data = {
+            "schema_version": STATE_SCHEMA_VERSION,
+            "branch": "master",
+            "deployers": {},
+            "created_at": 0.0,
+            "diff_base_commit": "",
+        }
+        sf.write_text(json.dumps(data))
+        try:
+            loaded = load_state(tmp_path)
+            assert loaded is not None
+            assert loaded.backend == ""
+        finally:
+            sf.unlink(missing_ok=True)
+
     def test_load_state_missing_diff_base_commit(self, tmp_path: Path) -> None:
         """State files without diff_base_commit (v2 compat) default to empty string."""
         sf = state_file_path(tmp_path)

@@ -317,6 +317,7 @@ def _collect_deploy_state(site: SiteInfo | None) -> dict[str, Any]:
             "deployer_count": len(state.deployers),
             "diff_base_commit": state.diff_base_commit,
             "branch_in_state": state.branch,
+            "backend_in_state": state.backend,
         }
     except Exception:
         return {"state_file_exists": "error"}

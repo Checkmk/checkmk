@@ -40,6 +40,8 @@ class DeployState:
     created_at: float = 0.0
     diff_base_commit: str = ""
     """Set to HEAD after each deploy cycle; used as the diff base on next run."""
+    backend: str = ""
+    """Site preparation backend that prepared the site ("overlay" or "clone")."""
 
 
 def state_file_path(site_root: Path) -> Path:
@@ -72,6 +74,7 @@ def load_state(site_root: Path) -> DeployState | None:
             deployers=deployers,
             created_at=raw.get("created_at", 0.0),
             diff_base_commit=raw.get("diff_base_commit", ""),
+            backend=raw.get("backend", ""),
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError):
         return None
@@ -87,6 +90,7 @@ def save_state(state: DeployState, site_root: Path) -> None:
         "branch": state.branch,
         "created_at": state.created_at,
         "diff_base_commit": state.diff_base_commit,
+        "backend": state.backend,
         "deployers": {
             key: {
                 "deployer": ds.deployer,
@@ -237,6 +241,7 @@ def build_and_save_state(
     previous_state: DeployState | None,
     deployer_dirty_hashes: dict[str, dict[str, str]] | None = None,
     all_succeeded: bool = True,
+    backend: str = "",
 ) -> None:
     """Assemble and persist deploy state with partial-failure support.
 
@@ -273,6 +278,7 @@ def build_and_save_state(
         branch=branch,
         created_at=now,
         diff_base_commit=diff_base,
+        backend=backend or (previous_state.backend if previous_state else ""),
     )
 
     all_deployer_names = ["install_spec", "config_spec", "wheel_spec"]

@@ -44,6 +44,7 @@ py_library(
         "cmk/dev_deploy/manifest/update.py",
         "cmk/dev_deploy/site/__init__.py",
         "cmk/dev_deploy/site/overlay.py",
+        "cmk/dev_deploy/site/preparation.py",
         "cmk/dev_deploy/site/privilege.py",
         "cmk/dev_deploy/site/site_config.py",
         "cmk/dev_deploy/site/site_resolver.py",

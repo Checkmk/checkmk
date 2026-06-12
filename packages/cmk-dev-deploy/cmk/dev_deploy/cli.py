@@ -93,7 +93,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--purge",
         action="store_true",
-        help="Remove overlay and revert site to original state, then exit (no deploy)",
+        help="Revert site to original state and remove deploy data, then exit (no deploy)",
+    )
+    parser.add_argument(
+        "--backend",
+        choices=("overlay",),
+        default=None,
+        help="Site preparation backend (default: backend recorded for the site, else overlay)",
     )
     parser.add_argument(
         "--json-errors",

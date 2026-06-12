@@ -27,7 +27,6 @@ from cmk.dev_deploy.errors import (
     ChangeDetectionError,
     DeployError,
     ManifestBuildError,
-    OverlayError,
     RepoNotFoundError,
     SiteError,
     SiteNotFoundError,
@@ -431,6 +430,7 @@ def _run_deploy_cycle(
             current_branch,
             successful_deployers=set(),
             previous_state=state,
+            backend=args.backend or "",
         )
         return _make_result(0, all_skipped=True)
 
@@ -483,6 +483,7 @@ def _run_deploy_cycle(
             state,
             deployer_dirty_hashes=_deployer_dirty,
             all_succeeded=False,
+            backend=args.backend or "",
         )
         return _make_result(1)
 
@@ -527,6 +528,7 @@ def _run_deploy_cycle(
         successful_deployers,
         state,
         deployer_dirty_hashes=_deployer_dirty,
+        backend=args.backend or "",
     )
 
     # Total deploy time and optional verbose timing table
@@ -693,6 +695,7 @@ def _infer_phase(error: BaseException) -> str:
         ConfigDeployError,
         FrontendError,
         IBazelError,
+        OverlayError,
         WheelDeployError,
     )
 
@@ -764,11 +767,6 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         return 0
 
-    # OverlayFS management
-    from cmk.dev_deploy.site.overlay import (
-        teardown_overlay,
-    )
-
     # --purge only needs the site root path, not full site resolution.
     # This allows purging even if the site is partially deleted (or removed
     # via ``omd rm``).  We try the lightweight find_site_root first, then
@@ -801,15 +799,21 @@ def main(argv: list[str] | None = None) -> int:
                 "  Specify explicitly: cmk-dev-deploy --purge --site SITENAME"
             )
             return 1
-        from cmk.dev_deploy.site.privilege import ensure_sudo
+        from cmk.dev_deploy.site.preparation import create_backend, resolve_backend_name
 
-        ensure_sudo()
+        # Read the state before teardown -- teardown removes the state file.
+        state = load_state(site_root)
+        backend = create_backend(
+            resolve_backend_name(args.backend, state.backend if state else ""), SSHState()
+        )
         try:
-            teardown_overlay(site_root)
-        except OverlayError as e:
+            backend.teardown(site_root)
+        except DeployError as e:
             output.error(str(e))
             return 1
-        output.success("Overlay purged. Site reverted to original state (stopped).")
+        output.success(
+            f"{backend.name.capitalize()} purged. Site reverted to original state (stopped)."
+        )
         output.info(f"  Start with: omd start {site_root.name}")
         return 0
 
@@ -841,12 +845,7 @@ def _main_with_site(args: argparse.Namespace, repo_root: Path, site: SiteInfo) -
     import time as _time
 
     from cmk.dev_deploy.manifest.staleness import ensure_manifest
-    from cmk.dev_deploy.site.overlay import (
-        ensure_overlay,
-        is_overlay_active,
-        teardown_overlay,
-    )
-    from cmk.dev_deploy.site.privilege import ensure_sudo
+    from cmk.dev_deploy.site.preparation import create_backend, resolve_backend_name
 
     if output.get_verbosity() >= output.Verbosity.VERBOSE:
         output.print_blank()
@@ -871,24 +870,30 @@ def _main_with_site(args: argparse.Namespace, repo_root: Path, site: SiteInfo) -
         ssh_state = SSHState()
         return _run_deploy_cycle(args, repo_root, site, ssh_state, _manifest_elapsed).exit_code
 
-    # Pre-authenticate sudo early — before the manifest rebuild which
-    # can take minutes and would otherwise expire the sudo timestamp.
-    if not is_overlay_active(site.root) or args.full:
-        output.info("Overlay setup requires sudo privileges")
-        ensure_sudo()
+    ssh_state = SSHState()
 
-    # Manifest must be ready before overlay setup because
-    # _restore_capabilities (called during overlay mount) reads it.
+    # Backend selection: explicit flag > deploy-state record > default.
+    # Resolved once here; the cycle records it back into the deploy state.
+    state = load_state(site.root)
+    backend = create_backend(
+        resolve_backend_name(args.backend, state.backend if state else ""), ssh_state
+    )
+    args.backend = backend.name
+
+    # Acquire privileges early — before the manifest rebuild which can
+    # take minutes (and would e.g. expire a sudo timestamp).
+    backend.prepare_privileges(site.root, full=args.full)
+
+    # Manifest must be ready before site preparation because capability
+    # restoration during ensure() reads it.
     t0 = _time.monotonic()
     ensure_manifest(repo_root, force_rebuild=args.rebuild_manifest)
     _manifest_elapsed = _time.monotonic() - t0
 
-    ssh_state = SSHState()
-
     t0 = _time.monotonic()
     if args.full:
-        teardown_overlay(site.root)
-    ensure_overlay(site.root, ssh_state)
+        backend.teardown(site.root)
+    backend.ensure(site.root)
     _overlay_elapsed = _time.monotonic() - t0
 
     # Branch mismatch warning

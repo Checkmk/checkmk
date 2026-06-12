@@ -58,6 +58,7 @@ class TestDefaults:
         assert args.purge is False
         assert args.print_setup is False
         assert args.remove_setup is False
+        assert args.backend is None
 
 
 # ---------------------------------------------------------------------------
@@ -295,3 +296,10 @@ class TestValidCombinations:
 
     def test_remove_setup_alone(self) -> None:
         assert parse_args(["--remove-setup"]).remove_setup is True
+
+    def test_backend_overlay(self) -> None:
+        assert parse_args(["--backend", "overlay"]).backend == "overlay"
+
+    def test_backend_unknown_rejected(self) -> None:
+        with pytest.raises(SystemExit):
+            parse_args(["--backend", "teleport"])

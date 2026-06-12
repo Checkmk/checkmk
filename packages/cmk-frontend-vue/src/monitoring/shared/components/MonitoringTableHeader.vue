@@ -5,7 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts" generic="T">
 import { type Column, type ColumnDef, FlexRender, type HeaderGroup } from '@tanstack/vue-table'
-import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-vue-next'
 import { type CSSProperties, inject } from 'vue'
 
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
@@ -93,7 +92,6 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
         :class="[
           'monitoring-table-header__header-cell',
           {
-            'monitoring-table-header__header-cell--sortable': header.column.getCanSort(),
             'monitoring-table-header__header-cell--last-pinned': isLastPinned(header.column.id)
           }
         ]"
@@ -112,24 +110,40 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
             :disabled="disabled"
             @click="header.column.getToggleSortingHandler()?.($event)"
           >
-            <ChevronUp
-              v-if="header.column.getIsSorted() === 'asc'"
-              class="monitoring-table-header__sort-icon"
-              :size="14"
-              aria-hidden="true"
-            />
-            <ChevronDown
-              v-else-if="header.column.getIsSorted() === 'desc'"
-              class="monitoring-table-header__sort-icon"
-              :size="14"
-              aria-hidden="true"
-            />
-            <ChevronsUpDown
-              v-else
-              class="monitoring-table-header__sort-icon monitoring-table-header__sort-icon--inactive"
-              :size="14"
-              aria-hidden="true"
-            />
+            <div class="monitoring-table-header__sort-icon-wrapper">
+              <CmkMultitoneIcon
+                v-if="header.column.getIsSorted() === 'asc'"
+                name="chevron-up"
+                primary-color="font"
+                aria-hidden="true"
+                size="xsmall"
+              />
+
+              <CmkMultitoneIcon
+                v-else-if="header.column.getIsSorted() === 'desc'"
+                name="chevron-down"
+                primary-color="font"
+                aria-hidden="true"
+                size="xsmall"
+              />
+              <template v-else>
+                <CmkMultitoneIcon
+                  name="chevron-up"
+                  class="monitoring-table-header__sort-icon--inactive"
+                  primary-color="font"
+                  aria-hidden="true"
+                  size="xsmall"
+                />
+                <CmkMultitoneIcon
+                  class="monitoring-table-header__sort-icon--inactive"
+                  name="chevron-down"
+                  primary-color="font"
+                  aria-hidden="true"
+                  size="xsmall"
+                />
+              </template>
+            </div>
+
             <span class="monitoring-table-header__label">
               <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
             </span>
@@ -282,11 +296,20 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
   opacity: 1;
 }
 
-.monitoring-table-header__sort-icon {
+.monitoring-table-header__sort-icon-wrapper {
   flex-shrink: 0;
+  margin-right: var(--dimension-2);
 }
 
 .monitoring-table-header__sort-icon--inactive {
   opacity: 0.4;
+
+  &:first-child {
+    margin-top: calc(-1 * var(--dimension-2));
+  }
+
+  &:last-child {
+    margin-top: calc(-1 * var(--dimension-3));
+  }
 }
 </style>

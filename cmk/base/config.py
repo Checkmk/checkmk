@@ -620,7 +620,6 @@ def perform_post_config_loading_actions(
     # First cleanup things (needed for e.g. reloading the config)
     cache_manager.clear_all()
 
-    _transform_plugin_names_from_160_to_170(loaded_context)
     _drop_invalid_ssc_rules(loaded_context)
 
     loaded_config = BaseConfig(
@@ -779,15 +778,6 @@ def _load_config(
     target_context["all_hosts"] = list(all_hosts_h)
     target_context["clusters"] = dict(clusters_h)
     return target_context
-
-
-def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None:
-    # Pre 1.7.0 check plug-in names may have dots or dashes (one case) in them.
-    # Now they don't, and we have to translate all variables that may use them:
-    if "service_descriptions" in global_dict:
-        global_dict["service_descriptions"] = {
-            maincheckify(k): str(v) for k, v in global_dict["service_descriptions"].items()
-        }
 
 
 def _is_mapping_rulespec(rs: RuleSpec[object]) -> TypeGuard[RuleSpec[Mapping[str, object]]]:

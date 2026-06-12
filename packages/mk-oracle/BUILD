@@ -170,6 +170,9 @@ rust_test_suite(
         "tests/files/orasql_config/**/*.sql",
     ]),
     crate_features = ["build_system_bazel"],
+    data = [
+        "references/output-xe-single.cfg",
+    ],
     env_inherit = [
         "CI_ORA2_DB_TEST",
         "LD_LIBRARY_PATH",

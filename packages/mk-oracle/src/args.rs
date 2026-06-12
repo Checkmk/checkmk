@@ -80,6 +80,16 @@ pub struct Args {
     /// Windows: entry will be added to the bakery file
     #[arg(short, long)]
     pub generate_plugins: Option<PathBuf>,
+
+    /// Migrate legacy mk_oracle config to mk-oracle.yml format.
+    /// Provide the path to the legacy config file.
+    /// Output is written to the path given by --migrate-output, or stdout.
+    #[arg(short = 'M', long = "migrate-config")]
+    pub migrate_config: Option<PathBuf>,
+
+    /// Output path for migrated config (default: stdout)
+    #[arg(long = "migrate-output", requires = "migrate_config")]
+    pub migrate_output: Option<PathBuf>,
 }
 
 impl Args {

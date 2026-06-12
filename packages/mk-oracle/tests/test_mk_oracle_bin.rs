@@ -79,6 +79,8 @@ fn test_help() {
         "--runtime-ready",
         "-f, --filter",
         "-g, --generate-plugins",
+        "-M, --migrate-config",
+        "--migrate-output",
         "-h, --help",
         "-V, --version",
     ] {
@@ -189,4 +191,55 @@ fn test_print_info() {
             "Missing in --print-info output: {expected}"
         );
     }
+}
+
+fn legacy_cfg_path() -> String {
+    #[cfg(feature = "build_system_bazel")]
+    {
+        let cwd = std::env::current_dir().unwrap();
+        cwd.join("packages/mk-oracle/references/output-xe-single.cfg")
+            .to_str()
+            .unwrap()
+            .to_string()
+    }
+    #[cfg(not(feature = "build_system_bazel"))]
+    {
+        "references/output-xe-single.cfg".to_string()
+    }
+}
+
+#[test]
+fn test_migrate_config_to_stdout() {
+    let cfg = legacy_cfg_path();
+    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains("oracle:"), "missing oracle: key");
+    assert!(stdout.contains("main:"), "missing main: key");
+    assert!(
+        stdout.contains("authentication:"),
+        "missing authentication:"
+    );
+    assert!(stdout.contains("connection:"), "missing connection:");
+    assert!(
+        stdout.contains("# DBUSER="),
+        "legacy config not in comments"
+    );
+}
+
+#[test]
+fn test_migrate_config_to_file() {
+    let cfg = legacy_cfg_path();
+    let tmp = tempfile::tempdir().unwrap();
+    let output_path = tmp.path().join("migrated.yml");
+    run_bin()
+        .args(["-M", &cfg])
+        .args(["--migrate-output", output_path.to_str().unwrap()])
+        .assert()
+        .success();
+    let content = fs::read_to_string(&output_path).expect("output file missing");
+    assert!(content.contains("oracle:"), "missing oracle: key");
+    assert!(
+        content.contains("# DBUSER="),
+        "legacy config not in comments"
+    );
 }

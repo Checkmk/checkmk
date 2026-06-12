@@ -39,6 +39,16 @@ class ReplicationType(DropdownOptions):
     PUSH_CONFIGURATION = "Push configuration to this site"
 
 
+class AuthenticationConnections(DropdownOptions):
+    """Cascading choice for the 'Authentication connections' Form Spec field."""
+
+    # "Use same as the central site" was removed from both properties (CMK-37102);
+    # "Disabled" replaced it as the non-default, no-nested-data choice.
+    DISABLED = "Disabled (Use the local users of the central site)"
+    USE_ALL = "Use all"
+    FOLLOWING_CONNECTIONS = "Use the following"
+
+
 class DistributedMonitoring(CmkPage):
     """Represent the page `Setup -> General -> Distributed monitoring`."""
 
@@ -107,6 +117,26 @@ class DistributedMonitoring(CmkPage):
         add_site_connection_page = AddSiteConnection(self.page, navigate_to_page=False)
         add_site_connection_page.fill_site_connection_form(remote_site)
         add_site_connection_page.save_button.click()
+
+    def open_add_connection_form(self) -> "AddSiteConnection":
+        """Open the 'Add site connection' form and return its page object."""
+        logger.info("Open the 'Add site connection' form")
+        self.add_connection_button.click()
+        return AddSiteConnection(self.page, navigate_to_page=False)
+
+    def open_edit_connection(self, site_id: str) -> "AddSiteConnection":
+        """Open the edit form of an existing site connection.
+
+        The site ID cell links to `wato.py?mode=edit_site&site=<id>`.
+
+        Args:
+            site_id: The ID of the site connection to edit.
+        """
+        logger.info("Open the edit form of site connection '%s'", site_id)
+        # Pencil link in the row's Actions column (distinct from `clone=` and `edit_site_globals`).
+        self._get_table_row(site_id).locator(f"a[href*='mode=edit_site&site={site_id}']").click()
+        # URL stays SPA-encoded; the page object's validate_page waits on the title instead.
+        return AddSiteConnection(self.page, navigate_to_page=False, edit_site_id=site_id)
 
     def check_site_online_status(self, site_id: str, times_to_reload_page: int = 5) -> None:
         """Check via the UI that the remote site is online.
@@ -208,9 +238,31 @@ class DistributedMonitoring(CmkPage):
 
 
 class AddSiteConnection(CmkPage):
-    """Represent the page `Setup -> General -> Distributed monitoring -> Add site connection`."""
+    """Represent the page `Setup -> General -> Distributed monitoring -> Add site connection`.
+
+    The same WATO mode (`edit_site`) renders both the add form (no `site` argument)
+    and the edit form of an existing connection (`site=<id>`). When `edit_site_id`
+    is provided this page object represents the edit form of that connection,
+    where the Site ID is a read-only value rather than an input field.
+    """
 
     page_title = "Add site connection"
+
+    def __init__(
+        self, page: Page, navigate_to_page: bool = True, edit_site_id: str | None = None
+    ) -> None:
+        """Initialize the add/edit site connection page.
+
+        Args:
+            page: The Playwright page object.
+            navigate_to_page: Whether to navigate to the add form on construction.
+            edit_site_id: If set, this page object represents the edit form of the
+                given site connection (the Site ID is then read-only).
+        """
+        self._edit_site_id = edit_site_id
+        if edit_site_id is not None:
+            self.page_title = f"Edit site connection {edit_site_id}"
+        super().__init__(page, navigate_to_page=navigate_to_page)
 
     @override
     def navigate(self) -> None:
@@ -229,9 +281,10 @@ class AddSiteConnection(CmkPage):
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
-        expect(
-            self.site_id_input, message=f"Site ID input not present in '{self.page_title}' page"
-        ).to_be_visible()
+        if self._edit_site_id is None:
+            expect(
+                self.site_id_input, message=f"Site ID input not present in '{self.page_title}' page"
+            ).to_be_visible()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
@@ -301,6 +354,27 @@ class AddSiteConnection(CmkPage):
     def url_of_remote_site_input(self) -> Locator:
         """The input field for the URL of the remote site."""
         return self.form_site.get_by_label("URL of remote site")
+
+    @property
+    def authentication_connections_dropdown(self) -> DropdownHelper[AuthenticationConnections]:
+        """The Form Spec cascading-choice for 'Authentication connections'.
+
+        Rendered by cmk-frontend-vue as a `CmkDropdown` whose accessible name is
+        the Form Spec title ('Authentication connections').
+        """
+        return DropdownHelper[AuthenticationConnections](
+            "Authentication connections",
+            dropdown_box=self.form_site.get_by_role("combobox", name="Authentication connections"),
+            dropdown_list=self.form_site.get_by_role("listbox"),
+        )
+
+    def assert_authentication_connections_selected(self, option: AuthenticationConnections) -> None:
+        """Assert the 'Authentication connections' cascading-choice shows `option`."""
+        logger.info("Assert 'Authentication connections' is set to '%s'", option)
+        expect(
+            self.form_site.get_by_role("combobox", name="Authentication connections"),
+            message=f"'Authentication connections' is not set to '{option}'",
+        ).to_contain_text(option)
 
     def fill_site_connection_form(self, remote_site: Site) -> None:
         """Fill the form to add a new site connection.

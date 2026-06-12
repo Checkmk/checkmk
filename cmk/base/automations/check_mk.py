@@ -34,7 +34,7 @@ from cmk.ccc.version import edition_supports_nagvis
 
 import cmk.utils.password_store
 import cmk.utils.paths
-from cmk.utils import config_warnings, ip_lookup, log, man_pages
+from cmk.utils import config_warnings, ip_lookup, log, man_pages, tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
@@ -43,6 +43,7 @@ from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParame
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import (
     autochecks_dir,
@@ -720,7 +721,6 @@ def _execute_autodiscovery(
     called_from_automation_helper: bool,
 ) -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     # pylint: disable=too-many-branches
-    _logger = logging.getLogger("cmk.base.discovery")
     file_cache_options = FileCacheOptions(use_outdated=True)
 
     if not (autodiscovery_queue := AutoQueue(autodiscovery_dir)):
@@ -776,15 +776,14 @@ def _execute_autodiscovery(
     )
     for host_name in autodiscovery_queue:
         if host_name not in all_hosts:
-            _logger.debug(f"  Removing mark '{host_name}' (host not configured")
+            console.verbose(f"  Removing mark '{host_name}' (host not configured")
             (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
 
     if (oldest_queued := autodiscovery_queue.oldest()) is None:
-        _logger.debug("Autodiscovery: No hosts marked by discovery check")
+        console.verbose("Autodiscovery: No hosts marked by discovery check")
         return {}, False
 
-    queue_size_at_start = len(autodiscovery_queue)
-    _logger.debug("Autodiscovery: Discovering all hosts marked by discovery check:")
+    console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:")
 
     activation_required = False
     rediscovery_reference_time = time.time()
@@ -816,12 +815,12 @@ def _execute_autodiscovery(
                     )
 
                 hosts_processed.add(host_name)
+                console.verbose(f"{tty.bold}{host_name}{tty.normal}:")
                 params = config_cache.discovery_check_parameters(host_name)
                 if params.commandline_only:
-                    _logger.debug(f"autodiscovery: {host_name} failed: discovery check disabled")
+                    console.verbose("  failed: discovery check disabled")
                     discovery_result, activate_host = None, False
                 else:
-                    _logger.debug(f"autodiscovery: processing {host_name}")
                     hosts_config = config_cache.hosts_config
                     discovery_result, activate_host = autodiscovery(
                         host_name,
@@ -857,33 +856,9 @@ def _execute_autodiscovery(
                 if discovery_result:
                     discovery_results[host_name] = discovery_result
                     activation_required |= activate_host
-                elif (autodiscovery_queue.path / str(host_name)).exists():
-                    _logger.debug(
-                        "Autodiscovery: host %s retained in queue for next run", host_name
-                    )
 
-    except (MKTimeout, TimeoutError):
-        elapsed = time.monotonic() - start
-        remaining_hosts = list(autodiscovery_queue)
-        _logger.warning(
-            "Autodiscovery: timed out after %.1fs (limit: %ds). "
-            "Processed %d host(s), %d host(s) remaining in queue: %s",
-            elapsed,
-            limit,
-            len(hosts_processed),
-            len(remaining_hosts),
-            ", ".join(remaining_hosts) if remaining_hosts else "none",
-        )
-
-    _logger.debug(
-        "Autodiscovery: run complete: queue_start=%d queue_end=%d processed=%d "
-        "results=%d activation_required=%s",
-        queue_size_at_start,
-        len(autodiscovery_queue),
-        len(hosts_processed),
-        len(discovery_results),
-        activation_required,
-    )
+    except (MKTimeout, TimeoutError) as exc:
+        console.verbose_no_lf(str(exc))
 
     if not activation_required:
         return discovery_results, False

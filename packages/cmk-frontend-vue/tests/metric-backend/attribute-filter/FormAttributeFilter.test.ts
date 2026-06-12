@@ -494,7 +494,7 @@ describe('Escape in edit mode', () => {
     within(pill).getByRole('combobox', { name: 'Attribute operator' }).focus()
   }
 
-  test.skip('Escape on a valid editing pill commits and focuses the chip', async () => {
+  test('Escape on a valid editing pill commits and focuses the chip', async () => {
     renderForm([
       pill('pill-a', null, { attributeType: 'scope', key: 'otel.library.name', value: 'foo' })
     ])
@@ -512,7 +512,7 @@ describe('Escape in edit mode', () => {
     )
   })
 
-  test.skip('Escape on an invalid editing pill keeps it open and reveals errors', async () => {
+  test('Escape on an invalid editing pill keeps it open and reveals errors', async () => {
     renderForm(singlePill({ key: 'service.name', value: '' }))
     const pillA = pillsInOrder()[0]!
     await enterEditMode(pillA)
@@ -526,7 +526,7 @@ describe('Escape in edit mode', () => {
     })
   })
 
-  test.skip('Escape with a dropdown open only closes the dropdown', async () => {
+  test('Escape with a dropdown open only closes the dropdown', async () => {
     renderForm([
       pill('pill-a', null, { attributeType: 'scope', key: 'otel.library.name', value: 'foo' })
     ])

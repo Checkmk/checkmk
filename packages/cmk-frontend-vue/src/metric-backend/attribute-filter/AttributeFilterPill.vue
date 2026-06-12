@@ -73,6 +73,9 @@ const showValidationErrors = ref(false)
 
 const validationVisible = computed(() => showValidationErrors.value)
 
+const chipButtonRef = useTemplateRef<HTMLButtonElement>('chipButtonRef')
+let returnFocusToChip = false
+
 // The click that creates a pill in edit mode keeps bubbling after Vue mounts
 // the new edit branch. Defer arming the outside-click handler by one task so
 // that tail bubble does not turn into the pill's own first commit attempt.
@@ -105,6 +108,10 @@ watch(
         armTimer = null
       }
       showValidationErrors.value = false
+      if (returnFocusToChip) {
+        returnFocusToChip = false
+        void nextTick(() => chipButtonRef.value?.focus())
+      }
     }
   },
   { immediate: true }
@@ -263,6 +270,25 @@ function onOutside(): void {
   emit('done')
 }
 
+// Escape should close open Dropdown without commiting the pill
+let escapeAteDropdown = false
+function onEditEscapeCapture(): void {
+  escapeAteDropdown =
+    editPaneRef.value !== null && editPaneRef.value.querySelector('[aria-expanded="true"]') !== null
+}
+function onEditEscape(): void {
+  if (escapeAteDropdown) {
+    escapeAteDropdown = false
+    return
+  }
+  if (hasValidationErrors.value) {
+    showValidationErrors.value = true
+    return
+  }
+  returnFocusToChip = true
+  emit('done')
+}
+
 defineExpose({
   revealValidationErrors: () => {
     showValidationErrors.value = true
@@ -282,6 +308,8 @@ defineExpose({
       v-click-outside="onOutside"
       class="metric-backend-attribute-filter-pill__edit"
       :title="fullLabel"
+      @keydown.esc.capture="onEditEscapeCapture"
+      @keydown.esc="onEditEscape"
     >
       <span
         v-if="condition.key"
@@ -339,6 +367,7 @@ defineExpose({
     </span>
     <button
       v-else
+      ref="chipButtonRef"
       type="button"
       class="metric-backend-attribute-filter-pill__main"
       :title="fullLabel"

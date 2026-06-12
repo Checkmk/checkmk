@@ -547,6 +547,76 @@ describe('Escape in edit mode', () => {
   })
 })
 
+describe('combined pill keyboard stop', () => {
+  function chipOf(pill: HTMLElement): HTMLElement {
+    return within(pill).getByRole('button', { name: /^Edit condition:/ })
+  }
+
+  test.skip('closed: tabbing into the pill lands on a single stop that wraps the chip and the remove X', async () => {
+    renderForm(makeModel())
+    const pillA = pillsInOrder()[0]!
+
+    for (let i = 0; i < 20 && !pillA.contains(document.activeElement); i++) {
+      await userEvent.tab()
+    }
+
+    const focused = document.activeElement as HTMLElement
+    expect(pillA.contains(focused)).toBe(true)
+    expect(within(focused).getByRole('button', { name: /^Edit condition:/ })).toBeInTheDocument()
+    expect(within(focused).getByRole('button', { name: 'Remove condition' })).toBeInTheDocument()
+  })
+
+  test.skip('edit mode: tabbing forward eventually focuses the remove X on its own', async () => {
+    renderForm(makeModel())
+    const pillA = pillsInOrder()[0]!
+    await enterEditMode(pillA)
+    const removeX = within(pillA).getByRole('button', { name: 'Remove condition' })
+
+    for (let i = 0; i < 20 && document.activeElement !== removeX; i++) {
+      await userEvent.tab()
+    }
+
+    expect(document.activeElement).toBe(removeX)
+  })
+
+  test.skip.each([
+    ['Backspace', '{Backspace}'],
+    ['Delete', '{Delete}']
+  ])('%s on a focused chip removes the pill', async (_name, key) => {
+    const { model } = renderForm(makeModel())
+    chipOf(pillsInOrder()[0]!).focus()
+
+    await userEvent.keyboard(key)
+
+    expect(model.value).toHaveLength(1)
+    expect(model.value![0]!.id).toBe('pill-b')
+  })
+
+  test.skip.each([
+    ['Space', ' '],
+    ['Enter', '{Enter}']
+  ])('%s on a focused chip enters edit mode', async (_name, key) => {
+    renderForm(makeModel())
+    const pillA = pillsInOrder()[0]!
+    chipOf(pillA).focus()
+
+    await userEvent.keyboard(key)
+
+    expect(within(pillA).getByRole('combobox', { name: 'Attribute operator' })).toBeInTheDocument()
+  })
+
+  test.skip('Tab from a chip lands on the per-pill +, skipping the remove X', async () => {
+    renderForm(makeModel())
+    chipOf(pillsInOrder()[0]!).focus()
+
+    await userEvent.tab()
+
+    expect(
+      screen.getByRole('button', { name: 'Add condition after previous condition' })
+    ).toHaveFocus()
+  })
+})
+
 test("clicking another pill's chip while the editing pill is invalid is a no-op and reveals errors", async () => {
   renderForm(makeModel())
   const pillA = pillsInOrder()[0]!

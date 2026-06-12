@@ -36,6 +36,8 @@ from tests.testlib.package_manager import ABCPackageManager, code_name
 from tests.testlib.version import CMKEdition
 
 HTTP_STATUS_OK = 200
+DOCKER_HUB_API = "https://hub.docker.com/v2"
+RELAY_IMAGE_NAME = "checkmk/check-mk-relay"
 
 UseCase = Literal["release", "daily", "weekly"]
 MetaFileExtension = Literal["json", "csv"]
@@ -243,6 +245,20 @@ def _download_file(url, credentials, destination):
             shutil.copyfileobj(r.raw, f)
 
 
+def assert_relay_image_on_docker_hub(version: str) -> AssertResult:
+    url = f"{DOCKER_HUB_API}/repositories/{RELAY_IMAGE_NAME}/tags/{version}/"
+    sys.stdout.write(f"Checking if relay image {RELAY_IMAGE_NAME}:{version} is on Docker Hub...")
+    response = requests.get(url, timeout=30)
+    if response.status_code == HTTP_STATUS_OK:
+        sys.stdout.write(" OK\n")
+        return AssertResult(assertion_ok=True, message="")
+    sys.stdout.write(f" MISSING (HTTP {response.status_code})\n")
+    return AssertResult(
+        assertion_ok=False,
+        message=f"Relay image {RELAY_IMAGE_NAME}:{version} not found on Docker Hub!",
+    )
+
+
 def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     credentials = get_credentials()
     version = Version.from_str(args.version)
@@ -290,6 +306,7 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
                     message=f"{image_name} not found!" if not image_exists else "",
                 )
             )
+        results.append(assert_relay_image_on_docker_hub(args.version))
 
     errors = [r.message for r in results if not r.assertion_ok]
 

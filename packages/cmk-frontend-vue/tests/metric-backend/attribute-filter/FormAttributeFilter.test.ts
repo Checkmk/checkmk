@@ -788,6 +788,86 @@ describe('combined group keyboard stop', () => {
   })
 })
 
+describe('arrow-nav within multi-element stops', () => {
+  const TWO_PILL_AND = [pill('pill-a', null), pill('pill-b', 'AND')]
+
+  async function expand(): Promise<HTMLElement> {
+    const group = screen.getByTestId(GROUP_TESTID)
+    group.focus()
+    await userEvent.keyboard(' ')
+    return group
+  }
+
+  const TAB_STOP_SELECTOR = 'button, [role="combobox"], [tabindex="0"]'
+  function tabStops(scope: HTMLElement): HTMLElement[] {
+    return Array.from(scope.querySelectorAll<HTMLElement>(TAB_STOP_SELECTOR)).filter(
+      (el) => el.getAttribute('tabindex') !== '-1'
+    )
+  }
+
+  const cycleCases = [
+    { key: 'ArrowRight', focusOrder: (items: HTMLElement[]) => [...items.slice(1), items[0]!] },
+    {
+      key: 'ArrowLeft',
+      focusOrder: (items: HTMLElement[]) => [...items.slice(1).reverse(), items[0]!]
+    }
+  ]
+
+  test.skip.each(cycleCases)(
+    '$key cycles inner controls from the group-entry stop and wraps, staying inside the group',
+    async ({ key, focusOrder }) => {
+      renderForm(TWO_PILL_AND)
+      const group = await expand()
+      const items = tabStops(group)
+      expect(items.length).toBeGreaterThanOrEqual(2)
+      // Group entry focuses the first pill's chip, not items[0]; cycle from that natural stop.
+      const entryStop = document.activeElement as HTMLElement
+      const startIdx = items.indexOf(entryStop)
+      expect(startIdx).toBeGreaterThanOrEqual(0)
+      const fromEntry = [...items.slice(startIdx), ...items.slice(0, startIdx)]
+
+      for (const expected of focusOrder(fromEntry)) {
+        await userEvent.keyboard(`{${key}}`)
+        expect(expected).toHaveFocus()
+        expect(group.contains(document.activeElement)).toBe(true)
+      }
+    }
+  )
+
+  test.skip.each(cycleCases)(
+    '$key cycles inner controls in DOM order and wraps, staying inside the pill',
+    async ({ key, focusOrder }) => {
+      // Pre-fill so entering edit mode does not auto-open the key dropdown.
+      renderForm([
+        pill('pill-a', null, { attributeType: 'resource', key: 'service.name', value: 'x' }),
+        pill('pill-b', 'AND', { attributeType: 'resource', key: 'foo.bar', value: 'y' })
+      ])
+      await expand()
+      const pillA = pillsInOrder()[0]!
+      await enterEditMode(pillA)
+      const items = tabStops(pillA)
+      expect(items.length).toBeGreaterThanOrEqual(2)
+      items[0]!.focus()
+
+      for (const expected of focusOrder(items)) {
+        await userEvent.keyboard(`{${key}}`)
+        expect(expected).toHaveFocus()
+        expect(pillA.contains(document.activeElement)).toBe(true)
+      }
+    }
+  )
+
+  test.skip('arrows on a singleton pill chip are no-ops', async () => {
+    renderForm(singlePill())
+    const chip = screen.getByRole('button', { name: /^Edit condition:/ })
+    chip.focus()
+
+    await userEvent.keyboard('{ArrowRight}')
+
+    expect(chip).toHaveFocus()
+  })
+})
+
 test("clicking another pill's chip while the editing pill is invalid is a no-op and reveals errors", async () => {
   renderForm(makeModel())
   const pillA = pillsInOrder()[0]!

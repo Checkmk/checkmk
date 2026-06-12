@@ -19,6 +19,14 @@ Topology and interfaces
    arch-comp-omd.rst
    arch-comp-hosts.rst
 
+Ongoing migrations
+==================
+
+.. toctree::
+   :maxdepth: 1
+
+   arch-migrations.rst
+
 Components
 ==========
 

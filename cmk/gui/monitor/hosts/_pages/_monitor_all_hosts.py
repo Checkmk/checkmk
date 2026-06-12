@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
 
+from cmk.ccc.user import UserId
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -21,12 +22,34 @@ from cmk.gui.pages import PageContext
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.top_heading import top_heading
-from cmk.gui.type_defs import IconNames, StaticIcon
+from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon, Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.shared_typing.monitoring.all_hosts import MonitoringAllHostsApp
 
 _PAGE_TITLE = _("All hosts (experimental)")
+
+
+def monitor_all_hosts_visual_spec() -> Visual:
+    return {
+        "owner": UserId.builtin(),
+        "description": "",
+        "hidebutton": False,
+        "public": True,
+        "topic": "overview",
+        "title": _PAGE_TITLE,
+        "name": "monitor_all_hosts",
+        "sort_index": 21,
+        "is_show_more": False,
+        "icon": DynamicIconName("folder"),
+        "hidden": False,
+        "single_infos": [],
+        "context": {},
+        "link_from": {},
+        "add_context_to_title": True,
+        "packaged": False,
+        "main_menu_search_terms": [],
+    }
 
 
 def page_monitor_all_hosts(ctx: PageContext) -> None:

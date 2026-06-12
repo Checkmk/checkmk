@@ -51,6 +51,7 @@ py_library(
         "//cmk/gui:messaging",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/dashboard",
+        "//cmk/gui/monitor/hosts",
         "//cmk/gui/nodevis:topology",
         "//cmk/gui/pagetypes",
         "//cmk/gui/search",

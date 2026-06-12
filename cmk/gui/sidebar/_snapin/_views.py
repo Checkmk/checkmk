@@ -15,9 +15,11 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import MainMenuItem
+from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
+from cmk.gui.type_defs import Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
 from cmk.shared_typing.main_menu import NavItemHeader, NavItemIdEnum, NavItemShortcut, NavItemTopic
@@ -127,8 +129,15 @@ def view_menu_items(user_permissions: UserPermissions) -> list[VisualMenuItem]:
                 else:
                     raise TypeError(f"Unsupported visual menu type name: {visual_menu_type_name}")
 
-    network_topology_visual_spec = ParentChildTopologyPage.visual_spec()
-    pages_to_show = [(network_topology_visual_spec["name"], network_topology_visual_spec)]
+    pages_to_show: list[tuple[str, Visual]] = []
+    if user.may("general.parent_child_topology"):
+        network_topology_visual_spec = ParentChildTopologyPage.visual_spec()
+        pages_to_show.append((network_topology_visual_spec["name"], network_topology_visual_spec))
+    if user.may("view.allhosts"):
+        all_hosts_experimental_visual_spec = monitor_all_hosts_visual_spec()
+        pages_to_show.append(
+            (all_hosts_experimental_visual_spec["name"], all_hosts_experimental_visual_spec)
+        )
 
     visuals_to_show: list[VisualMenuItem] = [
         VisualMenuItem("views", VisualItem(k, v)) for k, v in get_permitted_views().items()

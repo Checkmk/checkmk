@@ -3,7 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { readCodeExample, serializePanelConfig } from '@ucl/_ucl/vite-plugin-ucl-mcp'
+import { evaluateNode, readCodeExample, serializePanelConfig } from '@ucl/_ucl/vite-plugin-ucl-mcp'
+import type { Expression } from 'acorn'
 import fs from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -16,6 +17,78 @@ describe('readCodeExample', () => {
     )
     const expected = fs.readFileSync(path.join(compDir, 'UclCmkButtonCodeExample.vue'), 'utf-8')
     expect(readCodeExample(path.join(compDir, 'UclCmkButton.vue'))).toBe(expected)
+  })
+
+  it('throws when no co-located *CodeExample.vue exists', () => {
+    const compDir = path.resolve(
+      __dirname,
+      '../../../ui-component-library/components/basic-elements/CmkButton'
+    )
+    // A component that has no sibling *CodeExample.vue: the plugin treats this as
+    // a hard error, so readCodeExample must throw rather than return "".
+    expect(() => readCodeExample(path.join(compDir, 'NoSuchComponent.vue'))).toThrow()
+  })
+})
+
+// evaluateNode walks the small subset of ESTree node shapes the plugin relies
+// on. We build those nodes as plain literals (the same shape acorn produces)
+// rather than parsing source, keeping the test free of a parser dependency.
+function asExpression(node: unknown): Expression {
+  return node as Expression
+}
+
+describe('evaluateNode', () => {
+  it('evaluates a Literal to its value', () => {
+    expect(evaluateNode(asExpression({ type: 'Literal', value: 'primary' }))).toBe('primary')
+    expect(evaluateNode(asExpression({ type: 'Literal', value: 42 }))).toBe(42)
+    expect(evaluateNode(asExpression({ type: 'Literal', value: true }))).toBe(true)
+  })
+
+  it('evaluates an ArrayExpression element-wise, skipping null and spread', () => {
+    const node = {
+      type: 'ArrayExpression',
+      elements: [
+        { type: 'Literal', value: 'a' },
+        null,
+        { type: 'SpreadElement' },
+        { type: 'Literal', value: 'b' }
+      ]
+    }
+    expect(evaluateNode(asExpression(node))).toEqual(['a', 'b'])
+  })
+
+  it('evaluates an ObjectExpression with Identifier and string-literal keys', () => {
+    const node = {
+      type: 'ObjectExpression',
+      properties: [
+        {
+          type: 'Property',
+          key: { type: 'Identifier', name: 'name' },
+          value: { type: 'Literal', value: 'primary' }
+        },
+        {
+          type: 'Property',
+          key: { type: 'Literal', value: 'is-default' },
+          value: { type: 'Literal', value: true }
+        }
+      ]
+    }
+    expect(evaluateNode(asExpression(node))).toEqual({ name: 'primary', 'is-default': true })
+  })
+
+  it('evaluates a TemplateLiteral, interpolating its expressions', () => {
+    const node = {
+      type: 'TemplateLiteral',
+      quasis: [{ value: { cooked: 'count: ' } }, { value: { cooked: ' items' } }],
+      expressions: [{ type: 'Literal', value: 3 }]
+    }
+    expect(evaluateNode(asExpression(node))).toBe('count: 3 items')
+  })
+
+  it('throws on a node type it cannot evaluate', () => {
+    expect(() =>
+      evaluateNode(asExpression({ type: 'CallExpression', callee: {}, arguments: [] }))
+    ).toThrow('Cannot evaluate: CallExpression')
   })
 })
 

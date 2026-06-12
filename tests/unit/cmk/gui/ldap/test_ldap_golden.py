@@ -274,6 +274,39 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
     )
 
 
+def test_ldap_sync_leaves_saml_owned_user_without_ldap_entry_untouched(
+    request_context: None,
+) -> None:
+    """The LDAP sync's stale-user removal leaves a user owned by
+    another connector (here the SAML connector) untouched, and raises no error,
+    when that user has no matching LDAP entry. Only users owned by *this* LDAP
+    connector are pruned when they vanish from the directory; a SAML-owned record
+    keeps its attributes and owning connector -- the graceful SAML-only handling
+    the unification requires."""
+    connector = LDAPUserConnector(_test_config)
+    saml_user = UserId("frank")
+    users: Users = {
+        saml_user: {
+            "connector": "saml2",
+            "alias": "Frank Franklin",
+            "email": "frank@example.com",
+            "roles": ["user"],
+        },
+    }
+    result = SyncUsersResult(fetched_users={}, sync_start_time=0.0)
+
+    # The LDAP directory returns no entry for the SAML-owned user.
+    connector._quarantine_or_remove_users_no_longer_in_ldap(
+        users=users, ldap_users={}, sync_users_result=result
+    )
+
+    assert saml_user in users, "SAML-owned user removed despite being absent from LDAP"
+    assert users[saml_user]["connector"] == "saml2", "owning connector was changed"
+    assert users[saml_user]["alias"] == "Frank Franklin", "SAML alias not preserved"
+    assert users[saml_user]["email"] == "frank@example.com", "SAML email not preserved"
+    assert result.changes == [], "no change should be recorded for an untouched user"
+
+
 def test_check_credentials_valid(
     mocker: MockerFixture,
     mock_ldap: MagicMock,

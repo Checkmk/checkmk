@@ -16,8 +16,9 @@ import usei18n from '@/lib/i18n'
 
 import CmkSearchInput from '@/components/CmkSearchInput.vue'
 
-import type { HostEntry } from '@/monitoring/shared/api/types'
+import type { HostEntry, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
+import type { ColumnFilterDefinition } from '@/monitoring/shared/components/filter/types'
 
 import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
@@ -38,8 +39,24 @@ onBeforeUnmount(() => {
 
 provide(MONITORING_SERVICE, hostService)
 
+const stateFilter: ColumnFilterDefinition = {
+  type: 'checkbox-list',
+  options: [
+    { value: 'UP', title: _t('UP') },
+    { value: 'DOWN', title: _t('DOWN') },
+    { value: 'UNREACHABLE', title: _t('UNREACH') }
+  ] satisfies { value: HostState; title: string }[]
+}
+
 const columns: ColumnDef<HostEntry>[] = [
-  { accessorKey: 'state', header: _t('State'), sortDescFirst: true, minSize: 60, maxSize: 130 },
+  {
+    accessorKey: 'state',
+    header: _t('State'),
+    sortDescFirst: true,
+    minSize: 60,
+    maxSize: 130,
+    meta: { filter: stateFilter }
+  },
   { accessorKey: 'name', header: _t('Host'), sortDescFirst: false, minSize: 150 },
   { accessorKey: 'alias', header: _t('Alias'), sortDescFirst: false, minSize: 150 },
   { accessorKey: 'ip', header: _t('IP address'), sortDescFirst: false, minSize: 100 },
@@ -87,7 +104,12 @@ const columns: ColumnDef<HostEntry>[] = [
 
 const columnPinning: ColumnPinningState = { left: ['state', 'name'] }
 
-const filterState = ref<ColumnFiltersState>([])
+const columnFilters = ref<ColumnFiltersState>([])
+
+function onColumnFilters(next: ColumnFiltersState): void {
+  columnFilters.value = next
+  hostService.updateFilters(next)
+}
 
 function rowKey(row: HostEntry): string {
   return `${row.site_id}/${row.name}`
@@ -102,16 +124,16 @@ function rowKey(row: HostEntry): string {
   />
   <MonitoringResultsCount
     class="monitoring-all-hosts-app__results-count"
-    :active-filter-count="filterState.length"
+    :active-filter-count="columnFilters.length"
   />
   <MonitoringTable
     :rows="hostService.items.value"
     :loading="hostService.loading.value"
     :columns="columns"
-    :filter-state="filterState"
+    :filter-state="columnFilters"
     :column-pinning="columnPinning"
     :get-row-key="rowKey"
-    @update:filter-state="filterState = $event"
+    @update:filter-state="onColumnFilters"
   >
     <template #row="{ row }">
       <HostRow :row="row" />

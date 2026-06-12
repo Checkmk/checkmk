@@ -29,6 +29,7 @@ from cmk.gui.user_connection_config_types import (
 from cmk.gui.userdb._connections import (
     effective_authentication_connections,
     get_saml_connections_for_current_site,
+    resolved_authentication_connections,
 )
 from cmk.gui.utils.output_funnel import output_funnel
 from tests.testlib.gui.web_test_app import SetConfig
@@ -143,6 +144,43 @@ class TestEffectiveAuthenticationConnections:
                 )
                 == []
             )
+
+
+class TestResolvedAuthenticationConnections:
+    """`resolved_authentication_connections` fixes each site's list on the central for propagation.
+
+    An explicit list (including an empty one) is kept verbatim, so no
+    connection registry is consulted; ``"disabled"`` yields nothing; and an
+    absent key — only code-constructed specs omit it — falls back to every
+    available connection rather than to another site's value.
+    """
+
+    def test_explicit_value_passes_through_unexpanded(self) -> None:
+        per_site = [_saml_entry("per_site_saml")]
+        assert (
+            resolved_authentication_connections(
+                _site_config(authentication_connections=per_site),
+            )
+            == per_site
+        )
+
+    def test_explicit_empty_value_is_kept(self) -> None:
+        """An emptied list means "no connections", not "fall back to the default"."""
+        assert (
+            resolved_authentication_connections(_site_config(authentication_connections=[])) == []
+        )
+
+    def test_disabled_resolves_to_empty_list(self) -> None:
+        assert (
+            resolved_authentication_connections(_site_config(authentication_connections="disabled"))
+            == []
+        )
+
+    def test_absent_key_falls_back_to_all_available_connections(
+        self, set_config: SetConfig, request_context: None
+    ) -> None:
+        with set_config(user_connections=[_ldap_connection("my_ldap")]):
+            assert resolved_authentication_connections(_site_config()) == [("ldap", "my_ldap")]
 
 
 class TestGetSamlConnectionsForCurrentSite:

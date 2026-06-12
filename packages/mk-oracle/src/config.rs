@@ -17,6 +17,7 @@
 pub mod authentication;
 pub mod connection;
 pub mod defines;
+pub mod migration;
 mod options;
 pub mod ora_sql;
 pub mod section;

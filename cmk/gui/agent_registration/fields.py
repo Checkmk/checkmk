@@ -7,6 +7,8 @@ from typing import Any, override
 from cmk import fields
 from cmk.ccc import version
 from cmk.gui.fields.utils import edition_field_description
+from cmk.licensing.basics.options import OptionName
+from cmk.licensing.registry import is_option_enabled
 from cmk.utils import paths
 from cmk.utils.agent_registration import HostAgentConnectionMode
 
@@ -15,7 +17,7 @@ class _AgentConnectionField(fields.String):
     """A field representing the agent connection mode."""
 
     default_error_messages = {
-        "edition_not_supported": "Agent connection field not supported in this edition.",
+        "feature_not_supported": "Agent connection field not supported in this edition.",
     }
 
     def __init__(self, **kwargs: Any):
@@ -32,8 +34,8 @@ class _AgentConnectionField(fields.String):
 
     @override
     def _validate(self, value: str) -> None:
-        if version.edition(paths.omd_root) not in self._supported_editions:
-            raise self.make_error("edition_not_supported")
+        if not is_option_enabled(paths.omd_root, OptionName.AGENT_REGISTRATION):
+            raise self.make_error("feature_not_supported")
         super()._validate(value)
 
 

@@ -7,6 +7,7 @@ from collections.abc import Iterable, Mapping
 from typing import Annotated, assert_never, Literal, override, Self
 
 from annotated_types import Ge
+from pydantic import field_validator
 from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard import dashlet_registry, GROW, MAX
@@ -22,6 +23,11 @@ from .widget_content import content_from_internal, WidgetContent
 type ApiRenderMode = Literal["hidden", "with_background", "without_background"]
 
 
+def _is_allowed_title_url(url: str) -> bool:
+    # Read and write side must stay in lockstep, so they share this check.
+    return is_allowed_url(url, cross_domain=True, schemes=["http", "https"])
+
+
 @api_model
 class WidgetTitle:
     text: str = api_field(description="The title of the widget.")
@@ -33,6 +39,15 @@ class WidgetTitle:
         description="How the title should be rendered.",
         # default="with_background",
     )
+
+    @field_validator("url")
+    @classmethod
+    def _validate_url_scheme(cls, value: str | ApiOmitted) -> str | ApiOmitted:
+        if isinstance(value, ApiOmitted):
+            return value
+        if not _is_allowed_title_url(value):
+            raise ValueError("Invalid URL. Only http and https URLs or relative URLs are allowed.")
+        return value
 
     @staticmethod
     def _render_mode_from_internal(show_title: bool | Literal["transparent"]) -> ApiRenderMode:
@@ -57,9 +72,7 @@ class WidgetTitle:
     @classmethod
     def from_internal(cls, config: DashletConfig) -> Self:
         raw_url = config.get("title_url")
-        if raw_url is not None and not is_allowed_url(
-            raw_url, cross_domain=True, schemes=["http", "https"]
-        ):
+        if raw_url is not None and not _is_allowed_title_url(raw_url):
             raw_url = None
         return cls(
             text=config.get("title", "$DEFAULT_TITLE$"),

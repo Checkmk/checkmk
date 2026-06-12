@@ -8,7 +8,7 @@ from typing import override
 
 from cmk.gui.config import active_config
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
-from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset, RulesetCollection
+from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.watolib.sample_config import INVENTORY_PROCESS_DISCOVERY_RULES
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -16,23 +16,25 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 PS_DISCOVERY_RULE_NAME = RuleGroup.DiscoveryParameters("inventory_processes_rules")
 _NEW_DEFAULT_RULE_IDS = frozenset[str]()
+EVENT_CONSOLE_RULE_ID = "2105c8a7-5672-4242-98f6-fd6ce8b8f3a7"
 
 
 class UpdatePSDiscovery(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
         all_rulesets = AllRulesets.load_all_rulesets()
-        add_ps_discovery_rules(logger, all_rulesets)
+
+        if ps_discovery_rules := all_rulesets.get_rulesets().get(PS_DISCOVERY_RULE_NAME):
+            add_ps_discovery_rules(logger, ps_discovery_rules)
+            overwrite_default_ec_rule(logger, ps_discovery_rules)
+
         all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 
 
 def add_ps_discovery_rules(
     logger: Logger,
-    all_rulesets: RulesetCollection,
+    ps_discovery_rules: Ruleset,
 ) -> None:
-    if (ps_discovery_rules := all_rulesets.get_rulesets().get(PS_DISCOVERY_RULE_NAME)) is None:
-        return  # uh?
-
     root_folder = folder_tree().root_folder()
     if _some_shipped_rules_present(ps_discovery_rules):
         # a new default rule was added since the previous batch was added
@@ -78,6 +80,23 @@ def overwrite_ps_discovery_rule(
         logger.info("Overwriting default value: %s", rule.rule_options.description)
     else:
         logger.debug("Rule for %s was changed. Nothing to do.", ps_descr)
+
+
+def overwrite_default_ec_rule(logger: Logger, ps_discovery_rules: Ruleset) -> None:
+    # One-time migration: the corrected default covers new sites, this fixes existing ones.
+    _ = ExpiryVersion.CMK_310
+
+    # The event console may be started with optional built-in receivers appended
+    # to its command line (--syslog, --syslog-tcp, --snmptrap). The original
+    # default anchored the command line with "$" right after "mkeventd", so such
+    # sites reported the service as CRIT.
+    overwrite_ps_discovery_rule(
+        logger,
+        ps_discovery_rules,
+        EVENT_CONSOLE_RULE_ID,
+        "~python3 /omd/sites/[^/]+/bin/mkeventd$",
+        "self-monitoring of the event console",
+    )
 
 
 def rule_present(current_rules: Ruleset, rule_id: str) -> bool:

@@ -135,7 +135,7 @@ PS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = [
         (
             "2105c8a7-5672-4242-98f6-fd6ce8b8f3a7",
             "event console",
-            "~python3 /omd/sites/[^/]+/bin/mkeventd$",
+            "~python3 /omd/sites/[^/]+/bin/mkeventd(.*)?$",
         ),
         (
             "0846dd4c-cc62-4adf-9400-7f20a651f996",

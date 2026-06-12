@@ -19,8 +19,6 @@ from cmk.livestatus_client.tables import Hosts, Status
 
 from ._models import Host, HostSort, HostSortColumn, HostState, ServiceCounts
 
-_SEARCHABLE_COLUMNS = (Hosts.name, Hosts.alias, Hosts.address)
-
 
 def _search_filter(search_query: str) -> QueryExpression:
     """Build an OR-combined case-insensitive "contains" filter over the searchable columns.
@@ -30,7 +28,12 @@ def _search_filter(search_query: str) -> QueryExpression:
     """
     if not search_query:
         return NothingExpression()
-    return Or(*(column.contains(search_query, ignore_case=True) for column in _SEARCHABLE_COLUMNS))
+
+    return Or(
+        Hosts.name.contains(search_query, ignore_case=True),
+        Hosts.alias.contains(search_query, ignore_case=True),
+        Hosts.address.contains(search_query, ignore_case=True),
+    )
 
 
 class LiveStatusHostRepository:

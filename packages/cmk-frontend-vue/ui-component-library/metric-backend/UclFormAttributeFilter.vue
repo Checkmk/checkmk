@@ -23,6 +23,11 @@ export const a11yData = [
     keys: ['Enter', 'Space', 'Click'],
     description:
       'Activates the focused element — opens a pill for editing or triggers a button. Only one pill is editable at a time; activating another control commits the open pill if valid, otherwise the pill stays open and its validation errors are revealed.'
+  },
+  {
+    keys: ['Escape'],
+    description:
+      'Closes the open pill back to its read-only chip and returns focus to it. A pill with any required field empty stays open and reveals validation errors. If a dropdown inside the pill is open, only the dropdown closes.'
   }
 ]
 

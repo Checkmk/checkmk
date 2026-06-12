@@ -81293,6 +81293,10 @@ msgstr "Niveaus voor actieve verbindingen"
 msgid "Upper levels for surge queue length"
 msgstr "Bovenste niveaus voor de lengte van de wachtrij"
 
+#, fuzzy
+msgid "Upper levels for swap usage"
+msgstr "Bovenste niveaus voor gebruik"
+
 msgid "Upper levels for the DB space size"
 msgstr "Bovenste niveaus voor de grootte van de DB-ruimte"
 
@@ -91559,8 +91563,12 @@ msgid "Copied!"
 msgstr "Code Grootte"
 
 #, fuzzy
-msgid "Copy response"
-msgstr "Hop responstijden"
+msgid "Copy answer"
+msgstr "Inloggen uitgeschakeld"
+
+#, fuzzy
+msgid "Regenerate answer"
+msgstr "Back-upcodes opnieuw genereren"
 
 #, fuzzy
 msgid "Feature temporarily unavailable"
@@ -93812,6 +93820,10 @@ msgid "Attribute operator"
 msgstr "In te stellen attribuut"
 
 #, fuzzy
+msgid "Edit condition"
+msgstr "Verbinding bewerken"
+
+#, fuzzy
 msgid "Remove condition"
 msgstr "Verwijder tag voorwaarde"
 
@@ -93826,6 +93838,17 @@ msgstr "Extra opties"
 #, fuzzy
 msgid "Attribute filter"
 msgstr "In te stellen attribuut"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Mislukte verbindingen"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Voorwaarde toevoegen"
 
 #, fuzzy
 msgid "[Resource]"
@@ -96055,6 +96078,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Copy response"
+#~ msgstr "Hop responstijden"
+
 #~ msgid "Value must be string"
 #~ msgstr "De waarde moet een string zijn"
 
@@ -97076,10 +97103,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Expired keys"
 #~ msgstr "Verlopen objecten"
-
-#, fuzzy
-#~ msgid "Failed concurrent connections"
-#~ msgstr "Mislukte verbindingen"
 
 #, fuzzy
 #~ msgid "Get commands"
@@ -98233,10 +98256,6 @@ msgstr ""
 
 #~ msgid "Service (exact match)"
 #~ msgstr "Dienst (exacte match)"
-
-#, fuzzy
-#~ msgid "Copy answer"
-#~ msgstr "Inloggen uitgeschakeld"
 
 #, fuzzy, python-format
 #~ msgid "%s section"

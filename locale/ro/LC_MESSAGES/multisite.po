@@ -81408,6 +81408,10 @@ msgstr ""
 "Niveluri superioare pentru lungimea cozii de așteptare în caz de "
 "supratensiune"
 
+#, fuzzy
+msgid "Upper levels for swap usage"
+msgstr "Niveluri superioare de utilizare"
+
 msgid "Upper levels for the DB space size"
 msgstr "Niveluri superioare pentru dimensiunea spațiului BD"
 
@@ -91688,8 +91692,12 @@ msgid "Copied!"
 msgstr "Coduri copiate"
 
 #, fuzzy
-msgid "Copy response"
-msgstr "Timpii de răspuns la hopuri"
+msgid "Copy answer"
+msgstr "Login dezactivat"
+
+#, fuzzy
+msgid "Regenerate answer"
+msgstr "Regenerarea codurilor"
 
 #, fuzzy
 msgid "Feature temporarily unavailable"
@@ -93949,6 +93957,10 @@ msgid "Attribute operator"
 msgstr "Atributul de setat"
 
 #, fuzzy
+msgid "Edit condition"
+msgstr "Editați conexiunea"
+
+#, fuzzy
 msgid "Remove condition"
 msgstr "Eliminarea condiției de etichetare"
 
@@ -93963,6 +93975,17 @@ msgstr "Opțiuni adiționale"
 #, fuzzy
 msgid "Attribute filter"
 msgstr "Atributul de setat"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Conexiuni eșuate"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Adăugați o condiție"
 
 #, fuzzy
 msgid "[Resource]"
@@ -96210,6 +96233,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Copy response"
+#~ msgstr "Timpii de răspuns la hopuri"
+
 #~ msgid "Value must be string"
 #~ msgstr "Valoarea trebuie să fie un șir de caractere"
 
@@ -97242,10 +97269,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Expired keys"
 #~ msgstr "Obiecte expirate"
-
-#, fuzzy
-#~ msgid "Failed concurrent connections"
-#~ msgstr "Conexiuni eșuate"
 
 #, fuzzy
 #~ msgid "Get commands"
@@ -98406,10 +98429,6 @@ msgstr ""
 
 #~ msgid "Service (exact match)"
 #~ msgstr "Serviciu (potrivire exactă)"
-
-#, fuzzy
-#~ msgid "Copy answer"
-#~ msgstr "Login dezactivat"
 
 #, fuzzy, python-format
 #~ msgid "%s section"

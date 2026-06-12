@@ -75223,6 +75223,10 @@ msgstr "接続成功の上位レベル"
 msgid "Upper levels for surge queue length"
 msgstr "サージキューの長さの上位レベル"
 
+#, fuzzy
+msgid "Upper levels for swap usage"
+msgstr "使用量の上位レベル"
+
 msgid "Upper levels for the DB space size"
 msgstr "DBスペースサイズの上位レベル"
 
@@ -84756,8 +84760,12 @@ msgstr "事実関係が正しいことを確認してください。"
 msgid "Copied!"
 msgstr "コピーされました！"
 
-msgid "Copy response"
-msgstr "応答をコピー"
+msgid "Copy answer"
+msgstr "回答をコピー"
+
+#, fuzzy
+msgid "Regenerate answer"
+msgstr "AIが生成した回答"
 
 msgid "Feature temporarily unavailable"
 msgstr "この機能は現在ご利用いただけません"
@@ -86778,6 +86786,10 @@ msgid "Attribute operator"
 msgstr "設定する属性"
 
 #, fuzzy
+msgid "Edit condition"
+msgstr "接続を編集する"
+
+#, fuzzy
 msgid "Remove condition"
 msgstr "タグ条件を削除します"
 
@@ -86792,6 +86804,17 @@ msgstr "追加オプション"
 #, fuzzy
 msgid "Attribute filter"
 msgstr "属性フィルター"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "失敗した同時接続"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "条件を追加"
 
 #, fuzzy
 msgid "[Resource]"
@@ -89290,6 +89313,9 @@ msgid ""
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
 
+#~ msgid "Copy response"
+#~ msgstr "応答をコピー"
+
 #~ msgid "Value must be string"
 #~ msgstr "値は文字列であること"
 
@@ -90387,9 +90413,6 @@ msgstr ""
 
 #~ msgid "Expired keys"
 #~ msgstr "期限切れのキー"
-
-#~ msgid "Failed concurrent connections"
-#~ msgstr "失敗した同時接続"
 
 #~ msgid "Get commands"
 #~ msgstr "コマンドwを取得"
@@ -91523,9 +91546,6 @@ msgstr ""
 
 #~ msgid "Service (exact match)"
 #~ msgstr "サービス(完全一致)"
-
-#~ msgid "Copy answer"
-#~ msgstr "回答をコピー"
 
 #, python-format
 #~ msgid "%s section"

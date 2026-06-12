@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-10 08:34+0000\n"
+"PO-Revision-Date: 2026-06-12 07:27+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -81244,6 +81244,10 @@ msgstr "Níveis para ligações activas"
 msgid "Upper levels for surge queue length"
 msgstr "Níveis superiores para o comprimento da fila de surtos"
 
+#, fuzzy
+msgid "Upper levels for swap usage"
+msgstr "Níveis superiores de utilização"
+
 msgid "Upper levels for the DB space size"
 msgstr "Níveis superiores para o tamanho do espaço da BD"
 
@@ -91457,8 +91461,12 @@ msgid "Copied!"
 msgstr "Código Tamanho"
 
 #, fuzzy
-msgid "Copy response"
-msgstr "Tempos de resposta do lúpulo"
+msgid "Copy answer"
+msgstr "Login desactivado"
+
+#, fuzzy
+msgid "Regenerate answer"
+msgstr "Regenerar códigos de backup"
 
 #, fuzzy
 msgid "Feature temporarily unavailable"
@@ -93708,6 +93716,10 @@ msgid "Attribute operator"
 msgstr "Atributo a definir"
 
 #, fuzzy
+msgid "Edit condition"
+msgstr "Editar conexão"
+
+#, fuzzy
 msgid "Remove condition"
 msgstr "Remover a condição da etiqueta"
 
@@ -93722,6 +93734,17 @@ msgstr "Opções adicionais"
 #, fuzzy
 msgid "Attribute filter"
 msgstr "Atributo a definir"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Conexões falhadas"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Adicionar condição"
 
 #, fuzzy
 msgid "[Resource]"
@@ -95953,6 +95976,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Copy response"
+#~ msgstr "Tempos de resposta do lúpulo"
+
 #~ msgid "Value must be string"
 #~ msgstr "O valor deve ser uma cadeia de caracteres"
 
@@ -96983,10 +97010,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Expired keys"
 #~ msgstr "Objetos expirados"
-
-#, fuzzy
-#~ msgid "Failed concurrent connections"
-#~ msgstr "Conexões falhadas"
 
 #, fuzzy
 #~ msgid "Get commands"
@@ -98144,10 +98167,6 @@ msgstr ""
 
 #~ msgid "Service (exact match)"
 #~ msgstr "Serviço (correspondência exacta)"
-
-#, fuzzy
-#~ msgid "Copy answer"
-#~ msgstr "Login desactivado"
 
 #, fuzzy, python-format
 #~ msgid "%s section"

@@ -80943,6 +80943,10 @@ msgstr "Livelli per le connessioni attive"
 msgid "Upper levels for surge queue length"
 msgstr "Livelli superiori per la lunghezza della coda"
 
+#, fuzzy
+msgid "Upper levels for swap usage"
+msgstr "Livelli superiori per le dimensioni"
+
 msgid "Upper levels for the DB space size"
 msgstr "Livelli superiori per le dimensioni dello spazio DB"
 
@@ -91180,8 +91184,12 @@ msgid "Copied!"
 msgstr "Codici copiati"
 
 #, fuzzy
-msgid "Copy response"
-msgstr "Tempi di risposta del luppolo"
+msgid "Copy answer"
+msgstr "Accesso disabilitato"
+
+#, fuzzy
+msgid "Regenerate answer"
+msgstr "Rigenerare i codici"
 
 #, fuzzy
 msgid "Feature temporarily unavailable"
@@ -93426,6 +93434,10 @@ msgid "Attribute operator"
 msgstr "Attributo da impostare"
 
 #, fuzzy
+msgid "Edit condition"
+msgstr "Modifica connessione"
+
+#, fuzzy
 msgid "Remove condition"
 msgstr "Rimuovere la condizione di tag"
 
@@ -93440,6 +93452,17 @@ msgstr "Opzioni aggiuntive"
 #, fuzzy
 msgid "Attribute filter"
 msgstr "Attributo da impostare"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Connessioni fallite"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Aggiungi condizione"
 
 #, fuzzy
 msgid "[Resource]"
@@ -95677,6 +95700,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Copy response"
+#~ msgstr "Tempi di risposta del luppolo"
+
 #~ msgid "Value must be string"
 #~ msgstr "Il valore deve essere una stringa"
 
@@ -96710,10 +96737,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Expired keys"
 #~ msgstr "Oggetti scaduti"
-
-#, fuzzy
-#~ msgid "Failed concurrent connections"
-#~ msgstr "Connessioni fallite"
 
 #, fuzzy
 #~ msgid "Get commands"
@@ -97871,10 +97894,6 @@ msgstr ""
 
 #~ msgid "Service (exact match)"
 #~ msgstr "Servizio (corrispondenza esatta)"
-
-#, fuzzy
-#~ msgid "Copy answer"
-#~ msgstr "Accesso disabilitato"
 
 #, python-format
 #~ msgid "%s section"

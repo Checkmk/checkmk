@@ -81992,6 +81992,10 @@ msgstr "Niveaux pour les connexions actives"
 msgid "Upper levels for surge queue length"
 msgstr "Niveaux supérieurs pour la longueur des files d'attente"
 
+#, fuzzy
+msgid "Upper levels for swap usage"
+msgstr "Niveaux supérieurs d'utilisation"
+
 msgid "Upper levels for the DB space size"
 msgstr "Niveaux supérieurs pour la taille de l'espace de la BD"
 
@@ -92384,8 +92388,12 @@ msgid "Copied!"
 msgstr "Code Taille"
 
 #, fuzzy
-msgid "Copy response"
-msgstr "Temps de réponse des hop"
+msgid "Copy answer"
+msgstr "Connexion désactivée"
+
+#, fuzzy
+msgid "Regenerate answer"
+msgstr "Régénérer les codes de sauvegarde"
 
 #, fuzzy
 msgid "Feature temporarily unavailable"
@@ -94647,6 +94655,10 @@ msgid "Attribute operator"
 msgstr "Attribut à définir"
 
 #, fuzzy
+msgid "Edit condition"
+msgstr "Modifier la connexion"
+
+#, fuzzy
 msgid "Remove condition"
 msgstr "Suppression de la condition d'étiquetage"
 
@@ -94661,6 +94673,17 @@ msgstr "Options supplémentaires"
 #, fuzzy
 msgid "Attribute filter"
 msgstr "Attribut à définir"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Échec des connexions"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Ajouter une condition"
 
 #, fuzzy
 msgid "[Resource]"
@@ -96898,6 +96921,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Copy response"
+#~ msgstr "Temps de réponse des hop"
+
 #~ msgid "Value must be string"
 #~ msgstr "La valeur doit être une chaîne de caractères"
 
@@ -97929,10 +97956,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Expired keys"
 #~ msgstr "Objets périmés"
-
-#, fuzzy
-#~ msgid "Failed concurrent connections"
-#~ msgstr "Échec des connexions"
 
 #, fuzzy
 #~ msgid "Get commands"
@@ -99090,10 +99113,6 @@ msgstr ""
 
 #~ msgid "Service (exact match)"
 #~ msgstr "Service (correspondance exacte)"
-
-#, fuzzy
-#~ msgid "Copy answer"
-#~ msgstr "Connexion désactivée"
 
 #, fuzzy, python-format
 #~ msgid "%s section"

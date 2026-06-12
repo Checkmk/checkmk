@@ -4,11 +4,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-10 11:13+0000\n"
-"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
-"de/>\n"
+"PO-Revision-Date: 2026-06-11 21:57+0000\n"
+"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
+">\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -16016,10 +16016,10 @@ msgid "Create a private copy of this"
 msgstr "Erstelle eine persönliche Kopie hiervon"
 
 msgid "Create a separate check for each LVM volume (Linux)"
-msgstr "Separaten Check für jedes LVM-Volumen erstellen (Linux)"
+msgstr "Separaten Check für jedes LVM-Volume erstellen (Linux)"
 
 msgid "Create a separate check for each VxVM volume (Linux)"
-msgstr "Separaten Check für jedes VxVM-Volumen erstellen (Linux)"
+msgstr "Separaten Check für jedes VxVM-Volume erstellen (Linux)"
 
 msgid "Create a separate check for each log file"
 msgstr "Separaten Check für jede Log-Datei erstellen"
@@ -16795,7 +16795,7 @@ msgid "Custom MIBs"
 msgstr "Benutzerdefinierte MIBs"
 
 msgid "Custom Metrics cache age"
-msgstr "Cache-Alter der benutzerdefinierten Metriken"
+msgstr "Cache-Alter der Custom Metrics"
 
 msgid "Custom SQL"
 msgstr "Benutzerdefiniertes SQL"
@@ -16898,11 +16898,11 @@ msgid "Custom macros"
 msgstr "Benutzerdefinierte Makros"
 
 msgid "Custom metrics"
-msgstr "Benutzerdefinierte Metriken"
+msgstr "Custom Metrics"
 
 #, python-format
 msgid "Custom metrics (%s):"
-msgstr "Benutzerdefinierte Metriken (%s):"
+msgstr "Custom Metrics (%s):"
 
 #, python-format
 msgid "Custom notification table for user %s"
@@ -19710,7 +19710,7 @@ msgid "Discovery settings for physical ports"
 msgstr "Erkennungseinstellungen für physikalische Ports"
 
 msgid "Discovery settings for volumes"
-msgstr "Erkennungseinstellungen für Datenträger"
+msgstr "Erkennungseinstellungen für Volumes"
 
 msgid "Discovery state"
 msgstr "Erkennungszustand"
@@ -19827,7 +19827,7 @@ msgid "Disk usage (Podman images)"
 msgstr "Festplatten-Auslastung (Podman Images)"
 
 msgid "Disk usage (Podman volumes)"
-msgstr "Festplatten-Auslastung (Podman Volumes)"
+msgstr "Festplatten-Auslastung (Podman-Volumes)"
 
 msgid "Disk utilization"
 msgstr "Festplattenauslastung"
@@ -30149,9 +30149,7 @@ msgstr ""
 
 msgid ""
 "How old (in seconds) the cache file for custom metrics is allowed to be."
-msgstr ""
-"Wie alt (in Sekunden) die Cache-Datei für benutzerdefinierte Metriken sein "
-"darf."
+msgstr "Wie alt (in Sekunden) die Cache-Datei für Custom Metrics sein darf."
 
 msgid ""
 "How the disks are named depends on the type of hardware being used. Please "
@@ -30865,9 +30863,9 @@ msgid ""
 "device instead of the UUID. The alias will then be part of the service name. "
 "The UUID will be displayed in the plug-in output."
 msgstr ""
-"Wenn ein Multipath-Gerät ein Alias hat, dann können Sie dies anstelle der "
-"UUID angeben, um das Gerät zu spezifizieren. Das Alias wird dann Teil des "
-"Service-Namens. Die UUID wird in der Ausgabe des Plugins angezeigt."
+"Wenn ein Multipath-Gerät einen Alias hat, dann können Sie diesen anstelle "
+"der UUID angeben, um das Gerät zu spezifizieren. Der Alias wird dann Teil "
+"des Service-Namens. Die UUID wird in der Ausgabe des Plugins angezeigt."
 
 msgid ""
 "If a new log file is found we usually skip to its end to avoid processing "
@@ -35527,7 +35525,7 @@ msgid "LUNs"
 msgstr "LUNs"
 
 msgid "LVM volumes (Linux)"
-msgstr "LVM Datenträger (Linux)"
+msgstr "LVM-Volumes (Linux)"
 
 msgid "LVM, Logical Volume Groups (Linux)"
 msgstr "LVM, Logical Volume Groups (Linux)"
@@ -35819,7 +35817,7 @@ msgid "Layout configuration"
 msgstr "Layout-Konfiguration"
 
 msgid "Layout options"
-msgstr "Layout Optionen"
+msgstr "Layout-Optionen"
 
 msgid ""
 "Learn how to set up a REST endpoint <a href=\"https://help.victorops.com/"
@@ -36620,7 +36618,7 @@ msgid "License verification"
 msgstr "Lizenzverifizierung"
 
 msgid "Licensed custom metrics"
-msgstr "Lizenzierte benutzerdefinierte Metriken"
+msgstr "Lizenzierte Custom Metrics"
 
 msgid "Licensed services"
 msgstr "Lizenzierte Services"
@@ -42088,7 +42086,7 @@ msgid "NetApp Snapshot Reserve"
 msgstr "NetApp Snapshot-Reserve"
 
 msgid "NetApp Snapshot Volumes"
-msgstr "NetApp Snapshot-Volumen"
+msgstr "NetApp Snapshot Volumes"
 
 msgid "NetApp Snapvaults / Snapmirror Lag Time"
 msgstr "NetApp Snapvaults / Snapmirror Lag-Zeit"
@@ -43859,7 +43857,7 @@ msgid "Number of Podman images"
 msgstr "Anzahl der Podman Images"
 
 msgid "Number of Podman volumes"
-msgstr "Anzahl der Podman Volumes"
+msgstr "Anzahl der Podman-Volumes"
 
 msgid "Number of Resources"
 msgstr "Anzahl von Ressourcen"
@@ -43889,7 +43887,7 @@ msgid "Number of active Podman images"
 msgstr "Anzahl von aktiven Podman Images"
 
 msgid "Number of active Podman volumes"
-msgstr "Anzahl der aktiven Podman Volumes"
+msgstr "Anzahl der aktiven Podman-Volumes"
 
 msgid "Number of active instances"
 msgstr "Anzahl der aktiven Instanzen"
@@ -44528,7 +44526,7 @@ msgid "Number of vaults"
 msgstr "Anzahl der Tresore"
 
 msgid "Number of volumes"
-msgstr "Anzahl der Volumen"
+msgstr "Anzahl der Volumes"
 
 msgid "Number of warnings"
 msgstr "Anzahl von Warnings"
@@ -45114,9 +45112,9 @@ msgid ""
 "not shown!"
 msgstr ""
 "Gilt nur für Installationen im Cluster-Modus. Der Service-Name von Snapvault-"
-"Diensten setzt sich standardmäßig aus dem Ziel-Vserver (SVM) und dem "
-"Zielvolumen zusammen. Aktivieren Sie diesen Kasten, wenn Sie das Zielvolumen "
-"als eigenständigen Service-Namen verwenden möchten. Bitte beachten Sie, dass "
+"Diensten setzt sich standardmäßig aus dem Ziel-Vserver (SVM) und dem Ziel-"
+"Volume zusammen. Aktivieren Sie diesen Kasten, wenn Sie das Ziel-Volume als "
+"eigenständigen Service-Namen verwenden möchten. Bitte beachten Sie, dass "
 "dies zu einem nicht-eindeutigen Service-Namen führen kann, was dazu führt, "
 "dass einige Services nicht angezeigt werden!"
 
@@ -56950,7 +56948,7 @@ msgid "Show description"
 msgstr "Beschreibung anzeigen"
 
 msgid "Show description if set, else alias"
-msgstr "Zeige die Beschreibung, falls diese gesetzt ist, ansonten den Alias"
+msgstr "Zeige die Beschreibung, falls diese gesetzt ist, ansonsten den Alias"
 
 msgid "Show details"
 msgstr "Details anzeigen"
@@ -57248,7 +57246,7 @@ msgid "Show vertical axis"
 msgstr "Zeige die vertikale Achse"
 
 msgid "Show volume name in service output"
-msgstr "Volumen-Namen in der Service-Ausgabe anzeigen"
+msgstr "Volume-Namen in der Service-Ausgabe anzeigen"
 
 msgid "Show/hide password"
 msgstr "Passwort anzeigen/ausblenden"
@@ -57593,7 +57591,7 @@ msgid "Site (enforced)"
 msgstr "Instanz (erzwungen)"
 
 msgid "Site Alias"
-msgstr "Instanz Alias"
+msgstr "Instanz-Alias"
 
 msgid "Site DNS cache is already up to date."
 msgstr "Der DNS-Cache der Instanz ist bereits aktuell."
@@ -57621,7 +57619,7 @@ msgid "Site ID must be set"
 msgstr "Instanz-ID muss gesetzt sein"
 
 msgid "Site alias"
-msgstr "Instanz Alias"
+msgstr "Instanz-Alias"
 
 msgid "Site backup"
 msgstr "Instanzsicherung"
@@ -62448,7 +62446,7 @@ msgid ""
 "The HTTP port can be used to access the ClickHouse web UI. It is not needed "
 "for standard operations."
 msgstr ""
-"Der HTTP-Port kann für den Zugriff auf die ClickHouse WEb-UI genutzt werden. "
+"Der HTTP-Port kann für den Zugriff auf die ClickHouse Web-UI genutzt werden. "
 "Für Standard-Operationen wird er nicht benötigt."
 
 #, python-format
@@ -65101,9 +65099,7 @@ msgstr ""
 "Upgrade fehlschlagen, wenden Sie sich bitte an den Checkmk-Support."
 
 msgid "The metric backend snapin shows the number of custom metrics"
-msgstr ""
-"Das Snapin zum Metrik-Backend zeigt die Anzahl der benutzerdefinierten "
-"Metriken an"
+msgstr "Das Snapin zum Metrik-Backend zeigt die Anzahl der Custom Metrics an"
 
 msgid ""
 "The metric label is displayed alongside the queried value in the status "
@@ -66425,7 +66421,7 @@ msgid ""
 "For host events this condition never matches as soon as at least one group "
 "is selected."
 msgstr ""
-"Der Service-Gruppen Alias muss auf einen der regulären Ausdrücke zutreffen. "
+"Der Service-Gruppen-Alias muss auf einen der regulären Ausdrücke zutreffen. "
 "Für Host-Ereignisse trifft diese Bedingung nur zu, wenn mindestens eine "
 "Bedingung gesetzt ist."
 
@@ -66433,7 +66429,7 @@ msgid ""
 "The service group alias must not match one of the following regular "
 "expressions. For host events this condition is simply ignored."
 msgstr ""
-"Der Service-Gruppen Alias darf nicht auf einen dieser regulären Ausdrücke "
+"Der Service-Gruppen-Alias darf nicht auf einen dieser regulären Ausdrücke "
 "zutreffen. Für Host-Ereignisse wird diese Bedingung ignoriert."
 
 msgid ""
@@ -77411,6 +77407,10 @@ msgstr "Obergrenzen für erfolgreiche Verbindungen"
 msgid "Upper levels for surge queue length"
 msgstr "Obergrenzen für die Länge der Überspannungswarteschlange"
 
+#, fuzzy
+msgid "Upper levels for swap usage"
+msgstr "Obergrenzen für die Nutzung"
+
 msgid "Upper levels for the DB space size"
 msgstr "Obergrenzen für die Größe des DB-Speicherplatzes"
 
@@ -83683,7 +83683,7 @@ msgid ""
 "`*` or `_all`. The patterns will be combined to form the final url endpoint, "
 "e.g.: `pattern_1,pattern_2/_stats/store,docs?ignore_unavailable=true`"
 msgstr ""
-"Sie können Datenströme, Indizes und verwendete Aliase angeben, um die "
+"Sie können Datenströme, Indizes und verwendete Aliasse angeben, um die "
 "Anfrage zu begrenzen. Unterstützt Wildcards (*). Um alle Datenströme und "
 "Indizes zu erreichen, verwenden Sie `*` oder `_all`. Die Patterns werden "
 "kombiniert, um den endgültigen URL-Endpunkt zu bilden, z.B.: "
@@ -87321,8 +87321,12 @@ msgstr "Bitte überprüfen Sie die Richtigkeit der Angaben."
 msgid "Copied!"
 msgstr "Kopiert!"
 
-msgid "Copy response"
+msgid "Copy answer"
 msgstr "Antwort kopieren"
+
+#, fuzzy
+msgid "Regenerate answer"
+msgstr "KI-generierte Antwort"
 
 msgid "Feature temporarily unavailable"
 msgstr "Funktion vorübergehend nicht verfügbar"
@@ -89287,6 +89291,10 @@ msgstr "Attribut-Schlüssel"
 msgid "Attribute operator"
 msgstr "Attribut-Operator"
 
+#, fuzzy
+msgid "Edit condition"
+msgstr "Verbindung bearbeiten"
+
 msgid "Remove condition"
 msgstr "Bedingung entfernen"
 
@@ -89298,6 +89306,17 @@ msgstr "Bedingung nach vorheriger Bedingung hinzufügen"
 
 msgid "Attribute filter"
 msgstr "Attribut-Filter"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Fehlgeschlagene gleichzeitige Verbindungen"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Bedingung nach %{key} hinzufügen"
 
 msgid "[Resource]"
 msgstr "[Resource]"
@@ -90176,22 +90195,22 @@ msgid " | created"
 msgstr " | erstellt"
 
 msgid "At least one receiver (GRPC or HTTP) must be enabled."
-msgstr "Mindestens ein Empfänger (GRPC oder HTTP) muss aktiviert sein."
+msgstr "Mindestens ein Empfänger (gRPC oder HTTP) muss aktiviert sein."
 
 msgid "GRPC"
-msgstr "GRPC"
+msgstr "gRPC"
 
 msgid ""
 "Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
 msgstr ""
-"Konfigurieren Sie einen GRPC-basierten OTLP-Empfänger, der OpenTelemetry-"
+"Konfigurieren Sie einen gRPC-basierten OTLP-Empfänger, der OpenTelemetry-"
 "Daten erfasst."
 
 msgid "GRPC-based receiver"
-msgstr "GRPC-basierter Empfänger"
+msgstr "gRPC-basierter Empfänger"
 
 msgid "Enable the GRPC-based OTLP receiver"
-msgstr "Den GRPC-basierten OTLP-Empfänger aktivieren"
+msgstr "Den gRPC-basierten OTLP-Empfänger aktivieren"
 
 msgid ""
 "Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data."
@@ -91642,6 +91661,9 @@ msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
 
+#~ msgid "Copy response"
+#~ msgstr "Antwort kopieren"
+
 #~ msgid "Leave empty to auto-generate from Checkmk server URL"
 #~ msgstr ""
 #~ "Leer lassen, um automatisch aus der Checkmk-Server-URL zu generieren"
@@ -92766,9 +92788,6 @@ msgstr ""
 
 #~ msgid "Expired keys"
 #~ msgstr "Abgelaufene Schlüssel"
-
-#~ msgid "Failed concurrent connections"
-#~ msgstr "Fehlgeschlagene gleichzeitige Verbindungen"
 
 #~ msgid "Get commands"
 #~ msgstr "Befehle erhalten"
@@ -93912,9 +93931,6 @@ msgstr ""
 
 #~ msgid "Service (exact match)"
 #~ msgstr "Service (genaue Übereinstimmung)"
-
-#~ msgid "Copy answer"
-#~ msgstr "Antwort kopieren"
 
 #, python-format
 #~ msgid "%s section"

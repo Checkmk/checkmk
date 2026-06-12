@@ -60,6 +60,40 @@ def test_widget_title_from_internal_sanitizes_title_url(
         assert result.url == expected_url
 
 
+@pytest.mark.parametrize(
+    "title_url,should_fail",
+    [
+        pytest.param("javascript:alert(1)", True, id="javascript scheme blocked"),
+        pytest.param("data:text/html,<script>alert(1)</script>", True, id="data scheme blocked"),
+        pytest.param("vbscript:msgbox(1)", True, id="vbscript scheme blocked"),
+        pytest.param("file:///etc/passwd", True, id="file scheme blocked"),
+        pytest.param("http://example.com", False, id="http allowed"),
+        pytest.param("https://example.com", False, id="https allowed"),
+        pytest.param("view.py?view_name=allhosts", False, id="relative URL allowed (no scheme)"),
+    ],
+)
+def test_widget_title_url_scheme_validation(
+    clients: ClientRegistry, title_url: str, should_fail: bool
+) -> None:
+    widget = _create_widget({"type": "static_text", "text": "Test"})
+    widget["general_settings"]["title"]["url"] = title_url  # type: ignore[index]
+    resp = clients.DashboardClient.create_relative_grid_dashboard(
+        _create_dashboard_payload("test_dashboard", {"test_widget": widget}),
+        expect_ok=not should_fail,
+    )
+    if should_fail:
+        assert resp.status_code == 400, f"Expected 400 for {title_url}, got {resp.status_code}"
+        field_error = resp.json["fields"]["body.widgets.test_widget.general_settings.title.url"]
+        assert "invalid url" in field_error["msg"].lower(), (
+            f"Expected error message to mention 'Invalid URL' for {title_url}, "
+            f"got: {field_error['msg']}"
+        )
+    else:
+        assert resp.status_code == 201, (
+            f"Expected 201 for {title_url}, got {resp.status_code} {resp.body!r}"
+        )
+
+
 @pytest.mark.parametrize("widget_api_model", _CONTENT_TYPES)
 def test_widget_api_model_has_valid_type_mapping(widget_api_model: BaseWidgetContent) -> None:
     literal_values = get_args(get_type_hints(widget_api_model)["type"])

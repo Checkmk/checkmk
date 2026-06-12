@@ -5,6 +5,14 @@
 """Tests for the ``user_sync`` → ``authentication_connections`` /
 ``user_attribute_sync_connections`` migration."""
 
+import pytest
+
+from cmk.gui.watolib.sites import (
+    _auth_connections_from_disk,
+    _auth_connections_to_disk,
+    _user_attribute_sync_from_disk,
+    _user_attribute_sync_to_disk,
+)
 from cmk.update_config.plugins.actions.migrate_user_sync_to_auth_connections import (
     _derive_new_values,
     _MISSING,
@@ -90,3 +98,31 @@ def test_missing_user_sync_key_writes_both_fields_explicitly() -> None:
     auth, attr = _derive_new_values(_MISSING, is_central_site=True, saml_supported=True)
     assert auth == ("all", ["ldap", "saml"])
     assert attr == "all"
+
+
+@pytest.mark.parametrize(
+    "legacy_user_sync, is_central_site",
+    [
+        ("all", True),
+        ("all", False),
+        ("master", True),
+        ("master", False),
+        (("list", ["ldap_a", "ldap_b"]), False),
+        (None, False),
+        (_MISSING, True),
+        (_MISSING, False),
+    ],
+)
+def test_migrated_legacy_values_feed_ported_form_spec_without_diff(
+    legacy_user_sync: object, is_central_site: bool
+) -> None:
+    """The "Add connection" half: every migrated legacy ``user_sync`` shape round-trips through the ported Form Spec converters unchanged (SAML half: tests/unit/cmk/gui/nonfree/pro/saml2/test_config.py)."""
+    auth_value, attr_sync_value = _derive_new_values(
+        legacy_user_sync, is_central_site=is_central_site, saml_supported=True
+    )
+
+    assert _auth_connections_to_disk(_auth_connections_from_disk(auth_value)) == auth_value
+    assert (
+        _user_attribute_sync_to_disk(_user_attribute_sync_from_disk(attr_sync_value))
+        == attr_sync_value
+    )

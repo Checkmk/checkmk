@@ -36,7 +36,6 @@ from typing import (
     Literal,
     NamedTuple,
     overload,
-    TypeGuard,
 )
 
 import cmk.ccc.debug
@@ -620,8 +619,6 @@ def perform_post_config_loading_actions(
     # First cleanup things (needed for e.g. reloading the config)
     cache_manager.clear_all()
 
-    _drop_invalid_ssc_rules(loaded_context)
-
     loaded_config = BaseConfig(
         **{f.name: loaded_context[f.name] for f in dataclasses.fields(BaseConfig)},
     )
@@ -778,26 +775,6 @@ def _load_config(
     target_context["all_hosts"] = list(all_hosts_h)
     target_context["clusters"] = dict(clusters_h)
     return target_context
-
-
-def _is_mapping_rulespec(rs: RuleSpec[object]) -> TypeGuard[RuleSpec[Mapping[str, object]]]:
-    return isinstance(rs["value"], dict) and all(isinstance(k, str) for k in rs["value"])
-
-
-def _drop_invalid_ssc_rules(global_dict: dict[str, Any]) -> None:
-    """Drop all SSC rules whos values are not Mapping[str, object]s
-
-    These days, we rely on all values of these type of rules to be Mappings.
-    This is ensured by the new ruleset types, but users could have old
-    configurations flying around.
-    """
-    for ssc_rule_type in ("active_checks", "special_agents"):
-        if ssc_rule_type not in global_dict:
-            continue
-        global_dict[ssc_rule_type] = {
-            k: [rs for rs in rulespecs if _is_mapping_rulespec(rs)]
-            for k, rulespecs in global_dict[ssc_rule_type].items()
-        }
 
 
 # Create list of all files to be included during configuration loading

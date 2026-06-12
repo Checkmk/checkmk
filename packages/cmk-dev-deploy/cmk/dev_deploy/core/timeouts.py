@@ -39,6 +39,12 @@ VERSION_CMD: int = 10
 # OMD commands (omd stop/start) and overlay mount/umount operations
 OVERLAY_CMD: int = 60
 
+# Copy of the whole version tree for the clone backend (GBs without reflink)
+CLONE_COPY: int = 600
+
+# getcap -r scan over the pristine version tree
+GETCAP_SCAN: int = 120
+
 # Service reload (quick operation)
 SERVICE_RELOAD: int = 10
 

@@ -692,6 +692,7 @@ def _run_frontend_watch(
 def _infer_phase(error: BaseException) -> str:
     from cmk.dev_deploy.errors import (
         BazelBuildError,
+        CloneError,
         ConfigDeployError,
         FrontendError,
         IBazelError,
@@ -703,6 +704,8 @@ def _infer_phase(error: BaseException) -> str:
         ManifestBuildError: "manifest_build",
         ChangeDetectionError: "change_detection",
         OverlayError: "overlay",
+        CloneError: "clone",
+        SudoersError: "sudoers",
         BazelBuildError: "bazel_build",
         ConfigDeployError: "config_deploy",
         WheelDeployError: "wheel_deploy",
@@ -804,7 +807,8 @@ def main(argv: list[str] | None = None) -> int:
         # Read the state before teardown -- teardown removes the state file.
         state = load_state(site_root)
         backend = create_backend(
-            resolve_backend_name(args.backend, state.backend if state else ""), SSHState()
+            resolve_backend_name(args.backend, state.backend if state else "", site_root),
+            SSHState(),
         )
         try:
             backend.teardown(site_root)
@@ -845,7 +849,11 @@ def _main_with_site(args: argparse.Namespace, repo_root: Path, site: SiteInfo) -
     import time as _time
 
     from cmk.dev_deploy.manifest.staleness import ensure_manifest
-    from cmk.dev_deploy.site.preparation import create_backend, resolve_backend_name
+    from cmk.dev_deploy.site.preparation import (
+        check_backend_conflict,
+        create_backend,
+        resolve_backend_name,
+    )
 
     if output.get_verbosity() >= output.Verbosity.VERBOSE:
         output.print_blank()
@@ -876,13 +884,22 @@ def _main_with_site(args: argparse.Namespace, repo_root: Path, site: SiteInfo) -
     # Resolved once here; the cycle records it back into the deploy state.
     state = load_state(site.root)
     backend = create_backend(
-        resolve_backend_name(args.backend, state.backend if state else ""), ssh_state
+        resolve_backend_name(args.backend, state.backend if state else "", site.root), ssh_state
     )
     args.backend = backend.name
 
+    if (conflict := check_backend_conflict(backend.name, site.root)) is not None:
+        output.error(conflict)
+        return 1
+
     # Acquire privileges early — before the manifest rebuild which can
     # take minutes (and would e.g. expire a sudo timestamp).
-    backend.prepare_privileges(site.root, full=args.full)
+    try:
+        backend.prepare_privileges(site.root, full=args.full)
+    except SudoersError as e:
+        # Missing consent is not a crash — no diagnostic bundle.
+        output.error(str(e))
+        return 1
 
     # Manifest must be ready before site preparation because capability
     # restoration during ensure() reads it.

@@ -67,3 +67,7 @@ class OverlayError(DeployError):
 
 class SudoersError(DeployError):
     """Raised when the per-site sudoers rule is missing or cannot be managed."""
+
+
+class CloneError(DeployError):
+    """Raised when a version clone cannot be built, activated, or reverted."""

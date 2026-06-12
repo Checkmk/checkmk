@@ -177,8 +177,6 @@ def _render_ipv6_address(bytes_: Sequence[int]) -> str:
 
 
 def _render_networkaddress(bytes_: Sequence[int]) -> str:
-    if not bytes_:
-        return "n/a"
     match bytes_[0]:
         case 1:  # ipv4 address
             return _render_ipv4_address(bytes_[1:])

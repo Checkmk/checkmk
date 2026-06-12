@@ -13,6 +13,7 @@ from unittest.mock import patch
 import pytest
 
 from cmk.dev_deploy.deployers import wheel_deployer
+from cmk.dev_deploy.deployers.wheel_deployer import _uv_cache_env
 from cmk.dev_deploy.errors import WheelDeployError
 from cmk.dev_deploy.types import ChangeSet, Edition, SiteInfo
 
@@ -60,6 +61,35 @@ def test_wheel_prefixes_come_from_manifest() -> None:
 # ---------------------------------------------------------------------------
 # has_wheel_changes
 # ---------------------------------------------------------------------------
+
+
+class TestUvCacheEnv:
+    """The uv cache moves next to the clones for hardlinked installs."""
+
+    def test_cache_on_site_filesystem(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        dev_versions = tmp_path / "dev-versions"
+        dev_versions.mkdir()
+        monkeypatch.setattr(wheel_deployer, "DEV_VERSIONS_DIR", dev_versions)
+        monkeypatch.delenv("UV_CACHE_DIR", raising=False)
+        env = _uv_cache_env()
+        assert env is not None
+        assert env["UV_CACHE_DIR"] == str(dev_versions / ".uv-cache")
+
+    def test_user_cache_dir_wins(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        dev_versions = tmp_path / "dev-versions"
+        dev_versions.mkdir()
+        monkeypatch.setattr(wheel_deployer, "DEV_VERSIONS_DIR", dev_versions)
+        monkeypatch.setenv("UV_CACHE_DIR", "/elsewhere")
+        assert _uv_cache_env() is None
+
+    def test_missing_clone_base_inherits_env(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(wheel_deployer, "DEV_VERSIONS_DIR", tmp_path / "missing")
+        monkeypatch.delenv("UV_CACHE_DIR", raising=False)
+        assert _uv_cache_env() is None
 
 
 class TestHasWheelChanges:

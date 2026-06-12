@@ -790,7 +790,11 @@ def main(argv: list[str] | None = None) -> int:
             candidates: set[str] = set()
             for base in (overlay_base, DEV_VERSIONS_DIR):
                 if base.is_dir():
-                    candidates.update(d.name for d in base.iterdir() if d.is_dir())
+                    # Hidden dirs (e.g. the .uv-cache next to the clones)
+                    # are not site data.
+                    candidates.update(
+                        d.name for d in base.iterdir() if d.is_dir() and not d.name.startswith(".")
+                    )
             if len(candidates) == 1:
                 orphan = next(iter(candidates))
                 site_root = Path("/omd/sites") / orphan

@@ -15,6 +15,7 @@ selection.
 
 from __future__ import annotations
 
+import os
 import time
 from pathlib import Path
 
@@ -23,6 +24,7 @@ from cmk.dev_deploy.core.subprocess_utils import run_checked
 from cmk.dev_deploy.core.timeouts import BAZEL_BUILD
 from cmk.dev_deploy.errors import WheelDeployError
 from cmk.dev_deploy.manifest.reader import get_wheel_prefixes
+from cmk.dev_deploy.site.sudoers import DEV_VERSIONS_DIR
 from cmk.dev_deploy.types import ChangeSet, SiteInfo, WheelDeployResult
 
 DEPLOY_PYTHON_TARGET = "//:deploy-python"
@@ -61,6 +63,22 @@ def _check_site_layout(site: SiteInfo) -> None:
         )
 
 
+def _uv_cache_env() -> dict[str, str] | None:
+    """Environment placing the uv cache on the site's filesystem.
+
+    uv installs wheels via hardlinks when its cache shares a filesystem
+    with the target site-packages; the default ``~/.cache/uv`` usually
+    does not share one with ``/omd``, forcing full copies of every file.
+    The clone base directory is deploy-user-owned and guaranteed to be
+    on the site's filesystem.  Returns ``None`` (inherit the unchanged
+    environment) when the user already configured a cache or the clone
+    base does not exist.
+    """
+    if "UV_CACHE_DIR" in os.environ or not os.access(DEV_VERSIONS_DIR, os.W_OK):
+        return None
+    return {**os.environ, "UV_CACHE_DIR": str(DEV_VERSIONS_DIR / ".uv-cache")}
+
+
 def deploy_wheels(repo_root: Path, site: SiteInfo) -> WheelDeployResult:
     """Build and force-reinstall all of the edition's wheels into the site."""
     start = time.monotonic()
@@ -78,6 +96,7 @@ def deploy_wheels(repo_root: Path, site: SiteInfo) -> WheelDeployResult:
         ],
         cwd=repo_root,
         timeout=BAZEL_BUILD,
+        env=_uv_cache_env(),
         error_cls=WheelDeployError,
         description=f"bazel run {DEPLOY_PYTHON_TARGET}",
         recovery=f"Check 'bazel run {DEPLOY_PYTHON_TARGET} "

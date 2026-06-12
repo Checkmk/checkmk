@@ -22,6 +22,7 @@ def run_checked(
     error_cls: type[Exception] = DeployError,
     description: str = "",
     recovery: str = "",
+    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Run a subprocess, raising on timeout, OS error, or non-zero exit.
 
@@ -37,6 +38,7 @@ def run_checked(
             check=False,
             cwd=str(cwd),
             timeout=timeout,
+            env=env,
         )
     except subprocess.TimeoutExpired:
         _raise(error_cls, f"{desc} timed out after {timeout}s", recovery)

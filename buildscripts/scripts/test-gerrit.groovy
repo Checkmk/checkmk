@@ -101,10 +101,7 @@ void main() {
                     sec_var_list_str = item.SEC_VAR_LIST.join("#");
                 }
                 def independent_command = item.COMMAND.replace("${checkout_dir}", "JOB_SPECIFIC_SPACE_PLACEHOLDER");
-                def relative_job_name = "${branch_base_folder}/cv/test-gerrit-single-node"
-                if (env.USE_K8S_GERRIT == "1") {
-                    relative_job_name = "${branch_base_folder}/cv/test-gerrit-single-k8s"
-                }
+                def relative_job_name = "${branch_base_folder}/cv/test-gerrit-single-k8s"
 
                 smart_stage(
                     name: stepName,
@@ -124,7 +121,6 @@ void main() {
                         CIPARAM_GIT_FETCH_NOTES: item.GIT_FETCH_NOTES,
                         CIPARAM_COMMAND: independent_command,
                         CIPARAM_RESULT_CHECK_FILE_PATTERN: item.RESULT_CHECK_FILE_PATTERN,
-                        CIPARAM_BAZEL_LOCKS_AMOUNT: item.BAZEL_LOCKS_AMOUNT,
                     ];
 
                     // use another switch statement to apply k8s specific settings and/or job paths, CMK-25972

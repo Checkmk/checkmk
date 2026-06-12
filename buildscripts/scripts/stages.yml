@@ -101,7 +101,6 @@ STAGES:
           done
           bazel mod graph --output=json | jq -e ".. | select(.name? == \"boringssl\")" >"${RESULTS}/results.txt" && exit 1 || true
       RESULT_CHECK_FILE_PATTERN: "results/results.txt"
-      BAZEL_LOCKS_AMOUNT: 1
 
     - NAME: "Bazel sanity check"
       # omdlib/__init__.py is checked in in the repo but then overwritten by bazel. No way to lint the checked in file.
@@ -118,7 +117,6 @@ STAGES:
           ./tests/agent-plugin-unit/bootstrap.sh --check-sources >> ${RESULTS}/results.txt || make_rc=$?
           exit $make_rc
       RESULT_CHECK_FILE_PATTERN: "results/results.txt"
-      BAZEL_LOCKS_AMOUNT: 1
 
     - NAME: "All unit tests"
       SEC_VAR_LIST:
@@ -138,7 +136,6 @@ STAGES:
           ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
           bazel --run_under="cd $PWD &&" run //buildscripts/scripts:collect_rust_tests -- "../results" "../results" || :
           exit $make_rc
-      BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/unit/**/test.xml"
       JENKINS_TEST_RESULT_PATH: "testReport/"
@@ -160,7 +157,6 @@ STAGES:
               //... || make_rc=$?
         ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
         exit $make_rc
-      BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "GoogleTest"
       RESULT_CHECK_FILE_PATTERN: "results/cpp/**/test.xml"
       JENKINS_TEST_RESULT_PATH: "testReport/(root)/"
@@ -181,7 +177,6 @@ STAGES:
             //tests/code_quality/werks:werks || make_rc=$?
           ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
           exit $make_rc
-      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Werk files changed"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/werks/**/test.xml"
@@ -190,7 +185,6 @@ STAGES:
     - NAME: "Bazel Lint"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_BAZEL_FILES
       COMMAND: "bazel run //:buildifier.check 2>${RESULTS}/bazel-lint.txt"
-      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No Bazel files changed"
       RESULT_CHECK_TYPE: "BAZELLINT"
       RESULT_CHECK_FILE_PATTERN: "results/bazel-lint.txt"
@@ -200,13 +194,11 @@ STAGES:
       DIR: "tests"
       COMMAND: "make test-agent-plugin > ${RESULTS}/agent-plugin-unit-junit.txt"
       TEXT_ON_SKIP: "No agent files changed"
-      BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_FILE_PATTERN: "results/agent-plugin-unit-junit.txt"
 
     - NAME: "GitHub actions"
       ONLY_WHEN_NOT_EMPTY: CHANGED_BAZEL_FILES
       COMMAND: echo "Just have this line here, task is handled in test-gerrit.groovy"
-      BAZEL_LOCKS_AMOUNT: 1
 
     ########## packages ########################################################
 
@@ -214,7 +206,6 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FRONTEND_VUE_FILES,CHANGED_SHARED_TYPING_FILES,CHANGED_JS_DEPENDENCIES
       DIR: "packages/cmk-frontend-vue"
       COMMAND: "./run -B --build-dev --lint &> ${RESULTS}/cmk-frontend-vue.txt"
-      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-frontend-vue files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend-vue.txt"
 
@@ -226,13 +217,11 @@ STAGES:
           - "CI_ORA_TEST_PASSWORD"
       DIR: "packages/mk-oracle"
       COMMAND: "./run --component-tests"
-      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No mk-oracle files changed"
       RESULT_CHECK_FILE_PATTERN: "mk-oracle.txt"
 
     - NAME: "Format repository"
       COMMAND: "bazel run //:format.check &> ${RESULTS}/format.txt"
-      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "unconditional"
       RESULT_CHECK_FILE_PATTERN: "results/format.txt"
 
@@ -245,7 +234,6 @@ STAGES:
           bazel run //scripts:sarif_preparse -- --root_dir=$PWD/bazel-bin --output ${RESULTS}/results.sarif || true
           exit $exit_code
       TEXT_ON_SKIP: "unconditional"
-      BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "SARIF"
       RESULT_CHECK_FILE_PATTERN: "results/results.sarif"
 
@@ -263,7 +251,6 @@ STAGES:
              bazel-out/k8-fastbuild/bin \
              > results/mypy-results.xml
           exit $exit_code
-      BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "unconditional"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/mypy-results.xml"

@@ -56,6 +56,8 @@ class TestDefaults:
         assert args.rebuild_manifest is False
         assert args.frontend is False
         assert args.purge is False
+        assert args.print_setup is False
+        assert args.remove_setup is False
 
 
 # ---------------------------------------------------------------------------
@@ -231,6 +233,27 @@ class TestPurgeConflicts:
 
 
 # ---------------------------------------------------------------------------
+# Mutual exclusivity -- setup flag conflicts
+# ---------------------------------------------------------------------------
+
+
+class TestSetupFlagConflicts:
+    """--print-setup / --remove-setup exit early and combine only with --site."""
+
+    @pytest.mark.parametrize("setup_flag", ["--print-setup", "--remove-setup"])
+    @pytest.mark.parametrize(
+        "other", ["--full", "--dry-run", "--watch", "--info", "--frontend", "--purge"]
+    )
+    def test_conflicts(self, setup_flag: str, other: str) -> None:
+        with pytest.raises(SystemExit):
+            parse_args([setup_flag, other])
+
+    def test_print_and_remove_conflict(self) -> None:
+        with pytest.raises(SystemExit):
+            parse_args(["--print-setup", "--remove-setup"])
+
+
+# ---------------------------------------------------------------------------
 # Combined valid flags
 # ---------------------------------------------------------------------------
 
@@ -264,3 +287,11 @@ class TestValidCombinations:
         assert args.purge is True
         assert args.verbose == 1
         assert args.site == "mysite"
+
+    def test_print_setup_with_site(self) -> None:
+        args = parse_args(["--print-setup", "-s", "mysite"])
+        assert args.print_setup is True
+        assert args.site == "mysite"
+
+    def test_remove_setup_alone(self) -> None:
+        assert parse_args(["--remove-setup"]).remove_setup is True

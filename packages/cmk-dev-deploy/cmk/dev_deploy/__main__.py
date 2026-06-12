@@ -31,6 +31,7 @@ from cmk.dev_deploy.errors import (
     RepoNotFoundError,
     SiteError,
     SiteNotFoundError,
+    SudoersError,
 )
 from cmk.dev_deploy.execution.bazel_resolver import resolve_bazel_targets
 from cmk.dev_deploy.execution.parallel import DeployStep, execute_parallel
@@ -739,6 +740,29 @@ def main(argv: list[str] | None = None) -> int:
     except RepoNotFoundError as e:
         output.error(str(e))
         return 1
+
+    # --print-setup / --remove-setup only need the site name; they exit
+    # before any manifest, sudo, or site preparation work.
+    if args.print_setup or args.remove_setup:
+        from cmk.dev_deploy.site import sudoers
+        from cmk.dev_deploy.site.site_resolver import resolve_site_name
+
+        flag = "--print-setup" if args.print_setup else "--remove-setup"
+        site_name = resolve_site_name(args.site, repo_root, Path.cwd())
+        if site_name is None:
+            output.error(
+                f"No site found.\n  Specify explicitly: cmk-dev-deploy {flag} --site SITENAME"
+            )
+            return 1
+        try:
+            if args.print_setup:
+                sudoers.print_setup(site_name)
+            else:
+                sudoers.remove_setup(site_name)
+        except SudoersError as e:
+            output.error(str(e))
+            return 1
+        return 0
 
     # OverlayFS management
     from cmk.dev_deploy.site.overlay import (

@@ -100,6 +100,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="On error, output a JSON diagnostic bundle to stdout (for automation)",
     )
+    parser.add_argument(
+        "--print-setup",
+        action="store_true",
+        help="Print the admin commands that set up the clone backend, then exit",
+    )
+    parser.add_argument(
+        "--remove-setup",
+        action="store_true",
+        help="Remove the clone backend's sudoers rule, then exit (no deploy)",
+    )
 
     args = parser.parse_args(argv)
 
@@ -129,5 +139,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         for flag in ("full", "dry_run", "watch", "info", "frontend"):
             if getattr(args, flag, False):
                 parser.error(f"--purge and --{flag.replace('_', '-')} cannot be used together")
+
+    # The setup flags exit before any deploy logic; only --site combines with them.
+    for setup_flag in ("print_setup", "remove_setup"):
+        if getattr(args, setup_flag):
+            for flag in ("full", "dry_run", "watch", "info", "frontend", "purge"):
+                if getattr(args, flag, False):
+                    parser.error(
+                        f"--{setup_flag.replace('_', '-')} and "
+                        f"--{flag.replace('_', '-')} cannot be used together"
+                    )
+    if args.print_setup and args.remove_setup:
+        parser.error("--print-setup and --remove-setup cannot be used together")
 
     return args

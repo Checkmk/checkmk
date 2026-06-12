@@ -135,8 +135,8 @@ class _FakeFetchRRD:
 def test_discover_template_graphs_empty_service_returns_no_graphs() -> None:
     service = _service()
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -152,8 +152,8 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
     service = _service()
     cpu_user = MetricName("cpu_user")
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -183,8 +183,8 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
         name="cpu", title=Title("CPU"), simple_lines=["cpu_user", "cpu_system"]
     )
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -210,8 +210,8 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
     extra = MetricName("extra")
     plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -233,8 +233,8 @@ def test_discover_template_graphs_rejects_plugin_when_required_metric_missing() 
         name="cpu", title=Title("CPU"), simple_lines=["cpu_user", "cpu_system"]
     )
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -258,8 +258,8 @@ def test_discover_template_graphs_optional_missing_metric_still_matches() -> Non
         optional=["cpu_iowait"],
     )
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -284,8 +284,8 @@ def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() ->
         conflicting=["util"],
     )
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -307,8 +307,8 @@ def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
         name="cpu", title=Title("CPU"), simple_lines=["cpu_user", "cpu_system"]
     )
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -335,8 +335,8 @@ def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
         upper=graphs_v2_unstable.Graph(name="out", title=Title("Out"), simple_lines=["if_out"]),
     )
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -360,8 +360,8 @@ def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantit
         simple_lines=["cpu_user", metrics_v2_unstable.LowerWarningOf("cpu_system")],
     )
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -390,8 +390,8 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
         simple_lines=["cpu_user", metrics_v1.WarningOf("cpu_system")],
     )
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -417,8 +417,8 @@ def test_discover_template_graphs_evaluates_the_title_expression() -> None:
         simple_lines=["cpu_user"],
     )
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -443,8 +443,8 @@ def test_discover_template_graphs_title_expression_falls_back_when_unresolvable(
         simple_lines=["cpu_user"],
     )
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -469,8 +469,8 @@ def test_discover_template_graphs_requires_a_metric_referenced_only_in_the_title
         simple_lines=["util"],
     )
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -496,8 +496,8 @@ def test_discover_template_graphs_claims_a_metric_referenced_only_in_the_title()
         simple_lines=["util"],
     )
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -522,8 +522,8 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> 
     predict = MetricName("predict_cpu_user")
     plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -548,8 +548,8 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_fallback_graph() ->
     cpu_user = MetricName("cpu_user")
     predict = MetricName("predict_cpu_user")
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],
@@ -571,8 +571,8 @@ def test_discover_template_graphs_ignores_a_predictive_metric_without_its_base()
     service = _service()
     predict = MetricName("predict_cpu_user")
     options = TemplateDiscoveryOptions(
-        time_range=_time_range(),
         service=service,
+        time_range=_time_range(),
         consolidation_function=ConsolidationFunction.AVERAGE,
         metrics=_METRICS,
         translations=[],

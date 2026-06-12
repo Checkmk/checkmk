@@ -38,8 +38,8 @@ _PREDICT_PREFIX = "predict_"
 
 @dataclass(frozen=True, kw_only=True)
 class TemplateDiscoveryOptions:
-    time_range: TimeRange
     service: ServiceRef
+    time_range: TimeRange
     consolidation_function: ConsolidationFunction
     localizer: Callable[[str], str]
     registered_graphs: Sequence[

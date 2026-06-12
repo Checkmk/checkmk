@@ -28,17 +28,25 @@ hence the specification can be rendered using the current state of your branch.
 To generate the specification file (`spec.yaml`), run the following command:
 
 ```bash
-bazel --cmk_edition=<community, pro, ultimate, ultimatemt, cloud> run //cmk/gui/openapi/spec/spec_generator:generate_api_spec -- generate --version <internal, unstable, v1> --edition <community, pro, ultimate, ultimatemt, cloud> --out spec.yaml --format yaml
+# community
+bazel run //cmk/gui/openapi/spec/editions/community:generate_api_spec -- generate --version <internal, unstable, v1> --edition community --out "$(pwd)/spec.yaml" --format yaml
+
+# pro / ultimate / ultimatemt / cloud  (nonfree editions)
+bazel run //cmk/gui/openapi/spec/editions/nonfree/<edition>:generate_api_spec -- generate --version <internal, unstable, v1> --edition <edition> --out "$(pwd)/spec.yaml" --format yaml
 ```
 
-Then use `redocly` to preview and inspect the documentation:
+You can use any tool of your preference to inspect the specification. To install
+`redocly` locally:
 
 ```bash
-redocly preview-docs spec.yaml
+npm install -g @redocly/cli
 ```
 
-You can use any tool of your preference to inspect the specification hence you
-may have to install `redocly` locally
+Then use `redocly` to build and open the documentation:
+
+```bash
+redocly build-docs spec.yaml && xdg-open redoc-static.html
+```
 
 ### Code structure
 

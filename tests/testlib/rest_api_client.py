@@ -4298,6 +4298,7 @@ class MonitorHostsClient(RestApiClient):
         limit: int,
         q: str | None = None,
         sort: list[str] | None = None,
+        filters: dict[str, Any] | None = None,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
@@ -4308,6 +4309,7 @@ class MonitorHostsClient(RestApiClient):
                     "limit": limit,
                     "q": q,
                     "sort": sort,
+                    "filter": filters,
                 }
             ),
             expect_ok=expect_ok,

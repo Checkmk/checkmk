@@ -24,6 +24,7 @@ from cmk.gui.utils import permission_verification as permissions
 from .._impl import LiveStatusHostRepository
 from .._models import (
     Host,
+    HostFilter,
     HostSort,
     HostSortColumn,
     HostSortDirection,
@@ -31,7 +32,7 @@ from .._models import (
 )
 from .._repositories import HostRepository
 from ._family import MONITOR_HOSTS_FAMILY
-from ._filters import FilterNode
+from ._filters import FilterNode, parse_as_livestatus_filter
 from ._validators import parse_host_search_query, parse_host_sort_options
 
 # NOTE: currently hardcoding these constraints. It's to be determined where these should come from,
@@ -133,13 +134,18 @@ def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
 
     host_repo = LiveStatusHostRepository(connection=sites.live())
 
-    # Filtering will be implemented in the next tasks
+    parsed_filters = (
+        HostFilter("")
+        if isinstance(body.filter, ApiOmitted)
+        else parse_as_livestatus_filter(body.filter)
+    )
 
     return _handle_list_hosts(
         host_repo,
         limit=body.limit,
         search_query="" if isinstance(body.q, ApiOmitted) else body.q,
         sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
+        filters=parsed_filters,
     )
 
 
@@ -149,9 +155,15 @@ def _handle_list_hosts(
     limit: int,
     search_query: str = "",
     sorters: Sequence[HostSort] = _DEFAULT_SORT,
+    filters: HostFilter = HostFilter(""),
 ) -> HostsResponse:
-    hosts = host_repo.fetch(limit=limit, search_query=search_query, sorters=sorters)
-    host_total = host_repo.count(search_query=search_query)
+    hosts = host_repo.fetch(
+        limit=limit,
+        search_query=search_query,
+        sorters=sorters,
+        filters=filters,
+    )
+    host_total = host_repo.count(search_query=search_query, filters=filters)
 
     return HostsResponse(
         hosts=[HostEntry.from_domain(host) for host in hosts],

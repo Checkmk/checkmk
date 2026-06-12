@@ -17,7 +17,7 @@ from cmk.livestatus_client.expressions import NothingExpression, Or, QueryExpres
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Status
 
-from ._models import Host, HostSort, HostState, ServiceCounts
+from ._models import Host, HostFilter, HostSort, HostState, ServiceCounts
 
 
 def _search_filter(search_query: str) -> QueryExpression:
@@ -46,6 +46,7 @@ class LiveStatusHostRepository:
         limit: int,
         search_query: str = "",
         sorters: Sequence[HostSort],
+        filters: HostFilter,
     ) -> Sequence[Host]:
         q = Query(
             [
@@ -62,6 +63,7 @@ class LiveStatusHostRepository:
             ],
             _search_filter(search_query),
             extra_headers=[
+                *filters.splitlines(),
                 # NOTE: Livestatus doesn't support sorting by multiple columns at the moment. The
                 # resulting query will only take the first `OrderBy` statement and sort by that
                 # criteria. We are leaving the wiring in for now and will investigate the ability to
@@ -93,8 +95,8 @@ class LiveStatusHostRepository:
                 for row in q.iterate(conn)
             ]
 
-    def count(self, *, search_query: str = "") -> int:
-        if not search_query:
+    def count(self, *, search_query: str = "", filters: HostFilter) -> int:
+        if not search_query and not filters:
             q = Query([Status.num_hosts])
             with detailed_connection(self._connection) as conn:
                 return sum(row["num_hosts"] for row in q.iterate(conn))
@@ -105,5 +107,12 @@ class LiveStatusHostRepository:
         # The ``Stats`` count is the trailing column of each returned row; summing it across rows
         # adds up the per-site counts.
         filter_lines = (": ".join(line) for line in _search_filter(search_query).render())
-        stats_query = "\n".join([f"GET {Hosts.__tablename__}", "Stats: state >= 0", *filter_lines])
+        stats_query = "\n".join(
+            [
+                f"GET {Hosts.__tablename__}",
+                "Stats: state >= 0",
+                *filter_lines,
+                *filters.splitlines(),
+            ]
+        )
         return sum(int(row[-1]) for row in self._connection.query(stats_query))

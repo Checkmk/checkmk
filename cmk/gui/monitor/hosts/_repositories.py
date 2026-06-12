@@ -13,7 +13,7 @@ they will return. This allows us to pass stubs when testing our applications.
 from collections.abc import Sequence
 from typing import Protocol
 
-from ._models import Host, HostSort
+from ._models import Host, HostFilter, HostSort
 
 
 class HostRepository(Protocol):
@@ -23,6 +23,7 @@ class HostRepository(Protocol):
         limit: int,
         search_query: str = "",
         sorters: Sequence[HostSort],
+        filters: HostFilter,
     ) -> Sequence[Host]:
         """Fetch hosts based on filter criteria.
 
@@ -31,7 +32,7 @@ class HostRepository(Protocol):
         """
         ...
 
-    def count(self, *, search_query: str = "") -> int:
+    def count(self, *, search_query: str = "", filters: HostFilter) -> int:
         """Count the hosts matching the given criteria.
 
         ``search_query`` is an already whitespace-stripped free-text search. When empty, the total

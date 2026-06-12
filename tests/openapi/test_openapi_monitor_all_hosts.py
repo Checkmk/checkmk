@@ -67,8 +67,8 @@ class TestMonitorHostsResponse:
                 "address": "127.0.0.1",
                 "alias": "Today",
                 "state": 0,
-                "num_services": 0,
-                "num_services_ok": 0,
+                "num_services": 10,
+                "num_services_ok": 10,
                 "num_services_warn": 0,
                 "num_services_crit": 0,
                 "num_services_unknown": 0,
@@ -79,8 +79,8 @@ class TestMonitorHostsResponse:
                 "address": "127.0.10.1",
                 "alias": "Yesterday",
                 "state": 1,
-                "num_services": 0,
-                "num_services_ok": 0,
+                "num_services": 20,
+                "num_services_ok": 20,
                 "num_services_warn": 0,
                 "num_services_crit": 0,
                 "num_services_unknown": 0,
@@ -91,8 +91,8 @@ class TestMonitorHostsResponse:
                 "address": "127.0.2.1",
                 "alias": "Tomorrow",
                 "state": 2,
-                "num_services": 0,
-                "num_services_ok": 0,
+                "num_services": 30,
+                "num_services_ok": 30,
                 "num_services_warn": 0,
                 "num_services_crit": 0,
                 "num_services_unknown": 0,
@@ -116,9 +116,9 @@ class TestMonitorHostsResponse:
                 "alias": "Today",
                 "address": "127.0.0.1",
                 "name": "heute",
-                "num_services": 0,
+                "num_services": 10,
                 "num_services_crit": 0,
-                "num_services_ok": 0,
+                "num_services_ok": 10,
                 "num_services_pending": 0,
                 "num_services_unknown": 0,
                 "num_services_warn": 0,
@@ -129,9 +129,9 @@ class TestMonitorHostsResponse:
                 "alias": "Yesterday",
                 "address": "127.0.10.1",
                 "name": "gestern",
-                "num_services": 0,
+                "num_services": 20,
                 "num_services_crit": 0,
-                "num_services_ok": 0,
+                "num_services_ok": 20,
                 "num_services_pending": 0,
                 "num_services_unknown": 0,
                 "num_services_warn": 0,
@@ -142,9 +142,9 @@ class TestMonitorHostsResponse:
                 "alias": "Tomorrow",
                 "address": "127.0.2.1",
                 "name": "morgen",
-                "num_services": 0,
+                "num_services": 30,
                 "num_services_crit": 0,
-                "num_services_ok": 0,
+                "num_services_ok": 30,
                 "num_services_pending": 0,
                 "num_services_unknown": 0,
                 "num_services_warn": 0,
@@ -210,6 +210,113 @@ class TestMonitorHostsResponse:
 
         assert resp.json["hosts"] == []
         assert resp.json["meta"]["total"] == 0
+
+    def test_filters(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", self.hosts)
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending",
+                "Filter: num_services <= 10",
+                "Filter: state = 0",
+                "Filter: state = 1",
+                "Or: 2",
+                "And: 2",
+                "OrderBy: name asc",
+                f"Limit: {self.limit}",
+            ]
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Stats: state >= 0",
+                "Filter: num_services <= 10",
+                "Filter: state = 0",
+                "Filter: state = 1",
+                "Or: 2",
+                "And: 2",
+            ]
+        )
+        filters = {
+            "type": "and",
+            "children": [
+                {
+                    "type": "condition",
+                    "field": "num_services",
+                    "op": "lte",
+                    "value": 10,
+                },
+                {
+                    "type": "condition",
+                    "field": "state",
+                    "op": "one_of",
+                    "value": ["UP", "DOWN"],
+                },
+            ],
+        }
+
+        with mock_livestatus():
+            resp = clients.MonitorHosts.list_all(limit=self.limit, filters=filters)
+
+        assert resp.json["hosts"] == [
+            {
+                "alias": "Today",
+                "address": "127.0.0.1",
+                "name": "heute",
+                "num_services": 10,
+                "num_services_crit": 0,
+                "num_services_ok": 10,
+                "num_services_pending": 0,
+                "num_services_unknown": 0,
+                "num_services_warn": 0,
+                "site_id": "NO_SITE",
+                "state": "UP",
+            },
+        ]
+
+    @pytest.mark.parametrize(
+        "filters",
+        [
+            pytest.param({}, id="empty payload"),
+            pytest.param(
+                {"type": "condition", "field": "states", "op": "one_of", "value": []},
+                id="min length of 'one_of' condition",
+            ),
+            pytest.param(
+                {"type": "condition", "field": "states", "op": "one_of", "value": ["UP", "UP"]},
+                id="uniqueness in 'one_of' condition",
+            ),
+            pytest.param(
+                {
+                    "type": "and",
+                    "children": [
+                        {"type": "condition", "field": "num_services", "op": "lte", "value": 10},
+                    ],
+                },
+                id="min length of 'and' condition",
+            ),
+            pytest.param(
+                {
+                    "type": "and",
+                    "children": [
+                        {"type": "condition", "field": "num_services", "op": "lte", "value": 10},
+                    ],
+                },
+                id="min length of 'or' condition",
+            ),
+        ],
+    )
+    def test_filters_validation_errors(
+        self,
+        clients: ClientRegistry,
+        filters: dict[str, object],
+    ) -> None:
+        resp = clients.MonitorHosts.list_all(limit=self.limit, filters=filters, expect_ok=False)
+        assert resp.status_code == 400
 
     def _setup_search(self, mock_livestatus: MockLiveStatusConnection, *, query: str) -> None:
         mock_livestatus.add_table("hosts", self.hosts)

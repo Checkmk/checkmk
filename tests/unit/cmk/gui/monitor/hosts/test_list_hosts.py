@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from polyfactory.factories import DataclassFactory
 
 from cmk.gui.monitor.hosts._api._list_hosts import _handle_list_hosts
-from cmk.gui.monitor.hosts._models import Host, HostSort
+from cmk.gui.monitor.hosts._models import Host, HostFilter, HostSort
 from cmk.gui.monitor.hosts._repositories import HostRepository
 
 
@@ -27,10 +27,11 @@ def get_fake_host_repository(*, n_hosts: int) -> HostRepository:
             limit: int,
             search_query: str = "",
             sorters: Sequence[HostSort],
+            filters: HostFilter,
         ) -> Sequence[Host]:
             return self._matching(search_query)[:limit]
 
-        def count(self, *, search_query: str = "") -> int:
+        def count(self, *, search_query: str = "", filters: HostFilter) -> int:
             return len(self._matching(search_query))
 
         def _matching(self, search_query: str) -> list[Host]:
@@ -75,11 +76,12 @@ def test_handle_list_hosts_forwards_search_query_to_repository() -> None:
             limit: int,
             search_query: str = "",
             sorters: Sequence[HostSort],
+            filters: HostFilter,
         ) -> Sequence[Host]:
             calls["fetch"] = search_query
             return []
 
-        def count(self, *, search_query: str = "") -> int:
+        def count(self, *, search_query: str = "", filters: HostFilter) -> int:
             calls["count"] = search_query
             return 0
 

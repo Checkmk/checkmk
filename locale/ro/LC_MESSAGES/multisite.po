@@ -15140,6 +15140,10 @@ msgstr "Numele clusterului"
 msgid "Cluster node IPs"
 msgstr "IP-urile nodurilor de cluster"
 
+#, fuzzy
+msgid "Cluster node IPs or subnets"
+msgstr "IP-urile nodurilor de cluster"
+
 msgid "Cluster node definition"
 msgstr "Definiția nodului de cluster"
 
@@ -34128,6 +34132,9 @@ msgstr "Subrețea IPv4"
 msgid "IPv4/IPv6 address"
 msgstr "Adresa IPv4/IPv6"
 
+msgid "IPv4/IPv6 address or subnet (CIDR notation)"
+msgstr ""
+
 msgid "IPv4/IPv6 dual-stack"
 msgstr "IPv4/IPv6 dual-stack"
 
@@ -37975,6 +37982,11 @@ msgstr "Format de dată invalid: %s"
 
 msgid "Invalid end time given"
 msgstr "Ora de încheiere invalidă dată"
+
+msgid ""
+"Invalid entry. You need to specify an IPv4/IPv6 address or a subnet in CIDR "
+"notation (e.g. 192.168.1.0/24)."
+msgstr ""
 
 #, python-format
 msgid "Invalid expected callable for %s at idx %d: %r"
@@ -91352,6 +91364,19 @@ msgid ""
 "With this option activated cluster node IPs may be mapped to a cluster. In "
 "case the monitoring site is operated in a failover cluster configuration "
 "this option is required to prevent from potentially duplicated log entries."
+msgstr ""
+"Cu această opțiune activată, IP-urile nodurilor de cluster pot fi alocate "
+"unui cluster. În cazul în care site-ul de monitorizare este operat într-o "
+"configurație de cluster de tip failover, această opțiune este necesară "
+"pentru a preveni eventualele intrări de jurnal duplicat."
+
+#, fuzzy
+msgid ""
+"With this option activated cluster node IPs may be mapped to a cluster. "
+"Nodes can be specified as single IPv4/IPv6 addresses or as subnets in CIDR "
+"notation (e.g. 192.168.1.0/24). In case the monitoring site is operated in a "
+"failover cluster configuration this option is required to prevent from "
+"potentially duplicated log entries."
 msgstr ""
 "Cu această opțiune activată, IP-urile nodurilor de cluster pot fi alocate "
 "unui cluster. În cazul în care site-ul de monitorizare este operat într-o "

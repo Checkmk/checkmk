@@ -14388,6 +14388,10 @@ msgstr "クラスター名"
 msgid "Cluster node IPs"
 msgstr "クラスターノードIP"
 
+#, fuzzy
+msgid "Cluster node IPs or subnets"
+msgstr "クラスターノードIP"
+
 msgid "Cluster node definition"
 msgstr "クラスターノードの定義"
 
@@ -32268,6 +32272,9 @@ msgstr "IPv4サブネット"
 msgid "IPv4/IPv6 address"
 msgstr "IPv4 / IPv6アドレス"
 
+msgid "IPv4/IPv6 address or subnet (CIDR notation)"
+msgstr ""
+
 msgid "IPv4/IPv6 dual-stack"
 msgstr "IPv4/IPv6デュアルスタック"
 
@@ -35939,6 +35946,11 @@ msgstr "無効な日付形式：%s"
 
 msgid "Invalid end time given"
 msgstr "無効な終了時刻が指定されました"
+
+msgid ""
+"Invalid entry. You need to specify an IPv4/IPv6 address or a subnet in CIDR "
+"notation (e.g. 192.168.1.0/24)."
+msgstr ""
 
 #, python-format
 msgid "Invalid expected callable for %s at idx %d: %r"
@@ -86147,6 +86159,18 @@ msgid ""
 "With this option activated cluster node IPs may be mapped to a cluster. In "
 "case the monitoring site is operated in a failover cluster configuration "
 "this option is required to prevent from potentially duplicated log entries."
+msgstr ""
+"このオプションをアクティブにすると、クラスターノードのIPをクラスターにマップ"
+"できます。監視サイトがフェールオーバークラスター構成で運用されている場合、こ"
+"のオプションは、ログエントリが重複する可能性を防ぐために必要です。"
+
+#, fuzzy
+msgid ""
+"With this option activated cluster node IPs may be mapped to a cluster. "
+"Nodes can be specified as single IPv4/IPv6 addresses or as subnets in CIDR "
+"notation (e.g. 192.168.1.0/24). In case the monitoring site is operated in a "
+"failover cluster configuration this option is required to prevent from "
+"potentially duplicated log entries."
 msgstr ""
 "このオプションをアクティブにすると、クラスターノードのIPをクラスターにマップ"
 "できます。監視サイトがフェールオーバークラスター構成で運用されている場合、こ"

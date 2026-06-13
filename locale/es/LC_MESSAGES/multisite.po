@@ -15176,6 +15176,10 @@ msgstr "Nombre del clúster"
 msgid "Cluster node IPs"
 msgstr "IPs de los nodos de cluster"
 
+#, fuzzy
+msgid "Cluster node IPs or subnets"
+msgstr "IPs de los nodos de cluster"
+
 msgid "Cluster node definition"
 msgstr "Definición del nodo del clúster"
 
@@ -34271,6 +34275,9 @@ msgstr "Subred IPv4"
 msgid "IPv4/IPv6 address"
 msgstr "Dirección IPv4/IPv6"
 
+msgid "IPv4/IPv6 address or subnet (CIDR notation)"
+msgstr ""
+
 msgid "IPv4/IPv6 dual-stack"
 msgstr "IPv4/IPv6 dual-stack"
 
@@ -38097,6 +38104,11 @@ msgstr "Fuente de datos no válida: %s"
 
 msgid "Invalid end time given"
 msgstr "Hora de finalización no válida indicada"
+
+msgid ""
+"Invalid entry. You need to specify an IPv4/IPv6 address or a subnet in CIDR "
+"notation (e.g. 192.168.1.0/24)."
+msgstr ""
 
 #, python-format
 msgid "Invalid expected callable for %s at idx %d: %r"
@@ -91728,6 +91740,19 @@ msgid ""
 "With this option activated cluster node IPs may be mapped to a cluster. In "
 "case the monitoring site is operated in a failover cluster configuration "
 "this option is required to prevent from potentially duplicated log entries."
+msgstr ""
+"Con esta opción activada, las IPs de los nodos de cluster pueden ser "
+"asignadas a un cluster. En caso de que el sitio de monitorización funcione "
+"en una configuración de clúster de conmutación por error, esta opción es "
+"necesaria para evitar posibles entradas de registro duplicadas."
+
+#, fuzzy
+msgid ""
+"With this option activated cluster node IPs may be mapped to a cluster. "
+"Nodes can be specified as single IPv4/IPv6 addresses or as subnets in CIDR "
+"notation (e.g. 192.168.1.0/24). In case the monitoring site is operated in a "
+"failover cluster configuration this option is required to prevent from "
+"potentially duplicated log entries."
 msgstr ""
 "Con esta opción activada, las IPs de los nodos de cluster pueden ser "
 "asignadas a un cluster. En caso de que el sitio de monitorización funcione "

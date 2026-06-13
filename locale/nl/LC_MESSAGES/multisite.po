@@ -14322,6 +14322,10 @@ msgstr "Naam cluster"
 msgid "Cluster node IPs"
 msgstr "IP's van clusterknooppunten"
 
+#, fuzzy
+msgid "Cluster node IPs or subnets"
+msgstr "IP's van clusterknooppunten"
+
 msgid "Cluster node definition"
 msgstr "Cluster node definitie"
 
@@ -32210,6 +32214,9 @@ msgstr "IPv4 Subnet"
 msgid "IPv4/IPv6 address"
 msgstr "IPv4/IPv6 adres"
 
+msgid "IPv4/IPv6 address or subnet (CIDR notation)"
+msgstr ""
+
 msgid "IPv4/IPv6 dual-stack"
 msgstr "IPv4/IPv6 dubbel-stapel"
 
@@ -35811,6 +35818,11 @@ msgstr "Ongeldige gegevensbron: %s"
 #, fuzzy, python-format
 msgid "Invalid date format: %s"
 msgstr "Ongeldige gegevensbron: %s"
+
+msgid ""
+"Invalid entry. You need to specify an IPv4/IPv6 address or a subnet in CIDR "
+"notation (e.g. 192.168.1.0/24)."
+msgstr ""
 
 #, python-format
 msgid "Invalid expected callable for %s at idx %d: %r"
@@ -45510,6 +45522,10 @@ msgstr "Niet gevonden"
 #, fuzzy
 msgid "Not Present"
 msgstr "niet aanwezig"
+
+#, fuzzy
+msgid "Not a NagVis URL"
+msgstr "Opmerkingen"
 
 #, fuzzy
 msgid "Not a list"
@@ -86407,6 +86423,19 @@ msgstr ""
 "gebruikt in een failover cluster configuratie is deze optie vereist om "
 "potentieel dubbele logboekitems te voorkomen."
 
+#, fuzzy
+msgid ""
+"With this option activated cluster node IPs may be mapped to a cluster. "
+"Nodes can be specified as single IPv4/IPv6 addresses or as subnets in CIDR "
+"notation (e.g. 192.168.1.0/24). In case the monitoring site is operated in a "
+"failover cluster configuration this option is required to prevent from "
+"potentially duplicated log entries."
+msgstr ""
+"Met deze optie geactiveerd kunnen IP's van clusterknooppunten aan een "
+"cluster worden toegewezen. In het geval dat de monitoring site wordt "
+"gebruikt in een failover cluster configuratie is deze optie vereist om "
+"potentieel dubbele logboekitems te voorkomen."
+
 msgid ""
 "With this option activated you can make the Event Console monitor that a "
 "certain number of messages are <b>at least</b> seen within each regular time "
@@ -88531,7 +88560,7 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "You have not defined any virtual host trees. You can do this in the <a "
-"href=\"%s\" target=\"main\">Global settings</a>."
+"href=\"%s\">Global settings</a>."
 msgstr ""
 "U hebt geen virtuele hostbomen gedefinieerd. U kunt dit doen in de <a "
 "href=\"%s\" target=\"main\">globale instellingen</a>."
@@ -91669,6 +91698,10 @@ msgid "Remove element"
 msgstr "Verwijder dit element"
 
 #, fuzzy
+msgid "Clear search"
+msgstr "Regel zoeken"
+
+#, fuzzy
 msgid "filter"
 msgstr "Filter"
 
@@ -91772,10 +91805,6 @@ msgstr "Verwijder filter"
 #, fuzzy
 msgid "Close filter settings"
 msgstr "%d Filter instellingen"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "Regel zoeken"
 
 msgid "Runtime filters are required to load data."
 msgstr ""
@@ -95157,8 +95186,52 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Search hosts…"
+msgstr "Zoek hosts"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "alle staten"
+
+#, fuzzy
+msgid "Filter values"
+msgstr "Filter bekijken"
+
+#, fuzzy
+msgid "Select all"
+msgstr "Verwijder alle"
+
+#, fuzzy
+msgid "No matching values"
+msgstr "Geen overeenkomende hostnamen"
+
+#, fuzzy
+msgid "No results found for your search."
+msgstr "Geen logs gevonden voor deze host."
+
+#, fuzzy
+msgid "No results found."
+msgstr "Geen regels gevonden."
+
+msgid "Check for typing errors or try a broader term."
+msgstr ""
+
+msgid "Rows matching your filter and search: %{count}"
+msgid_plural "Rows matching your filters and search: %{count}"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Rows matching your filter: %{count}"
+msgid_plural "Rows matching your filters: %{count}"
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy
+msgid "Rows matching your search: %{count}"
+msgstr "Geen overeenkomstige metriek gevonden"
+
+msgid "Rows found: %{count}"
+msgstr ""
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""

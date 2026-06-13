@@ -14121,6 +14121,10 @@ msgstr "Nome del cluster"
 msgid "Cluster node IPs"
 msgstr "IP dei nodi del cluster"
 
+#, fuzzy
+msgid "Cluster node IPs or subnets"
+msgstr "IP dei nodi del cluster"
+
 msgid "Cluster node definition"
 msgstr "Definizione del nodo del cluster"
 
@@ -31981,6 +31985,9 @@ msgstr "Subnet IPv4"
 msgid "IPv4/IPv6 address"
 msgstr "Indirizzo IPv4/IPv6"
 
+msgid "IPv4/IPv6 address or subnet (CIDR notation)"
+msgstr ""
+
 msgid "IPv4/IPv6 dual-stack"
 msgstr "IPv4/IPv6 dual-stack"
 
@@ -35592,6 +35599,11 @@ msgstr "Formato di data non valido: %s"
 #, python-format
 msgid "Invalid date format: %s"
 msgstr "Formato di data non valido: %s"
+
+msgid ""
+"Invalid entry. You need to specify an IPv4/IPv6 address or a subnet in CIDR "
+"notation (e.g. 192.168.1.0/24)."
+msgstr ""
 
 #, python-format
 msgid "Invalid expected callable for %s at idx %d: %r"
@@ -45239,6 +45251,10 @@ msgstr "Non trovato"
 #, fuzzy
 msgid "Not Present"
 msgstr "non presente"
+
+#, fuzzy
+msgid "Not a NagVis URL"
+msgstr "Note URL"
 
 #, fuzzy
 msgid "Not a list"
@@ -86032,6 +86048,19 @@ msgstr ""
 "in una configurazione di failover cluster questa opzione è necessaria per "
 "evitare voci di registro potenzialmente duplicate."
 
+#, fuzzy
+msgid ""
+"With this option activated cluster node IPs may be mapped to a cluster. "
+"Nodes can be specified as single IPv4/IPv6 addresses or as subnets in CIDR "
+"notation (e.g. 192.168.1.0/24). In case the monitoring site is operated in a "
+"failover cluster configuration this option is required to prevent from "
+"potentially duplicated log entries."
+msgstr ""
+"Con questa opzione attivata gli IP dei nodi del cluster possono essere "
+"mappati in un cluster. Nel caso in cui il sito di monitoraggio sia gestito "
+"in una configurazione di failover cluster questa opzione è necessaria per "
+"evitare voci di registro potenzialmente duplicate."
+
 msgid ""
 "With this option activated you can make the Event Console monitor that a "
 "certain number of messages are <b>at least</b> seen within each regular time "
@@ -88155,7 +88184,7 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "You have not defined any virtual host trees. You can do this in the <a "
-"href=\"%s\" target=\"main\">Global settings</a>."
+"href=\"%s\">Global settings</a>."
 msgstr ""
 "Non hai definito alcun albero di host virtuale. Puoi farlo nelle <a "
 "href=\"%s\" target=\"main\">impostazioni globali</a>."
@@ -91289,6 +91318,10 @@ msgid "Remove element"
 msgstr "Rimuovere questo elemento"
 
 #, fuzzy
+msgid "Clear search"
+msgstr "Ricerca delle regole"
+
+#, fuzzy
 msgid "filter"
 msgstr "Filtro"
 
@@ -91391,10 +91424,6 @@ msgstr "Rimuovi filtro"
 #, fuzzy
 msgid "Close filter settings"
 msgstr "%d Impostazioni del filtro"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "Ricerca delle regole"
 
 msgid "Runtime filters are required to load data."
 msgstr ""
@@ -94774,8 +94803,52 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Search hosts…"
+msgstr "Cerca host"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "tutti gli stati"
+
+#, fuzzy
+msgid "Filter values"
+msgstr "Vista del filtro"
+
+#, fuzzy
+msgid "Select all"
+msgstr "Rimuovere tutti"
+
+#, fuzzy
+msgid "No matching values"
+msgstr "Nessun nome host corrispondente"
+
+#, fuzzy
+msgid "No results found for your search."
+msgstr "Nessun log trovato per questo host."
+
+#, fuzzy
+msgid "No results found."
+msgstr "Nessuna regola trovata."
+
+msgid "Check for typing errors or try a broader term."
+msgstr ""
+
+msgid "Rows matching your filter and search: %{count}"
+msgid_plural "Rows matching your filters and search: %{count}"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Rows matching your filter: %{count}"
+msgid_plural "Rows matching your filters: %{count}"
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy
+msgid "Rows matching your search: %{count}"
+msgstr "Nessuna metrica corrispondente trovata"
+
+msgid "Rows found: %{count}"
+msgstr ""
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""

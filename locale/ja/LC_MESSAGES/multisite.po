@@ -13306,6 +13306,10 @@ msgstr "クラスター名"
 msgid "Cluster node IPs"
 msgstr "クラスターノードIP"
 
+#, fuzzy
+msgid "Cluster node IPs or subnets"
+msgstr "クラスターノードIP"
+
 msgid "Cluster node definition"
 msgstr "クラスターノードの定義"
 
@@ -29874,6 +29878,9 @@ msgstr "IPv4サブネット"
 msgid "IPv4/IPv6 address"
 msgstr "IPv4 / IPv6アドレス"
 
+msgid "IPv4/IPv6 address or subnet (CIDR notation)"
+msgstr ""
+
 msgid "IPv4/IPv6 dual-stack"
 msgstr "IPv4/IPv6デュアルスタック"
 
@@ -33291,6 +33298,11 @@ msgstr "無効な日付形式：%s"
 #, python-format
 msgid "Invalid date format: %s"
 msgstr "無効な日付形式：%s"
+
+msgid ""
+"Invalid entry. You need to specify an IPv4/IPv6 address or a subnet in CIDR "
+"notation (e.g. 192.168.1.0/24)."
+msgstr ""
 
 #, python-format
 msgid "Invalid expected callable for %s at idx %d: %r"
@@ -42201,6 +42213,10 @@ msgstr "見つかりません"
 
 msgid "Not Present"
 msgstr "現在ではない"
+
+#, fuzzy
+msgid "Not a NagVis URL"
+msgstr "備考URL"
 
 msgid "Not a list"
 msgstr "リストがありません"
@@ -79894,6 +79910,18 @@ msgstr ""
 "できます。監視サイトがフェールオーバークラスター構成で運用されている場合、こ"
 "のオプションは、ログエントリが重複する可能性を防ぐために必要です。"
 
+#, fuzzy
+msgid ""
+"With this option activated cluster node IPs may be mapped to a cluster. "
+"Nodes can be specified as single IPv4/IPv6 addresses or as subnets in CIDR "
+"notation (e.g. 192.168.1.0/24). In case the monitoring site is operated in a "
+"failover cluster configuration this option is required to prevent from "
+"potentially duplicated log entries."
+msgstr ""
+"このオプションをアクティブにすると、クラスターノードのIPをクラスターにマップ"
+"できます。監視サイトがフェールオーバークラスター構成で運用されている場合、こ"
+"のオプションは、ログエントリが重複する可能性を防ぐために必要です。"
+
 msgid ""
 "With this option activated you can make the Event Console monitor that a "
 "certain number of messages are <b>at least</b> seen within each regular time "
@@ -81866,10 +81894,10 @@ msgstr ""
 "%s グループはまだ定義していません。最初に少なくとも1つ <a href=\"wato.py?"
 "mode=edit_%s_group\">作成</a>してください。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "You have not defined any virtual host trees. You can do this in the <a "
-"href=\"%s\" target=\"main\">Global settings</a>."
+"href=\"%s\">Global settings</a>."
 msgstr ""
 "バーチャルホストツリーが定義されていません。これは<a href=\"%s\" "
 "target=\"main\">グローバル設定</a>で行うことができます。"
@@ -84845,6 +84873,9 @@ msgstr "ドラッグし並び替え"
 msgid "Remove element"
 msgstr "要素を削除"
 
+msgid "Clear search"
+msgstr "検索をクリア"
+
 msgid "filter"
 msgstr "フィルタ"
 
@@ -84933,9 +84964,6 @@ msgstr "ランタイムフィルター"
 
 msgid "Close filter settings"
 msgstr "フィルタ設定を閉じる"
-
-msgid "Clear search"
-msgstr "検索をクリア"
 
 msgid "Runtime filters are required to load data."
 msgstr "データを読み込むにはランタイムフィルターが必要です。"
@@ -88254,8 +88282,50 @@ msgstr ""
 "Relayは、以下のオペレーティングシステムでの動作が公式にサポートされています："
 
 #, fuzzy
+msgid "Search hosts…"
+msgstr "ホストを検索"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "すべての状態"
+
+#, fuzzy
+msgid "Filter values"
+msgstr "フィルタビュー"
+
+#, fuzzy
+msgid "Select all"
+msgstr "すべて見る"
+
+#, fuzzy
+msgid "No matching values"
+msgstr "一致するホスト名がありません"
+
+#, fuzzy
+msgid "No results found for your search."
+msgstr "お探しの結果が見つかりませんでした"
+
+#, fuzzy
+msgid "No results found."
+msgstr "ルールが見つかりません"
+
+msgid "Check for typing errors or try a broader term."
+msgstr ""
+
+msgid "Rows matching your filter and search: %{count}"
+msgid_plural "Rows matching your filters and search: %{count}"
+msgstr[0] ""
+
+msgid "Rows matching your filter: %{count}"
+msgid_plural "Rows matching your filters: %{count}"
+msgstr[0] ""
+
+#, fuzzy
+msgid "Rows matching your search: %{count}"
+msgstr "一致するメトリックが見つかりません"
+
+msgid "Rows found: %{count}"
+msgstr ""
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"

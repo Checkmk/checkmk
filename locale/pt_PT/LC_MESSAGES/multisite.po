@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-06-12 07:27+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -14336,6 +14336,10 @@ msgid "Cluster name"
 msgstr "Nome do aglomerado"
 
 msgid "Cluster node IPs"
+msgstr "IPs de nós de cluster"
+
+#, fuzzy
+msgid "Cluster node IPs or subnets"
 msgstr "IPs de nós de cluster"
 
 msgid "Cluster node definition"
@@ -32220,6 +32224,9 @@ msgstr "Sub-rede IPv4"
 msgid "IPv4/IPv6 address"
 msgstr "Endereço IPv4/IPv6"
 
+msgid "IPv4/IPv6 address or subnet (CIDR notation)"
+msgstr ""
+
 msgid "IPv4/IPv6 dual-stack"
 msgstr "IPv4/IPv6 dual-stack"
 
@@ -35816,6 +35823,11 @@ msgstr "Fonte de dados inválida: %s"
 #, fuzzy, python-format
 msgid "Invalid date format: %s"
 msgstr "Fonte de dados inválida: %s"
+
+msgid ""
+"Invalid entry. You need to specify an IPv4/IPv6 address or a subnet in CIDR "
+"notation (e.g. 192.168.1.0/24)."
+msgstr ""
 
 #, python-format
 msgid "Invalid expected callable for %s at idx %d: %r"
@@ -45512,6 +45524,10 @@ msgstr "Não encontrado"
 #, fuzzy
 msgid "Not Present"
 msgstr "não presentes"
+
+#, fuzzy
+msgid "Not a NagVis URL"
+msgstr "Notas"
 
 #, fuzzy
 msgid "Not a list"
@@ -86337,6 +86353,19 @@ msgstr ""
 "configuração de cluster de failover, esta opção é necessária para evitar "
 "entradas de log potencialmente duplicadas."
 
+#, fuzzy
+msgid ""
+"With this option activated cluster node IPs may be mapped to a cluster. "
+"Nodes can be specified as single IPv4/IPv6 addresses or as subnets in CIDR "
+"notation (e.g. 192.168.1.0/24). In case the monitoring site is operated in a "
+"failover cluster configuration this option is required to prevent from "
+"potentially duplicated log entries."
+msgstr ""
+"Com esta opção os IPs dos nós de cluster activados podem ser mapeados para "
+"um cluster. No caso do local de monitoramento ser operado em uma "
+"configuração de cluster de failover, esta opção é necessária para evitar "
+"entradas de log potencialmente duplicadas."
+
 msgid ""
 "With this option activated you can make the Event Console monitor that a "
 "certain number of messages are <b>at least</b> seen within each regular time "
@@ -88437,7 +88466,7 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "You have not defined any virtual host trees. You can do this in the <a "
-"href=\"%s\" target=\"main\">Global settings</a>."
+"href=\"%s\">Global settings</a>."
 msgstr ""
 "Você não definiu nenhuma árvore hospedeira virtual. Você pode fazer isso na "
 "meta <a href=\"%s\" target=\"main\">global settings</a>."
@@ -89464,7 +89493,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -89978,7 +90006,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -91568,6 +91595,10 @@ msgid "Remove element"
 msgstr "Remover este elemento"
 
 #, fuzzy
+msgid "Clear search"
+msgstr "Pesquisa de regras"
+
+#, fuzzy
 msgid "filter"
 msgstr "Filtro"
 
@@ -91671,10 +91702,6 @@ msgstr "Remover filtro"
 #, fuzzy
 msgid "Close filter settings"
 msgstr "%d Configurações de filtro"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "Pesquisa de regras"
 
 msgid "Runtime filters are required to load data."
 msgstr ""
@@ -95053,8 +95080,52 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Search hosts…"
+msgstr "Anfitriões de busca"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "todos os Estados"
+
+#, fuzzy
+msgid "Filter values"
+msgstr "Vista do filtro"
+
+#, fuzzy
+msgid "Select all"
+msgstr "Remover tudo"
+
+#, fuzzy
+msgid "No matching values"
+msgstr "Nenhum nome de anfitrião correspondente"
+
+#, fuzzy
+msgid "No results found for your search."
+msgstr "Não foram encontrados registos para este anfitrião."
+
+#, fuzzy
+msgid "No results found."
+msgstr "Não foram encontradas regras."
+
+msgid "Check for typing errors or try a broader term."
+msgstr ""
+
+msgid "Rows matching your filter and search: %{count}"
+msgid_plural "Rows matching your filters and search: %{count}"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Rows matching your filter: %{count}"
+msgid_plural "Rows matching your filters: %{count}"
+msgstr[0] ""
+msgstr[1] ""
+
+#, fuzzy
+msgid "Rows matching your search: %{count}"
+msgstr "Não foram encontradas métricas correspondentes"
+
+msgid "Rows found: %{count}"
+msgstr ""
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""

@@ -1291,9 +1291,6 @@ allows = []
 [components."cmk.utils.dateutils"]
 allows = ["cmk.ccc.i18n"]
 
-[components."cmk.utils.deprecation_warnings"]
-allows = []
-
 [components."cmk.utils.encoding"]
 allows = []
 
@@ -1522,9 +1519,6 @@ allows = [
 ]
 
 [components."cmk.utils.schedule"]
-allows = []
-
-[components."cmk.utils.sectionname"]
 allows = []
 
 [components."cmk.utils.security_event"]

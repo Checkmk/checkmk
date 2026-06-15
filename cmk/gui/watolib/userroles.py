@@ -8,11 +8,11 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from typing import NewType
 
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.userdb import (
     is_two_factor_login_enabled,
     load_roles,
@@ -168,7 +168,11 @@ def update_role(role: UserRole, old_roleid: RoleID, new_roleid: RoleID, pprint_v
 
 
 def logout_users_with_role(
-    role_id: RoleID, user_attributes: Sequence[tuple[str, UserAttribute]]
+    role_id: RoleID,
+    user_attributes: Sequence[tuple[str, UserAttribute]],
+    user_connections: Sequence[UserConnectionConfig],
+    *,
+    pprint_value: bool,
 ) -> None:
     users = load_users(lock=True)
     for user_id, user in users.items():
@@ -177,8 +181,8 @@ def logout_users_with_role(
     save_users(
         users,
         user_attributes,
-        active_config.user_connections,
+        user_connections,
         now=datetime.now(),
-        pprint_value=active_config.wato_pprint_config,
+        pprint_value=pprint_value,
         call_users_saved_hook=True,
     )

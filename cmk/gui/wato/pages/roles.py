@@ -304,7 +304,12 @@ class ModeRoleTwoFactor(WatoMode):
             new_roleid=self._role_id,
             pprint_value=config.wato_pprint_config,
         )
-        userroles.logout_users_with_role(self._role_id, get_user_attributes(config.wato_user_attrs))
+        userroles.logout_users_with_role(
+            self._role_id,
+            get_user_attributes(config.wato_user_attrs),
+            config.user_connections,
+            pprint_value=config.wato_pprint_config,
+        )
         _pending_changes(
             config.sites,
             use_git=config.wato_use_git,

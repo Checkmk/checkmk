@@ -653,6 +653,31 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring> &params) {
     cfg::modules::ModuleCommander mc;
     mc.LoadDefault();
     auto command_to_run = mc.buildCommandLine(wtools::ToStr(updater_file));
+
+    // Python provisioning can be delayed, since it's unpacked only after Agent
+    // installation during PostInstall. We wait for its completion because
+    // scripts may call the agent updater via agent controller immediately after
+    // installation.
+    if (command_to_run.empty() && install::IsPostInstallRequired()) {
+        XLOG::l.i(
+            "Python module is not ready yet, waiting for post-install to finish");
+        constexpr int wait_seconds = 120;
+        for (int i = 0; i < wait_seconds && command_to_run.empty(); ++i) {
+            const bool finalized = !install::IsPostInstallRequired();
+            tools::sleep(1000);
+            cfg::modules::ModuleCommander retry;
+            retry.LoadDefault();
+            command_to_run =
+                retry.buildCommandLine(wtools::ToStr(updater_file));
+            if (finalized) {
+                break;
+            }
+        }
+        if (!command_to_run.empty()) {
+            XLOG::l.i("Python module is ready now, continuing with updater");
+        }
+    }
+
     if (command_to_run.empty()) {
         ReportNoPythonModule(params);
         return 1;

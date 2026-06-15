@@ -143,7 +143,7 @@ def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
     return _handle_list_hosts(
         host_repo,
         limit=body.limit,
-        search_query="" if isinstance(body.q, ApiOmitted) else body.q,
+        query="" if isinstance(body.q, ApiOmitted) else body.q,
         sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
         filters=parsed_filters,
     )
@@ -153,17 +153,17 @@ def _handle_list_hosts(
     host_repo: HostRepository,
     *,
     limit: int,
-    search_query: str = "",
+    query: str = "",
     sorters: Sequence[HostSort] = _DEFAULT_SORT,
     filters: HostFilter = HostFilter(""),
 ) -> HostsResponse:
     hosts = host_repo.fetch(
         limit=limit,
-        search_query=search_query,
+        query=query,
         sorters=sorters,
         filters=filters,
     )
-    host_total = host_repo.count(search_query=search_query, filters=filters)
+    host_total = host_repo.count(query=query, filters=filters)
 
     return HostsResponse(
         hosts=[HostEntry.from_domain(host) for host in hosts],

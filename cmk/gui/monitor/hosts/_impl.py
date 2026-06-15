@@ -20,19 +20,19 @@ from cmk.livestatus_client.tables import Hosts, Status
 from ._models import Host, HostFilter, HostSort, HostState, ServiceCounts
 
 
-def _search_filter(search_query: str) -> QueryExpression:
+def _search_filter(query: str) -> QueryExpression:
     """Build an OR-combined case-insensitive "contains" filter over the searchable columns.
 
     ``search_query`` is expected to be already whitespace-stripped. An empty value yields a no-op
     filter, so the resulting query is identical to one without a search.
     """
-    if not search_query:
+    if not query:
         return NothingExpression()
 
     return Or(
-        Hosts.name.contains(search_query, ignore_case=True),
-        Hosts.alias.contains(search_query, ignore_case=True),
-        Hosts.address.contains(search_query, ignore_case=True),
+        Hosts.name.contains(query, ignore_case=True),
+        Hosts.alias.contains(query, ignore_case=True),
+        Hosts.address.contains(query, ignore_case=True),
     )
 
 
@@ -44,7 +44,7 @@ class LiveStatusHostRepository:
         self,
         *,
         limit: int,
-        search_query: str,
+        query: str,
         sorters: Sequence[HostSort],
         filters: HostFilter,
     ) -> Sequence[Host]:
@@ -61,7 +61,7 @@ class LiveStatusHostRepository:
                 Hosts.num_services_unknown,
                 Hosts.num_services_pending,
             ],
-            _search_filter(search_query),
+            _search_filter(query),
             extra_headers=[
                 *filters.splitlines(),
                 # NOTE: Livestatus doesn't support sorting by multiple columns at the moment. The
@@ -95,8 +95,8 @@ class LiveStatusHostRepository:
                 for row in q.iterate(conn)
             ]
 
-    def count(self, *, search_query: str, filters: HostFilter) -> int:
-        if not search_query and not filters:
+    def count(self, *, query: str, filters: HostFilter) -> int:
+        if not query and not filters:
             q = Query([Status.num_hosts])
             with detailed_connection(self._connection) as conn:
                 return sum(row["num_hosts"] for row in q.iterate(conn))
@@ -106,7 +106,7 @@ class LiveStatusHostRepository:
         # can't emit ``Stats`` headers yet, so the query is assembled by hand from the shared filter.
         # The ``Stats`` count is the trailing column of each returned row; summing it across rows
         # adds up the per-site counts.
-        filter_lines = (": ".join(line) for line in _search_filter(search_query).render())
+        filter_lines = (": ".join(line) for line in _search_filter(query).render())
         stats_query = "\n".join(
             [
                 f"GET {Hosts.__tablename__}",

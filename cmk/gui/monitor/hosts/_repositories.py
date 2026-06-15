@@ -21,7 +21,7 @@ class HostRepository(Protocol):
         self,
         *,
         limit: int,
-        search_query: str,
+        query: str,
         sorters: Sequence[HostSort],
         filters: HostFilter,
     ) -> Sequence[Host]:
@@ -32,7 +32,7 @@ class HostRepository(Protocol):
         """
         ...
 
-    def count(self, *, search_query: str, filters: HostFilter) -> int:
+    def count(self, *, query: str, filters: HostFilter) -> int:
         """Count the hosts matching the given criteria.
 
         ``search_query`` is an already whitespace-stripped free-text search. When empty, the total

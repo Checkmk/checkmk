@@ -25,19 +25,19 @@ def get_fake_host_repository(*, n_hosts: int) -> HostRepository:
             self,
             *,
             limit: int,
-            search_query: str,
+            query: str,
             sorters: Sequence[HostSort],
             filters: HostFilter,
         ) -> Sequence[Host]:
-            return self._matching(search_query)[:limit]
+            return self._matching(query)[:limit]
 
-        def count(self, *, search_query: str, filters: HostFilter) -> int:
-            return len(self._matching(search_query))
+        def count(self, *, query: str, filters: HostFilter) -> int:
+            return len(self._matching(query))
 
-        def _matching(self, search_query: str) -> list[Host]:
-            if not search_query:
+        def _matching(self, query: str) -> list[Host]:
+            if not query:
                 return self._hosts
-            needle = search_query.lower()
+            needle = query.lower()
             return [
                 host
                 for host in self._hosts
@@ -74,17 +74,17 @@ def test_handle_list_hosts_forwards_search_query_to_repository() -> None:
             self,
             *,
             limit: int,
-            search_query: str,
+            query: str,
             sorters: Sequence[HostSort],
             filters: HostFilter,
         ) -> Sequence[Host]:
-            calls["fetch"] = search_query
+            calls["fetch"] = query
             return []
 
-        def count(self, *, search_query: str, filters: HostFilter) -> int:
-            calls["count"] = search_query
+        def count(self, *, query: str, filters: HostFilter) -> int:
+            calls["count"] = query
             return 0
 
-    _handle_list_hosts(RecordingRepository(), limit=10, search_query="web")
+    _handle_list_hosts(RecordingRepository(), limit=10, query="web")
 
     assert calls == {"fetch": "web", "count": "web"}

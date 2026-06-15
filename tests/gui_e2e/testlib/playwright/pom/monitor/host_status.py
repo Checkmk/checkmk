@@ -53,7 +53,7 @@ class HostStatus(CmkPage):
         This method assumes that the host is already created.
         """
         logger.info("Navigate to Monitor >> Overview >> All hosts")
-        self.main_menu.monitor_menu("All hosts").click()
+        self.main_menu.monitor_menu("All hosts", exact=True).click()
         self.page.wait_for_url(url=re.compile(re.escape("view_name=allhosts")), wait_until="load")
 
         logger.info("Navigate to 'Services of host %s'", self.host_details.name)

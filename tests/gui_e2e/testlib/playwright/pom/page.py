@@ -225,8 +225,31 @@ class MainMenu(LocatorHelper):
                 if show_more_locator.count():
                     show_more_locator.click()
             _loc = self.locator().get_by_role(role="link", name=sub_menu, exact=exact)
+            if not _loc.count():
+                _loc = self._reveal_overflowing_entry(sub_menu, exact)
         self._unique_web_element(_loc)
         return _loc
+
+    def _reveal_overflowing_entry(self, sub_menu: str, exact: bool) -> Locator:
+        """Locate a sub menu entry hidden behind a topic's "Show all" overflow.
+
+        Each topic renders only a limited number of entries; any surplus is
+        collapsed behind a "Show all" link and is therefore absent from the DOM.
+        Which entries are displayed depends on their configured sort order, so
+        adding a new entry can push an existing one out of the rendered set.
+        To stay independent of ordering and entry count, expand each
+        overflowing topic in turn until the requested entry shows up.
+        """
+        show_all_links = self.locator().locator(".mm-nav-item-topic__show-all")
+        for index in range(show_all_links.count()):
+            self.locator().locator(".mm-nav-item-topic__show-all").nth(index).click()
+            entry = self.locator().get_by_role(role="link", name=sub_menu, exact=exact)
+            if entry.count():
+                return entry
+            self.locator().locator(".mm-nav-item-topic__show-all-back").get_by_role(
+                "button"
+            ).click()
+        return self.locator().get_by_role(role="link", name=sub_menu, exact=exact)
 
     @property
     def main_page(self) -> Locator:
@@ -321,7 +344,7 @@ class MainMenu(LocatorHelper):
     @property
     def monitor_all_hosts(self) -> Locator:
         """main menu -> monitoring -> All hosts"""
-        return self.monitor_menu("All hosts")
+        return self.monitor_menu("All hosts", exact=True)
 
     @property
     def setup_hosts(self) -> Locator:

@@ -35,6 +35,14 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
   <StringCell column-id="alias" :value="row.alias" />
   <StringCell column-id="address" :value="row.address" />
   <NumberCell
+    column-id="num_services"
+    :value="row.num_services"
+    :linked-to="{
+      href: `view.py?host=${row.name}&view_name=host`,
+      target: '_top'
+    }"
+  />
+  <NumberCell
     column-id="num_services_ok"
     :value="row.num_services_ok"
     :highlight="OK_HIGHLIGHT"

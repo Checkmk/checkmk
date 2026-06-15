@@ -72,6 +72,7 @@ test('renders state badge with warning color for state UNREACHABLE', () => {
 test('renders one cell per service state with its count', () => {
   const { container } = mountRow(
     makeHost({
+      num_services: 15,
       num_services_ok: 1,
       num_services_warn: 2,
       num_services_crit: 3,
@@ -81,13 +82,14 @@ test('renders one cell per service state with its count', () => {
   )
 
   const tds = Array.from(container.querySelectorAll('td'))
-  // state, name, alias, address, ok, warn, crit, unknown, pending
-  expect(tds).toHaveLength(9)
-  expect(tds[4]).toHaveTextContent('1')
-  expect(tds[5]).toHaveTextContent('2')
-  expect(tds[6]).toHaveTextContent('3')
-  expect(tds[7]).toHaveTextContent('4')
-  expect(tds[8]).toHaveTextContent('5')
+  // state, name, alias, address, total, ok, warn, crit, unknown, pending
+  expect(tds).toHaveLength(10)
+  expect(tds[4]).toHaveTextContent('15')
+  expect(tds[5]).toHaveTextContent('1')
+  expect(tds[6]).toHaveTextContent('2')
+  expect(tds[7]).toHaveTextContent('3')
+  expect(tds[8]).toHaveTextContent('4')
+  expect(tds[9]).toHaveTextContent('5')
 })
 
 test('renders the zero counts as well — one badge per service state column', () => {

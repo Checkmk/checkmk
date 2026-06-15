@@ -43,7 +43,10 @@ def check_checkpoint_tunnels(
 ) -> CheckResult:
     for peer, status in section:
         if peer == item:
-            state_name = tunnel_states[status]
+            state_name = tunnel_states.get(status)
+            if state_name is None:
+                yield Result(state=State.UNKNOWN, summary=f"Unknown tunnel status: {status}")
+                return
             yield Result(state=State(params[state_name]), summary=state_name)
             return
 

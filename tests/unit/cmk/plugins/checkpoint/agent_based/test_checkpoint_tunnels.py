@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.checkpoint.agent_based.checkpoint_tunnels import (
     check_checkpoint_tunnels,
@@ -34,10 +32,6 @@ def test_check_checkpoint_tunnels_known_status() -> None:
     ]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report cccb62da-6572-11f1-9919-005056b93709: KeyError on unknown tunnel status",
-)
 def test_check_checkpoint_tunnels_unknown_status() -> None:
     # Crash group 4803: the device reported a composite, non-numeric status string
     # instead of a single numeric state code, which is not a key in tunnel_states.

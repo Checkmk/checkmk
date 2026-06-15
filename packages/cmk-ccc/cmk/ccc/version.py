@@ -674,9 +674,7 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
     ),
     _BaseVersion(3, 0, 0): max(
         (
-            Version.from_str(
-                "2.5.0p7"
-            ),  # CMK-35018: fix KeyError in last_major_releases for 2->3 jump
+            Version.from_str("2.5.0"),  # at least the last major version, by default.
         )
     ),
 }

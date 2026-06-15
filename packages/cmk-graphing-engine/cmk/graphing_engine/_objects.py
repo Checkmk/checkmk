@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import itertools
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, KW_ONLY
 from typing import NewType
 
@@ -329,15 +329,3 @@ class Graph:
                 for rrd_metric in _rrd_metrics_in_quantity(quantity)
             )
         )
-
-
-def metric_data_of(
-    graph: Graph,
-    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
-) -> Mapping[RRDMetricRef, RRDMetricData]:
-    result: dict[RRDMetricRef, RRDMetricData] = {}
-    for metric in graph.rrd_metrics():
-        service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
-        if (translated := translated_metrics.get(service, {}).get(metric.metric_name)) is not None:
-            result[metric] = translated
-    return result

@@ -13,7 +13,6 @@ from ._evaluate import evaluate_graph, EvaluatedGraph
 from ._from_api import parse_translations_from_api
 from ._objects import (
     Graph,
-    metric_data_of,
     MetricName,
     PerformanceData,
     RRDMetric,
@@ -141,6 +140,18 @@ def fetch_translated_metrics(
     }
 
 
+def _metric_data_of(
+    graph: Graph,
+    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
+) -> Mapping[RRDMetricRef, RRDMetricData]:
+    result: dict[RRDMetricRef, RRDMetricData] = {}
+    for metric in graph.rrd_metrics():
+        service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
+        if (translated := translated_metrics.get(service, {}).get(metric.metric_name)) is not None:
+            result[metric] = translated
+    return result
+
+
 def evaluate_graphs(
     *,
     graphs: Sequence[Graph],
@@ -151,7 +162,7 @@ def evaluate_graphs(
 ) -> Sequence[EvaluatedGraph]:
     evaluated = []
     for graph in graphs:
-        metric_data = metric_data_of(graph, translated_metrics)
+        metric_data = _metric_data_of(graph, translated_metrics)
         evaluated.append(
             evaluate_graph(
                 graph,

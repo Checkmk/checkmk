@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.plugins.collection.server_side_calls.cert import (
     CertEndpoint,
     CertificateDetails,
+    ConnectionType,
     generate_cert_services,
     Issuer,
     ServiceDescription,
@@ -61,6 +64,38 @@ def test_no_proxy() -> None:
         ActiveCheckCommand(
             service_description="CERT my_service",
             command_arguments=["--hostname", "abc.xyz", "--port", "443", "--ignore-proxy-env"],
+        )
+    ]
+
+
+@pytest.mark.parametrize("connection_type", list(ConnectionType))
+def test_connection_type_reaches_command_line(connection_type: ConnectionType) -> None:
+    # Every connection type (e.g. IMAP/LDAP STARTTLS) must be passed to
+    # check_cert via --connection-type.
+    result = list(
+        generate_cert_services(
+            [
+                CertEndpoint(
+                    service_name=ServiceDescription(prefix=ServicePrefix.AUTO, name="my_service"),
+                    address="abc.xyz",
+                    port=443,
+                    individual_settings=Settings(connection=connection_type),
+                )
+            ],
+            HOST_CONFIG,
+        )
+    )
+    assert result == [
+        ActiveCheckCommand(
+            service_description="CERT my_service",
+            command_arguments=[
+                "--hostname",
+                "abc.xyz",
+                "--port",
+                "443",
+                "--connection-type",
+                connection_type.value,
+            ],
         )
     ]
 

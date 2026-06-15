@@ -28,7 +28,6 @@ _CacheInfo = tuple[int, int]
 
 ServiceState = int
 ServiceDetails = str
-ServiceAdditionalDetails = str
 
 
 def _sanitize_perftext(

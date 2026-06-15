@@ -28,8 +28,8 @@ def _split_predict_prefix(metric_name: str) -> tuple[str, str]:
 
 
 def _translations_for_command(
-    translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
     check_command: str,
+    translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
 ) -> Mapping[MetricName, MetricTranslation]:
     if not check_command:
         return {}
@@ -58,7 +58,7 @@ def translate_performance_data(
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
 ) -> Mapping[MetricName, RRDMetricData]:
-    command_translations = _translations_for_command(translations, performance_data.check_command)
+    command_translations = _translations_for_command(performance_data.check_command, translations)
     result: dict[MetricName, RRDMetricData] = {}
     for perf_value in performance_data.values:
         prefix, bare_name = _split_predict_prefix(perf_value.metric_name)

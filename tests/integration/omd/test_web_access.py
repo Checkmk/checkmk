@@ -97,6 +97,21 @@ def test_cmk_relay_installation_script_access(site: Site) -> None:
     assert response.text.startswith("#!")
 
 
+@pytest.mark.skip_if_not_edition("cloud", "ultimate", "ultimatemt")
+@pytest.mark.skip_if_faked_artifacts
+def test_cmk_relay_msi_access(site: Site) -> None:
+    # OLE compound document signature; every genuine MSI starts with these bytes.
+    _MSI_OLE_MAGIC = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+
+    web = CMKWebSession(site)
+    response = web.get(f"/{site.id}/check_mk/relays/CheckmkRelayInstaller.msi")
+
+    assert response.status_code == 200
+    assert response.headers["Content-Type"] == "application/x-msi"
+    # Verify the body is a genuine MSI (OLE compound document magic).
+    assert response.content[:8] == _MSI_OLE_MAGIC
+
+
 def test_cmk_local_agents_access(site: Site) -> None:
     web = CMKWebSession(site)
     body = web.get("/%s/check_mk/local/agents" % site.id, expected_code=404).text

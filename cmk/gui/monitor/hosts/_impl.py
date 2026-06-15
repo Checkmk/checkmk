@@ -20,17 +20,6 @@ from cmk.livestatus_client.tables import Hosts, Status
 from ._models import Host, HostFilter, HostSort, HostState, ServiceCounts
 
 
-def _search_filter(query: str) -> QueryExpression:
-    if not query:
-        return NothingExpression()
-
-    return Or(
-        Hosts.name.contains(query, ignore_case=True),
-        Hosts.alias.contains(query, ignore_case=True),
-        Hosts.address.contains(query, ignore_case=True),
-    )
-
-
 class LiveStatusHostRepository:
     def __init__(self, *, connection: MultiSiteConnection) -> None:
         self._connection = connection
@@ -111,3 +100,14 @@ class LiveStatusHostRepository:
             ]
         )
         return sum(int(row[-1]) for row in self._connection.query(stats_query))
+
+
+def _search_filter(query: str) -> QueryExpression:
+    if not query:
+        return NothingExpression()
+
+    return Or(
+        Hosts.name.contains(query, ignore_case=True),
+        Hosts.alias.contains(query, ignore_case=True),
+        Hosts.address.contains(query, ignore_case=True),
+    )

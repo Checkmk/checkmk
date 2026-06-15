@@ -131,7 +131,7 @@ ClusterSection = Mapping[str, Section | None]
 
 class ClusterNodeResults(NamedTuple):
     node_name: str
-    node_state_text: str
+    node_state_text: str | None
     node_frozen_state: State
     node_summaries: Sequence[str]
 
@@ -263,10 +263,12 @@ def cluster_check_veritas_vcs_subsection(
             node_frozen_state = State.worst(*(f.state for f in frozen_results))
             node_summaries.extend([f.summary for f in frozen_results])
 
-        node_state_text = veritas_vcs_boil_down_states_in_cluster(
-            [vcs.value for vcs in item_subsection if vcs.attr.endswith("State")]
+        state_values = [vcs.value for vcs in item_subsection if vcs.attr.endswith("State")]
+        node_state_text = (
+            veritas_vcs_boil_down_states_in_cluster(state_values) if state_values else None
         )
-        node_summaries.append(node_state_text.lower())
+        if node_state_text is not None:
+            node_summaries.append(node_state_text.lower())
 
         node_results.append(
             ClusterNodeResults(
@@ -283,15 +285,17 @@ def cluster_check_veritas_vcs_subsection(
         return
 
     state_mapping = params["map_states"]
-    cluster_state = State.worst(
-        State(
-            state_mapping.get(
-                veritas_vcs_boil_down_states_in_cluster([n.node_state_text for n in node_results]),
-                state_mapping["default"],
+    states_to_consider = [n.node_frozen_state for n in node_results]
+    if state_texts := [n.node_state_text for n in node_results if n.node_state_text is not None]:
+        states_to_consider.append(
+            State(
+                state_mapping.get(
+                    veritas_vcs_boil_down_states_in_cluster(state_texts),
+                    state_mapping["default"],
+                )
             )
-        ),
-        *(n.node_frozen_state for n in node_results),
-    )
+        )
+    cluster_state = State.worst(*states_to_consider)
 
     if cluster_state is State.OK:
         yield Result(

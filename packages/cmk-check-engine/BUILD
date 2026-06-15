@@ -134,6 +134,23 @@ py_library(
 )
 
 py_library(
+    name = "checker-plugin",
+    srcs = [
+        "cmk/checkengine/checkerplugin.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":helper-interface",
+        ":section-parser",
+        ":specs",
+        "//cmk/utils",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
+    ],
+)
+
+py_library(
     name = "specs",
     srcs = glob([
         "cmk/checkengine/specs/*.py",
@@ -308,6 +325,7 @@ py_wheel(
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
+        ":checker-plugin",
         ":fetcher-protocol",
         ":fetchers",
         ":helper-interface",

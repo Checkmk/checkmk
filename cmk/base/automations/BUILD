@@ -36,6 +36,7 @@ py_library(
         "//packages/cmk-ccc:timeout",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-check-engine:checker-plugin",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:snmplib",

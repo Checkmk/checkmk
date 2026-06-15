@@ -131,6 +131,7 @@ py_library(
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:tty",
+        "//packages/cmk-check-engine:checker-plugin",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:section-parser",

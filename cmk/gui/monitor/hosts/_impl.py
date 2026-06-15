@@ -44,7 +44,7 @@ class LiveStatusHostRepository:
         self,
         *,
         limit: int,
-        search_query: str = "",
+        search_query: str,
         sorters: Sequence[HostSort],
         filters: HostFilter,
     ) -> Sequence[Host]:
@@ -95,7 +95,7 @@ class LiveStatusHostRepository:
                 for row in q.iterate(conn)
             ]
 
-    def count(self, *, search_query: str = "", filters: HostFilter) -> int:
+    def count(self, *, search_query: str, filters: HostFilter) -> int:
         if not search_query and not filters:
             q = Query([Status.num_hosts])
             with detailed_connection(self._connection) as conn:

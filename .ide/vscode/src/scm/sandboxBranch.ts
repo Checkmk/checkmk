@@ -6,6 +6,7 @@
 import * as vscode from 'vscode'
 
 import { log, notifyError } from '../core/log'
+import { runCommand, waitForTask } from '../core/tasks'
 import { currentBranch, gitAsync, isInternalCheckout, repoRoot } from './git'
 
 const COMMON_BASES = ['master', '2.4.0', '2.3.0', '2.2.0']
@@ -139,10 +140,49 @@ async function promptTopic(base: string): Promise<string | undefined> {
   })
 }
 
+/** Force VS Code's git extension to re-read repository state. `git workon`
+ *  switches HEAD outside the git API, so the SCM view can stay stale until the
+ *  next manual refresh; calling `repo.status()` (or the `git.refresh` command
+ *  as a fallback) brings it back in sync immediately. */
+async function refreshScmView(cwd: string): Promise<void> {
+  try {
+    const ext = vscode.extensions.getExtension('vscode.git')
+    if (ext && !ext.isActive) await ext.activate()
+    const api = ext?.exports.getAPI(1)
+    const repo =
+      api?.repositories?.find((r: { rootUri: vscode.Uri }) => r.rootUri.fsPath === cwd) ??
+      api?.repositories?.[0]
+    if (repo?.status) {
+      await repo.status()
+      return
+    }
+  } catch (err) {
+    log(`Git API refresh failed: ${(err as Error).message}; falling back to git.refresh`)
+  }
+  try {
+    await vscode.commands.executeCommand('git.refresh')
+  } catch {
+    // ignore
+  }
+}
+
 function runWorkonInTerminal(base: string, topic: string, cwd: string): void {
   const term = vscode.window.createTerminal({ name: `CMK: workon ${base}/${topic}`, cwd })
   term.show()
   term.sendText(`git workon ${base} ${topic}`)
+}
+
+/** Run `git workon` as an awaitable task so the SCM view can be refreshed once
+ *  the branch switch finishes. Falls back to a plain terminal (no refresh) when
+ *  the task cannot be launched. */
+async function runWorkon(base: string, topic: string, cwd: string): Promise<void> {
+  const execution = runCommand(`workon ${base}/${topic}`, `git workon ${base} ${topic}`)
+  if (!execution) {
+    runWorkonInTerminal(base, topic, cwd)
+    return
+  }
+  const exitCode = await waitForTask(execution)
+  if (exitCode === 0 || exitCode === undefined) await refreshScmView(cwd)
 }
 
 async function createSandboxBranch(): Promise<void> {
@@ -156,7 +196,7 @@ async function createSandboxBranch(): Promise<void> {
   const topic = await promptTopic(base)
   if (!topic) return
   log(`Create sandbox branch: base=${base} topic=${topic}`)
-  runWorkonInTerminal(base, topic, cwd)
+  await runWorkon(base, topic, cwd)
 }
 
 type Action = 'create-sandbox' | 'create-branch' | 'create-branch-from' | 'checkout'

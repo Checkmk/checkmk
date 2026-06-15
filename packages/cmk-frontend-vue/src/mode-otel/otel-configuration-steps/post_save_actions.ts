@@ -170,7 +170,7 @@ async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult>
         dcd_id: dcdId,
         connector: {
           connector_type: 'metric_backend',
-          host_name_resource_attribute_key: 'service.name',
+          host_name_template: '$RESOURCE_ATTR.service.name$',
           creation_rules: [{ folder_path: '/telemetry', delete_hosts: true }]
         }
       }

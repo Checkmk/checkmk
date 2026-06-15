@@ -194,17 +194,23 @@ fn test_print_info() {
 }
 
 fn legacy_cfg_path() -> String {
+    #[cfg(windows)]
+    const REFERENCE_FILE: &str = "output-xe-single.ps1";
+    #[cfg(not(windows))]
+    const REFERENCE_FILE: &str = "output-xe-single.cfg";
+
     #[cfg(feature = "build_system_bazel")]
     {
         let cwd = std::env::current_dir().unwrap();
-        cwd.join("packages/mk-oracle/references/output-xe-single.cfg")
+        cwd.join("packages/mk-oracle/references")
+            .join(REFERENCE_FILE)
             .to_str()
             .unwrap()
             .to_string()
     }
     #[cfg(not(feature = "build_system_bazel"))]
     {
-        "references/output-xe-single.cfg".to_string()
+        format!("references/{REFERENCE_FILE}")
     }
 }
 
@@ -213,6 +219,19 @@ fn test_migrate_config_to_stdout() {
     let cfg = legacy_cfg_path();
     let output = run_bin().args(["-M", &cfg]).ok().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        stdout.starts_with(&format!("# --- Converted from {cfg} at ")),
+        "must start with conversion header"
+    );
+    assert!(stdout.contains("DBUSER"), "legacy config not in comments");
+    assert!(
+        stdout.contains("# --- Known environment variables defined in legacy config ---\n"),
+        "missing env vars section"
+    );
+    assert!(
+        stdout.contains("# --- Unified Config ---\n"),
+        "missing unified config header"
+    );
     assert!(stdout.contains("oracle:"), "missing oracle: key");
     assert!(stdout.contains("main:"), "missing main: key");
     assert!(
@@ -220,10 +239,6 @@ fn test_migrate_config_to_stdout() {
         "missing authentication:"
     );
     assert!(stdout.contains("connection:"), "missing connection:");
-    assert!(
-        stdout.contains("# DBUSER="),
-        "legacy config not in comments"
-    );
 }
 
 #[test]
@@ -237,9 +252,112 @@ fn test_migrate_config_to_file() {
         .assert()
         .success();
     let content = fs::read_to_string(&output_path).expect("output file missing");
-    assert!(content.contains("oracle:"), "missing oracle: key");
     assert!(
-        content.contains("# DBUSER="),
-        "legacy config not in comments"
+        content.starts_with("# --- Converted from "),
+        "must start with conversion header"
+    );
+    assert!(
+        content.contains("# --- Unified Config ---\n"),
+        "missing unified config header"
+    );
+    assert!(content.contains("oracle:"), "missing oracle: key");
+}
+
+#[test]
+fn test_migrate_config_yaml_structure() {
+    let cfg = legacy_cfg_path();
+    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    // Header
+    assert!(stdout.starts_with(&format!("# --- Converted from {cfg} at ")));
+
+    // Legacy config echoed as comments
+    for var in ["DBUSER", "ONLY_SIDS", "ORACLE_HOME", "TNS_ADMIN"] {
+        assert!(stdout.contains(var), "legacy config missing {var}");
+    }
+
+    // Extracted environment variables as comments
+    assert!(stdout.contains("# --- Known environment variables defined in legacy config ---\n"));
+    let env_value_of = |var: &str| -> Option<&str> {
+        let prefix = format!("# {var} ");
+        stdout
+            .lines()
+            .find(|l| l.starts_with(&prefix))
+            .map(|l| &l[prefix.len()..])
+    };
+    assert_eq!(
+        env_value_of("DBUSER"),
+        Some("c##checkmk:********::localhost::XE")
+    );
+    assert_eq!(env_value_of("ONLY_SIDS"), Some("XE"));
+    assert_eq!(
+        env_value_of("ORACLE_HOME"),
+        Some("/opt/oracle/product/21c/dbhomeXE")
+    );
+    assert_eq!(
+        env_value_of("TNS_ADMIN"),
+        Some("/opt/oracle/product/21c/dbhomeXE/network/admin")
+    );
+
+    // Unified config section
+    assert!(stdout.contains("# --- Unified Config ---\n"));
+    assert!(stdout.contains("      hostname: localhost\n"));
+    assert!(stdout.contains("      port: 1521\n"));
+    assert!(stdout.contains("      username: CHANGE_ME\n"));
+    assert!(stdout.contains("      type: standard\n"));
+
+    // Output must be loadable as valid Oracle config
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout);
+    assert!(
+        config.is_ok(),
+        "migrated output must parse as YAML: {stdout}"
+    );
+    assert!(config.unwrap().ora_sql().is_some());
+}
+
+#[test]
+fn test_execute_config_reference() {
+    use std::path::Path;
+
+    let cfg = legacy_cfg_path();
+    let vars = mk_oracle::config::migration::convert_config(Path::new(&cfg)).unwrap();
+    let lines: Vec<String> = vars.iter().map(|(n, v)| format!("{n} {v}")).collect();
+
+    let value_of = |var: &str| -> Option<&str> {
+        let prefix = format!("{var} ");
+        lines
+            .iter()
+            .find(|l| l.starts_with(&prefix))
+            .map(|l| &l[prefix.len()..])
+    };
+
+    assert_eq!(
+        value_of("DBUSER"),
+        Some("c##checkmk:********::localhost::XE")
+    );
+    assert_eq!(value_of("ONLY_SIDS"), Some("XE"));
+    assert_eq!(
+        value_of("ORACLE_HOME"),
+        Some("/opt/oracle/product/21c/dbhomeXE")
+    );
+    assert_eq!(
+        value_of("TNS_ADMIN"),
+        Some("/opt/oracle/product/21c/dbhomeXE/network/admin")
+    );
+
+    // Variables not in this config must be absent
+    assert!(value_of("ASMUSER").is_none(), "ASMUSER not set");
+    assert!(value_of("CACHE_MAXAGE").is_none(), "CACHE_MAXAGE not set");
+    assert!(value_of("REMOTE_ORACLE_HOME").is_none());
+
+    // No prefix-matched variables in this simple config
+    assert!(
+        !lines.iter().any(|l| l.starts_with("REMOTE_INSTANCE_")),
+        "no remote instances in reference config"
+    );
+    assert!(
+        !lines.iter().any(|l| l.starts_with("EXCLUDE_")),
+        "no excludes in reference config"
     );
 }

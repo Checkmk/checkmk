@@ -21,30 +21,24 @@ use clap::Parser;
 async fn main() {
     let cli = Args::parse();
     if let Some(input) = &cli.migrate_config {
-        let code = match &cli.migrate_output {
-            Some(output) => match config::migration::migrate(input, output) {
-                Ok(()) => 0,
-                Err(e) => {
-                    eprintln!("Migration failed: {e}");
-                    1
-                }
-            },
-            None => match std::fs::read_to_string(input) {
-                Ok(legacy) => match config::migration::convert(&legacy) {
-                    Ok(yml) => {
-                        print!("{yml}");
-                        0
-                    }
+        let code = match config::migration::migrate(input) {
+            Ok(yml) => match &cli.migrate_output {
+                Some(output) => match std::fs::write(output, &yml) {
+                    Ok(()) => 0,
                     Err(e) => {
-                        eprintln!("Migration failed: {e}");
+                        eprintln!("Cannot write {}: {e}", output.display());
                         1
                     }
                 },
-                Err(e) => {
-                    eprintln!("Cannot read {}: {e}", input.display());
-                    1
+                None => {
+                    print!("{yml}");
+                    0
                 }
             },
+            Err(e) => {
+                eprintln!("Migration failed: {e}");
+                1
+            }
         };
         std::process::exit(code);
     }

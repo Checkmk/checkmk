@@ -17,23 +17,53 @@
 use anyhow::Result;
 use std::path::Path;
 
-/// Read legacy config from `input`, write generated mk-oracle.yml to `output`.
-pub fn migrate(input: &Path, output: &Path) -> Result<()> {
+/// Full migration pipeline: read legacy config, execute it, convert to new format.
+///
+/// Returns the formatted output string. Caller decides whether to write to file or stdout.
+pub fn migrate(input: &Path) -> Result<String> {
     let legacy = std::fs::read_to_string(input)?;
-    let yml = convert(&legacy)?;
-    std::fs::write(output, yml)?;
-    Ok(())
+    let variables = convert_config(input).unwrap_or_default();
+    let timestamp = format_timestamp();
+    convert(
+        &legacy,
+        &input.display().to_string(),
+        &variables,
+        &timestamp,
+    )
 }
 
 /// Convert legacy Oracle plugin configuration to mk-oracle.yml content.
 ///
-/// Returns a YAML string with the base structure and the original legacy
-/// configuration appended as comments for reference.
-pub fn convert(legacy: &str) -> Result<String> {
-    let mut out = String::from(
-        r#"---
-# Migrated from legacy mk_oracle configuration.
-# Review and adjust before use.
+/// Output structure:
+/// - Header with timestamp and source path
+/// - Original config content as comments
+/// - Extracted environment variables as comments
+/// - Resulting YAML configuration
+pub fn convert(
+    legacy: &str,
+    source_path: &str,
+    variables: &[(String, String)],
+    timestamp: &str,
+) -> Result<String> {
+    let mut out = String::new();
+
+    out.push_str(&format!(
+        "# --- Converted from {source_path} at {timestamp} ---\n"
+    ));
+    for line in legacy.lines() {
+        out.push_str("# ");
+        out.push_str(line);
+        out.push('\n');
+    }
+
+    out.push_str("# --- Known environment variables defined in legacy config ---\n");
+    for (name, value) in variables {
+        out.push_str(&format!("# {name} {value}\n"));
+    }
+
+    out.push_str(
+        r#"# --- Unified Config ---
+---
 oracle:
   main:
     connection:
@@ -45,38 +75,221 @@ oracle:
 "#,
     );
 
-    out.push_str("\n# --- Original legacy configuration ---\n");
-    for line in legacy.lines() {
-        out.push_str("# ");
-        out.push_str(line);
-        out.push('\n');
-    }
-
     Ok(out)
+}
+
+fn format_timestamp() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let (year, month, day) = civil_from_days((secs / 86400) as i64);
+    let t = (secs % 86400) as u32;
+    format!(
+        "{year:04}-{month:02}-{day:02} {:02}:{:02}:{:02} UTC",
+        t / 3600,
+        (t % 3600) / 60,
+        t % 60
+    )
+}
+
+/// Convert days since Unix epoch to (year, month, day).
+fn civil_from_days(days: i64) -> (i64, u32, u32) {
+    let z = days + 719468;
+    let era = (if z >= 0 { z } else { z - 146096 }) / 146097;
+    let doe = (z - era * 146097) as u32;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    let y = yoe as i64 + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    (y, m, d)
+}
+
+/// Variables to extract from legacy config files.
+const KNOWN_VARIABLES: &[&str] = &[
+    "DBUSER",
+    "ASMUSER",
+    "SYNC_SECTIONS",
+    "ASYNC_SECTIONS",
+    "SYNC_ASM_SECTIONS",
+    "ASYNC_ASM_SECTIONS",
+    "CACHE_MAXAGE",
+    "REMOTE_ORACLE_HOME",
+    "ONLY_SIDS",
+    "SKIP_SIDS",
+    "ORACLE_HOME",
+    "TNS_ADMIN",
+    "OLRLOC",
+    "MAX_TASKS",
+    "ID_BY",
+    "SQLS_SECTIONS",
+    "SQLS_DBUSER",
+    "SQLS_DBPASSWORD",
+    "SQLS_DBSYSCONNECT",
+    "SQLS_TNSALIAS",
+    "SQLS_SIDS",
+    "SQLS_DIR",
+    "SQLS_SQL",
+    "SQLS_PARAMETERS",
+    "SQLS_SECTION_NAME",
+    "SQLS_MAX_CACHE_AGE",
+];
+
+/// Variable name prefixes for dynamic matching (e.g. REMOTE_INSTANCE_XE).
+const KNOWN_PREFIXES: &[&str] = &["REMOTE_INSTANCE_", "EXCLUDE_"];
+
+/// Execute a legacy config file in its native shell and return extracted variables.
+///
+/// Sources the config in the platform's shell (bash on Linux, ksh on AIX,
+/// powershell on Windows) and captures known variable values.
+///
+/// Returns pairs of (name, value) for variables with non-empty values.
+pub fn convert_config(config_path: &Path) -> Result<Vec<(String, String)>> {
+    let output = run_config_shell(config_path)?;
+    parse_variable_output(&output)
+}
+
+#[cfg(target_os = "windows")]
+fn run_config_shell(config_path: &Path) -> Result<String> {
+    run_shell(
+        "powershell",
+        &["-NoProfile", "-NonInteractive", "-Command"],
+        &build_powershell_script(config_path),
+    )
+}
+
+#[cfg(target_os = "aix")]
+fn run_config_shell(config_path: &Path) -> Result<String> {
+    run_shell("ksh", &["-c"], &build_posix_script(config_path))
+}
+
+#[cfg(not(any(target_os = "windows", target_os = "aix")))]
+fn run_config_shell(config_path: &Path) -> Result<String> {
+    run_shell("bash", &["-c"], &build_posix_script(config_path))
+}
+
+fn run_shell(shell: &str, args: &[&str], script: &str) -> Result<String> {
+    let output = std::process::Command::new(shell)
+        .args(args)
+        .arg(script)
+        .output()?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("Config execution failed (exit {}): {stderr}", output.status);
+    }
+    Ok(String::from_utf8(output.stdout)?)
+}
+
+#[cfg(unix)]
+fn build_posix_script(config_path: &Path) -> String {
+    let quoted_path = posix_quote(&config_path.display().to_string());
+    let vars = KNOWN_VARIABLES.join(" ");
+    let prefixes = KNOWN_PREFIXES
+        .iter()
+        .map(|p| format!("{p}*"))
+        .collect::<Vec<_>>()
+        .join("|");
+    format!(
+        r#". {quoted_path}
+for __n in {vars}; do
+  eval "__v=\$$__n"
+  [ -n "$__v" ] && printf '%s %s\n' "$__n" "$__v"
+done
+set 2>/dev/null | while IFS='=' read -r __n __rest; do
+  case "$__n" in {prefixes}) eval "__v=\$$__n"; [ -n "$__v" ] && printf '%s %s\n' "$__n" "$__v";; esac
+done"#
+    )
+}
+
+#[cfg(windows)]
+fn build_powershell_script(config_path: &Path) -> String {
+    let quoted_path = powershell_quote(&config_path.display().to_string());
+    let var_list = KNOWN_VARIABLES
+        .iter()
+        .map(|v| format!("'{v}'"))
+        .collect::<Vec<_>>()
+        .join(",");
+    let prefix_filter = KNOWN_PREFIXES
+        .iter()
+        .map(|p| format!("$_.Name -like '{p}*'"))
+        .collect::<Vec<_>>()
+        .join(" -or ");
+    format!(
+        r#". {quoted_path}
+foreach ($__n in @({var_list})) {{
+  $__v = (Get-Variable -Name $__n -ValueOnly -ErrorAction SilentlyContinue)
+  if ($__v -is [array]) {{ $__v = $__v -join ':' }}
+  if ($__v) {{ Write-Output "$__n $__v" }}
+}}
+Get-Variable | Where-Object {{ {prefix_filter} }} | ForEach-Object {{
+  $__v = $_.Value
+  if ($__v -is [array]) {{ $__v = $__v -join ':' }}
+  if ($__v) {{ Write-Output "$($_.Name) $__v" }}
+}}"#
+    )
+}
+
+#[cfg(unix)]
+fn posix_quote(s: &str) -> String {
+    format!("'{}'", s.replace('\'', "'\\''"))
+}
+
+#[cfg(windows)]
+fn powershell_quote(s: &str) -> String {
+    format!("'{}'", s.replace('\'', "''"))
+}
+
+fn parse_variable_output(output: &str) -> Result<Vec<(String, String)>> {
+    Ok(output
+        .lines()
+        .filter_map(|line| {
+            let (name, value) = line.split_once(' ')?;
+            if name.is_empty() || value.is_empty() {
+                return None;
+            }
+            Some((name.to_string(), value.to_string()))
+        })
+        .collect())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    const TS: &str = "2026-06-15 12:00:00 UTC";
+
     #[test]
     fn test_convert_minimal() {
         let legacy = "DBUSER='checkmk:secret::localhost::XE'\nCACHE_MAXAGE=600\n";
-        let result = convert(legacy).unwrap();
-        assert!(result.starts_with("---\n"));
-        assert!(result.contains("oracle:\n"));
-        assert!(result.contains("main:\n"));
-        assert!(result.contains("connection:\n"));
-        assert!(result.contains("authentication:\n"));
+        let vars = vec![
+            ("DBUSER".into(), "checkmk:secret::localhost::XE".into()),
+            ("CACHE_MAXAGE".into(), "600".into()),
+        ];
+        let result = convert(legacy, "/test/mk_oracle.cfg", &vars, TS).unwrap();
+        assert!(result.starts_with(
+            "# --- Converted from /test/mk_oracle.cfg at 2026-06-15 12:00:00 UTC ---\n"
+        ));
         assert!(result.contains("# DBUSER='checkmk:secret::localhost::XE'"));
         assert!(result.contains("# CACHE_MAXAGE=600"));
+        assert!(result.contains("# --- Known environment variables defined in legacy config ---\n"));
+        assert!(result.contains("# DBUSER checkmk:secret::localhost::XE\n"));
+        assert!(result.contains("# CACHE_MAXAGE 600\n"));
+        assert!(result.contains("# --- Unified Config ---\n"));
+        assert!(result.contains("oracle:\n"));
+        assert!(result.contains("  main:\n"));
     }
 
     #[test]
     fn test_convert_empty() {
-        let result = convert("").unwrap();
+        let result = convert("", "/test/empty.cfg", &[], TS).unwrap();
+        assert!(result.starts_with("# --- Converted from /test/empty.cfg at"));
+        assert!(result.contains("# --- Known environment variables defined in legacy config ---\n"));
+        assert!(result.contains("# --- Unified Config ---\n"));
         assert!(result.contains("oracle:\n"));
-        assert!(result.contains("# --- Original legacy configuration ---\n"));
     }
 
     #[test]
@@ -85,7 +298,7 @@ mod tests {
                        ASMUSER='/::SYSASM:::'\n\
                        CACHE_MAXAGE=600\n\
                        REMOTE_INSTANCE_XE='user:pass::host:1521::XE::'\n";
-        let result = convert(legacy).unwrap();
+        let result = convert(legacy, "/test/cfg", &[], TS).unwrap();
         for line in legacy.lines() {
             assert!(result.contains(&format!("# {line}")), "missing: {line}");
         }
@@ -94,9 +307,78 @@ mod tests {
     #[test]
     fn test_convert_result_is_valid_yaml() {
         let legacy = "DBUSER='checkmk:secret:::'\n";
-        let result = convert(legacy).unwrap();
+        let vars = vec![("DBUSER".into(), "checkmk:secret:::".into())];
+        let result = convert(legacy, "/test/mk_oracle.cfg", &vars, TS).unwrap();
         let config = super::super::OracleConfig::load_str(&result);
         assert!(config.is_ok(), "generated YAML must be loadable: {result}");
         assert!(config.unwrap().ora_sql().is_some());
+    }
+
+    #[test]
+    fn test_format_timestamp() {
+        let ts = format_timestamp();
+        assert!(ts.ends_with(" UTC"));
+        assert!(ts.contains('-'));
+        assert!(ts.contains(':'));
+        assert_eq!(ts.len(), 23);
+    }
+
+    #[test]
+    fn test_civil_from_days() {
+        assert_eq!(civil_from_days(0), (1970, 1, 1));
+        assert_eq!(civil_from_days(365), (1971, 1, 1));
+        assert_eq!(civil_from_days(19889), (2024, 6, 15));
+    }
+
+    #[test]
+    fn test_parse_variable_output() {
+        let output = "DBUSER checkmk:secret\nCACHE_MAXAGE 600\nSYNC_SECTIONS instance sessions\n";
+        let result = parse_variable_output(output).unwrap();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].0, "DBUSER");
+        assert_eq!(result[0].1, "checkmk:secret");
+        assert_eq!(result[1], ("CACHE_MAXAGE".into(), "600".into()));
+        assert!(result[2].1.contains("sessions"));
+    }
+
+    #[test]
+    fn test_parse_variable_output_skips_malformed() {
+        let output = "DBUSER checkmk\n\n BADNAME value\nNOSPACE\nVAR \n";
+        let result = parse_variable_output(output).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].0, "DBUSER");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_build_posix_script() {
+        let script = build_posix_script(Path::new("/tmp/test.cfg"));
+        assert!(script.starts_with(". '/tmp/test.cfg'"));
+        assert!(script.contains("DBUSER"));
+        assert!(script.contains("CACHE_MAXAGE"));
+        assert!(script.contains("REMOTE_INSTANCE_"));
+        assert!(script.contains("EXCLUDE_"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_execute_config_basic() {
+        let config_path =
+            std::env::temp_dir().join(format!("mk_oracle_test_exec_{}.cfg", std::process::id()));
+        std::fs::write(
+            &config_path,
+            "DBUSER='checkmk:secret'\nCACHE_MAXAGE=600\nREMOTE_INSTANCE_XE='user:pass::host'\n",
+        )
+        .unwrap();
+        let result = convert_config(&config_path);
+        let _ = std::fs::remove_file(&config_path);
+        let vars = result.unwrap();
+        assert!(vars
+            .iter()
+            .any(|(n, v)| n == "DBUSER" && v == "checkmk:secret"));
+        assert!(vars.iter().any(|(n, v)| n == "CACHE_MAXAGE" && v == "600"));
+        assert!(vars
+            .iter()
+            .any(|(n, v)| n == "REMOTE_INSTANCE_XE" && v == "user:pass::host"));
     }
 }

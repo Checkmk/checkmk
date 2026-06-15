@@ -172,6 +172,7 @@ rust_test_suite(
     crate_features = ["build_system_bazel"],
     data = [
         "references/output-xe-single.cfg",
+        "references/output-xe-single.ps1",
     ],
     env_inherit = [
         "CI_ORA2_DB_TEST",

@@ -133,6 +133,7 @@ py_library(
         "//packages/cmk-ccc:tty",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:helper-interface",
+        "//packages/cmk-check-engine:section-parser",
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-livestatus-client:py_livestatus",

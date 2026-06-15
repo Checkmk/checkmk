@@ -16,11 +16,10 @@ from typing import Any, Final, NamedTuple, Self
 from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import HostKey, SourceType
+from cmk.checkengine.parser import HostSections
 from cmk.checkengine.plugins import ParsedSectionName, SectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.piggyback.backend import store_piggyback_raw_data
-
-from .parser import HostSections
 
 _CacheInfo = tuple[int, int]
 

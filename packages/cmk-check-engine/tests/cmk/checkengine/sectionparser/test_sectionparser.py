@@ -4,11 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
+# ruff: noqa: ARG001
+# ruff: noqa: ARG002
+# ruff: noqa: ARG005
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 
 import pytest
 
+from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.parser import AgentRawDataSection, AgentRawDataSectionElem, HostSections
 from cmk.checkengine.plugins import ParsedSectionName, SectionName
@@ -265,15 +269,20 @@ class TestSectionsParser:
         assert parsing_result.data == 1
 
     @staticmethod
-    @pytest.mark.usefixtures("disable_debug")
     def test_parsing_errors(
         sections_parser: SectionsParser[AgentRawDataSectionElem],
     ) -> None:
         section_name = SectionName("one")
 
-        assert sections_parser.parse(section_name, lambda *args, **kw: 1 / 0) is None
-        assert len(sections_parser.parsing_errors) == 1
-        assert sections_parser.parsing_errors == ["error"]
+        was_enabled = debug.enabled()
+        debug.disable()
+        try:
+            assert sections_parser.parse(section_name, lambda *args, **kw: 1 / 0) is None
+            assert len(sections_parser.parsing_errors) == 1
+            assert sections_parser.parsing_errors == ["error"]
+        finally:
+            if was_enabled:
+                debug.enable()
 
     @staticmethod
     def test_parse(sections_parser: SectionsParser[AgentRawDataSectionElem]) -> None:

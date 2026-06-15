@@ -60,6 +60,7 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:helper-interface",
+        "//packages/cmk-check-engine:section-parser",
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-plugin-apis:agent_based",

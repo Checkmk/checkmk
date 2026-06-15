@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
+# ruff: noqa: ARG005
 
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any

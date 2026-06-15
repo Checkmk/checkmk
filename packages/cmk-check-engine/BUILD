@@ -148,6 +148,25 @@ py_library(
 )
 
 py_library(
+    name = "section-parser",
+    srcs = [
+        "cmk/checkengine/sectionparser.py",
+        "cmk/checkengine/sectionparserutils.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":helper-interface",
+        ":specs",
+        "//cmk/piggyback:backend",
+        "//packages/cmk-ccc:debug",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-check-engine/cmk/checkengine/parser",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
+    ],
+)
+
+py_library(
     name = "lib",
     srcs = [
         "cmk/checkengine/submitters.py",
@@ -247,6 +266,22 @@ py_test(
 )
 
 py_test(
+    name = "section-parser-tests",
+    size = "small",
+    srcs = glob([
+        "tests/cmk/checkengine/sectionparser/*.py",
+    ]) + [
+        ":__test__.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        ":section-parser",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
     name = "lib-tests",
     size = "small",
     srcs = [
@@ -277,6 +312,7 @@ py_wheel(
         ":fetchers",
         ":helper-interface",
         ":lib",
+        ":section-parser",
         ":snmp-backends",
         ":snmplib",
         ":specs",

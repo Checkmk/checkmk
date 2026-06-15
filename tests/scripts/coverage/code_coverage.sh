@@ -6,7 +6,7 @@
 set -e -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_PATH="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+REPO_PATH="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 
 SOURCE_DIRS=(cmk non-free omd packages agents)
 

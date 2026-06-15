@@ -828,6 +828,18 @@ def bake_agents(
     )
 
 
+def bakery_changed_targets(*, debug: bool) -> results.BakeryChangedTargetsResult:
+    return _deserialize(
+        _automation_serialized(
+            AutomationID("bakery-changed-targets"),
+            automation_config=LocalAutomationConfig(),
+            debug=debug,
+        ),
+        results.BakeryChangedTargetsResult,
+        debug=debug,
+    )
+
+
 def find_unknown_check_parameter_rule_sets(
     *, debug: bool
 ) -> results.UnknownCheckParameterRuleSetsResult:

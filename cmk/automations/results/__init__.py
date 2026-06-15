@@ -133,6 +133,9 @@ from cmk.automations.results.host_management import (
     BakeAgentsResult as BakeAgentsResult,
 )
 from cmk.automations.results.host_management import (
+    BakeryChangedTargetsResult as BakeryChangedTargetsResult,
+)
+from cmk.automations.results.host_management import (
     DeleteHostsKnownRemoteResult as DeleteHostsKnownRemoteResult,
 )
 from cmk.automations.results.host_management import (

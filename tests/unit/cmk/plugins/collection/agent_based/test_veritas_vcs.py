@@ -612,6 +612,24 @@ def test_cluster_check_veritas_vcs_resource() -> None:
             ],
             id="State is CRIT when at least one node has state FAULTED, and others are OFFLINE",
         ),
+        pytest.param(
+            {
+                "node1": {
+                    "minions": [Vcs(attr="ClusState", value="RUNNING", cluster=None)],
+                },
+                "node2": {
+                    "minions": [
+                        Vcs(attr="Frozen", value="0", cluster=None),
+                        Vcs(attr="TFrozen", value="0", cluster=None),
+                    ],
+                },
+            },
+            [
+                Result(state=State.OK, summary="All nodes OK"),
+                Result(state=State.OK, notice="[node1]: running, [node2]: "),
+            ],
+            id="Node without state row contributes no state text and no WARN",
+        ),
     ],
 )
 def test_cluster_check_veritas_vcs_states(

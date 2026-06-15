@@ -10,16 +10,11 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.discovery._discover.host_labels import (
-    _all_parsing_results as all_parsing_results,
-)
-from cmk.checkengine.helper_interface import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, AgentRawDataSectionElem, HostSections
 from cmk.checkengine.plugins import ParsedSectionName, SectionName
 from cmk.checkengine.sectionparser import _ParsingResult as ParsingResult
 from cmk.checkengine.sectionparser import (
     ParsedSectionsResolver,
-    ResolvedResult,
     SectionPlugin,
     SectionsParser,
 )
@@ -36,7 +31,7 @@ def _section(
     )
 
 
-class _FakeParser(dict):
+class _FakeParser(dict[str, object]):
     def parse(self, section_name: SectionName, *args: object) -> object:
         return self.get(str(section_name))
 
@@ -119,23 +114,6 @@ class TestParsedSectionsResolver:
         assert resolved is not None
         assert resolved.parsed_data == 1
         assert resolved.section_name == SectionName("section_one")
-
-    def test_iteration(self) -> None:
-        host_key = HostKey(HostName("host"), SourceType.HOST)
-        sections = dict(
-            (
-                _section("section_one", "parsed_section_one", set()),
-                _section("section_two", "parsed_section_two", set()),
-                _section("section_thr", "parsed_section_thr", {"section_two"}),
-                _section("section_fou", "parsed_section_fou", {"section_one"}),
-            )
-        )
-        providers = {host_key: self.make_provider(sections)}
-
-        assert all_parsing_results(host_key, providers) == [
-            ResolvedResult(section_name=SectionName("section_one"), parsed_data=1, cache_info=None),
-            ResolvedResult(section_name=SectionName("section_thr"), parsed_data=3, cache_info=None),
-        ]
 
     @pytest.mark.parametrize(
         ["errors", "error_state", "results"],

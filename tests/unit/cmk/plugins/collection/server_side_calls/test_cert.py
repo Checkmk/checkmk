@@ -11,6 +11,7 @@ from cmk.plugins.collection.server_side_calls.cert import (
     ConnectionType,
     generate_cert_services,
     Issuer,
+    parse_cert_params,
     ServiceDescription,
     ServicePrefix,
     Settings,
@@ -98,6 +99,28 @@ def test_connection_type_reaches_command_line(connection_type: ConnectionType) -
             ],
         )
     ]
+
+
+def test_parse_ldap_starttls_connection_type() -> None:
+    # The raw params mirror what the "Check certificates" ruleset produces
+    # for "Connection type: LDAP STARTTLS" (CMK-32024).
+    endpoints = parse_cert_params(
+        {
+            "connections": [
+                {
+                    "service_name": {"prefix": "auto", "name": "my_service"},
+                    "address": "abc.xyz",
+                    "port": 389,
+                    "individual_settings": {"connection": "ldap_starttls"},
+                }
+            ],
+            "standard_settings": {"port": 443},
+        }
+    )
+    assert len(endpoints) == 1
+    assert endpoints[0].port == 389
+    assert endpoints[0].individual_settings is not None
+    assert endpoints[0].individual_settings.connection is ConnectionType.LDAP_STARTTLS
 
 
 def test_generate_cert_services() -> None:

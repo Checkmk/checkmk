@@ -97,6 +97,20 @@ rust_test(
 )
 
 rust_test(
+    name = "fetcher_ldap_starttls_test",
+    size = "small",
+    srcs = [
+        "tests/fetcher_ldap_starttls.rs",
+        "tests/starttls/common/tls_server.rs",
+    ],
+    crate_root = "tests/fetcher_ldap_starttls.rs",
+    deps = [
+        ":check-cert-lib",
+        "@site_crates//:openssl",
+    ],
+)
+
+rust_test(
     name = "starttls_stream_io_test",
     srcs = [
         "tests/starttls/stream_io.rs",

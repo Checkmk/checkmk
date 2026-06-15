@@ -11,7 +11,7 @@ from pydantic import AfterValidator
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.livestatus_client.expressions import LqSafe
 
-from .._models import HostFilter, HostState, StateLabel
+from .._models import HostFilter, HostState, HostStateLabel
 from ._validators import validate_uniqueness
 
 # TODO: look into whether we can utilize generics when generating our shared typing. It's not great
@@ -55,9 +55,11 @@ class StateChoiceCondition:
     )
     field: Literal["state"] = api_field(description="Host state field", example="state")
     op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
-    value: Annotated[list[StateLabel], MinLen(1), AfterValidator(validate_uniqueness)] = api_field(
-        description="Host states to match",
-        example=["UP", "DOWN"],
+    value: Annotated[list[HostStateLabel], MinLen(1), AfterValidator(validate_uniqueness)] = (
+        api_field(
+            description="Host states to match",
+            example=["UP", "DOWN"],
+        )
     )
 
 

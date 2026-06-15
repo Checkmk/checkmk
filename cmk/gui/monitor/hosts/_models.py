@@ -15,7 +15,7 @@ import dataclasses
 import enum
 from typing import assert_never, Literal, NewType
 
-type StateLabel = Literal["UP", "DOWN", "UNREACHABLE"]
+type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE"]
 
 
 class HostState(enum.IntEnum):
@@ -44,7 +44,7 @@ class Host:
     service_counts: ServiceCounts
 
     @property
-    def state_label(self) -> StateLabel:
+    def state_label(self) -> HostStateLabel:
         match self.state:
             case HostState.UP:
                 return "UP"

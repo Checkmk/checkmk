@@ -28,7 +28,7 @@ from .._models import (
     HostSort,
     HostSortColumn,
     HostSortDirection,
-    StateLabel,
+    HostStateLabel,
 )
 from .._repositories import HostRepository
 from ._family import MONITOR_HOSTS_FAMILY
@@ -47,7 +47,7 @@ _DEFAULT_SORT = (HostSort(column=HostSortColumn.NAME, direction=HostSortDirectio
 @api_model
 class HostEntry:
     name: str = api_field(description="Host name", example="web-server-01")
-    state: StateLabel = api_field(description="Host state", example="UP")
+    state: HostStateLabel = api_field(description="Host state", example="UP")
     address: str = api_field(description="Primary IP address", example="10.0.0.1")
     alias: str = api_field(description="Host alias", example="Web Server")
     site_id: str = api_field(description="Site ID", example="local")

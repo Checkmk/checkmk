@@ -31,8 +31,6 @@ from ._objects import (
 )
 from ._options import ConsolidationFunction, TimeRange
 
-# A predictive metric (predict_<name> / predict_lower_<name>) is drawn alongside the metric it
-# predicts; predict_lower_ also starts with this prefix.
 _PREDICT_PREFIX = "predict_"
 
 
@@ -94,9 +92,6 @@ def _add_predictive_lines(
     service: ServiceRef,
     available: Mapping[MetricName, RRDMetricData],
 ) -> tuple[Graph, set[MetricName]]:
-    """Augment a template graph with the predictive companions of its metrics (new graph object)."""
-    # A predictive companion is drawn in the same direction as the line of the metric it predicts.
-    # Each drawn metric is paired with the direction (inverse) of the line drawing it.
     inverse_by_metric: dict[MetricName, bool] = {}
     for group in graph.stacks:
         for member in group.members:
@@ -141,7 +136,6 @@ def _add_predictive_lines(
 
 def discover_template_graphs(
     *,
-    # subject
     service: ServiceRef,
     registered_graphs: Sequence[
         graphs_v1.Graph
@@ -149,14 +143,11 @@ def discover_template_graphs(
         | graphs_v2_unstable.Graph
         | graphs_v2_unstable.Bidirectional
     ],
-    # environment
     translations: Sequence[translations_v1.Translation],
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
-    # runtime
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
-    # source
     rrd: RRDSource,
 ) -> Sequence[DiscoveredGraph[TemplateOptions]]:
     translated_metrics = fetch_translated_metrics(
@@ -172,14 +163,10 @@ def discover_template_graphs(
         consolidation_function=consolidation_function,
     )
 
-    # Match the registered plugins and collect the graphs to draw (matched plugins first, then a
-    # fallback single-metric graph for each still-unclaimed metric), claiming their metrics. Drawing
-    # and evaluating happens afterwards in one batch, so the performance data is fetched only once.
     graphs: list[Graph] = []
     claimed: set[MetricName] = set()
 
     def _collect(base: Graph) -> None:
-        # Draw the predictive companions of the graph's metrics and claim them.
         graph, predictive_names = _add_predictive_lines(base, service, service_metrics)
         claimed.update(predictive_names)
         graphs.append(graph)
@@ -192,7 +179,6 @@ def discover_template_graphs(
         _collect(parse_graph_from_api(plugin, localizer, service, metrics))
 
     for name in service_metrics:
-        # Predictive metrics are companions of the metric they predict, never graphed on their own.
         if name in claimed or name.startswith(_PREDICT_PREFIX):
             continue
         _collect(
@@ -214,7 +200,6 @@ def discover_template_graphs(
             )
         )
 
-    # Reuse the already translated metrics so the performance data is not fetched a second time.
     evaluated_graphs = evaluate_graphs(
         graphs=graphs,
         translated_metrics=translated_metrics,

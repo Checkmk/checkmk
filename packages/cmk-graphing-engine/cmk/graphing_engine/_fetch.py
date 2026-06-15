@@ -39,14 +39,7 @@ class RRDSource(Protocol):
         *,
         time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
-    ) -> Mapping[RRDMetric, TimeSeries]:
-        """Read the raw RRD series of the given metrics.
-
-        The series may be returned on their native RRD grid (whatever start/end/step RRDTool
-        serves); the engine aligns them to the requested time_range itself. Missing metrics are
-        omitted from the result.
-        """
-        ...
+    ) -> Mapping[RRDMetric, TimeSeries]: ...
 
 
 def _consolidation_function(
@@ -56,7 +49,6 @@ def _consolidation_function(
         case RRDMetricWithCF():
             return metric.consolidation_function
         case RRDMetric():
-            # A bare metric uses the fallback.
             return consolidation_function
 
 
@@ -70,7 +62,6 @@ def _scaled(time_series: TimeSeries, scale: float) -> TimeSeries:
 
 
 def _merge(series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
-    # Merge a metric's originals point by point, taking the first value present.
     return TimeSeries(
         time_range=time_range,
         values=[
@@ -88,9 +79,6 @@ def _fetch_series(
     consolidation_function: ConsolidationFunction,
     rrd: RRDSource,
 ) -> Mapping[RRDMetricRef, TimeSeries]:
-    # A metric's originals are the raw RRD metrics to read (with per-metric scale). Fetch them
-    # batched by consolidation function (a pinned metric uses its own, a bare one the fallback),
-    # then scale each one and merge a metric's series point by point.
     rrd_metrics_per_metric: dict[
         RRDMetricRef, tuple[ConsolidationFunction, list[tuple[RRDMetric, float]]]
     ] = {}
@@ -127,8 +115,6 @@ def _fetch_series(
     result: dict[RRDMetricRef, TimeSeries] = {}
     for metric, (function, rrd_metrics) in rrd_metrics_per_metric.items():
         raw = raw_per_function[function]
-        # Align every fetched series to the requested grid before scaling and merging: the source
-        # may return its own RRD grid, but the originals are merged point by point.
         scaled = [
             _scaled(resample(raw[rrd_metric], time_range, function), scale)
             for rrd_metric, scale in rrd_metrics
@@ -141,18 +127,13 @@ def _fetch_series(
 
 def fetch_translated_metrics(
     *,
-    # subject
     services: Iterable[ServiceRef],
-    # environment
     translations: Iterable[translations_v1.Translation],
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
-    # source
     rrd: RRDSource,
 ) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
-    # Parse the registered translation plugins once into the per-check-command lookup.
     parsed_translations = parse_translations_from_api(translations)
-    # dict.fromkeys dedups the services while keeping a deterministic order.
     performance_data = rrd.fetch_performance_data(list(dict.fromkeys(services)))
     return {
         service: translate_performance_data(perf, parsed_translations, metrics, localizer)
@@ -162,20 +143,12 @@ def fetch_translated_metrics(
 
 def evaluate_graphs(
     *,
-    # subject
     graphs: Sequence[Graph],
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
-    # runtime
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
-    # source
     rrd: RRDSource,
 ) -> Sequence[EvaluatedGraph]:
-    """Fetch the time series of the given graphs (given their already translated metrics).
-
-    The consolidation function is the fallback for the graphs' bare RRDMetric columns; metrics that
-    pin their own (RRDMetricWithCF) keep it.
-    """
     evaluated = []
     for graph in graphs:
         metric_data = metric_data_of(graph, translated_metrics)
@@ -199,24 +172,14 @@ def evaluate_graphs(
 
 def update_graph_data(
     *,
-    # subject
     graphs: Sequence[Graph],
-    # environment
     translations: Iterable[translations_v1.Translation],
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
-    # runtime
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
-    # source
     rrd: RRDSource,
 ) -> Sequence[EvaluatedGraph]:
-    """Fetch and evaluate the current performance data and time series of the given graphs.
-
-    The consolidation function is the fallback for the graphs' bare RRDMetric columns; metrics that
-    pin their own (RRDMetricWithCF) keep it.
-    """
-    # Each metric carries its own service; fetch and translate the performance data of all of them.
     translated_metrics = fetch_translated_metrics(
         services=(
             ServiceRef(host_name=metric.host_name, service_name=metric.service_name)

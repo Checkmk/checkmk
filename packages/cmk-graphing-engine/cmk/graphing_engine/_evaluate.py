@@ -39,8 +39,6 @@ from ._objects import (
 from ._options import TimeRange
 from ._title import evaluate_title
 
-# The arithmetic of the four operations, shared by the scalar and the time-series evaluation. Each
-# takes one "point" (the operands' values at one instant) and combines them; None means "no value".
 type _Operator = Callable[[Sequence[float | None]], float | None]
 
 
@@ -73,7 +71,6 @@ def _evaluate_value_op(
     operands: Sequence[Quantity],
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
 ) -> float | None:
-    # An operation needs every operand: a missing one makes the whole expression unevaluable.
     values = [_evaluate_value(operand, metric_data) for operand in operands]
     if any(value is None for value in values):
         return None
@@ -84,7 +81,6 @@ def _evaluate_value(
     quantity: Quantity,
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
 ) -> float | None:
-    """The current value of a quantity, or None if it cannot be evaluated."""
     match quantity:
         case RRDMetric() | RRDMetricWithCF():
             return None if (data := metric_data.get(quantity)) is None else data.value
@@ -160,7 +156,6 @@ def _evaluate_time_series(
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
     time_range: TimeRange,
 ) -> TimeSeries:
-    """The time series of a quantity, evaluating constants and operations point by point."""
     match quantity:
         case RRDMetric() | RRDMetricWithCF():
             existing = time_series.get(quantity)
@@ -208,7 +203,6 @@ def _attributes(
     quantity: Quantity,
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
 ) -> DisplayAttributes | None:
-    """Title, unit and colour of a drawn quantity, or None if it cannot be resolved."""
     match quantity:
         case RRDMetric() | RRDMetricWithCF():
             return (
@@ -230,7 +224,6 @@ def _attributes(
             | MinimumOf()
             | MaximumOf()
         ):
-            # A threshold line takes the unit (and title) of the metric it refers to, its own colour.
             data = metric_data.get(quantity.metric)
             return (
                 None
@@ -238,7 +231,6 @@ def _attributes(
                 else DisplayAttributes(title=data.title, unit=data.unit, color=quantity.color)
             )
         case Sum():
-            # A sum has no unit of its own; it takes the unit of its first summand.
             first = _attributes(quantity.summands[0], metric_data) if quantity.summands else None
             return (
                 None
@@ -269,28 +261,24 @@ class EvaluatedCurve:
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluatedStack:
-    # A group of curves drawn as filled areas, stacked cumulatively (was compound lines).
     members: Sequence[EvaluatedCurve]
     inverse: bool
 
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluatedLine:
-    # A single curve drawn as a line (was a simple line).
     curve: EvaluatedCurve
     inverse: bool
 
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluatedMinimalRange:
-    # The axis covers at least [lower, upper]; it may grow to fit the curves.
     lower: float | None
     upper: float | None
 
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluatedFixedRange:
-    # The axis is pinned to exactly [lower, upper].
     lower: float | None
     upper: float | None
 
@@ -311,8 +299,6 @@ class EvaluatedGraph:
 class DiscoveredGraph[Options]:
     graph: Graph
     options: Options
-    # The graph's title with its expressions evaluated against the translated metrics; graph.title
-    # still carries the original, unevaluated title.
     title: str
     vertical_range: EvaluatedVerticalRange | None
     stacks: Sequence[EvaluatedStack]
@@ -370,8 +356,6 @@ def _title_metrics(
     graph: Graph,
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
 ) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
-    # A title expression may reference any metric of the graph's services, drawn or not, so the
-    # title is resolved against those services' full metric maps rather than only the drawn metrics.
     services = {
         ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
         for metric in graph.rrd_metrics()
@@ -390,11 +374,6 @@ def evaluate_graph(
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     time_range: TimeRange,
 ) -> EvaluatedGraph:
-    """Evaluate a graph, keeping its stacks and lines so line type and stacking are preserved.
-
-    Curves whose display attributes cannot be resolved (e.g. a missing metric) are dropped; an
-    empty stack is dropped along with them.
-    """
     stacks = []
     for group in graph.stacks:
         members = [

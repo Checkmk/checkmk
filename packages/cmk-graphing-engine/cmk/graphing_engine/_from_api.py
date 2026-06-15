@@ -136,7 +136,6 @@ def _parse_unit(unit: metrics_v1.Unit) -> Unit:
     return Unit(notation=notation, precision=precision)
 
 
-# Defaults for metrics that have no registered definition.
 _FALLBACK_COLOR = _COLORS[metrics_v1.Color.GRAY]
 _FALLBACK_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
@@ -146,7 +145,6 @@ def metric_display_attributes(
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
 ) -> DisplayAttributes:
-    """Title, unit and color of a (translated) metric, falling back to sensible defaults."""
     if (definition := metrics.get(metric_name)) is None:
         return DisplayAttributes(title=metric_name, unit=_FALLBACK_UNIT, color=_FALLBACK_COLOR)
     return DisplayAttributes(
@@ -163,7 +161,6 @@ class _ParseContext:
     metrics: Mapping[str, metrics_v1.Metric]
 
     def rrd_metric(self, metric_name: str) -> RRDMetric:
-        # Discovery leaves the consolidation function open; the graph request supplies it at fetch.
         return RRDMetric(
             host_name=self.service.host_name,
             service_name=self.service.service_name,
@@ -281,8 +278,6 @@ def _metric_names_in_quantity(quantity: _ApiQuantity) -> Iterable[MetricName]:
 
 
 def metric_names_of_title(title: Title) -> Sequence[MetricName]:
-    # Metric names referenced by title expressions are independent of the localization, so the
-    # title is rendered without translating it.
     return list(metric_names_in_title(title.localize(lambda text: text)))
 
 
@@ -373,8 +368,6 @@ def parse_graph_from_api(
                 lines=lines,
             )
         case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
-            # A bidirectional collapses into one graph: the upper half drawn normally, the lower
-            # half mirrored below the x-axis (inverse).
             upper_stacks, upper_lines = _parse_lines(graph.upper, context, inverse=False)
             lower_stacks, lower_lines = _parse_lines(graph.lower, context, inverse=True)
             return Graph(
@@ -413,8 +406,6 @@ def _parse_check_command(
                 if check_command.name.startswith("check_")
                 else (f"check_{check_command.name}")
             )
-            # The lookup key is normalized with .replace(".", "_") (see translate_performance_data),
-            # so apply the same here to match plug-in names containing a dot (e.g. "check_ping.exe").
             return name.replace(".", "_")
         case _:
             assert_never(check_command)
@@ -430,7 +421,6 @@ def _parse_metric_translation(
         case translations_v1.RenameTo():
             return MetricTranslation(name=MetricName(translation.metric_name))
         case translations_v1.ScaleBy():
-            # No rename: the metric keeps its own name and is only scaled.
             return MetricTranslation(name=old_name, scale=translation.factor)
         case translations_v1.RenameToAndScaleBy():
             return MetricTranslation(
@@ -443,11 +433,6 @@ def _parse_metric_translation(
 def parse_translations_from_api(
     translations: Iterable[translations_v1.Translation],
 ) -> Mapping[str, Mapping[MetricName, MetricTranslation]]:
-    """Parse registered translation plugins into the per-check-command translation map.
-
-    The result is keyed by the normalized check command and feeds translate_performance_data /
-    fetch_translated_metrics directly.
-    """
     result: dict[str, Mapping[MetricName, MetricTranslation]] = {}
     for translation in translations:
         parsed = {

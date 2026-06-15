@@ -17,7 +17,6 @@ from ._objects import (
     RRDOriginal,
 )
 
-# A predictive metric keeps its prefix on the translated name but is matched by the bare name.
 _PREDICT_PREFIXES = ("predict_lower_", "predict_")
 
 
@@ -59,13 +58,6 @@ def translate_performance_data(
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
 ) -> Mapping[MetricName, RRDMetricData]:
-    """Translate raw performance data of a single service into RRD metric data.
-
-    Renaming and scaling are applied here: each value (and its scalar bounds) is multiplied by the
-    translation scale, and the display attributes are taken from the registered metric definition
-    of the renamed metric. Several raw metrics that rename to the same target are merged, keeping
-    every contributing original.
-    """
     command_translations = _translations_for_command(translations, performance_data.check_command)
     result: dict[MetricName, RRDMetricData] = {}
     for perf_value in performance_data.values:
@@ -79,7 +71,6 @@ def translate_performance_data(
 
         original = RRDOriginal(metric_name=perf_value.metric_name, scale=scale)
         attributes = metric_display_attributes(name, metrics, localizer)
-        # A later raw metric renaming to the same target overrides the values; originals accumulate.
         originals = [*result[name].originals, original] if name in result else [original]
         result[name] = RRDMetricData(
             value=_scaled(perf_value.value),

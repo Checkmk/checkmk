@@ -74,7 +74,6 @@ class Unit:
 
 @dataclass(frozen=True, kw_only=True)
 class DisplayAttributes:
-    # How a metric or quantity is rendered: its title, unit and colour.
     title: str
     unit: Unit
     color: str
@@ -216,14 +215,12 @@ type VerticalRange = MinimalRange | FixedRange
 @dataclass(frozen=True)
 class Stack:
     members: Sequence[Quantity]
-    # An inverse group is mirrored below the x-axis (the lower half of a former bidirectional).
     inverse: bool
 
 
 @dataclass(frozen=True)
 class Line:
     quantity: Quantity
-    # An inverse line is mirrored below the x-axis (the lower half of a former bidirectional).
     inverse: bool
 
 
@@ -338,8 +335,6 @@ def metric_data_of(
     graph: Graph,
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
 ) -> Mapping[RRDMetricRef, RRDMetricData]:
-    # Each metric carries its own service, so the data is looked up per service: two services that
-    # expose the same metric name must not collide.
     result: dict[RRDMetricRef, RRDMetricData] = {}
     for metric in graph.rrd_metrics():
         service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)

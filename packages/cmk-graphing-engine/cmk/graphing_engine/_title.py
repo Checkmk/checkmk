@@ -9,8 +9,6 @@ from collections.abc import Callable, Iterable, Mapping
 
 from ._objects import MetricName, RRDMetricData, ServiceRef
 
-# A graph title may embed expressions referencing a metric's scalar, e.g.
-# 'CPU load - _EXPRESSION:{"metric": "load1", "scalar": "max"} CPU cores'.
 _TITLE_EXPRESSION_PREFIX = "_EXPRESSION:"
 _TITLE_EXPRESSION_PATTERN = re.compile(re.escape(_TITLE_EXPRESSION_PREFIX) + r"\{.*?\}")
 _TITLE_SCALARS: Mapping[str, Callable[[RRDMetricData], float | None]] = {
@@ -24,7 +22,6 @@ _TITLE_SCALARS: Mapping[str, Callable[[RRDMetricData], float | None]] = {
 
 
 def _parse_title_expression(raw: str) -> Mapping[str, str]:
-    # raw is an '_EXPRESSION:{"metric": ..., "scalar": ...}' match.
     expression: Mapping[str, str] = json.loads(raw[len(_TITLE_EXPRESSION_PREFIX) :])
     return expression
 
@@ -64,9 +61,6 @@ def evaluate_title(
     for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
         value = _evaluate_title_expression(raw, flattened)
         if value is None:
-            # An expression could not be resolved: fall back to the static part of the title
-            # (everything before the first dash).
             return title.split("-", maxsplit=1)[0].strip()
-        # Rendering as an integer is hard-coded because it is all we need for now.
         title = title.replace(raw, str(int(value)), 1)
     return title

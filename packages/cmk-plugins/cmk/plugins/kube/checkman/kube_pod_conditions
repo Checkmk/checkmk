@@ -7,7 +7,7 @@ description:
  A Pod's status depends on an array of PodConditions through which the
  Pod has or has not yet passed. This check monitors the status of each
  condition (scheduled, initialized, containersready, ready, resizepending,
- resizeinprogress, as well as allcontainersrestarting as of Kubernetes 1.34)
+ resizeinprogress, as well as allcontainersrestarting as of Kubernetes 1.35)
  and the duration of the condition if it is in an abnormal state. This check
  does not monitor custom conditions.
 

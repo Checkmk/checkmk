@@ -76,7 +76,9 @@ build_cmd = """
     # This is where the Python Modules should be found
     export LD_LIBRARY_PATH="$$PWD/$$EXT_DEPS_PATH/{python_dir}/python/lib/:$$PWD/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib/"
 
-    # Python binary supplied by bazel build process
+    # Python binary supplied by bazel build process. Safe to run directly out of
+    # @python's tree: it ships fully precompiled (CMK-35159), so importing here
+    # never writes bytecode back into @python's output.
     export PYTHON_EXECUTABLE=$$PWD/$$EXT_DEPS_PATH/{python_dir}/python/bin/python3
 
     # Workaround for git execution issue: pip may call git for VCS deps, but LD_LIBRARY_PATH

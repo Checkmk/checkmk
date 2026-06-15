@@ -222,10 +222,9 @@ copy_to_directory(
         ["lib/%s" % i[0] for i in lib_symlinks] +
         ["lib/pkgconfig/%s" % i[0] for i in pkgconfig_symlinks] +
         ["share/man/man1/%s" % i[0] for i in share_symlinks] +
-        # CPython's bytecode writer creates `.pyc.<pid>.<counter>` tempfiles
-        # and renames them onto `.pyc`. Skip the tempfiles so a concurrent
-        # writer can't make copy_to_directory lstat a file that disappears
-        # before it's read.
+        # @python now ships fully precompiled hash-based bytecode, so the
+        # .pyc.<id> writer tempfiles should no longer appear; keep this exclude
+        # only to drop any stray one from the package.
         [
             "**/*.pyc.*",
         ],

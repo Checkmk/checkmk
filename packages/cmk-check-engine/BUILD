@@ -147,6 +147,29 @@ py_library(
     ],
 )
 
+py_library(
+    name = "lib",
+    srcs = [
+        "cmk/checkengine/submitters.py",
+        "cmk/checkengine/summarize.py",
+        "cmk/checkengine/value_store.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":helper-interface",
+        ":specs",
+        "//cmk/piggyback:backend",
+        "//cmk/utils",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:timeout",
+        "//packages/cmk-check-engine/cmk/checkengine/parser",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
+    ],
+)
+
 py_test(
     name = "fetchers-tests",
     size = "small",
@@ -222,6 +245,25 @@ py_test(
     ],
 )
 
+py_test(
+    name = "lib-tests",
+    size = "small",
+    srcs = [
+        "tests/cmk/checkengine/test_submitters.py",
+        "tests/cmk/checkengine/test_summarizers.py",
+        "tests/cmk/checkengine/test_value_store.py",
+        ":__test__.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        ":lib",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-plugin-apis:agent_based",
+        requirement("pytest"),
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-check-engine",
@@ -233,6 +275,7 @@ py_wheel(
         ":fetcher-protocol",
         ":fetchers",
         ":helper-interface",
+        ":lib",
         ":snmp-backends",
         ":snmplib",
         ":specs",

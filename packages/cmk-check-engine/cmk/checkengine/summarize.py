@@ -67,7 +67,7 @@ def summarize(
     )
 
 
-def summarize_success(exit_spec: ExitSpec) -> Sequence[ActiveCheckResult]:
+def summarize_success(exit_spec: ExitSpec) -> Sequence[ActiveCheckResult]:  # noqa: ARG001
     return [ActiveCheckResult(state=0, summary="Success")]
 
 

@@ -20,6 +20,7 @@ py_library(
         "//packages/cmk-ccc:translations",
         "//packages/cmk-check-engine:fetcher-protocol",
         "//packages/cmk-check-engine:helper-interface",
+        "//packages/cmk-check-engine:lib",
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/parser",

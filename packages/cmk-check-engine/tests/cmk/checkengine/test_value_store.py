@@ -16,6 +16,7 @@ from cmk.checkengine import value_store
 from cmk.checkengine.plugins import CheckPluginName, ServiceID
 
 
+# TODO: This test covers the functionality from the plugin API and should not live here.
 def test_load_host_value_store_loads_file(tmp_path: Path) -> None:
     service_id = ServiceID(CheckPluginName("test_service"), None)
     raw_content = '[[["test_load_host_value_store_loads_file", "test_service", null], {"loaded_file": "True"}]]'
@@ -29,7 +30,7 @@ def test_load_host_value_store_loads_file(tmp_path: Path) -> None:
             HostName("test_load_host_value_store_loads_file"),
             value_store.AllValueStoresStore(
                 stores_file,
-                log_debug=lambda x: None,
+                log_debug=lambda x: None,  # noqa: ARG005
             ),
         ),
         store_changes=False,
@@ -46,7 +47,7 @@ class TestAllValueStoresStore:
             '[["host1", "service2", null], {"key": "value2"}]'
             "]"
         )
-        return value_store.AllValueStoresStore(file, log_debug=lambda x: None)
+        return value_store.AllValueStoresStore(file, log_debug=lambda x: None)  # noqa: ARG005
 
     def test_load_without_file(self, tmp_path: Path) -> None:
         file = tmp_path / "no-file"
@@ -62,7 +63,7 @@ class TestAllValueStoresStore:
     def test_load_corrupt_file(self, tmp_path: Path) -> None:
         file = tmp_path / "corrupt-file"
         file.write_text("{'not': 'json'}")
-        assert value_store.AllValueStoresStore(file, log_debug=lambda x: None).load() == {}
+        assert value_store.AllValueStoresStore(file, log_debug=lambda x: None).load() == {}  # noqa: ARG005
 
     def test_update(self, tmp_path: Path) -> None:
         file = tmp_path / "file"
@@ -72,7 +73,7 @@ class TestAllValueStoresStore:
         avss1.update({(HostName("host1"), "service1", "item"): {"key": "new_value1"}})
         avss2.update({(HostName("host1"), "service2", None): {"key": "new_value2"}})
 
-        assert value_store.AllValueStoresStore(file, log_debug=lambda x: None).load() == {
+        assert value_store.AllValueStoresStore(file, log_debug=lambda x: None).load() == {  # noqa: ARG005
             (HostName("host1"), "service1", "item"): {"key": "new_value1"},
             (HostName("host1"), "service2", None): {"key": "new_value2"},
         }
@@ -86,7 +87,7 @@ class _BrokenRepr(str):
 class Test_ValueStore:
     @staticmethod
     def _get_vs() -> value_store._ValueStore:
-        return value_store._ValueStore(
+        return value_store._ValueStore(  # noqa: SLF001
             {
                 "good_key": "'value'",
                 "bad_key": "inf",
@@ -142,7 +143,7 @@ class Test_ValueStore:
         assert vs["rogue"] is rogue
 
         # next time we access it, it will raise
-        next_times_vs = value_store._ValueStore(vs.export())
+        next_times_vs = value_store._ValueStore(vs.export())  # noqa: SLF001
         with pytest.raises(SyntaxError):
             _ = next_times_vs["rogue"]
 
@@ -156,7 +157,7 @@ _KEY_OUTER = (str(_TEST_HOST), str(_SERVICE_OUTER[0]), _SERVICE_OUTER[1])
 
 class _AllValueStoresStoreSpy(value_store.AllValueStoresStore):
     def __init__(self) -> None:
-        super().__init__(Path(), log_debug=lambda x: None)
+        super().__init__(Path(), log_debug=lambda x: None)  # noqa: ARG005
         self.inspect_updated: Mapping[value_store.ValueStoreKey, Mapping[str, str]] | None = None
 
     def load(self) -> Mapping[value_store.ValueStoreKey, Mapping[str, str]]:

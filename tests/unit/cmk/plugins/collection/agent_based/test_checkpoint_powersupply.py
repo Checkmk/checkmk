@@ -67,6 +67,12 @@ def test_discover_checkpoint_powersupply_filters_indices(
     [
         ("1", DEFAULT_PARAMS, [["1", "Up"]], Result(state=State.OK, summary="Up")),
         ("1", DEFAULT_PARAMS, [["1", "OK"]], Result(state=State.OK, summary="OK")),
+        (
+            "1",
+            DEFAULT_PARAMS,
+            [["1", "No Redundancy"]],
+            Result(state=State.WARN, summary="No Redundancy"),
+        ),
         ("1", DEFAULT_PARAMS, [["1", "Down"]], Result(state=State.CRIT, summary="Down")),
         ("1", DEFAULT_PARAMS, [["1", "Present"]], Result(state=State.CRIT, summary="Present")),
         (

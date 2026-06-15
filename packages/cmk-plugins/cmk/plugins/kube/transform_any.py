@@ -15,6 +15,8 @@ from collections.abc import Iterator, Mapping
 
 from .schemata import api
 
+_VOLUME_METRIC_NAMES = frozenset(metric.value for metric in api.KubeletVolumeMetricName)
+
 
 def parse_match_labels(labels: Mapping[str, str]) -> Mapping[api.LabelName, api.LabelValue]:
     return {api.LabelName(k): api.LabelValue(v) for k, v in labels.items()}
@@ -25,6 +27,12 @@ def parse_open_metric_samples(
 ) -> Iterator[api.KubeletVolumeMetricSample]:
     for raw_open_metric in raw_response_dump.split("\n"):
         if "{" not in raw_open_metric:
+            continue
+
+        # Only the volume metrics are of interest. Skipping everything else up
+        # front avoids parsing (and JSON-decoding) the labels of unrelated
+        # metrics, which can contain values we cannot parse (e.g. a NUL byte).
+        if raw_open_metric.split("{", 1)[0] not in _VOLUME_METRIC_NAMES:
             continue
 
         open_metric_sample = _parse_metric_sample_with_labels(raw_open_metric)

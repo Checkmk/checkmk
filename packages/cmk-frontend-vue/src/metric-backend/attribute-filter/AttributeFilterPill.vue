@@ -312,6 +312,7 @@ defineExpose({
       ref="editPaneRef"
       v-click-outside="onOutside"
       class="metric-backend-attribute-filter-pill__edit"
+      data-af-scope
       :title="fullLabel"
       @keydown.tab.capture.stop
       @keydown.esc.capture="onEditEscapeCapture"
@@ -319,6 +320,7 @@ defineExpose({
     >
       <span
         v-if="condition.key"
+        data-af-item
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--attribute-type"
       >
         <CmkDropdown
@@ -332,6 +334,7 @@ defineExpose({
         />
       </span>
       <span
+        data-af-item
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--key"
       >
         <CmkDropdown
@@ -346,6 +349,7 @@ defineExpose({
         />
       </span>
       <span
+        data-af-item
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator"
       >
         <CmkDropdown
@@ -357,6 +361,7 @@ defineExpose({
       </span>
       <span
         v-if="showValue"
+        data-af-item
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--value"
       >
         <CmkDropdown
@@ -372,6 +377,7 @@ defineExpose({
       </span>
       <CmkIconButton
         v-if="removable"
+        data-af-item
         class="metric-backend-attribute-filter-pill__remove"
         name="close"
         size="small"
@@ -384,6 +390,7 @@ defineExpose({
     <span
       v-else
       ref="closedPillRef"
+      data-af-item
       class="metric-backend-attribute-filter-pill__closed"
       :tabindex="tabFocusable ? 0 : -1"
       @keydown.enter.prevent="emit('edit')"

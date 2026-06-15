@@ -14,6 +14,7 @@ import CmkIconButton from '@/components/CmkIconButton.vue'
 import type { QuerySuggestionsFn } from '@/components/CmkSuggestions/types'
 
 import AttributeFilterPill from './AttributeFilterPill.vue'
+import { handleArrowNav } from './focus-nav'
 import { isConditionValid, operatorTakesValue } from './types'
 import type {
   AttributeCondition,
@@ -261,6 +262,8 @@ function onGroupClickOutside(group: FilterGroup): void {
     class="metric-backend-form-attribute-filter"
     role="group"
     :aria-label="ariaLabel ?? _t('Attribute filter')"
+    @keydown.left.capture="handleArrowNav"
+    @keydown.right.capture="handleArrowNav"
   >
     <CmkIconButton
       v-if="model.length === 0"
@@ -295,6 +298,7 @@ function onGroupClickOutside(group: FilterGroup): void {
         v-click-outside="() => onGroupClickOutside(group)"
         class="metric-backend-form-attribute-filter__group"
         data-testid="attribute-filter-group"
+        :data-af-scope="isEntered(group) ? '' : undefined"
         :tabindex="isEntered(group) ? -1 : 0"
         :aria-label="_t('AND group of %{count} conditions', { count: group.entries.length })"
         @keydown="(e) => onGroupKeydown(e, group)"
@@ -304,6 +308,7 @@ function onGroupClickOutside(group: FilterGroup): void {
           class="metric-backend-form-attribute-filter__remove-group"
           name="close"
           size="small"
+          data-af-item
           :tabindex="isEntered(group) ? 0 : -1"
           :title="_t('Remove group')"
           :aria-label="_t('Remove group')"
@@ -315,6 +320,7 @@ function onGroupClickOutside(group: FilterGroup): void {
             v-if="entryIndex > 0"
             type="button"
             class="metric-backend-form-attribute-filter__connector"
+            data-af-item
             :tabindex="isEntered(group) ? 0 : -1"
             :aria-label="
               _t('Toggle connector, currently %{connector}', {
@@ -347,6 +353,7 @@ function onGroupClickOutside(group: FilterGroup): void {
             class="metric-backend-form-attribute-filter__add"
             name="add"
             size="large"
+            data-af-item
             :tabindex="isEntered(group) ? 0 : -1"
             :title="_t('Add condition')"
             :aria-label="addConditionLabel(entry)"

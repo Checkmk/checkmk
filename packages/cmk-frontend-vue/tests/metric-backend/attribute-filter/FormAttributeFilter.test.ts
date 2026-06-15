@@ -813,7 +813,7 @@ describe('arrow-nav within multi-element stops', () => {
     }
   ]
 
-  test.skip.each(cycleCases)(
+  test.each(cycleCases)(
     '$key cycles inner controls from the group-entry stop and wraps, staying inside the group',
     async ({ key, focusOrder }) => {
       renderForm(TWO_PILL_AND)
@@ -834,7 +834,7 @@ describe('arrow-nav within multi-element stops', () => {
     }
   )
 
-  test.skip.each(cycleCases)(
+  test.each(cycleCases)(
     '$key cycles inner controls in DOM order and wraps, staying inside the pill',
     async ({ key, focusOrder }) => {
       // Pre-fill so entering edit mode does not auto-open the key dropdown.
@@ -857,7 +857,7 @@ describe('arrow-nav within multi-element stops', () => {
     }
   )
 
-  test.skip('arrows on a singleton pill chip are no-ops', async () => {
+  test('arrows on a singleton pill chip are no-ops', async () => {
     renderForm(singlePill())
     const chip = screen.getByRole('button', { name: /^Edit condition:/ })
     chip.focus()

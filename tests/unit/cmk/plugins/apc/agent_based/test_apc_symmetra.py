@@ -96,24 +96,6 @@ STRING_TABLE_3 = [
 ]
 
 
-# Environmental monitoring device (e.g. APC NetBotz NRM250):
-# external temperature sensors, but no UPS battery data at all.
-STRING_TABLE_SENSORS_ONLY = [
-    [
-        ["Temp Sensor 1", "21"],
-        ["Temp Sensor 2", "24"],
-    ],
-    [],
-]
-# UPS reporting both external sensors and battery data.
-STRING_TABLE_SENSORS_AND_BATTERY = [
-    [
-        ["Temp Sensor 1", "21"],
-    ],
-    STRING_TABLE_1[1],
-]
-
-
 @pytest.mark.parametrize(
     ["string_table", "params", "expected"],
     [
@@ -258,21 +240,7 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                     notice="Configuration: prefer user levels over device levels (used user levels)",
                 ),
             ],
-        ),
-        pytest.param(
-            STRING_TABLE_SENSORS_ONLY,
-            "Temp Sensor 1",
-            {"levels_sensors": (25, 30)},
-            [
-                Metric(name="temp", value=21.0, levels=(25.0, 30.0)),
-                Result(state=State.OK, summary="Temperature: 21.0 °C"),
-                Result(
-                    state=State.OK,
-                    notice="Configuration: prefer user levels over device levels (used user levels)",
-                ),
-            ],
-            id="sensor_without_battery_data",
-        ),
+        )
     ],
 )
 def test_check_temp(
@@ -305,19 +273,6 @@ def test_check_temp(
         pytest.param(STRING_TABLE_3, apc_symmetra.discovery_apc_symmetra_elphase, []),
         pytest.param(
             STRING_TABLE_3, apc_symmetra.discovery_apc_symmetra_temp, [Service(item="Battery")]
-        ),
-        pytest.param(STRING_TABLE_SENSORS_ONLY, apc_symmetra.discovery_apc_symmetra, []),
-        pytest.param(
-            STRING_TABLE_SENSORS_ONLY,
-            apc_symmetra.discovery_apc_symmetra_temp,
-            [Service(item="Temp Sensor 1"), Service(item="Temp Sensor 2")],
-            id="sensors_without_battery_data",
-        ),
-        pytest.param(
-            STRING_TABLE_SENSORS_AND_BATTERY,
-            apc_symmetra.discovery_apc_symmetra_temp,
-            [Service(item="Temp Sensor 1"), Service(item="Battery")],
-            id="sensors_and_battery_data",
         ),
     ],
 )

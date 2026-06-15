@@ -118,9 +118,11 @@ def test_openapi_user_minimal_settings(
             user_object,
             default_sites,
             get_user_attributes([]),
+            [],
             pending_changes=_test_pending_changes(),
             use_git=False,
             acting_user=LoggedInSuperUser(),
+            pprint_value=False,
         )
 
     user_attributes = _load_internal_attributes(UserId("user"))
@@ -284,9 +286,11 @@ def test_openapi_user_internal_with_notifications(
         user_object,
         default_sites,
         get_user_attributes([]),
+        [],
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
 
     expected: dict[str, object] = {
@@ -494,9 +498,11 @@ def test_openapi_user_internal_auth_handling(
             user_object,
             default_sites,
             get_user_attributes([]),
+            [],
             pending_changes=_test_pending_changes(),
             use_git=False,
             acting_user=LoggedInSuperUser(),
+            pprint_value=False,
         )
 
     loaded = _load_internal_attributes(name)
@@ -524,9 +530,11 @@ def test_openapi_user_internal_auth_handling(
             updated_internal_attributes,
             default_sites,
             get_user_attributes([]),
+            [],
             pending_changes=_test_pending_changes(),
             use_git=False,
             acting_user=LoggedInSuperUser(),
+            pprint_value=False,
         )
 
     loaded = _load_internal_attributes(name)
@@ -552,9 +560,11 @@ def test_openapi_user_internal_auth_handling(
             updated_internal_attributes,
             default_sites,
             get_user_attributes([]),
+            [],
             pending_changes=_test_pending_changes(),
             use_git=False,
             acting_user=LoggedInSuperUser(),
+            pprint_value=False,
         )
 
     loaded = _load_internal_attributes(name)
@@ -633,9 +643,11 @@ def test_managed_idle_internal(
         user_object,
         default_sites,
         get_user_attributes([]),
+        [],
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
 
     user_internal = _load_user(UserId("user"))

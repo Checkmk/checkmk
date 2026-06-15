@@ -124,6 +124,7 @@ def test_edit_ldap_user_with_locked_attributes(clients: ClientRegistry) -> None:
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
 
     clients.User.edit(

@@ -16,7 +16,6 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.crypto.password import Password, PasswordPolicy
 from cmk.gui import site_config, userdb
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _l
@@ -154,10 +153,12 @@ def edit_user(
     new_spec: UserSpec,
     sites: _UserAssociatedSitesFn,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    user_connections: Sequence[UserConnectionConfig],
     *,
     pending_changes: PendingChanges,
     use_git: bool,
     acting_user: LoggedInUser,
+    pprint_value: bool,
 ) -> None:
     acting_user.need_permission("wato.users")
     acting_user.need_permission("wato.edit")
@@ -167,7 +168,9 @@ def edit_user(
     affected_sites: _AffectedSites = set()
 
     try:
-        with UserDB(user_attributes).get_user_for_editing(user_id) as edit_user_data:
+        with UserDB(
+            user_attributes, user_connections, pprint_value=pprint_value
+        ).get_user_for_editing(user_id) as edit_user_data:
             affected_sites = _update_affected_sites(
                 affected_sites, sites(edit_user_data.to_userspec())
             )
@@ -217,16 +220,13 @@ def create_user(
     new_user: UserSpec,
     sites: _UserAssociatedSitesFn,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    user_connections: Sequence[UserConnectionConfig],
     *,
     pending_changes: PendingChanges,
     use_git: bool,
     acting_user: LoggedInUser,
-    # TODO: Make this a mandatory parameter in the next commit
-    user_connections: Sequence[UserConnectionConfig] | None = None,
+    pprint_value: bool,
 ) -> None:
-    if user_connections is None:
-        user_connections = active_config.user_connections
-
     acting_user.need_permission("wato.users")
     acting_user.need_permission("wato.edit")
 
@@ -236,7 +236,7 @@ def create_user(
 
     new_user_data = UserData.from_userspec(user_id, new_user, user_attributes)
     try:
-        UserDB(user_attributes).add_user(new_user_data)
+        UserDB(user_attributes, user_connections, pprint_value=pprint_value).add_user(new_user_data)
     except UserAlreadyExistsError:
         raise MKUserError("user_id", _("This username is already being used by another user."))
 

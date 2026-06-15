@@ -10,6 +10,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.http import request
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.utils import roles
 
 from ._user_attribute import UserAttribute
@@ -21,16 +22,25 @@ auth_logger = gui_logger.getChild("auth")
 def on_failed_login(
     username: UserId,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    user_connections: Sequence[UserConnectionConfig],
     *,
     now: datetime,
     lock_on_logon_failures: int | None,
     log_logon_failures: bool,
+    pprint_value: bool,
 ) -> None:
     all_users = load_users(lock=True)
 
     if (user := all_users.get(username)) and not roles.is_automation_user(username):
         _increment_failed_logins_and_lock(user, lock_on_logon_failures)
-        update_user(username, all_users, user_attributes, now)
+        update_user(
+            username,
+            all_users,
+            user_attributes,
+            user_connections,
+            now,
+            pprint_value=pprint_value,
+        )
 
     if log_logon_failures:
         if user:

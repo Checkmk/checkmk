@@ -146,9 +146,11 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
     userdb.on_failed_login(
         user_id,
         user_attributes,
+        [],
         now=now,
         lock_on_logon_failures=10,
         log_logon_failures=True,
+        pprint_value=False,
     )
     assert _load_failed_logins(user_id) == 1
     assert not userdb.user_locked(user_id, load_user(user_id))
@@ -156,9 +158,11 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
     userdb.on_failed_login(
         user_id,
         user_attributes,
+        [],
         now=now,
         lock_on_logon_failures=10,
         log_logon_failures=True,
+        pprint_value=False,
     )
     assert _load_failed_logins(user_id) == 2
     assert not userdb.user_locked(user_id, load_user(user_id))
@@ -166,9 +170,11 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
     userdb.on_failed_login(
         user_id,
         user_attributes,
+        [],
         now=now,
         lock_on_logon_failures=10,
         log_logon_failures=True,
+        pprint_value=False,
     )
     assert _load_failed_logins(user_id) == 3
     assert not userdb.user_locked(user_id, load_user(user_id))
@@ -184,9 +190,11 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None
     userdb.on_failed_login(
         user_id,
         user_attributes,
+        [],
         now=now,
         lock_on_logon_failures=10,
         log_logon_failures=True,
+        pprint_value=False,
     )
     assert _load_failed_logins(user_id) == 1
     assert not userdb.user_locked(user_id, load_user(user_id))
@@ -205,9 +213,11 @@ def test_on_failed_login_with_locking(user_id: UserId) -> None:
     userdb.on_failed_login(
         user_id,
         user_attributes,
+        [],
         now=now,
         lock_on_logon_failures=3,
         log_logon_failures=True,
+        pprint_value=False,
     )
     assert _load_failed_logins(user_id) == 1
     assert not userdb.user_locked(user_id, load_user(user_id))
@@ -215,9 +225,11 @@ def test_on_failed_login_with_locking(user_id: UserId) -> None:
     userdb.on_failed_login(
         user_id,
         user_attributes,
+        [],
         now=now,
         lock_on_logon_failures=3,
         log_logon_failures=True,
+        pprint_value=False,
     )
     assert _load_failed_logins(user_id) == 2
     assert not userdb.user_locked(user_id, load_user(user_id))
@@ -225,9 +237,11 @@ def test_on_failed_login_with_locking(user_id: UserId) -> None:
     userdb.on_failed_login(
         user_id,
         user_attributes,
+        [],
         now=now,
         lock_on_logon_failures=3,
         log_logon_failures=True,
+        pprint_value=False,
     )
     assert _load_failed_logins(user_id) == 3
     assert userdb.user_locked(user_id, load_user(user_id))

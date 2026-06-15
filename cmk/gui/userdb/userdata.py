@@ -13,6 +13,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.type_defs import LastLoginInfo, SessionId, SessionInfo, TwoFactorCredentials, UserSpec
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
 from cmk.utils.object_diff import make_diff_text
 
@@ -320,8 +321,16 @@ class UserData:
 
 
 class UserDB:
-    def __init__(self, custom_user_attributes: Sequence[tuple[str, UserAttribute]]):
+    def __init__(
+        self,
+        custom_user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
+        *,
+        pprint_value: bool,
+    ):
         self.custom_user_attributes = custom_user_attributes
+        self.user_connections = user_connections
+        self.pprint_value = pprint_value
 
     @contextmanager
     def get_user_for_editing(
@@ -340,7 +349,14 @@ class UserDB:
         yield user
 
         users[user_id] = UserData.to_userspec(user)
-        update_user(user_id, users, self.custom_user_attributes, datetime.now())
+        update_user(
+            user_id,
+            users,
+            self.custom_user_attributes,
+            self.user_connections,
+            datetime.now(),
+            pprint_value=self.pprint_value,
+        )
 
     def add_user(self, user: UserData) -> None:
         """Add a new user to the user database."""
@@ -352,4 +368,11 @@ class UserDB:
             raise UserAlreadyExistsError(f"User {user.user_id} already exists")
 
         users[user.user_id] = UserData.to_userspec(user)
-        update_user(user.user_id, users, self.custom_user_attributes, datetime.now())
+        update_user(
+            user.user_id,
+            users,
+            self.custom_user_attributes,
+            self.user_connections,
+            datetime.now(),
+            pprint_value=self.pprint_value,
+        )

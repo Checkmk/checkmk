@@ -178,11 +178,13 @@ def create_user(params: Mapping[str, Any]) -> Response:
         internal_attrs,
         user_features_registry.features().sites,
         get_user_attributes(active_config.wato_user_attrs),
+        active_config.user_connections,
         pending_changes=_pending_changes(
             config=active_config, local_site=omd_site(), acting_user=user.id
         ),
         use_git=active_config.wato_use_git,
         acting_user=user,
+        pprint_value=active_config.wato_pprint_config,
     )
     return serve_user(username)
 
@@ -276,11 +278,13 @@ def edit_user(params: Mapping[str, Any]) -> Response:
         internal_attrs,
         user_features_registry.features().sites,
         user_attributes,
+        active_config.user_connections,
         pending_changes=_pending_changes(
             config=active_config, local_site=omd_site(), acting_user=user.id
         ),
         use_git=active_config.wato_use_git,
         acting_user=user,
+        pprint_value=active_config.wato_pprint_config,
     )
     return serve_user(username)
 

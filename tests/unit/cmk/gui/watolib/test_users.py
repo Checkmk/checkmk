@@ -177,9 +177,11 @@ def test_only_affected_sites_require_activation_when_adding_users(
             userspec,
             default_sites,
             get_user_attributes([]),
+            [],
             pending_changes=_test_pending_changes(),
             use_git=False,
             acting_user=LoggedInSuperUser(),
+            pprint_value=False,
         )
     all_users = userdb.load_users()
     assert user_id in all_users
@@ -194,9 +196,11 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
         UserSpec({"alias": "user1", "locked": False, "authorized_sites": [SITE1], "roles": []}),
         default_sites,
         get_user_attributes([]),
+        [],
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
     _reset_site_changes(ALL_SITES)
 
@@ -206,9 +210,11 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
         UserSpec({"alias": "user1", "locked": False, "authorized_sites": [SITE2], "roles": []}),
         default_sites,
         get_user_attributes([]),
+        [],
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
 
     # THEN both site1 and site2 should require activation
@@ -245,18 +251,22 @@ def test_only_affected_sites_require_activation_when_deleting_users(
         UserSpec({"alias": "user1", "locked": False, "roles": []}),
         default_sites,
         get_user_attributes([]),
+        [],
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
     create_user(
         USER2_ID,
         UserSpec({"alias": "user2", "locked": False, "authorized_sites": [SITE2], "roles": []}),
         default_sites,
         get_user_attributes([]),
+        [],
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
     _reset_site_changes(ALL_SITES)
 
@@ -303,18 +313,22 @@ def test_remove_custom_attribute_only_touches_affected_users(sites: list[SiteId]
         UserSpec({"alias": "user1", "locked": False, "roles": []}),
         default_sites,
         get_user_attributes([]),
+        [],
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
     create_user(
         USER2_ID,
         UserSpec({"alias": "user2", "locked": False, "roles": []}),
         default_sites,
         get_user_attributes([]),
+        [],
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
     _add_custom_attr_to_user(USER1_ID, CUSTOM_ATTR_NAME, "some_value")
     _reset_site_changes(ALL_SITES)
@@ -363,18 +377,22 @@ def test_remove_custom_attribute_only_affected_sites_require_activation(
         UserSpec({"alias": "user1", "locked": False, "authorized_sites": [SITE1], "roles": []}),
         default_sites,
         get_user_attributes([]),
+        [],
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
     create_user(
         USER2_ID,
         UserSpec({"alias": "user2", "locked": False, "authorized_sites": [SITE2], "roles": []}),
         default_sites,
         get_user_attributes([]),
+        [],
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
     if user1_has_attr:
         _add_custom_attr_to_user(USER1_ID, CUSTOM_ATTR_NAME, "some_value")
@@ -410,9 +428,11 @@ def test_remove_custom_attribute_requires_permissions(sites: list[SiteId]) -> No
         UserSpec({"alias": "user1", "locked": False, "roles": []}),
         default_sites,
         get_user_attributes([]),
+        [],
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
     _add_custom_attr_to_user(USER1_ID, CUSTOM_ATTR_NAME, "some_value")
 

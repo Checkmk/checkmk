@@ -250,9 +250,11 @@ class LoginPage(Page):
             userdb.on_failed_login(
                 username,
                 user_attributes,
+                config.user_connections,
                 now=now,
                 lock_on_logon_failures=config.lock_on_logon_failures,
                 log_logon_failures=config.log_logon_failures,
+                pprint_value=config.wato_pprint_config,
             )
             raise MKUserError(self._password_varname, self._default_login_error_msg)
 

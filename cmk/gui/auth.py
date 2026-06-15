@@ -33,6 +33,7 @@ from cmk.gui.log import logger
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import AuthType, CustomUserAttrSpec, UserSpec
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.userdb import get_user_attributes, load_user, UserAttribute
 from cmk.gui.userdb.session import generate_auth_hash
 from cmk.gui.utils.htpasswd import Htpasswd
@@ -197,6 +198,8 @@ def _check_auth_by_header(
     lock_on_logon_failures: int | None,
     log_logon_failures: bool,
     default_user_profile: UserSpec,
+    user_connections: Sequence[UserConnectionConfig],
+    pprint_value: bool,
 ) -> UserId | None:
     """Parse the auth header and verify the credentials"""
     if not (
@@ -230,9 +233,11 @@ def _check_auth_by_header(
     userdb.on_failed_login(
         user_id,
         user_attributes,
+        user_connections,
         now=datetime.now(),
         lock_on_logon_failures=lock_on_logon_failures,
         log_logon_failures=log_logon_failures,
+        pprint_value=pprint_value,
     )
 
     raise MKAuthException(f"Wrong credentials ({token_name} header)")
@@ -257,6 +262,8 @@ def _check_auth_by_basic_header(config: Config) -> UserId | None:
             config.lock_on_logon_failures,
             config.log_logon_failures,
             config.default_user_profile,
+            config.user_connections,
+            config.wato_pprint_config,
         )
     ):
         return None
@@ -313,6 +320,8 @@ def _check_auth_by_bearer_header(config: Config) -> UserId | None:
         config.lock_on_logon_failures,
         config.log_logon_failures,
         config.default_user_profile,
+        config.user_connections,
+        config.wato_pprint_config,
     )
 
 

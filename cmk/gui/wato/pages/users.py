@@ -1023,11 +1023,13 @@ class ModeEditUser(WatoMode):
                 user_attrs,
                 user_features_registry.features().sites,
                 user_attributes,
+                config.user_connections,
                 pending_changes=_pending_changes(
                     config=config, local_site=omd_site(), acting_user=user.id
                 ),
                 use_git=config.wato_use_git,
                 acting_user=user,
+                pprint_value=config.wato_pprint_config,
             )
         else:
             edit_user(
@@ -1035,11 +1037,13 @@ class ModeEditUser(WatoMode):
                 user_attrs,
                 user_features_registry.features().sites,
                 user_attributes,
+                config.user_connections,
                 pending_changes=_pending_changes(
                     config=config, local_site=omd_site(), acting_user=user.id
                 ),
                 use_git=config.wato_use_git,
                 acting_user=user,
+                pprint_value=config.wato_pprint_config,
             )
 
         return redirect(mode_url("users"))

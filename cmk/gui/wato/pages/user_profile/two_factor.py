@@ -79,6 +79,7 @@ from cmk.gui.type_defs import (
     WebAuthnActionState,
     WebAuthnCredential,
 )
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.userdb import (
     get_user_attributes,
     is_two_factor_backup_code_valid,
@@ -166,13 +167,17 @@ def _handle_failed_auth(
     user_attributes: Sequence[tuple[str, UserAttribute]],
     lock_on_logon_failures: int | None,
     log_logon_failures: bool,
+    user_connections: Sequence[UserConnectionConfig],
+    pprint_value: bool,
 ) -> None:
     on_failed_login(
         user_id,
         user_attributes,
+        user_connections,
         now=datetime.datetime.now(),
         lock_on_logon_failures=lock_on_logon_failures,
         log_logon_failures=log_logon_failures,
+        pprint_value=pprint_value,
     )
     if user_locked(user_id, user_spec):
         session.logout()
@@ -1331,6 +1336,8 @@ class UserLoginTwoFactor(Page):
                 get_user_attributes(ctx.config.wato_user_attrs),
                 ctx.config.lock_on_logon_failures,
                 ctx.config.log_logon_failures,
+                ctx.config.user_connections,
+                ctx.config.wato_pprint_config,
             )
             self._set_json_response(
                 http_client.UNAUTHORIZED,
@@ -1363,6 +1370,8 @@ class UserLoginTwoFactor(Page):
         user_attributes: Sequence[tuple[str, UserAttribute]],
         lock_on_logon_failures: int | None,
         log_logon_failures: bool,
+        user_connections: Sequence[UserConnectionConfig],
+        pprint_value: bool,
     ) -> None:
         assert user.id is not None
         if "totp_credentials" in available_methods:
@@ -1383,6 +1392,8 @@ class UserLoginTwoFactor(Page):
                     user_attributes,
                     lock_on_logon_failures,
                     log_logon_failures,
+                    user_connections,
+                    pprint_value,
                 )
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
@@ -1408,6 +1419,8 @@ class UserLoginTwoFactor(Page):
                     user_attributes,
                     lock_on_logon_failures,
                     log_logon_failures,
+                    user_connections,
+                    pprint_value,
                 )
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
@@ -1465,6 +1478,8 @@ class UserLoginTwoFactor(Page):
             get_user_attributes(ctx.config.wato_user_attrs),
             ctx.config.lock_on_logon_failures,
             ctx.config.log_logon_failures,
+            ctx.config.user_connections,
+            ctx.config.wato_pprint_config,
         )
 
         html.footer()
@@ -1521,6 +1536,8 @@ class UserWebAuthnLoginComplete(JsonPage):
                 get_user_attributes(ctx.config.wato_user_attrs),
                 ctx.config.lock_on_logon_failures,
                 ctx.config.log_logon_failures,
+                ctx.config.user_connections,
+                ctx.config.wato_pprint_config,
             )
             raise MKUserError(None, _("WebAuthn login failed"), HTTPStatus.UNAUTHORIZED)
 

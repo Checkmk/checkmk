@@ -12,6 +12,7 @@
 
 import time
 from collections.abc import Mapping
+from itertools import chain
 from typing import Any, NewType, TypedDict
 
 from cmk.agent_based.v2 import (
@@ -117,9 +118,6 @@ def parse_apc_symmetra(
 
     parsed = ParsedSection(
         cartridge_states=[row[0] for row in cartridge_info],
-        # External sensors must be parsed independently of the battery data:
-        # devices like the APC NetBotz NRM250 report sensors but no UPS data.
-        temp={Item(name): float(temp) for name, temp in sensor_info},
     )
 
     if not battery_info:
@@ -161,8 +159,13 @@ def parse_apc_symmetra(
         diag_date=last_diag_date,
     )
 
-    if battery_temp:
-        parsed["temp"] = {**parsed["temp"], Item("Battery"): float(battery_temp)}
+    parsed["temp"] = {
+        Item(name): float(temp)
+        for name, temp in chain(
+            sensor_info,
+            [["Battery", battery_temp]] if battery_temp else [],
+        )
+    }
 
     if battery_current:
         parsed["elphase"] = {

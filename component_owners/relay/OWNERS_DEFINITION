@@ -1,9 +1,9 @@
-max.linke@checkmk.com  # component lead
+pablo.municio@checkmk.com  # component lead
 
 andreas.hasenkopf@checkmk.com
 cornel.craveta@checkmk.com
 jose.naranjo@checkmk.com
-pablo.municio@checkmk.com
+max.linke@checkmk.com
 
 # Find information about code-owners (+ find-owners syntax) here:
 #  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html

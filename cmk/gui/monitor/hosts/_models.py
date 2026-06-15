@@ -57,8 +57,6 @@ class Host:
 
 
 class HostSortColumn(enum.StrEnum):
-    """The host attributes a host query may be sorted by."""
-
     NAME = "name"
     ALIAS = "alias"
     ADDRESS = "address"
@@ -76,8 +74,6 @@ class HostSortColumn(enum.StrEnum):
 
 
 class HostSortDirection(enum.StrEnum):
-    """The direction a host query may be sorted in."""
-
     ASC = "asc"
     DESC = "desc"
 

@@ -16,12 +16,6 @@ def validate_uniqueness[T](values: Sequence[T]) -> Sequence[T]:
 
 
 def parse_host_search_query(value: object) -> str:
-    """Normalize the ``q`` search query param.
-
-    Newline characters are removed and leading and trailing whitespace is stripped. An empty or
-    whitespace-only value is treated as no filter and normalized to an empty string. Any
-    ``ValueError`` raised here is turned into a 400 response by the API framework.
-    """
     if not isinstance(value, str):
         raise ValueError(f"Expected a search string, got {type(value).__name__!r}.")
 
@@ -29,12 +23,6 @@ def parse_host_search_query(value: object) -> str:
 
 
 def parse_host_sort_options(value: object) -> list[HostSort]:
-    """Parse the repeated ``sort`` query param into :class:`HostSort` objects.
-
-    Each value defines one sort column; multiple values define a multi-column sort applied in the
-    given priority order. An empty list means no sort. The same column must not be repeated. Any
-    ``ValueError`` raised here is turned into a 400 response by the API framework.
-    """
     if not isinstance(value, list):
         raise ValueError(f"Expected a list of sort values, got {type(value).__name__!r}.")
 
@@ -50,7 +38,6 @@ def parse_host_sort_options(value: object) -> list[HostSort]:
 
 
 def _parse_host_sort_option(token: object) -> HostSort:
-    """Parse a single ``column:direction`` query value into a :class:`HostSort`."""
     if not isinstance(token, str):
         raise ValueError(f"Expected a 'column:direction' string, got {type(token).__name__!r}.")
 

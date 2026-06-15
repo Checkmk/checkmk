@@ -21,11 +21,6 @@ from ._models import Host, HostFilter, HostSort, HostState, ServiceCounts
 
 
 def _search_filter(query: str) -> QueryExpression:
-    """Build an OR-combined case-insensitive "contains" filter over the searchable columns.
-
-    ``search_query`` is expected to be already whitespace-stripped. An empty value yields a no-op
-    filter, so the resulting query is identical to one without a search.
-    """
     if not query:
         return NothingExpression()
 

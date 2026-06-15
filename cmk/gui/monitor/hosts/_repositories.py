@@ -25,17 +25,9 @@ class HostRepository(Protocol):
         sorters: Sequence[HostSort],
         filters: HostFilter,
     ) -> Sequence[Host]:
-        """Fetch hosts based on filter criteria.
-
-        ``search_query`` is an already whitespace-stripped free-text search. When empty, no search
-        filter is applied.
-        """
+        """Fetch hosts based on filter criteria."""
         ...
 
     def count(self, *, query: str, filters: HostFilter) -> int:
-        """Count the hosts matching the given criteria.
-
-        ``search_query`` is an already whitespace-stripped free-text search. When empty, the total
-        number of hosts is returned.
-        """
+        """Count the hosts matching the given criteria."""
         ...

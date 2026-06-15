@@ -51,6 +51,13 @@ static LinkedHashMap<String, List> dependency_paths_mapping() {
         "winagt-build-modules": [
             "agents/modules/windows",
         ],
+        "relay-msi": [
+            // The MSI is built from the WiX installer sources and bundles
+            // omd/non-free/relay/install_relay.sh (see RelayProduct.wxs and
+            // build-msi.ps1), so a change in either must rebuild the MSI.
+            "non-free/packages/cmk-relay-engine/windows-installer",
+            "omd/non-free/relay/install_relay.sh",
+        ],
     ];
 }
 
@@ -206,6 +213,30 @@ void provide_agent_binaries(Map args) {
                     ${checkout_dir}/agents/windows/
                 """.stripIndent(),
         ],
+        "relay-msi": [
+            // Windows-built relay MSI. Only the cloud/ultimate/ultimatemt editions ship
+            // it (see relay_install_pkg gating in omd/BUILD), so skip the fetch for any
+            // other edition. The MSI binary is identical across editions, so EDITION is
+            // kept out of the cache identity (see additional_build_params_no_check below)
+            // and a single artifact is shared across the gated editions.
+            // The job is registered directly under the branch folder, mirroring
+            // winagt-build (checkmk/<branch>/winagt-build) - NOT under builders/.
+            relative_job_name: "${branch_base_folder(false)}/relay-msi",
+            dependency_paths_hash: all_dependency_paths_hashes["relay-msi"],
+            condition: ! test_binaries_only && (args.edition in ["cloud", "ultimate", "ultimatemt"]),
+            retry: 3,
+            additional_build_params: [],
+            // Forward the edition so the relay-msi job's edition guard can validate
+            // it. Passed via the no-check channel on purpose: the MSI is identical
+            // across editions, so EDITION must NOT enter the cache identity - that
+            // keeps a single artifact shared across the gated editions.
+            additional_build_params_no_check: [EDITION: args.edition],
+            install_cmd: """\
+                cp \
+                    CheckmkRelayInstaller.msi \
+                    ${checkout_dir}/omd/non-free/relay/
+                """.stripIndent(),
+        ],
     ];
 
     def stages = upstream_job_details.collectEntries { job_name, details ->
@@ -246,7 +277,7 @@ void provide_agent_binaries(Map args) {
                             CUSTOM_GIT_REF: effective_git_ref,
                             CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                             CIPARAM_BISECT_COMMENT: args.bisect_comment,
-                        ],
+                        ] + (details.additional_build_params_no_check ?: [:]),
                     ]
                 } else {
                     this_parameters += [
@@ -258,7 +289,7 @@ void provide_agent_binaries(Map args) {
                         build_params_no_check: [
                             CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                             CIPARAM_BISECT_COMMENT: args.bisect_comment,
-                        ],
+                        ] + (details.additional_build_params_no_check ?: [:]),
                     ]
                 }
 

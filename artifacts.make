@@ -39,12 +39,14 @@ SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/windows_files_hashes.txt \
 	$(REPO_PATH)/agents/windows/check_mk.user.yml \
 	$(REPO_PATH)/agents/windows/unsign-msi.patch
+SOURCE_BUILT_RELAY := $(REPO_PATH)/omd/non-free/relay/CheckmkRelayInstaller.msi
 SOURCE_BUILT_AGENTS := \
 	$(SOURCE_BUILT_LINUX_AGENTS) \
 	$(SOURCE_BUILT_EXT) \
 	$(SOURCE_BUILT_MK_SQL) \
 	$(SOURCE_BUILT_MK_ORACLE) \
-	$(SOURCE_BUILT_WINDOWS)
+	$(SOURCE_BUILT_WINDOWS) \
+	$(SOURCE_BUILT_RELAY)
 SOURCE_BUILT_ARTIFACTS := \
 	$(SOURCE_BUILT_AGENTS) \
 	$(SOURCE_BUILT_AGENT_UPDATER)

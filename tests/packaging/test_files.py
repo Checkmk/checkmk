@@ -778,6 +778,54 @@ def test_relay_install_script_file(package_path: str) -> None:
         )
 
 
+# The relay MSI is embedded only in these editions (see relay_install_pkg in omd/BUILD)
+# and signed by default in the distro build (relay-msi.groovy: should_sign). CMK-34188
+RELAY_MSI_EDITIONS = ("cloud", "ultimate", "ultimatemt")
+RELAY_MSI_PATH = "share/check_mk/relays/CheckmkRelayInstaller.msi"
+
+
+@pytest.mark.skip_if_faked_artifacts
+def test_relay_msi_embedded(package_path: str) -> None:
+    """The real relay MSI must be embedded in the package - not a placeholder.
+
+    A bare file-existence check would also pass on an empty or faked file, so we extract
+    the embedded MSI and have msiinfo parse it, asserting the product identity and version.
+    This proves the genuine, Windows-built MSI actually shipped inside the package.
+    """
+    if package_path.endswith(".tar.gz"):
+        pytest.skip("Skipping test for source package.")
+
+    if _edition_from_pkg_path(package_path) not in RELAY_MSI_EDITIONS:
+        pytest.skip("Relay MSI is only shipped for cloud/ultimate/ultimatemt editions.")
+
+    msi_bytes = _get_file_from_package(package_path, RELAY_MSI_PATH)
+
+    with NamedTemporaryFile(suffix=".msi") as tmp:
+        tmp.write(msi_bytes)
+        tmp.flush()
+        properties = {
+            name: value
+            for line in subprocess.check_output(
+                ["msiinfo", "export", tmp.name, "Property"], text=True
+            ).splitlines()
+            if "\t" in line
+            for name, value in (line.split("\t", 1),)
+        }
+
+    assert properties.get("Manufacturer") == "Checkmk GmbH"
+    assert properties.get("ProductName", "").startswith("Checkmk Relay Installer")
+
+    product_version = properties.get("ProductVersion", "")
+    assert re.fullmatch(r"\d+\.\d+\.\d+\.\d+", product_version), (
+        f"Unexpected relay MSI ProductVersion {product_version!r}"
+    )
+    base_version = re.match(r"\d+\.\d+\.\d+", _version_from_pkg_path(package_path))
+    assert base_version and product_version.startswith(f"{base_version.group(0)}."), (
+        f"Relay MSI ProductVersion {product_version!r} does not match package version "
+        f"{_version_from_pkg_path(package_path)!r}"
+    )
+
+
 class UnwantedDependency(NamedTuple):
     dependency: str
     reason: str
@@ -988,6 +1036,17 @@ def test_windows_artifacts_are_signed(
                             f"check_mk_agent.msi/Program Files/checkmk/service/{file}",
                         )
                     )
+
+        # check the embedded relay MSI - shipped only for cloud/ultimate/ultimatemt and
+        # signed by default in the distro build (relay-msi.groovy: should_sign). CMK-34188
+        if _edition_from_pkg_path(package_path) in RELAY_MSI_EDITIONS:
+            with NamedTemporaryFile(suffix=".msi") as relay_msi_file:
+                relay_msi_file.write(_get_file_from_package(package_path, RELAY_MSI_PATH))
+                relay_msi_file.flush()
+                signing_failures.append(
+                    _verify_signature(Path(relay_msi_file.name), RELAY_MSI_PATH)
+                )
+                paths_checked.append(RELAY_MSI_PATH)
 
     # check for additional files in the package
     # (so we don't forget to add them to the signing process)

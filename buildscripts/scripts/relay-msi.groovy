@@ -3,7 +3,7 @@
 /// file: relay-msi.groovy
 
 void main() {
-    def edition = params.EDITION ?: "cloud";
+    def edition = params.EDITION;
     def version = params.VERSION ?: "daily";
 
     def allowed_editions = ["cloud", "ultimate", "ultimatemt"];

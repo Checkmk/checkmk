@@ -113,9 +113,8 @@ configure_make(
         # omd_prefix must be fixed-up to the corresponding omd path (e.g. /omd/versions/2.2.0p2.cee)
         omd_prefix="/replace-me"
 
-        echo '### Compile and install sitecustomize.py ###';
+        echo '### Install sitecustomize.py ###';
         install -m 644 $$EXT_BUILD_ROOT/omd/packages/Python/sitecustomize.py $$INSTALLDIR/lib/python{pyMajMin}/;
-        LD_LIBRARY_PATH=$$py_install_dir/lib $$py_install_dir/bin/python{pyMaj} -m py_compile $$INSTALLDIR/lib/python{pyMajMin}/sitecustomize.py;
 
         echo '### Fix sysconfigdata ###';
         # For now 'OMD_VERSION' is not yet available in Bazel, therefore we use a well defined placeholder
@@ -142,6 +141,24 @@ configure_make(
 
         # Tests are not needed in final package
         rm -rf $$INSTALLDIR/lib/python{pyMajMin}/test ;
+
+        echo '### Pre-compile all bytecode, hash-based (CMK-35159) ###';
+        # Pre-compile EVERY shipped .py as a hash-based pyc, so no .py is ever
+        # missing a pyc at import time. Hash-based pycs are validated by source
+        # content, not mtime, so copying/staging the @python tree (which bumps
+        # .py mtimes) no longer invalidates them: a build action that runs this
+        # interpreter finds the source byte-identical to what was compiled, uses
+        # the pyc, and writes nothing back into @python's output tree. Such a
+        # write would otherwise invalidate @python's action cache (a ~30 min PGO
+        # rebuild under DISABLE_CACHE), race python_rest, and succeed even on the
+        # read-only output trees because CI builds as root. -f also covers pip's
+        # vendored packages, which ship without pycs. checked-hash (not
+        # unchecked) so that if a source ever does diverge from its pyc the
+        # interpreter recompiles from source instead of silently running stale
+        # bytecode -- e.g. _sysconfigdata, whose source is version-stamped later
+        # by string_replace in omd/packages/Python/BUILD: its shipped pyc no
+        # longer matches, so the runtime transparently recompiles it.
+        LD_LIBRARY_PATH=$$py_install_dir/lib $$py_install_dir/bin/python{pyMaj} -E -m compileall -f -j4 -o 0 -o 1 -o 2 --invalidation-mode checked-hash -d $$omd_prefix/lib/python{pyMajMin} -q $$INSTALLDIR/lib/python{pyMajMin} ;
     """.format(
         installPrefix = STAGING_PREFIX,
         pyMaj = PYTHON_VERSION_MAJOR,

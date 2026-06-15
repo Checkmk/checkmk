@@ -119,48 +119,60 @@ function rowKey(row: HostEntry): string {
 </script>
 
 <template>
-  <div class="monitoring-all-hosts-app__header">
-    <CmkSearchInput
-      class="monitoring-all-hosts-app__search"
-      :placeholder="_t('Search hosts…')"
-      @search="hostService.updateSearch($event)"
-      @focusin="hostService.beginAutoPause()"
-      @focusout="hostService.endAutoPause()"
+  <div class="monitoring-all-hosts-app">
+    <div class="monitoring-all-hosts-app__header">
+      <CmkSearchInput
+        class="monitoring-all-hosts-app__search"
+        :placeholder="_t('Search hosts…')"
+        @search="hostService.updateSearch($event)"
+        @focusin="hostService.beginAutoPause()"
+        @focusout="hostService.endAutoPause()"
+      />
+      <RefreshCountdown
+        :remaining="hostService.secondsRemaining.value"
+        :interval="hostService.pollIntervalSeconds"
+        :paused="hostService.paused.value"
+        :manual-paused="hostService.manualPaused.value"
+        size="small"
+        @toggle="hostService.togglePause()"
+      />
+    </div>
+    <MonitoringResultsCount
+      class="monitoring-all-hosts-app__results-count"
+      :active-filter-count="columnFilters.length"
     />
-    <RefreshCountdown
-      :remaining="hostService.secondsRemaining.value"
-      :interval="hostService.pollIntervalSeconds"
-      :paused="hostService.paused.value"
-      :manual-paused="hostService.manualPaused.value"
-      size="small"
-      @toggle="hostService.togglePause()"
-    />
+    <MonitoringTable
+      :rows="hostService.items.value"
+      :loading="hostService.loading.value"
+      :columns="columns"
+      :filter-state="columnFilters"
+      :column-pinning="columnPinning"
+      :get-row-key="rowKey"
+      @update:filter-state="onColumnFilters"
+    >
+      <template #row="{ row }">
+        <HostRow :row="row" />
+      </template>
+      <template #empty-state>
+        <MonitoringEmptyState />
+      </template>
+    </MonitoringTable>
   </div>
-  <MonitoringResultsCount
-    class="monitoring-all-hosts-app__results-count"
-    :active-filter-count="columnFilters.length"
-  />
-  <MonitoringTable
-    :rows="hostService.items.value"
-    :loading="hostService.loading.value"
-    :columns="columns"
-    :filter-state="columnFilters"
-    :column-pinning="columnPinning"
-    :get-row-key="rowKey"
-    @update:filter-state="onColumnFilters"
-  >
-    <template #row="{ row }">
-      <HostRow :row="row" />
-    </template>
-    <template #empty-state>
-      <MonitoringEmptyState />
-    </template>
-  </MonitoringTable>
 </template>
 
 <style scoped>
+.monitoring-all-hosts-app {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding-bottom: var(--spacing);
+}
+
 .monitoring-all-hosts-app__header {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing);
@@ -172,6 +184,7 @@ function rowKey(row: HostEntry): string {
 }
 
 .monitoring-all-hosts-app__results-count {
+  flex: 0 0 auto;
   margin: var(--spacing-half) 0 var(--spacing);
 }
 </style>

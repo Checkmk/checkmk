@@ -331,7 +331,8 @@ function rowAt(index: number): T {
 <style scoped>
 .monitoring-table {
   width: 100%;
-  max-height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
 }
 

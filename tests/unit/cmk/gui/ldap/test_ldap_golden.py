@@ -527,8 +527,14 @@ sync_data: list[SyncLdapData] = [
 
 
 @pytest.mark.parametrize("sync_ldap_data", sync_data)
-def test_ldap_sync(mocker: MockerFixture, sync_ldap_data: SyncLdapData) -> None:
+def test_ldap_sync(
+    mocker: MockerFixture, sync_ldap_data: SyncLdapData, request_context: None
+) -> None:
     mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    # The connector is treated as an authentication connection so the "user
+    # created" parametrization still creates users (creation is gated on
+    # authentication_connections membership).
+    mocker.patch.object(LDAPUserConnector, "is_authentication_connection", return_value=True)
     sync_user_result = SyncUsersResult(
         sync_start_time=time(),
         fetched_users={
@@ -727,7 +733,6 @@ def test_sync_takes_over_saml_owned_user(mocker: MockerFixture, request_context:
     """A SAML-owned user with a matching LDAP entry is taken over by LDAP sync.
 
     Connector flips to the LDAP id and LDAP-managed attributes are written.
-    Spec D1+D4 (CMK-33824 ACs 1 and 2).
     """
     mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
     _patch_get_connection(mocker, {"saml2_corp": _stub_saml2_connection("saml2_corp")})
@@ -811,8 +816,7 @@ def test_takeover_drops_attributes_provided_by_saml(
 def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_context: None) -> None:
     """A SAML-owned user with NO matching LDAP entry is left untouched.
 
-    Spec AC3 / D6 — guardrail: ``do_sync`` only iterates fetched LDAP users,
-    so a SAML-only user is never reached by the takeover path.
+    ``do_sync`` only iterates fetched LDAP users, so a SAML-only user is never reached by the takeover path.
     """
     connector = LDAPUserConnector(_test_config)
     saml_only_user = _saml_owned_carol("saml2_corp")
@@ -844,8 +848,8 @@ def test_sync_does_not_touch_saml_only_user(mocker: MockerFixture, request_conte
 def test_sync_for_ldap_only_users_unchanged(mocker: MockerFixture, request_context: None) -> None:
     """A regular LDAP-owned user still receives the standard modify event.
 
-    AC4 guardrail: the new takeover branch must not affect users that were
-    already owned by the LDAP connector. This pins today's modify path.
+    The new takeover branch must not affect users that were already owned by the LDAP connector.
+    This pins today's modify path.
     """
     mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
     # No SAML connector registered — only the LDAP one matters here.
@@ -1008,3 +1012,186 @@ def test_takeover_with_suffix_keeps_bare_userid(
     assert suffixed not in existing_users, (
         f"takeover must not create a suffixed duplicate; found {suffixed!r}"
     )
+
+
+# .--creation gating-----------------------------------------------------.
+# |   User creation during the periodic sync is reserved for connectors  |
+# |   listed in `authentication_connections`. Connectors that only       |
+# |   appear in `user_attribute_sync_connections` update existing users  |
+# |   (and delete users they own that left LDAP) but never create new    |
+# |   ones. See doc/documentation/sec-auth-ldap-creation-gating.md.      |
+# '----------------------------------------------------------------------'
+
+
+def test_sync_skips_creation_for_attr_only_connector(
+    mocker: MockerFixture, request_context: None
+) -> None:
+    """A connector absent from `authentication_connections` must not create a
+    new user during the periodic background sync (`login_attempt=False`).
+    """
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    _patch_get_connection(mocker, {})
+    connector = LDAPUserConnector(_test_config_no_suffix)
+    mocker.patch.object(connector, "is_authentication_connection", return_value=False)
+
+    existing_users: Users = {}
+    sync_user_result = SyncUsersResult(
+        sync_start_time=time(),
+        fetched_users={_carol_ldap_fetch.ldap_user_name: _carol_ldap_fetch},
+    )
+
+    user_id = _sync_ldap_user(
+        fetched_ldap_user=_carol_ldap_fetch,
+        ldap_user_connector=connector,
+        users=existing_users,
+        sync_users_result=sync_user_result,
+        user_attributes=_ldap_user_attributes(),
+        default_user_profile=_ldap_default_user_profile(),
+    )
+
+    assert user_id is None, "no user created for an attribute-sync-only connector"
+    assert existing_users == {}, "no user added to the site"
+    assert sync_user_result.security_events == [], "no 'user created' event emitted"
+
+
+def test_sync_creates_user_for_authentication_connector(
+    mocker: MockerFixture, request_context: None
+) -> None:
+    """A connector listed in `authentication_connections` still creates new
+    users during the periodic sync — the gate does not change this path.
+    """
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    _patch_get_connection(mocker, {})
+    connector = LDAPUserConnector(_test_config_no_suffix)
+    mocker.patch.object(connector, "is_authentication_connection", return_value=True)
+
+    existing_users: Users = {}
+    sync_user_result = SyncUsersResult(
+        sync_start_time=time(),
+        fetched_users={_carol_ldap_fetch.ldap_user_name: _carol_ldap_fetch},
+    )
+
+    user_id = _sync_ldap_user(
+        fetched_ldap_user=_carol_ldap_fetch,
+        ldap_user_connector=connector,
+        users=existing_users,
+        sync_users_result=sync_user_result,
+        user_attributes=_ldap_user_attributes(),
+        default_user_profile=_ldap_default_user_profile(),
+    )
+
+    assert user_id == UserId("carol"), "user created for an authentication connector"
+    created = existing_users[UserId("carol")]
+    assert created["connector"] == _test_config_no_suffix["id"]
+    assert created["start_url"] == "mr_bojangles.py", "LDAP attributes applied on creation"
+    assert created["temperature_unit"] == "celsius"
+    assert any(event.summary == "user created" for event in sync_user_result.security_events)
+
+
+def test_sync_updates_existing_user_for_attr_only_connector(
+    mocker: MockerFixture, request_context: None
+) -> None:
+    """An attribute-sync-only connector still updates an existing user it owns.
+    The creation gate sits on the new-user branch only.
+    """
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    _patch_get_connection(mocker, {})
+    connector = LDAPUserConnector(_test_config_no_suffix)
+    mocker.patch.object(connector, "is_authentication_connection", return_value=False)
+
+    ldap_owned_carol = UserSpec(
+        alias="carol",
+        connector=_test_config_no_suffix["id"],
+        contactgroups=[],
+        force_authuser=False,
+        locked=False,
+        roles=["user"],
+        serial=0,
+        start_url="stale.py",
+        temperature_unit="fahrenheit",
+        user_scheme_serial=1,
+    )
+    existing_users: Users = {UserId("carol"): ldap_owned_carol}
+    sync_user_result = SyncUsersResult(
+        sync_start_time=time(),
+        fetched_users={_carol_ldap_fetch.ldap_user_name: _carol_ldap_fetch},
+    )
+
+    user_id = _sync_ldap_user(
+        fetched_ldap_user=_carol_ldap_fetch,
+        ldap_user_connector=connector,
+        users=existing_users,
+        sync_users_result=sync_user_result,
+        user_attributes=_ldap_user_attributes(),
+        default_user_profile=_ldap_default_user_profile(),
+    )
+
+    assert user_id == UserId("carol")
+    updated = existing_users[UserId("carol")]
+    assert updated["connector"] == _test_config_no_suffix["id"], "ownership unchanged"
+    assert updated["start_url"] == "mr_bojangles.py", "attributes refreshed from LDAP"
+    assert updated["temperature_unit"] == "celsius"
+
+
+def test_sync_takeover_still_works_for_attr_only_connector(
+    mocker: MockerFixture, request_context: None
+) -> None:
+    """The CMK-33824 SAML->LDAP takeover still applies for a connector that is
+    only in `user_attribute_sync_connections`: takeover acts on an
+    already-existing user, so the creation gate does not affect it.
+    """
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    _patch_get_connection(mocker, {"saml2_corp": _stub_saml2_connection("saml2_corp")})
+    connector = LDAPUserConnector(_test_config)
+    mocker.patch.object(connector, "is_authentication_connection", return_value=False)
+
+    existing_users: Users = {UserId("carol"): _saml_owned_carol()}
+    sync_user_result = SyncUsersResult(
+        sync_start_time=time(),
+        fetched_users={_carol_ldap_fetch.ldap_user_name: _carol_ldap_fetch},
+    )
+
+    user_id = _sync_ldap_user(
+        fetched_ldap_user=_carol_ldap_fetch,
+        ldap_user_connector=connector,
+        users=existing_users,
+        sync_users_result=sync_user_result,
+        user_attributes=_ldap_user_attributes(),
+        default_user_profile=_ldap_default_user_profile(),
+    )
+
+    assert user_id == UserId("carol")
+    taken_over = existing_users[UserId("carol")]
+    assert taken_over["connector"] == _test_config["id"], "takeover still flips the connector"
+    assert taken_over["start_url"] == "mr_bojangles.py", "LDAP attributes still synced"
+
+
+def test_sync_attr_only_connector_deletes_owned_user_gone_from_ldap(
+    mocker: MockerFixture, request_context: None
+) -> None:
+    """Deletion follows ownership, not auth membership: an attribute-sync-only
+    connector still removes a user it owns once that user leaves the LDAP
+    directory. The removal pass is unchanged.
+    """
+    mocker.patch("cmk.gui.ldap_integration.ldap_connector.logged_in_user_id", lambda: "admin_gav")
+    log_security_event = mocker.patch("cmk.gui.ldap_integration.ldap_connector.log_security_event")
+    connector = LDAPUserConnector(_test_config_no_suffix)
+    mocker.patch.object(connector, "is_authentication_connection", return_value=False)
+
+    users: Users = {
+        UserId("bob"): UserSpec(alias="bob", connector=_test_config_no_suffix["id"]),
+    }
+    sync_user_result = SyncUsersResult(sync_start_time=time(), fetched_users={})
+
+    connector._remove_checkmk_users_that_are_no_longer_in_the_ldap_instance(
+        users=users,
+        ldap_users={},
+        sync_users_result=sync_user_result,
+    )
+
+    assert UserId("bob") not in users, "owned user absent from LDAP is removed"
+    assert any("emoved" in change for change in sync_user_result.changes), (
+        f"missing removal change entry; changes were: {sync_user_result.changes!r}"
+    )
+    assert log_security_event.call_args is not None
+    assert log_security_event.call_args.args[0].summary == "user deleted"

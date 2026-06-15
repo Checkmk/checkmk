@@ -104,6 +104,7 @@ from cmk.gui.user_connection_config_types import (
 )
 from cmk.gui.userdb import (
     active_connections,
+    effective_authentication_connections,
     get_connection,
     get_ldap_connections,
 )
@@ -627,6 +628,14 @@ def _sync_ldap_user(
         ldap_user_connector._logger.info(
             f'  SKIP SYNC "{fetched_ldap_user.ldap_user_name}" '
             f'(Only create user of "{ldap_user_connector.id}" connector on login)'
+        )
+        return None
+
+    if not login_attempt and not ldap_user_connector.is_authentication_connection():
+        ldap_user_connector._logger.info(
+            f'  SKIP SYNC "{fetched_ldap_user.ldap_user_name}" '
+            f'(connector "{ldap_user_connector.id}" only syncs attributes; '
+            f"user creation is reserved for authentication_connections)"
         )
         return None
 
@@ -1996,6 +2005,22 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             # self._ldap_logger('Skipping disabled connection %s' % (self.id))
             return False
         return True
+
+    def is_authentication_connection(self) -> bool:
+        """True if this LDAP connector is listed for login authentication on the
+        current site, i.e. ``authentication_connections`` contains
+        ``("ldap", self.id)``.
+
+        Connectors that only appear in ``user_attribute_sync_connections`` (and
+        not here) update existing users and remove users they own when those
+        leave LDAP, but must not create new users during the periodic background
+        sync (user creation is reserved for authentication connections).
+        """
+        site_config = active_config.sites[omd_site()]
+        return any(
+            entry[0] == "ldap" and entry[1] == self.id
+            for entry in effective_authentication_connections(site_config)
+        )
 
     @override
     def sync_is_needed(self) -> bool:

@@ -183,7 +183,10 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
                 :aria-expanded="isOpen"
                 @click="toggle"
               >
-                <CmkMultitoneIcon name="filter" primary-color="font" />
+                <CmkMultitoneIcon
+                  name="filter"
+                  :primary-color="isActive ? { custom: 'var(--success)' } : 'font'"
+                />
               </button>
             </template>
           </FilterDropdown>

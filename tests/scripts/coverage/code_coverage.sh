@@ -17,7 +17,6 @@ SOURCE_DIRS=(cmk non-free omd packages agents)
 RUN=false
 GENERATE_HTML=false
 UPLOAD_MODE=""
-ALIAS=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -38,24 +37,20 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help | -h)
-            echo "Usage: $0 [--run] [--generate-html] [--upload-totals|--upload-per-module [alias]]"
+            echo "Usage: $0 [--run] [--generate-html] [--upload-totals|--upload-per-module]"
             echo ""
             echo "  --run                    Run bazel coverage"
             echo "  --generate-html          Generate HTML report from coverage data"
-            echo "  --upload-totals [alias]  Upload aggregate totals to DB"
-            echo "  --upload-per-module [alias]  Upload totals and per-module data to DB"
+            echo "  --upload-totals          Upload overall coverage to the history table"
+            echo "  --upload-per-module      Upload overall coverage and rewrite the per-module table"
             echo ""
             echo "  --upload-* require: POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, QA_POSTGRES_USER, QA_POSTGRES_PASSWORD"
             exit 0
             ;;
-        -*)
-            echo "Error: Unknown option '$1'" >&2
+        *)
+            echo "Error: Unknown argument '$1'" >&2
             echo "Run '$0 --help' for usage." >&2
             exit 1
-            ;;
-        *)
-            ALIAS="$1"
-            shift
             ;;
     esac
 done
@@ -67,7 +62,6 @@ if [[ "$RUN" == false && "$GENERATE_HTML" == false && -z "$UPLOAD_MODE" ]]; then
 fi
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-ALIAS="${ALIAS:-test-unit-all-coverage-${BRANCH}}"
 
 # ---------------------------------------------------------------------------
 # Fail fast: validate all upload prerequisites before doing any work
@@ -173,12 +167,10 @@ if [[ -n "$UPLOAD_MODE" ]]; then
 
     [[ "$UPLOAD_MODE" == "per-module" ]] && PER_FILE_OPT="--include-module-data" || PER_FILE_OPT=""
 
-    echo "Uploading coverage for commit $COMMIT_HASH at $COMMIT_TIME (mode: $UPLOAD_MODE, alias: $ALIAS)"
+    echo "Uploading coverage for commit $COMMIT_HASH at $COMMIT_TIME (mode: $UPLOAD_MODE)"
     # shellcheck disable=SC2086
     "$SCRIPT_DIR/store_code_coverage.py" \
         --csv-file "$RESULT_CSV" \
-        --makefile-target test-unit-all-coverage \
-        --alias "$ALIAS" \
         --git-commit-hash "$COMMIT_HASH" \
         --commit-time "$COMMIT_TIME" \
         ${PER_FILE_OPT}

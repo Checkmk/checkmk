@@ -31,10 +31,12 @@ import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/type
 
 import { MONITORING_SERVICE } from '../MonitoringTableContext'
 import FilterCheckboxList from './FilterCheckboxList.vue'
+import FilterStringInput from './FilterStringInput.vue'
 import type { ColumnFilterDefinition } from './types'
 
 const FILTER_COMPONENTS: Record<ColumnFilterDefinition['type'], Component> = {
-  'checkbox-list': FilterCheckboxList
+  'checkbox-list': FilterCheckboxList,
+  'string-input': FilterStringInput
 }
 
 const props = defineProps<{

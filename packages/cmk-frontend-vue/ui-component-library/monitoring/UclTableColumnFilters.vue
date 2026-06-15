@@ -61,7 +61,10 @@ import { computed, ref } from 'vue'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { ColumnFilterNode, FilterField, HostEntry } from '@/monitoring/shared/api/types'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
-import type { CheckboxListFilter } from '@/monitoring/shared/components/filter/types'
+import type {
+  CheckboxListFilter,
+  StringInputFilter
+} from '@/monitoring/shared/components/filter/types'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -92,9 +95,21 @@ const stateFilter = computed<CheckboxListFilter>(() => ({
     title: state
   }))
 }))
+const nameFilter = computed<StringInputFilter>(() => ({
+  type: 'string-input',
+  field: 'name'
+}))
 
-// Only the State column carries a filter dropdown in this demo; the remaining
-// columns are non-filterable so the dropdown stays the focus of the example.
+const aliasFilter = computed<StringInputFilter>(() => ({
+  type: 'string-input',
+  field: 'alias'
+}))
+
+const addressFilter = computed<StringInputFilter>(() => ({
+  type: 'string-input',
+  field: 'address'
+}))
+
 const columns = computed<ColumnDef<HostEntry>[]>(() => [
   {
     accessorKey: 'state',
@@ -103,14 +118,26 @@ const columns = computed<ColumnDef<HostEntry>[]>(() => [
     maxSize: 130,
     meta: { filter: stateFilter.value }
   },
-  { accessorKey: 'name', header: 'Host', minSize: 100, maxSize: 320, enableColumnFilter: false },
-  { accessorKey: 'alias', header: 'Alias', minSize: 100, maxSize: 320, enableColumnFilter: false },
+  {
+    accessorKey: 'name',
+    header: 'Host',
+    minSize: 100,
+    maxSize: 320,
+    meta: { filter: nameFilter.value }
+  },
+  {
+    accessorKey: 'alias',
+    header: 'Alias',
+    minSize: 100,
+    maxSize: 320,
+    meta: { filter: aliasFilter.value }
+  },
   {
     accessorKey: 'address',
     header: 'IP address',
     minSize: 100,
     maxSize: 160,
-    enableColumnFilter: false
+    meta: { filter: addressFilter.value }
   }
 ])
 

@@ -26,6 +26,11 @@ export interface CheckboxListFilter<F extends FilterField = FilterField> {
   /** Show the inline search field once the option count exceeds this value. */
   searchThreshold?: number
 }
+export interface StringInputFilter<F extends FilterField = FilterField> {
+  type: 'string-input'
+  /** API field this filter targets. Used to produce the correct condition node. */
+  field: F
+}
 
 /**
  * Per-column filter description, injected via `columnDef.meta.filter`. The
@@ -35,4 +40,6 @@ export interface CheckboxListFilter<F extends FilterField = FilterField> {
  * `FilterDropdown` parent keeps owning the popover and keyboard handling while
  * each new content component only renders its own active state.
  */
-export type ColumnFilterDefinition<F extends FilterField = FilterField> = CheckboxListFilter<F>
+export type ColumnFilterDefinition<F extends FilterField = FilterField> =
+  | CheckboxListFilter<F>
+  | StringInputFilter<F>

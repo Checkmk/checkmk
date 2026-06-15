@@ -7,13 +7,15 @@
 
 The CSV is produced by ``code_coverage_summary.py`` and holds one row per source
 module plus a ``TOTAL`` row. This script writes that data into two tables (see
-``code_coverage_tables.sql``):
+``code_coverage_tables.sql``), independently selected via ``--upload-totals`` and
+``--upload-per-module`` (at least one is required):
 
-* ``cmk_code_coverage_total``: overall coverage history, one row per commit. It
-  is never overwritten; re-running the same commit updates its row in place.
-* ``cmk_code_coverage_per_module``: per-module coverage of the most recent run.
-  When ``--include-module-data`` is given, this table is rewritten in full so it
-  always reflects the latest state of the code base.
+* ``cmk_code_coverage_total`` (``--upload-totals``): overall coverage history,
+  one row per commit. It is never overwritten; re-running the same commit updates
+  its row in place.
+* ``cmk_code_coverage_per_module`` (``--upload-per-module``): per-module coverage
+  of the most recent run. This table is rewritten in full so it always reflects
+  the latest state of the code base.
 
 The schema is idempotent (``CREATE TABLE/INDEX IF NOT EXISTS``) and applied
 automatically on every upload, so the target tables need no separate setup step.
@@ -223,6 +225,8 @@ class _Args(argparse.Namespace):
     csv_file: Path
     git_commit_hash: str
     commit_time: datetime
+    upload_totals: bool
+    upload_per_module: bool
     dbname: str
     dbuser: str
     dbhost: str
@@ -231,7 +235,6 @@ class _Args(argparse.Namespace):
     sslrootcert: Path | None
     sslcert: Path | None
     sslkey: Path | None
-    include_module_data: bool
     log_level: str
 
 
@@ -250,7 +253,12 @@ def parse_args() -> _Args:
         help="Git committer time in ISO format, e.g. 2025-10-16T12:05:43+02:00",
     )
     parser.add_argument(
-        "--include-module-data",
+        "--upload-totals",
+        action="store_true",
+        help="Store the overall coverage in the history table",
+    )
+    parser.add_argument(
+        "--upload-per-module",
         action="store_true",
         help="Rewrite the per-module coverage table from the CSV",
     )
@@ -295,7 +303,10 @@ def parse_args() -> _Args:
         "--log-level", type=str, default="INFO", help="Logging level (default: %(default)s)"
     )
 
-    return parser.parse_args(namespace=_Args())
+    args = parser.parse_args(namespace=_Args())
+    if not (args.upload_totals or args.upload_per_module):
+        parser.error("at least one of --upload-totals / --upload-per-module is required")
+    return args
 
 
 def _validate_ssl_files(sslrootcert: Path, sslcert: Path, sslkey: Path) -> None:
@@ -332,8 +343,9 @@ def main() -> None:
         sslmode=args.sslmode,
     ) as db:
         db.apply_schema(_SCHEMA_FILE)
-        db.store_total_coverage(total, args.git_commit_hash, args.commit_time)
-        if args.include_module_data:
+        if args.upload_totals:
+            db.store_total_coverage(total, args.git_commit_hash, args.commit_time)
+        if args.upload_per_module:
             db.replace_module_coverage(modules, args.git_commit_hash, args.commit_time)
 
     logger.info("Code coverage storage completed successfully")

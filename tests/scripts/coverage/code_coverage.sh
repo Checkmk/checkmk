@@ -16,7 +16,8 @@ SOURCE_DIRS=(cmk non-free omd packages agents)
 
 RUN=false
 GENERATE_HTML=false
-UPLOAD_MODE=""
+UPLOAD_TOTALS=false
+UPLOAD_PER_MODULE=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -29,20 +30,23 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --upload-totals)
-            UPLOAD_MODE="totals"
+            UPLOAD_TOTALS=true
             shift
             ;;
         --upload-per-module)
-            UPLOAD_MODE="per-module"
+            UPLOAD_PER_MODULE=true
             shift
             ;;
         --help | -h)
-            echo "Usage: $0 [--run] [--generate-html] [--upload-totals|--upload-per-module]"
+            echo "Usage: $0 [--run] [--generate-html] [--upload-totals] [--upload-per-module]"
             echo ""
-            echo "  --run                    Run bazel coverage"
-            echo "  --generate-html          Generate HTML report from coverage data"
-            echo "  --upload-totals          Upload overall coverage to the history table"
-            echo "  --upload-per-module      Upload overall coverage and rewrite the per-module table"
+            echo "  --run                  Run bazel coverage"
+            echo "  --generate-html        Generate HTML report from coverage data"
+            echo "  --upload-totals        Upload overall coverage to the history table"
+            echo "  --upload-per-module    Rewrite the per-module coverage table"
+            echo ""
+            echo "The flags combine freely, e.g. '--run --upload-totals --upload-per-module'"
+            echo "runs coverage and uploads both. At least one flag is required."
             echo ""
             echo "  --upload-* require: POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, QA_POSTGRES_USER, QA_POSTGRES_PASSWORD"
             exit 0
@@ -55,7 +59,12 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [[ "$RUN" == false && "$GENERATE_HTML" == false && -z "$UPLOAD_MODE" ]]; then
+DO_UPLOAD=false
+if [[ "$UPLOAD_TOTALS" == true || "$UPLOAD_PER_MODULE" == true ]]; then
+    DO_UPLOAD=true
+fi
+
+if [[ "$RUN" == false && "$GENERATE_HTML" == false && "$DO_UPLOAD" == false ]]; then
     echo "Error: no operation specified. Use --run, --generate-html, --upload-totals, or --upload-per-module." >&2
     echo "Run '$0 --help' for usage." >&2
     exit 1
@@ -67,7 +76,7 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 # Fail fast: validate all upload prerequisites before doing any work
 # ---------------------------------------------------------------------------
 
-if [[ -n "$UPLOAD_MODE" ]]; then
+if [[ "$DO_UPLOAD" == true ]]; then
     TRACKED_BRANCHES=(master main)
     if [[ ! " ${TRACKED_BRANCHES[*]} " == *" ${BRANCH} "* ]] && [[ ! "$BRANCH" =~ ^[0-9]+\.[0-9]+ ]]; then
         echo "Error: branch '$BRANCH' is not tracked in the coverage database." >&2
@@ -152,7 +161,7 @@ if [[ "$GENERATE_HTML" == true ]]; then
         "$COVERAGE_FILTERED_DAT"
 fi
 
-if [[ -n "$UPLOAD_MODE" ]]; then
+if [[ "$DO_UPLOAD" == true ]]; then
     if [ ! -f "$COVERAGE_FILTERED_DAT" ]; then
         echo "Error: Coverage data file not found at $COVERAGE_FILTERED_DAT" >&2
         exit 1
@@ -165,13 +174,14 @@ if [[ -n "$UPLOAD_MODE" ]]; then
         exit 1
     fi
 
-    [[ "$UPLOAD_MODE" == "per-module" ]] && PER_FILE_OPT="--include-module-data" || PER_FILE_OPT=""
+    UPLOAD_ARGS=()
+    [[ "$UPLOAD_TOTALS" == true ]] && UPLOAD_ARGS+=(--upload-totals)
+    [[ "$UPLOAD_PER_MODULE" == true ]] && UPLOAD_ARGS+=(--upload-per-module)
 
-    echo "Uploading coverage for commit $COMMIT_HASH at $COMMIT_TIME (mode: $UPLOAD_MODE)"
-    # shellcheck disable=SC2086
+    echo "Uploading coverage for commit $COMMIT_HASH at $COMMIT_TIME (${UPLOAD_ARGS[*]})"
     "$SCRIPT_DIR/store_code_coverage.py" \
         --csv-file "$RESULT_CSV" \
         --git-commit-hash "$COMMIT_HASH" \
         --commit-time "$COMMIT_TIME" \
-        ${PER_FILE_OPT}
+        "${UPLOAD_ARGS[@]}"
 fi

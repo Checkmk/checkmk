@@ -102,6 +102,7 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
 from cmk.gui.watolib.utils import wato_root_dir
+from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.host_storage import (
@@ -212,7 +213,7 @@ class FolderMetaData:
                     self._path,
                     skip_permission_checks=(
                         user.may("wato.see_all_folders")
-                        or not active_config.wato_hide_folders_without_read_permissions
+                        or not self.tree.config.wato_hide_folders_without_read_permissions
                     ),
                     user_contact_groups=(
                         set(userdb.contactgroups_of_user(user.id)) if user.id is not None else set()
@@ -1005,7 +1006,7 @@ class FolderTree:
 
     def __init__(self, root_dir: str | None = None, *, config: HostsAndFoldersConfig) -> None:
         self._root_dir = _ensure_trailing_slash(root_dir if root_dir else str(wato_root_dir()))
-        self._config = config
+        self.config = config
         self._all_host_attributes: dict[str, ABCHostAttribute] | None = None
         self._redis_client: _RedisHelper | None = None
 
@@ -1112,10 +1113,20 @@ class FolderTree:
     def reset_redis_client(self) -> None:
         self._redis_client = None
 
+    def refresh_config(self) -> None:
+        """Re-read the config snapshot from the global active_config.
+
+        The config is snapshotted once when the tree is created (see folder_tree())
+        and stays valid for the lifetime of the request. This is only needed in tests
+        that change the global config between requests while reusing the same request
+        context (and thus the same cached tree).
+        """
+        self.config = HostsAndFoldersConfig.from_config(active_config)
+
     def all_host_attributes(self) -> dict[str, ABCHostAttribute]:
         if self._all_host_attributes is None:
             self._all_host_attributes = all_host_attributes(
-                self._config.wato_host_attrs, self._config.tags.get_tag_groups_by_topic()
+                self.config.wato_host_attrs, self.config.tags.get_tag_groups_by_topic()
             )
         return self._all_host_attributes
 
@@ -1907,7 +1918,7 @@ class Folder(FolderProtocol):
             visible_subfolders
             or self.permissions.may("read")
             or self.is_root()
-            or not active_config.wato_hide_folders_without_read_permissions
+            or not self.tree.config.wato_hide_folders_without_read_permissions
         ):
             results.append((self.path(), self._prefixed_title(current_depth, pretty)))
             return True
@@ -1931,7 +1942,7 @@ class Folder(FolderProtocol):
         return self._choices_for_moving_host
 
     def folder_should_be_shown(self, how: Literal["read", "write"]) -> bool:
-        if not active_config.wato_hide_folders_without_read_permissions:
+        if not self.tree.config.wato_hide_folders_without_read_permissions:
             return True
 
         has_permission = self.permissions.may(how)
@@ -1993,7 +2004,7 @@ class Folder(FolderProtocol):
             parent = self.parent()
             assert parent is not None
             return parent.site_id()
-        if not is_distributed_setup_remote_site(active_config.sites):
+        if not is_distributed_setup_remote_site(SiteConfigurations(self.tree.config.sites)):
             return omd_site()
 
         # Placeholder for "central site". This is only relevant when using Setup on a remote site
@@ -2743,7 +2754,7 @@ class Folder(FolderProtocol):
     ) -> None:
         for site_id, site_host_names in self.get_hosts_by_site(host_names).items():
             automation(
-                make_automation_config(active_config.sites[site_id]),
+                make_automation_config(self.tree.config.sites[site_id]),
                 site_host_names,
                 debug,
             )

@@ -17,7 +17,7 @@ import time
 import uuid
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import count
 from unittest.mock import MagicMock, patch
 from zoneinfo import ZoneInfo
@@ -33,7 +33,6 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
-from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user as logged_in_user
@@ -610,26 +609,22 @@ def three_levels_leaf_permissions() -> hosts_and_folders.Folder:
 )
 @pytest.mark.usefixtures("patch_may")
 def test_recursive_subfolder_choices(
-    monkeypatch: MonkeyPatch,
     actual_builder: Callable[[], hosts_and_folders.Folder],
     expected: list[tuple[str, str]],
 ) -> None:
-    with monkeypatch.context() as m:
-        m.setattr(active_config, "wato_hide_folders_without_read_permissions", True)
-        assert actual_builder().recursive_subfolder_choices(pretty=True) == expected
+    folder = actual_builder()
+    with hide_folders_without_permission(True):
+        assert folder.recursive_subfolder_choices(pretty=True) == expected
 
 
 @pytest.mark.usefixtures("patch_may")
-def test_recursive_subfolder_choices_function_calls(
-    monkeypatch: MonkeyPatch, mocker: MagicMock
-) -> None:
+def test_recursive_subfolder_choices_function_calls(mocker: MagicMock) -> None:
     """Every folder should only be visited once"""
-    with monkeypatch.context() as m:
-        m.setattr(active_config, "wato_hide_folders_without_read_permissions", True)
-        spy = mocker.spy(hosts_and_folders.Folder, "_walk_tree")
-        tree = three_levels_leaf_permissions()
+    spy = mocker.spy(hosts_and_folders.Folder, "_walk_tree")
+    tree = three_levels_leaf_permissions()
+    with hide_folders_without_permission(True):
         tree.recursive_subfolder_choices(pretty=True)
-        assert spy.call_count == 7
+    assert spy.call_count == 7
 
 
 def test_subfolder_creation() -> None:
@@ -881,12 +876,13 @@ class _UserTest:
 
 @contextmanager
 def hide_folders_without_permission(do_hide: bool) -> Iterator[None]:
-    old_value = active_config.wato_hide_folders_without_read_permissions
+    tree = folder_tree()
+    old_config = tree.config
     try:
-        active_config.wato_hide_folders_without_read_permissions = do_hide
+        tree.config = replace(old_config, wato_hide_folders_without_read_permissions=do_hide)
         yield
     finally:
-        active_config.wato_hide_folders_without_read_permissions = old_value
+        tree.config = old_config
 
 
 def _default_groups(configured_groups: list[str]) -> HostAttributes:

@@ -314,28 +314,12 @@ class TimeSeries:
 
 
 @dataclass(frozen=True, kw_only=True)
-class DrawnMetric:
-    # A metric drawn by a graph, paired with the direction (inverse) of the line drawing it.
-    metric: RRDMetricRef
-    inverse: bool
-
-
-@dataclass(frozen=True, kw_only=True)
 class Graph:
     name: str
     title: str
     vertical_range: VerticalRange | None = None
     stacks: Sequence[Stack] = ()
     lines: Sequence[Line] = ()
-
-    def drawn_metrics(self) -> Iterable[DrawnMetric]:
-        for group in self.stacks:
-            for member in group.members:
-                for rrd_metric in _rrd_metrics_in_quantity(member):
-                    yield DrawnMetric(metric=rrd_metric, inverse=group.inverse)
-        for line in self.lines:
-            for rrd_metric in _rrd_metrics_in_quantity(line.quantity):
-                yield DrawnMetric(metric=rrd_metric, inverse=line.inverse)
 
     def rrd_metrics(self) -> Sequence[RRDMetricRef]:
         return list(

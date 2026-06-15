@@ -20,6 +20,7 @@ from ._from_api import (
     parse_graph_from_api,
 )
 from ._objects import (
+    _rrd_metrics_in_quantity,
     Graph,
     Line,
     MetricName,
@@ -95,9 +96,15 @@ def _add_predictive_lines(
 ) -> tuple[Graph, set[MetricName]]:
     """Augment a template graph with the predictive companions of its metrics (new graph object)."""
     # A predictive companion is drawn in the same direction as the line of the metric it predicts.
+    # Each drawn metric is paired with the direction (inverse) of the line drawing it.
     inverse_by_metric: dict[MetricName, bool] = {}
-    for drawn in graph.drawn_metrics():
-        inverse_by_metric.setdefault(drawn.metric.metric_name, drawn.inverse)
+    for group in graph.stacks:
+        for member in group.members:
+            for metric in _rrd_metrics_in_quantity(member):
+                inverse_by_metric.setdefault(metric.metric_name, group.inverse)
+    for line in graph.lines:
+        for metric in _rrd_metrics_in_quantity(line.quantity):
+            inverse_by_metric.setdefault(metric.metric_name, line.inverse)
 
     added: list[Line] = []
     names: set[MetricName] = set()

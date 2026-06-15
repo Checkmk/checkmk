@@ -25,6 +25,19 @@ export async function isInstalledAsync(): Promise<boolean> {
   return !!(await getInstalledVersionAsync())
 }
 
+/** Build the pipx upgrade command matching how cmk-dev-site was installed.
+ *  A per-user `pipx install` is upgraded with a plain `pipx upgrade`, but a
+ *  `pipx install --global` copy (venvs under /opt/pipx, shims in
+ *  /usr/local/bin) is invisible to the per-user pipx home — it needs
+ *  `sudo pipx upgrade --global`, otherwise the upgrade silently no-ops. */
+async function resolveUpgradeCommandAsync(): Promise<string> {
+  const globalList = await safeExecAsync('pipx list --global --short 2>/dev/null', {
+    timeout: 5000
+  })
+  const installedGlobally = /^cmk-dev-site\b/m.test(globalList)
+  return installedGlobally ? 'sudo pipx upgrade --global cmk-dev-site' : 'pipx upgrade cmk-dev-site'
+}
+
 async function getLatestPypiVersionAsync(): Promise<string> {
   const raw = await safeExecAsync('curl -s https://pypi.org/pypi/cmk-dev-site/json 2>/dev/null', {
     timeout: 10000
@@ -59,8 +72,9 @@ export async function checkForUpdates(context: vscode.ExtensionContext): Promise
     'Update'
   )
   if (choice === 'Update') {
-    log('Update cmk-dev-site')
-    const exec = runCommand('cmk-dev-site update', 'pipx upgrade cmk-dev-site')
+    const upgradeCommand = await resolveUpgradeCommandAsync()
+    log(`Update cmk-dev-site: ${upgradeCommand}`)
+    const exec = runCommand('cmk-dev-site update', upgradeCommand)
     if (exec) await waitForTask(exec)
   }
 }

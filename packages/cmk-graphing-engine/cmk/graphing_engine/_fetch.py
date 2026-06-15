@@ -71,9 +71,9 @@ def _merge(series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
 
 
 def _fetch_series(
+    *,
     graph: Graph,
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
-    *,
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
     rrd: RRDSource,
@@ -168,8 +168,8 @@ def evaluate_graphs(
                 graph,
                 metric_data,
                 _fetch_series(
-                    graph,
-                    metric_data,
+                    graph=graph,
+                    metric_data=metric_data,
                     consolidation_function=consolidation_function,
                     time_range=time_range,
                     rrd=rrd,

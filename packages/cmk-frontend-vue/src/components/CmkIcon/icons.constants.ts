@@ -768,6 +768,7 @@ export const oneColorIcons = [
   'sidebar',
   'success',
   'user',
+  'user-interface',
   'warning',
   'back',
   'chain',
@@ -777,7 +778,8 @@ export const oneColorIcons = [
   'reload',
   'filter',
   'pause',
-  'play'
+  'play',
+  'waiting'
 ] as const
 export const twoColorIcons = ['aggr'] as const
 

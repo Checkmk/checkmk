@@ -30,8 +30,10 @@ def inventory_checkpoint_tunnels(info):
 def check_checkpoint_tunnels(item, params, info):
     for peer, status in info:
         if peer == item:
-            state = params[tunnel_states[status]]
-            return state, tunnel_states[status]
+            state_name = tunnel_states.get(status)
+            if state_name is None:
+                return 3, f"Unknown tunnel status: {status}"
+            return params[state_name], state_name
     return None
 
 

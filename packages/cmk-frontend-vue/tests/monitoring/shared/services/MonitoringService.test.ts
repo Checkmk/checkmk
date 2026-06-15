@@ -11,6 +11,7 @@ import type { KeyShortcutService } from '@/lib/keyShortcuts'
 import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
 import {
   MonitoringService,
+  type MonitoringServiceOptions,
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
 
@@ -24,11 +25,11 @@ interface TestItem {
 class TestService extends MonitoringService<TestItem> {
   constructor(
     public readonly fetchBatchMock: () => Promise<PagedResponse<TestItem>>,
-    pollIntervalMs?: number,
+    options: MonitoringServiceOptions<TestItem> = {},
     shortCutService: KeyShortcutService = makeKeyShortcutService(),
     serviceId: string = 'test-service'
   ) {
-    super(serviceId, shortCutService, pollIntervalMs)
+    super(serviceId, shortCutService, options)
   }
 
   protected fetchBatch(): Promise<PagedResponse<TestItem>> {
@@ -133,7 +134,7 @@ describe('MonitoringService', () => {
   it('honors a custom poll interval passed to the constructor', async () => {
     const customInterval = 5_000
     const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0))
-    const service = new TestService(fetchBatch, customInterval)
+    const service = new TestService(fetchBatch, { pollIntervalMs: customInterval })
 
     await vi.advanceTimersByTimeAsync(0)
     expect(fetchBatch).toHaveBeenCalledTimes(1)
@@ -272,6 +273,37 @@ describe('MonitoringService', () => {
     service.stopPolling()
   })
 
+  it('activating a chip updates filterState and triggers a refresh', async () => {
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0))
+    const service = new TestService(fetchBatch, {
+      quickFilters: [
+        {
+          label: 'Down',
+          filter: { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
+        }
+      ]
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchBatch).toHaveBeenCalledTimes(1)
+    expect(service.filterState.value).toBeUndefined()
+
+    const chip = service.filters.chips[0]!
+    service.filters.activateChip(chip)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.filterState.value).toStrictEqual(chip.filter)
+    expect(fetchBatch).toHaveBeenCalledTimes(2)
+
+    service.filters.deactivateChip(chip)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.filterState.value).toBeUndefined()
+    expect(fetchBatch).toHaveBeenCalledTimes(3)
+
+    service.stopPolling()
+  })
+
   it('destruct() removes the focus-search callback so it is no longer dispatched', () => {
     let shortcutCallback: (() => void) | undefined
     const shortCutService = {
@@ -290,5 +322,25 @@ describe('MonitoringService', () => {
     shortcutCallback?.()
 
     expect(onFocus).not.toHaveBeenCalled()
+  })
+
+  it('stops reacting to filter changes after stopPolling()', async () => {
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0))
+    const service = new TestService(fetchBatch, {
+      quickFilters: [
+        {
+          label: 'Down',
+          filter: { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
+        }
+      ]
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+    service.stopPolling()
+
+    service.filters.activateChip(service.filters.chips[0]!)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchBatch).toHaveBeenCalledTimes(1)
   })
 })

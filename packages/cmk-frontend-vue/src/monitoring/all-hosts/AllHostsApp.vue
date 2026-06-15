@@ -4,13 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import {
-  type ColumnDef,
-  type ColumnFiltersState,
-  type ColumnPinningState
-} from '@tanstack/vue-table'
+import { type ColumnDef, type ColumnPinningState } from '@tanstack/vue-table'
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
-import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
+import { onBeforeUnmount, onMounted, provide, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { getKeyShortcutServiceInstance } from '@/lib/keyShortcuts'
@@ -19,6 +15,7 @@ import CmkSearchInput from '@/components/CmkSearchInput.vue'
 
 import type { HostEntry, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
+import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
 import type {
   CheckboxListFilter,
   StringInputFilter
@@ -35,24 +32,6 @@ import { HostService } from './services/HostService'
 const { _t } = usei18n()
 
 const props = defineProps<MonitoringAllHostsApp>()
-
-const hostService = new HostService(
-  new HostApi(),
-  getKeyShortcutServiceInstance(),
-  props.poll_interval_ms
-)
-
-const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
-
-onMounted(() => {
-  hostService.onFocusSearch(() => searchInput.value?.focus())
-})
-
-onBeforeUnmount(() => {
-  hostService.destruct()
-})
-
-provide(MONITORING_SERVICE, hostService)
 
 const stateFilter: CheckboxListFilter<'state'> = {
   type: 'checkbox-list',
@@ -169,12 +148,39 @@ const columns: ColumnDef<HostEntry>[] = [
 
 const columnPinning: ColumnPinningState = { left: ['select', 'state', 'name'] }
 
-const columnFilters = ref<ColumnFiltersState>([])
+const hostService = new HostService(new HostApi(), getKeyShortcutServiceInstance(), {
+  pollIntervalMs: props.poll_interval_ms,
+  columns,
+  quickFilters: [
+    {
+      label: _t('Unhandled Problems'),
+      filter: {
+        type: 'and',
+        children: [
+          {
+            type: 'condition',
+            field: 'state',
+            op: 'one_of',
+            value: ['DOWN', 'UNREACHABLE'] as HostState[]
+          },
+          { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
+        ]
+      }
+    }
+  ]
+})
 
-function onColumnFilters(next: ColumnFiltersState): void {
-  columnFilters.value = next
-  hostService.updateFilters(next)
-}
+const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
+
+onMounted(() => {
+  hostService.onFocusSearch(() => searchInput.value?.focus())
+})
+
+onBeforeUnmount(() => {
+  hostService.destruct()
+})
+
+provide(MONITORING_SERVICE, hostService)
 
 function rowKey(row: HostEntry): string {
   return `${row.site_id}/${row.name}`
@@ -184,15 +190,27 @@ function rowKey(row: HostEntry): string {
 <template>
   <div class="monitoring-all-hosts-app">
     <div class="monitoring-all-hosts-app__header">
-      <CmkSearchInput
-        ref="searchInput"
-        v-model="hostService.searchQuery.value"
-        class="monitoring-all-hosts-app__search"
-        :placeholder="_t('Search hosts…')"
-        @search="hostService.updateSearch($event)"
-        @focusin="hostService.beginAutoPause()"
-        @focusout="hostService.endAutoPause()"
-      />
+      <div class="monitoring-all-hosts-app__toolbar">
+        <CmkSearchInput
+          ref="searchInput"
+          v-model="hostService.searchQuery.value"
+          class="monitoring-all-hosts-app__search"
+          :placeholder="_t('Search hosts…')"
+          @search="hostService.updateSearch($event)"
+          @focusin="hostService.beginAutoPause()"
+          @focusout="hostService.endAutoPause()"
+        />
+        <div class="monitoring-all-hosts-app__quick-filters">
+          <QuickFilterChip
+            v-for="chip in hostService.filters.chips"
+            :key="chip.label"
+            :label="chip.label"
+            :active="chip.isActive.value"
+            @activate="hostService.filters.activateChip(chip)"
+            @deactivate="hostService.filters.deactivateChip(chip)"
+          />
+        </div>
+      </div>
       <RefreshCountdown
         :remaining="hostService.secondsRemaining.value"
         :interval="hostService.pollIntervalSeconds"
@@ -204,17 +222,17 @@ function rowKey(row: HostEntry): string {
     </div>
     <MonitoringResultsCount
       class="monitoring-all-hosts-app__results-count"
-      :active-filter-count="columnFilters.length"
+      :active-filter-count="hostService.filters.activeFilterCount"
     />
     <MonitoringTable
       :rows="hostService.items.value"
       :loading="hostService.loading.value"
       :has-loaded="hostService.hasLoaded.value"
       :columns="columns"
-      :filter-state="columnFilters"
+      :filter-state="hostService.tableColumnFilters.value"
       :column-pinning="columnPinning"
       :get-row-key="rowKey"
-      @update:filter-state="onColumnFilters"
+      @update:filter-state="hostService.onColumnFiltersUpdate($event)"
     >
       <template #row="{ row, tableRow }">
         <HostRow :row="row" :table-row="tableRow" />
@@ -241,12 +259,23 @@ function rowKey(row: HostEntry): string {
   flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
+}
+
+.monitoring-all-hosts-app__toolbar {
+  display: flex;
+  align-items: center;
   gap: var(--spacing);
 }
 
 .monitoring-all-hosts-app__search {
   flex: 1;
   max-width: 360px;
+}
+
+.monitoring-all-hosts-app__quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dimension-4);
 }
 
 .monitoring-all-hosts-app__results-count {

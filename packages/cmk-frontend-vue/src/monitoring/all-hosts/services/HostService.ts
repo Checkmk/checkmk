@@ -8,6 +8,7 @@ import type { KeyShortcutService } from '@/lib/keyShortcuts'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import {
   MonitoringService,
+  type MonitoringServiceOptions,
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
 
@@ -17,9 +18,9 @@ export class HostService extends MonitoringService<HostEntry> {
   constructor(
     private readonly api: HostApi,
     shortCutService: KeyShortcutService,
-    pollIntervalMs?: number
+    options: MonitoringServiceOptions<HostEntry> = {}
   ) {
-    super('host-service', shortCutService, pollIntervalMs)
+    super('host-service', shortCutService, options)
   }
 
   protected async fetchBatch(): Promise<PagedResponse<HostEntry>> {

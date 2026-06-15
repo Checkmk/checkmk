@@ -3,8 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ColumnFiltersState, SortingState } from '@tanstack/vue-table'
-import { type ComputedRef, type Ref, computed, ref, shallowRef } from 'vue'
+import type { ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table'
+import {
+  type ComputedRef,
+  type Ref,
+  type WatchStopHandle,
+  computed,
+  ref,
+  shallowRef,
+  watch
+} from 'vue'
 
 import type { KeyShortcutService } from '@/lib/keyShortcuts'
 import { ServiceBase } from '@/lib/service/base'
@@ -12,11 +20,22 @@ import { ServiceBase } from '@/lib/service/base'
 import type { FilterNode } from '@/monitoring/shared/api/types'
 import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
 
+import { FilterStore, type QuickFilterConfig } from './FilterStore'
+import { useColumnFilterBridge } from './useColumnFilterBridge'
+
 export interface PagedResponse<T> {
   items: T[]
   meta: {
     total: number
   }
+}
+
+export interface MonitoringServiceOptions<T> {
+  pollIntervalMs?: number | undefined
+  /** Column definitions including optional column filters */
+  columns?: ColumnDef<T>[]
+  /** Quick-filter chip presets exposed via `this.filters.chips`. */
+  quickFilters?: QuickFilterConfig[]
 }
 
 export abstract class MonitoringService<T> extends ServiceBase {
@@ -28,6 +47,13 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly searchQuery: Ref<string> = ref('')
   readonly filterState: Ref<FilterNode | undefined> = ref(undefined)
 
+  /** Owns all filter state: quick-filter chips and active conditions. */
+  readonly filters: FilterStore
+  /** Column filter state derived from {@link filters}, for binding to the table. */
+  readonly tableColumnFilters: ComputedRef<ColumnFiltersState>
+  /** Apply a table column-filter change back into {@link filters}. */
+  readonly onColumnFiltersUpdate: (next: ColumnFiltersState) => void
+
   readonly pollIntervalSeconds: number
   readonly secondsRemaining: Ref<number>
   readonly manualPaused: Ref<boolean> = ref(false)
@@ -38,13 +64,24 @@ export abstract class MonitoringService<T> extends ServiceBase {
 
   private initialFetchTimer: ReturnType<typeof setTimeout> | null = null
   private tickTimer: ReturnType<typeof setInterval> | null = null
+  private stopFilterWatch: WatchStopHandle | null = null
 
   constructor(
     serviceId: string,
     shortCutService: KeyShortcutService,
-    pollIntervalMs: number = POLL_INTERVAL_MS
+    options: MonitoringServiceOptions<T> = {}
   ) {
     super(serviceId, shortCutService)
+    const { pollIntervalMs = POLL_INTERVAL_MS, quickFilters = [], columns = [] } = options
+
+    this.filters = new FilterStore(quickFilters)
+    const bridge = useColumnFilterBridge(columns, this.filters)
+    this.tableColumnFilters = bridge.tableColumnFilters
+    this.onColumnFiltersUpdate = bridge.onColumnFiltersUpdate
+    this.stopFilterWatch = watch(this.filters.filterNode, (node) => {
+      this.updateFilters(node)
+    })
+
     this.pollIntervalSeconds = Math.max(1, Math.round(pollIntervalMs / 1000))
     this.secondsRemaining = ref(this.pollIntervalSeconds)
     this.initShortCuts()
@@ -105,26 +142,16 @@ export abstract class MonitoringService<T> extends ServiceBase {
     void this.fetch()
   }
 
-  updateFilters(columnFilters: ColumnFiltersState): void {
-    this.filterState.value = this.buildFilter(columnFilters)
+  updateFilters(node: FilterNode | undefined): void {
+    this.filterState.value = node
     void this.fetch()
   }
 
-  private buildFilter(columnFilters: ColumnFiltersState): FilterNode | undefined {
-    const nodes = columnFilters.flatMap((f) => {
-      const node = f.value as FilterNode | undefined
-      return node ? [node] : []
-    })
-    if (nodes.length === 0) {
-      return undefined
-    }
-    if (nodes.length === 1) {
-      return nodes[0]!
-    }
-    return { type: 'and', children: nodes }
-  }
-
   stopPolling(): void {
+    if (this.stopFilterWatch !== null) {
+      this.stopFilterWatch()
+      this.stopFilterWatch = null
+    }
     if (this.initialFetchTimer !== null) {
       clearTimeout(this.initialFetchTimer)
       this.initialFetchTimer = null

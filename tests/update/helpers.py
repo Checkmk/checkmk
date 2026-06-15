@@ -310,19 +310,16 @@ class BaseVersions:
                 base_versions_pb_file = MODULE_PATH / "base_versions.json"
             if edition_from_env().is_cloud_edition():
                 raw_versions = json.loads(base_versions_pb_file.read_text(encoding="utf-8"))
-                if raw_versions:
-                    # Extract the branch version from the latest entry
-                    latest_version = raw_versions[-1]
-                    branch_ver = CMKVersion(latest_version).semantic
-                    # branch and branch_version are equal for release branches
-                    cls._base_packages = [
-                        CMKPackageInfo(
-                            CMKVersion(CMKVersion.DAILY, branch_ver, branch_ver),
-                            CMKEdition(CMKEdition.CLOUD),
-                        )
-                    ]
-                else:
-                    cls._base_packages = []
+                # Extract the branch version from the latest entry
+                latest_version = raw_versions[-1]
+                branch_ver = CMKVersion(latest_version).semantic
+                # branch and branch_version are equal for release branches
+                cls._base_packages = [
+                    CMKPackageInfo(
+                        CMKVersion(CMKVersion.DAILY, branch_ver, branch_ver),
+                        CMKEdition(CMKEdition.CLOUD),
+                    )
+                ]
             else:
                 base_versions_pb = cls._limit_versions(
                     json.loads(base_versions_pb_file.read_text(encoding="utf-8")), cls.min_version
@@ -342,10 +339,7 @@ class BaseVersions:
                     CMKPackageInfo(CMKVersion(base_version_str), edition_from_env())
                     for base_version_str in base_versions_pb + base_versions_cb
                 ]
-        if not cls._base_packages:
-            pytest.skip(
-                f"No base packages found: min version '{cls.min_version.version}' is not yet released"
-            )
+        assert cls._base_packages, "No base packages found for the test!"
         return cls._base_packages
 
     @classmethod

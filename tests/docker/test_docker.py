@@ -20,7 +20,6 @@ from tests.testlib.docker import (
     CheckmkApp,
     package_name,
     prepare_package,
-    pull_checkmk,
 )
 from tests.testlib.version import (
     CMKEdition,
@@ -335,11 +334,6 @@ def test_update(client: docker.DockerClient) -> None:
     base_package = CMKPackageInfo(min_version, CMKEdition(CMKEdition.COMMUNITY))
     update_package = CMKPackageInfo(version_from_env(), edition_from_env())
     container_name = f"checkmk-{update_package.version.branch}_{randint(10000000, 99999999)}"
-
-    try:
-        pull_checkmk(client, base_package)
-    except docker.errors.APIError:
-        pytest.skip(f"Base image {min_version.version} not yet available on Docker Hub")
 
     update_compatibility = base_package.version.is_update_compatible(update_package.version)
     assert update_compatibility.is_compatible, (

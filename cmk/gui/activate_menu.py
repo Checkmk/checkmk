@@ -57,7 +57,10 @@ def _get_changes_app(request: Request) -> NavItemVueApp:
                 ),
                 user_has_activate_foreign=user.may("wato.activateforeign"),
                 new_installation=get_last_wato_snapshot_file(debug=False) is None,
-                user_name=user.ident,
+                # InternalToken users (site secret) have no user id; user.ident
+                # would raise. They never interact with the changes popup, so an
+                # empty name is fine.
+                user_name=user.id or "",
                 navbar_changes_action=_get_navbar_changes_action(user),
             )
         ),
@@ -73,7 +76,9 @@ def get_activate_changes_full_page_url(request: Request) -> str:
 
 
 def _get_navbar_changes_action(user: LoggedInUser) -> NavbarChangesActionChoices | None:
-    assert user.id is not None
+    if user.id is None:
+        # InternalToken users (site secret) have no persisted custom attributes.
+        return None
     raw = load_custom_attr(
         user_id=user.id,
         key="navbar_changes_action",

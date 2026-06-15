@@ -554,11 +554,16 @@ class SidebarRenderer:
         )
         html.close_div()
 
-        assert user.id is not None
-        sidebar_position = load_custom_attr(
-            user_id=user.id,
-            key="ui_sidebar_position",
-            parser=lambda x: None if x == "None" else "left",
+        # InternalToken users (site secret) have no user id and thus no
+        # persisted sidebar position; fall back to the default.
+        sidebar_position = (
+            load_custom_attr(
+                user_id=user.id,
+                key="ui_sidebar_position",
+                parser=lambda x: None if x == "None" else "left",
+            )
+            if user.id is not None
+            else None
         )
         html.open_div(
             id_="check_mk_sidebar",

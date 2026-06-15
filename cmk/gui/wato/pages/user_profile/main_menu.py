@@ -69,7 +69,9 @@ def _get_current_theme_title() -> str:
 
 
 def _get_sidebar_position() -> str:
-    assert user.id is not None
+    if user.id is None:
+        # InternalToken users (site secret) have no persisted custom attributes.
+        return "right"
     sidebar_position = load_custom_attr(
         user_id=user.id,
         key="ui_sidebar_position",

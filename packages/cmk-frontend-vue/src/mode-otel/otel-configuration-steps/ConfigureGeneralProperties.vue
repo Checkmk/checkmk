@@ -7,12 +7,31 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 export type RawSite = { id: string; title: string; extensions?: { logged_in?: boolean } }
 
-// Module-level cache so re-entering the step does not trigger a second network call.
-let cachedSites: RawSite[] | null = null
+type OTelConfigEntry = {
+  id?: string
+  extensions?: { site?: string[] }
+}
 
-/** Exposed for testing only — resets the module-level site cache. */
-export function _resetSiteCache(): void {
+let cachedSites: RawSite[] | null = null
+let cachedConfigs: { endpoint: string; entries: OTelConfigEntry[] } | null = null
+
+/** Exposed for testing only — resets the module-level caches. */
+export function _resetCaches(): void {
   cachedSites = null
+  cachedConfigs = null
+}
+
+export function nextAvailableConfigName(existingIds: string[], prefix: string): string {
+  const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const pattern = new RegExp(`^${escapedPrefix}(\\d+)$`)
+  let max = 0
+  for (const id of existingIds) {
+    const match = pattern.exec(id)
+    if (match) {
+      max = Math.max(max, Number(match[1]))
+    }
+  }
+  return `${prefix}${max + 1}`
 }
 </script>
 
@@ -30,10 +49,6 @@ import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
-type OTelConfigEntry = {
-  extensions?: { site?: string[] }
-}
-
 const API_ROOT = 'api/v1'
 
 const { _t } = usei18n()
@@ -42,10 +57,12 @@ const configNameId = useId()
 const siteDropdownId = useId()
 
 const props = defineProps<{
-  configNamePlaceholder: string
+  configNamePrefix: string
   configListEndpoint: string
   alreadyConfiguredError: string
 }>()
+
+const configNamePlaceholder = computed(() => `${props.configNamePrefix}1`)
 
 const configName = defineModel<string>('configName', { required: true })
 const siteId = defineModel<string | null>('siteId', { required: true })
@@ -67,7 +84,7 @@ function applySites(rawSites: RawSite[]) {
   }
 }
 
-onMounted(async () => {
+async function loadSites(): Promise<void> {
   if (cachedSites !== null) {
     applySites(cachedSites)
     return
@@ -88,6 +105,37 @@ onMounted(async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+async function fetchConfigList(skipCache = false): Promise<OTelConfigEntry[]> {
+  if (!skipCache && cachedConfigs?.endpoint === props.configListEndpoint) {
+    return cachedConfigs.entries
+  }
+  const response = await fetchRestAPI(props.configListEndpoint, 'GET')
+  await response.raiseForStatus()
+  const data = await response.json()
+  const entries = data.value as OTelConfigEntry[]
+  cachedConfigs = { endpoint: props.configListEndpoint, entries }
+  return entries
+}
+
+async function initConfigName(): Promise<void> {
+  // A non-empty configName means the parent supplied a value (or the user typed one); leave it.
+  if (configName.value !== '') {
+    return
+  }
+  try {
+    const existingIds = (await fetchConfigList())
+      .map((config) => config.id)
+      .filter((id): id is string => typeof id === 'string')
+    configName.value = nextAvailableConfigName(existingIds, props.configNamePrefix)
+  } catch {
+    configName.value = nextAvailableConfigName([], props.configNamePrefix)
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([loadSites(), initConfigName()])
 })
 
 const displayErrors = ref(false)
@@ -120,27 +168,13 @@ function validateSiteRequired(): string[] {
   return []
 }
 
-async function checkSiteAlreadyConfigured(): Promise<string[]> {
+function checkSiteAlreadyConfigured(configs: OTelConfigEntry[]): string[] {
   if (!siteId.value) {
     return []
   }
-
-  try {
-    const response = await fetchRestAPI(props.configListEndpoint, 'GET')
-    await response.raiseForStatus()
-    const data = await response.json()
-
-    const hasExistingConfig = data.value.some((config: OTelConfigEntry) =>
-      config.extensions?.site?.includes(siteId.value!)
-    )
-
-    if (hasExistingConfig) {
-      return [props.alreadyConfiguredError]
-    }
-  } catch {
-    return [_t('Failed to validate site configuration. Please try again.')]
+  if (configs.some((config) => config.extensions?.site?.includes(siteId.value!))) {
+    return [props.alreadyConfiguredError]
   }
-
   return []
 }
 
@@ -156,8 +190,18 @@ async function validate(): Promise<boolean> {
     return false
   }
 
-  const configErrors = await checkSiteAlreadyConfigured()
-  siteErrors.value = [...requiredErrors, ...configErrors]
+  let configs: OTelConfigEntry[]
+  try {
+    configs = await fetchConfigList(true)
+  } catch {
+    siteErrors.value = [
+      ...requiredErrors,
+      _t('Failed to validate site configuration. Please try again.')
+    ]
+    return false
+  }
+
+  siteErrors.value = [...requiredErrors, ...checkSiteAlreadyConfigured(configs)]
 
   return configNameErrors.value.length === 0 && siteErrors.value.length === 0
 }
@@ -180,7 +224,7 @@ defineExpose({ validate })
       v-model="configName"
       type="text"
       field-size="medium"
-      :placeholder="props.configNamePlaceholder"
+      :placeholder="configNamePlaceholder"
       :external-errors="configNameErrors"
       aria-required="true"
     />

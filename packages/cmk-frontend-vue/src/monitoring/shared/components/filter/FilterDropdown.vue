@@ -11,12 +11,21 @@ mounted from a per-type registry; each filter component owns its own state and
 communicates via v-model (a `ColumnFilterNode` or undefined). New filter types
 (numeric range, IP range, ...) register in FILTER_COMPONENTS without touching
 this shell.
+
+Edits are staged in a `draft` that is snapshotted from the committed model when
+the popover opens. The mounted filter component binds to that draft, so toggling
+options never touches the committed model directly. Only "Apply" commits the
+draft (closing the popover and updating the table); "Cancel", Escape and
+click-outside discard the draft, leaving the model at the state it had on open.
 -->
 <script setup lang="ts">
 import { type Component, computed, inject, nextTick, onBeforeUnmount, ref } from 'vue'
 
+import usei18n from '@/lib/i18n'
 import { getKeyShortcutServiceInstance } from '@/lib/keyShortcuts'
 import useClickOutside from '@/lib/useClickOutside'
+
+import CmkInlineButton from '@/components/user-input/CmkInlineButton.vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 
@@ -36,6 +45,8 @@ const props = defineProps<{
 
 const model = defineModel<ColumnFilterNode<FilterField> | undefined>({ default: undefined })
 
+const { _t } = usei18n()
+
 const vClickOutside = useClickOutside()
 const shortcuts = getKeyShortcutServiceInstance()
 let shortcutIds: string[] = []
@@ -46,6 +57,10 @@ const isOpen = ref(false)
 const flipUp = ref(false)
 // Swallow the click-outside fired by the same click that opened the popover.
 const suppressNextClickOutside = ref(false)
+
+// Staged edits, snapshotted from the committed model on open. Only Apply writes
+// this back to the model; cancelling discards it.
+const draft = ref<ColumnFilterNode<FilterField> | undefined>(undefined)
 
 const panel = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLElement | null>(null)
@@ -58,6 +73,7 @@ function open(): void {
   if (isOpen.value) {
     return
   }
+  draft.value = model.value
   isOpen.value = true
   monitoringService?.beginAutoPause()
   suppressNextClickOutside.value = true
@@ -87,6 +103,15 @@ function toggle(): void {
   } else {
     open()
   }
+}
+
+function apply(): void {
+  model.value = draft.value
+  close()
+}
+
+function cancel(): void {
+  close()
 }
 
 function onClickOutside(): void {
@@ -186,7 +211,12 @@ onBeforeUnmount(() => {
       :aria-label="`Filter ${label}`"
       @focusout="onFocusOut"
     >
-      <component :is="filterComponent" v-model="model" :definition="definition" />
+      <component :is="filterComponent" v-model="draft" :definition="definition" />
+
+      <div class="monitoring-filter-dropdown__footer">
+        <CmkInlineButton icon="checkmark" @click="apply">{{ _t('Apply') }}</CmkInlineButton>
+        <CmkInlineButton icon="cancel" @click="cancel">{{ _t('Cancel') }}</CmkInlineButton>
+      </div>
     </div>
   </span>
 </template>
@@ -218,5 +248,15 @@ onBeforeUnmount(() => {
   bottom: 100%;
   margin-top: 0;
   margin-bottom: var(--dimension-2);
+}
+
+.monitoring-filter-dropdown__footer {
+  display: flex;
+  gap: var(--dimension-4);
+  justify-content: space-around;
+  margin-top: var(--dimension-4);
+  padding: var(--dimension-3) 0 var(--dimension-2);
+  border-top: 1px solid var(--ux-theme-4);
+  align-items: center;
 }
 </style>

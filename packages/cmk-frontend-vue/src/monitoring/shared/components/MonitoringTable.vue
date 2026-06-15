@@ -23,6 +23,8 @@ import {
   watch
 } from 'vue'
 
+import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
+
 import {
   COLUMN_LAYOUT_KEY,
   type ColumnJustify,
@@ -291,7 +293,8 @@ function rowAt(index: number): T {
 
 <template>
   <div ref="wrapperRef" class="monitoring-table" :aria-busy="loading">
-    <table class="monitoring-table__table">
+    <TableSkeleton v-if="loading"></TableSkeleton>
+    <table v-else class="monitoring-table__table">
       <colgroup v-if="pinningEnabled">
         <col v-for="entry in columnLayout" :key="entry.id" :style="{ width: `${entry.width}px` }" />
       </colgroup>

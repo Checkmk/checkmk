@@ -33,7 +33,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     }"
   />
   <StringCell column-id="alias" :value="row.alias" />
-  <StringCell column-id="ip" :value="row.ip" />
+  <StringCell column-id="address" :value="row.address" />
   <NumberCell
     column-id="num_services_ok"
     :value="row.num_services_ok"

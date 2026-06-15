@@ -38,7 +38,7 @@ class StringCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
     )
-    field: Literal["name", "alias", "ip"] = api_field(
+    field: Literal["name", "alias", "address"] = api_field(
         description="String host field to filter on", example="name"
     )
     op: StringOp = api_field(description="String match operation", example="contains")

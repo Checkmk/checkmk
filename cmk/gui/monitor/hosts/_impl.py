@@ -17,7 +17,7 @@ from cmk.livestatus_client.expressions import NothingExpression, Or, QueryExpres
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Status
 
-from ._models import Host, HostSort, HostSortColumn, HostState, ServiceCounts
+from ._models import Host, HostSort, HostState, ServiceCounts
 
 
 def _search_filter(search_query: str) -> QueryExpression:
@@ -68,10 +68,7 @@ class LiveStatusHostRepository:
                 # sort by multiple columns in the livestatus client. Alternatively, we can apply
                 # only the first filter in this query and then sort the other columns after limiting
                 # the results (in Python).
-                *[
-                    f"OrderBy: {_SORT_COLUMN_OVERRIDES.get(s.column, s.column)} {s.direction}"
-                    for s in sorters
-                ],
+                *[f"OrderBy: {s.column} {s.direction}" for s in sorters],
                 f"Limit: {limit}",
             ],
         )
@@ -81,7 +78,7 @@ class LiveStatusHostRepository:
                 Host(
                     name=row["name"],
                     alias=row["alias"],
-                    ip=row["address"],
+                    address=row["address"],
                     state=HostState(row["state"]),
                     site_id=row["site"],
                     service_counts=ServiceCounts(
@@ -110,10 +107,3 @@ class LiveStatusHostRepository:
         filter_lines = (": ".join(line) for line in _search_filter(search_query).render())
         stats_query = "\n".join([f"GET {Hosts.__tablename__}", "Stats: state >= 0", *filter_lines])
         return sum(int(row[-1]) for row in self._connection.query(stats_query))
-
-
-# NOTE: the sort values defined in the model may not match the livestatus column. This mapping
-# handles columns that do not match allowing us to translate these columns when building the query.
-_SORT_COLUMN_OVERRIDES: dict[HostSortColumn, str] = {
-    HostSortColumn.IP: "address",
-}

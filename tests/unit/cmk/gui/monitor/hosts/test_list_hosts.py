@@ -42,7 +42,7 @@ def get_fake_host_repository(*, n_hosts: int) -> HostRepository:
                 for host in self._hosts
                 if needle in host.name.lower()
                 or needle in host.alias.lower()
-                or needle in host.ip.lower()
+                or needle in host.address.lower()
             ]
 
     return HostFakeRepository()

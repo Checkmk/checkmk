@@ -114,7 +114,7 @@ class TestMonitorHostsResponse:
         expected = [
             {
                 "alias": "Today",
-                "ip": "127.0.0.1",
+                "address": "127.0.0.1",
                 "name": "heute",
                 "num_services": 0,
                 "num_services_crit": 0,
@@ -127,7 +127,7 @@ class TestMonitorHostsResponse:
             },
             {
                 "alias": "Yesterday",
-                "ip": "127.0.10.1",
+                "address": "127.0.10.1",
                 "name": "gestern",
                 "num_services": 0,
                 "num_services_crit": 0,
@@ -140,7 +140,7 @@ class TestMonitorHostsResponse:
             },
             {
                 "alias": "Tomorrow",
-                "ip": "127.0.2.1",
+                "address": "127.0.2.1",
                 "name": "morgen",
                 "num_services": 0,
                 "num_services_crit": 0,

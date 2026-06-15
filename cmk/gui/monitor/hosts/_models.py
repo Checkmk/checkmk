@@ -38,7 +38,7 @@ class ServiceCounts:
 class Host:
     name: str
     state: HostState
-    ip: str
+    address: str
     alias: str
     site_id: str
     service_counts: ServiceCounts
@@ -61,7 +61,7 @@ class HostSortColumn(enum.StrEnum):
 
     NAME = "name"
     ALIAS = "alias"
-    IP = "ip"
+    ADDRESS = "address"
     STATE = "state"
     NUM_SERVICES = "num_services"
     NUM_SERVICES_OK = "num_services_ok"

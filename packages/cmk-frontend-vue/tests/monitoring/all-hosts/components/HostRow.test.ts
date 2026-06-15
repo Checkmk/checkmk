@@ -13,7 +13,7 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
     name: 'web-1',
     state: 'UP',
-    ip: '10.0.0.1',
+    address: '10.0.0.1',
     alias: 'web server 1',
     site_id: 'local',
     num_services: 6,
@@ -81,7 +81,7 @@ test('renders one cell per service state with its count', () => {
   )
 
   const tds = Array.from(container.querySelectorAll('td'))
-  // state, name, alias, ip, ok, warn, crit, unknown, pending
+  // state, name, alias, address, ok, warn, crit, unknown, pending
   expect(tds).toHaveLength(9)
   expect(tds[4]).toHaveTextContent('1')
   expect(tds[5]).toHaveTextContent('2')

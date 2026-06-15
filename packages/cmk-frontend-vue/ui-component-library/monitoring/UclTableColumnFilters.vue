@@ -105,7 +105,13 @@ const columns = computed<ColumnDef<HostEntry>[]>(() => [
   },
   { accessorKey: 'name', header: 'Host', minSize: 100, maxSize: 320, enableColumnFilter: false },
   { accessorKey: 'alias', header: 'Alias', minSize: 100, maxSize: 320, enableColumnFilter: false },
-  { accessorKey: 'ip', header: 'IP address', minSize: 100, maxSize: 160, enableColumnFilter: false }
+  {
+    accessorKey: 'address',
+    header: 'IP address',
+    minSize: 100,
+    maxSize: 160,
+    enableColumnFilter: false
+  }
 ])
 
 const filterState = ref<ColumnFiltersState>([])
@@ -125,7 +131,7 @@ const rows: HostEntry[] = [
   {
     name: 'web-server-01',
     state: 'UP',
-    ip: '10.0.0.1',
+    address: '10.0.0.1',
     alias: 'Frontend web server (eu-west)',
     site_id: 'local',
     num_services: 48,
@@ -138,7 +144,7 @@ const rows: HostEntry[] = [
   {
     name: 'db-primary-02',
     state: 'DOWN',
-    ip: '10.0.0.27',
+    address: '10.0.0.27',
     alias: 'Primary database (eu-west)',
     site_id: 'local',
     num_services: 31,
@@ -151,7 +157,7 @@ const rows: HostEntry[] = [
   {
     name: 'cache-node-03',
     state: 'UP',
-    ip: '10.0.0.51',
+    address: '10.0.0.51',
     alias: 'Redis cache node',
     site_id: 'local',
     num_services: 12,

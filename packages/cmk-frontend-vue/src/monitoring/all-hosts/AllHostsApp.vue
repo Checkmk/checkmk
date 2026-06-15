@@ -60,7 +60,7 @@ const columns: ColumnDef<HostEntry>[] = [
   },
   { accessorKey: 'name', header: _t('Host'), sortDescFirst: false, minSize: 150 },
   { accessorKey: 'alias', header: _t('Alias'), sortDescFirst: false, minSize: 150 },
-  { accessorKey: 'ip', header: _t('IP address'), sortDescFirst: false, minSize: 100 },
+  { accessorKey: 'address', header: _t('IP address'), sortDescFirst: false, minSize: 100 },
   {
     accessorKey: 'num_services_ok',
     header: _t('OK'),

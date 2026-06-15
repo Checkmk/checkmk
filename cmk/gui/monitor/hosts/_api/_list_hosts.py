@@ -47,7 +47,7 @@ _DEFAULT_SORT = (HostSort(column=HostSortColumn.NAME, direction=HostSortDirectio
 class HostEntry:
     name: str = api_field(description="Host name", example="web-server-01")
     state: StateLabel = api_field(description="Host state", example="UP")
-    ip: str = api_field(description="Primary IP address", example="10.0.0.1")
+    address: str = api_field(description="Primary IP address", example="10.0.0.1")
     alias: str = api_field(description="Host alias", example="Web Server")
     site_id: str = api_field(description="Site ID", example="local")
     num_services: int = api_field(description="Total number of services", example=48)
@@ -68,7 +68,7 @@ class HostEntry:
         return cls(
             name=host.name,
             state=host.state_label,
-            ip=host.ip,
+            address=host.address,
             alias=host.alias,
             site_id=host.site_id,
             num_services=host.service_counts.total,

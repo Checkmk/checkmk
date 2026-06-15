@@ -73,8 +73,7 @@ def get_activate_changes_full_page_url(request: Request) -> str:
 
 
 def _get_navbar_changes_action(user: LoggedInUser) -> NavbarChangesActionChoices | None:
-    if user.id is None:
-        return None
+    assert user.id is not None
     raw = load_custom_attr(
         user_id=user.id,
         key="navbar_changes_action",

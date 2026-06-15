@@ -121,8 +121,8 @@ class _FakeFetchRRD:
         self,
         rrd_metrics: Sequence[RRDMetric],
         *,
-        time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
+        time_range: TimeRange,
     ) -> Mapping[RRDMetric, TimeSeries]:
         self.time_series_calls.append((tuple(rrd_metrics), time_range, consolidation_function))
         return {

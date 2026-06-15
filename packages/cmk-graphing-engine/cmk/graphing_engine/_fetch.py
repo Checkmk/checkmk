@@ -36,8 +36,8 @@ class RRDSource(Protocol):
         self,
         rrd_metrics: Sequence[RRDMetric],
         *,
-        time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
+        time_range: TimeRange,
     ) -> Mapping[RRDMetric, TimeSeries]: ...
 
 
@@ -74,8 +74,8 @@ def _fetch_series(
     graph: Graph,
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
     *,
-    time_range: TimeRange,
     consolidation_function: ConsolidationFunction,
+    time_range: TimeRange,
     rrd: RRDSource,
 ) -> Mapping[RRDMetricRef, TimeSeries]:
     rrd_metrics_per_metric: dict[
@@ -105,8 +105,8 @@ def _fetch_series(
     raw_per_function = {
         function: rrd.fetch_time_series(
             list(dict.fromkeys(rrd_metrics)),
-            time_range=time_range,
             consolidation_function=function,
+            time_range=time_range,
         )
         for function, rrd_metrics in rrd_metrics_per_function.items()
     }
@@ -170,8 +170,8 @@ def evaluate_graphs(
                 _fetch_series(
                     graph,
                     metric_data,
-                    time_range=time_range,
                     consolidation_function=consolidation_function,
+                    time_range=time_range,
                     rrd=rrd,
                 ),
                 translated_metrics,

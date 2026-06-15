@@ -86,8 +86,8 @@ class _FakeRRD:
         self,
         rrd_metrics: Sequence[RRDMetric],
         *,
-        time_range: TimeRange,
         consolidation_function: ConsolidationFunction,
+        time_range: TimeRange,
     ) -> Mapping[RRDMetric, TimeSeries]:
         self.time_series_requests.append((time_range, consolidation_function))
         return {

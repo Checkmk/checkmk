@@ -74,10 +74,12 @@ def delete_users(
     users_to_delete: Sequence[UserId],
     sites: _UserAssociatedSitesFn,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    user_connections: Sequence[UserConnectionConfig],
     *,
     pending_changes: PendingChanges,
     use_git: bool,
     acting_user: LoggedInUser,
+    pprint_value: bool,
 ) -> tuple[list[UserId], dict[UserId, list[EventRule]]]:
     acting_user.need_permission("wato.users")
     acting_user.need_permission("wato.edit")
@@ -133,9 +135,9 @@ def delete_users(
         userdb.save_users(
             all_users,
             user_attributes,
-            active_config.user_connections,
+            user_connections,
             now=datetime.now(),
-            pprint_value=active_config.wato_pprint_config,
+            pprint_value=pprint_value,
             call_users_saved_hook=True,
         )
     return deleted_users, users_used_in_notification_rule
@@ -276,9 +278,11 @@ def remove_custom_attribute_from_all_users(
     custom_attribute_name: str,
     sites: _UserAssociatedSitesFn,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    user_connections: Sequence[UserConnectionConfig],
     *,
     pending_changes: PendingChanges,
     use_git: bool,
+    pprint_value: bool,
 ) -> None:
     # This function duplicates code from edit_user. However, it is the only place in the codebase
     # where we need to update all users at once. For this it calls userdb.save_users directly.
@@ -343,9 +347,9 @@ def remove_custom_attribute_from_all_users(
         userdb.save_users(
             all_users,
             user_attributes,
-            active_config.user_connections,
+            user_connections,
             now=datetime.now(),
-            pprint_value=active_config.wato_pprint_config,
+            pprint_value=pprint_value,
             call_users_saved_hook=True,
         )
 

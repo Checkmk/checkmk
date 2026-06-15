@@ -338,11 +338,13 @@ class ModeUsers(WatoMode):
                 [delete_user],
                 user_features_registry.features().sites,
                 get_user_attributes(config.wato_user_attrs),
+                config.user_connections,
                 pending_changes=_pending_changes(
                     config=config, local_site=omd_site(), acting_user=user.id
                 ),
                 use_git=config.wato_use_git,
                 acting_user=user,
+                pprint_value=config.wato_pprint_config,
             )
             if users_used_in_notification_rule:
                 self._render_related_rule_warning(users_used_in_notification_rule)
@@ -387,10 +389,12 @@ class ModeUsers(WatoMode):
         if self._can_create_and_delete_users and request.var("_bulk_delete_users"):
             self._bulk_delete_users_after_confirm(
                 get_user_attributes(config.wato_user_attrs),
+                config.user_connections,
                 pending_changes=_pending_changes(
                     config=config, local_site=omd_site(), acting_user=user.id
                 ),
                 use_git=config.wato_use_git,
+                pprint_value=config.wato_pprint_config,
             )
             return redirect(self.mode_url())
 
@@ -406,9 +410,11 @@ class ModeUsers(WatoMode):
     def _bulk_delete_users_after_confirm(
         self,
         user_attributes: Sequence[tuple[str, UserAttribute]],
+        user_connections: Sequence[UserConnectionConfig],
         *,
         pending_changes: PendingChanges,
         use_git: bool,
+        pprint_value: bool,
     ) -> None:
         selected_users = []
         users = userdb.load_users()
@@ -425,9 +431,11 @@ class ModeUsers(WatoMode):
                 selected_users,
                 user_features_registry.features().sites,
                 user_attributes,
+                user_connections,
                 pending_changes=pending_changes,
                 use_git=use_git,
                 acting_user=user,
+                pprint_value=pprint_value,
             )
 
             if users_used_in_notification_rule:

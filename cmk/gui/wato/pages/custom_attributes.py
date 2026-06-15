@@ -563,8 +563,10 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
             delname,
             user_features_registry.features().sites,
             get_user_attributes(config.wato_user_attrs),
+            config.user_connections,
             pending_changes=pending_changes,
             use_git=config.wato_use_git,
+            pprint_value=config.wato_pprint_config,
         )
         self._update_config(self._attrs, pprint_value=config.wato_pprint_config)
         pending_changes.add(

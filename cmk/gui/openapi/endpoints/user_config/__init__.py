@@ -202,11 +202,13 @@ def delete_user(params: Mapping[str, Any]) -> Response:
         [username],
         user_features_registry.features().sites,
         user_attributes=get_user_attributes(active_config.wato_user_attrs),
+        user_connections=active_config.user_connections,
         pending_changes=_pending_changes(
             config=active_config, local_site=omd_site(), acting_user=user.id
         ),
         use_git=active_config.wato_use_git,
         acting_user=user,
+        pprint_value=active_config.wato_pprint_config,
     )
     return Response(status=204)
 

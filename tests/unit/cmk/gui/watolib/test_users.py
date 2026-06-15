@@ -265,9 +265,11 @@ def test_only_affected_sites_require_activation_when_deleting_users(
         users_to_delete,
         default_sites,
         get_user_attributes([]),
+        [],
         pending_changes=_test_pending_changes(),
         use_git=False,
         acting_user=LoggedInSuperUser(),
+        pprint_value=False,
     )
 
     # THEN
@@ -286,9 +288,9 @@ def _add_custom_attr_to_user(user_id: UserId, attr_name: str, value: str) -> Non
     userdb.save_users(
         all_users,
         get_user_attributes([]),
-        active_config.user_connections,
+        [],
         now=datetime.now(),
-        pprint_value=active_config.wato_pprint_config,
+        pprint_value=False,
         call_users_saved_hook=False,
     )
 
@@ -323,6 +325,7 @@ def test_remove_custom_attribute_only_touches_affected_users(sites: list[SiteId]
             CUSTOM_ATTR_NAME,
             default_sites,
             get_user_attributes([]),
+            [],
             pending_changes=PendingChanges(
                 activation_sites=active_config.sites,
                 local_site=SITE1,
@@ -331,6 +334,7 @@ def test_remove_custom_attribute_only_touches_affected_users(sites: list[SiteId]
                 hooks=(),
             ),
             use_git=False,
+            pprint_value=False,
         )
 
     # THEN user1 lost the attribute; user2 is completely untouched
@@ -382,6 +386,7 @@ def test_remove_custom_attribute_only_affected_sites_require_activation(
             CUSTOM_ATTR_NAME,
             default_sites,
             get_user_attributes([]),
+            [],
             pending_changes=PendingChanges(
                 activation_sites=active_config.sites,
                 local_site=SITE1,
@@ -390,6 +395,7 @@ def test_remove_custom_attribute_only_affected_sites_require_activation(
                 hooks=(),
             ),
             use_git=False,
+            pprint_value=False,
         )
 
     # THEN
@@ -416,6 +422,7 @@ def test_remove_custom_attribute_requires_permissions(sites: list[SiteId]) -> No
             CUSTOM_ATTR_NAME,
             default_sites,
             get_user_attributes([]),
+            [],
             pending_changes=PendingChanges(
                 activation_sites=active_config.sites,
                 local_site=SITE1,
@@ -424,4 +431,5 @@ def test_remove_custom_attribute_requires_permissions(sites: list[SiteId]) -> No
                 hooks=(),
             ),
             use_git=False,
+            pprint_value=False,
         )

@@ -920,6 +920,22 @@ result_type_registry.register(BakeAgentsResult)
 
 
 @dataclass
+class BakeryChangedTargetsResult(ABCAutomationResult):
+    # Targets are carried as their .serialize() form (see BakeryTarget); decode
+    # with cmk.bakery.shared.type_defs.get_bakery_target() on the consumer side
+    # when typed objects are needed. Avoids pulling non-free types into this
+    # open-source result module.
+    changed: Sequence[str]
+
+    @staticmethod
+    def automation_call() -> str:
+        return "bakery-changed-targets"
+
+
+result_type_registry.register(BakeryChangedTargetsResult)
+
+
+@dataclass
 class UnknownCheckParameterRuleSetsResult(ABCAutomationResult):
     result: Sequence[str]
 

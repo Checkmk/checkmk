@@ -63,6 +63,7 @@ def test_registered_automations(edition: Edition) -> None:
     if edition is not Edition.COMMUNITY:
         needed_automations += [
             "bake-agents",
+            "bakery-changed-targets",
             "notify",
         ]
 

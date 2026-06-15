@@ -37,7 +37,7 @@ def test_result_type_registry_completeness() -> None:
     # ensures that all automation calls registered in cmk.base have a corresponding result type
     # registered in cmk.automations
     automations_missing = (
-        {"bake-agents", "notify"}
+        {"bake-agents", "bakery-changed-targets", "notify"}
         if (edition := cmk_version.edition(paths.omd_root)) is cmk_version.Edition.COMMUNITY
         else set()
     )

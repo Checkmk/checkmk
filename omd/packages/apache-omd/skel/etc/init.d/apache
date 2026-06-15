@@ -18,6 +18,24 @@ INITLOG_ARGS=""
 PID_FILE="$OMD_ROOT"/tmp/apache/run/apache.pid
 CONFIG_FILE="$OMD_ROOT"/etc/apache/apache.conf
 
+# Preload our bundled OpenSSL into the (distribution-provided) httpd binary.
+#
+# The site apache runs the distro httpd, whose own dependencies and startup
+# pull in the system libcrypto.so.3 (via libnss_systemd, used for user/group
+# lookups) before mod_wsgi loads our Python. Both libraries share the SONAME
+# "libcrypto.so.3", so the loader reuses the already-mapped system copy for our
+# extensions too - regardless of their RPATH. On distributions that strip
+# algorithms from their OpenSSL (e.g. RHEL drops SM4) this makes our Python
+# crypto extensions fail to resolve symbols such as EVP_sm4_ecb, breaking the
+# GUI/REST API (SUP-29520).
+#
+# Preloading our libssl/libcrypto here makes our OpenSSL win that resolution.
+# It is scoped to this single exec (not exported) so it never leaks into the
+# other system tools this script invokes (ping, kill, killall, php-cgi, ...).
+# We reference the unversioned ".so" symlinks so this keeps working across an
+# OpenSSL major bump (e.g. 3 -> 4) without editing this script.
+APACHE_LD_PRELOAD="$OMD_ROOT/lib/libssl.so $OMD_ROOT/lib/libcrypto.so"
+
 apache_bin() {
     if [ -e /usr/sbin/apache2 ]; then
         echo /usr/sbin/apache2
@@ -124,7 +142,7 @@ apache_wait_start() {
         done
     fi
 
-    $(apache_bin) -f "$CONFIG_FILE"
+    LD_PRELOAD="$APACHE_LD_PRELOAD" $(apache_bin) -f "$CONFIG_FILE"
 
     i=0
     while ! pidof_apache >/dev/null 2>&1; do
@@ -192,7 +210,7 @@ case $1 in
         ;;
     reload)
         echo "Reloading apache"
-        $(apache_bin) -f "$CONFIG_FILE" -k graceful
+        LD_PRELOAD="$APACHE_LD_PRELOAD" $(apache_bin) -f "$CONFIG_FILE" -k graceful
         __init_hook $0 $1 post $?
         ;;
     status)

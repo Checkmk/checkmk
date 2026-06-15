@@ -234,6 +234,48 @@ div.graph {
   }
 }
 
+/* CMK-35215: Make the dashboard graph widget a flex column so the legend scrolls in the
+   space left below the fixed canvas (browser-sized, not a server pixel estimate). Scoped
+   to .db-content-graph so View/report/graph-collection rendering is unaffected. */
+/* stylelint-disable no-descending-specificity */
+.db-content-graph {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+
+  div.graph_container {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+  }
+
+  div.graph {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: max-content; /* shrink-wrap to canvas width */
+    max-width: 100%;
+    min-height: 0;
+  }
+
+  div.graph_header,
+  canvas {
+    flex: none; /* fixed graph: don't shrink/scroll */
+  }
+
+  div.legend_container {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none; /* override the global 600px cap */
+    overflow: hidden auto; /* vertical scroll only (avoid x-scroll from the wide legend) */
+  }
+}
+/* stylelint-enable no-descending-specificity */
+
 /* stylelint-disable-next-line no-descending-specificity */
 table.prediction td {
   padding: 0;

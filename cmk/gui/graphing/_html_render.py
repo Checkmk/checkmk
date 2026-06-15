@@ -356,6 +356,9 @@ _MIN_RESIZE_HEIGHT = 6
 # Minimum canvas height below which a widget is too small to render a graph with legend.
 _MIN_WIDGET_HEIGHT_EX = 11
 
+# Minimum legend height (ex) so a scrolling legend stays useful (header + ~2 rows).
+_MIN_LEGEND_HEIGHT_EX = 5
+
 
 def render_graph_error_html(*, title: str, msg_or_exc: Exception | str, debug: bool) -> HTML:
     if isinstance(msg_or_exc, MKGeneralException) and not debug:
@@ -1647,6 +1650,27 @@ class GraphDestinations:
         ]
 
 
+def _legend_height_ex(usable_height_ex: float, curve_count: int, horizontal_rule_count: int) -> int:
+    """Ex to reserve below the graph for the scrollable legend.
+
+    Legend gets at most a third (graph keeps >= _MIN_WIDGET_HEIGHT_EX) but never less than
+    _MIN_LEGEND_HEIGHT_EX. Raises MKGraphWidgetTooSmallError when neither fits.
+    """
+    if usable_height_ex <= _MIN_WIDGET_HEIGHT_EX + _MIN_LEGEND_HEIGHT_EX:
+        raise MKGraphWidgetTooSmallError(
+            _("Either increase the widget height or disable the graph legend.")
+        )
+
+    # Rough estimate; inaccurate because _HTML_SIZE_PER_EX is hard coded, not font-derived.
+    estimated_legend_height_ex = int(3.0 + (curve_count + horizontal_rule_count) * 1.5)
+    budget_ex = min(usable_height_ex // 3, max(usable_height_ex - _MIN_WIDGET_HEIGHT_EX, 0))
+    legend_height_ex = min(estimated_legend_height_ex, budget_ex)
+    if legend_height_ex < estimated_legend_height_ex:
+        # Legend will scroll: keep it usable (the size guard above protects the graph).
+        legend_height_ex = max(legend_height_ex, _MIN_LEGEND_HEIGHT_EX)
+    return int(legend_height_ex)
+
+
 @tracer.instrument("graphing.host_service_graph_dashlet_cmk")
 def host_service_graph_dashlet_cmk(
     request: Request,
@@ -1717,37 +1741,15 @@ def host_service_graph_dashlet_cmk(
         mark_requested_end_time=recipe_with_overrides.mark_requested_end_time,
     )
 
-    # When the legend is enabled, we need to reduce the height by the height of the legend to
-    # make the graph fit into the dashlet area. In preview mode, the Vue scroll container
-    # handles legend overflow, so we skip the height reduction.
+    # Shrink the fixed canvas so the legend fits below it; the browser then sizes the
+    # legend's scroll area via flex (see _graphs.scss), not a pixel max-height (CMK-35215).
+    # Preview mode handles overflow via the Vue scroll container, so skip the reduction.
     is_preview = display_id.endswith("-preview")
     if display_config.show_legend and artwork_or_errors.artwork.curves and not is_preview:
-        if height <= _MIN_WIDGET_HEIGHT_EX:
-            raise MKGraphWidgetTooSmallError(
-                _("Either increase the widget height or disable the graph legend.")
-            )
-
-        # Estimates the height of the graph legend in ex units. TODO: This is
-        # not accurate! Especially when the font size is changed this does not
-        # lead to correct results. But this is a more generic problem of the
-        # _HTML_SIZE_PER_EX which is hard coded instead of relying on the font
-        # as it should.
-        estimated_legend_height_ex = int(
-            3.0
-            + (
-                len(list(artwork_or_errors.artwork.curves))
-                + len(artwork_or_errors.artwork.horizontal_rules)
-            )
-            * 1.5
-        )
-        # Give the legend at most a third of the available height and ensure
-        # the graph keeps at least _MIN_WIDGET_HEIGHT_EX. When the legend
-        # exceeds the budget, its container becomes scrollable.
-        max_legend_height_ex = min(height // 3, max(height - _MIN_WIDGET_HEIGHT_EX, 0))
-        legend_height_ex = min(estimated_legend_height_ex, max_legend_height_ex)
-        height -= legend_height_ex
-        display_config = display_config.model_copy(
-            update={"legend_max_height_px": int(legend_height_ex * _HTML_SIZE_PER_EX)}
+        height -= _legend_height_ex(
+            height,
+            len(list(artwork_or_errors.artwork.curves)),
+            len(artwork_or_errors.artwork.horizontal_rules),
         )
 
     effective_ranges = recipe_with_overrides.ranges or graph_ranges

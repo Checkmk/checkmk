@@ -166,6 +166,7 @@ def evaluate_graphs(
         evaluated.append(
             evaluate_graph(
                 graph,
+                metric_data,
                 _fetch_series(
                     graph,
                     metric_data,
@@ -173,7 +174,6 @@ def evaluate_graphs(
                     consolidation_function=consolidation_function,
                     rrd=rrd,
                 ),
-                metric_data,
                 translated_metrics,
                 time_range,
             )

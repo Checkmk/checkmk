@@ -127,12 +127,12 @@ def _apply(operator: _Operator, point: Sequence[float | None]) -> float | None:
 def _evaluate_time_series_op(
     operator: _Operator,
     operands: Sequence[Quantity],
-    time_series: Mapping[RRDMetricRef, TimeSeries],
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
+    time_series: Mapping[RRDMetricRef, TimeSeries],
     time_range: TimeRange,
 ) -> TimeSeries:
     evaluated = [
-        _evaluate_time_series(operand, time_series, metric_data, time_range) for operand in operands
+        _evaluate_time_series(operand, metric_data, time_series, time_range) for operand in operands
     ]
     return TimeSeries(
         time_range=time_range,
@@ -152,8 +152,8 @@ def _constant_time_series(value: float | None, time_range: TimeRange) -> TimeSer
 
 def _evaluate_time_series(
     quantity: Quantity,
-    time_series: Mapping[RRDMetricRef, TimeSeries],
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
+    time_series: Mapping[RRDMetricRef, TimeSeries],
     time_range: TimeRange,
 ) -> TimeSeries:
     match quantity:
@@ -173,26 +173,26 @@ def _evaluate_time_series(
             return _constant_time_series(_evaluate_value(quantity, metric_data), time_range)
         case Sum():
             return _evaluate_time_series_op(
-                _op_sum, quantity.summands, time_series, metric_data, time_range
+                _op_sum, quantity.summands, metric_data, time_series, time_range
             )
         case Product():
             return _evaluate_time_series_op(
-                _op_product, quantity.factors, time_series, metric_data, time_range
+                _op_product, quantity.factors, metric_data, time_series, time_range
             )
         case Difference():
             return _evaluate_time_series_op(
                 _op_difference,
                 [quantity.minuend, quantity.subtrahend],
-                time_series,
                 metric_data,
+                time_series,
                 time_range,
             )
         case Fraction():
             return _evaluate_time_series_op(
                 _op_fraction,
                 [quantity.dividend, quantity.divisor],
-                time_series,
                 metric_data,
+                time_series,
                 time_range,
             )
         case _:
@@ -337,8 +337,8 @@ def _evaluate_vertical_range(
 
 def _evaluate_curve(
     quantity: Quantity,
-    time_series: Mapping[RRDMetricRef, TimeSeries],
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
+    time_series: Mapping[RRDMetricRef, TimeSeries],
     time_range: TimeRange,
 ) -> EvaluatedCurve | None:
     if (attributes := _attributes(quantity, metric_data)) is None:
@@ -348,7 +348,7 @@ def _evaluate_curve(
         unit=attributes.unit,
         color=attributes.color,
         value=_evaluate_value(quantity, metric_data),
-        time_series=_evaluate_time_series(quantity, time_series, metric_data, time_range),
+        time_series=_evaluate_time_series(quantity, metric_data, time_series, time_range),
     )
 
 
@@ -369,8 +369,8 @@ def _title_metrics(
 
 def evaluate_graph(
     graph: Graph,
-    time_series: Mapping[RRDMetricRef, TimeSeries],
     metric_data: Mapping[RRDMetricRef, RRDMetricData],
+    time_series: Mapping[RRDMetricRef, TimeSeries],
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     time_range: TimeRange,
 ) -> EvaluatedGraph:
@@ -379,14 +379,14 @@ def evaluate_graph(
         members = [
             curve
             for member in group.members
-            if (curve := _evaluate_curve(member, time_series, metric_data, time_range)) is not None
+            if (curve := _evaluate_curve(member, metric_data, time_series, time_range)) is not None
         ]
         if members:
             stacks.append(EvaluatedStack(members=members, inverse=group.inverse))
     lines = [
         EvaluatedLine(curve=curve, inverse=line.inverse)
         for line in graph.lines
-        if (curve := _evaluate_curve(line.quantity, time_series, metric_data, time_range))
+        if (curve := _evaluate_curve(line.quantity, metric_data, time_series, time_range))
         is not None
     ]
     return EvaluatedGraph(

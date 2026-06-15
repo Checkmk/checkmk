@@ -156,7 +156,7 @@ def test_evaluate_value_of_a_fraction_by_zero_is_none() -> None:
 def test_evaluate_time_series_of_a_metric_returns_the_fetched_time_series() -> None:
     a = _metric("a")
     time_series = _time_series(1.0, 2.0, 3.0)
-    assert _evaluate_time_series(a, {a: time_series}, {}, _TR) == time_series
+    assert _evaluate_time_series(a, {}, {a: time_series}, _TR) == time_series
 
 
 def test_evaluate_time_series_of_a_missing_metric_is_all_none() -> None:
@@ -171,7 +171,7 @@ def test_evaluate_time_series_of_a_scalar_reference_is_a_constant_line() -> None
     a = _metric("a")
     metric_data = {a: _data("a", value=1.0, warning=80.0)}
     assert _evaluate_time_series(
-        WarningOf(metric=a, color="#000000"), {}, metric_data, _TR
+        WarningOf(metric=a, color="#000000"), metric_data, {}, _TR
     ) == _time_series(80.0, 80.0, 80.0)
 
 
@@ -179,7 +179,7 @@ def test_evaluate_time_series_of_a_sum_drops_none_points() -> None:
     a, b = _metric("a"), _metric("b")
     time_series = {a: _time_series(1.0, None, 3.0), b: _time_series(10.0, 20.0, None)}
     result = _evaluate_time_series(
-        Sum(title="s", color="#000000", summands=[a, b]), time_series, {}, _TR
+        Sum(title="s", color="#000000", summands=[a, b]), {}, time_series, _TR
     )
     assert result == _time_series(11.0, 20.0, 3.0)
 
@@ -188,7 +188,7 @@ def test_evaluate_time_series_of_a_product_is_none_at_points_with_a_gap() -> Non
     a, b = _metric("a"), _metric("b")
     time_series = {a: _time_series(2.0, None, 4.0), b: _time_series(3.0, 5.0, None)}
     result = _evaluate_time_series(
-        Product(title="p", unit=_UNIT, color="#000000", factors=[a, b]), time_series, {}, _TR
+        Product(title="p", unit=_UNIT, color="#000000", factors=[a, b]), {}, time_series, _TR
     )
     assert result == _time_series(6.0, None, None)
 
@@ -197,7 +197,7 @@ def test_evaluate_time_series_of_a_difference() -> None:
     a, b = _metric("a"), _metric("b")
     time_series = {a: _time_series(10.0, None, 4.0), b: _time_series(3.0, 5.0, 1.0)}
     result = _evaluate_time_series(
-        Difference(title="d", color="#000000", minuend=a, subtrahend=b), time_series, {}, _TR
+        Difference(title="d", color="#000000", minuend=a, subtrahend=b), {}, time_series, _TR
     )
     assert result == _time_series(7.0, None, 3.0)
 
@@ -207,8 +207,8 @@ def test_evaluate_time_series_of_a_fraction_guards_zero_and_gaps() -> None:
     time_series = {a: _time_series(10.0, 6.0, 4.0), b: _time_series(2.0, 0.0, None)}
     result = _evaluate_time_series(
         Fraction(title="f", unit=_UNIT, color="#000000", dividend=a, divisor=b),
-        time_series,
         {},
+        time_series,
         _TR,
     )
     assert result == _time_series(5.0, None, None)
@@ -230,7 +230,7 @@ def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
 
     # Stacks (filled areas) and lines stay separate, each keeping its direction; curves carry
     # their resolved title/unit/colour.
-    assert evaluate_graph(graph, time_series, metric_data, {}, _TR) == EvaluatedGraph(
+    assert evaluate_graph(graph, metric_data, time_series, {}, _TR) == EvaluatedGraph(
         name="g",
         title="g",
         vertical_range=None,
@@ -273,7 +273,7 @@ def test_evaluate_graph_drops_curves_of_missing_metrics() -> None:
     )
     # "gone" has no metric data, so its stack is dropped; only the line for "a" remains.
     result = evaluate_graph(
-        graph, {a: _time_series(1.0, 2.0, 3.0)}, {a: _data("a", value=3.0)}, {}, _TR
+        graph, {a: _data("a", value=3.0)}, {a: _time_series(1.0, 2.0, 3.0)}, {}, _TR
     )
     assert result.stacks == []
     assert [line.curve.title for line in result.lines] == ["a"]
@@ -295,7 +295,7 @@ def test_evaluate_graph_resolves_a_minimal_range_bound_expression() -> None:
     a = _metric("a")
     # The upper bound is a metric reference, resolved against the metric data; the lower is a number.
     graph = Graph(name="g", title="g", vertical_range=MinimalRange(lower=0, upper=a))
-    result = evaluate_graph(graph, {}, {a: _data("a", value=42.0)}, {}, _TR)
+    result = evaluate_graph(graph, {a: _data("a", value=42.0)}, {}, {}, _TR)
     assert result.vertical_range == EvaluatedMinimalRange(lower=0.0, upper=42.0)
 
 

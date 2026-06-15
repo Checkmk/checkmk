@@ -21,10 +21,12 @@ __all__ = ["ActiveCheckResult", "ServiceCheckResult", "state_markers"]
 # TODO(ml): Should probably be of type enum::int -> str
 state_markers = ("", "(!)", "(!!)", "(?)")
 
+ServiceState = int
+
 
 @dataclasses.dataclass(frozen=True)
 class ServiceCheckResult:
-    state: int = 0
+    state: ServiceState = 0
     output: str = ""
     metrics: Sequence[MetricTuple] = ()
 
@@ -61,7 +63,7 @@ class UnsubmittableServiceCheckResult(ServiceCheckResult):
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ActiveCheckResult:
-    state: int = 0
+    state: ServiceState = 0
     summary: str = ""
     details: tuple[str, ...] | list[str] = ()  # Sequence, but not str...
     metrics: tuple[str, ...] | list[str] = ()
@@ -97,7 +99,7 @@ class ActiveCheckResult:
         )
 
     @staticmethod
-    def _add_marker(txt: str, state: int) -> str:
+    def _add_marker(txt: str, state: ServiceState) -> str:
         marker = state_markers[state]
         return txt if txt.endswith(marker) else f"{txt}{marker}"
 

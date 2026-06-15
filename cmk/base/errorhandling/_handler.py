@@ -16,9 +16,8 @@ from cmk.ccc.exceptions import (
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import FetcherError
 from cmk.checkengine.snmplib import SNMPBackendEnum
-from cmk.checkengine.specs.checkresults import ActiveCheckResult
+from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.checkengine.specs.exitspec import ExitSpec
-from cmk.checkengine.submitters import ServiceState
 from cmk.utils.servicename import ServiceName
 
 from ._crash import create_check_crash_dump

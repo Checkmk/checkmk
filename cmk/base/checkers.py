@@ -105,12 +105,12 @@ from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPRawData
 from cmk.checkengine.specs.checkresults import (
     ActiveCheckResult,
     ServiceCheckResult,
+    ServiceState,
     state_markers,
     SubmittableServiceCheckResult,
     UnsubmittableServiceCheckResult,
 )
 from cmk.checkengine.specs.parameters import Parameters, ParametersTypeAlias
-from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize, SummaryConfig
 from cmk.checkengine.value_store import ValueStoreManager
 from cmk.server_side_calls_backend import ExecutableFinder, SpecialAgentCommandLine

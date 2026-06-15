@@ -117,8 +117,8 @@ from cmk.checkengine.snmplib import (
     SNMPSectionName,
     walk_for_export,
 )
-from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.checkengine.submitters import get_submitter, ServiceState
+from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
+from cmk.checkengine.submitters import get_submitter
 from cmk.checkengine.summarize import summarize, SummarizerFunction
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.discover_plugins import discover_families, PluginGroup

@@ -11,6 +11,7 @@ from pathlib import Path
 
 import cmk.ccc.cleanup
 import cmk.ccc.debug
+import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName

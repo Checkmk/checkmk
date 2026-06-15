@@ -42,8 +42,7 @@ from cmk.checkengine.plugin_backend import (
     plugin_index,
 )
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.checkengine.submitters import ServiceState
+from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils.ip_lookup import (
     ConfiguredIPLookup,

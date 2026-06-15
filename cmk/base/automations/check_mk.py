@@ -194,8 +194,9 @@ from cmk.checkengine.snmplib import (
     SNMPVersion,
     walk_for_export,
 )
+from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.specs.parameters import TimespecificParameters
-from cmk.checkengine.submitters import ServiceDetails, ServiceState
+from cmk.checkengine.submitters import ServiceDetails
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.core_client import CoreAction

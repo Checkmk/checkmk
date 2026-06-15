@@ -45,7 +45,7 @@ class LiveStatusHostRepository:
                 Hosts.num_services_unknown,
                 Hosts.num_services_pending,
             ],
-            _search_filter(query),
+            _build_query_filter(query),
             extra_headers=[
                 *filters.splitlines(),
                 # NOTE: Livestatus doesn't support sorting by multiple columns at the moment. The
@@ -90,19 +90,19 @@ class LiveStatusHostRepository:
         # can't emit ``Stats`` headers yet, so the query is assembled by hand from the shared filter.
         # The ``Stats`` count is the trailing column of each returned row; summing it across rows
         # adds up the per-site counts.
-        filter_lines = (": ".join(line) for line in _search_filter(query).render())
+        query_filter = (": ".join(line) for line in _build_query_filter(query).render())
         stats_query = "\n".join(
             [
                 f"GET {Hosts.__tablename__}",
                 "Stats: state >= 0",
-                *filter_lines,
+                *query_filter,
                 *filters.splitlines(),
             ]
         )
         return sum(int(row[-1]) for row in self._connection.query(stats_query))
 
 
-def _search_filter(query: str) -> QueryExpression:
+def _build_query_filter(query: str) -> QueryExpression:
     if not query:
         return NothingExpression()
 

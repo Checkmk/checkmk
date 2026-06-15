@@ -32,7 +32,6 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     store_piggybacked_sections,
 )
-from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.snmplib import SNMPRawData
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.specs.exitspec import ExitSpec
@@ -129,14 +128,11 @@ def execute_checkmk_checks(
         )
     timed_results = [
         *summarizer(host_sections),
-        *check_parsing_errors(
-            itertools.chain.from_iterable(
-                resolver.parsing_errors for resolver in providers.values()
-            )
+        *itertools.chain.from_iterable(
+            resolver.parsing_errors() for resolver in providers.values()
         ),
         *check_plugins_missing_data(service_results, exit_spec),
     ]
-
     return timed_results
 
 

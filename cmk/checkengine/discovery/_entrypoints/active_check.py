@@ -47,7 +47,6 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     store_piggybacked_sections,
 )
-from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.snmplib import SNMPRawData
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.summarize import SummarizerFunction
@@ -193,8 +192,8 @@ def execute_check_discovery(
         discovery_mode,
     )
 
-    parsing_errors_results = check_parsing_errors(
-        itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())
+    parsing_errors_results = list(
+        itertools.chain.from_iterable(resolver.parsing_errors() for resolver in providers.values())
     )
     failed_sources = [r for r in summarizer(host_sections) if r.state != 0]
 

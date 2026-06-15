@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Final, NamedTuple
 
 from cmk.checkengine.helper_interface import HostKey
 from cmk.checkengine.plugins import ParsedSectionName
-from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 
 from .sectionparser import ParsedSectionContent, Provider
 
@@ -74,17 +73,6 @@ def get_section_cluster_kwargs(
         return {}
 
     return kwargs
-
-
-def check_parsing_errors(
-    errors: Iterable[str],
-    *,
-    error_state: ServiceState = 1,
-) -> Sequence[ActiveCheckResult]:
-    return [
-        ActiveCheckResult(state=error_state, summary=msg.split(" - ")[0], details=(msg,))
-        for msg in errors
-    ]
 
 
 _CacheInfo = tuple[int, int]

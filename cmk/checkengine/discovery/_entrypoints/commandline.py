@@ -33,7 +33,6 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     store_piggybacked_sections,
 )
-from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 
@@ -194,8 +193,8 @@ def _commandline_discovery_on_host(
     count = len(service_result.new) if service_result.new else ("no new" if only_new else "no")
     section.section_success(f"Found {count} services")
 
-    for result in check_parsing_errors(
-        itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())
+    for result in itertools.chain.from_iterable(
+        resolver.parsing_errors() for resolver in providers.values()
     ):
         for line in result.details:
             console.warning(tty.format_warning(f"{line}"))

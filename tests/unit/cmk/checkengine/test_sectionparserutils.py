@@ -21,11 +21,9 @@ from cmk.checkengine.sectionparser import (
     SectionsParser,
 )
 from cmk.checkengine.sectionparserutils import (
-    check_parsing_errors,
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
-from cmk.checkengine.specs.checkresults import ActiveCheckResult
 
 
 def _test_section(
@@ -219,24 +217,3 @@ def test_get_section_cluster_kwargs(
     )
 
     assert expected_result == kwargs
-
-
-def test_check_parsing_errors_no_errors() -> None:
-    assert not check_parsing_errors(())
-
-
-def test_check_parsing_errors_are_ok() -> None:
-    assert check_parsing_errors(
-        ("error - message",),
-        error_state=0,
-    ) == [ActiveCheckResult(state=0, summary="error", details=("error - message",))]
-
-
-def test_check_parsing_errors_with_errors_() -> None:
-    assert check_parsing_errors(("error - message",)) == [
-        ActiveCheckResult(state=1, summary="error", details=("error - message",))
-    ]
-    assert check_parsing_errors(
-        ("error - message",),
-        error_state=2,
-    ) == [ActiveCheckResult(state=2, summary="error", details=("error - message",))]

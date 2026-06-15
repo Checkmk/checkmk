@@ -23,6 +23,7 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     SectionsParser,
 )
+from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 
 
 def _section(
@@ -42,6 +43,12 @@ class _FakeParser(dict):
     def disable(self, names: Iterable[SectionName]) -> None:
         for name in names:
             _ = self.pop(str(name), None)
+
+
+class _FailedFakeParser(dict[str, Sequence[str]]):
+    @property
+    def parsing_errors(self) -> Sequence[str]:
+        return self.get("parsing_errors", [])
 
 
 class TestParsedSectionsResolver:
@@ -129,6 +136,39 @@ class TestParsedSectionsResolver:
             ResolvedResult(section_name=SectionName("section_one"), parsed_data=1, cache_info=None),
             ResolvedResult(section_name=SectionName("section_thr"), parsed_data=3, cache_info=None),
         ]
+
+    @pytest.mark.parametrize(
+        ["errors", "error_state", "results"],
+        [
+            pytest.param([], 0, [], id="no errors"),
+            pytest.param(
+                ["error - message"],
+                0,
+                [ActiveCheckResult(state=0, summary="error", details=("error - message",))],
+                id="errors are OK",
+            ),
+            pytest.param(
+                ["error - message"],
+                1,
+                [ActiveCheckResult(state=1, summary="error", details=("error - message",))],
+                id="errors with errors: 1",
+            ),
+            pytest.param(
+                ["error - message"],
+                2,
+                [ActiveCheckResult(state=2, summary="error", details=("error - message",))],
+                id="errors with errors: 2",
+            ),
+        ],
+    )
+    def test_parsing_errors(
+        self, errors: list[str], error_state: ServiceState, results: list[ActiveCheckResult]
+    ) -> None:
+        resolver = ParsedSectionsResolver(
+            _FailedFakeParser({"parsing_errors": errors}),  # type: ignore[arg-type]
+            section_plugins={},
+        )
+        assert resolver.parsing_errors(error_state) == results
 
 
 def _test_section(

@@ -58,7 +58,7 @@ from .sectionparser import (
     SectionPlugin,
     store_piggybacked_sections,
 )
-from .sectionparserutils import check_parsing_errors, get_cache_info, get_section_kwargs
+from .sectionparserutils import get_cache_info, get_section_kwargs
 from .summarize import SummarizerFunction
 
 __all__ = [
@@ -170,8 +170,10 @@ def inventorize_host(
     # `_collect_inventory_plugin_items()` because the broker implements
     # an implicit protocol where `parsing_errors()` is empty until other
     # methods of the broker have been called.
-    parsing_errors: Sequence[str] = list(
-        itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())
+    parsing_errors: Sequence[ActiveCheckResult] = list(
+        itertools.chain.from_iterable(
+            resolver.parsing_errors(parameters.fail_status) for resolver in providers.values()
+        )
     )
     processing_failed = any(
         host_section.is_error() for _source, host_section in host_sections
@@ -191,7 +193,7 @@ def inventorize_host(
                 no_data_or_files=no_data_or_files,
             ),
             *(r for r in summarizer(host_sections) if r.state != 0),
-            *check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
+            *parsing_errors,
         ],
         inventory_tree=trees.inventory,
     )

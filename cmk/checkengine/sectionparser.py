@@ -17,6 +17,7 @@ from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import HostKey, SourceType
 from cmk.checkengine.plugins import ParsedSectionName, SectionName
+from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.piggyback.backend import store_piggyback_raw_data
 
 from .parser import HostSections
@@ -140,9 +141,11 @@ class ParsedSectionsResolver:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(section_plugins={self.section_plugins})"
 
-    @property
-    def parsing_errors(self) -> Sequence[str]:
-        return self._parser.parsing_errors
+    def parsing_errors(self, error_state: ServiceState = 1) -> Sequence[ActiveCheckResult]:
+        return [
+            ActiveCheckResult(state=error_state, summary=msg.split(" - ")[0], details=(msg,))
+            for msg in self._parser.parsing_errors
+        ]
 
     @staticmethod
     def _init_superseders(

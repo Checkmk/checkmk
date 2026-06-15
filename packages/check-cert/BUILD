@@ -84,6 +84,19 @@ rust_test(
 )
 
 rust_test(
+    name = "fetcher_imap_starttls_test",
+    srcs = [
+        "tests/fetcher_imap_starttls.rs",
+        "tests/starttls/common/tls_server.rs",
+    ],
+    crate_root = "tests/fetcher_imap_starttls.rs",
+    deps = [
+        ":check-cert-lib",
+        "@site_crates//:openssl",
+    ],
+)
+
+rust_test(
     name = "starttls_stream_io_test",
     srcs = [
         "tests/starttls/stream_io.rs",

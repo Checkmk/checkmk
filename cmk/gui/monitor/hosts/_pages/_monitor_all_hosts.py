@@ -6,6 +6,7 @@ from dataclasses import asdict
 
 from cmk.ccc.user import UserId
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -21,7 +22,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
-from cmk.gui.top_heading import top_heading
 from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon, Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
@@ -55,30 +55,23 @@ def monitor_all_hosts_visual_spec() -> Visual:
 def page_monitor_all_hosts(ctx: PageContext) -> None:
     breadcrumb = _make_breadcrumb(ctx)
 
-    html.body_start(
+    make_header(
+        html,
         str(_PAGE_TITLE),
+        breadcrumb,
+        page_menu=_build_page_menu(breadcrumb),
+        enable_main_page_scrollbar=False,
+        debug=ctx.config.debug,
         lang=user.language,
         inject_js_profiling_code=ctx.config.inject_js_profiling_code,
         load_frontend_vue=ctx.config.load_frontend_vue,
         custom_style_sheet=ctx.config.custom_style_sheet,
         screenshotmode=ctx.config.screenshotmode,
         inline_help_as_text=user.inline_help_as_text,
-    )
-
-    top_heading(
-        html,
-        request,
-        str(_PAGE_TITLE),
-        breadcrumb,
-        page_menu=_build_page_menu(breadcrumb),
-        # Vue app will handle its own polling — no browser-level reload timer.
-        browser_reload=0.0,
-        debug=ctx.config.debug,
         hide_suggestions=not user.get_tree_state("suggestions", "all", True),
         user_role_ids=user.role_ids,
     )
 
-    html.begin_page_content(enable_scrollbar=False)
     html.vue_component(
         "cmk-monitoring-all-hosts",
         data=asdict(
@@ -87,9 +80,8 @@ def page_monitor_all_hosts(ctx: PageContext) -> None:
             )
         ),
     )
-    html.end_page_content()
 
-    html.body_end()
+    html.footer()
 
 
 def _make_breadcrumb(ctx: PageContext) -> Breadcrumb:

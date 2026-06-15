@@ -369,6 +369,37 @@ def test_check_veritas_vcs_group() -> None:
     ]
 
 
+def test_check_veritas_vcs_group_no_state() -> None:
+    # Partial VCS output: group reported with only Frozen/TFrozen rows and no
+    # State row must not crash on an empty summary (CMK-35328).
+    section: veritas_vcs.Section = {
+        "group": {
+            "NRTRDE_HUN": [
+                Vcs(attr="Frozen", value="0", cluster="minions"),
+                Vcs(attr="TFrozen", value="0", cluster="minions"),
+            ],
+        },
+    }
+    assert list(veritas_vcs.check_veritas_vcs_group("NRTRDE_HUN", PARAMS, section)) == [
+        Result(state=State.OK, summary="cluster: minions"),
+    ]
+
+
+def test_check_veritas_vcs_group_no_state_but_frozen() -> None:
+    section: veritas_vcs.Section = {
+        "group": {
+            "NRTRDE_HUN": [
+                Vcs(attr="Frozen", value="1", cluster="minions"),
+                Vcs(attr="TFrozen", value="0", cluster="minions"),
+            ],
+        },
+    }
+    assert list(veritas_vcs.check_veritas_vcs_group("NRTRDE_HUN", PARAMS, section)) == [
+        Result(state=State.CRIT, summary="frozen"),
+        Result(state=State.OK, summary="cluster: minions"),
+    ]
+
+
 def test_check_veritas_vcs_resource() -> None:
     assert list(
         veritas_vcs.check_veritas_vcs_resource(

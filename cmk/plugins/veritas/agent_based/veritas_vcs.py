@@ -232,11 +232,12 @@ def check_veritas_vcs_subsection(
 
     state_mapping = params["map_states"]
     states = [vcs.value for vcs in list_vcs_tuples if vcs.attr.endswith("State")]
-    state_text = veritas_vcs_boil_down_states_in_cluster(states)
-    yield Result(
-        state=State(state_mapping.get(state_text, state_mapping["default"])),
-        summary=", ".join(map(lambda s: s.lower(), states)),
-    )
+    if states:
+        state_text = veritas_vcs_boil_down_states_in_cluster(states)
+        yield Result(
+            state=State(state_mapping.get(state_text, state_mapping["default"])),
+            summary=", ".join(s.lower() for s in states),
+        )
 
     cluster_name = _cluster_name(list_vcs_tuples)
     if cluster_name is not None:

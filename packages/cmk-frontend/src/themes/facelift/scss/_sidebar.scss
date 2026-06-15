@@ -136,6 +136,8 @@ body.side.main {
 }
 
 #content_area {
+  display: flex;
+  flex-flow: column nowrap;
   width: auto;
   height: 100%;
   overflow: hidden;

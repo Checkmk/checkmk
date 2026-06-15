@@ -85,6 +85,9 @@ def _handle_failure(
     if cmk.ccc.debug.enabled():
         raise exc
 
+    if isinstance(exc, BrokenPipeError):
+        raise exc
+
     if isinstance(exc, MKTimeout):
         if keepalive:
             raise exc

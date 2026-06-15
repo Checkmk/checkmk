@@ -74,6 +74,7 @@ def save_configuration_entity(
     tree: FolderTree,
     user: LoggedInUser,
     pprint_value: bool,
+    debug: bool,
     pending_changes: PendingChanges,
 ) -> ConfigurationEntityDescription:
     """Save a configuration entity.
@@ -135,6 +136,8 @@ def save_configuration_entity(
                 tree,
                 user,
                 pending_changes=pending_changes,
+                pprint_value=pprint_value,
+                debug=debug,
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(rule_form_spec_descr.ident),

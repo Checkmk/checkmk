@@ -8,7 +8,6 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.form_specs import (
     get_visitor,
@@ -97,6 +96,8 @@ def save_rule_form_spec_from_slidein_schema(
     user: LoggedInUser,
     *,
     pending_changes: PendingChanges,
+    pprint_value: bool,
+    debug: bool,
 ) -> RuleFormSpecDescription:
     _check_edit_permissions(name, user)
 
@@ -142,8 +143,8 @@ def save_rule_form_spec_from_slidein_schema(
     )
     index = ruleset.append_rule(folder, rule)
     rulesets.save_folder(
-        pprint_value=active_config.wato_pprint_config,
-        debug=active_config.debug,
+        pprint_value=pprint_value,
+        debug=debug,
     )
     ruleset.add_new_rule_change(index, folder, rule, pending_changes=pending_changes)
 

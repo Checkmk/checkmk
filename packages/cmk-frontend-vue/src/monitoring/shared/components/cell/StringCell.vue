@@ -11,10 +11,11 @@ import BaseCell, { type CellLink } from './BaseCell.vue'
 
 const props = withDefaults(
   defineProps<{
-    value: string
+    value: string | undefined
     hardBreakEvery?: number
     linkedTo?: CellLink | undefined
     columnId?: string | undefined
+    emptyLabel?: string | undefined
   }>(),
   { hardBreakEvery: 15, linkedTo: undefined }
 )
@@ -23,15 +24,24 @@ const SOFT_BREAK_CHARS = /([ \-_.])/g
 const ZWSP = '​'
 
 const display = computed(() => {
+  const value = props.value ?? props.emptyLabel ?? 'n/a'
   const hardBreak = new RegExp(`([^\\s\\-_.]{${props.hardBreakEvery}})`, 'g')
-  return props.value.replace(SOFT_BREAK_CHARS, `$1${ZWSP}`).replace(hardBreak, `$1${ZWSP}`)
+  return value.replace(SOFT_BREAK_CHARS, `$1${ZWSP}`).replace(hardBreak, `$1${ZWSP}`)
 })
 </script>
 
 <template>
   <BaseCell class="monitoring-string-cell" :column-id="columnId" :linked-to="linkedTo">
     <template #default>
-      <span :title="value" class="monitoring-string-cell__text">{{ display }}</span>
+      <span
+        :title="value"
+        class="monitoring-string-cell__text"
+        :class="{
+          'monitoring-string-cell__text--empty-string': display === 'n/a' || display === emptyLabel
+        }"
+      >
+        {{ display }}
+      </span>
     </template>
   </BaseCell>
 </template>
@@ -48,6 +58,11 @@ const display = computed(() => {
   overflow: hidden;
   overflow-wrap: normal;
   word-break: normal;
+
+  &.monitoring-string-cell__text--empty-string {
+    font-style: italic;
+    color: var(--font-color-dimmed);
+  }
 }
 
 /* stylelint-disable selector-pseudo-class-no-unknown */

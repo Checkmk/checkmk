@@ -31,7 +31,7 @@ def check_checkpoint_powersupply(
     for index, dev_status in section:
         if index == item:
             yield Result(
-                state=State(params.get(dev_status.lower(), State.CRIT)),
+                state=State(params.get(dev_status.lower().replace(" ", "_"), State.CRIT)),
                 summary=dev_status,
             )
             return
@@ -57,10 +57,12 @@ check_plugin_checkpoint_powersupply = CheckPlugin(
     check_function=check_checkpoint_powersupply,
     # for possible device statuses see SUP-27826
     # only "Present" seems officially supported, but we've also seen "up" and "ok"
+    # "No Redundancy" appears on R82 (SUP-29437): the supply is healthy but redundancy is lost
     check_default_parameters={
         "up": State.OK.value,
         "ok": State.OK.value,
         "present": State.CRIT.value,
+        "no_redundancy": State.WARN.value,
     },
     check_ruleset_name="checkpoint_powersupply",
 )

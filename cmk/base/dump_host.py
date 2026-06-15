@@ -18,7 +18,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.base import sources
-from cmk.base.config import ConfigCache, get_relay_id, ObjectAttributes
+from cmk.base.config import ConfigCache, CoreObjectsConfig, get_relay_id, ObjectAttributes
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
@@ -126,6 +126,7 @@ def print_(txt: str) -> None:
 def dump_host(
     loaded_config: BaseConfig,
     config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     service_name_config: PassiveServiceNameConfig,
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
@@ -212,14 +213,14 @@ def dump_host(
         tty.yellow
         + "Host groups:            "
         + tty.normal
-        + ", ".join(config_cache.hostgroups(hostname))
+        + ", ".join(core_objects_config.hostgroups(hostname))
         + "\n"
     )
     print_(
         tty.yellow
         + "Contact groups:         "
         + tty.normal
-        + ", ".join(config_cache.contactgroups(hostname))
+        + ", ".join(core_objects_config.contactgroups(hostname))
         + "\n"
     )
 
@@ -349,7 +350,7 @@ def dump_host(
                 _evaluate_params(service.parameters, timeperiod_active),
                 service.description,
                 ",".join(
-                    config_cache.servicegroups_of_service(
+                    core_objects_config.servicegroups_of_service(
                         hostname, service.description, service.labels
                     )
                 ),

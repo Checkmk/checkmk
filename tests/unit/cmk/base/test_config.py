@@ -87,6 +87,14 @@ from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
+def _make_core_objects_config(config_cache: ConfigCache) -> config.CoreObjectsConfig:
+    return config.CoreObjectsConfig(
+        config_cache._loaded_config,
+        config_cache.ruleset_matcher,
+        config_cache.label_manager,
+    )
+
+
 @dataclass(frozen=True)
 class _SecretsConfig:
     path: Path
@@ -1486,7 +1494,7 @@ def test_hostgroups(monkeypatch: MonkeyPatch, hostname: HostName, result: list[s
             },
         ],
     )
-    assert ts.apply(monkeypatch).hostgroups(hostname) == result
+    assert _make_core_objects_config(ts.apply(monkeypatch)).hostgroups(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -1532,7 +1540,9 @@ def test_contactgroups(monkeypatch: MonkeyPatch, hostname: HostName, result: lis
             },
         ],
     )
-    assert sorted(ts.apply(monkeypatch).contactgroups(hostname)) == sorted(result)
+    assert sorted(
+        _make_core_objects_config(ts.apply(monkeypatch)).contactgroups(hostname)
+    ) == sorted(result)
 
 
 @pytest.mark.parametrize(
@@ -1967,7 +1977,7 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
         "tcp": "tcp",
         "checkmk-agent": "checkmk-agent",
     }
-    assert config_cache.tags_of_service(xyz_host, "CPU load", {}) == {}
+    assert _make_core_objects_config(config_cache).tags_of_service(xyz_host, "CPU load", {}) == {}
 
     assert config_cache.host_tags.tags(test_host) == {
         "address_family": "ip-v4-only",
@@ -1979,7 +1989,9 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
         "site": "unit",
         "snmp_ds": "no-snmp",
     }
-    assert config_cache.tags_of_service(test_host, "CPU load", {}) == {"criticality": "prod"}
+    assert _make_core_objects_config(config_cache).tags_of_service(test_host, "CPU load", {}) == {
+        "criticality": "prod"
+    }
 
 
 def test_labels(monkeypatch: MonkeyPatch) -> None:
@@ -2116,7 +2128,12 @@ def test_config_cache_extra_attributes_of_service(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.extra_attributes_of_service(hostname, "CPU load", {}) == result
+    assert (
+        _make_core_objects_config(config_cache).extra_attributes_of_service(
+            hostname, "CPU load", {}
+        )
+        == result
+    )
 
 
 @pytest.mark.parametrize(
@@ -2162,7 +2179,7 @@ def test_config_cache_icons_and_actions(
     )
     config_cache = ts.apply(monkeypatch)
     assert sorted(
-        config_cache.icons_and_actions_of_service(
+        _make_core_objects_config(config_cache).icons_and_actions_of_service(
             hostname,
             "CPU load",
             {},
@@ -2196,7 +2213,10 @@ def test_config_cache_servicegroups_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.servicegroups_of_service(hostname, "CPU load", {}) == result
+    assert (
+        _make_core_objects_config(config_cache).servicegroups_of_service(hostname, "CPU load", {})
+        == result
+    )
 
 
 @pytest.mark.parametrize(
@@ -2258,7 +2278,9 @@ def test_config_cache_contactgroups_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert sorted(config_cache.contactgroups_of_service(hostname, "CPU load", {})) == sorted(result)
+    assert sorted(
+        _make_core_objects_config(config_cache).contactgroups_of_service(hostname, "CPU load", {})
+    ) == sorted(result)
 
 
 @pytest.mark.parametrize(
@@ -2335,7 +2357,12 @@ def test_config_cache_custom_attributes_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.custom_attributes_of_service(hostname, "CPU load", {}) == result
+    assert (
+        _make_core_objects_config(config_cache).custom_attributes_of_service(
+            hostname, "CPU load", {}
+        )
+        == result
+    )
 
 
 @pytest.mark.parametrize(

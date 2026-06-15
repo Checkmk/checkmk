@@ -11,7 +11,7 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Final, Literal
 
 from cmk import trace
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, CoreObjectsConfig
 from cmk.ccc.config_path import ConfigCreationContext
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
@@ -43,6 +43,7 @@ class MonitoringCore(abc.ABC):
         self,
         config_creation_context: ConfigCreationContext,
         config_cache: ConfigCache,
+        core_objects_config: CoreObjectsConfig,
         hosts_config: Hosts,
         final_service_name_config: Callable[
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
@@ -67,6 +68,7 @@ class MonitoringCore(abc.ABC):
         self._create_config(
             config_creation_context,
             config_cache,
+            core_objects_config,
             hosts_config,
             final_service_name_config,
             passive_service_name_config,
@@ -87,6 +89,7 @@ class MonitoringCore(abc.ABC):
         self,
         config_creation_context: ConfigCreationContext,
         config_cache: ConfigCache,
+        core_objects_config: CoreObjectsConfig,
         hosts_config: Hosts,
         final_service_name_config: Callable[
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName

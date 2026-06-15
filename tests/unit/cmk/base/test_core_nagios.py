@@ -56,6 +56,15 @@ from cmk.utils.servicename import ServiceName
 from tests.testlib.common.empty_config import EMPTY_CONFIG, EMPTY_NAGIOS_CORE_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
+
+def _make_core_objects_config(config_cache: config.ConfigCache) -> config.CoreObjectsConfig:
+    return config.CoreObjectsConfig(
+        config_cache._loaded_config,
+        config_cache.ruleset_matcher,
+        config_cache.label_manager,
+    )
+
+
 _TEST_LOCATION = PluginLocation(
     cmk.plugins.monitoring_plugins.server_side_calls.ftp.__name__,
     "yolo",
@@ -342,6 +351,7 @@ def test_create_nagios_host_spec(
     host_spec = create_nagios_host_spec(
         cfg,
         config_cache,
+        _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
         hostname,
         socket.AddressFamily.AF_INET,
@@ -378,6 +388,7 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
     host_spec = create_nagios_host_spec(
         cfg,
         config_cache,
+        _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
         hostname,
         socket.AddressFamily.AF_INET,
@@ -647,6 +658,7 @@ def test_create_nagios_servicedefs_active_check(
     create_nagios_servicedefs(
         cfg,
         config_cache,
+        _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
         final_service_name_config=final_service_name_config,
         passive_service_name_config=config_cache.make_passive_service_name_config(
@@ -697,6 +709,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
     create_nagios_servicedefs(
         cfg,
         config_cache,
+        _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
         final_service_name_config=lambda *a: "",
         passive_service_name_config=lambda *a: "",
@@ -836,6 +849,7 @@ def test_create_nagios_servicedefs_with_warnings(
     create_nagios_servicedefs(
         cfg,
         config_cache,
+        _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
         final_service_name_config=final_service_name_config,
         passive_service_name_config=config_cache.make_passive_service_name_config(
@@ -918,6 +932,7 @@ def test_create_nagios_servicedefs_omit_service(
     create_nagios_servicedefs(
         cfg,
         config_cache,
+        _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
         final_service_name_config=lambda *a: "",
         passive_service_name_config=lambda *a: "",
@@ -1000,6 +1015,7 @@ def test_create_nagios_servicedefs_invalid_args(
     create_nagios_servicedefs(
         cfg,
         config_cache,
+        _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
         final_service_name_config=lambda *a: "",
         passive_service_name_config=lambda *a: "",
@@ -1101,6 +1117,7 @@ def test_create_nagios_config_commands(
     create_nagios_servicedefs(
         cfg,
         config_cache,
+        _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
         final_service_name_config=final_service_name_config,
         passive_service_name_config=config_cache.make_passive_service_name_config(

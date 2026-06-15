@@ -16,7 +16,7 @@ from typing import Literal
 import cmk.ccc.debug
 import cmk.utils.paths
 from cmk import trace
-from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.config import ConfigCache, CoreObjectsConfig, ObjectAttributes
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import ServiceID
@@ -207,14 +207,14 @@ def check_icmp_arguments_of(
 
 
 def get_cmk_passive_service_attributes(
-    config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     host_name: HostName,
     service_name: ServiceName,
     service_labels: Labels,
     check_mk_attrs: ObjectAttributes,
 ) -> ObjectAttributes:
     attrs = get_service_attributes(
-        config_cache,
+        core_objects_config,
         host_name,
         service_name,
         service_labels,
@@ -226,17 +226,17 @@ def get_cmk_passive_service_attributes(
 
 
 def get_service_attributes(
-    config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     host_name: HostName,
     service_name: ServiceName,
     service_labels: Labels,
 ) -> ObjectAttributes:
     attrs: ObjectAttributes = _extra_service_attributes(
-        config_cache, host_name, service_name, service_labels
+        core_objects_config, host_name, service_name, service_labels
     )
     attrs.update(
         ConfigCache._get_tag_attributes(
-            config_cache.tags_of_service(host_name, service_name, service_labels), "TAG"
+            core_objects_config.tags_of_service(host_name, service_name, service_labels), "TAG"
         )
     )
     attrs.update(ConfigCache._get_tag_attributes(service_labels, "LABEL"))
@@ -245,7 +245,7 @@ def get_service_attributes(
 
 
 def _extra_service_attributes(
-    config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     host_name: HostName,
     service_name: ServiceName,
     service_labels: Labels,
@@ -254,21 +254,25 @@ def _extra_service_attributes(
 
     # Add service custom_variables. Name conflicts are prevented by the GUI, but just
     # to be sure, add them first. The other definitions will override the custom attributes.
-    for varname, value in config_cache.custom_attributes_of_service(
+    for varname, value in core_objects_config.custom_attributes_of_service(
         host_name, service_name, service_labels
     ).items():
         attrs["_%s" % varname.upper()] = value
 
-    attrs.update(config_cache.extra_attributes_of_service(host_name, service_name, service_labels))
+    attrs.update(
+        core_objects_config.extra_attributes_of_service(host_name, service_name, service_labels)
+    )
 
     # Add explicit custom_variables
-    for varname, value in config_cache.get_explicit_service_custom_variables(
+    for varname, value in core_objects_config.get_explicit_service_custom_variables(
         host_name, service_name
     ).items():
         attrs["_%s" % varname.upper()] = value
 
     # Add custom user icons and actions
-    actions = config_cache.icons_and_actions_of_service(host_name, service_name, service_labels)
+    actions = core_objects_config.icons_and_actions_of_service(
+        host_name, service_name, service_labels
+    )
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
     return attrs

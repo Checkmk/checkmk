@@ -23,6 +23,7 @@ from typing import Any, assert_never, Final, IO, Literal
 from cmk.base import config
 from cmk.base.config import (
     ConfigCache,
+    CoreObjectsConfig,
     HostgroupName,
     ObjectAttributes,
     ServicegroupName,
@@ -124,6 +125,7 @@ class NagiosCore(MonitoringCore):
         self,
         config_creation_context: ConfigCreationContext,
         config_cache: ConfigCache,
+        core_objects_config: CoreObjectsConfig,
         hosts_config: Hosts,
         final_service_name_config: Callable[
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
@@ -146,6 +148,7 @@ class NagiosCore(MonitoringCore):
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
         self._config_cache = config_cache
+        self._core_objects_config = core_objects_config
         self._create_core_config(
             config_creation_context.path_created,
             final_service_name_config,
@@ -211,6 +214,7 @@ class NagiosCore(MonitoringCore):
         notify_host_files = create_config(
             config_buffer,
             self._config_cache,
+            self._core_objects_config,
             self.nagios_core_config,
             final_service_name_config,
             passive_service_name_config,
@@ -318,6 +322,7 @@ def _validate_licensing(
 def create_config(
     outfile: IO[str],
     config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
@@ -352,6 +357,7 @@ def create_config(
         all_notify_host_configs[hostname] = _create_nagios_config_host(
             cfg,
             config_cache,
+            core_objects_config,
             nagios_core_config,
             final_service_name_config,
             passive_service_name_config,
@@ -407,6 +413,7 @@ def _output_conf_header(cfg: NagiosConfig) -> None:
 def _create_nagios_config_host(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
@@ -436,6 +443,7 @@ def _create_nagios_config_host(
         host_spec = create_nagios_host_spec(
             cfg,
             config_cache,
+            core_objects_config,
             nagios_core_config,
             hostname,
             host_ip_family,
@@ -450,6 +458,7 @@ def _create_nagios_config_host(
         service_labels=create_nagios_servicedefs(
             cfg,
             config_cache,
+            core_objects_config,
             nagios_core_config,
             final_service_name_config,
             passive_service_name_config,
@@ -472,6 +481,7 @@ def _create_nagios_config_host(
 def create_nagios_host_spec(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
     hostname: HostName,
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
@@ -557,7 +567,7 @@ def create_nagios_host_spec(
     if command:
         host_spec["check_command"] = command
 
-    hostgroups = config_cache.hostgroups(hostname)
+    hostgroups = core_objects_config.hostgroups(hostname)
     if nagios_core_config.define_hostgroups or hostgroups == [
         nagios_core_config.default_host_group
     ]:
@@ -565,7 +575,7 @@ def create_nagios_host_spec(
     host_spec["hostgroups"] = ",".join(sorted(hostgroups))
 
     # Contact groups
-    contactgroups = config_cache.contactgroups(hostname)
+    contactgroups = core_objects_config.contactgroups(hostname)
     if contactgroups:
         host_spec["contact_groups"] = ",".join(sorted(contactgroups))
         cfg.contactgroups_to_define.update(contactgroups)
@@ -619,6 +629,7 @@ _ServiceLabels = dict[ServiceName, Labels]
 def _process_services_data(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
     passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
@@ -676,7 +687,7 @@ def _process_services_data(
 
         passive_service_attributes = _to_nagios_core_attributes(
             get_cmk_passive_service_attributes(
-                config_cache,
+                core_objects_config,
                 hostname,
                 service.description,
                 service.labels,
@@ -696,7 +707,7 @@ def _process_services_data(
             | passive_service_attributes
             | _extra_service_conf_of(
                 cfg,
-                config_cache,
+                core_objects_config,
                 hostname,
                 service.description,
                 service.labels,
@@ -717,6 +728,7 @@ _PingServiceNames = Literal["PING", "PING IPv4", "PING IPv6"]
 def create_nagios_servicedefs(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
@@ -739,12 +751,13 @@ def create_nagios_servicedefs(
 ) -> dict[ServiceName, Labels]:
     check_mk_labels = _get_service_labels(config_cache.label_manager, hostname, "Check_MK")
     check_mk_attrs = _to_nagios_core_attributes(
-        get_service_attributes(config_cache, hostname, "Check_MK", check_mk_labels)
+        get_service_attributes(core_objects_config, hostname, "Check_MK", check_mk_labels)
     )
 
     services_ids, service_labels = _process_services_data(
         cfg,
         config_cache,
+        core_objects_config,
         nagios_core_config,
         passive_service_name_config,
         enforced_services_table,
@@ -766,7 +779,7 @@ def create_nagios_servicedefs(
             | check_mk_attrs
             | _extra_service_conf_of(
                 cfg,
-                config_cache,
+                core_objects_config,
                 hostname,
                 "Check_MK",
                 check_mk_labels,
@@ -816,7 +829,7 @@ def create_nagios_servicedefs(
 
         service_attributes = _to_nagios_core_attributes(
             get_service_attributes(
-                config_cache,
+                core_objects_config,
                 hostname,
                 service_data.description,
                 active_service_labels,
@@ -840,7 +853,7 @@ def create_nagios_servicedefs(
             | service_attributes
             | _extra_service_conf_of(
                 cfg,
-                config_cache,
+                core_objects_config,
                 hostname,
                 service_data.description,
                 active_service_labels,
@@ -879,6 +892,7 @@ def create_nagios_servicedefs(
                 entry,
                 cfg,
                 config_cache,
+                core_objects_config,
                 nagios_core_config,
                 final_service_name_config,
                 hostname,
@@ -899,11 +913,13 @@ def create_nagios_servicedefs(
                 "service_description": service_discovery_name,
             }
             | _to_nagios_core_attributes(
-                get_service_attributes(config_cache, hostname, service_discovery_name, labels)
+                get_service_attributes(
+                    core_objects_config, hostname, service_discovery_name, labels
+                )
             )
             | _extra_service_conf_of(
                 cfg,
-                config_cache,
+                core_objects_config,
                 hostname,
                 service_discovery_name,
                 labels,
@@ -947,6 +963,7 @@ def create_nagios_servicedefs(
         _add_ping_service(
             cfg,
             config_cache,
+            core_objects_config,
             hostname,
             host_ip_family,
             host_attrs,
@@ -963,6 +980,7 @@ def _create_custom_check(
     entry: dict[str, Any],
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
@@ -1034,7 +1052,7 @@ def _create_custom_check(
     labels = _get_service_labels(config_cache.label_manager, hostname, description)
 
     service_attr = _to_nagios_core_attributes(
-        get_service_attributes(config_cache, hostname, description, labels)
+        get_service_attributes(core_objects_config, hostname, description, labels)
     )
     service_spec = (
         {
@@ -1048,7 +1066,7 @@ def _create_custom_check(
         | service_attr
         | _extra_service_conf_of(
             cfg,
-            config_cache,
+            core_objects_config,
             hostname,
             description,
             labels,
@@ -1115,6 +1133,7 @@ def _get_dependencies(
 def _add_ping_service(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     host_name: HostName,
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     host_attrs: Mapping[str, Any],
@@ -1150,7 +1169,7 @@ def _add_ping_service(
 
     service_spec = _make_ping_only_spec(
         cfg,
-        config_cache,
+        core_objects_config,
         host_name,
         ping_service,
         arguments,
@@ -1165,7 +1184,7 @@ def _add_ping_service(
 
 def _make_ping_only_spec(
     cfg: NagiosConfig,
-    config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     host_name: HostName,
     service_name: ServiceName,
     arguments: str,
@@ -1182,10 +1201,15 @@ def _make_ping_only_spec(
             "check_command": f"{ping_command}!{arguments}",
         }
         | _to_nagios_core_attributes(
-            get_service_attributes(config_cache, host_name, service_name, service_labels)
+            get_service_attributes(core_objects_config, host_name, service_name, service_labels)
         )
         | _extra_service_conf_of(
-            cfg, config_cache, host_name, service_name, service_labels, define_servicegroups
+            cfg,
+            core_objects_config,
+            host_name,
+            service_name,
+            service_labels,
+            define_servicegroups,
         )
     )
 
@@ -1451,7 +1475,7 @@ def _to_nagios_core_attributes(attrs: ObjectAttributes) -> ObjectAttributes:
 
 def _extra_service_conf_of(
     cfg: NagiosConfig,
-    config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     host_name: HostName,
     service_name: ServiceName,
     service_labels: Labels,
@@ -1464,12 +1488,12 @@ def _extra_service_conf_of(
     # Otherwise inherit the contact groups from the host.
     # "check-mk-notify" is always returned for rulebased notifications and
     # the Nagios core and not defined by the user.
-    sercgr = config_cache.contactgroups_of_service(host_name, service_name, service_labels)
+    sercgr = core_objects_config.contactgroups_of_service(host_name, service_name, service_labels)
     if sercgr != ["check-mk-notify"]:
         service_spec["contact_groups"] = ",".join(sorted(sercgr))
         cfg.contactgroups_to_define.update(sercgr)
 
-    sergr = config_cache.servicegroups_of_service(host_name, service_name, service_labels)
+    sergr = core_objects_config.servicegroups_of_service(host_name, service_name, service_labels)
     if sergr:
         service_spec["service_groups"] = ",".join(sorted(sergr))
         if define_servicegroups:

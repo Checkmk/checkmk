@@ -374,12 +374,19 @@ _SNMP_BACKEND_OPTION: Final = Option(
 
 
 def _mode_list_hosts(app: CheckmkBaseApp, options: dict, args: list[str]) -> None:
-    config_cache = config.load(
+    loading_result = config.load(
         get_builtin_host_labels=app.get_builtin_host_labels,
         edition=app.edition,
-    ).config_cache
+    )
+    config_cache = loading_result.config_cache
+    core_objects_config = config.CoreObjectsConfig(
+        loading_result.loaded_config,
+        config_cache.ruleset_matcher,
+        config_cache.label_manager,
+    )
     hosts = _list_all_hosts(
         config_cache,
+        core_objects_config,
         args,
         options,
     )
@@ -391,6 +398,7 @@ def _mode_list_hosts(app: CheckmkBaseApp, options: dict, args: list[str]) -> Non
 # TODO: Does not care about internal group "check_mk"
 def _list_all_hosts(
     config_cache: ConfigCache,
+    core_objects_config: config.CoreObjectsConfig,
     hostgroups: list[str],
     options: dict,
 ) -> list[HostName]:
@@ -417,7 +425,7 @@ def _list_all_hosts(
 
     hostlist = []
     for hn in hostnames:
-        for hg in config_cache.hostgroups(hn):
+        for hg in core_objects_config.hostgroups(hn):
             if hg in hostgroups:
                 hostlist.append(hn)
                 break
@@ -878,6 +886,7 @@ def _mode_dump_hosts(app: CheckmkBaseApp, hostlist: Iterable[HostName]) -> None:
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     config_cache = loading_result.config_cache
+    core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = config_cache.hosts_config
     ip_lookup_config = config_cache.ip_lookup_config()
 
@@ -918,6 +927,7 @@ def _mode_dump_hosts(app: CheckmkBaseApp, hostlist: Iterable[HostName]) -> None:
         cmk.base.dump_host.dump_host(
             loading_result.loaded_config,
             config_cache,
+            core_objects_config,
             service_name_config,
             enforced_services_table,
             plugins,
@@ -1497,6 +1507,7 @@ def _mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> N
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     config_cache = loading_result.config_cache
+    core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = config_cache.hosts_config
 
     ip_lookup_config = config_cache.ip_lookup_config()
@@ -1529,6 +1540,7 @@ def _mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> N
     _notify_host_files = create_config(
         sys.stdout,
         config_cache,
+        core_objects_config,
         NagiosCoreConfig(
             delay_precompile=loaded_config.delay_precompile,
             host_template=loaded_config.host_template,
@@ -1639,6 +1651,7 @@ def _mode_update(app: CheckmkBaseApp) -> None:
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
+    core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.config_cache.hosts_config
 
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
@@ -1679,6 +1692,7 @@ def _mode_update(app: CheckmkBaseApp) -> None:
                 ),
                 hosts_config=hosts_config,
                 config_cache=loading_result.config_cache,
+                core_objects_config=core_objects_config,
                 final_service_name_config=final_service_name_config,
                 passive_service_name_config=service_name_config,
                 enforced_services_table=enfored_services_table,
@@ -1746,6 +1760,7 @@ def _mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
+    core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.config_cache.hosts_config
 
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
@@ -1765,6 +1780,7 @@ def _mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
 
     core_interface.do_restart(
         loading_result.config_cache,
+        core_objects_config,
         hosts_config,
         final_service_name_config,
         passive_service_name_config,
@@ -1844,6 +1860,7 @@ def _mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
+    core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.config_cache.hosts_config
 
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
@@ -1863,6 +1880,7 @@ def _mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
 
     core_interface.do_reload(
         loading_result.config_cache,
+        core_objects_config,
         hosts_config,
         final_service_name_config,
         passive_service_name_config,

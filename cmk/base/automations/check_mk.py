@@ -1297,10 +1297,14 @@ def _execute_autodiscovery(
         hosts_config = config.make_hosts_config(env.loaded_config)
         bake_on_restart = app.make_bake_on_restart(env.loading_result, hosts_config.hosts)
         notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
+        core_objects_config = config.CoreObjectsConfig(
+            env.loaded_config, env.ruleset_matcher, env.label_manager
+        )
 
         if env.loaded_config.monitoring_core == "cmc":
             do_reload(
                 env.config_cache,
+                core_objects_config,
                 hosts_config,
                 env.final_service_name_config,
                 env.passive_service_name_config,
@@ -1328,6 +1332,7 @@ def _execute_autodiscovery(
         else:
             do_restart(
                 env.config_cache,
+                core_objects_config,
                 hosts_config,
                 env.final_service_name_config,
                 env.passive_service_name_config,
@@ -2568,6 +2573,9 @@ def _execute_silently(
 ) -> RestartResult:
     env = rctx.env
     config_cache = env.config_cache
+    core_objects_config = config.CoreObjectsConfig(
+        env.loaded_config, env.ruleset_matcher, env.label_manager
+    )
     hosts_config = rctx.hosts_config
     with redirect_stdout(open(os.devnull, "w")):
         # The IP lookup used to write to stdout, that is not the case anymore.
@@ -2576,6 +2584,7 @@ def _execute_silently(
         try:
             do_restart(
                 config_cache,
+                core_objects_config,
                 hosts_config,
                 env.final_service_name_config,
                 env.passive_service_name_config,
@@ -3651,6 +3660,9 @@ class AutomationActiveCheck:
 
         env = AutomationEnvironment.create(app, plugins, loading_result)
         ip_family = env.ip_lookup_config.default_address_family(host_name)
+        core_objects_config = config.CoreObjectsConfig(
+            env.loaded_config, env.ruleset_matcher, env.label_manager
+        )
 
         env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
@@ -3675,6 +3687,7 @@ class AutomationActiveCheck:
                     ip_address_of,
                     discovered_labels={},
                     config_cache=env.config_cache,
+                    core_objects_config=core_objects_config,
                 )
                 if command_line:
                     cmd = autodetect_plugin(command_line)
@@ -3719,7 +3732,7 @@ class AutomationActiveCheck:
                 service_data.description,
                 env.label_manager.labels_of_service(host_name, service_data.description, {}),
                 " ".join(service_data.command),
-                config_cache=env.config_cache,
+                core_objects_config=core_objects_config,
             )
             return ActiveCheckResult(*self._execute_check_plugin(command_line))
 
@@ -3742,13 +3755,14 @@ class AutomationActiveCheck:
         ip_address_of: ip_lookup.IPLookup,
         discovered_labels: Mapping[str, str],
         config_cache: config.ConfigCache,
+        core_objects_config: config.CoreObjectsConfig,
     ) -> str:
         macros = config.ConfigCache.get_host_macros_from_attributes(
             hostname, config_cache.get_host_attributes(hostname, ip_family, ip_address_of)
         )
 
         service_attrs = get_service_attributes(
-            config_cache,
+            core_objects_config,
             hostname,
             service_desc,
             config_cache.label_manager.labels_of_service(hostname, service_desc, discovered_labels),
@@ -3769,10 +3783,10 @@ class AutomationActiveCheck:
         service_name: ServiceName,
         service_labels: Mapping[str, str],
         commandline: str,
-        config_cache: config.ConfigCache,
+        core_objects_config: config.CoreObjectsConfig,
     ) -> str:
         service_attrs = get_service_attributes(
-            config_cache, host_name, service_name, service_labels
+            core_objects_config, host_name, service_name, service_labels
         )
         service_macros = config.ConfigCache.get_service_macros_from_attributes(service_attrs)
 

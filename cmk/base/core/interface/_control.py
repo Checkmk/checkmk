@@ -18,7 +18,7 @@ import cmk.ccc.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, CoreObjectsConfig
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS
 from cmk.ccc import config_path
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
@@ -44,6 +44,7 @@ type _LockingMode = Literal["abort", "wait"] | None
 
 def do_reload(
     config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Mapping[str, str]]], ServiceName
@@ -70,6 +71,7 @@ def do_reload(
 ) -> None:
     do_restart(
         config_cache,
+        core_objects_config,
         hosts_config,
         final_service_name_config,
         passive_service_name_config,
@@ -92,6 +94,7 @@ def do_reload(
 
 def do_restart(
     config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     host_config: Hosts,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Mapping[str, str]]], ServiceName
@@ -124,6 +127,7 @@ def do_restart(
             do_create_config(
                 core=core,
                 config_cache=config_cache,
+                core_objects_config=core_objects_config,
                 hosts_config=host_config,
                 final_service_name_config=final_service_name_config,
                 passive_service_name_config=passive_service_name_config,
@@ -150,6 +154,7 @@ def do_restart(
 def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
@@ -194,6 +199,7 @@ def do_create_config(
             _create_active_config(
                 core,
                 config_cache,
+                core_objects_config,
                 hosts_config,
                 final_service_name_config,
                 passive_service_name_config,
@@ -264,6 +270,7 @@ def _backup_objects_file(core_client: CoreClient) -> Iterator[None]:
 def _create_active_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
@@ -304,6 +311,7 @@ def _create_active_config(
         core.create_config(
             config_creation_context,
             config_cache,
+            core_objects_config,
             hosts_config,
             final_service_name_config,
             passive_service_name_config,

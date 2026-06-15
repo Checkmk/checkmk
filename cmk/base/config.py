@@ -1431,8 +1431,6 @@ class ConfigCache:
         self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
         self.__active_checks: dict[HostName, Sequence[SSCRules]] = {}
         self.__special_agents: dict[HostName, Sequence[SSCRules]] = {}
-        self.__hostgroups: dict[HostName, Sequence[str]] = {}
-        self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
         self.__snmp_fetch_interval: dict[HostName, Mapping[SectionName, int | None]] = {}
         self.__snmp_backend: dict[HostName, SNMPBackendEnum] = {}
@@ -1783,8 +1781,6 @@ class ConfigCache:
         self.__discovery_check_parameters.clear()
         self.__active_checks.clear()
         self.__special_agents.clear()
-        self.__hostgroups.clear()
-        self.__contactgroups.clear()
         self.__explicit_check_command.clear()
         self.__snmp_fetch_interval.clear()
         self.__snmp_backend.clear()
@@ -3304,6 +3300,31 @@ class ConfigCache:
                 TagGroupID("site"), self._loaded_config.distributed_wato_site or omd_site()
             )
         )
+
+
+class CoreObjectsConfig:
+    """Configuration accessors used only for core-config generation.
+
+    These used to live on ConfigCache but are consumed exclusively by the
+    main-process core-config writers (Nagios/CMC) and ``cmk -D`` -- never by the
+    checking/helper side. Splitting them off is a step towards dissolving
+    ConfigCache; the checking side must never depend on this class.
+    """
+
+    def __init__(
+        self,
+        loaded_config: BaseConfig,
+        matcher: RulesetMatcher,
+        label_manager: LabelManager,
+    ) -> None:
+        self._loaded_config = loaded_config
+        self.ruleset_matcher = matcher
+        self.label_manager = label_manager
+        # extra_attributes_of_service needs the check interval; build it here from
+        # the same inputs ConfigCache.initialize() uses (no extra dependency).
+        self.check_interval = make_check_interval_config(loaded_config, matcher, label_manager)
+        self.__hostgroups: dict[HostName, Sequence[str]] = {}
+        self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}
 
     def tags_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels

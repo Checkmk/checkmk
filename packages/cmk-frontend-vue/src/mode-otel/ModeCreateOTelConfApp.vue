@@ -62,7 +62,7 @@ const { _t } = usei18n()
 const currentMode = ref<'guided' | 'overview'>('guided')
 const currentStep = ref(1)
 
-const configName = ref<string>('opentelemetry_config_1')
+const configName = ref<string>('')
 const siteId = ref<string | null>(null)
 
 const generalPropertiesRef =
@@ -358,7 +358,7 @@ async function onSaveClick(): Promise<void> {
           ref="generalProperties"
           v-model:config-name="configName"
           v-model:site-id="siteId"
-          :config-name-placeholder="_t('opentelemetry_config_1')"
+          config-name-prefix="opentelemetry_config_"
           config-list-endpoint="api/internal/domain-types/otel_collector_config_receivers/collections/all"
           :already-configured-error="
             _t(

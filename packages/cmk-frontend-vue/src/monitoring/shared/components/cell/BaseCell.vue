@@ -82,6 +82,10 @@ const linkedHighlightClasses = computed<string[]>(() =>
     ? [...highlightClasses.value, 'monitoring-base-cell__highlight--hover']
     : highlightClasses.value
 )
+
+const highlightStyle = computed<CSSProperties>(() =>
+  props.highlight?.minWidth !== undefined ? { minWidth: `${props.highlight.minWidth}px` } : {}
+)
 </script>
 
 <template>
@@ -99,12 +103,12 @@ const linkedHighlightClasses = computed<string[]>(() =>
       :href="linkedTo.href"
       :target="linkedTo.target"
     >
-      <div :class="linkedHighlightClasses">
+      <div :class="linkedHighlightClasses" :style="highlightStyle">
         <slot :name="activeSlot" />
       </div>
     </a>
     <div v-else class="monitoring-base-cell__wrapper">
-      <div :class="highlightClasses">
+      <div :class="highlightClasses" :style="highlightStyle">
         <slot :name="activeSlot" />
       </div>
       <a

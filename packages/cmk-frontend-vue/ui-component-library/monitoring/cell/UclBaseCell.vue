@@ -90,6 +90,12 @@ export const panelConfig = {
       { title: 'info', name: 'info' }
     ],
     initialState: 'default'
+  },
+  highlightMinWidth: {
+    type: 'number' as const,
+    title: '↳ minWidth',
+    initialState: 0,
+    help: 'Minimum width of the highlight in pixels (0 disables it).'
   }
 } satisfies PanelConfig
 </script>
@@ -136,13 +142,15 @@ const highlight = computed<CellHighlight | undefined>(() =>
   propState.value.highlightEnabled
     ? {
         type: propState.value.highlightType as CellHighlight['type'],
-        color: propState.value.highlightColor as CellHighlight['color']
+        color: propState.value.highlightColor as CellHighlight['color'],
+        minWidth:
+          propState.value.highlightMinWidth > 0 ? propState.value.highlightMinWidth : undefined
       }
     : undefined
 )
 
 const LINK_SUB_KEYS = ['linkHref', 'linkTarget', 'linkVariant'] as const
-const HIGHLIGHT_SUB_KEYS = ['highlightType', 'highlightColor'] as const
+const HIGHLIGHT_SUB_KEYS = ['highlightType', 'highlightColor', 'highlightMinWidth'] as const
 
 const visibleConfig = computed(() =>
   Object.fromEntries(
@@ -234,6 +242,7 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-linkVariant'])),
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-highlightType'])),
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-highlightColor'])),
+.ucl-base-cell__panel :deep(div:has(> div > label[for$='-highlightMinWidth'])),
 .ucl-base-cell__panel :deep(div:has(> div > label[for$='-highlightOutline'])) {
   padding-left: 16px;
 }

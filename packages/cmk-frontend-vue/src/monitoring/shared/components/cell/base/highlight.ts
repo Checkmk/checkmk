@@ -7,4 +7,5 @@
 export interface CellHighlight {
   type: 'inline' | 'outline' | 'full'
   color: 'default' | 'success' | 'warning' | 'danger' | 'info'
+  minWidth?: number | undefined
 }

@@ -233,8 +233,9 @@ py_test(
 py_test(
     name = "parser-tests",
     size = "small",
-    srcs = [
-        "tests/cmk/checkengine/test_parser.py",
+    srcs = glob([
+        "tests/cmk/checkengine/parser/*.py",
+    ]) + [
         ":__test__.py",
     ],
     main = "__test__.py",

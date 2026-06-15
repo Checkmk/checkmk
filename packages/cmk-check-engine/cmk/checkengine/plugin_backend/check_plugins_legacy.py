@@ -7,6 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
+# ruff: noqa: SLF001
 
 """Helper to register a new-style section based on config.check_info"""
 

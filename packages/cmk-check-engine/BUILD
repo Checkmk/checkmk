@@ -317,6 +317,22 @@ py_test(
     ],
 )
 
+py_test(
+    name = "plugin-backend-tests",
+    size = "small",
+    srcs = glob([
+        "tests/cmk/checkengine/plugin_backend/*.py",
+    ]) + [
+        ":__test__.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
+        requirement("pytest"),
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-check-engine",
@@ -335,6 +351,7 @@ py_wheel(
         ":snmplib",
         ":specs",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
     ],
 )
@@ -374,6 +391,7 @@ py_requirements_test(
         ":snmplib",
         ":specs",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
     ],
     requirements_in = "requirements.in",

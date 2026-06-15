@@ -5,7 +5,8 @@
 
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-
+# ruff: noqa: ARG001
+# ruff: noqa: SLF001
 
 import inspect
 from dataclasses import replace

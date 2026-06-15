@@ -198,7 +198,7 @@ def _validate_fetch_spec(trees: Sequence[SNMPTree]) -> None:
         tree.validate()
 
 
-def _noop_host_label_function(section: Any) -> Generator[HostLabel]:
+def _noop_host_label_function(section: Any) -> Generator[HostLabel]:  # noqa: ARG001
     yield from ()
 
 

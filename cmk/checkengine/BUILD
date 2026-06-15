@@ -26,6 +26,7 @@ py_library(
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:discover_plugins",

@@ -5,7 +5,9 @@
 
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
-
+# ruff: noqa: ARG001
+# ruff: noqa: ARG005
+# ruff: noqa: SLF001
 
 from collections.abc import Callable
 

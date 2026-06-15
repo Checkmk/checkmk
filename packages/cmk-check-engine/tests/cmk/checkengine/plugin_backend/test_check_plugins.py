@@ -6,6 +6,8 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
+# ruff: noqa: ARG001
+# ruff: noqa: SLF001
 
 
 from collections.abc import Callable, Generator

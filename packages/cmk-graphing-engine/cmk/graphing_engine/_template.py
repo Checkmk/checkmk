@@ -176,7 +176,7 @@ def discover_template_graphs(
         if not walk.matched:
             continue
         claimed.update(walk.metric_names)
-        _collect(parse_graph_from_api(plugin, localizer, service, metrics))
+        _collect(parse_graph_from_api(plugin, service, metrics, localizer))
 
     for name in service_metrics:
         if name in claimed or name.startswith(_PREDICT_PREFIX):

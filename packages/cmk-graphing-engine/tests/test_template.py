@@ -201,7 +201,7 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
     discovered = _discover(service, registered_graphs, rrd=rrd)
 
     assert len(discovered) == 1
-    assert discovered[0].graph == parse_graph_from_api(plugin, _id, service, _METRICS)
+    assert discovered[0].graph == parse_graph_from_api(plugin, service, _METRICS, _id)
     # A plain title without expressions is carried through unchanged.
     assert discovered[0].title == "CPU"
     assert [line.curve.value for line in discovered[0].lines] == [1.0, 1.0]
@@ -217,7 +217,7 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
 
     [matched, fallback] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert matched.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
+    assert matched.graph == parse_graph_from_api(plugin, service, _METRICS, _id)
     assert fallback.graph == Graph(name=extra, title=extra, stacks=[_stack(_rrd(extra))])
 
 
@@ -249,7 +249,7 @@ def test_discover_template_graphs_optional_missing_metric_still_matches() -> Non
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert discovered.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
+    assert discovered.graph == parse_graph_from_api(plugin, service, _METRICS, _id)
 
 
 def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() -> None:
@@ -284,7 +284,7 @@ def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert discovered.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
+    assert discovered.graph == parse_graph_from_api(plugin, service, _METRICS, _id)
 
 
 def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
@@ -302,7 +302,7 @@ def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert discovered.graph == parse_graph_from_api(plugin, _id, service, _METRICS)
+    assert discovered.graph == parse_graph_from_api(plugin, service, _METRICS, _id)
 
 
 def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantity() -> None:

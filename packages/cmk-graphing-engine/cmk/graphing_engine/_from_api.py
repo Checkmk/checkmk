@@ -156,9 +156,9 @@ def metric_display_attributes(
 
 @dataclass(frozen=True)
 class _ParseContext:
-    localizer: Callable[[str], str]
     service: ServiceRef
     metrics: Mapping[str, metrics_v1.Metric]
+    localizer: Callable[[str], str]
 
     def rrd_metric(self, metric_name: str) -> RRDMetric:
         return RRDMetric(
@@ -348,14 +348,14 @@ def parse_graph_from_api(
         | graphs_v2_unstable.Graph
         | graphs_v2_unstable.Bidirectional
     ),
-    localizer: Callable[[str], str],
     service: ServiceRef,
     metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
 ) -> Graph:
     context = _ParseContext(
-        localizer=localizer,
         service=service,
         metrics=metrics,
+        localizer=localizer,
     )
     match graph:
         case graphs_v1.Graph() | graphs_v2_unstable.Graph():

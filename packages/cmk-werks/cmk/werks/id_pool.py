@@ -53,6 +53,13 @@ def load_legacy_stash_from_file(paths: Paths) -> LegacyStash:
 
 
 def load_stash_from_file(paths: Paths) -> LegacyStash | Stash:
+    if paths.legacy_stash_file.exists() and paths.stash_file.exists():
+        bail_out(
+            f"{TTY_RED}Found both a legacy and a new werk IDs file:\n"
+            f"  {paths.legacy_stash_file}\n"
+            f"  {paths.stash_file}\n"
+            f"Please run 'werk init' to merge them into a single file.{TTY_NORMAL}"
+        )
     if paths.secret_file.exists():
         return (
             Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))

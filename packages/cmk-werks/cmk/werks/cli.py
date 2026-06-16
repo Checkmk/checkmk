@@ -982,6 +982,12 @@ def load_stash_from_file(paths: Paths) -> "LegacyStash | Stash":
     return load_legacy_stash_from_file(paths)
 
 
+# Use a single short timeout for every request so commands fail fast when the werk IDs
+# server is unreachable (e.g. outside the VPN, where DNS/connect behaviour differs)
+# instead of blocking.
+_TIMEOUT: Final = 5
+
+
 def _server_error_message(response: requests.Response) -> str:
     """Extract the error message from a JSON error response, falling back to the raw body."""
     try:
@@ -998,7 +1004,7 @@ class WerkIDsClient:
 
     def ensure_connection(self) -> bool:
         try:
-            response = requests.get(self.URL, timeout=5)
+            response = requests.get(self.URL, timeout=_TIMEOUT)
             response.raise_for_status()
             return True
         except requests.exceptions.RequestException:
@@ -1013,7 +1019,7 @@ class WerkIDsClient:
                 f"{self.URL}/v1/connect",
                 verify=True,
                 headers={"Authorization": f"Bearer {secret}"},
-                timeout=5,
+                timeout=_TIMEOUT,
             )
         except requests.exceptions.RequestException:
             traceback.print_exc(file=sys.stderr)
@@ -1037,7 +1043,7 @@ class WerkIDsClient:
                 verify=True,
                 headers={"Authorization": f"Bearer {secret}"},
                 json={"local_werk_ids_count": local_werk_ids_count},
-                timeout=10,
+                timeout=_TIMEOUT,
             )
         except requests.exceptions.RequestException:
             # The server is unreachable (e.g. outside the VPN). Stay quiet and let the

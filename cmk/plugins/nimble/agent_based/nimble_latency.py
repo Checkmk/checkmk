@@ -93,7 +93,7 @@ def _discover_nimble_latency(section: ParsedNimbleLatency, ty: str) -> Discovery
 
 def _check_nimble_latency(params: Mapping[str, Any], data: VolumeData, ty: str) -> CheckResult:
     ty_data = data.get(ty)
-    if ty_data is None:
+    if not ty_data:
         return
 
     total_value = ty_data["total"]

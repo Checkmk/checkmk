@@ -47,7 +47,11 @@ class Stash(BaseModel):
             removed = True
             self.ids.remove(werk_id.id)
             if not self.ids:
-                sys.stderr.write(f"\n{TTY_RED}This was your last reserved ID{TTY_NORMAL}\n\n")
+                sys.stderr.write(
+                    f"\n{TTY_RED}This was your last reserved ID{TTY_NORMAL}\n"
+                    "Please ensure that you're in the VPN and the werk IDs server is "
+                    "reachable when you create your next Werk.\n\n"
+                )
 
         if not removed:
             raise RuntimeError(f"Could not find werk_id {werk_id} in any project.")

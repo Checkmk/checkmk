@@ -6,9 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
-import { computed } from 'vue'
 
 import useId from '@/lib/useId'
+
+import useProgressLabel, { type ProgressLabel } from './useProgressLabel'
 
 const sizes = cva('', {
   variants: {
@@ -29,7 +30,7 @@ export interface CmkProgressbarDefaultProps {
   value?: number
   size?: Sizes
   max?: number | 'unknown'
-  label?: { showTotal?: boolean; unit?: string } | boolean | undefined
+  label?: ProgressLabel
 }
 
 const {
@@ -39,28 +40,11 @@ const {
   label = undefined
 } = defineProps<CmkProgressbarDefaultProps>()
 
-const accessibilityLabelString = computed<string>(() => {
-  if (max === 'unknown' || typeof max === 'undefined') {
-    return 'unknown progress'
-  }
-
-  if (label) {
-    if (label !== true) {
-      return `${value.toFixed(0)}${label?.showTotal ? ' / '.concat(max.toFixed(0)) : ''} ${label?.unit}`.trim()
-    }
-  }
-
-  return value.toFixed(0)
-})
-
-const labelString = computed<string>(() => {
-  if (label) {
-    return accessibilityLabelString.value
-  }
-
-  return ''
-})
-const progressRatio = computed(() => (max === 'unknown' ? 0 : value / max))
+const { accessibilityLabelString, labelString, progressRatio } = useProgressLabel(() => ({
+  value,
+  max,
+  label
+}))
 
 const cmkProgressbarId = useId()
 </script>

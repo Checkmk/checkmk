@@ -36,7 +36,7 @@ const hasValidToken = async () => ott.value !== null && !(ott.value instanceof E
 const installCommand = computed(() => {
   const token = ott.value instanceof Error ? '' : (ott.value ?? '')
   return [
-    `msiexec /i checkmk-relay.msi /passive /norestart \``,
+    `msiexec /i CheckmkRelayInstaller.msi /passive /norestart \``,
     `  RELAY_NAME="${props.relayAlias}" \``,
     `  INITIAL_TAG_VERSION=${props.siteVersion} \``,
     `  TARGET_SERVER=${props.domain}:${props.agentReceiverPort} \``,

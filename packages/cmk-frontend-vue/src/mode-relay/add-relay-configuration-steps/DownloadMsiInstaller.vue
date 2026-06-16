@@ -28,7 +28,7 @@ const hostWithPort = computed(() =>
 
 const msiUrl = computed(
   () =>
-    `${window.location.protocol}//${hostWithPort.value}/${props.siteName}/check_mk/relays/checkmk-relay.msi`
+    `${window.location.protocol}//${hostWithPort.value}/${props.siteName}/check_mk/relays/CheckmkRelayInstaller.msi`
 )
 
 const insecureProtocolWarning = computed(() => {
@@ -43,7 +43,7 @@ const insecureProtocolWarning = computed(() => {
 
 // TODO: Verify this command is correct once the actual MSI installer is ready.
 const downloadCommand = computed(
-  () => `Invoke-WebRequest -Uri "${msiUrl.value}" -OutFile "checkmk-relay.msi"`
+  () => `Invoke-WebRequest -Uri "${msiUrl.value}" -OutFile "CheckmkRelayInstaller.msi"`
 )
 </script>
 

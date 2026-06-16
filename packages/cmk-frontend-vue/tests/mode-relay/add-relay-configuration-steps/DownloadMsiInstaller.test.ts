@@ -30,11 +30,11 @@ describe('DownloadMsiInstaller', () => {
     expect(cmd.textContent).toContain('Invoke-WebRequest')
   })
 
-  test('download command targets checkmk-relay.msi', () => {
+  test('download command targets CheckmkRelayInstaller.msi', () => {
     mountWithWizardContext(DownloadMsiInstaller, baseProps)
 
     const cmd = screen.getByLabelText('Download relay MSI installer command')
-    expect(cmd.textContent).toContain('checkmk-relay.msi')
+    expect(cmd.textContent).toContain('CheckmkRelayInstaller.msi')
   })
 
   test('download command contains domain without port when serverPort is null', () => {

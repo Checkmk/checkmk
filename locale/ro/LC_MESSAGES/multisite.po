@@ -911,6 +911,9 @@ msgstr "(Modul fără titlu)"
 msgid "(Version: %s - no version change)"
 msgstr ""
 
+msgid "(auto-generated when the connection is saved)"
+msgstr ""
+
 msgid "(built-in)"
 msgstr "(încorporat)"
 
@@ -21618,9 +21621,6 @@ msgstr "Nume de coadă de corespondență Domino"
 msgid "Don't activate services matching"
 msgstr "Nu activați serviciile de potrivire"
 
-msgid "Don't apply compression"
-msgstr "Nu aplicați compresie"
-
 msgid "Don't change labels for matching services"
 msgstr "Nu schimbați etichetele pentru serviciile de potrivire"
 
@@ -23488,6 +23488,12 @@ msgstr "Punct final"
 #, fuzzy
 msgid "Endpoint URL (optional)"
 msgstr "Comentariu (opțional)"
+
+msgid ""
+"Endpoint exposing this Checkmk Service Provider's metadata to the identity "
+"provider. This value is auto-generated from the Checkmk server URL "
+"(<tt>{Checkmk server URL}/saml_metadata.py</tt>)."
+msgstr ""
 
 msgid ""
 "Endpoint where Checkmk receives the SAML response with the user's assertion "
@@ -37202,6 +37208,10 @@ msgstr "LDAP [%s]: Utilizator modificat %s (%s)"
 #, python-format
 msgid "LDAP [%s]: Removed user %s"
 msgstr "LDAP [%s]: A fost eliminat utilizatorul %s."
+
+#, fuzzy, python-format
+msgid "LDAP [%s]: Took over user %s (was owned by %s)"
+msgstr "LDAP [%s]: Utilizator modificat %s (%s)"
 
 msgid "LDAP attribute to be used as indicator"
 msgstr "Atributul LDAP care urmează să fie utilizat ca indicator"
@@ -51711,6 +51721,10 @@ msgid ""
 "Please select at least one and at most {max_regions} regions to continue"
 msgstr "Vă rugăm să alegeți un raport de programat"
 
+#, fuzzy
+msgid "Please select at least one connection or choose a different option."
+msgstr "Vă rugăm să alegeți un raport de programat"
+
 msgid "Please select at least one element"
 msgstr "Vă rugăm să selectați cel puțin un element"
 
@@ -58254,12 +58268,20 @@ msgstr ""
 
 msgid ""
 "Select the connections that are available for login on this site. Choose "
-"<i>Use identity connectors from central site</i> to inherit the central "
+"<i>Use same connections as the central site</i> to inherit the central "
 "site's selection (changes made on the central site take effect after the "
-"next configuration sync), or <i>Use following connections</i> to pick "
+"next configuration sync), or <i>Use the following connections</i> to pick "
 "specific LDAP and SAML connections. Each SAML entry may optionally override "
 "the SP entity ID, which is useful when multiple sites share the same SAML "
 "connection but need to be registered separately at the IdP."
+msgstr ""
+
+msgid ""
+"Select the connections that are available for login on this site. Choose "
+"<i>Use same connections as the central site</i> to inherit the central "
+"site's selection (changes made on the central site take effect after the "
+"next configuration sync), or <i>Use the following connections</i> to pick "
+"specific LDAP connections."
 msgstr ""
 
 #, fuzzy
@@ -63635,6 +63657,10 @@ msgid "State when replication state is unknown"
 msgstr "Stare atunci când starea de replicare este necunoscută"
 
 #, fuzzy
+msgid "State when reported device status is No Redundancy"
+msgstr "Stare atunci când starea de replicare este eroare"
+
+#, fuzzy
 msgid "State when reported device status is OK"
 msgstr "Stare atunci când starea de replicare este eroare"
 
@@ -67754,6 +67780,12 @@ msgstr ""
 msgid ""
 "The following sections utilize this setting:<ul><li>Wireless device "
 "statuses</li><li>Wireless ethernet statuses</li></ul>"
+msgstr ""
+
+#, python-format
+msgid ""
+"The following sites could not be reached, so the shown data is incomplete "
+"and the computed availability might be incorrect: %s"
 msgstr ""
 
 msgid "The following users"
@@ -82056,10 +82088,6 @@ msgstr ""
 msgid "Use fixed width (relative to font size)"
 msgstr "Utilizați lățimea fixă (în raport cu dimensiunea fontului)"
 
-#, fuzzy
-msgid "Use following connections"
-msgstr "Utilizați următoarea culoare"
-
 msgid "Use for all connections"
 msgstr "Utilizați pentru toate conexiunile"
 
@@ -82079,10 +82107,6 @@ msgstr "Utilizați adresa gazdă"
 #, fuzzy
 msgid "Use host name"
 msgstr "Utilizați numele de gazdă"
-
-#, fuzzy
-msgid "Use identity connectors from central site"
-msgstr "Timpul de așteptare a conexiunii TCP pentru conectarea la master"
 
 msgid "Use in notifications"
 msgstr "Utilizare în notificări"
@@ -82200,6 +82224,10 @@ msgstr ""
 "Utilizați setările proxy din mediul de procesare. Aceasta este valoarea "
 "implicită."
 
+#, fuzzy
+msgid "Use same connections as the central site"
+msgstr "Timpul de așteptare a conexiunii TCP pentru conectarea la master"
+
 msgid "Use sensor description"
 msgstr "Utilizați descrierea senzorului"
 
@@ -82300,6 +82328,10 @@ msgid ""
 "Use the following command to download an agent package in basic "
 "configuration:"
 msgstr ""
+
+#, fuzzy
+msgid "Use the following connections"
+msgstr "Utilizați următoarea culoare"
 
 msgid "Use the following credentials"
 msgstr "Utilizați următoarele acreditări"
@@ -91893,6 +91925,10 @@ msgid "Review applied filters."
 msgstr "Filtre aplicate:"
 
 #, fuzzy
+msgid "Invalid URL"
+msgstr "URL invalid dat"
+
+#, fuzzy
 msgid "Not available on shared dashboards"
 msgstr "Nu aveți voie să editați tablouri de bord."
 
@@ -93986,12 +94022,12 @@ msgid "Attribute operator"
 msgstr "Atributul de setat"
 
 #, fuzzy
-msgid "Edit condition"
-msgstr "Editați conexiunea"
-
-#, fuzzy
 msgid "Remove condition"
 msgstr "Eliminarea condiției de etichetare"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "Editați conexiunea"
 
 #, fuzzy
 msgid "Add condition after %{key}"
@@ -94011,6 +94047,10 @@ msgstr "Conexiuni eșuate"
 
 msgid "Toggle AND / OR"
 msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "Numărul de conexiuni curente"
 
 #, fuzzy
 msgid "Add condition after this group"
@@ -96307,6 +96347,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Don't apply compression"
+#~ msgstr "Nu aplicați compresie"
 
 #, fuzzy
 #~ msgid "Copy response"

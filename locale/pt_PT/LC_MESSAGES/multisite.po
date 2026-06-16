@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-13 17:57+0000\n"
+"PO-Revision-Date: 2026-06-15 17:57+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -902,6 +902,9 @@ msgstr "(Módulo sem título)"
 
 #, python-format
 msgid "(Version: %s - no version change)"
+msgstr ""
+
+msgid "(auto-generated when the connection is saved)"
 msgstr ""
 
 msgid "(built-in)"
@@ -21595,9 +21598,6 @@ msgstr "Domino Nomes de Fila de Correio"
 msgid "Don't activate services matching"
 msgstr "Não activar serviços correspondentes"
 
-msgid "Don't apply compression"
-msgstr "Não aplicar a compressão"
-
 #, fuzzy
 msgid "Don't change labels for matching services"
 msgstr "Não remova serviços desaparecidos correspondentes"
@@ -23447,6 +23447,12 @@ msgstr "Ponto final"
 #, fuzzy
 msgid "Endpoint URL (optional)"
 msgstr "Comentário (opcional)"
+
+msgid ""
+"Endpoint exposing this Checkmk Service Provider's metadata to the identity "
+"provider. This value is auto-generated from the Checkmk server URL "
+"(<tt>{Checkmk server URL}/saml_metadata.py</tt>)."
+msgstr ""
 
 msgid ""
 "Endpoint where Checkmk receives the SAML response with the user's assertion "
@@ -37111,6 +37117,10 @@ msgstr "LDAP [%s]: Utilizador modificado %s (%s)"
 #, python-format
 msgid "LDAP [%s]: Removed user %s"
 msgstr "LDAP [%s]: Removido %s do usuário"
+
+#, fuzzy, python-format
+msgid "LDAP [%s]: Took over user %s (was owned by %s)"
+msgstr "LDAP [%s]: Utilizador modificado %s (%s)"
 
 msgid "LDAP attribute to be used as indicator"
 msgstr "Atributo LDAP a ser utilizado como indicador"
@@ -51627,6 +51637,10 @@ msgid ""
 "Please select at least one and at most {max_regions} regions to continue"
 msgstr "Por favor, escolha um relatório para agendar"
 
+#, fuzzy
+msgid "Please select at least one connection or choose a different option."
+msgstr "Por favor, escolha um relatório para agendar"
+
 msgid "Please select at least one element"
 msgstr "Por favor, selecione pelo menos um elemento"
 
@@ -58186,12 +58200,20 @@ msgstr ""
 
 msgid ""
 "Select the connections that are available for login on this site. Choose "
-"<i>Use identity connectors from central site</i> to inherit the central "
+"<i>Use same connections as the central site</i> to inherit the central "
 "site's selection (changes made on the central site take effect after the "
-"next configuration sync), or <i>Use following connections</i> to pick "
+"next configuration sync), or <i>Use the following connections</i> to pick "
 "specific LDAP and SAML connections. Each SAML entry may optionally override "
 "the SP entity ID, which is useful when multiple sites share the same SAML "
 "connection but need to be registered separately at the IdP."
+msgstr ""
+
+msgid ""
+"Select the connections that are available for login on this site. Choose "
+"<i>Use same connections as the central site</i> to inherit the central "
+"site's selection (changes made on the central site take effect after the "
+"next configuration sync), or <i>Use the following connections</i> to pick "
+"specific LDAP connections."
 msgstr ""
 
 #, fuzzy
@@ -63522,6 +63544,10 @@ msgid "State when replication state is unknown"
 msgstr "Estado quando o estado de replicação é desconhecido"
 
 #, fuzzy
+msgid "State when reported device status is No Redundancy"
+msgstr "Estado quando o estado de replicação é erro"
+
+#, fuzzy
 msgid "State when reported device status is OK"
 msgstr "Estado quando o estado de replicação é erro"
 
@@ -67632,6 +67658,12 @@ msgstr ""
 msgid ""
 "The following sections utilize this setting:<ul><li>Wireless device "
 "statuses</li><li>Wireless ethernet statuses</li></ul>"
+msgstr ""
+
+#, python-format
+msgid ""
+"The following sites could not be reached, so the shown data is incomplete "
+"and the computed availability might be incorrect: %s"
 msgstr ""
 
 msgid "The following users"
@@ -81893,10 +81925,6 @@ msgstr "Use nomes de serviço explícitos e ignore as tags AWS em geral"
 msgid "Use fixed width (relative to font size)"
 msgstr "Usar largura fixa (em relação ao tamanho da fonte)"
 
-#, fuzzy
-msgid "Use following connections"
-msgstr "Use a seguinte cor"
-
 msgid "Use for all connections"
 msgstr "Utilização para todas as ligações"
 
@@ -81916,10 +81944,6 @@ msgstr "Use o endereço do anfitrião"
 #, fuzzy
 msgid "Use host name"
 msgstr "Usar hostname"
-
-#, fuzzy
-msgid "Use identity connectors from central site"
-msgstr "Tempo limite de conexão TCP para conexão com o mestre"
 
 msgid "Use in notifications"
 msgstr "Utilização em notificações"
@@ -82033,6 +82057,10 @@ msgid "Use proxy settings from the process environment. This is the default."
 msgstr ""
 "Usa as configurações de proxy do ambiente do processo. Esta é a predefinição."
 
+#, fuzzy
+msgid "Use same connections as the central site"
+msgstr "Tempo limite de conexão TCP para conexão com o mestre"
+
 msgid "Use sensor description"
 msgstr "Utilizar a descrição do sensor"
 
@@ -82129,6 +82157,10 @@ msgid ""
 "Use the following command to download an agent package in basic "
 "configuration:"
 msgstr ""
+
+#, fuzzy
+msgid "Use the following connections"
+msgstr "Use a seguinte cor"
 
 msgid "Use the following credentials"
 msgstr "Use as seguintes credenciais"
@@ -91658,6 +91690,10 @@ msgid "Review applied filters."
 msgstr "Filtros Aplicados:"
 
 #, fuzzy
+msgid "Invalid URL"
+msgstr "URL inválido dado"
+
+#, fuzzy
 msgid "Not available on shared dashboards"
 msgstr "Você não está autorizado a editar painéis de controle."
 
@@ -93743,12 +93779,12 @@ msgid "Attribute operator"
 msgstr "Atributo a definir"
 
 #, fuzzy
-msgid "Edit condition"
-msgstr "Editar conexão"
-
-#, fuzzy
 msgid "Remove condition"
 msgstr "Remover a condição da etiqueta"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "Editar conexão"
 
 #, fuzzy
 msgid "Add condition after %{key}"
@@ -93768,6 +93804,10 @@ msgstr "Conexões falhadas"
 
 msgid "Toggle AND / OR"
 msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "Número de ligações actuais"
 
 #, fuzzy
 msgid "Add condition after this group"
@@ -96046,6 +96086,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Don't apply compression"
+#~ msgstr "Não aplicar a compressão"
 
 #, fuzzy
 #~ msgid "Copy response"

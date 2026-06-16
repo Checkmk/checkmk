@@ -901,6 +901,9 @@ msgstr "(Módulo sin título)"
 msgid "(Version: %s - no version change)"
 msgstr ""
 
+msgid "(auto-generated when the connection is saved)"
+msgstr ""
+
 msgid "(built-in)"
 msgstr "(incorporado)"
 
@@ -21756,9 +21759,6 @@ msgstr "Nombres de colas de correo de Domino"
 msgid "Don't activate services matching"
 msgstr "No activar la coincidencia de servicios"
 
-msgid "Don't apply compression"
-msgstr "No aplique la compresión"
-
 #, fuzzy
 msgid "Don't change labels for matching services"
 msgstr "No elimine los servicios desaparecidos correspondientes"
@@ -23626,6 +23626,12 @@ msgstr "Puntos finales"
 #, fuzzy
 msgid "Endpoint URL (optional)"
 msgstr "Comentario (opcional)"
+
+msgid ""
+"Endpoint exposing this Checkmk Service Provider's metadata to the identity "
+"provider. This value is auto-generated from the Checkmk server URL "
+"(<tt>{Checkmk server URL}/saml_metadata.py</tt>)."
+msgstr ""
 
 msgid ""
 "Endpoint where Checkmk receives the SAML response with the user's assertion "
@@ -37381,6 +37387,10 @@ msgstr "LDAP [%s]: Usuario modificado %s (%s)"
 #, python-format
 msgid "LDAP [%s]: Removed user %s"
 msgstr "LDAP [%s]: Usuario eliminado %s"
+
+#, fuzzy, python-format
+msgid "LDAP [%s]: Took over user %s (was owned by %s)"
+msgstr "LDAP [%s]: Usuario modificado %s (%s)"
 
 msgid "LDAP attribute to be used as indicator"
 msgstr "Atributo LDAP a utilizar como indicador"
@@ -52045,6 +52055,10 @@ msgid ""
 "Please select at least one and at most {max_regions} regions to continue"
 msgstr "Elija un informe para programar"
 
+#, fuzzy
+msgid "Please select at least one connection or choose a different option."
+msgstr "Elija un informe para programar"
+
 msgid "Please select at least one element"
 msgstr "Seleccione al menos un elemento"
 
@@ -58660,12 +58674,20 @@ msgstr ""
 
 msgid ""
 "Select the connections that are available for login on this site. Choose "
-"<i>Use identity connectors from central site</i> to inherit the central "
+"<i>Use same connections as the central site</i> to inherit the central "
 "site's selection (changes made on the central site take effect after the "
-"next configuration sync), or <i>Use following connections</i> to pick "
+"next configuration sync), or <i>Use the following connections</i> to pick "
 "specific LDAP and SAML connections. Each SAML entry may optionally override "
 "the SP entity ID, which is useful when multiple sites share the same SAML "
 "connection but need to be registered separately at the IdP."
+msgstr ""
+
+msgid ""
+"Select the connections that are available for login on this site. Choose "
+"<i>Use same connections as the central site</i> to inherit the central "
+"site's selection (changes made on the central site take effect after the "
+"next configuration sync), or <i>Use the following connections</i> to pick "
+"specific LDAP connections."
 msgstr ""
 
 #, fuzzy
@@ -64064,6 +64086,10 @@ msgid "State when replication state is unknown"
 msgstr "Estado cuando se desconoce el estado de replicación"
 
 #, fuzzy
+msgid "State when reported device status is No Redundancy"
+msgstr "Estado cuando el estado de replicación es de error"
+
+#, fuzzy
 msgid "State when reported device status is OK"
 msgstr "Estado cuando el estado de replicación es de error"
 
@@ -68215,6 +68241,12 @@ msgstr ""
 msgid ""
 "The following sections utilize this setting:<ul><li>Wireless device "
 "statuses</li><li>Wireless ethernet statuses</li></ul>"
+msgstr ""
+
+#, python-format
+msgid ""
+"The following sites could not be reached, so the shown data is incomplete "
+"and the computed availability might be incorrect: %s"
 msgstr ""
 
 msgid "The following users"
@@ -82606,10 +82638,6 @@ msgstr ""
 msgid "Use fixed width (relative to font size)"
 msgstr "Utilizar una anchura fija (relativa al tamaño de la fuente)"
 
-#, fuzzy
-msgid "Use following connections"
-msgstr "Utilice el siguiente color"
-
 msgid "Use for all connections"
 msgstr "Utilizar para todas las conexiones"
 
@@ -82629,10 +82657,6 @@ msgstr "Utilizar la dirección del host"
 #, fuzzy
 msgid "Use host name"
 msgstr "Utilizar el nombre de host"
-
-#, fuzzy
-msgid "Use identity connectors from central site"
-msgstr "Tiempo de espera de la conexión TCP para conectarse al maestro"
 
 msgid "Use in notifications"
 msgstr "Utilización en las notificaciones"
@@ -82749,6 +82773,10 @@ msgstr ""
 "Utilizar la configuración del proxy del entorno del proceso. Este es el "
 "valor por defecto."
 
+#, fuzzy
+msgid "Use same connections as the central site"
+msgstr "Tiempo de espera de la conexión TCP para conectarse al maestro"
+
 msgid "Use sensor description"
 msgstr "Utilizar la descripción del sensor"
 
@@ -82849,6 +82877,10 @@ msgid ""
 "Use the following command to download an agent package in basic "
 "configuration:"
 msgstr ""
+
+#, fuzzy
+msgid "Use the following connections"
+msgstr "Utilice el siguiente color"
 
 msgid "Use the following credentials"
 msgstr "Utilice las siguientes credenciales"
@@ -92470,6 +92502,10 @@ msgid "Review applied filters."
 msgstr "Filtros aplicados:"
 
 #, fuzzy
+msgid "Invalid URL"
+msgstr "URL inválida dada"
+
+#, fuzzy
 msgid "Not available on shared dashboards"
 msgstr "No está permitido editar los cuadros de mando."
 
@@ -94559,12 +94595,12 @@ msgid "Attribute operator"
 msgstr "Atributo a fijar"
 
 #, fuzzy
-msgid "Edit condition"
-msgstr "Editar la conexión"
-
-#, fuzzy
 msgid "Remove condition"
 msgstr "Eliminar la condición de la etiqueta"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "Editar la conexión"
 
 #, fuzzy
 msgid "Add condition after %{key}"
@@ -94584,6 +94620,10 @@ msgstr "Conexiones fallidas"
 
 msgid "Toggle AND / OR"
 msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "Número de conexiones actuales"
 
 #, fuzzy
 msgid "Add condition after this group"
@@ -96868,6 +96908,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Don't apply compression"
+#~ msgstr "No aplique la compresión"
 
 #, fuzzy
 #~ msgid "Copy response"

@@ -891,6 +891,9 @@ msgstr "(無題モジュール)"
 msgid "(Version: %s - no version change)"
 msgstr "(バージョン: %s - バージョン変更はありません)"
 
+msgid "(auto-generated when the connection is saved)"
+msgstr ""
+
 msgid "(built-in)"
 msgstr "(組み込み)"
 
@@ -20098,9 +20101,6 @@ msgstr "Dominoメールキュー名"
 msgid "Don't activate services matching"
 msgstr "一致するサービスをアクティブ化しないでください"
 
-msgid "Don't apply compression"
-msgstr "圧縮しないこと"
-
 msgid "Don't change labels for matching services"
 msgstr "一致するサービスのラベルを変更しない"
 
@@ -21905,6 +21905,12 @@ msgstr "エンドポイント"
 
 msgid "Endpoint URL (optional)"
 msgstr "エンドポイントURL(オプション)"
+
+msgid ""
+"Endpoint exposing this Checkmk Service Provider's metadata to the identity "
+"provider. This value is auto-generated from the Checkmk server URL "
+"(<tt>{Checkmk server URL}/saml_metadata.py</tt>)."
+msgstr ""
 
 msgid ""
 "Endpoint where Checkmk receives the SAML response with the user's assertion "
@@ -34481,6 +34487,10 @@ msgstr "LDAP [%s]: 変更されたユーザー %s (%s)"
 #, python-format
 msgid "LDAP [%s]: Removed user %s"
 msgstr "LDAP [%s]:ユーザー%sを削除しました"
+
+#, fuzzy, python-format
+msgid "LDAP [%s]: Took over user %s (was owned by %s)"
+msgstr "LDAP [%s]: 変更されたユーザー %s (%s)"
 
 msgid "LDAP attribute to be used as indicator"
 msgstr "インジケーターとして使用されるLDAP属性"
@@ -47722,6 +47732,10 @@ msgid ""
 "Please select at least one and at most {max_regions} regions to continue"
 msgstr "少なくとも1つ、最大{max_regions}の地域を選択してください"
 
+#, fuzzy
+msgid "Please select at least one connection or choose a different option."
+msgstr "少なくとも1つ以上の地域を選択してください。"
+
 msgid "Please select at least one element"
 msgstr "少なくとも1つの要素を選択してください"
 
@@ -53791,12 +53805,20 @@ msgstr ""
 
 msgid ""
 "Select the connections that are available for login on this site. Choose "
-"<i>Use identity connectors from central site</i> to inherit the central "
+"<i>Use same connections as the central site</i> to inherit the central "
 "site's selection (changes made on the central site take effect after the "
-"next configuration sync), or <i>Use following connections</i> to pick "
+"next configuration sync), or <i>Use the following connections</i> to pick "
 "specific LDAP and SAML connections. Each SAML entry may optionally override "
 "the SP entity ID, which is useful when multiple sites share the same SAML "
 "connection but need to be registered separately at the IdP."
+msgstr ""
+
+msgid ""
+"Select the connections that are available for login on this site. Choose "
+"<i>Use same connections as the central site</i> to inherit the central "
+"site's selection (changes made on the central site take effect after the "
+"next configuration sync), or <i>Use the following connections</i> to pick "
+"specific LDAP connections."
 msgstr ""
 
 msgid "Select the contact group that can edit this OAuth2 connection."
@@ -58776,6 +58798,10 @@ msgstr "レプリケーション状態が同期しているときの状態"
 msgid "State when replication state is unknown"
 msgstr "レプリケーション状態が不明な場合の状態"
 
+#, fuzzy
+msgid "State when reported device status is No Redundancy"
+msgstr "報告されたデバイスステータスがOKの場合の状態"
+
 msgid "State when reported device status is OK"
 msgstr "報告されたデバイスステータスがOKの場合の状態"
 
@@ -62665,6 +62691,12 @@ msgid ""
 msgstr ""
 "以下のセクションではこの設定を使用します：<ul><li>ワイヤレスデバイスの状態</"
 "li><li>ワイヤレスイーサネットの状態</li></ul>"
+
+#, python-format
+msgid ""
+"The following sites could not be reached, so the shown data is incomplete "
+"and the computed availability might be incorrect: %s"
+msgstr ""
 
 msgid "The following users"
 msgstr "次のユーザー"
@@ -75832,10 +75864,6 @@ msgstr "明示的なサービス名を使用し、AWSタグ全体を無視しま
 msgid "Use fixed width (relative to font size)"
 msgstr "固定幅を使用(フォントサイズに対して)"
 
-#, fuzzy
-msgid "Use following connections"
-msgstr "次の色を使用する"
-
 msgid "Use for all connections"
 msgstr "すべての接続に使用"
 
@@ -75853,10 +75881,6 @@ msgstr "ホストアドレスを使用する"
 
 msgid "Use host name"
 msgstr "ホスト名を使用する"
-
-#, fuzzy
-msgid "Use identity connectors from central site"
-msgstr "セントラルサイトに接続するためのTCP接続タイムアウト"
 
 msgid "Use in notifications"
 msgstr "通知で使用"
@@ -75960,6 +75984,10 @@ msgstr "SQLステートメントの代わりにプロシージャコールを使
 msgid "Use proxy settings from the process environment. This is the default."
 msgstr "プロセス環境からのプロキシ設定を使用する。デフォルト設定です。"
 
+#, fuzzy
+msgid "Use same connections as the central site"
+msgstr "セントラルサイトに接続するためのTCP接続タイムアウト"
+
 msgid "Use sensor description"
 msgstr "センサーの説明を使用する"
 
@@ -76056,6 +76084,10 @@ msgid ""
 "Use the following command to download an agent package in basic "
 "configuration:"
 msgstr ""
+
+#, fuzzy
+msgid "Use the following connections"
+msgstr "次の色を使用する"
 
 msgid "Use the following credentials"
 msgstr "次の資格情報を使用します"
@@ -84921,6 +84953,10 @@ msgstr "ダッシュボードのクローン。"
 msgid "Review applied filters."
 msgstr "適用されたフィルターを確認。"
 
+#, fuzzy
+msgid "Invalid URL"
+msgstr "無効なURLが指定されました"
+
 msgid "Not available on shared dashboards"
 msgstr "共有ダッシュボードで利用できません"
 
@@ -86814,12 +86850,12 @@ msgid "Attribute operator"
 msgstr "設定する属性"
 
 #, fuzzy
-msgid "Edit condition"
-msgstr "接続を編集する"
-
-#, fuzzy
 msgid "Remove condition"
 msgstr "タグ条件を削除します"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "接続を編集する"
 
 #, fuzzy
 msgid "Add condition after %{key}"
@@ -86839,6 +86875,10 @@ msgstr "失敗した同時接続"
 
 msgid "Toggle AND / OR"
 msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "現在の接続数"
 
 #, fuzzy
 msgid "Add condition after this group"
@@ -89382,6 +89422,9 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Don't apply compression"
+#~ msgstr "圧縮しないこと"
 
 #~ msgid "Copy response"
 #~ msgstr "応答をコピー"

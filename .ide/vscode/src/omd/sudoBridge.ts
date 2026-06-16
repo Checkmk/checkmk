@@ -29,6 +29,21 @@ export const KEEPALIVE_READY = path.join(BRIDGE_DIR, 'keepalive.ready')
 
 let _keepaliveTerm: vscode.Terminal | null = null
 
+/**
+ * Tail of the bridge command queue. The keepalive shell is a single shared
+ * TTY, so two `sendText()` commands dispatched concurrently end up queued in
+ * the pty input buffer — the shell still runs them one after another, but each
+ * `runInKeepaliveTerminal()` call polls for its own sentinel with its own
+ * deadline. A command stuck behind a slow one (e.g. the OMD section refresh
+ * behind a long `omd start`/`rm`) sees its short deadline elapse while it is
+ * still buffered, the bridge reports a spurious timeout, and the caller falls
+ * back to a fresh `sudo` task in a new TTY — which re-prompts for the password
+ * under tty_tickets (CMK-35796). Chaining each command onto the previous one
+ * keeps a single command driving the shell at a time and starts each
+ * command's deadline only once it is actually dispatched.
+ */
+let _bridgeChain: Promise<unknown> = Promise.resolve()
+
 export function setKeepaliveTerminal(term: vscode.Terminal | null): void {
   _keepaliveTerm = term
 }
@@ -45,10 +60,25 @@ export function hasKeepalive(): boolean {
  * Send `inner` (executed as `sudo sh -c "…"`) to the keepalive terminal.
  * Waits for completion via a sentinel file; returns captured output + rc.
  * Returns null if there's no keepalive or the command times out.
+ *
+ * Bridge commands are serialized: each call is chained onto the previous one
+ * so only a single command drives the shared keepalive shell at a time (see
+ * `_bridgeChain`).
  */
-export async function runInKeepaliveTerminal(
+export function runInKeepaliveTerminal(
   inner: string,
   timeoutMs = 30_000
+): Promise<{ output: string; exitCode: number } | null> {
+  const result = _bridgeChain.then(() => dispatchBridgeCommand(inner, timeoutMs))
+  // Keep the chain alive even if this command rejects, so a single failure
+  // doesn't wedge every subsequent bridge command.
+  _bridgeChain = result.catch(() => undefined)
+  return result
+}
+
+async function dispatchBridgeCommand(
+  inner: string,
+  timeoutMs: number
 ): Promise<{ output: string; exitCode: number } | null> {
   const term = _keepaliveTerm
   if (!term) return null

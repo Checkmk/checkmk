@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
+import logging
 import sys
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 
@@ -22,6 +23,8 @@ from cmk.checkengine.sectionparserutils import get_section_kwargs
 from ._autochecks import AutocheckEntry
 from ._discovery import DiscoveryPlugin
 from ._utils import QualifiedDiscovery
+
+_logger = logging.getLogger("cmk.base.discovery")
 
 __all__ = ["analyse_services", "discover_services", "find_plugins"]
 
@@ -149,6 +152,7 @@ def discover_services(
             if on_error is OnError.RAISE:
                 raise
             if on_error is OnError.WARN:
+                _logger.warning("Discovery of '%s' failed: %s", check_plugin_name, e)
                 console.error(f"Discovery of '{check_plugin_name}' failed: {e}", file=sys.stderr)
 
     # TODO: Building a dict to discard its keys isn't efficient.
@@ -167,6 +171,7 @@ def _discover_plugins_services(
     try:
         plugin = plugins[check_plugin_name]
     except KeyError:
+        _logger.warning("Missing check plug-in: '%s'", check_plugin_name)
         console.warning(tty.format_warning(f"  Missing check plug-in: '{check_plugin_name}'\n"))
         return
 
@@ -176,6 +181,7 @@ def _discover_plugins_services(
         if cmk.ccc.debug.enabled() or on_error is OnError.RAISE:
             raise
         if on_error is OnError.WARN:
+            _logger.warning("Exception while parsing agent section: %s", exc)
             console.warning(tty.format_warning(f"  Exception while parsing agent section: {exc}\n"))
         return
 
@@ -192,6 +198,9 @@ def _discover_plugins_services(
         if on_error is OnError.RAISE:
             raise
         if on_error is OnError.WARN:
+            _logger.warning(
+                "Exception in discovery function of check plug-in '%s': %s", check_plugin_name, e
+            )
             console.warning(
                 tty.format_warning(
                     f"  Exception in discovery function of check plug-in '{check_plugin_name}': {e}"

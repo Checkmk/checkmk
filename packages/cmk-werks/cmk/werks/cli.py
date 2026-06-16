@@ -68,7 +68,7 @@ class Stash(BaseModel):
             raise RuntimeError(f"Could not find werk_id {werk_id} in any project.")
 
     def add_ids(self, werk_ids: "Sequence[WerkId]") -> None:
-        self.ids = list(set(self.ids).union(werk_id.id for werk_id in werk_ids))
+        self.ids = sorted(set(self.ids).union(werk_id.id for werk_id in werk_ids))
 
 
 class LegacyStash(BaseModel):

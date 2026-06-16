@@ -258,7 +258,7 @@ def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
     stash = load_or_update_stash(paths, FakeWerkIDsClient())
 
     assert isinstance(stash, Stash)
-    assert sorted(stash.ids) == [10, 20, 30, 40]
+    assert stash.ids == [10, 20, 30, 40]
 
 
 def test_load_or_update_stash_uses_local_ids_when_server_empty(tmp_path: Path) -> None:

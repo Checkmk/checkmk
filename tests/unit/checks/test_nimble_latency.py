@@ -87,6 +87,14 @@ def test_nimble_latency_ranges(
     assert result == actual_results[0]
 
 
+@pytest.mark.xfail(strict=True)
+def test_nimble_latency_empty_type_data() -> None:
+    data: Data = {"itemxyz": {"read": {}, "write": {}}}
+    params: Param = {"range_reference": "20", "read": (10.0, 20.0), "write": (10.0, 20.0)}
+    assert not list(Check("nimble_latency").run_check("itemxyz", params, data))
+    assert not list(Check("nimble_latency_write").run_check("itemxyz", params, data))
+
+
 @pytest.mark.parametrize(
     "params, data, result",
     [

@@ -624,6 +624,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.snmplib",
     ),
     Component("cmk.fields"): _allow(*PACKAGE_CCC),
+    Component("cmk.flags"): _allow(),
     Component("cmk.gui.main_modules"): _allow(
         *PACKAGE_CCC,
         "cmk.utils.paths",

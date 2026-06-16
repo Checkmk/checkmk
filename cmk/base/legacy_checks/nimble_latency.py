@@ -72,7 +72,7 @@ def inventory_nimble_latency(parsed, ty):
 
 def _check_nimble_latency(item, params, data, ty):
     ty_data = data.get(ty)
-    if ty_data is None:
+    if not ty_data:
         return
 
     total_value = ty_data["total"]

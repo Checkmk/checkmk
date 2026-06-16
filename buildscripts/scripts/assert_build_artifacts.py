@@ -38,6 +38,7 @@ from tests.testlib.version import CMKEdition
 HTTP_STATUS_OK = 200
 DOCKER_HUB_API = "https://hub.docker.com/v2"
 RELAY_IMAGE_NAME = "checkmk/check-mk-relay"
+EXIT_CODE_RELAY_MISSING = 2
 
 UseCase = Literal["release", "daily", "weekly"]
 MetaFileExtension = Literal["json", "csv"]
@@ -295,6 +296,7 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
         if not internal_only:
             results.append(assert_hash_matches_package_content(artifact_name, version, credentials))
 
+    relay_missing = False
     if not args.skip_docker:
         for image_name, edition, registry in build_docker_image_name_and_registry(
             args, loaded_yaml, registries
@@ -306,7 +308,9 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
                     message=f"{image_name} not found!" if not image_exists else "",
                 )
             )
-        results.append(assert_relay_image_on_docker_hub(args.version))
+        relay_result = assert_relay_image_on_docker_hub(args.version)
+        results.append(relay_result)
+        relay_missing = not relay_result.assertion_ok
 
     errors = [r.message for r in results if not r.assertion_ok]
 
@@ -314,10 +318,14 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     print("ARTIFACTS_ERRORS: ", len(errors))
 
     if errors:
-        raise RuntimeError(
+        error_msg = (
             f"The following {len(errors)} build artifacts errors were detected:\n"
             + "\n".join([str(e) for e in errors])
         )
+        if relay_missing:
+            sys.stderr.write(error_msg + "\n")
+            sys.exit(EXIT_CODE_RELAY_MISSING)
+        raise RuntimeError(error_msg)
 
 
 # cloud images

@@ -256,6 +256,8 @@ PACKAGE_WERKS = ("cmk.werks",)
 
 PACKAGE_CRYPTO = ("cmk.crypto",)
 
+PACKAGE_FLAGS = ("cmk.flags",)
+
 PACKAGE_TRACE = ("cmk.trace",)
 
 PACKAGE_METRIC_BACKEND = ("cmk.metric_backend",)
@@ -792,6 +794,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_CRYPTO,
+        *PACKAGE_FLAGS,
         *PACKAGE_MESSAGING,
         *PACKAGE_MKP_TOOL,
         *PACKAGE_TRACE,

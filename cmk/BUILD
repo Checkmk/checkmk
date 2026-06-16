@@ -223,6 +223,7 @@ CMK_PACKAGES = [
     "//packages/cmk-crypto",
     "//packages/cmk-ec",
     "//packages/cmk-events",
+    "//packages/cmk-flags",
     "//packages/cmk-livestatus-client",
     "//packages/cmk-livestatus-client:py_livestatus",
     "//packages/cmk-messaging",

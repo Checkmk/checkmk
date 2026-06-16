@@ -804,13 +804,19 @@ def get_werk_arg(arg: WerkId | None) -> WerkId:
 
 
 def main_init() -> None:
-    if not WerkIDsClient().ensure_connection():
+    werk_ids_client = WerkIDsClient()
+
+    if not werk_ids_client.ensure_connection():
         return
 
     paths = make_paths_object(Path.home())
 
-    if paths.secret_file.exists() and WerkIDsClient().test_connection(paths.secret_file):
+    if paths.secret_file.exists() and werk_ids_client.test_connection(paths.secret_file):
         sys.stdout.write("Everything is fine.\n")
+        # The secret is already valid, so migrate any leftover legacy file (e.g. when
+        # both a legacy and a new stash file are present) instead of leaving it behind.
+        if paths.legacy_stash_file.exists():
+            migrate_werk_ids_file(paths)
         return
 
     paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
@@ -819,7 +825,9 @@ def main_init() -> None:
         with paths.secret_file.open("w") as fp:
             fp.write(secret)
 
-        if WerkIDsClient().test_connection(paths.secret_file):
+        # Only migrate the legacy file once the secret is confirmed correct. A wrong
+        # secret leaves the legacy stash untouched, so it stays usable for 'werk create'.
+        if werk_ids_client.test_connection(paths.secret_file):
             migrate_werk_ids_file(paths)
             break
 

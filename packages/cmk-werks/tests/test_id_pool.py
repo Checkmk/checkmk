@@ -361,13 +361,12 @@ def test_migrate_list_legacy_file(tmp_path: Path) -> None:
 def test_migrate_werk_ids_file_merges_both_files(tmp_path: Path) -> None:
     # When the new stash file already exists, legacy IDs are merged into it.
     paths = make_paths_object(tmp_path)
+    _write_secret(paths)
     paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
     paths.stash_file.write_text(Stash(ids=[1]).model_dump_json(by_alias=True), encoding="utf-8")
     paths.legacy_stash_file.write_text(
         LegacyStash(ids_by_project={"cmk": [2]}).model_dump_json(by_alias=True), encoding="utf-8"
     )
-    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
-    paths.secret_file.write_text("secret", encoding="utf-8")
 
     migrate_werk_ids_file(paths)
 

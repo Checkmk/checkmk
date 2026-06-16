@@ -595,6 +595,9 @@ allows = [
   "cmk.utils.paths",
 ]
 
+[components."cmk.flags"]
+allows = []
+
 [components."cmk.gui.cmkcert"]
 allows = [
   "@ccc",

@@ -23,6 +23,7 @@ import type { CheckboxListFilter } from '@/monitoring/shared/components/filter/t
 import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
 import MonitoringTable from '../shared/components/MonitoringTable.vue'
+import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
 import { HostApi } from './api/hosts'
 import HostRow from './components/HostRow.vue'
 import { HostService } from './services/HostService'
@@ -118,11 +119,20 @@ function rowKey(row: HostEntry): string {
 </script>
 
 <template>
-  <CmkSearchInput
-    class="monitoring-all-hosts-app__search"
-    :placeholder="_t('Search hosts…')"
-    @search="hostService.updateSearch($event)"
-  />
+  <div class="monitoring-all-hosts-app__header">
+    <CmkSearchInput
+      class="monitoring-all-hosts-app__search"
+      :placeholder="_t('Search hosts…')"
+      @search="hostService.updateSearch($event)"
+    />
+    <RefreshCountdown
+      :remaining="hostService.secondsRemaining.value"
+      :interval="hostService.pollIntervalSeconds"
+      :paused="hostService.paused.value"
+      size="small"
+      @toggle="hostService.togglePause()"
+    />
+  </div>
   <MonitoringResultsCount
     class="monitoring-all-hosts-app__results-count"
     :active-filter-count="columnFilters.length"
@@ -146,7 +156,15 @@ function rowKey(row: HostEntry): string {
 </template>
 
 <style scoped>
+.monitoring-all-hosts-app__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing);
+}
+
 .monitoring-all-hosts-app__search {
+  flex: 1;
   max-width: 360px;
 }
 

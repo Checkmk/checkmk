@@ -24,17 +24,38 @@ export abstract class MonitoringService<T> {
   readonly searchQuery: Ref<string> = ref('')
   readonly filterState: Ref<FilterNode | undefined> = ref(undefined)
 
+  readonly pollIntervalSeconds: number
+  readonly secondsRemaining: Ref<number>
+  readonly paused: Ref<boolean> = ref(false)
+
   private initialFetchTimer: ReturnType<typeof setTimeout> | null = null
-  private pollTimer: ReturnType<typeof setInterval> | null = null
+  private tickTimer: ReturnType<typeof setInterval> | null = null
 
   constructor(pollIntervalMs: number = POLL_INTERVAL_MS) {
+    this.pollIntervalSeconds = Math.max(1, Math.round(pollIntervalMs / 1000))
+    this.secondsRemaining = ref(this.pollIntervalSeconds)
     this.initialFetchTimer = setTimeout(() => {
       this.initialFetchTimer = null
       void this.fetch()
     }, 0)
-    this.pollTimer = setInterval(() => {
+    this.tickTimer = setInterval(() => {
+      this.tick()
+    }, 1000)
+  }
+
+  private tick(): void {
+    if (this.paused.value) {
+      return
+    }
+    if (this.secondsRemaining.value <= 1) {
       void this.fetch()
-    }, pollIntervalMs)
+    } else {
+      this.secondsRemaining.value -= 1
+    }
+  }
+
+  togglePause(): void {
+    this.paused.value = !this.paused.value
   }
 
   protected abstract fetchBatch(): Promise<PagedResponse<T>>
@@ -73,9 +94,9 @@ export abstract class MonitoringService<T> {
       clearTimeout(this.initialFetchTimer)
       this.initialFetchTimer = null
     }
-    if (this.pollTimer !== null) {
-      clearInterval(this.pollTimer)
-      this.pollTimer = null
+    if (this.tickTimer !== null) {
+      clearInterval(this.tickTimer)
+      this.tickTimer = null
     }
   }
 
@@ -83,6 +104,7 @@ export abstract class MonitoringService<T> {
     if (this.loading.value) {
       return
     }
+    this.secondsRemaining.value = this.pollIntervalSeconds
     this.loading.value = true
     try {
       const response = await this.fetchBatch()

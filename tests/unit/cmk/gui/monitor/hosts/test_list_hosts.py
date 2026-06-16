@@ -48,7 +48,7 @@ def test_handle_list_hosts_limit_handling() -> None:
 
 def test_handle_list_hosts_state_label_conversion() -> None:
     host_repo = get_fake_host_repository(n_hosts=100)
-    response = _handle_list_hosts(host_repo, limit=100)
+    response = _handle_list_hosts(host_repo)
     host_states = [host.state for host in response.hosts]
 
     assert all(state in {"UP", "DOWN", "UNREACHABLE"} for state in host_states)

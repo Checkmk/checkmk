@@ -152,7 +152,7 @@ def list_hosts(body: HostsRequestBody = HostsRequestBody()) -> HostsResponse:
 def _handle_list_hosts(
     host_repo: HostRepository,
     *,
-    limit: int,
+    limit: int = _DEFAULT_LIMIT,
     query: str = "",
     sorters: Sequence[HostSort] = _DEFAULT_SORT,
     filters: HostFilter = HostFilter(""),

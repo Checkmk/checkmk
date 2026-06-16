@@ -187,8 +187,8 @@ class Paths:
 def make_paths_object(home: Path) -> Paths:
     return Paths(
         legacy_stash_file=home / ".cmk-werk-ids",
-        stash_file=home / ".local/cmk-werks/reserved-ids",
-        secret_file=home / ".local/cmk-werks/secret",
+        stash_file=home / ".local/state/cmk-werk-ids-reserved",
+        secret_file=home / ".config/cmk-werk-ids-secret",
     )
 
 
@@ -922,11 +922,13 @@ def dump_stash_to_file(paths: Paths, stash: "LegacyStash | Stash") -> None:
     raw_stash = stash.model_dump_json(by_alias=True) + "\n"
     match stash:
         case LegacyStash():
-            paths.legacy_stash_file.write_text(raw_stash, encoding="utf-8")
+            target = paths.legacy_stash_file
         case Stash():
-            paths.stash_file.write_text(raw_stash, encoding="utf-8")
+            target = paths.stash_file
         case other:
             raise TypeError(other)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(raw_stash, encoding="utf-8")
 
 
 def _read_legacy_stash_file(paths: Paths) -> Sequence[int]:
@@ -955,8 +957,7 @@ def migrate_werk_ids_file(paths: Paths) -> None:
     )
     stash.add_ids([WerkId(id_) for id_ in _read_legacy_stash_file(paths)])
 
-    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
-    paths.stash_file.write_text(stash.model_dump_json(by_alias=True) + "\n", encoding="utf-8")
+    dump_stash_to_file(paths, stash)
     paths.legacy_stash_file.unlink(missing_ok=True)
 
 

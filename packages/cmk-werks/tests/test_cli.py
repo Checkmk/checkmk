@@ -221,8 +221,8 @@ def test_add_id_to_new_stash() -> None:
 def test_paths_object(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     assert paths.legacy_stash_file == tmp_path / ".cmk-werk-ids"
-    assert paths.stash_file == tmp_path / ".local/cmk-werks/reserved-ids"
-    assert paths.secret_file == tmp_path / ".local/cmk-werks/secret"
+    assert paths.stash_file == tmp_path / ".local/state/cmk-werk-ids-reserved"
+    assert paths.secret_file == tmp_path / ".config/cmk-werk-ids-secret"
 
 
 def test_active_stash_file_without_secret(tmp_path: Path) -> None:

@@ -65,6 +65,51 @@ class ManagedRobotsOverview(CmkPage):
         self.delete_robot_button(name).click()
         self.delete_confirmation_button.click()
 
+    def edit_robot_button(self, name: str) -> Locator:
+        return self.robot_row(name).get_by_role("link", name="Edit")
+
+    def edit_robot(self, name: str) -> None:
+        logger.info("Navigating to edit page for robot '%s'", name)
+        self.edit_robot_button(name).click()
+        self.page.wait_for_load_state("load")
+
+
+class EditManagedRobot(CmkPage):
+    """Represent the page for editing an existing managed robot."""
+
+    def __init__(self, page: Page, navigate_to_page: bool = True) -> None:
+        self.page_title = "Edit managed robot"
+        super().__init__(page, navigate_to_page)
+
+    @override
+    def navigate(self) -> None:
+        raise NotImplementedError(
+            "Navigate to EditManagedRobot via ManagedRobotsOverview.edit_robot(name)"
+        )
+
+    @override
+    def validate_page(self) -> None:
+        expect(self.main_area.get_suggestion("Save")).to_be_visible()
+
+    @override
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
+    @property
+    def replace_file_button(self) -> Locator:
+        return self.main_area.locator().get_by_role("button", name="Replace file")
+
+    @property
+    def file_upload_input(self) -> Locator:
+        return self.main_area.locator("input[type='file']")
+
+    def replace_file_and_save(self, archive_path: Path) -> None:
+        logger.info("Replacing robot archive with '%s'", archive_path.name)
+        self.replace_file_button.click()
+        self.file_upload_input.set_input_files(archive_path)
+        self.main_area.get_suggestion("Save").click()
+        self.page.wait_for_load_state("load")
+
 
 class CreateManagedRobot(CmkPage):
     """Represent the page for creating a new managed robot."""

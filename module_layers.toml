@@ -39,6 +39,8 @@ werks = ["cmk.werks"]
 
 crypto = ["cmk.crypto"]
 
+flags = ["cmk.flags"]
+
 trace = ["cmk.trace"]
 
 metric_backend = ["cmk.metric_backend"]
@@ -884,6 +886,7 @@ excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 allows = [
   "@ccc",
   "@crypto",
+  "@flags",
   "@livestatus_client",
   "@messaging",
   "@mkp_tool",

@@ -767,6 +767,7 @@ py_library(
         "//cmk/gui/painter:v0_base",
         "//cmk/gui/product_usage_analytics",
         "//cmk/gui/quick_setup",
+        "//cmk/gui/release_flags",
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/rule_specs:registering",
         "//cmk/gui/search",

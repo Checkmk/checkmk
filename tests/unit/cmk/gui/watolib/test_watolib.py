@@ -28,6 +28,7 @@ def test_registered_config_domains() -> None:
         "rrdcached",
         "site-certificate",
         "product_usage_analytics",
+        "release_flags",
     ]
 
     registered = sorted(config_domain_registry.keys())

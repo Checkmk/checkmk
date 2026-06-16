@@ -27,6 +27,7 @@ from cmk.gui import (
     painter_options,
     prediction,
     product_usage_analytics,
+    release_flags,
     rulespec,
     search_menu,
     user_message,
@@ -313,6 +314,9 @@ def register(
         config_variable_registry,
         config_variable_group_registry,
         replication_path_registry,
+    )
+    release_flags.register(
+        config_domain_registry,
     )
     quick_setup_registration.register(
         automation_command_registry,

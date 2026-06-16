@@ -8,19 +8,29 @@ This module exposes the file-backed release flags (defined in the ``cmk-flags``
 package) in the global settings UI. It is the only writer of
 ``release_flag.json``; every other consumer reads the file through
 ``cmk.flags.load_release_flags``.
+
+The config variables are generated from the fields of
+:class:`cmk.flags.ReleaseFlagConfig`, so adding a flag there is enough to make
+it appear in the UI -- no per-flag boilerplate here.
 """
 
 import os
 from pathlib import Path
 from typing import Final, override
 
+from pydantic.fields import FieldInfo
+
 from cmk.ccc import store
 from cmk.flags import CONFIG_FILENAME as RELEASE_FLAGS_CONFIG_FILENAME
 from cmk.flags import ReleaseFlagConfig
+from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.valuespec import Checkbox
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigDomainName,
+    ConfigVariable,
+    ConfigVariableGroup,
     SerializedSettings,
 )
 from cmk.utils.config_warnings import ConfigurationWarnings
@@ -94,3 +104,37 @@ class ConfigDomainReleaseFlags(ABCConfigDomain):
     @override
     def default_globals(self) -> GlobalSettings:
         return ReleaseFlagConfig().model_dump()
+
+
+ConfigVariableGroupReleaseFlags = ConfigVariableGroup(
+    title=_l("Release flags"),
+    sort_index=200,
+)
+
+
+def _make_flag_config_variable(name: str, field_info: FieldInfo) -> ConfigVariable:
+    extra = field_info.json_schema_extra or {}
+    assert isinstance(extra, dict)
+    description = str(extra.get("description", ""))
+    remove_after = str(extra.get("remove_after", ""))
+    help_text = _(
+        "%s<br><br>This is a temporary release flag. It is scheduled for removal "
+        "in version %s and must not be relied on for permanent configuration."
+    ) % (description, remove_after)
+    return ConfigVariable(
+        group=ConfigVariableGroupReleaseFlags,
+        primary_domain=ConfigDomainReleaseFlags,
+        ident=name,
+        valuespec=lambda context: Checkbox(
+            title=name,
+            label=_("Enabled"),
+            help=help_text,
+            default_value=False,
+        ),
+    )
+
+
+release_flag_config_variables: Final[list[ConfigVariable]] = [
+    _make_flag_config_variable(name, field_info)
+    for name, field_info in ReleaseFlagConfig.model_fields.items()
+]

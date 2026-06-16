@@ -769,7 +769,9 @@ export const oneColorIcons = [
   'share',
   'stale',
   'reload',
-  'filter'
+  'filter',
+  'pause',
+  'play'
 ] as const
 export const twoColorIcons = ['aggr'] as const
 

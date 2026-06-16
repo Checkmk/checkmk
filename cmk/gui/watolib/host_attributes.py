@@ -970,6 +970,10 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
     def form_spec(self) -> FormSpec:
         raise NotImplementedError()
 
+    def form_spec_for_host_creation(self) -> FormSpec:
+        """Form variant for creating hosts; defaults to ``form_spec()``."""
+        return self.form_spec()
+
     def title(self) -> str:
         title = self.valuespec().title()
         assert title is not None

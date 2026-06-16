@@ -127,7 +127,7 @@ def create_host_attributes_selection(
                 continue
 
             try:
-                form_spec = attr.form_spec()
+                form_spec = attr.form_spec_for_host_creation()
             except NotImplementedError:
                 form_spec = LegacyValueSpec.wrap(attr.valuespec())
 

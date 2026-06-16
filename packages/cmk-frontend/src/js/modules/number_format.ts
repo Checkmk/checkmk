@@ -149,6 +149,7 @@ export function physical_precision(v: number, precision: number, unit_symbol: st
   return scaled_value.toFixed(places_after_comma) + ' ' + symbol + unit_symbol
 }
 
+/** Re-implemented as `mantissaAndExp` in cmk-frontend-vue (TimeSeriesGraph/tickStepping.ts). */
 export function frexpb(x: number, base: number) {
   let exp = Math.floor(Math.log(x) / Math.log(base))
   let mantissa = x / base ** exp
@@ -191,17 +192,20 @@ function calculate_approx_age_value(secs: number): string {
 // When labeling domains we place ticks on integer values. Return integer
 // divisors of the base we work on. Decimal by default, yet for Bytes we call
 // it binary stepping and use the Hexadecimal.
+/** Re-implemented as `stepIncrements` in cmk-frontend-vue (TimeSeriesGraph/tickStepping.ts). */
 export function domainIntervals(stepping: string) {
   if (stepping === 'binary') return [1, 2, 4, 8, 16]
   return [1, 2, 5, 10]
 }
 
+/** Re-implemented as `tickStep` in cmk-frontend-vue (TimeSeriesGraph/tickStepping.ts). */
 function tickStep(range: number, ticks: number, increments: number[]) {
   const base = increments[increments.length - 1]
   const [mantissa, exp] = frexpb(range / ticks, base)
   return increments.find((e) => mantissa <= e)! * base ** exp
 }
 
+/** Re-implemented as `alignedDomain` in cmk-frontend-vue (TimeSeriesGraph/tickStepping.ts). */
 export function partitionableDomain(domain: [number, number], ticks: number, increments: number[]) {
   let [start, end] = domain.map((x) => x || 0).sort((a, b) => a - b)
   if (start === end) end += 1

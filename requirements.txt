@@ -3675,6 +3675,7 @@ pydantic==2.12.5 \
     #   -r non-free/packages/cmk-telemetry/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-backup/requirements.in
+    #   -r packages/cmk-flags/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
@@ -4093,6 +4094,7 @@ pytest==8.4.2 \
     #   -r packages/cmk-dev-deploy/dev-requirements.in
     #   -r packages/cmk-ec/dev-requirements.in
     #   -r packages/cmk-events/dev-requirements.in
+    #   -r packages/cmk-flags/dev-requirements.in
     #   -r packages/cmk-graphing-engine/dev-requirements.in
     #   -r packages/cmk-licensing/dev-requirements.in
     #   -r packages/cmk-livestatus-client/dev-requirements.in

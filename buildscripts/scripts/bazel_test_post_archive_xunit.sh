@@ -33,7 +33,7 @@ find "${BAZEL_TEST_LOGS_SRC}" -name "test.xml" | while IFS= read -r src; do
     rel="${src#"${BAZEL_TEST_LOGS_SRC}"/}"
     dst="${BAZEL_TEST_LOGS_DEST}/${rel}"
     mkdir -p "$(dirname "$dst")"
-    mv "$src" "$dst"
+    cp "$src" "$dst"
 done
 
 exit $?

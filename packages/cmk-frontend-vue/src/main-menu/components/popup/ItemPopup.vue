@@ -49,15 +49,27 @@ mainMenu.onCloseShowAllEntriesOfTopic((id) => {
   }
 })
 
+const FOCUS_RETRY_FRAMES = 120
+
+function focusElementWhenAvailable(elementId: string, framesLeft: number = FOCUS_RETRY_FRAMES) {
+  const element = document.getElementById(elementId) as HTMLInputElement | null
+  if (element) {
+    element.focus()
+    return
+  }
+  if (framesLeft > 0) {
+    requestAnimationFrame(() => {
+      focusElementWhenAvailable(elementId, framesLeft - 1)
+    })
+  }
+}
+
 mainMenu.onNavigate((item: NavItem) => {
   if (item.id === props.item.id && item.set_focus_on_element_by_id) {
-    const searchInput = document.getElementById(item.set_focus_on_element_by_id) as HTMLInputElement
-
-    if (searchInput) {
-      void nextTick(() => {
-        searchInput.focus()
-      })
-    }
+    const elementId = item.set_focus_on_element_by_id
+    void nextTick(() => {
+      focusElementWhenAvailable(elementId)
+    })
   } else {
     showAllTopic.value = null
   }

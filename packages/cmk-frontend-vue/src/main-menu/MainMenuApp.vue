@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type MainMenuConfig, type NavItemIdEnum } from 'cmk-shared-typing/typescript/main_menu'
-import { provide, ref } from 'vue'
+import { onMounted, provide, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
@@ -23,6 +23,7 @@ import NavItem from './components/NavItem.vue'
 import SidebarToggle from './components/SidebarToggle.vue'
 import ItemPopup from './components/popup/ItemPopup.vue'
 import PopupBackdrop from './components/popup/PopupBackdrop.vue'
+import { lazyMainMenuItemVueAppLoaders } from './provider/item-vue-apps'
 import { mainMenuKey } from './provider/main-menu'
 
 const { _t } = usei18n()
@@ -56,6 +57,23 @@ function navElClick(e: MouseEvent) {
     }
   }
 }
+
+onMounted(() => {
+  // Warm the lazily-loaded nav popup chunks in the background once the
+  // navigation is mounted and interactive, so they are ready before the user
+  // opens the corresponding popup. Errors are ignored: the popup itself
+  // retries the load on demand.
+  const warm = () => {
+    for (const load of Object.values(lazyMainMenuItemVueAppLoaders)) {
+      void load().catch(() => {})
+    }
+  }
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(warm)
+  } else {
+    setTimeout(warm, 0)
+  }
+})
 </script>
 
 <template>

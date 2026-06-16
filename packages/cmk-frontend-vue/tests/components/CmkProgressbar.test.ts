@@ -5,7 +5,7 @@
  */
 import { render, screen } from '@testing-library/vue'
 
-import CmkProgressbar from '@/components/CmkProgressbar.vue'
+import CmkProgressbar from '@/components/progress/CmkProgressbar.vue'
 
 function getRandomProgressValues(): { max: number; value: number } {
   let max = Math.round(Math.random() * 1000)

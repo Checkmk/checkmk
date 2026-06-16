@@ -56,9 +56,9 @@ import UclCmkLoading from '@ucl/components/system-feedback/CmkLoading/UclCmkLoad
 import UclCmkPerfometer from '@ucl/components/system-feedback/CmkPerfometer/UclCmkPerfometer.vue'
 import UclCmkPopup from '@ucl/components/system-feedback/CmkPopup/UclCmkPopup.vue'
 import UclCmkPopupDialog from '@ucl/components/system-feedback/CmkPopupDialog/UclCmkPopupDialog.vue'
-import UclCmkProgressbar from '@ucl/components/system-feedback/CmkProgressbar/UclCmkProgressbar.vue'
 import UclCmkSkeleton from '@ucl/components/system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
 import UclCmkTooltip from '@ucl/components/system-feedback/CmkTooltip/UclCmkTooltip.vue'
+import UclCmkProgressbar from '@ucl/components/system-feedback/progress/UclCmkProgressbar.vue'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
 

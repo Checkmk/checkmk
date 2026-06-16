@@ -55,9 +55,9 @@ import UclCmkLoadingCodeExample from '@ucl/components/system-feedback/CmkLoading
 import UclCmkPerfometerCodeExample from '@ucl/components/system-feedback/CmkPerfometer/UclCmkPerfometerCodeExample.vue'
 import UclCmkPopupCodeExample from '@ucl/components/system-feedback/CmkPopup/UclCmkPopupCodeExample.vue'
 import UclCmkPopupDialogCodeExample from '@ucl/components/system-feedback/CmkPopupDialog/UclCmkPopupDialogCodeExample.vue'
-import UclCmkProgressbarCodeExample from '@ucl/components/system-feedback/CmkProgressbar/UclCmkProgressbarCodeExample.vue'
 import UclCmkSkeletonCodeExample from '@ucl/components/system-feedback/CmkSkeleton/UclCmkSkeletonCodeExample.vue'
 import UclCmkTooltipCodeExample from '@ucl/components/system-feedback/CmkTooltip/UclCmkTooltipCodeExample.vue'
+import UclCmkProgressbarCodeExample from '@ucl/components/system-feedback/progress/UclCmkProgressbarCodeExample.vue'
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({ resolve: () => ({ href: '/' }) }),

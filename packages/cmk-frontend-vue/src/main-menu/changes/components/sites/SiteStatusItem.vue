@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Site } from 'cmk-shared-typing/typescript/changes'
 
 import CmkBadge from '@/components/CmkBadge.vue'
-import CmkProgressbar from '@/components/CmkProgressbar.vue'
+import CmkProgressbar from '@/components/progress/CmkProgressbar.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import SiteStatusIcons from './SiteStatusIcons.vue'

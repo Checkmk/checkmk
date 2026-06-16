@@ -9,11 +9,11 @@ import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkProgressbar from '@/components/CmkProgressbar.vue'
+import CmkProgressbar from '@/components/progress/CmkProgressbar.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import { type Sizes } from '../../components/CmkProgressbar.vue'
+import { type Sizes } from '../../components/progress/CmkProgressbar.vue'
 
 const { _t } = usei18n()
 

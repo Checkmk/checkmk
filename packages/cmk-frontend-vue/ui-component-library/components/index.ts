@@ -67,9 +67,9 @@ import UclCmkLoading from './system-feedback/CmkLoading/UclCmkLoading.vue'
 import UclCmkPerfometer from './system-feedback/CmkPerfometer/UclCmkPerfometer.vue'
 import UclCmkPopup from './system-feedback/CmkPopup/UclCmkPopup.vue'
 import UclCmkPopupDialog from './system-feedback/CmkPopupDialog/UclCmkPopupDialog.vue'
-import UclCmkProgressbar from './system-feedback/CmkProgressbar/UclCmkProgressbar.vue'
 import UclCmkSkeleton from './system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
 import UclCmkTooltip from './system-feedback/CmkTooltip/UclCmkTooltip.vue'
+import UclCmkProgressbar from './system-feedback/progress/UclCmkProgressbar.vue'
 
 const basicElementsPages = [
   new Page('CmkBadge', UclCmkBadge),
@@ -142,7 +142,7 @@ const systemFeedbackPages = [
   new Page('CmkPerfometer', UclCmkPerfometer),
   new Page('CmkPopup', UclCmkPopup),
   new Page('CmkPopupDialog', UclCmkPopupDialog),
-  new Page('CmkProgressbar', UclCmkProgressbar),
+  new Folder('Progress', [new Page('CmkProgressbar', UclCmkProgressbar)]),
   new Page('CmkSkeleton', UclCmkSkeleton),
   new Page('CmkTooltip', UclCmkTooltip)
 ]

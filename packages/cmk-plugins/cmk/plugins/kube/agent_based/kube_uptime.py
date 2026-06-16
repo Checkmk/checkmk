@@ -21,7 +21,16 @@ def _parse_kube_start_time(now: float, string_table: StringTable) -> Section | N
     # host that has an uptime service. And importing the Pydantic models is
     # slow. Don't use this as a good pattern to follow in the Kube plugins.
     start_time = json.loads(string_table[0][0])["start_time"]
-    return Section(uptime_sec=now - start_time, message=None)
+    uptime_sec = now - start_time
+    if uptime_sec < 0:
+        return Section(
+            uptime_sec=None,
+            message=(
+                f"Negative uptime ({uptime_sec:.0f} seconds): the Pod's start time lies in the future. "
+                "This indicates clock skew between the Kubelet and the Checkmk server."
+            ),
+        )
+    return Section(uptime_sec=uptime_sec, message=None)
 
 
 def parse_kube_start_time(string_table: StringTable) -> Section | None:

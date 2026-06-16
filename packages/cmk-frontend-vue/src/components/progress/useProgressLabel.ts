@@ -46,7 +46,7 @@ export default function useProgressLabel(source: () => ProgressLabelProps): Prog
 
   const progressRatio = computed(() => {
     const { value, max } = source()
-    return max === 'unknown' ? 0 : value / max
+    return max === 'unknown' ? 0 : Math.min(Math.max(value / max, 0), 1)
   })
 
   return { accessibilityLabelString, labelString, progressRatio }

@@ -48,7 +48,8 @@ export const panelConfig = {
     ] satisfies Options<NonNullable<FontColors>>[],
     initialState: 'success' as const
   },
-  label: { type: 'boolean' as const, title: 'label', initialState: true }
+  label: { type: 'boolean' as const, title: 'label', initialState: true },
+  reverse: { type: 'boolean' as const, title: 'reverse (countdown)', initialState: false }
 } satisfies PanelConfigFor<typeof CmkProgressCircle>
 </script>
 
@@ -82,6 +83,7 @@ const propState = new PanelStateCreator<typeof CmkProgressCircle>().createRef(pa
         :color="propState.color"
         :font-color="propState.fontColor"
         :label="propState.label ? { showTotal: true, unit: '%' } : undefined"
+        :reverse="propState.reverse"
       />
 
       <template #properties>

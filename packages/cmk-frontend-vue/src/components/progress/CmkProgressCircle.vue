@@ -67,6 +67,7 @@ export interface CmkProgressCircleDefaultProps {
   fontColor?: FontColors
   max?: number | 'unknown'
   label?: ProgressLabel
+  reverse?: boolean
 }
 
 const {
@@ -75,7 +76,8 @@ const {
   color = 'success',
   fontColor = undefined,
   max = 100,
-  label = undefined
+  label = undefined,
+  reverse = false
 } = defineProps<CmkProgressCircleDefaultProps>()
 
 const { accessibilityLabelString, labelString, progressRatio } = useProgressLabel(() => ({
@@ -88,7 +90,11 @@ const geometry = computed(() => SIZE_GEOMETRY[size ?? 'medium'])
 const radius = computed(() => (geometry.value.diameter - geometry.value.stroke) / 2)
 const center = computed(() => geometry.value.diameter / 2)
 const circumference = computed(() => 2 * Math.PI * radius.value)
-const dashOffset = computed(() => circumference.value * (1 - progressRatio.value))
+const dashOffset = computed(() =>
+  reverse
+    ? circumference.value * progressRatio.value
+    : circumference.value * (1 - progressRatio.value)
+)
 
 const cmkProgressCircleId = useId()
 </script>

@@ -124,7 +124,7 @@ class WerkIDsClient:
         secret = secret_file_path.read_text(encoding="utf-8").strip()
         try:
             response = requests.get(
-                f"{self.URL}/connect",
+                f"{self.URL}/v1/connect",
                 verify=True,
                 headers={"Authorization": f"Bearer {secret}"},
                 timeout=5,
@@ -140,7 +140,7 @@ class WerkIDsClient:
         secret = secret_file_path.read_text(encoding="utf-8").strip()
         try:
             response = requests.post(
-                f"{self.URL}/reserve",
+                f"{self.URL}/v1/reserve",
                 verify=True,
                 headers={"Authorization": f"Bearer {secret}"},
                 json={"local_werk_ids_count": local_werk_ids_count},

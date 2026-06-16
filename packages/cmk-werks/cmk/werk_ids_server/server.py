@@ -35,12 +35,12 @@ def health() -> Response:
     return jsonify({"status": "ok"})
 
 
-@app.get("/connect")
+@app.get("/v1/connect")
 def connect() -> Response:
     return jsonify({"status": "ok"})
 
 
-@app.post("/reserve")
+@app.post("/v1/reserve")
 def reserve_ids() -> Response:
     data = request.get_json(silent=True) or {}
     local_werk_ids_count = data.get("local_werk_ids_count")

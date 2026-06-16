@@ -102,6 +102,11 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             site_path="etc/check_mk/product_usage_analytics.mk",
         ),
         ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident="release_flags",
+            site_path="etc/check_mk/release_flag.json",
+        ),
+        ReplicationPath.make(
             ty=ReplicationPathType.DIR,
             ident="usersettings",
             site_path="var/check_mk/web",

@@ -311,6 +311,7 @@ def register(
         config_domain_registry,
         config_variable_registry,
         config_variable_group_registry,
+        replication_path_registry,
     )
     quick_setup_registration.register(
         automation_command_registry,

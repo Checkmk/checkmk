@@ -53,7 +53,11 @@ function scriptOnError(event: string | Event) {
   }
 }
 
-const scriptsToLoad = ['/cmk-frontend-vue-ahr/@vite/client', '/cmk-frontend-vue-ahr/src/main.ts']
+const scriptsToLoad = [
+  '/cmk-frontend-vue-ahr/@vite/client',
+  '/cmk-frontend-vue-ahr/src/nav_sidebar.ts',
+  '/cmk-frontend-vue-ahr/src/main.ts'
+]
 
 scriptsToLoad.forEach(function (url: string) {
   loadScript(url)

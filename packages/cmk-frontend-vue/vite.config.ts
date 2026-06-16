@@ -103,6 +103,7 @@ export default defineConfig(({ command }) => {
         },
         input: {
           'main.js': './src/main.ts',
+          'nav_sidebar.js': './src/nav_sidebar.ts',
           'stage1.js': './src/stage1.ts'
         }
       }

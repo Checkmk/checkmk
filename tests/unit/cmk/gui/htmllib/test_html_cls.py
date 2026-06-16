@@ -13,7 +13,7 @@ from werkzeug.test import create_environ
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import Request
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.utils.html import HTML
@@ -290,3 +290,64 @@ def test_render_a_with_makeuri_contextless() -> None:
     uri = makeuri_contextless(request, [("foo", "val"), ("bar", "val")], filename="wato.py")
     a = HTMLWriter.render_a("link", href=uri)
     assert str(a) == '<a href="wato.py?bar=val&foo=val">link</a>'
+
+
+@pytest.mark.parametrize(
+    "manifest, entry_key, expected",
+    [
+        pytest.param(
+            {"entry": {"css": ["entry.css"]}},
+            "entry",
+            ["entry.css"],
+            id="own css only, no imports",
+        ),
+        pytest.param(
+            {"entry": {"imports": [], "css": []}},
+            "entry",
+            [],
+            id="no stylesheets at all",
+        ),
+        pytest.param(
+            {
+                "entry": {"imports": ["shared"], "css": ["entry.css"]},
+                "shared": {"css": ["shared.css"]},
+            },
+            "entry",
+            ["shared.css", "entry.css"],
+            id="shared chunk css first, entry css last",
+        ),
+        pytest.param(
+            {
+                "entry": {"imports": ["a", "b"], "css": ["entry.css"]},
+                "a": {"imports": ["base"], "css": ["a.css"]},
+                "b": {"imports": ["base"], "css": ["b.css"]},
+                "base": {"css": ["base.css"]},
+            },
+            "entry",
+            ["base.css", "a.css", "b.css", "entry.css"],
+            id="diamond graph dedupes shared base, keeps dependency-first order",
+        ),
+        pytest.param(
+            {
+                "entry": {"imports": ["dep"], "css": ["shared.css"]},
+                "dep": {"css": ["shared.css"]},
+            },
+            "entry",
+            ["shared.css"],
+            id="stylesheet shared by entry and dependency injected once",
+        ),
+        pytest.param(
+            {
+                "entry": {"imports": ["other"], "css": ["entry.css"]},
+                "other": {"imports": ["entry"], "css": ["other.css"]},
+            },
+            "entry",
+            ["other.css", "entry.css"],
+            id="import cycle does not recurse infinitely",
+        ),
+    ],
+)
+def test_collect_stylesheets(
+    manifest: dict[str, dict[str, list[str]]], entry_key: str, expected: list[str]
+) -> None:
+    assert HTMLGenerator._collect_stylesheets(manifest, entry_key) == expected

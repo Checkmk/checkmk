@@ -21,9 +21,6 @@ import Dashboard from './dashboard/DashboardApp.vue'
 import SharedDashboard from './dashboard/DashboardSharedApp.vue'
 import DateTimePickerApp from './date-time-picker/CmkDateTimePickerApp.vue'
 import DialogApp from './dialog/DialogApp.vue'
-import LoadingTransition from './loading-transition/LoadingTransition.vue'
-import MainMenuApp from './main-menu/MainMenuApp.vue'
-import ChangesApp from './main-menu/changes/ChangesApp.vue'
 import ModeCreateOAuth2ConnectionApp from './mode-oauth2-connection/ModeCreateOAuth2ConnectionApp.vue'
 import ModeRedirectOAuth2ConnectionAppCopy from './mode-oauth2-connection/ModeRedirectOAuth2ConnectionApp.vue'
 import ModeCreateOTelConfApp from './mode-otel/ModeCreateOTelConfApp.vue'
@@ -34,7 +31,6 @@ import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import ProductUsageAnalyticsApp from './product-usage-analytics/ProductUsageAnalyticsApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import AgentDownload from './setup/AgentDownloadApp.vue'
-import SidebarApp from './sidebar/SidebarApp.vue'
 import TwoFactorAuthApp from './two-factor-auth/TwoFactorAuthApp.vue'
 import WebAuthnRegisterButtonApp from './two-factor-auth/WebAuthnRegisterButtonApp.vue'
 import UnifiedSearchApp from './unified-search/UnifiedSearchApp.vue'
@@ -58,14 +54,10 @@ defineCmkComponent('cmk-mode-create-relay', ModeCreateRelayApp)
 defineCmkComponent('cmk-mode-create-oauth2-connection', ModeCreateOAuth2ConnectionApp)
 defineCmkComponent('cmk-mode-redirect-oauth2-connection', ModeRedirectOAuth2ConnectionAppCopy)
 defineCmkComponent('cmk-monitoring-all-hosts', AllHostsApp)
-defineCmkComponent('cmk-sidebar', SidebarApp)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)
 defineCmkComponent('cmk-rnbw', RnbwApp, { pure: true })
-defineCmkComponent('cmk-main-menu', MainMenuApp)
-defineCmkComponent('cmk-main-menu-changes', ChangesApp)
-defineCmkComponent('cmk-loading-transition', LoadingTransition, { appprops: { fullPage: true } })
 defineCmkComponent('cmk-ai-explain-button', AiExplainThisIssueApp)
 defineCmkComponent('cmk-dialog', DialogApp)
 defineCmkComponent('cmk-dynamic-icon', DynamicIconApp, { pure: true })

@@ -17,6 +17,11 @@ import requests
 from .in_out_elements import bail_out, TTY_NORMAL, TTY_RED
 from .schemas.werk import LegacyStash, Stash, WerkId
 
+# Use a single short timeout for every request so commands fail fast when the werk IDs
+# server is unreachable (e.g. outside the VPN, where DNS/connect behaviour differs)
+# instead of blocking.
+_TIMEOUT: Final = 5
+
 
 @dataclass(frozen=True, kw_only=True)
 class Paths:
@@ -130,7 +135,7 @@ class WerkIDsClient:
 
     def ensure_connection(self) -> bool:
         try:
-            response = requests.get(self.URL, timeout=5)
+            response = requests.get(self.URL, timeout=_TIMEOUT)
             response.raise_for_status()
             return True
         except requests.exceptions.RequestException:
@@ -145,7 +150,7 @@ class WerkIDsClient:
                 f"{self.URL}/v1/connect",
                 verify=True,
                 headers={"Authorization": f"Bearer {secret}"},
-                timeout=5,
+                timeout=_TIMEOUT,
             )
         except requests.exceptions.RequestException:
             traceback.print_exc(file=sys.stderr)
@@ -169,7 +174,7 @@ class WerkIDsClient:
                 verify=True,
                 headers={"Authorization": f"Bearer {secret}"},
                 json={"local_werk_ids_count": local_werk_ids_count},
-                timeout=10,
+                timeout=_TIMEOUT,
             )
         except requests.exceptions.RequestException:
             # The server is unreachable (e.g. outside the VPN). Stay quiet and let the

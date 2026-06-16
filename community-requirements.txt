@@ -3885,6 +3885,7 @@ pydantic==2.12.5 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-flags/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in

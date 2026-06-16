@@ -75,6 +75,14 @@ def test_nimble_latency_ranges(
     assert actual_results[0] == expected
 
 
+@pytest.mark.xfail(strict=True)
+def test_nimble_latency_empty_type_data() -> None:
+    data: ParsedNimbleLatency = {"itemxyz": {"read": {}, "write": {}}}
+    params: Param = {"range_reference": "20", "read": (10.0, 20.0), "write": (10.0, 20.0)}
+    assert not list(check_nimble_latency_reads("itemxyz", params, data))
+    assert not list(check_nimble_latency_writes("itemxyz", params, data))
+
+
 def test_nimble_latency_read_params() -> None:
     """Test that latency read levels are applied to read types only."""
     params: Param = {

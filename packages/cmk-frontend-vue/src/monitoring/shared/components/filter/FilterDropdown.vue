@@ -13,13 +13,14 @@ communicates via v-model (a `ColumnFilterNode` or undefined). New filter types
 this shell.
 -->
 <script setup lang="ts">
-import { type Component, computed, nextTick, onBeforeUnmount, ref } from 'vue'
+import { type Component, computed, inject, nextTick, onBeforeUnmount, ref } from 'vue'
 
 import { getKeyShortcutServiceInstance } from '@/lib/keyShortcuts'
 import useClickOutside from '@/lib/useClickOutside'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 
+import { MONITORING_SERVICE } from '../MonitoringTableContext'
 import FilterCheckboxList from './FilterCheckboxList.vue'
 import type { ColumnFilterDefinition } from './types'
 
@@ -39,6 +40,8 @@ const vClickOutside = useClickOutside()
 const shortcuts = getKeyShortcutServiceInstance()
 let shortcutIds: string[] = []
 
+const monitoringService = inject(MONITORING_SERVICE, null)
+
 const isOpen = ref(false)
 const flipUp = ref(false)
 // Swallow the click-outside fired by the same click that opened the popover.
@@ -56,6 +59,7 @@ function open(): void {
     return
   }
   isOpen.value = true
+  monitoringService?.beginAutoPause()
   suppressNextClickOutside.value = true
   setTimeout(() => {
     suppressNextClickOutside.value = false
@@ -72,6 +76,7 @@ function close(): void {
     return
   }
   isOpen.value = false
+  monitoringService?.endAutoPause()
   removeShortcuts()
   trigger.value?.querySelector('button')?.focus()
 }
@@ -159,7 +164,12 @@ function onFocusOut(event: FocusEvent): void {
   }
 }
 
-onBeforeUnmount(removeShortcuts)
+onBeforeUnmount(() => {
+  if (isOpen.value) {
+    monitoringService?.endAutoPause()
+  }
+  removeShortcuts()
+})
 </script>
 
 <template>

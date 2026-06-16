@@ -124,11 +124,14 @@ function rowKey(row: HostEntry): string {
       class="monitoring-all-hosts-app__search"
       :placeholder="_t('Search hosts…')"
       @search="hostService.updateSearch($event)"
+      @focusin="hostService.beginAutoPause()"
+      @focusout="hostService.endAutoPause()"
     />
     <RefreshCountdown
       :remaining="hostService.secondsRemaining.value"
       :interval="hostService.pollIntervalSeconds"
       :paused="hostService.paused.value"
+      :manual-paused="hostService.manualPaused.value"
       size="small"
       @toggle="hostService.togglePause()"
     />

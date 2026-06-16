@@ -17,6 +17,7 @@ interface RefreshCountdownProps {
   remaining: number
   interval: number
   paused?: boolean
+  manualPaused?: boolean
   size?: Sizes
   color?: Colors
   pauseColor?: Colors
@@ -26,6 +27,7 @@ const {
   remaining,
   interval,
   paused = false,
+  manualPaused = false,
   size = 'medium',
   color = 'success',
   pauseColor = 'font'
@@ -55,7 +57,7 @@ const accessibilityLabel = computed<string>(() =>
       :value="remaining"
       :max="interval"
       :size="size"
-      :color="paused ? pauseColor : color"
+      :color="manualPaused ? pauseColor : color"
       :label="false"
       :reverse="true"
     />

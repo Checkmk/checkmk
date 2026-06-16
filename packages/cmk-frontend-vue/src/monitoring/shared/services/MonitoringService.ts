@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ColumnFiltersState, SortingState } from '@tanstack/vue-table'
-import { type Ref, ref, shallowRef } from 'vue'
+import { type ComputedRef, type Ref, computed, ref, shallowRef } from 'vue'
 
 import type { FilterNode } from '@/monitoring/shared/api/types'
 import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
@@ -26,7 +26,11 @@ export abstract class MonitoringService<T> {
 
   readonly pollIntervalSeconds: number
   readonly secondsRemaining: Ref<number>
-  readonly paused: Ref<boolean> = ref(false)
+  readonly manualPaused: Ref<boolean> = ref(false)
+  private readonly autoPauseCount: Ref<number> = ref(0)
+  readonly paused: ComputedRef<boolean> = computed(
+    () => this.manualPaused.value || this.autoPauseCount.value > 0
+  )
 
   private initialFetchTimer: ReturnType<typeof setTimeout> | null = null
   private tickTimer: ReturnType<typeof setInterval> | null = null
@@ -55,7 +59,15 @@ export abstract class MonitoringService<T> {
   }
 
   togglePause(): void {
-    this.paused.value = !this.paused.value
+    this.manualPaused.value = !this.manualPaused.value
+  }
+
+  beginAutoPause(): void {
+    this.autoPauseCount.value += 1
+  }
+
+  endAutoPause(): void {
+    this.autoPauseCount.value = Math.max(0, this.autoPauseCount.value - 1)
   }
 
   protected abstract fetchBatch(): Promise<PagedResponse<T>>

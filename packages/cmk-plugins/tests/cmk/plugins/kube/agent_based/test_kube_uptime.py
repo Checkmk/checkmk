@@ -21,3 +21,13 @@ def test_parse_kube_start_time_from_section_model() -> None:
     assert _parse_kube_start_time(100.0, [[start_time_json]]) == Section(
         uptime_sec=80.0, message=None
     )
+
+
+def test_parse_kube_start_time_negative_uptime_reports_message() -> None:
+    section = _parse_kube_start_time(0.0, [['{"start_time": 1912}']])
+    assert section is not None
+    assert section.uptime_sec is None
+    assert section.message == (
+        "Negative uptime (-1912 seconds): the Pod's start time lies in the future. "
+        "This indicates clock skew between the Kubelet and the Checkmk server."
+    )

@@ -128,6 +128,9 @@ def _migrate(value: object) -> Mapping[str, object]:
     elif "connection_method" not in result:
         result["connection_method"] = ("api", ("auto", None))
 
+    if "keep_non_zero_exit_containers" not in result:
+        result["keep_non_zero_exit_containers"] = True
+
     return result
 
 

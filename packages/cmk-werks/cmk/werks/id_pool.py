@@ -14,7 +14,7 @@ from typing import Final
 
 import requests
 
-from .in_out_elements import bail_out
+from .in_out_elements import bail_out, TTY_NORMAL, TTY_RED
 from .schemas.werk import LegacyStash, Stash, WerkId
 
 
@@ -182,7 +182,12 @@ def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> Legacy
         return load_stash_from_file(paths)
 
     if not local_werk_ids_count:
-        bail_out("No local or reserved werk IDs available.")
+        bail_out(
+            f"\n{TTY_RED}No werk IDs available, and reserving new IDs from the werk IDs "
+            "server failed.\n"
+            "Please ensure that you're in the VPN and the werk IDs server is reachable, "
+            f"then try again.{TTY_NORMAL}"
+        )
 
     return stash
 

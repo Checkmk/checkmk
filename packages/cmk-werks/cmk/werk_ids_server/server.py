@@ -6,7 +6,7 @@
 import logging
 import secrets
 
-from flask import abort, current_app, Flask, jsonify, request, Response
+from flask import current_app, Flask, jsonify, request, Response
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from cmk.werk_ids_server._db import reserve
@@ -18,16 +18,23 @@ setattr(app, "wsgi_app", ProxyFix(app.wsgi_app, x_for=1))
 _logger = logging.getLogger(__name__)
 
 
+def _error(status_code: int, message: str) -> Response:
+    response = jsonify({"error": message})
+    response.status_code = status_code
+    return response
+
+
 @app.before_request
-def _auth() -> None:
+def _auth() -> Response | None:
     if request.endpoint == "health":
-        return
+        return None
     secret = current_app.config["secret_file"].read_text().strip()
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer ") or not secrets.compare_digest(
         auth.removeprefix("Bearer "), secret
     ):
-        abort(401)
+        return _error(401, "Invalid or missing authorization.")
+    return None
 
 
 @app.get("/")
@@ -45,7 +52,7 @@ def reserve_ids() -> Response:
     data = request.get_json(silent=True) or {}
     local_werk_ids_count = data.get("local_werk_ids_count")
     if not isinstance(local_werk_ids_count, int) or local_werk_ids_count < 0:
-        abort(400)
+        return _error(400, "Field 'local_werk_ids_count' must be a non-negative integer.")
 
     to_be_reserved = _MAX_RESERVABLE_IDS - local_werk_ids_count
     if to_be_reserved <= 0:

@@ -67081,6 +67081,10 @@ msgid "State when replication state is unknown"
 msgstr "Staat wanneer replicatietoestand onbekend is"
 
 #, fuzzy
+msgid "State when reported device status is No Redundancy"
+msgstr "Toestand wanneer replicatietoestand fout is"
+
+#, fuzzy
 msgid "State when reported device status is OK"
 msgstr "Toestand wanneer replicatietoestand fout is"
 

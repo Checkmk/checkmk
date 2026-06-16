@@ -67622,6 +67622,10 @@ msgid "State when replication state is unknown"
 msgstr "Estado cuando se desconoce el estado de replicación"
 
 #, fuzzy
+msgid "State when reported device status is No Redundancy"
+msgstr "Estado cuando el estado de replicación es de error"
+
+#, fuzzy
 msgid "State when reported device status is OK"
 msgstr "Estado cuando el estado de replicación es de error"
 

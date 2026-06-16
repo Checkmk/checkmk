@@ -63672,6 +63672,10 @@ msgstr "レプリケーション状態が同期しているときの状態"
 msgid "State when replication state is unknown"
 msgstr "レプリケーション状態が不明な場合の状態"
 
+#, fuzzy
+msgid "State when reported device status is No Redundancy"
+msgstr "報告されたデバイスステータスがOKの場合の状態"
+
 msgid "State when reported device status is OK"
 msgstr "報告されたデバイスステータスがOKの場合の状態"
 

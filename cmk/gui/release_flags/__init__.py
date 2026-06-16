@@ -8,12 +8,18 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroupRegistry,
     ConfigVariableRegistry,
 )
+from cmk.gui.watolib.config_sync import (
+    ReplicationPath,
+    ReplicationPathRegistry,
+    ReplicationPathType,
+)
 
 
 def register(
     config_domain_registry: ConfigDomainRegistry,
     config_variable_registry: ConfigVariableRegistry,
     config_variable_group_registry: ConfigVariableGroupRegistry,
+    replication_path_registry: ReplicationPathRegistry,
 ) -> None:
     config_domain_registry.register(global_config.ConfigDomainReleaseFlags())
 
@@ -24,3 +30,13 @@ def register(
         config_variable_group_registry.register(global_config.ConfigVariableGroupReleaseFlags)
         for config_variable in global_config.release_flag_config_variables:
             config_variable_registry.register(config_variable)
+
+    # Sync the flags file to remote sites so a distributed setup shares the same
+    # flag state, controlled from the central site.
+    replication_path_registry.register(
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
+            ident=global_config.RELEASE_FLAGS_CONFIG_ID,
+            site_path=str(global_config.RELEASE_FLAGS_CONFIG_FILE_RELATIVE),
+        )
+    )

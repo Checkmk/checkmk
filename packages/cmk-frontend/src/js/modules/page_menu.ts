@@ -343,8 +343,15 @@ function is_kiosk_url(search: string): boolean {
 }
 
 export function toggle_navigation_page_menu_entry() {
-  const hide_navigation = document.getElementById('menu_entry_hide_navigation')!
-  const show_navigation = document.getElementById('menu_entry_show_navigation')!
+  const hide_navigation = document.getElementById('menu_entry_hide_navigation')
+  const show_navigation = document.getElementById('menu_entry_show_navigation')
+
+  // Pages may omit the "Display" dropdown entirely (e.g. the experimental
+  // all-hosts page lets its Vue app own the display controls), in which case
+  // these entries do not exist and there is nothing to toggle.
+  if (!hide_navigation || !show_navigation) {
+    return
+  }
 
   if (is_kiosk_url(window.location.search)) {
     remove_class(show_navigation, 'hidden')

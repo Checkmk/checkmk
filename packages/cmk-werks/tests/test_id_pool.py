@@ -162,8 +162,8 @@ def test_add_id_to_new_stash() -> None:
 def test_paths_object(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     assert paths.legacy_stash_file == tmp_path / ".cmk-werk-ids"
-    assert paths.stash_file == tmp_path / ".local/cmk-werks/reserved-ids"
-    assert paths.secret_file == tmp_path / ".local/cmk-werks/secret"
+    assert paths.stash_file == tmp_path / ".local/state/cmk-werk-ids-reserved"
+    assert paths.secret_file == tmp_path / ".config/cmk-werk-ids-secret"
 
 
 def test_active_stash_file_without_secret(tmp_path: Path) -> None:
@@ -247,6 +247,7 @@ def test_load_or_update_stash_no_secret_skips_server(tmp_path: Path) -> None:
 def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
     paths.secret_file.write_text("secret", encoding="utf-8")
     paths.stash_file.write_text(
         Stash(ids=[10, 20]).model_dump_json(by_alias=True), encoding="utf-8"
@@ -261,6 +262,7 @@ def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
 def test_load_or_update_stash_uses_local_ids_when_server_empty(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
     paths.secret_file.write_text("secret", encoding="utf-8")
     paths.stash_file.write_text(
         Stash(ids=[10, 20]).model_dump_json(by_alias=True), encoding="utf-8"
@@ -275,6 +277,7 @@ def test_load_or_update_stash_uses_local_ids_when_server_empty(tmp_path: Path) -
 def test_load_or_update_stash_no_ids_anywhere_bails_out(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
     paths.secret_file.write_text("secret", encoding="utf-8")
     paths.stash_file.write_text(Stash(ids=[]).model_dump_json(by_alias=True), encoding="utf-8")
 
@@ -286,6 +289,7 @@ def test_load_stash_from_file_prefers_new_stash(tmp_path: Path) -> None:
     # Both stash formats present; new format wins only when secret_file also exists.
     paths = make_paths_object(tmp_path)
     paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
     paths.secret_file.write_text("secret", encoding="utf-8")
     paths.stash_file.write_text(Stash(ids=[5]).model_dump_json(by_alias=True), encoding="utf-8")
     legacy = LegacyStash(ids_by_project={"cmk": [99]})

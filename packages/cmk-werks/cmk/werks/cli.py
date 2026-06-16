@@ -1040,8 +1040,9 @@ class WerkIDsClient:
                 timeout=10,
             )
         except requests.exceptions.RequestException:
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.write(f"Could not connect to the werk IDs server {self.URL}\n")
+            # The server is unreachable (e.g. outside the VPN). Stay quiet and let the
+            # caller decide: recover from locally reserved IDs, or bail out with a
+            # descriptive message when none are left.
             return []
 
         if response.status_code == 200:

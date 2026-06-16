@@ -18,27 +18,36 @@ def test_migrate_invalid_type() -> None:
     [
         pytest.param(
             {},
-            {"connection_method": ("api", ("auto", None))},
+            {"connection_method": ("api", ("auto", None)), "keep_non_zero_exit_containers": True},
             id="empty dict defaults to api+auto",
         ),
         pytest.param(
             {"socket_detection": ("auto", None)},
-            {"connection_method": ("api", ("auto", None))},
+            {"connection_method": ("api", ("auto", None)), "keep_non_zero_exit_containers": True},
             id="old format: auto detection",
         ),
         pytest.param(
             {"socket_detection": ("only_root_socket", None)},
-            {"connection_method": ("api", ("only_root_socket", None))},
+            {
+                "connection_method": ("api", ("only_root_socket", None)),
+                "keep_non_zero_exit_containers": True,
+            },
             id="old format: only root socket",
         ),
         pytest.param(
             {"socket_detection": ("only_user_sockets", None)},
-            {"connection_method": ("api", ("only_user_sockets", None))},
+            {
+                "connection_method": ("api", ("only_user_sockets", None)),
+                "keep_non_zero_exit_containers": True,
+            },
             id="old format: only user sockets",
         ),
         pytest.param(
             {"socket_detection": ("manual", ["/run/podman/podman.sock"])},
-            {"connection_method": ("api", ("manual", ["/run/podman/podman.sock"]))},
+            {
+                "connection_method": ("api", ("manual", ["/run/podman/podman.sock"])),
+                "keep_non_zero_exit_containers": True,
+            },
             id="old format: manual socket paths",
         ),
         pytest.param(
@@ -51,6 +60,7 @@ def test_migrate_invalid_type() -> None:
                 "deploy": True,
                 "connection_method": ("api", ("auto", None)),
                 "piggyback_name_method": "name_id",
+                "keep_non_zero_exit_containers": True,
             },
             id="old format: preserves other fields",
         ),
@@ -64,13 +74,31 @@ def test_migrate_invalid_type() -> None:
                 "deploy": True,
                 "connection_method": ("api", ("auto", None)),
                 "piggyback_name_method": "nodename_name",
+                "keep_non_zero_exit_containers": True,
             },
-            id="new format: api is noop",
+            id="new format: api adds keep_non_zero_exit_containers default",
         ),
         pytest.param(
             {"deploy": True, "connection_method": ("cli", None)},
-            {"deploy": True, "connection_method": ("cli", None)},
-            id="new format: cli is noop",
+            {
+                "deploy": True,
+                "connection_method": ("cli", None),
+                "keep_non_zero_exit_containers": True,
+            },
+            id="new format: cli adds keep_non_zero_exit_containers default",
+        ),
+        pytest.param(
+            {
+                "deploy": True,
+                "connection_method": ("api", ("auto", None)),
+                "keep_non_zero_exit_containers": False,
+            },
+            {
+                "deploy": True,
+                "connection_method": ("api", ("auto", None)),
+                "keep_non_zero_exit_containers": False,
+            },
+            id="existing keep_non_zero_exit_containers is preserved",
         ),
     ],
 )

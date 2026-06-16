@@ -391,3 +391,25 @@ def test_migrate_werk_ids_file_deduplicates_overlapping_ids(tmp_path: Path) -> N
     new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
     assert sorted(new_stash.ids) == [1, 2, 3]
     assert not paths.legacy_stash_file.exists()
+
+
+def test_migrate_werk_ids_file_is_idempotent(tmp_path: Path) -> None:
+    # Running the migration repeatedly must merge old and new IDs once and then
+    # leave the result unchanged, without losing IDs.
+    paths = make_paths_object(tmp_path)
+    _write_secret(paths)
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.stash_file.write_text(Stash(ids=[1]).model_dump_json(by_alias=True), encoding="utf-8")
+    paths.legacy_stash_file.write_text(
+        LegacyStash(ids_by_project={"cmk": [2]}).model_dump_json(by_alias=True), encoding="utf-8"
+    )
+
+    migrate_werk_ids_file(paths)
+    after_first = paths.stash_file.read_text(encoding="utf-8")
+
+    migrate_werk_ids_file(paths)
+    after_second = paths.stash_file.read_text(encoding="utf-8")
+
+    assert after_first == after_second
+    assert sorted(Stash.model_validate_json(after_second).ids) == [1, 2]
+    assert not paths.legacy_stash_file.exists()

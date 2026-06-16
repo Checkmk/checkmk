@@ -107,6 +107,17 @@ def migrate_werk_ids_file(paths: Paths) -> None:
     paths.legacy_stash_file.unlink(missing_ok=True)
 
 
+def _server_error_message(response: requests.Response) -> str:
+    """Extract the error message from a JSON error response, falling back to the raw body."""
+    try:
+        payload = response.json()
+    except ValueError:
+        payload = None
+    if isinstance(payload, dict) and "error" in payload:
+        return str(payload["error"])
+    return response.text.strip()
+
+
 class WerkIDsClient:
     URL: Final = "https://werk-ids.lan.checkmk.net"
 
@@ -129,12 +140,19 @@ class WerkIDsClient:
                 headers={"Authorization": f"Bearer {secret}"},
                 timeout=5,
             )
-            response.raise_for_status()
-            return True
         except requests.exceptions.RequestException:
             traceback.print_exc(file=sys.stderr)
             sys.stderr.write("Failed: could not connect\n")
             return False
+
+        if response.status_code == 200:
+            return True
+
+        sys.stderr.write(
+            f"{TTY_RED}Connection test failed "
+            f"(status {response.status_code}): {_server_error_message(response)}{TTY_NORMAL}\n"
+        )
+        return False
 
     def reserve_werk_ids(self, secret_file_path: Path, local_werk_ids_count: int) -> Sequence[int]:
         secret = secret_file_path.read_text(encoding="utf-8").strip()
@@ -156,9 +174,9 @@ class WerkIDsClient:
             return [int(i) for i in reserved_werk_ids]
 
         sys.stderr.write(
-            "Could not reserve werk IDs"
-            f" (Status code: {response.status_code}, server: {self.URL}):"
-            f" {response.text}\n"
+            f"{TTY_RED}Could not reserve werk IDs "
+            f"(status {response.status_code}, server: {self.URL}): "
+            f"{_server_error_message(response)}{TTY_NORMAL}\n"
         )
         return []
 

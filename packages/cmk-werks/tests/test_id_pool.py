@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
+import requests
 
 from cmk.werks.id_pool import (
+    _server_error_message,
     add_id_to_stash,
     dump_stash_to_file,
     load_legacy_stash_from_file,
@@ -411,3 +414,31 @@ def test_migrate_werk_ids_file_is_idempotent(tmp_path: Path) -> None:
     assert after_first == after_second
     assert sorted(Stash.model_validate_json(after_second).ids) == [1, 2]
     assert not paths.legacy_stash_file.exists()
+
+
+# ---------------------------------------------------------------------------
+# Server error response handling
+# ---------------------------------------------------------------------------
+
+
+def _make_response(status_code: int, content: bytes) -> requests.Response:
+    response = requests.Response()
+    response.status_code = status_code
+    # _content is the documented way to seed a Response body in tests.
+    response._content = content  # noqa: SLF001
+    return response
+
+
+def test_server_error_message_from_json_error() -> None:
+    response = _make_response(400, json.dumps({"error": "Bad input."}).encode("utf-8"))
+    assert _server_error_message(response) == "Bad input."
+
+
+def test_server_error_message_json_without_error_key() -> None:
+    response = _make_response(500, json.dumps({"status": "boom"}).encode("utf-8"))
+    assert _server_error_message(response) == '{"status": "boom"}'
+
+
+def test_server_error_message_non_json_body() -> None:
+    response = _make_response(502, b"  Bad Gateway  ")
+    assert _server_error_message(response) == "Bad Gateway"

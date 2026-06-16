@@ -6,6 +6,7 @@
 import { Folder, Page } from '@ucl/_ucl/types/page'
 
 import UclColumnPinning from './UclColumnPinning.vue'
+import UclRefreshCountdown from './UclRefreshCountdown.vue'
 import UclTableCellBreakpoints from './UclTableCellBreakpoints.vue'
 import UclTableColumnFilters from './UclTableColumnFilters.vue'
 import UclBaseCell from './cell/UclBaseCell.vue'
@@ -22,6 +23,7 @@ export const pages: Array<Folder | Page> = [
     new Page('StateCell', UclStateCell),
     new Page('StringCell', UclStringCell)
   ]),
+  new Page('RefreshCountdown', UclRefreshCountdown),
   new Page('Table cell breakpoints', UclTableCellBreakpoints),
   new Page('Table column pinning', UclColumnPinning),
   new Page('Table column filters', UclTableColumnFilters)

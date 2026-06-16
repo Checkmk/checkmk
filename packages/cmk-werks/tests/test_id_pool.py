@@ -290,8 +290,9 @@ def test_load_or_update_stash_no_ids_anywhere_bails_out(tmp_path: Path) -> None:
         load_or_update_stash(paths, FakeEmptyServerClient())
 
 
-def test_load_stash_from_file_prefers_new_stash(tmp_path: Path) -> None:
-    # Both stash formats present; new format wins only when secret_file also exists.
+def test_load_stash_from_file_bails_when_both_files_exist(tmp_path: Path) -> None:
+    # Outside of 'werk init', a legacy and a new stash file must not coexist: loading
+    # must exit instead of silently ignoring one of them.
     paths = make_paths_object(tmp_path)
     paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
     paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
@@ -300,9 +301,8 @@ def test_load_stash_from_file_prefers_new_stash(tmp_path: Path) -> None:
     legacy = LegacyStash(ids_by_project={"cmk": [99]})
     paths.legacy_stash_file.write_text(legacy.model_dump_json(by_alias=True), encoding="utf-8")
 
-    result = load_stash_from_file(paths)
-    assert isinstance(result, Stash)
-    assert result.ids == [5]
+    with pytest.raises(SystemExit):
+        load_stash_from_file(paths)
 
 
 # ---------------------------------------------------------------------------

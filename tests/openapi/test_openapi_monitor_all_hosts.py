@@ -53,6 +53,46 @@ class TestMonitorHostsQueryParamValidation:
         resp = clients.MonitorHosts.list_all(limit=100, sort=sort, expect_ok=False)
         assert resp.status_code == 400
 
+    @pytest.mark.parametrize(
+        "filters",
+        [
+            pytest.param({}, id="empty payload"),
+            pytest.param(
+                {"type": "condition", "field": "states", "op": "one_of", "value": []},
+                id="min length of 'one_of' condition",
+            ),
+            pytest.param(
+                {"type": "condition", "field": "states", "op": "one_of", "value": ["UP", "UP"]},
+                id="uniqueness in 'one_of' condition",
+            ),
+            pytest.param(
+                {
+                    "type": "and",
+                    "children": [
+                        {"type": "condition", "field": "num_services", "op": "lte", "value": 10},
+                    ],
+                },
+                id="min length of 'and' condition",
+            ),
+            pytest.param(
+                {
+                    "type": "and",
+                    "children": [
+                        {"type": "condition", "field": "num_services", "op": "lte", "value": 10},
+                    ],
+                },
+                id="min length of 'or' condition",
+            ),
+        ],
+    )
+    def test_filters_validation_errors(
+        self,
+        clients: ClientRegistry,
+        filters: dict[str, object],
+    ) -> None:
+        resp = clients.MonitorHosts.list_all(limit=1000, filters=filters, expect_ok=False)
+        assert resp.status_code == 400
+
 
 class TestMonitorHostsResponse:
     @property
@@ -277,46 +317,6 @@ class TestMonitorHostsResponse:
                 "state": "UP",
             },
         ]
-
-    @pytest.mark.parametrize(
-        "filters",
-        [
-            pytest.param({}, id="empty payload"),
-            pytest.param(
-                {"type": "condition", "field": "states", "op": "one_of", "value": []},
-                id="min length of 'one_of' condition",
-            ),
-            pytest.param(
-                {"type": "condition", "field": "states", "op": "one_of", "value": ["UP", "UP"]},
-                id="uniqueness in 'one_of' condition",
-            ),
-            pytest.param(
-                {
-                    "type": "and",
-                    "children": [
-                        {"type": "condition", "field": "num_services", "op": "lte", "value": 10},
-                    ],
-                },
-                id="min length of 'and' condition",
-            ),
-            pytest.param(
-                {
-                    "type": "and",
-                    "children": [
-                        {"type": "condition", "field": "num_services", "op": "lte", "value": 10},
-                    ],
-                },
-                id="min length of 'or' condition",
-            ),
-        ],
-    )
-    def test_filters_validation_errors(
-        self,
-        clients: ClientRegistry,
-        filters: dict[str, object],
-    ) -> None:
-        resp = clients.MonitorHosts.list_all(limit=self.limit, filters=filters, expect_ok=False)
-        assert resp.status_code == 400
 
     def _setup_search(self, mock_livestatus: MockLiveStatusConnection, *, query: str) -> None:
         mock_livestatus.add_table("hosts", self.hosts)

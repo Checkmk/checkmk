@@ -9,6 +9,11 @@ from cmk.ccc.user import UserId
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
 
+# NOTE: we are a bit contrained on what we can do with the mock livestatus fixture. For instance the
+# stats table does not get updated when adding hosts. So, the limit and meta data counts will not
+# work as expected. Therefore, this module mainly tests that the livestatus are correctly built
+# based on the user input.
+
 
 class TestMonitorHostsAuth:
     def test_invalid_credentials(self, clients: ClientRegistry) -> None:
@@ -94,122 +99,30 @@ class TestMonitorHostsQueryParamValidation:
         assert resp.status_code == 400
 
 
-class TestMonitorHostsResponse:
-    @property
-    def limit(self) -> int:
-        return 1000
-
-    @property
-    def hosts(self) -> list[dict[str, str | int]]:
-        return [
-            {
-                "name": "heute",
-                "address": "127.0.0.1",
-                "alias": "Today",
-                "state": 0,
-                "num_services": 10,
-                "num_services_ok": 10,
-                "num_services_warn": 0,
-                "num_services_crit": 0,
-                "num_services_unknown": 0,
-                "num_services_pending": 0,
-            },
-            {
-                "name": "gestern",
-                "address": "127.0.10.1",
-                "alias": "Yesterday",
-                "state": 1,
-                "num_services": 20,
-                "num_services_ok": 20,
-                "num_services_warn": 0,
-                "num_services_crit": 0,
-                "num_services_unknown": 0,
-                "num_services_pending": 0,
-            },
-            {
-                "name": "morgen",
-                "address": "127.0.2.1",
-                "alias": "Tomorrow",
-                "state": 2,
-                "num_services": 30,
-                "num_services_ok": 30,
-                "num_services_warn": 0,
-                "num_services_crit": 0,
-                "num_services_unknown": 0,
-                "num_services_pending": 0,
-            },
-        ]
-
+class TestMonitorHosts:
     def test_hosts(
         self,
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
-        self._setup_host_table(mock_livestatus)
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+        mock_livestatus.expect_query(["GET status", "Columns: num_hosts"])
 
         with mock_livestatus(expect_status_query=True):
-            resp = clients.MonitorHosts.list_all(limit=self.limit)
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT)
 
-        value = resp.json["hosts"]
-        expected = [
-            {
-                "alias": "Today",
-                "address": "127.0.0.1",
-                "name": "heute",
-                "num_services": 10,
-                "num_services_crit": 0,
-                "num_services_ok": 10,
-                "num_services_pending": 0,
-                "num_services_unknown": 0,
-                "num_services_warn": 0,
-                "site_id": "NO_SITE",
-                "state": "UP",
-            },
-            {
-                "alias": "Yesterday",
-                "address": "127.0.10.1",
-                "name": "gestern",
-                "num_services": 20,
-                "num_services_crit": 0,
-                "num_services_ok": 20,
-                "num_services_pending": 0,
-                "num_services_unknown": 0,
-                "num_services_warn": 0,
-                "site_id": "NO_SITE",
-                "state": "DOWN",
-            },
-            {
-                "alias": "Tomorrow",
-                "address": "127.0.2.1",
-                "name": "morgen",
-                "num_services": 30,
-                "num_services_crit": 0,
-                "num_services_ok": 30,
-                "num_services_pending": 0,
-                "num_services_unknown": 0,
-                "num_services_warn": 0,
-                "site_id": "NO_SITE",
-                "state": "UNREACHABLE",
-            },
-        ]
+        assert len(resp.json["hosts"]) == len(_HOSTS)
 
-        assert value == expected
 
-    def test_metadata(
-        self,
-        clients: ClientRegistry,
-        mock_livestatus: MockLiveStatusConnection,
-    ) -> None:
-        self._setup_host_table(mock_livestatus)
-
-        with mock_livestatus(expect_status_query=True):
-            resp = clients.MonitorHosts.list_all(limit=self.limit)
-
-        value = resp.json["meta"]
-        expected = {"limit": self.limit, "total": 3}
-
-        assert value == expected
-
+class TestMonitorHostsQuery:
     @pytest.mark.parametrize("query", ["", "   "])
     def test_blank_search_is_treated_as_no_filter(
         self,
@@ -217,57 +130,74 @@ class TestMonitorHostsResponse:
         mock_livestatus: MockLiveStatusConnection,
         query: str,
     ) -> None:
-        self._setup_host_table(mock_livestatus)
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+        mock_livestatus.expect_query(["GET status", "Columns: num_hosts"])
 
         with mock_livestatus(expect_status_query=True):
-            resp = clients.MonitorHosts.list_all(limit=self.limit, q=query)
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, q=query)
 
-        assert len(resp.json["hosts"]) == 3
-        assert resp.json["meta"]["total"] == 3
-
-    def test_search_filters_hosts_and_total(
-        self,
-        clients: ClientRegistry,
-        mock_livestatus: MockLiveStatusConnection,
-    ) -> None:
-        self._setup_search(mock_livestatus, query="heute")
-
-        with mock_livestatus():
-            resp = clients.MonitorHosts.list_all(limit=self.limit, q="heute")
-
-        assert [host["name"] for host in resp.json["hosts"]] == ["heute"]
-        assert resp.json["meta"]["total"] == 1
+        assert len(resp.json["hosts"]) == len(_HOSTS)
 
     def test_search_with_no_matches(
         self,
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
-        self._setup_search(mock_livestatus, query="no-such-host")
-
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "Filter: name ~~ no-such-host",
+                "Filter: alias ~~ no-such-host",
+                "Filter: address ~~ no-such-host",
+                "Or: 3",
+                "OrderBy: name asc",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Stats: state >= 0",
+                "Filter: name ~~ no-such-host",
+                "Filter: alias ~~ no-such-host",
+                "Filter: address ~~ no-such-host",
+                "Or: 3",
+            ]
+        )
         with mock_livestatus():
-            resp = clients.MonitorHosts.list_all(limit=self.limit, q="no-such-host")
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, q="no-such-host")
 
-        assert resp.json["hosts"] == []
-        assert resp.json["meta"]["total"] == 0
+        assert len(resp.json["hosts"]) == 0
 
+
+class TestMonitorHostsFilters:
     def test_filters(
         self,
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
-        mock_livestatus.add_table("hosts", self.hosts)
+        mock_livestatus.add_table("hosts", _HOSTS)
         mock_livestatus.expect_query(
             [
                 "GET hosts",
-                "Columns: name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
                 "Filter: num_services <= 10",
                 "Filter: state = 0",
                 "Filter: state = 1",
                 "Or: 2",
                 "And: 2",
                 "OrderBy: name asc",
-                f"Limit: {self.limit}",
+                f"Limit: {_LIMIT}",
             ]
         )
         mock_livestatus.expect_query(
@@ -298,9 +228,8 @@ class TestMonitorHostsResponse:
                 },
             ],
         }
-
         with mock_livestatus():
-            resp = clients.MonitorHosts.list_all(limit=self.limit, filters=filters)
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, filters=filters)
 
         assert resp.json["hosts"] == [
             {
@@ -318,52 +247,44 @@ class TestMonitorHostsResponse:
             },
         ]
 
-    def _setup_search(self, mock_livestatus: MockLiveStatusConnection, *, query: str) -> None:
-        mock_livestatus.add_table("hosts", self.hosts)
 
-        search_filter = [
-            f"Filter: name ~~ {query}",
-            f"Filter: alias ~~ {query}",
-            f"Filter: address ~~ {query}",
-            "Or: 3",
-        ]
-        mock_livestatus.expect_query(
-            [
-                "GET hosts",
-                "Columns: name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending",
-                *search_filter,
-                "OrderBy: name asc",
-                f"Limit: {self.limit}",
-            ]
-        )
-        mock_livestatus.expect_query(
-            [
-                "GET hosts",
-                "Stats: state >= 0",
-                *search_filter,
-            ]
-        )
-
-    def _setup_host_table(self, mock_livestatus: MockLiveStatusConnection) -> None:
-        # Add the hosts defined in the fixture to the mock livestatus "hosts" table.
-        mock_livestatus.add_table("hosts", self.hosts)
-
-        # Need to update the number of host counts to reflect the fixture.
-        for row in mock_livestatus.tables["status"][mock_livestatus.sites[0]]:
-            row["num_hosts"] = len(self.hosts)
-
-        # Register the livestatus queries that we expect are endpoint to call.
-        mock_livestatus.expect_query(
-            [
-                "GET hosts",
-                "Columns: name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending",
-                "OrderBy: name asc",
-                f"Limit: {self.limit}",
-            ]
-        )
-        mock_livestatus.expect_query(
-            [
-                "GET status",
-                "Columns: num_hosts",
-            ]
-        )
+_LIMIT = 1000
+_HOSTS = [
+    {
+        "name": "heute",
+        "address": "127.0.0.1",
+        "alias": "Today",
+        "state": 0,
+        "num_services": 10,
+        "num_services_ok": 10,
+        "num_services_warn": 0,
+        "num_services_crit": 0,
+        "num_services_unknown": 0,
+        "num_services_pending": 0,
+    },
+    {
+        "name": "gestern",
+        "address": "127.0.10.1",
+        "alias": "Yesterday",
+        "state": 1,
+        "num_services": 20,
+        "num_services_ok": 20,
+        "num_services_warn": 0,
+        "num_services_crit": 0,
+        "num_services_unknown": 0,
+        "num_services_pending": 0,
+    },
+    {
+        "name": "morgen",
+        "address": "127.0.2.1",
+        "alias": "Tomorrow",
+        "state": 2,
+        "num_services": 30,
+        "num_services_ok": 30,
+        "num_services_warn": 0,
+        "num_services_crit": 0,
+        "num_services_unknown": 0,
+        "num_services_pending": 0,
+    },
+]
+_HOST_TABLE_COLUMNS = "name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending"

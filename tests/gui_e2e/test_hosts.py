@@ -169,10 +169,10 @@ def test_delete_host_row(
         message=f"Missing message to confirm deletion of host: {host_details.name}!",
     ).to_be_visible()
     setup_host.main_area.get_confirmation_popup_button("Delete host").click()
-    expect(
-        main_area_locator.get_by_text(host_details.name),
-        message=f"Deleted host: '{host_details.name}' is still visible!",
-    ).to_have_count(0)
+    # Assert against the host's table row rather than any text in the main area:
+    # the "Deleted host delete_me" pending-change banner now lives inside
+    # '#content_area' too, so a bare text match for the host name matches it.
+    setup_host.check_host_not_present(host_details.name)
     test_site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 

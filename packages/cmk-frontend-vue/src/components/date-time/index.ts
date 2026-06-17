@@ -5,6 +5,7 @@
  */
 export { default as CmkTimePicker } from './CmkTimePicker.vue'
 export { default as CmkDatePicker } from './CmkDatePicker.vue'
+export { default as CmkDateTimePicker } from './CmkDateTimePicker.vue'
 
 export { useResolvedDateTimeSettings } from './useResolvedDateTimeSettings'
 

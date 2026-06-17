@@ -46,6 +46,7 @@ import UclCmkSearchInput from './form-elements/CmkSearchInput/UclCmkSearchInput.
 import UclCmkSlideInDropdown from './form-elements/CmkSlideInDropdown/UclCmkSlideInDropdown.vue'
 import UclCmkTimeSpan from './form-elements/CmkTimeSpan/UclCmkTimeSpan.vue'
 import UclCmkToggleButtonGroup from './form-elements/CmkToggleButtonGroup/UclCmkToggleButtonGroup.vue'
+import UclCmkTimePicker from './form-elements/date-time/UclCmkTimePicker.vue'
 import UclCmkHtml from './foundation-elements/CmkHtml/UclCmkHtml.vue'
 import UclCmkIcon from './foundation-elements/CmkIcon/UclCmkIcon.vue'
 import UclCmkIconEmblem from './foundation-elements/CmkIcon/UclCmkIconEmblem.vue'
@@ -114,7 +115,8 @@ const formElementsPages = [
   new Page('CmkSearchInput', UclCmkSearchInput),
   new Page('CmkSlideInDropdown', UclCmkSlideInDropdown),
   new Page('CmkTimeSpan', UclCmkTimeSpan),
-  new Page('CmkToggleButtonGroup', UclCmkToggleButtonGroup)
+  new Page('CmkToggleButtonGroup', UclCmkToggleButtonGroup),
+  new Folder('Date & Time Pickers', [new Page('CmkTimePicker', UclCmkTimePicker)])
 ]
 
 const foundationsPages = [new Page('Breakpoints', UclBreakpoints), new Page('Colors', UclColors)]

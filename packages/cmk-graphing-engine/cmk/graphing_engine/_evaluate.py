@@ -3,251 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import math
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never
 
 from ._objects import (
     Bound,
-    Constant,
-    CriticalOf,
-    Difference,
-    DisplayAttributes,
+    EvaluationContext,
     FixedRange,
-    Fraction,
     Graph,
-    LowerCriticalOf,
-    LowerWarningOf,
-    MaximumOf,
     MetricName,
     MinimalRange,
-    MinimumOf,
-    Product,
     Quantity,
-    RRDMetric,
     RRDMetricData,
     RRDMetricRef,
-    RRDMetricWithCF,
     ServiceRef,
-    Sum,
     TimeSeries,
     Unit,
     VerticalRange,
-    WarningOf,
 )
 from ._options import TimeRange
 from ._title import evaluate_title
-
-type _Operator = Callable[[Sequence[float | None]], float | None]
-
-
-def _op_sum(point: Sequence[float | None]) -> float | None:
-    return sum(value for value in point if value is not None)
-
-
-def _op_product(point: Sequence[float | None]) -> float | None:
-    if None in point:
-        return None
-    return math.prod(value for value in point if value is not None)
-
-
-def _op_difference(point: Sequence[float | None]) -> float | None:
-    minuend, subtrahend = point
-    if minuend is None or subtrahend is None:
-        return None
-    return minuend - subtrahend
-
-
-def _op_fraction(point: Sequence[float | None]) -> float | None:
-    dividend, divisor = point
-    if dividend is None or divisor is None or divisor == 0:
-        return None
-    return dividend / divisor
-
-
-def _evaluate_value_op(
-    operator: _Operator,
-    operands: Sequence[Quantity],
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
-) -> float | None:
-    values = [_evaluate_value(operand, metric_data) for operand in operands]
-    if any(value is None for value in values):
-        return None
-    return operator(values)
-
-
-def _evaluate_value(
-    quantity: Quantity,
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
-) -> float | None:
-    match quantity:
-        case RRDMetric() | RRDMetricWithCF():
-            return None if (data := metric_data.get(quantity)) is None else data.value
-        case Constant():
-            return quantity.value
-        case WarningOf():
-            return None if (data := metric_data.get(quantity.metric)) is None else data.warning
-        case CriticalOf():
-            return None if (data := metric_data.get(quantity.metric)) is None else data.critical
-        case LowerWarningOf():
-            return (
-                None if (data := metric_data.get(quantity.metric)) is None else data.lower_warning
-            )
-        case LowerCriticalOf():
-            return (
-                None if (data := metric_data.get(quantity.metric)) is None else data.lower_critical
-            )
-        case MinimumOf():
-            return None if (data := metric_data.get(quantity.metric)) is None else data.minimum
-        case MaximumOf():
-            return None if (data := metric_data.get(quantity.metric)) is None else data.maximum
-        case Sum():
-            return _evaluate_value_op(_op_sum, quantity.summands, metric_data)
-        case Product():
-            return _evaluate_value_op(_op_product, quantity.factors, metric_data)
-        case Difference():
-            return _evaluate_value_op(
-                _op_difference, [quantity.minuend, quantity.subtrahend], metric_data
-            )
-        case Fraction():
-            return _evaluate_value_op(
-                _op_fraction, [quantity.dividend, quantity.divisor], metric_data
-            )
-        case _:
-            assert_never(quantity)
-
-
-def _apply(operator: _Operator, point: Sequence[float | None]) -> float | None:
-    if all(value is None for value in point):
-        return None
-    return operator(point)
-
-
-def _evaluate_time_series_op(
-    operator: _Operator,
-    operands: Sequence[Quantity],
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
-    time_series: Mapping[RRDMetricRef, TimeSeries],
-    time_range: TimeRange,
-) -> TimeSeries:
-    evaluated = [
-        _evaluate_time_series(operand, metric_data, time_series, time_range) for operand in operands
-    ]
-    return TimeSeries(
-        time_range=time_range,
-        values=[_apply(operator, point) for point in zip(*(ts.values for ts in evaluated))],
-    )
-
-
-def _num_points(time_range: TimeRange) -> int:
-    if time_range.step <= 0:
-        return 0
-    return max(0, (time_range.end - time_range.start) // time_range.step)
-
-
-def _constant_time_series(value: float | None, time_range: TimeRange) -> TimeSeries:
-    return TimeSeries(time_range=time_range, values=[value] * _num_points(time_range))
-
-
-def _evaluate_time_series(
-    quantity: Quantity,
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
-    time_series: Mapping[RRDMetricRef, TimeSeries],
-    time_range: TimeRange,
-) -> TimeSeries:
-    match quantity:
-        case RRDMetric() | RRDMetricWithCF():
-            existing = time_series.get(quantity)
-            return existing if existing is not None else _constant_time_series(None, time_range)
-        case Constant():
-            return _constant_time_series(quantity.value, time_range)
-        case (
-            WarningOf()
-            | CriticalOf()
-            | LowerWarningOf()
-            | LowerCriticalOf()
-            | MinimumOf()
-            | MaximumOf()
-        ):
-            return _constant_time_series(_evaluate_value(quantity, metric_data), time_range)
-        case Sum():
-            return _evaluate_time_series_op(
-                _op_sum, quantity.summands, metric_data, time_series, time_range
-            )
-        case Product():
-            return _evaluate_time_series_op(
-                _op_product, quantity.factors, metric_data, time_series, time_range
-            )
-        case Difference():
-            return _evaluate_time_series_op(
-                _op_difference,
-                [quantity.minuend, quantity.subtrahend],
-                metric_data,
-                time_series,
-                time_range,
-            )
-        case Fraction():
-            return _evaluate_time_series_op(
-                _op_fraction,
-                [quantity.dividend, quantity.divisor],
-                metric_data,
-                time_series,
-                time_range,
-            )
-        case _:
-            assert_never(quantity)
-
-
-def _attributes(
-    quantity: Quantity,
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
-) -> DisplayAttributes | None:
-    match quantity:
-        case RRDMetric() | RRDMetricWithCF():
-            return (
-                None
-                if (data := metric_data.get(quantity)) is None
-                else DisplayAttributes(title=data.title, unit=data.unit, color=data.color)
-            )
-        case Constant():
-            return DisplayAttributes(title=quantity.title, unit=quantity.unit, color=quantity.color)
-        case Product():
-            return DisplayAttributes(title=quantity.title, unit=quantity.unit, color=quantity.color)
-        case Fraction():
-            return DisplayAttributes(title=quantity.title, unit=quantity.unit, color=quantity.color)
-        case (
-            WarningOf()
-            | CriticalOf()
-            | LowerWarningOf()
-            | LowerCriticalOf()
-            | MinimumOf()
-            | MaximumOf()
-        ):
-            data = metric_data.get(quantity.metric)
-            return (
-                None
-                if data is None
-                else DisplayAttributes(title=data.title, unit=data.unit, color=quantity.color)
-            )
-        case Sum():
-            first = _attributes(quantity.summands[0], metric_data) if quantity.summands else None
-            return (
-                None
-                if first is None
-                else DisplayAttributes(title=quantity.title, unit=first.unit, color=quantity.color)
-            )
-        case Difference():
-            minuend = _attributes(quantity.minuend, metric_data)
-            return (
-                None
-                if minuend is None
-                else DisplayAttributes(
-                    title=quantity.title, unit=minuend.unit, color=quantity.color
-                )
-            )
-        case _:
-            assert_never(quantity)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -305,50 +81,42 @@ class DiscoveredGraph[Options]:
     lines: Sequence[EvaluatedLine]
 
 
-def _evaluate_bound(
-    bound: Bound,
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
-) -> float | None:
+def _evaluate_bound(bound: Bound, context: EvaluationContext) -> float | None:
     if isinstance(bound, int | float):
         return float(bound)
-    return _evaluate_value(bound, metric_data)
+    return bound.evaluate_value(context)
 
 
 def _evaluate_vertical_range(
     vertical_range: VerticalRange | None,
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
+    context: EvaluationContext,
 ) -> EvaluatedVerticalRange | None:
     match vertical_range:
         case None:
             return None
         case MinimalRange():
             return EvaluatedMinimalRange(
-                lower=_evaluate_bound(vertical_range.lower, metric_data),
-                upper=_evaluate_bound(vertical_range.upper, metric_data),
+                lower=_evaluate_bound(vertical_range.lower, context),
+                upper=_evaluate_bound(vertical_range.upper, context),
             )
         case FixedRange():
             return EvaluatedFixedRange(
-                lower=_evaluate_bound(vertical_range.lower, metric_data),
-                upper=_evaluate_bound(vertical_range.upper, metric_data),
+                lower=_evaluate_bound(vertical_range.lower, context),
+                upper=_evaluate_bound(vertical_range.upper, context),
             )
         case _:
             assert_never(vertical_range)
 
 
-def _evaluate_curve(
-    quantity: Quantity,
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
-    time_series: Mapping[RRDMetricRef, TimeSeries],
-    time_range: TimeRange,
-) -> EvaluatedCurve | None:
-    if (attributes := _attributes(quantity, metric_data)) is None:
+def _evaluate_curve(quantity: Quantity, context: EvaluationContext) -> EvaluatedCurve | None:
+    if (attributes := quantity.evaluate_attributes(context)) is None:
         return None
     return EvaluatedCurve(
         title=attributes.title,
         unit=attributes.unit,
         color=attributes.color,
-        value=_evaluate_value(quantity, metric_data),
-        time_series=_evaluate_time_series(quantity, metric_data, time_series, time_range),
+        value=quantity.evaluate_value(context),
+        time_series=quantity.evaluate_time_series(context),
     )
 
 
@@ -374,25 +142,29 @@ def evaluate_graph(
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     time_range: TimeRange,
 ) -> EvaluatedGraph:
+    context = EvaluationContext(
+        metric_data=metric_data,
+        time_series=time_series,
+        time_range=time_range,
+    )
     stacks = []
     for group in graph.stacks:
         members = [
             curve
             for member in group.members
-            if (curve := _evaluate_curve(member, metric_data, time_series, time_range)) is not None
+            if (curve := _evaluate_curve(member, context)) is not None
         ]
         if members:
             stacks.append(EvaluatedStack(members=members, inverse=group.inverse))
     lines = [
         EvaluatedLine(curve=curve, inverse=line.inverse)
         for line in graph.lines
-        if (curve := _evaluate_curve(line.quantity, metric_data, time_series, time_range))
-        is not None
+        if (curve := _evaluate_curve(line.quantity, context)) is not None
     ]
     return EvaluatedGraph(
         name=graph.name,
         title=evaluate_title(graph.title, _title_metrics(graph, translated_metrics)),
-        vertical_range=_evaluate_vertical_range(graph.vertical_range, metric_data),
+        vertical_range=_evaluate_vertical_range(graph.vertical_range, context),
         stacks=stacks,
         lines=lines,
     )

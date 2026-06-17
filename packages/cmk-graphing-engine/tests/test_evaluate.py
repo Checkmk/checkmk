@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 from cmk.graphing_engine import (
     AutoPrecision,
     Constant,
@@ -30,8 +32,8 @@ from cmk.graphing_engine import (
     Unit,
     WarningOf,
 )
-from cmk.graphing_engine._evaluate import _evaluate_time_series, _evaluate_value, evaluate_graph
-from cmk.graphing_engine._objects import RRDMetricData
+from cmk.graphing_engine._evaluate import evaluate_graph
+from cmk.graphing_engine._objects import EvaluationContext, Quantity, RRDMetricData
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TR = TimeRange(start=0, end=30, step=10)  # three data points
@@ -58,6 +60,26 @@ def _constant(value: float) -> Constant:
 
 def _time_series(*values: float | None) -> TimeSeries:
     return TimeSeries(time_range=_TR, values=list(values))
+
+
+def _evaluate_value(
+    quantity: Quantity,
+    metric_data: Mapping[RRDMetricRef, RRDMetricData],
+) -> float | None:
+    return quantity.evaluate_value(
+        EvaluationContext(metric_data=metric_data, time_series={}, time_range=_TR)
+    )
+
+
+def _evaluate_time_series(
+    quantity: Quantity,
+    metric_data: Mapping[RRDMetricRef, RRDMetricData],
+    time_series: Mapping[RRDMetricRef, TimeSeries],
+    time_range: TimeRange,
+) -> TimeSeries:
+    return quantity.evaluate_time_series(
+        EvaluationContext(metric_data=metric_data, time_series=time_series, time_range=time_range)
+    )
 
 
 # --- evaluate_value -----------------------------------------------------------------------------

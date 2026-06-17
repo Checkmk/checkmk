@@ -24,6 +24,7 @@ import DateTimePickerApp from './date-time-picker/CmkDateTimePickerApp.vue'
 import DialogApp from './dialog/DialogApp.vue'
 import ModeCreateOAuth2ConnectionApp from './mode-oauth2-connection/ModeCreateOAuth2ConnectionApp.vue'
 import ModeRedirectOAuth2ConnectionAppCopy from './mode-oauth2-connection/ModeRedirectOAuth2ConnectionApp.vue'
+import { registerOAuth2ConnectionFormComponents } from './mode-oauth2-connection/registerFormComponents'
 import ModeCreateOTelConfApp from './mode-otel/ModeCreateOTelConfApp.vue'
 import ModeCreatePrometheusConfApp from './mode-otel/ModeCreatePrometheusConfApp.vue'
 import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
@@ -40,6 +41,7 @@ import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
 
 initializeComponentRegistry()
 registerGraphDesignerFormComponents()
+registerOAuth2ConnectionFormComponents()
 
 defineCmkComponent('cmk-form-spec', FormApp)
 defineCmkComponent('cmk-quick-setup', QuickSetup)

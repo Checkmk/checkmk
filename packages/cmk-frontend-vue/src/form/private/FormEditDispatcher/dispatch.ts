@@ -30,7 +30,6 @@ import FormListUniqueSelection from '@/form/private/forms/FormList/FormListUniqu
 import FormListOfStrings from '@/form/private/forms/FormListOfStrings.vue'
 import FormMetric from '@/form/private/forms/FormMetric.vue'
 import FormMultilineText from '@/form/private/forms/FormMultilineText.vue'
-import FormOAuth2ConnectionSetup from '@/form/private/forms/FormOAuth2ConnectionSetup.vue'
 import FormOptionalChoice from '@/form/private/forms/FormOptionalChoice.vue'
 import FormPassword from '@/form/private/forms/FormPassword.vue'
 import FormRegex from '@/form/private/forms/FormRegex/FormRegex.vue'
@@ -50,7 +49,7 @@ type FormSpecComponents = Record<Components['type'], Component>
 
 // Explicitly call out components owned by features to statically ensure
 // base components are exhaustively registered.
-type FeatureOwnedComponents = 'metric_backend_custom_query'
+type FeatureOwnedComponents = 'metric_backend_custom_query' | 'oauth2_connection_setup'
 
 type BaseComponents = Omit<FormSpecComponents, FeatureOwnedComponents>
 
@@ -79,7 +78,6 @@ const baseComponents: BaseComponents = {
   list: FormList,
   list_unique_selection: FormListUniqueSelection,
   list_of_strings: FormListOfStrings,
-  oauth2_connection_setup: FormOAuth2ConnectionSetup,
   metric: FormMetric,
   multiline_text: FormMultilineText,
   optional_choice: FormOptionalChoice,

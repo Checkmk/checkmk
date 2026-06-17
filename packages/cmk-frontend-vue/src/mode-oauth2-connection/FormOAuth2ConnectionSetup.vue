@@ -8,11 +8,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed } from 'vue'
 
-import { type ValidationMessages } from '@/form/private/validation'
+import { type ValidationMessages } from '@/form'
 
-import CreateOAuth2Connection from '@/mode-oauth2-connection/CreateOAuth2Connection.vue'
-import { Oauth2ConnectionApi } from '@/mode-oauth2-connection/lib/service/oauth2-connection-api'
-import type { OAuth2FormData } from '@/mode-oauth2-connection/lib/service/oauth2-connection-api.ts'
+import CreateOAuth2Connection from './CreateOAuth2Connection.vue'
+import { Oauth2ConnectionApi } from './lib/service/oauth2-connection-api'
+import type { OAuth2FormData } from './lib/service/oauth2-connection-api.ts'
 
 const props = defineProps<{
   spec: FormSpec.Oauth2ConnectionSetup

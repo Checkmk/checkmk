@@ -1,5 +1,5 @@
 {
-  "checksum": "09c00895fa9f679592fb48b51f6c9808aa11656e0a669c6351c00357ce0aff02",
+  "checksum": "621b5ea21aaa1a5719b9958e10b8e29cbfc5e5746bfe282b04883282e22a8167",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -2674,7 +2674,7 @@
               "target": "log"
             },
             {
-              "id": "openssl 0.10.78",
+              "id": "openssl 0.10.80",
               "target": "openssl"
             },
             {
@@ -3196,6 +3196,18 @@
               ]
             }
           }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
         }
       ],
       "library_target_name": "cmk_agent_ctl",
@@ -3216,6 +3228,10 @@
             {
               "id": "clap 4.5.45",
               "target": "clap"
+            },
+            {
+              "id": "cmk-agent-ctl 1.0.0",
+              "target": "build_script_build"
             },
             {
               "id": "faccess 0.2.4",
@@ -3254,7 +3270,7 @@
               "target": "nix"
             },
             {
-              "id": "openssl 0.10.78",
+              "id": "openssl 0.10.80",
               "target": "openssl"
             },
             {
@@ -3375,6 +3391,17 @@
           "selects": {}
         },
         "version": "1.0.0"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "compile_data_glob_excludes": [
+          "**/*.rs"
+        ],
+        "data_glob": [
+          "**"
+        ]
       },
       "license": null,
       "license_ids": [],
@@ -11475,6 +11502,18 @@
               ]
             }
           }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
         }
       ],
       "library_target_name": "mk_sql",
@@ -11513,7 +11552,11 @@
               "target": "log"
             },
             {
-              "id": "openssl 0.10.78",
+              "id": "mk-sql 0.1.0",
+              "target": "build_script_build"
+            },
+            {
+              "id": "openssl 0.10.80",
               "target": "openssl"
             },
             {
@@ -11544,6 +11587,10 @@
                 "target": "odbc_api"
               },
               {
+                "id": "winapi 0.3.9",
+                "target": "winapi"
+              },
+              {
                 "id": "winreg 0.52.0",
                 "target": "winreg"
               }
@@ -11565,6 +11612,17 @@
         },
         "edition": "2021",
         "version": "0.1.0"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "compile_data_glob_excludes": [
+          "**/*.rs"
+        ],
+        "data_glob": [
+          "**"
+        ]
       },
       "license": null,
       "license_ids": [],
@@ -11632,7 +11690,7 @@
                 "target": "log"
               },
               {
-                "id": "openssl 0.10.78",
+                "id": "openssl 0.10.80",
                 "target": "openssl"
               },
               {
@@ -11640,7 +11698,7 @@
                 "target": "openssl_probe"
               },
               {
-                "id": "openssl-sys 0.9.114",
+                "id": "openssl-sys 0.9.116",
                 "target": "openssl_sys"
               }
             ],
@@ -11690,7 +11748,7 @@
           "selects": {
             "cfg(not(any(target_os = \"windows\", target_vendor = \"apple\")))": [
               {
-                "id": "openssl-sys 0.9.114",
+                "id": "openssl-sys 0.9.116",
                 "target": "openssl_sys"
               }
             ]
@@ -14023,14 +14081,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl 0.10.78": {
+    "openssl 0.10.80": {
       "name": "openssl",
-      "version": "0.10.78",
+      "version": "0.10.80",
       "package_url": "https://github.com/rust-openssl/rust-openssl",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl/0.10.78/download",
-          "sha256": "f38c4372413cdaaf3cc79dd92d29d7d9f5ab09b51b10dded508fb90bb70b9222"
+          "url": "https://static.crates.io/crates/openssl/0.10.80/download",
+          "sha256": "a45fa2aa886c42762255da344f0a0d313e254066c46aad76f300c3d3da62d967"
         }
       },
       "targets": [
@@ -14090,15 +14148,11 @@
               "target": "libc"
             },
             {
-              "id": "once_cell 1.21.3",
-              "target": "once_cell"
-            },
-            {
-              "id": "openssl 0.10.78",
+              "id": "openssl 0.10.80",
               "target": "build_script_build"
             },
             {
-              "id": "openssl-sys 0.9.114",
+              "id": "openssl-sys 0.9.116",
               "target": "openssl_sys",
               "alias": "ffi"
             }
@@ -14115,7 +14169,7 @@
           ],
           "selects": {}
         },
-        "version": "0.10.78"
+        "version": "0.10.80"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -14130,7 +14184,7 @@
         "link_deps": {
           "common": [
             {
-              "id": "openssl-sys 0.9.114",
+              "id": "openssl-sys 0.9.116",
               "target": "openssl_sys",
               "alias": "ffi"
             }
@@ -14333,14 +14387,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl-sys 0.9.114": {
+    "openssl-sys 0.9.116": {
       "name": "openssl-sys",
-      "version": "0.9.114",
+      "version": "0.9.116",
       "package_url": "https://github.com/rust-openssl/rust-openssl",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl-sys/0.9.114/download",
-          "sha256": "13ce1245cd07fcc4cfdb438f7507b0c7e4f3849a69fd84d52374c66d83741bb6"
+          "url": "https://static.crates.io/crates/openssl-sys/0.9.116/download",
+          "sha256": "f28a22dc7140cda5f096e5e7724a6962ca81a7f8bfd2979f9b18c11af56318c4"
         }
       },
       "targets": [
@@ -14388,14 +14442,14 @@
               "target": "libc"
             },
             {
-              "id": "openssl-sys 0.9.114",
+              "id": "openssl-sys 0.9.116",
               "target": "build_script_main"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.9.114"
+        "version": "0.9.116"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -30539,7 +30593,7 @@
     "mime 0.3.17",
     "nix 0.29.0",
     "odbc-api 10.2.0",
-    "openssl 0.10.78",
+    "openssl 0.10.80",
     "openssl-probe 0.1.6",
     "oracle 0.6.3",
     "os_info 3.12.0",

@@ -5,6 +5,17 @@ use mk_sql::setup;
 
 #[tokio::main]
 async fn main() {
+    #[cfg(windows)]
+    {
+        use clap::Parser;
+        if mk_sql::args::Args::parse().active_instances {
+            for inst in mk_sql::platform::processes::find_running_instances() {
+                println!("{inst}");
+            }
+            return;
+        }
+    }
+
     let result = setup::init(std::env::args_os());
     if let Ok((config, environment)) = result {
         match config.exec(&environment).await {

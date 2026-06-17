@@ -836,3 +836,131 @@ pub mod registry {
         }
     }
 }
+
+/// Finds running MS SQL Server instances via the Windows Service Control Manager.
+///
+/// Enumerates all active Win32 services and returns the instance name for every
+/// service whose name is `MSSQLSERVER` (default instance) or `MSSQL$<NAME>`
+/// (named instance).  Only services in the `Running` state are included.
+#[cfg(windows)]
+pub mod processes {
+    use std::mem;
+    use std::ptr::null;
+    use winapi::um::winsvc::{
+        CloseServiceHandle, EnumServicesStatusExW, OpenSCManagerW, ENUM_SERVICE_STATUS_PROCESSW,
+    };
+
+    const SC_MANAGER_ENUMERATE_SERVICE: u32 = 0x0004;
+    const SC_ENUM_PROCESS_INFO: u32 = 0;
+    const SERVICE_WIN32: u32 = 0x0030; // OWN_PROCESS | SHARE_PROCESS
+    const SERVICE_ACTIVE: u32 = 0x0001;
+    const SERVICE_RUNNING: u32 = 0x0004;
+
+    pub fn find_running_instances() -> Vec<String> {
+        unsafe {
+            let scm = OpenSCManagerW(null(), null(), SC_MANAGER_ENUMERATE_SERVICE);
+            if scm.is_null() {
+                log::error!(
+                    "OpenSCManagerW failed: {:?}",
+                    std::io::Error::last_os_error()
+                );
+                return vec![];
+            }
+
+            let instances = enum_mssql_services(scm);
+            CloseServiceHandle(scm);
+            instances
+        }
+    }
+
+    unsafe fn enum_mssql_services(scm: winapi::um::winsvc::SC_HANDLE) -> Vec<String> {
+        let mut bytes_needed: u32 = 0;
+        let mut count: u32 = 0;
+        let mut resume: u32 = 0;
+
+        let enum_services =
+            |ptr: *mut u8, size: u32, bytes_needed: &mut u32, count: &mut u32, resume: &mut u32| {
+                EnumServicesStatusExW(
+                    scm,
+                    SC_ENUM_PROCESS_INFO,
+                    SERVICE_WIN32,
+                    SERVICE_ACTIVE,
+                    ptr,
+                    size,
+                    bytes_needed,
+                    count,
+                    resume,
+                    null(),
+                )
+            };
+
+        enum_services(
+            std::ptr::null_mut(),
+            0,
+            &mut bytes_needed,
+            &mut count,
+            &mut resume,
+        );
+
+        if bytes_needed == 0 {
+            log::debug!("No active Win32 services found");
+            return vec![];
+        }
+
+        let stride = mem::size_of::<ENUM_SERVICE_STATUS_PROCESSW>();
+        let n_elems = (bytes_needed as usize).div_ceil(stride);
+        let mut buf: Vec<ENUM_SERVICE_STATUS_PROCESSW> =
+            (0..n_elems).map(|_| mem::zeroed()).collect();
+        let buf_bytes = (buf.len() * stride) as u32;
+        resume = 0;
+
+        let ok = enum_services(
+            buf.as_mut_ptr() as *mut u8,
+            buf_bytes,
+            &mut bytes_needed,
+            &mut count,
+            &mut resume,
+        );
+
+        if ok == 0 {
+            log::error!(
+                "EnumServicesStatusExW failed: {:?}",
+                std::io::Error::last_os_error()
+            );
+            return vec![];
+        }
+
+        buf.into_iter()
+            .take(count as usize)
+            .filter_map(|entry| {
+                if entry.ServiceStatusProcess.dwCurrentState != SERVICE_RUNNING {
+                    return None;
+                }
+                instance_from_service_name(wide_ptr_to_string(entry.lpServiceName))
+            })
+            .collect()
+    }
+
+    fn instance_from_service_name(name: String) -> Option<String> {
+        let upper = name.to_uppercase();
+        if upper == "MSSQLSERVER" {
+            return Some(upper);
+        }
+        upper
+            .strip_prefix("MSSQL$")
+            .filter(|s| !s.is_empty())
+            .map(str::to_owned)
+    }
+
+    unsafe fn wide_ptr_to_string(ptr: *const u16) -> String {
+        if ptr.is_null() {
+            log::warn!("Null service name pointer");
+            return String::new();
+        }
+        let mut len = 0;
+        while *ptr.add(len) != 0 {
+            len += 1;
+        }
+        String::from_utf16_lossy(std::slice::from_raw_parts(ptr, len))
+    }
+}

@@ -47,6 +47,12 @@ pub struct Args {
 
     #[arg(long)]
     pub detect_only: bool,
+
+    /// List running MS SQL Server instances discovered via Windows services and exit.
+    /// No config file required.
+    #[cfg(windows)]
+    #[arg(long)]
+    pub active_instances: bool,
 }
 
 impl Args {

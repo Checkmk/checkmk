@@ -110,3 +110,18 @@ selects.config_setting_group(
         ":ubuntu-26.04",
     ],
 )
+
+# These distros either ship too old or too new of a OpenSSL than us.
+#
+# See omd/packages/omd/BUILD
+# See MODULE.bazel for the current version.
+selects.config_setting_group(
+    name = "incompatible-openssl",
+    match_any = [
+        ":almalinux-8",
+        ":almalinux-9",
+        ":sles-15sp6",
+        ":sles-15sp7",
+        ":ubuntu-22.04",
+    ],
+)

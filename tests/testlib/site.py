@@ -803,14 +803,14 @@ class Site:
     def path(self, rel_path: str | Path) -> Path:
         return self.root / rel_path
 
-    def file_mtime(self, rel_path: str | Path) -> float:
-        """Return the last modification time of a file."""
+    def file_timestamp_ms(self, rel_path: str | Path) -> int:
+        """Return the last modification time of a file, in milliseconds."""
         try:
-            stdout = self.check_output(["stat", "-c", "%Y", self.path(rel_path).as_posix()])
+            stdout = self.check_output(["date", "-r", self.path(rel_path).as_posix(), r"+%s%3N"])
         except subprocess.CalledProcessError as excp:
             excp.add_note(f"Failed to read file '{rel_path}'!")
             raise excp
-        return float(stdout)
+        return int(stdout.strip())
 
     @overload
     def read_file(
@@ -904,9 +904,6 @@ class Site:
             self.check_output(["stat", "-c", "%f", self.path(rel_path).as_posix()]).rstrip(),
             base=16,
         )
-
-    def file_timestamp(self, rel_path: str | Path) -> int:
-        return int(self.check_output(["stat", "-c", "%Y", self.path(rel_path).as_posix()]).rstrip())
 
     def inode(self, rel_path: str | Path) -> int:
         return int(self.check_output(["stat", "-c", "%i", self.path(rel_path).as_posix()]).rstrip())

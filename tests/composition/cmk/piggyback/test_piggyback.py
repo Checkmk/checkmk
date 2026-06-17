@@ -222,7 +222,7 @@ def test_piggyback_services_remote_remote_diff_customer(
 def _piggybackhub_conf_timestamp(site: Site) -> int | None:
     if not site.file_exists(site.root / RELATIVE_CONFIG_PATH):
         return None
-    return site.file_timestamp(site.root / RELATIVE_CONFIG_PATH)
+    return site.file_timestamp_ms(site.root / RELATIVE_CONFIG_PATH)
 
 
 @contextmanager

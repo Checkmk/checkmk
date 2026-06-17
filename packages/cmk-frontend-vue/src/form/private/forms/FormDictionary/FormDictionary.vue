@@ -16,7 +16,7 @@ import CmkHtml from '@/components/CmkHtml.vue'
 import FormIndent from '@/components/CmkIndent.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import FormHelp from '@/form/private/FormHelp.vue'
@@ -109,7 +109,7 @@ const componentId = useId()
     role="group"
   >
     <tbody>
-      <FormValidation :validation="validation.map((m) => m.message)"></FormValidation>
+      <CmkInlineValidation :validation="validation.map((m) => m.message)"></CmkInlineValidation>
       <tr v-for="group in groups" :key="`${componentId}.${group.groupKey}`">
         <td class="form-dictionary__dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>

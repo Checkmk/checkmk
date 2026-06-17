@@ -14,7 +14,7 @@ import { immediateWatch } from '@/lib/watch'
 
 import CmkHtml from '@/components/CmkHtml.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormReadonly from '@/form/FormReadonly.vue'
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
@@ -83,7 +83,7 @@ const componentId = useId()
     role="group"
   >
     <tbody>
-      <FormValidation :validation="validation.map((m) => m.message)"></FormValidation>
+      <CmkInlineValidation :validation="validation.map((m) => m.message)"></CmkInlineValidation>
       <tr v-for="group in groups" :key="`${componentId}.${group.groupKey}`">
         <td class="form-two-column-dictionary__dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>

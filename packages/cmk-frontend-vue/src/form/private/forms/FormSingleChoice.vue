@@ -11,7 +11,7 @@ import useId from '@/lib/useId'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkSpace from '@/components/CmkSpace.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
@@ -41,7 +41,7 @@ const componentId = useId()
         /></FormLabel>
       </div>
       <div class="form-single-choice__input-column">
-        <FormValidation :validation="validation"></FormValidation>
+        <CmkInlineValidation :validation="validation"></CmkInlineValidation>
         <div v-if="props.spec.elements.length === 0">
           {{ untranslated(props.spec.no_elements_text || '') }}
         </div>

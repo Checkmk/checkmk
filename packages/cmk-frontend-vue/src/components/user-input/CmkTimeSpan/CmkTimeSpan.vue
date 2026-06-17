@@ -10,7 +10,7 @@ import { ref, watch, watchEffect } from 'vue'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
@@ -110,7 +110,7 @@ const localValidation = ref<Array<string>>([])
 </script>
 
 <template>
-  <FormValidation :validation="[...validation, ...localValidation]" />
+  <CmkInlineValidation :validation="[...validation, ...localValidation]" />
   {{ props.label }}
   <span role="group" :aria-label="props.ariaLabel || props.label || props.title">
     <label v-for="magnitude in selectedMagnitudes" :key="magnitude">

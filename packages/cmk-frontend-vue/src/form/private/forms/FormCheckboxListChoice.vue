@@ -12,7 +12,7 @@ import type {
 import { untranslated } from '@/lib/i18n'
 
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { type ValidationMessages, useValidation } from '../validation'
 
@@ -44,7 +44,7 @@ function change(element: MultipleChoiceElement, newValue: boolean) {
 
 <template>
   <div role="listbox" :aria-label="spec.title">
-    <FormValidation :validation="validation"></FormValidation>
+    <CmkInlineValidation :validation="validation"></CmkInlineValidation>
     <div
       v-for="element in props.spec.elements"
       :key="element.name"

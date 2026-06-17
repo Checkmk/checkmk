@@ -12,7 +12,7 @@ import { untranslated } from '@/lib/i18n'
 import CmkHelpText from '@/components/CmkHelpText.vue'
 import FormIndent from '@/components/CmkIndent.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import { type ValidationMessages } from '@/form/private/validation'
@@ -61,7 +61,7 @@ watch(checkboxValue, (newValue: boolean) => {
 <template>
   <CmkCheckbox v-model="checkboxValue" :label="untranslated(spec.i18n.label)" />
   <CmkHelpText :help="untranslated(spec.help)" />
-  <FormValidation :validation="localValidation"></FormValidation>
+  <CmkInlineValidation :validation="localValidation"></CmkInlineValidation>
   <FormIndent v-if="data !== null">
     <FormEditDispatcher
       v-model:data="data"

@@ -10,7 +10,7 @@ import useId from '@/lib/useId'
 
 import CmkTimePicker from '@/components/CmkDateTimePicker/CmkTimePicker.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
 import FormRequired from '@/form/private/FormRequired.vue'
@@ -43,7 +43,7 @@ const componentId = useId()
       </template>
     </div>
     <div class="form-time-picker__input-wrapper">
-      <FormValidation :validation="validation" />
+      <CmkInlineValidation :validation="validation" />
       <CmkTimePicker :id="componentId" v-model="value" />
     </div>
   </div>

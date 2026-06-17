@@ -12,7 +12,7 @@ import useId from '@/lib/useId'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkSpace from '@/components/CmkSpace.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
@@ -60,7 +60,7 @@ const magnitudeOptions = computed(() => {
     </div>
     <CmkSpace size="small" />
     <div class="form-data-size__validation-wrapper">
-      <FormValidation :validation="validation" />
+      <CmkInlineValidation :validation="validation" />
       <div class="form-single-choice__input-column--inner">
         <CmkInput
           :id="componentId"

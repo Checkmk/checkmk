@@ -8,7 +8,7 @@ import type { FixedValue } from 'cmk-shared-typing/typescript/vue_formspec_compo
 import { computed } from 'vue'
 
 import CmkHtml from '@/components/CmkHtml.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
@@ -35,7 +35,7 @@ const allowedClasses = {
 </script>
 
 <template>
-  <FormValidation v-if="fixedValue" :validation="validation"></FormValidation>
+  <CmkInlineValidation v-if="fixedValue" :validation="validation"></CmkInlineValidation>
   <FormLabel v-if="fixedValue">
     <CmkHtml v-if="spec.label" :html="spec.label" :allowed-classes="allowedClasses" />
     <template v-else>{{ fixedValue }}</template>

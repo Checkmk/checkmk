@@ -8,7 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 import { computed } from 'vue'
 
 import { inputSizes } from '@/components/user-input//sizes'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
@@ -38,7 +38,7 @@ const style = computed(() => {
       <FormLabel> {{ spec.label }}</FormLabel
       ><br />
     </div>
-    <FormValidation :validation="validation"></FormValidation>
+    <CmkInlineValidation :validation="validation"></CmkInlineValidation>
     <textarea
       v-model="value"
       :style="style"

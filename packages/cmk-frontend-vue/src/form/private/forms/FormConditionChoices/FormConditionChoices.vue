@@ -12,7 +12,7 @@ import { immediateWatch } from '@/lib/watch'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkList from '@/components/CmkList'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { required } from '@/form/private/requiredValidator'
 import { type ValidationMessages, validateValue } from '@/form/private/validation'
@@ -80,7 +80,7 @@ const elementRequired = computed(() => {
 </script>
 
 <template>
-  <FormValidation :validation="validation"></FormValidation>
+  <CmkInlineValidation :validation="validation"></CmkInlineValidation>
   <CmkList
     :items-props="{ itemData: data }"
     :try-delete="

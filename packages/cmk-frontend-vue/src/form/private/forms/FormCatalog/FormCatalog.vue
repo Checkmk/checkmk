@@ -18,7 +18,7 @@ import { immediateWatch } from '@/lib/watch'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormReadonly from '@/form/FormReadonly.vue'
 import TopicGrouped from '@/form/private/forms/FormCatalog/TopicGrouped.vue'
@@ -133,7 +133,7 @@ function computeDictionaries(topic: Topic): DictionaryData[] {
 
 <template>
   <div class="form-catalog__container">
-    <FormValidation :validation="validation.map((m) => m.message)"></FormValidation>
+    <CmkInlineValidation :validation="validation.map((m) => m.message)"></CmkInlineValidation>
     <CmkCatalogPanel
       v-for="topic in props.spec.elements"
       :key="topic.name"

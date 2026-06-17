@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { LegacyValuespec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import type { ValidationMessages } from '@/form/private/validation'
 
@@ -149,7 +149,7 @@ function collectData() {
 
 <template>
   <!-- eslint-disable vue/no-v-html -->
-  <FormValidation :validation="validation"></FormValidation>
+  <CmkInlineValidation :validation="validation"></CmkInlineValidation>
   <form ref="legacyDOM" class="legacy_valuespec" v-html="inputHtml"></form>
   <!--eslint-enable-->
 </template>

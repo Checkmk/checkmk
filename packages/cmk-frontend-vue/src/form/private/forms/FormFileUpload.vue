@@ -9,7 +9,7 @@ import type { FileUpload } from 'cmk-shared-typing/typescript/vue_formspec_compo
 import useId from '@/lib/useId'
 
 import CmkButton from '@/components/CmkButton'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
@@ -37,7 +37,7 @@ const componentId = useId()
 </script>
 
 <template>
-  <FormValidation :validation="validation"></FormValidation>
+  <CmkInlineValidation :validation="validation"></CmkInlineValidation>
   <span>
     <input
       v-if="value.file_name === null"

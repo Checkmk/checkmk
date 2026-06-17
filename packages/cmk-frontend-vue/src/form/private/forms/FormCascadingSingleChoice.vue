@@ -21,7 +21,7 @@ import CmkHelpText from '@/components/CmkHelpText.vue'
 import FormIndent from '@/components/CmkIndent.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
@@ -122,7 +122,7 @@ const buttonGroupButtons = computed((): Array<{ label: string; value: string }> 
 </script>
 
 <template>
-  <FormValidation :validation="validation"></FormValidation>
+  <CmkInlineValidation :validation="validation"></CmkInlineValidation>
   <div
     class="form-cascading-single-choice"
     :class="{ 'form-cascading-single-choice__horizontal': props.spec.layout === 'horizontal' }"

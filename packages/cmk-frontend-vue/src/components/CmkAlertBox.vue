@@ -12,8 +12,8 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import type { ButtonVariants } from '@/components/CmkButton'
 import CmkButton from '@/components/CmkButton'
-import CmkIcon from '@/components/CmkIcon'
 import type { SimpleIcons } from '@/components/CmkIcon'
+import CmkIcon from '@/components/CmkIcon'
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
 import CmkHeading from './typography/CmkHeading.vue'
@@ -161,7 +161,7 @@ const alertIconColor = computed(() => {
 </template>
 
 <style scoped>
-/* TODO: try to unify this component with component FormValidation. the styling should be the same
+/* TODO: try to unify this component with component CmkInlineValidation. the styling should be the same
          for all error messages, so the same base component should be used. */
 .cmk-alert-box {
   color: var(--font-color);

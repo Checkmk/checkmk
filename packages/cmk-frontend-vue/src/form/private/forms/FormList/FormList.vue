@@ -8,7 +8,7 @@ import type { Components, List } from 'cmk-shared-typing/typescript/vue_formspec
 import { ref, watch } from 'vue'
 
 import CmkList from '@/components/CmkList'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import { type ValidationMessages } from '@/form/private/validation'
@@ -49,7 +49,7 @@ function reorderElements(order: number[]) {
 
 <template>
   <span>
-    <FormValidation :validation="validation"></FormValidation>
+    <CmkInlineValidation :validation="validation"></CmkInlineValidation>
     <CmkList
       :items-props="{ itemData: data, itemElementValidation: elementValidation }"
       :drag-callbacks="props.spec.editable_order ? { onReorder: reorderElements } : null"

@@ -13,7 +13,7 @@ import { immediateWatch } from '@/lib/watch'
 import CmkButton from '@/components/CmkButton'
 import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import { type ValidationMessages } from '@/form/private/validation'
@@ -71,7 +71,7 @@ function toggleTimeSpecific() {
     ><CmkSpace size="small" /><CmkHelpText :help="untranslated(spec.help)" />
     <br />
     <CmkSpace size="small" direction="vertical" />
-    <FormValidation :validation="localValidation"></FormValidation>
+    <CmkInlineValidation :validation="localValidation"></CmkInlineValidation>
     <template v-if="timespecificActive">
       <FormEditDispatcher
         v-model:data="data"

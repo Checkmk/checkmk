@@ -10,7 +10,7 @@ import { computed, shallowRef } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkButton from '@/components/CmkButton'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
@@ -106,7 +106,7 @@ const elementCounter = computed(() => props.elements.length)
 </script>
 
 <template>
-  <FormValidation :validation="validation" />
+  <CmkInlineValidation :validation="validation" />
   <div class="cmk-dual-list__container" role="group" :aria-label="title">
     <div class="cmk-dual-list__body">
       <div class="cmk-dual-list__single-list">

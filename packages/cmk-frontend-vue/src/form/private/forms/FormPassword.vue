@@ -11,7 +11,7 @@ import usei18n, { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkDropdown from '@/components/CmkDropdown'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { type ValidationMessages, validateValue } from '@/form/private/validation'
 
@@ -95,7 +95,7 @@ const passwordStoreOptions = computed(() => {
 </script>
 
 <template>
-  <FormValidation :validation="validation"></FormValidation>
+  <CmkInlineValidation :validation="validation"></CmkInlineValidation>
   <CmkDropdown
     v-model="passwordType"
     :options="{ type: 'fixed', suggestions: passwordTypeOptions }"

@@ -14,7 +14,7 @@ import { computed, ref } from 'vue'
 
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkList from '@/components/CmkList'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormMetricBackendCustomQueryAttribute, {
   type Attribute
@@ -114,7 +114,7 @@ function deleteAttribute(index: number) {
     </component>
     <component :is="valueCellWrapperComponent">
       <component :is="valueCellComponent">
-        <FormValidation :validation="validation" />
+        <CmkInlineValidation :validation="validation" />
         <CmkList
           :items-props="{ itemData: attributes }"
           :orientation="orientation"

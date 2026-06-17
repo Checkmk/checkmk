@@ -10,7 +10,7 @@ import { computed, ref } from 'vue'
 import useId from '@/lib/useId'
 import { immediateWatch } from '@/lib/watch'
 
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { type ValidationMessages, validateValue } from '@/form/private/validation'
 
@@ -42,7 +42,7 @@ const componentId = useId()
 </script>
 
 <template>
-  <FormValidation :validation="validation"></FormValidation>
+  <CmkInlineValidation :validation="validation"></CmkInlineValidation>
   <input
     :id="componentId"
     v-model="password"

@@ -11,7 +11,7 @@ import type {
 import { computed, ref, watch } from 'vue'
 
 import CmkList from '@/components/CmkList'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import { type ValidationMessages } from '@/form/private/validation'
@@ -91,7 +91,7 @@ const showAddButton = computed(() => {
 </script>
 
 <template>
-  <FormValidation :validation="validation"></FormValidation>
+  <CmkInlineValidation :validation="validation"></CmkInlineValidation>
   <CmkList
     :items-props="{ itemData: data, itemElementValidation: elementValidation }"
     :add="{

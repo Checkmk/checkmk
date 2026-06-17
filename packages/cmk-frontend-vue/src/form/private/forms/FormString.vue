@@ -13,7 +13,7 @@ import useId from '@/lib/useId'
 import CmkDropdownButton from '@/components/CmkDropdown/CmkDropdownButton.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkSpace from '@/components/CmkSpace.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
@@ -57,7 +57,7 @@ const autoCompleterValue = computed<string | null>({
     </div>
     <template v-if="spec.autocompleter">
       <div class="form-string__autocomplete-wrapper">
-        <FormValidation :validation="validation"></FormValidation>
+        <CmkInlineValidation :validation="validation"></CmkInlineValidation>
         <div class="form-string--dropdown-container">
           <FormAutocompleter
             :id="componentId"

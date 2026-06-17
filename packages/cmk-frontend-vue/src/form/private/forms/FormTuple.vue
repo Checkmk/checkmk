@@ -12,7 +12,7 @@ import { capitalizeFirstLetter } from '@/lib/utils'
 
 import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
@@ -56,7 +56,7 @@ const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
 </script>
 
 <template>
-  <FormValidation :validation="validation"></FormValidation>
+  <CmkInlineValidation :validation="validation"></CmkInlineValidation>
   <div class="form-tuple" :class="CLASS_LOOKUP[spec.layout]">
     <div v-for="(element, index) in spec.elements" :key="index" class="form-tuple__item">
       <div v-if="spec.show_titles" class="form-tuple__label">

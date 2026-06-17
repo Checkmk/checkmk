@@ -11,7 +11,7 @@ import { computed, ref, watch } from 'vue'
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 import { type ValidationMessages } from '@/form/private/validation'
@@ -115,7 +115,7 @@ watch(
 
 <template>
   <td>
-    <FormValidation :validation="validationByLocation.host_name" />
+    <CmkInlineValidation :validation="validationByLocation.host_name" />
     <FormAutocompleter
       v-model="hostName"
       :autocompleter="hostNameAutocompleter"
@@ -126,7 +126,7 @@ watch(
     />
   </td>
   <td>
-    <FormValidation :validation="validationByLocation.service_name" />
+    <CmkInlineValidation :validation="validationByLocation.service_name" />
     <FormAutocompleter
       v-model="serviceName"
       :autocompleter="serviceNameAutocompleter"
@@ -137,7 +137,7 @@ watch(
     />
   </td>
   <td>
-    <FormValidation :validation="validationByLocation.metric_name" />
+    <CmkInlineValidation :validation="validationByLocation.metric_name" />
     <FormAutocompleter
       v-model="metricName"
       :autocompleter="metricNameAutocompleter"

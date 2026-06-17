@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { ListOfStrings } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, onBeforeMount, ref, watch } from 'vue'
 
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormEditDispatcher from '@/form/private/FormEditDispatcher/FormEditDispatcher.vue'
 import { type ValidationMessages, groupIndexedValidations } from '@/form/private/validation'
@@ -114,7 +114,7 @@ const specWithoutLabel = computed(() => {
 </script>
 
 <template>
-  <FormValidation :validation="validation" />
+  <CmkInlineValidation :validation="validation" />
   <div role="group" :aria-label="spec.title" :class="`form-list-of-strings--${spec.layout}`">
     <div
       v-for="(_, index) in backendData"

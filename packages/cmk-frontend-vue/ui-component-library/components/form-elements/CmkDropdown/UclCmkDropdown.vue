@@ -62,7 +62,11 @@ export const panelConfig = {
   },
   disabled: { type: 'boolean' as const, title: 'Disabled', initialState: false },
   required: { type: 'boolean' as const, title: 'Required', initialState: false },
-  formValidation: { type: 'boolean' as const, title: 'Form Validation Error', initialState: false },
+  formValidation: {
+    type: 'boolean' as const,
+    title: 'Form Validation Error',
+    initialState: false
+  },
   inputHint: {
     type: 'string' as const,
     title: 'Input Hint',

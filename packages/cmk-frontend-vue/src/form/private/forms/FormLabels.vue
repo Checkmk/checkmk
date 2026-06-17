@@ -9,7 +9,7 @@ import { nextTick, onBeforeUpdate, ref, watch } from 'vue'
 
 import CmkList from '@/components/CmkList'
 import { type Suggestion } from '@/components/CmkSuggestions'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 import FormLabel from '@/form/private/FormLabel.vue'
@@ -123,7 +123,7 @@ const deleteItem = (index: number) => {
 </script>
 
 <template>
-  <FormValidation :validation="validation"></FormValidation>
+  <CmkInlineValidation :validation="validation"></CmkInlineValidation>
   <CmkList
     :items-props="{ itemData: keyValuePairs }"
     orientation="vertical"

@@ -88,8 +88,6 @@ watch(allowedIds, () => {
       class="cmk-dual-list__single-list"
       :elements="filteredElements"
       :title="_t('Visual information')"
-      :validators="[]"
-      :backend-validation="[]"
       width="small"
     />
 

@@ -160,12 +160,6 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
       <tr>
         <td>{{ _t('Aggregation lookback') }}</td>
         <td>
-          <!-- We can't use the backend-validation from the CmkTimeSpan
-            as applying the replacement_value cleans the backend-validation
-            effectively causing it to not show the validation messages -->
-          <CmkInlineValidation
-            :validation="validationByLocation.aggregation_lookback"
-          ></CmkInlineValidation>
           <CmkTimeSpan
             v-model="aggregationLookback"
             :aria-label="_t('Aggregation lookback')"
@@ -173,8 +167,7 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
             :title="''"
             :input-hint="1"
             :displayed-magnitudes="['hour', 'minute', 'second']"
-            :validators="[]"
-            :backend-validation="[]"
+            :external-errors="validationByLocation.aggregation_lookback"
             @update:model-value="validationByLocation.aggregation_lookback = []"
           />
           <CmkHelpText :help="AGGREGATION_LOOKBACK_HELP_TEXT" />

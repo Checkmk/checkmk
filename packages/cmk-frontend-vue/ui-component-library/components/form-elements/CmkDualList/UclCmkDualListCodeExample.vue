@@ -23,8 +23,6 @@ const selectedRoles = ref<DualListElement[]>([availableRoles.value[2]!])
     v-model="selectedRoles"
     :elements="availableRoles"
     title="Assign User Roles"
-    :validators="[]"
-    :backend-validation="[]"
     width="medium"
   />
 </template>

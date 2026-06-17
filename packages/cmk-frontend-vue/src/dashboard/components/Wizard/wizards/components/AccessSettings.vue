@@ -171,7 +171,5 @@ if (shareMode.value === 'with_contact_groups' || shareMode.value === 'with_sites
     v-model="selectedElements"
     :elements="availableElements"
     :title="_t('Visual information')"
-    :validators="[]"
-    :backend-validation="[]"
   />
 </template>

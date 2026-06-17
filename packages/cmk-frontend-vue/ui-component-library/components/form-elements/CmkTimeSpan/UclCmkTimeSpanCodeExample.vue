@@ -18,7 +18,5 @@ const data = ref<number | null>(0)
     title="Duration"
     :input-hint="null"
     :displayed-magnitudes="['day', 'hour', 'minute', 'second']"
-    :validators="[]"
-    :backend-validation="[]"
   />
 </template>

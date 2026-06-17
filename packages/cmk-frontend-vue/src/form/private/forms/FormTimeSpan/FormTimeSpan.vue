@@ -8,9 +8,9 @@ import type { TimeSpan } from 'cmk-shared-typing/typescript/vue_formspec_compone
 
 import CmkTimeSpan from '@/components/user-input/CmkTimeSpan/CmkTimeSpan.vue'
 
-import { type ValidationMessages } from '@/form/private/validation'
+import { type ValidationMessages, useValidation } from '@/form/private/validation'
 
-defineProps<{
+const props = defineProps<{
   spec: TimeSpan
   backendValidation: ValidationMessages
 }>()
@@ -19,16 +19,20 @@ defineProps<{
 // activated but no value is selected. this should not be our concern in this component
 // but handled differently in the dictionary.
 const data = defineModel<number | null>('data', { required: true })
+const [validation, value] = useValidation<number | null>(
+  data,
+  props.spec.validators,
+  () => props.backendValidation
+)
 </script>
 
 <template>
   <CmkTimeSpan
-    v-model="data"
+    v-model="value"
     :label="spec.label"
     :title="spec.title"
     :input-hint="spec.input_hint"
     :displayed-magnitudes="spec.displayed_magnitudes"
-    :validators="spec.validators"
-    :backend-validation="backendValidation"
+    :external-errors="validation"
   />
 </template>

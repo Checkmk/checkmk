@@ -4,7 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { Validator } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, shallowRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -12,16 +11,13 @@ import usei18n from '@/lib/i18n'
 import CmkButton from '@/components/CmkButton'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import { type ValidationMessages, useValidation } from '@/form/private/validation'
-
 import CmkSearchableList from './CmkSearchableList.vue'
 import type { DualListElement, SearchableListWidthVariants } from './index.ts'
 
 interface CmkDualListProps {
   elements: DualListElement[]
   title: string
-  validators: Validator[]
-  backendValidation: ValidationMessages
+  externalErrors?: string[]
   width?: SearchableListWidthVariants
 }
 
@@ -35,12 +31,6 @@ const unselectedListRef = shallowRef<InstanceType<typeof CmkSearchableList>>()
 const selectedListRef = shallowRef<InstanceType<typeof CmkSearchableList>>()
 
 const { _t } = usei18n()
-
-const [validation] = useValidation<DualListElement[]>(
-  data,
-  props.validators,
-  () => props.backendValidation
-)
 
 const unselectedItems = computed<DualListElement[]>(() => {
   const selectedNames = new Set(data.value.map((e) => e.name))
@@ -106,7 +96,7 @@ const elementCounter = computed(() => props.elements.length)
 </script>
 
 <template>
-  <CmkInlineValidation :validation="validation" />
+  <CmkInlineValidation :validation="externalErrors" />
   <div class="cmk-dual-list__container" role="group" :aria-label="title">
     <div class="cmk-dual-list__body">
       <div class="cmk-dual-list__single-list">

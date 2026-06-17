@@ -8,13 +8,7 @@ import { type BoolPropDef, type PanelConfigFor } from '@ucl/_ucl/types/prop-def'
 
 import codeExample from './UclCmkTimeSpanCodeExample.vue?raw'
 
-type OmittedProps =
-  | 'modelValue'
-  | 'ariaLabel'
-  | 'title'
-  | 'backendValidation'
-  | 'validators'
-  | 'displayedMagnitudes'
+type OmittedProps = 'modelValue' | 'ariaLabel' | 'title' | 'externalErrors' | 'displayedMagnitudes'
 type AdditionalProps = {
   showDay: BoolPropDef
   showHour: BoolPropDef
@@ -91,8 +85,6 @@ const displayedMagnitudes = computed<Magnitude[]>(() => {
         title="Duration"
         :input-hint="propState.inputHint"
         :displayed-magnitudes="displayedMagnitudes"
-        :validators="[]"
-        :backend-validation="[]"
       />
 
       <template #properties>

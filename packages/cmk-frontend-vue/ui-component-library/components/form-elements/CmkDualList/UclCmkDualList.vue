@@ -54,10 +54,9 @@ export const panelConfig = {
     initialState: ['host_admin'],
     help: 'Type: string[]. IDs must match the name of each available element. In the UCL app, enter one ID per line in the textarea, e.g.:host_admin network_admin db_admin'
   }
-} satisfies PanelConfigFor<
-  typeof CmkDualList,
-  'modelValue' | 'backendValidation' | 'validators' | 'elements'
-> & { selectedData: StringArrayPropDef }
+} satisfies PanelConfigFor<typeof CmkDualList, 'modelValue' | 'externalErrors' | 'elements'> & {
+  selectedData: StringArrayPropDef
+}
 </script>
 
 <script setup lang="ts">
@@ -90,7 +89,7 @@ const elements: DualListElement[] = [
 
 const propState = new PanelStateCreator<
   typeof CmkDualList,
-  'modelValue' | 'backendValidation' | 'validators' | 'elements'
+  'modelValue' | 'externalErrors' | 'elements'
 >().createRef(panelConfig)
 
 const selectedData = computed({
@@ -111,8 +110,6 @@ const selectedData = computed({
         v-model="selectedData"
         :elements="elements"
         :title="propState.title"
-        :validators="[]"
-        :backend-validation="[]"
         :width="propState.width"
       />
 

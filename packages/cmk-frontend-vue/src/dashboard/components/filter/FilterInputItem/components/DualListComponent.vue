@@ -61,7 +61,5 @@ const selectedDualListElements = computed<DualListElement[]>({
     :width="'xsmall'"
     :elements="dualListElements"
     :title="component.id"
-    :validators="[]"
-    :backend-validation="[]"
   />
 </template>

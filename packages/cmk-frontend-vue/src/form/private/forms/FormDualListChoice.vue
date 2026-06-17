@@ -16,7 +16,7 @@ import CmkIcon from '@/components/CmkIcon'
 
 import { fetchData } from '@/form/private/FormAutocompleter/autocompleters/ajax'
 
-import { type ValidationMessages } from '../validation'
+import { type ValidationMessages, useValidation } from '../validation'
 
 const props = defineProps<{
   spec: DualListChoice
@@ -26,6 +26,11 @@ const props = defineProps<{
 const { _t } = usei18n()
 
 const data = defineModel<DualListElement[]>('data', { required: true })
+const [validation, value] = useValidation<DualListElement[]>(
+  data,
+  props.spec.validators,
+  () => props.backendValidation
+)
 const localElements = ref<DualListElement[]>(props.spec.elements)
 const loading: Ref<boolean> = ref(false) // Loading flag
 
@@ -53,11 +58,10 @@ onMounted(async () => {
       <span>{{ _t('Loading') }}</span>
     </div>
     <CmkDualList
-      v-model="data"
+      v-model="value"
       :elements="localElements"
       :title="props.spec.title"
-      :validators="props.spec.validators"
-      :backend-validation="props.backendValidation"
+      :external-errors="validation"
     />
   </div>
 </template>

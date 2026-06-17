@@ -30,6 +30,7 @@ SOURCES_COMMON = [
     "configuration_entity.json",
     "create_relay.json",
     "dialog.json",
+    "global_time_picker.json",
     "loading_transition.json",
     "main_menu.json",
     "mode_host.json",

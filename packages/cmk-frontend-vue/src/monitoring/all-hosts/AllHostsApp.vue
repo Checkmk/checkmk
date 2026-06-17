@@ -19,7 +19,10 @@ import CmkSearchInput from '@/components/CmkSearchInput.vue'
 
 import type { HostEntry, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type { CheckboxListFilter } from '@/monitoring/shared/components/filter/types'
+import type {
+  CheckboxListFilter,
+  StringInputFilter
+} from '@/monitoring/shared/components/filter/types'
 
 import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
@@ -55,6 +58,21 @@ const stateFilter: CheckboxListFilter<'state'> = {
   ] satisfies { value: HostState; title: string }[]
 }
 
+const nameFilter: StringInputFilter<'name'> = {
+  type: 'string-input',
+  field: 'name'
+}
+
+const aliasFilter: StringInputFilter<'alias'> = {
+  type: 'string-input',
+  field: 'alias'
+}
+
+const addressFilter: StringInputFilter<'address'> = {
+  type: 'string-input',
+  field: 'address'
+}
+
 const columns: ColumnDef<HostEntry>[] = [
   {
     id: 'select',
@@ -72,9 +90,27 @@ const columns: ColumnDef<HostEntry>[] = [
     maxSize: 130,
     meta: { filter: stateFilter }
   },
-  { accessorKey: 'name', header: _t('Host'), sortDescFirst: false, minSize: 150 },
-  { accessorKey: 'alias', header: _t('Alias'), sortDescFirst: false, minSize: 150 },
-  { accessorKey: 'address', header: _t('IP address'), sortDescFirst: false, minSize: 100 },
+  {
+    accessorKey: 'name',
+    header: _t('Host'),
+    sortDescFirst: false,
+    minSize: 150,
+    meta: { filter: nameFilter }
+  },
+  {
+    accessorKey: 'alias',
+    header: _t('Alias'),
+    sortDescFirst: false,
+    minSize: 150,
+    meta: { filter: aliasFilter }
+  },
+  {
+    accessorKey: 'address',
+    header: _t('IP address'),
+    sortDescFirst: false,
+    minSize: 100,
+    meta: { filter: addressFilter }
+  },
   {
     accessorKey: 'num_services',
     header: _t('Total'),

@@ -4,15 +4,23 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { Row } from '@tanstack/vue-table'
+
 import type { HostEntry } from '@/monitoring/shared/api/types'
+import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import type { CellHighlight } from '@/monitoring/shared/components/cell/base/highlight'
 
-defineProps<{
+const props = defineProps<{
   row: HostEntry
+  tableRow: Row<HostEntry>
 }>()
+
+function toggleSelected(selected: boolean): void {
+  props.tableRow.toggleSelected(selected)
+}
 
 const OK_HIGHLIGHT: CellHighlight = { type: 'inline', color: 'success' }
 const WARN_HIGHLIGHT: CellHighlight = { type: 'inline', color: 'warning' }
@@ -22,6 +30,11 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
 </script>
 
 <template>
+  <CheckboxCell
+    column-id="select"
+    :model-value="tableRow.getIsSelected()"
+    @update:model-value="toggleSelected"
+  />
   <StateCell column-id="state" :state="row.state" />
   <StringCell
     column-id="name"

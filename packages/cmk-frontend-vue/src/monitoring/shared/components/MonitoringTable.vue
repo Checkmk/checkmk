@@ -8,6 +8,8 @@ import {
   type ColumnDef,
   type ColumnFiltersState,
   type ColumnPinningState,
+  type Row,
+  type RowSelectionState,
   type Updater,
   getCoreRowModel,
   useVueTable
@@ -57,6 +59,8 @@ function resolveUpdater<S>(updater: Updater<S>, current: S): S {
   return typeof updater === 'function' ? (updater as (old: S) => S)(current) : updater
 }
 
+const rowSelection = ref<RowSelectionState>({})
+
 const table = useVueTable({
   // Server-side sort/filter — we bypass getRowModel() and slot rows directly.
   get data() {
@@ -74,16 +78,27 @@ const table = useVueTable({
     },
     get columnPinning() {
       return props.columnPinning ?? {}
+    },
+    get rowSelection() {
+      return rowSelection.value
     }
   },
   enableColumnPinning: true,
+  enableRowSelection: true,
   manualSorting: true,
   manualFiltering: true,
+  // Key selection by the stable row key so it survives server-side reordering.
+  ...(props.getRowKey
+    ? { getRowId: (row: T, index: number) => String(props.getRowKey!(row, index)) }
+    : {}),
   onSortingChange: (updater) => {
     monitoringService?.updateSort(resolveUpdater(updater, monitoringService.sortState.value))
   },
   onColumnFiltersChange: (updater) => {
     emit('update:filterState', resolveUpdater(updater, props.filterState))
+  },
+  onRowSelectionChange: (updater) => {
+    rowSelection.value = resolveUpdater(updater, rowSelection.value)
   },
   getCoreRowModel: getCoreRowModel()
 })
@@ -289,6 +304,12 @@ function measureRowElement(el: Element | ComponentPublicInstance | null): void {
 function rowAt(index: number): T {
   return props.rows[index]!
 }
+
+// getCoreRowModel keeps rows in data order (manual sort/filter), so the row
+// model index lines up with the virtualized data index.
+function tableRowAt(index: number): Row<T> {
+  return table.getRowModel().rows[index]!
+}
 </script>
 
 <template>
@@ -317,7 +338,12 @@ function rowAt(index: number): T {
             class="monitoring-table__row"
             :class="{ 'monitoring-table__row--alt': virtualRow.index % 2 === 1 }"
           >
-            <slot name="row" :row="rowAt(virtualRow.index)" :index="virtualRow.index" />
+            <slot
+              name="row"
+              :row="rowAt(virtualRow.index)"
+              :table-row="tableRowAt(virtualRow.index)"
+              :index="virtualRow.index"
+            />
           </tr>
           <tr v-if="paddingBottom > 0" class="monitoring-table__spacer" aria-hidden="true">
             <td :colspan="leafColumnCount" :style="{ height: `${paddingBottom}px` }"></td>

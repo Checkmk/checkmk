@@ -191,8 +191,8 @@ const rows: HostEntry[] = [
             :get-row-key="(row) => `${row.site_id}/${row.name}`"
             @update:filter-state="filterState = $event"
           >
-            <template #row="{ row }">
-              <HostRow :row="row" />
+            <template #row="{ row, tableRow }">
+              <HostRow :row="row" :table-row="tableRow" />
             </template>
           </MonitoringTable>
         </div>

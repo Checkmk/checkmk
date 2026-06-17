@@ -3,7 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
+import type { Row } from '@tanstack/vue-table'
+import { fireEvent, render, screen } from '@testing-library/vue'
 import { defineComponent, h } from 'vue'
 
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
@@ -26,12 +27,20 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   }
 }
 
-function mountRow(row: HostEntry) {
+function makeTableRow(overrides: Partial<Row<HostEntry>> = {}): Row<HostEntry> {
+  return {
+    getIsSelected: () => false,
+    toggleSelected: () => {},
+    ...overrides
+  } as unknown as Row<HostEntry>
+}
+
+function mountRow(row: HostEntry, tableRow: Row<HostEntry> = makeTableRow()) {
   return render(
     defineComponent({
       components: { HostRow },
       render() {
-        return h('table', [h('tbody', [h('tr', [h(HostRow, { row })])])])
+        return h('table', [h('tbody', [h('tr', [h(HostRow, { row, tableRow })])])])
       }
     })
   )
@@ -82,14 +91,31 @@ test('renders one cell per service state with its count', () => {
   )
 
   const tds = Array.from(container.querySelectorAll('td'))
-  // state, name, alias, address, total, ok, warn, crit, unknown, pending
-  expect(tds).toHaveLength(10)
-  expect(tds[4]).toHaveTextContent('15')
-  expect(tds[5]).toHaveTextContent('1')
-  expect(tds[6]).toHaveTextContent('2')
-  expect(tds[7]).toHaveTextContent('3')
-  expect(tds[8]).toHaveTextContent('4')
-  expect(tds[9]).toHaveTextContent('5')
+  // select, state, name, alias, address, total, ok, warn, crit, unknown, pending
+  expect(tds).toHaveLength(11)
+  expect(tds[5]).toHaveTextContent('15')
+  expect(tds[6]).toHaveTextContent('1')
+  expect(tds[7]).toHaveTextContent('2')
+  expect(tds[8]).toHaveTextContent('3')
+  expect(tds[9]).toHaveTextContent('4')
+  expect(tds[10]).toHaveTextContent('5')
+})
+
+test('toggles the row selection when the checkbox is clicked', async () => {
+  const toggleSelected = vi.fn()
+  const { container } = mountRow(makeHost(), makeTableRow({ toggleSelected }))
+
+  const checkbox = container.querySelector('.cmk-checkbox__button')!
+  await fireEvent.click(checkbox)
+
+  expect(toggleSelected).toHaveBeenCalledWith(true)
+})
+
+test('reflects the selected state from the tanstack row', () => {
+  const { container } = mountRow(makeHost(), makeTableRow({ getIsSelected: () => true }))
+
+  const checkbox = container.querySelector('.cmk-checkbox__button')!
+  expect(checkbox).toHaveAttribute('aria-checked', 'true')
 })
 
 test('renders the zero counts as well — one badge per service state column', () => {

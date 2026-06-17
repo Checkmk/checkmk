@@ -221,8 +221,8 @@ const pinningActive = computed(
             :column-pinning="columnPinning"
             :get-row-key="(row) => `${row.site_id}/${row.name}`"
           >
-            <template #row="{ row }">
-              <HostRow :row="row" />
+            <template #row="{ row, tableRow }">
+              <HostRow :row="row" :table-row="tableRow" />
             </template>
           </MonitoringTable>
         </div>

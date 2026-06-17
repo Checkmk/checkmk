@@ -52,6 +52,14 @@ const stateFilter: CheckboxListFilter<'state'> = {
 
 const columns: ColumnDef<HostEntry>[] = [
   {
+    id: 'select',
+    header: '',
+    enableSorting: false,
+    minSize: 36,
+    maxSize: 36,
+    meta: { selectColumn: true, justify: 'center' }
+  },
+  {
     accessorKey: 'state',
     header: _t('State'),
     sortDescFirst: true,
@@ -112,7 +120,7 @@ const columns: ColumnDef<HostEntry>[] = [
   }
 ]
 
-const columnPinning: ColumnPinningState = { left: ['state', 'name'] }
+const columnPinning: ColumnPinningState = { left: ['select', 'state', 'name'] }
 
 const columnFilters = ref<ColumnFiltersState>([])
 
@@ -158,8 +166,8 @@ function rowKey(row: HostEntry): string {
       :get-row-key="rowKey"
       @update:filter-state="onColumnFilters"
     >
-      <template #row="{ row }">
-        <HostRow :row="row" />
+      <template #row="{ row, tableRow }">
+        <HostRow :row="row" :table-row="tableRow" />
       </template>
       <template #empty-state>
         <MonitoringEmptyState />

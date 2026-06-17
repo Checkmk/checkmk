@@ -17,6 +17,7 @@ declare module '@tanstack/vue-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
     justify?: ColumnJustify
     filter?: ColumnFilterDefinition
+    selectColumn?: boolean
   }
 }
 

@@ -4,10 +4,17 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts" generic="T">
-import { type Column, type ColumnDef, FlexRender, type HeaderGroup } from '@tanstack/vue-table'
+import {
+  type Column,
+  type ColumnDef,
+  FlexRender,
+  type HeaderGroup,
+  type Table
+} from '@tanstack/vue-table'
 import { type CSSProperties, inject } from 'vue'
 
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 
@@ -32,6 +39,17 @@ function setFilterValue(
 
 function columnLabel(column: Column<T, unknown>): string {
   return column.columnDef.header?.toString() ?? column.id
+}
+
+function selectAllModel(table: Table<T>): boolean | 'indeterminate' {
+  if (table.getIsAllRowsSelected()) {
+    return true
+  }
+  return table.getIsSomeRowsSelected() ? 'indeterminate' : false
+}
+
+function setSelectAll(table: Table<T>, value: boolean | 'indeterminate'): void {
+  table.toggleAllRowsSelected(value === true)
 }
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
@@ -106,8 +124,14 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
           class="monitoring-table-header__cell-content"
           :style="contentStyle(header.column.columnDef)"
         >
+          <CmkCheckbox
+            v-if="!header.isPlaceholder && header.column.columnDef.meta?.selectColumn"
+            :allow-indeterminate="true"
+            :model-value="selectAllModel(header.getContext().table)"
+            @update:model-value="setSelectAll(header.getContext().table, $event)"
+          />
           <button
-            v-if="!header.isPlaceholder && header.column.getCanSort()"
+            v-else-if="!header.isPlaceholder && header.column.getCanSort()"
             type="button"
             class="monitoring-table-header__header-button"
             :title="header.column.columnDef.header?.toString()"

@@ -22,6 +22,7 @@ import Dashboard from './dashboard/DashboardApp.vue'
 import SharedDashboard from './dashboard/DashboardSharedApp.vue'
 import DateTimePickerApp from './date-time-picker/CmkDateTimePickerApp.vue'
 import DialogApp from './dialog/DialogApp.vue'
+import { registerMetricBackendFormComponents } from './metric-backend/registerFormComponents'
 import ModeCreateOAuth2ConnectionApp from './mode-oauth2-connection/ModeCreateOAuth2ConnectionApp.vue'
 import ModeRedirectOAuth2ConnectionAppCopy from './mode-oauth2-connection/ModeRedirectOAuth2ConnectionApp.vue'
 import { registerOAuth2ConnectionFormComponents } from './mode-oauth2-connection/registerFormComponents'
@@ -42,6 +43,7 @@ import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
 initializeComponentRegistry()
 registerGraphDesignerFormComponents()
 registerOAuth2ConnectionFormComponents()
+registerMetricBackendFormComponents()
 
 defineCmkComponent('cmk-form-spec', FormApp)
 defineCmkComponent('cmk-quick-setup', QuickSetup)

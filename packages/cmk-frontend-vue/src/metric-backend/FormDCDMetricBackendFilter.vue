@@ -8,9 +8,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { DcdMetricBackendFilter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
-import { type ValidationMessages } from '@/form/private/validation'
+import { type ValidationMessages } from '@/form'
 
-import FormMetricBackendAttributes from '@/metric-backend/FormMetricBackendAttributes.vue'
+import FormMetricBackendAttributes from './FormMetricBackendAttributes.vue'
 
 defineProps<{
   spec: DcdMetricBackendFilter

@@ -13,7 +13,6 @@ import FormCatalog from '@/form/private/forms/FormCatalog/FormCatalog.vue'
 import FormCheckboxListChoice from '@/form/private/forms/FormCheckboxListChoice.vue'
 import FormCommentTextArea from '@/form/private/forms/FormCommentTextArea.vue'
 import FormConditionChoices from '@/form/private/forms/FormConditionChoices'
-import FormDCDMetricBackendFilter from '@/form/private/forms/FormDCDMetricBackendFilter.vue'
 import FormDataSize from '@/form/private/forms/FormDataSize.vue'
 import FormDatePicker from '@/form/private/forms/FormDatePicker.vue'
 import FormDictionary from '@/form/private/forms/FormDictionary/FormDictionary.vue'
@@ -49,7 +48,10 @@ type FormSpecComponents = Record<Components['type'], Component>
 
 // Explicitly call out components owned by features to statically ensure
 // base components are exhaustively registered.
-type FeatureOwnedComponents = 'metric_backend_custom_query' | 'oauth2_connection_setup'
+type FeatureOwnedComponents =
+  | 'metric_backend_custom_query'
+  | 'oauth2_connection_setup'
+  | 'dcd_metric_backend_filter'
 
 type BaseComponents = Omit<FormSpecComponents, FeatureOwnedComponents>
 
@@ -66,7 +68,6 @@ const baseComponents: BaseComponents = {
   date_picker: FormDatePicker,
   time_picker: FormTimePicker,
   dictionary: FormDictionary,
-  dcd_metric_backend_filter: FormDCDMetricBackendFilter,
   two_column_dictionary: FormTwoColumnDictionary,
   dual_list_choice: FormDualListChoice,
   file_upload: FormFileUpload,

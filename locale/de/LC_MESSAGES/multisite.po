@@ -4,11 +4,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-12 23:57+0000\n"
-"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
-">\n"
+"PO-Revision-Date: 2026-06-17 07:36+0000\n"
+"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
+"de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -908,6 +908,9 @@ msgstr "(Modul ohne Namen)"
 #, python-format
 msgid "(Version: %s - no version change)"
 msgstr "(Version: %s - keine Versionsänderung)"
+
+msgid "(auto-generated when the connection is saved)"
+msgstr ""
 
 msgid "(built-in)"
 msgstr "(mitgeliefert)"
@@ -13718,9 +13721,8 @@ msgstr "Cluster-Name"
 msgid "Cluster node IPs"
 msgstr "Cluster-Knoten IPs"
 
-#, fuzzy
 msgid "Cluster node IPs or subnets"
-msgstr "Cluster-Knoten IPs"
+msgstr "Cluster-Knoten IPs oder Subnetze"
 
 msgid "Cluster node definition"
 msgstr "Definition von Cluster-Knoten"
@@ -19714,7 +19716,7 @@ msgid "Discovery settings for physical ports"
 msgstr "Erkennungseinstellungen für physikalische Ports"
 
 msgid "Discovery settings for volumes"
-msgstr "Erkennungseinstellungen für Datenträger"
+msgstr "Erkennungseinstellungen für Volumes"
 
 msgid "Discovery state"
 msgstr "Erkennungszustand"
@@ -20649,9 +20651,6 @@ msgstr "Domino Mail Warteschlangen-Namen"
 
 msgid "Don't activate services matching"
 msgstr "Zutreffende Services nicht aktivieren"
-
-msgid "Don't apply compression"
-msgstr "Keine Komprimierung verwenden"
 
 msgid "Don't change labels for matching services"
 msgstr "Labels für übereinstimmende Services nicht austauschen"
@@ -22511,6 +22510,16 @@ msgstr "Endpunkt"
 
 msgid "Endpoint URL (optional)"
 msgstr "Endpunkt-URL (optional)"
+
+#, fuzzy
+msgid ""
+"Endpoint exposing this Checkmk Service Provider's metadata to the identity "
+"provider. This value is auto-generated from the Checkmk server URL "
+"(<tt>{Checkmk server URL}/saml_metadata.py</tt>)."
+msgstr ""
+"Endpunkt, über den Checkmk die SAML-Antwort mit der Benutzer-Assertion vom "
+"Identitätsanbieter empfängt. Dieser Wert wird automatisch aus der Checkmk-"
+"Server-URL generiert (<tt>{Checkmk-Server-URL}/saml_acs.py?acs</tt>)."
 
 msgid ""
 "Endpoint where Checkmk receives the SAML response with the user's assertion "
@@ -24453,34 +24462,34 @@ msgid "Failover (only one node should be active)"
 msgstr "Failover (nur ein Knoten sollte aktiv sein)"
 
 msgid "Failover monitoring"
-msgstr "Failover Monitoring"
+msgstr "Failover-Monitoring"
 
 msgid "Failover servers"
 msgstr "Failover-Server"
 
 msgid "Failover state: ACTIVE"
-msgstr "Failover Zustand: ACTIVE"
+msgstr "Failover-Zustand: ACTIVE"
 
 msgid "Failover state: ACTIVE_DOWN"
-msgstr "Failover Zustand: ACTIVE_DOWN"
+msgstr "Failover-Zustand: ACTIVE_DOWN"
 
 msgid "Failover state: ACTIVE_FAILED"
-msgstr "Failover Zustand: ACTIVE_FAILED"
+msgstr "Failover-Zustand: ACTIVE_FAILED"
 
 msgid "Failover state: FAILBACK_PENDING"
-msgstr "Failover Zustand: FAILBACK_PENDING"
+msgstr "Failover-Zustand: FAILBACK_PENDING"
 
 msgid "Failover state: FAILED_OVER"
-msgstr "Failover Zustand: FAILED_OVER"
+msgstr "Failover-Zustand: FAILED_OVER"
 
 msgid "Failover state: FAILOVER_PENDING"
-msgstr "Failover Zustand: FAILOVER_PENDING"
+msgstr "Failover-Zustand: FAILOVER_PENDING"
 
 msgid "Failover state: NONE"
-msgstr "Failover Zustand: NONE"
+msgstr "Failover-Zustand: NONE"
 
 msgid "Failover states"
-msgstr "Failover Zustände"
+msgstr "Failover-Zustände"
 
 msgid ""
 "Failover: The check function of the plug-in will be applied to each "
@@ -27971,7 +27980,7 @@ msgstr "Hier können Sie die Levels der Steal-CPU-Auslastung einstellen."
 
 msgid "Here you can set the failover state for BIG-IP system of version 11.2.0"
 msgstr ""
-"Hier können sie den Failover-Zustand für BIP-IP Systeme ab Version 11.2.0 "
+"Hier können Sie den Failover-Zustand für BIP-IP Systeme ab Version 11.2.0 "
 "einstellen"
 
 msgid "Here you can set the number of remaining open slots"
@@ -30667,7 +30676,7 @@ msgid "IPv4/IPv6 address"
 msgstr "IPv4/IPv6-Adresse"
 
 msgid "IPv4/IPv6 address or subnet (CIDR notation)"
-msgstr ""
+msgstr "IPv4-/IPv6-Adresse oder Subnetz (CIDR-Notation)"
 
 msgid "IPv4/IPv6 dual-stack"
 msgstr "IPv4/IPV6 Dual-Stack"
@@ -34234,6 +34243,8 @@ msgid ""
 "Invalid entry. You need to specify an IPv4/IPv6 address or a subnet in CIDR "
 "notation (e.g. 192.168.1.0/24)."
 msgstr ""
+"Ungültige Eingabe. Sie müssen eine IPv4-/IPv6-Adresse oder ein Subnetz in "
+"CIDR-Notation angeben (z. B. 192.168.1.0/24)."
 
 #, python-format
 msgid "Invalid expected callable for %s at idx %d: %r"
@@ -35434,6 +35445,10 @@ msgstr "LDAP [%s]: Benutzer %s geändert (%s)"
 #, python-format
 msgid "LDAP [%s]: Removed user %s"
 msgstr "LDAP [%s]: Benutzer %s entfernt"
+
+#, fuzzy, python-format
+msgid "LDAP [%s]: Took over user %s (was owned by %s)"
+msgstr "LDAP [%s]: Benutzer %s geändert (%s)"
 
 msgid "LDAP attribute to be used as indicator"
 msgstr "LDAP-Attribut, das als Indikator fungiert"
@@ -36979,7 +36994,7 @@ msgid "Linux user"
 msgstr "Linux-Benutzer"
 
 msgid "Linux user to run handlers"
-msgstr "Linuxbenutzer unter dem die Handler laufen"
+msgstr "Linuxbenutzer, unter dem die Handlers laufen"
 
 msgid "Linux, Solaris, AIX files"
 msgstr "Linux, Solaris, AIX Dateien"
@@ -38361,7 +38376,7 @@ msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr "Magic Factor (automatische Level-Anpassung für große Tablespaces)"
 
 msgid "Magnetic volumes space"
-msgstr "Magnetischer Datenträgerplatz"
+msgstr "Magnetischer Volume-Platz"
 
 #, python-format
 msgid "Mail could not be delivered: '%s'"
@@ -41661,16 +41676,16 @@ msgid "Nagios status"
 msgstr "Nagios-Status"
 
 msgid "Naildown the DC"
-msgstr "Den DC festnageln"
+msgstr "Den DC festlegen"
 
 msgid "Naildown the resources"
-msgstr "Ressourcen festnageln"
+msgstr "Ressourcen festlegen"
 
 msgid ""
 "Nails down the DC to the node which is the DC during discovery. The check "
 "will report CRITICAL when another node becomes the DC during later checks."
 msgstr ""
-"Den DC festnageln auf den Knoten, welcher während der Erkennung der DC ist. "
+"Den DC festlegen für den Knoten, welcher während der Erkennung der DC ist. "
 "Der Check meldet CRITICAL, sobald ein anderen Knoten später die Rolle des DC "
 "übernimmt."
 
@@ -41679,7 +41694,7 @@ msgid ""
 "The check will report CRITICAL when another holds the resource during later "
 "checks."
 msgstr ""
-"Die Ressource auf den Knoten festnageln, auf welchem sie während der "
+"Die Ressource für den Knoten festlegen, auf welchem sie während der "
 "Erkennung läuft. Der Check meldet CRITICAL, sobald ein anderen Knoten diese "
 "später übernimmt."
 
@@ -42206,7 +42221,7 @@ msgid "Network inbound"
 msgstr "Netzwerk eingehend"
 
 msgid "Network interface and switch port discovery"
-msgstr "Erkennung von Netzwerkschnittstellen und Switchports"
+msgstr "Erkennung von Netzwerkschnittstellen und Switch-Ports"
 
 msgid "Network interface groups"
 msgstr "Netzwerkschnittstellen-Gruppen"
@@ -42215,7 +42230,7 @@ msgid "Network interfaces"
 msgstr "Netzwerkschnittstellen"
 
 msgid "Network interfaces and switch ports"
-msgstr "Netzwerkschnittstellen und Switch Ports"
+msgstr "Netzwerkschnittstellen und Switch-Ports"
 
 msgid "Network interfaces on Windows"
 msgstr "Netzwerkschnittstellen unter Windows"
@@ -43288,9 +43303,8 @@ msgstr "Nicht gefunden"
 msgid "Not Present"
 msgstr "Nicht vorhanden"
 
-#, fuzzy
 msgid "Not a NagVis URL"
-msgstr "URL Hinweise"
+msgstr "Keine NagVis URL"
 
 msgid "Not a list"
 msgstr "Dies ist keine Liste"
@@ -47469,7 +47483,7 @@ msgid "Parameters for output phases of UPSs and PDUs"
 msgstr "Parameter für Ausgangsphasen von USVs und PDUs"
 
 msgid "Parameters for switch port inventory"
-msgstr "Parameter für die Switchport-Erkennung"
+msgstr "Parameter für die Switch-Port-Erkennung"
 
 msgid "Parameters for the Windows Update Check with WSUS"
 msgstr "Parameter für den Windows-Update-Check mit WSUS"
@@ -48371,19 +48385,19 @@ msgid "Physical state of port"
 msgstr "Physischer Zustand des Ports"
 
 msgid "Physical volume free partitions"
-msgstr "Freie Partitionen auf physikalischem Datenträger"
+msgstr "Freie Partitionen auf physikalischem Volume"
 
 msgid "Physical volume name"
-msgstr "Physikalischer Datenträgername"
+msgstr "Name des physikalischen Volumes"
 
 msgid "Physical volume status"
-msgstr "Physikalischer Datenträgerstatus"
+msgstr "Status des physikalischen Volumes"
 
 msgid "Physical volume total partitions"
-msgstr "Gesamtanzahl an Partitionen auf physikalischem Datenträger"
+msgstr "Gesamtanzahl an Partitionen auf physikalischem Volume"
 
 msgid "Physical volumes"
-msgstr "Physikalische Datenträger"
+msgstr "Physikalische Volumes"
 
 msgid "Piano Bar"
 msgstr "Klavier"
@@ -48918,6 +48932,11 @@ msgid ""
 msgstr ""
 "Bitte wählen Sie mindestens eine und höchstens {max_regions} Regionen aus, "
 "um fortzufahren"
+
+#, fuzzy
+msgid "Please select at least one connection or choose a different option."
+msgstr ""
+"Bitte wählen Sie mindestens eine oder mehrere Regionen aus, um fortzufahren."
 
 msgid "Please select at least one element"
 msgstr "Bitte wählen Sie mindestens ein Element aus"
@@ -55082,14 +55101,33 @@ msgstr ""
 "Verbindungen ermöglichen die Verbindung über einen Proxy-Server; es werden "
 "nur globale und manuelle Proxy-Konfigurationen unterstützt."
 
+#, fuzzy
 msgid ""
 "Select the connections that are available for login on this site. Choose "
-"<i>Use identity connectors from central site</i> to inherit the central "
+"<i>Use same connections as the central site</i> to inherit the central "
 "site's selection (changes made on the central site take effect after the "
-"next configuration sync), or <i>Use following connections</i> to pick "
+"next configuration sync), or <i>Use the following connections</i> to pick "
 "specific LDAP and SAML connections. Each SAML entry may optionally override "
 "the SP entity ID, which is useful when multiple sites share the same SAML "
 "connection but need to be registered separately at the IdP."
+msgstr ""
+"Wählen Sie die Verbindungen aus, die für die Anmeldung auf dieser Instanz "
+"verfügbar sind. Wählen Sie <i>Die gleichen Verbindungen wie die "
+"Zentralinstanz verwenden</i>, um die Auswahl der Zentralinstanz zu "
+"übernehmen (Änderungen an der Zentralinstanz werden nach der nächsten "
+"Konfigurationssynchronisierung wirksam), oder <i>Die folgenden Verbindungen "
+"verwenden</i>, um bestimmte LDAP- und SAML-Verbindungen auszuwählen. Jeder "
+"SAML-Eintrag kann optional die SP-Entitäts-ID überschreiben. Dies ist "
+"nützlich, wenn mehrere Instanzen dieselbe SAML-Verbindung nutzen, aber "
+"separat beim IdP registriert werden müssen."
+
+#, fuzzy
+msgid ""
+"Select the connections that are available for login on this site. Choose "
+"<i>Use same connections as the central site</i> to inherit the central "
+"site's selection (changes made on the central site take effect after the "
+"next configuration sync), or <i>Use the following connections</i> to pick "
+"specific LDAP connections."
 msgstr ""
 "Wählen Sie die Verbindungen aus, die für die Anmeldung auf dieser Instanz "
 "verfügbar sind. Wählen Sie <i>Die gleichen Verbindungen wie die "
@@ -60249,6 +60287,10 @@ msgstr "Zustand, wenn der Replikationszustand syncing ist"
 msgid "State when replication state is unknown"
 msgstr "Zustand, wenn der Replikationszustand unknown ist"
 
+#, fuzzy
+msgid "State when reported device status is No Redundancy"
+msgstr "Zustand, wenn der gemeldete Gerätezustand OK ist"
+
 msgid "State when reported device status is OK"
 msgstr "Zustand, wenn der gemeldete Gerätezustand OK ist"
 
@@ -61025,7 +61067,7 @@ msgid "Switch number"
 msgstr "Switchnummer"
 
 msgid "Switch port statistics"
-msgstr "Switchportstatistiken"
+msgstr "Switch-Port-Statistiken"
 
 msgid "Switch ports statuses"
 msgstr "Status der Switch-Ports"
@@ -64338,6 +64380,12 @@ msgid ""
 msgstr ""
 "Die folgenden Abschnitte nutzen die Einstellung:<ul><li>Status der "
 "drahtlosen Geräte</li><li>Status des drahtlosen Ethernet</li></ul>"
+
+#, python-format
+msgid ""
+"The following sites could not be reached, so the shown data is incomplete "
+"and the computed availability might be incorrect: %s"
+msgstr ""
 
 msgid "The following users"
 msgstr "Die folgenden Benutzer"
@@ -73384,7 +73432,7 @@ msgid "Total Index Size"
 msgstr "Gesamtindexgröße"
 
 msgid "Total Magnetic volumes space"
-msgstr "Speicherplatz Magnetspeicher insgesamt"
+msgstr "Platz des magnetischen Volumes insgesamt"
 
 msgid "Total PGA allocated"
 msgstr "PGA insgesamt zugewiesen"
@@ -77423,9 +77471,8 @@ msgstr "Obergrenzen für erfolgreiche Verbindungen"
 msgid "Upper levels for surge queue length"
 msgstr "Obergrenzen für die Länge der Überspannungswarteschlange"
 
-#, fuzzy
 msgid "Upper levels for swap usage"
-msgstr "Obergrenzen für die Nutzung"
+msgstr "Obergrenzen für die Swap-Nutzung"
 
 msgid "Upper levels for the DB space size"
 msgstr "Obergrenzen für die Größe des DB-Speicherplatzes"
@@ -78027,9 +78074,6 @@ msgstr ""
 msgid "Use fixed width (relative to font size)"
 msgstr "Feste Breite (relativ zur Schriftgröße) verwenden"
 
-msgid "Use following connections"
-msgstr "Die folgenden Verbindungen verwenden"
-
 msgid "Use for all connections"
 msgstr "Für alle Verbindungen verwenden"
 
@@ -78047,9 +78091,6 @@ msgstr "Host-Adresse benutzen"
 
 msgid "Use host name"
 msgstr "Host-Namen benutzen"
-
-msgid "Use identity connectors from central site"
-msgstr "Die Identitätsverbindungen der Zentralinstanz nutzen"
 
 msgid "Use in notifications"
 msgstr "In Benachrichtigungen nutzen"
@@ -78162,6 +78203,10 @@ msgstr ""
 "Proxy-Einstellungen aus der Prozessumgebung verwenden. Dies ist die "
 "Standardeinstellung."
 
+#, fuzzy
+msgid "Use same connections as the central site"
+msgstr "Die Identitätsverbindungen der Zentralinstanz nutzen"
+
 msgid "Use sensor description"
 msgstr "Beschreibung des Sensors verwenden"
 
@@ -78265,6 +78310,10 @@ msgid ""
 msgstr ""
 "Verwenden Sie den folgenden Befehl, um ein Agentenpaket in der "
 "Basiskonfiguration herunterzuladen:"
+
+#, fuzzy
+msgid "Use the following connections"
+msgstr "Die folgenden Verbindungen verwenden"
 
 msgid "Use the following credentials"
 msgstr "Mit den folgenden Daten anmelden"
@@ -80238,31 +80287,31 @@ msgid "Volume"
 msgstr "Volume"
 
 msgid "Volume Group"
-msgstr "Volumegruppe"
+msgstr "Volume-Gruppe"
 
 msgid "Volume Groups (LVM)"
-msgstr "Volume Gruppen (LVM)"
+msgstr "Volume-Gruppen (LVM)"
 
 msgid "Volume Performance Counters (requires Volumes)"
 msgstr "Volume Performance Counters (erfordert 'Volumes')"
 
 msgid "Volume group name"
-msgstr "Name der Volumengruppe"
+msgstr "Name der Volume-Gruppe"
 
 msgid "Volume name"
 msgstr "Name des Volumes"
 
 msgid "Volume parameters"
-msgstr "Volumenparameter"
+msgstr "Volume-Parameter"
 
 msgid "VolumeSets: Volume Set Configuration"
 msgstr "VolumeSets: Volume Set-Konfiguration"
 
 msgid "Volumes"
-msgstr "Volumen"
+msgstr "Volumes"
 
 msgid "Volumes: Virtual Volume Summary"
-msgstr "Volumen: Virtuelle Volumenzusammenfassung"
+msgstr "Volumes: virtuelle Volume-Zusammenfassung"
 
 msgid "Voluntary context switches"
 msgstr "Freiwillige Kontextwechsel"
@@ -81409,9 +81458,9 @@ msgid ""
 "retrieve information about current and historic events then this timeout "
 "will be applied."
 msgstr ""
-"Wenn die GUI eine Verbindung mit dem Socket des Event Daemons herstellt, um "
-"Informationen über aktuelle und historische Ereignisse abzurufen, wird diese "
-"Zeitüberschreitung angewendet."
+"Wenn die graphische Benutzeroberfläche (GUI) eine Verbindung mit dem Socket "
+"des Event Daemons herstellt, um Informationen über aktuelle und historische "
+"Ereignisse abzurufen, wird diese Zeitüberschreitung angewendet."
 
 msgid ""
 "When the Multisite GUI or the active check check_mkevents connects to the "
@@ -81420,12 +81469,13 @@ msgid ""
 "processed. This setting defines the number of unaccepted connections to be "
 "queued before refusing new connections."
 msgstr ""
-"Wenn die GUI oder der aktive Check check_mkevents eine Verbindung zum Socket "
-"des Event Daemons herstellt, um Informationen über aktuelle und historische "
-"Ereignisse abzurufen, kann die Verbindungsanfrage in eine Warteschlange "
-"gestellt werden, bevor sie verarbeitet wird. Mit dieser Einstellung wird die "
-"Anzahl der nicht akzeptierten Verbindungen festgelegt, die in die "
-"Warteschlange gestellt werden, bevor neue Verbindungen abgelehnt werden."
+"Wenn die graphische Benutzeroberfläche (GUI) oder der aktive Check "
+"check_mkevents eine Verbindung zum Socket des Event Daemons herstellt, um "
+"Informationen über aktuelle und historische Ereignisse abzurufen, kann die "
+"Verbindungsanfrage in eine Warteschlange gestellt werden, bevor sie "
+"verarbeitet wird. Mit dieser Einstellung wird die Anzahl der nicht "
+"akzeptierten Verbindungen festgelegt, die in die Warteschlange gestellt "
+"werden, bevor neue Verbindungen abgelehnt werden."
 
 msgid ""
 "When the NTP offset reported by the selected peer was worse (in either "
@@ -82268,7 +82318,6 @@ msgstr ""
 "Konfiguration betrieben wird, ist diese Option erforderlich, um potenziell "
 "doppelte Log-Einträge zu verhindern."
 
-#, fuzzy
 msgid ""
 "With this option activated cluster node IPs may be mapped to a cluster. "
 "Nodes can be specified as single IPv4/IPv6 addresses or as subnets in CIDR "
@@ -82277,9 +82326,11 @@ msgid ""
 "potentially duplicated log entries."
 msgstr ""
 "Wenn diese Option aktiviert ist, können Cluster-Knoten IPs auf einen Cluster "
-"abgebildet werden. Wenn die Monitoring-Instanz in einer Failover-Cluster-"
-"Konfiguration betrieben wird, ist diese Option erforderlich, um potenziell "
-"doppelte Log-Einträge zu verhindern."
+"abgebildet werden. Knoten können als einzelne IPv4-/IPv6-Adressen oder als "
+"Subnetze in CIDR-Notation (z. B. 192.168.1.0/24) angegeben werden. Wenn die "
+"Monitoring-Instanz in einer Failover-Cluster-Konfiguration betrieben wird, "
+"ist diese Option erforderlich, um potenziell doppelte Log-Einträge zu "
+"verhindern."
 
 msgid ""
 "With this option activated you can make the Event Console monitor that a "
@@ -83596,10 +83647,10 @@ msgid ""
 "and warning and critical levels to 10% and 20% respectively."
 msgstr ""
 "Es können Limits für die Latenz der Lese oder Schreibe I/O Operationen von "
-"Nimble Speichervolumen festgelegt werden. Die Operationen werden in Bezug "
+"Nimble Speicher-Volumes festgelegt werden. Die Operationen werden in Bezug "
 "auf die Anzahl an Operationen als prozentualer Anteil der gesamten Lese oder "
 "Schreibe I/O Operationen der letzten Latenzzeit (z.B. 0-0.1ms, 0.1-0.2ms, "
-"etc.) angezeigt. Um effektiv Limits für diese Volumen festzulegen, sollten "
+"etc.) angezeigt. Um effektiv Limits für diese Volumes festzulegen, sollten "
 "WARN/CRIT-Levels abhängig vom prozentualen Anteil der gesamten Anzahl an "
 "Operationen gesetzt werden. Um eine große Anzahl an Nimble Speichergeräten "
 "und deren verschiedenen Funktionalitäten (all-flash, hybrid, tape, etc.) "
@@ -84393,13 +84444,13 @@ msgstr ""
 "Sie haben bisher keine %sgruppe angelegt. Bitte <a href=\"wato.py?"
 "mode=edit_%s_group\">erstellen</a> Sie zunächst mindestens eine Gruppe."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "You have not defined any virtual host trees. You can do this in the <a "
 "href=\"%s\">Global settings</a>."
 msgstr ""
 "Sie haben keine virtuellen Hostbäume definiert. Sie können dies in den <a "
-"href=\"%s\" target=\"main\">globalen Einstellungen</a> tun."
+"href=\"%s\">globalen Einstellungen</a> tun."
 
 msgid "You have permission to this host."
 msgstr "Für diesen Host haben Sie Berechtigungen."
@@ -87353,9 +87404,8 @@ msgstr "Kopiert!"
 msgid "Copy answer"
 msgstr "Antwort kopieren"
 
-#, fuzzy
 msgid "Regenerate answer"
-msgstr "KI-generierte Antwort"
+msgstr "Antwort erneut generieren"
 
 msgid "Feature temporarily unavailable"
 msgstr "Funktion vorübergehend nicht verfügbar"
@@ -87486,6 +87536,10 @@ msgstr "Dashboard wurde geklont."
 
 msgid "Review applied filters."
 msgstr "Angewendete Filter prüfen."
+
+#, fuzzy
+msgid "Invalid URL"
+msgstr "Ungültige URL angegeben"
 
 msgid "Not available on shared dashboards"
 msgstr "Nicht verfügbar auf freigegebenen Dashboards"
@@ -88488,10 +88542,10 @@ msgid "Expiration date cannot be in the past."
 msgstr "Das Ablaufdatum darf nicht in der Vergangenheit liegen."
 
 msgid "Expiration date cannot be more than 30 days in the future."
-msgstr "Ablaufdatum darf nicht mehr als 30 Tage in der Zukunft liegen."
+msgstr "Das Ablaufdatum darf nicht mehr als 30 Tage in der Zukunft liegen."
 
 msgid "Expiration date cannot be more than 2 years in the future."
-msgstr "Das Ablaufdatum darf nicht mehr als zwei Jahre in der Zukunft liegen."
+msgstr "Das Ablaufdatum darf nicht mehr als 2 Jahre in der Zukunft liegen."
 
 msgid "Users with access permissions can view this dashboard"
 msgstr "Benutzer mit Zugriffsberechtigung können dieses Dashboard ansehen"
@@ -88505,7 +88559,7 @@ msgstr "Öffentlichen Link nicht mehr teilen?"
 msgid "This will disable the link and revoke access for all viewers."
 msgstr ""
 "Dadurch wird der Link deaktiviert und der Zugriff für alle Betrachter "
-"widerrufen."
+"gesperrt."
 
 msgid "Enable access"
 msgstr "Zugang aktivieren"
@@ -88514,7 +88568,7 @@ msgid "Enable public link?"
 msgstr "Öffentlichen Link aktivieren?"
 
 msgid "Anyone with the link can view this dashboard."
-msgstr "Jeder, der über den Link verfügt, kann dieses Dashboard sehen."
+msgstr "Jeder, der den Link hat, kann dieses Dashboard sehen."
 
 msgid "Access will automatically expire on %{date}."
 msgstr "Der Zugriff läuft automatisch am %{date} ab."
@@ -88527,14 +88581,13 @@ msgstr "Öffentlichen Link löschen?"
 
 msgid "This will delete the link and revoke access for all viewers."
 msgstr ""
-"Dadurch wird der Link gelöscht und der Zugriff für alle Betrachter "
-"widerrufen."
+"Dadurch wird der Link gelöscht und der Zugriff für alle Betrachter gesperrt."
 
 msgid "Public access"
 msgstr "Öffentlicher Zugang"
 
 msgid "Anyone with this link can view the dashboard"
-msgstr "Jeder, der über diesen Link verfügt, kann das Dashboard sehen"
+msgstr "Jeder, der diesen Link hat, kann dieses Dashboard sehen"
 
 msgid "Navigation and menus are hidden."
 msgstr "Navigation und Menüs werden verborgen."
@@ -88542,13 +88595,13 @@ msgstr "Navigation und Menüs werden verborgen."
 msgid ""
 "Runtime filtering isn't available. Set default filter values before sharing."
 msgstr ""
-"Laufzeitfilterung ist nicht verfügbar. Legen Sie vor der Freigabe "
+"Keine Laufzeitfilterung verfügbar. Legen Sie vor der Freigabe "
 "Standardfilterwerte fest."
 
 msgid "View widgets may not render all rows, if they exceed the soft limit."
 msgstr ""
-"Widgets für Ansichten rendern möglicherweise nicht alle Zeilen, wenn diese "
-"das weiche Limit überschreiten."
+"Ansichts-Widgets zeigen möglicherweise nicht alle Zeilen an, wenn diese die "
+"weichen Limits überschreiten."
 
 msgid "Sidebar widgets are not available on shared dashboards."
 msgstr ""
@@ -88585,7 +88638,7 @@ msgid "Save changes"
 msgstr "Änderungen speichern"
 
 msgid "Public link can't be generated"
-msgstr "Es kann kein öffentlicher Link erstellt werden"
+msgstr "Öffentlicher Link kann nicht erstellt werden"
 
 msgid "Review filters"
 msgstr "Filter überprüfen"
@@ -88595,8 +88648,8 @@ msgid ""
 "runtime filters or convert them to default filters to continue."
 msgstr ""
 "Öffentliche Dashboards sind schreibgeschützt und unterstützen keine "
-"Laufzeitfilter. Entfernen Sie Laufzeitfilter oder konvertieren Sie sie in "
-"Standardfilter, um fortzufahren."
+"Laufzeitfilter. Entfernen Sie Laufzeitfilter oder wandeln Sie diese in "
+"Standardfilter um, um fortzufahren."
 
 msgid "Event selection"
 msgstr "Ereignis-Auswahl"
@@ -88630,7 +88683,7 @@ msgstr ""
 "Wenn viele Sechsecke angezeigt werden, werden sie so skaliert, dass sie in "
 "das Widget passen.\n"
 "   Die Unterschiede zwischen \"Klein\" und \"Groß\" sind in der Vorschau "
-"möglicherweise nicht sichtbar."
+"möglicherweise nicht erkennbar."
 
 msgid "Show state of"
 msgstr "Zeige Zustand von"
@@ -88651,7 +88704,7 @@ msgid "Please select a HW/SW inventory property."
 msgstr "Bitte wählen Sie eine Eigenschaft der HW-/SW-Inventur aus."
 
 msgid "The selected HW/SW inventory property is invalid."
-msgstr "Die gewählte Eigenschaft der HW-/SW-Inventur ist ungültig."
+msgstr "Die ausgewählte Eigenschaft der HW-/SW-Inventur ist ungültig."
 
 msgid "Inventory single value"
 msgstr "Einzelwert der Inventur"
@@ -88697,8 +88750,8 @@ msgid ""
 ">Click the Host name or Service label to clear the filter."
 msgstr ""
 "Verwenden Sie diese Felder, um die Liste der verfügbaren Service-Metriken "
-"einzugrenzen.<br />Klicken Sie auf den Host-Namen oder die Service-"
-"Bezeichnung, um den Filter zu löschen."
+"einzugrenzen.<br>Klicken Sie auf den Host-Namen oder das Service-Label, um "
+"den Filter zu leeren."
 
 msgid "Service graph"
 msgstr "Service-Graph"
@@ -88790,8 +88843,8 @@ msgstr "Balkenansicht anzeigen"
 msgid ""
 "A preview of ntop widgets is not available due to the widget size limitation"
 msgstr ""
-"Eine Vorschau der ntop-Widgets ist aufgrund der Größenbeschränkung für "
-"Widgets nicht verfügbar"
+"Aufgrund der Größenbeschränkung für Widgets ist keine Vorschau der ntop-"
+"Widgets verfügbar"
 
 msgid "Ntop alerts"
 msgstr "Ntop Alerts"
@@ -88806,10 +88859,10 @@ msgid "Add ntop"
 msgstr "Ntop hinzufügen"
 
 msgid "Choose what to display"
-msgstr "Wählen Sie, was angezeigt werden soll"
+msgstr "Wählen Sie aus, was angezeigt werden soll"
 
 msgid "Enter URL to embed"
-msgstr "URL zum Einbetten eingeben"
+msgstr "Geben Sie die URL ein, die Sie einbetten möchten"
 
 msgid "Loading sidebar elements..."
 msgstr "Seitenleistenelemente laden..."
@@ -88942,7 +88995,7 @@ msgid "Enter regex (pattern match)"
 msgstr "Regex eingeben (Pattern Match)"
 
 msgid "Enter plain text (single match)"
-msgstr "Normalen Text eingeben (einfaches Match)"
+msgstr "Geben Sie Klartext ein (einzelner Treffer)"
 
 msgid "show preview"
 msgstr "Vorschau anzeigen"
@@ -88955,7 +89008,7 @@ msgid ""
 "<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
 "<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
 msgstr ""
-"Verfügbare Macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
+"Verfügbare Makros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
 "<tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, "
 "<tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>"
 
@@ -89090,8 +89143,8 @@ msgstr "Regel bearbeiten: Metrik-Backend (benutzerdefinierte Anfrage)"
 
 msgid "This creates a special agent rule based on the selected custom graph. "
 msgstr ""
-"Dies erstellt eine Regel für einen Spezialagenten auf der Grundlage des "
-"ausgewählten benutzerdefinierten Graphs. "
+"Dies erstellt eine Spezialagentenregel auf der Grundlage des ausgewählten "
+"benutzerdefinierten Graphen. "
 
 msgid "Graph metrics with all zero values"
 msgstr "Graph-Metriken mit allen Null-Werten"
@@ -89140,11 +89193,11 @@ msgstr "Alt"
 
 msgid "Copy failed: this might be due to browser security restrictions."
 msgstr ""
-"Kopieren fehlgeschlagen: Dies kann an den Sicherheitsbeschränkungen Ihres "
-"Browsers liegen."
+"Kopie fehlgeschlagen: Dies könnte an Sicherheitsbeschränkungen des Browsers "
+"liegen."
 
 msgid "Copy failed: no text was selected."
-msgstr "Kopieren fehlgeschlagen: Es wurde kein Text ausgewählt."
+msgstr "Kopie fehlgeschlagen: Es wurde kein Text ausgewählt."
 
 msgid "Failed to copy to clipboard"
 msgstr "Kopie in die Zwischenablage fehlgeschlagen"
@@ -89159,7 +89212,9 @@ msgid "Activation of changes failed"
 msgstr "Aktivierung von Änderungen ist fehlgeschlagen"
 
 msgid "Open the full activation page for more details."
-msgstr "Öffnen Sie die gesamte Aktivierungsseite für weitere Details."
+msgstr ""
+"Öffnen Sie die vollständige Aktivierungsseite, um weitere Informationen zu "
+"erhalten."
 
 msgid "No changes available for activation"
 msgstr "Es stehen keine Änderungen zur Aktivierung bereit"
@@ -89196,10 +89251,10 @@ msgid "Everything is up to date"
 msgstr "Alles ist aktuell"
 
 msgid "Problems detected during activation"
-msgstr "Es wurden Probleme während der Aktivierung erkannt"
+msgstr "Während der Aktivierung festgestellte Probleme"
 
 msgid "Some things may not be monitored properly."
-msgstr "Einige Dinge werden möglicherweise nicht korrekt überwacht."
+msgstr "Manche Dinge werden möglicherweise nicht ordnungsgemäß überwacht."
 
 msgid "Activating changes on "
 msgstr "Änderungen aktivieren am "
@@ -89209,8 +89264,7 @@ msgstr "Änderungen aktivieren... "
 
 msgid "You can safely navigate away - we'll keep working in the background"
 msgstr ""
-"Sie können die Seite bedenkenlos verlassen – wir arbeiten im Hintergrund "
-"weiter"
+"Sie können die Seite getrost verlassen – wir arbeiten im Hintergrund weiter"
 
 msgid "This may take up to 30 seconds when a site restart is required."
 msgstr ""
@@ -89320,12 +89374,11 @@ msgstr "Attribut-Schlüssel"
 msgid "Attribute operator"
 msgstr "Attribut-Operator"
 
-#, fuzzy
-msgid "Edit condition"
-msgstr "Verbindung bearbeiten"
-
 msgid "Remove condition"
 msgstr "Bedingung entfernen"
+
+msgid "Edit condition"
+msgstr "Bedingung bearbeiten"
 
 msgid "Add condition after %{key}"
 msgstr "Bedingung nach %{key} hinzufügen"
@@ -89336,16 +89389,18 @@ msgstr "Bedingung nach vorheriger Bedingung hinzufügen"
 msgid "Attribute filter"
 msgstr "Attribut-Filter"
 
-#, fuzzy
 msgid "Toggle connector, currently %{connector}"
-msgstr "Fehlgeschlagene gleichzeitige Verbindungen"
+msgstr "Umschaltbarer Anschluss, derzeit %{connector}"
 
 msgid "Toggle AND / OR"
-msgstr ""
+msgstr "UND / ODER umschalten"
 
 #, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "Anzahl aktueller Verbindungen"
+
 msgid "Add condition after this group"
-msgstr "Bedingung nach %{key} hinzufügen"
+msgstr "Bedingung nach dieser Gruppe hinzufügen"
 
 msgid "[Resource]"
 msgstr "[Resource]"
@@ -89794,7 +89849,6 @@ msgid ""
 msgstr ""
 "Host kann nicht erreicht werden. Host ist über DNS auflösbar, aber nicht "
 "pingbar.\n"
-"\n"
 "              Geben Sie einen erreichbaren Host-Namen oder eine IP-Adresse "
 "ein oder legen Sie 'Keine IP' im Abschnitt 'Netzwerkadresse' fest."
 
@@ -90345,7 +90399,7 @@ msgid "Update your settings directly in your code."
 msgstr "Aktualisieren Sie Ihre Einstellungen direkt in Ihrem Code."
 
 msgid "Headers"
-msgstr ""
+msgstr "Headers"
 
 msgid "Set Authorization to \"Basic {base64-encoded-credentials}\""
 msgstr "Die Authorisierung auf \"Basic {base64-encoded-credentials}\" setzen"
@@ -90685,52 +90739,46 @@ msgid ""
 msgstr ""
 "Das Relay wird offiziell für die folgenden Betriebssysteme unterstützt:"
 
-#, fuzzy
 msgid "Search hosts…"
-msgstr "Suche Hosts"
+msgstr "Hosts suchen…"
 
 msgid "Stale state"
 msgstr "Veraltet-Zustand"
 
-#, fuzzy
 msgid "Filter values"
-msgstr "Filter Ansicht"
+msgstr "Werte filtern"
 
-#, fuzzy
 msgid "Select all"
-msgstr "Alle ansehen"
+msgstr "Alle auswählen"
 
-#, fuzzy
 msgid "No matching values"
-msgstr "Keine passenden Host-Namen"
+msgstr "Keine passenden Werte"
 
-#, fuzzy
 msgid "No results found for your search."
-msgstr "Für Ihre Suche wurden keine Ergebnisse gefunden"
+msgstr "Für Ihre Suche wurden keine Ergebnisse gefunden."
 
-#, fuzzy
 msgid "No results found."
-msgstr "Keine Ergebnisse gefunden"
+msgstr "Keine Ergebnisse gefunden."
 
 msgid "Check for typing errors or try a broader term."
 msgstr ""
+"Überprüfen Sie auf Tippfehler oder versuchen Sie einen allgemeineren Begriff."
 
 msgid "Rows matching your filter and search: %{count}"
 msgid_plural "Rows matching your filters and search: %{count}"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Zeilen, die Ihrem Filter und Ihrer Suche entsprechen: %{count}"
+msgstr[1] "Zeilen, die Ihren Filtern und Ihrer Suche entsprechen: %{count}"
 
 msgid "Rows matching your filter: %{count}"
 msgid_plural "Rows matching your filters: %{count}"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Zeilen, die Ihrem Filter entsprechen: %{count}"
+msgstr[1] "Zeilen, die Ihren Filtern entsprechen: %{count}"
 
-#, fuzzy
 msgid "Rows matching your search: %{count}"
-msgstr "Keine passenden Metriken gefunden"
+msgstr "Zeilen, die Ihrer Suche entsprechen: %{count}"
 
 msgid "Rows found: %{count}"
-msgstr ""
+msgstr "Gefundene Zeilen: %{count}"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
@@ -91422,14 +91470,10 @@ msgid ""
 "            start with the Service discovery page of a host."
 msgstr ""
 "Jeder Service in Checkmk verfügt über Standardparameterwerte.\n"
-"\n"
 "            Sie können diese an Ihre Überwachungsanforderungen anpassen,\n"
-"\n"
 "            in der Regel indem Sie mithilfe von Regeln Schwellenwerte für "
 "die Zustände WARN und CRIT festlegen.\n"
-"\n"
 "            Um den richtigen Regelsatz für einen Service zu finden,\n"
-"\n"
 "            beginnen Sie mit der Seite für die Service-Erkennung eines Hosts."
 
 msgid "Before adjusting thresholds"
@@ -91733,6 +91777,9 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Don't apply compression"
+#~ msgstr "Keine Komprimierung verwenden"
 
 #~ msgid "Copy response"
 #~ msgstr "Antwort kopieren"

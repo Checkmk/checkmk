@@ -4,8 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 export { default as CmkTimePicker } from './CmkTimePicker.vue'
+export { default as CmkDatePicker } from './CmkDatePicker.vue'
 
 export { useResolvedDateTimeSettings } from './useResolvedDateTimeSettings'
+
+export type { CalendarMode, CalendarSelection } from './private/calendar/types'
 
 export type {
   CmkDatePickerProps,

@@ -145,11 +145,28 @@ describe('useResolvedDateTimeSettings — ICU names', () => {
 })
 
 describe('useResolvedDateTimeSettings — weekendDays & timeZone', () => {
-  test('weekendDays default', () => {
+  test('weekendDays en-US → Sat & Sun', () => {
+    mockLocale('en-US')
     expect(useResolvedDateTimeSettings().weekendDays).toEqual([0, 6])
+  })
+  test('weekendDays de-DE → Sat & Sun', () => {
+    mockLocale('de-DE')
+    expect(useResolvedDateTimeSettings().weekendDays).toEqual([0, 6])
+  })
+  test('weekendDays ar-SA → Fri & Sat', () => {
+    mockLocale('ar-SA')
+    expect(useResolvedDateTimeSettings().weekendDays).toEqual([5, 6])
+  })
+  test('weekendDays fa-IR → Fri only', () => {
+    mockLocale('fa-IR')
+    expect(useResolvedDateTimeSettings().weekendDays).toEqual([5])
   })
   test('weekendDays override', () => {
     expect(useResolvedDateTimeSettings(() => ({ weekendDays: [5] })).weekendDays).toEqual([5])
+  })
+  test('weekendDays explicit empty is preserved', () => {
+    mockLocale('en-US')
+    expect(useResolvedDateTimeSettings(() => ({ weekendDays: [] })).weekendDays).toEqual([])
   })
   test('timeZone explicit', () => {
     expect(useResolvedDateTimeSettings(undefined, () => 'Asia/Tokyo').timeZone).toBe('Asia/Tokyo')

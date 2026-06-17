@@ -3,7 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { CalendarDate, DateFormatter, getLocalTimeZone, startOfWeek } from '@internationalized/date'
+import {
+  CalendarDate,
+  DateFormatter,
+  getLocalTimeZone,
+  isWeekend,
+  startOfWeek
+} from '@internationalized/date'
 import { type MaybeRefOrGetter, computed, reactive, toValue } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
@@ -60,6 +66,26 @@ function resolveFirstDayOfWeek(explicit: Weekday | undefined): Weekday {
   // A calendar date's weekday is timezone-free; create and read the instant in the same fixed
   // zone (UTC) so it never shifts. getUTCDay() is by definition in 0..6.
   return weekStart.toDate('UTC').getUTCDay() as Weekday
+}
+
+/** Resolve weekend days (0=Sunday … 6=Saturday), honoring an explicit override and otherwise
+ * deriving from the locale. */
+function resolveWeekendDays(explicit: Weekday[] | undefined): Weekday[] {
+  if (explicit !== undefined) {
+    return explicit
+  }
+  const locale = currentLocale()
+  const sunday = new CalendarDate(2024, 1, 7) // a Sunday
+  const days: Weekday[] = []
+  // Iterating Sunday → Saturday yields the result already in ascending 0..6 order. Read each
+  // weekday timezone-free via UTC, mirroring resolveFirstDayOfWeek.
+  for (let offset = 0; offset < 7; offset++) {
+    const date = sunday.add({ days: offset })
+    if (isWeekend(date, locale)) {
+      days.push(date.toDate('UTC').getUTCDay() as Weekday)
+    }
+  }
+  return days
 }
 
 /** Resolve the date section order + separator from the locale, or fixed ISO `YYYY-MM-DD`. */
@@ -128,7 +154,7 @@ export function useResolvedDateTimeSettings(
   return reactive({
     hourCycle: computed(() => resolveHourCycle(toValue(settings)?.hourCycle)),
     firstDayOfWeek: computed(() => resolveFirstDayOfWeek(toValue(settings)?.firstDayOfWeek)),
-    weekendDays: computed((): Weekday[] => toValue(settings)?.weekendDays ?? [0, 6]),
+    weekendDays: computed(() => resolveWeekendDays(toValue(settings)?.weekendDays)),
     dateFormat: computed(() => resolveDateFormat(toValue(settings)?.dateFormat ?? 'locale')),
     monthNamesShort: computed(() => monthNames('short')),
     monthNamesLong: computed(() => monthNames('long')),

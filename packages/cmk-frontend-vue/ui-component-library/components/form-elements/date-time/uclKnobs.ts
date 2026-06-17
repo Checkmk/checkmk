@@ -3,10 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-/**
- * Small converters mapping the string-valued showcase knobs to the picker prop values.
- */
-import type { HourCycle } from '@/components/date-time'
+import type { HourCycle, Weekday } from '@/components/date-time'
 
 /**
  * Shared properties-panel knob definitions for the date/time pickers. Defining them once here (and
@@ -51,11 +48,12 @@ export const weekendDaysKnob = {
   type: 'list' as const,
   title: 'Weekend days',
   options: [
+    { title: 'Locale-derived', name: 'locale' },
     { title: 'Saturday & Sunday', name: 'sat-sun' },
     { title: 'Friday & Saturday', name: 'fri-sat' },
     { title: 'None', name: 'none' }
   ],
-  initialState: 'sat-sun'
+  initialState: 'locale'
 }
 
 export const saveModeKnob = { type: 'boolean' as const, title: 'Save mode', initialState: false }
@@ -77,4 +75,27 @@ export function resolveHourCycleKnob(value: string): HourCycle | undefined {
     return 24
   }
   return undefined
+}
+
+export function resolveFirstDayOfWeek(value: string): Weekday | undefined {
+  if (value === 'locale') {
+    return undefined
+  }
+  // The knob only offers 0 / 1 / 6, all valid Weekday values.
+  return parseInt(value, 10) as Weekday
+}
+
+export function resolveWeekendDays(value: string): Weekday[] | undefined {
+  switch (value) {
+    case 'locale':
+      return undefined
+    case 'sat-sun':
+      return [0, 6]
+    case 'fri-sat':
+      return [5, 6]
+    case 'none':
+      return []
+    default:
+      return undefined
+  }
 }

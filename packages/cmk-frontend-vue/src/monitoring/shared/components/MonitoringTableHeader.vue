@@ -178,7 +178,6 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
                   'monitoring-table-header__filter-button--active': isActive || isOpen
                 }"
                 :title="`Filter ${header.column.columnDef.header?.toString() ?? ''}`.trim()"
-                :disabled="disabled"
                 aria-haspopup="true"
                 :aria-expanded="isOpen"
                 @click="toggle"

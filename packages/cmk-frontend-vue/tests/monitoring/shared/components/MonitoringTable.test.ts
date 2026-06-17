@@ -223,11 +223,11 @@ test('keeps the sort buttons enabled when there are rows', () => {
   expect(screen.getByRole('button', { name: 'Name' })).toBeEnabled()
 })
 
-test('disables the filter buttons in the empty state', () => {
+test('keeps the filter buttons enabled in the empty state', () => {
   mountTable({ rows: [] })
 
-  expect(screen.getByRole('button', { name: 'Filter Name' })).toBeDisabled()
-  expect(screen.getByRole('button', { name: 'Filter State' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Filter Name' })).toBeEnabled()
+  expect(screen.getByRole('button', { name: 'Filter State' })).toBeEnabled()
 })
 
 test('keeps the filter buttons enabled when there are rows', () => {

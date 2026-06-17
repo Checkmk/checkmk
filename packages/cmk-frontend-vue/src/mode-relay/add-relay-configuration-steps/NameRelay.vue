@@ -8,7 +8,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
-import { type Relay, getRelayCollection } from '@/lib/rest-api-client/relay/client'
 import useId from '@/lib/useId'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
@@ -19,6 +18,8 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
+
+import { type Relay, getRelayCollection } from '@/mode-relay/relay-client'
 
 const { _t } = usei18n()
 

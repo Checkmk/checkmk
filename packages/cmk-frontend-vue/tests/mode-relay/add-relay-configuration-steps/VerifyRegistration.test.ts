@@ -5,9 +5,8 @@
  */
 import { cleanup, screen, waitFor } from '@testing-library/vue'
 
-import * as relayClient from '@/lib/rest-api-client/relay/client'
-
 import VerifyRegistration from '@/mode-relay/add-relay-configuration-steps/VerifyRegistration.vue'
+import * as relayClient from '@/mode-relay/relay-client'
 
 import { mountWithWizardContext } from '../helpers'
 

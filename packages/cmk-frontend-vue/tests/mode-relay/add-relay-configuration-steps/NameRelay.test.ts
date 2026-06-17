@@ -6,9 +6,8 @@
 import userEvent from '@testing-library/user-event'
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/vue'
 
-import * as relayClient from '@/lib/rest-api-client/relay/client'
-
 import NameRelay from '@/mode-relay/add-relay-configuration-steps/NameRelay.vue'
+import * as relayClient from '@/mode-relay/relay-client'
 
 import { mountWithWizardContext } from '../helpers'
 

@@ -82,6 +82,7 @@ defineProps<CmkChipProps>()
   display: flex;
 
   --chip-color: var(--color-corporate-green-50);
+  --chip-border-color: var(--chip-color);
   --chip-fill-hover-color: var(--white);
   --chip-fill-hover-opacity: 0.3;
   --chip-fill-font-color: var(--black);
@@ -181,7 +182,7 @@ defineProps<CmkChipProps>()
   &.cmk-chip--variant-fill {
     .cmk-chip__content {
       background-color: var(--chip-color);
-      border: 1px solid var(--chip-color);
+      border: 1px solid var(--chip-border-color);
       color: var(--chip-fill-font-color);
     }
   }
@@ -189,7 +190,7 @@ defineProps<CmkChipProps>()
   &.cmk-chip--variant-outline {
     .cmk-chip__content {
       background-color: var(--ux-theme-0);
-      border: 1px solid var(--chip-color);
+      border: 1px solid var(--chip-border-color);
       color: var(--chip-outline-font-color, var(--chip-color));
     }
   }

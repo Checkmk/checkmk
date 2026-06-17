@@ -83,7 +83,8 @@ class CustomDashboard(BaseDashboard):
     @property
     def save_button(self) -> Locator:
         """Locator property for the 'Save' button"""
-        return self.main_area.locator().get_by_role("button", name="Save")
+        # exact: avoid also matching the wizard's "Save widget" button
+        return self.main_area.locator().get_by_role("button", name="Save", exact=True)
 
     def enter_edit_widgets_mode(self) -> None:
         """Activate the mode to edit widgets of the dashboard"""

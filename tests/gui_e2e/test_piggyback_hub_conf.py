@@ -192,7 +192,7 @@ def _setup_settings(
 
 def _wait_for_file_change(site: Site, file_path: Path, original_mtime: float) -> None:
     def _file_has_changed() -> bool:
-        current_mtime = site.file_mtime(file_path)
+        current_mtime = site.file_timestamp_ms(file_path)
         return current_mtime > original_mtime
 
     wait_until(_file_has_changed, timeout=10)
@@ -289,7 +289,7 @@ def test_enabled_on_central__enable_on_remote__no_error(
     with _setup_settings(
         global_settings, site_specific_settings, test_site, [remote_site_wato_disabled]
     ):
-        original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
+        original_mtime = test_site.file_timestamp_ms(SITE_SPECIFIC_SETTINGS_REL_PATH)
 
         # when
         _enable_hub_site_specific(dashboard_page, remote_site_wato_disabled.id, enable_action)
@@ -344,7 +344,7 @@ def test_enabled_on_remote__disable_on_remote__no_error(
     with _setup_settings(
         global_settings, site_specific_settings, test_site, [remote_site_wato_disabled]
     ):
-        original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
+        original_mtime = test_site.file_timestamp_ms(SITE_SPECIFIC_SETTINGS_REL_PATH)
 
         # when
         _disable_hub_site_specific(dashboard_page, remote_site_wato_disabled.id, disable_action)
@@ -506,7 +506,7 @@ def test_disabled_on_remote_site__disable_on_central__no_error(
     with _setup_settings(
         global_settings, site_specific_settings, test_site, [remote_site_wato_disabled]
     ):
-        original_mtime = test_site.file_mtime(SITE_SPECIFIC_SETTINGS_REL_PATH)
+        original_mtime = test_site.file_timestamp_ms(SITE_SPECIFIC_SETTINGS_REL_PATH)
 
         # when
         _disable_hub_site_specific(dashboard_page, test_site.id, disable_action)
@@ -595,7 +595,7 @@ def test_disabled_on_remote_or_enabled_on_central__disable_globally__no_error(
     with _setup_settings(
         global_settings, site_specific_settings, test_site, [remote_site_wato_disabled]
     ):
-        original_mtime = test_site.file_mtime(GLOBAL_SETTINGS_REL_PATH)
+        original_mtime = test_site.file_timestamp_ms(GLOBAL_SETTINGS_REL_PATH)
 
         # when
         _disable_hub_globally(dashboard_page, disable_action)
@@ -659,7 +659,7 @@ def test_unset_on_central_and_remote__enable_globally__no_error(
     """Test that enabling the piggyback-hub globally works if it is not disabled for the central site"""
     # given
     with _setup_settings(None, None, test_site, [remote_site_wato_disabled]):
-        original_mtime = test_site.file_mtime(GLOBAL_SETTINGS_REL_PATH)
+        original_mtime = test_site.file_timestamp_ms(GLOBAL_SETTINGS_REL_PATH)
 
         # when
         _enable_hub_globally(dashboard_page, enable_action)

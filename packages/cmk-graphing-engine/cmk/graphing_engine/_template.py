@@ -76,7 +76,7 @@ def _walk(
             lower_names = metric_names_of_graph(graph.lower)
             upper_names = metric_names_of_graph(graph.upper)
             return _GraphMatch(
-                metric_names=list(set((*title_names, *lower_names, *upper_names))),
+                metric_names=list({*title_names, *lower_names, *upper_names}),
                 matched=(
                     all(name in available for name in title_names)
                     and (

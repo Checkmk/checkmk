@@ -275,9 +275,9 @@ class LockfileV9(BaseModel):
                     package_components[MyDependencyIdentifier(name, info.version)],
                 )
 
-        non_optional_deps = set(
+        non_optional_deps = {
             id_ for id_, component in package_components.items() if not component.optional
-        )
+        }
         if unused_components := non_optional_deps - (prod_dependencies | dev_dependencies):
             raise ValueError(f"Unused components: {unused_components}")
 

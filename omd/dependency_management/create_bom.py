@@ -94,7 +94,7 @@ def create_bom_vulnerabilites(
     pick that up. I think this is a workaround we can live with.
     """
 
-    assert not (non_existent_vulns := set(vulnerability_info) - set(c.purl for c in components)), (
+    assert not (non_existent_vulns := set(vulnerability_info) - {c.purl for c in components}), (
         f"Vulnerabilities for non-existent components: {non_existent_vulns}"
     )
 

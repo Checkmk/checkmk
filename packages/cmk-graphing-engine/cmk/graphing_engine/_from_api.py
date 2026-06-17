@@ -285,11 +285,11 @@ def metric_names_of_graph(
     graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
 ) -> Sequence[MetricName]:
     return list(
-        set(
+        {
             name
             for quantity in (*graph.compound_lines, *graph.simple_lines)
             for name in _metric_names_in_quantity(quantity)
-        )
+        }
         | set(metric_names_of_title(graph.title))
     )
 

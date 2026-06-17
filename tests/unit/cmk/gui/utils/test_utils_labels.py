@@ -249,5 +249,5 @@ def test_label_autocompleter_scopes_query_by_object_type(
         # Ignore arg-type as we pass `None` for config since it is not used in the label autocompleter
         choices = label_autocompleter(config=None, value="", params=params)  # type: ignore[arg-type]
 
-    returned_label_ids = set(choice_id for choice_id, _choice_text in choices)
+    returned_label_ids = {choice_id for choice_id, _choice_text in choices}
     assert returned_label_ids == expected_choices

@@ -3,11 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { ValidationMessage } from 'cmk-shared-typing/typescript/vue_formspec_components'
+
 import type { SimpleIcons } from '@/components/CmkIcon'
 
-import type { ValidationMessages } from '@/form'
-
 import { type ComponentSpec } from '@/quick-setup/components/quick-setup/widgets/widget_types'
+
+type ValidationMessages = ValidationMessage[]
 
 interface QuickSetupStageOverviewResponse {
   title: string

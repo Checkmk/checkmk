@@ -29,7 +29,6 @@ import FormList from '@/form/private/forms/FormList/FormList.vue'
 import FormListUniqueSelection from '@/form/private/forms/FormList/FormListUniqueSelection.vue'
 import FormListOfStrings from '@/form/private/forms/FormListOfStrings.vue'
 import FormMetric from '@/form/private/forms/FormMetric.vue'
-import FormMetricBackendCustomQuery from '@/form/private/forms/FormMetricBackendCustomQuery.vue'
 import FormMultilineText from '@/form/private/forms/FormMultilineText.vue'
 import FormOAuth2ConnectionSetup from '@/form/private/forms/FormOAuth2ConnectionSetup.vue'
 import FormOptionalChoice from '@/form/private/forms/FormOptionalChoice.vue'
@@ -45,10 +44,18 @@ import FormTimeSpan from '@/form/private/forms/FormTimeSpan/FormTimeSpan.vue'
 import FormTimeSpecific from '@/form/private/forms/FormTimeSpecific.vue'
 import FormTuple from '@/form/private/forms/FormTuple.vue'
 
-import { setComponentRegistry } from './componentRegistry'
+import { registerFormComponents } from './componentRegistry'
+
+type FormSpecComponents = Record<Components['type'], Component>
+
+// Explicitly call out components owned by features to statically ensure
+// base components are exhaustively registered.
+type FeatureOwnedComponents = 'metric_backend_custom_query'
+
+type BaseComponents = Omit<FormSpecComponents, FeatureOwnedComponents>
 
 // TODO: https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
-const components: Record<Components['type'], Component> = {
+const baseComponents: BaseComponents = {
   binary_condition_choices: FormBinaryConditionChoices,
   boolean_choice: FormBooleanChoice,
   cascading_single_choice: FormCascadingSingleChoice,
@@ -72,7 +79,6 @@ const components: Record<Components['type'], Component> = {
   list: FormList,
   list_unique_selection: FormListUniqueSelection,
   list_of_strings: FormListOfStrings,
-  metric_backend_custom_query: FormMetricBackendCustomQuery,
   oauth2_connection_setup: FormOAuth2ConnectionSetup,
   metric: FormMetric,
   multiline_text: FormMultilineText,
@@ -90,7 +96,7 @@ const components: Record<Components['type'], Component> = {
 }
 
 export function initializeComponentRegistry() {
-  setComponentRegistry(components)
+  registerFormComponents(baseComponents)
 }
 
 export { getComponent } from './componentRegistry'

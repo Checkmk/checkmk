@@ -6,19 +6,15 @@
 import type { Components } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { type Component } from 'vue'
 
-// This registry will be populated by dispatch.ts when it's imported
-let _componentRegistry: Record<string, Component> | null = null
+export type FormComponents = Partial<Record<Components['type'], Component>>
 
-export function setComponentRegistry(registry: Record<string, Component>) {
-  _componentRegistry = registry
+const _componentRegistry: Record<string, Component> = {}
+
+export function registerFormComponents(components: FormComponents) {
+  Object.assign(_componentRegistry, components)
 }
 
 export function getComponent(type: string): Component {
-  if (_componentRegistry === null) {
-    throw new Error(
-      'Component registry not initialized. Import and call initializeComponentRegistry from dispatch.ts first.'
-    )
-  }
   const result = _componentRegistry[type as Components['type']]
   if (result !== undefined) {
     return result

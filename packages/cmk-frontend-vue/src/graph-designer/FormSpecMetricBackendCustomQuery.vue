@@ -12,11 +12,11 @@ import useId from '@/lib/useId'
 import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
+import { type ValidationMessages } from '@/form'
 import FormHelp from '@/form/private/FormHelp.vue'
-import { type ValidationMessages } from '@/form/private/validation'
 
-import FormMetricBackendCustomQuery from '@/graph-designer/FormMetricBackendCustomQuery.vue'
-import { METRIC_BACKEND_MACRO_HELP } from '@/graph-designer/constants'
+import FormMetricBackendCustomQuery from './FormMetricBackendCustomQuery.vue'
+import { METRIC_BACKEND_MACRO_HELP } from './constants'
 
 const { _t } = usei18n()
 
@@ -45,7 +45,7 @@ const componentId = useId()
       <tr>
         <td>{{ _t('Service name template') }}</td>
         <td>
-          <div class="form-metric-backend-custom-query__service-name-template">
+          <div class="gd-form-spec-metric-backend-custom-query__service-name-template">
             <CmkInput
               v-model="data.service_name_template"
               type="text"
@@ -62,7 +62,7 @@ const componentId = useId()
 </template>
 
 <style scoped>
-.form-metric-backend-custom-query__service-name-template {
+.gd-form-spec-metric-backend-custom-query__service-name-template {
   display: flex;
   align-items: center;
   gap: 8px;

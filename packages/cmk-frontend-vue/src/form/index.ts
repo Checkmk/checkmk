@@ -16,3 +16,7 @@ import { type ValidationMessages } from './private/validation'
 
 export { FormEdit, FormReadonly, FormApp, type ValidationMessages }
 export { configEntityAPI, type EntityDescription, type Payload, type SetDataResult }
+export {
+  registerFormComponents,
+  type FormComponents
+} from './private/FormEditDispatcher/componentRegistry'

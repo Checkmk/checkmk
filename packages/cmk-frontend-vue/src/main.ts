@@ -10,6 +10,7 @@ import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/d
 
 import '@/assets/variables.css'
 import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
+import { registerGraphDesignerFormComponents } from '@/graph-designer/registerFormComponents'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 
@@ -38,6 +39,7 @@ import WelcomeApp from './welcome/WelcomeApp.vue'
 import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
 
 initializeComponentRegistry()
+registerGraphDesignerFormComponents()
 
 defineCmkComponent('cmk-form-spec', FormApp)
 defineCmkComponent('cmk-quick-setup', QuickSetup)

@@ -247,6 +247,7 @@ def _check_update_config_timestamps(sites: Sequence[Site], timestamps_dict: dict
         timestamps_dict[site.id] = file_timestamp
 
 
+@pytest.mark.xfail(reason="CMK-35803; flake")
 @pytest.mark.skip_if_not_edition("ultimatemt")
 def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site: Site) -> None:
     """

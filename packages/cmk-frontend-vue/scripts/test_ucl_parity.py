@@ -28,6 +28,9 @@ def unique_dict[K, V](data: Iterator[tuple[K, V]]) -> dict[K, V]:
 
 def component_remove_category_folder(all_files: dict[Path, Path]) -> Iterator[tuple[Path, Path]]:
     for relative, path in all_files.items():
+        # Anything within a `private` folder is an implementation detail and ignored.
+        if "private" in relative.parts:
+            continue
         if relative.parts[0].islower():
             yield relative.relative_to(relative.parts[0]), path
         else:
@@ -64,7 +67,8 @@ def component_remove_suffix(all_files: dict[Path, Path]) -> Iterator[tuple[str, 
 def load_component_names() -> Iterator[tuple[str, Path]]:
     # have to make some assumptions for the components:
     # 1. If there is a mixed-case vue file in a folder of the same name, it is assumed to be a single component
-    # 2. If it's a lowecase folder directly below the components, its just a group and ignored
+    # 2. If it's a lowercase folder directly below the components, it's just a group and ignored
+    # 3. Anything within a `private` folder is an implementation detail and ignored
     all_files = {p.relative_to(COMPONENTS_FOLDER): p for p in COMPONENTS_FOLDER.glob("**/*.vue")}
     all_files = unique_dict(component_remove_category_folder(all_files))
     all_files = unique_dict(component_pick_one_from_folder(all_files))

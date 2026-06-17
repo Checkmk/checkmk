@@ -12,8 +12,8 @@ import usei18n from '@/lib/i18n'
 import client, { unwrap } from '@/lib/rest-api-client/client'
 
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
-import { configEntityAPI } from '@/components/user-input/CmkConfigurationEntityDropdown/configuration_entity'
 
+import { configEntityAPI } from '@/form'
 import type { API, Payload } from '@/form/FormEditAsync.vue'
 import FormEditAsync from '@/form/FormEditAsync.vue'
 

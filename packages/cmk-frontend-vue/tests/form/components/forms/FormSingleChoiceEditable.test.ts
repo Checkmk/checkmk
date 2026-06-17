@@ -4,14 +4,16 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
-import type { Dictionary } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import type {
+  Dictionary,
+  SingleChoiceEditable,
+  ValidationMessage
+} from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
 
-import CmkConfigurationEntityDropdown from '@/components/user-input/CmkConfigurationEntityDropdown/CmkConfigurationEntityDropdown.vue'
-
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
+import FormSingleChoiceEditable from '@/form/private/forms/FormSingleChoiceEditable/FormSingleChoiceEditable.vue'
 
 // The default client singleton captures `globalThis.fetch` at import time, before
 // server.listen() patches it. Re-create it with a lazy fetch wrapper so MSW can intercept.
@@ -42,7 +44,6 @@ const mockSchema: Dictionary = {
   additional_static_elements: []
 }
 
-const entityType = 'notification_parameter' as ConfigEntityType
 const BASE = `${location.protocol}//${location.host}/api/internal`
 
 const server = setupServer(
@@ -71,29 +72,39 @@ afterEach(() => {
   server.resetHandlers()
 })
 
+function makeSpec(overrides: Partial<SingleChoiceEditable> = {}): SingleChoiceEditable {
+  return {
+    type: 'single_choice_editable',
+    title: 'Select entity',
+    help: '',
+    validators: [],
+    elements: [],
+    config_entity_type: 'notification_parameter',
+    config_entity_type_specifier: 'mail',
+    allow_editing_existing_elements: true,
+    ...overrides
+  }
+}
+
 function renderComponent(
   props: {
-    modelValue?: string | null
-    allowEditingExistingElements?: boolean
-    validation?: Array<string>
-    label?: string
-    inputHint?: string
+    data?: string | null
+    spec?: SingleChoiceEditable
+    backendValidation?: Array<ValidationMessage>
   } = {}
 ) {
-  const { modelValue = null, ...rest } = props
-  return render(CmkConfigurationEntityDropdown, {
+  const { data = null, spec = makeSpec(), backendValidation = [] } = props
+  return render(FormSingleChoiceEditable, {
     props: {
-      modelValue,
-      'onUpdate:modelValue': () => {},
-      configEntityType: entityType,
-      configEntityTypeSpecifier: 'mail',
-      label: 'Select entity',
-      ...rest
+      data,
+      'onUpdate:data': () => {},
+      spec,
+      backendValidation
     }
   })
 }
 
-test('shows no-elements text when no entities available', async () => {
+test('loads entities and shows no-elements text when none available', async () => {
   server.use(
     http.get(`${BASE}/domain-types/notification_parameter/collections/:entity_type_specifier`, () =>
       HttpResponse.json({ value: [] })
@@ -104,28 +115,20 @@ test('shows no-elements text when no entities available', async () => {
 })
 
 test('uses inputHint as dropdown placeholder', async () => {
-  renderComponent({ inputHint: 'Pick a parameter...' })
+  renderComponent({ spec: makeSpec({ input_hint: 'Pick a parameter...' }) })
   await screen.findByLabelText('Pick a parameter...')
 })
 
-test('always shows create button', async () => {
+test('opens slide-in with readable new title when clicking create', async () => {
   renderComponent()
-  await screen.findByRole('button', { name: /Create/ })
+  await fireEvent.click(screen.getByRole('button', { name: /Create/ }))
+  await screen.findByText('New mail parameter')
 })
 
-test('does not show edit button when nothing is selected', () => {
-  renderComponent({ modelValue: null, allowEditingExistingElements: true })
-  expect(screen.queryByRole('button', { name: /Edit/ })).not.toBeInTheDocument()
-})
-
-test('shows edit button when an item is selected', async () => {
-  renderComponent({ modelValue: 'entity-1', allowEditingExistingElements: true })
-  expect(await screen.findByRole('button', { name: /Edit/ })).toBeVisible()
-})
-
-test('does not show edit button when allowEditingExistingElements is false', async () => {
-  renderComponent({ modelValue: 'entity-1', allowEditingExistingElements: false })
-  expect(screen.queryByRole('button', { name: /Edit/, hidden: true })).not.toBeInTheDocument()
+test('opens slide-in with readable edit title when clicking edit', async () => {
+  renderComponent({ data: 'entity-1' })
+  await fireEvent.click(await screen.findByRole('button', { name: /Edit/ }))
+  await screen.findByText('Edit mail parameter')
 })
 
 test('does not show edit button for entity with hide_edit flag', async () => {
@@ -136,40 +139,17 @@ test('does not show edit button for entity with hide_edit flag', async () => {
       })
     )
   )
-  renderComponent({ modelValue: 'entity-1', allowEditingExistingElements: true })
+  renderComponent({ data: 'entity-1' })
   await waitFor(() => {
     expect(screen.queryByRole('button', { name: /Edit/, hidden: true })).not.toBeInTheDocument()
   })
 })
 
-test('opens slide-in with new title when clicking create', async () => {
-  renderComponent()
-  await fireEvent.click(screen.getByRole('button', { name: /Create/ }))
-  await screen.findByText('New mail parameter')
-})
-
-test('opens slide-in with edit title when clicking edit', async () => {
-  renderComponent({ modelValue: 'entity-1', allowEditingExistingElements: true })
-  await fireEvent.click(await screen.findByRole('button', { name: /Edit/ }))
-  await screen.findByText('Edit mail parameter')
-})
-
-test('closes slide-in when close button is clicked', async () => {
-  renderComponent()
-  await fireEvent.click(screen.getByRole('button', { name: /Create/ }))
-  await screen.findByText('New mail parameter')
-  await fireEvent.click(screen.getByRole('button', { name: 'Close' }))
-  await waitFor(() => {
-    expect(screen.queryByText('New mail parameter')).not.toBeInTheDocument()
+test('displays backend validation messages', async () => {
+  renderComponent({
+    backendValidation: [
+      { location: [], message: 'This field is required', replacement_value: null }
+    ]
   })
-})
-
-test('displays validation messages', async () => {
-  renderComponent({ validation: ['This field is required'] })
   await screen.findByText('This field is required')
-})
-
-test('does not display validation messages when no validation prop', async () => {
-  renderComponent()
-  expect(screen.queryByText('This field is required')).not.toBeInTheDocument()
 })

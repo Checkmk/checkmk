@@ -12,10 +12,7 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, toRaw } from 'vue'
 
-import FormSingleChoiceEditableEditAsync, {
-  type API,
-  type SetDataResult
-} from '@/form/FormEditAsync.vue'
+import FormEditAsync, { type API, type SetDataResult } from '@/form/FormEditAsync.vue'
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
 initializeComponentRegistry()
@@ -138,7 +135,7 @@ const api: API<ObjectId, ObjectId> = {
       </select>
     </label>
   </div>
-  <FormSingleChoiceEditableEditAsync
+  <FormEditAsync
     :key="reloadCount"
     :object-id="objectId"
     :api="api"

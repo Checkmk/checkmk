@@ -7,9 +7,10 @@ import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuratio
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
+import type { SetDataResult, ValidationMessages } from '@/lib/configuration_entity_types'
 import client, { unwrap } from '@/lib/rest-api-client/client'
 
-import type { SetDataResult, ValidationMessages } from './api-result-types'
+export type { SetDataResult }
 
 export interface EntityDescription {
   ident: string

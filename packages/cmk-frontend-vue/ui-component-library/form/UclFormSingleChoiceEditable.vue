@@ -9,8 +9,7 @@ import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_form
 import { HttpResponse, bypass, http, passthrough } from 'msw'
 import { ref } from 'vue'
 
-import { configEntityAPI } from '@/components/user-input/CmkConfigurationEntityDropdown'
-
+import { configEntityAPI } from '@/form'
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 import FormSingleChoiceEditable from '@/form/private/forms/FormSingleChoiceEditable/FormSingleChoiceEditable.vue'
 

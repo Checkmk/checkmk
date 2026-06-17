@@ -35,13 +35,13 @@ import UclCmkSlideInDialog from './content-organization/CmkSlideInDialog/UclCmkS
 import UclCmkTabs from './content-organization/CmkTabs/UclCmkTabs.vue'
 import UclCmkWizard from './content-organization/CmkWizard/UclCmkWizard.vue'
 import UclCmkCheckbox from './form-elements/CmkCheckbox/UclCmkCheckbox.vue'
-import UclCmkConfigurationEntityDropdown from './form-elements/CmkConfigurationEntityDropdown/UclCmkConfigurationEntityDropdown.vue'
 import UclCmkDateTimePicker from './form-elements/CmkDateTimePicker/UclCmkDateTimePicker.vue'
 import UclCmkDropdown from './form-elements/CmkDropdown/UclCmkDropdown.vue'
 import UclCmkDualList from './form-elements/CmkDualList/UclCmkDualList.vue'
 import UclCmkInput from './form-elements/CmkInput/UclCmkInput.vue'
 import UclCmkList from './form-elements/CmkList/UclCmkList.vue'
 import UclCmkSearchInput from './form-elements/CmkSearchInput/UclCmkSearchInput.vue'
+import UclCmkSlideInDropdown from './form-elements/CmkSlideInDropdown/UclCmkSlideInDropdown.vue'
 import UclCmkTimeSpan from './form-elements/CmkTimeSpan/UclCmkTimeSpan.vue'
 import UclCmkToggleButtonGroup from './form-elements/CmkToggleButtonGroup/UclCmkToggleButtonGroup.vue'
 import UclCmkHtml from './foundation-elements/CmkHtml/UclCmkHtml.vue'
@@ -101,13 +101,13 @@ const contentOrganizationPages = [
 
 const formElementsPages = [
   new Page('CmkCheckbox', UclCmkCheckbox),
-  new Page('CmkConfigurationEntityDropdown', UclCmkConfigurationEntityDropdown),
   new Page('CmkDateTimePicker', UclCmkDateTimePicker),
   new Page('CmkDropdown', UclCmkDropdown),
   new Page('CmkDualList', UclCmkDualList),
   new Page('CmkInput', UclCmkInput),
   new Page('CmkList', UclCmkList),
   new Page('CmkSearchInput', UclCmkSearchInput),
+  new Page('CmkSlideInDropdown', UclCmkSlideInDropdown),
   new Page('CmkTimeSpan', UclCmkTimeSpan),
   new Page('CmkToggleButtonGroup', UclCmkToggleButtonGroup)
 ]

@@ -6,7 +6,7 @@
 import { CmkFetchError, fetchRestAPI } from '@/lib/cmkFetch.ts'
 import usei18n from '@/lib/i18n'
 
-import { configEntityAPI } from '@/components/user-input/CmkConfigurationEntityDropdown'
+import { configEntityAPI } from '@/form/configuration_entity'
 
 import type { EventConsoleConfig } from './otelTypes'
 import type { PasswordConfig } from './password_store_password.types.ts'

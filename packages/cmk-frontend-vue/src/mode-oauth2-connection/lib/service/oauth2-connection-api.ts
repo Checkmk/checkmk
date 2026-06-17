@@ -6,11 +6,7 @@
 import { Api } from '@/lib/api-client'
 import type { SetDataResult } from '@/lib/configuration_entity_types'
 
-import {
-  type EntityDescription,
-  type Payload,
-  configEntityAPI
-} from '@/components/user-input/CmkConfigurationEntityDropdown'
+import { type EntityDescription, type Payload, configEntityAPI } from '@/form/configuration_entity'
 
 export type PasswordValue = [string, string, string, boolean]
 

@@ -25,12 +25,12 @@ import UclCmkSlideInDialog from '@ucl/components/content-organization/CmkSlideIn
 import UclCmkTabs from '@ucl/components/content-organization/CmkTabs/UclCmkTabs.vue'
 import UclCmkWizard from '@ucl/components/content-organization/CmkWizard/UclCmkWizard.vue'
 import UclCmkCheckbox from '@ucl/components/form-elements/CmkCheckbox/UclCmkCheckbox.vue'
-import UclCmkConfigurationEntityDropdown from '@ucl/components/form-elements/CmkConfigurationEntityDropdown/UclCmkConfigurationEntityDropdown.vue'
 import UclCmkDateTimePicker from '@ucl/components/form-elements/CmkDateTimePicker/UclCmkDateTimePicker.vue'
 import UclCmkDropdown from '@ucl/components/form-elements/CmkDropdown/UclCmkDropdown.vue'
 import UclCmkDualList from '@ucl/components/form-elements/CmkDualList/UclCmkDualList.vue'
 import UclCmkInput from '@ucl/components/form-elements/CmkInput/UclCmkInput.vue'
 import UclCmkList from '@ucl/components/form-elements/CmkList/UclCmkList.vue'
+import UclCmkSlideInDropdown from '@ucl/components/form-elements/CmkSlideInDropdown/UclCmkSlideInDropdown.vue'
 import UclCmkTimeSpan from '@ucl/components/form-elements/CmkTimeSpan/UclCmkTimeSpan.vue'
 import UclCmkToggleButtonGroup from '@ucl/components/form-elements/CmkToggleButtonGroup/UclCmkToggleButtonGroup.vue'
 import UclCmkHtml from '@ucl/components/foundation-elements/CmkHtml/UclCmkHtml.vue'
@@ -59,8 +59,6 @@ import UclCmkPopupDialog from '@ucl/components/system-feedback/CmkPopupDialog/Uc
 import UclCmkSkeleton from '@ucl/components/system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
 import UclCmkTooltip from '@ucl/components/system-feedback/CmkTooltip/UclCmkTooltip.vue'
 import UclCmkProgressbar from '@ucl/components/system-feedback/progress/UclCmkProgressbar.vue'
-import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({ resolve: () => ({ href: '/' }) }),
@@ -104,25 +102,9 @@ test('CmkCheckbox page renders its component', () => {
   within(componentPreview()).getByRole('checkbox', { name: 'Enable notifications' })
 })
 
-test('CmkConfigurationEntityDropdown page renders its component', async () => {
-  const BASE = `${location.protocol}//${location.host}/api/internal`
-  const server = setupServer(
-    http.get(`${BASE}/domain-types/ucl_demo_entity/collections/all`, () =>
-      HttpResponse.json({
-        value: [
-          { id: 'entity_1', title: 'First Demo Entity' },
-          { id: 'entity_2', title: 'Second Demo Entity' }
-        ]
-      })
-    )
-  )
-  server.listen({ onUnhandledRequest: 'bypass' })
-  try {
-    render(UclCmkConfigurationEntityDropdown, { props: { screenshotMode: false } })
-    await within(componentPreview()).findByRole('combobox')
-  } finally {
-    server.close()
-  }
+test('CmkSlideInDropdown page renders its component', async () => {
+  render(UclCmkSlideInDropdown, { props: { screenshotMode: false } })
+  await within(componentPreview()).findByRole('combobox')
 })
 
 test('CmkDateTimePicker page renders its component', async () => {

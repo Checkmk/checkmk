@@ -6,6 +6,13 @@
 import FormApp from './FormApp.vue'
 import FormEdit from './FormEdit.vue'
 import FormReadonly from './FormReadonly.vue'
+import {
+  type EntityDescription,
+  type Payload,
+  type SetDataResult,
+  configEntityAPI
+} from './configuration_entity'
 import { type ValidationMessages } from './private/validation'
 
 export { FormEdit, FormReadonly, FormApp, type ValidationMessages }
+export { configEntityAPI, type EntityDescription, type Payload, type SetDataResult }

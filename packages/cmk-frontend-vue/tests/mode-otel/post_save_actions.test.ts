@@ -7,7 +7,7 @@ import type { Mock } from 'vitest'
 
 import * as cmkFetch from '@/lib/cmkFetch'
 
-import { configEntityAPI } from '@/components/user-input/CmkConfigurationEntityDropdown'
+import { configEntityAPI } from '@/form'
 
 import type { PasswordConfig } from '@/mode-otel/otel-configuration-steps/password_store_password.types.ts'
 import {

@@ -18,18 +18,18 @@ import {
 } from 'vue'
 
 import { CmkError, CmkSimpleError, formatError } from '@/lib/error.ts'
+import usePersistentRef from '@/lib/usePersistentRef'
+
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
+
+import type { StageData } from '@/quick-setup/components/quick-setup/widgets/widget_types'
 import {
   type Action,
   QuickSetupCompleteActionValidationResponse,
   type QuickSetupGuidedResponse,
   QuickSetupStageActionErrorValidationResponse,
   type QuickSetupStageStructure
-} from '@/lib/rest-api-client/quick-setup/response_schemas'
-import usePersistentRef from '@/lib/usePersistentRef'
-
-import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
-
-import type { StageData } from '@/quick-setup/components/quick-setup/widgets/widget_types'
+} from '@/quick-setup/rest-api/response_schemas'
 
 import {
   type LogUpdate,

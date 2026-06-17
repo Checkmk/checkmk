@@ -3,12 +3,23 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { wait } from '@/lib/utils'
+
+import type { LogUpdate } from '@/quick-setup/components/BackgroundJobLog/useBackgroundJobLog'
+import type { StageData } from '@/quick-setup/components/quick-setup/widgets/widget_types'
+
+import { get as getBackgroundJob } from './background-job/client'
+import type { BackgroundJobSpawnResponse } from './background-job/response_schemas'
 import {
-  backgroundJob as backgroundJobClient,
-  quickSetup as quickSetupClient
-} from '@/lib/rest-api-client'
-import type { BackgroundJobSpawnResponse } from '@/lib/rest-api-client/background-job/response_schemas'
-import type { QuickSetupStageRequest } from '@/lib/rest-api-client/quick-setup/request_schemas'
+  editQuickSetup,
+  fetchBackgroundJobResult,
+  fetchStageBackgroundJobResult,
+  getOverviewModeOrGuidedMode,
+  getStageStructure as getStageStructureRequest,
+  runQuickSetupAction,
+  runStageAction
+} from './client'
+import type { QuickSetupStageRequest } from './request_schemas'
 import {
   QuickSetupCompleteActionValidationResponse,
   type QuickSetupCompleteResponse,
@@ -18,11 +29,7 @@ import {
   QuickSetupStageActionErrorValidationResponse,
   type QuickSetupStageActionResponse,
   type QuickSetupStageStructure
-} from '@/lib/rest-api-client/quick-setup/response_schemas'
-import { wait } from '@/lib/utils'
-
-import type { LogUpdate } from '../components/BackgroundJobLog/useBackgroundJobLog'
-import type { StageData } from '../components/quick-setup/widgets/widget_types'
+} from './response_schemas'
 
 /** @constant {number} BACKGROUND_JOB_CHECK_INTERVAL - Wait time in milliseconds between checks */
 export const BACKGROUND_JOB_CHECK_INTERVAL = 1000
@@ -75,7 +82,7 @@ const _getOverviewOrAllStages = async (
   mode: 'overview' | 'guided',
   objectId: string | null = null
 ): Promise<QuickSetupResponse> => {
-  return await quickSetupClient.getOverviewModeOrGuidedMode(quickSetupId, mode, objectId)
+  return await getOverviewModeOrGuidedMode(quickSetupId, mode, objectId)
 }
 
 /**
@@ -97,8 +104,8 @@ export const saveOrEditQuickSetup = async (
   const stages: QuickSetupStageRequest[] = formData.map((stage) => ({ form_data: stage }))
 
   const data = objectId
-    ? await quickSetupClient.editQuickSetup(quickSetupId, buttonId, stages, objectId, search)
-    : await quickSetupClient.runQuickSetupAction(quickSetupId, buttonId, stages, search)
+    ? await editQuickSetup(quickSetupId, buttonId, stages, objectId, search)
+    : await runQuickSetupAction(quickSetupId, buttonId, stages, search)
 
   if (data instanceof QuickSetupCompleteActionValidationResponse) {
     return data
@@ -112,7 +119,7 @@ export const saveOrEditQuickSetup = async (
   */
     const siteId = data.extensions.site_id
     await _waitForBackgroundJobToFinish(data.id, siteId, onLogUpdate)
-    return await quickSetupClient.fetchBackgroundJobResult(data.id)
+    return await fetchBackgroundJobResult(data.id)
   } else {
     return data as QuickSetupCompleteResponse
   }
@@ -134,7 +141,7 @@ export const validateAndRecapStage = async (
 ): Promise<QuickSetupStageActionResponse | QuickSetupStageActionErrorValidationResponse> => {
   const stages = formData.map((stage) => ({ form_data: stage }))
 
-  const data = await quickSetupClient.runStageAction(quickSetupId, actionId, stages)
+  const data = await runStageAction(quickSetupId, actionId, stages)
 
   if (data instanceof QuickSetupStageActionErrorValidationResponse) {
     return data
@@ -148,7 +155,7 @@ export const validateAndRecapStage = async (
   */
     const siteId = data.extensions.site_id
     await _waitForBackgroundJobToFinish(data.id, siteId, onLogUpdate)
-    return await quickSetupClient.fetchStageBackgroundJobResult(data.id, siteId)
+    return await fetchStageBackgroundJobResult(data.id, siteId)
   } else {
     return data as QuickSetupStageActionResponse
   }
@@ -166,7 +173,7 @@ export const getStageStructure = async (
   stageIndex: number,
   objectId: string | null = null
 ): Promise<QuickSetupStageStructure> => {
-  return quickSetupClient.getStageStructure(quickSetupId, stageIndex, objectId)
+  return getStageStructureRequest(quickSetupId, stageIndex, objectId)
 }
 
 /**
@@ -184,7 +191,7 @@ const _waitForBackgroundJobToFinish = async (
   let lastLog: LogUpdate | null = null
 
   do {
-    const data = await backgroundJobClient.get(id, siteId)
+    const data = await getBackgroundJob(id, siteId)
     isActive = !!data.extensions.active
 
     if (onLogUpdate) {

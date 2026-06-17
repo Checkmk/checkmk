@@ -5,7 +5,8 @@
  */
 import axios from 'axios'
 
-import { API_ROOT } from '../constants'
+import { API_ROOT } from '@/lib/rest-api-client/constants'
+
 import type { BackgroundJobSnapshotObject } from './response_schemas'
 
 const API_DOMAIN = 'background_job'

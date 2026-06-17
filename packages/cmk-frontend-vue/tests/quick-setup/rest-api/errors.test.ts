@@ -6,7 +6,8 @@
 import { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 
 import { CmkSimpleError } from '@/lib/error'
-import { argumentError } from '@/lib/rest-api-client/errors'
+
+import { argumentError } from '@/quick-setup/rest-api/errors'
 
 const MULTIPLE_QUICK_SETUP_ACTIONS_RUNNING_ERROR = {
   title: 'Cannot start action',

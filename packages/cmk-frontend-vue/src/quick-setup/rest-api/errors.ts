@@ -7,10 +7,9 @@ import type { AxiosError } from 'axios'
 import axios from 'axios'
 
 import { CmkError, CmkSimpleError } from '@/lib/error.ts'
-import type { Errors, StageErrors } from '@/lib/rest-api-client/quick-setup/response_schemas'
 import type { MaybeRestApiCrashReport, MaybeRestApiError } from '@/lib/types'
 
-// import type { Errors, StageErrors } from '@lib/rest./response_types'
+import type { Errors, StageErrors } from './response_schemas'
 
 export class QuickSetupAxiosError extends CmkError<AxiosError> {
   override name = 'QuickSetupAxiosError'

@@ -8,9 +8,10 @@
  */
 import axios, { isAxiosError } from 'axios'
 
-import type { BackgroundJobSpawnResponse } from '../background-job/response_schemas'
-import { API_ROOT } from '../constants'
-import { argumentError } from '../errors'
+import { API_ROOT } from '@/lib/rest-api-client/constants'
+
+import type { BackgroundJobSpawnResponse } from './background-job/response_schemas'
+import { argumentError } from './errors'
 import type { QuickSetupStageActionRequest, QuickSetupStageRequest } from './request_schemas'
 import {
   QuickSetupCompleteActionValidationResponse,

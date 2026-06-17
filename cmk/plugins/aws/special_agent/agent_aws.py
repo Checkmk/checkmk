@@ -67,7 +67,7 @@ from ._data_cache import DataCache
 if TYPE_CHECKING:
     from mypy_boto3_logs.client import CloudWatchLogsClient
 
-__version__ = "2.5.0p7"
+__version__ = "2.5.0p8"
 
 AGENT = "aws"
 

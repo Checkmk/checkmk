@@ -8,7 +8,7 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-__version__ = "2.5.0p7"
+__version__ = "2.5.0p8"
 
 ###################################################
 # plugin to retrieve data from tinkerforge devices.

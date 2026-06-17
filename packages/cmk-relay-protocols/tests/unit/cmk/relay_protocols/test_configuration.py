@@ -10,3 +10,7 @@ class TestEngingeConfig:
     def test_from_user_engine_config(self) -> None:
         uec = UserEngineConfig(num_fetchers=0, hosts=(), log_level=LogLevel.ERROR)
         _ = EngineConfig.model_validate_json(uec.model_dump_json())
+
+    def test_site_version_trigger_interval_default(self) -> None:
+        config = EngineConfig(num_fetchers=0, hosts=(), log_level=LogLevel.ERROR)
+        assert config.site_version_trigger_interval == 60

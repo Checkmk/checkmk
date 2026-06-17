@@ -89,6 +89,8 @@ class EngineConfig(UserEngineConfig):
     cert_rotation_schedule: float = 24 * 60 * 60
     # Relay status check frequency in seconds (1 minute)
     relay_status_schedule: float = 60
+    # Minimum interval between site version update triggers in seconds (1 minute)
+    site_version_trigger_interval: float = 60
 
     @classmethod
     def load(cls, path: Path) -> Self:

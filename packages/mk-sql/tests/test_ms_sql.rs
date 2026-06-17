@@ -991,7 +991,9 @@ async fn test_find_no_detect_local() {
     let mssql = mk_sql::config::ms_sql::Config::from_string(&make_local_config_string("", false))
         .unwrap()
         .unwrap();
-    let instances = instance::find_all_instance_builders(&mssql).await.unwrap();
+    let instances = instance::find_all_instance_builders(&mssql, None)
+        .await
+        .unwrap();
     assert_eq!(instances.len(), 0);
 }
 
@@ -1007,7 +1009,9 @@ async fn test_find_no_detect_two_custom_instances_local() {
     .unwrap()
     .unwrap();
     let instances = to_instances(
-        instance::find_all_instance_builders(&mssql).await.unwrap(),
+        instance::find_all_instance_builders(&mssql, None)
+            .await
+            .unwrap(),
         &mssql.endpoint(),
     );
     assert_eq!(instances.len(), 1);
@@ -1036,7 +1040,9 @@ async fn test_find_no_detect_remote() {
         ))
         .unwrap()
         .unwrap();
-        let instances = instance::find_all_instance_builders(&mssql).await.unwrap();
+        let instances = instance::find_all_instance_builders(&mssql, None)
+            .await
+            .unwrap();
         assert_eq!(instances.len(), 0);
     } else {
         tools::skip_on_lack_of_ms_sql_endpoint();
@@ -1059,7 +1065,9 @@ async fn test_find_no_detect_two_custom_instances_remote() {
         .unwrap()
         .unwrap();
         let instances = to_instances(
-            instance::find_all_instance_builders(&mssql).await.unwrap(),
+            instance::find_all_instance_builders(&mssql, None)
+                .await
+                .unwrap(),
             &mssql.endpoint(),
         );
         assert_eq!(instances.len(), 1);
@@ -1647,7 +1655,7 @@ fn test_odbc() {
     use mk_sql::types::HostName;
 
     let s = odbc::make_connection_string(
-        Some(&HostName::from("127.0.0.1".to_string())),
+        Some(&HostName::from("localhost".to_string())),
         None,
         &InstanceName::from("SQLEXPRESS_NAME"),
         Some("master"),
@@ -1745,4 +1753,77 @@ async fn test_odbc_high_level() {
         create_client("MSSQLSERVER", true).await.get_edition(),
         Edition::Normal
     );
+}
+
+// --- find_all_instance_builders `active` parameter tests ---
+
+/// Returns detected instance builders with `active=None`, or skips if nothing installed.
+#[cfg(windows)]
+async fn all_local_builders_or_skip(
+    mssql: &mk_sql::config::ms_sql::Config,
+) -> Option<Vec<instance::SqlInstanceBuilder>> {
+    let builders = instance::find_all_instance_builders(mssql, None)
+        .await
+        .unwrap();
+    if builders.is_empty() {
+        println!("SKIPPING: no SQL Server instances detected on this machine");
+        return None;
+    }
+    Some(builders)
+}
+
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_find_all_instance_builders_active_none_returns_all_detected() {
+    let mssql = mk_sql::config::ms_sql::Config::from_string(&make_local_config_string("", true))
+        .unwrap()
+        .unwrap();
+    let Some(builders) = all_local_builders_or_skip(&mssql).await else {
+        return;
+    };
+    assert!(
+        !builders.is_empty(),
+        "active=None must return all detected instances"
+    );
+}
+
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_find_all_instance_builders_active_empty_filters_all() {
+    let mssql = mk_sql::config::ms_sql::Config::from_string(&make_local_config_string("", true))
+        .unwrap()
+        .unwrap();
+    let Some(_) = all_local_builders_or_skip(&mssql).await else {
+        return;
+    };
+    let builders = instance::find_all_instance_builders(&mssql, Some(HashSet::new()))
+        .await
+        .unwrap();
+    assert_eq!(
+        builders.len(),
+        0,
+        "empty active set must filter all instances"
+    );
+}
+
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_find_all_instance_builders_active_one_returns_one() {
+    let mssql = mk_sql::config::ms_sql::Config::from_string(&make_local_config_string("", true))
+        .unwrap()
+        .unwrap();
+    let Some(all) = all_local_builders_or_skip(&mssql).await else {
+        return;
+    };
+    let first = all[0].get_name().to_string().to_uppercase();
+    let active: HashSet<String> = std::iter::once(first.clone()).collect();
+    let builders = instance::find_all_instance_builders(&mssql, Some(active))
+        .await
+        .unwrap();
+    assert_eq!(
+        builders.len(),
+        1,
+        "active={{'{first}'}} must return exactly 1 instance"
+    );
+    assert_eq!(builders[0].get_name().to_string().to_uppercase(), first);
 }

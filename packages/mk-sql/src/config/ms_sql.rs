@@ -303,9 +303,14 @@ fn get_additional_registry_instances(
 }
 
 pub fn is_local_endpoint(auth: &Authentication, conn: &Connection) -> bool {
-    auth.auth_type() == &AuthType::Integrated
-        || conn.hostname() == HostName::from("localhost".to_owned())
-        || conn.hostname() == HostName::from("127.0.0.1".to_owned())
+    auth.auth_type() == &AuthType::Integrated || is_local_hostname(conn)
+}
+
+pub fn is_local_hostname(conn: &Connection) -> bool {
+    let h = conn.hostname();
+    h == HostName::from("localhost".to_owned())
+        || h == HostName::from("127.0.0.1".to_owned())
+        || h == HostName::from("::1".to_owned())
 }
 
 #[derive(PartialEq, Debug, Clone)]

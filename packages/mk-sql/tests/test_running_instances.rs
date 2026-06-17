@@ -56,6 +56,50 @@ fn test_running_instances_if_installed() {
     }
 }
 
+/// Verifies that `get_active_local_instances` returns a set whose size matches
+/// the count reported by `find_running_instances` when the flag is enabled.
+#[cfg(windows)]
+#[test]
+fn test_get_active_local_instances_count() {
+    use mk_sql::config::ms_sql::Config;
+    use mk_sql::ms_sql::instance::get_active_local_instances;
+    use mk_sql::platform::processes::find_running_instances;
+
+    let Some(_) = registry_instances() else {
+        return;
+    };
+
+    let config = Config::from_string(
+        r#"
+---
+mssql:
+  main:
+    options:
+      ignore_inactive_local_instances: true
+    authentication:
+      username: ""
+      type: "integrated"
+    connection:
+      hostname: "localhost"
+"#,
+    )
+    .unwrap()
+    .unwrap();
+
+    let active = get_active_local_instances(&config);
+    assert!(
+        active.is_some(),
+        "Expected Some on Windows localhost with flag enabled"
+    );
+    let active_count = active.unwrap().len();
+    let running_count = find_running_instances().len();
+    assert_eq!(
+        active_count, running_count,
+        "get_active_local_instances returned {active_count} but find_running_instances returned {running_count}"
+    );
+    assert!(active_count >= 1, "Expected at least 1 active instance");
+}
+
 /// Binary-level test for `--active-instances`.
 ///
 /// Guards with a registry check: if SQL Server is not installed on this

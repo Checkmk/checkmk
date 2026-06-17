@@ -23,7 +23,6 @@ from tests.testlib.common.utils2 import (
 )
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.version import (
-    CMKEdition,
     CMKPackageInfo,
     CMKVersion,
     edition_from_env,
@@ -302,37 +301,26 @@ class BaseVersions:
             base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
             if not base_versions_pb_file.exists():
                 base_versions_pb_file = MODULE_PATH / "base_versions.json"
-            if edition_from_env().is_cloud_edition():
-                raw_versions = json.loads(base_versions_pb_file.read_text(encoding="utf-8"))
-                # Extract the branch version from the latest entry
-                latest_version = raw_versions[-1]
-                branch_ver = CMKVersion(latest_version).semantic
-                # branch and branch_version are equal for release branches
-                cls._base_packages = [
-                    CMKPackageInfo(
-                        CMKVersion(CMKVersion.DAILY, branch_ver, branch_ver),
-                        CMKEdition(CMKEdition.CLOUD),
-                    )
-                ]
-            else:
-                base_versions_pb = cls._limit_versions(
-                    json.loads(base_versions_pb_file.read_text(encoding="utf-8")), cls.min_version
-                )
 
-                base_versions_cb_file = MODULE_PATH / "base_versions_current_branch.json"
-                base_versions_cb = (
-                    cls._limit_versions(
-                        json.loads(base_versions_cb_file.read_text(encoding="utf-8")),
-                        cls.min_version,
-                    )
-                    if base_versions_cb_file.exists()
-                    else []
-                )
+            base_versions_pb = cls._limit_versions(
+                json.loads(base_versions_pb_file.read_text(encoding="utf-8")), cls.min_version
+            )
 
-                cls._base_packages = [
-                    CMKPackageInfo(CMKVersion(base_version_str), edition_from_env())
-                    for base_version_str in base_versions_pb + base_versions_cb
-                ]
+            base_versions_cb_file = MODULE_PATH / "base_versions_current_branch.json"
+            base_versions_cb = (
+                cls._limit_versions(
+                    json.loads(base_versions_cb_file.read_text(encoding="utf-8")),
+                    cls.min_version,
+                )
+                if base_versions_cb_file.exists()
+                else []
+            )
+
+            cls._base_packages = [
+                CMKPackageInfo(CMKVersion(base_version_str), edition_from_env())
+                for base_version_str in base_versions_pb + base_versions_cb
+            ]
+
         assert cls._base_packages, "No base packages found for the test!"
         return cls._base_packages
 

@@ -92,6 +92,11 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
     parser.add_argument("--dump-logs", action="store_true", help="dump all backup logs to disk")
     parser.add_argument("--no-cert-check", action="store_true")
+    parser.add_argument(
+        "--connection-test",
+        action="store_true",
+        help="Run a connection test. No further agent code is executed.",
+    )
     parser.add_argument("hostname", help="Name of the Proxmox VE instance to query.")
     return parser.parse_args(argv)
 
@@ -177,6 +182,12 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
         timeout=args.timeout,
         verify_ssl=not args.no_cert_check,
     ) as session:
+        if args.connection_test:
+            # Establishing the session above already authenticated against the Proxmox VE API.
+            # Reaching this point means the connection and credentials are valid.
+            LOGGER.info("Connection test successful")
+            return 0
+
         LOGGER.info("Fetch general cluster and node information..")
         data = session.get_tree(
             {

@@ -102,6 +102,7 @@ def register(
     main_module_registry.register(MainModuleQuickSetupAzure)
     main_module_registry.register(MainModuleQuickSetupAzureV2)
     main_module_registry.register(MainModuleQuickSetupGCP)
+    main_module_registry.register(MainModuleQuickSetupProxmoxVE)
 
 
 MainModuleTopicQuickSetup = MainModuleTopic(
@@ -683,6 +684,46 @@ class MainModuleQuickSetupGCP(ABCMainModuleQuickSetup):
     @override
     def main_menu_search_terms(cls) -> Sequence[str]:
         return ["gcp"]
+
+
+class MainModuleQuickSetupProxmoxVE(ABCMainModuleQuickSetup):
+    @property
+    @override
+    def rule_group_type(self) -> RuleGroupType:
+        return RuleGroupType.SPECIAL_AGENTS
+
+    @property
+    @override
+    def mode_or_url(self) -> str:
+        return mode_url(
+            ModeEditConfigurationBundles.name(),
+            varname=RuleGroup.SpecialAgents("proxmox_ve"),
+        )
+
+    @property
+    @override
+    def title(self) -> str:
+        return _("Proxmox VE")
+
+    @property
+    @override
+    def icon(self) -> StaticIcon | DynamicIcon:
+        return StaticIcon(IconNames.proxmox_ve)
+
+    @property
+    @override
+    def description(self) -> str:
+        return _("Configure Proxmox VE monitoring in Checkmk")
+
+    @property
+    @override
+    def sort_index(self) -> int:
+        return 14
+
+    @classmethod
+    @override
+    def main_menu_search_terms(cls) -> Sequence[str]:
+        return ["proxmox", "proxmox_ve"]
 
 
 class EditDCDConnection(Protocol):

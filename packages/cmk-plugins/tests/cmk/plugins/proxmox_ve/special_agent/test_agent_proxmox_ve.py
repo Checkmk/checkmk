@@ -13,6 +13,7 @@ import pytest
 from cmk.plugins.proxmox_ve.special_agent.agent_proxmox_ve import (
     hostname_matches_node,
     node_piggyback_host,
+    parse_arguments,
 )
 from cmk.plugins.proxmox_ve.special_agent.libbackups import (
     BackupInfo,
@@ -588,3 +589,8 @@ def test_hostname_matches_node(hostname: str, node: str, expected: bool) -> None
 )
 def test_node_piggyback_host(hostname: str, node: str, nodes: list[str], expected: str) -> None:
     assert node_piggyback_host(hostname, node, nodes) == expected
+
+
+def test_parse_arguments_connection_test_flag() -> None:
+    assert parse_arguments(["--connection-test", "myhost"]).connection_test is True
+    assert parse_arguments(["myhost"]).connection_test is False

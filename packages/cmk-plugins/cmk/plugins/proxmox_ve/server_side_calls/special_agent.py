@@ -30,6 +30,7 @@ class Params(BaseModel):
     no_cert_check: bool = False
     timeout: int | None = None
     log_cutoff_weeks: int | None = None
+    connection_test: bool = False  # only used by quick setup
 
 
 def commands_function(
@@ -58,6 +59,8 @@ def commands_function(
         command_arguments += ["--timeout", str(params.timeout)]
     if params.log_cutoff_weeks is not None:
         command_arguments += ["--log-cutoff-weeks", str(params.log_cutoff_weeks)]
+    if params.connection_test:
+        command_arguments.append("--connection-test")
     command_arguments.append(host_specifier())
     yield SpecialAgentCommand(command_arguments=command_arguments)
 

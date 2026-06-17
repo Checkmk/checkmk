@@ -396,12 +396,14 @@ import lightIconPredictionPng from '~cmk-frontend/themes/facelift/images/icon_pr
 import lightIconProblemSvg from '~cmk-frontend/themes/facelift/images/icon_problem.svg?url&no-inline'
 import lightIconProductSvg from '~cmk-frontend/themes/facelift/images/icon_product.svg?url&no-inline'
 import lightIconPrometheusSvg from '~cmk-frontend/themes/facelift/images/icon_prometheus.svg?url&no-inline'
+import lightIconProxmoxVeSvg from '~cmk-frontend/themes/facelift/images/icon_proxmox_ve.svg?url&no-inline'
 import lightIconQaSvg from '~cmk-frontend/themes/facelift/images/icon_qa.svg?url&no-inline'
 import lightIconQsAwsSvg from '~cmk-frontend/themes/facelift/images/icon_qs_aws.svg?url&no-inline'
 import lightIconQsAzureSvg from '~cmk-frontend/themes/facelift/images/icon_qs_azure.svg?url&no-inline'
 import lightIconQsGcpSvg from '~cmk-frontend/themes/facelift/images/icon_qs_gcp.svg?url&no-inline'
 import lightIconQsOtelSvg from '~cmk-frontend/themes/facelift/images/icon_qs_otel.svg?url&no-inline'
 import lightIconQsPrometheusSvg from '~cmk-frontend/themes/facelift/images/icon_qs_prometheus.svg?url&no-inline'
+import lightIconQsProxmoxVeSvg from '~cmk-frontend/themes/facelift/images/icon_qs_proxmox_ve.svg?url&no-inline'
 import lightIconQsRelaySvg from '~cmk-frontend/themes/facelift/images/icon_qs_relay.svg?url&no-inline'
 import lightIconQuickSetupAwsSvg from '~cmk-frontend/themes/facelift/images/icon_quick_setup_aws.svg?url&no-inline'
 import lightIconQuicksearchPng from '~cmk-frontend/themes/facelift/images/icon_quicksearch.png?url&no-inline'
@@ -681,7 +683,9 @@ import darkIconNagiosSvg from '~cmk-frontend/themes/modern-dark/images/icon_nagi
 import darkIconNetworkSvg from '~cmk-frontend/themes/modern-dark/images/icon_network.svg?url&no-inline'
 import darkIconPerformanceDataSvg from '~cmk-frontend/themes/modern-dark/images/icon_performance_data.svg?url&no-inline'
 import darkIconProductSvg from '~cmk-frontend/themes/modern-dark/images/icon_product.svg?url&no-inline'
+import darkIconProxmoxVeSvg from '~cmk-frontend/themes/modern-dark/images/icon_proxmox_ve.svg?url&no-inline'
 import darkIconQaSvg from '~cmk-frontend/themes/modern-dark/images/icon_qa.svg?url&no-inline'
+import darkIconQsProxmoxVeSvg from '~cmk-frontend/themes/modern-dark/images/icon_qs_proxmox_ve.svg?url&no-inline'
 import darkIconReloadCmkSvg from '~cmk-frontend/themes/modern-dark/images/icon_reload_cmk.svg?url&no-inline'
 import darkIconRulesetsSvg from '~cmk-frontend/themes/modern-dark/images/icon_rulesets.svg?url&no-inline'
 import darkIconSaasSvg from '~cmk-frontend/themes/modern-dark/images/icon_saas.svg?url&no-inline'
@@ -1471,6 +1475,8 @@ export const themedIcons: Record<'light' | 'dark', Partial<Record<IconNames, str
     qa: lightIconQaSvg,
     development: lightIconDevelopmentSvg,
     product: lightIconProductSvg,
+    'proxmox-ve': lightIconProxmoxVeSvg,
+    'qs-proxmox-ve': lightIconQsProxmoxVeSvg,
     unavailable: lightIconUnavailableSvg,
     ux: lightIconUXSvg
   },
@@ -1548,6 +1554,8 @@ export const themedIcons: Record<'light' | 'dark', Partial<Record<IconNames, str
     qa: darkIconQaSvg,
     development: darkIconDevelopmentSvg,
     product: darkIconProductSvg,
+    'proxmox-ve': darkIconProxmoxVeSvg,
+    'qs-proxmox-ve': darkIconQsProxmoxVeSvg,
     unavailable: darkIconUnavailableSvg,
     ux: darkIconUXSvg
   }

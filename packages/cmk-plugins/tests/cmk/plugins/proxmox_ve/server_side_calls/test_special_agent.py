@@ -86,6 +86,22 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
             ],
             id="connect_custom",
         ),
+        pytest.param(
+            {
+                "username": "user",
+                "password": Secret(23),
+                "connection_test": True,
+            },
+            [
+                "-u",
+                "user",
+                "--password-id",
+                Secret(23),
+                "--connection-test",
+                "testhost",
+            ],
+            id="connection_test",
+        ),
     ],
 )
 def test_agent_proxmox_ve_arguments(

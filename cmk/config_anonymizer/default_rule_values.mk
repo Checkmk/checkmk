@@ -4981,7 +4981,7 @@ checkgroup_parameters['proxmox_ve_cpu_util'] = [
 checkgroup_parameters.setdefault('proxmox_ve_disk_percentage_used', [])
 
 checkgroup_parameters['proxmox_ve_disk_percentage_used'] = [
-{'id': 'c541f61c-e074-4803-850d-d232a51c11b9', 'value': {'levels': (80.0, 90.0)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'c541f61c-e074-4803-850d-d232a51c11b9', 'value': {'levels': ('fixed', (80.0, 90.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['proxmox_ve_disk_percentage_used']
 
 
@@ -5002,7 +5002,7 @@ checkgroup_parameters['proxmox_ve_ha_manager_status'] = [
 checkgroup_parameters.setdefault('proxmox_ve_mem_usage', [])
 
 checkgroup_parameters['proxmox_ve_mem_usage'] = [
-{'id': '49c172f6-4af0-4eb5-b3ed-4cef6a989e6a', 'value': {'levels': (80.0, 90.0)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '49c172f6-4af0-4eb5-b3ed-4cef6a989e6a', 'value': {'levels': ('fixed', (80.0, 90.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['proxmox_ve_mem_usage']
 
 
@@ -5023,7 +5023,7 @@ checkgroup_parameters['proxmox_ve_node_cpu_allocation'] = [
 checkgroup_parameters.setdefault('proxmox_ve_node_info', [])
 
 checkgroup_parameters['proxmox_ve_node_info'] = [
-{'id': '3a3aa335-ec03-4b66-9809-04231cf0d578', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '3a3aa335-ec03-4b66-9809-04231cf0d578', 'value': {'subscription_expiration_days_levels': ('fixed', (30, 7))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['proxmox_ve_node_info']
 
 
@@ -5051,14 +5051,14 @@ checkgroup_parameters['proxmox_ve_vm_backup_status'] = [
 checkgroup_parameters.setdefault('proxmox_ve_vm_info', [])
 
 checkgroup_parameters['proxmox_ve_vm_info'] = [
-{'id': 'a215fd38-4b0d-4865-8143-6b4df9f019dd', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'a215fd38-4b0d-4865-8143-6b4df9f019dd', 'value': {'lock_duration': ('fixed', (900.0, 1800.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['proxmox_ve_vm_info']
 
 
 checkgroup_parameters.setdefault('proxmox_ve_vm_snapshot_age', [])
 
 checkgroup_parameters['proxmox_ve_vm_snapshot_age'] = [
-{'id': '5187a98b-d4bc-4d12-9a57-092af61321c2', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '5187a98b-d4bc-4d12-9a57-092af61321c2', 'value': {'oldest_levels': ('fixed', (86400.0, 172800.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['proxmox_ve_vm_snapshot_age']
 
 
@@ -10822,21 +10822,21 @@ static_checks['prometheus_custom'] = [
 static_checks.setdefault('proxmox_ve_disk_percentage_used', [])
 
 static_checks['proxmox_ve_disk_percentage_used'] = [
-{'id': 'b922ced2-ae73-46eb-a09a-3b2dc19d3f93', 'value': ('proxmox_ve_disk_usage', None, {'levels': (80.0, 90.0)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'b922ced2-ae73-46eb-a09a-3b2dc19d3f93', 'value': ('proxmox_ve_disk_usage', None, {'levels': ('fixed', (80.0, 90.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['proxmox_ve_disk_percentage_used']
 
 
 static_checks.setdefault('proxmox_ve_mem_usage', [])
 
 static_checks['proxmox_ve_mem_usage'] = [
-{'id': 'f6b8f272-292a-488d-8ecc-057a2e11ce60', 'value': ('proxmox_ve_mem_usage', None, {'levels': (80.0, 90.0)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'f6b8f272-292a-488d-8ecc-057a2e11ce60', 'value': ('proxmox_ve_mem_usage', None, {'levels': ('fixed', (80.0, 90.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['proxmox_ve_mem_usage']
 
 
 static_checks.setdefault('proxmox_ve_node_info', [])
 
 static_checks['proxmox_ve_node_info'] = [
-{'id': '0fc1ffbc-e08c-42ea-aaac-fe57340b1af5', 'value': ('proxmox_ve_node_info', None, {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '0fc1ffbc-e08c-42ea-aaac-fe57340b1af5', 'value': ('proxmox_ve_node_info', None, {'subscription_expiration_days_levels': ('fixed', (30, 7))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['proxmox_ve_node_info']
 
 
@@ -10850,14 +10850,14 @@ static_checks['proxmox_ve_vm_backup_status'] = [
 static_checks.setdefault('proxmox_ve_vm_info', [])
 
 static_checks['proxmox_ve_vm_info'] = [
-{'id': 'c787c18e-f4c5-406a-bc33-091470ecaca4', 'value': ('proxmox_ve_vm_info', None, {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'c787c18e-f4c5-406a-bc33-091470ecaca4', 'value': ('proxmox_ve_vm_info', None, {'lock_duration': ('fixed', (900.0, 1800.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['proxmox_ve_vm_info']
 
 
 static_checks.setdefault('proxmox_ve_vm_snapshot_age', [])
 
 static_checks['proxmox_ve_vm_snapshot_age'] = [
-{'id': '8a15b3a2-59e0-4f45-a3e3-aa55b911d79d', 'value': ('proxmox_ve_vm_snapshot_age', None, {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '8a15b3a2-59e0-4f45-a3e3-aa55b911d79d', 'value': ('proxmox_ve_vm_snapshot_age', None, {'oldest_levels': ('fixed', (86400.0, 172800.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['proxmox_ve_vm_snapshot_age']
 
 

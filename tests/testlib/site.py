@@ -1741,6 +1741,15 @@ class Site:
             if re.search("systime", crash_detail):
                 logger.warning("Ignored crash report. See CMK-20674")
                 continue
+            if crash_type == "BrokenPipeError" and any(
+                "cmk-create-rrd" in arg for arg in crash.get("details", {}).get("argv", [])
+            ):
+                # cmc closes the RRD helper's stdout pipe during shutdown (e.g. the core
+                # restart that follows a site update); the helper's os.write then raises
+                # BrokenPipeError, which the generic handler turns into a crash report.
+                # Assumed benign - to be confirmed by the component team. See CMK-35802.
+                logger.warning("Ignored crash report. See CMK-35802")
+                continue
             if re.search("Licensed phase: too many services.", crash_detail):
                 logger.warning("Ignored crash report due to license violation!")
             if ignore_bakery_crashes and re.search(r"bake-agents|bake_agents", crash_detail):

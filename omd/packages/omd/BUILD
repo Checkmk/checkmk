@@ -203,6 +203,7 @@ py_library(
         "omdlib/livestatus.py",
         "omdlib/main.py",
         "omdlib/main_site_user.py",
+        "omdlib/mkeventd.py",
         "omdlib/options.py",
         "omdlib/options_legacy.py",
         "omdlib/package_manager.py",

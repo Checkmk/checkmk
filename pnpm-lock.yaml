@@ -8,6 +8,7 @@ overrides:
   glob: ^11.1.0
   uuid: ^14.0.0
   js-yaml: ^4.1.0
+  '@ranfdev/deepobj': ^1.0.3
 
 importers:
 
@@ -3426,8 +3427,8 @@ packages:
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
     dev: true
 
-  /@ranfdev/deepobj@1.0.2:
-    resolution: {integrity: sha512-FM3y6kfJaj5MCoAjdv24EDCTDbuFz+4+pgAunbjYfugwIE4O/xx8mPNji1n/ouG8pHCntSnBr1xwTOensF23Gg==}
+  /@ranfdev/deepobj@1.0.4:
+    resolution: {integrity: sha512-skfyKxqaXUjAeLD/uZR1drUzoMaooddZXlhqDMXuha4BFwBAjt8oZclb2HQ/iY7ad1Zyo7GgfW6XcW2fg3237Q==}
     dev: false
 
   /@redocly/ajv@8.11.3:
@@ -7005,7 +7006,7 @@ packages:
   /crossfilter2@1.5.4:
     resolution: {integrity: sha512-oOGqOM0RocwQFOXJnEaUKqYV6Mc1TNCRv3LrNUa0QlofQTutGAXyQaLW1aGKLls2sfnbwBEtsa6tPD3jY+ycqQ==}
     dependencies:
-      '@ranfdev/deepobj': 1.0.2
+      '@ranfdev/deepobj': 1.0.4
     dev: false
 
   /css-declaration-sorter@7.3.0(postcss@8.5.6):

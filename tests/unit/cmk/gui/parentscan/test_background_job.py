@@ -16,13 +16,13 @@ from cmk.automations.results import Gateway, GatewayResult, ScanParentsResult
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.utils.script_helpers import application_and_request_context
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
-from cmk.gui.watolib.parent_scan import (
+from cmk.gui.parentscan.background_job import (
     ParentScanBackgroundJob,
     ParentScanSettings,
     start_parent_scan,
 )
+from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 
 
 @pytest.fixture(name="host")
@@ -52,7 +52,7 @@ def test_scan_parents_job(
     suppress_bake_agents_in_background: MagicMock, mocker: MockerFixture, host: Host
 ) -> None:
     # GIVEN
-    scan_parents_mock = mocker.patch("cmk.gui.watolib.parent_scan.scan_parents")
+    scan_parents_mock = mocker.patch("cmk.gui.parentscan.background_job.scan_parents")
     scan_parents_mock.return_value = ScanParentsResult(
         results=[GatewayResult(Gateway(None, HostAddress("123.0.0.1"), None), "gateway", 0, "")]
     )

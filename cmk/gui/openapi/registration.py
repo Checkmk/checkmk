@@ -24,7 +24,6 @@ from cmk.gui.openapi.endpoints import (
     host_internal,
     host_tag_group,
     notification_rules,
-    parent_scan,
     quick_setup,
     rule,
     ruleset,
@@ -83,7 +82,6 @@ def register(
     host_internal.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     host_tag_group.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     notification_rules.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
-    parent_scan.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     rule.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     ruleset.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     service.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)

@@ -31,7 +31,7 @@ def test_openapi_parent_scan_background(
         ]
     )
 
-    automation = mocker.patch("cmk.gui.watolib.parent_scan.scan_parents")
+    automation = mocker.patch("cmk.gui.parentscan.background_job.scan_parents")
     resp = clients.ParentScan.start(
         host_names=["foobar", "sample"],
         gateway_hosts={
@@ -103,7 +103,7 @@ def test_openapi_parent_scan_background_non_admin(
         with_automation_user_not_admin[0], with_automation_user_not_admin[1]
     )
 
-    mocker.patch("cmk.gui.watolib.parent_scan.scan_parents")
+    mocker.patch("cmk.gui.parentscan.background_job.scan_parents")
 
     resp = clients.ParentScan.start(
         host_names=["foobar", "sample"],

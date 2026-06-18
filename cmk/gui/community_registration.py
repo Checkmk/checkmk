@@ -44,6 +44,7 @@ from cmk.gui.openapi.endpoints import metric as metric_endpoint
 from cmk.gui.pages import page_registry, PageEndpoint
 from cmk.gui.painter.v0 import painter_registry
 from cmk.gui.painter_options import painter_option_registry
+from cmk.gui.parentscan.register import register as parentscan_register
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.search import match_item_generator_registry
@@ -132,6 +133,13 @@ def register_painters() -> None:
 def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> None:
     sample_config_generator_registry.register(SampleConfigGeneratorGroups)
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
+    parentscan_register(
+        mode_registry,
+        job_registry,
+        endpoint_registry,
+        permission_registry,
+        ignore_duplicate_endpoints=ignore_duplicate_endpoints,
+    )
     nagvis.register(permission_section_registry, permission_registry, snapin_registry)
     roles.register(mode_registry)
     login.register(page_registry)

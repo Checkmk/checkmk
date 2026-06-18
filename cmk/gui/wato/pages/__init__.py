@@ -40,7 +40,6 @@ from . import (
     not_implemented,
     notifications,
     object_parameters,
-    parentscan,
     password_store,
     pattern_editor,
     predefined_conditions,
@@ -102,7 +101,6 @@ def register(
         automation_command_registry,
     )
     object_parameters.register(mode_registry)
-    parentscan.register(mode_registry)
     password_store.register(mode_registry)
     pattern_editor.register(mode_registry, match_item_generator_registry)
     predefined_conditions.register(mode_registry)

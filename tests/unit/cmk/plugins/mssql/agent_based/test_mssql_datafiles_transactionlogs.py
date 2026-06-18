@@ -5,6 +5,7 @@
 
 from collections.abc import Sequence
 from functools import lru_cache
+from typing import NamedTuple
 
 import pytest
 
@@ -330,4 +331,232 @@ def test_check_mssql_transactionlogs_multiple_mp_summary() -> None:
         Result(state=State.OK, summary="Allocated: 248 GiB"),
         Metric("allocated_size", 266107617280.0, boundaries=(0.0, 868418453504.0)),
         Result(state=State.OK, summary="Maximum size: 809 GiB"),
+    ]
+
+
+SUP29484_DF = [
+    ["sys", "NTFS", "125315068", "35448632", "89866436", "29%", "C:\\"],
+    ["user", "NTFS", "52425724", "26347860", "26077864", "51%", "D:\\"],
+    ["user2", "NTFS", "838854592", "619967168", "218887424", "74%", "E:\\"],
+    ["user3", "NTFS", "524284924", "263515944", "260768980", "51%", "F:\\"],
+    ["user4", "NTFS", "52425664", "4295936", "48129728", "9%", "G:\\"],
+    ["user5", "NTFS", "52425664", "4295936", "48129728", "9%", "H:\\"],
+    ["user6", "NTFS", "52425724", "1151300", "51274424", "3%", "I:\\"],
+]
+
+SUP29484_MSSQL_DATAFILES = [
+    [
+        "MSSQLSERVER",
+        "ppppppppppppppppp",
+        "ppppppppppppppppp_1",
+        r"E:\MSSQL_Data\ppppppppppppppppp.mdf",
+        "32768",
+        "32768",
+        "28437",
+        "0",
+    ],
+    [
+        "MSSQLSERVER",
+        "ppppppppppppppppp",
+        "ppppppppppppppppp_2",
+        r"E:\MSSQL_Data\ppppppppppppppppp_2.ndf",
+        "32768",
+        "32768",
+        "28251",
+        "0",
+    ],
+    [
+        "MSSQLSERVER",
+        "ppppppppppppppppp",
+        "ppppppppppppppppp_3",
+        r"E:\MSSQL_Data\ppppppppppppppppp_3.ndf",
+        "32768",
+        "32768",
+        "27473",
+        "0",
+    ],
+    [
+        "MSSQLSERVER",
+        "ppppppppppppppppp",
+        "ppppppppppppppppp_4",
+        r"E:\MSSQL_Data\ppppppppppppppppp_4.ndf",
+        "32768",
+        "23552",
+        "20990",
+        "0",
+    ],
+    [
+        "MSSQLSERVER",
+        "ppppppppppppppppp",
+        "ppppppppppppppppp_5",
+        r"E:\MSSQL_Data\ppppppppppppppppp_5.ndf",
+        "10240",
+        "1024",
+        "647",
+        "0",
+    ],
+]
+
+
+def test_datafile_usage_unlimited_poisons_other_filesystems() -> None:
+    limited: msdt.MSSQLInstanceData = {
+        "unlimited": False,
+        "max_size": 10,
+        "allocated_size": 3,
+        "used_size": 7,
+        "mountpoint": "x:\\limited.mdf",
+    }
+    unlimited: msdt.MSSQLInstanceData = {
+        "unlimited": True,
+        "max_size": 0,
+        "allocated_size": 4,
+        "used_size": 6,
+        "mountpoint": "y:\\unlimited.ldf",
+    }
+    free_space_per_mountpoint = {"x:/": 1000, "y:/": 1000}
+
+    unlimited_second = msdt._datafile_usage([limited, unlimited], free_space_per_mountpoint)
+    unlimited_first = msdt._datafile_usage([unlimited, limited], free_space_per_mountpoint)
+
+    # correct
+    assert unlimited_second.max == 10 + 1006
+    # THIS IS A BUG!
+    assert unlimited_first.max == 1006 + 1007
+    assert unlimited_second.max != unlimited_first.max
+
+    assert unlimited_first.used == unlimited_second.used == 7 + 6
+    assert unlimited_first.allocated == unlimited_second.allocated == 3 + 4
+
+
+def test_datafile_usage_no_filesystem_info_dedup_poisons_repeated_files() -> None:
+    first: msdt.MSSQLInstanceData = {
+        "unlimited": False,
+        "max_size": 100,
+        "allocated_size": 50,
+        "used_size": 7,
+        "mountpoint": "z:\\data\\first.mdf",
+    }
+    second: msdt.MSSQLInstanceData = {
+        "unlimited": False,
+        "max_size": 200,
+        "allocated_size": 60,
+        "used_size": 8,
+        "mountpoint": "z:\\data\\second.mdf",
+    }
+
+    usage = msdt._datafile_usage([first, second], {})
+
+    assert usage.max == 100 + 8  # THIS IS A BUG! should be 100 + 200
+
+
+class _Scenario(NamedTuple):
+    unlimited: bool
+    max_size: float | None
+    used_size: float
+    allocated_size: float
+    filesystem_free: float | None
+    expected_max: float
+
+
+@pytest.mark.parametrize(
+    "scenario",
+    [
+        pytest.param(
+            _Scenario(
+                unlimited=False,
+                max_size=100,
+                used_size=7,
+                allocated_size=50,
+                filesystem_free=None,
+                expected_max=100,
+            ),
+            id="no-df-limited-uses-configured-max",
+        ),
+        pytest.param(
+            _Scenario(
+                unlimited=False,
+                max_size=None,
+                used_size=7,
+                allocated_size=50,
+                filesystem_free=None,
+                expected_max=0,
+            ),
+            id="no-df-no-configured-max",
+        ),
+        pytest.param(
+            _Scenario(
+                unlimited=True,
+                max_size=None,
+                used_size=7,
+                allocated_size=50,
+                filesystem_free=None,
+                expected_max=0,
+            ),
+            id="no-df-unlimited-still-zero",
+        ),
+        pytest.param(
+            _Scenario(
+                unlimited=True,
+                max_size=100,
+                used_size=7,
+                allocated_size=50,
+                filesystem_free=1000,
+                expected_max=1007,
+            ),
+            id="df-unlimited-uses-free-plus-used",
+        ),
+        pytest.param(
+            _Scenario(
+                unlimited=False,
+                max_size=100,
+                used_size=7,
+                allocated_size=50,
+                filesystem_free=1000,
+                expected_max=100,
+            ),
+            id="df-limited-capped-by-configured-max",
+        ),
+        pytest.param(
+            _Scenario(
+                unlimited=False,
+                max_size=100000,
+                used_size=7,
+                allocated_size=50,
+                filesystem_free=10,
+                expected_max=17,  # THIS IS A BUG! it should be 100000
+            ),
+            id="df-limited-capped-by-filesystem",
+        ),
+    ],
+)
+def test_effective_max_size_paths(scenario: _Scenario) -> None:
+    instance: msdt.MSSQLInstanceData = {
+        "unlimited": scenario.unlimited,
+        "max_size": scenario.max_size,
+        "allocated_size": scenario.allocated_size,
+        "used_size": scenario.used_size,
+        "mountpoint": "z:\\data\\file.mdf",
+    }
+    mountpoints = {} if scenario.filesystem_free is None else {"z:/": scenario.filesystem_free}
+
+    assert msdt._datafile_usage([instance], mountpoints).max == scenario.expected_max
+
+
+def test_check_mssql_transactionlogs_multiple_mp_summary_SUP29484() -> None:
+    assert list(
+        msdt.check_mssql_transactionlogs(
+            "MSSQLSERVER.ppppppppppppppppp",
+            {},
+            msdt.parse_mssql_datafiles(SUP29484_MSSQL_DATAFILES),
+            parse_df(SUP29484_DF),
+        )
+    ) == [
+        Result(state=State.OK, summary="Used: 103 GiB"),
+        Metric("data_size", 110937243648.0, boundaries=(0.0, 115478626304.0)),
+        Result(state=State.OK, summary="Allocated used: 103 GiB"),
+        Result(state=State.OK, summary="Allocated: 120 GiB"),
+        Metric("allocated_size", 128849018880.0, boundaries=(0.0, 115478626304.0)),
+        Result(
+            state=State.OK, summary="Maximum size: 108 GiB"
+        ),  # THIS IS A BUG! should be 138 GiB, can not be smaller as allocated?!
     ]

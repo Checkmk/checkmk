@@ -116,5 +116,8 @@
     "select2": "^4.0.13",
     "simplebar": "^6.2.7",
     "sweetalert2": "^11.14.5"
+  },
+  "overrides": {
+    "@ranfdev/deepobj": "^1.0.3"
   }
 }

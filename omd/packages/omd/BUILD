@@ -200,6 +200,7 @@ py_library(
         "omdlib/init_scripts.py",
         "omdlib/instance_id.py",
         "omdlib/jaeger.py",
+        "omdlib/liveproxyd.py",
         "omdlib/livestatus.py",
         "omdlib/main.py",
         "omdlib/main_site_user.py",

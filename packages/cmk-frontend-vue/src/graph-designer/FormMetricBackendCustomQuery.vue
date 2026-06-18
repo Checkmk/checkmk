@@ -6,11 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type GraphLineQueryAttributes } from 'cmk-shared-typing/typescript/graph_designer'
-import type {
-  Autocompleter,
-  MetricBackendCustomQuery
-} from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { computed, ref } from 'vue'
+import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
@@ -22,11 +19,11 @@ import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 import CmkTimeSpan from '@/components/user-input/CmkTimeSpan/CmkTimeSpan.vue'
 
-import FormAutocompleter from '@/form/private/FormAutocompleter/FormAutocompleter.vue'
 import FormHelp from '@/form/private/FormHelp.vue'
 import { type ValidationMessages } from '@/form/private/validation'
 
 import FormMetricBackendAttributes from '@/metric-backend/FormMetricBackendAttributes.vue'
+import FormMetricNameAutocompleter from '@/metric-backend/FormMetricNameAutocompleter.vue'
 
 const { _t } = usei18n()
 
@@ -100,6 +97,7 @@ immediateWatch(
 )
 
 const metricName = defineModel<string | null>('metricName', { default: null })
+const metricTypes = defineModel<string[]>('metricTypes', { default: () => [] })
 const resourceAttributes = defineModel<GraphLineQueryAttributes>('resourceAttributes', {
   default: []
 })
@@ -115,20 +113,6 @@ const aggregationLookback = defineModel<number>('aggregationLookback', {
 const aggregationHistogramPercentile = defineModel<number>('aggregationHistogramPercentile', {
   required: true
 })
-
-const metricNameAutocompleter = computed<Autocompleter>(() => ({
-  fetch_method: 'rest_autocomplete',
-  data: {
-    ident: 'monitored_metrics_backend',
-    params: {
-      context: metricName.value
-        ? {
-            metric_name: metricName.value
-          }
-        : {}
-    }
-  }
-}))
 </script>
 
 <template>
@@ -141,13 +125,13 @@ const metricNameAutocompleter = computed<Autocompleter>(() => ({
         </td>
         <td>
           <CmkInlineValidation :validation="validationByLocation.metric_name"></CmkInlineValidation>
-          <FormAutocompleter
-            v-model="metricName"
+          <FormMetricNameAutocompleter
+            v-model:metric-name="metricName"
+            v-model:metric-types="metricTypes"
             :label="_t('Metric name')"
-            :autocompleter="metricNameAutocompleter"
             :placeholder="_t('Metric name')"
             :has-error="validationByLocation.metric_name.length > 0"
-            @update:model-value="validationByLocation.metric_name = []"
+            @update:metric-name="validationByLocation.metric_name = []"
           />
         </td>
       </tr>

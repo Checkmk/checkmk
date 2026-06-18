@@ -618,7 +618,6 @@ describe('Adding a Query graph line', { timeout: 20_000 }, () => {
     type Id = string
     type Value = string
     const choicesByIdent: Record<string, Array<{ id: Id; value: Value }>> = {
-      monitored_metrics_backend: [{ id: 'dummy_metric_name', value: 'Dummy Metric Name' }],
       monitored_resource_attributes_keys_backend: [
         { id: 'dummy_resource_attribute_key', value: 'Dummy Resource Attribute key' }
       ],
@@ -654,6 +653,13 @@ describe('Adding a Query graph line', { timeout: 20_000 }, () => {
       http.post(
         `${location.protocol}//${location.host}/api/1.0/objects/autocomplete/:autocompleter`,
         autocompleteInterceptor
+      ),
+      http.post(
+        `${location.protocol}//${location.host}/api/internal/domain-types/metric_backend/actions/names_with_types/invoke`,
+        () =>
+          HttpResponse.json({
+            choices: [{ name: 'Dummy Metric Name', types: ['gauge'] }]
+          })
       )
     )
   })

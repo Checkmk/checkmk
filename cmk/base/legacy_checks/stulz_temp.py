@@ -59,10 +59,9 @@ def parse_stulz_temp(string_table):
     parsed = {}
     for oidend, reading_str in string_table:
         oids = oidend.split(".")
-        temp_ty = oids[0]
-        index = oids[2]
+        temp_ty, bus, unit = oids[0], oids[1], oids[2]
         if temp_ty in map_types and reading_str != "999":
-            itemname = f"{map_types[temp_ty]}-{index}"
+            itemname = f"{map_types[temp_ty]} {bus}-{unit}"
             parsed.setdefault(itemname, float(reading_str) / 10)
 
     return parsed

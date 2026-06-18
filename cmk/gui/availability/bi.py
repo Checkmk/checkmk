@@ -380,7 +380,7 @@ def compute_bi_timelines(
 
     bi_manager = BIManager()
 
-    logger.warning(
+    logger.debug(
         "Computing timelines for range %r. %d phases and %d timeline containers",
         tuple(map(lambda x: time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(x)), time_range)),
         len(phases_list),
@@ -438,7 +438,7 @@ def compute_bi_timelines(
             )
         )
 
-    logger.warning("Timeline generation finished. Computed %d aggregations", computed_aggregations)
+    logger.debug("Timeline generation finished. Computed %d aggregations", computed_aggregations)
     return timeline_containers
 
 

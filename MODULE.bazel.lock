@@ -937,6 +937,31 @@
         "recordedRepoMappingEntries": []
       }
     },
+    "@@libxml2+//:extensions.bzl%libxml2": {
+      "general": {
+        "bzlTransitiveDigest": "/NBkW2bl3gpGdX4KI767AEM1QKN/+fLyISZXz2ShXFQ=",
+        "usagesDigest": "IAFNRlgZLs+zIccVvvesKC+mPMXxAyzftOj/Mf1UpqU=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "libxml2": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:local.bzl%new_local_repository",
+            "attributes": {
+              "build_file": "@@libxml2+//:BUILD.libxml2.bazel",
+              "path": "/usr"
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "libxml2+",
+            "bazel_tools",
+            "bazel_tools"
+          ]
+        ]
+      }
+    },
     "@@perl-modules+//:extensions.bzl%perl_modules": {
       "general": {
         "bzlTransitiveDigest": "0N81OWmLbJkIaOhPdKTytfOZ9pBrTxSa9PAOUUZw7IQ=",

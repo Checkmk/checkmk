@@ -1,0 +1,16 @@
+module(
+    name = "libxml2",
+    version = "2.0.cmk.1",
+    bazel_compatibility = [">=7.2.1"],
+    compatibility_level = 1,
+)
+
+# Provides @cmk//filesystem_layout config_settings used by the select() in
+# BUILD.libxml2.bazel (the overlay applied to the @libxml2 repo created by
+# //:extensions.bzl).
+bazel_dep(name = "cmk", version = "1.0.0")
+
+# The @libxml2 repo provided by //:extensions.bzl is consumed by the root module
+# and the rrdtool module (which use_repo it); this module only hosts the
+# extension definition, so it does not use_repo it itself (the name "libxml2" is
+# already taken by this module).

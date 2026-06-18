@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::Result;
+use anyhow::{bail, Result};
+use std::collections::HashMap;
 use std::path::Path;
 
 /// Full migration pipeline: read legacy config, execute it, convert to new format.
@@ -39,12 +40,47 @@ pub fn migrate(input: &Path) -> Result<String> {
 /// - Original config content as comments
 /// - Extracted environment variables as comments
 /// - Resulting YAML configuration
+// DBUSER fields: USERNAME:PASSWORD:ROLE:HOST:PORT:TNSALIAS
+struct LegacyDbUser {
+    username: String,
+    password: String,
+    role: Option<String>,
+    hostname: String,
+    port: Option<String>,
+    alias_or_sid: String,
+}
+
+fn optional_value(s: &str) -> Option<String> {
+    (!s.is_empty()).then(|| s.to_string())
+}
+
+fn parse_dbuser(value: &str) -> Result<LegacyDbUser> {
+    let fields: Vec<&str> = value.splitn(6, ':').collect();
+    if fields.len() < 2 {
+        bail!("DBUSER must have at least username:password, got: {value}");
+    }
+    let field = |i: usize| fields.get(i).copied().unwrap_or("");
+    Ok(LegacyDbUser {
+        username: field(0).to_string(),
+        password: field(1).to_string(),
+        role: optional_value(field(2)),
+        hostname: field(3).to_string(),
+        port: optional_value(field(4)),
+        alias_or_sid: optional_value(field(5)).unwrap_or_else(|| "$ORACLE_SID".to_string()),
+    })
+}
+
 pub fn convert(
     legacy: &str,
     source_path: &str,
-    variables: &[(String, String)],
+    variables: &HashMap<String, String>,
     timestamp: &str,
 ) -> Result<String> {
+    let dbuser_raw = variables
+        .get("DBUSER")
+        .ok_or_else(|| anyhow::anyhow!("DBUSER not defined in legacy config, cannot generate"))?;
+    let dbuser = parse_dbuser(dbuser_raw)?;
+
     let mut out = String::new();
 
     out.push_str(&format!(
@@ -61,19 +97,37 @@ pub fn convert(
         out.push_str(&format!("# {name} {value}\n"));
     }
 
-    out.push_str(
-        r#"# --- Unified Config ---
----
-oracle:
-  main:
-    connection:
-      hostname: localhost
-      port: 1521
-    authentication:
-      username: CHANGE_ME
-      type: standard
-"#,
-    );
+    out.push_str("# --- Unified Config ---\n---\noracle:\n  main:\n");
+
+    // connection
+    let host = if dbuser.hostname.is_empty() {
+        "localhost"
+    } else {
+        &dbuser.hostname
+    };
+    out.push_str(&format!("    connection:\n      hostname: {host}\n"));
+    if let Some(port) = &dbuser.port {
+        out.push_str(&format!("      port: {port}\n"));
+    }
+    if let Some(tns_admin) = variables.get("TNS_ADMIN") {
+        out.push_str(&format!("      tns_admin: {tns_admin}\n"));
+    }
+
+    // authentication
+    out.push_str(&format!(
+        "    authentication:\n      username: \"{}\"\n      password: \"{}\"\n      type: standard\n",
+        dbuser.username, dbuser.password
+    ));
+    if let Some(role) = &dbuser.role {
+        out.push_str(&format!("      role: {}\n", role.to_lowercase()));
+    }
+
+    // instances from DBUSER
+    out.push_str("    instances:\n");
+    out.push_str(&format!(
+        "      - sid: {}\n        alias: {}\n",
+        dbuser.alias_or_sid, dbuser.alias_or_sid
+    ));
 
     Ok(out)
 }
@@ -148,7 +202,7 @@ const KNOWN_PREFIXES: &[&str] = &["REMOTE_INSTANCE_", "EXCLUDE_"];
 /// powershell on Windows) and captures known variable values.
 ///
 /// Returns pairs of (name, value) for variables with non-empty values.
-pub fn convert_config(config_path: &Path) -> Result<Vec<(String, String)>> {
+pub fn convert_config(config_path: &Path) -> Result<HashMap<String, String>> {
     let output = run_config_shell(config_path)?;
     parse_variable_output(&output)
 }
@@ -243,7 +297,7 @@ fn powershell_quote(s: &str) -> String {
     format!("'{}'", s.replace('\'', "''"))
 }
 
-fn parse_variable_output(output: &str) -> Result<Vec<(String, String)>> {
+fn parse_variable_output(output: &str) -> Result<HashMap<String, String>> {
     Ok(output
         .lines()
         .filter_map(|line| {
@@ -264,32 +318,28 @@ mod tests {
 
     #[test]
     fn test_convert_minimal() {
-        let legacy = "DBUSER='checkmk:secret::localhost::XE'\nCACHE_MAXAGE=600\n";
-        let vars = vec![
-            ("DBUSER".into(), "checkmk:secret::localhost::XE".into()),
-            ("CACHE_MAXAGE".into(), "600".into()),
-        ];
+        let legacy = "DBUSER='checkmk:secret::localhost::XE'\n";
+        let vars = HashMap::from([("DBUSER".into(), "checkmk:secret::localhost::XE".into())]);
         let result = convert(legacy, "/test/mk_oracle.cfg", &vars, TS).unwrap();
         assert!(result.starts_with(
             "# --- Converted from /test/mk_oracle.cfg at 2026-06-15 12:00:00 UTC ---\n"
         ));
         assert!(result.contains("# DBUSER='checkmk:secret::localhost::XE'"));
-        assert!(result.contains("# CACHE_MAXAGE=600"));
         assert!(result.contains("# --- Known environment variables defined in legacy config ---\n"));
-        assert!(result.contains("# DBUSER checkmk:secret::localhost::XE\n"));
-        assert!(result.contains("# CACHE_MAXAGE 600\n"));
         assert!(result.contains("# --- Unified Config ---\n"));
-        assert!(result.contains("oracle:\n"));
-        assert!(result.contains("  main:\n"));
+        assert!(result.contains("hostname: localhost"));
+        assert!(result.contains("      - sid: XE"));
+        assert!(result.contains("        alias: XE"));
+        assert!(result.contains("username: \"checkmk\""));
+        assert!(result.contains("password: \"secret\""));
     }
 
     #[test]
-    fn test_convert_empty() {
-        let result = convert("", "/test/empty.cfg", &[], TS).unwrap();
-        assert!(result.starts_with("# --- Converted from /test/empty.cfg at"));
-        assert!(result.contains("# --- Known environment variables defined in legacy config ---\n"));
-        assert!(result.contains("# --- Unified Config ---\n"));
-        assert!(result.contains("oracle:\n"));
+    fn test_convert_no_dbuser_fails() {
+        let result = convert("", "/test/empty.cfg", &HashMap::new(), TS);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("DBUSER not defined"), "got: {err}");
     }
 
     #[test]
@@ -298,7 +348,8 @@ mod tests {
                        ASMUSER='/::SYSASM:::'\n\
                        CACHE_MAXAGE=600\n\
                        REMOTE_INSTANCE_XE='user:pass::host:1521::XE::'\n";
-        let result = convert(legacy, "/test/cfg", &[], TS).unwrap();
+        let vars = HashMap::from([("DBUSER".into(), "user:pass::::".into())]);
+        let result = convert(legacy, "/test/cfg", &vars, TS).unwrap();
         for line in legacy.lines() {
             assert!(result.contains(&format!("# {line}")), "missing: {line}");
         }
@@ -306,12 +357,85 @@ mod tests {
 
     #[test]
     fn test_convert_result_is_valid_yaml() {
-        let legacy = "DBUSER='checkmk:secret:::'\n";
-        let vars = vec![("DBUSER".into(), "checkmk:secret:::".into())];
+        let legacy = "DBUSER='checkmk:secret::::'\n";
+        let vars = HashMap::from([("DBUSER".into(), "checkmk:secret::::".into())]);
         let result = convert(legacy, "/test/mk_oracle.cfg", &vars, TS).unwrap();
         let config = super::super::OracleConfig::load_str(&result);
         assert!(config.is_ok(), "generated YAML must be loadable: {result}");
         assert!(config.unwrap().ora_sql().is_some());
+    }
+
+    #[test]
+    fn test_convert_full_dbuser() {
+        let vars = HashMap::from([(
+            "DBUSER".into(),
+            "admin:s3cret:SYSDBA:dbhost:1522:ORCL".into(),
+        )]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(result.contains("hostname: dbhost"));
+        assert!(result.contains("port: 1522"));
+        assert!(result.contains("      - sid: ORCL"));
+        assert!(result.contains("        alias: ORCL"));
+        assert!(result.contains("username: \"admin\""));
+        assert!(result.contains("password: \"s3cret\""));
+        assert!(result.contains("role: sysdba"));
+    }
+
+    #[test]
+    fn test_convert_dbuser_defaults() {
+        let vars = HashMap::from([("DBUSER".into(), "user:pass::::".into())]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(result.contains("hostname: localhost"));
+        assert!(!result.contains("port:"));
+        assert!(!result.contains("role:"));
+    }
+
+    #[test]
+    fn test_convert_tns_admin() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "user:pass::::".into()),
+            ("TNS_ADMIN".into(), "/opt/oracle/tns".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(result.contains("tns_admin: /opt/oracle/tns"));
+    }
+
+    #[test]
+    fn test_parse_dbuser() {
+        let db = parse_dbuser("checkmk:secret:SYSDBA:myhost:1522:ORCL").unwrap();
+        assert_eq!(db.username, "checkmk");
+        assert_eq!(db.password, "secret");
+        assert_eq!(db.role.as_deref(), Some("SYSDBA"));
+        assert_eq!(db.hostname, "myhost");
+        assert_eq!(db.port.as_deref(), Some("1522"));
+        assert_eq!(db.alias_or_sid, "ORCL");
+    }
+
+    #[test]
+    fn test_parse_dbuser_empty_optionals() {
+        let db = parse_dbuser("user:pass::::").unwrap();
+        assert_eq!(db.username, "user");
+        assert_eq!(db.password, "pass");
+        assert!(db.role.is_none());
+        assert!(db.hostname.is_empty());
+        assert!(db.port.is_none());
+        assert_eq!(db.alias_or_sid, "$ORACLE_SID");
+    }
+
+    #[test]
+    fn test_parse_dbuser_minimal() {
+        let db = parse_dbuser("user:pass").unwrap();
+        assert_eq!(db.username, "user");
+        assert_eq!(db.password, "pass");
+        assert!(db.role.is_none());
+        assert!(db.hostname.is_empty());
+        assert!(db.port.is_none());
+        assert_eq!(db.alias_or_sid, "$ORACLE_SID");
+    }
+
+    #[test]
+    fn test_parse_dbuser_too_few_fields() {
+        assert!(parse_dbuser("onlyuser").is_err());
     }
 
     #[test]
@@ -335,10 +459,9 @@ mod tests {
         let output = "DBUSER checkmk:secret\nCACHE_MAXAGE 600\nSYNC_SECTIONS instance sessions\n";
         let result = parse_variable_output(output).unwrap();
         assert_eq!(result.len(), 3);
-        assert_eq!(result[0].0, "DBUSER");
-        assert_eq!(result[0].1, "checkmk:secret");
-        assert_eq!(result[1], ("CACHE_MAXAGE".into(), "600".into()));
-        assert!(result[2].1.contains("sessions"));
+        assert_eq!(result["DBUSER"], "checkmk:secret");
+        assert_eq!(result["CACHE_MAXAGE"], "600");
+        assert!(result["SYNC_SECTIONS"].contains("sessions"));
     }
 
     #[test]
@@ -346,7 +469,7 @@ mod tests {
         let output = "DBUSER checkmk\n\n BADNAME value\nNOSPACE\nVAR \n";
         let result = parse_variable_output(output).unwrap();
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].0, "DBUSER");
+        assert_eq!(result["DBUSER"], "checkmk");
     }
 
     #[cfg(unix)]
@@ -373,12 +496,8 @@ mod tests {
         let result = convert_config(&config_path);
         let _ = std::fs::remove_file(&config_path);
         let vars = result.unwrap();
-        assert!(vars
-            .iter()
-            .any(|(n, v)| n == "DBUSER" && v == "checkmk:secret"));
-        assert!(vars.iter().any(|(n, v)| n == "CACHE_MAXAGE" && v == "600"));
-        assert!(vars
-            .iter()
-            .any(|(n, v)| n == "REMOTE_INSTANCE_XE" && v == "user:pass::host"));
+        assert_eq!(vars["DBUSER"], "checkmk:secret");
+        assert_eq!(vars["CACHE_MAXAGE"], "600");
+        assert_eq!(vars["REMOTE_INSTANCE_XE"], "user:pass::host");
     }
 }

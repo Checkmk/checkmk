@@ -264,59 +264,6 @@ fn test_migrate_config_to_file() {
 }
 
 #[test]
-fn test_migrate_config_yaml_structure() {
-    let cfg = legacy_cfg_path();
-    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
-    let stdout = String::from_utf8(output.stdout).unwrap();
-
-    // Header
-    assert!(stdout.starts_with(&format!("# --- Converted from {cfg} at ")));
-
-    // Legacy config echoed as comments
-    for var in ["DBUSER", "ONLY_SIDS", "ORACLE_HOME", "TNS_ADMIN"] {
-        assert!(stdout.contains(var), "legacy config missing {var}");
-    }
-
-    // Extracted environment variables as comments
-    assert!(stdout.contains("# --- Known environment variables defined in legacy config ---\n"));
-    let env_value_of = |var: &str| -> Option<&str> {
-        let prefix = format!("# {var} ");
-        stdout
-            .lines()
-            .find(|l| l.starts_with(&prefix))
-            .map(|l| &l[prefix.len()..])
-    };
-    assert_eq!(
-        env_value_of("DBUSER"),
-        Some("c##checkmk:********::localhost::XE")
-    );
-    assert_eq!(env_value_of("ONLY_SIDS"), Some("XE"));
-    assert_eq!(
-        env_value_of("ORACLE_HOME"),
-        Some("/opt/oracle/product/21c/dbhomeXE")
-    );
-    assert_eq!(
-        env_value_of("TNS_ADMIN"),
-        Some("/opt/oracle/product/21c/dbhomeXE/network/admin")
-    );
-
-    // Unified config section
-    assert!(stdout.contains("# --- Unified Config ---\n"));
-    assert!(stdout.contains("      hostname: localhost\n"));
-    assert!(stdout.contains("      port: 1521\n"));
-    assert!(stdout.contains("      username: CHANGE_ME\n"));
-    assert!(stdout.contains("      type: standard\n"));
-
-    // Output must be loadable as valid Oracle config
-    let config = mk_oracle::config::OracleConfig::load_str(&stdout);
-    assert!(
-        config.is_ok(),
-        "migrated output must parse as YAML: {stdout}"
-    );
-    assert!(config.unwrap().ora_sql().is_some());
-}
-
-#[test]
 fn test_execute_config_reference() {
     use std::path::Path;
 
@@ -359,5 +306,92 @@ fn test_execute_config_reference() {
     assert!(
         !lines.iter().any(|l| l.starts_with("EXCLUDE_")),
         "no excludes in reference config"
+    );
+}
+
+#[test]
+fn test_migrate_reference_config_connection_and_auth() {
+    let cfg = legacy_cfg_path();
+    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+
+    // Connection
+    let conn = ora.conn();
+    assert!(conn.is_local(), "hostname must be localhost");
+    assert_eq!(
+        conn.port().to_string(),
+        "1521",
+        "empty port defaults to 1521"
+    );
+    assert_eq!(
+        conn.tns_admin().map(|p| p.to_str().unwrap()),
+        Some("/opt/oracle/product/21c/dbhomeXE/network/admin")
+    );
+
+    // connection must not have sid
+    assert!(
+        ora.target_id().is_none(),
+        "main target_id must be None (no sid/alias at top level)"
+    );
+
+    // Authentication
+    let auth = ora.auth();
+    assert_eq!(auth.username(), "c##checkmk");
+    assert_eq!(auth.password(), Some("********"));
+    assert_eq!(auth.auth_type().to_string(), "standard");
+    assert!(auth.role().is_none(), "empty role must be None");
+
+    // First instance has sid and alias from TNSALIAS
+    let instances = ora.instances();
+    assert_eq!(instances.len(), 1, "must have one instance from DBUSER");
+    let inst = &instances[0];
+    assert!(
+        stdout.contains("      - sid: XE"),
+        "instance must have sid: XE in YAML"
+    );
+    assert_eq!(
+        inst.alias().as_ref().map(|a| a.to_string()),
+        Some("XE".to_string()),
+        "instance alias must be XE"
+    );
+}
+
+#[cfg(not(windows))]
+fn legacy_cfg_no_tnsalias_path() -> String {
+    const REFERENCE_FILE: &str = "output-xe-no-tnsalias.cfg";
+
+    #[cfg(feature = "build_system_bazel")]
+    {
+        let cwd = std::env::current_dir().unwrap();
+        cwd.join("packages/mk-oracle/references")
+            .join(REFERENCE_FILE)
+            .to_str()
+            .unwrap()
+            .to_string()
+    }
+    #[cfg(not(feature = "build_system_bazel"))]
+    {
+        format!("references/{REFERENCE_FILE}")
+    }
+}
+
+#[cfg(not(windows))]
+#[test]
+fn test_migrate_no_tnsalias_falls_back_to_oracle_sid() {
+    let cfg = legacy_cfg_no_tnsalias_path();
+    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    assert!(
+        stdout.contains("      - sid: $ORACLE_SID"),
+        "sid must fall back to $ORACLE_SID"
+    );
+    assert!(
+        stdout.contains("        alias: $ORACLE_SID"),
+        "alias must fall back to $ORACLE_SID"
     );
 }

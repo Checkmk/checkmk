@@ -390,6 +390,22 @@ py_test(
     ],
 )
 
+py_test(
+    name = "checking-tests",
+    size = "small",
+    srcs = glob([
+        "tests/cmk/checkengine/checking/*.py",
+    ]) + [
+        ":__test__.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "//packages/cmk-check-engine/cmk/checkengine/checking",
+        requirement("pytest"),
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-check-engine",

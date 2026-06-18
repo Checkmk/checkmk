@@ -81,7 +81,6 @@ py_test(
             "cmk/*.py",
             "cmk/automations/**/*.py",
             "cmk/bi/**/*.py",
-            "cmk/checkengine/**/*.py",
             "cmk/diagnostics/**/*.py",
             "cmk/diskspace/**/*.py",
             "cmk/fields/**/*.py",

@@ -652,12 +652,15 @@ def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
             username,
             Password(password),
             get_user_attributes([]),
+            active_config.user_connections,
             datetime.now(),
             UserSpec(
                 contactgroups=[],
                 roles=["user"],
                 force_authuser=False,
             ),
+            pprint_value=False,
+            debug=False,
         )
         == username
     )
@@ -682,12 +685,15 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
             user_id,
             Password("cmk"),
             get_user_attributes([]),
+            active_config.user_connections,
             datetime.now(),
             UserSpec(
                 contactgroups=[],
                 roles=["user"],
                 force_authuser=False,
             ),
+            pprint_value=False,
+            debug=False,
         )
         == user_id
     )
@@ -707,12 +713,15 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
             user_id,
             Password(password),
             user_attributes,
+            active_config.user_connections,
             now,
             UserSpec(
                 contactgroups=[],
                 roles=["user"],
                 force_authuser=False,
             ),
+            pprint_value=False,
+            debug=False,
         )
         == user_id
     )
@@ -734,12 +743,15 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
             user_id,
             Password(password),
             user_attributes,
+            active_config.user_connections,
             now,
             UserSpec(
                 contactgroups=[],
                 roles=["user"],
                 force_authuser=False,
             ),
+            pprint_value=False,
+            debug=False,
         )
 
 

@@ -200,6 +200,7 @@ def _check_auth_by_header(
     default_user_profile: UserSpec,
     user_connections: Sequence[UserConnectionConfig],
     pprint_value: bool,
+    debug: bool,
 ) -> UserId | None:
     """Parse the auth header and verify the credentials"""
     if not (
@@ -224,7 +225,13 @@ def _check_auth_by_header(
 
     # Could be an automation user or a regular user
     if _verify_automation_login(user_id, password.raw) or _verify_user_login(
-        user_id, password, user_attributes, default_user_profile
+        user_id,
+        password,
+        user_attributes,
+        user_connections,
+        default_user_profile,
+        pprint_value=pprint_value,
+        debug=debug,
     ):
         return user_id
 
@@ -264,6 +271,7 @@ def _check_auth_by_basic_header(config: Config) -> UserId | None:
             config.default_user_profile,
             config.user_connections,
             config.wato_pprint_config,
+            config.debug,
         )
     ):
         return None
@@ -322,6 +330,7 @@ def _check_auth_by_bearer_header(config: Config) -> UserId | None:
         config.default_user_profile,
         config.user_connections,
         config.wato_pprint_config,
+        config.debug,
     )
 
 
@@ -439,7 +448,11 @@ def _verify_user_login(
     user_id: UserId,
     password: Password,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    user_connections: Sequence[UserConnectionConfig],
     default_user_profile: UserSpec,
+    *,
+    pprint_value: bool,
+    debug: bool,
 ) -> bool:
     """Verify the user's login credentials.
 
@@ -452,8 +465,11 @@ def _verify_user_login(
                 user_id,
                 password,
                 user_attributes,
+                user_connections,
                 datetime.now(),
                 default_user_profile,
+                pprint_value=pprint_value,
+                debug=debug,
             )
         )
     except MKUserError:

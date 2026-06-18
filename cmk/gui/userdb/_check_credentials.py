@@ -13,13 +13,13 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
-from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.utils.security_event import log_security_event
@@ -46,14 +46,18 @@ def check_credentials(
     username: UserId,
     password: Password,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    user_connections: Sequence[UserConnectionConfig],
     now: datetime,
     default_user_profile: UserSpec,
+    *,
+    pprint_value: bool,
+    debug: bool,
 ) -> UserId | Literal[False]:
     """Verify the credentials given by a user using all auth connections"""
     user_attribute_connector = _connection_id_of_user(username)
 
     connections = sorted(
-        active_connections(active_config.user_connections),
+        active_connections(user_connections),
         key=lambda x: x[0] != user_attribute_connector,
     )
     for connection_id, connection in connections:
@@ -64,7 +68,7 @@ def check_credentials(
             username,
             password,
             user_attributes,
-            active_config.user_connections,
+            user_connections,
             default_user_profile,
         )
 
@@ -89,7 +93,14 @@ def check_credentials(
         #
         # In this situation a user account with the "default profile" should be created
         _create_non_existing_user(
-            connection_id, user_id, user_attributes, now, default_user_profile
+            connection_id,
+            user_id,
+            user_attributes,
+            user_connections,
+            now,
+            default_user_profile,
+            pprint_value=pprint_value,
+            debug=debug,
         )
 
         user_spec = load_user(user_id)
@@ -113,8 +124,12 @@ def _create_non_existing_user(
     connection_id: str,
     username: UserId,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    user_connections: Sequence[UserConnectionConfig],
     now: datetime,
     default_user_profile: UserSpec,
+    *,
+    pprint_value: bool,
+    debug: bool,
 ) -> None:
     # Since user_exists also looks into the htpasswd and treats all users that can be found there as
     # "existing users", we don't care about partially known users here and don't create them ad-hoc.
@@ -130,9 +145,9 @@ def _create_non_existing_user(
     save_users(
         users,
         user_attributes,
-        active_config.user_connections,
+        user_connections,
         now=now,
-        pprint_value=active_config.wato_pprint_config,
+        pprint_value=pprint_value,
         call_users_saved_hook=True,
     )
 
@@ -161,7 +176,7 @@ def _create_non_existing_user(
             default_user_profile=default_user_profile,
         )
     except Exception as e:
-        _show_exception(connection_id, _("Error during sync"), e, debug=active_config.debug)
+        _show_exception(connection_id, _("Error during sync"), e, debug=debug)
 
 
 # This function is called very often during regular page loads so it has to be efficient

@@ -190,8 +190,11 @@ class LoginPage(Page):
                 username,
                 password,
                 (user_attributes := get_user_attributes(config.wato_user_attrs)),
+                config.user_connections,
                 (now := datetime.now()),
                 config.default_user_profile,
+                pprint_value=config.wato_pprint_config,
+                debug=config.debug,
             ):
                 # use the username provided by the successful login function, this function
                 # might have transformed the username provided by the user. e.g. switched

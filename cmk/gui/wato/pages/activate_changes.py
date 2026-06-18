@@ -396,9 +396,7 @@ class ModeActivateChanges(WatoMode):
                             title=_("On all sites"),
                             entries=list(
                                 self._page_menu_entries_all_sites(
-                                    activation_site_ids := list(
-                                        activation_sites(active_config.sites)
-                                    ),
+                                    activation_site_ids := list(activation_sites(config.sites)),
                                     config.wato_read_only,
                                     debug=config.debug,
                                 )

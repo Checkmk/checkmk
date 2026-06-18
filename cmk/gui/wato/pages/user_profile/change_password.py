@@ -111,8 +111,11 @@ class UserChangePasswordPage(Page):
                 user.id,
                 cur_password,
                 (user_attributes := get_user_attributes(config.wato_user_attrs)),
+                config.user_connections,
                 now,
                 config.default_user_profile,
+                pprint_value=config.wato_pprint_config,
+                debug=config.debug,
             )
             is False
         ):

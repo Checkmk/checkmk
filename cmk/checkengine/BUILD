@@ -21,6 +21,7 @@ py_library(
         "//packages/cmk-check-engine:checker-plugin",
         "//packages/cmk-check-engine:fetcher-protocol",
         "//packages/cmk-check-engine:helper-interface",
+        "//packages/cmk-check-engine:inventory",
         "//packages/cmk-check-engine:lib",
         "//packages/cmk-check-engine:section-parser",
         "//packages/cmk-check-engine:snmplib",

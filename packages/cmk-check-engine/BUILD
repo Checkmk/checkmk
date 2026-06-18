@@ -206,6 +206,31 @@ py_library(
     ],
 )
 
+py_library(
+    name = "inventory",
+    srcs = [
+        "cmk/checkengine/inventory.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":fetcher-protocol",
+        ":helper-interface",
+        ":lib",
+        ":section-parser",
+        ":specs",
+        "//cmk/inventory",
+        "//cmk/piggyback:backend",
+        "//cmk/utils",
+        "//packages/cmk-ccc:debug",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:tty",
+        "//packages/cmk-check-engine/cmk/checkengine/parser",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-plugin-apis:agent_based",
+    ],
+)
+
 py_test(
     name = "fetchers-tests",
     size = "small",
@@ -350,6 +375,21 @@ py_test(
     ],
 )
 
+py_test(
+    name = "inventory-tests",
+    size = "small",
+    srcs = [
+        "tests/cmk/checkengine/test_inventory.py",
+        ":__test__.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        ":inventory",
+        requirement("pytest"),
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-check-engine",
@@ -362,6 +402,7 @@ py_wheel(
         ":fetcher-protocol",
         ":fetchers",
         ":helper-interface",
+        ":inventory",
         ":lib",
         ":section-parser",
         ":snmp-backends",
@@ -406,6 +447,7 @@ py_requirements_test(
         ":fetchers",
         ":fetcher-protocol",
         ":helper-interface",
+        ":inventory",
         ":snmplib",
         ":specs",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",

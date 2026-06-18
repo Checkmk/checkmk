@@ -76,7 +76,7 @@ void main() {
 
             smart_stage(
                 name: "Upload to download server",
-                condition: push_to_registry && !is_release_candidate,
+                condition: push_to_registry,
             ) {
                 artifacts_helper.upload_via_rsync(
                     "${artifact_directory}",

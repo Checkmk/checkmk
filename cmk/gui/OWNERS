@@ -1,8 +1,5 @@
 set noparent  # don't inherit owners information from parent folders
 
-per-file availability.py=file:/component_owners/availability_and_sla/OWNERS_DEFINITION
-per-file availability.py=set noparent
-
 per-file auth.py=file:/component_owners/user_management_and_authentication/OWNERS_DEFINITION
 per-file auth.py=set noparent
 
@@ -17,9 +14,6 @@ per-file search_menu.py=set noparent
 
 per-file pages.py=file:/component_owners/ui_framework/OWNERS_DEFINITION
 per-file pages.py=set noparent
-
-per-file product_usage_analytics_popup.py=file:/component_owners/product_usage_analytics/OWNERS_DEFINITION
-per-file product_usage_analytics_popup.py=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

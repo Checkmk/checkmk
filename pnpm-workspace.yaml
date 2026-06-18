@@ -11,3 +11,4 @@ overrides:
   "glob": "^11.1.0" # "CMK-28102",
   "js-yaml": "^4.1.0" # "CMK-28103"
   "uuid": "^14.0.0" # CMK-34957
+  "@ranfdev/deepobj": "^1.0.3" # CMK-34943

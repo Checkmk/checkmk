@@ -1367,7 +1367,7 @@
   "pkg:npm/%40nodelib/fs.scandir@2.1.5": "MIT",
   "pkg:npm/%40nodelib/fs.stat@2.0.5": "MIT",
   "pkg:npm/%40nodelib/fs.walk@1.2.8": "MIT",
-  "pkg:npm/%40ranfdev/deepobj@1.0.2": "MIT",
+  "pkg:npm/%40ranfdev/deepobj@1.0.4": "MIT",
   "pkg:npm/%40swc/helpers@0.5.17": "Apache-2.0",
   "pkg:npm/%40swc/helpers@0.5.20": "Apache-2.0",
   "pkg:npm/%40swc/helpers@0.5.21": "Apache-2.0",

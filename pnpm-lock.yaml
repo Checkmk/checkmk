@@ -9,6 +9,7 @@ overrides:
   glob: ^11.1.0
   js-yaml: ^4.1.0
   uuid: ^14.0.0
+  '@ranfdev/deepobj': ^1.0.3
 
 importers:
 
@@ -1921,9 +1922,8 @@ packages:
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
 
-  '@ranfdev/deepobj@1.0.2':
-    resolution: {integrity: sha512-FM3y6kfJaj5MCoAjdv24EDCTDbuFz+4+pgAunbjYfugwIE4O/xx8mPNji1n/ouG8pHCntSnBr1xwTOensF23Gg==}
-    deprecated: This library is unmaintained
+  '@ranfdev/deepobj@1.0.4':
+    resolution: {integrity: sha512-skfyKxqaXUjAeLD/uZR1drUzoMaooddZXlhqDMXuha4BFwBAjt8oZclb2HQ/iY7ad1Zyo7GgfW6XcW2fg3237Q==}
 
   '@redocly/ajv@8.11.2':
     resolution: {integrity: sha512-io1JpnwtIcvojV7QKDUSIuMN/ikdOUd1ReEnUnMKGfDVridQZ31J0MmIuqwuRjWDZfmvr+Q0MqCcfHM2gTivOg==}
@@ -9871,7 +9871,7 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@ranfdev/deepobj@1.0.2': {}
+  '@ranfdev/deepobj@1.0.4': {}
 
   '@redocly/ajv@8.11.2':
     dependencies:
@@ -12312,7 +12312,7 @@ snapshots:
 
   crossfilter2@1.5.4:
     dependencies:
-      '@ranfdev/deepobj': 1.0.2
+      '@ranfdev/deepobj': 1.0.4
 
   css-declaration-sorter@7.4.0(postcss@8.5.10):
     dependencies:

@@ -5,7 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
-import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
+import type { ListPropDef, MultiSelectPropDef } from '@ucl/_ucl/types/prop-def'
+
+import { EXISTENCE_OPERATORS, STRING_OPERATORS } from '@/metric-backend/attribute-filter/types'
+import type { Operator } from '@/metric-backend/attribute-filter/types'
 
 import { type PresetName, presetOptions } from './attributeFilterPresets'
 
@@ -31,17 +34,45 @@ export const a11yData = [
   }
 ]
 
+const ALL_OPERATORS: Operator[] = [...STRING_OPERATORS, ...EXISTENCE_OPERATORS]
+
+// Plain-string mirror of operatorPhrases() in pill-label.ts: panelConfig labels
+// cannot use the i18n helper because it runs at module load, before i18n is set up.
+const OPERATOR_LABELS: Record<Operator, string> = {
+  eq: 'is',
+  neq: 'is not',
+  contains: 'contains',
+  not_contains: 'does not contain',
+  starts_with: 'starts with',
+  not_starts_with: 'does not start with',
+  ends_with: 'ends with',
+  not_ends_with: 'does not end with',
+  regex: 'matches regex',
+  not_regex: 'does not match regex',
+  exists: 'exists',
+  not_exists: 'does not exist'
+}
+
+const operatorOptions = ALL_OPERATORS.map((name) => ({ name, title: OPERATOR_LABELS[name] }))
+
 export const panelConfig = {
   preset: {
     type: 'list',
     title: 'Preset',
     options: presetOptions,
     initialState: 'empty'
+  },
+  operators: {
+    type: 'multiselect',
+    title: 'Operators',
+    options: operatorOptions,
+    initialState: [...ALL_OPERATORS],
+    help: 'Changing the available operators after conditions already exist is a dev-tooling artifact, not a component scenario: a caller fixes the operator set up front. Narrowing to a single existence operator clears each value; widening back to a comparison operator leaves those values empty and the conditions model-invalid, but existing closed pills are not re-opened so the invalid state is not shown. In real usage the operator set does not change at runtime.'
   }
 } satisfies PanelConfigFor<
   typeof FormAttributeFilter,
   'modelValue' | 'querySuggestions' | 'queryValueSuggestions' | 'resolveAttributeType' | 'ariaLabel'
-> & { preset: ListPropDef<PresetName> }
+> & { preset: ListPropDef<PresetName>; operators: MultiSelectPropDef<Operator> }
 </script>
 
 <script setup lang="ts">
@@ -53,7 +84,7 @@ import {
   UclDetailPageLayout,
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { Response } from '@/components/CmkSuggestions/suggestions'
 import type { Section } from '@/components/CmkSuggestions/types'
@@ -174,6 +205,8 @@ watch(
     filters.value = clonePreset(name)
   }
 )
+
+const selectedOperators = computed(() => propState.value.operators)
 </script>
 
 <template>
@@ -186,6 +219,7 @@ watch(
         :query-suggestions="querySuggestions"
         :query-value-suggestions="queryValueSuggestions"
         :resolve-attribute-type="resolveAttributeType"
+        :operators="selectedOperators"
       />
 
       <template #properties>

@@ -36,13 +36,22 @@ const props = withDefaults(
       condition: AttributeCondition,
       query: string
     ) => ReturnType<QuerySuggestionsFn>
+    operators?: Operator[] | undefined
     ariaLabel?: string | undefined
     removable?: boolean
     editing?: boolean
     tabFocusable?: boolean
   }>(),
-  { removable: false, editing: false, tabFocusable: true }
+  {
+    operators: () => [...STRING_OPERATORS, ...EXISTENCE_OPERATORS],
+    removable: false,
+    editing: false,
+    tabFocusable: true
+  }
 )
+
+// A single allowed operator is fixed: the dropdown would offer no choice, so hide it.
+const showOperator = computed(() => props.operators.length > 1)
 
 const emit = defineEmits<{
   (e: 'remove'): void
@@ -225,19 +234,18 @@ function operatorSuggestion(name: Operator) {
   return { name, title: operatorPhrase(name) }
 }
 
-const operatorOptions = computed(() => ({
-  type: 'fixed' as const,
-  suggestions: [
-    {
-      title: _t('Comparison'),
-      suggestions: STRING_OPERATORS.map(operatorSuggestion)
-    },
-    {
-      title: _t('Existence'),
-      suggestions: EXISTENCE_OPERATORS.map(operatorSuggestion)
-    }
-  ]
-}))
+const operatorOptions = computed(() => {
+  const comparison = STRING_OPERATORS.filter((op) => props.operators.includes(op))
+  const existence = EXISTENCE_OPERATORS.filter((op) => props.operators.includes(op))
+  const sections = []
+  if (comparison.length > 0) {
+    sections.push({ title: _t('Comparison'), suggestions: comparison.map(operatorSuggestion) })
+  }
+  if (existence.length > 0) {
+    sections.push({ title: _t('Existence'), suggestions: existence.map(operatorSuggestion) })
+  }
+  return { type: 'fixed' as const, suggestions: sections }
+})
 
 const hasValidationErrors = computed(() => !isConditionValid(props.condition))
 
@@ -349,6 +357,7 @@ defineExpose({
         />
       </span>
       <span
+        v-if="showOperator"
         data-af-item
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator"
       >
@@ -359,6 +368,11 @@ defineExpose({
           @update:model-value="onOperatorUpdate"
         />
       </span>
+      <span
+        v-else
+        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator metric-backend-attribute-filter-pill__segment--operator-static"
+        >{{ operatorText }}</span
+      >
       <span
         v-if="showValue"
         data-af-item
@@ -492,7 +506,8 @@ defineExpose({
 .metric-backend-attribute-filter-pill__main
   .metric-backend-attribute-filter-pill__segment--attribute-type,
 .metric-backend-attribute-filter-pill__main
-  .metric-backend-attribute-filter-pill__segment--operator {
+  .metric-backend-attribute-filter-pill__segment--operator,
+.metric-backend-attribute-filter-pill__segment--operator-static {
   color: var(--font-color-dimmed);
   font-style: italic;
 }

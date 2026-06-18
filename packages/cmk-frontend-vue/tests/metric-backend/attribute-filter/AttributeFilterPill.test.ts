@@ -20,7 +20,7 @@ function echoQueryValueSuggestions(_: AttributeCondition, query: string): Promis
   return Promise.resolve(new Response(query ? [{ name: query, title: query }] : []))
 }
 
-function renderPill(initialOperator: Operator = 'eq', value = 'GET') {
+function renderPill(initialOperator: Operator = 'eq', value = 'GET', operators?: Operator[]) {
   const condition = ref<AttributeCondition>({
     attributeType: null,
     key: 'http.method',
@@ -38,6 +38,7 @@ function renderPill(initialOperator: Operator = 'eq', value = 'GET') {
       }
       return {
         condition,
+        operators,
         onUpdateOperator,
         onUpdateValue,
         querySuggestions: noopQuerySuggestions,
@@ -47,6 +48,7 @@ function renderPill(initialOperator: Operator = 'eq', value = 'GET') {
     template: `
       <AttributeFilterPill
         :condition="condition"
+        :operators="operators"
         editing
         :query-suggestions="querySuggestions"
         :query-value-suggestions="queryValueSuggestions"
@@ -70,6 +72,13 @@ test('selecting a comparison operator emits the new operator and keeps the value
 
   expect(condition.value.operator).toBe('neq')
   await waitFor(() => expect(screen.getByLabelText('Attribute value')).toHaveTextContent('GET'))
+})
+
+test('a single allowed operator renders as static text in edit mode, not a dropdown', () => {
+  renderPill('eq', 'GET', ['eq'])
+
+  expect(screen.queryByRole('combobox', { name: 'Attribute operator' })).toBeNull()
+  expect(screen.getByText('is')).toBeVisible()
 })
 
 test('selecting an existence operator hides the value segment, switching back restores it', async () => {

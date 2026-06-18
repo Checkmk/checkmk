@@ -14,6 +14,7 @@ from cmk.graphing_engine import (
     build_graphs,
     ConsolidationFunction,
     DiscoveredGraph,
+    DiscoveredGraphs,
     evaluate_graphs,
     fetch_translated_metrics,
     Graph,
@@ -144,7 +145,7 @@ def _discover(
     ],
     *,
     rrd: _FakeFetchRRD,
-) -> Sequence[DiscoveredGraph[TemplateOptions]]:
+) -> Sequence[DiscoveredGraph]:
     # Compose the discovery steps the way the GUI does: fetch -> build -> evaluate -> wrap.
     translated_metrics = fetch_translated_metrics(
         services=[service], translations=[], metrics=_METRICS, localizer=_id, rrd=rrd
@@ -156,13 +157,9 @@ def _discover(
         localizer=_id,
         available=translated_metrics.get(service, {}),
     )
-    options = TemplateOptions(
-        time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
-    )
     return [
         DiscoveredGraph(
             graph=graph,
-            options=options,
             title=evaluated.title,
             vertical_range=evaluated.vertical_range,
             stacks=evaluated.stacks,
@@ -200,12 +197,28 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     assert discovered.graph == Graph(name=cpu_user, title=cpu_user, stacks=[_stack(_rrd(cpu_user))])
-    assert discovered.options == TemplateOptions(
-        time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
-    )
     # The single metric is drawn as a stacked curve carrying its value.
     assert [curve.value for stack in discovered.stacks for curve in stack.members] == [1.0]
     assert discovered.lines == []
+
+
+def test_discovered_graphs_groups_options_with_graphs() -> None:
+    service = _service()
+    cpu_user = MetricName("cpu_user")
+    registered_graphs: list[graphs_v1.Graph] = []
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user))})
+
+    discovered = DiscoveredGraphs(
+        options=TemplateOptions(
+            time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
+        ),
+        graphs=_discover(service, registered_graphs, rrd=rrd),
+    )
+
+    assert discovered.options == TemplateOptions(
+        time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
+    )
+    assert [graph.graph.name for graph in discovered.graphs] == [cpu_user]
 
 
 def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:

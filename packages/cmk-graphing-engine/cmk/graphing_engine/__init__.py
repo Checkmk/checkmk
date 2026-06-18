@@ -9,6 +9,7 @@
 
 from ._evaluate import (
     DiscoveredGraph,
+    DiscoveredGraphs,
     EvaluatedCurve,
     EvaluatedFixedRange,
     EvaluatedGraph,
@@ -85,6 +86,7 @@ __all__ = [
     "DecimalNotation",
     "Difference",
     "DiscoveredGraph",
+    "DiscoveredGraphs",
     "DisplayAttributes",
     "EngineeringScientificNotation",
     "EvaluatedCurve",

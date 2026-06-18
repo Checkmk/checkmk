@@ -29,7 +29,6 @@ from cmk.graphing_engine import (
     PerformanceValue,
     RRDMetric,
     ServiceRef,
-    TemplateOptions,
     TimeRange,
     TimeSeries,
     update_graph_data,
@@ -104,7 +103,7 @@ def _discover(
     registered_graphs: Sequence[graphs_v1.Graph],
     *,
     translations: Sequence[translations_v1.Translation] = (),
-) -> Sequence[DiscoveredGraph[TemplateOptions]]:
+) -> Sequence[DiscoveredGraph]:
     # Compose the discovery steps the way the GUI does: fetch -> build -> evaluate -> wrap.
     translated_metrics = fetch_translated_metrics(
         services=[_SERVICE],
@@ -120,13 +119,9 @@ def _discover(
         localizer=_id,
         available=translated_metrics.get(_SERVICE, {}),
     )
-    options = TemplateOptions(
-        time_range=_TIME_RANGE, consolidation_function=ConsolidationFunction.AVERAGE
-    )
     return [
         DiscoveredGraph(
             graph=graph,
-            options=options,
             title=evaluated.title,
             vertical_range=evaluated.vertical_range,
             stacks=evaluated.stacks,
@@ -147,7 +142,7 @@ def _discover(
 
 def _refresh(
     rrd: _FakeRRD,
-    discovered: Sequence[DiscoveredGraph[TemplateOptions]],
+    discovered: Sequence[DiscoveredGraph],
     *,
     translations: Sequence[translations_v1.Translation] = (),
 ) -> Sequence[EvaluatedGraph]:
@@ -163,7 +158,7 @@ def _refresh(
 
 
 def _assert_refresh_reproduces_discovery(
-    discovered: Sequence[DiscoveredGraph[TemplateOptions]],
+    discovered: Sequence[DiscoveredGraph],
     evaluated: Sequence[EvaluatedGraph],
 ) -> None:
     assert [graph.name for graph in evaluated] == [graph.graph.name for graph in discovered]

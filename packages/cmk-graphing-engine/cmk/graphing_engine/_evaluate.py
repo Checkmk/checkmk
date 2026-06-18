@@ -72,13 +72,18 @@ class EvaluatedGraph:
 
 
 @dataclass(frozen=True, kw_only=True)
-class DiscoveredGraph[Options]:
+class DiscoveredGraph:
     graph: Graph
-    options: Options
     title: str
     vertical_range: EvaluatedVerticalRange | None
     stacks: Sequence[EvaluatedStack]
     lines: Sequence[EvaluatedLine]
+
+
+@dataclass(frozen=True, kw_only=True)
+class DiscoveredGraphs[Options]:
+    options: Options
+    graphs: Sequence[DiscoveredGraph]
 
 
 def _evaluate_bound(bound: Bound, context: EvaluationContext) -> float | None:

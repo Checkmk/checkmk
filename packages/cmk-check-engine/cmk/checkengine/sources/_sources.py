@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-# TODO This module should be freed from base deps.
-
 import os.path
 import socket
 from pathlib import Path
@@ -529,7 +527,10 @@ class PiggybackSource(Source[AgentRawData]):
         return PiggybackFetcher()
 
     def file_cache(
-        self, *, simulation: bool, file_cache_options: FileCacheOptions
+        self,
+        *,
+        simulation: bool,  # noqa: ARG002
+        file_cache_options: FileCacheOptions,  # noqa: ARG002
     ) -> FileCache[AgentRawData]:
         return _NO_CACHE
 
@@ -556,7 +557,7 @@ class MissingIPSource(Source):
     def fetcher(self) -> NoFetcher:
         return NoFetcher(NoFetcherError.MISSING_IP)
 
-    def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:
+    def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:  # noqa: ARG002
         return _NO_CACHE
 
 
@@ -582,7 +583,7 @@ class MissingSourceSource(Source):
     def fetcher(self) -> NoFetcher:
         return NoFetcher(NoFetcherError.NO_FETCHER)
 
-    def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:
+    def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:  # noqa: ARG002
         return _NO_CACHE
 
 
@@ -621,7 +622,10 @@ class MetricBackendSource(Source[AgentRawData]):
         return self._fetcher
 
     def file_cache(
-        self, *, simulation: bool, file_cache_options: FileCacheOptions
+        self,
+        *,
+        simulation: bool,
+        file_cache_options: FileCacheOptions,  # noqa: ARG002
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
             base_path=self._file_cache_path_base,

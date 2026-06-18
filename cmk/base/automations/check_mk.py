@@ -86,7 +86,7 @@ from cmk.automations.results import (
     UpdatePasswordsMergedFileResult,
 )
 from cmk.automations.types import AutomationID
-from cmk.base import config, sources
+from cmk.base import config
 from cmk.base.automations._environment import (
     AutomationEnvironment,
     ConfigSource,
@@ -123,7 +123,6 @@ from cmk.base.core.shared import autodetect_plugin, get_service_attributes
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
 from cmk.base.snmp_plugin_store import make_plugin_store
-from cmk.base.sources import make_parser
 from cmk.ccc import tty, version
 from cmk.ccc.exceptions import (
     MKBailOut,
@@ -135,6 +134,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName, HostNameValidationError, 
 from cmk.ccc.i18n import _
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import edition_supports_nagvis
+from cmk.checkengine import sources
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
 from cmk.checkengine.discovery import (
@@ -194,6 +194,7 @@ from cmk.checkengine.snmplib import (
     SNMPVersion,
     walk_for_export,
 )
+from cmk.checkengine.sources import make_parser
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.specs.parameters import TimespecificParameters
 from cmk.checkengine.submitters import ServiceDetails

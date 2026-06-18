@@ -57,7 +57,6 @@ from cmk.base.configlib.scheduling import make_check_interval_config
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.snmp_plugin_store import make_plugin_store
-from cmk.base.sources import ParserConfig
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
@@ -118,6 +117,7 @@ from cmk.checkengine.snmplib import (  # some of these are required in the modul
     SNMPTiming,
     SNMPVersion,
 )
+from cmk.checkengine.sources import ParserConfig
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig

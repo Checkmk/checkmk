@@ -6,6 +6,7 @@ py_library(
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//packages/cmk-check-engine:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [

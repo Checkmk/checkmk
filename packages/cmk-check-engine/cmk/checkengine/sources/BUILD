@@ -7,6 +7,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//packages/cmk-check-engine:__pkg__",
     ],
     deps = [
         "//cmk/server_side_calls_backend",

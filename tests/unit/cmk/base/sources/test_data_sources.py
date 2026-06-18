@@ -5,6 +5,8 @@
 
 # mypy: disable-error-code="type-arg"
 
+# TODO: Move this file into the cmk-check-engine package. First eliminate dependency on testlib.
+
 import socket
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -15,7 +17,6 @@ import pytest
 
 from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache
-from cmk.base.sources import make_sources, Source
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetchers import (
@@ -29,6 +30,7 @@ from cmk.checkengine.fetchers import (
 )
 from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.checkengine.sources import make_sources, Source
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID

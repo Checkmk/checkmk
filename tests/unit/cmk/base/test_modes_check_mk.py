@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-import cmk.base.sources._sources as _sources_module
 import cmk.ccc.resulttype as result
 import cmk.checkengine.fetchers._snmp._fetcher as _snmp_module
+import cmk.checkengine.sources._sources as _sources_module
 import cmk.utils.paths as cmk_paths
 from cmk.base import config
 from cmk.base.community_app import make_app

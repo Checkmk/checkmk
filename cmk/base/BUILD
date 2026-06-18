@@ -86,7 +86,6 @@ py_library(
         ":snmp-plugin-store",
         "//cmk/base/configlib",
         "//cmk/base/default_config:default-config",
-        "//cmk/base/sources",
         "//cmk/inventory",
         "//cmk/piggyback:backend",
         "//cmk/server_side_calls_backend",
@@ -108,6 +107,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-check-engine/cmk/checkengine/sources",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-plugin-apis:server_side_calls",
@@ -126,7 +126,6 @@ py_library(
     deps = [
         ":config",
         "//cmk/base/errorhandling",
-        "//cmk/base/sources",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
         "//packages/cmk-ccc:cpu-tracking",
@@ -148,6 +147,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-check-engine/cmk/checkengine/sources",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-plugin-apis:agent_based",
     ],
@@ -164,7 +164,6 @@ py_library(
     deps = [
         ":config",
         "//cmk/base/configlib",
-        "//cmk/base/sources",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
@@ -176,6 +175,7 @@ py_library(
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-check-engine/cmk/checkengine/sources",
         "//packages/cmk-plugin-apis:password_store",
     ],
 )
@@ -397,7 +397,7 @@ py_library(
         "//cmk/base/modes",
         "//cmk/base/modes:modes-registry",
         "//cmk/base/plugins:plugins-bakery",
-        "//cmk/base/sources",
+        "//packages/cmk-check-engine/cmk/checkengine/sources",
     ],
 )
 

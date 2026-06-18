@@ -23,7 +23,6 @@ from cmk.base.checkers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.sources import ParserConfig
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import OK
@@ -35,6 +34,7 @@ from cmk.checkengine.fetchers.filecache import AgentFileCache, FileCacheMode, Ma
 from cmk.checkengine.helper_interface import SourceInfo
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+from cmk.checkengine.sources import ParserConfig
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.submitters import FormattedSubmittee, Submitter
 from cmk.checkengine.summarize import SummaryConfig

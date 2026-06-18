@@ -36,13 +36,6 @@ from cmk.agent_based.v1 import Result as CheckFunctionResult
 from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
-from cmk.base.sources import (
-    FetcherFactory,
-    make_parser,
-    make_sources,
-    ParserConfig,
-    Source,
-)
 from cmk.ccc import tty
 from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
 from cmk.ccc.exceptions import MKTimeout
@@ -102,6 +95,13 @@ from cmk.checkengine.sectionparserutils import (
     get_section_kwargs,
 )
 from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPRawData
+from cmk.checkengine.sources import (
+    FetcherFactory,
+    make_parser,
+    make_sources,
+    ParserConfig,
+    Source,
+)
 from cmk.checkengine.specs.checkresults import (
     ActiveCheckResult,
     ServiceCheckResult,

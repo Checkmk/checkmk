@@ -17,15 +17,14 @@ from typing import Literal
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
-from cmk.base import sources
 from cmk.base.config import ConfigCache, CoreObjectsConfig, get_relay_id, ObjectAttributes
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
-from cmk.base.sources import Source
 from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.checkengine import sources
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.fetchers import (
     Fetcher,
@@ -43,6 +42,7 @@ from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.helper_interface import AgentRawData, SourceType
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPVersion
+from cmk.checkengine.sources import Source
 from cmk.checkengine.specs.parameters import IsTimeperiodActiveCallback, TimespecificParameters
 from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import ExecutableFinder

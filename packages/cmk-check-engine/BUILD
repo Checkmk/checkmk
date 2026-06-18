@@ -430,6 +430,7 @@ py_wheel(
         "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-check-engine/cmk/checkengine/sources",
     ],
 )
 

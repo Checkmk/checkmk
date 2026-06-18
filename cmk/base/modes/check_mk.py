@@ -29,7 +29,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
-from cmk.base import config, profiling, sources
+from cmk.base import config, profiling
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.checkers import (
     CheckerConfig,
@@ -53,7 +53,6 @@ from cmk.base.core.active_config_layout import (
 )
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.snmp_plugin_store import make_plugin_store
-from cmk.base.sources import make_parser
 from cmk.ccc import tty
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
@@ -62,7 +61,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.site import SiteId
 from cmk.ccc.store import activation_lock
 from cmk.ccc.timeout import Timeout
-from cmk.checkengine import inventory
+from cmk.checkengine import inventory, sources
 from cmk.checkengine.checking import (
     execute_checkmk_checks,
     make_timing_results,
@@ -117,6 +116,7 @@ from cmk.checkengine.snmplib import (
     SNMPSectionName,
     walk_for_export,
 )
+from cmk.checkengine.sources import make_parser
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.checkengine.submitters import get_submitter
 from cmk.checkengine.summarize import summarize, SummarizerFunction

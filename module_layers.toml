@@ -423,7 +423,7 @@ allows = [
   "cmk.base.default_config",
   "cmk.base.parent_scan",
   "cmk.base.snmp_plugin_store",
-  "cmk.base.sources",
+  "cmk.checkengine.sources",
   "cmk.checkengine",
   "cmk.discover_plugins",
   "cmk.ec",
@@ -553,6 +553,16 @@ allows = [
   "cmk.utils.rulesets",
   "cmk.utils.servicename",
   "cmk.utils.timeperiod",
+]
+
+[components."cmk.checkengine.sources"]
+allows = [
+  "@ccc",
+  "cmk.checkengine",
+  "cmk.server_side_calls_backend",
+  "cmk.utils.agent_registration",
+  "cmk.utils.ip_lookup",
+  "cmk.utils.tags",
 ]
 
 [components."cmk.core_client"]

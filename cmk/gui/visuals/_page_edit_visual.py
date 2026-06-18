@@ -19,7 +19,7 @@ from urllib.parse import unquote
 
 from cmk.ccc.user import UserId
 from cmk.gui import forms
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.header import make_header
@@ -74,6 +74,7 @@ def page_edit_visual(
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], TVisual],
     user_permissions: UserPermissions,
+    config: Config,
     custom_field_handler=None,
     create_handler=None,
     info_handler=None,
@@ -176,12 +177,12 @@ def page_edit_visual(
         title,
         breadcrumb,
         page_menu,
-        debug=active_config.debug,
+        debug=config.debug,
         lang=user.language,
-        inject_js_profiling_code=active_config.inject_js_profiling_code,
-        load_frontend_vue=active_config.load_frontend_vue,
-        custom_style_sheet=active_config.custom_style_sheet,
-        screenshotmode=active_config.screenshotmode,
+        inject_js_profiling_code=config.inject_js_profiling_code,
+        load_frontend_vue=config.load_frontend_vue,
+        custom_style_sheet=config.custom_style_sheet,
+        screenshotmode=config.screenshotmode,
         inline_help_as_text=user.inline_help_as_text,
         hide_suggestions=not user.get_tree_state("suggestions", "all", True),
         user_role_ids=user.role_ids,
@@ -357,7 +358,7 @@ def page_edit_visual(
                     save(what, all_visuals, owner_user_id)
                     start_profile_replication_job(
                         back_url=back_url,
-                        config=active_config,
+                        config=config,
                     )
 
                 if not request.var("save_and_view"):

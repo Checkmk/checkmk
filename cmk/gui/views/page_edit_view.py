@@ -99,6 +99,7 @@ def page_edit_view(ctx: PageContext) -> None:
         "views",
         get_all_views(),
         UserPermissions.from_config(ctx.config, permission_registry),
+        ctx.config,
         custom_field_handler=render_view_config,
         create_handler=create_view_from_valuespec,
         info_handler=get_view_infos,

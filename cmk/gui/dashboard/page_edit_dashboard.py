@@ -28,6 +28,7 @@ def page_edit_dashboard(ctx: PageContext) -> None:
         "dashboards",
         get_all_dashboards(),
         UserPermissions.from_config(ctx.config, permission_registry),
+        ctx.config,
         create_handler=create_dashboard,
         custom_field_handler=dashboard_fields_handler,
         info_handler=dashboard_info_handler,

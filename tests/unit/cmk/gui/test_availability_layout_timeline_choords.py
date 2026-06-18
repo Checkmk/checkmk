@@ -11,7 +11,7 @@ import time
 
 import pytest
 
-from cmk.gui.availability import layout_timeline_choords
+from cmk.gui.availability.layout import layout_timeline_choords
 
 # In case this someday is better testable, we'll make sure to include
 # the daylight savings time switch in tests

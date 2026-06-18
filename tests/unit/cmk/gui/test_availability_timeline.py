@@ -9,14 +9,14 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-from cmk.gui.availability import (
+from cmk.gui.availability.layout import layout_timeline
+from cmk.gui.availability.type_defs import (
     AVLayoutTimelineRow,
     AVObjectType,
     AVOptions,
     AVTimelineRows,
     AVTimelineSpan,
     AVTimelineStyle,
-    layout_timeline,
 )
 
 

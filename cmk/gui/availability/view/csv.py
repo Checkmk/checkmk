@@ -5,8 +5,13 @@
 
 import time
 
-from cmk.gui import availability
-from cmk.gui.availability import (
+from cmk.gui.availability.computation import compute_availability_groups, object_title
+from cmk.gui.availability.layout import (
+    get_object_cells,
+    layout_availability_table,
+    layout_timeline,
+)
+from cmk.gui.availability.type_defs import (
     AVData,
     AVEntry,
     AVMode,
@@ -56,7 +61,7 @@ def _output_availability_timelines_csv(
 def _output_availability_timeline_csv(
     table: Table, what: AVObjectType, av_entry: AVEntry, avoptions: AVOptions
 ) -> None:
-    timeline_layout = availability.layout_timeline(
+    timeline_layout = layout_timeline(
         what,
         av_entry["timeline"],
         av_entry["considered_duration"],
@@ -64,7 +69,7 @@ def _output_availability_timeline_csv(
         "standalone",
     )
 
-    object_cells = availability.get_object_cells(what, av_entry, avoptions["labelling"])
+    object_cells = get_object_cells(what, av_entry, avoptions["labelling"])
     for row in timeline_layout["table"]:
         table.row()
 
@@ -72,7 +77,7 @@ def _output_availability_timeline_csv(
         for cell_index, objectcell in enumerate(object_cells):
             table.cell("object_name_%d" % cell_index, objectcell[0])
 
-        table.cell("object_title", availability.object_title(what, av_entry))
+        table.cell("object_title", object_title(what, av_entry))
         table.cell("from", row["from"])
         table.cell("from_text", row["from_text"])
         table.cell("until", row["until"])
@@ -110,12 +115,10 @@ def _output_availability_csv(
             table.cell(title, text)
 
     _av_output_set_content_disposition("Checkmk-Availability")
-    availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
+    availability_tables = compute_availability_groups(what, av_data, avoptions)
     with table_element("av_items", output_format="csv", limit=table_row_limit) as table:
         for group_title, availability_table in availability_tables:
-            av_table = availability.layout_availability_table(
-                what, group_title, availability_table, avoptions
-            )
+            av_table = layout_availability_table(what, group_title, availability_table, avoptions)
             pad = 0
 
             if group_title:

@@ -8,8 +8,16 @@ import time
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui import availability
-from cmk.gui.availability import (
+from cmk.gui.availability.annotations import (
+    delete_annotation,
+    find_annotation,
+    get_annotation_date_render_function,
+    get_relevant_annotations,
+    load_annotations,
+    save_annotations,
+    update_annotations,
+)
+from cmk.gui.availability.type_defs import (
     AVAnnotationKey,
     AVAnnotations,
     AVObjectType,
@@ -58,10 +66,8 @@ def show_annotations(
     *,
     table_row_limit: int,
 ) -> None:
-    annos_to_render = availability.get_relevant_annotations(
-        annotations, av_rawdata, what, avoptions
-    )
-    render_date = availability.get_annotation_date_render_function(annos_to_render, avoptions)
+    annos_to_render = get_relevant_annotations(annotations, av_rawdata, what, avoptions)
+    render_date = get_annotation_date_render_function(annos_to_render, avoptions)
 
     with table_element(title=_("Annotations"), omit_if_empty=True, limit=table_row_limit) as table:
         for nr, ((site_id, host, service), annotation) in enumerate(annos_to_render):
@@ -161,8 +167,8 @@ def _edit_annotation(breadcrumb: Breadcrumb, *, debug: bool) -> bool:
     ) = _handle_anno_request_vars()
 
     # Find existing annotation with this specification
-    annotations = availability.load_annotations()
-    annotation = availability.find_annotation(
+    annotations = load_annotations()
+    annotation = find_annotation(
         annotations, site_host_svc, host_state, service_state, fromtime, untiltime
     )
 
@@ -194,7 +200,7 @@ def _edit_annotation(breadcrumb: Breadcrumb, *, debug: bool) -> bool:
             del value["host"]
             value["date"] = time.time()
             value["author"] = user.id
-            availability.update_annotations(site_host_svc, value, replace_existing=annotation)
+            update_annotations(site_host_svc, value, replace_existing=annotation)
             request.del_var("filled_in")
             return False
         except MKUserError as e:
@@ -336,17 +342,17 @@ def handle_delete_annotations() -> None:
             site_host_svc,
         ) = _handle_anno_request_vars()
 
-        annotations = availability.load_annotations()
-        annotation = availability.find_annotation(
+        annotations = load_annotations()
+        annotation = find_annotation(
             annotations, site_host_svc, host_state, service_state, fromtime, untiltime
         )
         if not annotation:
             return
 
-        availability.delete_annotation(
+        delete_annotation(
             annotations, site_host_svc, host_state, service_state, fromtime, untiltime
         )
-        availability.save_annotations(annotations)
+        save_annotations(annotations)
 
 
 def _handle_edit_annotations(breadcrumb: Breadcrumb, *, debug: bool) -> bool:

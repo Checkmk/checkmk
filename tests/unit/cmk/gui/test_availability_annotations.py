@@ -21,6 +21,8 @@ import cmk.utils.render
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import availability
+from cmk.gui.availability.computation import reclassify_by_annotations
+from cmk.gui.availability.type_defs import AVAnnotationEntry, AVAnnotations, SiteHostSvc
 
 
 @pytest.mark.parametrize(
@@ -210,12 +212,12 @@ from cmk.gui import availability
 def test_reclassify_by_annotations(
     monkeypatch: MonkeyPatch,
     av_rawdata: availability.AVRawData,
-    annotations: availability.AVAnnotations,
+    annotations: AVAnnotations,
     result: availability.AVRawData,
 ) -> None:
 
     monkeypatch.setattr(cmk.gui.availability.computation, "load_annotations", lambda: annotations)
-    assert availability.reclassify_by_annotations("service", av_rawdata) == result
+    assert reclassify_by_annotations("service", av_rawdata) == result
 
 
 @pytest.mark.parametrize(
@@ -267,7 +269,7 @@ def test_relevant_annotation_times(
 def test_get_annotation_date_render_function(
     annotation_times: Sequence[tuple[int, int]], result: Callable
 ) -> None:
-    annotations: list[tuple[availability.SiteHostSvc, availability.AVAnnotationEntry]] = [
+    annotations: list[tuple[SiteHostSvc, AVAnnotationEntry]] = [
         ((SiteId("foo"), HostName("checkmk.com"), None), {"from": s, "until": e})
         for s, e in annotation_times
     ]
@@ -452,7 +454,7 @@ def test_get_annotation_date_render_function(
     ],
 )
 def test_get_relevant_annotations(
-    annotations: availability.AVAnnotations,
+    annotations: AVAnnotations,
     by_host: availability.AVRawData,
     avoptions: availability.AVOptions,
     result: Sequence[tuple[object, object]],

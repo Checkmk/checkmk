@@ -10,8 +10,22 @@ from collections.abc import Iterator, Sequence
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui import availability, sites
-from cmk.gui.availability import (
+from cmk.gui import sites
+from cmk.gui.availability.annotations import load_annotations
+from cmk.gui.availability.bi import get_bi_availability
+from cmk.gui.availability.computation import (
+    compute_availability,
+    compute_availability_groups,
+    object_title,
+)
+from cmk.gui.availability.layout import layout_availability_table, layout_timeline
+from cmk.gui.availability.options import (
+    get_av_computation_options,
+    get_av_display_options,
+    get_availability_options_from_request,
+)
+from cmk.gui.availability.rawdata import get_availability_rawdata
+from cmk.gui.availability.type_defs import (
     AVData,
     AVEntry,
     AVGroups,
@@ -202,7 +216,7 @@ def show_availability_page(
         what = "host"
 
     _handle_availability_option_reset()
-    avoptions = availability.get_availability_options_from_request(what)
+    avoptions = get_availability_options_from_request(what)
     _save_availability_options_after_update(avoptions)
     time_range: AVTimeRange = avoptions["range"][0]
     range_title: str = avoptions["range"][1]
@@ -265,7 +279,7 @@ def show_availability_page(
         request.del_var("filled_in")
     # Re-read the avoptions again, because the HTML vars have changed above (anno_ and editanno_ has
     # been removed, which must not be part of the form
-    avoptions = availability.get_availability_options_from_request(what)
+    avoptions = get_availability_options_from_request(what)
     _save_availability_options_after_update(avoptions)
 
     # Now compute all data, we need this also for CSV export
@@ -276,7 +290,7 @@ def show_availability_page(
         include_long_output = (
             av_mode == "timeline" and "timeline_long_output" in avoptions["labelling"]
         )
-        av_rawdata, has_reached_logrow_limit = availability.get_availability_rawdata(
+        av_rawdata, has_reached_logrow_limit = get_availability_rawdata(
             what,
             context,
             filterheaders,
@@ -287,7 +301,7 @@ def show_availability_page(
             avoptions=avoptions,
             view_process_tracking=process_tracking,
         )
-        av_data = availability.compute_availability(what, av_rawdata, avoptions)
+        av_data = compute_availability(what, av_rawdata, avoptions)
 
     # Do CSV ouput
     if html.output_format == "csv_export" and user.may("general.csv_export"):
@@ -417,7 +431,7 @@ def _page_menu_availability(
                                         "display",
                                         what,
                                         avoptions,
-                                        availability.get_av_display_options(what),
+                                        get_av_display_options(what),
                                     ),
                                 ),
                                 name="avoptions_display",
@@ -430,7 +444,7 @@ def _page_menu_availability(
                                         "computation",
                                         what,
                                         avoptions,
-                                        availability.get_av_computation_options(),
+                                        get_av_computation_options(),
                                     ),
                                 ),
                                 name="avoptions_computation",
@@ -540,7 +554,7 @@ def do_render_availability(
     *,
     table_row_limit: int,
 ) -> None:
-    availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
+    availability_tables = compute_availability_groups(what, av_data, avoptions)
     if av_mode == "timeline":
         render_availability_timelines(
             what, availability_tables, avoptions, table_row_limit=table_row_limit
@@ -548,7 +562,7 @@ def do_render_availability(
     else:
         render_availability_tables(availability_tables, what, avoptions)
 
-    annotations = availability.load_annotations()
+    annotations = load_annotations()
     show_annotations(
         annotations,
         av_rawdata,
@@ -612,7 +626,7 @@ def _render_availability_timeline(
     *,
     table_row_limit: int,
 ) -> None:
-    html.h3(_("Timeline of %s") % availability.object_title(what, av_entry))
+    html.h3(_("Timeline of %s") % object_title(what, av_entry))
 
     timeline_rows = av_entry["timeline"]
 
@@ -620,7 +634,7 @@ def _render_availability_timeline(
         html.div(_("No information available"), class_="info")
         return
 
-    timeline_layout = availability.layout_timeline(
+    timeline_layout = layout_timeline(
         what,
         timeline_rows,
         av_entry["considered_duration"],
@@ -732,9 +746,7 @@ def render_timeline_legend(what: AVObjectType) -> None:
 def render_availability_table(
     group_title: str | None, availability_table: AVData, what: AVObjectType, avoptions: AVOptions
 ) -> None:
-    av_table = availability.layout_availability_table(
-        what, group_title, availability_table, avoptions
-    )
+    av_table = layout_availability_table(what, group_title, availability_table, avoptions)
 
     # TODO: If summary line is activated, then sorting should now move that line to the
     # top. It should also stay at the bottom. This would require an extension to the
@@ -876,7 +888,7 @@ def show_bi_availability(
     av_mode = request.get_ascii_input_mandatory("av_mode", "availability")
 
     _handle_availability_option_reset()
-    avoptions = availability.get_availability_options_from_request("bi")
+    avoptions = get_availability_options_from_request("bi")
     _save_availability_options_after_update(avoptions)
 
     title = view_title(spec, context)
@@ -946,7 +958,7 @@ def show_bi_availability(
             user_role_ids=user.role_ids,
         )
 
-        avoptions = availability.get_availability_options_from_request("bi")
+        avoptions = get_availability_options_from_request("bi")
         _save_availability_options_after_update(avoptions)
 
     if not user_errors:
@@ -967,7 +979,7 @@ def show_bi_availability(
             timeline_containers,
             av_rawdata,
             has_reached_logrow_limit,
-        ) = availability.get_bi_availability(avoptions, aggr_rows, timewarp)
+        ) = get_bi_availability(avoptions, aggr_rows, timewarp)
         process_tracking.amount_rows_after_limit = len(av_rawdata)
 
         # Detect unreachable sites at the render layer rather than from the
@@ -1083,7 +1095,7 @@ def show_bi_availability(
 
                     timewarpcode += HTML.without_escaping(output_funnel.drain())
 
-        av_data = availability.compute_availability("bi", av_rawdata, avoptions)
+        av_data = compute_availability("bi", av_rawdata, avoptions)
 
         # If we abolish the limit we have to fetch the data again
         # with changed logrow_limit = 0, which means no limit

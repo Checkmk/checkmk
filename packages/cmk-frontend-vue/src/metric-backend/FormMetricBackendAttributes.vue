@@ -5,57 +5,60 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type {
-  GraphLineQueryAttribute,
-  GraphLineQueryAttributes
-} from 'cmk-shared-typing/typescript/graph_designer'
+import type { GraphLineQueryAttributes } from 'cmk-shared-typing/typescript/graph_designer'
+import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, watch } from 'vue'
 
-import usei18n from '@/lib/i18n'
+import usei18n, { untranslated } from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 import { immediateWatch } from '@/lib/watch'
 
-import type { ValidationMessages } from '@/form'
+import CmkIndent from '@/components/CmkIndent.vue'
+import {
+  ErrorResponse,
+  Response,
+  type Section,
+  type Suggestion,
+  flattenSuggestions
+} from '@/components/CmkSuggestions'
+import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import FormMetricBackendAttributeSection from './FormMetricBackendAttributeSection.vue'
+import type { ValidationMessages } from '@/form'
+import { fetchSuggestions } from '@/form/private/FormAutocompleter/autocompleter'
+
+import FormAttributeFilter from './attribute-filter/FormAttributeFilter.vue'
+import type {
+  AttributeFilterModel,
+  AttributeType,
+  ConnectedCondition
+} from './attribute-filter/types'
+import {
+  ATTRIBUTE_TYPE_ORDER,
+  type AttributeTypeKey,
+  KEY_IDENTS,
+  type ThreeLists,
+  VALUE_IDENTS,
+  buildAutocompleteContext,
+  fromModel,
+  toModel
+} from './attributeFilterAdapter'
 
 const { _t } = usei18n()
 
 const props = withDefaults(
   defineProps<{
     metricName?: string | null
-    disableValuesOnEmptyKey?: boolean
     staticResourceAttributeKeys?: string[] | null
     indent?: boolean
-    orientation?: 'horizontal' | 'vertical'
   }>(),
   {
     metricName: null,
-    disableValuesOnEmptyKey: false,
     staticResourceAttributeKeys: null,
-    indent: false,
-    orientation: 'horizontal'
+    indent: false
   }
 )
 
 const backendValidation = defineModel<ValidationMessages>('backendValidation', { default: [] })
-
-enum ValidationLocation {
-  RESOURCE_ATTRIBUTES = 'resource_attributes',
-  SCOPE_ATTRIBUTES = 'scope_attributes',
-  DATA_POINT_ATTRIBUTES = 'data_point_attributes'
-}
-
-type ValidationByLocation = {
-  [ValidationLocation.RESOURCE_ATTRIBUTES]: string[]
-  [ValidationLocation.SCOPE_ATTRIBUTES]: string[]
-  [ValidationLocation.DATA_POINT_ATTRIBUTES]: string[]
-}
-
-const validationByLocation = ref<ValidationByLocation>({
-  [ValidationLocation.RESOURCE_ATTRIBUTES]: [],
-  [ValidationLocation.SCOPE_ATTRIBUTES]: [],
-  [ValidationLocation.DATA_POINT_ATTRIBUTES]: []
-})
 
 const resourceAttributes = defineModel<GraphLineQueryAttributes>('resourceAttributes', {
   default: []
@@ -67,246 +70,248 @@ const dataPointAttributes = defineModel<GraphLineQueryAttributes>('dataPointAttr
   default: []
 })
 
-const resourceSection = ref<InstanceType<typeof FormMetricBackendAttributeSection> | null>(null)
-const scopeSection = ref<InstanceType<typeof FormMetricBackendAttributeSection> | null>(null)
-const dataPointSection = ref<InstanceType<typeof FormMetricBackendAttributeSection> | null>(null)
+const LOCATION_TO_TYPE: Record<string, AttributeTypeKey> = {
+  resource_attributes: 'resource',
+  scope_attributes: 'scope',
+  data_point_attributes: 'datapoint'
+}
 
-immediateWatch(
-  () => backendValidation.value,
-  (newValidation: ValidationMessages | undefined) => {
-    validationByLocation.value = {
-      [ValidationLocation.RESOURCE_ATTRIBUTES]: [],
-      [ValidationLocation.SCOPE_ATTRIBUTES]: [],
-      [ValidationLocation.DATA_POINT_ATTRIBUTES]: []
-    }
-    if (newValidation && newValidation.length > 0) {
-      newValidation.forEach((message) => {
-        const location = message.location[0] as ValidationLocation
-        validationByLocation.value[location].push(message.message)
-        switch (location) {
-          case ValidationLocation.RESOURCE_ATTRIBUTES:
-            resourceAttributes.value = message.replacement_value as GraphLineQueryAttributes
-            break
-          case ValidationLocation.SCOPE_ATTRIBUTES:
-            scopeAttributes.value = message.replacement_value as GraphLineQueryAttributes
-            break
-          case ValidationLocation.DATA_POINT_ATTRIBUTES:
-            dataPointAttributes.value = message.replacement_value as GraphLineQueryAttributes
-            break
-        }
-      })
-    }
+const SECTION_TITLES: Record<AttributeTypeKey, TranslatedString> = {
+  resource: _t('Resource'),
+  scope: _t('Scope'),
+  datapoint: _t('Data point')
+}
+
+// The flat pill model is the single source of truth; the three list models are
+// kept in sync from it.
+const filterModel = ref<AttributeFilterModel>(
+  toModel(
+    {
+      resource: resourceAttributes.value,
+      scope: scopeAttributes.value,
+      datapoint: dataPointAttributes.value
+    },
+    () => crypto.randomUUID()
+  )
+)
+// A key may be offered under more than one attribute type, so record the set of
+// types each suggested key belongs to (see `resolveAttributeType`).
+const keyTypeCache = new Map<string, Set<AttributeTypeKey>>()
+const validationMessages = ref<string[]>([])
+
+function cacheKeyType(name: string, attributeType: AttributeTypeKey): void {
+  const types = keyTypeCache.get(name)
+  if (types) {
+    types.add(attributeType)
+  } else {
+    keyTypeCache.set(name, new Set([attributeType]))
   }
+}
+
+function attributesEqual(a: GraphLineQueryAttributes, b: GraphLineQueryAttributes): boolean {
+  return (
+    a.length === b.length &&
+    a.every((attr, i) => attr.key === b[i]!.key && attr.value === b[i]!.value)
+  )
+}
+
+// Only reassign a list model when its derived content actually changed, so an
+// in-progress (key-less) pill or an unrelated edit does not churn the parent
+// models with fresh array references on every keystroke.
+watch(
+  filterModel,
+  (model) => {
+    const lists = fromModel(model)
+    if (!attributesEqual(lists.resource, resourceAttributes.value)) {
+      resourceAttributes.value = lists.resource
+    }
+    if (!attributesEqual(lists.scope, scopeAttributes.value)) {
+      scopeAttributes.value = lists.scope
+    }
+    if (!attributesEqual(lists.datapoint, dataPointAttributes.value)) {
+      dataPointAttributes.value = lists.datapoint
+    }
+  },
+  { deep: true }
 )
 
 watch(
   () => props.metricName,
   () => {
-    resourceSection.value?.clearAttributeSelection()
-    scopeSection.value?.clearAttributeSelection()
-    dataPointSection.value?.clearAttributeSelection()
-    resourceAttributes.value = []
-    scopeAttributes.value = []
-    dataPointAttributes.value = []
+    filterModel.value = []
   }
 )
 
-watch(
-  () => resourceAttributes.value,
-  () => {
-    scopeAttributes.value = []
-    dataPointAttributes.value = []
+immediateWatch(
+  () => backendValidation.value,
+  (newValidation: ValidationMessages | undefined) => {
+    validationMessages.value = []
+    if (!newValidation || newValidation.length === 0) {
+      return
+    }
+    const lists: ThreeLists = fromModel(filterModel.value)
+    newValidation.forEach((message) => {
+      validationMessages.value.push(message.message)
+      const attributeType = LOCATION_TO_TYPE[message.location[0] ?? '']
+      if (attributeType !== undefined) {
+        lists[attributeType] = message.replacement_value as GraphLineQueryAttributes
+      }
+    })
+    filterModel.value = toModel(lists, () => crypto.randomUUID())
   }
 )
 
-watch(
-  () => scopeAttributes.value,
-  () => {
-    dataPointAttributes.value = []
-  }
-)
+async function querySuggestions(query: string): Promise<Response | ErrorResponse> {
+  // The three key autocompleters are independent, so fetch them concurrently.
+  const responses = await Promise.all(
+    ATTRIBUTE_TYPE_ORDER.map((attributeType) => {
+      const autocompleter: Autocompleter = {
+        fetch_method: 'rest_autocomplete',
+        data: {
+          ident: KEY_IDENTS[attributeType],
+          params: {
+            context: buildAutocompleteContext(filterModel.value, {
+              metricName: props.metricName,
+              staticResourceAttributeKeys: props.staticResourceAttributeKeys
+            })
+          }
+        }
+      }
+      return fetchSuggestions(autocompleter, query)
+    })
+  )
+  const sections: Section[] = []
+  ATTRIBUTE_TYPE_ORDER.forEach((attributeType, index) => {
+    const response = responses[index]
+    if (!response || response instanceof ErrorResponse) {
+      return
+    }
+    // The backend echoes the typed text as a leading (query, query) choice; a real
+    // key equal to the query is indistinguishable from the echo and is dropped too,
+    // falling into the section-less user entry below (its type stays unresolved).
+    const suggestions = flattenSuggestions(response.choices).filter(
+      (s: Suggestion) =>
+        s.name !== query && (s.name === null || (s.name.length > 0 && s.title.length > 0))
+    )
+    for (const suggestion of suggestions) {
+      if (suggestion.name) {
+        cacheKeyType(suggestion.name, attributeType)
+      }
+    }
+    if (suggestions.length > 0) {
+      sections.push({ title: SECTION_TITLES[attributeType], suggestions })
+    }
+  })
+  const userEntry: Section[] = query
+    ? [{ title: untranslated(''), suggestions: [{ name: query, title: untranslated(query) }] }]
+    : []
+  return new Response([...userEntry, ...sections])
+}
 
-function clearAttributeSelection() {
-  resourceSection.value?.clearAttributeSelection()
-  scopeSection.value?.clearAttributeSelection()
-  dataPointSection.value?.clearAttributeSelection()
+async function queryValueSuggestions(
+  condition: ConnectedCondition,
+  query: string
+): Promise<Response | ErrorResponse> {
+  if (condition.attributeType === null || !condition.key) {
+    return new Response([])
+  }
+  const autocompleter: Autocompleter = {
+    fetch_method: 'rest_autocomplete',
+    data: {
+      ident: VALUE_IDENTS[condition.attributeType],
+      params: {
+        context: buildAutocompleteContext(filterModel.value, {
+          metricName: props.metricName,
+          staticResourceAttributeKeys: props.staticResourceAttributeKeys,
+          attributeKey: condition.key,
+          excludeId: condition.id
+        })
+      }
+    }
+  }
+  const response = await fetchSuggestions(autocompleter, query)
+  if (response instanceof ErrorResponse) {
+    return response
+  }
+  return new Response(
+    flattenSuggestions(response.choices).filter(
+      (s: Suggestion) => s.name === null || (s.name.length > 0 && s.title.length > 0)
+    )
+  )
+}
+
+function resolveAttributeType(key: string): AttributeType {
+  // A key offered under more than one attribute type is ambiguous: leave it
+  // unresolved so the attribute-type dropdown opens for the user to choose.
+  const types = keyTypeCache.get(key)
+  return types?.size === 1 ? [...types][0]! : null
+}
+
+function clearAttributeSelection(): void {
+  filterModel.value = []
 }
 
 function hasInvalidAttributes(): boolean {
   return (
-    resourceAttributes.value.some((attr) => attr.value === null || attr.value.trim() === '') ||
-    scopeAttributes.value.some((attr) => attr.value === null || attr.value.trim() === '') ||
-    dataPointAttributes.value.some((attr) => attr.value === null || attr.value.trim() === '')
+    resourceAttributes.value.some((attr) => attr.value.trim() === '') ||
+    scopeAttributes.value.some((attr) => attr.value.trim() === '') ||
+    dataPointAttributes.value.some((attr) => attr.value.trim() === '')
   )
 }
 
 function getValidationMessages(): ValidationMessages {
   const messages: ValidationMessages = []
-
-  if (resourceAttributes.value.some((attr) => attr.value === null || attr.value.trim() === '')) {
+  if (resourceAttributes.value.some((attr) => attr.value.trim() === '')) {
     messages.push({
       message: 'Resource attribute values cannot be empty.',
       location: ['resource_attributes'],
       replacement_value: resourceAttributes.value
     })
   }
-
-  if (scopeAttributes.value.some((attr) => attr.value === null || attr.value.trim() === '')) {
+  if (scopeAttributes.value.some((attr) => attr.value.trim() === '')) {
     messages.push({
       message: 'Scope attribute values cannot be empty.',
       location: ['scope_attributes'],
       replacement_value: scopeAttributes.value
     })
   }
-
-  if (dataPointAttributes.value.some((attr) => attr.value === null || attr.value.trim() === '')) {
+  if (dataPointAttributes.value.some((attr) => attr.value.trim() === '')) {
     messages.push({
       message: 'Data point attribute values cannot be empty.',
       location: ['data_point_attributes'],
       replacement_value: dataPointAttributes.value
     })
   }
-
   return messages
 }
 
 defineExpose({ clearAttributeSelection, hasInvalidAttributes, getValidationMessages })
-
-// autocompleters
-export interface AutoCompleteContext {
-  metric_name?: string
-  attribute_key?: string
-  resource_attributes?: GraphLineQueryAttributes
-  scope_attributes?: GraphLineQueryAttributes
-  data_point_attributes?: GraphLineQueryAttributes
-  static_resource_attribute_keys?: string[]
-}
-
-enum AttributeType {
-  RESOURCE,
-  SCOPE,
-  DATA_POINT
-}
-
-function getResourceAutoCompleterContext(
-  key: string | null = null,
-  ignoreExisting: { index: number } | null = null
-): AutoCompleteContext {
-  return getAutoCompleterContext(
-    key,
-    ignoreExisting ? { attributeType: AttributeType.RESOURCE, index: ignoreExisting.index } : null
-  )
-}
-
-function getScopeAutoCompleterContext(
-  key: string | null = null,
-  ignoreExisting: { index: number } | null = null
-): AutoCompleteContext {
-  return getAutoCompleterContext(
-    key,
-    ignoreExisting ? { attributeType: AttributeType.SCOPE, index: ignoreExisting.index } : null
-  )
-}
-
-function getDataPointAutoCompleterContext(
-  key: string | null = null,
-  ignoreExisting: { index: number } | null = null
-): AutoCompleteContext {
-  return getAutoCompleterContext(
-    key,
-    ignoreExisting ? { attributeType: AttributeType.DATA_POINT, index: ignoreExisting.index } : null
-  )
-}
-
-function getAutoCompleterContext(
-  key: string | null = null,
-  ignoreExisting: { attributeType: AttributeType; index: number } | null = null
-): AutoCompleteContext {
-  const context: AutoCompleteContext = {}
-  if (props.metricName) {
-    context.metric_name = props.metricName
-  }
-  if (resourceAttributes.value.length > 0) {
-    context.resource_attributes = resourceAttributes.value.filter(
-      (_attribute: GraphLineQueryAttribute, index: number) =>
-        _attribute.value !== null &&
-        !(
-          ignoreExisting &&
-          ignoreExisting.attributeType === AttributeType.RESOURCE &&
-          ignoreExisting.index === index
-        )
-    )
-  }
-  if (scopeAttributes.value.length > 0) {
-    context.scope_attributes = scopeAttributes.value.filter(
-      (_attribute: GraphLineQueryAttribute, index: number) =>
-        _attribute.value !== null &&
-        !(
-          ignoreExisting &&
-          ignoreExisting.attributeType === AttributeType.SCOPE &&
-          ignoreExisting.index === index
-        )
-    )
-  }
-  if (dataPointAttributes.value.length > 0) {
-    context.data_point_attributes = dataPointAttributes.value.filter(
-      (_attribute: GraphLineQueryAttribute, index: number) =>
-        _attribute.value !== null &&
-        !(
-          ignoreExisting &&
-          ignoreExisting.attributeType === AttributeType.DATA_POINT &&
-          ignoreExisting.index === index
-        )
-    )
-  }
-  if (key !== '' && key !== null) {
-    context.attribute_key = key
-  }
-  if (props.staticResourceAttributeKeys !== null) {
-    context.static_resource_attribute_keys = props.staticResourceAttributeKeys
-  }
-  return context
-}
 </script>
 
 <template>
-  <FormMetricBackendAttributeSection
-    ref="resourceSection"
-    v-model="resourceAttributes"
-    v-model:validation="validationByLocation.resource_attributes"
-    :aria-label="_t('Resource attributes')"
-    :label="_t('Resource attributes')"
-    key-ident="monitored_resource_attributes_keys_backend"
-    value-ident="monitored_resource_attributes_values_backend"
-    :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
-    :indent="props.indent"
-    :orientation="props.orientation"
-    :get-auto-completer-context="getResourceAutoCompleterContext"
-  />
-  <FormMetricBackendAttributeSection
-    ref="scopeSection"
-    v-model="scopeAttributes"
-    v-model:validation="validationByLocation.scope_attributes"
-    :aria-label="_t('Scope attributes')"
-    :label="_t('Scope attributes')"
-    key-ident="monitored_scope_attributes_keys_backend"
-    value-ident="monitored_scope_attributes_values_backend"
-    :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
-    :indent="props.indent"
-    :orientation="props.orientation"
-    :get-auto-completer-context="getScopeAutoCompleterContext"
-  />
-  <FormMetricBackendAttributeSection
-    ref="dataPointSection"
-    v-model="dataPointAttributes"
-    v-model:validation="validationByLocation.data_point_attributes"
-    :aria-label="_t('Data point attributes')"
-    :label="_t('Data point attributes')"
-    key-ident="monitored_data_point_attributes_keys_backend"
-    value-ident="monitored_data_point_attributes_values_backend"
-    :disable-values-on-empty-key="props.disableValuesOnEmptyKey"
-    :indent="props.indent"
-    :orientation="props.orientation"
-    :get-auto-completer-context="getDataPointAutoCompleterContext"
-  />
+  <tr>
+    <td class="metric-backend-form-metric-backend-attributes__label-cell">
+      {{ _t('Attributes') }}
+    </td>
+    <td>
+      <FormValidation :validation="validationMessages" />
+      <component :is="props.indent ? CmkIndent : 'div'">
+        <FormAttributeFilter
+          v-model="filterModel"
+          :allow-or="false"
+          :operators="['eq']"
+          :query-suggestions="querySuggestions"
+          :query-value-suggestions="queryValueSuggestions"
+          :resolve-attribute-type="resolveAttributeType"
+          :aria-label="_t('Attributes')"
+        />
+      </component>
+    </td>
+  </tr>
 </template>
+
+<style scoped>
+.metric-backend-form-metric-backend-attributes__label-cell {
+  vertical-align: top;
+}
+</style>

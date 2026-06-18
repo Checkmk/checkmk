@@ -1112,9 +1112,6 @@ allows = ["@ccc", "@trace"]
 [components."cmk.mknotifyd"]
 allows = ["@ccc", "cmk.events"]
 
-[components."cmk.nonfree.ultimate.metric_backend.dcd"]
-allows = ["@ccc", "@metric_backend", "cmk.dcd.daemon", "cmk.utils"]
-
 [components."cmk.nonfree.ultimate.metric_backend.gui"]
 allows = [
   "@ccc",

@@ -1,7 +1,7 @@
 """Macro to package Python wheels into OMD site-packages tarballs."""
 
 load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
-load("@rules_pkg//pkg:mappings.bzl", "filter_directory", "pkg_files")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:pip.bzl", "whl_filegroup")
 load("//bazel/rules:patchelf.bzl", "set_runpath_tree")
@@ -14,7 +14,6 @@ def _package_wheel_impl(
         visibility):
     """Packages a python wheel into our omd site-packages."""
     whl_filegroup_name = name + "_fg"
-    filtered_name = name + "_filtered"
     pkg_files_name = name + "_pkg_files"
 
     whl_filegroup(
@@ -22,27 +21,20 @@ def _package_wheel_impl(
         whl = whl,
     )
 
-    # TODO: Is this a no-op now and can be removed?
-    filter_directory(
-        name = filtered_name,
-        src = whl_filegroup_name,
-        excludes = [],
-    )
-
     if rpath:
         runpath_name = name + "_runpath"
         set_runpath_tree(
             name = runpath_name,
-            src = ":" + filtered_name,
+            src = ":" + whl_filegroup_name,
             rpath = rpath,
         )
         pkg_files_src = runpath_name
     else:
-        pkg_files_src = filtered_name
+        pkg_files_src = whl_filegroup_name
 
-    # Filter_directory creates TreeArtifacts and Stripping
+    # whl_filegroup creates a TreeArtifact and stripping
     # of TreeArtifacts is not working.
-    # Dus we need to create pkg_files first which then can be
+    # Thus we need to create pkg_files first which then can be
     # stripped and prefixed in the next pkg_files
     pkg_files(
         name = pkg_files_name + "1",

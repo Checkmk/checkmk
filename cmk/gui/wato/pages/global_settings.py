@@ -451,7 +451,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
         if (
             self.name() == "edit_site_configvar"
-            and not has_distributed_setup_remote_sites(active_config.sites)
+            and not has_distributed_setup_remote_sites(config.sites)
             and not self._current_settings
         ):
             return redirect(mode_url("sites"))

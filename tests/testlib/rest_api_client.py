@@ -3113,6 +3113,21 @@ class SAMLConnectionClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def edit(
+        self,
+        saml_connection_id: str,
+        saml_data: dict[str, Any],
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "valid_etag",
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{saml_connection_id}",
+            body=saml_data,
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(saml_connection_id, etag),
+        )
+
     def delete(
         self,
         saml_connection_id: str,

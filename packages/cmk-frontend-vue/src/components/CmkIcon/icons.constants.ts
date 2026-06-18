@@ -656,6 +656,7 @@ import darkIconCheckmarkPlusSvg from '~cmk-frontend/themes/modern-dark/images/ic
 import darkIconCloseSvg from '~cmk-frontend/themes/modern-dark/images/icon_close.svg?url&no-inline'
 import darkIconCommentSvg from '~cmk-frontend/themes/modern-dark/images/icon_comment.svg?url&no-inline'
 import darkIconConfigurationSvg from '~cmk-frontend/themes/modern-dark/images/icon_configuration.svg?url&no-inline'
+import darkIconCopiedSvg from '~cmk-frontend/themes/modern-dark/images/icon_copied.svg?url&no-inline'
 import darkIconCrossBgWhiteSvg from '~cmk-frontend/themes/modern-dark/images/icon_cross_bg_white.svg?url&no-inline'
 import darkIconDashboardGridSvg from '~cmk-frontend/themes/modern-dark/images/icon_dashboard_grid.svg?url&no-inline'
 import darkIconDashboardMenuarrowSvg from '~cmk-frontend/themes/modern-dark/images/icon_dashboard_menuarrow.svg?url&no-inline'
@@ -962,7 +963,6 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   'connection-tests': lightIconConnectionTestsSvg,
   contactgroups: lightIconContactgroupsSvg,
   continue: lightIconContinuePng,
-  copied: lightIconCopiedSvg,
   counting: lightIconCountingPng,
   crash: lightIconCrashSvg,
   'crash-glow': lightIconCrashGlowPng,
@@ -1416,6 +1416,7 @@ export const themedIcons: Record<'light' | 'dark', Partial<Record<IconNames, str
     close: lightIconCloseSvg,
     comment: lightIconCommentSvg,
     configuration: lightIconConfigurationSvg,
+    copied: lightIconCopiedSvg,
     'cross-bg-white': lightIconCrossBgWhiteSvg,
     'dashboard-grid': lightIconDashboardGridSvg,
     'dashboard-menuarrow': lightIconDashboardMenuarrowSvg,
@@ -1495,6 +1496,7 @@ export const themedIcons: Record<'light' | 'dark', Partial<Record<IconNames, str
     close: darkIconCloseSvg,
     comment: darkIconCommentSvg,
     configuration: darkIconConfigurationSvg,
+    copied: darkIconCopiedSvg,
     'cross-bg-white': darkIconCrossBgWhiteSvg,
     'dashboard-grid': darkIconDashboardGridSvg,
     'dashboard-menuarrow': darkIconDashboardMenuarrowSvg,

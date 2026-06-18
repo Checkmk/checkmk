@@ -27,7 +27,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.site_config import get_login_sites
+from cmk.gui.site_config import wato_site_ids
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, IconNames, StaticIcon
 from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
@@ -216,10 +216,10 @@ def get_affected_sites(
         _customer_api = customer_api()
         customer: str | None = connection.get("customer", SCOPE_GLOBAL)
         if _customer_api.is_global(customer):
-            return list(site_configs)
+            return wato_site_ids(site_configs)
         assert customer is not None
         return list(_customer_api.get_sites_of_customer(customer).keys())
-    return get_login_sites(site_configs)
+    return wato_site_ids(site_configs)
 
 
 def _delete_connection(

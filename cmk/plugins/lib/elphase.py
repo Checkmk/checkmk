@@ -116,6 +116,18 @@ def check_elphase(  # pylint: disable=too-many-branches
                 if levels[0] is not None and levels[1] is not None:
                     levels_lower = (factor * levels[0], factor * levels[1])
 
+        # Upper voltage levels are configured via a separate "voltage_upper"
+        # key of the elphase ruleset (werk 18753) and evaluated in addition to
+        # the lower voltage levels above.
+        if quantity == "voltage":
+            voltage_upper = params.get("voltage_upper")
+            if (
+                voltage_upper is not None
+                and voltage_upper[0] is not None
+                and voltage_upper[1] is not None
+            ):
+                levels_upper = (factor * voltage_upper[0], factor * voltage_upper[1])
+
         yield from check_levels_v1(
             value * factor,
             levels_upper=levels_upper,

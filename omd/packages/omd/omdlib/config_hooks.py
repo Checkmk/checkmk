@@ -35,6 +35,7 @@ from omdlib.config_choices import (
     IpListenAddressHasError,
     NetworkPortHasError,
 )
+from omdlib.core import write_core_conf
 from omdlib.jaeger import (
     TRACE_JAEGER_ADMIN_PORT_HOOK,
     TRACE_JAEGER_UI_PORT_HOOK,
@@ -385,6 +386,7 @@ PORT_HOOKS: Sequence[PortHook] = [
 
 _MIGRATED_ACTIVATION: Mapping[str, Activation] = {
     "APACHE_TCP_ADDR": write_apache_listen_conf,
+    "CORE": write_core_conf,
     "LIVESTATUS_TCP": write_livestatus_xinetd_conf,
     # Do not patch the xinetd config directly here, because that would lead to
     # later conflicts during omd cp/mv. The xinetd config points to a link

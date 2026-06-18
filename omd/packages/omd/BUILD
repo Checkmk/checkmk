@@ -191,6 +191,7 @@ py_library(
         "omdlib/config_hooks.py",
         "omdlib/console.py",
         "omdlib/contexts.py",
+        "omdlib/core.py",
         "omdlib/crash_reporting.py",
         "omdlib/dialog.py",
         "omdlib/finalize.py",

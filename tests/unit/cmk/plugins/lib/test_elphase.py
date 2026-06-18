@@ -78,3 +78,45 @@ def test_output_load_v1_float() -> None:
     )
     assert any(isinstance(r, Result) and r.state == State.OK for r in results)
     assert any(isinstance(r, Metric) and r.name == "output_load" for r in results)
+
+
+def test_voltage_lower_only_keeps_legacy_behavior() -> None:
+    # No upper levels configured: a high voltage must not warn.
+    results = list(
+        check_elphase(
+            {"voltage": (210, 200)},
+            ElPhase(voltage=ReadingWithState(value=265.0)),
+        )
+    )
+    assert all(r.state == State.OK for r in results if isinstance(r, Result))
+    assert any(isinstance(r, Metric) and r.name == "voltage" for r in results)
+
+
+def test_voltage_upper_crit_old_tuple() -> None:
+    results = list(
+        check_elphase(
+            {"voltage": (210, 200), "voltage_upper": (250, 260)},
+            ElPhase(voltage=ReadingWithState(value=265.0)),
+        )
+    )
+    assert any(isinstance(r, Result) and r.state == State.CRIT for r in results)
+
+
+def test_voltage_upper_warn_v1_float() -> None:
+    results = list(
+        check_elphase(
+            {"voltage": ("fixed", (210.0, 200.0)), "voltage_upper": ("fixed", (250.0, 260.0))},
+            ElPhase(voltage=ReadingWithState(value=255.0)),
+        )
+    )
+    assert any(isinstance(r, Result) and r.state == State.WARN for r in results)
+
+
+def test_voltage_lower_still_triggers_with_upper_set() -> None:
+    results = list(
+        check_elphase(
+            {"voltage": (210, 200), "voltage_upper": (250, 260)},
+            ElPhase(voltage=ReadingWithState(value=195.0)),
+        )
+    )
+    assert any(isinstance(r, Result) and r.state == State.CRIT for r in results)

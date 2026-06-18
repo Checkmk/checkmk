@@ -20,10 +20,21 @@ def _phase_elements():
         (
             "voltage",
             Tuple(
-                title=_("Voltage"),
+                title=_("Lower voltage levels"),
                 elements=[
                     Integer(title=_("warning if below"), unit="V", default_value=210),
                     Integer(title=_("critical if below"), unit="V", default_value=200),
+                ],
+            ),
+        ),
+        (
+            "voltage_upper",
+            Tuple(
+                title=_("Upper voltage levels"),
+                help=_("Leave unset on installations where over-voltage is not a concern."),
+                elements=[
+                    Integer(title=_("warning if above"), unit="V", default_value=245),
+                    Integer(title=_("critical if above"), unit="V", default_value=250),
                 ],
             ),
         ),

@@ -44,7 +44,19 @@ def check_ups_in_freq(item, params, parsed):
         state = 1
     if state:
         infotext += f" (warn/crit below {warn} Hz/{crit} Hz)"
-    return state, infotext, [("in_freq", freq, warn, crit, 30, 70)]
+
+    warn_upper = crit_upper = None
+    levels_upper = params.get("levels_upper")
+    if levels_upper is not None:
+        warn_upper, crit_upper = levels_upper
+        if freq >= crit_upper:
+            state = 2
+            infotext += f" (warn/crit above {warn_upper} Hz/{crit_upper} Hz)"
+        elif freq >= warn_upper:
+            state = max(state, 1)
+            infotext += f" (warn/crit above {warn_upper} Hz/{crit_upper} Hz)"
+
+    return state, infotext, [("in_freq", freq, warn_upper, crit_upper, 30, 70)]
 
 
 check_info["ups_in_freq"] = LegacyCheckDefinition(
@@ -59,5 +71,5 @@ check_info["ups_in_freq"] = LegacyCheckDefinition(
     discovery_function=discover_ups_in_freq,
     check_function=check_ups_in_freq,
     check_ruleset_name="efreq",
-    check_default_parameters={"levels_lower": (45, 40)},
+    check_default_parameters={"levels_lower": (49.0, 48.5)},
 )

@@ -158,7 +158,7 @@ def check_elphase(
             label="Voltage",
             metric_name="voltage",
             lower_levels=_to_levels(params.get("voltage")),
-            upper_levels=None,
+            upper_levels=_to_levels(params.get("voltage_upper")),
             render_func=lambda x: f"{x:.1f} V",
         )
 

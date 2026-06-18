@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Float, Migrate, TextInput, Tuple
 
 
 def _item_spec_efreq():
@@ -32,13 +32,46 @@ def _parameter_valuespec_efreq():
                             "like UPSs or PDUs. Several phases may be addressed independently."
                         ),
                         elements=[
-                            Integer(title=_("warning if below"), unit="Hz", default_value=40),
-                            Integer(title=_("critical if below"), unit="Hz", default_value=45),
+                            Float(
+                                title=_("warning if below"),
+                                unit="Hz",
+                                default_value=49.0,
+                                allow_int=True,
+                            ),
+                            Float(
+                                title=_("critical if below"),
+                                unit="Hz",
+                                default_value=48.5,
+                                allow_int=True,
+                            ),
+                        ],
+                    ),
+                ),
+                (
+                    "levels_upper",
+                    Tuple(
+                        help=_(
+                            "Upper levels for the nominal frequencies of AC devices "
+                            "like UPSs or PDUs. Leave unset where over-frequency is not a concern."
+                        ),
+                        elements=[
+                            Float(
+                                title=_("warning if above"),
+                                unit="Hz",
+                                default_value=51.0,
+                                allow_int=True,
+                            ),
+                            Float(
+                                title=_("critical if above"),
+                                unit="Hz",
+                                default_value=51.5,
+                                allow_int=True,
+                            ),
                         ],
                     ),
                 ),
             ],
-            optional_keys=[],
+            optional_keys=("levels_lower", "levels_upper"),
         ),
         migrate=lambda p: p if isinstance(p, dict) else {"levels_lower": p},
     )

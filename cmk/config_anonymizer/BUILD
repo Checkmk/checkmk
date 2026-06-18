@@ -16,7 +16,6 @@ py_library(
         "//cmk/base:base-app",
         "//cmk/base:config",
         "//cmk/base/configlib",
-        "//cmk/checkengine",
         "//cmk/gui:app",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
@@ -29,6 +28,9 @@ py_library(
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
+        "//packages/cmk-check-engine/cmk/checkengine/discovery",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-livestatus-client",
     ],
 )

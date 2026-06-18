@@ -6,7 +6,6 @@ py_library(
     srcs = glob(["**/*.py"]),
     visibility = ["//tests/plugins_consistency:__subpackages__"],
     deps = [
-        "//cmk/checkengine",
         "//cmk/gui:general_pages",
         "//cmk/gui/dashboard",
         "//cmk/gui/graphing",
@@ -15,6 +14,8 @@ py_library(
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:graphing",

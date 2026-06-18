@@ -9,7 +9,6 @@ py_library(
         "//cmk/base:__subpackages__",
     ],
     deps = [
-        "//cmk/checkengine",
         "//cmk/piggyback:backend",
         "//cmk/utils",
         "//packages/cmk-ccc:crash-reporting",
@@ -20,5 +19,6 @@ py_library(
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine:specs",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
     ],
 )

@@ -59,7 +59,6 @@ py_library(
     visibility = ["//:__subpackages__"],
     deps = [
         "//cmk/base:config",
-        "//cmk/checkengine",
         "//cmk/gui:app",
         "//cmk/gui/rule_specs:types",
         "//cmk/gui/watolib",
@@ -68,6 +67,9 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-check-engine:specs",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:rulesets",

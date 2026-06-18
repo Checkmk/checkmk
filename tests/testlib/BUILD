@@ -20,7 +20,6 @@ py_library(
     visibility = ["//:__subpackages__"],
     deps = [
         "//cmk/base",
-        "//cmk/checkengine",
         "//cmk/gui:app",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
@@ -39,6 +38,8 @@ py_library(
         "//cmk/gui/watolib:password_store",
         "//cmk/utils",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-check-engine/cmk/checkengine/discovery",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-relay-protocols",
         "//tests:pkg_marker",
         "//tests/testlib/common:repo",
@@ -124,7 +125,6 @@ py_library(
     imports = ["../.."],
     deps = [
         "//cmk/base",
-        "//cmk/checkengine",
         "//cmk/gui:app",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
@@ -143,6 +143,8 @@ py_library(
         "//cmk/gui/watolib:password_store",
         "//cmk/utils",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-check-engine/cmk/checkengine/discovery",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-relay-protocols",
         "//tests:pkg_marker",
         "//tests/testlib/common:repo",

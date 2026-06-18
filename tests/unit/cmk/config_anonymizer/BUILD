@@ -8,7 +8,7 @@ py_library(
     visibility = [":__subpackages__"],
     deps = [
         "//cmk/base:config",
-        "//cmk/checkengine",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//tests/testlib/unit",
         requirement("flask"),
         requirement("pytest"),

@@ -13,7 +13,6 @@ py_library(
     ],
     deps = [
         "//cmk/base/default_config:default-config",
-        "//cmk/checkengine",
         "//cmk/piggyback:backend",
         "//cmk/rrd",
         "//cmk/utils",
@@ -22,6 +21,9 @@ py_library(
         "//packages/cmk-ccc:translations",
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:snmplib",
+        "//packages/cmk-check-engine/cmk/checkengine/checking",
+        "//packages/cmk-check-engine/cmk/checkengine/discovery",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-logwatch:config",
         "//packages/cmk-plugin-apis:agent_based",
     ],

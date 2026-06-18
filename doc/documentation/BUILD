@@ -10,7 +10,7 @@ py_binary(
     main = "sphinx_build_wrapper.py",
     tags = ["no-mypy"],
     deps = [
-        "//cmk/checkengine",
+        "//packages/cmk-check-engine/cmk/checkengine/parser",
         requirement("sphinx"),
         requirement("sphinx_autodoc_typehints"),
         requirement("sphinx_rtd_theme"),

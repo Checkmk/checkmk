@@ -149,7 +149,6 @@ py_library(
     deps = [
         ":auth_core",
         ":core_toolkit",
-        "//cmk/checkengine",
         "//cmk/gui/utils:compatibility",
         "//cmk/gui/utils:temperate_unit",
         "//cmk/inventory",
@@ -160,6 +159,7 @@ py_library(
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-livestatus-client:py_livestatus",

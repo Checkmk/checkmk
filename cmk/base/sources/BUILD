@@ -9,7 +9,6 @@ py_library(
         "//cmk/base:__subpackages__",
     ],
     deps = [
-        "//cmk/checkengine",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
         "//packages/cmk-ccc:hostaddress",
@@ -17,5 +16,7 @@ py_library(
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:snmplib",
+        "//packages/cmk-check-engine/cmk/checkengine/parser",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
     ],
 )

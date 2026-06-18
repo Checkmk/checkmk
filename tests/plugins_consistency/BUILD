@@ -8,7 +8,7 @@ py_library(
     visibility = [":__subpackages__"],
     deps = [
         "//cmk/base:config",  # hidden in a local import
-        "//cmk/checkengine",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         requirement("pytest"),
     ],
 )
@@ -38,8 +38,8 @@ py_test(
         ":__test__",
         ":conftest",
         "//:pyproject-toml",
-        "//cmk/checkengine",
         "//cmk/plugins",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//tests/plugins_consistency/common_tests",
         "//tests/testlib/unit",
         requirement("pytest-mock"),

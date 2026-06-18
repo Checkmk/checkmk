@@ -12,7 +12,7 @@ from typing import Any, override
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
@@ -35,7 +35,7 @@ class SharedDashboardPage(DashboardTokenAuthenticatedPage):
 
     @override
     def _handle_exception(self, exception: Exception, ctx: PageContext) -> PageResult:
-        return page_dashboard_token_invalid()
+        return page_dashboard_token_invalid(ctx.config)
 
 
 class SharedDashboardPageComponents:
@@ -47,14 +47,14 @@ class SharedDashboardPageComponents:
             raise ValueError("Referenced invalid dashboard token")
 
     @staticmethod
-    def html_section(title: str, page_properties: dict[str, Any]) -> None:
+    def html_section(title: str, page_properties: dict[str, Any], config: Config) -> None:
         html.body_start(
             title,
             lang=user.language,
-            inject_js_profiling_code=active_config.inject_js_profiling_code,
-            load_frontend_vue=active_config.load_frontend_vue,
-            custom_style_sheet=active_config.custom_style_sheet,
-            screenshotmode=active_config.screenshotmode,
+            inject_js_profiling_code=config.inject_js_profiling_code,
+            load_frontend_vue=config.load_frontend_vue,
+            custom_style_sheet=config.custom_style_sheet,
+            screenshotmode=config.screenshotmode,
             inline_help_as_text=user.inline_help_as_text,
         )
         html.begin_page_content(enable_scrollbar=True)
@@ -129,4 +129,4 @@ def page_shared_dashboard(
         "url_params": {"ifid": ctx.request.get_ascii_input("ifid")},
         "token_value": token_id,
     }
-    SharedDashboardPageComponents.html_section(title, page_properties)
+    SharedDashboardPageComponents.html_section(title, page_properties, ctx.config)

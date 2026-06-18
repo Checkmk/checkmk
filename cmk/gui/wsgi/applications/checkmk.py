@@ -294,7 +294,7 @@ def _process_request(
 
     except MKTokenExpiredOrRevokedException as e:
         if e.token_type == "dashboard":
-            resp = page_dashboard_token_invalid()
+            resp = page_dashboard_token_invalid(ctx.config)
         else:
             resp = _render_exception(ctx, e, title=_("Token invalid"))
         logger.error("MKTokenExpiredOrRevokedException: %s", e)

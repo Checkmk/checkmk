@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Response, response
 from cmk.gui.i18n import _
@@ -11,7 +11,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.theme.current_theme import theme
 
 
-def page_dashboard_token_invalid() -> Response:
+def page_dashboard_token_invalid(config: Config) -> Response:
     def _render_main_logo() -> None:
         html.open_div(class_="cmk_main_logo")
         html.open_a(href="https://checkmk.com", class_="logo_link")
@@ -48,10 +48,10 @@ def page_dashboard_token_invalid() -> Response:
     html.body_start(
         title=_("Token invalid"),
         lang=user.language,
-        inject_js_profiling_code=active_config.inject_js_profiling_code,
-        load_frontend_vue=active_config.load_frontend_vue,
-        custom_style_sheet=active_config.custom_style_sheet,
-        screenshotmode=active_config.screenshotmode,
+        inject_js_profiling_code=config.inject_js_profiling_code,
+        load_frontend_vue=config.load_frontend_vue,
+        custom_style_sheet=config.custom_style_sheet,
+        screenshotmode=config.screenshotmode,
         inline_help_as_text=user.inline_help_as_text,
     )
     html.begin_page_content(enable_scrollbar=False)

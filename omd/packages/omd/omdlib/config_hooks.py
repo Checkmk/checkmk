@@ -48,6 +48,7 @@ from omdlib.liveproxyd import write_liveproxyd_conf
 from omdlib.livestatus import LIVESTATUS_TCP_PORT_HOOK, write_livestatus_xinetd_conf
 from omdlib.mkeventd import write_mkeventd_conf
 from omdlib.multisite import write_multisite_authorisation, write_multisite_cookie_auth
+from omdlib.pnp4nagios import write_pnp4nagios_conf
 from omdlib.rabbitmq import (
     RABBITMQ_DIST_PORT_HOOK,
     RABBITMQ_MANAGEMENT_PORT_HOOK,
@@ -407,6 +408,7 @@ _MIGRATED_ACTIVATION: Mapping[str, Activation] = {
     "MKEVENTD": write_mkeventd_conf,
     "MULTISITE_AUTHORISATION": write_multisite_authorisation,
     "MULTISITE_COOKIE_AUTH": write_multisite_cookie_auth,
+    "PNP4NAGIOS": write_pnp4nagios_conf,
     "RABBITMQ_ONLY_FROM": write_rabbitmq_default_conf,
     "TRACE_RECEIVE": write_jaeger_apache_conf,
     "TRACE_RECEIVE_ADDRESS": write_jaeger_receiver_conf,

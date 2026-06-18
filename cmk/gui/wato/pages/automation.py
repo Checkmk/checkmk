@@ -32,7 +32,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.crypto.password import Password
 from cmk.gui import userdb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -41,6 +41,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.session_context import SuperUserContext
 from cmk.gui.type_defs import CustomUserAttrSpec
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import (
@@ -195,7 +196,12 @@ class PageAutomation(AjaxPage):
                 self._execute_cmk_automation(debug=config.debug)
                 return
             if self._command == "push-profile":
-                self._execute_push_profile(config.wato_user_attrs, debug=config.debug)
+                self._execute_push_profile(
+                    config.wato_user_attrs,
+                    user_connections=config.user_connections,
+                    pprint_value=config.wato_pprint_config,
+                    debug=config.debug,
+                )
                 return
             try:
                 automation_command = automation_command_registry[self._command]
@@ -253,11 +259,24 @@ class PageAutomation(AjaxPage):
         )
 
     def _execute_push_profile(
-        self, custom_user_attributes: Sequence[CustomUserAttrSpec], *, debug: bool
+        self,
+        custom_user_attributes: Sequence[CustomUserAttrSpec],
+        *,
+        user_connections: Sequence[UserConnectionConfig],
+        pprint_value: bool,
+        debug: bool,
     ) -> None:
         try:
             response.set_data(
-                str(watolib_utils.mk_repr(self._automation_push_profile(custom_user_attributes)))
+                str(
+                    watolib_utils.mk_repr(
+                        self._automation_push_profile(
+                            custom_user_attributes,
+                            user_connections=user_connections,
+                            pprint_value=pprint_value,
+                        )
+                    )
+                )
             )
         except Exception as e:
             logger.exception("error pushing profile")
@@ -266,7 +285,11 @@ class PageAutomation(AjaxPage):
             response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
     def _automation_push_profile(
-        self, custom_user_attributes: Sequence[CustomUserAttrSpec]
+        self,
+        custom_user_attributes: Sequence[CustomUserAttrSpec],
+        *,
+        user_connections: Sequence[UserConnectionConfig],
+        pprint_value: bool,
     ) -> bool:
         site_id = request.var("siteid")
         if not site_id:
@@ -293,9 +316,9 @@ class PageAutomation(AjaxPage):
         userdb.save_users(
             users,
             get_user_attributes(custom_user_attributes),
-            active_config.user_connections,
+            user_connections,
             now=datetime.now(),
-            pprint_value=active_config.wato_pprint_config,
+            pprint_value=pprint_value,
             call_users_saved_hook=True,
         )
 

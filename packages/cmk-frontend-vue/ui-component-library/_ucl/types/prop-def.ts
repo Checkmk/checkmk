@@ -48,6 +48,14 @@ export interface StringArrayPropDef {
   help?: string
 }
 
+export interface MultiSelectPropDef<T extends string = string> {
+  type: 'multiselect'
+  title: string
+  options: Array<{ title: string; name: NonNullable<T> }>
+  initialState: T[]
+  help?: string
+}
+
 export type PropDef =
   | BoolPropDef
   | StringPropDef
@@ -55,6 +63,7 @@ export type PropDef =
   | ListPropDef<string>
   | MultilineStringPropDef
   | StringArrayPropDef
+  | MultiSelectPropDef<string>
 
 export type PanelConfig = Record<string, PropDef>
 

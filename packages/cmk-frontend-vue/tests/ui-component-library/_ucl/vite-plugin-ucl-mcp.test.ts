@@ -162,4 +162,27 @@ describe('vite-plugin-ucl-mcp', () => {
       }
     ])
   })
+
+  it('serializes multiselect options to the option name list', () => {
+    const result = serializePanelConfig({
+      columns: {
+        type: 'multiselect',
+        title: 'Columns',
+        options: [
+          { title: 'Name', name: 'name' },
+          { title: 'State', name: 'state' }
+        ],
+        initialState: ['name']
+      }
+    })
+
+    expect(result).toEqual([
+      {
+        name: 'columns',
+        type: 'multiselect',
+        uclInitialState: ['name'],
+        options: ['name', 'state']
+      }
+    ])
+  })
 })

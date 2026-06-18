@@ -10,6 +10,7 @@ import type { Suggestion } from '@/components/CmkSuggestions'
 import type {
   BoolPropDef,
   ListPropDef,
+  MultiSelectPropDef,
   MultilineStringPropDef,
   NumberPropDef,
   PanelConfig,
@@ -24,6 +25,7 @@ export type {
   BoolPropDef,
   ListPropDef,
   MultilineStringPropDef,
+  MultiSelectPropDef,
   NumberPropDef,
   PanelConfig,
   PanelConfigFor,
@@ -51,7 +53,9 @@ type InferStateFromDef<T extends PropDef> = T extends BoolPropDef
           ? string
           : T extends StringArrayPropDef
             ? string[]
-            : never
+            : T extends MultiSelectPropDef<infer U>
+              ? NonNullable<U>[]
+              : never
 
 export type InferPanelState<T extends PanelConfig> = {
   [K in keyof T]: InferStateFromDef<T[K]>

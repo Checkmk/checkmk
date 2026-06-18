@@ -4,7 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { ListPropDef, PanelConfig, PanelState } from '@ucl/_ucl/types/prop-panel.ts'
+import type {
+  ListPropDef,
+  MultiSelectPropDef,
+  PanelConfig,
+  PanelState
+} from '@ucl/_ucl/types/prop-panel.ts'
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -20,6 +25,7 @@ import CmkSwitch from '@/components/CmkSwitch.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
+import UclMultiSelect from './UclMultiSelect.vue'
 import UclStringArrayTextarea from './UclStringArrayTextarea.vue'
 
 const { config, title = 'Properties' } = defineProps<{ config: PanelConfig; title?: string }>()
@@ -63,7 +69,7 @@ onMounted(() => {
         state.value[configKey] = urlValue === '1' ? true : false
       } else if (configValue.type === 'number') {
         state.value[configKey] = parseFloat(urlValue as string)
-      } else if (configValue.type === 'string-array') {
+      } else if (configValue.type === 'string-array' || configValue.type === 'multiselect') {
         state.value[configKey] = (Array.isArray(urlValue) ? urlValue : [urlValue]).filter(
           (v): v is string => v !== null
         )
@@ -93,7 +99,11 @@ onMounted(() => {
       class="ucl-properties-panel__prop-control"
     >
       <div class="ucl-properties-panel__label-container">
-        <CmkLabel :for="`${uid}-${key}`">{{ def.title }}</CmkLabel>
+        <CmkLabel
+          :id="`${uid}-${key}-label`"
+          v-bind="def.type === 'multiselect' ? {} : { for: `${uid}-${key}` }"
+          >{{ def.title }}</CmkLabel
+        >
         <CmkSpace v-if="def.help" size="small" />
         <CmkHelpText v-if="def.help" :help="def.help" />
       </div>
@@ -139,6 +149,13 @@ onMounted(() => {
       <UclStringArrayTextarea
         v-else-if="def.type === 'string-array'"
         :id="`${uid}-${key}`"
+        :model-value="state[key] as string[]"
+        @update:model-value="state[key] = $event"
+      />
+      <UclMultiSelect
+        v-else-if="def.type === 'multiselect'"
+        :aria-labelledby="`${uid}-${key}-label`"
+        :options="(def as MultiSelectPropDef).options"
         :model-value="state[key] as string[]"
         @update:model-value="state[key] = $event"
       />

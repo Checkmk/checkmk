@@ -136,6 +136,15 @@ describe('prop type interactions update component', () => {
         { name: 'option-a', title: 'Option A' },
         { name: 'option-b', title: 'Option B' }
       ]
+    },
+    multiselectProp: {
+      type: 'multiselect',
+      title: 'Multiselect',
+      initialState: [] as string[],
+      options: [
+        { name: 'ms-a', title: 'MS A' },
+        { name: 'ms-b', title: 'MS B' }
+      ]
     }
   } satisfies PanelConfig
 
@@ -148,7 +157,8 @@ describe('prop type interactions update component', () => {
         numberProp: { type: Number, required: true },
         multilineStringProp: { type: String, required: true },
         stringArrayProp: { type: Array as PropType<string[]>, required: true },
-        listProp: { type: String, required: true }
+        listProp: { type: String, required: true },
+        multiselectProp: { type: Array as PropType<string[]>, required: true }
       },
       template: `
         <div>
@@ -160,6 +170,7 @@ describe('prop type interactions update component', () => {
             <li v-for="item in stringArrayProp" :key="item">{{ item }}</li>
           </ul>
           <span data-testid="list-prop">{{ listProp }}</span>
+          <span data-testid="multiselect-prop">{{ multiselectProp.join(',') }}</span>
         </div>
       `
     })
@@ -179,6 +190,7 @@ describe('prop type interactions update component', () => {
           :multilineStringProp="propState.multilineStringProp"
           :stringArrayProp="propState.stringArrayProp"
           :listProp="propState.listProp"
+          :multiselectProp="propState.multiselectProp"
         />
       `
     })
@@ -230,6 +242,27 @@ describe('prop type interactions update component', () => {
     await userEvent.click(screen.getByRole('combobox', { name: 'List' }))
     await userEvent.click(await screen.findByRole('option', { name: 'Option B' }))
     expect(screen.getByTestId('list-prop')).toHaveTextContent('option-b')
+  })
+
+  test('multiselect', async () => {
+    render(makeTestApp())
+    const mirror = screen.getByTestId('multiselect-prop')
+    const selectAll = screen.getByRole('checkbox', { name: 'Select all' })
+    expect(mirror).toBeEmptyDOMElement()
+
+    // Toggle in reverse definition order; the selection stays in definition order.
+    await userEvent.click(screen.getByRole('checkbox', { name: 'MS B' }))
+    expect(mirror).toHaveTextContent('ms-b')
+    expect(selectAll).toHaveAttribute('aria-checked', 'mixed')
+
+    await userEvent.click(screen.getByRole('checkbox', { name: 'MS A' }))
+    expect(mirror).toHaveTextContent('ms-a,ms-b')
+    expect(selectAll).toHaveAttribute('aria-checked', 'true')
+
+    // The master checkbox toggles every option at once.
+    await userEvent.click(selectAll)
+    expect(mirror).toBeEmptyDOMElement()
+    expect(selectAll).toHaveAttribute('aria-checked', 'false')
   })
 
   test('aria-observable state propagates to ARIA attributes', async () => {

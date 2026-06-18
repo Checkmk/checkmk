@@ -105,7 +105,7 @@ export function serializePanelConfig(config: Record<string, PropDef>): ApiPropDe
     if (def.help) {
       prop.description = def.help
     }
-    if (def.type === 'list') {
+    if (def.type === 'list' || def.type === 'multiselect') {
       prop.options = def.options.map((o) => o.name)
     }
     return prop

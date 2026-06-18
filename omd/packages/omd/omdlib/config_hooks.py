@@ -26,6 +26,7 @@ from pathlib import Path
 from re import Pattern
 from typing import TYPE_CHECKING
 
+from omdlib.admin_mail import write_admin_mail_forward
 from omdlib.config_api import Activation, Config, null_action, PortHook
 from omdlib.config_choices import (
     ApacheNetworkPortHasError,
@@ -388,6 +389,7 @@ PORT_HOOKS: Sequence[PortHook] = [
 
 
 _MIGRATED_ACTIVATION: Mapping[str, Activation] = {
+    "ADMIN_MAIL": write_admin_mail_forward,
     "APACHE_TCP_ADDR": write_apache_listen_conf,
     "CORE": write_core_conf,
     "LIVESTATUS_TCP": write_livestatus_xinetd_conf,

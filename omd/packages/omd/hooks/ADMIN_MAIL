@@ -18,11 +18,4 @@ case "$1" in
     choices)
         echo "^([-a-zäöüÄÖÜA-Z0-9_.+%]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*)?$"
         ;;
-    set)
-        if [ -n "$2" ]; then
-            echo $2 >$OMD_ROOT/.forward
-        else
-            rm -f $OMD_ROOT/.forward
-        fi
-        ;;
 esac

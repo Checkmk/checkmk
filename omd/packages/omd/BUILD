@@ -183,6 +183,7 @@ file_from_flag(
 py_library(
     name = "omdlib",
     srcs = [
+        "omdlib/admin_mail.py",
         "omdlib/args_site_user.py",
         "omdlib/backup.py",
         "omdlib/buffer.py",

@@ -3,13 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from pathlib import Path
 
 from omdlib.jaeger import (
     _write_jaeger_admin_port_conf,
     _write_jaeger_ui_port_conf,
+    write_jaeger_apache_conf,
     write_jaeger_receiver_conf,
 )
+
+
+def test_write_jaeger_apache_conf_on_then_off(tmp_path: Path) -> None:
+    (tmp_path / "etc/apache/conf.d").mkdir(parents=True)
+    (tmp_path / "etc/jaeger").mkdir(parents=True)
+    (tmp_path / "etc/jaeger/apache.conf").write_text("real\n")
+    jaeger_conf = tmp_path / "etc/apache/conf.d/jaeger.conf"
+
+    write_jaeger_apache_conf("_", tmp_path, {"TRACE_RECEIVE": "on"})
+    assert jaeger_conf.is_symlink()
+    assert os.readlink(jaeger_conf) == "../../jaeger/apache.conf"
+
+    write_jaeger_apache_conf("_", tmp_path, {"TRACE_RECEIVE": "off"})
+    assert not jaeger_conf.exists()
+
+
+def test_write_jaeger_apache_conf_off_then_on(tmp_path: Path) -> None:
+    (tmp_path / "etc/apache/conf.d").mkdir(parents=True)
+    jaeger_conf = tmp_path / "etc/apache/conf.d/jaeger.conf"
+    os.symlink("../../jaeger/apache.conf", jaeger_conf)
+
+    write_jaeger_apache_conf("_", tmp_path, {"TRACE_RECEIVE": "off"})
+    assert jaeger_conf.is_symlink()
+
+    write_jaeger_apache_conf("_", tmp_path, {"TRACE_RECEIVE": "on"})
+    assert jaeger_conf.is_symlink()
+    assert os.readlink(jaeger_conf) == "../../jaeger/apache.conf"
 
 
 def test_write_jaeger_receiver_conf(tmp_path: Path) -> None:

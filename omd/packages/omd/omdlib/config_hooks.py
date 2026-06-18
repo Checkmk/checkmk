@@ -40,6 +40,7 @@ from omdlib.jaeger import (
     TRACE_JAEGER_ADMIN_PORT_HOOK,
     TRACE_JAEGER_UI_PORT_HOOK,
     TRACE_RECEIVE_PORT_HOOK,
+    write_jaeger_apache_conf,
     write_jaeger_receiver_conf,
 )
 from omdlib.livestatus import LIVESTATUS_TCP_PORT_HOOK, write_livestatus_xinetd_conf
@@ -400,6 +401,7 @@ _MIGRATED_ACTIVATION: Mapping[str, Activation] = {
     "LIVESTATUS_TCP_PER_SOURCE": write_livestatus_xinetd_conf,
     "MKEVENTD": write_mkeventd_conf,
     "RABBITMQ_ONLY_FROM": write_rabbitmq_default_conf,
+    "TRACE_RECEIVE": write_jaeger_apache_conf,
     "TRACE_RECEIVE_ADDRESS": write_jaeger_receiver_conf,
 }
 

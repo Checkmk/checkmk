@@ -3,9 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from pathlib import Path
 
 from omdlib.config_api import Config, PortHook
+
+
+def write_jaeger_apache_conf(_site_name: str, site_home: Path, config: Config) -> None:
+    # Toggle the apache reverse proxy for accessing the Jaeger UI
+    jaeger_conf = site_home / "etc" / "apache" / "conf.d" / "jaeger.conf"
+    if config["TRACE_RECEIVE"] == "on":
+        jaeger_conf.unlink(missing_ok=True)
+        os.symlink("../../jaeger/apache.conf", jaeger_conf)
+    elif jaeger_conf.is_file():
+        jaeger_conf.unlink()
 
 
 def write_jaeger_receiver_conf(_site_name: str, site_home: Path, config: Config) -> None:

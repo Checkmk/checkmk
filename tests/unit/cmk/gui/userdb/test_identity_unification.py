@@ -7,6 +7,12 @@
 These cover the credential-resolution layer (`cmk.gui.userdb._check_credentials`)
 that is meant to resolve a user reaching Checkmk through more than one connector
 to a *single* record — no duplicate account created by the second connector.
+
+The credential resolver also implements the CMK-33822 connector-reordering
+rule: when a user is already owned by one connector, ``check_credentials``
+consults that *owning* connector first -- even if it is declared last -- so
+the user is resolved by their own connector and the second connector never
+claims them.
 """
 
 from __future__ import annotations
@@ -57,6 +63,7 @@ def _patch_resolution(
     *,
     connectors: Sequence[tuple[str, _FakeConnector]],
     existing: bool,
+    owning_connector: str | None = None,
 ) -> dict[str, int]:
     """Wire up `_check_credentials` so `check_credentials` runs without a real
     site: a fixed connector chain, a known `user_exists` answer, and recording
@@ -69,6 +76,9 @@ def _patch_resolution(
     calls = {"save_users": 0, "load_users": 0, "do_sync": 0}
 
     monkeypatch.setattr(_check_credentials, "active_connections", lambda _cfg: list(connectors))
+    # CMK-33822: the connector that already owns the user is consulted first.
+    # By default no owner is known (returns None), so declaration order holds.
+    monkeypatch.setattr(_check_credentials, "_connection_id_of_user", lambda _u: owning_connector)
     monkeypatch.setattr(_check_credentials, "user_exists", lambda _u: existing)
     monkeypatch.setattr(_check_credentials, "load_user", lambda _u: UserSpec(roles=["user"]))
     monkeypatch.setattr(
@@ -182,6 +192,116 @@ def test_unknown_user_falls_through_to_next_connector(
     assert result == UserId("erin")
     assert first.consulted is True
     assert second.consulted is True
+
+
+def test_owning_connector_is_consulted_first_even_when_declared_last(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """CMK-33822 reordering: when a user is already owned by one
+    connector, that owning connector is consulted *first* during credential
+    resolution -- even if it is declared last. So the owning connector resolves
+    the user and the connector declared first never claims them."""
+    # Declaration order: saml2 first, ldap last. The user is owned by ldap.
+    saml = _FakeConnector("saml2", result=UserId("grace"))
+    ldap = _FakeConnector("ldap", result=UserId("grace"))
+    _patch_resolution(
+        monkeypatch,
+        connectors=[("saml2", saml), ("ldap", ldap)],
+        existing=True,
+        owning_connector="ldap",
+    )
+
+    result = _check_credentials.check_credentials(
+        UserId("grace"),
+        Password("pw"),
+        [],
+        [],
+        _NOW,
+        _default_profile(),
+        pprint_value=False,
+        debug=False,
+    )
+
+    assert result == UserId("grace")
+    # The owning connector (declared last) wins; the first-declared one is never
+    # reached because resolution stops at the first matching connector.
+    assert ldap.consulted is True
+    assert saml.consulted is False
+
+
+def test_without_owner_match_declaration_order_is_preserved(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """CMK-33822 reordering, mutation guard: with no known owning
+    connector (``_connection_id_of_user`` returns ``None``), the reordering is a
+    no-op and connectors are consulted in declaration order -- so the *first*
+    declared connector resolves the user. This pins that the reordering only
+    fires for the actual owner, not unconditionally."""
+    saml = _FakeConnector("saml2", result=UserId("heidi"))
+    ldap = _FakeConnector("ldap", result=UserId("heidi"))
+    _patch_resolution(
+        monkeypatch,
+        connectors=[("saml2", saml), ("ldap", ldap)],
+        existing=True,
+        owning_connector=None,
+    )
+
+    result = _check_credentials.check_credentials(
+        UserId("heidi"),
+        Password("pw"),
+        [],
+        [],
+        _NOW,
+        _default_profile(),
+        pprint_value=False,
+        debug=False,
+    )
+
+    assert result == UserId("heidi")
+    # Declaration order holds: the first connector resolves it, the second is
+    # never consulted.
+    assert saml.consulted is True
+    assert ldap.consulted is False
+
+
+def test_login_via_second_connector_resolves_to_existing_record(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A user who already exists under one connector and authenticates through
+    another is resolved to that same record, and nothing is written.
+
+    The end-to-end shape of the unification guarantee: the owning connector
+    (consulted first) cannot verify these credentials and returns ``None``, so
+    the chain falls through to the second connector, which authenticates the
+    user. The returned id is the existing one and no user record is created or
+    synced -- the second connector neither forks a duplicate nor claims the
+    record during login."""
+    owner = _FakeConnector("saml2", result=None)
+    other = _FakeConnector("ldap", result=UserId("ivan"))
+    calls = _patch_resolution(
+        monkeypatch,
+        connectors=[("saml2", owner), ("ldap", other)],
+        existing=True,
+        owning_connector="saml2",
+    )
+
+    result = _check_credentials.check_credentials(
+        UserId("ivan"),
+        Password("pw"),
+        [],
+        [],
+        _NOW,
+        _default_profile(),
+        pprint_value=False,
+        debug=False,
+    )
+
+    assert result == UserId("ivan")
+    assert owner.consulted is True
+    assert other.consulted is True
+    # No second record: the create path short-circuits on the existing user.
+    assert calls["save_users"] == 0
+    assert calls["do_sync"] == 0
 
 
 def test_new_user_template_stamps_single_owning_connector() -> None:

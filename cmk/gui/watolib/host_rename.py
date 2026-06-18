@@ -22,12 +22,13 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import edition_supports_nagvis
 from cmk.gui import userdb
 from cmk.gui.background_job.job import BackgroundJob, BackgroundProcessInterface
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import CustomUserAttrSpec
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
@@ -107,6 +108,7 @@ def perform_rename_hosts(
     job_interface: BackgroundProcessInterface,
     *,
     custom_user_attributes: Sequence[CustomUserAttrSpec],
+    user_connections: Sequence[UserConnectionConfig],
     site_configs: Mapping[SiteId, SiteConfiguration],
     pending_changes: PendingChanges,
     pprint_value: bool,
@@ -200,7 +202,11 @@ def perform_rename_hosts(
     update_interface(_("Renaming host(s) in notification rules..."))
     for folder, oldname, newname in successful_renamings:
         actions += _rename_host_in_event_rules(
-            oldname, newname, custom_user_attributes, pprint_value=pprint_value
+            oldname,
+            newname,
+            custom_user_attributes,
+            user_connections,
+            pprint_value=pprint_value,
         )
         actions += _rename_host_in_multisite(oldname, newname)
 
@@ -399,6 +405,7 @@ def _rename_host_in_event_rules(
     oldname: HostName,
     newname: HostName,
     custom_user_attributes: Sequence[CustomUserAttrSpec],
+    user_connections: Sequence[UserConnectionConfig],
     *,
     pprint_value: bool,
 ) -> list[str]:
@@ -421,9 +428,9 @@ def _rename_host_in_event_rules(
         userdb.save_users(
             users,
             get_user_attributes(custom_user_attributes),
-            active_config.user_connections,
+            user_connections,
             now=datetime.now(),
-            pprint_value=active_config.wato_pprint_config,
+            pprint_value=pprint_value,
             call_users_saved_hook=True,
         )
 
@@ -630,6 +637,7 @@ class RenameHostsJobArgs(BaseModel, frozen=True):
     debug: bool
     site_configs: Mapping[SiteId, SiteConfiguration]
     custom_user_attributes: Sequence[CustomUserAttrSpec]
+    user_connections: Sequence[UserConnectionConfig]
     user_permission_config: UserPermissionSerializableConfig
 
 
@@ -651,6 +659,7 @@ def rename_hosts_job_entry_point(
             renamings,
             job_interface,
             custom_user_attributes=args.custom_user_attributes,
+            user_connections=args.user_connections,
             site_configs=args.site_configs,
             pending_changes=PendingChanges(
                 activation_sites=activation_sites(SiteConfigurations(dict(args.site_configs))),
@@ -698,6 +707,7 @@ def _rename_hosts(
     job_interface: BackgroundProcessInterface,
     *,
     custom_user_attributes: Sequence[CustomUserAttrSpec],
+    user_connections: Sequence[UserConnectionConfig],
     site_configs: Mapping[SiteId, SiteConfiguration],
     pending_changes: PendingChanges,
     pprint_value: bool,
@@ -708,6 +718,7 @@ def _rename_hosts(
         renamings,
         job_interface,
         custom_user_attributes=custom_user_attributes,
+        user_connections=user_connections,
         site_configs=site_configs,
         pending_changes=pending_changes,
         pprint_value=pprint_value,

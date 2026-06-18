@@ -834,6 +834,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
                 use_git=active_config.wato_use_git,
                 debug=active_config.debug,
                 custom_user_attributes=active_config.wato_user_attrs,
+                user_connections=active_config.user_connections,
                 user_permission_config=UserPermissionSerializableConfig.from_global_config(
                     active_config
                 ),

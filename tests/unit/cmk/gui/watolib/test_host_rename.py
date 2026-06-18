@@ -153,6 +153,7 @@ def test_rename_host(
         renamings=[(folder, old, new) for old, new in renamings],
         job_interface=job_interface,
         custom_user_attributes=[],
+        user_connections=[],
         site_configs={
             SiteId("NO_SITE"): SiteConfiguration(
                 id=SiteId("NO_SITE"),

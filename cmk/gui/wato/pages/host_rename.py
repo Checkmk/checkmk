@@ -181,6 +181,7 @@ class ModeBulkRenameHost(WatoMode):
                         args=RenameHostsJobArgs(
                             renamings=_renamings_to_job_args(renamings),
                             custom_user_attributes=config.wato_user_attrs,
+                            user_connections=config.user_connections,
                             site_configs=config.sites,
                             user_permission_config=UserPermissionSerializableConfig.from_global_config(
                                 config
@@ -553,6 +554,7 @@ class ModeRenameHost(WatoMode):
                     args=RenameHostsJobArgs(
                         renamings=_renamings_to_job_args(renamings),
                         custom_user_attributes=config.wato_user_attrs,
+                        user_connections=config.user_connections,
                         site_configs=config.sites,
                         user_permission_config=UserPermissionSerializableConfig.from_global_config(
                             config

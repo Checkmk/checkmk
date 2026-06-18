@@ -6,13 +6,15 @@
 import type { SortingState } from '@tanstack/vue-table'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { KeyShortcutService } from '@/lib/keyShortcuts'
+
 import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
 import {
   MonitoringService,
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
 
-import { makeResponse } from './testHelpers'
+import { makeKeyShortcutService, makeResponse } from './testHelpers'
 
 interface TestItem {
   id: string
@@ -22,9 +24,10 @@ interface TestItem {
 class TestService extends MonitoringService<TestItem> {
   constructor(
     public readonly fetchBatchMock: () => Promise<PagedResponse<TestItem>>,
-    pollIntervalMs?: number
+    pollIntervalMs?: number,
+    shortCutService: KeyShortcutService = makeKeyShortcutService()
   ) {
-    super(pollIntervalMs)
+    super('test-service', shortCutService, pollIntervalMs)
   }
 
   protected fetchBatch(): Promise<PagedResponse<TestItem>> {

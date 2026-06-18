@@ -13,6 +13,7 @@ import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitor
 import { onBeforeUnmount, provide, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import { getKeyShortcutServiceInstance } from '@/lib/keyShortcuts'
 
 import CmkSearchInput from '@/components/CmkSearchInput.vue'
 
@@ -32,7 +33,11 @@ const { _t } = usei18n()
 
 const props = defineProps<MonitoringAllHostsApp>()
 
-const hostService = new HostService(new HostApi(), props.poll_interval_ms)
+const hostService = new HostService(
+  new HostApi(),
+  getKeyShortcutServiceInstance(),
+  props.poll_interval_ms
+)
 
 onBeforeUnmount(() => {
   hostService.stopPolling()

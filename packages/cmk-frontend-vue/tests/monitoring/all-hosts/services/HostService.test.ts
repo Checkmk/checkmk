@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { HostService } from '@/monitoring/all-hosts/services/HostService'
 import type { HostEntry, HostsResponse } from '@/monitoring/shared/api/types'
 
+import { makeKeyShortcutService } from '../../shared/services/testHelpers'
+
 function makeHostsResponse(hosts: HostEntry[], total: number): HostsResponse {
   return { hosts, meta: { limit: 1000, total } }
 }
@@ -45,7 +47,7 @@ describe('HostService', () => {
   it('calls api.fetchHosts on construction and populates items/total', async () => {
     const host = makeHost()
     const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([host], 1))
-    service = new HostService({ fetchHosts })
+    service = new HostService({ fetchHosts }, makeKeyShortcutService())
 
     await vi.advanceTimersByTimeAsync(0)
 
@@ -57,7 +59,7 @@ describe('HostService', () => {
 
   it('passes sort state to api.fetchHosts after updateSort is called', async () => {
     const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([], 0))
-    service = new HostService({ fetchHosts })
+    service = new HostService({ fetchHosts }, makeKeyShortcutService())
 
     await vi.advanceTimersByTimeAsync(0)
 
@@ -72,7 +74,7 @@ describe('HostService', () => {
 
   it('passes the search query to api.fetchHosts after updateSearch is called', async () => {
     const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([], 0))
-    service = new HostService({ fetchHosts })
+    service = new HostService({ fetchHosts }, makeKeyShortcutService())
 
     await vi.advanceTimersByTimeAsync(0)
 

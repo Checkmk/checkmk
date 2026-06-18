@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { KeyShortcutService } from '@/lib/keyShortcuts'
+
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import {
   MonitoringService,
@@ -14,9 +16,10 @@ import type { HostApi } from '../api/hosts'
 export class HostService extends MonitoringService<HostEntry> {
   constructor(
     private readonly api: HostApi,
+    shortCutService: KeyShortcutService,
     pollIntervalMs?: number
   ) {
-    super(pollIntervalMs)
+    super('host-service', shortCutService, pollIntervalMs)
   }
 
   protected async fetchBatch(): Promise<PagedResponse<HostEntry>> {

@@ -6,6 +6,9 @@
 import type { ColumnFiltersState, SortingState } from '@tanstack/vue-table'
 import { type ComputedRef, type Ref, computed, ref, shallowRef } from 'vue'
 
+import type { KeyShortcutService } from '@/lib/keyShortcuts'
+import { ServiceBase } from '@/lib/service/base'
+
 import type { FilterNode } from '@/monitoring/shared/api/types'
 import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
 
@@ -16,7 +19,7 @@ export interface PagedResponse<T> {
   }
 }
 
-export abstract class MonitoringService<T> {
+export abstract class MonitoringService<T> extends ServiceBase {
   readonly items: Ref<T[]> = shallowRef<T[]>([])
   readonly total: Ref<number> = ref(0)
   readonly loading: Ref<boolean> = ref(false)
@@ -35,7 +38,12 @@ export abstract class MonitoringService<T> {
   private initialFetchTimer: ReturnType<typeof setTimeout> | null = null
   private tickTimer: ReturnType<typeof setInterval> | null = null
 
-  constructor(pollIntervalMs: number = POLL_INTERVAL_MS) {
+  constructor(
+    serviceId: string,
+    shortCutService: KeyShortcutService,
+    pollIntervalMs: number = POLL_INTERVAL_MS
+  ) {
+    super(serviceId, shortCutService)
     this.pollIntervalSeconds = Math.max(1, Math.round(pollIntervalMs / 1000))
     this.secondsRemaining = ref(this.pollIntervalSeconds)
     this.initialFetchTimer = setTimeout(() => {

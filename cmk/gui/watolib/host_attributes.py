@@ -17,7 +17,7 @@ import functools
 import re
 from collections.abc import Callable, Hashable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, Final, Literal, NotRequired, TypedDict
 
 from marshmallow import fields
 
@@ -47,6 +47,15 @@ from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
 from cmk.rulesets.v1.form_specs import String as StringFormSpec
 from cmk.utils.labels import Labels
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
+
+# A host attribute's labels() may return this sentinel as the value for a label
+# key to signal that the key must be REMOVED from the effective labels — i.e. it
+# overrides (turns off) a value inherited from a parent folder, rather than being
+# added. The sentinel is non-empty so it survives the add-only inheritance merge,
+# and Host.labels() strips it before labels are exposed. It therefore never
+# reaches any label consumer (a cleared key is simply absent). The control
+# characters guarantee it cannot collide with a real label value.
+LABEL_CLEAR_VALUE: Final = "\x00cmk-label-clear\x00"
 
 _ContactgroupName = str
 
@@ -484,9 +493,11 @@ class ABCHostAttribute(abc.ABC):
         return {}
 
     def labels(self, value: Any) -> Labels:
-        """Set host labels based on the attributes value
+        """Set host labels based on the attribute's value
 
-        Returns a set of host labels which are added to the effective explicit hosts labels.
+        Returns a set of host labels which are added to the effective explicit host
+        labels. To instead REMOVE a label inherited from a parent folder, return
+        ``LABEL_CLEAR_VALUE`` as the value for that key.
         """
         return {}
 

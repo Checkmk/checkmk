@@ -39,6 +39,7 @@ def page_edit_dashboards(ctx: PageContext) -> None:
         title=_("Edit dashboards"),
         visuals=get_all_dashboards(),
         user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
+        config=ctx.config,
         render_custom_buttons=_render_dashboard_buttons(ctx.request),
         render_custom_columns=_render_dashboard_columns(),
     )

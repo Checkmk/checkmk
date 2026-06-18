@@ -9,7 +9,7 @@ import json
 from collections.abc import Callable, Iterable
 
 from cmk.ccc.user import UserId
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
@@ -70,6 +70,7 @@ def page_list(
     title: str,
     visuals: dict[tuple[UserId, VisualName], TVisual],
     user_permissions: UserPermissions,
+    config: Config,
     custom_columns: Iterable[tuple[HTMLContent, Callable[[TVisual], HTMLContent]]] | None = None,
     render_custom_buttons: Callable[[VisualName, TVisual], None] | None = None,
     render_custom_columns: Callable[[Table, VisualName, TVisual], None] | None = None,
@@ -137,12 +138,12 @@ def page_list(
         title,
         breadcrumb,
         page_menu,
-        debug=active_config.debug,
+        debug=config.debug,
         lang=user.language,
-        inject_js_profiling_code=active_config.inject_js_profiling_code,
-        load_frontend_vue=active_config.load_frontend_vue,
-        custom_style_sheet=active_config.custom_style_sheet,
-        screenshotmode=active_config.screenshotmode,
+        inject_js_profiling_code=config.inject_js_profiling_code,
+        load_frontend_vue=config.load_frontend_vue,
+        custom_style_sheet=config.custom_style_sheet,
+        screenshotmode=config.screenshotmode,
         inline_help_as_text=user.inline_help_as_text,
         hide_suggestions=not user.get_tree_state("suggestions", "all", True),
         user_role_ids=user.role_ids,
@@ -169,7 +170,7 @@ def page_list(
             save(what, visuals, user_id)
             start_profile_replication_job(
                 back_url=request.get_url_input("back", visual_type.show_url),
-                config=active_config,
+                config=config,
             )
             flash(_("Your %s has been deleted.") % visual_type.title)
             html.final_javascript("cmk.utils.navigate_to_page(%s)" % json.dumps(html.request.path))

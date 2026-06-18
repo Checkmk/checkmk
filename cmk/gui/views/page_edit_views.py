@@ -22,5 +22,6 @@ def page_edit_views(ctx: PageContext) -> None:
         _("Edit Views"),
         get_all_views(),
         UserPermissions.from_config(ctx.config, permission_registry),
+        ctx.config,
         cols,
     )

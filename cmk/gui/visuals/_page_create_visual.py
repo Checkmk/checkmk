@@ -10,7 +10,7 @@
 from collections.abc import Sequence
 
 from cmk.gui import forms
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
@@ -28,7 +28,11 @@ from ._breadcrumb import visual_page_breadcrumb
 
 
 def page_create_visual(
-    request: Request, what: VisualTypeName, info_keys: SingleInfos, next_url: str | None = None
+    request: Request,
+    config: Config,
+    what: VisualTypeName,
+    info_keys: SingleInfos,
+    next_url: str | None = None,
 ) -> None:
     visual_name = visual_type_registry[what]().title
     title = _("Create %s") % visual_name
@@ -48,12 +52,12 @@ def page_create_visual(
             button_name="_save",
             save_title=_("Continue"),
         ),
-        debug=active_config.debug,
+        debug=config.debug,
         lang=user.language,
-        inject_js_profiling_code=active_config.inject_js_profiling_code,
-        load_frontend_vue=active_config.load_frontend_vue,
-        custom_style_sheet=active_config.custom_style_sheet,
-        screenshotmode=active_config.screenshotmode,
+        inject_js_profiling_code=config.inject_js_profiling_code,
+        load_frontend_vue=config.load_frontend_vue,
+        custom_style_sheet=config.custom_style_sheet,
+        screenshotmode=config.screenshotmode,
         inline_help_as_text=user.inline_help_as_text,
         hide_suggestions=not user.get_tree_state("suggestions", "all", True),
         user_role_ids=user.role_ids,

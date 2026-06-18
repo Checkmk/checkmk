@@ -18,6 +18,7 @@ def page_create_view(ctx: PageContext) -> None:
     ds_class, ds_name = ctx.request.get_item_input("datasource", data_source_registry)
     visuals.page_create_visual(
         ctx.request,
+        ctx.config,
         "views",
         ds_class().infos,
         next_url="edit_view.py?mode=create&datasource=%s&single_infos=%%s" % ds_name,

@@ -75,7 +75,6 @@ types-mypy-extensions==1.0.0.20240311 # used for type checking
 types-oauthlib==3.2.0.20240806 # used for type checking
 types-paho-mqtt==1.6.0.20240321 # used for type checking
 types-paramiko==3.5.0.20240928 # used for type checking
-types-pillow==10.2.0.20240822 # used for type checking
 types-protobuf==5.29.1.20241207 # used for type checking
 types-psutil==6.1.0.20241102 # used for type checking
 types-pyasn1==0.6.0.20240913 # used for type checking

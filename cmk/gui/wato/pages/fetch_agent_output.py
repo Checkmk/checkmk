@@ -29,7 +29,7 @@ from cmk.gui.background_job.job import (
 )
 from cmk.gui.background_job.wato import ActionHandler, JobRenderer
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html, HTMLGenerator
@@ -93,7 +93,13 @@ class FetchAgentOutputRequest:
         self.timeout = timeout
 
     @classmethod
-    def deserialize(cls, serialized: Mapping[str, object]) -> "FetchAgentOutputRequest":
+    def deserialize(
+        cls,
+        serialized: Mapping[str, object],
+        *,
+        default_debug: bool,
+        default_snmp_walk_download_timeout: int,
+    ) -> "FetchAgentOutputRequest":
         host_name = serialized["host_name"]
         assert isinstance(host_name, str)
         host = folder_tree().host(HostName(host_name))
@@ -111,15 +117,13 @@ class FetchAgentOutputRequest:
 
         # For compatibility with 2.4 central sites default to the local sites config
         if "debug" not in serialized:
-            debug = active_config.debug
+            debug = default_debug
         else:
             assert isinstance(serialized["debug"], bool)
             debug = serialized["debug"]
         if "timeout" not in serialized:
             timeout = (
-                180
-                if serialized["agent_type"] == "agent"
-                else int(active_config.snmp_walk_download_timeout)
+                180 if serialized["agent_type"] == "agent" else default_snmp_walk_download_timeout
             )
         else:
             assert isinstance(serialized["timeout"], int)
@@ -140,7 +144,7 @@ class FetchAgentOutputRequest:
 # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
 # would need larger refactoring of the generic html.popup_trigger() mechanism.
 class AgentOutputPage(Page, abc.ABC):
-    def _handle_http_request(self) -> None:
+    def _handle_http_request(self, config: Config) -> None:
         user.need_permission("wato.download_agent_output")
 
         host_name = request.var("host")
@@ -166,8 +170,8 @@ class AgentOutputPage(Page, abc.ABC):
         self._request = FetchAgentOutputRequest(
             host=host,
             agent_type=ty,
-            debug=active_config.debug,
-            timeout=(180 if ty == "agent" else int(active_config.snmp_walk_download_timeout)),
+            debug=config.debug,
+            timeout=(180 if ty == "agent" else int(config.snmp_walk_download_timeout)),
         )
 
     @staticmethod
@@ -178,7 +182,7 @@ class AgentOutputPage(Page, abc.ABC):
 class PageFetchAgentOutput(AgentOutputPage):
     @override
     def page(self, ctx: PageContext) -> None:
-        self._handle_http_request()
+        self._handle_http_request(ctx.config)
 
         if (
             self._request.agent_type == "walk"
@@ -305,7 +309,11 @@ class ABCAutomationFetchAgentOutput(AutomationCommand[FetchAgentOutputRequest]):
         ascii_input = request.get_ascii_input("request")
         if ascii_input is None:
             raise MKUserError("request", _('The parameter "%s" is missing.') % "request")
-        return FetchAgentOutputRequest.deserialize(ast.literal_eval(ascii_input))
+        return FetchAgentOutputRequest.deserialize(
+            ast.literal_eval(ascii_input),
+            default_debug=config.debug,
+            default_snmp_walk_download_timeout=int(config.snmp_walk_download_timeout),
+        )
 
 
 class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
@@ -476,7 +484,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
 
 class PageDownloadAgentOutput(AgentOutputPage):
     def page(self, ctx: PageContext) -> None:
-        self._handle_http_request()
+        self._handle_http_request(ctx.config)
 
         file_name = self.file_name(
             self._request.host.site_id(), self._request.host.name(), self._request.agent_type

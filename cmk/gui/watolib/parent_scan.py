@@ -9,7 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from livestatus import SiteConfiguration
+from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.automations.results import Gateway, GatewayResult
 from cmk.ccc import store
@@ -445,6 +445,7 @@ def start_parent_scan(
                     for host in hosts
                 ],
                 settings=settings,
+                site_configs=site_configs,
                 user_permission_config=UserPermissionSerializableConfig.from_global_config(
                     active_config
                 ),
@@ -465,6 +466,7 @@ def start_parent_scan(
 class ParentScanJobArgs(BaseModel, frozen=True):
     tasks: Sequence[ParentScanTask]
     settings: ParentScanSettings
+    site_configs: Mapping[SiteId, SiteConfiguration]
     user_permission_config: UserPermissionSerializableConfig
     pprint_value: bool
     debug: bool
@@ -482,7 +484,7 @@ def parent_scan_job_entry_point(
         pprint_value=args.pprint_value,
         debug=args.debug,
         pending_changes=PendingChanges(
-            activation_sites=activation_sites(active_config.sites),
+            activation_sites=activation_sites(SiteConfigurations(dict(args.site_configs))),
             local_site=omd_site(),
             acting_user=user.id,
             store=PendingChangesStore(),

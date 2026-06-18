@@ -233,25 +233,15 @@ impl Section {
         params: &[SqlBindParam],
         search_dirs: &[PathBuf],
     ) -> Option<Vec<SqlQuery>> {
-        Some(
-            self.resolve_path_query(instance_version, search_dirs)
-                .or_else(|| self.inline_sql.clone())
-                .or_else(|| {
-                    get_sql_id(&self.header_name)
-                        .and_then(|s| Self::find_known_query(s, instance_version, tenant))
-                        .map(|s| s.to_owned())
-                })?
-                .split(';')
-                .filter_map(|q| {
-                    let trimmed = q.trim();
-                    if !trimmed.is_empty() {
-                        Some(SqlQuery::new(trimmed, params))
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>(),
-        )
+        let body = self
+            .resolve_path_query(instance_version, search_dirs)
+            .or_else(|| self.inline_sql.clone())
+            .or_else(|| {
+                get_sql_id(&self.header_name)
+                    .and_then(|s| Self::find_known_query(s, instance_version, tenant))
+                    .map(|s| s.to_owned())
+            })?;
+        Some(split_into_queries(&body, params))
     }
 
     /// Resolve the SQL body when the section has a user-supplied `path:`.
@@ -439,6 +429,98 @@ static SECTION_MAP: LazyLock<HashMap<&'static str, sqls::Id>> = LazyLock::new(||
 
 pub fn get_sql_id<T: AsRef<str>>(section_name: T) -> Option<sqls::Id> {
     SECTION_MAP.get(section_name.as_ref()).copied()
+}
+
+/// Split a SQL script into statements on top-level `;` terminators.
+///
+/// A `;` ends a statement only in ordinary SQL text — not inside a
+/// single-quoted string literal, a `"..."` quoted identifier, a `--` line
+/// comment, or a `/* ... */` block comment. This keeps statements such as
+/// `SELECT 'a;b' FROM dual` and `SELECT 1 AS "a;b" FROM dual` intact.
+fn split_sql_statements(sql: &str) -> Vec<&str> {
+    enum State {
+        Normal,
+        InString,
+        InQuotedIdentifier,
+        InLineComment,
+        InBlockComment,
+    }
+
+    let mut statements: Vec<&str> = Vec::new();
+    let mut state = State::Normal;
+    let mut start = 0usize;
+    let mut chars = sql.char_indices().peekable();
+
+    while let Some((i, c)) = chars.next() {
+        match state {
+            State::Normal => match c {
+                '\'' => state = State::InString,
+                '"' => state = State::InQuotedIdentifier,
+                ';' => {
+                    statements.push(&sql[start..i]);
+                    start = i + 1; // `;` is a single ASCII byte
+                }
+                '-' if matches!(chars.peek(), Some((_, '-'))) => {
+                    chars.next(); // consume the second `-`
+                    state = State::InLineComment;
+                }
+                '/' if matches!(chars.peek(), Some((_, '*'))) => {
+                    chars.next(); // consume the `*`
+                    state = State::InBlockComment;
+                }
+                _ => {}
+            },
+            State::InString => {
+                if c == '\'' {
+                    // A doubled `''` is an escaped quote: stay in the string.
+                    if matches!(chars.peek(), Some((_, '\''))) {
+                        chars.next();
+                    } else {
+                        state = State::Normal;
+                    }
+                }
+            }
+            State::InQuotedIdentifier => {
+                // Oracle quoted identifiers cannot themselves contain a `"`, so
+                // the next `"` always ends the identifier.
+                if c == '"' {
+                    state = State::Normal;
+                }
+            }
+            State::InLineComment => {
+                if c == '\n' {
+                    state = State::Normal;
+                }
+            }
+            State::InBlockComment => {
+                if c == '*' && matches!(chars.peek(), Some((_, '/'))) {
+                    chars.next(); // consume the `/`
+                    state = State::Normal;
+                }
+            }
+        }
+    }
+
+    // Trailing remainder after the last `;` (or the whole input if there is
+    // none), mirroring the final segment `str::split(';')` always yields.
+    statements.push(&sql[start..]);
+    statements
+}
+
+/// Split a SQL script into the non-empty [`SqlQuery`] statements it contains,
+/// binding `params` into each.
+pub fn split_into_queries(sql: &str, params: &[SqlBindParam]) -> Vec<SqlQuery> {
+    split_sql_statements(sql)
+        .into_iter()
+        .filter_map(|q| {
+            let trimmed = q.trim();
+            if !trimmed.is_empty() {
+                Some(SqlQuery::new(trimmed, params))
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -677,5 +759,105 @@ mod tests {
         assert!(pats[0].is_match("PDB2"));
         assert!(pats[0].is_match("PDB3"));
         assert!(!pats[0].is_match("PDB4"));
+    }
+
+    fn split_trimmed(sql: &str) -> Vec<&str> {
+        split_sql_statements(sql)
+            .into_iter()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .collect()
+    }
+
+    #[test]
+    fn test_split_sql_statements_plain() {
+        assert_eq!(split_trimmed("a;b;c"), vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn test_split_sql_statements_semicolon_in_string_literal() {
+        assert_eq!(
+            split_trimmed("SELECT 'a;b' FROM dual"),
+            vec!["SELECT 'a;b' FROM dual"]
+        );
+    }
+
+    #[test]
+    fn test_split_sql_statements_escaped_quote_in_string() {
+        assert_eq!(
+            split_trimmed("SELECT 'it''s;ok' FROM dual; SELECT 2 FROM dual"),
+            vec!["SELECT 'it''s;ok' FROM dual", "SELECT 2 FROM dual"]
+        );
+    }
+
+    #[test]
+    fn test_split_sql_statements_semicolon_in_quoted_identifier() {
+        assert_eq!(
+            split_trimmed("SELECT 1 AS \"a;b\" FROM dual; SELECT 2 FROM dual"),
+            vec!["SELECT 1 AS \"a;b\" FROM dual", "SELECT 2 FROM dual"]
+        );
+    }
+
+    #[test]
+    fn test_split_sql_statements_semicolon_in_line_comment() {
+        // The `;` in the `-- c;d` comment must not split; the one after `dual` does.
+        assert_eq!(
+            split_trimmed("SELECT 1 -- c;d\nFROM dual; SELECT 2 FROM dual"),
+            vec!["SELECT 1 -- c;d\nFROM dual", "SELECT 2 FROM dual"]
+        );
+    }
+
+    #[test]
+    fn test_split_sql_statements_semicolon_in_block_comment() {
+        // The `;` inside the /* ... */ block comment must not split.
+        assert_eq!(
+            split_trimmed("SELECT /* x;y */ 1 FROM dual; SELECT 2 FROM dual"),
+            vec!["SELECT /* x;y */ 1 FROM dual", "SELECT 2 FROM dual"]
+        );
+    }
+
+    #[test]
+    fn test_split_sql_statements_trailing_and_empty_segments() {
+        assert_eq!(
+            split_trimmed("SELECT 1 FROM dual;;  ;"),
+            vec!["SELECT 1 FROM dual"]
+        );
+    }
+
+    #[test]
+    fn test_split_sql_statements_chr59_passes_through() {
+        assert_eq!(
+            split_trimmed("SELECT CHR(59) FROM dual"),
+            vec!["SELECT CHR(59) FROM dual"]
+        );
+    }
+
+    #[test]
+    fn test_find_queries_keeps_semicolon_in_string_literal() {
+        let section_config = section::SectionBuilder::new("product_price")
+            .sql("SELECT 'a;b' FROM dual")
+            .set_item_value(ItemValue::from("product_price".to_string()))
+            .build();
+        let runtime = Section::new(&section_config, 0);
+        let queries = runtime
+            .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
+            .expect("inline sql should yield queries");
+        assert_eq!(queries.len(), 1);
+        assert_eq!(queries[0].as_str(), "SELECT 'a;b' FROM dual");
+    }
+
+    #[test]
+    fn test_find_queries_splits_real_statement_terminators() {
+        let section_config = section::SectionBuilder::new("product_price")
+            .sql("SELECT 1 FROM dual; SELECT 2 FROM dual")
+            .set_item_value(ItemValue::from("product_price".to_string()))
+            .build();
+        let runtime = Section::new(&section_config, 0);
+        let queries = runtime
+            .find_queries(InstanceNumVersion::from(0), Tenant::All, &[])
+            .expect("inline sql should yield queries");
+        assert_eq!(queries.len(), 2);
+        assert_eq!(queries[0].as_str(), "SELECT 1 FROM dual");
+        assert_eq!(queries[1].as_str(), "SELECT 2 FROM dual");
     }
 }

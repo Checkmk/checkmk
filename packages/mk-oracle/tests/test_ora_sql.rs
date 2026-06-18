@@ -30,6 +30,7 @@ use mk_oracle::config::ora_sql::Config;
 use mk_oracle::config::OracleConfig;
 use mk_oracle::ora_sql::backend;
 use mk_oracle::ora_sql::instance::generate_data;
+use mk_oracle::ora_sql::section;
 use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
 use mk_oracle::platform::registry::get_instances;
@@ -525,18 +526,8 @@ fn connect_and_query(
 
     let spot = backend::make_spot(&config.endpoint()).unwrap();
     let conn = spot.connect(None).unwrap();
-    let queries = sqls::get_factory_query(id, version, Tenant::All, None)
-        .unwrap()
-        .split(';')
-        .filter_map(|q| {
-            let trimmed = q.trim();
-            if !trimmed.is_empty() {
-                Some(SqlQuery::new(trimmed, config.params()))
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<_>>();
+    let factory_query = sqls::get_factory_query(id, version, Tenant::All, None).unwrap();
+    let queries = section::split_into_queries(&factory_query, config.params());
 
     queries
         .iter()

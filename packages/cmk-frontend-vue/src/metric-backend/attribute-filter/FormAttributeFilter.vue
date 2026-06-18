@@ -39,9 +39,10 @@ const props = withDefaults(
       query: string
     ) => ReturnType<QuerySuggestionsFn>
     resolveAttributeType?: ((key: string) => AttributeType) | undefined
+    operators?: Operator[] | undefined
     ariaLabel?: string | undefined
   }>(),
-  { resolveAttributeType: undefined }
+  { resolveAttributeType: undefined, operators: undefined }
 )
 
 const model = defineModel<AttributeFilterModel>({ default: () => [] })
@@ -131,6 +132,28 @@ function updateValue(target: ConnectedCondition, value: string): void {
   model.value = model.value.map((c) => (c.id === target.id ? { ...c, value } : c))
 }
 
+// Operators collapsed to one choice: the per-pill dropdown is hidden, so coerce every condition onto it in a single mutation (per-pill emits would race through defineModel and lose all but the last write).
+watch(
+  () => [props.operators, model.value] as const,
+  ([operators]) => {
+    if (!operators || operators.length !== 1) {
+      return
+    }
+    const only = operators[0]!
+    if (model.value.every((c) => c.operator === only)) {
+      return
+    }
+    model.value = model.value.map((c) => {
+      if (c.operator === only) {
+        return c
+      }
+      const clearValue = operatorTakesValue(c.operator) !== operatorTakesValue(only)
+      return { ...c, operator: only, ...(clearValue ? { value: '' } : {}) }
+    })
+  },
+  { immediate: true }
+)
+
 const groups = computed<FilterGroup[]>(() => {
   const result: FilterGroup[] = []
   model.value.forEach((entry, idx) => {
@@ -182,7 +205,7 @@ function addCondition(index: number, connector: Connector | null): void {
     id: crypto.randomUUID(),
     attributeType: null,
     key: '',
-    operator: 'eq',
+    operator: props.operators?.[0] ?? 'eq',
     value: '',
     connector
   }
@@ -336,6 +359,7 @@ function onGroupClickOutside(group: FilterGroup): void {
           <AttributeFilterPill
             :ref="pillRefSetter(entry.id)"
             :condition="entry"
+            :operators="operators"
             :query-suggestions="querySuggestions"
             :query-value-suggestions="queryValueSuggestions"
             removable
@@ -366,6 +390,7 @@ function onGroupClickOutside(group: FilterGroup): void {
         v-else
         :ref="pillRefSetter(group.entries[0]!.id)"
         :condition="group.entries[0]!"
+        :operators="operators"
         :query-suggestions="querySuggestions"
         :query-value-suggestions="queryValueSuggestions"
         removable

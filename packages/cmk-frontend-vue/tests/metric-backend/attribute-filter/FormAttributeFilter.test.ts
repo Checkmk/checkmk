@@ -11,7 +11,11 @@ import { Response } from '@/components/CmkSuggestions/suggestions'
 
 import FormAttributeFilter from '@/metric-backend/attribute-filter/FormAttributeFilter.vue'
 import { pillLabel } from '@/metric-backend/attribute-filter/pill-label'
-import type { AttributeFilterModel, AttributeType } from '@/metric-backend/attribute-filter/types'
+import type {
+  AttributeFilterModel,
+  AttributeType,
+  Operator
+} from '@/metric-backend/attribute-filter/types'
 
 const KEY_SUGGESTIONS = [
   { name: 'http.method', title: 'http.method' },
@@ -51,14 +55,20 @@ function echoQueryValueSuggestions(_: unknown, query: string): Promise<Response>
 
 function renderForm(
   initial: AttributeFilterModel,
-  resolve?: (key: string) => AttributeType
-): { model: ReturnType<typeof ref<AttributeFilterModel>> } {
+  resolve?: (key: string) => AttributeType,
+  initialOperators?: Operator[]
+): {
+  model: ReturnType<typeof ref<AttributeFilterModel>>
+  operators: ReturnType<typeof ref<Operator[] | undefined>>
+} {
   const model = ref<AttributeFilterModel>(initial)
+  const operators = ref<Operator[] | undefined>(initialOperators)
   const wrapperComponent = defineComponent({
     components: { FormAttributeFilter },
     setup() {
       return {
         model,
+        operators,
         querySuggestions,
         queryValueSuggestions: echoQueryValueSuggestions,
         resolveAttributeType: resolve
@@ -67,6 +77,7 @@ function renderForm(
     template: `
       <FormAttributeFilter
         v-model="model"
+        :operators="operators"
         :query-suggestions="querySuggestions"
         :query-value-suggestions="queryValueSuggestions"
         :resolve-attribute-type="resolveAttributeType"
@@ -74,7 +85,7 @@ function renderForm(
     `
   })
   render(wrapperComponent)
-  return { model }
+  return { model, operators }
 }
 
 function pillsInOrder(): HTMLElement[] {
@@ -174,6 +185,36 @@ test('manual operator change persists on the targeted row', async () => {
 
   expect(model.value![1]!.operator).toBe('neq')
   expect(model.value![0]!.operator).toBe('eq')
+})
+
+test('restricting operators to a single choice forces every pill onto it, not just the last', async () => {
+  const { model, operators } = renderForm([
+    pill('pill-a', null, { key: 'service.name', operator: 'eq', value: 'foo' }),
+    pill('pill-b', 'AND', { key: 'otel.library.name', operator: 'neq', value: 'bar' }),
+    pill('pill-c', 'AND', { key: 'http.method', operator: 'starts_with', value: 'baz' })
+  ])
+
+  operators.value = ['contains']
+
+  await waitFor(() => {
+    expect(model.value!.map((c) => c.operator)).toEqual(['contains', 'contains', 'contains'])
+  })
+  // contains takes a value, so each populated value survives the coercion.
+  expect(model.value!.map((c) => c.value)).toEqual(['foo', 'bar', 'baz'])
+})
+
+test('forcing onto a single existence operator clears the value of every pill', async () => {
+  const { model, operators } = renderForm([
+    pill('pill-a', null, { key: 'service.name', operator: 'eq', value: 'foo' }),
+    pill('pill-b', 'AND', { key: 'http.method', operator: 'contains', value: 'bar' })
+  ])
+
+  operators.value = ['exists']
+
+  await waitFor(() => {
+    expect(model.value!.map((c) => c.operator)).toEqual(['exists', 'exists'])
+  })
+  expect(model.value!.map((c) => c.value)).toEqual(['', ''])
 })
 
 test('picking a key with no resolver hit auto-opens the type dropdown', async () => {

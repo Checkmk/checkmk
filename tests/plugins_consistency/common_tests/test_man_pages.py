@@ -23,7 +23,7 @@ _FREE_LICENSE = "GPLv2"
 
 _IF64_MAN_PAGE = man_pages.ManPage(
     name="if64",
-    path=Path("/omd/sites/heute/lib/python3/cmk/plugins/network/checkman/if64"),
+    path=Path("/omd/sites/heute/lib/python3.13/site-packages/cmk/plugins/network/checkman/if64"),
     title="Monitor Network Interfaces via Standard MIB Using 64-Bit Counters",
     agents=["snmp"],
     catalog=["hw", "network", "generic"],

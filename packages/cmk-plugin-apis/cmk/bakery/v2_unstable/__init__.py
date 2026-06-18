@@ -42,7 +42,7 @@ Example:
 ########
 
 We register the bakery plugin for our ceph integration from the file
-``~/lib/python3/cmk/plugins/ceph/bakery/ceph.py``::
+``~/lib/python3.13/site-packages/cmk/plugins/ceph/bakery/ceph.py``::
 
     #!/usr/bin/env/python3
     ...

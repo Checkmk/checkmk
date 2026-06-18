@@ -17,7 +17,7 @@ Plugin location and loading
 Most of the plugin APIs (Agent based, Ruleset, Server-side calls, Graphing and Bakery API) share the same logic when it comes to location and loading of the plugins.
 This section will cover those APIs.
 
-The shipped plugins are located under the ``~/lib/python3/cmk/plugins`` folder, while local third party plugins are placed under the ``~/local/lib/python3/cmk_addons/plugins`` folder in the site.
+The shipped plugins are located under the ``~/lib/python3.13/site-packages/cmk/plugins`` folder, while local third party plugins are placed under the ``~/local/lib/python3/cmk_addons/plugins`` folder in the site.
 As a general rule, code `should` reside below ``cmk`` if and only if it is supplied by Checkmk (but that's not always the case yet).
 
 If you want to override the behavior of existing plugins, you can put code under ``~/local/lib/python3/cmk/plugins``.
@@ -128,8 +128,8 @@ For example, ``cmk/plugins/fritzbox`` has an ``__init__.py`` file, which makes t
 .. code-block:: text
 
    # Shipped plugins:
-   ~/lib/python3/cmk/plugins/fritzbox/__init__.py
-   ~/lib/python3/cmk/plugins/fritzbox/agent_based/device.py
+   ~/lib/python3.13/site-packages/cmk/plugins/fritzbox/__init__.py
+   ~/lib/python3.13/site-packages/cmk/plugins/fritzbox/agent_based/device.py
 
    # Your local override (correct):
    ~/local/lib/python3/cmk/plugins/fritzbox/__init__.py
@@ -159,8 +159,8 @@ Other plugin families, particularly the ``collection`` family (which contains pl
 .. code-block:: text
 
    # Shipped plugins:
-   ~/lib/python3/cmk/plugins/collection/agent_based/plugin_a.py
-   ~/lib/python3/cmk/plugins/collection/agent_based/plugin_b.py
+   ~/lib/python3.13/site-packages/cmk/plugins/collection/agent_based/plugin_a.py
+   ~/lib/python3.13/site-packages/cmk/plugins/collection/agent_based/plugin_b.py
    
    # Your local override:
    ~/local/lib/python3/cmk/plugins/collection/agent_based/plugin_a.py

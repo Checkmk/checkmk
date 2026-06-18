@@ -489,25 +489,35 @@ void ParsedQuery::parseLocaltimeLine(std::string_view line) {
 
 void ParsedQuery::parseOrderBy(std::string_view line,
                                const ColumnCreator &make_column) {
-    // Use this header as: `OrderBy: COLUMN_NAME [asc,desc]`
+    // Use this header as: `OrderBy: COLUMN_NAME [asc|desc] [natural]`
     auto column = mk::next_argument(line);
+    auto direction = OrderByDirection::ascending;
+    auto sorting = OrderBySorting::lexicographic;
+
     mk::skip_whitespace(line);
-    auto direction = [line]() {
-        if (line.empty() || line == "asc"sv) {
-            return OrderByDirection::ascending;
-        }
-        if (line == "desc"sv) {
-            return OrderByDirection::descending;
-        }
-        throw std::runtime_error("expected 'asc' or 'desc'");
-    };
+    auto token = line.empty() ? std::string{} : mk::next_argument(line);
+    if (token == "asc" || token == "desc") {
+        direction = token == "desc" ? OrderByDirection::descending
+                                    : OrderByDirection::ascending;
+        mk::skip_whitespace(line);
+        token = line.empty() ? std::string{} : mk::next_argument(line);
+    }
+    if (token == "natural") {
+        sorting = OrderBySorting::natural;
+        mk::skip_whitespace(line);
+        checkNoArguments(line);
+    } else if (!token.empty()) {
+        throw std::runtime_error("expected 'asc', 'desc' or 'natural'");
+    }
     auto dot = column.find('.');
     order_by.push_back(
         dot == std::string_view::npos
             ? OrderBy{.column = make_column(column),
                       .key = {},
-                      .direction = direction()}
+                      .direction = direction,
+                      .sorting = sorting}
             : OrderBy{.column = make_column(column.substr(0, dot)),
                       .key = column.substr(dot + 1),
-                      .direction = direction()});
+                      .direction = direction,
+                      .sorting = sorting});
 }

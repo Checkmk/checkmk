@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <variant>
 
@@ -195,11 +196,31 @@ bool Query::processDataset(Row row) {
     return true;
 }
 
+namespace {
+// std::variant's operator<=> is a std::partial_ordering because one of its
+// alternatives is double, so we cannot promise std::strong_ordering here.
+std::partial_ordering compareKeys(const Sorter::key_type &a,
+                                  const Sorter::key_type &b, bool natural) {
+    return natural && std::holds_alternative<std::string>(a) &&
+                   std::holds_alternative<std::string>(b)
+               ? mk::natural_compare(std::get<std::string>(a),
+                                     std::get<std::string>(b))
+               : a <=> b;
+}
+}  // namespace
+
 void Query::renderSorters() {
     // See also Query::renderAggregators()
     const auto &o = orderBy();
-    std::ranges::sort(sorted_rows_, [&o](auto &&x, auto &&y) {
-        return o.direction == OrderByDirection::ascending ? x < y : x > y;
+    auto ascending = o.direction == OrderByDirection::ascending;
+    auto natural = o.sorting == OrderBySorting::natural;
+    std::ranges::sort(sorted_rows_, [ascending, natural](auto &&x, auto &&y) {
+        auto cmp = compareKeys(x.first, y.first, natural);
+        // Equal keys fall back to the rendered row, giving a total order so the
+        // output does not depend on std::ranges::sort being stable (it isn't).
+        return cmp == 0
+                   ? (ascending ? x.second < y.second : y.second < x.second)
+                   : (ascending ? cmp < 0 : cmp > 0);
     });
     for (auto &&[k, row_fragment] : sorted_rows_) {
         if (parsed_query_.limit && ++current_line_ > *parsed_query_.limit) {

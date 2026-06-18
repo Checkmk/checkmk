@@ -248,6 +248,59 @@ bool is_utf8(std::string_view s) {
     return true;
 }
 
+namespace {
+bool is_ascii_digit(char c) {
+    return std::isdigit(static_cast<unsigned char>(c)) != 0;
+}
+
+char ascii_tolower(char c) {
+    return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+}
+
+// Compare two runs of decimal digits by their numeric value, ignoring leading
+// zeros: the shorter run is the smaller number, equal lengths fall back to a
+// lexicographic comparison of the digits.
+std::strong_ordering compare_digits(std::string_view a, std::string_view b) {
+    a.remove_prefix(std::min(a.size(), a.find_first_not_of('0')));
+    b.remove_prefix(std::min(b.size(), b.find_first_not_of('0')));
+    return a.size() != b.size() ? a.size() <=> b.size() : a <=> b;
+}
+
+// Compare two non-digit runs case-insensitively.
+std::strong_ordering compare_text(std::string_view a, std::string_view b) {
+    return std::lexicographical_compare_three_way(
+        a.begin(), a.end(), b.begin(), b.end(),
+        [](char x, char y) { return ascii_tolower(x) <=> ascii_tolower(y); });
+}
+}  // namespace
+
+std::strong_ordering natural_compare(std::string_view a, std::string_view b) {
+    // Chop off and return str's leading run of digits (want_digits) or
+    // non-digits (!want_digits), possibly empty, advancing str past the run.
+    auto take_run = [](std::string_view &str, bool want_digits) {
+        auto end = std::ranges::find_if(str, [want_digits](char c) {
+            return is_ascii_digit(c) != want_digits;
+        });
+        auto run = str.substr(0, static_cast<std::size_t>(end - str.begin()));
+        str.remove_prefix(run.size());
+        return run;
+    };
+    // Both strings are split into alternating non-digit and digit runs (each
+    // possibly empty) and compared run by run. take_run consumes the leading
+    // run from a and b, so each iteration shrinks both until they are empty.
+    while (!a.empty() || !b.empty()) {
+        if (auto cmp = compare_text(take_run(a, false), take_run(b, false));
+            cmp != std::strong_ordering::equal) {
+            return cmp;
+        }
+        if (auto cmp = compare_digits(take_run(a, true), take_run(b, true));
+            cmp != std::strong_ordering::equal) {
+            return cmp;
+        }
+    }
+    return std::strong_ordering::equal;
+}
+
 void skip_whitespace(std::string_view &str) {
     str.remove_prefix(
         std::min(str.size(), str.find_first_not_of(mk::whitespace)));

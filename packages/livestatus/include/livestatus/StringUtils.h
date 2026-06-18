@@ -7,6 +7,7 @@
 #define StringUtils_h
 
 #include <bitset>
+#include <compare>
 #include <cstddef>
 #include <iterator>
 #include <ostream>
@@ -78,6 +79,10 @@ std::vector<std::string> split_list(const std::string &str);
 }  // namespace ec
 
 bool is_utf8(std::string_view s);
+
+// Case-insensitive natural sort order comparison, see
+// https://en.wikipedia.org/wiki/Natural_sort_order
+std::strong_ordering natural_compare(std::string_view a, std::string_view b);
 
 // -----------------------------------------------------------------------------
 // We basically use a std::string_view argument like a stream below.

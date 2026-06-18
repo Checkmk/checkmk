@@ -106,31 +106,19 @@ class TimeSeries:
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluationContext:
-    """Everything a quantity needs to evaluate itself against fetched data."""
-
     metric_data: Mapping[RRDMetricRef, RRDMetricData]
     time_series: Mapping[RRDMetricRef, TimeSeries]
     time_range: TimeRange
 
 
 class Quantity(Protocol):
-    """A value that can be drawn on a graph.
+    def rrd_metrics(self) -> Iterable[RRDMetricRef]: ...
 
-    The open extension point of the engine: a new quantity kind is added by implementing
-    this protocol, with no change to the consuming code (evaluation, fetching, templating).
-    """
+    def evaluate_value(self, context: EvaluationContext) -> float | None: ...
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
-        """The RRD metrics this quantity references, directly or transitively."""
+    def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries: ...
 
-    def evaluate_value(self, context: EvaluationContext) -> float | None:
-        """The current scalar value, or None if it cannot be determined."""
-
-    def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries:
-        """The value over the context's time range."""
-
-    def evaluate_attributes(self, context: EvaluationContext) -> DisplayAttributes | None:
-        """Title, unit and color for display, or None if the quantity is undisplayable."""
+    def evaluate_attributes(self, context: EvaluationContext) -> DisplayAttributes | None: ...
 
 
 type _Operator = Callable[[Sequence[float | None]], float | None]

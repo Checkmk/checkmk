@@ -733,6 +733,7 @@ class ModeLDAPConfig(WatoMode):
             connection_type=self.type,
             custom_config_dirs=(),
             site_configs=config.sites,
+            pprint_value=config.wato_pprint_config,
             pending_changes=_pending_changes(config, omd_site(), user.id),
         )
 

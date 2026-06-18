@@ -229,6 +229,7 @@ def _delete_connection(
     connection_type: Literal["ldap", "saml2"],
     custom_config_dirs: Iterable[Path],
     site_configs: SiteConfigurations,
+    pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> None:
     user_connection_config_file = UserConnectionConfigFile()
@@ -247,7 +248,7 @@ def _delete_connection(
         connection_type=connection_type,
         sites=get_affected_sites(edition, site_configs, connection),
         domains=[ConfigDomainGUI()],
-        pprint_value=active_config.wato_pprint_config,
+        pprint_value=pprint_value,
         pending_changes=pending_changes,
     )
 
@@ -265,6 +266,7 @@ def _move_connection(
     connection_type: Literal["ldap", "saml2"],
     site_configs: SiteConfigurations,
     *,
+    pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> None:
     user_connection_config_file = UserConnectionConfigFile()
@@ -279,7 +281,7 @@ def _move_connection(
         to_index=to_index,
         sites=get_affected_sites(edition, site_configs, connection),
         domains=[ConfigDomainGUI()],
-        pprint_value=active_config.wato_pprint_config,
+        pprint_value=pprint_value,
         pending_changes=pending_changes,
     )
 
@@ -304,6 +306,7 @@ def connection_actions(
     custom_config_dirs: Iterable[Path],
     site_configs: SiteConfigurations,
     *,
+    pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> ActionResult:
     if not transactions.check_transaction():
@@ -316,6 +319,7 @@ def connection_actions(
             connection_type=connection_type,
             custom_config_dirs=custom_config_dirs,
             site_configs=site_configs,
+            pprint_value=pprint_value,
             pending_changes=pending_changes,
         )
 
@@ -330,6 +334,7 @@ def connection_actions(
             ),
             connection_type=connection_type,
             site_configs=site_configs,
+            pprint_value=pprint_value,
             pending_changes=pending_changes,
         )
 

@@ -22,7 +22,7 @@ from cmk.crypto.password import Password
 from cmk.gui import userdb
 from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config, get_page_heading
+from cmk.gui.config import Config, get_page_heading
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -280,12 +280,12 @@ class LoginPage(Page):
             get_page_heading(config, omd_site()),
             Breadcrumb(),
             show_main_navigation=False,
-            debug=active_config.debug,
+            debug=config.debug,
             lang=user.language,
-            inject_js_profiling_code=active_config.inject_js_profiling_code,
-            load_frontend_vue=active_config.load_frontend_vue,
-            custom_style_sheet=active_config.custom_style_sheet,
-            screenshotmode=active_config.screenshotmode,
+            inject_js_profiling_code=config.inject_js_profiling_code,
+            load_frontend_vue=config.load_frontend_vue,
+            custom_style_sheet=config.custom_style_sheet,
+            screenshotmode=config.screenshotmode,
             inline_help_as_text=user.inline_help_as_text,
             hide_suggestions=not user.get_tree_state("suggestions", "all", True),
             user_role_ids=user.role_ids,

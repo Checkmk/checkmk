@@ -228,6 +228,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//cmk/nonfree:__subpackages__",
+        "//non-free/packages/cmk-metric-backend:__pkg__",
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//non-free/packages/cmk-telemetry:__pkg__",
         "//packages/cmk-plugin-apis:__pkg__",

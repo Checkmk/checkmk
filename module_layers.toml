@@ -154,7 +154,7 @@ allows = [
 [plugin_families.violations.custom_query_metric_backend]
 allows = [
   "cmk.metric_backend",
-  "cmk.nonfree.ultimate.metric_backend.gui._metric_backend_custom_query",
+  "cmk.metric_backend.gui._metric_backend_custom_query",
   "cmk.utils.macros",
   "cmk.utils.paths",
 ]
@@ -696,7 +696,7 @@ allows = [
   "cmk.dcd.gui",
   "cmk.gui",
   "cmk.gui.nonfree",
-  "cmk.nonfree.ultimate.metric_backend",
+  "cmk.metric_backend.gui",
   "cmk.otel_collector",
 ]
 
@@ -800,7 +800,7 @@ allows = [
   "cmk.gui_plugins.internal",
   "cmk.licensing",
   "cmk.liveproxyd.gui",
-  "cmk.nonfree.ultimate.metric_backend.gui",
+  "cmk.metric_backend.gui",
   "cmk.telemetry.gui",
   "cmk.otel_collector",
   "cmk.robotmk.gui",
@@ -836,7 +836,7 @@ allows = [
   "cmk.licensing",
   "cmk.liveproxyd.gui",
   "cmk.multi_tenancy.shared",
-  "cmk.nonfree.ultimate.metric_backend.gui.register",
+  "cmk.metric_backend.gui.register",
   "cmk.otel_collector.gui",
   "cmk.telemetry.gui.register",
   "cmk.piggyback",
@@ -863,7 +863,7 @@ allows = [
   "cmk.gui_plugins.internal",
   "cmk.licensing",
   "cmk.liveproxyd.gui",
-  "cmk.nonfree.ultimate.metric_backend.gui.register",
+  "cmk.metric_backend.gui.register",
   "cmk.otel_collector.gui",
   "cmk.telemetry.gui.register",
   "cmk.shared_typing",
@@ -1057,7 +1057,7 @@ allows = [
   "cmk.checkengine.fetchers",
   "cmk.gui",
   "cmk.message_broker_certs",
-  "cmk.nonfree.ultimate.metric_backend",
+  "cmk.metric_backend.gui",
   "cmk.otel_collector",
   "cmk.robotmk",
   "cmk.update_config",
@@ -1084,7 +1084,7 @@ allows = [
   "cmk.gui",
   "cmk.licensing",
   "cmk.message_broker_certs",
-  "cmk.nonfree.ultimate.metric_backend",
+  "cmk.metric_backend.gui",
   "cmk.otel_collector",
   "cmk.robotmk",
   "cmk.utils",
@@ -1109,7 +1109,7 @@ allows = ["@ccc", "@trace"]
 [components."cmk.mknotifyd"]
 allows = ["@ccc", "cmk.events"]
 
-[components."cmk.nonfree.ultimate.metric_backend.gui"]
+[components."cmk.metric_backend.gui"]
 allows = [
   "@ccc",
   "@metric_backend",

@@ -48,7 +48,7 @@ Both self-hosted and cloud connections are configured here based on the active c
 Configuration
 -------------
 
-*Location:* ``non-free/packages/cmk-metric-backend/cmk/metric_backend/config.py``, ``cmk/nonfree/ultimate/metric_backend/gui/_config_domain.py``
+*Location:* ``non-free/packages/cmk-metric-backend/cmk/metric_backend/config.py``, ``non-free/packages/cmk-metric-backend/cmk/metric_backend/gui/_config_domain.py``
 
 The metric backend configuration is stored in ``etc/check_mk/metric_backend.json`` and
 read at startup by all components that need to connect to ClickHouse. The config is a

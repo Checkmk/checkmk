@@ -11,6 +11,7 @@ py_library(
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//non-free/packages/cmk-metric-backend:__pkg__",
         "//omd/packages/appliance:__pkg__",
         "//tests:__subpackages__",
     ],

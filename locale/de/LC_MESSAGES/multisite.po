@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-17 07:36+0000\n"
+"PO-Revision-Date: 2026-06-18 10:30+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -21349,7 +21349,7 @@ msgid "Display options"
 msgstr "Optionen anzeigen"
 
 msgid "Display sidecar details on"
-msgstr "Zeige Sidecar Details auf"
+msgstr "Zeige Sidecar-Details auf"
 
 msgid "Display snapshot summary on ESX hosts"
 msgstr "Snapshot-Zusammenfassung auf ESX-Hosts anzeigen"
@@ -50481,7 +50481,7 @@ msgid "Partitions (XEN)"
 msgstr "Partitionen (XEN)"
 
 msgid "Parts per Million"
-msgstr "Millionstel"
+msgstr "Parts per million"
 
 msgid "Passive checks"
 msgstr "Passive Checks"
@@ -63869,7 +63869,7 @@ msgid "State when no enterprise license is installed"
 msgstr "Zustand, wenn keine Unternehmenslizenz installiert ist"
 
 msgid "State when no ping signal from sidecar"
-msgstr "Zustand, wenn kein Ping-Signal vom Seitenwagen"
+msgstr "Zustand, wenn kein Ping-Signal vom Sidecar"
 
 msgid "State when normal updates are pending"
 msgstr "Zustand, wenn normale Updates ausstehen"
@@ -63904,9 +63904,8 @@ msgstr "Zustand, wenn der Replikationszustand syncing ist"
 msgid "State when replication state is unknown"
 msgstr "Zustand, wenn der Replikationszustand unknown ist"
 
-#, fuzzy
 msgid "State when reported device status is No Redundancy"
-msgstr "Zustand, wenn der gemeldete Gerätezustand OK ist"
+msgstr "Zustand, wenn der gemeldete Gerätezustand 'Keine Redundanzen' ist"
 
 msgid "State when reported device status is OK"
 msgstr "Zustand, wenn der gemeldete Gerätezustand OK ist"
@@ -70688,7 +70687,7 @@ msgstr ""
 "Sidecar-Host angezeigt werden."
 
 msgid "The sidecar host"
-msgstr "Sidecar-Host"
+msgstr "Der Sidecar-Host"
 
 msgid ""
 "The signature algorithm for the certificate's signature. Please note that a "
@@ -77228,7 +77227,7 @@ msgid "Time since the last check of the service"
 msgstr "Zeit seit dem letzten Check des Services"
 
 msgid "Time since the sidecar was last seen by graylog"
-msgstr "Zeit seitdem das Sidecar das letzte Mal von graylog gesehen wurde"
+msgstr "Zeit seitdem das Sidecar das letzte Mal von Graylog gesehen wurde"
 
 msgid "Time span for difference calculation of summed up values"
 msgstr "Zeitspanne für Differenzberechnung der summierten Werte"
@@ -93759,7 +93758,7 @@ msgid ""
 ">Click the Host name or Service label to clear the filter."
 msgstr ""
 "Verwenden Sie diese Felder, um die Liste der verfügbaren Service-Metriken "
-"einzugrenzen.<br>Klicken Sie auf den Host-Namen oder das Service-Label, um "
+"einzugrenzen.<br />Klicken Sie auf den Host-Namen oder das Service-Label, um "
 "den Filter zu leeren."
 
 msgid "Service graph"

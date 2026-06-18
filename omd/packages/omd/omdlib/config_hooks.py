@@ -58,6 +58,7 @@ from omdlib.rabbitmq import (
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites
 from omdlib.system_apache import APACHE_TCP_PORT_HOOK, write_apache_listen_conf
+from omdlib.tmpfs import deactivate_tmpfs
 
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import edition
@@ -410,6 +411,7 @@ _MIGRATED_ACTIVATION: Mapping[str, Activation] = {
     "MULTISITE_COOKIE_AUTH": write_multisite_cookie_auth,
     "PNP4NAGIOS": write_pnp4nagios_conf,
     "RABBITMQ_ONLY_FROM": write_rabbitmq_default_conf,
+    "TMPFS": deactivate_tmpfs,
     "TRACE_RECEIVE": write_jaeger_apache_conf,
     "TRACE_RECEIVE_ADDRESS": write_jaeger_receiver_conf,
 }

@@ -17,6 +17,7 @@ from pathlib import Path
 
 from omdlib.config_api import Config
 from omdlib.console import ok
+from omdlib.init_scripts import check_status
 from omdlib.skel_permissions import Permissions
 from omdlib.type_defs import Replacements
 from omdlib.users_and_groups import run_as_site_user
@@ -132,6 +133,15 @@ def unmount_tmpfs(
         if output:
             ok()
     return unmount_tmpfs_without_save(site_name, site_tmp_dir, output, kill)
+
+
+def deactivate_tmpfs(site_name: str, site_home: Path, config: Config) -> None:
+    if config["TMPFS"] != "off":
+        return
+    if check_status(str(site_home), verbose=False, display=False) != 1:
+        raise RuntimeError(f"Cannot unmount tmpfs of site {site_name} while it is running")
+    if not unmount_tmpfs(site_name, str(site_home), str(site_home / "tmp"), output=False):
+        raise RuntimeError(f"Could not unmount tmpfs of site {site_name}")
 
 
 def unmount_tmpfs_without_save(

@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from pathlib import Path
+
+import pytest
 
 from tests.testlib.site import Site
 
@@ -66,3 +69,21 @@ def test_hooks(site: Site) -> None:
     installed_hooks = os.listdir(site.root / "lib" / "omd" / "hooks")
 
     assert sorted(hooks) == sorted(installed_hooks)
+
+
+def _site_tmp_is_tmpfs(site: Site) -> bool:
+    return f"sites/{site.id}/tmp" in Path("/proc/mounts").read_text()
+
+
+@pytest.mark.skipif(
+    bool(os.environ.get("POD_LABEL")),
+    reason="On k8s a tmpfs cannot be mounted, so the site fixture forces TMPFS=off",
+)
+def test_tmpfs_hook_controls_tmpfs_mount(site: Site) -> None:
+    """`omd config set TMPFS on/off` mounts/unmounts the site's tmpfs."""
+    with site.omd_config("TMPFS", "on"):
+        site.start()
+        assert _site_tmp_is_tmpfs(site), "TMPFS=on should mount a tmpfs at the site tmp dir"
+
+    with site.omd_config("TMPFS", "off"):
+        assert not _site_tmp_is_tmpfs(site), "TMPFS=off should leave no tmpfs mounted"

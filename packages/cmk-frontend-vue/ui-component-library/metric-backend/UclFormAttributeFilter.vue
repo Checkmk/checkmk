@@ -68,6 +68,11 @@ export const panelConfig = {
     options: operatorOptions,
     initialState: [...ALL_OPERATORS],
     help: 'Changing the available operators after conditions already exist is a dev-tooling artifact, not a component scenario: a caller fixes the operator set up front. Narrowing to a single existence operator clears each value; widening back to a comparison operator leaves those values empty and the conditions model-invalid, but existing closed pills are not re-opened so the invalid state is not shown. In real usage the operator set does not change at runtime.'
+  },
+  allowOr: {
+    type: 'boolean',
+    title: 'Allow OR',
+    initialState: true
   }
 } satisfies PanelConfigFor<
   typeof FormAttributeFilter,
@@ -220,6 +225,7 @@ const selectedOperators = computed(() => propState.value.operators)
         :query-value-suggestions="queryValueSuggestions"
         :resolve-attribute-type="resolveAttributeType"
         :operators="selectedOperators"
+        :allow-or="propState.allowOr"
       />
 
       <template #properties>

@@ -18,6 +18,7 @@ from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Status
 
 from ._models import Host, HostFilter, HostSort, HostState, ServiceCounts
+from ._sorting import host_sorter
 
 
 class LiveStatusHostRepository:
@@ -48,36 +49,33 @@ class LiveStatusHostRepository:
             _build_query_filter(query),
             extra_headers=[
                 *filters.splitlines(),
-                # NOTE: Livestatus doesn't support sorting by multiple columns at the moment. The
-                # resulting query will only take the first `OrderBy` statement and sort by that
-                # criteria. We are leaving the wiring in for now and will investigate the ability to
-                # sort by multiple columns in the livestatus client. Alternatively, we can apply
-                # only the first filter in this query and then sort the other columns after limiting
-                # the results (in Python).
-                *[f"OrderBy: {s.column} {s.direction}" for s in sorters],
+                _build_primary_sort(sorters),
                 f"Limit: {limit}",
             ],
         )
 
         with detailed_connection(self._connection) as conn:
-            return [
-                Host(
-                    name=row["name"],
-                    alias=row["alias"],
-                    address=row["address"],
-                    state=HostState(row["state"]),
-                    site_id=row["site"],
-                    service_counts=ServiceCounts(
-                        total=row["num_services"],
-                        ok=row["num_services_ok"],
-                        warn=row["num_services_warn"],
-                        crit=row["num_services_crit"],
-                        unknown=row["num_services_unknown"],
-                        pending=row["num_services_pending"],
-                    ),
-                )
-                for row in q.iterate(conn)
-            ]
+            return sorted(
+                [
+                    Host(
+                        name=row["name"],
+                        alias=row["alias"],
+                        address=row["address"],
+                        state=HostState(row["state"]),
+                        site_id=row["site"],
+                        service_counts=ServiceCounts(
+                            total=row["num_services"],
+                            ok=row["num_services_ok"],
+                            warn=row["num_services_warn"],
+                            crit=row["num_services_crit"],
+                            unknown=row["num_services_unknown"],
+                            pending=row["num_services_pending"],
+                        ),
+                    )
+                    for row in q.iterate(conn)
+                ],
+                key=host_sorter(sorters),
+            )
 
     def count(self, *, query: str, filters: HostFilter) -> int:
         if not query and not filters:
@@ -111,3 +109,8 @@ def _build_query_filter(query: str) -> QueryExpression:
         Hosts.alias.contains(query, ignore_case=True),
         Hosts.address.contains(query, ignore_case=True),
     )
+
+
+def _build_primary_sort(sorters: Sequence[HostSort]) -> str:
+    condition = f"{sorters[0].column} {sorters[0].direction}" if sorters else "name asc"
+    return f"OrderBy: {condition}"

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui import forms, visuals
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.header import make_header
@@ -32,10 +32,10 @@ def DatasourceSelection() -> DropdownChoice[str]:
 
 
 def page_select_datasource(ctx: PageContext) -> None:
-    show_create_view_dialog()
+    show_create_view_dialog(ctx.config)
 
 
-def show_create_view_dialog(next_url: str | None = None) -> None:
+def show_create_view_dialog(config: Config, next_url: str | None = None) -> None:
     vs_ds = DatasourceSelection()
 
     ds: str | None = "services"  # Default selection
@@ -53,12 +53,12 @@ def show_create_view_dialog(next_url: str | None = None) -> None:
             button_name="_save",
             save_title=_("Continue"),
         ),
-        debug=active_config.debug,
+        debug=config.debug,
         lang=user.language,
-        inject_js_profiling_code=active_config.inject_js_profiling_code,
-        load_frontend_vue=active_config.load_frontend_vue,
-        custom_style_sheet=active_config.custom_style_sheet,
-        screenshotmode=active_config.screenshotmode,
+        inject_js_profiling_code=config.inject_js_profiling_code,
+        load_frontend_vue=config.load_frontend_vue,
+        custom_style_sheet=config.custom_style_sheet,
+        screenshotmode=config.screenshotmode,
         inline_help_as_text=user.inline_help_as_text,
         hide_suggestions=not user.get_tree_state("suggestions", "all", True),
         user_role_ids=user.role_ids,

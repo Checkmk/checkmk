@@ -72,8 +72,8 @@ const containerClasses = computed(() => ({
       </div>
       <CmkCopy :text="codeText">
         <CmkIconButton
-          name="copied"
-          size="medium"
+          name="cmkcode-copied"
+          size="xxlarge"
           class="copy_button"
           :data-testId="copyButtonTestId"
         />
@@ -204,10 +204,6 @@ const containerClasses = computed(() => ({
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--dimension-4);
-    border-radius: var(--border-radius);
-    border: var(--border-width-1, 1px) solid var(--color-corporate-green-50);
-    background: var(--color-corporate-green-50);
     cursor: pointer;
   }
 }

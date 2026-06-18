@@ -139,6 +139,7 @@ import lightIconCloseSvg from '~cmk-frontend/themes/facelift/images/icon_close.s
 import lightIconClosetimewarpPng from '~cmk-frontend/themes/facelift/images/icon_closetimewarp.png?url&no-inline'
 import lightIconCloudSvg from '~cmk-frontend/themes/facelift/images/icon_cloud.svg?url&no-inline'
 import lightIconClusterPng from '~cmk-frontend/themes/facelift/images/icon_cluster.png?url&no-inline'
+import lightIconCmkcodeCopiedSvg from '~cmk-frontend/themes/facelift/images/icon_cmkcode_copied.svg?url&no-inline'
 import lightIconCollapsePng from '~cmk-frontend/themes/facelift/images/icon_collapse.png?url&no-inline'
 import lightIconCollapseArrowPng from '~cmk-frontend/themes/facelift/images/icon_collapse_arrow.png?url&no-inline'
 import lightIconColorModeSvg from '~cmk-frontend/themes/facelift/images/icon_color_mode.svg?url&no-inline'
@@ -952,6 +953,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   closetimewarp: lightIconClosetimewarpPng,
   cloud: lightIconCloudSvg,
   cluster: lightIconClusterPng,
+  'cmkcode-copied': lightIconCmkcodeCopiedSvg,
   collapse: lightIconCollapsePng,
   'collapse-arrow': lightIconCollapseArrowPng,
   'color-mode': lightIconColorModeSvg,

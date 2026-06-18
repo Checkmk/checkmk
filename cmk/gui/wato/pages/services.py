@@ -25,6 +25,8 @@ from typing import Any, Literal, NamedTuple, override
 
 from pydantic import BaseModel, Field
 
+from livestatus import SiteConfigurations
+
 import cmk.utils.render
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -2151,9 +2153,9 @@ class DiscoveryPageRenderer:
 
 
 class ModeAjaxExecuteCheck(AjaxPage):
-    def _handle_http_request(self) -> None:
+    def _handle_http_request(self, sites: SiteConfigurations) -> None:
         self._site = SiteId(request.get_ascii_input_mandatory("site"))
-        if self._site not in active_config.sites:
+        if self._site not in sites:
             raise MKUserError("site", _("You called this page with an invalid site."))
 
         self._host_name = request.get_validated_type_input_mandatory(HostName, "host")
@@ -2171,7 +2173,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
 
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        self._handle_http_request()
+        self._handle_http_request(ctx.config.sites)
         check_csrf_token()
         try:
             active_check_result = active_check(

@@ -206,6 +206,7 @@ py_library(
         "omdlib/main.py",
         "omdlib/main_site_user.py",
         "omdlib/mkeventd.py",
+        "omdlib/multisite.py",
         "omdlib/options.py",
         "omdlib/options_legacy.py",
         "omdlib/package_manager.py",

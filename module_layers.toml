@@ -758,7 +758,6 @@ allows = [
   "cmk.utils.dateutils",
   "cmk.utils.global_ident_type",
   "cmk.utils.http_proxy_config",
-  "cmk.utils.images",
   "cmk.utils.jsontype",
   "cmk.utils.keypair_store",
   "cmk.utils.local_secrets",
@@ -844,7 +843,6 @@ allows = [
   "cmk.robotmk.gui",
   "cmk.utils.automation_config",
   "cmk.utils.certs",
-  "cmk.utils.images",
   "cmk.utils.nonfree.pro",
   "cmk.utils.password_store",
   "cmk.utils.paths",
@@ -926,7 +924,6 @@ allows = [
   "cmk.utils.host_storage",
   "cmk.utils.html",
   "cmk.utils.http_proxy_config",
-  "cmk.utils.images",
   "cmk.utils.ip_lookup",
   "cmk.utils.jsontype",
   "cmk.utils.keypair_store",
@@ -1326,9 +1323,6 @@ allows = []
 
 [components."cmk.utils.http_proxy_config"]
 allows = ["cmk.utils.password_store"]
-
-[components."cmk.utils.images"]
-allows = []
 
 [components."cmk.utils.ip_lookup"]
 allows = [

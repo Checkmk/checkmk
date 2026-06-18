@@ -115,7 +115,7 @@ def test_pillow_allows_unrelated_imports() -> None:
 
 def test_pillow_allows_pil_in_images_wrapper() -> None:
     repo_root = Path("/repo")
-    file_path = repo_root / "cmk" / "utils" / "images.py"
+    file_path = repo_root / "cmk" / "gui" / "utils" / "images.py"
     assert _check_pillow("from PIL import Image", file_path=file_path, repo_root=repo_root) == []
 
 

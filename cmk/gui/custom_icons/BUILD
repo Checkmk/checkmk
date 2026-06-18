@@ -14,6 +14,7 @@ py_library(
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/utils:csrf_token",
+        "//cmk/gui/utils:images",
         "//cmk/gui/utils:transaction_manager",
         "//cmk/gui/utils:urls",
         "//cmk/gui/valuespec",
@@ -21,6 +22,5 @@ py_library(
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:registries",
         "//cmk/utils",
-        "//cmk/utils:images",
     ],
 )

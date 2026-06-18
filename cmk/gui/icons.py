@@ -9,8 +9,8 @@ from typing import Final
 
 from cmk.gui.i18n import _
 from cmk.gui.theme import Theme
+from cmk.gui.utils.images import CMKImage, ImageType
 from cmk.utils import paths
-from cmk.utils.images import CMKImage, ImageType
 
 _DEFAULT_BUILT_IN_CATEGORY: Final = "builtin"
 _DEFAULT_USER_CATEGORY: Final = "misc"

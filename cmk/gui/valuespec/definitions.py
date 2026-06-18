@@ -97,6 +97,7 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.images import CMKImage, ImageType
 from cmk.gui.utils.labels import (
     encode_labels_for_http,
     get_labels_from_config,
@@ -114,7 +115,6 @@ from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
 from cmk.utils import dateutils
-from cmk.utils.images import CMKImage, ImageType
 from cmk.utils.labels import AndOrNotLiteral, LabelSources
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url

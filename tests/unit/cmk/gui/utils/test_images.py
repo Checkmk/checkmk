@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.utils.images import CMKImage, ImageSize, ImageType
+from cmk.gui.utils.images import CMKImage, ImageSize, ImageType
 
 TEST_PNG = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAABhGlDQ1BJQ0MgcHJvZmlsZQAAKJF9"

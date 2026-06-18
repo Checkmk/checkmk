@@ -23,6 +23,19 @@ py_library(
 )
 
 py_library(
+    name = "images",
+    srcs = ["images.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        requirement("pillow"),
+    ],
+)
+
+py_library(
     name = "temperate_unit",
     srcs = ["temperate_unit.py"],
     imports = ["../../.."],

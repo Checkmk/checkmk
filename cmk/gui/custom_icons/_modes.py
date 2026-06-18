@@ -19,13 +19,13 @@ from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, DynamicIconName, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.images import CMKImage, ImageType
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
 from cmk.gui.valuespec import Dictionary, DropdownChoice, FileUploadModel, IconSelector, ImageUpload
 from cmk.gui.wato import PERMISSION_SECTION_WATO
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
-from cmk.utils.images import CMKImage, ImageType
 
 
 def validate_icon(value: FileUploadModel, varprefix: str) -> None:

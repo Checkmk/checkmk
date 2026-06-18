@@ -58,7 +58,11 @@ class HTMLDebugChecker(ASTVisitorChecker):
 
 
 class PillowImportChecker(ASTVisitorChecker):
-    """Detects direct imports of PIL. Use cmk.utils.images instead."""
+    """Detects direct imports of PIL.
+
+    PIL should be wrapped in a dedicated images module at the correct layer
+    (e.g. cmk.gui.utils.images for GUI code).
+    """
 
     def checker_id(self) -> str:
         return "pillow-import"
@@ -69,7 +73,8 @@ class PillowImportChecker(ASTVisitorChecker):
         for alias in node.names:
             if alias.name == "PIL" or alias.name.startswith("PIL."):
                 self.add_error(
-                    "PIL should not be used directly. Use cmk.utils.images instead.",
+                    "PIL should not be used directly. Wrap it in a dedicated images "
+                    "module at the correct layer (e.g. cmk.gui.utils.images for GUI code).",
                     node,
                 )
         self.generic_visit(node)
@@ -79,14 +84,15 @@ class PillowImportChecker(ASTVisitorChecker):
             return
         if node.module is not None and (node.module == "PIL" or node.module.startswith("PIL.")):
             self.add_error(
-                "PIL should not be used directly. Use cmk.utils.images instead.",
+                "PIL should not be used directly. Wrap it in a dedicated images "
+                "module at the correct layer (e.g. cmk.gui.utils.images for GUI code).",
                 node,
             )
         self.generic_visit(node)
 
     def _is_excluded(self) -> bool:
         return PurePosixPath(self.file_path) == PurePosixPath(
-            self.repo_root / "cmk" / "utils" / "images.py"
+            self.repo_root / "cmk" / "gui" / "utils" / "images.py"
         )
 
 

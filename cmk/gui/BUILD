@@ -38,10 +38,10 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/gui/utils:images",
         "//cmk/gui/utils:speaklater",
         "//cmk/inventory",
         "//cmk/utils",
-        "//cmk/utils:images",
         "//cmk/utils:paths",
         "//cmk/utils:unixsocket_http",
         "//packages/cmk-ccc:cpu-tracking",
@@ -113,8 +113,8 @@ py_library(
     ],
     deps = [
         ":core_toolkit",
+        "//cmk/gui/utils:images",
         "//cmk/utils",
-        "//cmk/utils:images",
         requirement("reportlab"),
     ],
 )

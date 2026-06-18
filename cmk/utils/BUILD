@@ -47,23 +47,6 @@ py_library(
 )
 
 py_library(
-    name = "images",
-    srcs = ["images.py"],
-    visibility = [
-        "//bin:__subpackages__",
-        "//cmk:__subpackages__",
-        "//non-free/packages:__subpackages__",
-        "//non-free/tests:__subpackages__",
-        "//omd/packages:__subpackages__",
-        "//packages:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        requirement("pillow"),
-    ],
-)
-
-py_library(
     name = "msi_patch",
     srcs = [
         "msi_engine.py",
@@ -159,7 +142,6 @@ py_library(
             "**/nonfree/**",
             "caching_redis.py",
             "encryption.py",
-            "images.py",
             "msi_engine.py",
             "msi_patch.py",
             "paths.py",

@@ -25,9 +25,10 @@ class TestService extends MonitoringService<TestItem> {
   constructor(
     public readonly fetchBatchMock: () => Promise<PagedResponse<TestItem>>,
     pollIntervalMs?: number,
-    shortCutService: KeyShortcutService = makeKeyShortcutService()
+    shortCutService: KeyShortcutService = makeKeyShortcutService(),
+    serviceId: string = 'test-service'
   ) {
-    super('test-service', shortCutService, pollIntervalMs)
+    super(serviceId, shortCutService, pollIntervalMs)
   }
 
   protected fetchBatch(): Promise<PagedResponse<TestItem>> {
@@ -224,5 +225,46 @@ describe('MonitoringService', () => {
     expect(fetchBatch).toHaveBeenCalledTimes(2)
 
     service.stopPolling()
+  })
+
+  it('dispatches the registered focus-search callback when the shortcut fires', () => {
+    let shortcutCallback: (() => void) | undefined
+    const shortCutService = {
+      on: vi.fn((_shortcut: unknown, cb: () => void) => {
+        shortcutCallback = cb
+        return 'shortcut-id'
+      }),
+      remove: vi.fn()
+    } as unknown as KeyShortcutService
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0))
+    const service = new TestService(fetchBatch, undefined, shortCutService, 'focus-dispatch')
+
+    const onFocus = vi.fn()
+    service.onFocusSearch(onFocus)
+    shortcutCallback?.()
+
+    expect(onFocus).toHaveBeenCalledTimes(1)
+
+    service.stopPolling()
+  })
+
+  it('destruct() removes the focus-search callback so it is no longer dispatched', () => {
+    let shortcutCallback: (() => void) | undefined
+    const shortCutService = {
+      on: vi.fn((_shortcut: unknown, cb: () => void) => {
+        shortcutCallback = cb
+        return 'shortcut-id'
+      }),
+      remove: vi.fn()
+    } as unknown as KeyShortcutService
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0))
+    const service = new TestService(fetchBatch, undefined, shortCutService, 'focus-destruct')
+
+    const onFocus = vi.fn()
+    service.onFocusSearch(onFocus)
+    service.destruct()
+    shortcutCallback?.()
+
+    expect(onFocus).not.toHaveBeenCalled()
   })
 })

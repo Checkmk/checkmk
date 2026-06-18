@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { useTemplateRef } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
@@ -20,6 +22,15 @@ const query = defineModel<string>({ default: '' })
 const emit = defineEmits<{
   search: [query: string]
 }>()
+
+const input = useTemplateRef<HTMLInputElement>('input')
+
+defineExpose({
+  focus: () => {
+    input.value?.focus()
+    input.value?.select()
+  }
+})
 
 function submit(): void {
   emit('search', query.value)
@@ -40,6 +51,7 @@ function clear(): void {
       size="small"
     />
     <input
+      ref="input"
       v-model="query"
       type="search"
       role="searchbox"

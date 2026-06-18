@@ -10,7 +10,7 @@ import {
   type ColumnPinningState
 } from '@tanstack/vue-table'
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
-import { onBeforeUnmount, provide, ref } from 'vue'
+import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { getKeyShortcutServiceInstance } from '@/lib/keyShortcuts'
@@ -42,8 +42,14 @@ const hostService = new HostService(
   props.poll_interval_ms
 )
 
+const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
+
+onMounted(() => {
+  hostService.onFocusSearch(() => searchInput.value?.focus())
+})
+
 onBeforeUnmount(() => {
-  hostService.stopPolling()
+  hostService.destruct()
 })
 
 provide(MONITORING_SERVICE, hostService)
@@ -179,6 +185,8 @@ function rowKey(row: HostEntry): string {
   <div class="monitoring-all-hosts-app">
     <div class="monitoring-all-hosts-app__header">
       <CmkSearchInput
+        ref="searchInput"
+        v-model="hostService.searchQuery.value"
         class="monitoring-all-hosts-app__search"
         :placeholder="_t('Search hosts…')"
         @search="hostService.updateSearch($event)"

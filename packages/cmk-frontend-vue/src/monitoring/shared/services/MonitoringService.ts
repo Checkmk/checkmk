@@ -46,6 +46,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
     super(serviceId, shortCutService)
     this.pollIntervalSeconds = Math.max(1, Math.round(pollIntervalMs / 1000))
     this.secondsRemaining = ref(this.pollIntervalSeconds)
+    this.initShortCuts()
     this.initialFetchTimer = setTimeout(() => {
       this.initialFetchTimer = null
       void this.fetch()
@@ -79,6 +80,19 @@ export abstract class MonitoringService<T> extends ServiceBase {
   }
 
   protected abstract fetchBatch(): Promise<PagedResponse<T>>
+
+  onFocusSearch(callback: () => void): void {
+    this.pushCallBack('focus-search', callback)
+  }
+
+  private focusSearch(): void {
+    this.dispatchCallback('focus-search')
+  }
+
+  private initShortCuts(): void {
+    this.registerShortCut({ key: ['/'], preventDefault: true }, () => this.focusSearch())
+    this.enableShortCuts()
+  }
 
   updateSort(sortState: SortingState): void {
     this.sortState.value = sortState
@@ -118,6 +132,12 @@ export abstract class MonitoringService<T> extends ServiceBase {
       clearInterval(this.tickTimer)
       this.tickTimer = null
     }
+  }
+
+  destruct(): void {
+    this.stopPolling()
+    this.disableShortCuts()
+    this.removeCallbacks()
   }
 
   private async fetch(): Promise<void> {

@@ -22,7 +22,7 @@ import {
   isOperator,
   operatorTakesValue
 } from './types'
-import type { AttributeCondition, AttributeType, Operator } from './types'
+import type { AttributeType, ConnectedCondition, Operator } from './types'
 
 const { _t } = usei18n()
 
@@ -30,10 +30,10 @@ const vClickOutside = useClickOutside()
 
 const props = withDefaults(
   defineProps<{
-    condition: AttributeCondition
+    condition: ConnectedCondition
     querySuggestions: QuerySuggestionsFn
     queryValueSuggestions: (
-      condition: AttributeCondition,
+      condition: ConnectedCondition,
       query: string
     ) => ReturnType<QuerySuggestionsFn>
     operators?: Operator[] | undefined

@@ -48,10 +48,8 @@ onBeforeUnmount(() => {
       v-model:scope-attributes="data.scope_attributes"
       v-model:data-point-attributes="data.data_point_attributes"
       v-model:backend-validation="validation"
-      :disable-values-on-empty-key="true"
       :static-resource-attribute-keys="['service.name']"
       :indent="true"
-      :orientation="'vertical'"
     />
   </table>
 </template>

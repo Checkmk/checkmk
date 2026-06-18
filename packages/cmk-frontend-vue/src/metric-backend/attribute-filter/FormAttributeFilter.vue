@@ -17,7 +17,6 @@ import AttributeFilterPill from './AttributeFilterPill.vue'
 import { handleArrowNav } from './focus-nav'
 import { isConditionValid, operatorTakesValue } from './types'
 import type {
-  AttributeCondition,
   AttributeFilterModel,
   AttributeType,
   ConnectedCondition,
@@ -35,7 +34,7 @@ const props = withDefaults(
   defineProps<{
     querySuggestions: QuerySuggestionsFn
     queryValueSuggestions: (
-      condition: AttributeCondition,
+      condition: ConnectedCondition,
       query: string
     ) => ReturnType<QuerySuggestionsFn>
     resolveAttributeType?: ((key: string) => AttributeType) | undefined

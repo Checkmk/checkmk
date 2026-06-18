@@ -64,7 +64,8 @@ GuiDiscovery = tuple[bool, GuiIncludeExclude]
 
 
 class GuiOptions(TypedDict):
-    max_connections: int
+    max_connections: NotRequired[int]
+    ignore_inactive_local_instances: NotRequired[bool]
 
 
 class GuiPiggyback(TypedDict):
@@ -99,6 +100,7 @@ class GuiAllConf(TypedDict):
 
 class SqlOptions(TypedDict):
     max_connections: NotRequired[int]
+    ignore_inactive_local_instances: NotRequired[bool]
 
 
 class SqlAuth(TypedDict):
@@ -328,12 +330,13 @@ def _to_options(options: GuiOptions | None) -> SqlOptions | None:
     if options is None:
         return None
 
+    sql_options = SqlOptions()
     if max_connections := options.get("max_connections"):
-        sql_options = SqlOptions()
         sql_options["max_connections"] = max_connections
-        return sql_options
+    if options.get("ignore_inactive_local_instances"):
+        sql_options["ignore_inactive_local_instances"] = True
 
-    return None
+    return sql_options or None
 
 
 def _to_tls(tls: GuiTls | None) -> SqlTls | None:

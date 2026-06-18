@@ -6,7 +6,8 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
-
+# ruff: noqa: SLF001
+# ruff: noqa: ARG001
 
 from collections.abc import Sequence
 from dataclasses import dataclass

@@ -93,7 +93,7 @@ class DiscoveryMode(enum.Enum):
     FALLBACK = 5  # not sure why this could happen
 
     @classmethod
-    def _missing_(cls, value: object) -> DiscoveryMode:
+    def _missing_(cls, value: object) -> DiscoveryMode:  # noqa: ARG003
         return cls.FALLBACK
 
     @classmethod

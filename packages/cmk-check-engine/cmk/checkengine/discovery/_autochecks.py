@@ -98,11 +98,11 @@ def merge_cluster_autochecks(
 
     return [
         AutocheckEntry(
-            *id,
+            *id_,
             parameters={k: v for e in entries for k, v in e.parameters.items()},
             service_labels={k: v for e in entries for k, v in e.service_labels.items()},
         )
-        for id, entries in entries_by_id.items()
+        for id_, entries in entries_by_id.items()
     ]
 
 

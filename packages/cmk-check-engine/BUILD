@@ -333,6 +333,23 @@ py_test(
     ],
 )
 
+py_test(
+    name = "discovery-tests",
+    size = "small",
+    srcs = glob([
+        "tests/cmk/checkengine/discovery/*.py",
+    ]) + [
+        ":__test__.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "//packages/cmk-check-engine/cmk/checkengine/discovery",
+        requirement("pytest"),
+        requirement("time_machine"),
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-check-engine",
@@ -350,6 +367,7 @@ py_wheel(
         ":snmp-backends",
         ":snmplib",
         ":specs",
+        "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
@@ -393,6 +411,7 @@ py_requirements_test(
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
+        "//packages/cmk-check-engine/cmk/checkengine/discovery",
     ],
     requirements_in = "requirements.in",
 )

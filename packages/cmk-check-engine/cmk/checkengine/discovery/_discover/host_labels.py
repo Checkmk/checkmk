@@ -38,7 +38,7 @@ class HostLabelPlugin:
 
     @classmethod
     def trivial(cls) -> HostLabelPlugin:
-        return cls(function=lambda *a, **kw: iter(()), parameters=lambda _: None)
+        return cls(function=lambda *a, **kw: iter(()), parameters=lambda _: None)  # noqa:ARG005
 
 
 def analyse_cluster_labels(

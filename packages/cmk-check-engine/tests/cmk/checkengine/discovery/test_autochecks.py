@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# ruff: noqa: ARG001
 
 from collections.abc import Sequence
 from pathlib import Path
@@ -14,11 +15,11 @@ from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import AutocheckServiceWithNodes, AutochecksStore
 from cmk.checkengine.discovery._autochecks import (
     _consolidate_autochecks_of_real_hosts,
+    AutochecksMemoizer,
     AutochecksSerializer,
 )
 from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
-from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
 @pytest.fixture(autouse=True)
@@ -97,11 +98,7 @@ def test_memoizer_get_autochecks_of(
     with (cmk.utils.paths.autochecks_dir / "host.mk").open("w", encoding="utf-8") as f:
         f.write(autochecks_content)
 
-    ts = Scenario()
-    ts.add_host(HostName("host"))
-    config_cache = ts.apply(monkeypatch)
-
-    memoizer = config_cache.autochecks_memoizer
+    memoizer = AutochecksMemoizer(cmk.utils.paths.autochecks_dir)
 
     result = memoizer.read(HostName("host"))
     assert result == expected_result

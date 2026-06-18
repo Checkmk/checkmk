@@ -91,6 +91,7 @@ from cmk.gui.watolib.host_attributes import (
     host_attribute_matches,
     HostAttributes,
     HostContactGroupSpec,
+    LABEL_CLEAR_VALUE,
     mask_attributes,
     MetaData,
 )
@@ -3494,7 +3495,7 @@ class Host:
         labels.update(self.attributes.get("labels", {}).items())
         set_attribute_labels(labels, self.attributes, all_attributes)
 
-        return labels
+        return {key: value for key, value in labels.items() if value != LABEL_CLEAR_VALUE}
 
     def groups(self) -> tuple[set[_ContactgroupName], set[_ContactgroupName], bool]:
         return self.folder().groups(self)

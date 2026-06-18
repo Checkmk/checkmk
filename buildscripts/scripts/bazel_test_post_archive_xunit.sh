@@ -36,4 +36,11 @@ find "${BAZEL_TEST_LOGS_SRC}" -name "test.xml" | while IFS= read -r src; do
     cp "$src" "$dst"
 done
 
-exit $?
+rc=$?
+
+xml_count=$(find "${BAZEL_TEST_LOGS_DEST}" -name "test.xml" 2>/dev/null | wc -l)
+if [ "${xml_count}" -eq 0 ]; then
+    echo "WARNING: No test.xml files found in ${BAZEL_TEST_LOGS_DEST}"
+fi
+
+exit $rc

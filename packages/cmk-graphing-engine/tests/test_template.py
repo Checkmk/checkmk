@@ -11,9 +11,11 @@ from cmk.graphing.v1 import Title
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
+    build_graphs,
     ConsolidationFunction,
-    discover_template_graphs,
     DiscoveredGraph,
+    evaluate_graphs,
+    fetch_translated_metrics,
     Graph,
     Line,
     MetricName,
@@ -143,20 +145,40 @@ def _discover(
     *,
     rrd: _FakeFetchRRD,
 ) -> Sequence[DiscoveredGraph[TemplateOptions]]:
-    return discover_template_graphs(
-        # subject
+    # Compose the discovery steps the way the GUI does: fetch -> build -> evaluate -> wrap.
+    translated_metrics = fetch_translated_metrics(
+        services=[service], translations=[], metrics=_METRICS, localizer=_id, rrd=rrd
+    )
+    graphs = build_graphs(
         service=service,
         registered_graphs=registered_graphs,
-        # environment
-        translations=[],
         metrics=_METRICS,
         localizer=_id,
-        # runtime
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        time_range=_time_range(),
-        # source
-        rrd=rrd,
+        available=translated_metrics.get(service, {}),
     )
+    options = TemplateOptions(
+        time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
+    )
+    return [
+        DiscoveredGraph(
+            graph=graph,
+            options=options,
+            title=evaluated.title,
+            vertical_range=evaluated.vertical_range,
+            stacks=evaluated.stacks,
+            lines=evaluated.lines,
+        )
+        for graph, evaluated in zip(
+            graphs,
+            evaluate_graphs(
+                graphs=graphs,
+                translated_metrics=translated_metrics,
+                consolidation_function=ConsolidationFunction.AVERAGE,
+                time_range=_time_range(),
+                rrd=rrd,
+            ),
+        )
+    ]
 
 
 def test_discover_template_graphs_empty_service_returns_no_graphs() -> None:

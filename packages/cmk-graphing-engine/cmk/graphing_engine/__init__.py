@@ -18,6 +18,8 @@ from ._evaluate import (
     EvaluatedVerticalRange,
 )
 from ._fetch import (
+    evaluate_graphs,
+    fetch_translated_metrics,
     RRDSource,
     update_graph_data,
 )
@@ -49,6 +51,7 @@ from ._objects import (
     Product,
     Quantity,
     RRDMetric,
+    RRDMetricData,
     RRDMetricRef,
     RRDMetricWithCF,
     ServiceRef,
@@ -68,7 +71,8 @@ from ._options import (
     TimeRange,
 )
 from ._template import (
-    discover_template_graphs,
+    build_graphs,
+    discover_graphs,
     TemplateOptions,
 )
 
@@ -109,6 +113,7 @@ __all__ = [
     "Product",
     "Quantity",
     "RRDMetric",
+    "RRDMetricData",
     "RRDMetricRef",
     "RRDMetricWithCF",
     "RRDSource",
@@ -125,6 +130,9 @@ __all__ = [
     "Unit",
     "VerticalRange",
     "WarningOf",
-    "discover_template_graphs",
+    "build_graphs",
+    "discover_graphs",
+    "evaluate_graphs",
+    "fetch_translated_metrics",
     "update_graph_data",
 ]

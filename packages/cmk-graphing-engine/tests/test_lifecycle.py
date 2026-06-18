@@ -18,10 +18,12 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
+    build_graphs,
     ConsolidationFunction,
-    discover_template_graphs,
     DiscoveredGraph,
+    evaluate_graphs,
     EvaluatedGraph,
+    fetch_translated_metrics,
     MetricName,
     PerformanceData,
     PerformanceValue,
@@ -103,16 +105,44 @@ def _discover(
     *,
     translations: Sequence[translations_v1.Translation] = (),
 ) -> Sequence[DiscoveredGraph[TemplateOptions]]:
-    return discover_template_graphs(
-        service=_SERVICE,
-        registered_graphs=registered_graphs,
+    # Compose the discovery steps the way the GUI does: fetch -> build -> evaluate -> wrap.
+    translated_metrics = fetch_translated_metrics(
+        services=[_SERVICE],
         translations=translations,
         metrics=_METRICS,
         localizer=_id,
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        time_range=_TIME_RANGE,
         rrd=rrd,
     )
+    graphs = build_graphs(
+        service=_SERVICE,
+        registered_graphs=registered_graphs,
+        metrics=_METRICS,
+        localizer=_id,
+        available=translated_metrics.get(_SERVICE, {}),
+    )
+    options = TemplateOptions(
+        time_range=_TIME_RANGE, consolidation_function=ConsolidationFunction.AVERAGE
+    )
+    return [
+        DiscoveredGraph(
+            graph=graph,
+            options=options,
+            title=evaluated.title,
+            vertical_range=evaluated.vertical_range,
+            stacks=evaluated.stacks,
+            lines=evaluated.lines,
+        )
+        for graph, evaluated in zip(
+            graphs,
+            evaluate_graphs(
+                graphs=graphs,
+                translated_metrics=translated_metrics,
+                consolidation_function=ConsolidationFunction.AVERAGE,
+                time_range=_TIME_RANGE,
+                rrd=rrd,
+            ),
+        )
+    ]
 
 
 def _refresh(

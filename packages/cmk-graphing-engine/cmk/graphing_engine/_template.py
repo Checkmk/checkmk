@@ -9,11 +9,8 @@ from typing import ClassVar, Literal
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
-from ._evaluate import DiscoveredGraph
-from ._fetch import evaluate_graphs, fetch_translated_metrics, RRDSource
 from ._from_api import (
     metric_names_of_graph,
     metric_names_of_title,
@@ -133,51 +130,53 @@ def _add_predictive_lines(
     )
 
 
-def discover_template_graphs(
+type _GraphPlugin = (
+    graphs_v1.Graph
+    | graphs_v1.Bidirectional
+    | graphs_v2_unstable.Graph
+    | graphs_v2_unstable.Bidirectional
+)
+
+
+def discover_graphs(
     *,
-    service: ServiceRef,
-    registered_graphs: Sequence[
-        graphs_v1.Graph
-        | graphs_v1.Bidirectional
-        | graphs_v2_unstable.Graph
-        | graphs_v2_unstable.Bidirectional
-    ],
-    translations: Sequence[translations_v1.Translation],
+    services: Sequence[ServiceRef],
+    graph: _GraphPlugin,
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
-    consolidation_function: ConsolidationFunction,
-    time_range: TimeRange,
-    rrd: RRDSource,
-) -> Sequence[DiscoveredGraph[TemplateOptions]]:
-    translated_metrics = fetch_translated_metrics(
-        services=[service],
-        translations=translations,
-        metrics=metrics,
-        localizer=localizer,
-        rrd=rrd,
-    )
-    service_metrics = translated_metrics.get(service, {})
-    post_options = TemplateOptions(
-        time_range=time_range,
-        consolidation_function=consolidation_function,
-    )
+    available: Mapping[ServiceRef, Container[MetricName]],
+) -> Sequence[Graph]:
+    return [
+        parse_graph_from_api(graph, service, metrics, localizer)
+        for service in services
+        if _walk(graph, available.get(service, frozenset())).matched
+    ]
 
+
+def build_graphs(
+    *,
+    service: ServiceRef,
+    registered_graphs: Sequence[_GraphPlugin],
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
+    available: Mapping[MetricName, RRDMetricData],
+) -> Sequence[Graph]:
     graphs: list[Graph] = []
     claimed: set[MetricName] = set()
 
     def _collect(base: Graph) -> None:
-        graph, predictive_names = _add_predictive_lines(base, service, service_metrics)
+        graph, predictive_names = _add_predictive_lines(base, service, available)
         claimed.update(predictive_names)
         graphs.append(graph)
 
     for plugin in registered_graphs:
-        walk = _walk(plugin, service_metrics)
+        walk = _walk(plugin, available)
         if not walk.matched:
             continue
         claimed.update(walk.metric_names)
         _collect(parse_graph_from_api(plugin, service, metrics, localizer))
 
-    for name in service_metrics:
+    for name in available:
         if name in claimed or name.startswith(_PREDICT_PREFIX):
             continue
         _collect(
@@ -199,22 +198,4 @@ def discover_template_graphs(
             )
         )
 
-    evaluated_graphs = evaluate_graphs(
-        graphs=graphs,
-        translated_metrics=translated_metrics,
-        consolidation_function=consolidation_function,
-        time_range=time_range,
-        rrd=rrd,
-    )
-
-    return [
-        DiscoveredGraph(
-            graph=graph,
-            options=post_options,
-            title=evaluated.title,
-            vertical_range=evaluated.vertical_range,
-            stacks=evaluated.stacks,
-            lines=evaluated.lines,
-        )
-        for graph, evaluated in zip(graphs, evaluated_graphs)
-    ]
+    return graphs

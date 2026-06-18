@@ -56,7 +56,8 @@ function echoQueryValueSuggestions(_: unknown, query: string): Promise<Response>
 function renderForm(
   initial: AttributeFilterModel,
   resolve?: (key: string) => AttributeType,
-  initialOperators?: Operator[]
+  initialOperators?: Operator[],
+  allowOr: boolean = true
 ): {
   model: ReturnType<typeof ref<AttributeFilterModel>>
   operators: ReturnType<typeof ref<Operator[] | undefined>>
@@ -69,6 +70,7 @@ function renderForm(
       return {
         model,
         operators,
+        allowOr,
         querySuggestions,
         queryValueSuggestions: echoQueryValueSuggestions,
         resolveAttributeType: resolve
@@ -77,6 +79,7 @@ function renderForm(
     template: `
       <FormAttributeFilter
         v-model="model"
+        :allow-or="allowOr"
         :operators="operators"
         :query-suggestions="querySuggestions"
         :query-value-suggestions="queryValueSuggestions"
@@ -1122,4 +1125,48 @@ test('removing the first of two OR-joined groups rewrites the new head connector
   expect(model.value!.map((c) => c.id)).toEqual(['pill-c', 'pill-d'])
   expect(model.value![0]!.connector).toBeNull()
   expect(model.value![1]!.connector).toBe('AND')
+})
+
+describe('AND-only mode (allowOr false)', () => {
+  test('renders flat pills with no group box and no connector toggles', () => {
+    renderForm([pill('pill-a', null), pill('pill-b', 'AND')], undefined, undefined, false)
+
+    expect(screen.queryAllByTestId(GROUP_TESTID)).toHaveLength(0)
+    expect(pillsInOrder()).toHaveLength(2)
+    expect(screen.queryByRole('button', { name: /^Toggle connector, currently / })).toBeNull()
+  })
+
+  test('renders a static AND label between adjacent pills', () => {
+    renderForm([pill('pill-a', null), pill('pill-b', 'AND')], undefined, undefined, false)
+
+    const outerGroup = screen.getByRole('group', { name: 'Attribute filter' })
+    const connectors = within(outerGroup).getAllByText('AND')
+    // One static label sits between the two pills; it is not a toggle button.
+    expect(connectors).toHaveLength(1)
+    expect(connectors[0]!.tagName).toBe('SPAN')
+    expect(within(outerGroup).queryByRole('button', { name: /^Toggle connector/ })).toBeNull()
+  })
+
+  test('a single pill renders no connector label', () => {
+    renderForm([pill('pill-a', null)], undefined, undefined, false)
+
+    const outerGroup = screen.getByRole('group', { name: 'Attribute filter' })
+    expect(within(outerGroup).queryByText('AND')).toBeNull()
+  })
+
+  test("per-pill '+' inserts an AND-connected pill at index + 1", async () => {
+    const { model } = renderForm(
+      [
+        pill('pill-a', null, { attributeType: 'resource', key: 'service.name' }),
+        pill('pill-b', 'AND', { attributeType: 'scope', key: 'otel.library.name' })
+      ],
+      undefined,
+      undefined,
+      false
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Add condition after service.name' }))
+
+    expect(model.value!.map((c) => c.id)).toEqual(['pill-a', expect.any(String), 'pill-b'])
+    expect(model.value![1]!.connector).toBe('AND')
+  })
 })

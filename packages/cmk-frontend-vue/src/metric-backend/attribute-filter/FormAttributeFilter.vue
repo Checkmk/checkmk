@@ -40,9 +40,10 @@ const props = withDefaults(
     ) => ReturnType<QuerySuggestionsFn>
     resolveAttributeType?: ((key: string) => AttributeType) | undefined
     operators?: Operator[] | undefined
+    allowOr?: boolean
     ariaLabel?: string | undefined
   }>(),
-  { resolveAttributeType: undefined, operators: undefined }
+  { resolveAttributeType: undefined, operators: undefined, allowOr: true }
 )
 
 const model = defineModel<AttributeFilterModel>({ default: () => [] })
@@ -298,7 +299,7 @@ function onGroupClickOutside(group: FilterGroup): void {
       @mousedown.prevent
       @click="addCondition(0, null)"
     />
-    <template v-for="(group, groupIndex) in groups" :key="group.entries[0]!.id">
+    <template v-for="(group, groupIndex) in allowOr ? groups : []" :key="group.entries[0]!.id">
       <!-- Connectors (AND/OR) are intentionally kept untranslated:
            they have no agreed product-wide localisations yet. -->
       <button
@@ -417,6 +418,39 @@ function onGroupClickOutside(group: FilterGroup): void {
         @click="addCondition(group.startIndex + group.entries.length, 'OR')"
       />
     </template>
+    <!-- AND-only mode: flat pills joined by a static AND label, no group box or connector toggles. -->
+    <template v-for="(entry, index) in allowOr ? [] : model" :key="entry.id">
+      <!-- Connectors (AND) are intentionally kept untranslated:
+           they have no agreed product-wide localisations yet. -->
+      <span v-if="index > 0" class="metric-backend-form-attribute-filter__connector-static">
+        {{ untranslated('AND') }}
+      </span>
+      <AttributeFilterPill
+        :ref="pillRefSetter(entry.id)"
+        :condition="entry"
+        :operators="operators"
+        :query-suggestions="querySuggestions"
+        :query-value-suggestions="queryValueSuggestions"
+        removable
+        :editing="entry.id === editingId"
+        @remove="removeCondition(entry)"
+        @edit="startEditing(entry.id)"
+        @done="onEditDone(entry.id)"
+        @update:key="(value) => updateKey(entry, value)"
+        @update:attribute-type="(value) => updateAttributeType(entry, value)"
+        @update:operator="(value) => updateOperator(entry, value)"
+        @update:value="(value) => updateValue(entry, value)"
+      />
+      <CmkIconButton
+        class="metric-backend-form-attribute-filter__add"
+        name="add"
+        size="large"
+        :title="_t('Add condition')"
+        :aria-label="addConditionLabel(entry)"
+        @mousedown.prevent
+        @click="addCondition(index + 1, 'AND')"
+      />
+    </template>
   </div>
 </template>
 
@@ -475,6 +509,12 @@ function onGroupClickOutside(group: FilterGroup): void {
 
 .metric-backend-form-attribute-filter__connector:hover {
   background-color: var(--input-hover-bg-color);
+}
+
+.metric-backend-form-attribute-filter__connector-static {
+  flex-shrink: 0;
+  color: var(--font-color-dimmed);
+  font-style: italic;
 }
 
 .metric-backend-form-attribute-filter__connector:focus-visible {

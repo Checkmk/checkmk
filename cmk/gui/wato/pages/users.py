@@ -14,6 +14,8 @@ import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from typing import cast, Literal, NamedTuple, overload, TypedDict
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
@@ -125,10 +127,10 @@ from ._user_security_message import (
 )
 
 
-def _iter_ntop_connections() -> Iterator[dict]:
+def _iter_ntop_connections(sites: SiteConfigurations) -> Iterator[dict]:
     seen = {
         site_id: get_site_globals(site_id, site_config).get("ntop_connection", {})
-        for site_id, site_config in active_config.sites.items()
+        for site_id, site_config in sites.items()
     } | {omd_site(): ntop_connection().get_connection()}
     for conn in seen.values():
         if conn:
@@ -1201,6 +1203,7 @@ class ModeEditUser(WatoMode):
             self._show_form(
                 config.default_language,
                 config.wato_user_attrs,
+                config.sites,
                 UserPermissions.from_config(config, permission_registry),
             )
 
@@ -1208,6 +1211,7 @@ class ModeEditUser(WatoMode):
         self,
         default_language: str,
         custom_user_attributes: Sequence[CustomUserAttrSpec],
+        sites: SiteConfigurations,
         user_permissions: UserPermissions,
     ) -> None:
         html.prevent_password_auto_completion()
@@ -1215,7 +1219,7 @@ class ModeEditUser(WatoMode):
         is_automation_user = self._user.get("is_automation_user", False)
 
         if self._can_edit_users:
-            self._render_identity(custom_user_attr_topics)
+            self._render_identity(custom_user_attr_topics, sites)
             self._render_security(
                 {
                     "password",
@@ -1227,6 +1231,7 @@ class ModeEditUser(WatoMode):
                 },
                 custom_user_attr_topics,
                 is_automation_user,
+                sites,
                 user_permissions,
             )
         elif is_automation_user:
@@ -1237,6 +1242,7 @@ class ModeEditUser(WatoMode):
                 },
                 None,
                 is_automation_user,
+                sites,
                 user_permissions,
             )
 
@@ -1340,7 +1346,9 @@ class ModeEditUser(WatoMode):
         html.hidden_fields()
 
     def _render_identity(
-        self, custom_user_attr_topics: dict[str, list[tuple[str, UserAttribute]]]
+        self,
+        custom_user_attr_topics: dict[str, list[tuple[str, UserAttribute]]],
+        sites: SiteConfigurations,
     ) -> None:
         forms.header(_("Identity"))
 
@@ -1401,7 +1409,7 @@ class ModeEditUser(WatoMode):
 
         # ntopng — show the ntop_alias field only when the global setting is enabled
         if ntop_connection().is_available():
-            for ntop_conn in _iter_ntop_connections():
+            for ntop_conn in _iter_ntop_connections(sites):
                 ntop_username_attribute = ntop_conn.get("use_custom_attribute_as_ntop_username")
                 if ntop_username_attribute == "ntop_alias" and ntop_ident_attrs:
                     self._show_custom_user_attributes(ntop_ident_attrs)
@@ -1421,6 +1429,7 @@ class ModeEditUser(WatoMode):
         ],
         custom_user_attr_topics: dict[str, list[tuple[str, UserAttribute]]] | None,
         is_automation: bool,
+        sites: SiteConfigurations,
         user_permissions: UserPermissions,
     ) -> None:
         forms.header(_("Security"))

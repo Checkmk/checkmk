@@ -52,6 +52,16 @@ backup_domains.update(
             ],
             "default": True,
         },
+        "omd": {
+            "group": _("Configuration"),
+            "title": _("Site management configuration (OMD)"),
+            "prefix": cmk.utils.paths.omd_root,
+            "paths": [
+                ("file", "etc/omd/global.mk"),
+                ("file", "etc/omd/sitespecific.mk"),
+            ],
+            "default": True,
+        },
         "extensions": {
             "title": _("Extensions in <tt>~/local/</tt> and MKPs"),
             "prefix": cmk.utils.paths.omd_root,

@@ -10,7 +10,7 @@ import { type PanelState } from '@ucl/_ucl/types/prop-panel'
 export const panelConfig = {
   filter: {
     type: 'string' as const,
-    title: 'Filter',
+    title: 'Search',
     initialState: '',
     help: 'Substring match against token name (e.g. green, mid-grey-50).'
   }
@@ -229,7 +229,7 @@ const filtered = computed(() => {
       </div>
 
       <template #properties>
-        <UclPropertiesPanel v-model="propState" :config="panelConfig" />
+        <UclPropertiesPanel v-model="propState" :config="panelConfig" title="Filters" />
       </template>
     </UclDetailPageComponent>
 

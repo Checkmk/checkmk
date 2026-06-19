@@ -47,6 +47,7 @@ from cmk.base.configlib.servicename import (
     PassiveServiceNameConfig,
 )
 from cmk.base.default_config.base import _PeriodicDiscovery
+from cmk.base.notify import make_notification_parameters_config
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -1228,32 +1229,38 @@ def test_discovery_check_parameters(
 def test_notification_plugin_parameters(
     monkeypatch: MonkeyPatch, hostname: HostName, result: dict[str, int]
 ) -> None:
+    notification_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]] = {
+        "mail": [
+            RuleSpec(
+                id="01",
+                condition={"host_name": [HostName("testhost2")]},
+                value={
+                    "value1": 1,
+                },
+            ),
+            RuleSpec(
+                id="02",
+                condition={"host_name": [HostName("testhost2")]},
+                value={
+                    "value1": 2,
+                    "value2": 2,
+                },
+            ),
+        ],
+    }
+
+    # TODO: clean this up:
+    # * create RulesetMatcher and LabelManager directly
+    # * move to the module it belongs to
     ts = Scenario()
     ts.add_host(hostname)
-    ts.set_option(
-        "notification_parameters",
-        {
-            "mail": [
-                {
-                    "id": "01",
-                    "condition": {"host_name": [HostName("testhost2")]},
-                    "value": {
-                        "value1": 1,
-                    },
-                },
-                {
-                    "id": "02",
-                    "condition": {"host_name": [HostName("testhost2")]},
-                    "value": {
-                        "value1": 2,
-                        "value2": 2,
-                    },
-                },
-            ],
-        },
-    )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.notification_plugin_parameters(hostname, "mail") == result
+    host_parameters_cb = make_notification_parameters_config(
+        notification_parameters,
+        config_cache.ruleset_matcher,
+        config_cache.label_manager,
+    )
+    assert host_parameters_cb(hostname, "mail") == result
 
 
 @pytest.mark.parametrize(

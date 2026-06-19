@@ -22,6 +22,7 @@
 #       to call and its parameters.
 
 import ast
+import contextlib
 import datetime
 import io
 import itertools
@@ -59,6 +60,7 @@ from cmk.automations.types import AutomationID
 from cmk.base import config, events
 from cmk.base.automations.automations import Automation, load_config, load_plugins
 from cmk.base.base_app import CheckmkBaseApp
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.modes.modes import Mode, Option
 from cmk.base.utils import register_sigint_handler
 from cmk.ccc import store
@@ -82,6 +84,7 @@ from cmk.events.notification_spool_file import (
 )
 from cmk.utils import http_proxy_config, log, timeperiod
 from cmk.utils.http_proxy_config import make_http_proxy_getter
+from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import find_wato_folder
@@ -106,6 +109,7 @@ from cmk.utils.notify_types import (
     ServiceEventType,
     UUIDs,
 )
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.timeperiod import (
     get_all_timeperiods,
     is_timeperiod_active,
@@ -175,6 +179,34 @@ class NotificationConfig:
     plugin_timeout: int
     spooling: Literal["local", "remote", "both", "off"]
     logging_level: int
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]]
+
+
+def make_notification_parameters_config(
+    notification_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
+    matcher: RulesetMatcher,
+    label_manager: LabelManager,
+) -> Callable[[HostName, str], Mapping[str, object]]:
+    """Create a callback returning the merged notification plug-in parameters for a host."""
+    cache: dict[tuple[HostName, str], Mapping[str, object]] = {}
+
+    def get_notification_plugin_parameters(
+        host_name: HostName, plugin_name: str
+    ) -> Mapping[str, object]:
+        with contextlib.suppress(KeyError):
+            return cache[(host_name, plugin_name)]
+
+        default: Sequence[RuleSpec[Mapping[str, object]]] = []
+        return cache.setdefault(
+            (host_name, plugin_name),
+            matcher.get_host_values_merged(
+                host_name,
+                notification_parameters.get(plugin_name, default),
+                label_manager.labels_of_host,
+            ),
+        )
+
+    return get_notification_plugin_parameters
 
 
 def resolve_logging_level(notification_logging: int) -> int:
@@ -211,19 +243,26 @@ def resolve_spooling(
 
 
 def make_notification_config(
-    edition: cmk_version.Edition, loaded_config: config.LoadingResult
+    edition: cmk_version.Edition,
+    base_config: BaseConfig,
+    matcher: RulesetMatcher,
+    label_manager: LabelManager,
 ) -> NotificationConfig:
-    lc = loaded_config.loaded_config
     return NotificationConfig(
-        rules=lc.notification_rules,
-        parameters=lc.notification_parameter,
-        backlog_size=lc.notification_backlog,
-        bulk_interval=lc.notification_bulk_interval,
-        fallback_email=lc.notification_fallback_email,
-        fallback_format=lc.notification_fallback_format,
-        plugin_timeout=lc.notification_plugin_timeout,
-        spooling=resolve_spooling(edition, lc.notification_spooling, lc.notification_spool_to),
-        logging_level=resolve_logging_level(lc.notification_logging),
+        rules=base_config.notification_rules,
+        parameters=base_config.notification_parameter,
+        backlog_size=base_config.notification_backlog,
+        bulk_interval=base_config.notification_bulk_interval,
+        fallback_email=base_config.notification_fallback_email,
+        fallback_format=base_config.notification_fallback_format,
+        plugin_timeout=base_config.notification_plugin_timeout,
+        spooling=resolve_spooling(
+            edition, base_config.notification_spooling, base_config.notification_spool_to
+        ),
+        logging_level=resolve_logging_level(base_config.notification_logging),
+        host_parameters_cb=make_notification_parameters_config(
+            base_config.notification_parameters, matcher, label_manager
+        ),
     )
 
 
@@ -339,9 +378,13 @@ def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | N
     return do_notify(
         options,
         args,
-        notification_config=make_notification_config(app.edition, loading_result),
+        notification_config=make_notification_config(
+            app.edition,
+            loading_result.loaded_config,
+            loading_result.config_cache.ruleset_matcher,
+            loading_result.config_cache.label_manager,
+        ),
         define_servicegroups=loading_result.loaded_config.define_servicegroups,
-        host_parameters_cb=loading_result.config_cache.notification_plugin_parameters,
         get_http_proxy=make_http_proxy_getter(loading_result.loaded_config.http_proxies),
         ensure_nagios=make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         config_contacts=loading_result.loaded_config.contacts,
@@ -424,7 +467,6 @@ def do_notify(
     notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
     get_http_proxy: events.ProxyGetter,
-    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     ensure_nagios: Callable[[str], object],
     config_contacts: ConfigContacts,
     keepalive: bool,
@@ -460,7 +502,6 @@ def do_notify(
             filename = args[1]
             return _handle_spoolfile(
                 filename,
-                host_parameters_cb,
                 get_http_proxy,
                 notification_config=notification_config,
                 define_servicegroups=define_servicegroups,
@@ -471,7 +512,6 @@ def do_notify(
 
         if keepalive:
             _notify_keepalive(
-                host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
                 notification_config=notification_config,
@@ -487,7 +527,6 @@ def do_notify(
             _notify_notify(
                 raw_context_from_backlog(replay_nr),
                 timeperiods_active,
-                host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
                 notification_config=notification_config,
@@ -500,7 +539,6 @@ def do_notify(
             _notify_notify(
                 EventContext(args[0]),
                 timeperiods_active,
-                host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
                 notification_config=notification_config,
@@ -512,7 +550,6 @@ def do_notify(
             _notify_notify(
                 events.raw_context_from_string(sys.stdin.read()),
                 timeperiods_active,
-                host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
                 notification_config=notification_config,
@@ -531,7 +568,6 @@ def do_notify(
             _notify_notify(
                 raw_context_from_env(os.environ),
                 timeperiods_active,
-                host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
                 notification_config=notification_config,
@@ -554,7 +590,6 @@ def do_notify(
 def _notify_notify(
     raw_context: EventContext,
     timeperiods_active: _CoreTimeperiodsActive,
-    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     *,
@@ -617,7 +652,6 @@ def _notify_notify(
     if notification_config.spooling != "remote":
         return _locally_deliver_raw_context(
             enriched_context,
-            host_parameters_cb,
             get_http_proxy,
             notification_config=notification_config,
             define_servicegroups=define_servicegroups,
@@ -632,7 +666,6 @@ def _notify_notify(
 
 def _locally_deliver_raw_context(
     enriched_context: EnrichedEventContext,
-    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     *,
     notification_config: NotificationConfig,
@@ -647,7 +680,6 @@ def _locally_deliver_raw_context(
         logger.debug("Preparing rule based notifications")
         return _notify_rulebased(
             enriched_context,
-            host_parameters_cb,
             get_http_proxy,
             notification_config=notification_config,
             define_servicegroups=define_servicegroups,
@@ -667,7 +699,6 @@ def _locally_deliver_raw_context(
 
 
 def _notification_replay_backlog(
-    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     nr: int,
@@ -685,7 +716,6 @@ def _notification_replay_backlog(
     _notify_notify(
         raw_context,
         timeperiods_active,
-        host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
         notification_config=notification_config,
@@ -696,7 +726,6 @@ def _notification_replay_backlog(
 
 
 def _notification_analyse_backlog(
-    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     nr: int,
@@ -714,7 +743,6 @@ def _notification_analyse_backlog(
     return _notify_notify(
         raw_context,
         timeperiods_active,
-        host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
         notification_config=notification_config,
@@ -727,7 +755,6 @@ def _notification_analyse_backlog(
 
 def _notification_test(
     raw_context: NotificationContext,
-    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     *,
@@ -752,7 +779,6 @@ def _notification_test(
     return _notify_notify(
         plugin_context,
         timeperiods_active,
-        host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
         notification_config=notification_config,
@@ -780,7 +806,6 @@ def _notification_test(
 
 # TODO: Make use of the generic do_keepalive() mechanism?
 def _notify_keepalive(
-    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     *,
@@ -792,7 +817,6 @@ def _notify_keepalive(
     events.event_keepalive(
         event_function=partial(
             _notify_notify,
-            host_parameters_cb=host_parameters_cb,
             get_http_proxy=get_http_proxy,
             ensure_nagios=ensure_nagios,
             notification_config=notification_config,
@@ -825,11 +849,15 @@ def _automation_notification_replay(
 
     nr = args[0]
     _notification_replay_backlog(
-        loading_result.config_cache.notification_plugin_parameters,
         http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
         make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         int(nr),
-        notification_config=make_notification_config(app.edition, loading_result),
+        notification_config=make_notification_config(
+            app.edition,
+            loading_result.loaded_config,
+            loading_result.config_cache.ruleset_matcher,
+            loading_result.config_cache.label_manager,
+        ),
         define_servicegroups=loading_result.loaded_config.define_servicegroups,
         config_contacts=loading_result.loaded_config.contacts,
         all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
@@ -856,11 +884,15 @@ def _automation_notification_analyse(
     nr = args[0]
     return NotificationAnalyseResult(
         _notification_analyse_backlog(
-            loading_result.config_cache.notification_plugin_parameters,
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             make_ensure_nagios(loading_result.loaded_config.monitoring_core),
             int(nr),
-            notification_config=make_notification_config(app.edition, loading_result),
+            notification_config=make_notification_config(
+                app.edition,
+                loading_result.loaded_config,
+                loading_result.config_cache.ruleset_matcher,
+                loading_result.config_cache.label_manager,
+            ),
             define_servicegroups=loading_result.loaded_config.define_servicegroups,
             config_contacts=loading_result.loaded_config.contacts,
             all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
@@ -891,10 +923,14 @@ def _automation_notification_test(
     return NotificationTestResult(
         _notification_test(
             context,
-            loading_result.config_cache.notification_plugin_parameters,
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             ensure_nagios,
-            notification_config=make_notification_config(app.edition, loading_result),
+            notification_config=make_notification_config(
+                app.edition,
+                loading_result.loaded_config,
+                loading_result.config_cache.ruleset_matcher,
+                loading_result.config_cache.label_manager,
+            ),
             define_servicegroups=loading_result.loaded_config.define_servicegroups,
             config_contacts=loading_result.loaded_config.contacts,
             all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
@@ -987,7 +1023,6 @@ automation_notification_get_bulks = Automation(
 
 def _notify_rulebased(
     enriched_context: EnrichedEventContext,
-    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     *,
     notification_config: NotificationConfig,
@@ -1038,7 +1073,7 @@ def _notify_rulebased(
                 notification_config.parameters,
                 notifications,
                 rule_info,
-                host_parameters_cb,
+                notification_config.host_parameters_cb,
                 config_contacts=config_contacts,
                 fallback_email=notification_config.fallback_email,
                 rule_nr=nr,
@@ -1050,7 +1085,7 @@ def _notify_rulebased(
         notifications,
         notification_config.parameters,
         num_rule_matches,
-        host_parameters_cb,
+        notification_config.host_parameters_cb,
         get_http_proxy,
         config_contacts=config_contacts,
         fallback_email=notification_config.fallback_email,
@@ -2230,7 +2265,6 @@ def notification_script_env(plugin_context: NotificationContext) -> PluginNotifi
 # Spool files of type 1 are not handled here!
 def _handle_spoolfile(
     spoolfile: str,
-    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     *,
     notification_config: NotificationConfig,
@@ -2284,7 +2318,6 @@ def _handle_spoolfile(
         store_notification_backlog(raw_context, backlog_size=notification_config.backlog_size)
         _locally_deliver_raw_context(
             raw_context,
-            host_parameters_cb,
             get_http_proxy,
             notification_config=notification_config,
             define_servicegroups=define_servicegroups,

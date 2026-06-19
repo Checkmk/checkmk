@@ -1435,7 +1435,6 @@ class ConfigCache:
         self.__contactgroups: dict[HostName, Sequence[_ContactgroupName]] = {}
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
         self.__snmp_fetch_interval: dict[HostName, Mapping[SectionName, int | None]] = {}
-        self.__notification_plugin_parameters: dict[tuple[HostName, str], Mapping[str, object]] = {}
         self.__snmp_backend: dict[HostName, SNMPBackendEnum] = {}
         self.initialize(get_builtin_host_labels)
 
@@ -1788,7 +1787,6 @@ class ConfigCache:
         self.__contactgroups.clear()
         self.__explicit_check_command.clear()
         self.__snmp_fetch_interval.clear()
-        self.__notification_plugin_parameters.clear()
         self.__snmp_backend.clear()
 
     @staticmethod
@@ -3507,24 +3505,6 @@ class ConfigCache:
             return self.__contactgroups[host_name]
 
         return self.__contactgroups.setdefault(host_name, contactgroups_impl())
-
-    def notification_plugin_parameters(
-        self,
-        host_name: HostName,
-        plugin_name: str,
-    ) -> Mapping[str, object]:
-        def _impl() -> Mapping[str, object]:
-            default: Sequence[RuleSpec[Mapping[str, object]]] = []
-            return self.ruleset_matcher.get_host_values_merged(
-                host_name,
-                self._loaded_config.notification_parameters.get(plugin_name, default),
-                self.label_manager.labels_of_host,
-            )
-
-        with contextlib.suppress(KeyError):
-            return self.__notification_plugin_parameters[(host_name, plugin_name)]
-
-        return self.__notification_plugin_parameters.setdefault((host_name, plugin_name), _impl())
 
 
 class EnforcedServicesTable:

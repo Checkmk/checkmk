@@ -2,8 +2,6 @@ http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "ht
 
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
-new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
-
 repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_license")
 
 snap7_repository = use_repo_rule("//omd/packages/snap7:snap7_repository.bzl", "snap7_repository")
@@ -19,6 +17,7 @@ bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "cmk", version = "0.0.0")
 bazel_dep(name = "crypt-ssleay", version = "0.72.cmk.1", repo_name = "Crypt-SSLeay")
 bazel_dep(name = "gazelle", version = "0.45.0")
+bazel_dep(name = "glib", version = "2.0.cmk.1", repo_name = "glib_module")
 bazel_dep(name = "googletest", version = "1.17.0", repo_name = "gtest")
 bazel_dep(name = "libgsf", version = "1.14.44.cmk.3")
 bazel_dep(name = "libxml2", version = "2.0.cmk.1", repo_name = "libxml2_module")
@@ -203,12 +202,6 @@ local_path_override(
     path = "bazel/cmk",
 )
 
-new_local_repository(
-    name = "glib",
-    build_file = "@//omd/packages/glib:BUILD.glib.bazel",
-    path = "/usr",
-)
-
 # TODO: Duplicate from bazel_variables.bzl. won't be needed anymore when all omd packages are loaded via MODULE.bazel
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
 
@@ -228,9 +221,11 @@ apt.install(
 )
 use_repo(apt, "relay_base_image")
 
-# @libxml2 overlays the distro-provided system library (new_local_repository
-# over /usr).  The module is pulled in as @libxml2_module so the @libxml2
-# apparent name stays free for its extension repo.
+# @glib and @libxml2 overlay the distro-provided system libraries
+# (new_local_repository over /usr).
+glib_ext = use_extension("@glib_module//:extensions.bzl", "glib")
+use_repo(glib_ext, "glib")
+
 libxml2_ext = use_extension("@libxml2_module//:extensions.bzl", "libxml2")
 use_repo(libxml2_ext, "libxml2")
 

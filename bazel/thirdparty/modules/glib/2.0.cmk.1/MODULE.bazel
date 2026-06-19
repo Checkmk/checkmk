@@ -1,0 +1,8 @@
+module(
+    name = "glib",
+    version = "2.0.cmk.1",
+    bazel_compatibility = [">=7.2.1"],
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "cmk", version = "1.0.0")

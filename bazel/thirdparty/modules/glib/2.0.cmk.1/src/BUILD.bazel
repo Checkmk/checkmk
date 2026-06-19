@@ -1,0 +1,4 @@
+exports_files([
+    "extensions.bzl",
+    "BUILD.glib.bazel",
+])

@@ -424,6 +424,7 @@ py_wheel(
         ":snmp-backends",
         ":snmplib",
         ":specs",
+        "//packages/cmk-check-engine/cmk/checkengine/checking",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",

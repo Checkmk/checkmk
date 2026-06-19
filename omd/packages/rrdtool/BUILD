@@ -1,7 +1,8 @@
 load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
+load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("@rules_python//python:pip.bzl", "whl_filegroup")
 load("//bazel/rules:patchelf.bzl", "set_runpath", "set_runpath_tree")
 
 exports_files(["skel.permissions"])
@@ -88,11 +89,30 @@ pkg_tar(
     visibility = ["//visibility:public"],
 )
 
-package_wheel(
-    name = "rrdtool_python_tar",
-    rpath = "$ORIGIN/../..",
-    visibility = ["//visibility:public"],
+whl_filegroup(
+    name = "rrdtool_python_fg",
     whl = "@rrdtool_native//:rrdtool_python_wheel",
+)
+
+set_runpath_tree(
+    name = "rrdtool_python_runpath",
+    src = ":rrdtool_python_fg",
+    rpath = "$ORIGIN/../..",
+)
+
+# Package the patched wheel TreeArtifact directly with pkg_tar (instead of going
+# through pkg_files) so the original file permissions are kept: pkg_files forces
+# a fixed mode on every entry, which would strip the executable bit off the
+# bundled rrdtool.so. package_dir installs the contents under site-packages,
+# strip_prefix removes the TreeArtifact's own directory name.
+pkg_tar(
+    name = "rrdtool_python_tar",
+    srcs = [":rrdtool_python_runpath"],
+    mtime = 1767744000,
+    package_dir = "lib/python%s/site-packages" % PYTHON_MAJOR_DOT_MINOR,
+    portable_mtime = False,
+    strip_prefix = "rrdtool_python_runpath",
+    visibility = ["//visibility:public"],
 )
 
 # 'rrdtool' prefix cannot be stripped from filegroup

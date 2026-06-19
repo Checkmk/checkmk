@@ -3,13 +3,11 @@
 load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:pip.bzl", "whl_filegroup")
-load("//bazel/rules:patchelf.bzl", "set_runpath_tree")
 
 def _package_wheel_impl(
         name,
         whl,
         additional_files,
-        rpath,
         visibility):
     """Packages a python wheel into our omd site-packages."""
     whl_filegroup_name = name + "_fg"
@@ -19,17 +17,6 @@ def _package_wheel_impl(
         whl = whl,
     )
 
-    if rpath:
-        runpath_name = name + "_runpath"
-        set_runpath_tree(
-            name = runpath_name,
-            src = ":" + whl_filegroup_name,
-            rpath = rpath,
-        )
-        wheel_src = runpath_name
-    else:
-        wheel_src = whl_filegroup_name
-
     # Package the wheel TreeArtifact directly with pkg_tar (instead of going
     # through pkg_files) so the original file permissions are kept: pkg_files
     # forces a fixed mode on every entry, which would strip e.g. the executable
@@ -38,9 +25,9 @@ def _package_wheel_impl(
     wheel_tar_name = name + "_wheel_tar"
     pkg_tar(
         name = wheel_tar_name,
-        srcs = [wheel_src],
+        srcs = [whl_filegroup_name],
         package_dir = "lib/python%s/site-packages" % PYTHON_MAJOR_DOT_MINOR,
-        strip_prefix = wheel_src,
+        strip_prefix = whl_filegroup_name,
         mtime = 1767744000,
         portable_mtime = False,
     )
@@ -61,10 +48,6 @@ package_wheel = macro(
     implementation = _package_wheel_impl,
     attrs = {
         "additional_files": attr.label_list(default = [], doc = "List of additional files to put in the tar."),
-        "rpath": attr.string(
-            default = "",
-            doc = "When non-empty, patch all ELF .so files in the wheel with this RUNPATH via set_runpath_tree.",
-        ),
         "whl": attr.label(mandatory = True, doc = "Wheel to be packaged."),
     },
 )

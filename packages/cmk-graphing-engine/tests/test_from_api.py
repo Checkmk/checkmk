@@ -349,6 +349,29 @@ def test_parse_graph_from_api_recurses_into_nested_quantities() -> None:
     ]
 
 
+def test_parse_graph_from_api_bidirectional_range_is_the_envelope_of_both_halves() -> None:
+    # The combined range spans the smallest lower and largest upper across both halves, not just one.
+    bidir = graphs_v1.Bidirectional(
+        name="b",
+        title=Title("title"),
+        upper=graphs_v1.Graph(
+            name="up",
+            title=Title("up"),
+            compound_lines=["b"],
+            minimal_range=graphs_v1.MinimalRange(0, 80),
+        ),
+        lower=graphs_v1.Graph(
+            name="lo",
+            title=Title("lo"),
+            compound_lines=["a"],
+            minimal_range=graphs_v1.MinimalRange(10, 100),
+        ),
+    )
+    parsed = parse_graph_from_api(bidir, _SERVICE, _METRICS, _id)
+    assert isinstance(parsed, Graph)
+    assert parsed.vertical_range == MinimalRange(lower=0, upper=100)
+
+
 def test_parse_graph_from_api_collapses_bidirectional_into_one_graph() -> None:
     # A bidirectional becomes a single graph: the upper half normal, the lower half inverse.
     bidir = graphs_v1.Bidirectional(

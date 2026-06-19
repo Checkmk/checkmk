@@ -181,11 +181,14 @@ def test_update_reproduces_a_title_expression_for_a_non_drawn_metric() -> None:
         time_series={_column("cpu_user"): _ts(1.0, 2.0, 3.0, 4.0, 5.0, 6.0)},
     )
 
-    [discovered] = _discover(rrd, [plugin])
-    assert discovered.evaluated.title == "CPU - 8 cores"
+    # cpu_cores is referenced only by the title, so it is not claimed and gets its own fallback
+    # graph alongside the cpu plugin graph.
+    discovered = _discover(rrd, [plugin])
+    cpu = next(d for d in discovered if d.graph.name == "cpu")
+    assert cpu.evaluated.title == "CPU - 8 cores"
 
-    evaluated = _refresh(rrd, [discovered])
-    _assert_refresh_reproduces_discovery([discovered], evaluated)
+    evaluated = _refresh(rrd, discovered)
+    _assert_refresh_reproduces_discovery(discovered, evaluated)
 
 
 def test_update_reproduces_a_compound_and_simple_line_graph() -> None:
@@ -384,12 +387,16 @@ def test_refresh_picks_up_a_changed_title_scalar() -> None:
             time_series={_column("cpu_user"): _ts(1.0, 1.0, 1.0, 1.0, 1.0, 1.0)},
         )
 
-    [discovered] = _discover(_rrd(8.0), [plugin])
-    assert discovered.evaluated.title == "CPU - 8 cores"
+    # cpu_cores is referenced only by the title, so it is not claimed and gets its own fallback
+    # graph; pick the cpu plugin graph out of the discovered set.
+    discovered = _discover(_rrd(8.0), [plugin])
+    cpu = next(d for d in discovered if d.graph.name == "cpu")
+    assert cpu.evaluated.title == "CPU - 8 cores"
 
     # The machine grew to 16 cores; the refreshed title reflects the new scalar.
-    [evaluated] = _refresh(_rrd(16.0), [discovered])
-    assert evaluated.title == "CPU - 16 cores"
+    evaluated = _refresh(_rrd(16.0), discovered)
+    cpu_evaluated = next(e for e in evaluated if e.name == "cpu")
+    assert cpu_evaluated.title == "CPU - 16 cores"
 
 
 def test_refresh_drops_a_curve_whose_metric_disappeared() -> None:

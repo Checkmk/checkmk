@@ -9,7 +9,6 @@ from typing import assert_never
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.graphing.v1 import Title
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
@@ -50,7 +49,6 @@ from ._objects import (
     Unit,
     WarningOf,
 )
-from ._title import metric_names_in_title
 
 type _ApiQuantity = (
     str
@@ -306,20 +304,20 @@ def _is_scalar(quantity: _ApiQuantity) -> bool:
             assert_never(quantity)
 
 
-def metric_names_of_title(title: Title) -> Sequence[MetricName]:
-    return list(metric_names_in_title(title.localize(lambda text: text)))
-
-
-def metric_names_of_graph(
+def drawn_metric_names_of_graph(
     graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
 ) -> Sequence[MetricName]:
+    # The metrics actually drawn as curves: the non-scalar compound/simple lines. These are what
+    # matching requires and what the graph claims. Title references and scalar thresholds are
+    # neither required nor claimed — mirroring legacy `_evaluate_graph_lines`, which skips scalars
+    # and never consults the title.
     return list(
         {
             name
             for quantity in (*graph.compound_lines, *graph.simple_lines)
+            if not _is_scalar(quantity)
             for name in _metric_names_in_quantity(quantity)
         }
-        | set(metric_names_of_title(graph.title))
     )
 
 
@@ -346,6 +344,31 @@ def _parse_range(
     return (
         None if graph.minimal_range is None else _parse_minimal_range(graph.minimal_range, context)
     )
+
+
+def _bidirectional_range(
+    graph: graphs_v1.Bidirectional | graphs_v2_unstable.Bidirectional,
+    context: _ParseContext,
+) -> MinimalRange | None:
+    upper = _parse_range(graph.upper, context)
+    lower = _parse_range(graph.lower, context)
+    if upper is None:
+        return lower
+    if lower is None:
+        return upper
+    # The envelope of both halves' ranges (legacy evaluate_graph_plugin_range), not just one half.
+    # Numeric bounds combine statically; with a metric-valued bound we cannot, so keep the upper.
+    if (
+        isinstance(upper.lower, int | float)
+        and isinstance(upper.upper, int | float)
+        and isinstance(lower.lower, int | float)
+        and isinstance(lower.upper, int | float)
+    ):
+        return MinimalRange(
+            lower=min(upper.lower, lower.lower),
+            upper=max(upper.upper, lower.upper),
+        )
+    return upper
 
 
 def _parse_lines(
@@ -408,8 +431,7 @@ def parse_graph_from_api(
             return Graph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
-                vertical_range=_parse_range(graph.upper, context)
-                or _parse_range(graph.lower, context),
+                vertical_range=_bidirectional_range(graph, context),
                 stacks=[*upper_stacks, *lower_stacks],
                 lines=[*upper_lines, *lower_lines],
                 rules=[*upper_rules, *lower_rules],

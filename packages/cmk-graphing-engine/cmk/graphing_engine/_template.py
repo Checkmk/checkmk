@@ -12,8 +12,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._from_api import (
-    metric_names_of_graph,
-    metric_names_of_title,
+    drawn_metric_names_of_graph,
     parse_graph_from_api,
 )
 from ._objects import (
@@ -65,20 +64,18 @@ def _walk(
 ) -> _GraphMatch:
     match graph:
         case graphs_v1.Graph() | graphs_v2_unstable.Graph():
-            names = metric_names_of_graph(graph)
+            names = drawn_metric_names_of_graph(graph)
             return _GraphMatch(metric_names=names, matched=_matches(graph, names, available))
         case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
-            title_names = metric_names_of_title(graph.title)
-            lower_names = metric_names_of_graph(graph.lower)
-            upper_names = metric_names_of_graph(graph.upper)
+            # Matching is per drawn metric only; the title is not consulted (legacy parity), and a
+            # bidirectional matches when either half matches.
+            lower_names = drawn_metric_names_of_graph(graph.lower)
+            upper_names = drawn_metric_names_of_graph(graph.upper)
             return _GraphMatch(
-                metric_names=list({*title_names, *lower_names, *upper_names}),
+                metric_names=list({*lower_names, *upper_names}),
                 matched=(
-                    all(name in available for name in title_names)
-                    and (
-                        _matches(graph.lower, lower_names, available)
-                        or _matches(graph.upper, upper_names, available)
-                    )
+                    _matches(graph.lower, lower_names, available)
+                    or _matches(graph.upper, upper_names, available)
                 ),
             )
 

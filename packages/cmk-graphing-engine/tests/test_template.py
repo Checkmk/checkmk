@@ -355,12 +355,15 @@ def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantit
         }
     )
 
-    [discovered] = _discover(service, registered_graphs, rrd=rrd)
+    discovered = _discover(service, registered_graphs, rrd=rrd)
 
     # cpu_user is drawn with its value; the scalar reference becomes a rule at cpu_system's lower
-    # warning.
-    assert [line.curve.value for line in discovered.evaluated.lines] == [1.0]
-    assert [rule.value for rule in discovered.evaluated.rules] == [50.0]
+    # warning. cpu_system is only referenced as a threshold, so it is not claimed and also gets its
+    # own fallback graph.
+    assert {d.graph.name for d in discovered} == {"cpu", "cpu_system"}
+    cpu = next(d for d in discovered if d.graph.name == "cpu")
+    assert [line.curve.value for line in cpu.evaluated.lines] == [1.0]
+    assert [rule.value for rule in cpu.evaluated.rules] == [50.0]
 
 
 def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics() -> None:
@@ -377,11 +380,15 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
         performance_response={service: _perf_data(_perf(cpu_user), _perf(cpu_system, warning=50.0))}
     )
 
-    [discovered] = _discover(service, registered_graphs, rrd=rrd)
+    discovered = _discover(service, registered_graphs, rrd=rrd)
 
     # cpu_user is drawn with its value; the scalar reference becomes a rule at cpu_system's warning.
-    assert [line.curve.value for line in discovered.evaluated.lines] == [1.0]
-    assert [rule.value for rule in discovered.evaluated.rules] == [50.0]
+    # cpu_system is only referenced as a threshold, so it is not claimed and also gets its own
+    # fallback graph.
+    assert {d.graph.name for d in discovered} == {"cpu", "cpu_system"}
+    cpu = next(d for d in discovered if d.graph.name == "cpu")
+    assert [line.curve.value for line in cpu.evaluated.lines] == [1.0]
+    assert [rule.value for rule in cpu.evaluated.rules] == [50.0]
 
 
 def test_discover_template_graphs_evaluates_the_title_expression() -> None:
@@ -419,7 +426,7 @@ def test_discover_template_graphs_title_expression_falls_back_when_unresolvable(
     assert discovered.evaluated.title == "CPU"
 
 
-def test_discover_template_graphs_requires_a_metric_referenced_only_in_the_title() -> None:
+def test_discover_template_graphs_matches_despite_a_metric_referenced_only_in_the_title() -> None:
     service = _service()
     util = MetricName("util")
     # cpu_user is referenced by the title only (not drawn as a line).
@@ -429,16 +436,17 @@ def test_discover_template_graphs_requires_a_metric_referenced_only_in_the_title
         simple_lines=["util"],
     )
     registered_graphs = [plugin]
-    # cpu_user (referenced by the title) is missing, so the plugin must not match; only the
-    # fallback single-metric graph for util is discovered.
+    # cpu_user (referenced only by the title) is missing, but the title is not part of matching, so
+    # the plugin still matches on its drawn metric util; the title expression falls back.
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(util))})
 
     discovered = _discover(service, registered_graphs, rrd=rrd)
 
-    assert [d.graph.name for d in discovered] == ["util"]
+    assert [d.graph.name for d in discovered] == ["cpu"]
+    assert discovered[0].evaluated.title == "CPU"
 
 
-def test_discover_template_graphs_claims_a_metric_referenced_only_in_the_title() -> None:
+def test_discover_template_graphs_does_not_claim_a_metric_referenced_only_in_the_title() -> None:
     service = _service()
     util = MetricName("util")
     cpu_user = MetricName("cpu_user")
@@ -454,10 +462,11 @@ def test_discover_template_graphs_claims_a_metric_referenced_only_in_the_title()
 
     discovered = _discover(service, registered_graphs, rrd=rrd)
 
-    # The plugin matches and claims cpu_user via its title, so cpu_user is not emitted separately.
-    assert len(discovered) == 1
-    assert discovered[0].graph.name == "cpu"
-    assert discovered[0].evaluated.title == "CPU - 8 cores"
+    # The plugin matches and its title resolves against cpu_user, but cpu_user is only referenced by
+    # the title, so it is not claimed and still gets its own fallback graph.
+    assert {d.graph.name for d in discovered} == {"cpu", "cpu_user"}
+    cpu = next(d for d in discovered if d.graph.name == "cpu")
+    assert cpu.evaluated.title == "CPU - 8 cores"
 
 
 def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> None:

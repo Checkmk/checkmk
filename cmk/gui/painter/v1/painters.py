@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence
 
-from cmk.gui.config import active_config
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import Rows
@@ -74,7 +73,7 @@ def _get_perfdata_with_staleness_callable(
         return [
             StrWithStaleness(
                 get_perfdata_nth_value(row, value_number),
-                is_stale(row, active_config.staleness_threshold),
+                is_stale(row, config.staleness_threshold),
             )
             for row in rows
         ]

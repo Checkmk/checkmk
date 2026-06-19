@@ -849,7 +849,9 @@ class PainterAdapter(Painter):
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         config = PainterConfiguration(
-            parameters=cell.painter_parameters(), columns=self._painter.columns
+            parameters=cell.painter_parameters(),
+            columns=self._painter.columns,
+            staleness_threshold=self.config.staleness_threshold,
         )
         return self._painter.formatters.html(
             list(self._painter.computer([row], config))[0],

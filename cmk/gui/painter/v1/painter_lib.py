@@ -22,6 +22,7 @@ from cmk.gui.view_utils import CellSpec
 class PainterConfiguration:
     columns: Sequence[ColumnName]
     parameters: PainterParameters | None  # configured via valuespec
+    staleness_threshold: float
     painter_options: PainterOptions | None = None
     time_range: tuple[int, int] | None = None  # provided from external view/dashlet
     dynamic_columns: Callable[["PainterConfiguration"], Sequence[ColumnName]] | None = None

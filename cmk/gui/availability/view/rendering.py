@@ -95,18 +95,6 @@ from .csv import _output_csv
 # availability_table: a list of dicts. Each dicts describes the availability
 #   information of one object (seconds being OK, CRIT, etc.)
 
-#   .--Options-------------------------------------------------------------.
-#   |                   ___        _   _                                   |
-#   |                  / _ \ _ __ | |_(_) ___  _ __  ___                   |
-#   |                 | | | | '_ \| __| |/ _ \| '_ \/ __|                  |
-#   |                 | |_| | |_) | |_| | (_) | | | \__ \                  |
-#   |                  \___/| .__/ \__|_|\___/|_| |_|___/                  |
-#   |                       |_|                                            |
-#   +----------------------------------------------------------------------+
-#   |  Handling of all options for tuning availability computation and     |
-#   |  display.                                                            |
-#   '----------------------------------------------------------------------'
-
 
 def _save_availability_options_after_update(avoptions: AVOptions) -> None:
     if html.form_submitted():
@@ -164,18 +152,6 @@ def _show_availability_options_controls() -> None:
     html.close_div()
 
 
-# .
-#   .--Rendering-----------------------------------------------------------.
-#   |            ____                _           _                         |
-#   |           |  _ \ ___ _ __   __| | ___ _ __(_)_ __   __ _             |
-#   |           | |_) / _ \ '_ \ / _` |/ _ \ '__| | '_ \ / _` |            |
-#   |           |  _ <  __/ | | | (_| |  __/ |  | | | | | (_| |            |
-#   |           |_| \_\___|_| |_|\__,_|\___|_|  |_|_| |_|\__, |            |
-#   |                                                    |___/             |
-#   +----------------------------------------------------------------------+
-#   |  Rendering availability data into HTML.                              |
-#   '----------------------------------------------------------------------'
-
 # Hints:
 # There are several modes for displaying data
 # 1. Availability table
@@ -185,6 +161,21 @@ def _show_availability_options_controls() -> None:
 # b. BI aggregates (identified by aggr_groups and aggr_name)
 # The code flow for these four combinations is different
 #
+
+
+def _maybe_output_csv(
+    what: AVObjectType,
+    av_mode: AVMode,
+    av_data: AVData,
+    avoptions: AVOptions,
+    *,
+    table_row_limit: int,
+) -> bool:
+    """Emit CSV output if requested and permitted. Returns whether output was emitted."""
+    if html.output_format == "csv_export" and user.may("general.csv_export"):
+        _output_csv(what, av_mode, av_data, avoptions, table_row_limit=table_row_limit)
+        return True
+    return False
 
 
 # Render the page showing availability table or timelines. It
@@ -303,9 +294,8 @@ def show_availability_page(
         )
         av_data = compute_availability(what, av_rawdata, avoptions)
 
-    # Do CSV ouput
-    if html.output_format == "csv_export" and user.may("general.csv_export"):
-        _output_csv(what, av_mode, av_data, avoptions, table_row_limit=table_row_limit)
+    # Do CSV output
+    if _maybe_output_csv(what, av_mode, av_data, avoptions, table_row_limit=table_row_limit):
         return
 
     # Show/hide the header with page title, MK logo, etc. — matches the
@@ -852,19 +842,6 @@ def render_timeline_bar(
     html.close_div()
 
 
-# .
-#   .--BI------------------------------------------------------------------.
-#   |                              ____ ___                                |
-#   |                             | __ )_ _|                               |
-#   |                             |  _ \| |                                |
-#   |                             | |_) | |                                |
-#   |                             |____/___|                               |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Special code for Business Intelligence availability                 |
-#   '----------------------------------------------------------------------'
-
-
 # Render availability of a BI aggregate. This is currently
 # no view and does not support display options
 # TODO: Why should we handle this in a special way? Probably because we cannot
@@ -1122,8 +1099,7 @@ def show_bi_availability(
                 % ", ".join(sorted(dead_sites))
             )
 
-        if html.output_format == "csv_export" and user.may("general.csv_export"):
-            _output_csv("bi", av_mode, av_data, avoptions, table_row_limit=table_row_limit)
+        if _maybe_output_csv("bi", av_mode, av_data, avoptions, table_row_limit=table_row_limit):
             return
 
         html.write_html(timewarpcode)

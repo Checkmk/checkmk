@@ -42,30 +42,18 @@ from .type_defs import (
 )
 
 
-# .
-#   .--Layout--------------------------------------------------------------.
-#   |                  _                            _                      |
-#   |                 | |    __ _ _   _  ___  _   _| |_                    |
-#   |                 | |   / _` | | | |/ _ \| | | | __|                   |
-#   |                 | |__| (_| | |_| | (_) | |_| | |_                    |
-#   |                 |_____\__,_|\__, |\___/ \__,_|\__|                   |
-#   |                             |___/                                    |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 # When grouping is enabled, this function is called once for each group
-# TODO: range_title sollte hier ueberfluessig sein
-# TODO: Hier jetzt nicht direkt HTML erzeugen, sondern eine saubere
-# Datenstruktur füllen, welche die Daten so repräsentiert, dass sie
-# nur noch 1:1 dargestellt werden müssen.
-# Beispiel für einen Rückgabewert:
+# TODO: range_title should be superfluous here
+# TODO: Don't generate HTML directly here, but rather fill a clean data
+# structure that represents the data such that it only needs to be rendered 1:1.
+# Example of a return value:
 # {
 #    "title" : "Host group foobar",
 #    "headers" : [ "OK, "CRIT", "Downtime" ],
 #    "rows" : [ ... ],
 #    "summary" : [ ("84.50%", "crit"), ("15.50%", "crit"), ("0.00%", "p"),  ("0.00%", "p") ],
 # }
-# row ist ein dict: {
+# row is a dict: {
 #    "cells" : [ ("84.50%", "crit"), ("15.50%", "crit"), ("0.00%", "p"),  ("0.00%", "p") ],
 #    "urls" : { "timeline": "view.py..." },
 #    "object" : ( "Host123", "Foobar" ),
@@ -114,7 +102,7 @@ def layout_availability_table(
 
         # Iconbuttons with URLs
         if "omit_buttons" not in labelling:
-            urls = omit_urls(host, service, site, time_range, what)
+            urls = make_object_urls(host, service, site, time_range, what)
         else:
             urls = []
         row["urls"] = urls
@@ -256,7 +244,7 @@ def _availability_value(
     return result
 
 
-def omit_urls(
+def make_object_urls(
     host: HostName,
     service: ServiceName,
     site: SiteId,

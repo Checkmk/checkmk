@@ -422,7 +422,6 @@ def get_av_computation_options() -> AVOptionValueSpecs:
                     (
                         "unreach",
                         DropdownChoice(
-                            # TOOD: aligned
                             title=_("Treat unreachable as"),
                             choices=[
                                 ("up", _("UP")),

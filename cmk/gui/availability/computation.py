@@ -534,7 +534,7 @@ def compute_availability_groups(
             else:
                 assert isinstance(group_id, HostOrServiceGroupName)
                 title = group_titles.get(group_id, group_id)
-            titled_groups.append((title, group_id))  # ACHTUNG
+            titled_groups.append((title, group_id))
 
     # 3. Loop over all groups and render them
     for title, group_id in sorted(titled_groups, key=lambda x: x[1] or ""):

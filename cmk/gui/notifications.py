@@ -13,7 +13,7 @@ from livestatus import LivestatusResponse, MKLivestatusNotFoundError
 import cmk.utils.render
 from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.header import make_header
@@ -209,7 +209,7 @@ class ClearFailedNotificationPage(Page):
             ctx.request,
             acktime,
             failed_notifications,
-            table_row_limit=ctx.config.table_row_limit,
+            ctx.config,
         )
 
     # TODO: We should really recode this to use the view and a normal view command / action
@@ -218,8 +218,7 @@ class ClearFailedNotificationPage(Page):
         request: Request,
         acktime: float,
         failed_notifications: LivestatusResponse,
-        *,
-        table_row_limit: int,
+        config: Config,
     ) -> None:
         title = _("Confirm failed notifications")
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_monitoring(), title)
@@ -231,18 +230,18 @@ class ClearFailedNotificationPage(Page):
             title,
             breadcrumb,
             page_menu,
-            debug=active_config.debug,
+            debug=config.debug,
             lang=user.language,
-            inject_js_profiling_code=active_config.inject_js_profiling_code,
-            load_frontend_vue=active_config.load_frontend_vue,
-            custom_style_sheet=active_config.custom_style_sheet,
-            screenshotmode=active_config.screenshotmode,
+            inject_js_profiling_code=config.inject_js_profiling_code,
+            load_frontend_vue=config.load_frontend_vue,
+            custom_style_sheet=config.custom_style_sheet,
+            screenshotmode=config.screenshotmode,
             inline_help_as_text=user.inline_help_as_text,
             hide_suggestions=not user.get_tree_state("suggestions", "all", True),
             user_role_ids=user.role_ids,
         )
 
-        self._show_notification_table(failed_notifications, table_row_limit=table_row_limit)
+        self._show_notification_table(failed_notifications, table_row_limit=config.table_row_limit)
 
         html.footer()
 

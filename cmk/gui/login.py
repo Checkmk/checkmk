@@ -414,7 +414,7 @@ def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None
     #       this code is not reached anymore (license switch from trial to free)
     remaining_days: int = remaining_trial_time.days
     remaining_hours: int = remaining_trial_time.hours
-    remaining_percentage: float = remaining_trial_time.perc
+    remaining_percentage: float = max(min(100, remaining_trial_time.perc), 0)
 
     html.open_div(class_="trial_expiration_info" + (" warning" if remaining_days < 8 else ""))
     html.span(

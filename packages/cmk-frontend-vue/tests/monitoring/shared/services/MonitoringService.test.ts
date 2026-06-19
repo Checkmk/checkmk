@@ -71,6 +71,30 @@ describe('MonitoringService', () => {
     service.stopPolling()
   })
 
+  it('flips hasLoaded once the first fetch settles', async () => {
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([{ id: 'a', value: 1 }], 1))
+    const service = new TestService(fetchBatch)
+
+    expect(service.hasLoaded.value).toBe(false)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(service.hasLoaded.value).toBe(true)
+
+    service.stopPolling()
+  })
+
+  it('flips hasLoaded even when the first fetch rejects', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const fetchBatch = vi.fn().mockRejectedValue(new Error('boom'))
+    const service = new TestService(fetchBatch)
+
+    expect(service.hasLoaded.value).toBe(false)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(service.hasLoaded.value).toBe(true)
+
+    service.stopPolling()
+    consoleErrorSpy.mockRestore()
+  })
+
   it('keeps loading=true while a fetch is in flight', async () => {
     const pending = new Promise<PagedResponse<TestItem>>(() => {})
     const fetchBatch = vi.fn().mockReturnValue(pending)

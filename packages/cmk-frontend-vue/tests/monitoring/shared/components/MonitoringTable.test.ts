@@ -76,6 +76,7 @@ function makeMockService(
 function mountTable(overrides: {
   rows?: Row[]
   loading?: boolean
+  hasLoaded?: boolean
   sortState?: SortingState
   filterState?: ColumnFiltersState
   onSortUpdate?: (value: SortingState) => void
@@ -84,6 +85,7 @@ function mountTable(overrides: {
 }) {
   const rows = overrides.rows ?? makeRows(3)
   const loading = overrides.loading ?? false
+  const hasLoaded = overrides.hasLoaded ?? !loading
   const filterState = overrides.filterState ?? []
   const onFilterUpdate = overrides.onFilterUpdate ?? (() => {})
   const getRowKey = overrides.getRowKey
@@ -94,7 +96,7 @@ function mountTable(overrides: {
       components: { MonitoringTable },
       setup() {
         provide(MONITORING_SERVICE, mockService as unknown as MonitoringService<unknown>)
-        return { rows, loading, filterState, onFilterUpdate, getRowKey }
+        return { rows, loading, hasLoaded, filterState, onFilterUpdate, getRowKey }
       },
       render() {
         return h(
@@ -102,6 +104,7 @@ function mountTable(overrides: {
           {
             rows: this.rows,
             loading: this.loading,
+            hasLoaded: this.hasLoaded,
             columns: COLUMNS,
             filterState: this.filterState,
             ...(this.getRowKey ? { getRowKey: this.getRowKey } : {}),
@@ -179,6 +182,31 @@ test('aria-busy is false when not loading', () => {
   const { container } = mountTable({ loading: false })
 
   expect(container.querySelector('.monitoring-table')).toHaveAttribute('aria-busy', 'false')
+})
+
+test('shows the skeleton on the initial load (loading before first fetch settled)', () => {
+  const { container } = mountTable({ rows: [], loading: true, hasLoaded: false })
+
+  // The real table carries the monitoring-table__table class; the skeleton does not.
+  expect(container.querySelector('.monitoring-table__table')).not.toBeInTheDocument()
+})
+
+test('keeps the table mounted during a background refresh (loading after first load)', async () => {
+  const { container } = mountTable({ rows: makeRows(3), loading: true, hasLoaded: true })
+  await flushVirtualizer()
+
+  // No skeleton swap: the existing table stays so the poll does not visibly rebuild it.
+  expect(container.querySelector('.monitoring-table__table')).toBeInTheDocument()
+  expect(screen.getByTestId('row-row-0')).toHaveTextContent('0:host-0')
+})
+
+test('keeps the empty state during a background refresh of an empty result', () => {
+  // A result set that is genuinely empty must not flash back to the skeleton on
+  // every poll — once loaded, the empty state stays put while the poll runs.
+  const { container } = mountTable({ rows: [], loading: true, hasLoaded: true })
+
+  expect(container.querySelector('.monitoring-table__table')).toBeInTheDocument()
+  expect(screen.getByTestId('empty-state')).toBeInTheDocument()
 })
 
 test('uses getRowKey for row keying when provided', async () => {

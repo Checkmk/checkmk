@@ -41,6 +41,7 @@ const DEFAULT_COLUMN_MAX_SIZE = Number.POSITIVE_INFINITY
 const props = defineProps<{
   rows: T[]
   loading: boolean
+  hasLoaded?: boolean
   columns: ColumnDef<T>[]
   filterState: ColumnFiltersState
   getRowKey?: (row: T, index: number) => string | number
@@ -52,8 +53,8 @@ const emit = defineEmits<{
 }>()
 
 const monitoringService = inject(MONITORING_SERVICE)
-
-const showEmptyState = computed(() => !props.loading && props.rows.length === 0)
+const showSkeleton = computed(() => !props.hasLoaded)
+const showEmptyState = computed(() => props.hasLoaded && props.rows.length === 0)
 
 function resolveUpdater<S>(updater: Updater<S>, current: S): S {
   return typeof updater === 'function' ? (updater as (old: S) => S)(current) : updater
@@ -314,7 +315,7 @@ function tableRowAt(index: number): Row<T> {
 
 <template>
   <div ref="wrapperRef" class="monitoring-table" :aria-busy="loading">
-    <TableSkeleton v-if="loading"></TableSkeleton>
+    <TableSkeleton v-if="showSkeleton"></TableSkeleton>
     <table v-else class="monitoring-table__table">
       <colgroup v-if="pinningEnabled">
         <col v-for="entry in columnLayout" :key="entry.id" :style="{ width: `${entry.width}px` }" />

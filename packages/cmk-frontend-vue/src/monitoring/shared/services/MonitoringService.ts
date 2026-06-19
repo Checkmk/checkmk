@@ -23,6 +23,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly items: Ref<T[]> = shallowRef<T[]>([])
   readonly total: Ref<number> = ref(0)
   readonly loading: Ref<boolean> = ref(false)
+  readonly hasLoaded: Ref<boolean> = ref(false)
   readonly sortState: Ref<SortingState> = ref<SortingState>([])
   readonly searchQuery: Ref<string> = ref('')
   readonly filterState: Ref<FilterNode | undefined> = ref(undefined)
@@ -154,6 +155,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
       console.error('MonitoringService: fetchBatch failed', error)
     } finally {
       this.loading.value = false
+      this.hasLoaded.value = true
     }
   }
 }

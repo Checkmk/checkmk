@@ -2451,10 +2451,12 @@ def test_config_cache_check_period_of_service(
 
 def test_config_cache_max_cachefile_age_no_cluster() -> None:
     xyz_host = HostName("xyz")
+    loaded_config = dataclasses.replace(EMPTY_CONFIG, all_hosts=(xyz_host,))
     config_cache = config.ConfigCache(
-        dataclasses.replace(EMPTY_CONFIG, all_hosts=(xyz_host,)),
+        loaded_config,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        config.make_hosts_config(loaded_config),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -2472,10 +2474,12 @@ def test_config_cache_max_cachefile_age_no_cluster() -> None:
 
 def test_config_cache_max_cachefile_age_cluster() -> None:
     clu = HostName("clu")
+    loaded_config = dataclasses.replace(EMPTY_CONFIG, clusters={clu: []})
     config_cache = config.ConfigCache(
-        dataclasses.replace(EMPTY_CONFIG, clusters={clu: []}),
+        loaded_config,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        config.make_hosts_config(loaded_config),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -2677,6 +2681,7 @@ def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
         folder_path_test_config,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        config.make_hosts_config(folder_path_test_config),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )

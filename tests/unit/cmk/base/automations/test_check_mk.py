@@ -105,6 +105,7 @@ class TestAutomationDiagHost:
         }
 
         loaded_config = replace(EMPTY_CONFIG, host_tags=configured_tags)
+        hosts_config = config.make_hosts_config(loaded_config)
         app = replace(
             make_app(),
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data.encode(), Path("/")),
@@ -115,10 +116,12 @@ class TestAutomationDiagHost:
             AgentBasedPlugins.empty(),
             config.LoadingResult(
                 loaded_config=loaded_config,
+                hosts_config=hosts_config,
                 config_cache=ConfigCache(
                     loaded_config,
                     app.get_builtin_host_labels,
                     app.edition,
+                    hosts_config,
                     autochecks_dir=cmk.utils.paths.autochecks_dir,
                     discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
                 ),
@@ -256,6 +259,7 @@ def test_automation_active_check(
         EMPTY_CONFIG,
         app.get_builtin_host_labels,
         app.edition,
+        config.make_hosts_config(EMPTY_CONFIG),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -269,6 +273,7 @@ def test_automation_active_check(
             AgentBasedPlugins.empty(),
             config.LoadingResult(
                 loaded_config=EMPTY_CONFIG,
+                hosts_config=config_cache.hosts_config,
                 config_cache=config_cache,
             ),
         )
@@ -332,6 +337,7 @@ def test_automation_active_check_invalid_args(
         loaded_config,
         app.get_builtin_host_labels,
         app.edition,
+        config.make_hosts_config(loaded_config),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -344,7 +350,11 @@ def test_automation_active_check_invalid_args(
         app,
         active_check_args,
         AgentBasedPlugins.empty(),
-        config.LoadingResult(loaded_config=loaded_config, config_cache=config_cache),
+        config.LoadingResult(
+            loaded_config=loaded_config,
+            hosts_config=config_cache.hosts_config,
+            config_cache=config_cache,
+        ),
     )
 
     assert error_message == capsys.readouterr().err

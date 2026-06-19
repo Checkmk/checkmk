@@ -25,7 +25,7 @@ from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.sources import Source
 from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
-from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.fetchers import (
     Fetcher,
@@ -125,6 +125,7 @@ def print_(txt: str) -> None:
 
 def dump_host(
     loaded_config: BaseConfig,
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     service_name_config: PassiveServiceNameConfig,
@@ -151,7 +152,6 @@ def dump_host(
 ) -> None:
     print_("\n")
     label_manager = config_cache.label_manager
-    hosts_config = config_cache.hosts_config
 
     if hostname in hosts_config.clusters:
         assert config_cache.nodes(hostname)

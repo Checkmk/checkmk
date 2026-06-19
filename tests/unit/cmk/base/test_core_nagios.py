@@ -636,6 +636,7 @@ def test_create_nagios_servicedefs_active_check(
         EMPTY_CONFIG,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        config.make_hosts_config(EMPTY_CONFIG),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -833,6 +834,7 @@ def test_create_nagios_servicedefs_with_warnings(
         EMPTY_CONFIG,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        config.make_hosts_config(EMPTY_CONFIG),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -919,6 +921,7 @@ def test_create_nagios_servicedefs_omit_service(
         EMPTY_CONFIG,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        config.make_hosts_config(EMPTY_CONFIG),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -1000,6 +1003,7 @@ def test_create_nagios_servicedefs_invalid_args(
         EMPTY_CONFIG,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        config.make_hosts_config(EMPTY_CONFIG),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -1102,6 +1106,7 @@ def test_create_nagios_config_commands(
         EMPTY_CONFIG,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        config.make_hosts_config(EMPTY_CONFIG),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )

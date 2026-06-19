@@ -27,7 +27,7 @@ from cmk.base.automations.check_mk import (
 )
 from cmk.base.community_app import make_app
 from cmk.base.config import LoadingResult
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.watolib import password_store, rulesets
@@ -138,6 +138,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         config_cache = ts.apply(monkeypatch)
         loading_result = LoadingResult(
             loaded_config=config_cache._loaded_config,
+            hosts_config=Hosts(hosts=(), clusters={}, shadow_hosts=(), host_paths={}),
             config_cache=config_cache,
         )
 
@@ -290,6 +291,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
         config_cache = ts.apply(monkeypatch)
         loading_result = LoadingResult(
             loaded_config=config_cache._loaded_config,
+            hosts_config=config_cache.hosts_config,
             config_cache=config_cache,
         )
 

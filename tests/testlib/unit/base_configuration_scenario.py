@@ -18,7 +18,7 @@ from pytest import MonkeyPatch
 import cmk.utils.paths
 import cmk.utils.tags
 from cmk.base.app import make_app
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, make_hosts_config
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
@@ -44,16 +44,18 @@ class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
 
     def _get_config_cache(self) -> ConfigCache:
+        loaded_config = replace(
+            EMPTY_CONFIG,
+            # This only works as long as the attribute names of BaseConfig
+            # are the same as the variabele names in config.py
+            # But it's probably less confusing if we stick to that pattern anyway.
+            **{k: v for k, v in self.config.items() if k in asdict(EMPTY_CONFIG)},
+        )
         return ConfigCache(
-            replace(
-                EMPTY_CONFIG,
-                # This only works as long as the attribute names of BaseConfig
-                # are the same as the variabele names in config.py
-                # But it's probably less confusing if we stick to that pattern anyway.
-                **{k: v for k, v in self.config.items() if k in asdict(EMPTY_CONFIG)},
-            ),
+            loaded_config,
             self.get_builtin_host_labels,
             self._edition,
+            make_hosts_config(loaded_config),
             autochecks_dir=cmk.utils.paths.autochecks_dir,
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         )

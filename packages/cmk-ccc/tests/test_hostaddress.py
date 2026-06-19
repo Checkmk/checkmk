@@ -8,6 +8,19 @@ import pytest
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 
 
+def test_all_configured_hosts() -> None:
+    hostnames = (
+        HostName("un"),
+        HostName("deux"),
+        HostName("deux"),
+        HostName("trois"),
+        HostName("trois"),
+        HostName("trois"),
+    )
+    hosts_config = Hosts(hosts=hostnames, clusters={}, shadow_hosts=(), host_paths={})
+    assert set(hosts_config.all_configured_hosts) == {"un", "deux", "trois"}
+
+
 def test_duplicate_hosts() -> None:
     hostnames = (
         HostName("un"),
@@ -17,7 +30,7 @@ def test_duplicate_hosts() -> None:
         HostName("trois"),
         HostName("trois"),
     )
-    hosts_config = Hosts(hosts=hostnames, clusters=(), shadow_hosts=())
+    hosts_config = Hosts(hosts=hostnames, clusters={}, shadow_hosts=(), host_paths={})
     assert list(hosts_config.duplicates(lambda _hn: True)) == ["deux", "trois"]
 
 

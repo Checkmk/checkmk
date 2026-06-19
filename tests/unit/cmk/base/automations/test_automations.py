@@ -41,7 +41,11 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         make_app(),
         ["test-host"],
         AgentBasedPlugins.empty(),
-        LoadingResult(loaded_config=EMPTY_CONFIG, config_cache=config_cache),
+        LoadingResult(
+            loaded_config=EMPTY_CONFIG,
+            hosts_config=config_cache.hosts_config,
+            config_cache=config_cache,
+        ),
     ) == AnalyseHostResult(
         label_sources=label_sources | additional_label_sources,
         labels={
@@ -83,7 +87,11 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
         make_app(),
         ["test-host", "CPU load", "CPU temp"],
         AgentBasedPlugins.empty(),
-        LoadingResult(loaded_config=EMPTY_CONFIG, config_cache=config_cache),
+        LoadingResult(
+            loaded_config=EMPTY_CONFIG,
+            hosts_config=config_cache.hosts_config,
+            config_cache=config_cache,
+        ),
     ) == GetServicesLabelsResult(
         {
             "CPU load": {"label1": "val1", "label2": "val2"},

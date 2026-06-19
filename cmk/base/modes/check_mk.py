@@ -926,6 +926,7 @@ def _mode_dump_hosts(app: CheckmkBaseApp, hostlist: Iterable[HostName]) -> None:
     for hostname in sorted(hosts & all_hosts):
         cmk.base.dump_host.dump_host(
             loading_result.loaded_config,
+            loading_result.hosts_config,
             config_cache,
             core_objects_config,
             service_name_config,

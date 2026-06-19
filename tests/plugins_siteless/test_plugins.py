@@ -19,7 +19,7 @@ from cmk.base.checkers import (
     CheckerPluginMapper,
     SectionPluginMapper,
 )
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.ccc.version import edition
 from cmk.checkengine import value_store
 from cmk.checkengine.checking import execute_checkmk_checks
@@ -103,6 +103,13 @@ def test_checks_executor(
         EMPTY_CONFIG,
         (get_builtin_host_labels := make_app(edition(paths.omd_root)).get_builtin_host_labels),
         edition(paths.omd_root),
+        Hosts(
+            # weird to leave hosts empty, but at the time of writing this works
+            hosts=(),
+            clusters={},
+            shadow_hosts=(),
+            host_paths={},
+        ),
         autochecks_dir=paths.autochecks_dir,
         discovered_host_labels_dir=paths.discovered_host_labels_dir,
     ).initialize(get_builtin_host_labels)

@@ -9,8 +9,9 @@ import ipaddress
 import itertools
 import re
 from collections import Counter
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Final, Self
 
 __all__ = ["HostAddress", "Hosts", "HostName", "HostNameValidationError"]
@@ -25,14 +26,28 @@ class HostNameValidationError(ValueError):
 @dataclass(frozen=True)
 class Hosts:
     hosts: Sequence[HostName]
-    clusters: Sequence[HostName]
+    clusters: Mapping[HostName, Sequence[HostName]]
     shadow_hosts: Sequence[HostName]
+    host_paths: Mapping[HostName, str]
+
+    @cached_property
+    def clusters_of_nodes(self) -> Mapping[HostName, Sequence[HostName]]:
+        clusters_of_nodes = dict[HostName, list[HostName]]()
+        for cluster, nodes in self.clusters.items():
+            for node in nodes:
+                clusters_of_nodes.setdefault(node, []).append(cluster)
+        return clusters_of_nodes
 
     def duplicates(self, /, pred: Callable[[HostName], bool]) -> Iterable[HostName]:
-        return (hn for hn, count in Counter(hn for hn in self if pred(hn)).items() if count > 1)
+        return (
+            hn
+            for hn, count in Counter(hn for hn in self.all_configured_hosts if pred(hn)).items()
+            if count > 1
+        )
 
-    def __iter__(self) -> Iterator[HostName]:
-        return itertools.chain(self.hosts, self.clusters, self.shadow_hosts)
+    @cached_property
+    def all_configured_hosts(self) -> Sequence[HostName]:
+        return tuple(itertools.chain(self.hosts, self.clusters, self.shadow_hosts))
 
 
 class HostAddress(str):

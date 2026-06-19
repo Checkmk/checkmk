@@ -552,6 +552,7 @@ class LoadingResult:
     """
 
     loaded_config: BaseConfig
+    hosts_config: Hosts
     config_cache: ConfigCache
 
 
@@ -623,10 +624,13 @@ def perform_post_config_loading_actions(
         **{f.name: loaded_context[f.name] for f in dataclasses.fields(BaseConfig)},
     )
 
+    hosts_config = make_hosts_config(loaded_config)
+
     config_cache = ConfigCache(
         loaded_config,
         get_builtin_host_labels,
         edition,
+        hosts_config,
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     ).initialize(get_builtin_host_labels)
@@ -642,6 +646,7 @@ def perform_post_config_loading_actions(
 
     return LoadingResult(
         loaded_config=loaded_config,
+        hosts_config=hosts_config,
         config_cache=config_cache,
     )
 
@@ -1021,13 +1026,17 @@ def parse_hostname_list(
 #   '----------------------------------------------------------------------'
 
 
+def strip_tag(tagged_hostname: str) -> HostName:
+    return HostName(tagged_hostname.split("|", 1)[0])
+
+
 def strip_tags(tagged_hostlist: Iterable[str]) -> Sequence[HostName]:
     cache = cache_manager.obtain_cache("strip_tags")
 
     cache_id = tuple(tagged_hostlist)
     with contextlib.suppress(KeyError):
         return cache[cache_id]
-    return cache.setdefault(cache_id, [HostName(h.split("|", 1)[0]) for h in tagged_hostlist])
+    return cache.setdefault(cache_id, [strip_tag(h) for h in tagged_hostlist])
 
 
 # .
@@ -1324,24 +1333,17 @@ def get_ssc_host_config(
 
 
 def make_hosts_config(loaded_config: BaseConfig) -> Hosts:
+    # TODO: if we really need all these strip_tags calls, the typing of loaded_config is wrong.
     return Hosts(
         hosts=strip_tags(loaded_config.all_hosts),
-        clusters=strip_tags(loaded_config.clusters),
+        clusters={strip_tag(k): strip_tags(v) for k, v in loaded_config.clusters.items()},
         shadow_hosts=list(loaded_config.shadow_hosts),
+        host_paths={
+            # parse hostname and normalize for trailing slash
+            HostName(h): f"{os.path.dirname(filename).removesuffix('/')}/"
+            for h, filename in loaded_config.host_paths.items()
+        },
     )
-
-
-def _make_clusters_nodes_maps(
-    clusters: Mapping[HostName, Sequence[HostName]],
-) -> tuple[Mapping[HostName, Sequence[HostName]], Mapping[HostName, Sequence[HostName]]]:
-    clusters_of_cache: dict[HostName, list[HostName]] = {}
-    nodes_cache: dict[HostName, Sequence[HostName]] = {}
-    for cluster, hosts in clusters.items():
-        clustername = HostName(cluster.split("|", 1)[0])
-        for name in hosts:
-            clusters_of_cache.setdefault(name, []).append(clustername)
-        nodes_cache[clustername] = [HostName(h) for h in hosts]
-    return clusters_of_cache, nodes_cache
 
 
 class AutochecksConfigurer:
@@ -1405,6 +1407,7 @@ class ConfigCache:
         loaded_config: BaseConfig,
         get_builtin_host_labels: Callable[[SiteId], Labels],
         edition: cmk_version.Edition,
+        hosts_config: Hosts,
         *,
         autochecks_dir: Path,
         discovered_host_labels_dir: Path,
@@ -1414,7 +1417,7 @@ class ConfigCache:
         self.edition: Final = edition
         self._autochecks_dir = autochecks_dir
         self._discovered_host_labels_dir = discovered_host_labels_dir
-        self.hosts_config = Hosts(hosts=(), clusters=(), shadow_hosts=())
+        self._hosts_config = hosts_config
         self.__enforced_services_table: dict[
             HostName,
             Mapping[
@@ -1441,14 +1444,6 @@ class ConfigCache:
 
         self._check_table_cache = cache_manager.obtain_cache("check_tables")
         self._cache_section_name_of: dict[str, str] = {}
-        self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(
-            self._loaded_config.host_paths
-        )
-
-        (
-            self._clusters_of_cache,
-            self._nodes_cache,
-        ) = _make_clusters_nodes_maps(self._loaded_config.clusters)
 
         # Public + mutable: the keepalive checker reassigns this per command to point
         # at the per-serial helper config dir. Long term we should detach the
@@ -1461,10 +1456,8 @@ class ConfigCache:
             HostName,
         ] = {}
 
-        self.hosts_config = make_hosts_config(self._loaded_config)
-
         self.host_tags = cmk.utils.tags.HostTags.make(
-            self._host_paths,
+            self._hosts_config.host_paths,
             self._loaded_config.tag_config,
             self._loaded_config.host_tags,
             [*self._loaded_config.all_hosts, *self._loaded_config.clusters],
@@ -1473,20 +1466,14 @@ class ConfigCache:
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             host_tags=self.host_tags.host_tags_maps,
-            host_paths=self._host_paths,
-            clusters_of=self._clusters_of_cache,
-            nodes_of=self._nodes_cache,
-            all_configured_hosts=frozenset(
-                itertools.chain(
-                    self.hosts_config.hosts,
-                    self.hosts_config.clusters,
-                    self.hosts_config.shadow_hosts,
-                )
-            ),
+            host_paths=self._hosts_config.host_paths,
+            clusters_of=self._hosts_config.clusters_of_nodes,
+            nodes_of=self._hosts_config.clusters,
+            all_configured_hosts=frozenset(self._hosts_config.all_configured_hosts),
         )
         builtin_host_labels = {
             hostname: get_builtin_host_labels(self._site_of_host(hostname))
-            for hostname in self.hosts_config
+            for hostname in self._hosts_config.all_configured_hosts
         }
         self.label_manager = LabelManager(
             LabelConfig(
@@ -1494,7 +1481,7 @@ class ConfigCache:
                 self._loaded_config.host_label_rules,
                 self._loaded_config.service_label_rules,
             ),
-            self._nodes_cache,
+            self._hosts_config.clusters,
             self._loaded_config.host_labels,
             builtin_host_labels=builtin_host_labels,
             discovered_host_labels_dir=self._discovered_host_labels_dir,
@@ -1503,7 +1490,7 @@ class ConfigCache:
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
             {
                 hn
-                for hn in set(self.hosts_config.hosts).union(self.hosts_config.clusters)
+                for hn in set(self._hosts_config.hosts).union(self._hosts_config.clusters)
                 if self.is_active(hn) and self.is_online(hn)
             }
         )
@@ -1521,9 +1508,15 @@ class ConfigCache:
 
     @property
     def base_config(self) -> BaseConfig:
-        # currently needed for save_packed_config.
-        # please do not use this.
+        # Currently needed for save_packed_config.
+        # Please do not use this.
         return self._loaded_config
+
+    @property
+    def hosts_config(self) -> Hosts:
+        # Currently needed during nagios core config creation.
+        # Please do not use this.
+        return self._hosts_config
 
     def make_passive_service_name_config(
         self,
@@ -1785,19 +1778,8 @@ class ConfigCache:
         self.__snmp_fetch_interval.clear()
         self.__snmp_backend.clear()
 
-    @staticmethod
-    def _get_host_paths(config_host_paths: Mapping[HostName, str]) -> dict[HostName, str]:
-        """Reference hostname -> dirname including /"""
-        host_dirs = {}
-        for hostname, filename in config_host_paths.items():
-            dirname_of_host = os.path.dirname(filename)
-            if dirname_of_host[-1] != "/":
-                dirname_of_host += "/"
-            host_dirs[hostname] = dirname_of_host
-        return host_dirs
-
     def host_path(self, hostname: HostName) -> str:
-        return self._host_paths.get(hostname, "/")
+        return self._hosts_config.host_paths.get(hostname, "/")
 
     def check_table(
         self,
@@ -3135,16 +3117,20 @@ class ConfigCache:
 
         return _checktype_ignored_for_host(check_plugin_name_str)
 
+    # TODO: pass `Hosts` into the callsites of this function.
     def get_cluster_cache_info(self) -> ClusterCacheInfo:
-        return ClusterCacheInfo(clusters_of=self._clusters_of_cache, nodes_of=self._nodes_cache)
+        return ClusterCacheInfo(
+            clusters_of=self._hosts_config.clusters_of_nodes,
+            nodes_of=self._hosts_config.clusters,
+        )
 
     def clusters_of(self, hostname: HostName) -> Sequence[HostName]:
         """Returns names of cluster hosts the host is a node of"""
-        return self._clusters_of_cache.get(hostname, ())
+        return self._hosts_config.clusters_of_nodes.get(hostname, ())
 
     def nodes(self, hostname: HostName) -> Sequence[HostName]:
         """Returns the nodes of a cluster. Returns () if no match."""
-        return self._nodes_cache.get(hostname, ())
+        return self._hosts_config.clusters.get(hostname, ())
 
     def effective_host(
         self,

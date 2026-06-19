@@ -408,40 +408,79 @@ py_test(
 )
 
 py_wheel(
-    name = "wheel",
-    distribution = "cmk-check-engine",
+    name = "wheel_fetchers",
+    distribution = "cmk-check-engine-fetchers",
+    strip_path_prefixes = ["packages/cmk-check-engine"],
+    # Keep in sync with pyproject.toml
+    version = "1.0.0",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":fetcher-protocol",
+        ":fetchers",
+        ":helper-interface",
+        ":snmp-backends",
+        ":snmplib",
+    ],
+)
+
+py_wheel(
+    name = "wheel_plugins",
+    distribution = "cmk-check-engine-plugins",
+    strip_path_prefixes = ["packages/cmk-check-engine"],
+    # Keep in sync with pyproject.toml
+    version = "1.0.0",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":specs",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
+    ],
+)
+
+py_wheel(
+    name = "wheel_checkers",
+    distribution = "cmk-check-engine-checkers",
     strip_path_prefixes = ["packages/cmk-check-engine"],
     # Keep in sync with pyproject.toml
     version = "1.0.0",
     visibility = ["//visibility:public"],
     deps = [
         ":checker-plugin",
-        ":fetcher-protocol",
-        ":fetchers",
-        ":helper-interface",
         ":inventory",
         ":lib",
         ":section-parser",
-        ":snmp-backends",
-        ":snmplib",
-        ":specs",
         "//packages/cmk-check-engine/cmk/checkengine/checking",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
-        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
-        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-check-engine/cmk/checkengine/sources",
     ],
 )
 
 build_test(
     name = "build_test",
-    targets = ["wheel"],
+    targets = [
+        "wheel_checkers",
+        "wheel_fetchers",
+        "wheel_plugins",
+    ],
 )
 
 package_wheel(
-    name = "wheel_pkg",
-    whl = "wheel",
+    name = "wheel_fetchers_pkg",
+    visibility = ["//omd:__subpackages__"],
+    whl = "wheel_fetchers",
+)
+
+package_wheel(
+    name = "wheel_plugins_pkg",
+    visibility = ["//omd:__subpackages__"],
+    whl = "wheel_plugins",
+)
+
+package_wheel(
+    name = "wheel_checkers_pkg",
+    visibility = ["//omd:__subpackages__"],
+    whl = "wheel_checkers",
 )
 
 pkg_tar(
@@ -449,7 +488,9 @@ pkg_tar(
     stamp = 1,
     visibility = ["//omd:__subpackages__"],
     deps = [
-        ":wheel_pkg",
+        ":wheel_checkers_pkg",
+        ":wheel_fetchers_pkg",
+        ":wheel_plugins_pkg",
     ],
 )
 

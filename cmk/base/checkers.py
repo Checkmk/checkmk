@@ -18,7 +18,7 @@ import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Literal
+from typing import Any, Final, Literal
 
 import livestatus
 
@@ -110,7 +110,7 @@ from cmk.checkengine.specs.checkresults import (
     SubmittableServiceCheckResult,
     UnsubmittableServiceCheckResult,
 )
-from cmk.checkengine.specs.parameters import Parameters, ParametersTypeAlias
+from cmk.checkengine.specs.parameters import Parameters
 from cmk.checkengine.summarize import summarize, SummaryConfig
 from cmk.checkengine.value_store import ValueStoreManager
 from cmk.server_side_calls_backend import ExecutableFinder, SpecialAgentCommandLine
@@ -1250,7 +1250,7 @@ def _make_discovery_parameters_getter(
     discovery_config: ABCDiscoveryConfig,
     check_plugin_name: CheckPluginName,
     *,
-    default_parameters: ParametersTypeAlias | None,
+    default_parameters: Mapping[str, Any] | None,
     ruleset_name: RuleSetName | None,
     ruleset_type: Literal["all", "merged"],
 ) -> Callable[[HostName], None | Parameters | list[Parameters]]:

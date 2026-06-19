@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
-# ruff: noqa: SLF001
 
 """Helper to register a new-style section based on config.check_info"""
 
@@ -113,7 +112,7 @@ def _create_check_function(
             # In the new API check_functions will be passed an immutable mapping
             # instead of a dict. However, we have way too many 'if isinsance(params, dict)'
             # call sites to introduce this into legacy code, so use the plain dict.
-            parameters = copy.deepcopy(parameters._data)
+            parameters = copy.deepcopy(dict(parameters))
         kwargs["params"] = parameters
 
         if not requires_item:

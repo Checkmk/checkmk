@@ -22,13 +22,19 @@ __all__ = [
     "IsTimeperiodActiveCallback",
 ]
 
-ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
 
+class Parameters(Mapping[str, Any]):
+    """Parameter objects are used to pass parameters to plug-in functions.
 
-class Parameters(ParametersTypeAlias):
-    """Parameter objects are used to pass parameters to plug-in functions"""
+    Intentionally not a `dict` subclass: the legacy check API relies on
+    `isinstance(..., Parameters)` to tell new-style (immutable) parameters
+    apart from plain dicts.
 
-    def __init__(self, data: ParametersTypeAlias) -> None:
+    The value type is `Any` by API contract; narrowing it would be an
+    incompatible API change.
+    """
+
+    def __init__(self, data: Mapping[str, Any]) -> None:
         self._data = dict(data)
 
     def __getitem__(self, key: str) -> object:

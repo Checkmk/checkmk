@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from cmk.automations.results._base import (
     ABCAutomationResult,
@@ -22,7 +22,7 @@ from cmk.automations.results._base import (
 from cmk.ccc import version as cmk_version
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.specs.checkresults import ServiceState
-from cmk.checkengine.specs.parameters import ParametersTypeAlias, TimespecificParameters
+from cmk.checkengine.specs.parameters import TimespecificParameters
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
@@ -37,7 +37,7 @@ class ServiceInfo(TypedDict, total=False):
     checktype: str
     item: Item
     inv_parameters: LegacyCheckParameters
-    factory_settings: ParametersTypeAlias | None
+    factory_settings: Mapping[str, Any] | None
     parameters: TimespecificParameters | LegacyCheckParameters
     command_line: str
 

@@ -9,10 +9,10 @@ import dataclasses
 import itertools
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
-from typing import Literal
+from typing import Any, Literal
 
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.specs.parameters import Parameters, ParametersTypeAlias
+from cmk.checkengine.specs.parameters import Parameters
 from cmk.utils.rulesets import RuleSetName
 
 from .filters import RediscoveryParameters
@@ -48,7 +48,7 @@ def get_plugin_parameters(
     host_name: HostName,
     discovery_config: ABCDiscoveryConfig,
     *,
-    default_parameters: ParametersTypeAlias | None,
+    default_parameters: Mapping[str, Any] | None,
     ruleset_name: RuleSetName | None,
     ruleset_type: Literal["all", "merged"],
 ) -> None | Parameters | list[Parameters]:

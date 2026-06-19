@@ -13,8 +13,4 @@ case "$1" in
     default)
         echo "on"
         ;;
-    choices)
-        echo "on: use cookie authentication"
-        echo "off: use basic authentication"
-        ;;
 esac

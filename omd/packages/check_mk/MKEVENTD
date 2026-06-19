@@ -16,8 +16,4 @@ case "$1" in
             echo "on"
         fi
         ;;
-    choices)
-        echo "on: enable"
-        echo "off: disable"
-        ;;
 esac

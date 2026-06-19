@@ -19,8 +19,4 @@ case "$1" in
             echo "own"
         fi
         ;;
-    choices)
-        echo "own: Run an own webserver process for this instance"
-        echo "none: Do not run or configure a webserver"
-        ;;
 esac

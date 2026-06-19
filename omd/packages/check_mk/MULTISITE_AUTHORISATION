@@ -11,8 +11,4 @@ case "$1" in
     default)
         echo "on"
         ;;
-    choices)
-        echo "on: control user permissions"
-        echo "off: disable permission control"
-        ;;
 esac

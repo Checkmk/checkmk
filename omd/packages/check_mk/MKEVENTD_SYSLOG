@@ -15,8 +15,4 @@ case "$1" in
     default)
         echo "off"
         ;;
-    choices)
-        echo "on: enable"
-        echo "off: disable"
-        ;;
 esac

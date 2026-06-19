@@ -12,8 +12,4 @@ case "$1" in
     default)
         echo "on"
         ;;
-    choices)
-        echo "on: Use a ramdisk for temporary files"
-        echo "off: Do not use a ramdisk within this site"
-        ;;
 esac

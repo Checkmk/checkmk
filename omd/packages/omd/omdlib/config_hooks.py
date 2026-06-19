@@ -163,26 +163,65 @@ def _config_load_hook(
     )
 
 
-_HOOK_CHOICES: Mapping[str, ConfigChoiceHasError | Pattern[str]] = {
+_HOOK_CHOICES: Mapping[str, ConfigHookChoices] = {
     "ADMIN_MAIL": re.compile(
         r"^([-a-zäöüÄÖÜA-Z0-9_.+%]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*)?$$"
     ),
+    "AGENT_RECEIVER": [("on", "enable"), ("off", "disable")],
     "AGENT_RECEIVER_PORT": re.compile(r"[0-9]{1,5}$"),
+    "APACHE_MODE": [
+        ("own", "Run an own webserver process for this instance"),
+        ("none", "Do not run or configure a webserver"),
+    ],
     "APACHE_TCP_ADDR": ApacheTCPAddrHasError(),
     "APACHE_TCP_PORT": ApacheNetworkPortHasError(),
+    "AUTOMATION_HELPER": [("on", "enable"), ("off", "disable")],
+    "AUTOSTART": [
+        ("on", "Start this site at boot time"),
+        ("off", "Do not start this site at boot time"),
+    ],
+    "LIVEPROXYD": [("on", "enable"), ("off", "disable")],
+    "LIVESTATUS_TCP": [("on", "enable"), ("off", "disable")],
     "LIVESTATUS_TCP_INSTANCES": re.compile(r"[0-9]+$"),
     "LIVESTATUS_TCP_ONLY_FROM": IpAddressListHasError(),
     "LIVESTATUS_TCP_PER_SOURCE": re.compile(r"[0-9]+$"),
     "LIVESTATUS_TCP_PORT": re.compile(r"[0-9]{1,5}$"),
+    "LIVESTATUS_TCP_TLS": [("on", "encrypt"), ("off", "clear text")],
+    "MKEVENTD": [("on", "enable"), ("off", "disable")],
+    "MKEVENTD_SNMPTRAP": [("on", "enable"), ("off", "disable")],
+    "MKEVENTD_SYSLOG": [("on", "enable"), ("off", "disable")],
+    "MKEVENTD_SYSLOG_TCP": [("on", "enable"), ("off", "disable")],
+    "MULTISITE_AUTHORISATION": [
+        ("on", "control user permissions"),
+        ("off", "disable permission control"),
+    ],
+    "MULTISITE_COOKIE_AUTH": [
+        ("on", "use cookie authentication"),
+        ("off", "use basic authentication"),
+    ],
+    "OPENTELEMETRY_COLLECTOR": [("on", "enable"), ("off", "disable")],
     "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT": re.compile(r"[0-9]{1,5}$"),
+    "PIGGYBACK_HUB": [("on", "enable"), ("off", "disable")],
+    "PNP4NAGIOS": [
+        ("on", "enable bulk mode with npcdmod and npcd"),
+        ("npcd", "enable bulk mode with npcd"),
+        ("gearman", "enable gearman worker"),
+        ("off", "disable"),
+    ],
     "RABBITMQ_DIST_PORT": re.compile(r"[0-9]{1,5}$"),
     "RABBITMQ_MANAGEMENT_PORT": re.compile(r"[0-9]{1,5}$"),
     "RABBITMQ_ONLY_FROM": IpAddressListHasError(),
     "RABBITMQ_PORT": re.compile(r"[0-9]{1,5}$"),
+    "TMPFS": [
+        ("on", "Use a ramdisk for temporary files"),
+        ("off", "Do not use a ramdisk within this site"),
+    ],
     "TRACE_JAEGER_ADMIN_PORT": NetworkPortHasError(),
     "TRACE_JAEGER_UI_PORT": NetworkPortHasError(),
+    "TRACE_RECEIVE": [("on", "enable"), ("off", "disable")],
     "TRACE_RECEIVE_ADDRESS": IpListenAddressHasError(),
     "TRACE_RECEIVE_PORT": NetworkPortHasError(),
+    "TRACE_SEND": [("on", "enable"), ("off", "disable")],
     "TRACE_SEND_TARGET": re.compile(r"^(local_site|https?://[^\:]+:[0-9]{4,5})$$"),
     "TRACE_SERVICE_NAMESPACE": re.compile(r"^[a-zA-Z0-9_\.-]*$$"),
 }

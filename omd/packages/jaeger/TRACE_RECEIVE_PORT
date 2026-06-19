@@ -4,9 +4,3 @@
 # Menu: Add-ons
 # Description:
 #  If receiving traces is configured, you can configure the listen port here.
-
-case "$1" in
-    choices)
-        echo "@{NETWORK_PORT}"
-        ;;
-esac

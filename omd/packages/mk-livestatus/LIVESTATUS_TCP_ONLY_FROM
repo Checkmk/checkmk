@@ -12,7 +12,4 @@ case "$1" in
     default)
         echo "0.0.0.0 ::/0"
         ;;
-    choices)
-        echo "@{IP_ADDRESS_LIST}"
-        ;;
 esac

@@ -16,7 +16,4 @@ case "$1" in
     default)
         echo "127.0.0.1"
         ;;
-    choices)
-        echo "@{APACHE_TCP_ADDR}"
-        ;;
 esac

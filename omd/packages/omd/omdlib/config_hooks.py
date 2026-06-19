@@ -153,10 +153,9 @@ def _config_load_hook(
             else:
                 description_active = False
 
-    hook_info = _call_hook(site, hook_name, ["choices"], verbose)[1]
     assert alias is not None, "Implementation error, please contact support"
     return ConfigHook(
-        choices=_parse_hook_choices(hook_info),
+        choices=_load_hook_choices(site, hook_name, verbose),
         name=hook_name,
         alias=alias,
         menu=menu,
@@ -164,7 +163,25 @@ def _config_load_hook(
     )
 
 
-def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
+_HOOK_CHOICES: Mapping[str, ConfigChoiceHasError] = {
+    "APACHE_TCP_ADDR": ApacheTCPAddrHasError(),
+    "APACHE_TCP_PORT": ApacheNetworkPortHasError(),
+    "LIVESTATUS_TCP_ONLY_FROM": IpAddressListHasError(),
+    "RABBITMQ_ONLY_FROM": IpAddressListHasError(),
+    "TRACE_JAEGER_ADMIN_PORT": NetworkPortHasError(),
+    "TRACE_JAEGER_UI_PORT": NetworkPortHasError(),
+    "TRACE_RECEIVE_ADDRESS": IpListenAddressHasError(),
+    "TRACE_RECEIVE_PORT": NetworkPortHasError(),
+}
+
+
+def _load_hook_choices(site: "SiteContext", hook_name: str, verbose: bool) -> ConfigHookChoices:
+    if (validator := _HOOK_CHOICES.get(hook_name)) is not None:
+        return validator
+    return _parse_hook_choices(_call_hook(site, hook_name, ["choices"], verbose)[1])
+
+
+def _parse_hook_choices(hook_info: str) -> Pattern[str] | list[ConfigHookChoiceItem]:
     # The choices can either be a list of possible keys. Then
     # the hook outputs one live for each choice where the key and a
     # description are separated by a colon. Or it outputs one line
@@ -174,16 +191,6 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
     match [choice.strip() for choice in hook_info.split("\n")]:
         case [""]:
             raise MKTerminate("Invalid output of hook: empty output")
-        case ["@{IP_LISTEN_ADDRESS}"]:
-            return IpListenAddressHasError()
-        case ["@{NETWORK_PORT}"]:
-            return NetworkPortHasError()
-        case ["@{APACHE_NETWORK_PORT}"]:
-            return ApacheNetworkPortHasError()
-        case ["@{IP_ADDRESS_LIST}"]:
-            return IpAddressListHasError()
-        case ["@{APACHE_TCP_ADDR}"]:
-            return ApacheTCPAddrHasError()
         case [regextext]:
             return re.compile(regextext + "$")
         case choices_list:

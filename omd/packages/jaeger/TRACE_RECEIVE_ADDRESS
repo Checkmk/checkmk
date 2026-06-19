@@ -12,7 +12,4 @@ case "$1" in
     default)
         echo "[::1]"
         ;;
-    choices)
-        echo "@{IP_LISTEN_ADDRESS}"
-        ;;
 esac

@@ -8,9 +8,3 @@
 #
 #  After changing this variable, the man Apache webserver
 #  must be restarted.
-
-case "$1" in
-    choices)
-        echo "@{APACHE_NETWORK_PORT}"
-        ;;
-esac

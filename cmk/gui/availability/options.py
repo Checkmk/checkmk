@@ -595,43 +595,23 @@ def prepare_avo_timeformats(timeformat: AVTimeformatSpec) -> AVTimeFormats:
 def get_default_avoptions(range_spec: tuple[float, float] | None = None) -> AVOptions:
     if range_spec is None:
         range_spec = time.time() - 86400, time.time()
-    return {
-        "range": (range_spec, ""),
-        "rangespec": "d0",
-        "labelling": [],
-        "av_levels": None,
-        "av_filter_outages": {"warn": 0.0, "crit": 0.0, "non-ok": 0.0},
-        "outage_statistics": ([], []),
-        "av_mode": False,
-        "service_period": "honor",
-        "notification_period": "ignore",
-        "grouping": None,
-        "dateformat": "yyyy-mm-dd hh:mm:ss",
-        "timeformat": ("perc", "percentage_2", None),
-        "short_intervals": 0,
-        "dont_merge": False,
-        "summary": "sum",
-        "show_timeline": False,
-        "timelimit": 30,
-        "logrow_limit": 5000,
-        "downtimes": {
-            "include": "honor",
-            "exclude_ok": False,
-        },
-        "consider": {
-            "flapping": True,
-            "host_down": True,
-            "unmonitored": True,
-        },
-        "host_state_grouping": {
-            "unreach": "unreach",
-        },
-        "state_grouping": {
-            "warn": "warn",
-            "unknown": "unknown",
-            "host_down": "host_down",
-        },
-    }
+
+    # Derive the defaults from the option valuespecs so that the editable
+    # options have a single source of truth (their own ``default_value=``) and
+    # the defaults cannot silently drift from what the option editor offers.
+    avoptions: AVOptions = {"range": (range_spec, "")}
+    for name, _height, _show, valuespec in (
+        get_av_display_options("host") + get_av_computation_options()
+    ):
+        avoptions[name] = valuespec.default_value()
+
+    # The third ("absolute time") format is intentionally left unset for the
+    # default "percent only" mode; that dropdown has no own default and would
+    # otherwise fall back to its first choice.
+    timeformat = avoptions["timeformat"]
+    avoptions["timeformat"] = (timeformat[0], timeformat[1], None)
+
+    return avoptions
 
 
 def get_outage_statistic_options(avoptions: AVOptions) -> AVOutageStatistics:

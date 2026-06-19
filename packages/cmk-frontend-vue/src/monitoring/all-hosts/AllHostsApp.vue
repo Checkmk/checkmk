@@ -18,6 +18,8 @@ import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTab
 import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
 import type {
   CheckboxListFilter,
+  NumericFilter,
+  NumericPreset,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 
@@ -56,6 +58,52 @@ const aliasFilter: StringInputFilter<'alias'> = {
 const addressFilter: StringInputFilter<'address'> = {
   type: 'string-input',
   field: 'address'
+}
+
+const anyNonePresets: NumericPreset[] = [
+  { label: _t('Any'), from: 1 },
+  { label: _t('None'), from: 0, to: 0 }
+]
+
+const totalServicesFilter: NumericFilter<'num_services'> = {
+  type: 'numeric',
+  field: 'num_services',
+  unit: _t('services')
+}
+
+const okServicesFilter: NumericFilter<'num_services_ok'> = {
+  type: 'numeric',
+  field: 'num_services_ok',
+  unit: _t('services'),
+  presets: anyNonePresets
+}
+
+const warnServicesFilter: NumericFilter<'num_services_warn'> = {
+  type: 'numeric',
+  field: 'num_services_warn',
+  unit: _t('services'),
+  presets: anyNonePresets
+}
+
+const critServicesFilter: NumericFilter<'num_services_crit'> = {
+  type: 'numeric',
+  field: 'num_services_crit',
+  unit: _t('services'),
+  presets: anyNonePresets
+}
+
+const unknownServicesFilter: NumericFilter<'num_services_unknown'> = {
+  type: 'numeric',
+  field: 'num_services_unknown',
+  unit: _t('services'),
+  presets: anyNonePresets
+}
+
+const pendingServicesFilter: NumericFilter<'num_services_pending'> = {
+  type: 'numeric',
+  field: 'num_services_pending',
+  unit: _t('services'),
+  presets: anyNonePresets
 }
 
 const columns: ColumnDef<HostEntry>[] = [
@@ -100,7 +148,7 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services',
     header: _t('Total'),
     sortDescFirst: true,
-    meta: { justify: 'right' },
+    meta: { justify: 'right', filter: totalServicesFilter },
     minSize: 64,
     maxSize: 90
   },
@@ -108,7 +156,7 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_ok',
     header: _t('OK'),
     sortDescFirst: true,
-    meta: { justify: 'right' },
+    meta: { justify: 'right', filter: okServicesFilter },
     minSize: 64,
     maxSize: 90
   },
@@ -116,7 +164,7 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_warn',
     header: _t('Wa'),
     sortDescFirst: true,
-    meta: { justify: 'right' },
+    meta: { justify: 'right', filter: warnServicesFilter },
     minSize: 64,
     maxSize: 90
   },
@@ -124,7 +172,7 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_crit',
     header: _t('Cr'),
     sortDescFirst: true,
-    meta: { justify: 'right' },
+    meta: { justify: 'right', filter: critServicesFilter },
     minSize: 64,
     maxSize: 90
   },
@@ -132,7 +180,7 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_unknown',
     header: _t('Un'),
     sortDescFirst: true,
-    meta: { justify: 'right' },
+    meta: { justify: 'right', filter: unknownServicesFilter },
     minSize: 64,
     maxSize: 90
   },
@@ -140,7 +188,7 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_pending',
     header: _t('Pd'),
     sortDescFirst: true,
-    meta: { justify: 'right' },
+    meta: { justify: 'right', filter: pendingServicesFilter },
     minSize: 64,
     maxSize: 90
   }

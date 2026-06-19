@@ -20,3 +20,14 @@ def test_write_liveproxyd_conf_off(tmp_path: Path) -> None:
     write_liveproxyd_conf("_", tmp_path, {"LIVEPROXYD": "off"})
     content = (tmp_path / "etc/check_mk/multisite.d/liveproxyd.mk").read_text()
     assert content == "liveproxyd_enabled = False\n"
+
+
+def test_write_liveproxyd_conf_overwrites(tmp_path: Path) -> None:
+    (tmp_path / "etc/check_mk/multisite.d").mkdir(parents=True)
+    write_liveproxyd_conf("_", tmp_path, {"LIVEPROXYD": "on"})
+    content = (tmp_path / "etc/check_mk/multisite.d/liveproxyd.mk").read_text()
+    assert content == "liveproxyd_enabled = True\n"
+
+    write_liveproxyd_conf("_", tmp_path, {"LIVEPROXYD": "off"})
+    content = (tmp_path / "etc/check_mk/multisite.d/liveproxyd.mk").read_text()
+    assert content == "liveproxyd_enabled = False\n"

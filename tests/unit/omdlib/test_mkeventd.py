@@ -32,7 +32,11 @@ def test_write_mkeventd_conf_off(tmp_path: Path) -> None:
 def test_write_mkeventd_conf_overwrites(tmp_path: Path) -> None:
     _mkdirs(tmp_path)
     write_mkeventd_conf("mysite", tmp_path, {"MKEVENTD": "on"})
+    expected_on = "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = True\n"
+    assert (tmp_path / "etc/check_mk/multisite.d/mkeventd.mk").read_text() == expected_on
+    assert (tmp_path / "etc/check_mk/conf.d/mkeventd.mk").read_text() == expected_on
+
     write_mkeventd_conf("mysite", tmp_path, {"MKEVENTD": "off"})
-    expected = "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = False\n"
-    assert (tmp_path / "etc/check_mk/multisite.d/mkeventd.mk").read_text() == expected
-    assert (tmp_path / "etc/check_mk/conf.d/mkeventd.mk").read_text() == expected
+    expected_off = "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = False\n"
+    assert (tmp_path / "etc/check_mk/multisite.d/mkeventd.mk").read_text() == expected_off
+    assert (tmp_path / "etc/check_mk/conf.d/mkeventd.mk").read_text() == expected_off

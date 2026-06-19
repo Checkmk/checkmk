@@ -74,10 +74,7 @@ class EvaluatedGraph:
 @dataclass(frozen=True, kw_only=True)
 class DiscoveredGraph:
     graph: Graph
-    title: str
-    vertical_range: EvaluatedVerticalRange | None
-    stacks: Sequence[EvaluatedStack]
-    lines: Sequence[EvaluatedLine]
+    evaluated: EvaluatedGraph
 
 
 @dataclass(frozen=True, kw_only=True)

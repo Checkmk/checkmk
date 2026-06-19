@@ -122,10 +122,7 @@ def _discover(
     return [
         DiscoveredGraph(
             graph=graph,
-            title=evaluated.title,
-            vertical_range=evaluated.vertical_range,
-            stacks=evaluated.stacks,
-            lines=evaluated.lines,
+            evaluated=evaluated,
         )
         for graph, evaluated in zip(
             graphs,
@@ -161,12 +158,7 @@ def _assert_refresh_reproduces_discovery(
     discovered: Sequence[DiscoveredGraph],
     evaluated: Sequence[EvaluatedGraph],
 ) -> None:
-    assert [graph.name for graph in evaluated] == [graph.graph.name for graph in discovered]
-    for discovered_graph, evaluated_graph in zip(discovered, evaluated):
-        assert evaluated_graph.title == discovered_graph.title
-        assert evaluated_graph.vertical_range == discovered_graph.vertical_range
-        assert evaluated_graph.stacks == discovered_graph.stacks
-        assert evaluated_graph.lines == discovered_graph.lines
+    assert list(evaluated) == [discovered_graph.evaluated for discovered_graph in discovered]
 
 
 def test_update_reproduces_a_title_expression_for_a_non_drawn_metric() -> None:
@@ -190,7 +182,7 @@ def test_update_reproduces_a_title_expression_for_a_non_drawn_metric() -> None:
     )
 
     [discovered] = _discover(rrd, [plugin])
-    assert discovered.title == "CPU - 8 cores"
+    assert discovered.evaluated.title == "CPU - 8 cores"
 
     evaluated = _refresh(rrd, [discovered])
     _assert_refresh_reproduces_discovery([discovered], evaluated)
@@ -224,8 +216,11 @@ def test_update_reproduces_a_compound_and_simple_line_graph() -> None:
 
     [discovered] = _discover(rrd, [plugin])
     # A compound group becomes a stack; the simple line stays a line.
-    assert [curve.value for stack in discovered.stacks for curve in stack.members] == [10.0, 20.0]
-    assert [line.curve.value for line in discovered.lines] == [30.0]
+    assert [curve.value for stack in discovered.evaluated.stacks for curve in stack.members] == [
+        10.0,
+        20.0,
+    ]
+    assert [line.curve.value for line in discovered.evaluated.lines] == [30.0]
 
     evaluated = _refresh(rrd, [discovered])
     _assert_refresh_reproduces_discovery([discovered], evaluated)
@@ -245,7 +240,9 @@ def test_update_reproduces_a_fallback_single_metric_graph() -> None:
 
     [discovered] = _discover(rrd, [])
     assert discovered.graph.name == "temp"
-    assert [curve.value for stack in discovered.stacks for curve in stack.members] == [42.0]
+    assert [curve.value for stack in discovered.evaluated.stacks for curve in stack.members] == [
+        42.0
+    ]
 
     evaluated = _refresh(rrd, [discovered])
     _assert_refresh_reproduces_discovery([discovered], evaluated)
@@ -273,7 +270,7 @@ def test_update_reproduces_a_renamed_and_scaled_metric() -> None:
 
     [discovered] = _discover(rrd, [], translations=translations)
     assert discovered.graph.name == "temp"
-    [curve] = [curve for stack in discovered.stacks for curve in stack.members]
+    [curve] = [curve for stack in discovered.evaluated.stacks for curve in stack.members]
     assert curve.value == 42.0
     assert curve.time_series == _ts(20.0, 20.0, 20.0, 20.0, 20.0, 20.0)
 
@@ -328,8 +325,8 @@ def test_update_reproduces_a_natively_gridded_series() -> None:
 
     [discovered] = _discover(rrd, [plugin])
     # The fetched series is aligned to the six requested points.
-    assert len(discovered.lines[0].curve.time_series.values) == 6
-    assert discovered.lines[0].curve.time_series.time_range == _TIME_RANGE
+    assert len(discovered.evaluated.lines[0].curve.time_series.values) == 6
+    assert discovered.evaluated.lines[0].curve.time_series.time_range == _TIME_RANGE
 
     evaluated = _refresh(rrd, [discovered])
     _assert_refresh_reproduces_discovery([discovered], evaluated)
@@ -354,7 +351,7 @@ def test_refresh_picks_up_a_changed_value_and_series() -> None:
     later = _cpu_rrd(value=9.0, series=_ts(7.0, 8.0, 9.0, 10.0, 11.0, 12.0))
 
     [discovered] = _discover(at_discovery, [plugin])
-    assert discovered.lines[0].curve.value == 3.0
+    assert discovered.evaluated.lines[0].curve.value == 3.0
 
     [evaluated] = _refresh(later, [discovered])
 
@@ -388,7 +385,7 @@ def test_refresh_picks_up_a_changed_title_scalar() -> None:
         )
 
     [discovered] = _discover(_rrd(8.0), [plugin])
-    assert discovered.title == "CPU - 8 cores"
+    assert discovered.evaluated.title == "CPU - 8 cores"
 
     # The machine grew to 16 cores; the refreshed title reflects the new scalar.
     [evaluated] = _refresh(_rrd(16.0), [discovered])
@@ -426,7 +423,7 @@ def test_refresh_drops_a_curve_whose_metric_disappeared() -> None:
     )
 
     [discovered] = _discover(at_discovery, [plugin])
-    assert [line.curve.title for line in discovered.lines] == ["Metric", "Metric"]
+    assert [line.curve.title for line in discovered.evaluated.lines] == ["Metric", "Metric"]
 
     [evaluated] = _refresh(later, [discovered])
     # The curve of the vanished metric is dropped; cpu_user's line remains.

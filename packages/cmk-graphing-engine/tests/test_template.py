@@ -160,10 +160,7 @@ def _discover(
     return [
         DiscoveredGraph(
             graph=graph,
-            title=evaluated.title,
-            vertical_range=evaluated.vertical_range,
-            stacks=evaluated.stacks,
-            lines=evaluated.lines,
+            evaluated=evaluated,
         )
         for graph, evaluated in zip(
             graphs,
@@ -198,8 +195,10 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
 
     assert discovered.graph == Graph(name=cpu_user, title=cpu_user, stacks=[_stack(_rrd(cpu_user))])
     # The single metric is drawn as a stacked curve carrying its value.
-    assert [curve.value for stack in discovered.stacks for curve in stack.members] == [1.0]
-    assert discovered.lines == []
+    assert [curve.value for stack in discovered.evaluated.stacks for curve in stack.members] == [
+        1.0
+    ]
+    assert discovered.evaluated.lines == []
 
 
 def test_discovered_graphs_groups_options_with_graphs() -> None:
@@ -238,8 +237,8 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
     assert len(discovered) == 1
     assert discovered[0].graph == parse_graph_from_api(plugin, service, _METRICS, _id)
     # A plain title without expressions is carried through unchanged.
-    assert discovered[0].title == "CPU"
-    assert [line.curve.value for line in discovered[0].lines] == [1.0, 1.0]
+    assert discovered[0].evaluated.title == "CPU"
+    assert [line.curve.value for line in discovered[0].evaluated.lines] == [1.0, 1.0]
 
 
 def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() -> None:
@@ -359,7 +358,7 @@ def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantit
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     # cpu_user is drawn with its value; the scalar reference draws cpu_system's lower warning.
-    assert [line.curve.value for line in discovered.lines] == [1.0, 50.0]
+    assert [line.curve.value for line in discovered.evaluated.lines] == [1.0, 50.0]
 
 
 def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics() -> None:
@@ -379,7 +378,7 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     # cpu_user is drawn with its value; the scalar reference draws cpu_system's warning.
-    assert [line.curve.value for line in discovered.lines] == [1.0, 50.0]
+    assert [line.curve.value for line in discovered.evaluated.lines] == [1.0, 50.0]
 
 
 def test_discover_template_graphs_evaluates_the_title_expression() -> None:
@@ -396,7 +395,7 @@ def test_discover_template_graphs_evaluates_the_title_expression() -> None:
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     # The evaluated title is exposed via title; the graph keeps its raw title.
-    assert discovered.title == "CPU - 8 cores"
+    assert discovered.evaluated.title == "CPU - 8 cores"
     assert "_EXPRESSION:" in discovered.graph.title
 
 
@@ -414,7 +413,7 @@ def test_discover_template_graphs_title_expression_falls_back_when_unresolvable(
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert discovered.title == "CPU"
+    assert discovered.evaluated.title == "CPU"
 
 
 def test_discover_template_graphs_requires_a_metric_referenced_only_in_the_title() -> None:
@@ -455,7 +454,7 @@ def test_discover_template_graphs_claims_a_metric_referenced_only_in_the_title()
     # The plugin matches and claims cpu_user via its title, so cpu_user is not emitted separately.
     assert len(discovered) == 1
     assert discovered[0].graph.name == "cpu"
-    assert discovered[0].title == "CPU - 8 cores"
+    assert discovered[0].evaluated.title == "CPU - 8 cores"
 
 
 def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> None:
@@ -474,7 +473,7 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> 
     assert isinstance(graph, Graph)
     assert _line(_rrd(predict)) in graph.lines
     # cpu_user and its predictive companion are both drawn (neither dropped for missing data).
-    assert len(discovered[0].lines) == 2
+    assert len(discovered[0].evaluated.lines) == 2
 
 
 def test_discover_template_graphs_adds_predictive_lines_to_a_fallback_graph() -> None:

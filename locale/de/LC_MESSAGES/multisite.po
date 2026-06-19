@@ -4,11 +4,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-06-18 10:30+0000\n"
-"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
-"de/>\n"
+"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
+">\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -814,6 +814,12 @@ msgstr "%s: Service-Erkennung: Berechtigung verweigert"
 #, python-format
 msgid "%s: Uses SSL"
 msgstr "%s: Verwendet SSL"
+
+#, python-format
+msgid ""
+"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
+"version %s and must not be relied on for permanent configuration."
+msgstr ""
 
 msgid "&lt;None&gt;"
 msgstr "&lt;keine&gt;"
@@ -4837,6 +4843,10 @@ msgstr "Erweiterte Simulation der Bedingungen"
 msgid "Advanced configuration options"
 msgstr "Erweiterte Konfigurationsmöglichkeiten"
 
+#, fuzzy
+msgid "Advanced connection options"
+msgstr "Erweiterte Konfigurationsmöglichkeiten"
+
 msgid "Advanced options"
 msgstr "Erweiterte Optionen"
 
@@ -7387,6 +7397,11 @@ msgstr "Angenommene Sendegeschwindigkeit"
 #, python-format
 msgid "Assumed to be %s"
 msgstr "Angenommen %s"
+
+msgid ""
+"Assuming your Proxmox username is 'checkmk', it needs to be configured as "
+"'checkmk@pve' here"
+msgstr ""
 
 msgid "Asynchronous"
 msgstr "Asynchron"
@@ -14399,6 +14414,22 @@ msgstr "Microsoft Azure (veraltet) Monitoring in Checkmk konfigurieren"
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "Microsoft Azure Monitoring in Checkmk konfigurieren"
 
+#, fuzzy
+msgid "Configure Proxmox VE authentication"
+msgstr "Proxmox VE Replikation"
+
+#, fuzzy
+msgid "Configure Proxmox VE authentication for Checkmk"
+msgstr "Microsoft Azure Monitoring in Checkmk konfigurieren"
+
+#, fuzzy
+msgid "Configure Proxmox VE host"
+msgstr "Konfiguriere Host"
+
+#, fuzzy
+msgid "Configure Proxmox VE monitoring in Checkmk"
+msgstr "Microsoft Azure Monitoring in Checkmk konfigurieren"
+
 msgid "Configure SNMP related settings using rule sets"
 msgstr "Konfigurieren Sie SNMP-bezogene Einstellungen mithilfe von Regelsätzen"
 
@@ -14411,6 +14442,9 @@ msgstr ""
 
 msgid "Configure Windows Firewall to allow host monitoring"
 msgstr "Konfiguriere Windows Firewall so, dass Host-Monitoring erlaubt ist"
+
+msgid "Configure a Proxmox VE API user to fetch node and VM information"
+msgstr ""
 
 msgid "Configure a log file section"
 msgstr "Konfiguriere eine Log-Datei-Sektion"
@@ -15658,6 +15692,13 @@ msgstr ""
 "Der Zugriff auf Ihr GCP-Konto war nicht möglich. Bitte überprüfen Sie Ihre "
 "Zugangsdaten."
 
+#, fuzzy
+msgid ""
+"Could not access your Proxmox VE account. Please check your credentials."
+msgstr ""
+"Der Zugriff auf Ihr GCP-Konto war nicht möglich. Bitte überprüfen Sie Ihre "
+"Zugangsdaten."
+
 #, python-format
 msgid ""
 "Could not connect to automation helper. Possibly the service <tt>automation-"
@@ -16063,6 +16104,11 @@ msgstr "Zusammenfassung für alle physischen Festplatten erstellen"
 
 msgid "Create a summary service for all alert rules"
 msgstr "Erstellen Sie einen zusammenfassenden Service für alle Alert-Regeln"
+
+msgid ""
+"Create a user in the 'Proxmox VE authentication server' realm in Proxmox, "
+"which you use exclusively for monitoring with Checkmk"
+msgstr ""
 
 msgid ""
 "Create a workflow 'Post to a channel when a webhook request is received' for "
@@ -22637,6 +22683,11 @@ msgstr ""
 "Geben Sie eine Plugin-Ausgabe ein, um zu definieren, wonach gefiltert werden "
 "soll."
 
+msgid ""
+"Enter a unique configuration ID, your Proxmox VE node's host name and define "
+"the folder path where nodes and VMs should be created"
+msgstr ""
+
 msgid "Enter a valid IP address or host name."
 msgstr "Geben Sie eine gültige IP-Adresse oder einen gültigen Host-Namen ein."
 
@@ -22781,6 +22832,10 @@ msgid ""
 msgstr ""
 "Geben Sie hier den Dienstnamen für Uniserv an (dies hat nichts mit dem "
 "Service-Namen zu tun)."
+
+#, fuzzy
+msgid "Enter the user credentials below"
+msgstr "Anmeldedaten des Datenbankbenutzers"
 
 msgid "Enter the workflow name for the project here. E.g. \"in progress\"."
 msgstr ""
@@ -26622,6 +26677,11 @@ msgstr "Benutzer aus gefundenen Prozessen holen"
 
 msgid "Gracefully finishing"
 msgstr "Anständig beenden"
+
+msgid ""
+"Grant the user the permissions \"Role: PVEAuditor\" and \"Path: /\" (via "
+"User permissions or Group permissions)"
+msgstr ""
 
 msgid "Grants modify access to all maps the user is contact for."
 msgstr ""
@@ -42523,6 +42583,10 @@ msgstr "Für dieses Bündel wurde keine Prometheus-Konfiguration gefunden."
 msgid "No Prometheus configuration yet"
 msgstr "Noch keine Prometheus-Konfiguration vorhanden"
 
+#, fuzzy
+msgid "No Proxmox VE services found."
+msgstr "Keine GCP-Services gefunden."
+
 msgid "No Relay ID specified."
 msgstr "Keine Relay-ID spezifiziert."
 
@@ -43486,6 +43550,12 @@ msgstr ""
 "Hinweis: Das gleichzeitige Monitoring von Nutanix Prism Element und Nutanix "
 "Prism Central wird nicht unterstützt. Dies kann zu widersprüchlichen "
 "Piggyback-Daten führen."
+
+msgid ""
+"Note: The 'IP address' option under 'Specify Proxmox VE host via...' is not "
+"supported in the Quick Setup. Hosts created here have no explicit IP "
+"address, so please use 'Host name' or 'Custom host' instead."
+msgstr ""
 
 #, no-python-format
 msgid ""
@@ -50177,6 +50247,10 @@ msgstr "Proxmox VE Speicher in Prozent verwendet"
 msgid "Proxmox VE network throughput"
 msgstr "Proxmox VE Netzwerkdurchsatz"
 
+#, fuzzy
+msgid "Proxmox VE services found!"
+msgstr "GCP Services gefunden!"
+
 msgid "Proxmox cluster"
 msgstr "Proxmox-Cluster"
 
@@ -51690,6 +51764,10 @@ msgstr "Relays"
 msgid "Release extension package \"%s\""
 msgstr "Erweiterungspaket \"%s\" freigeben"
 
+#, fuzzy
+msgid "Release flags"
+msgstr "Paket freigeben"
+
 msgid "Release package"
 msgstr "Paket freigeben"
 
@@ -53197,6 +53275,10 @@ msgstr "Fremde Änderungen rückgängig machen"
 
 msgid "Reverting pending changes."
 msgstr "Ausstehenden Änderungen werden rückgängig gemacht."
+
+#, fuzzy
+msgid "Review and run connection test"
+msgstr "Speichern & Verbindungstests durchführen"
 
 msgid "Review and run preview service discovery"
 msgstr "Überprüfen und Ausführen einer Vorschau der Service-Erkennung"
@@ -63709,6 +63791,16 @@ msgstr ""
 msgid ""
 "The connection to GCP was successful, but no services were found. If this is "
 "unintentional, please verify your configuration."
+msgstr ""
+"Die Verbindung zu AWS war erfolgreich, aber es wurden keine Services "
+"gefunden. Wenn dies nicht beabsichtigt ist, überprüfen Sie bitte Ihre "
+"Konfiguration."
+
+#, fuzzy
+msgid ""
+"The connection to Proxmox VE was successful, but no services were found. "
+"This can be the case if your chosen host name does not match a node name "
+"within Proxmox VE. Otherwise, please verify your configuration."
 msgstr ""
 "Die Verbindung zu AWS war erfolgreich, aber es wurden keine Services "
 "gefunden. Wenn dies nicht beabsichtigt ist, überprüfen Sie bitte Ihre "
@@ -80720,6 +80812,12 @@ msgstr "Verschwendeter Platz in Tabelle und Indexen"
 
 msgid "Watch the total size of the log file"
 msgstr "Gesamtgröße der Log-Datei überwachen"
+
+msgid ""
+"We also recommend that you install Checkmk Linux agents on the Proxmox VE "
+"nodes — this will provide you with much more interesting information about "
+"your Proxmox VE environment."
+msgstr ""
 
 #, python-format
 msgid ""

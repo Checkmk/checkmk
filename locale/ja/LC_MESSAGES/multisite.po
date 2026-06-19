@@ -799,6 +799,12 @@ msgstr "%s:サービス検出:パーミッションが拒否されました"
 msgid "%s: Uses SSL"
 msgstr "%s: SSLを使用"
 
+#, python-format
+msgid ""
+"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
+"version %s and must not be relied on for permanent configuration."
+msgstr ""
+
 msgid "&lt;None&gt;"
 msgstr "&lt;なし&gt;"
 
@@ -4690,6 +4696,10 @@ msgstr "高度な条件シミュレーション"
 msgid "Advanced configuration options"
 msgstr "高度な条件シミュレーション"
 
+#, fuzzy
+msgid "Advanced connection options"
+msgstr "高度な条件シミュレーション"
+
 msgid "Advanced options"
 msgstr "高度なオプション"
 
@@ -7147,6 +7157,11 @@ msgstr "想定出力速度"
 #, python-format
 msgid "Assumed to be %s"
 msgstr "%s と見なされます"
+
+msgid ""
+"Assuming your Proxmox username is 'checkmk', it needs to be configured as "
+"'checkmk@pve' here"
+msgstr ""
 
 msgid "Asynchronous"
 msgstr "非同期"
@@ -13978,6 +13993,22 @@ msgstr "CheckmkでMicrosoft Azure(非推奨)監視を構成する"
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "CheckmkでMicrosoft Azure監視を構成する"
 
+#, fuzzy
+msgid "Configure Proxmox VE authentication"
+msgstr "Proxmox VE レプリケーション"
+
+#, fuzzy
+msgid "Configure Proxmox VE authentication for Checkmk"
+msgstr "CheckmkでMicrosoft Azure監視を構成する"
+
+#, fuzzy
+msgid "Configure Proxmox VE host"
+msgstr "ホスト設定"
+
+#, fuzzy
+msgid "Configure Proxmox VE monitoring in Checkmk"
+msgstr "CheckmkでMicrosoft Azure監視を構成する"
+
 msgid "Configure SNMP related settings using rule sets"
 msgstr "ルールセットを使用してSNMP関連の設定を行う"
 
@@ -13990,6 +14021,9 @@ msgstr ""
 
 msgid "Configure Windows Firewall to allow host monitoring"
 msgstr "ホストの監視を許可するようにWindowsファイアウォールを構成する"
+
+msgid "Configure a Proxmox VE API user to fetch node and VM information"
+msgstr ""
 
 msgid "Configure a log file section"
 msgstr "ログファイルセクションを構成する"
@@ -15182,6 +15216,11 @@ msgstr ""
 msgid "Could not access your GCP account. Please check your credentials."
 msgstr "GCPアカウントにアクセスできませんでした。認証情報を確認してください。"
 
+#, fuzzy
+msgid ""
+"Could not access your Proxmox VE account. Please check your credentials."
+msgstr "GCPアカウントにアクセスできませんでした。認証情報を確認してください。"
+
 #, python-format
 msgid ""
 "Could not connect to automation helper. Possibly the service <tt>automation-"
@@ -15573,6 +15612,11 @@ msgstr "すべての物理ディスクの要約を作成する"
 
 msgid "Create a summary service for all alert rules"
 msgstr "すべてのアラートルールに対するサマリーサービスを作成する"
+
+msgid ""
+"Create a user in the 'Proxmox VE authentication server' realm in Proxmox, "
+"which you use exclusively for monitoring with Checkmk"
+msgstr ""
 
 msgid ""
 "Create a workflow 'Post to a channel when a webhook request is received' for "
@@ -22021,6 +22065,11 @@ msgid "Enter a plug-in output to define what to filter for."
 msgstr ""
 "フィルタリングの対象を指定するために、プラグインの出力を入力してください。"
 
+msgid ""
+"Enter a unique configuration ID, your Proxmox VE node's host name and define "
+"the folder path where nodes and VMs should be created"
+msgstr ""
+
 msgid "Enter a valid IP address or host name."
 msgstr "有効なIPアドレスもマクロもありません。"
 
@@ -22146,6 +22195,10 @@ msgid ""
 "Enter the uniserve service name here (has nothing to do with service name)."
 msgstr ""
 "ここに uniserve サービス名を入力します (サービスの説明とは関係ありません)。"
+
+#, fuzzy
+msgid "Enter the user credentials below"
+msgstr "データベースユーザー資格情報"
 
 msgid "Enter the workflow name for the project here. E.g. \"in progress\"."
 msgstr "ここにプロジェクトのワークフロー名を入力します。例:\"進行中\"。"
@@ -25910,6 +25963,11 @@ msgstr "見つかったプロセスからユーザーを取得します"
 
 msgid "Gracefully finishing"
 msgstr "グレースフル終了"
+
+msgid ""
+"Grant the user the permissions \"Role: PVEAuditor\" and \"Path: /\" (via "
+"User permissions or Group permissions)"
+msgstr ""
 
 msgid "Grants modify access to all maps the user is contact for."
 msgstr "ユーザーが担当するすべてのマップに対する変更アクセス権を付与します。"
@@ -41465,6 +41523,10 @@ msgstr "Prometheusの設定はまだ行われていません"
 msgid "No Prometheus configuration yet"
 msgstr "Prometheusの設定はまだ行われていません"
 
+#, fuzzy
+msgid "No Proxmox VE services found."
+msgstr "GCPサービスが見つかりません。"
+
 msgid "No Relay ID specified."
 msgstr "リレーIDが指定されていません。"
 
@@ -42404,6 +42466,12 @@ msgid ""
 msgstr ""
 "注：Nutanix Prism Element と Nutanix Prism Central の同時監視はサポートされて"
 "いません。これを行うと、ピギーバックデータの競合が発生する可能性があります。"
+
+msgid ""
+"Note: The 'IP address' option under 'Specify Proxmox VE host via...' is not "
+"supported in the Quick Setup. Hosts created here have no explicit IP "
+"address, so please use 'Host name' or 'Custom host' instead."
+msgstr ""
 
 #, no-python-format
 msgid ""
@@ -48940,6 +49008,10 @@ msgstr "Proxmox VEメモリ使用率"
 msgid "Proxmox VE network throughput"
 msgstr "Proxmox VE ネットワークスループット"
 
+#, fuzzy
+msgid "Proxmox VE services found!"
+msgstr "GCPサービスを発見しました！"
+
 msgid "Proxmox cluster"
 msgstr "Proxmoxクラスター"
 
@@ -50435,6 +50507,10 @@ msgstr "リレー"
 msgid "Release extension package \"%s\""
 msgstr "拡張パッケージ \"%s\"をリリースする"
 
+#, fuzzy
+msgid "Release flags"
+msgstr "リリースパッケージ"
+
 msgid "Release package"
 msgstr "リリースパッケージ"
 
@@ -51922,6 +51998,10 @@ msgstr "他者の変更を戻す"
 
 msgid "Reverting pending changes."
 msgstr "保留中の変更を戻す。"
+
+#, fuzzy
+msgid "Review and run connection test"
+msgstr "保存して接続テストを実行"
 
 msgid "Review and run preview service discovery"
 msgstr "サービスディスカバリーのプレビュー実行とレビュー"
@@ -62080,6 +62160,15 @@ msgstr ""
 msgid ""
 "The connection to GCP was successful, but no services were found. If this is "
 "unintentional, please verify your configuration."
+msgstr ""
+"GCPへの接続は成功しましたが、サービスが見つかりませんでした。これが意図しない"
+"場合、設定を確認してください。"
+
+#, fuzzy
+msgid ""
+"The connection to Proxmox VE was successful, but no services were found. "
+"This can be the case if your chosen host name does not match a node name "
+"within Proxmox VE. Otherwise, please verify your configuration."
 msgstr ""
 "GCPへの接続は成功しましたが、サービスが見つかりませんでした。これが意図しない"
 "場合、設定を確認してください。"
@@ -78453,6 +78542,12 @@ msgstr "テーブルとインデックスの無駄なスペース"
 
 msgid "Watch the total size of the log file"
 msgstr "ログファイルの合計サイズを監視する"
+
+msgid ""
+"We also recommend that you install Checkmk Linux agents on the Proxmox VE "
+"nodes — this will provide you with much more interesting information about "
+"your Proxmox VE environment."
+msgstr ""
 
 #, python-format
 msgid ""

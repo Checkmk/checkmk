@@ -156,6 +156,7 @@ mainMenu.onNavigate((item: NavItem) => {
   display: flex;
   height: calc(100% - 81px);
   flex-wrap: wrap;
+  min-width: 100%;
 
   /*
     Workaround for nav item topics overflowing the popup.

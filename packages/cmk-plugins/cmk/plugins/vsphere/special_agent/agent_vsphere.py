@@ -2095,18 +2095,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         argv = sys.argv[1:]
 
     opt = parse_arguments(argv)
+    auth = (opt.user, resolve_secret_option(opt, SECRET_OPTION))
 
     socket.setdefaulttimeout(opt.timeout)
 
     try:
         esx_connection = ESXConnection(opt.host_address, opt.port, opt)
 
-        esx_connection.login(opt.user, resolve_secret_option(opt, SECRET_OPTION))
+        esx_connection.login(*auth)
         try:
             vsphere_output = fetch_data(esx_connection, opt)
         except ESXCookieInvalid:
             esx_connection.delete_server_cookie()
-            esx_connection.login(opt.user, opt.secret)
+            esx_connection.login(*auth)
             vsphere_output = fetch_data(esx_connection, opt)
 
     except Exception as exc:

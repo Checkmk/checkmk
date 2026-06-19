@@ -1020,6 +1020,10 @@ class FolderTree:
         return self._redis_client
 
     @cached_property
+    def wato_info_storage_manager(self) -> _WATOInfoStorageManager:
+        return _WATOInfoStorageManager()
+
+    @cached_property
     def folder_lookup_cache(self) -> FolderLookupCache:
         return FolderLookupCache(self)
 
@@ -1291,7 +1295,7 @@ class Folder(FolderProtocol):
         parent_folder: Folder | None,
     ) -> Folder:
         folder_path = os.path.join(parent_folder.path(), name) if parent_folder else name
-        serialized = cls.wato_info_storage_manager().read(
+        serialized = tree.wato_info_storage_manager.read(
             Path(_folder_wato_info_path(_folder_filesystem_path(tree.get_root_dir(), folder_path)))
         )
 
@@ -1676,17 +1680,11 @@ class Folder(FolderProtocol):
             raise ValueError("unique identifier not set")
         return self._id
 
-    @classmethod
-    def wato_info_storage_manager(cls) -> _WATOInfoStorageManager:
-        if "wato_info_storage_manager" not in g:
-            g.wato_info_storage_manager = _WATOInfoStorageManager()
-        return g.wato_info_storage_manager
-
     def save_folder_attributes(self) -> None:
         """Save the current state of the instance to a file."""
         self.attributes = update_metadata(self.attributes)
         self._save_folder_attributes(
-            storage_list=self.wato_info_storage_manager().write_storages,
+            storage_list=self.tree.wato_info_storage_manager.write_storages,
         )
         if may_use_redis():
             self.tree.redis_client.save_folder_info(self)

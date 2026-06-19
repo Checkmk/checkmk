@@ -448,6 +448,67 @@ fn test_migrate_reference_config_connection_and_auth() {
     );
 }
 
+#[test]
+fn test_migrate_reference_config_sections() {
+    use mk_oracle::config::section::SectionKind;
+    use mk_oracle::types::SectionAffinity;
+
+    let cfg = legacy_cfg_path();
+    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+    let sections = ora.all_sections();
+
+    let find = |name: &str| -> &mk_oracle::config::section::Section {
+        sections
+            .iter()
+            .find(|s| s.name().as_str() == name)
+            .unwrap_or_else(|| panic!("section {name} not found"))
+    };
+
+    // (name, expected_kind, expected_affinity)
+    use SectionAffinity::{All, Asm, Db};
+    use SectionKind::{Async, Sync};
+    let expected: &[(&str, SectionKind, SectionAffinity)] = &[
+        ("asm_diskgroup", Async, Asm),
+        ("dataguard_stats", Sync, Db),
+        ("instance", Sync, All),
+        ("jobs", Async, Db),
+        ("locks", Sync, Db),
+        ("logswitches", Sync, Db),
+        ("longactivesessions", Sync, Db),
+        ("performance", Sync, Db),
+        ("processes", Sync, All),
+        ("recovery_area", Sync, Db),
+        ("recovery_status", Sync, Db),
+        ("resumable", Async, Db),
+        ("rman", Async, Db),
+        ("sessions", Sync, Db),
+        // windows agent plugin does not implement systemparameter
+        #[cfg(not(windows))]
+        ("systemparameter", Sync, Db),
+        ("tablespaces", Async, Db),
+        ("undostat", Sync, Db),
+    ];
+
+    assert_eq!(
+        sections.len(),
+        expected.len(),
+        "expected {:#?} sections, got {:#?}",
+        expected,
+        sections
+    );
+
+    for (name, kind, affinity) in expected {
+        let s = find(name);
+        assert_eq!(s.kind(), *kind, "{name}: wrong kind");
+        assert_eq!(*s.affinity(), *affinity, "{name}: wrong affinity");
+    }
+}
+
 #[cfg(not(windows))]
 fn legacy_cfg_no_tnsalias_path() -> String {
     const REFERENCE_FILE: &str = "output-xe-no-tnsalias.cfg";

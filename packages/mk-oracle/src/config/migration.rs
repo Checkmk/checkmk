@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::{bail, Result};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 /// Full migration pipeline: read legacy config, execute it, convert to new format.
@@ -56,6 +56,19 @@ fn optional_value(s: &str) -> Option<String> {
     (!s.is_empty()).then(|| s.to_string())
 }
 
+fn parse_sections(variables: &HashMap<String, String>, key: &str) -> HashSet<String> {
+    variables
+        .get(key)
+        .map(|v| {
+            v.split(' ')
+                .filter(|s| !s.is_empty())
+                .map(String::from)
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+// TODO(sk): parse whole config and return Vec<LegacyDbUser> instead of just DBUSER
 fn parse_dbuser(name: &str, value: &str) -> Result<LegacyDbUser> {
     if name != "DBUSER" && !name.starts_with("DBUSER_") {
         bail!("invalid variable name: {name}, expected DBUSER or DBUSER_*");
@@ -121,6 +134,28 @@ pub fn convert(
         out.push_str(&format!("# {name} {value}\n"));
     }
 
+    let sync_normal = parse_sections(variables, "SYNC_SECTIONS");
+    let async_normal = parse_sections(variables, "ASYNC_SECTIONS");
+    let sync_asm = parse_sections(variables, "SYNC_ASM_SECTIONS");
+    let async_asm = parse_sections(variables, "ASYNC_ASM_SECTIONS");
+
+    let all_normal: HashSet<&str> = sync_normal
+        .iter()
+        .chain(async_normal.iter())
+        .map(|s| s.as_str())
+        .collect();
+    let all_asm: HashSet<&str> = sync_asm
+        .iter()
+        .chain(async_asm.iter())
+        .map(|s| s.as_str())
+        .collect();
+    let all_async: HashSet<&str> = async_normal
+        .iter()
+        .chain(async_asm.iter())
+        .map(|s| s.as_str())
+        .collect();
+    let all_sections: HashSet<&str> = all_normal.union(&all_asm).copied().collect();
+
     out.push_str("# --- Unified Config ---\n---\noracle:\n  main:\n");
 
     // connection
@@ -178,6 +213,24 @@ pub fn convert(
                 if let Some(role) = &entry.role {
                     out.push_str(&format!("          role: {}\n", role.to_lowercase()));
                 }
+            }
+        }
+    }
+
+    // sections
+    if !all_sections.is_empty() {
+        let mut sorted: Vec<&str> = all_sections.into_iter().collect();
+        sorted.sort();
+        out.push_str("    sections:\n");
+        for name in sorted {
+            out.push_str(&format!("      - {name}:\n"));
+            if all_async.contains(name) {
+                out.push_str("          is_async: yes\n");
+            }
+            if all_normal.contains(name) && all_asm.contains(name) {
+                out.push_str("          affinity: \"all\"\n");
+            } else if all_asm.contains(name) {
+                out.push_str("          affinity: \"asm\"\n");
             }
         }
     }
@@ -329,7 +382,10 @@ fn build_powershell_script(config_path: &Path) -> String {
         r#". {quoted_path}
 foreach ($__n in @({var_list})) {{
   $__v = (Get-Variable -Name $__n -ValueOnly -ErrorAction SilentlyContinue)
-  if ($__v -is [array]) {{ $__v = ($__v -join ':') + ':' }}
+  if ($__v -is [array]) {{
+    if ($__n -like 'DBUSER*' -or $__n -like 'ASMUSER*') {{ $__v = ($__v -join ':') + ':' }}
+    else {{ $__v = $__v -join ' ' }}
+  }}
   if ($__v) {{ Write-Output "$__n $__v" }}
 }}
 Get-Variable | Where-Object {{ {prefix_filter} }} | ForEach-Object {{
@@ -438,6 +494,60 @@ mod tests {
         let result = convert("", "/test/cfg", &vars, TS).unwrap();
         assert!(!result.contains("      - sid: XE2\n        alias:"));
         assert!(result.contains("      - sid: XE1\n        alias: oooo\n"));
+    }
+
+    #[test]
+    fn test_parse_sections() {
+        let vars = HashMap::from([("SYNC_SECTIONS".into(), "instance performance locks".into())]);
+        let result = parse_sections(&vars, "SYNC_SECTIONS");
+        assert_eq!(
+            result,
+            HashSet::from(["instance".into(), "performance".into(), "locks".into()])
+        );
+        assert!(parse_sections(&vars, "MISSING").is_empty());
+    }
+
+    #[test]
+    fn test_convert_sections_with_async_flag() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "user:pass::::".into()),
+            ("SYNC_SECTIONS".into(), "instance locks".into()),
+            ("ASYNC_SECTIONS".into(), "tablespaces rman".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(result.contains("      - instance:\n"));
+        assert!(result.contains("      - locks:\n"));
+        assert!(result.contains("      - rman:\n          is_async: yes\n"));
+        assert!(result.contains("      - tablespaces:\n          is_async: yes\n"));
+    }
+
+    #[test]
+    fn test_convert_sections_asm_affinity() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "user:pass::::".into()),
+            ("SYNC_SECTIONS".into(), "instance locks".into()),
+            ("ASYNC_SECTIONS".into(), "tablespaces".into()),
+            ("SYNC_ASM_SECTIONS".into(), "instance processes".into()),
+            ("ASYNC_ASM_SECTIONS".into(), "asm_diskgroup".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        // asm_diskgroup: async + asm-only
+        assert!(result.contains(
+            "      - asm_diskgroup:\n          is_async: yes\n          affinity: \"asm\"\n"
+        ));
+        // instance: sync normal + sync asm → affinity: all, not async
+        assert!(result.contains("      - instance:\n          affinity: \"all\"\n"));
+        assert!(!result.contains("      - instance:\n          is_async:"));
+        // processes: asm-only (not in normal)
+        assert!(result.contains("      - processes:\n          affinity: \"asm\"\n"));
+        // locks: normal-only, sync → no affinity, no async
+        assert!(result.contains("      - locks:\n"));
+        assert!(!result.contains("      - locks:\n          affinity:"));
+        // tablespaces: normal-only, async
+        assert!(result.contains("      - tablespaces:\n          is_async: yes\n"));
+        assert!(
+            !result.contains("      - tablespaces:\n          is_async: yes\n          affinity:")
+        );
     }
 
     #[test]

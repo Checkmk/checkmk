@@ -17,29 +17,29 @@ orasql:
       user: "" # mandatory
     sections: # optional, if absent will use default as defined below
       - instance: # special section
-        affinity: "all" # optional, default: "db", values: "all", "db", "asm"
+          affinity: "all" # optional, default: "db", values: "all", "db", "asm"
       - dataguard_stats:
       - locks:
       - logswitches:
       - longactivesessions:
       - performance:
       - processes:
-        affinity: "all" # optional, default "db", values: "all", "db", "asm"
+          affinity: "all" # optional, default "db", values: "all", "db", "asm"
       - recovery_area:
       - recovery_status:
       - sessions:
       - systemparameter:
       - undostat:
       - asm_diskgroup:
-        is_async: yes
-        affinity: "asm" # optional, default: "asm", values: "all", "db", "asm"
+          is_async: yes
+          affinity: "asm" # optional, default: "asm", values: "all", "db", "asm"
       - iostats:
-        is_async: yes
+          is_async: yes
       - jobs:
-        is_async: yes
+          is_async: yes
       - resumable:
-        is_async: yes
+          is_async: yes
       - rman:
-        is_async: yes
+          is_async: yes
       - tablespaces:
-        is_async: yes
+          is_async: yes

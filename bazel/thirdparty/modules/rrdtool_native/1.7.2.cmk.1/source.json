@@ -1,0 +1,16 @@
+{
+  "integrity": "sha256-oZn6637/fK/Eb6wlPmgtgz0Iky89uTpVCkpa8YDKWNs=",
+  "strip_prefix": "rrdtool-1.7.2",
+  "url": "https://github.com/oetiker/rrdtool-1.x/releases/download/v1.7.2/rrdtool-1.7.2.tar.gz",
+  "patches": {
+    "0001-xff_field_missing_from_rrdinfo.dif": "sha256-2GI23x9J+qt2DBVmczE3OmmxdlxHlrdNaCM+ibEm2UA=",
+    "0003-cli-xport-consistency.dif": "sha256-JyZ8LG7SZa22Ew9gN5O8UOADsjwrRwi6mNVYlrfppvI=",
+    "0004-fix-error-formatting.dif": "sha256-QCNUYC0Gmx0a3gllrA/g0iZUKLkmy5NwaYnxnw1xo/A=",
+    "0005-config-disable_nls.dif": "sha256-mUwerEKwQb1FSqoaENtN/TGKN2BWVHxrr6FYGQyk0dg="
+  },
+  "patch_strip": 1,
+  "overlay": {
+    "BUILD.bazel": "sha256-A0WQr4aPF974kTy8uEVdmXw3Eordm3qElJnhluQ95NQ=",
+    "MODULE.bazel": "sha256-yec89CluPPGIJ0F7h0N8Yfp9XRWDwmh4Oj8zLJpE1OY="
+  }
+}

@@ -1,4 +1,4 @@
-load("@//bazel/rules:dependency_info.bzl", "dependency_info")
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 dependency_info(
@@ -9,7 +9,7 @@ dependency_info(
     license_text = "COPYRIGHT",
     purl_namespace = None,
     purl_type = "generic",
-    version = "1.7.2",
+    version = module_version(),
 )
 
 MAKE_PARALLEL = "-j4"
@@ -26,9 +26,18 @@ filegroup(
 configure_make(
     name = "rrdtool",
     args = ["%s" % MAKE_PARALLEL],
-    build_data = [
-        "@omd_packages//omd/packages/perl-modules:perl-modules.tar",
-    ],
+    # Intentionally no @perl-modules dependency.  rrdtool's Perl bindings (RRDs,
+    # RRDp) compile against core Perl only (DynaLoader + ExtUtils::MakeMaker) and
+    # link librrd -- they consume no CPAN module from perl-modules.  The build
+    # produces RRDs.so/RRDs.pm/RRDp.pm into rrdtool's own lib/perl5 tree, which is
+    # what ships.  perl-modules was only ever an *install destination*: the old
+    # --with-perl-options 'LIB=$(execpath ...:perl-modules)/...' pointed RRDs into
+    # the perl-modules output tree, but commit 6c4631bd19d ("Update foreign_cc to
+    # 0.11.1") repointed LIB= to $EXT_BUILD_DEPS (see --with-perl-options below).
+    # The perl-modules.tar build_data had been staged but unused ever since, so
+    # dropping it changes no functionality.  The bindings currently build against
+    # the host Perl; a hermetic Perl toolchain will be introduced later, at which
+    # point they should build against that instead.
     configure_in_place = True,
     configure_options = [
         "--verbose",
@@ -70,9 +79,8 @@ configure_make(
         "-Wno-stringop-overflow",
     ],
     env = {
-        "RANLIB": "ranlib",
-        "PERL_DIR": "$$EXT_BUILD_DEPS/omd/packages/perl-modules",
         "CFLAGS": "'-Dredacted=\"redacted\"'",
+        "RANLIB": "ranlib",
         "top_builddir": ".",
     },
     install_prefix = "$INSTALLDIR",

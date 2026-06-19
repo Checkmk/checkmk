@@ -1,0 +1,19 @@
+--- rrdtool-1.7.1/src/rrd_flushcached.c.orig	2019-02-04 18:42:30.000000000 +0100
++++ rrdtool-1.7.1/src/rrd_flushcached.c	2020-09-03 11:02:14.149613651 +0200
+@@ -92,13 +92,14 @@
+             char *error;
+             int   remaining;
+ 
+-            error     = rrd_get_error();
++            error     = strdup(rrd_get_error());
+             remaining = options.argc - options.optind - 1;
+ 
+             rrd_set_error("Flushing of file \"%s\" failed: %s. Skipping "
+                     "remaining %i file%s.", options.argv[i],
+-                    (*error == '\0') ? "unknown error" : error,
++                    (error == NULL || *error == '\0') ? "unknown error" : error,
+                     remaining, (remaining == 1) ? "" : "s");
++            free(error);
+             break;
+         }
+     }

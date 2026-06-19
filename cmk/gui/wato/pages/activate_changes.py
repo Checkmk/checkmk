@@ -43,7 +43,6 @@ from cmk.gui.page_menu import (
     show_confirm_cancel_dialog,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, ReadOnlySpec, StaticIcon
@@ -84,6 +83,7 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.site_changes import ChangeSpec
+from cmk.gui.watolib.sites import site_management_registry
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils import paths, render
@@ -194,7 +194,9 @@ class ModeRevertChanges(WatoMode):
                 item=make_simple_link(folder_preserving_link([("mode", "auditlog")])),
             )
 
-    def _may_discard_changes(self, read_only_config: ReadOnlySpec, *, debug: bool) -> bool:
+    def _may_discard_changes(
+        self, read_only_config: ReadOnlySpec, *, file_to_restore: str | None
+    ) -> bool:
         if not user.may("wato.activate"):
             return False
 
@@ -204,7 +206,7 @@ class ModeRevertChanges(WatoMode):
         if read_only.is_enabled(read_only_config) and not read_only.may_override(read_only_config):
             return False
 
-        if not get_last_wato_snapshot_file(debug=debug):
+        if not file_to_restore:
             return False
 
         return True
@@ -216,16 +218,18 @@ class ModeRevertChanges(WatoMode):
         if not transactions.check_transaction():
             return None
 
-        if not self._may_discard_changes(config.wato_read_only, debug=config.debug):
+        activation_site_ids = list(activation_sites(config.sites))
+
+        file_to_restore = get_last_wato_snapshot_file(debug=config.debug)
+
+        if not self._may_discard_changes(config.wato_read_only, file_to_restore=file_to_restore):
             return None
 
         if not self._changes.has_changes():
             return None
 
-        # Now remove all currently pending changes by simply restoring the last automatically
-        # taken snapshot. Then activate the configuration. This should revert all pending changes.
-        file_to_restore = get_last_wato_snapshot_file(debug=config.debug)
-
+        # Revert all pending changes by restoring the last automatically taken snapshot, then
+        # activate the restored configuration to make it effective again.
         if not file_to_restore:
             raise MKUserError(None, _("There is no Setup snapshot to be restored."))
 
@@ -243,17 +247,38 @@ class ModeRevertChanges(WatoMode):
         )
 
         _extract_snapshot(file_to_restore)
-        activate_changes.execute_activate_changes(
-            [d.get_domain_request([]) for d in ABCConfigDomain.enabled_domains()],
-            is_remote_site=is_distributed_setup_remote_site(config.sites),
-        )
-
-        for site_id in activation_sites(config.sites):
-            self._changes.confirm_site_changes(site_id)
-
         request_index_rebuild()
 
-        flash(_("Pending changes reverted."))
+        active_config.sites = site_management_registry["site_management"].load_sites()
+        reverted_site_ids = list(activation_sites(active_config.sites))
+        local_site = omd_site()
+
+        # Activate the local site since its files were just rewritten
+        manager = activate_changes.ActivateChangesManager()
+        manager.changes.load(reverted_site_ids)
+        manager.start(
+            sites=[local_site],
+            source="GUI",
+            all_site_configs=active_config.sites,
+            user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
+            max_snapshots=config.wato_max_snapshots,
+            use_git=config.wato_use_git,
+            debug=config.debug,
+            comment=msg,
+            activate_foreign=True,
+        )
+
+        # No snapshot restored on the remote sites, just clear the obsolete change log entries
+        for site_id in activation_site_ids:
+            if site_id != local_site:
+                self._changes.confirm_site_changes(site_id)
+
+        # TODO: Show the live progress of the revert activation on the target page. Reverting OMD
+        # settings restarts the site's apache (the change is added with force_restart=True), and
+        # that restart truncates/races any progress monitor we render in this flow.
+        # For now the activation runs in the background and the user has to reload the page to see
+        # the result
+        flash(_("Reverting pending changes. Reload this page to see the current status."))
         return HTTPRedirect(makeuri_contextless(request, [("mode", ModeActivateChanges.name())]))
 
     def page(self, config: Config) -> None:

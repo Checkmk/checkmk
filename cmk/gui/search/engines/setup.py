@@ -25,7 +25,6 @@ from cmk.gui.background_job.job import (
     JobTarget,
 )
 from cmk.gui.config import active_config, Config
-from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.global_config import get_global_config
 from cmk.gui.http import Request
@@ -315,12 +314,6 @@ class PermissionsHandler:
             self._request.set_var(name, vals[0])
 
         mode = modes[0] if (modes := query_vars.get("mode", [])) else None
-
-        # This attribute is set when calling cmk.gui.watolib.hosts_and_folders.Folder.all_folders
-        # if it is not set now, then it will be set for sure upon the next call.
-        if mode == "edit_host" and hasattr(g, "wato_folders"):
-            folder_name = query_vars.get("folder", [""])[0]  # "" means root dir
-            g.wato_current_folder = g.wato_folders[folder_name]
 
         try:
             if mode:

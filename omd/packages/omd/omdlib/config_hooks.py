@@ -36,7 +36,7 @@ from omdlib.config_choices import (
     IpListenAddressHasError,
     NetworkPortHasError,
 )
-from omdlib.core import CoreHasError, write_core_conf
+from omdlib.core import core_default, CoreHasError, write_core_conf
 from omdlib.jaeger import (
     TRACE_JAEGER_ADMIN_PORT_HOOK,
     TRACE_JAEGER_UI_PORT_HOOK,
@@ -300,6 +300,11 @@ def _default_port(site_name: str, port_hook: PortHook, site_configs: _SiteConfig
     )
 
 
+_HOOK_DEFAULTS: Mapping[str, Callable[[], str]] = {
+    "CORE": core_default,
+}
+
+
 def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/")) -> Config:
     """Load all variables from omd/sites.conf. These variables always begin with
     CONFIG_. The reason is that this file can be sources with the shell.
@@ -314,6 +319,8 @@ def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/
             if hook_name[0] != "." and hook_name not in config:
                 if (port_hook := _get_port_hook(hook_name)) is not None:
                     config[hook_name] = _default_port(site.name, port_hook, site_configs)
+                elif (default := _HOOK_DEFAULTS.get(hook_name)) is not None:
+                    config[hook_name] = default()
                 else:
                     config[hook_name] = _call_hook(
                         site, hook_name, ["default", edition(Path(site_home)).long], verbose

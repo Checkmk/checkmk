@@ -27,6 +27,14 @@ class CoreHasError(ConfigChoiceHasError):
         return result.OK(None)
 
 
+def core_default() -> str:
+    if Path("bin/cmc").exists():
+        return "cmc"
+    if Path("bin/nagios").exists():
+        return "nagios"
+    return "none"
+
+
 def _ln_sf(target: str, linkpath: Path) -> None:
     linkpath.unlink(missing_ok=True)
     os.symlink(target, linkpath)

@@ -7,15 +7,3 @@
 #  to run no monitoring core in this instance. This can be useful for
 #  instances running a GUI only site which can connect to other
 #  monitoring sites via Livestatus.
-
-case "$1" in
-    default)
-        if [ -e $OMD_ROOT/bin/cmc ]; then
-            echo "cmc"
-        elif [ -e $OMD_ROOT/bin/nagios ]; then
-            echo "nagios"
-        else
-            echo "none"
-        fi
-        ;;
-esac

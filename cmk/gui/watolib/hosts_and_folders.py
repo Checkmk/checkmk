@@ -1178,10 +1178,14 @@ class FolderTree:
         self._root_dir = _ensure_trailing_slash(root_dir)
 
 
+def make_folder_tree(config: Config) -> FolderTree:
+    return FolderTree(config=HostsAndFoldersConfig.from_config(config))
+
+
 # Hope that we can cleanup these request global objects one day
 def folder_tree() -> FolderTree:
     if "folder_tree" not in g:
-        g.folder_tree = FolderTree(config=HostsAndFoldersConfig.from_config(active_config))
+        g.folder_tree = make_folder_tree(active_config)
     return g.folder_tree
 
 
@@ -4014,7 +4018,7 @@ def rebuild_folder_lookup_cache(config: Config) -> None:
     if not (localtime.tm_hour == 5 and localtime.tm_min < 5):
         return
 
-    folder_tree().folder_lookup_cache.rebuild_outdated(max_age=300)
+    make_folder_tree(config).folder_lookup_cache.rebuild_outdated(max_age=300)
 
 
 def ajax_popup_host_action_menu(ctx: PageContext) -> None:

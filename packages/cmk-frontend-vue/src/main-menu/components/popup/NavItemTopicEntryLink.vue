@@ -67,10 +67,21 @@ a {
   line-height: 22px;
   display: flex;
   align-items: center;
-  width: 100%;
+  box-sizing: border-box;
+  width: calc(100% + 23px);
+  margin-left: -23px;
+  padding-left: 23px;
+  border: 1px solid transparent;
 
   &:hover {
-    color: var(--success);
+    background-color: var(--ux-theme-5);
+    border: 1px solid var(--ux-theme-5);
+  }
+
+  &:active,
+  &:focus {
+    border: 1px solid var(--success);
+    outline: none;
   }
 
   .mm-nav-item-topic-entry-link__icon {

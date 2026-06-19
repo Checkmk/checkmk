@@ -17,7 +17,7 @@ from cmk.gui.i18n import _
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.site_changes import ChangeSpec
-from cmk.piggyback.hub import HostLocations, publish_persisted_locations
+from cmk.piggyback.hub import HostLocations, publish_persisted_locations_for_sites
 from cmk.utils.paths import omd_root
 
 _HOST_CHANGES = (
@@ -50,10 +50,12 @@ def distribute_piggyback_hub_configs(
     site_to_activate: Collection[SiteId],  # only needed in multi-tenancy case.
     hosts_sites: Mapping[HostName, SiteId],
 ) -> None:
-    for destination_site, locations in compute_new_config(
-        global_settings, configured_sites, hosts_sites
-    ):
-        publish_persisted_locations(logger, destination_site, locations, omd_root, omd_site())
+    publish_persisted_locations_for_sites(
+        logger,
+        compute_new_config(global_settings, configured_sites, hosts_sites),
+        omd_root,
+        omd_site(),
+    )
 
 
 def compute_new_config(

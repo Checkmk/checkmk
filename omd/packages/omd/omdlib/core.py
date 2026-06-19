@@ -5,8 +5,26 @@
 
 import os
 from pathlib import Path
+from typing import override
 
 from omdlib.config_api import Config
+from omdlib.config_choices import ConfigChoiceHasError
+
+import cmk.ccc.resulttype as result
+
+
+class CoreHasError(ConfigChoiceHasError):
+    @override
+    def __call__(self, value: str) -> result.Result[None, str]:
+        cores: list[str] = []
+        if Path("bin/cmc").exists():
+            cores.append("cmc")
+        if Path("bin/nagios").exists():
+            cores.append("nagios")
+        cores.append("none")
+        if value not in cores:
+            return result.Error("Allowed are: " + ", ".join(cores))
+        return result.OK(None)
 
 
 def _ln_sf(target: str, linkpath: Path) -> None:

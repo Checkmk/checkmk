@@ -36,7 +36,7 @@ from omdlib.config_choices import (
     IpListenAddressHasError,
     NetworkPortHasError,
 )
-from omdlib.core import write_core_conf
+from omdlib.core import CoreHasError, write_core_conf
 from omdlib.jaeger import (
     TRACE_JAEGER_ADMIN_PORT_HOOK,
     TRACE_JAEGER_UI_PORT_HOOK,
@@ -180,6 +180,7 @@ _HOOK_CHOICES: Mapping[str, ConfigHookChoices] = {
         ("on", "Start this site at boot time"),
         ("off", "Do not start this site at boot time"),
     ],
+    "CORE": CoreHasError(),
     "LIVEPROXYD": [("on", "enable"), ("off", "disable")],
     "LIVESTATUS_TCP": [("on", "enable"), ("off", "disable")],
     "LIVESTATUS_TCP_INSTANCES": re.compile(r"[0-9]+$"),

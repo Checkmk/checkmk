@@ -18,9 +18,4 @@ case "$1" in
             echo "none"
         fi
         ;;
-    choices)
-        [ ! -e $OMD_ROOT/bin/cmc ] || echo "cmc: Check_MK Micro core"
-        [ ! -e $OMD_ROOT/bin/nagios ] || echo "nagios: Nagios"
-        echo "none: No monitoring core"
-        ;;
 esac

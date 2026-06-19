@@ -6,7 +6,23 @@
 import os
 from pathlib import Path
 
-from omdlib.core import write_core_conf
+import pytest
+
+from omdlib.core import CoreHasError, write_core_conf
+
+
+def test_core_has_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    choices = CoreHasError()
+    # "none" is always allowed; cmc/nagios only when their binary is present.
+    assert choices("none").is_ok()
+    assert choices("cmc").is_error()
+    assert choices("nagios").is_error()
+
+    (tmp_path / "bin").mkdir()
+    (tmp_path / "bin" / "cmc").write_text("")
+    assert choices("cmc").is_ok()
+    assert choices("nagios").is_error()
 
 
 def _mkdirs(tmp_path: Path) -> None:

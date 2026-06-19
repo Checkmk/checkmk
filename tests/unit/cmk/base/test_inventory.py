@@ -17,6 +17,7 @@ from cmk.agent_based.v1 import Attributes, TableRow
 from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.fetcher import FetcherFunction
 from cmk.checkengine.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import (
     _check_fetched_data_or_trees,
@@ -1227,21 +1228,22 @@ def test_updater_merge_tables_outdated(
     ],
 )
 def test_inventorize_host(failed_state: int | None, expected: int) -> None:
-    def fetcher(
-        host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData, Exception], Snapshot]]:
-        return [
-            (
-                SourceInfo(hostname, None, "ident", FetcherType.TCP, SourceType.HOST),
-                result.Error(Exception()),
-                Snapshot.null(),
-            ),
-            (
-                SourceInfo(hostname, None, "ident", FetcherType.TCP, SourceType.HOST),
-                result.OK(AgentRawData(b"<<<data>>>")),
-                Snapshot.null(),
-            ),
-        ]
+    class TestFetcher(FetcherFunction):
+        def __call__(
+            self, host_name: HostName, *, ip_address: HostAddress | None
+        ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData, Exception], Snapshot]]:
+            return [
+                (
+                    SourceInfo(hostname, None, "ident", FetcherType.TCP, SourceType.HOST),
+                    result.Error(Exception()),
+                    Snapshot.null(),
+                ),
+                (
+                    SourceInfo(hostname, None, "ident", FetcherType.TCP, SourceType.HOST),
+                    result.OK(AgentRawData(b"<<<data>>>")),
+                    Snapshot.null(),
+                ),
+            ]
 
     def parser(
         fetched: Iterable[
@@ -1275,7 +1277,7 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
     check_results = inventorize_host(
         hostname,
         omd_root=Path(""),
-        fetcher=fetcher,
+        fetcher=TestFetcher(),
         parser=parser,
         summarizer=lambda *args, **kwargs: [],
         inventory_parameters=lambda *args, **kw: {},
@@ -1302,12 +1304,18 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
 
 
 def test_inventorize_host_with_no_data_nor_files() -> None:
+    class TestFetcher(FetcherFunction):
+        def __call__(
+            self, host_name: HostName, *, ip_address: HostAddress | None
+        ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData, Exception], Snapshot]]:
+            return []
+
     hostname = HostName("my-host")
     check_results = inventorize_host(
         hostname,
         omd_root=Path(""),
         # no data!
-        fetcher=lambda *args, **kwargs: [],
+        fetcher=TestFetcher(),
         parser=lambda *args, **kwargs: [],
         summarizer=lambda *args, **kwargs: [],
         inventory_parameters=lambda *args, **kw: {},

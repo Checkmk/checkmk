@@ -5,8 +5,8 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Protocol
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.cpu_tracking import Snapshot
@@ -17,7 +17,8 @@ from cmk.checkengine.snmplib import SNMPRawData
 __all__ = ["FetcherFunction"]
 
 
-class FetcherFunction(Protocol):
+class FetcherFunction(ABC):
+    @abstractmethod
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
     ) -> Sequence[
@@ -26,4 +27,5 @@ class FetcherFunction(Protocol):
             result.Result[AgentRawData | SNMPRawData, Exception],
             Snapshot,
         ]
-    ]: ...
+    ]:
+        raise NotImplementedError

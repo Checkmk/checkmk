@@ -270,6 +270,81 @@ def spans_by_object(spans: list[AVSpan]) -> AVRawData:
     return av_rawdata
 
 
+def classify_span_state(span: AVSpan, avoptions: AVOptions, what: AVObjectType) -> tuple[str, bool]:
+    """Classify a single state-history span into an availability state.
+
+    Returns the availability state id and whether the span should be considered
+    for the availability computation. When ``consider`` is False the span is
+    dropped by the caller and the returned state id is irrelevant.
+
+    The possible states form the following hierarchy:
+
+    1. "unmonitored"
+    2. monitored -->
+       2.1 "outof_service_period"
+       2.2 in service period -->
+           2.2.1 "outof_notification_period"
+           2.2.2 in notification period -->
+                2.2.2.1 "in_downtime" (also in_host_downtime)
+                2.2.2.2 not in downtime -->
+                      2.2.2.2.1 "host_down"
+                      2.2.2.2.2 host not down -->
+                           2.2.2.2.2.1 "ok"
+                           2.2.2.2.2.2 "warn"
+                           2.2.2.2.2.3 "crit"
+                           2.2.2.2.2.4 "unknown"
+    """
+    state = span["state"]
+
+    if avoptions["service_period"] != "ignore" and (
+        (span["in_service_period"] and avoptions["service_period"] != "honor")
+        or (not span["in_service_period"] and avoptions["service_period"] == "honor")
+    ):
+        return "outof_service_period", False
+
+    if state == -1:
+        return "unmonitored", bool(avoptions["consider"]["unmonitored"])
+
+    if state is None:
+        # state is None means that this element was not known at this given time
+        # So there is no reason for creating a fake pending state
+        return "unmonitored", False
+
+    if span["in_notification_period"] == 0 and avoptions["notification_period"] == "exclude":
+        return "unmonitored", False
+
+    if span["in_notification_period"] == 0 and avoptions["notification_period"] == "honor":
+        return "outof_notification_period", True
+
+    if (
+        (span["in_downtime"] or span["in_host_downtime"])
+        and not (avoptions["downtimes"]["exclude_ok"] and state == 0)
+        and not avoptions["downtimes"]["include"] == "ignore"
+    ):
+        if avoptions["downtimes"]["include"] == "exclude":
+            return "unmonitored", False
+        return "in_downtime", True
+
+    if what != "host" and span["host_down"] and avoptions["consider"]["host_down"]:
+        # Reclassification due to state grouping
+        return avoptions["state_grouping"].get("host_down", "host_down"), True
+
+    if span["is_flapping"] and avoptions["consider"]["flapping"]:
+        return "flapping", True
+
+    if what in ["service", "bi"]:
+        s = {0: "ok", 1: "warn", 2: "crit", 3: "unknown"}.get(state, "unmonitored")
+    else:
+        s = {0: "up", 1: "down", 2: "unreach"}.get(state, "unmonitored")
+
+    # Reclassification due to state grouping
+    if s in avoptions["state_grouping"]:
+        return avoptions["state_grouping"][s], True
+    if s in avoptions["host_state_grouping"]:
+        return avoptions["host_state_grouping"][s], True
+    return s, True
+
+
 # Compute an availability table. what is one of "bi", "host", "service".
 def compute_availability(
     what: AVObjectType,
@@ -279,21 +354,8 @@ def compute_availability(
 ) -> AVData:
     reclassified_rawdata = reclassify_by_annotations(what, av_rawdata, annotations)
 
-    # Now compute availability table. We have the following possible states:
-    # 1. "unmonitored"
-    # 2. monitored -->
-    #    2.1 "outof_service_period"
-    #    2.2 in service period -->
-    #        2.2.1 "outof_notification_period"
-    #        2.2.2 in notification period -->
-    #             2.2.2.1 "in_downtime" (also in_host_downtime)
-    #             2.2.2.2 not in downtime -->
-    #                   2.2.2.2.1 "host_down"
-    #                   2.2.2.2.2 host not down -->
-    #                        2.2.2.2.2.1 "ok"
-    #                        2.2.2.2.2.2 "warn"
-    #                        2.2.2.2.2.3 "crit"
-    #                        2.2.2.2.2.4 "unknown"
+    # Now compute availability table. The per-span state classification (which
+    # availability state a span falls into) is done by classify_span_state.
     availability_table: AVData = []
     os_aggrs, os_states = get_outage_statistic_options(avoptions)
     need_statistics = os_aggrs and os_states
@@ -328,64 +390,9 @@ def compute_availability(
                             raise TypeError(grouping)
 
                 display_name = span.get("service_display_name", service)
-                state = span["state"]
                 host_alias = span.get("host_alias", site_host[1])
-                consider = True
-                s: str
 
-                if avoptions["service_period"] != "ignore" and (
-                    (span["in_service_period"] and avoptions["service_period"] != "honor")
-                    or (not span["in_service_period"] and avoptions["service_period"] == "honor")
-                ):
-                    s = "outof_service_period"
-                    consider = False
-                elif state == -1:
-                    s = "unmonitored"
-                    if not avoptions["consider"]["unmonitored"]:
-                        consider = False
-                elif state is None:
-                    # state is None means that this element was not known at this given time
-                    # So there is no reason for creating a fake pending state
-                    consider = False
-                elif (
-                    span["in_notification_period"] == 0
-                    and avoptions["notification_period"] == "exclude"
-                ):
-                    consider = False
-
-                elif (
-                    span["in_notification_period"] == 0
-                    and avoptions["notification_period"] == "honor"
-                ):
-                    s = "outof_notification_period"
-
-                elif (
-                    (span["in_downtime"] or span["in_host_downtime"])
-                    and not (avoptions["downtimes"]["exclude_ok"] and state == 0)
-                    and not avoptions["downtimes"]["include"] == "ignore"
-                ):
-                    if avoptions["downtimes"]["include"] == "exclude":
-                        consider = False
-                    else:
-                        s = "in_downtime"
-                elif what != "host" and span["host_down"] and avoptions["consider"]["host_down"]:
-                    # Reclassification due to state grouping
-                    s = avoptions["state_grouping"].get("host_down", "host_down")
-
-                elif span["is_flapping"] and avoptions["consider"]["flapping"]:
-                    s = "flapping"
-                else:
-                    if what in ["service", "bi"]:
-                        s = {0: "ok", 1: "warn", 2: "crit", 3: "unknown"}.get(state, "unmonitored")
-                    else:
-                        s = {0: "up", 1: "down", 2: "unreach"}.get(state, "unmonitored")
-
-                    # Reclassification due to state grouping
-                    if s in avoptions["state_grouping"]:
-                        s = avoptions["state_grouping"][s]
-
-                    elif s in avoptions["host_state_grouping"]:
-                        s = avoptions["host_state_grouping"][s]
+                s, consider = classify_span_state(span, avoptions, what)
 
                 total_duration += span["duration"]
                 if consider:

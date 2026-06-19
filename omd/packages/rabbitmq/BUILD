@@ -12,7 +12,7 @@ pkg_files(
         "RABBITMQ_PORT",
     ],
     attributes = pkg_attributes(
-        mode = "0755",
+        mode = "0644",
     ),
     prefix = "lib/omd/hooks",
     tags = ["manual"],
@@ -80,10 +80,6 @@ pkg_tar(
 sh_library(
     name = "omd_packages_rabbitmq_sh",
     srcs = [
-        "RABBITMQ_DIST_PORT",
-        "RABBITMQ_MANAGEMENT_PORT",
-        "RABBITMQ_ONLY_FROM",
-        "RABBITMQ_PORT",
         "skel/etc/init.d/rabbitmq",
     ],
 )

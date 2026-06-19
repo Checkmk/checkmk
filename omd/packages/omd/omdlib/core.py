@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import override
 
-from omdlib.config_api import Config
+from omdlib.config_api import Config, Hook
 from omdlib.config_choices import ConfigChoiceHasError
 
 import cmk.ccc.resulttype as result
@@ -27,7 +27,7 @@ class CoreHasError(ConfigChoiceHasError):
         return result.OK(None)
 
 
-def core_default() -> str:
+def core_default(_edition: object) -> str:
     if Path("bin/cmc").exists():
         return "cmc"
     if Path("bin/nagios").exists():
@@ -89,3 +89,11 @@ monitoring_core = 'cmc'
             livestatus_log.unlink(missing_ok=True)
         if nagios_log.is_symlink():
             nagios_log.unlink(missing_ok=True)
+
+
+CORE = Hook(
+    name="CORE",
+    choices=CoreHasError(),
+    default=core_default,
+    activation=write_core_conf,
+)

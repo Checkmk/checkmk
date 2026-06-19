@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Alias: Restrict interfaces on which RabbitMQ listens
 # Menu: Basic
 # Description:

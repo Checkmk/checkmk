@@ -69,14 +69,14 @@ def set_environment(site_name: str, config: Config) -> None:
     create_config_environment(config)
 
 
-def site_environment(site_name: str, verbose: bool) -> SiteContext:
+def site_environment(site_name: str) -> SiteContext:
     switch_to_site_user(site_name)
-    return site_environment_as_root(site_name, verbose)
+    return site_environment_as_root(site_name)
 
 
-def site_environment_as_root(site_name: str, verbose: bool) -> SiteContext:
+def site_environment_as_root(site_name: str) -> SiteContext:
     site = SiteContext(site_name)
-    site.set_config(load_config(site, verbose))
+    site.set_config(load_config(site))
     # Make sure environment is in a defined state
     _clear_environment()
     set_environment(site.name, site.conf)

@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import re
 from pathlib import Path
 
-from omdlib.config_api import Config, PortHook
+from omdlib.config_api import Config, Hook, null_action, PortHook
+from omdlib.config_choices import IpListenAddressHasError, NetworkPortHasError
 
 
 def write_jaeger_apache_conf(_site_name: str, site_home: Path, config: Config) -> None:
@@ -80,23 +82,67 @@ service:
         f.write(content)
 
 
-TRACE_JAEGER_ADMIN_PORT_HOOK = PortHook(
+TRACE_JAEGER_ADMIN_PORT = PortHook(
     name="TRACE_JAEGER_ADMIN_PORT",
     display_name="The port",
     default_port=14269,
     activation=_write_jaeger_admin_port_conf,
+    choices=NetworkPortHasError(),
+    depends=lambda c: c.get("TRACE_RECEIVE") == "on",
 )
 
-TRACE_JAEGER_UI_PORT_HOOK = PortHook(
+TRACE_JAEGER_UI_PORT = PortHook(
     name="TRACE_JAEGER_UI_PORT",
     display_name="The port",
     default_port=16686,
     activation=_write_jaeger_ui_port_conf,
+    choices=NetworkPortHasError(),
+    depends=lambda c: c.get("TRACE_RECEIVE") == "on",
 )
 
-TRACE_RECEIVE_PORT_HOOK = PortHook(
+TRACE_RECEIVE = Hook(
+    name="TRACE_RECEIVE",
+    choices=[("on", "enable"), ("off", "disable")],
+    default=lambda _edition: "off",
+    activation=write_jaeger_apache_conf,
+)
+
+TRACE_RECEIVE_ADDRESS = Hook(
+    name="TRACE_RECEIVE_ADDRESS",
+    choices=IpListenAddressHasError(),
+    default=lambda _edition: "[::1]",
+    depends=lambda c: c.get("TRACE_RECEIVE") == "on",
+    activation=write_jaeger_receiver_conf,
+)
+
+TRACE_RECEIVE_PORT = PortHook(
     name="TRACE_RECEIVE_PORT",
     display_name="Trace receiving port",
     default_port=4417,
     activation=write_jaeger_receiver_conf,
+    choices=NetworkPortHasError(),
+    depends=lambda c: c.get("TRACE_RECEIVE") == "on",
+)
+
+TRACE_SEND = Hook(
+    name="TRACE_SEND",
+    choices=[("on", "enable"), ("off", "disable")],
+    default=lambda _edition: "off",
+    activation=null_action,
+)
+
+TRACE_SEND_TARGET = Hook(
+    name="TRACE_SEND_TARGET",
+    choices=re.compile(r"^(local_site|https?://[^\:]+:[0-9]{4,5})$$"),
+    default=lambda _edition: "local_site",
+    depends=lambda c: c.get("TRACE_SEND") == "on",
+    activation=null_action,
+)
+
+TRACE_SERVICE_NAMESPACE = Hook(
+    name="TRACE_SERVICE_NAMESPACE",
+    choices=re.compile(r"^[a-zA-Z0-9_\.-]*$$"),
+    default=lambda _edition: "",
+    depends=lambda c: c.get("TRACE_SEND") == "on",
+    activation=null_action,
 )

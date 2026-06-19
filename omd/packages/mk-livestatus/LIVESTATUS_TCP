@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Alias: Make MK Livestatus accessable via TCP
 # Menu: Distributed Monitoring
 # Description:

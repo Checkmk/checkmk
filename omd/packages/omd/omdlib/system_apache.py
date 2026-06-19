@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from omdlib.config_api import Config, PortHook
+from omdlib.config_api import Config, Hook, null_action, PortHook
 from omdlib.config_choices import ApacheNetworkPortHasError, ApacheTCPAddrHasError
 from omdlib.console import show_success
 from omdlib.utils import is_containerized
@@ -51,11 +51,13 @@ def write_apache_listen_conf(_site_name: str, site_home: Path, config: Config) -
         f.write(content)
 
 
-APACHE_TCP_PORT_HOOK = PortHook(
+APACHE_TCP_PORT = PortHook(
     name="APACHE_TCP_PORT",
     display_name="Apache port",
     default_port=5000,
     activation=write_apache_listen_conf,
+    choices=ApacheNetworkPortHasError(),
+    depends=lambda c: c.get("APACHE_MODE") == "own",
 )
 
 
@@ -306,3 +308,22 @@ def restart_apache(version_info: VersionInfo, verbose: bool) -> None:
         if verbose:
             sys.stdout.write(f"Non-zero exit code {status_exit_code} from {status_cmd}.\n")
         sys.stdout.write("Skipping Apache restart.\n")
+
+
+APACHE_MODE = Hook(
+    name="APACHE_MODE",
+    choices=[
+        ("own", "Run an own webserver process for this instance"),
+        ("none", "Do not run or configure a webserver"),
+    ],
+    default=lambda _edition: apache_mode_default(),
+    activation=null_action,
+)
+
+APACHE_TCP_ADDR = Hook(
+    name="APACHE_TCP_ADDR",
+    choices=ApacheTCPAddrHasError(),
+    default=lambda _edition: "127.0.0.1",
+    depends=lambda c: c.get("APACHE_MODE") == "own",
+    activation=write_apache_listen_conf,
+)

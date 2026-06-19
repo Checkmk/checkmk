@@ -1,5 +1,3 @@
-#!/bin/sh
-
 # Alias: TCP port number for agent-receiver server
 # Menu: Basic
 # Description:

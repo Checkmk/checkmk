@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Alias: Restrict livestatus port to IP addresses
 # Menu: Distributed Monitoring
 # Description:

@@ -38,7 +38,7 @@ pkg_mklink(
 pkg_files(
     name = "PNP4NAGIOS_pkg",
     srcs = ["PNP4NAGIOS"],
-    attributes = pkg_attributes(mode = "0755"),
+    attributes = pkg_attributes(mode = "0644"),
     prefix = "lib/omd/hooks",
     tags = ["manual"],
 )

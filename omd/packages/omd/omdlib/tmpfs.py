@@ -15,7 +15,7 @@ import tarfile
 import time
 from pathlib import Path
 
-from omdlib.config_api import Config
+from omdlib.config_api import Config, Hook
 from omdlib.console import ok
 from omdlib.init_scripts import check_status
 from omdlib.skel_permissions import Permissions
@@ -344,3 +344,14 @@ def fstab_verify(site_name: str, mountpoint: str) -> bool:
             if "uid=%s," % site_name in line and mountpoint in line:
                 return True
     sys.exit(tty.error + ": fstab entry for %s does not exist" % mountpoint)
+
+
+TMPFS = Hook(
+    name="TMPFS",
+    choices=[
+        ("on", "Use a ramdisk for temporary files"),
+        ("off", "Do not use a ramdisk within this site"),
+    ],
+    default=lambda _edition: "on",
+    activation=deactivate_tmpfs,
+)

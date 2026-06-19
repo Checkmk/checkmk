@@ -4,74 +4,69 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-"""Site configuration and config hooks
-
-Hooks are scripts in lib/omd/hooks that are being called with one
-of the following arguments:
-
-default - return the default value of the hook. Mandatory
-set     - implements a new setting for the hook
-choices - available choices for enumeration hooks
-depends - exits with 1, if this hook misses its dependent hook settings
-"""
-
 import dataclasses
 import os
-import re
 import subprocess
 import sys
 import traceback
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from re import Pattern
 from typing import TYPE_CHECKING
 
-from omdlib.admin_mail import write_admin_mail_forward
-from omdlib.config_api import Activation, Config, null_action, PortHook
-from omdlib.config_choices import (
-    ApacheNetworkPortHasError,
-    ApacheTCPAddrHasError,
-    ConfigChoiceHasError,
-    IpAddressListHasError,
-    IpListenAddressHasError,
-    NetworkPortHasError,
-)
-from omdlib.core import core_default, CoreHasError, write_core_conf
+from omdlib.admin_mail import ADMIN_MAIL
+from omdlib.agent_receiver import AGENT_RECEIVER, AGENT_RECEIVER_PORT
+from omdlib.automation_helper import AUTOMATION_HELPER
+from omdlib.autostart import AUTOSTART
+from omdlib.config_api import Config, Hook, PortHook
+from omdlib.core import CORE
 from omdlib.jaeger import (
-    TRACE_JAEGER_ADMIN_PORT_HOOK,
-    TRACE_JAEGER_UI_PORT_HOOK,
-    TRACE_RECEIVE_PORT_HOOK,
-    write_jaeger_apache_conf,
-    write_jaeger_receiver_conf,
+    TRACE_JAEGER_ADMIN_PORT,
+    TRACE_JAEGER_UI_PORT,
+    TRACE_RECEIVE,
+    TRACE_RECEIVE_ADDRESS,
+    TRACE_RECEIVE_PORT,
+    TRACE_SEND,
+    TRACE_SEND_TARGET,
+    TRACE_SERVICE_NAMESPACE,
 )
-from omdlib.liveproxyd import write_liveproxyd_conf
-from omdlib.livestatus import LIVESTATUS_TCP_PORT_HOOK, write_livestatus_xinetd_conf
-from omdlib.mkeventd import write_mkeventd_conf
-from omdlib.multisite import write_multisite_authorisation, write_multisite_cookie_auth
-from omdlib.pnp4nagios import write_pnp4nagios_conf
+from omdlib.liveproxyd import LIVEPROXYD
+from omdlib.livestatus import (
+    LIVESTATUS_TCP,
+    LIVESTATUS_TCP_INSTANCES,
+    LIVESTATUS_TCP_ONLY_FROM,
+    LIVESTATUS_TCP_PER_SOURCE,
+    LIVESTATUS_TCP_PORT,
+    LIVESTATUS_TCP_TLS,
+)
+from omdlib.mkeventd import MKEVENTD, MKEVENTD_SNMPTRAP, MKEVENTD_SYSLOG, MKEVENTD_SYSLOG_TCP
+from omdlib.multisite import MULTISITE_AUTHORISATION, MULTISITE_COOKIE_AUTH
+from omdlib.opentelemetry import (
+    OPENTELEMETRY_COLLECTOR,
+    OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT,
+)
+from omdlib.piggyback_hub import PIGGYBACK_HUB
+from omdlib.pnp4nagios import PNP4NAGIOS
 from omdlib.rabbitmq import (
-    RABBITMQ_DIST_PORT_HOOK,
-    RABBITMQ_MANAGEMENT_PORT_HOOK,
-    RABBITMQ_PORT_HOOK,
-    write_rabbitmq_default_conf,
+    RABBITMQ_DIST_PORT,
+    RABBITMQ_MANAGEMENT_PORT,
+    RABBITMQ_ONLY_FROM,
+    RABBITMQ_PORT,
 )
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites
 from omdlib.system_apache import (
-    apache_mode_default,
-    APACHE_TCP_PORT_HOOK,
-    write_apache_listen_conf,
+    APACHE_MODE,
+    APACHE_TCP_ADDR,
+    APACHE_TCP_PORT,
 )
-from omdlib.tmpfs import deactivate_tmpfs
+from omdlib.tmpfs import TMPFS
 
 from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import edition
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
 
-ConfigHookChoiceItem = tuple[str, str]
-ConfigHookChoices = Pattern[str] | list[ConfigHookChoiceItem] | ConfigChoiceHasError
 ConfigHookResult = tuple[int, str]
 
 
@@ -83,7 +78,6 @@ class _SiteConfigs:
 
 @dataclasses.dataclass(frozen=True)
 class ConfigHook:
-    choices: ConfigHookChoices
     name: str
     description: str
     alias: str
@@ -112,17 +106,17 @@ def save_site_conf(site_home: str, config: Config) -> None:
 
 # Get information about all hooks. Just needed for
 # the "omd config" command.
-def load_config_hooks(site: "SiteContext", verbose: bool) -> ConfigHooks:
+def load_config_hooks(hook_dir: str | None) -> ConfigHooks:
     config_hooks: ConfigHooks = {}
 
     hook_files = []
-    if site.hook_dir:
-        hook_files = os.listdir(site.hook_dir)
+    if hook_dir:
+        hook_files = os.listdir(hook_dir)
 
     for hook_name in hook_files:
         try:
             if hook_name[0] != ".":
-                hook = _config_load_hook(site, hook_name, verbose)
+                hook = _config_load_hook(hook_dir, hook_name)
                 config_hooks[hook_name] = hook
         except MKTerminate:
             raise
@@ -131,12 +125,8 @@ def load_config_hooks(site: "SiteContext", verbose: bool) -> ConfigHooks:
     return config_hooks
 
 
-def _config_load_hook(
-    site: "SiteContext",
-    hook_name: str,
-    verbose: bool,
-) -> ConfigHook:
-    if not site.hook_dir:
+def _config_load_hook(hook_dir: str | None, hook_name: str) -> ConfigHook:
+    if not hook_dir:
         # IMHO this should be unreachable...
         raise MKTerminate("Site has no version and therefore no hooks")
 
@@ -144,7 +134,7 @@ def _config_load_hook(
     description = ""
     menu = "Other"
     description_active = False
-    with Path(site.hook_dir, hook_name).open() as hook_file:
+    with Path(hook_dir, hook_name).open() as hook_file:
         for line in hook_file:
             if line.startswith("# Alias:"):
                 alias = line[8:].strip()
@@ -158,143 +148,54 @@ def _config_load_hook(
                 description_active = False
 
     assert alias is not None, "Implementation error, please contact support"
-    return ConfigHook(
-        choices=_load_hook_choices(site, hook_name, verbose),
-        name=hook_name,
-        alias=alias,
-        menu=menu,
-        description=description,
-    )
+    return ConfigHook(name=hook_name, alias=alias, menu=menu, description=description)
 
 
-_HOOK_CHOICES: Mapping[str, ConfigHookChoices] = {
-    "ADMIN_MAIL": re.compile(
-        r"^([-a-zäöüÄÖÜA-Z0-9_.+%]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*)?$$"
-    ),
-    "AGENT_RECEIVER": [("on", "enable"), ("off", "disable")],
-    "AGENT_RECEIVER_PORT": re.compile(r"[0-9]{1,5}$"),
-    "APACHE_MODE": [
-        ("own", "Run an own webserver process for this instance"),
-        ("none", "Do not run or configure a webserver"),
-    ],
-    "APACHE_TCP_ADDR": ApacheTCPAddrHasError(),
-    "APACHE_TCP_PORT": ApacheNetworkPortHasError(),
-    "AUTOMATION_HELPER": [("on", "enable"), ("off", "disable")],
-    "AUTOSTART": [
-        ("on", "Start this site at boot time"),
-        ("off", "Do not start this site at boot time"),
-    ],
-    "CORE": CoreHasError(),
-    "LIVEPROXYD": [("on", "enable"), ("off", "disable")],
-    "LIVESTATUS_TCP": [("on", "enable"), ("off", "disable")],
-    "LIVESTATUS_TCP_INSTANCES": re.compile(r"[0-9]+$"),
-    "LIVESTATUS_TCP_ONLY_FROM": IpAddressListHasError(),
-    "LIVESTATUS_TCP_PER_SOURCE": re.compile(r"[0-9]+$"),
-    "LIVESTATUS_TCP_PORT": re.compile(r"[0-9]{1,5}$"),
-    "LIVESTATUS_TCP_TLS": [("on", "encrypt"), ("off", "clear text")],
-    "MKEVENTD": [("on", "enable"), ("off", "disable")],
-    "MKEVENTD_SNMPTRAP": [("on", "enable"), ("off", "disable")],
-    "MKEVENTD_SYSLOG": [("on", "enable"), ("off", "disable")],
-    "MKEVENTD_SYSLOG_TCP": [("on", "enable"), ("off", "disable")],
-    "MULTISITE_AUTHORISATION": [
-        ("on", "control user permissions"),
-        ("off", "disable permission control"),
-    ],
-    "MULTISITE_COOKIE_AUTH": [
-        ("on", "use cookie authentication"),
-        ("off", "use basic authentication"),
-    ],
-    "OPENTELEMETRY_COLLECTOR": [("on", "enable"), ("off", "disable")],
-    "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT": re.compile(r"[0-9]{1,5}$"),
-    "PIGGYBACK_HUB": [("on", "enable"), ("off", "disable")],
-    "PNP4NAGIOS": [
-        ("on", "enable bulk mode with npcdmod and npcd"),
-        ("npcd", "enable bulk mode with npcd"),
-        ("gearman", "enable gearman worker"),
-        ("off", "disable"),
-    ],
-    "RABBITMQ_DIST_PORT": re.compile(r"[0-9]{1,5}$"),
-    "RABBITMQ_MANAGEMENT_PORT": re.compile(r"[0-9]{1,5}$"),
-    "RABBITMQ_ONLY_FROM": IpAddressListHasError(),
-    "RABBITMQ_PORT": re.compile(r"[0-9]{1,5}$"),
-    "TMPFS": [
-        ("on", "Use a ramdisk for temporary files"),
-        ("off", "Do not use a ramdisk within this site"),
-    ],
-    "TRACE_JAEGER_ADMIN_PORT": NetworkPortHasError(),
-    "TRACE_JAEGER_UI_PORT": NetworkPortHasError(),
-    "TRACE_RECEIVE": [("on", "enable"), ("off", "disable")],
-    "TRACE_RECEIVE_ADDRESS": IpListenAddressHasError(),
-    "TRACE_RECEIVE_PORT": NetworkPortHasError(),
-    "TRACE_SEND": [("on", "enable"), ("off", "disable")],
-    "TRACE_SEND_TARGET": re.compile(r"^(local_site|https?://[^\:]+:[0-9]{4,5})$$"),
-    "TRACE_SERVICE_NAMESPACE": re.compile(r"^[a-zA-Z0-9_\.-]*$$"),
-}
-
-
-def _load_hook_choices(site: "SiteContext", hook_name: str, verbose: bool) -> ConfigHookChoices:
-    if (validator := _HOOK_CHOICES.get(hook_name)) is not None:
-        return validator
-    return _parse_hook_choices(_call_hook(site, hook_name, ["choices"], verbose)[1])
-
-
-def _parse_hook_choices(hook_info: str) -> Pattern[str] | list[ConfigHookChoiceItem]:
-    # The choices can either be a list of possible keys. Then
-    # the hook outputs one live for each choice where the key and a
-    # description are separated by a colon. Or it outputs one line
-    # where that line is an extended regular expression matching the
-    # possible values.
-
-    match [choice.strip() for choice in hook_info.split("\n")]:
-        case [""]:
-            raise MKTerminate("Invalid output of hook: empty output")
-        case [regextext]:
-            return re.compile(regextext + "$")
-        case choices_list:
-            try:
-                choices: list[ConfigHookChoiceItem] = []
-                for line in choices_list:
-                    val, descr = line.split(":", 1)
-                    choices.append((val.strip(), descr.strip()))
-            except ValueError as excep:
-                raise MKTerminate(f"Invalid output of hook: {choices_list}: {excep}") from excep
-            return choices
-
-
-_HOOK_DEPENDS: dict[str, Callable[[Config], bool]] = {
-    "AGENT_RECEIVER_PORT": lambda c: c.get("AGENT_RECEIVER") == "on",
-    "APACHE_TCP_ADDR": lambda c: c.get("APACHE_MODE") == "own",
-    "APACHE_TCP_PORT": lambda c: c.get("APACHE_MODE") == "own",
-    "LIVESTATUS_TCP": lambda c: c.get("CORE") != "none",
-    "LIVESTATUS_TCP_INSTANCES": lambda c: (
-        c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on"
-    ),
-    "LIVESTATUS_TCP_ONLY_FROM": lambda c: (
-        c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on"
-    ),
-    "LIVESTATUS_TCP_PER_SOURCE": lambda c: (
-        c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on"
-    ),
-    "LIVESTATUS_TCP_PORT": lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
-    "LIVESTATUS_TCP_TLS": lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
-    "MKEVENTD_SNMPTRAP": lambda c: c.get("MKEVENTD") == "on",
-    "MKEVENTD_SYSLOG": lambda c: c.get("MKEVENTD") == "on",
-    "MKEVENTD_SYSLOG_TCP": lambda c: c.get("MKEVENTD") == "on",
-    "PNP4NAGIOS": lambda c: c.get("CORE") not in ("cmc", "none"),
-    "TRACE_JAEGER_ADMIN_PORT": lambda c: c.get("TRACE_RECEIVE") == "on",
-    "TRACE_JAEGER_UI_PORT": lambda c: c.get("TRACE_RECEIVE") == "on",
-    "TRACE_RECEIVE_ADDRESS": lambda c: c.get("TRACE_RECEIVE") == "on",
-    "TRACE_RECEIVE_PORT": lambda c: c.get("TRACE_RECEIVE") == "on",
-    "TRACE_SEND_TARGET": lambda c: c.get("TRACE_SEND") == "on",
-    "TRACE_SERVICE_NAMESPACE": lambda c: c.get("TRACE_SEND") == "on",
-}
+_HOOKS: Sequence[Hook | PortHook] = [
+    ADMIN_MAIL,
+    AGENT_RECEIVER,
+    AGENT_RECEIVER_PORT,
+    APACHE_MODE,
+    APACHE_TCP_ADDR,
+    APACHE_TCP_PORT,
+    AUTOMATION_HELPER,
+    AUTOSTART,
+    CORE,
+    LIVEPROXYD,
+    LIVESTATUS_TCP,
+    LIVESTATUS_TCP_INSTANCES,
+    LIVESTATUS_TCP_ONLY_FROM,
+    LIVESTATUS_TCP_PER_SOURCE,
+    LIVESTATUS_TCP_PORT,
+    LIVESTATUS_TCP_TLS,
+    MKEVENTD,
+    MKEVENTD_SNMPTRAP,
+    MKEVENTD_SYSLOG,
+    MKEVENTD_SYSLOG_TCP,
+    MULTISITE_AUTHORISATION,
+    MULTISITE_COOKIE_AUTH,
+    OPENTELEMETRY_COLLECTOR,
+    OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT,
+    PIGGYBACK_HUB,
+    PNP4NAGIOS,
+    RABBITMQ_DIST_PORT,
+    RABBITMQ_MANAGEMENT_PORT,
+    RABBITMQ_ONLY_FROM,
+    RABBITMQ_PORT,
+    TMPFS,
+    TRACE_JAEGER_ADMIN_PORT,
+    TRACE_JAEGER_UI_PORT,
+    TRACE_RECEIVE,
+    TRACE_RECEIVE_ADDRESS,
+    TRACE_RECEIVE_PORT,
+    TRACE_SEND,
+    TRACE_SEND_TARGET,
+    TRACE_SERVICE_NAMESPACE,
+]
 
 
 def load_hook_dependencies(config: Config, config_hooks: ConfigHooks) -> dict[str, bool]:
-    return {
-        hook_name: _HOOK_DEPENDS[hook_name](config) if hook_name in _HOOK_DEPENDS else True
-        for hook_name in config_hooks
-    }
+    return {hook_name: _get_hook(hook_name).depends(config) for hook_name in config_hooks}
 
 
 def _default_port(site_name: str, port_hook: PortHook, site_configs: _SiteConfigs) -> str:
@@ -304,42 +205,7 @@ def _default_port(site_name: str, port_hook: PortHook, site_configs: _SiteConfig
     )
 
 
-_HOOK_DEFAULTS: Mapping[str, Callable[[Edition], str]] = {
-    "ADMIN_MAIL": lambda _edition: "",
-    "AGENT_RECEIVER": lambda _edition: "on",
-    "APACHE_MODE": lambda _edition: apache_mode_default(),
-    "APACHE_TCP_ADDR": lambda _edition: "127.0.0.1",
-    "AUTOMATION_HELPER": lambda _edition: "on",
-    "AUTOSTART": lambda _edition: "on",
-    "CORE": lambda _edition: core_default(),
-    "LIVEPROXYD": lambda _edition: "on",
-    "LIVESTATUS_TCP": lambda _edition: "off",
-    "LIVESTATUS_TCP_INSTANCES": lambda _edition: "500",
-    "LIVESTATUS_TCP_ONLY_FROM": lambda _edition: "0.0.0.0 ::/0",
-    "LIVESTATUS_TCP_PER_SOURCE": lambda _edition: "250",
-    "LIVESTATUS_TCP_TLS": lambda _edition: "on",
-    "MKEVENTD": lambda edition: (
-        "off" if edition.long == "saas" else "on"  # TODO: "saas" was removed.
-    ),
-    "MKEVENTD_SNMPTRAP": lambda _edition: "off",
-    "MKEVENTD_SYSLOG": lambda _edition: "off",
-    "MKEVENTD_SYSLOG_TCP": lambda _edition: "off",
-    "MULTISITE_AUTHORISATION": lambda _edition: "on",
-    "MULTISITE_COOKIE_AUTH": lambda _edition: "on",
-    "OPENTELEMETRY_COLLECTOR": lambda _edition: "off",
-    "PIGGYBACK_HUB": lambda _edition: "off",
-    "PNP4NAGIOS": lambda _edition: "on",
-    "RABBITMQ_ONLY_FROM": lambda _edition: ":: 0.0.0.0",
-    "TMPFS": lambda _edition: "on",
-    "TRACE_RECEIVE": lambda _edition: "off",
-    "TRACE_RECEIVE_ADDRESS": lambda _edition: "[::1]",
-    "TRACE_SEND": lambda _edition: "off",
-    "TRACE_SEND_TARGET": lambda _edition: "local_site",
-    "TRACE_SERVICE_NAMESPACE": lambda _edition: "",
-}
-
-
-def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/")) -> Config:
+def load_config(site: "SiteContext", omd_path: Path = Path("/omd/")) -> Config:
     """Load all variables from omd/sites.conf. These variables always begin with
     CONFIG_. The reason is that this file can be sources with the shell.
 
@@ -351,14 +217,11 @@ def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/
     if site.hook_dir and os.path.exists(site.hook_dir):
         for hook_name in _sort_hooks(os.listdir(site.hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
-                if (port_hook := _get_port_hook(hook_name)) is not None:
-                    config[hook_name] = _default_port(site.name, port_hook, site_configs)
-                elif (default := _HOOK_DEFAULTS.get(hook_name)) is not None:
-                    config[hook_name] = default(edition(Path(site_home)))
+                hook = _get_hook(hook_name)
+                if isinstance(hook, PortHook):
+                    config[hook_name] = _default_port(site.name, hook, site_configs)
                 else:
-                    config[hook_name] = _call_hook(
-                        site, hook_name, ["default", edition(Path(site_home)).long], verbose
-                    )[1]
+                    config[hook_name] = hook.default(edition(Path(site_home)))
     return config
 
 
@@ -395,48 +258,7 @@ def _hook_exists(site: "SiteContext", hook_name: str) -> bool:
     return os.path.exists(hook_file)
 
 
-def _call_hook(
-    site: "SiteContext", hook_name: str, args: list[str], verbose: bool
-) -> ConfigHookResult:
-    if not site.hook_dir:
-        # IMHO this should be unreachable...
-        raise MKTerminate("Site has no version and therefore no hooks")
-
-    cmd = [site.hook_dir + hook_name] + args
-    hook_env = os.environ.copy()
-    hook_env.update(
-        {
-            "OMD_ROOT": SitePaths.from_site_name(site.name).home,
-            "OMD_SITE": site.name,
-        }
-    )
-
-    if verbose:
-        sys.stdout.write("Calling hook: " + subprocess.list2cmdline(cmd) + "\n")
-
-    completed_process = subprocess.run(
-        cmd,
-        env=hook_env,
-        close_fds=True,
-        shell=False,
-        encoding="utf-8",
-        check=False,
-        capture_output=True,
-    )
-    # `sys.stderr` is a magically replaced during `omd update`. During all other situations just
-    # removing `stderr=subprocess.PIPE` and the line below should be completely equivalent.
-    sys.stderr.write(completed_process.stderr)
-    content = completed_process.stdout.strip()
-
-    if completed_process.returncode and args[0] != "depends":
-        sys.stderr.write(f"Error running {subprocess.list2cmdline(cmd)}: {content}\n")
-
-    return completed_process.returncode, content
-
-
-def config_set_all(
-    site: "SiteContext", config: Config, verbose: bool, ignored_hooks: Sequence[str]
-) -> None:
+def config_set_all(site: "SiteContext", config: Config, ignored_hooks: Sequence[str]) -> None:
     for hook_name in _sort_hooks(list(config.keys())):
         # Hooks may vanish after and up- or downdate
         if not _hook_exists(site, hook_name):
@@ -445,7 +267,7 @@ def config_set_all(
         if hook_name in ignored_hooks:
             continue
 
-        _config_set(site, config, hook_name, verbose)
+        _config_set(site.name, config, hook_name)
 
 
 def _report_error(key: str, sites_with_unreadable_configs: Sequence[str]) -> None:
@@ -457,103 +279,37 @@ def _report_error(key: str, sites_with_unreadable_configs: Sequence[str]) -> Non
         )
 
 
-def _get_port_hook(hook_name: str) -> PortHook | None:
-    for hook in PORT_HOOKS:
+def _get_hook(hook_name: str) -> Hook | PortHook:
+    for hook in _HOOKS:
         if hook.name == hook_name:
             return hook
-    return None
-
-
-_AGENT_RECEIVER_PORT_HOOK = PortHook(
-    name="AGENT_RECEIVER_PORT",
-    display_name="agent-receiver port",
-    default_port=8000,
-    activation=null_action,
-)
-
-_OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT_HOOK = PortHook(
-    name="OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT",
-    display_name="Otel Collector self-monitoring port",
-    default_port=14317,
-    activation=null_action,
-)
-
-PORT_HOOKS: Sequence[PortHook] = [
-    APACHE_TCP_PORT_HOOK,
-    _AGENT_RECEIVER_PORT_HOOK,
-    LIVESTATUS_TCP_PORT_HOOK,
-    _OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT_HOOK,
-    RABBITMQ_DIST_PORT_HOOK,
-    RABBITMQ_MANAGEMENT_PORT_HOOK,
-    RABBITMQ_PORT_HOOK,
-    TRACE_JAEGER_ADMIN_PORT_HOOK,
-    TRACE_JAEGER_UI_PORT_HOOK,
-    TRACE_RECEIVE_PORT_HOOK,
-]
-
-
-_MIGRATED_ACTIVATION: Mapping[str, Activation] = {
-    "ADMIN_MAIL": write_admin_mail_forward,
-    "APACHE_TCP_ADDR": write_apache_listen_conf,
-    "CORE": write_core_conf,
-    "LIVESTATUS_TCP": write_livestatus_xinetd_conf,
-    # Do not patch the xinetd config directly here, because that would lead to
-    # later conflicts during omd cp/mv. The xinetd config points to a link
-    # live-tcp instead which always points to the correct socket. This is
-    # done by "omd", because the hook can not change things in tmp since the
-    # tmpfs may not be available during hook execution.
-    "LIVESTATUS_TCP_TLS": null_action,
-    "LIVESTATUS_TCP_ONLY_FROM": write_livestatus_xinetd_conf,
-    "LIVESTATUS_TCP_INSTANCES": write_livestatus_xinetd_conf,
-    "LIVESTATUS_TCP_PER_SOURCE": write_livestatus_xinetd_conf,
-    "LIVEPROXYD": write_liveproxyd_conf,
-    "MKEVENTD": write_mkeventd_conf,
-    "MULTISITE_AUTHORISATION": write_multisite_authorisation,
-    "MULTISITE_COOKIE_AUTH": write_multisite_cookie_auth,
-    "PNP4NAGIOS": write_pnp4nagios_conf,
-    "RABBITMQ_ONLY_FROM": write_rabbitmq_default_conf,
-    "TMPFS": deactivate_tmpfs,
-    "TRACE_RECEIVE": write_jaeger_apache_conf,
-    "TRACE_RECEIVE_ADDRESS": write_jaeger_receiver_conf,
-}
+    assert False, "Implementation error, please contact support"
 
 
 def _config_set(
-    site: "SiteContext",
+    site_name: str,
     config: Config,
     hook_name: str,
-    verbose: bool,
     omd_path: Path = Path("/omd/"),
 ) -> None:
-    site_home = Path(SitePaths.from_site_name(site.name).home)
+    site_home = Path(SitePaths.from_site_name(site_name).home)
 
-    if (port_hook := _get_port_hook(hook_name)) is not None:
-        site_configs = _build_site_configs(site.name, omd_path)
+    hook = _get_hook(hook_name)
+    if isinstance(hook, PortHook):
+        site_configs = _build_site_configs(site_name, omd_path)
         _report_error(hook_name, site_configs.sites_with_unreadable_configs)
         value = config[hook_name]
-        new_value = str(_next_free_port(hook_name, site.name, int(value), site_configs.configs))
+        new_value = str(_next_free_port(hook_name, site_name, int(value), site_configs.configs))
         if value != new_value:
             sys.stderr.write(
-                f"{port_hook.display_name} {value} is in use. I've chosen {new_value} instead.\n"
+                f"{hook.display_name} {value} is in use. I've chosen {new_value} instead.\n"
             )
         config[hook_name] = new_value
-        try:
-            port_hook.activation(site.name, site_home, config)
-        except Exception:
-            traceback.print_exc()
-            return
-    elif (activation := _MIGRATED_ACTIVATION.get(hook_name)) is not None:
-        try:
-            activation(site.name, site_home, config)
-        except Exception:
-            traceback.print_exc()
-            return
-    else:
-        exitcode, output = _call_hook(site, hook_name, ["set", config[hook_name]], verbose)
-        if exitcode:
-            return
-        if output:
-            config[hook_name] = output
+    try:
+        hook.activation(site_name, site_home, config)
+    except Exception:
+        traceback.print_exc()
+        return
 
     os.environ["CONFIG_" + hook_name] = config[hook_name]
 
@@ -602,11 +358,10 @@ def config_set_value(
     config: Config,
     hook_name: str,
     value: str,
-    verbose: bool,
     save: bool = True,
 ) -> None:
     config[hook_name] = value
-    _config_set(site, config, hook_name, verbose)
+    _config_set(site.name, config, hook_name)
 
     if hook_name in ["CORE", "MKEVENTD", "PNP4NAGIOS"]:
         update_cmk_core_config(site_home, config)

@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from pathlib import Path
 
-from omdlib.config_api import Config, PortHook
+from omdlib.config_api import Config, Hook, null_action, PortHook
+from omdlib.config_choices import IpAddressListHasError
 
 LIVESTATUS_CONFIG_HEADER = """# This file is managed by OMD
 # Do not change anything in this file. Use omd config instead.
@@ -81,9 +83,56 @@ def write_livestatus_xinetd_conf(site_name: str, site_home: Path, config: Config
         livestatus_xinetd_conf.write(content)
 
 
-LIVESTATUS_TCP_PORT_HOOK = PortHook(
+LIVESTATUS_TCP = Hook(
+    name="LIVESTATUS_TCP",
+    choices=[("on", "enable"), ("off", "disable")],
+    default=lambda _edition: "off",
+    depends=lambda c: c.get("CORE") != "none",
+    activation=write_livestatus_xinetd_conf,
+)
+
+LIVESTATUS_TCP_INSTANCES = Hook(
+    name="LIVESTATUS_TCP_INSTANCES",
+    choices=re.compile(r"[0-9]+$"),
+    default=lambda _edition: "500",
+    depends=lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
+    activation=write_livestatus_xinetd_conf,
+)
+
+LIVESTATUS_TCP_ONLY_FROM = Hook(
+    name="LIVESTATUS_TCP_ONLY_FROM",
+    choices=IpAddressListHasError(),
+    default=lambda _edition: "0.0.0.0 ::/0",
+    depends=lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
+    activation=write_livestatus_xinetd_conf,
+)
+
+LIVESTATUS_TCP_PER_SOURCE = Hook(
+    name="LIVESTATUS_TCP_PER_SOURCE",
+    choices=re.compile(r"[0-9]+$"),
+    default=lambda _edition: "250",
+    depends=lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
+    activation=write_livestatus_xinetd_conf,
+)
+
+LIVESTATUS_TCP_PORT = PortHook(
     name="LIVESTATUS_TCP_PORT",
     display_name="Livestatus port",
     default_port=6557,
     activation=write_livestatus_xinetd_conf,
+    choices=re.compile(r"[0-9]{1,5}$"),
+    depends=lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
+)
+
+# Do not patch the xinetd config directly here, because that would lead to
+# later conflicts during omd cp/mv. The xinetd config points to a link
+# live-tcp instead which always points to the correct socket. This is
+# done by "omd", because the hook can not change things in tmp since the
+# tmpfs may not be available during hook execution.
+LIVESTATUS_TCP_TLS = Hook(
+    name="LIVESTATUS_TCP_TLS",
+    choices=[("on", "encrypt"), ("off", "clear text")],
+    default=lambda _edition: "on",
+    depends=lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
+    activation=null_action,
 )

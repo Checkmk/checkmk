@@ -166,7 +166,7 @@ pkg_files(
         "hooks/CORE",
         "hooks/TMPFS",
     ],
-    attributes = pkg_attributes(mode = "0755"),
+    attributes = pkg_attributes(mode = "0644"),
     prefix = "lib/omd/hooks",
 )
 
@@ -184,7 +184,10 @@ py_library(
     name = "omdlib",
     srcs = [
         "omdlib/admin_mail.py",
+        "omdlib/agent_receiver.py",
         "omdlib/args_site_user.py",
+        "omdlib/automation_helper.py",
+        "omdlib/autostart.py",
         "omdlib/backup.py",
         "omdlib/buffer.py",
         "omdlib/config_api.py",
@@ -207,9 +210,11 @@ py_library(
         "omdlib/main_site_user.py",
         "omdlib/mkeventd.py",
         "omdlib/multisite.py",
+        "omdlib/opentelemetry.py",
         "omdlib/options.py",
         "omdlib/options_legacy.py",
         "omdlib/package_manager.py",
+        "omdlib/piggyback_hub.py",
         "omdlib/pnp4nagios.py",
         "omdlib/rabbitmq.py",
         "omdlib/restore.py",

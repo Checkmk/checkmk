@@ -217,11 +217,6 @@ pkg_tar(
 sh_library(
     name = "omd_packages_check_mk_sh",
     srcs = [
-        "AUTOMATION_HELPER",
-        "PIGGYBACK_HUB",
-        "TRACE_SEND",
-        "TRACE_SEND_TARGET",
-        "TRACE_SERVICE_NAMESPACE",
         "post-create/02_message-broker-certs",
         "scripts/post-cp/01_cmk-post-rename-site",
         "scripts/post-mv/01_cmk-post-rename-site",

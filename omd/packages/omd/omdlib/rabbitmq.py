@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from pathlib import Path
 
-from omdlib.config_api import Config, null_action, PortHook
+from omdlib.config_api import Config, Hook, null_action, PortHook
+from omdlib.config_choices import IpAddressListHasError
 
 
 def write_rabbitmq_default_conf(_site_name: str, site_home: Path, config: Config) -> None:
@@ -33,23 +35,33 @@ management.ssl.port = {port}
         f.write(content)
 
 
-RABBITMQ_DIST_PORT_HOOK = PortHook(
+RABBITMQ_DIST_PORT = PortHook(
     name="RABBITMQ_DIST_PORT",
     display_name="RabbitMQ distribution port",
     default_port=25672,
     activation=null_action,
+    choices=re.compile(r"[0-9]{1,5}$"),
 )
 
-RABBITMQ_MANAGEMENT_PORT_HOOK = PortHook(
+RABBITMQ_MANAGEMENT_PORT = PortHook(
     name="RABBITMQ_MANAGEMENT_PORT",
     display_name="RabbitMQ management port",
     default_port=15671,
     activation=_write_rabbitmq_management_port_conf,
+    choices=re.compile(r"[0-9]{1,5}$"),
 )
 
-RABBITMQ_PORT_HOOK = PortHook(
+RABBITMQ_ONLY_FROM = Hook(
+    name="RABBITMQ_ONLY_FROM",
+    choices=IpAddressListHasError(),
+    default=lambda _edition: ":: 0.0.0.0",
+    activation=write_rabbitmq_default_conf,
+)
+
+RABBITMQ_PORT = PortHook(
     name="RABBITMQ_PORT",
     display_name="RabbitMQ port",
     default_port=5672,
     activation=write_rabbitmq_default_conf,
+    choices=re.compile(r"[0-9]{1,5}$"),
 )

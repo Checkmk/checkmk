@@ -119,7 +119,7 @@ def main_backup(
 
 
 def main_site_backup(args: Backup) -> int:
-    site = site_environment_as_root(args.site, args.verbose)
+    site = site_environment_as_root(args.site)
     # This lock protects two resources:
     # 1. Concurrent backups interleave SUSPEND/RESUME commands to rrdcached.
     # 2. Parallel site backups cause I/O contention.

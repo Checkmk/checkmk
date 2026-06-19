@@ -24,7 +24,7 @@ pkg_files(
         "LIVESTATUS_TCP_TLS",
     ],
     attributes = pkg_attributes(
-        mode = "0755",
+        mode = "0644",
     ),
     prefix = "lib/omd/hooks",
     tags = ["manual"],

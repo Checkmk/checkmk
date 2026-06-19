@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Alias: Maximum number of parallel Livestatus TCP server instances
 # Menu: Distributed Monitoring
 # Description:

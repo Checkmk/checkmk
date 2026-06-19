@@ -37,13 +37,13 @@ import omdlib
 import omdlib.backup
 from omdlib.args_site_user import args_to_command_line, Copy, Move, Restore
 from omdlib.buffer import BufferWithCopy
-from omdlib.config_api import Config
+from omdlib.config_api import Config, ConfigHookChoices
 from omdlib.config_choices import ConfigChoiceHasError
 from omdlib.config_hooks import (
+    _get_hook,
     config_set_all,
     config_set_value,
     ConfigHook,
-    ConfigHookChoices,
     ConfigHooks,
     load_config,
     load_config_hooks,
@@ -1432,7 +1432,7 @@ def config_change(
 
         changed: list[str] = []
         for key, value in settings:
-            config_set_value(site, site_home, config, key, value, verbose, save=False)
+            config_set_value(site, site_home, config, key, value, save=False)
             changed.append(key)
 
         save_site_conf(site_home, config)
@@ -1466,7 +1466,7 @@ def validate_config_change_commands(
         if not hook:
             sys.exit("Invalid config option: %r" % key)
 
-        error_from_config_choice = _error_from_config_choice(hook.choices, value)
+        error_from_config_choice = _error_from_config_choice(_get_hook(key).choices, value)
         if error_from_config_choice.is_error():
             sys.exit(f"Invalid value for '{value} for {key}'. {error_from_config_choice.error}\n")
 
@@ -1495,12 +1495,12 @@ def config_set(
         sys.stderr.write("No such variable '%s'\n" % hook_name)
         return []
 
-    error_from_config_choice = _error_from_config_choice(hook.choices, value)
+    error_from_config_choice = _error_from_config_choice(_get_hook(hook_name).choices, value)
     if error_from_config_choice.is_error():
         sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice.error}\n")
         return []
 
-    config_set_value(site, site_home, config, hook_name, value, verbose)
+    config_set_value(site, site_home, config, hook_name, value, save=True)
     return [hook_name]
 
 
@@ -1636,7 +1636,7 @@ def config_configure_hook(
     title = hook.alias
     descr = hook.description.replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
     value = config[hook_name]
-    choices = hook.choices
+    choices = _get_hook(hook_name).choices
 
     if isinstance(choices, list):
         change, new_value = dialog_menu(title, descr, choices, value, "Change", "Cancel")
@@ -1650,7 +1650,7 @@ def config_configure_hook(
         assert_never(choices)
 
     if change:
-        config_set_value(site, site_home, config, hook.name, new_value, verbose)
+        config_set_value(site, site_home, config, hook.name, new_value, save=False)
         save_site_conf(site_home, config)
         yield hook_name
 
@@ -2569,10 +2569,10 @@ def main_update(
 
             # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
             # new settings and default values.
-            config = load_config(site, global_opts.verbose)
+            config = load_config(site)
 
             # Let hooks of the new(!) version do their work and update configuration.
-            config_set_all(site, config, global_opts.verbose, ())
+            config_set_all(site, config, ())
             save_site_conf(site_home, config)
 
             # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
@@ -2860,7 +2860,7 @@ def main_config(
     else:
         need_start = False
 
-    config_hooks = load_config_hooks(site, global_opts.verbose)
+    config_hooks = load_config_hooks(site.hook_dir)
     set_hooks: list[str] = []
     config = site.conf
     if len(args) == 0:
@@ -3066,16 +3066,16 @@ def _restore_backup_from_tar_site(
         sys.stdout.write("Restoring site from %s...\n" % source_descr)
         sys.stdout.flush()
 
-        config = load_config(site, global_opts.verbose)
+        config = load_config(site)
         orig_apache_port = config.get("APACHE_TCP_PORT")
-        site = site_environment_as_root(site.name, global_opts.verbose)
+        site = site_environment_as_root(site.name)
         prepare_restore_as_site_user(site, "kill" in options, global_opts.verbose)
         _process_backup_tar(
             tar, global_opts.verbose, _get_conflict_mode(options), old_site_name, site
         )
-        site = site_environment_as_root(site.name, global_opts.verbose)
+        site = site_environment_as_root(site.name)
         postprocess_restore_as_site_user(
-            version_info, old_site_name, site, options, orig_apache_port, global_opts.verbose
+            version_info, old_site_name, site, options, orig_apache_port
         )
 
 
@@ -3131,11 +3131,10 @@ def postprocess_restore_as_site_user(
     site: SiteContext,
     options: CommandOptions,
     orig_apache_port: str | None,
-    verbose: bool,
 ) -> None:
     # Keep the apache port the site currently being replaced had before
     # (we can not restart the system apache as site user)
-    config = load_config(site, verbose)
+    config = load_config(site)
     if orig_apache_port is not None:
         config["APACHE_TCP_PORT"] = orig_apache_port
     # Needed by the post-rename-site script
@@ -3150,7 +3149,6 @@ def postprocess_restore_as_site_user(
             if "reuse" in options
             else CommandType.restore_as_new_site
         ),
-        verbose,
     )
 
 
@@ -3354,9 +3352,9 @@ def main() -> None:
                 site: SiteContext | RootContext | str = RootContext()
             elif not command.no_suid and not command.only_root:
                 if isinstance(user, Root):
-                    site = site_environment(site_name, global_opts.verbose)
+                    site = site_environment(site_name)
                 else:
-                    site = site_environment_as_root(site_name, global_opts.verbose)
+                    site = site_environment_as_root(site_name)
             else:
                 site = site_name
 
@@ -3389,7 +3387,7 @@ def _escape_to_site_context(version: str, args: Sequence[str]) -> NoReturn:
 
 
 def main_finalize_restore(args: Restore) -> int:
-    site = site_environment_as_root(args.site, args.verbose)
+    site = site_environment_as_root(args.site)
     if args.reuse:
         prepare_restore_as_site_user(site, args.kill, args.verbose)
     with (
@@ -3398,7 +3396,7 @@ def main_finalize_restore(args: Restore) -> int:
     ):
         tar.next()  # skip version entry
         _process_backup_tar(tar, args.verbose, args.skeleton, args.old_site, SiteContext(args.site))
-    site = site_environment_as_root(args.site, args.verbose)
+    site = site_environment_as_root(args.site)
     os.environ["OLD_OMD_SITE"] = args.old_site
     return finalize_site_as_user(
         version_info=VersionInfo(),
@@ -3407,12 +3405,11 @@ def main_finalize_restore(args: Restore) -> int:
         command_type=(
             CommandType.restore_existing_site if args.reuse else CommandType.restore_as_new_site
         ),
-        verbose=args.verbose,
     ).value
 
 
 def main_finalize_move(args: Move) -> int:
-    site = site_environment_as_root(args.site, args.verbose)
+    site = site_environment_as_root(args.site)
     patch_skeleton_files(args.skeleton, args.old_site, site)
     os.environ["OLD_OMD_SITE"] = args.old_site
     return finalize_site_as_user(
@@ -3420,12 +3417,11 @@ def main_finalize_move(args: Move) -> int:
         site=site,
         config=site.conf,
         command_type=CommandType.move,
-        verbose=args.verbose,
     ).value
 
 
 def main_finalize_copy(args: Copy) -> int:
-    site = site_environment_as_root(args.site, args.verbose)
+    site = site_environment_as_root(args.site)
     patch_skeleton_files(args.skeleton, args.old_site, site)
     os.environ["OLD_OMD_SITE"] = args.old_site
     return finalize_site_as_user(
@@ -3433,5 +3429,4 @@ def main_finalize_copy(args: Copy) -> int:
         site=site,
         config=site.conf,
         command_type=CommandType.copy,
-        verbose=args.verbose,
     ).value

@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Alias: Start/stop this site via /etc/init.d/omd
 # Menu: Basic
 #  This setting decides, wether this site will be automatically

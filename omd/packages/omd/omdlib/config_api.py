@@ -3,11 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from re import Pattern
 from typing import Protocol
 
+from omdlib.config_choices import ConfigChoiceHasError
+
+from cmk.ccc.version import Edition
+
 Config = dict[str, str]
+
+ConfigHookChoiceItem = tuple[str, str]
+ConfigHookChoices = Pattern[str] | list[ConfigHookChoiceItem] | ConfigChoiceHasError
 
 
 class _NamedSiteActivation(Protocol):
@@ -31,3 +40,14 @@ class PortHook:
     display_name: str
     default_port: int
     activation: Activation
+    choices: ConfigHookChoices
+    depends: Callable[[Config], bool] = lambda _: True
+
+
+@dataclass(frozen=True)
+class Hook:
+    name: str
+    default: Callable[[Edition], str]
+    activation: Activation
+    choices: ConfigHookChoices
+    depends: Callable[[Config], bool] = lambda _: True

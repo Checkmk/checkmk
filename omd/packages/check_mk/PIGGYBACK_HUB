@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Alias: Start daemon for the piggyback-hub
 # Menu: Distributed Monitoring
 # Description:

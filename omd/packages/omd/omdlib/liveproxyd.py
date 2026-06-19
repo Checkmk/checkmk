@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from omdlib.config_api import Config
+from omdlib.config_api import Config, Hook
 
 
 def write_liveproxyd_conf(_site_name: str, site_home: Path, config: Config) -> None:
@@ -13,3 +13,11 @@ def write_liveproxyd_conf(_site_name: str, site_home: Path, config: Config) -> N
     content = f"liveproxyd_enabled = {enabled}\n"
     with open(site_home / "etc" / "check_mk" / "multisite.d" / "liveproxyd.mk", "w") as f:
         f.write(content)
+
+
+LIVEPROXYD = Hook(
+    name="LIVEPROXYD",
+    choices=[("on", "enable"), ("off", "disable")],
+    default=lambda _edition: "on",
+    activation=write_liveproxyd_conf,
+)

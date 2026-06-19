@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Alias: Use a ramdisk for temporary files
 # Menu: Basic
 #  This settings decides, wether this site uses a ramdisk for

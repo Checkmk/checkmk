@@ -113,7 +113,6 @@ def finalize_site_as_user(
     site: SiteContext,
     config: Config,
     command_type: CommandType,
-    verbose: bool,
 ) -> FinalizeOutcome:
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
@@ -136,7 +135,7 @@ def finalize_site_as_user(
     # configuration settings
     # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
     # see CMK-3067
-    config_set_all(site, config, verbose, ["TMPFS"])
+    config_set_all(site, config, ["TMPFS"])
     initialize_site_ca(site)
     initialize_agent_ca(site)
     initialize_relay_ca(site)
@@ -190,14 +189,14 @@ def finalize_site(
     if pid == 0:
         try:
             # From now on we run as normal site user!
-            site = site_environment(site.name, verbose)
+            site = site_environment(site.name)
             os.chdir(site_home)
-            site.set_config(load_config(site, verbose) | config_settings)
+            site.set_config(load_config(site) | config_settings)
             create_config_environment(site.conf)
             # Needed by the post-rename-site script
             os.environ["OLD_OMD_SITE"] = old_site_name
 
-            outcome = finalize_site_as_user(version_info, site, site.conf, command_type, verbose)
+            outcome = finalize_site_as_user(version_info, site, site.conf, command_type)
             sys.exit(outcome.value)
         except Exception as e:
             sys.stderr.write(f"Failed to finalize site: {e}\n")

@@ -11,10 +11,12 @@ from omdlib.config_api import PortHook
 from omdlib.config_hooks import (
     _build_site_configs,
     _default_port,
+    _HOOKS,
     _next_free_port,
     _report_error,
-    PORT_HOOKS,
 )
+
+_PORT_HOOKS = [hook for hook in _HOOKS if isinstance(hook, PortHook)]
 
 
 def _make_site(sites_dir: Path, name: str, conf: str) -> None:
@@ -65,7 +67,7 @@ def test_next_free_port_missing_config_current_site(tmp_path: Path) -> None:
     assert _next_free_port("APACHE_TCP_PORT", "newsite", 5000, site_configs.configs) == 5000
 
 
-@pytest.mark.parametrize("port_hook", PORT_HOOKS, ids=[h.name for h in PORT_HOOKS])
+@pytest.mark.parametrize("port_hook", _PORT_HOOKS, ids=[h.name for h in _PORT_HOOKS])
 def test_default_port_cross_key_conflict(tmp_path: Path, port_hook: PortHook) -> None:
     sites = tmp_path / "sites"
     _make_site(sites, "other", f"CONFIG_OTHER_KEY='{port_hook.default_port}'\n")
@@ -75,7 +77,7 @@ def test_default_port_cross_key_conflict(tmp_path: Path, port_hook: PortHook) ->
     assert _default_port("mysite", port_hook, site_configs) == str(port_hook.default_port + 1)
 
 
-@pytest.mark.parametrize("port_hook", PORT_HOOKS, ids=[h.name for h in PORT_HOOKS])
+@pytest.mark.parametrize("port_hook", _PORT_HOOKS, ids=[h.name for h in _PORT_HOOKS])
 def test_default_port_warns_on_unreadable_site(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], port_hook: PortHook
 ) -> None:

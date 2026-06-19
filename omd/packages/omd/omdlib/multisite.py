@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from omdlib.config_api import Config
+from omdlib.config_api import Config, Hook
 
 _AUTHORISATION_PNP_CONTENT = """\
 <?php
@@ -83,3 +83,24 @@ authorisation_multisite_file="{site_home}/var/check_mk/wato/auth/auth.php"
             nagvis_cfg.unlink()
         if pnp_cfg.is_file():
             pnp_cfg.unlink()
+
+
+MULTISITE_AUTHORISATION = Hook(
+    name="MULTISITE_AUTHORISATION",
+    choices=[
+        ("on", "control user permissions"),
+        ("off", "disable permission control"),
+    ],
+    default=lambda _edition: "on",
+    activation=write_multisite_authorisation,
+)
+
+MULTISITE_COOKIE_AUTH = Hook(
+    name="MULTISITE_COOKIE_AUTH",
+    choices=[
+        ("on", "use cookie authentication"),
+        ("off", "use basic authentication"),
+    ],
+    default=lambda _edition: "on",
+    activation=write_multisite_cookie_auth,
+)

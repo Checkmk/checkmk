@@ -1,5 +1,3 @@
-#!/bin/sh
-
 # Alias: TCP port number for RabbitMQ distribution port
 # Menu: Basic
 # Description:

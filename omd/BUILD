@@ -479,7 +479,7 @@ pkg_files(
     # See also `//omd/packages/omd:hooks`.
     name = "omd_hooks",
     srcs = ["//omd/packages/check_mk:hooks"],
-    attributes = pkg_attributes(mode = "0755"),
+    attributes = pkg_attributes(mode = "0644"),
     prefix = "lib/omd/hooks",
 )
 

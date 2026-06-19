@@ -81,7 +81,7 @@ pkg_files(
         ":lib/omd/hooks/TRACE_RECEIVE_PORT",
     ],
     attributes = pkg_attributes(
-        mode = "0755",
+        mode = "0644",
     ),
     strip_prefix = strip_prefix.from_pkg(""),
     tags = ["manual"],
@@ -133,11 +133,6 @@ pkg_tar(
 sh_library(
     name = "omd_packages_jaeger_sh",
     srcs = [
-        "TRACE_JAEGER_ADMIN_PORT",
-        "TRACE_JAEGER_UI_PORT",
-        "TRACE_RECEIVE",
-        "TRACE_RECEIVE_ADDRESS",
-        "TRACE_RECEIVE_PORT",
         "skel/etc/init.d/jaeger",
     ],
 )

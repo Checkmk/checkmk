@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Alias: Encrypt MK Livestatus via TCP
 # Menu: Distributed Monitoring
 # Description:

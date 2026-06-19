@@ -7,7 +7,7 @@ import os
 import re
 from pathlib import Path
 
-from omdlib.config_api import Config
+from omdlib.config_api import Config, Hook
 
 
 def _set_gearman_perfdata(site_home: Path, value: str) -> None:
@@ -52,3 +52,17 @@ def write_pnp4nagios_conf(_site_name: str, site_home: Path, config: Config) -> N
 pnp4nagios_enabled = {enabled}
 """
         )
+
+
+PNP4NAGIOS = Hook(
+    name="PNP4NAGIOS",
+    choices=[
+        ("on", "enable bulk mode with npcdmod and npcd"),
+        ("npcd", "enable bulk mode with npcd"),
+        ("gearman", "enable gearman worker"),
+        ("off", "disable"),
+    ],
+    default=lambda _edition: "on",
+    depends=lambda c: c.get("CORE") not in ("cmc", "none"),
+    activation=write_pnp4nagios_conf,
+)

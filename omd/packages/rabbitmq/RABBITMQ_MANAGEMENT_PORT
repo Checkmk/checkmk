@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Alias: TCP port number for management plugin of RabbitMQ instance
 # Menu: Basic
 # Description:

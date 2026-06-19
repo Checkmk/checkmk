@@ -28,7 +28,7 @@ pkg_files(
         "APACHE_TCP_ADDR",
         "APACHE_TCP_PORT",
     ],
-    attributes = pkg_attributes(mode = "0755"),
+    attributes = pkg_attributes(mode = "0644"),
     prefix = "lib/omd/hooks",
 )
 

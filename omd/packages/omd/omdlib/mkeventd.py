@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from omdlib.config_api import Config
+from omdlib.config_api import Config, Hook, null_action
 
 
 def write_mkeventd_conf(_site_name: str, site_home: Path, config: Config) -> None:
@@ -18,3 +18,37 @@ mkeventd_enabled = {enabled}
         f.write(content)
     with open(site_home / "etc" / "check_mk" / "conf.d" / "mkeventd.mk", "w") as f:
         f.write(content)
+
+
+MKEVENTD = Hook(
+    name="MKEVENTD",
+    choices=[("on", "enable"), ("off", "disable")],
+    default=lambda edition: (
+        "off" if edition.long == "saas" else "on"  # TODO: "saas" was removed.
+    ),
+    activation=write_mkeventd_conf,
+)
+
+MKEVENTD_SNMPTRAP = Hook(
+    name="MKEVENTD_SNMPTRAP",
+    choices=[("on", "enable"), ("off", "disable")],
+    default=lambda _edition: "off",
+    depends=lambda c: c.get("MKEVENTD") == "on",
+    activation=null_action,
+)
+
+MKEVENTD_SYSLOG = Hook(
+    name="MKEVENTD_SYSLOG",
+    choices=[("on", "enable"), ("off", "disable")],
+    default=lambda _edition: "off",
+    depends=lambda c: c.get("MKEVENTD") == "on",
+    activation=null_action,
+)
+
+MKEVENTD_SYSLOG_TCP = Hook(
+    name="MKEVENTD_SYSLOG_TCP",
+    choices=[("on", "enable"), ("off", "disable")],
+    default=lambda _edition: "off",
+    depends=lambda c: c.get("MKEVENTD") == "on",
+    activation=null_action,
+)

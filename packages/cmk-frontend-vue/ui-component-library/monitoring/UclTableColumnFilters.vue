@@ -63,6 +63,7 @@ import type { ColumnFilterNode, FilterField, HostEntry } from '@/monitoring/shar
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import type {
   CheckboxListFilter,
+  NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 
@@ -110,6 +111,16 @@ const addressFilter = computed<StringInputFilter>(() => ({
   field: 'address'
 }))
 
+const servicesFilter = computed<NumericFilter>(() => ({
+  type: 'numeric',
+  field: 'num_services',
+  unit: 'services',
+  presets: [
+    { label: 'Any', op: 'gt', value: 0 },
+    { label: 'None', op: 'eq', value: 0 }
+  ]
+}))
+
 const columns = computed<ColumnDef<HostEntry>[]>(() => [
   {
     accessorKey: 'state',
@@ -138,19 +149,33 @@ const columns = computed<ColumnDef<HostEntry>[]>(() => [
     minSize: 100,
     maxSize: 160,
     meta: { filter: addressFilter.value }
+  },
+  {
+    accessorKey: 'num_services',
+    header: 'Services',
+    minSize: 80,
+    maxSize: 120,
+    meta: { filter: servicesFilter.value }
   }
 ])
 
 const filterState = ref<ColumnFiltersState>([])
 
+function describeNode(node: ColumnFilterNode<FilterField>): string {
+  if (node.type === 'and') {
+    return node.children.map(describeNode).join(' and ')
+  }
+  if (node.type === 'condition') {
+    const value = Array.isArray(node.value) ? node.value.join(', ') : String(node.value)
+    return `${node.op} ${value}`
+  }
+  return ''
+}
+
 const activeFilters = computed(() =>
   filterState.value.map((entry) => {
     const node = entry.value as ColumnFilterNode<FilterField>
-    const values =
-      node && 'value' in node && Array.isArray(node.value)
-        ? (node.value as string[]).join(', ')
-        : ''
-    return `${entry.id}: ${values}`
+    return `${entry.id}: ${node ? describeNode(node) : ''}`
   })
 )
 

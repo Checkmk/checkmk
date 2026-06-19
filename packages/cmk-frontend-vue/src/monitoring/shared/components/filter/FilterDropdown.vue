@@ -31,12 +31,14 @@ import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/type
 
 import { MONITORING_SERVICE } from '../MonitoringTableContext'
 import FilterCheckboxList from './FilterCheckboxList.vue'
+import FilterNumeric from './FilterNumeric.vue'
 import FilterStringInput from './FilterStringInput.vue'
 import type { ColumnFilterDefinition } from './types'
 
 const FILTER_COMPONENTS: Record<ColumnFilterDefinition['type'], Component> = {
   'checkbox-list': FilterCheckboxList,
-  'string-input': FilterStringInput
+  'string-input': FilterStringInput,
+  numeric: FilterNumeric
 }
 
 const props = defineProps<{
@@ -65,6 +67,8 @@ const suppressNextClickOutside = ref(false)
 // this back to the model; cancelling discards it.
 const draft = ref<ColumnFilterNode<FilterField> | undefined>(undefined)
 
+const isValid = ref(true)
+
 const panel = ref<HTMLElement | null>(null)
 const trigger = ref<HTMLElement | null>(null)
 
@@ -77,6 +81,7 @@ function open(): void {
     return
   }
   draft.value = model.value
+  isValid.value = true
   isOpen.value = true
   monitoringService?.beginAutoPause()
   suppressNextClickOutside.value = true
@@ -109,6 +114,9 @@ function toggle(): void {
 }
 
 function apply(): void {
+  if (!isValid.value) {
+    return
+  }
   model.value = draft.value
   close()
 }
@@ -179,15 +187,22 @@ function moveFocus(delta: number): void {
   focusRow(current + delta)
 }
 
+// Filter types whose input owns the vertical arrow keys (e.g. a number field's
+// native increment/decrement). For these the dropdown must not hijack ArrowUp /
+// ArrowDown for row navigation; Tab still moves between rows.
+const ARROW_NAV_DISABLED_TYPES = new Set<ColumnFilterDefinition['type']>(['numeric'])
+
 function registerShortcuts(): void {
   if (shortcutIds.length > 0) {
     return
   }
-  shortcutIds = [
-    shortcuts.on({ key: ['ArrowDown'], preventDefault: true }, () => moveFocus(1)),
-    shortcuts.on({ key: ['ArrowUp'], preventDefault: true }, () => moveFocus(-1)),
-    shortcuts.on({ key: ['Escape'] }, close)
-  ]
+  shortcutIds = [shortcuts.on({ key: ['Escape'] }, close)]
+  if (!ARROW_NAV_DISABLED_TYPES.has(props.definition.type)) {
+    shortcutIds.push(
+      shortcuts.on({ key: ['ArrowDown'], preventDefault: true }, () => moveFocus(1)),
+      shortcuts.on({ key: ['ArrowUp'], preventDefault: true }, () => moveFocus(-1))
+    )
+  }
 }
 
 function removeShortcuts(): void {
@@ -231,10 +246,19 @@ onBeforeUnmount(() => {
       :aria-label="`Filter ${label}`"
       @focusout="onFocusOut"
     >
-      <component :is="filterComponent" v-model="draft" :definition="definition" />
+      <div class="monitoring-filter-dropdown__content">
+        <component
+          :is="filterComponent"
+          v-model="draft"
+          :definition="definition"
+          @update:valid="isValid = $event"
+        />
+      </div>
 
       <div class="monitoring-filter-dropdown__footer">
-        <CmkInlineButton icon="checkmark" @click="apply">{{ _t('Apply') }}</CmkInlineButton>
+        <CmkInlineButton icon="checkmark" :disabled="!isValid" @click="apply">{{
+          _t('Apply')
+        }}</CmkInlineButton>
         <CmkInlineButton icon="cancel" @click="cancel">{{ _t('Close') }}</CmkInlineButton>
       </div>
     </div>
@@ -253,14 +277,20 @@ onBeforeUnmount(() => {
   top: 100%;
   left: 0;
   z-index: var(--z-index-dropdown-offset, 100);
+  box-sizing: border-box;
+  width: max-content;
   min-width: 180px;
-  max-width: 320px;
+  max-width: min(90vw, 32rem);
   margin-top: var(--dimension-2);
   padding: var(--dimension-2);
   background: var(--ux-theme-1);
   border: 1px solid var(--ux-theme-4);
   border-radius: 4px;
   box-shadow: 0 4px 12px rgb(0 0 0 / 25%);
+}
+
+.monitoring-filter-dropdown__content {
+  width: 100%;
 }
 
 .monitoring-filter-dropdown__panel--up {

@@ -21,6 +21,10 @@ export type ConditionNode = components['schemas']['ConditionNode']
 
 export type FilterField = ConditionNode['field']
 
+export type NumericCondition = Extract<ConditionNode, { value: number }>
+
+export type NumericOp = NumericCondition['op']
+
 type ConditionForField<F extends FilterField, C extends ConditionNode = ConditionNode> = C extends {
   field: infer Fields
 }

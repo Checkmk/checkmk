@@ -91,6 +91,14 @@ const table = useVueTable({
   enableRowSelection: true,
   manualSorting: true,
   manualFiltering: true,
+  // Filter values are opaque ColumnFilterNode objects resolved server-side, so
+  // the fn is never run. It is set explicitly only to stop TanStack from
+  // auto-detecting a per-column fn: a numeric column would otherwise get
+  // `inNumberRange`, whose autoRemove discards our node objects (no [0]/[1]),
+  // silently dropping numeric filters the moment they are applied.
+  defaultColumn: {
+    filterFn: () => true
+  },
   // Key selection by the stable row key so it survives server-side reordering.
   ...(props.getRowKey
     ? { getRowId: (row: T, index: number) => String(props.getRowKey!(row, index)) }

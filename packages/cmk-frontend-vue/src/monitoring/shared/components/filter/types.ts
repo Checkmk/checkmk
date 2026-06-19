@@ -33,6 +33,40 @@ export interface StringInputFilter<F extends FilterField = FilterField> {
 }
 
 /**
+ * A quick-pick chip for a {@link NumericFilter}, e.g. "Any" (1 to ∞) or "None"
+ * (0 to 0). Selecting one prefills the range inputs with its bounds so the user
+ * sees the resulting range before applying; selecting the active chip again
+ * clears the range.
+ */
+export interface NumericPreset {
+  label: string
+  from?: number
+  to?: number
+}
+
+/**
+ * Filter that matches an integer field against a closed/open range. The lower
+ * and upper bounds map onto `gte` / `lte` numeric conditions; supplying both
+ * produces an `and` of the two, a single bound a lone condition.
+ *
+ * The v-model value is a `ColumnFilterNode<F>` so the column filter state stores
+ * a typed condition directly — no `filterToNode` translation needed.
+ */
+export interface NumericFilter<F extends FilterField = FilterField> {
+  type: 'numeric'
+  /** API field this filter targets. Used to produce the correct condition node. */
+  field: F
+  /** Optional unit suffix shown after the upper-bound field (e.g. "services"). */
+  unit?: string
+  /**
+   * Optional quick-pick chips shown above the range. Omit for a plain range;
+   * not every numeric column has a meaningful preset (e.g. total service count
+   * has no natural "none").
+   */
+  presets?: NumericPreset[]
+}
+
+/**
  * Per-column filter description, injected via `columnDef.meta.filter`. The
  * `FilterDropdown` switches its rendered content on `type`.
  *
@@ -43,3 +77,4 @@ export interface StringInputFilter<F extends FilterField = FilterField> {
 export type ColumnFilterDefinition<F extends FilterField = FilterField> =
   | CheckboxListFilter<F>
   | StringInputFilter<F>
+  | NumericFilter<F>

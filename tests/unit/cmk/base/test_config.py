@@ -58,6 +58,7 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.fetchers import Mode
 from cmk.checkengine.fetchers._tcp import agent_protocol
+from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.checkengine.plugin_backend.section_plugins_legacy import convert_legacy_sections
 from cmk.checkengine.plugins import (
@@ -709,6 +710,37 @@ def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
 
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_snmp_backend(hostname) is SNMPBackendEnum.STORED_WALK
+
+
+def test_bulkwalk_hosts_ruleset_enables_use_bulkwalk(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.set_ruleset(
+        "bulkwalk_hosts",
+        [{"condition": {"host_name": ["localhost"]}, "id": "01", "value": True}],
+    )
+    ts.add_host(HostName("abc"))
+    ts.add_host(HostName("localhost"))
+    config_cache = ts.apply(monkeypatch)
+    assert (
+        config_cache.make_snmp_config(
+            HostName("abc"),
+            socket.AddressFamily.AF_INET,
+            HostAddress("1.2.3.4"),
+            SourceType.HOST,
+            backend_override=None,
+        ).use_bulkwalk
+        is False
+    )
+    assert (
+        config_cache.make_snmp_config(
+            HostName("localhost"),
+            socket.AddressFamily.AF_INET,
+            HostAddress("1.2.3.4"),
+            SourceType.HOST,
+            backend_override=None,
+        ).use_bulkwalk
+        is True
+    )
 
 
 @pytest.mark.parametrize(

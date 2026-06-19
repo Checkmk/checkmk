@@ -9,18 +9,15 @@
 
 import dataclasses
 import logging
-import socket
 from collections.abc import Sequence
 from functools import partial
 from pathlib import Path
 from typing import NoReturn
 
 import pytest
-from pytest import MonkeyPatch
 
 import cmk.checkengine.snmplib._table as _snmp_table
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
@@ -38,7 +35,6 @@ from cmk.checkengine.snmplib import (
     SpecialColumn,
 )
 from cmk.utils.log import logger
-from tests.testlib.unit.base_configuration_scenario import Scenario
 
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,
@@ -136,37 +132,6 @@ def test_sanitize_snmp_encoding(
     assert [
         _snmp_table._decode_column(c, v, partial(ensure_str, encoding=encoding)) for c, v in columns
     ] == expected
-
-
-def test_use_advanced_snmp_version(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
-    ts.set_ruleset(
-        "bulkwalk_hosts",
-        [{"condition": {"host_name": ["localhost"]}, "id": "01", "value": True}],
-    )
-    ts.add_host(HostName("abc"))
-    ts.add_host(HostName("localhost"))
-    config_cache = ts.apply(monkeypatch)
-    assert (
-        config_cache.make_snmp_config(
-            HostName("abc"),
-            socket.AddressFamily.AF_INET,
-            HostAddress("1.2.3.4"),
-            SourceType.HOST,
-            backend_override=None,
-        ).use_bulkwalk
-        is False
-    )
-    assert (
-        config_cache.make_snmp_config(
-            HostName("localhost"),
-            socket.AddressFamily.AF_INET,
-            HostAddress("1.2.3.4"),
-            SourceType.HOST,
-            backend_override=None,
-        ).use_bulkwalk
-        is True
-    )
 
 
 def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> None:

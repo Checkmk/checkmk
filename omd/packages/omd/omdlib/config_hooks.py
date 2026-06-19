@@ -163,15 +163,28 @@ def _config_load_hook(
     )
 
 
-_HOOK_CHOICES: Mapping[str, ConfigChoiceHasError] = {
+_HOOK_CHOICES: Mapping[str, ConfigChoiceHasError | Pattern[str]] = {
+    "ADMIN_MAIL": re.compile(
+        r"^([-a-zäöüÄÖÜA-Z0-9_.+%]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*)?$$"
+    ),
+    "AGENT_RECEIVER_PORT": re.compile(r"[0-9]{1,5}$"),
     "APACHE_TCP_ADDR": ApacheTCPAddrHasError(),
     "APACHE_TCP_PORT": ApacheNetworkPortHasError(),
+    "LIVESTATUS_TCP_INSTANCES": re.compile(r"[0-9]+$"),
     "LIVESTATUS_TCP_ONLY_FROM": IpAddressListHasError(),
+    "LIVESTATUS_TCP_PER_SOURCE": re.compile(r"[0-9]+$"),
+    "LIVESTATUS_TCP_PORT": re.compile(r"[0-9]{1,5}$"),
+    "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT": re.compile(r"[0-9]{1,5}$"),
+    "RABBITMQ_DIST_PORT": re.compile(r"[0-9]{1,5}$"),
+    "RABBITMQ_MANAGEMENT_PORT": re.compile(r"[0-9]{1,5}$"),
     "RABBITMQ_ONLY_FROM": IpAddressListHasError(),
+    "RABBITMQ_PORT": re.compile(r"[0-9]{1,5}$"),
     "TRACE_JAEGER_ADMIN_PORT": NetworkPortHasError(),
     "TRACE_JAEGER_UI_PORT": NetworkPortHasError(),
     "TRACE_RECEIVE_ADDRESS": IpListenAddressHasError(),
     "TRACE_RECEIVE_PORT": NetworkPortHasError(),
+    "TRACE_SEND_TARGET": re.compile(r"^(local_site|https?://[^\:]+:[0-9]{4,5})$$"),
+    "TRACE_SERVICE_NAMESPACE": re.compile(r"^[a-zA-Z0-9_\.-]*$$"),
 }
 
 

@@ -8,9 +8,3 @@
 #  If the port isn't available, the next available port
 #  will be chosen. It does not need to be reachable via
 #  network.
-
-case "${1}" in
-    choices)
-        echo "[0-9]{1,5}"
-        ;;
-esac

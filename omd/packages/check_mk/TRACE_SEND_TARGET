@@ -12,7 +12,4 @@ case "$1" in
     default)
         echo "local_site"
         ;;
-    choices)
-        echo "^(local_site|https?://[^\:]+:[0-9]{4,5})$"
-        ;;
 esac

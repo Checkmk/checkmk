@@ -11,7 +11,4 @@ case "$1" in
     default)
         echo "500"
         ;;
-    choices)
-        echo "[0-9]+"
-        ;;
 esac

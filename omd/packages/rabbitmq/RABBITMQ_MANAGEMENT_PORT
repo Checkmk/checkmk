@@ -6,9 +6,3 @@
 #  Configure the port on which the RabbitMQ management plugin
 #  will expose its REST API. If the port isn't
 #  available, the next available port will be chosen.
-
-case "$1" in
-    choices)
-        echo "[0-9]{1,5}"
-        ;;
-esac

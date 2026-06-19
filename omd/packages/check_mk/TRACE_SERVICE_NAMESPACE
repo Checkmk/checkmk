@@ -10,7 +10,4 @@ case "$1" in
     default)
         echo ""
         ;;
-    choices)
-        echo "^[a-zA-Z0-9_\.-]*$"
-        ;;
 esac

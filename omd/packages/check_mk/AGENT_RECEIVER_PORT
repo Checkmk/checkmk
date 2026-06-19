@@ -6,9 +6,3 @@
 #  Configure the port on which agent-receiver server
 #  will listen to requests. If the port isn't
 #  available, the next available port will be chosen.
-
-case "$1" in
-    choices)
-        echo "[0-9]{1,5}"
-        ;;
-esac

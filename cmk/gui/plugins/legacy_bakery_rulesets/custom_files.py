@@ -3,54 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
+from collections.abc import Mapping
 
-from pathlib import Path
-
-import cmk.utils.paths
-import cmk.utils.render
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    rulespec_registry,
-    RulespecGroupMonitoringAgentsGenericOptions,
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    Dictionary,
+    List,
+    String,
 )
-from cmk.gui.valuespec import ListChoice, Transform
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def custom_file_base_path() -> Path:
-    return cmk.utils.paths.local_agents_dir / "custom"
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "folders" in value:
+        return value
+    if isinstance(value, list):
+        return {"folders": value}
+    raise ValueError(f"Unexpected value: {value!r}")
 
 
-def _agent_config_custom_files_get_custom_files_choices() -> list[tuple[str, str]]:
-    choices: list[tuple[str, str]] = []
-    custom_dir = custom_file_base_path()
-
-    if not custom_dir.exists():
-        return choices
-
-    for entry in custom_dir.glob("*"):
-        if entry.is_dir():
-            folder = str(entry.relative_to(custom_dir))
-            choices.append((folder, folder))
-
-    return sorted(choices)
-
-
-def _valuespec_agent_config_custom_files() -> Transform:
-    return Transform(
-        valuespec=ListChoice(
-            title=_("Deploy custom files with agent"),
-            choices=_agent_config_custom_files_get_custom_files_choices,
-        ),
-        help=_(
-            "This rule provides a simple way to add files to Agent Bakery packages without the need"
-            " to write a Bakery plug-in.<br>"
-            "<i>Custom files</i> are organized in folders under <tt>{omd_root}/local/share/check_mk/agents/custom</tt>.<br>"
+def _valuespec_agent_config_custom_files() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
+            "This rule provides a simple way to add files to agent bakery packages without the need"
+            " to write a bakery plug-in.<br>"
+            "<i>Custom files</i> are organized in folders under"
+            " <tt>&lt;site_root&gt;/local/share/check_mk/agents/custom</tt>.<br>"
             "To add a set of custom files to the agent, please create a subfolder there with a meaningful"
-            " name of your choice.<br>"
-            "Added folders will be shown in this rule for activation.<br>"
+            " name of your choice and enter the folder name here.<br>"
             "<br>"
             "Since the agent installation paths are customizable by other rules, the file structure"
             " below these sets doesn't resemble directly to the agent installation.<br>"
@@ -101,20 +82,23 @@ def _valuespec_agent_config_custom_files() -> Transform:
             "<li><tt>lib/plugins</tt>: <tt>..\\agent\\plugins</tt></li>"
             "<li><tt>lib/local</tt>: <tt>..\\agent\\local</tt></li>"
             "</ul>"
-        ).format(omd_root=cmk.utils.paths.omd_root),
-        # If a custom dir gets deleted, we also remove the configured path
-        to_valuespec=lambda choices: [
-            x for x in choices if (x, x) in _agent_config_custom_files_get_custom_files_choices()
-        ],
-        from_valuespec=lambda x: x,
+        ),
+        elements={
+            "folders": DictElement(
+                required=True,
+                parameter_form=List(
+                    title=Title("Custom file folders to deploy"),
+                    element_template=String(),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsGenericOptions,
-        match_type="list",
-        name=RuleGroup.AgentConfig("custom_files"),
-        valuespec=_valuespec_agent_config_custom_files,
-    )
+rule_spec_custom_files = AgentConfig(
+    title=Title("Deploy custom files with agent"),
+    name="custom_files",
+    topic=Topic.GENERAL,
+    parameter_form=_valuespec_agent_config_custom_files,
 )

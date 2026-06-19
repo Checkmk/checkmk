@@ -19,7 +19,6 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.checkengine.snmplib._table as _snmp_table
-from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.snmplib import (
@@ -168,34 +167,6 @@ def test_use_advanced_snmp_version(monkeypatch: MonkeyPatch) -> None:
         ).use_bulkwalk
         is True
     )
-
-
-def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
-    ts.set_ruleset(
-        "bulkwalk_hosts",
-        [{"condition": {"host_name": ["bulkwalk_h"]}, "id": "01", "value": True}],
-    )
-    ts.set_ruleset(
-        "snmpv2c_hosts",
-        [{"condition": {"host_name": ["v2c_h"]}, "id": "02", "value": True}],
-    )
-    ts.add_host(HostName("bulkwalk_h"))
-    ts.add_host(HostName("v2c_h"))
-    ts.add_host(HostName("not_included"))
-    ts.add_host(HostName("v3_h"))
-    monkeypatch.setattr(ConfigCache, "_is_inline_backend_supported", lambda *args: True)
-
-    config_cache = ts.apply(monkeypatch)
-
-    # not bulkwalk and not v2c
-    assert config_cache.get_snmp_backend(HostName("not_included")) is SNMPBackendEnum.INLINE
-    assert config_cache.get_snmp_backend(HostName("bulkwalk_h")) is SNMPBackendEnum.INLINE
-    assert config_cache.get_snmp_backend(HostName("v2c_h")) is SNMPBackendEnum.INLINE
-
-    # credentials is v3 -> INLINE
-    monkeypatch.setattr(ConfigCache, "_snmp_credentials", lambda *args: ("a", "p"))
-    assert config_cache.get_snmp_backend(HostName("v3_h")) is SNMPBackendEnum.INLINE
 
 
 def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> None:

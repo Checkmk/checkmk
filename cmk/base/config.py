@@ -2676,20 +2676,6 @@ class ConfigCache:
         # nothing configured for this host -> use default
         return self._loaded_config.snmp_default_community
 
-    def _is_host_snmp_v1(self, host_name: HostName | HostAddress) -> bool:
-        """Determines is host snmp-v1 using a bit Heuristic algorithm"""
-        if isinstance(self._snmp_credentials(host_name), tuple):
-            return False  # v3
-
-        if self.ruleset_matcher.get_host_bool_value(
-            host_name, self._loaded_config.bulkwalk_hosts, self.label_manager.labels_of_host
-        ):
-            return False
-
-        return not self.ruleset_matcher.get_host_bool_value(
-            host_name, self._loaded_config.snmpv2c_hosts, self.label_manager.labels_of_host
-        )
-
     def _is_inline_backend_supported(self) -> bool:
         return "netsnmp" in sys.modules and self.edition is not cmk_version.Edition.COMMUNITY
 

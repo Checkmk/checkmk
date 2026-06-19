@@ -159,11 +159,25 @@ const configNameErrors = computed<string[]>(() => {
   return []
 })
 
+const configNameTakenErrors = ref<string[]>([])
+
+const allConfigNameErrors = computed<string[]>(() => [
+  ...configNameErrors.value,
+  ...configNameTakenErrors.value
+])
+
 const siteErrors = ref<string[]>([])
 
 function validateSiteRequired(): string[] {
   if (!siteId.value) {
     return [_t('Site is required but not specified.')]
+  }
+  return []
+}
+
+function checkConfigNameAvailable(configs: OTelConfigEntry[]): string[] {
+  if (configs.some((config) => config.id === configName.value)) {
+    return [_t('A configuration with this name already exists. Choose a different name.')]
   }
   return []
 }
@@ -194,6 +208,7 @@ async function validate(): Promise<boolean> {
   try {
     configs = await fetchConfigList(true)
   } catch {
+    configNameTakenErrors.value = []
     siteErrors.value = [
       ...requiredErrors,
       _t('Failed to validate site configuration. Please try again.')
@@ -201,9 +216,10 @@ async function validate(): Promise<boolean> {
     return false
   }
 
+  configNameTakenErrors.value = checkConfigNameAvailable(configs)
   siteErrors.value = [...requiredErrors, ...checkSiteAlreadyConfigured(configs)]
 
-  return configNameErrors.value.length === 0 && siteErrors.value.length === 0
+  return allConfigNameErrors.value.length === 0 && siteErrors.value.length === 0
 }
 
 defineExpose({ validate })
@@ -225,7 +241,7 @@ defineExpose({ validate })
       type="text"
       field-size="medium"
       :placeholder="configNamePlaceholder"
-      :external-errors="configNameErrors"
+      :external-errors="allConfigNameErrors"
       aria-required="true"
     />
 

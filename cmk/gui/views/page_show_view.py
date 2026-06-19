@@ -258,6 +258,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -
             process_tracking=view.process_tracking,
             breadcrumb=breadcrumb,
             aggr_rows=rows,
+            escape_plugin_output=config.escape_plugin_output,
         )
 
     with CPUTracker(log.logger.debug) as view_render_tracker:

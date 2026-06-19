@@ -755,6 +755,7 @@ def _paint_aggregated_tree_state(
     row: Row,
     *,
     painter_options: PainterOptions,
+    escape_plugin_output: bool,
     force_renderer_cls: type[ABCFoldableTreeRenderer] | None = None,
     show_frozen_difference: bool = False,
 ) -> CellSpec:
@@ -789,6 +790,7 @@ def _paint_aggregated_tree_state(
         only_diff=only_diff,
         only_problems=only_problems,
         lazy=True,
+        escape_plugin_output=escape_plugin_output,
         wrap_texts=wrap_texts,
         show_frozen_difference=show_frozen_difference,
     )
@@ -815,7 +817,11 @@ class PainterAggrTreestate(Painter):
         return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_aggregated_tree_state(row, painter_options=self._painter_options)
+        return _paint_aggregated_tree_state(
+            row,
+            painter_options=self._painter_options,
+            escape_plugin_output=self.config.escape_plugin_output,
+        )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
         return _render_tree_json(row, user=user, request=self.request)
@@ -852,7 +858,10 @@ class PainterAggrTreestateFrozenDiff(Painter):
             return "", _("Aggregation not configured to be frozen")
 
         return _paint_aggregated_tree_state(
-            row, painter_options=self._painter_options, show_frozen_difference=True
+            row,
+            painter_options=self._painter_options,
+            escape_plugin_output=self.config.escape_plugin_output,
+            show_frozen_difference=True,
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
@@ -983,6 +992,7 @@ class PainterAggrTreestateBoxed(Painter):
         return _paint_aggregated_tree_state(
             row,
             painter_options=self._painter_options,
+            escape_plugin_output=self.config.escape_plugin_output,
             force_renderer_cls=FoldableTreeRendererBoxes,
         )
 

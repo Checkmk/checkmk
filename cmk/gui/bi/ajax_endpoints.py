@@ -149,6 +149,7 @@ def ajax_render_tree(ctx: PageContext) -> None:
         only_diff=reqvars.only_diff,
         only_problems=reqvars.only_problems,
         lazy=False,
+        escape_plugin_output=ctx.config.escape_plugin_output,
         show_frozen_difference=reqvars.show_frozen_difference,
     )
     html.write_html(renderer.render())

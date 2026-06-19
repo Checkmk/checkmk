@@ -14,7 +14,6 @@ from contextlib import AbstractContextManager, contextmanager
 from typing import Any, Literal, TypeGuard
 
 import cmk.gui.view_utils
-from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -50,6 +49,8 @@ class ABCFoldableTreeRenderer(abc.ABC):
         only_diff: bool,
         only_problems: bool,
         lazy: bool,
+        *,
+        escape_plugin_output: bool,
         wrap_texts: Literal["wrap", "nowrap"] = "nowrap",
         show_frozen_difference: bool = False,
     ) -> None:
@@ -60,6 +61,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
         self._only_diff = only_diff
         self._only_problems = only_problems
         self._lazy = lazy
+        self._escape_plugin_output = escape_plugin_output
         self._wrap_texts = wrap_texts
         self._load_tree_state()
 
@@ -430,7 +432,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                 effective_state["output"],
                 request=request,
                 must_escape=True,
-                shall_escape=active_config.escape_plugin_output,
+                shall_escape=self._escape_plugin_output,
             )
 
             if output:

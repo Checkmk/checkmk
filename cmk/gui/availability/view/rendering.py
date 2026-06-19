@@ -865,6 +865,7 @@ def show_bi_availability(
     breadcrumb: Breadcrumb,
     aggr_rows: Rows,
     debug: bool,
+    escape_plugin_output: bool,
     table_row_limit: int,
 ) -> None:
     user.need_permission("general.see_availability")
@@ -1009,6 +1010,7 @@ def show_bi_availability(
                     only_diff=False,
                     only_problems=False,
                     lazy=False,
+                    escape_plugin_output=escape_plugin_output,
                 )
                 tdclass, htmlcode = renderer.css_class(), renderer.render()
 

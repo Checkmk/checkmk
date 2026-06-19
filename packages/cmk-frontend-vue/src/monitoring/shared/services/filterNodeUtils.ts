@@ -42,3 +42,42 @@ export function setCondition(
 export function getTopLevelConditions(node: FilterNode): ConditionNode[] {
   return getTopChildren(node).filter(isCondition)
 }
+
+type CanonicalNode =
+  | { type: 'condition'; field: string; op: string; value: unknown }
+  | { type: 'and' | 'or'; children: CanonicalNode[] }
+  | { type: 'not'; child: CanonicalNode }
+
+/**
+ * Produce an order-independent canonical form of a filter node: children of
+ * `and`/`or` nodes are sorted, and `one_of` value arrays are sorted, so that two
+ * filters that differ only in ordering canonicalize to the same shape.
+ */
+function canonicalize(node: FilterNode): CanonicalNode {
+  if (node.type === 'condition') {
+    const value = Array.isArray(node.value) ? [...node.value].sort() : node.value
+    return { type: 'condition', field: node.field, op: node.op, value }
+  }
+  if (node.type === 'not') {
+    return { type: 'not', child: canonicalize(node.child) }
+  }
+  const children = node.children
+    .map(canonicalize)
+    .sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1))
+  return { type: node.type, children }
+}
+
+/**
+ * Structural (value-based) equality for filter nodes, independent of child and
+ * `one_of` value ordering. Two `undefined` filters are equal; a defined filter
+ * is never equal to `undefined`.
+ */
+export function filterNodesEqual(a: FilterNode | undefined, b: FilterNode | undefined): boolean {
+  if (a === b) {
+    return true
+  }
+  if (a === undefined || b === undefined) {
+    return false
+  }
+  return JSON.stringify(canonicalize(a)) === JSON.stringify(canonicalize(b))
+}

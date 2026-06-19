@@ -7,7 +7,7 @@ import { type ComputedRef, type Ref, computed, shallowRef } from 'vue'
 
 import type { ConditionNode, FilterField, FilterNode } from '@/monitoring/shared/api/types'
 
-import { getTopLevelConditions, setCondition } from './filterNodeUtils'
+import { filterNodesEqual, getTopLevelConditions, setCondition } from './filterNodeUtils'
 
 export interface QuickFilterConfig {
   label: string
@@ -16,7 +16,7 @@ export interface QuickFilterConfig {
 
 export interface QuickFilter {
   readonly label: string
-  /** Derived: true when filterNode is the same reference as this chip's filter. */
+  /** Derived: true when filterNode is structurally equal to this chip's filter. */
   readonly isActive: ComputedRef<boolean>
   readonly filter: FilterNode
 }
@@ -31,7 +31,7 @@ export class FilterStore {
     const filterNode = this.filterNode
     this.chips = chipConfigs.map((c) => ({
       label: c.label,
-      isActive: computed(() => filterNode.value === c.filter),
+      isActive: computed(() => filterNodesEqual(filterNode.value, c.filter)),
       filter: c.filter
     }))
   }

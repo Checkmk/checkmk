@@ -6,7 +6,11 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ConditionNode, FilterNode } from '@/monitoring/shared/api/types'
-import { getTopLevelConditions, setCondition } from '@/monitoring/shared/services/filterNodeUtils'
+import {
+  filterNodesEqual,
+  getTopLevelConditions,
+  setCondition
+} from '@/monitoring/shared/services/filterNodeUtils'
 
 const name: ConditionNode = { type: 'condition', field: 'name', op: 'contains', value: 'heute' }
 const alias: ConditionNode = { type: 'condition', field: 'alias', op: 'contains', value: 'db' }
@@ -112,5 +116,67 @@ describe('getTopLevelConditions', () => {
     const node: FilterNode = { type: 'or', children: [name, alias] }
 
     expect(getTopLevelConditions(node)).toStrictEqual([])
+  })
+})
+
+describe('filterNodesEqual', () => {
+  it('treats two undefined filters as equal', () => {
+    expect(filterNodesEqual(undefined, undefined)).toBe(true)
+  })
+
+  it('treats a defined filter and undefined as unequal', () => {
+    expect(filterNodesEqual(name, undefined)).toBe(false)
+    expect(filterNodesEqual(undefined, name)).toBe(false)
+  })
+
+  it('considers identical bare conditions equal', () => {
+    expect(filterNodesEqual(name, { ...name })).toBe(true)
+  })
+
+  it('distinguishes conditions that differ in value, op, or field', () => {
+    expect(filterNodesEqual(name, { ...name, value: 'other' })).toBe(false)
+    expect(filterNodesEqual(name, { ...name, op: 'matches' })).toBe(false)
+    expect(filterNodesEqual(name, alias)).toBe(false)
+  })
+
+  it('ignores ordering of one_of values', () => {
+    const a: FilterNode = { type: 'condition', field: 'state', op: 'one_of', value: ['DOWN', 'UP'] }
+    const b: FilterNode = { type: 'condition', field: 'state', op: 'one_of', value: ['UP', 'DOWN'] }
+
+    expect(filterNodesEqual(a, b)).toBe(true)
+  })
+
+  it('ignores ordering of and-node children', () => {
+    const a: FilterNode = { type: 'and', children: [name, acknowledged] }
+    const b: FilterNode = { type: 'and', children: [acknowledged, name] }
+
+    expect(filterNodesEqual(a, b)).toBe(true)
+  })
+
+  it('matches a reconstructed preset regardless of child and value ordering', () => {
+    const preset: FilterNode = {
+      type: 'and',
+      children: [
+        { type: 'condition', field: 'state', op: 'one_of', value: ['DOWN', 'UNREACHABLE'] },
+        acknowledged
+      ]
+    }
+    // As if rebuilt via the column filter: children and one_of values reordered.
+    const rebuilt: FilterNode = {
+      type: 'and',
+      children: [
+        acknowledged,
+        { type: 'condition', field: 'state', op: 'one_of', value: ['UNREACHABLE', 'DOWN'] }
+      ]
+    }
+
+    expect(filterNodesEqual(preset, rebuilt)).toBe(true)
+  })
+
+  it('distinguishes and-nodes with different children', () => {
+    const a: FilterNode = { type: 'and', children: [name, acknowledged] }
+    const b: FilterNode = { type: 'and', children: [name, alias] }
+
+    expect(filterNodesEqual(a, b)).toBe(false)
   })
 })

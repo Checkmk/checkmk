@@ -324,6 +324,43 @@ describe('MonitoringService', () => {
     expect(onFocus).not.toHaveBeenCalled()
   })
 
+  it('re-activates a chip when the filter is rebuilt to a structurally equal value', async () => {
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0))
+    const service = new TestService(fetchBatch, {
+      quickFilters: [
+        {
+          label: 'Unacknowledged',
+          filter: { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
+        }
+      ]
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+    const chip = service.filters.chips[0]!
+
+    service.filters.activateChip(chip)
+    expect(chip.isActive.value).toBe(true)
+
+    // Edit away from the preset via the column-filter path: a fresh node object.
+    service.filters.setColumnConditions(
+      new Map([
+        ['acknowledged', { type: 'condition', field: 'acknowledged', op: 'eq', value: true }]
+      ])
+    )
+    expect(chip.isActive.value).toBe(false)
+
+    // Rebuild the same filter as the preset: a different object, but equal value.
+    service.filters.setColumnConditions(
+      new Map([
+        ['acknowledged', { type: 'condition', field: 'acknowledged', op: 'eq', value: false }]
+      ])
+    )
+    expect(service.filterState.value).not.toBe(chip.filter)
+    expect(chip.isActive.value).toBe(true)
+
+    service.stopPolling()
+  })
+
   it('stops reacting to filter changes after stopPolling()', async () => {
     const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0))
     const service = new TestService(fetchBatch, {

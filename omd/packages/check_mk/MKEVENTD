@@ -7,13 +7,3 @@
 #  classification daemon of Checkmk. This daemon will receive
 #  events via a pipe or socket and applies it so a set of
 #  rules.
-
-case "$1" in
-    default)
-        if [ "$2" = saas ]; then
-            echo "off"
-        else
-            echo "on"
-        fi
-        ;;
-esac

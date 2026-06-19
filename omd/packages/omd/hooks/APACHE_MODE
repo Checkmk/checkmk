@@ -10,13 +10,3 @@
 #
 #  The value "none" will not start a webserver nor create a configuration
 #  for the global Apache.
-
-case "$1" in
-    default)
-        if [ -n "$CONFIG_WEBSERVER" ]; then
-            echo "$CONFIG_WEBSERVER"
-        else
-            echo "own"
-        fi
-        ;;
-esac

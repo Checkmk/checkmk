@@ -22,7 +22,13 @@ __all__ = [
     "delete_apache_hook",
     "is_apache_hook_up_to_date",
     "write_apache_listen_conf",
+    "apache_mode_default",
 ]
+
+
+def apache_mode_default() -> str:
+    return os.environ.get("CONFIG_WEBSERVER") or "own"
+
 
 _CONF_HEADER = (
     "# This file is managed by 'omd config set APACHE_TCP_PORT'"

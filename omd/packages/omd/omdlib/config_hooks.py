@@ -57,11 +57,15 @@ from omdlib.rabbitmq import (
 )
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites
-from omdlib.system_apache import APACHE_TCP_PORT_HOOK, write_apache_listen_conf
+from omdlib.system_apache import (
+    apache_mode_default,
+    APACHE_TCP_PORT_HOOK,
+    write_apache_listen_conf,
+)
 from omdlib.tmpfs import deactivate_tmpfs
 
 from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.version import edition
+from cmk.ccc.version import Edition, edition
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
@@ -300,33 +304,37 @@ def _default_port(site_name: str, port_hook: PortHook, site_configs: _SiteConfig
     )
 
 
-_HOOK_DEFAULTS: Mapping[str, Callable[[], str]] = {
-    "AGENT_RECEIVER": lambda: "on",
-    "AUTOMATION_HELPER": lambda: "on",
-    "APACHE_TCP_ADDR": lambda: "127.0.0.1",
-    "AUTOSTART": lambda: "on",
-    "CORE": core_default,
-    "LIVEPROXYD": lambda: "on",
-    "LIVESTATUS_TCP": lambda: "off",
-    "LIVESTATUS_TCP_INSTANCES": lambda: "500",
-    "LIVESTATUS_TCP_ONLY_FROM": lambda: "0.0.0.0 ::/0",
-    "LIVESTATUS_TCP_PER_SOURCE": lambda: "250",
-    "LIVESTATUS_TCP_TLS": lambda: "on",
-    "MKEVENTD_SNMPTRAP": lambda: "off",
-    "MKEVENTD_SYSLOG": lambda: "off",
-    "MKEVENTD_SYSLOG_TCP": lambda: "off",
-    "MULTISITE_AUTHORISATION": lambda: "on",
-    "MULTISITE_COOKIE_AUTH": lambda: "on",
-    "OPENTELEMETRY_COLLECTOR": lambda: "off",
-    "PIGGYBACK_HUB": lambda: "off",
-    "PNP4NAGIOS": lambda: "on",
-    "RABBITMQ_ONLY_FROM": lambda: ":: 0.0.0.0",
-    "TMPFS": lambda: "on",
-    "TRACE_RECEIVE": lambda: "off",
-    "TRACE_RECEIVE_ADDRESS": lambda: "[::1]",
-    "TRACE_SEND": lambda: "off",
-    "TRACE_SEND_TARGET": lambda: "local_site",
-    "TRACE_SERVICE_NAMESPACE": lambda: "",
+_HOOK_DEFAULTS: Mapping[str, Callable[[Edition], str]] = {
+    "AGENT_RECEIVER": lambda _edition: "on",
+    "APACHE_MODE": lambda _edition: apache_mode_default(),
+    "APACHE_TCP_ADDR": lambda _edition: "127.0.0.1",
+    "AUTOMATION_HELPER": lambda _edition: "on",
+    "AUTOSTART": lambda _edition: "on",
+    "CORE": lambda _edition: core_default(),
+    "LIVEPROXYD": lambda _edition: "on",
+    "LIVESTATUS_TCP": lambda _edition: "off",
+    "LIVESTATUS_TCP_INSTANCES": lambda _edition: "500",
+    "LIVESTATUS_TCP_ONLY_FROM": lambda _edition: "0.0.0.0 ::/0",
+    "LIVESTATUS_TCP_PER_SOURCE": lambda _edition: "250",
+    "LIVESTATUS_TCP_TLS": lambda _edition: "on",
+    "MKEVENTD": lambda edition: (
+        "off" if edition.long == "saas" else "on"  # TODO: "saas" was removed.
+    ),
+    "MKEVENTD_SNMPTRAP": lambda _edition: "off",
+    "MKEVENTD_SYSLOG": lambda _edition: "off",
+    "MKEVENTD_SYSLOG_TCP": lambda _edition: "off",
+    "MULTISITE_AUTHORISATION": lambda _edition: "on",
+    "MULTISITE_COOKIE_AUTH": lambda _edition: "on",
+    "OPENTELEMETRY_COLLECTOR": lambda _edition: "off",
+    "PIGGYBACK_HUB": lambda _edition: "off",
+    "PNP4NAGIOS": lambda _edition: "on",
+    "RABBITMQ_ONLY_FROM": lambda _edition: ":: 0.0.0.0",
+    "TMPFS": lambda _edition: "on",
+    "TRACE_RECEIVE": lambda _edition: "off",
+    "TRACE_RECEIVE_ADDRESS": lambda _edition: "[::1]",
+    "TRACE_SEND": lambda _edition: "off",
+    "TRACE_SEND_TARGET": lambda _edition: "local_site",
+    "TRACE_SERVICE_NAMESPACE": lambda _edition: "",
 }
 
 
@@ -345,7 +353,7 @@ def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/
                 if (port_hook := _get_port_hook(hook_name)) is not None:
                     config[hook_name] = _default_port(site.name, port_hook, site_configs)
                 elif (default := _HOOK_DEFAULTS.get(hook_name)) is not None:
-                    config[hook_name] = default()
+                    config[hook_name] = default(edition(Path(site_home)))
                 else:
                     config[hook_name] = _call_hook(
                         site, hook_name, ["default", edition(Path(site_home)).long], verbose

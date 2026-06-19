@@ -5,8 +5,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Row } from '@tanstack/vue-table'
+import { inject } from 'vue'
 
 import type { HostEntry } from '@/monitoring/shared/api/types'
+import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
@@ -17,6 +19,12 @@ const props = defineProps<{
   row: HostEntry
   tableRow: Row<HostEntry>
 }>()
+
+const columns = inject(COLUMN_LAYOUT_KEY, null)
+
+function hasColumn(columnId: string): boolean {
+  return columns?.value.has(columnId) ?? true
+}
 
 function toggleSelected(selected: boolean): void {
   props.tableRow.toggleSelected(selected)
@@ -31,12 +39,14 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
 
 <template>
   <CheckboxCell
+    v-if="hasColumn('select')"
     column-id="select"
     :model-value="tableRow.getIsSelected()"
     @update:model-value="toggleSelected"
   />
-  <StateCell column-id="state" :state="row.state" />
+  <StateCell v-if="hasColumn('state')" column-id="state" :state="row.state" />
   <StringCell
+    v-if="hasColumn('name')"
     column-id="name"
     :value="row.name"
     :linked-to="{
@@ -45,9 +55,10 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
       variant: 'icon'
     }"
   />
-  <StringCell column-id="alias" :value="row.alias" />
-  <StringCell column-id="address" :value="row.address" />
+  <StringCell v-if="hasColumn('alias')" column-id="alias" :value="row.alias" />
+  <StringCell v-if="hasColumn('address')" column-id="address" :value="row.address" />
   <NumberCell
+    v-if="hasColumn('num_services')"
     column-id="num_services"
     :value="row.num_services"
     :linked-to="{
@@ -56,6 +67,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     }"
   />
   <NumberCell
+    v-if="hasColumn('num_services_ok')"
     column-id="num_services_ok"
     :value="row.num_services_ok"
     :highlight="OK_HIGHLIGHT"
@@ -65,6 +77,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     }"
   />
   <NumberCell
+    v-if="hasColumn('num_services_warn')"
     column-id="num_services_warn"
     :value="row.num_services_warn"
     :highlight="WARN_HIGHLIGHT"
@@ -74,6 +87,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     }"
   />
   <NumberCell
+    v-if="hasColumn('num_services_crit')"
     column-id="num_services_crit"
     :value="row.num_services_crit"
     :highlight="CRIT_HIGHLIGHT"
@@ -83,6 +97,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     }"
   />
   <NumberCell
+    v-if="hasColumn('num_services_unknown')"
     column-id="num_services_unknown"
     :value="row.num_services_unknown"
     :highlight="UNKNOWN_HIGHLIGHT"
@@ -92,6 +107,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     }"
   />
   <NumberCell
+    v-if="hasColumn('num_services_pending')"
     column-id="num_services_pending"
     :value="row.num_services_pending"
     :highlight="PENDING_HIGHLIGHT"

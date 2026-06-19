@@ -6,6 +6,7 @@
 import * as vscode from 'vscode'
 
 import { log, notifyError } from '../core/log'
+import { interactiveShellCommand } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
 import { currentBranch, gitAsync, isInternalCheckout, repoRoot } from './git'
 
@@ -126,13 +127,29 @@ async function pickBaseBranch(cwd: string): Promise<string | undefined> {
   })
 }
 
-async function promptTopic(base: string): Promise<string | undefined> {
+/** Extract the topic from the current branch when it is a proper sandbox branch
+ *  (`sandbox/<user>/<base>/<topic>`). Returns undefined otherwise — there is
+ *  then no topic for `git workon <base>` to carry over. */
+function currentSandboxTopic(cwd: string): string | undefined {
+  const match = /^sandbox\/[^/]+\/[^/]+\/(.+)$/.exec(currentBranch(cwd))
+  return match?.[1]
+}
+
+/** Prompt for the topic name. An empty value is accepted only when we are on a
+ *  proper sandbox branch, in which case `git workon <base>` reuses the current
+ *  topic on the chosen base. Returns undefined when the user cancels. */
+async function promptTopic(
+  base: string,
+  reuseTopic: string | undefined
+): Promise<string | undefined> {
   return vscode.window.showInputBox({
     title: `CMK ▸ Create Sandbox Branch (from ${base})`,
-    prompt: 'Topic name (will become sandbox/<user>/<base>/<topic>)',
-    placeHolder: 'my-feature',
+    prompt: reuseTopic
+      ? `Topic name — leave empty to reuse the current topic "${reuseTopic}"`
+      : 'Topic name (will become sandbox/<user>/<base>/<topic>)',
+    placeHolder: reuseTopic ?? 'my-feature',
     validateInput: (v) => {
-      if (!v) return 'Topic name is required'
+      if (!v) return reuseTopic ? undefined : 'Topic name is required'
       if (!/^[A-Za-z0-9._/-]+$/.test(v))
         return 'Use letters, digits, dot, dash, underscore, slash only'
       return undefined
@@ -166,17 +183,41 @@ async function refreshScmView(cwd: string): Promise<void> {
   }
 }
 
+/** Build the `git workon` invocation. An empty topic yields the one-argument
+ *  form, which carries the current sandbox topic over to the chosen base. */
+function workonCommand(base: string, topic: string): string {
+  return topic ? `git workon ${base} ${topic}` : `git workon ${base}`
+}
+
+/** Label for the task / terminal — reflects the reused topic when omitted. */
+function workonLabel(base: string, topic: string): string {
+  return topic ? `${base}/${topic}` : `${base} (current topic)`
+}
+
 function runWorkonInTerminal(base: string, topic: string, cwd: string): void {
-  const term = vscode.window.createTerminal({ name: `CMK: workon ${base}/${topic}`, cwd })
+  const term = vscode.window.createTerminal({
+    name: `CMK: workon ${workonLabel(base, topic)}`,
+    cwd
+  })
   term.show()
-  term.sendText(`git workon ${base} ${topic}`)
+  term.sendText(workonCommand(base, topic))
 }
 
 /** Run `git workon` as an awaitable task so the SCM view can be refreshed once
  *  the branch switch finishes. Falls back to a plain terminal (no refresh) when
- *  the task cannot be launched. */
+ *  the task cannot be launched.
+ *
+ *  `git workon` is a git alias (`!git-workon`) backed by a dev-tooling script
+ *  on a profile-managed PATH, not a built-in git command. The task env only
+ *  carries the extension host's minimal PATH, so the command must run through
+ *  the interactive shell to pick up the profile PATH — otherwise it fails with
+ *  "git: 'workon' is not a git command" until VS Code is restarted from a shell
+ *  that already sourced the profile (CMK-35847). */
 async function runWorkon(base: string, topic: string, cwd: string): Promise<void> {
-  const execution = runCommand(`workon ${base}/${topic}`, `git workon ${base} ${topic}`)
+  const execution = runCommand(
+    `workon ${workonLabel(base, topic)}`,
+    interactiveShellCommand(workonCommand(base, topic))
+  )
   if (!execution) {
     runWorkonInTerminal(base, topic, cwd)
     return
@@ -193,9 +234,10 @@ async function createSandboxBranch(): Promise<void> {
   }
   const base = await pickBaseBranch(cwd)
   if (!base) return
-  const topic = await promptTopic(base)
-  if (!topic) return
-  log(`Create sandbox branch: base=${base} topic=${topic}`)
+  const reuseTopic = currentSandboxTopic(cwd)
+  const topic = await promptTopic(base, reuseTopic)
+  if (topic === undefined) return
+  log(`Create sandbox branch: base=${base} topic=${topic || `(reuse "${reuseTopic}")`}`)
   await runWorkon(base, topic, cwd)
 }
 

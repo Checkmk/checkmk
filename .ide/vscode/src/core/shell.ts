@@ -34,13 +34,22 @@ export function safeExec(cmd: string, options?: { timeout?: number; cwd?: string
   }
 }
 
+/** Wrap a command so it runs through the user's interactive login shell, which
+ *  sources their shell profile (e.g. ~/.zshrc, ~/.bashrc). Use this for dev
+ *  tools that live on a profile-managed PATH (git aliases like `git workon`,
+ *  pyenv shims, ~/bin scripts) and are therefore invisible to the extension
+ *  host's minimal PATH. */
+export function interactiveShellCommand(cmd: string): string {
+  const shell = process.env.SHELL || '/bin/bash'
+  return `${shell} -ic '${cmd.replace(/'/g, "'\\''")}'`
+}
+
 /** Like safeExec but falls back to the user's interactive shell when the
  *  command isn't found on the extension host's minimal PATH. */
 export function shellExec(cmd: string, options?: { timeout?: number; cwd?: string }): string {
   const direct = safeExec(cmd, options)
   if (direct) return direct
-  const shell = process.env.SHELL || '/bin/bash'
-  return safeExec(`${shell} -ic '${cmd.replace(/'/g, "'\\''")}'`, options)
+  return safeExec(interactiveShellCommand(cmd), options)
 }
 
 /** Async counterpart to shellExec. Tries the direct command first, falls back
@@ -51,6 +60,5 @@ export async function shellExecAsync(
 ): Promise<string> {
   const direct = await safeExecAsync(cmd, options)
   if (direct) return direct
-  const shell = process.env.SHELL || '/bin/bash'
-  return safeExecAsync(`${shell} -ic '${cmd.replace(/'/g, "'\\''")}'`, options)
+  return safeExecAsync(interactiveShellCommand(cmd), options)
 }

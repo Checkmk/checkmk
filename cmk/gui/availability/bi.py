@@ -40,9 +40,10 @@ from cmk.gui.type_defs import (
 )
 from cmk.utils.servicename import ServiceName
 
-from .annotations import load_annotations, reclassify_history_by_annotations
+from .annotations import reclassify_history_by_annotations
 from .computation import spans_by_object
 from .type_defs import (
+    AVAnnotations,
     AVBIPhaseData,
     AVBIPhases,
     AVBITimelineState,
@@ -98,7 +99,10 @@ class BIAvailability(NamedTuple):
 
 
 def get_bi_availability(
-    avoptions: AVOptions, aggr_rows: Rows, timewarp: AVTimeStamp | None
+    avoptions: AVOptions,
+    aggr_rows: Rows,
+    timewarp: AVTimeStamp | None,
+    annotations: AVAnnotations,
 ) -> BIAvailability:
     logrow_limit = avoptions["logrow_limit"]
     if logrow_limit == 0:
@@ -107,7 +111,7 @@ def get_bi_availability(
         livestatus_limit = (len(aggr_rows) * logrow_limit) + 1
 
     timeline_containers, has_reached_logrow_limit = get_timeline_containers(
-        aggr_rows, avoptions, timewarp, livestatus_limit
+        aggr_rows, avoptions, timewarp, livestatus_limit, annotations
     )
 
     spans: list[AVSpan] = []
@@ -134,10 +138,11 @@ def get_timeline_containers(
     avoptions: AVOptions,
     timewarp: AVTimeStamp | None,
     livestatus_limit: int | None,
+    annotations: AVAnnotations,
 ) -> tuple[list[TimelineContainer], bool]:
     time_range: AVTimeRange = avoptions["range"][0]
     phases_list, timeline_containers, has_reached_logrow_limit = get_bi_leaf_history(
-        aggr_rows, time_range, livestatus_limit
+        aggr_rows, time_range, livestatus_limit, annotations
     )
     return (
         compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list),
@@ -171,6 +176,7 @@ def get_bi_leaf_history(
     aggr_rows: Rows,
     time_range: AVTimeRange,
     livestatus_limit: int | None,
+    annotations: AVAnnotations,
     max_time_range: int = DEFAULT_MAX_TIME_RANGE,
 ) -> tuple[AVBIPhases, list[TimelineContainer], bool]:
     """Get state history of all hosts and services contained in the tree.
@@ -236,7 +242,7 @@ def get_bi_leaf_history(
     rows = [dict(zip(columns, row)) for row in data]
 
     # Reclassify base data due to annotations
-    rows = reclassify_bi_rows(rows)
+    rows = reclassify_bi_rows(rows, annotations)
     merged_rows_by_id = get_bi_merged_rows_by_id(rows)
 
     # Now comes the tricky part: recompute the state of the aggregate
@@ -579,8 +585,7 @@ def _compute_status_info(
     return status_info
 
 
-def reclassify_bi_rows(rows: Rows) -> Rows:
-    annotations = load_annotations()
+def reclassify_bi_rows(rows: Rows, annotations: AVAnnotations) -> Rows:
     if not annotations:
         return rows
 

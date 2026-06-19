@@ -13,10 +13,8 @@ from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
-from pytest import MonkeyPatch
 
 import cmk.gui.availability.annotations
-import cmk.gui.availability.computation
 import cmk.utils.render
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -210,14 +208,11 @@ from cmk.gui.availability.type_defs import AVAnnotationEntry, AVAnnotations, Sit
     ],
 )
 def test_reclassify_by_annotations(
-    monkeypatch: MonkeyPatch,
     av_rawdata: availability.AVRawData,
     annotations: AVAnnotations,
     result: availability.AVRawData,
 ) -> None:
-
-    monkeypatch.setattr(cmk.gui.availability.computation, "load_annotations", lambda: annotations)
-    assert reclassify_by_annotations("service", av_rawdata) == result
+    assert reclassify_by_annotations("service", av_rawdata, annotations) == result
 
 
 @pytest.mark.parametrize(

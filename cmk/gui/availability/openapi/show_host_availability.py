@@ -10,6 +10,7 @@ from typing import Annotated
 from pydantic import AwareDatetime
 
 from cmk.ccc.site import SiteId
+from cmk.gui.availability.annotations import load_annotations
 from cmk.gui.availability.computation import compute_availability
 from cmk.gui.availability.rawdata import get_availability_rawdata
 from cmk.gui.logged_in import user
@@ -86,7 +87,7 @@ def show_host_availability_v1(
         include_long_output=False,
         avoptions=avoptions,
     )
-    av_data = compute_availability("host", raw_data, avoptions)
+    av_data = compute_availability("host", raw_data, avoptions, load_annotations())
 
     if not av_data:
         raise ProblemException(

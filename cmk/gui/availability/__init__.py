@@ -28,6 +28,7 @@ from .options import (
 )
 from .rawdata import get_availability_rawdata
 from .type_defs import (
+    AVAnnotations,
     AVData,
     AVEntry,
     AVLayoutTable,
@@ -42,6 +43,7 @@ from .type_defs import (
 # Public API surface -- the symbols external consumers (reporting, SLA) may import.
 # See the module docstring before adding to this list.
 __all__ = [
+    "AVAnnotations",
     "AVData",
     "AVEntry",
     "AVLayoutTable",

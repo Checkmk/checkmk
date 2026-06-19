@@ -29,9 +29,6 @@ from cmk.gui.view_utils import cmp_service_name_equiv
 from cmk.gui.watolib.groups_io import all_groups
 
 from .annotations import (
-    load_annotations,
-)
-from .annotations import (
     reclassify_config_by_annotation as reclassify_config_by_annotation,
 )
 from .annotations import (
@@ -49,6 +46,7 @@ from .annotations import (
 from .options import get_outage_statistic_options
 from .type_defs import (
     AVAnnotationKey,
+    AVAnnotations,
     AVData,
     AVEntry,
     AVGroupIds,
@@ -277,8 +275,9 @@ def compute_availability(
     what: AVObjectType,
     av_rawdata: AVRawData,
     avoptions: AVOptions,
+    annotations: AVAnnotations,
 ) -> AVData:
-    reclassified_rawdata = reclassify_by_annotations(what, av_rawdata)
+    reclassified_rawdata = reclassify_by_annotations(what, av_rawdata, annotations)
 
     # Now compute availability table. We have the following possible states:
     # 1. "unmonitored"
@@ -447,8 +446,9 @@ def compute_availability(
 
 # Note: Reclassifications of host/service periods do currently *not* have
 # any impact on BI aggregations.
-def reclassify_by_annotations(what: AVObjectType, av_rawdata: AVRawData) -> AVRawData:
-    annotations = load_annotations()
+def reclassify_by_annotations(
+    what: AVObjectType, av_rawdata: AVRawData, annotations: AVAnnotations
+) -> AVRawData:
     if not annotations:
         return av_rawdata
 

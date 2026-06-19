@@ -26,6 +26,7 @@ from cmk.gui.availability.options import (
 )
 from cmk.gui.availability.rawdata import get_availability_rawdata
 from cmk.gui.availability.type_defs import (
+    AVAnnotations,
     AVData,
     AVEntry,
     AVGroups,
@@ -273,6 +274,11 @@ def show_availability_page(
     avoptions = get_availability_options_from_request(what)
     _save_availability_options_after_update(avoptions)
 
+    # Load annotations once per request. Edits and deletions have already been
+    # handled above, so this reflects the up-to-date state and is threaded into
+    # both the computation and the rendering below.
+    annotations = load_annotations()
+
     # Now compute all data, we need this also for CSV export
     av_rawdata: AVRawData = {}
     av_data: AVData = []
@@ -292,7 +298,7 @@ def show_availability_page(
             avoptions=avoptions,
             view_process_tracking=process_tracking,
         )
-        av_data = compute_availability(what, av_rawdata, avoptions)
+        av_data = compute_availability(what, av_rawdata, avoptions, annotations)
 
     # Do CSV output
     if _maybe_output_csv(what, av_mode, av_data, avoptions, table_row_limit=table_row_limit):
@@ -385,6 +391,7 @@ def show_availability_page(
             av_mode,
             av_object,
             avoptions,
+            annotations,
             table_row_limit=table_row_limit,
         )
 
@@ -541,6 +548,7 @@ def do_render_availability(
     av_mode: AVMode,
     av_object: AVObjectSpec,
     avoptions: AVOptions,
+    annotations: AVAnnotations,
     *,
     table_row_limit: int,
 ) -> None:
@@ -552,7 +560,6 @@ def do_render_availability(
     else:
         render_availability_tables(availability_tables, what, avoptions)
 
-    annotations = load_annotations()
     show_annotations(
         annotations,
         av_rawdata,
@@ -939,6 +946,10 @@ def show_bi_availability(
         _save_availability_options_after_update(avoptions)
 
     if not user_errors:
+        # Load annotations once per request and thread them into the BI history
+        # reclassification, the availability computation and the rendering below.
+        annotations = load_annotations()
+
         # iterate all aggregation rows
         timewarpcode = HTML.empty()
         timewarp = request.get_integer_input("timewarp")
@@ -956,7 +967,7 @@ def show_bi_availability(
             timeline_containers,
             av_rawdata,
             has_reached_logrow_limit,
-        ) = get_bi_availability(avoptions, aggr_rows, timewarp)
+        ) = get_bi_availability(avoptions, aggr_rows, timewarp, annotations)
         process_tracking.amount_rows_after_limit = len(av_rawdata)
 
         # Detect unreachable sites at the render layer rather than from the
@@ -1072,7 +1083,7 @@ def show_bi_availability(
 
                     timewarpcode += HTML.without_escaping(output_funnel.drain())
 
-        av_data = compute_availability("bi", av_rawdata, avoptions)
+        av_data = compute_availability("bi", av_rawdata, avoptions, annotations)
 
         # If we abolish the limit we have to fetch the data again
         # with changed logrow_limit = 0, which means no limit
@@ -1110,6 +1121,7 @@ def show_bi_availability(
             av_mode,
             None,
             avoptions,
+            annotations,
             table_row_limit=table_row_limit,
         )
 

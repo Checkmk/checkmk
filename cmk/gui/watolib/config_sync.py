@@ -8,7 +8,7 @@ import abc
 import enum
 import os
 import re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import NamedTuple, override, Self
@@ -132,6 +132,28 @@ class ReplicationPathRegistry(Registry[ReplicationPath]):
 
 
 replication_path_registry = ReplicationPathRegistry()
+
+
+@dataclass(frozen=True, kw_only=True)
+class SnapshotFileCreator:
+    """A per-site snapshot file creator contributed by an (edition-specific) component.
+
+    The snapshot collectors call every registered creator once per site while preparing the
+    sync files (see `prepare_snapshot_files`). This lets components in the `nonfree` tree inject
+    site-dependent files into the snapshot without the core snapshot layer importing them.
+    """
+
+    ident: str
+    create_files: Callable[[Path, SiteConfiguration], None]
+
+
+class SnapshotFileCreatorRegistry(Registry[SnapshotFileCreator]):
+    @override
+    def plugin_name(self, instance: SnapshotFileCreator) -> str:
+        return instance.ident
+
+
+snapshot_file_creator_registry = SnapshotFileCreatorRegistry()
 
 
 class SnapshotSettings(NamedTuple):
@@ -336,9 +358,10 @@ def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> SiteGlo
             # mechanism. The propagated `authentication_connections` carries
             # per-entry SAML `acs_endpoint`/`metadata_endpoint` URLs computed
             # for this site by `populate_saml_site_endpoint_urls()`, so the
-            # remote's SAML runtime reads them straight from there. SAML cert
-            # files arrive on the remote via the `saml2_certs` `ReplicationPath`
-            # (see `cmk/gui/nonfree/pro/saml2_auth/registration.py`).
+            # remote's SAML runtime reads them straight from there. The cert
+            # files required by these connections are copied to the remote per
+            # site by the registered `SnapshotFileCreator`s during snapshot
+            # preparation.
             "authentication_connections": populated_site_config.get(
                 "authentication_connections", []
             ),

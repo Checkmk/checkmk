@@ -28,6 +28,7 @@ from cmk.gui.watolib.config_sync import (
     replication_path_registry,
     ReplicationPath,
     ReplicationPathType,
+    snapshot_file_creator_registry,
     SnapshotSettings,
 )
 from cmk.gui.watolib.global_settings import save_site_global_settings
@@ -137,6 +138,10 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
                 create_rabbitmq_new_definitions_file(
                     Path(snapshot_settings.work_dir), snapshot_settings.rabbitmq_definition
                 )
+                for snapshot_file_creator in snapshot_file_creator_registry.values():
+                    snapshot_file_creator.create_files(
+                        Path(snapshot_settings.work_dir), snapshot_settings.site_config
+                    )
 
     def _prepare_site_config_directory(self, site_id: SiteId) -> None:
         """

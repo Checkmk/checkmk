@@ -33,7 +33,6 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
-from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.search import MatchItem
@@ -1077,20 +1076,20 @@ def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch) -> None:
     with get_fake_setup_redis_client(
         monkeypatch, _convert_folder_tree_to_all_folders(wato_folder), []
     ):
-        folder_tree().all_folders()
+        wato_folders = folder_tree().all_folders()
         # Check if wato_folders class matches
-        assert isinstance(g.wato_folders, hosts_and_folders.WATOFoldersOnDemand)
+        assert isinstance(wato_folders, hosts_and_folders.WATOFoldersOnDemand)
         # Check if item is None
-        assert g.wato_folders._raw_dict["sub1.1"] is None
+        assert wato_folders._raw_dict["sub1.1"] is None
         # Check if item is generated on access
-        assert isinstance(g.wato_folders["sub1.1"], hosts_and_folders.Folder)
+        assert isinstance(wato_folders["sub1.1"], hosts_and_folders.Folder)
         # Check if item is now set in dict
-        assert isinstance(g.wato_folders._raw_dict["sub1.1"], hosts_and_folders.Folder)
+        assert isinstance(wato_folders._raw_dict["sub1.1"], hosts_and_folders.Folder)
 
         # Check if other folder is still None
-        assert g.wato_folders._raw_dict["sub1.2"] is None
+        assert wato_folders._raw_dict["sub1.2"] is None
         # Check if parent(main) folder got instantiated as well
-        assert isinstance(g.wato_folders._raw_dict[""], hosts_and_folders.Folder)
+        assert isinstance(wato_folders._raw_dict[""], hosts_and_folders.Folder)
 
 
 def test_folder_exists() -> None:

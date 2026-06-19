@@ -1009,6 +1009,9 @@ class FolderTree:
         self.config = config
         self._all_host_attributes: dict[str, ABCHostAttribute] | None = None
         self._redis_client: _RedisHelper | None = None
+        self._folders: Mapping[PathWithoutSlash, Folder] | None = None
+        self._folder_choices: Sequence[tuple[str, str]] | None = None
+        self._folder_choices_fulltitle: Sequence[tuple[str, str]] | None = None
 
     @property
     def redis_client(self) -> _RedisHelper:
@@ -1041,21 +1044,21 @@ class FolderTree:
         return host
 
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder]:
-        if "wato_folders" not in g:
-            g.wato_folders = _wato_folders_factory(self)
-        return g.wato_folders
+        if self._folders is None:
+            self._folders = _wato_folders_factory(self)
+        return self._folders
 
     def folder_choices(self) -> Sequence[tuple[str, str]]:
-        if "folder_choices" not in g:
-            g.folder_choices = self.root_folder().recursive_subfolder_choices(pretty=True)
-        return g.folder_choices
+        if self._folder_choices is None:
+            self._folder_choices = self.root_folder().recursive_subfolder_choices(pretty=True)
+        return self._folder_choices
 
     def folder_choices_fulltitle(self) -> Sequence[tuple[str, str]]:
-        if "folder_choices_full_title" not in g:
-            g.folder_choices_full_title = self.root_folder().recursive_subfolder_choices(
+        if self._folder_choices_fulltitle is None:
+            self._folder_choices_fulltitle = self.root_folder().recursive_subfolder_choices(
                 pretty=False
             )
-        return g.folder_choices_full_title
+        return self._folder_choices_fulltitle
 
     def folder(self, folder_path: PathWithoutSlash) -> Folder:
         if folder_path in (folders := self.all_folders()):
@@ -1103,9 +1106,9 @@ class FolderTree:
         self.root_folder().drop_caches()
         if may_use_redis():
             self.redis_client.clear_cached_folders()
-        g.pop("wato_folders", {})
-        for cache_id in ["folder_choices", "folder_choices_full_title"]:
-            g.pop(cache_id, None)
+        self._folders = None
+        self._folder_choices = None
+        self._folder_choices_fulltitle = None
         self._all_host_attributes = None
         with suppress(AttributeError):
             del self.folder_lookup_cache

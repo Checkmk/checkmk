@@ -9,11 +9,13 @@ import shutil
 import subprocess
 import sys
 
+from runpath_patch import depth_relative_rpath, is_elf
+
 
 def _is_elf(filepath: str) -> bool:
     try:
         with open(filepath, "rb") as f:
-            return f.read(4) == b"\x7fELF"
+            return is_elf(f.read(4))
     except OSError:
         return False
 
@@ -27,9 +29,7 @@ def _patch_elf_files(directory: str, patchelf: str, base_rpath: str) -> None:
             if not _is_elf(filepath):
                 continue
             rel_dir = os.path.relpath(dirpath, directory)
-            depth = len(rel_dir.split(os.sep)) if rel_dir != "." else 0
-            extra_ups = "/".join([".."] * (depth - 1)) if depth > 1 else ""
-            rpath = f"{base_rpath}/{extra_ups}" if extra_ups else base_rpath
+            rpath = depth_relative_rpath(base_rpath, rel_dir)
             subprocess.run([patchelf, "--set-rpath", rpath, filepath], check=True)
 
 

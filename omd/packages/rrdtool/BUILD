@@ -1,9 +1,8 @@
 load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_python//python:pip.bzl", "whl_filegroup")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
-load("//bazel/rules:patchelf.bzl", "set_runpath", "set_runpath_tree")
+load("//bazel/rules:patchelf.bzl", "set_runpath", "set_runpath_tree", "set_runpath_whl")
 
 exports_files(["skel.permissions"])
 
@@ -89,22 +88,17 @@ pkg_tar(
     visibility = ["//visibility:public"],
 )
 
-whl_filegroup(
-    name = "rrdtool_python_fg",
-    whl = "@rrdtool_native//:rrdtool_python_wheel",
-)
-
 # Patch the bundled rrdtool.so so it finds librrd in the OMD site's lib/.
-set_runpath_tree(
-    name = "rrdtool_python_runpath",
-    src = ":rrdtool_python_fg",
+set_runpath_whl(
+    name = "rrdtool_python_wheel_patched",
     rpath = "$ORIGIN/../..",
+    whl = "@rrdtool_native//:rrdtool_python_wheel",
 )
 
 package_wheel(
     name = "rrdtool_python_tar",
     visibility = ["//visibility:public"],
-    wheel_tree = ":rrdtool_python_runpath",
+    whl = ":rrdtool_python_wheel_patched",
 )
 
 # 'rrdtool' prefix cannot be stripped from filegroup

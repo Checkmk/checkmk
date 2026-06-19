@@ -104,6 +104,7 @@ class ABCViewRenderer(abc.ABC):
         load_frontend_vue: str,
         custom_style_sheet: str | None,
         screenshotmode: bool,
+        selection_livetime: int,
         show_livestatus_errors: bool,
         enable_sounds: bool,
         sounds: Sequence[tuple[str, str]],
@@ -144,6 +145,7 @@ class GUIViewRenderer(ABCViewRenderer):
         load_frontend_vue: str,
         custom_style_sheet: str | None,
         screenshotmode: bool,
+        selection_livetime: int,
         show_livestatus_errors: bool,
         enable_sounds: bool,
         sounds: Sequence[tuple[str, str]],
@@ -156,7 +158,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
         command_form = should_show_command_form(self.view.datasource)
         if command_form:
-            weblib.init_selection()
+            weblib.init_selection(selection_livetime)
             if self.view.checkboxes_displayed:
                 SelectionId.from_request(request)
 

@@ -385,6 +385,7 @@ class MobileViewRenderer(ABCViewRenderer):
         load_frontend_vue: str,
         custom_style_sheet: str | None,
         screenshotmode: bool,
+        selection_livetime: int,
         show_livestatus_errors: bool,
         enable_sounds: bool,
         sounds: Sequence[tuple[str, str]],

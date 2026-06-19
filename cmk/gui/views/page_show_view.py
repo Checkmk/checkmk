@@ -401,6 +401,7 @@ def _show_view(
             load_frontend_vue=config.load_frontend_vue,
             custom_style_sheet=config.custom_style_sheet,
             screenshotmode=config.screenshotmode,
+            selection_livetime=config.selection_livetime,
             show_livestatus_errors=config.show_livestatus_errors,
             enable_sounds=config.enable_sounds,
             sounds=config.sounds,

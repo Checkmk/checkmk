@@ -92,7 +92,7 @@ def _connection_elements() -> Mapping[str, DictElement]:
                 ),
                 prefill=DefaultValue(3.0),
                 displayed_magnitudes=(TimeMagnitude.SECOND,),
-                custom_validate=(validators.NumberInRange(min_value=1, max_value=20),),
+                custom_validate=(validators.NumberInRange(min_value=1, max_value=90),),
             ),
         ),
     }

@@ -55,6 +55,7 @@ import UclCmkKeyboardKey from './foundation-elements/CmkKeyboardKey/UclCmkKeyboa
 import UclCmkLabel from './foundation-elements/CmkLabel/UclCmkLabel.vue'
 import UclCmkLabelRequired from './foundation-elements/CmkLabelRequired/UclCmkLabelRequired.vue'
 import UclCmkSpace from './foundation-elements/CmkSpace/UclCmkSpace.vue'
+import UclCmkVisuallyHidden from './foundation-elements/CmkVisuallyHidden/UclCmkVisuallyHidden.vue'
 import UclCmkZebra from './foundation-elements/CmkZebra/UclCmkZebra.vue'
 import UclCmkHeading from './foundation-elements/typography/UclCmkHeading.vue'
 import UclCmkParagraph from './foundation-elements/typography/UclCmkParagraph.vue'
@@ -130,6 +131,7 @@ const foundationElementsPages = [
   new Page('CmkLabel', UclCmkLabel),
   new Page('CmkLabelRequired', UclCmkLabelRequired),
   new Page('CmkSpace', UclCmkSpace),
+  new Page('CmkVisuallyHidden', UclCmkVisuallyHidden),
   new Page('CmkZebra', UclCmkZebra)
 ]
 

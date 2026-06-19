@@ -887,6 +887,31 @@
         ]
       }
     },
+    "@@glib+//:extensions.bzl%glib": {
+      "general": {
+        "bzlTransitiveDigest": "sblapP1DsymdUVtFqn9VSE7zBbpNefRdSCMR8g20wt4=",
+        "usagesDigest": "xt6TtStmc/vCxBv2Phkc2hgSZMeJr29ummIJu+LfV40=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "glib": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:local.bzl%new_local_repository",
+            "attributes": {
+              "build_file": "@@glib+//:BUILD.glib.bazel",
+              "path": "/usr"
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "glib+",
+            "bazel_tools",
+            "bazel_tools"
+          ]
+        ]
+      }
+    },
     "@@hedron_compile_commands+//:workspace_setup.bzl%hedron_compile_commands_extension": {
       "general": {
         "bzlTransitiveDigest": "GTNjt7oW5GiUBfcBtXAq5etqAZ6ue6PRd5nPaxeMoYM=",

@@ -269,7 +269,9 @@ class ABCTopologyPage(Page):
         user.need_permission("general.parent_child_topology")
         reqvars = _RequestVars.from_request(ctx.request)
 
-        self.make_ui_components(UserPermissions.from_config(ctx.config, permission_registry))
+        self.make_ui_components(
+            UserPermissions.from_config(ctx.config, permission_registry), ctx.config
+        )
         self.show_topology(
             site_id=reqvars.site_id,
             layout=reqvars.layout,
@@ -278,7 +280,7 @@ class ABCTopologyPage(Page):
         )
         html.footer()
 
-    def make_ui_components(self, user_permissions: UserPermissions) -> None:
+    def make_ui_components(self, user_permissions: UserPermissions, config: Config) -> None:
         visual_spec = self.visual_spec()
         title = str(visual_spec["title"])
         breadcrumb = make_topic_breadcrumb(
@@ -293,12 +295,12 @@ class ABCTopologyPage(Page):
             title,
             breadcrumb,
             page_menu,
-            debug=active_config.debug,
+            debug=config.debug,
             lang=user.language,
-            inject_js_profiling_code=active_config.inject_js_profiling_code,
-            load_frontend_vue=active_config.load_frontend_vue,
-            custom_style_sheet=active_config.custom_style_sheet,
-            screenshotmode=active_config.screenshotmode,
+            inject_js_profiling_code=config.inject_js_profiling_code,
+            load_frontend_vue=config.load_frontend_vue,
+            custom_style_sheet=config.custom_style_sheet,
+            screenshotmode=config.screenshotmode,
             inline_help_as_text=user.inline_help_as_text,
             hide_suggestions=not user.get_tree_state("suggestions", "all", True),
             user_role_ids=user.role_ids,

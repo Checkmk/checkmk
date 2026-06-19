@@ -68,7 +68,9 @@ class AjaxFetchAggregationData(AjaxPage):
 
         aggregation_info: dict[str, Any] = {"aggregation": {}}
 
-        aggregation_layouts = BILayoutManagement.get_all_bi_aggregation_layouts()
+        aggregation_layouts = BILayoutManagement.get_all_bi_aggregation_layouts(
+            ctx.config.bi_layouts
+        )
 
         # Currently only one aggregation can be shown at a time
         for bi_compiled_aggregation, node_result_bundles in results:
@@ -284,7 +286,7 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
         layout_var = ctx.request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
         ctx.config.bi_layouts["aggregations"].update(layout_config)
-        BILayoutManagement.save_layouts()
+        BILayoutManagement.save_layouts(ctx.config.bi_layouts)
         return {}
 
 
@@ -294,7 +296,7 @@ class AjaxDeleteBIAggregationLayout(AjaxPage):
         check_csrf_token()
         for_aggregation = ctx.request.var("aggregation_name")
         ctx.config.bi_layouts["aggregations"].pop(for_aggregation)
-        BILayoutManagement.save_layouts()
+        BILayoutManagement.save_layouts(ctx.config.bi_layouts)
         return {}
 
 
@@ -302,7 +304,9 @@ class AjaxLoadBIAggregationLayout(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         aggregation_name = ctx.request.var("aggregation_name")
-        return BILayoutManagement.load_bi_aggregation_layout(aggregation_name)
+        return BILayoutManagement.load_bi_aggregation_layout(
+            aggregation_name, ctx.config.bi_layouts
+        )
 
 
 def _bi_map(ctx: PageContext) -> None:

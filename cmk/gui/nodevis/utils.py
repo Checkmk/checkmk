@@ -14,7 +14,6 @@ import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import sites
-from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
 from cmk.gui.type_defs import IconNames, StaticIcon
@@ -53,21 +52,23 @@ class BILayoutManagement:
     _config_file = default_config_dir / "multisite.d/wato" / "bi_layouts.mk"
 
     @classmethod
-    def save_layouts(cls) -> None:
+    def save_layouts(cls, bi_layouts: dict[str, Any]) -> None:
         store.save_to_mk_file(
             BILayoutManagement._config_file,
             key="bi_layouts",
-            value=active_config.bi_layouts,
+            value=bi_layouts,
             pprint_value=True,
         )
 
     @classmethod
-    def load_bi_aggregation_layout(cls, aggregation_name: str | None) -> Any:
-        return active_config.bi_layouts["aggregations"].get(aggregation_name)
+    def load_bi_aggregation_layout(
+        cls, aggregation_name: str | None, bi_layouts: dict[str, Any]
+    ) -> Any:
+        return bi_layouts["aggregations"].get(aggregation_name)
 
     @classmethod
-    def get_all_bi_aggregation_layouts(cls) -> Any:
-        return active_config.bi_layouts["aggregations"]
+    def get_all_bi_aggregation_layouts(cls, bi_layouts: dict[str, Any]) -> Any:
+        return bi_layouts["aggregations"]
 
 
 def get_toggle_layout_designer_page_menu_entry():

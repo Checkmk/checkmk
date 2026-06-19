@@ -41,7 +41,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
-from cmk.gui.config import active_config, default_authorized_builtin_role_ids
+from cmk.gui.config import active_config, Config, default_authorized_builtin_role_ids
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.default_permissions import PERMISSION_SECTION_GENERAL
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -1801,6 +1801,7 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
             element_type,
             create_info,
             UserPermissions.from_config(ctx.config, permission_registry),
+            ctx.config,
         )
         # Redirect user to tha page this displays the thing we just added to
         if target_page:
@@ -1818,6 +1819,7 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
         element_type: str,
         create_info: ElementSpec,
         user_permissions: UserPermissions,
+        config: Config,
     ) -> tuple[str | None, bool]:
         cls.need_overriding_permission("edit")
 

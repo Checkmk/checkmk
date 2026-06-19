@@ -229,7 +229,11 @@ class GUIViewRenderer(ABCViewRenderer):
                     # Create URI with all actions variables removed
                     backurl = makeuri(request, [], delvars=["filled_in", "actions"])
                     has_done_actions = do_actions(
-                        view_spec, self.view.datasource.infos[0], rows, backurl
+                        view_spec,
+                        self.view.datasource.infos[0],
+                        rows,
+                        backurl,
+                        debug=debug,
                     )
                 except MKUserError as e:
                     html.user_error(e)
@@ -250,7 +254,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 )
 
             try:
-                do_actions(view_spec, self.view.datasource.infos[0], rows, "")
+                do_actions(view_spec, self.view.datasource.infos[0], rows, "", debug=debug)
             except Exception:
                 pass  # currently no feed back on webservice
 

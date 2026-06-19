@@ -9,7 +9,6 @@ from collections.abc import Sequence
 from typing import Literal
 
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
@@ -129,6 +128,8 @@ def do_actions(
     what: InfoName,
     action_rows: Rows,
     backurl: str,
+    *,
+    debug: bool,
 ) -> bool:
     if not user.may("general.act"):
         html.show_error(
@@ -201,7 +202,7 @@ def do_actions(
     message = None
     if command:
         message = _("Successfully sent %d commands.") % count
-        if active_config.debug:
+        if debug:
             message += _("The last one was: <pre>%s</pre>") % command
     elif count == 0:
         message = _("No matching data row. No command sent.")

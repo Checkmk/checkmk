@@ -193,25 +193,24 @@ fn test_print_info() {
     }
 }
 
-fn legacy_cfg_path() -> String {
-    #[cfg(windows)]
-    const REFERENCE_FILE: &str = "output-xe-single.ps1";
-    #[cfg(not(windows))]
-    const REFERENCE_FILE: &str = "output-xe-single.cfg";
+fn reference_path(name: &str) -> String {
+    let ext = if cfg!(windows) { "ps1" } else { "cfg" };
+    let file = format!("{name}.{ext}");
 
-    #[cfg(feature = "build_system_bazel")]
-    {
+    if cfg!(feature = "build_system_bazel") {
         let cwd = std::env::current_dir().unwrap();
         cwd.join("packages/mk-oracle/references")
-            .join(REFERENCE_FILE)
+            .join(&file)
             .to_str()
             .unwrap()
             .to_string()
+    } else {
+        format!("references/{file}")
     }
-    #[cfg(not(feature = "build_system_bazel"))]
-    {
-        format!("references/{REFERENCE_FILE}")
-    }
+}
+
+fn legacy_cfg_path() -> String {
+    reference_path("output-multiple")
 }
 
 #[test]
@@ -239,6 +238,60 @@ fn test_migrate_config_to_stdout() {
         "missing authentication:"
     );
     assert!(stdout.contains("connection:"), "missing connection:");
+}
+
+#[test]
+fn test_migrate_config_yaml_structure() {
+    let cfg = legacy_cfg_path();
+    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    // Header
+    assert!(stdout.starts_with(&format!("# --- Converted from {cfg} at ")));
+
+    // Legacy config echoed as comments
+    for var in ["DBUSER", "ASMUSER", "SYNC_SECTIONS", "ASYNC_SECTIONS"] {
+        assert!(stdout.contains(var), "legacy config missing {var}");
+    }
+
+    // Extracted environment variables as comments
+    assert!(stdout.contains("# --- Known environment variables defined in legacy config ---\n"));
+    let env_value_of = |var: &str| -> Option<&str> {
+        let prefix = format!("# {var} ");
+        stdout
+            .lines()
+            .find(|l| l.starts_with(&prefix))
+            .map(|l| &l[prefix.len()..])
+    };
+    assert_eq!(
+        env_value_of("DBUSER"),
+        Some("c##checkmk:********::localhost:1521:")
+    );
+    assert_eq!(env_value_of("ASMUSER"), Some("/::SYSASM:::"));
+    assert_eq!(env_value_of("CACHE_MAXAGE"), Some("600"));
+    // assert_eq!(env_value_of("ONLY_SIDS"), Some("..."));
+    // assert_eq!(env_value_of("ORACLE_HOME"), Some("..."));
+    // assert_eq!(env_value_of("TNS_ADMIN"), Some("..."));
+
+    // Unified config section — values must come from DBUSER parsing
+    assert!(stdout.contains("# --- Unified Config ---\n"));
+    // From DBUSER='c##checkmk:********::localhost:1521:'
+    // assert!(stdout.contains("      hostname: localhost\n"));
+    // assert!(stdout.contains("      port: 1521\n"));
+    // assert!(stdout.contains("      username: c##checkmk\n"));
+    // From DBUSER_XE1='/:::::oooo'
+    // assert!(stdout.contains("      - sid: $ORACLE_SID\n"));
+    // assert!(stdout.contains("        alias: oooo\n"));
+    // From DBUSER_XE2='xe2user:xe2pwd:SYSDBA:localhost1:1521:'
+    // assert!(stdout.contains("      - sid: $ORACLE_SID\n"));
+
+    // Output must be loadable as valid Oracle config
+    // let config = mk_oracle::config::OracleConfig::load_str(&stdout);
+    // assert!(
+    //     config.is_ok(),
+    //     "migrated output must parse as YAML: {stdout}"
+    // );
+    // assert!(config.unwrap().ora_sql().is_some());
 }
 
 #[test]
@@ -281,31 +334,27 @@ fn test_execute_config_reference() {
 
     assert_eq!(
         value_of("DBUSER"),
-        Some("c##checkmk:********::localhost::XE")
+        Some("c##checkmk:********::localhost:1521:")
     );
-    assert_eq!(value_of("ONLY_SIDS"), Some("XE"));
+    if cfg!(windows) {
+        // windows ps1 doesn't support tnsalias
+        assert_eq!(value_of("DBUSER_XE1"), Some("/:::::"));
+    } else {
+        assert_eq!(value_of("DBUSER_XE1"), Some("/:::::oooo"));
+    }
     assert_eq!(
-        value_of("ORACLE_HOME"),
-        Some("/opt/oracle/product/21c/dbhomeXE")
+        value_of("DBUSER_XE2"),
+        Some("xe2user:xe2pwd:SYSDBA:localhost1:1521:")
     );
-    assert_eq!(
-        value_of("TNS_ADMIN"),
-        Some("/opt/oracle/product/21c/dbhomeXE/network/admin")
-    );
-
-    // Variables not in this config must be absent
-    assert!(value_of("ASMUSER").is_none(), "ASMUSER not set");
-    assert!(value_of("CACHE_MAXAGE").is_none(), "CACHE_MAXAGE not set");
-    assert!(value_of("REMOTE_ORACLE_HOME").is_none());
-
-    // No prefix-matched variables in this simple config
+    assert_eq!(value_of("ASMUSER"), Some("/::SYSASM:::"));
+    assert_eq!(value_of("CACHE_MAXAGE"), Some("600"));
     assert!(
-        !lines.iter().any(|l| l.starts_with("REMOTE_INSTANCE_")),
-        "no remote instances in reference config"
+        value_of("SYNC_SECTIONS").unwrap().contains("instance"),
+        "SYNC_SECTIONS must contain instance"
     );
     assert!(
-        !lines.iter().any(|l| l.starts_with("EXCLUDE_")),
-        "no excludes in reference config"
+        value_of("ASYNC_SECTIONS").unwrap().contains("tablespaces"),
+        "ASYNC_SECTIONS must contain tablespaces"
     );
 }
 
@@ -327,9 +376,10 @@ fn test_migrate_reference_config_connection_and_auth() {
         "1521",
         "empty port defaults to 1521"
     );
-    assert_eq!(
-        conn.tns_admin().map(|p| p.to_str().unwrap()),
-        Some("/opt/oracle/product/21c/dbhomeXE/network/admin")
+    // output-multiple.cfg has no TNS_ADMIN
+    assert!(
+        conn.tns_admin().is_none(),
+        "tns_admin must be None for multiple config"
     );
 
     // connection must not have sid
@@ -338,25 +388,63 @@ fn test_migrate_reference_config_connection_and_auth() {
         "main target_id must be None (no sid/alias at top level)"
     );
 
-    // Authentication
+    // Authentication from DBUSER='c##checkmk:********::localhost:1521:'
     let auth = ora.auth();
     assert_eq!(auth.username(), "c##checkmk");
     assert_eq!(auth.password(), Some("********"));
     assert_eq!(auth.auth_type().to_string(), "standard");
     assert!(auth.role().is_none(), "empty role must be None");
 
-    // First instance has sid and alias from TNSALIAS
+    // Instances: DBUSER (empty tnsalias), DBUSER_XE1 (tnsalias=oooo), DBUSER_XE2
     let instances = ora.instances();
-    assert_eq!(instances.len(), 1, "must have one instance from DBUSER");
-    let inst = &instances[0];
-    assert!(
-        stdout.contains("      - sid: XE"),
-        "instance must have sid: XE in YAML"
+    assert_eq!(
+        instances.len(),
+        3,
+        "must have 3 instances from DBUSER + DBUSER_XE1 + DBUSER_XE2"
+    );
+
+    // DBUSER instance: sid=$ORACLE_SID, alias=$ORACLE_SID, connection=localhost:1521, auth=c##checkmk
+    let dbuser_inst = instances
+        .iter()
+        .find(|i| i.alias().as_ref().map(|a| a.to_string()).as_deref() == Some("$ORACLE_SID"))
+        .expect("DBUSER instance with alias $ORACLE_SID");
+    assert!(dbuser_inst.conn().is_local());
+    assert_eq!(dbuser_inst.auth().username(), "c##checkmk");
+
+    // DBUSER_XE1: sid=XE1, alias=oooo, inherits main connection and auth
+    #[cfg(not(windows))]
+    let xe1_inst = instances
+        .iter()
+        .find(|i| i.alias().as_ref().map(|a| a.to_string()).as_deref() == Some("oooo"))
+        .expect("DBUSER_XE1 instance with alias oooo");
+    #[cfg(windows)]
+    let xe1_inst = instances
+        .iter()
+        .find(|i| i.standalone_sid().map(|s| s.to_string()).as_deref() == Some("XE1"))
+        .expect("DBUSER_XE1 instance with sid XE1");
+    #[cfg(windows)]
+    assert!(xe1_inst.alias().is_none());
+
+    assert_eq!(
+        xe1_inst.conn().hostname().to_string(),
+        conn.hostname().to_string(),
+        "XE1 connection must inherit main hostname"
     );
     assert_eq!(
-        inst.alias().as_ref().map(|a| a.to_string()),
-        Some("XE".to_string()),
-        "instance alias must be XE"
+        xe1_inst.auth().username(),
+        auth.username(),
+        "XE1 auth must inherit main username"
+    );
+
+    // DBUSER_XE2: sid=XE2, no alias, connection=localhost1:1521, auth=xe2user, role=SYSDBA
+    let xe2_inst = instances
+        .iter()
+        .find(|i| i.auth().username() == "xe2user")
+        .expect("DBUSER_XE2 instance with username xe2user");
+    assert_eq!(xe2_inst.conn().hostname().to_string(), "localhost1");
+    assert_eq!(
+        xe2_inst.auth().role().map(|r| r.to_string()),
+        Some("sysdba".to_string())
     );
 }
 

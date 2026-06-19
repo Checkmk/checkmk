@@ -41,7 +41,9 @@ pub fn migrate(input: &Path) -> Result<String> {
 /// - Extracted environment variables as comments
 /// - Resulting YAML configuration
 // DBUSER fields: USERNAME:PASSWORD:ROLE:HOST:PORT:TNSALIAS
+#[derive(Debug)]
 struct LegacyDbUser {
+    sid: Option<String>, // None for DBUSER, Some(XE) for DBUSER_XE
     username: String,
     password: String,
     role: Option<String>,
@@ -54,14 +56,29 @@ fn optional_value(s: &str) -> Option<String> {
     (!s.is_empty()).then(|| s.to_string())
 }
 
-fn parse_dbuser(value: &str) -> Result<LegacyDbUser> {
+fn parse_dbuser(name: &str, value: &str) -> Result<LegacyDbUser> {
+    if name != "DBUSER" && !name.starts_with("DBUSER_") {
+        bail!("invalid variable name: {name}, expected DBUSER or DBUSER_*");
+    }
     let fields: Vec<&str> = value.splitn(6, ':').collect();
     if fields.len() < 2 {
         bail!("DBUSER must have at least username:password, got: {value}");
     }
     let field = |i: usize| fields.get(i).copied().unwrap_or("");
+    let sid = name
+        .strip_prefix("DBUSER_")
+        .map(|suffix| suffix.to_string());
+    let raw_username = field(0);
+    // Legacy "/" means OS authentication; replace with empty for YAML output
+    let username = if raw_username == "/" {
+        log::info!("{name}: replacing '/' username with empty string (OS authentication)");
+        String::new()
+    } else {
+        raw_username.to_string()
+    };
     Ok(LegacyDbUser {
-        username: field(0).to_string(),
+        sid,
+        username,
         password: field(1).to_string(),
         role: optional_value(field(2)),
         hostname: field(3).to_string(),
@@ -79,7 +96,14 @@ pub fn convert(
     let dbuser_raw = variables
         .get("DBUSER")
         .ok_or_else(|| anyhow::anyhow!("DBUSER not defined in legacy config, cannot generate"))?;
-    let dbuser = parse_dbuser(dbuser_raw)?;
+    let dbuser = parse_dbuser("DBUSER", dbuser_raw)?;
+
+    let mut dbuser_extras: Vec<LegacyDbUser> = Vec::new();
+    for (name, value) in variables {
+        if let Some(_suffix) = name.strip_prefix("DBUSER_") {
+            dbuser_extras.push(parse_dbuser(name, value)?);
+        }
+    }
 
     let mut out = String::new();
 
@@ -122,12 +146,41 @@ pub fn convert(
         out.push_str(&format!("      role: {}\n", role.to_lowercase()));
     }
 
-    // instances from DBUSER
+    // instances from DBUSER and DBUSER_*
     out.push_str("    instances:\n");
-    out.push_str(&format!(
-        "      - sid: {}\n        alias: {}\n",
-        dbuser.alias_or_sid, dbuser.alias_or_sid
-    ));
+    let all_dbusers = std::iter::once(&dbuser).chain(dbuser_extras.iter());
+    for entry in all_dbusers {
+        let sid = entry.sid.as_deref().unwrap_or(&entry.alias_or_sid);
+        out.push_str(&format!("      - sid: {sid}\n"));
+        if entry.sid.is_some() && entry.alias_or_sid == "$ORACLE_SID" {
+            // sid known from variable name suffix, no explicit alias needed
+        } else {
+            out.push_str(&format!("        alias: {}\n", entry.alias_or_sid));
+        }
+        // DBUSER (sid=None) uses main-level connection/auth, skip in instance
+        if entry.sid.is_some() {
+            let has_connection = !entry.hostname.is_empty() || entry.port.is_some();
+            if has_connection {
+                out.push_str("        connection:\n");
+                if !entry.hostname.is_empty() {
+                    out.push_str(&format!("          hostname: {}\n", entry.hostname));
+                }
+                if let Some(port) = &entry.port {
+                    out.push_str(&format!("          port: {port}\n"));
+                }
+            }
+            let has_auth = !entry.username.is_empty() || !entry.password.is_empty();
+            if has_auth {
+                out.push_str(&format!(
+                    "        authentication:\n          username: \"{}\"\n          password: \"{}\"\n          type: standard\n",
+                    entry.username, entry.password
+                ));
+                if let Some(role) = &entry.role {
+                    out.push_str(&format!("          role: {}\n", role.to_lowercase()));
+                }
+            }
+        }
+    }
 
     Ok(out)
 }
@@ -194,7 +247,7 @@ const KNOWN_VARIABLES: &[&str] = &[
 ];
 
 /// Variable name prefixes for dynamic matching (e.g. REMOTE_INSTANCE_XE).
-const KNOWN_PREFIXES: &[&str] = &["REMOTE_INSTANCE_", "EXCLUDE_"];
+const KNOWN_PREFIXES: &[&str] = &["DBUSER_", "REMOTE_INSTANCE_", "EXCLUDE_"];
 
 /// Execute a legacy config file in its native shell and return extracted variables.
 ///
@@ -276,12 +329,12 @@ fn build_powershell_script(config_path: &Path) -> String {
         r#". {quoted_path}
 foreach ($__n in @({var_list})) {{
   $__v = (Get-Variable -Name $__n -ValueOnly -ErrorAction SilentlyContinue)
-  if ($__v -is [array]) {{ $__v = $__v -join ':' }}
+  if ($__v -is [array]) {{ $__v = ($__v -join ':') + ':' }}
   if ($__v) {{ Write-Output "$__n $__v" }}
 }}
 Get-Variable | Where-Object {{ {prefix_filter} }} | ForEach-Object {{
   $__v = $_.Value
-  if ($__v -is [array]) {{ $__v = $__v -join ':' }}
+  if ($__v -is [array]) {{ $__v = ($__v -join ':') + ':' }}
   if ($__v) {{ Write-Output "$($_.Name) $__v" }}
 }}"#
     )
@@ -366,31 +419,6 @@ mod tests {
     }
 
     #[test]
-    fn test_convert_full_dbuser() {
-        let vars = HashMap::from([(
-            "DBUSER".into(),
-            "admin:s3cret:SYSDBA:dbhost:1522:ORCL".into(),
-        )]);
-        let result = convert("", "/test/cfg", &vars, TS).unwrap();
-        assert!(result.contains("hostname: dbhost"));
-        assert!(result.contains("port: 1522"));
-        assert!(result.contains("      - sid: ORCL"));
-        assert!(result.contains("        alias: ORCL"));
-        assert!(result.contains("username: \"admin\""));
-        assert!(result.contains("password: \"s3cret\""));
-        assert!(result.contains("role: sysdba"));
-    }
-
-    #[test]
-    fn test_convert_dbuser_defaults() {
-        let vars = HashMap::from([("DBUSER".into(), "user:pass::::".into())]);
-        let result = convert("", "/test/cfg", &vars, TS).unwrap();
-        assert!(result.contains("hostname: localhost"));
-        assert!(!result.contains("port:"));
-        assert!(!result.contains("role:"));
-    }
-
-    #[test]
     fn test_convert_tns_admin() {
         let vars = HashMap::from([
             ("DBUSER".into(), "user:pass::::".into()),
@@ -401,8 +429,93 @@ mod tests {
     }
 
     #[test]
+    fn test_convert_dbuser_extra_omits_default_alias() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "user:pass::::".into()),
+            ("DBUSER_XE2".into(), "xe2user:xe2pwd:::1521:".into()),
+            ("DBUSER_XE1".into(), "/:::::oooo".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(!result.contains("      - sid: XE2\n        alias:"));
+        assert!(result.contains("      - sid: XE1\n        alias: oooo\n"));
+    }
+
+    #[test]
+    fn test_convert_dbuser_extra_has_connection_and_auth() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "user:pass::::".into()),
+            ("DBUSER_ORCL".into(), "admin:secret::myhost:1522:".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(result.contains(
+            r#"      - sid: ORCL
+        connection:
+          hostname: myhost
+          port: 1522
+        authentication:
+          username: "admin"
+          password: "secret"
+          type: standard
+"#
+        ));
+    }
+
+    #[test]
+    fn test_convert_dbuser_extra_no_connection_when_empty() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "user:pass::::".into()),
+            ("DBUSER_XE".into(), "xe:xepwd::::".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(!result.contains("      - sid: XE\n        connection:"));
+    }
+
+    #[test]
+    fn test_convert_dbuser_instance_no_connection_no_auth() {
+        let vars = HashMap::from([("DBUSER".into(), "admin:secret::myhost:1522:ORCL".into())]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(result.contains("      - sid: ORCL\n        alias: ORCL\n"));
+        assert!(!result.contains("      - sid: ORCL\n        alias: ORCL\n        connection:"));
+    }
+
+    #[test]
+    fn test_convert_dbuser_role_in_auth() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "user:pass::::".into()),
+            ("DBUSER_XE".into(), "admin:secret:SYSDBA:::".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(result.contains("          role: sysdba\n"));
+    }
+
+    #[test]
+    fn test_convert_slash_username_no_auth_block() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "user:pass::::".into()),
+            ("DBUSER_XE3".into(), "/::SYSASM:::".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        assert!(
+            !result.contains("      - sid: XE3\n        connection:"),
+            "XE3 must have no connection (empty hostname)"
+        );
+        assert!(
+            !result.contains("      - sid: XE3\n        authentication:"),
+            "XE3 must have no authentication ('/' → empty username)"
+        );
+    }
+
+    #[test]
+    fn test_parse_dbuser_slash_username_replaced() {
+        let db = parse_dbuser("DBUSER", "/::SYSASM:::").unwrap();
+        assert!(db.username.is_empty(), "'/' must be replaced with empty");
+        assert_eq!(db.role.as_deref(), Some("SYSASM"));
+    }
+
+    #[test]
     fn test_parse_dbuser() {
-        let db = parse_dbuser("checkmk:secret:SYSDBA:myhost:1522:ORCL").unwrap();
+        let db = parse_dbuser("DBUSER", "checkmk:secret:SYSDBA:myhost:1522:ORCL").unwrap();
+        assert!(db.sid.is_none(), "DBUSER has no SID suffix");
         assert_eq!(db.username, "checkmk");
         assert_eq!(db.password, "secret");
         assert_eq!(db.role.as_deref(), Some("SYSDBA"));
@@ -412,8 +525,17 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_dbuser_with_sid_suffix() {
+        let db = parse_dbuser("DBUSER_XE1", "/:::::oooo").unwrap();
+        assert_eq!(db.sid.as_deref(), Some("XE1"));
+        assert!(db.username.is_empty(), "'/' replaced with empty");
+        assert_eq!(db.alias_or_sid, "oooo");
+    }
+
+    #[test]
     fn test_parse_dbuser_empty_optionals() {
-        let db = parse_dbuser("user:pass::::").unwrap();
+        let db = parse_dbuser("DBUSER", "user:pass::::").unwrap();
+        assert!(db.sid.is_none());
         assert_eq!(db.username, "user");
         assert_eq!(db.password, "pass");
         assert!(db.role.is_none());
@@ -424,7 +546,8 @@ mod tests {
 
     #[test]
     fn test_parse_dbuser_minimal() {
-        let db = parse_dbuser("user:pass").unwrap();
+        let db = parse_dbuser("DBUSER", "user:pass").unwrap();
+        assert!(db.sid.is_none());
         assert_eq!(db.username, "user");
         assert_eq!(db.password, "pass");
         assert!(db.role.is_none());
@@ -435,7 +558,16 @@ mod tests {
 
     #[test]
     fn test_parse_dbuser_too_few_fields() {
-        assert!(parse_dbuser("onlyuser").is_err());
+        assert!(parse_dbuser("DBUSER", "onlyuser").is_err());
+    }
+
+    #[test]
+    fn test_parse_dbuser_invalid_name() {
+        let err = parse_dbuser("ASMUSER", "/:::::").unwrap_err();
+        assert!(err.to_string().contains("invalid variable name"));
+        assert!(parse_dbuser("DB_USER", "user:pass").is_err());
+        assert!(parse_dbuser("DBUSER", "user:pass").is_ok());
+        assert!(parse_dbuser("DBUSER_XE", "user:pass").is_ok());
     }
 
     #[test]

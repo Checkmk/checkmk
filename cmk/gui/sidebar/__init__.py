@@ -23,7 +23,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.gui import pagetypes, sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.dashboard.type_defs import SnapinDashletConfig as SnapinDashletConfig
 from cmk.gui.exceptions import MKUserError
@@ -471,9 +471,9 @@ class SidebarRenderer:
         html.html_head(
             title or _("Checkmk Sidebar"),
             lang=user.language,
-            inject_js_profiling_code=active_config.inject_js_profiling_code,
-            load_frontend_vue=active_config.load_frontend_vue,
-            custom_style_sheet=active_config.custom_style_sheet,
+            inject_js_profiling_code=nav.config.inject_js_profiling_code,
+            load_frontend_vue=nav.config.load_frontend_vue,
+            custom_style_sheet=nav.config.custom_style_sheet,
         )
 
         self._show_body_start(
@@ -550,7 +550,7 @@ class SidebarRenderer:
         )
         self._show_main_menu(start_url, user_permissions)
         render_product_usage_analytics_popup(
-            active_config=active_config, user=user, request=request, response=response
+            active_config=config, user=user, request=request, response=response
         )
         html.close_div()
 

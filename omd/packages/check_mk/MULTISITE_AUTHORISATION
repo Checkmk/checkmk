@@ -6,9 +6,3 @@
 #  Multisite can be used to manage the permissions of
 #  the users in the add-ons e.g. if a user can edit NagVis
 #  maps.
-
-case "$1" in
-    default)
-        echo "on"
-        ;;
-esac

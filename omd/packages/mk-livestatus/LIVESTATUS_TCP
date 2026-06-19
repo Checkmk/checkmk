@@ -7,9 +7,3 @@
 #  for reasons of performance and security. This option is used
 #  to make it reachable via TCP on a port configurable with
 #  LIVESTATUS_TCP_PORT.
-
-case "$1" in
-    default)
-        echo "off"
-        ;;
-esac

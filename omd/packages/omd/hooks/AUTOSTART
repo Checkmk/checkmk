@@ -6,9 +6,3 @@
 #  started at boot time (i.e. affected by /etc/init.d/omd start).
 #  Please note, that /etc/init.d/omd stop) will effect all sites,
 #  even those with AUTOSTART=off.
-
-case "$1" in
-    default)
-        echo "on"
-        ;;
-esac

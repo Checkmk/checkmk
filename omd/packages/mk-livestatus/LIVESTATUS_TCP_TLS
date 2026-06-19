@@ -5,9 +5,3 @@
 # Description:
 #  If Livestatus is configured to listen on a TCP port, you
 #  can configure the communication to be SSL encrypted.
-
-case "$1" in
-    default)
-        echo "on"
-        ;;
-esac

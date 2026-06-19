@@ -8,9 +8,3 @@
 #  that are part of the same distributed setup.
 #  It is strongly recommended to use the web interface for configuration.
 #  Changes made via the web interface may overwrite changes made here.
-
-case "$1" in
-    default)
-        echo "off"
-        ;;
-esac

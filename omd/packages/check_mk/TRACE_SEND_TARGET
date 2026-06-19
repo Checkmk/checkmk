@@ -7,9 +7,3 @@
 #  The most basic approach is to send traces to the site's local Jaeger instance, which needs to be
 #  enabled with the TRACE_RECEIVE setting To do so, configure "local_site" here. Alternatively
 #  you can configure the URL of a custom OTLP endpoint here.
-
-case "$1" in
-    default)
-        echo "local_site"
-        ;;
-esac

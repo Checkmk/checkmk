@@ -7,9 +7,3 @@
 #  during monitoring dramatically. It is highly recommended to
 #  leave this option enabled. Only disable this if you really
 #  need to.
-
-case "$1" in
-    default)
-        echo "on"
-        ;;
-esac

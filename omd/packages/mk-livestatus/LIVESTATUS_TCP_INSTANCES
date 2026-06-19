@@ -6,9 +6,3 @@
 #  If Livestatus is configured to listen on a TCP port, this setting
 #  limits how many server instances can be active simultaneously.
 #  Default: 500
-
-case "$1" in
-    default)
-        echo "500"
-        ;;
-esac

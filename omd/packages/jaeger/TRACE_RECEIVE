@@ -6,9 +6,3 @@
 #  This option enables receiving OpenTelemetry traces in a Jaeger instance running in the Checkmk
 #  site. This instance is run for diagnostic purposes of Checkmk and currently not intended to be
 #  used for external use cases.
-
-case "$1" in
-    default)
-        echo "off"
-        ;;
-esac

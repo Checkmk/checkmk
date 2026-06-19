@@ -7,9 +7,3 @@
 #  distributed setups it is useful to collect all traces in the central site. To do this, you can
 #  configure the IP address to listen for traces. The setting "[::]" makes the port available to all
 #  IPv4 and IPv6 clients.
-
-case "$1" in
-    default)
-        echo "[::1]"
-        ;;
-esac

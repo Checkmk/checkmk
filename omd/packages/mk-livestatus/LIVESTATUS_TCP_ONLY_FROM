@@ -7,9 +7,3 @@
 #  can configure the IP addresses that are allowed to
 #  connect to livestatus here. The setting "0.0.0.0 ::/0" makes the
 #  port available to all IPv4 and IPv6 clients,
-
-case "$1" in
-    default)
-        echo "0.0.0.0 ::/0"
-        ;;
-esac

@@ -8,9 +8,3 @@
 #  The cookie authentication is done by multisite. The cookie can
 #  also be used by other addons like NagVis. This is switched
 #  using this option.
-
-case "$1" in
-    default)
-        echo "on"
-        ;;
-esac

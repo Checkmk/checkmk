@@ -7,9 +7,3 @@
 #  for communication with remote hosts. It supports
 #  communication with pull and push hosts via HTTP
 #  requests.
-
-case "$1" in
-    default)
-        echo "on"
-        ;;
-esac

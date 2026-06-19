@@ -11,9 +11,3 @@
 #
 #  After changing this variable, the man Apache webserver
 #  must be restarted.
-
-case "$1" in
-    default)
-        echo "127.0.0.1"
-        ;;
-esac

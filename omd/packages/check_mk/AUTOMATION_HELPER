@@ -6,9 +6,3 @@
 #  This option enables the automation helper, which
 #  speeds up UI and Rest API interactions in most
 #  cases.
-
-case "$1" in
-    default)
-        echo "on"
-        ;;
-esac

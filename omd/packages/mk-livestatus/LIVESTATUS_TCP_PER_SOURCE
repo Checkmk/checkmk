@@ -7,9 +7,3 @@
 #  limits the number of simultaneous connections allowed from a single
 #  source IP address.
 #  Default: 250
-
-case "$1" in
-    default)
-        echo "250"
-        ;;
-esac

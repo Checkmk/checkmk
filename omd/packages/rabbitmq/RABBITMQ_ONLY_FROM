@@ -5,9 +5,3 @@
 # Description:
 #  Configure the IP addresses of the interfaces on which the RabbitMQ Instance will listen for connections. The setting
 #  "::" makes the port available to all IPv4 and IPv6 clients.
-
-case "$1" in
-    default)
-        echo ":: 0.0.0.0"
-        ;;
-esac

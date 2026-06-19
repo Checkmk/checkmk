@@ -301,7 +301,32 @@ def _default_port(site_name: str, port_hook: PortHook, site_configs: _SiteConfig
 
 
 _HOOK_DEFAULTS: Mapping[str, Callable[[], str]] = {
+    "AGENT_RECEIVER": lambda: "on",
+    "AUTOMATION_HELPER": lambda: "on",
+    "APACHE_TCP_ADDR": lambda: "127.0.0.1",
+    "AUTOSTART": lambda: "on",
     "CORE": core_default,
+    "LIVEPROXYD": lambda: "on",
+    "LIVESTATUS_TCP": lambda: "off",
+    "LIVESTATUS_TCP_INSTANCES": lambda: "500",
+    "LIVESTATUS_TCP_ONLY_FROM": lambda: "0.0.0.0 ::/0",
+    "LIVESTATUS_TCP_PER_SOURCE": lambda: "250",
+    "LIVESTATUS_TCP_TLS": lambda: "on",
+    "MKEVENTD_SNMPTRAP": lambda: "off",
+    "MKEVENTD_SYSLOG": lambda: "off",
+    "MKEVENTD_SYSLOG_TCP": lambda: "off",
+    "MULTISITE_AUTHORISATION": lambda: "on",
+    "MULTISITE_COOKIE_AUTH": lambda: "on",
+    "OPENTELEMETRY_COLLECTOR": lambda: "off",
+    "PIGGYBACK_HUB": lambda: "off",
+    "PNP4NAGIOS": lambda: "on",
+    "RABBITMQ_ONLY_FROM": lambda: ":: 0.0.0.0",
+    "TMPFS": lambda: "on",
+    "TRACE_RECEIVE": lambda: "off",
+    "TRACE_RECEIVE_ADDRESS": lambda: "[::1]",
+    "TRACE_SEND": lambda: "off",
+    "TRACE_SEND_TARGET": lambda: "local_site",
+    "TRACE_SERVICE_NAMESPACE": lambda: "",
 }
 
 

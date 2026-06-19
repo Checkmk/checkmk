@@ -1,0 +1,6 @@
+{
+  "homepage": "https://oss.oetiker.ch/rrdtool/",
+  "maintainers": [],
+  "repository": ["github:oetiker/rrdtool-1.x"],
+  "versions": ["1.7.2.cmk.1"]
+}

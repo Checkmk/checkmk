@@ -1,0 +1,18 @@
+module(
+    name = "rrdtool_native",
+    version = "1.7.2.cmk.1",
+    bazel_compatibility = [">=7.2.1"],
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "aspect_rules_py", version = "1.5.2")
+bazel_dep(name = "glib", version = "2.0.cmk.1", repo_name = "glib_module")
+bazel_dep(name = "libxml2", version = "2.0.cmk.1", repo_name = "libxml2_module")
+bazel_dep(name = "rules_cc", version = "0.2.11")
+bazel_dep(name = "rules_python", version = "1.6.0")
+
+glib_ext = use_extension("@glib_module//:extensions.bzl", "glib")
+use_repo(glib_ext, "glib")
+
+libxml2_ext = use_extension("@libxml2_module//:extensions.bzl", "libxml2")
+use_repo(libxml2_ext, "libxml2")

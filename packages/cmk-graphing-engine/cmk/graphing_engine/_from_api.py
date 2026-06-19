@@ -39,6 +39,7 @@ from ._objects import (
     Product,
     Quantity,
     RRDMetric,
+    Rule,
     ServiceRef,
     SINotation,
     Stack,
@@ -277,6 +278,34 @@ def _metric_names_in_quantity(quantity: _ApiQuantity) -> Iterable[MetricName]:
             assert_never(quantity)
 
 
+def _is_scalar(quantity: _ApiQuantity) -> bool:
+    # A scalar quantity (a threshold or constant, possibly combined) is rendered as a horizontal
+    # rule, not a drawn curve. Mirrors the legacy _is_scalar split.
+    match quantity:
+        case str():
+            return False
+        case (
+            metrics_v1.Constant()
+            | metrics_v2_unstable.LowerWarningOf()
+            | metrics_v2_unstable.LowerCriticalOf()
+            | metrics_v1.WarningOf()
+            | metrics_v1.CriticalOf()
+            | metrics_v1.MinimumOf()
+            | metrics_v1.MaximumOf()
+        ):
+            return True
+        case metrics_v1.Sum():
+            return all(_is_scalar(s) for s in quantity.summands)
+        case metrics_v1.Product():
+            return all(_is_scalar(f) for f in quantity.factors)
+        case metrics_v1.Difference():
+            return _is_scalar(quantity.minuend) and _is_scalar(quantity.subtrahend)
+        case metrics_v1.Fraction():
+            return _is_scalar(quantity.dividend) and _is_scalar(quantity.divisor)
+        case _:
+            assert_never(quantity)
+
+
 def metric_names_of_title(title: Title) -> Sequence[MetricName]:
     return list(metric_names_in_title(title.localize(lambda text: text)))
 
@@ -324,21 +353,22 @@ def _parse_lines(
     context: _ParseContext,
     *,
     inverse: bool,
-) -> tuple[list[Stack], list[Line]]:
-    stacks = (
-        [
-            Stack(
-                members=[_parse_quantity(q, context) for q in graph.compound_lines],
-                inverse=inverse,
-            )
-        ]
-        if graph.compound_lines
-        else []
-    )
+) -> tuple[list[Stack], list[Line], list[Rule]]:
+    # Scalar quantities (thresholds/constants) become horizontal rules rather than drawn curves;
+    # everything else stacks (compound_lines) or draws as a line (simple_lines).
+    stack_members = [_parse_quantity(q, context) for q in graph.compound_lines if not _is_scalar(q)]
+    stacks = [Stack(members=stack_members, inverse=inverse)] if stack_members else []
     lines = [
-        Line(quantity=_parse_quantity(q, context), inverse=inverse) for q in graph.simple_lines
+        Line(quantity=_parse_quantity(q, context), inverse=inverse)
+        for q in graph.simple_lines
+        if not _is_scalar(q)
     ]
-    return stacks, lines
+    rules = [
+        Rule(quantity=_parse_quantity(q, context), inverse=inverse)
+        for q in (*graph.compound_lines, *graph.simple_lines)
+        if _is_scalar(q)
+    ]
+    return stacks, lines, rules
 
 
 def parse_graph_from_api(
@@ -359,17 +389,22 @@ def parse_graph_from_api(
     )
     match graph:
         case graphs_v1.Graph() | graphs_v2_unstable.Graph():
-            stacks, lines = _parse_lines(graph, context, inverse=False)
+            stacks, lines, rules = _parse_lines(graph, context, inverse=False)
             return Graph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
                 vertical_range=_parse_range(graph, context),
                 stacks=stacks,
                 lines=lines,
+                rules=rules,
             )
         case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
-            upper_stacks, upper_lines = _parse_lines(graph.upper, context, inverse=False)
-            lower_stacks, lower_lines = _parse_lines(graph.lower, context, inverse=True)
+            upper_stacks, upper_lines, upper_rules = _parse_lines(
+                graph.upper, context, inverse=False
+            )
+            lower_stacks, lower_lines, lower_rules = _parse_lines(
+                graph.lower, context, inverse=True
+            )
             return Graph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
@@ -377,6 +412,7 @@ def parse_graph_from_api(
                 or _parse_range(graph.lower, context),
                 stacks=[*upper_stacks, *lower_stacks],
                 lines=[*upper_lines, *lower_lines],
+                rules=[*upper_rules, *lower_rules],
             )
         case _:
             assert_never(graph)

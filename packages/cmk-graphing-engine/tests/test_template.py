@@ -357,8 +357,10 @@ def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantit
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    # cpu_user is drawn with its value; the scalar reference draws cpu_system's lower warning.
-    assert [line.curve.value for line in discovered.evaluated.lines] == [1.0, 50.0]
+    # cpu_user is drawn with its value; the scalar reference becomes a rule at cpu_system's lower
+    # warning.
+    assert [line.curve.value for line in discovered.evaluated.lines] == [1.0]
+    assert [rule.value for rule in discovered.evaluated.rules] == [50.0]
 
 
 def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics() -> None:
@@ -377,8 +379,9 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    # cpu_user is drawn with its value; the scalar reference draws cpu_system's warning.
-    assert [line.curve.value for line in discovered.evaluated.lines] == [1.0, 50.0]
+    # cpu_user is drawn with its value; the scalar reference becomes a rule at cpu_system's warning.
+    assert [line.curve.value for line in discovered.evaluated.lines] == [1.0]
+    assert [rule.value for rule in discovered.evaluated.rules] == [50.0]
 
 
 def test_discover_template_graphs_evaluates_the_title_expression() -> None:

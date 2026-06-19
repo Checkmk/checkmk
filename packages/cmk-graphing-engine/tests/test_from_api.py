@@ -27,6 +27,7 @@ from cmk.graphing_engine import (
     Product,
     Quantity,
     RRDMetric,
+    Rule,
     ServiceRef,
     SINotation,
     Stack,
@@ -75,6 +76,10 @@ def _stack(*members: Quantity) -> Stack:
     return Stack(members=list(members), inverse=False)
 
 
+def _rule(quantity: Quantity) -> Rule:
+    return Rule(quantity=quantity, inverse=False)
+
+
 def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group() -> None:
     graph = graphs_v1.Graph(
         name="g",
@@ -90,7 +95,9 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
         title="Title",
         vertical_range=MinimalRange(lower=0, upper=100),
         stacks=[_stack(_rrd("a"), _rrd("b"))],
-        lines=[_line(_rrd("c")), _line(WarningOf(metric=_rrd("a"), color="#28a2f3"))],
+        lines=[_line(_rrd("c"))],
+        # The scalar threshold becomes a horizontal rule, not a drawn line.
+        rules=[_rule(WarningOf(metric=_rrd("a"), color="#28a2f3"))],
     )
 
 
@@ -126,7 +133,8 @@ def test_parse_graph_from_api_threshold_uses_fallback_color_for_undefined_metric
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=[metrics_v1.WarningOf("u")])
     parsed = parse_graph_from_api(graph, _SERVICE, {}, _id)
     assert isinstance(parsed, Graph)
-    assert parsed.lines == [_line(WarningOf(metric=_rrd("u"), color="#8c8c8c"))]
+    assert parsed.lines == []
+    assert parsed.rules == [_rule(WarningOf(metric=_rrd("u"), color="#8c8c8c"))]
 
 
 def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
@@ -178,8 +186,10 @@ def test_parse_graph_from_api_maps_unit_notations_and_precisions() -> None:
     )
     parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id)
     assert isinstance(parsed, Graph)
-    assert parsed.lines == [
-        _line(
+    # Constants are scalars, so they become horizontal rules rather than drawn lines.
+    assert parsed.lines == []
+    assert parsed.rules == [
+        _rule(
             Constant(
                 title="c1",
                 unit=Unit(notation=SINotation("bytes"), precision=AutoPrecision(2)),
@@ -187,7 +197,7 @@ def test_parse_graph_from_api_maps_unit_notations_and_precisions() -> None:
                 value=1,
             )
         ),
-        _line(
+        _rule(
             Constant(
                 title="c2",
                 unit=Unit(notation=IECNotation("bits"), precision=StrictPrecision(3)),
@@ -195,7 +205,7 @@ def test_parse_graph_from_api_maps_unit_notations_and_precisions() -> None:
                 value=2,
             )
         ),
-        _line(
+        _rule(
             Constant(
                 title="c3",
                 unit=Unit(notation=TimeNotation(), precision=AutoPrecision(2)),
@@ -219,13 +229,15 @@ def test_parse_graph_from_api_maps_warning_critical_minimum_maximum() -> None:
     )
     parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id)
     assert isinstance(parsed, Graph)
-    assert parsed.lines == [
+    # All four are scalars, so they become horizontal rules rather than drawn lines.
+    assert parsed.lines == []
+    assert parsed.rules == [
         # WarningOf/CriticalOf inherit the colour of the referenced metric (#28a2f3).
-        _line(WarningOf(metric=_rrd("a"), color="#28a2f3")),
-        _line(CriticalOf(metric=_rrd("a"), color="#28a2f3")),
+        _rule(WarningOf(metric=_rrd("a"), color="#28a2f3")),
+        _rule(CriticalOf(metric=_rrd("a"), color="#28a2f3")),
         # MinimumOf/MaximumOf keep their own colour from the API.
-        _line(MinimumOf(metric=_rrd("a"), color="#15d1a0")),
-        _line(MaximumOf(metric=_rrd("a"), color="#ed3b3b")),
+        _rule(MinimumOf(metric=_rrd("a"), color="#15d1a0")),
+        _rule(MaximumOf(metric=_rrd("a"), color="#ed3b3b")),
     ]
 
 
@@ -240,9 +252,10 @@ def test_parse_graph_from_api_maps_lower_warning_and_critical() -> None:
     )
     parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id)
     assert isinstance(parsed, Graph)
-    assert parsed.lines == [
-        _line(LowerWarningOf(metric=_rrd("a"), color="#28a2f3")),
-        _line(LowerCriticalOf(metric=_rrd("a"), color="#28a2f3")),
+    assert parsed.lines == []
+    assert parsed.rules == [
+        _rule(LowerWarningOf(metric=_rrd("a"), color="#28a2f3")),
+        _rule(LowerCriticalOf(metric=_rrd("a"), color="#28a2f3")),
     ]
 
 
@@ -352,4 +365,5 @@ def test_parse_graph_from_api_collapses_bidirectional_into_one_graph() -> None:
             Stack(members=[_rrd("a")], inverse=True),
         ],
         lines=[],
+        rules=[],
     )

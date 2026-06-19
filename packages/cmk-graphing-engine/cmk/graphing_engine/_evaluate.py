@@ -17,6 +17,7 @@ from ._objects import (
     Quantity,
     RRDMetricData,
     RRDMetricRef,
+    Rule,
     ServiceRef,
     TimeSeries,
     Unit,
@@ -48,6 +49,15 @@ class EvaluatedLine:
 
 
 @dataclass(frozen=True, kw_only=True)
+class EvaluatedRule:
+    value: float
+    title: str
+    color: str
+    unit: Unit
+    inverse: bool
+
+
+@dataclass(frozen=True, kw_only=True)
 class EvaluatedMinimalRange:
     lower: float | None
     upper: float | None
@@ -69,6 +79,7 @@ class EvaluatedGraph:
     vertical_range: EvaluatedVerticalRange | None
     stacks: Sequence[EvaluatedStack]
     lines: Sequence[EvaluatedLine]
+    rules: Sequence[EvaluatedRule] = ()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -122,6 +133,20 @@ def _evaluate_curve(quantity: Quantity, context: EvaluationContext) -> Evaluated
     )
 
 
+def _evaluate_rule(rule: Rule, context: EvaluationContext) -> EvaluatedRule | None:
+    attributes = rule.quantity.evaluate_attributes(context)
+    value = rule.quantity.evaluate_value(context)
+    if attributes is None or value is None:
+        return None
+    return EvaluatedRule(
+        value=value,
+        title=attributes.title if rule.title is None else rule.title,
+        color=attributes.color if rule.color is None else rule.color,
+        unit=attributes.unit,
+        inverse=rule.inverse,
+    )
+
+
 def _title_metrics(
     graph: Graph,
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
@@ -163,10 +188,16 @@ def evaluate_graph(
         for line in graph.lines
         if (curve := _evaluate_curve(line.quantity, context)) is not None
     ]
+    rules = [
+        evaluated
+        for rule in graph.rules
+        if (evaluated := _evaluate_rule(rule, context)) is not None
+    ]
     return EvaluatedGraph(
         name=graph.name,
         title=evaluate_title(graph.title, _title_metrics(graph, translated_metrics)),
         vertical_range=_evaluate_vertical_range(graph.vertical_range, context),
         stacks=stacks,
         lines=lines,
+        rules=rules,
     )

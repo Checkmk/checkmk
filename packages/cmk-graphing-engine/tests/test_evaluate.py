@@ -15,6 +15,7 @@ from cmk.graphing_engine import (
     EvaluatedGraph,
     EvaluatedLine,
     EvaluatedMinimalRange,
+    EvaluatedRule,
     EvaluatedStack,
     FixedRange,
     Fraction,
@@ -25,6 +26,7 @@ from cmk.graphing_engine import (
     Product,
     RRDMetric,
     RRDMetricRef,
+    Rule,
     Stack,
     Sum,
     TimeRange,
@@ -282,6 +284,7 @@ def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
                 inverse=False,
             )
         ],
+        rules=[],
     )
 
 
@@ -299,6 +302,42 @@ def test_evaluate_graph_drops_curves_of_missing_metrics() -> None:
     )
     assert result.stacks == []
     assert [line.curve.title for line in result.lines] == ["a"]
+
+
+def test_evaluate_graph_builds_rules_from_thresholds_and_constants() -> None:
+    a = _metric("a")
+    graph = Graph(
+        name="g",
+        title="g",
+        rules=[
+            # A threshold rule: the title is overridden ("Warning"); the colour falls back to the
+            # quantity's own (the WarningOf colour).
+            Rule(quantity=WarningOf(metric=a, color="#ff0000"), inverse=False, title="Warning"),
+            # A constant is a scalar too, so it is a rule carrying its own title/colour/value.
+            Rule(quantity=_constant(42.0), inverse=False),
+        ],
+    )
+    result = evaluate_graph(graph, {a: _data("a", value=3.0, warning=80.0)}, {}, {}, _TR)
+    assert result.rules == [
+        EvaluatedRule(value=80.0, title="Warning", color="#ff0000", unit=_UNIT, inverse=False),
+        EvaluatedRule(value=42.0, title="c", color="#000000", unit=_UNIT, inverse=False),
+    ]
+
+
+def test_evaluate_graph_drops_rules_without_a_value() -> None:
+    a = _metric("a")
+    graph = Graph(
+        name="g",
+        title="g",
+        rules=[
+            # The metric has no warn level (value None) ...
+            Rule(quantity=WarningOf(metric=a, color="#ff0000"), inverse=False),
+            # ... and "gone" has no data at all (attributes None).
+            Rule(quantity=WarningOf(metric=_metric("gone"), color="#ff0000"), inverse=False),
+        ],
+    )
+    result = evaluate_graph(graph, {a: _data("a", value=3.0)}, {}, {}, _TR)
+    assert result.rules == []
 
 
 def test_evaluate_graph_carries_the_name() -> None:

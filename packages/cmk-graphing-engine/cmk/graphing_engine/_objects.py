@@ -533,6 +533,17 @@ class Line:
     inverse: bool
 
 
+@dataclass(frozen=True)
+class Rule:
+    # A horizontal threshold line (warn/crit/min/max/constant). It is evaluated to a single value
+    # against the data, but is not a drawn curve. title/color default to the referenced quantity's
+    # own attributes; a caller may override them (e.g. a "Warning" label with a fixed colour).
+    quantity: Quantity
+    inverse: bool
+    title: str | None = None
+    color: str | None = None
+
+
 @dataclass(frozen=True, kw_only=True)
 class ServiceRef:
     host_name: str
@@ -576,6 +587,7 @@ class Graph:
     vertical_range: VerticalRange | None = None
     stacks: Sequence[Stack] = ()
     lines: Sequence[Line] = ()
+    rules: Sequence[Rule] = ()
 
     def rrd_metrics(self) -> Sequence[RRDMetricRef]:
         return list(
@@ -584,6 +596,7 @@ class Graph:
                 for quantity in itertools.chain(
                     (m for g in self.stacks for m in g.members),
                     (line.quantity for line in self.lines),
+                    (rule.quantity for rule in self.rules),
                 )
                 for rrd_metric in quantity.rrd_metrics()
             )

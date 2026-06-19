@@ -90,7 +90,6 @@ py_test(
             "cmk/piggyback/**/*.py",
             "cmk/product_usage/**/*.py",
             "cmk/server_side_calls_backend/**/*.py",
-            "cmk/snmplib/**/*.py",
             "cmk/special_agents/**/*.py",
             "livestatus/**/*.py",
         ],

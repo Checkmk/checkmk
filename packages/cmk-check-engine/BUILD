@@ -261,6 +261,7 @@ py_test(
     deps = [
         "__test__",
         "snmplib",
+        "//cmk/utils",
         "//packages/cmk-plugin-apis:agent_based",
         requirement("pytest"),
     ],

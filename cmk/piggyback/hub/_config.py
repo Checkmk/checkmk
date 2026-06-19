@@ -6,7 +6,7 @@
 import enum
 import os
 import time
-from collections.abc import Mapping
+from collections.abc import Collection, Iterable, Mapping
 from logging import Logger
 from pathlib import Path
 from typing import Annotated
@@ -67,25 +67,31 @@ def load_config(omd_root: Path) -> PiggybackHubConfig:
     return PiggybackHubConfig(type=ConfigType.PERSISTED, locations=locations)
 
 
-def publish_persisted_locations(
+def publish_persisted_locations_for_sites(
     logger: Logger,
-    destination_site: str,
-    locations: HostLocations,
+    site_locations: Iterable[tuple[str, HostLocations]],
     omd_root: Path,
     omd_site: str,
     customer: str = DEFAULT_CUSTOMER,
 ) -> None:
-    """Publish host locations for continuous distribution of piggyback data.
+    """Publish host locations for continuous distribution of piggyback data to multiple sites.
 
     Args:
-        destination_site: The site to receive the instruction to send piggyback data
-        locations: A mapping of host names to the sites they are monitored on.
+        site_locations: Pairs of destination site and the host locations to send to it.
         omd_root: The path to the OMD root directory of this site.
         omd_site: The name of this OMD site
         customer: The customer (vhost) to publish to, or None for the provider ("/") vhost
     """
-    config = PiggybackHubConfig(type=ConfigType.PERSISTED, locations=locations)
-    _publish_config(logger, destination_site, config, omd_root, omd_site, customer)
+    _publish_configs(
+        logger,
+        [
+            (destination_site, PiggybackHubConfig(type=ConfigType.PERSISTED, locations=locations))
+            for destination_site, locations in site_locations
+        ],
+        omd_root,
+        omd_site,
+        customer,
+    )
 
 
 def publish_one_shot_locations(
@@ -105,7 +111,9 @@ def publish_one_shot_locations(
     """
     config = PiggybackHubConfig(type=ConfigType.ONESHOT, locations=locations)
     # one-shot should be communicated only from central site to remote sites (customer 'provider')
-    _publish_config(logger, destination_site, config, omd_root, omd_site, customer=DEFAULT_CUSTOMER)
+    _publish_configs(
+        logger, [(destination_site, config)], omd_root, omd_site, customer=DEFAULT_CUSTOMER
+    )
 
 
 def _wait_config_queue_ready(logger: Logger, channel: Channel[PiggybackHubConfig]) -> bool:
@@ -136,18 +144,20 @@ def _wait_config_queue_ready(logger: Logger, channel: Channel[PiggybackHubConfig
     return False
 
 
-def _publish_config(
+def _publish_configs(
     logger: Logger,
-    destination_site: str,
-    config: PiggybackHubConfig,
+    configs: Collection[tuple[str, PiggybackHubConfig]],
     omd_root: Path,
     omd_site: str,
     customer: str,
 ) -> None:
+    if not configs:
+        return
     vhost = DEFAULT_VHOST_NAME if customer == DEFAULT_CUSTOMER else customer
     with Connection(APP_NAME, omd_root, omd_site, None, vhost=vhost) as conn:
         channel = conn.channel(PiggybackHubConfig)
         if vhost == DEFAULT_VHOST_NAME and not _wait_config_queue_ready(logger, channel):
             logger.error("Cannot publish piggyback hub config: Config queue does not exist")
             return
-        channel.publish_for_site(destination_site, config, routing=CONFIG_ROUTE)
+        for destination_site, config in configs:
+            channel.publish_for_site(destination_site, config, routing=CONFIG_ROUTE)

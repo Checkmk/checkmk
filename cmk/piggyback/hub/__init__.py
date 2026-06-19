@@ -6,6 +6,6 @@
 
 from ._config import HostLocations as HostLocations
 from ._config import publish_one_shot_locations as publish_one_shot_locations
-from ._config import publish_persisted_locations as publish_persisted_locations
+from ._config import publish_persisted_locations_for_sites as publish_persisted_locations_for_sites
 from ._main import main as main
 from ._paths import RELATIVE_CONFIG_PATH as RELATIVE_CONFIG_PATH

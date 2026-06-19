@@ -105,6 +105,35 @@ export class MainMenuService extends ServiceBase {
     this.pushCallBack('close', callback)
   }
 
+  private focusAdjacentEntry(direction: 1 | -1) {
+    const current = this.currentItem.value
+    if (!current || current.vue_app) {
+      return
+    }
+
+    const container = document.getElementById(`main_menu_${current.id}`)
+    if (!container) {
+      return
+    }
+
+    const entries = Array.from(container.querySelectorAll<HTMLAnchorElement>('a[href]')).filter(
+      (entry) => entry.offsetParent !== null && !entry.closest('.mm-default-popup__header')
+    )
+    if (entries.length === 0) {
+      return
+    }
+
+    const currentIndex = entries.indexOf(document.activeElement as HTMLAnchorElement)
+    const nextIndex =
+      currentIndex === -1
+        ? direction === 1
+          ? 0
+          : entries.length - 1
+        : (currentIndex + direction + entries.length) % entries.length
+
+    entries[nextIndex]?.focus()
+  }
+
   public setNavItemBadge(id: NavItemIdEnum, badge: MenuItemBadge | null) {
     if (this.itemBadge[id]) {
       this.itemBadge[id].value = badge
@@ -266,6 +295,12 @@ export class MainMenuService extends ServiceBase {
       if (this.isAnyNavItemActive()) {
         this.close()
       }
+    })
+    this.registerShortCut({ key: ['ArrowDown'] }, () => {
+      this.focusAdjacentEntry(1)
+    })
+    this.registerShortCut({ key: ['ArrowUp'] }, () => {
+      this.focusAdjacentEntry(-1)
     })
     this.enableShortCuts()
 

@@ -359,6 +359,24 @@ describe('ConfigureGeneralProperties', () => {
       )
     })
 
+    test('validate() returns false when the config name is already taken on another site', async () => {
+      const existingConfigs = [
+        { id: 'opentelemetry_config_1', extensions: { site: ['other_site'] } }
+      ]
+      mockSitesResponse(SITES, existingConfigs)
+      const { compRef, siteId } = renderComponent('opentelemetry_config_1', null)
+
+      await waitFor(() => expect(siteId.value).toBe('local'))
+      await waitFor(() => expect(compRef.value).toBeDefined())
+
+      const result = await compRef.value!.validate()
+
+      expect(result).toBe(false)
+      await screen.findByText(
+        'A configuration with this name already exists. Choose a different name.'
+      )
+    })
+
     test('validate() sees a config added after mount (skips the prefill cache)', async () => {
       // Empty at mount, so prefill caches an empty list; a config for the
       // selected site appears before the user submits. Validation must catch

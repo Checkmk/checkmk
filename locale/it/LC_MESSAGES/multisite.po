@@ -41919,6 +41919,10 @@ msgid "Metric backend"
 msgstr "Istanze Oracle"
 
 #, fuzzy
+msgid "Metric backend configuration"
+msgstr "Connessioni backend Varnish"
+
+#, fuzzy
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr "Istanze Oracle"
 
@@ -94331,10 +94335,6 @@ msgstr ""
 "Specificare uno, più o tutti i siti su cui deve essere eseguita la "
 "connessione."
 
-#, fuzzy
-msgid "opentelemetry_config_1"
-msgstr "Configurazione dell'host"
-
 msgid ""
 "OpenTelemetry is already configured for this site. Select another site or "
 "update the existing configuration."
@@ -94371,10 +94371,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Save Prometheus configuration"
-msgstr "Configurazione dello stile selezionato"
-
-#, fuzzy
-msgid "prometheus_config_1"
 msgstr "Configurazione dello stile selezionato"
 
 msgid ""
@@ -94532,6 +94528,12 @@ msgstr ""
 #, fuzzy
 msgid "Site is required but not specified."
 msgstr "%s è richiesto ma non è stato specificato."
+
+#, fuzzy
+msgid "A configuration with this name already exists. Choose a different name."
+msgstr ""
+"Un host con il nome %s esiste già nella cartella %s. Per favore scegli un "
+"nome host diverso."
 
 #, fuzzy
 msgid "Failed to validate site configuration. Please try again."
@@ -95906,6 +95908,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "opentelemetry_config_1"
+#~ msgstr "Configurazione dell'host"
+
+#, fuzzy
+#~ msgid "prometheus_config_1"
+#~ msgstr "Configurazione dello stile selezionato"
 
 #~ msgid "Don't apply compression"
 #~ msgstr "Non applicare la compressione"

@@ -42241,6 +42241,10 @@ msgid "Metric backend"
 msgstr "Instanțe Oracle"
 
 #, fuzzy
+msgid "Metric backend configuration"
+msgstr "Conexiuni Varnish Backend"
+
+#, fuzzy
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr "Instanțe Oracle"
 
@@ -94861,10 +94865,6 @@ msgstr ""
 "Precizați unul, mai multe sau toate site-urile pe care trebuie să "
 "funcționeze această conexiune."
 
-#, fuzzy
-msgid "opentelemetry_config_1"
-msgstr "Configurație gazdă"
-
 msgid ""
 "OpenTelemetry is already configured for this site. Select another site or "
 "update the existing configuration."
@@ -94901,10 +94901,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Save Prometheus configuration"
-msgstr "Configurația stilului selectat"
-
-#, fuzzy
-msgid "prometheus_config_1"
 msgstr "Configurația stilului selectat"
 
 msgid ""
@@ -95063,6 +95059,12 @@ msgstr ""
 #, fuzzy
 msgid "Site is required but not specified."
 msgstr "credențiale JSON pentru contul de servicii"
+
+#, fuzzy
+msgid "A configuration with this name already exists. Choose a different name."
+msgstr ""
+"O gazdă cu numele <b><tt>%s</tt></b> există deja în folderul <a "
+"href=\"%s\">%s</a>."
 
 #, fuzzy
 msgid "Failed to validate site configuration. Please try again."
@@ -96441,6 +96443,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "opentelemetry_config_1"
+#~ msgstr "Configurație gazdă"
+
+#, fuzzy
+#~ msgid "prometheus_config_1"
+#~ msgstr "Configurația stilului selectat"
 
 #~ msgid "Don't apply compression"
 #~ msgstr "Nu aplicați compresie"

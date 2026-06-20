@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-17 07:36+0000\n"
+"PO-Revision-Date: 2026-06-19 17:57+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -42174,6 +42174,10 @@ msgstr "Conexões do verniz backend"
 #, fuzzy
 msgid "Metric backend"
 msgstr "instâncias Oracle"
+
+#, fuzzy
+msgid "Metric backend configuration"
+msgstr "Conexões do verniz backend"
 
 #, fuzzy
 msgid "Metric backend is disabled, autocompletion is not available."
@@ -94610,10 +94614,6 @@ msgstr ""
 "Especifique um, vários ou todos os sítios em que esta ligação deve ser "
 "executada."
 
-#, fuzzy
-msgid "opentelemetry_config_1"
-msgstr "Configuração do anfitrião"
-
 msgid ""
 "OpenTelemetry is already configured for this site. Select another site or "
 "update the existing configuration."
@@ -94650,10 +94650,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Save Prometheus configuration"
-msgstr "Adicionar configuração do estado"
-
-#, fuzzy
-msgid "prometheus_config_1"
 msgstr "Adicionar configuração do estado"
 
 msgid ""
@@ -94809,6 +94805,12 @@ msgstr ""
 #, fuzzy
 msgid "Site is required but not specified."
 msgstr "Credenciais JSON para a conta de serviço"
+
+#, fuzzy
+msgid "A configuration with this name already exists. Choose a different name."
+msgstr ""
+"Já existe um hospedeiro com o nome <b><tt>%s</tt></b> na pasta <a "
+"href=\"%s\">%s</a>."
 
 #, fuzzy
 msgid "Failed to validate site configuration. Please try again."
@@ -96180,6 +96182,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "opentelemetry_config_1"
+#~ msgstr "Configuração do anfitrião"
+
+#, fuzzy
+#~ msgid "prometheus_config_1"
+#~ msgstr "Adicionar configuração do estado"
 
 #~ msgid "Don't apply compression"
 #~ msgstr "Não aplicar a compressão"

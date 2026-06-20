@@ -39181,6 +39181,10 @@ msgstr "Varnishバックエンド接続"
 msgid "Metric backend"
 msgstr "メトリックバックエンド"
 
+#, fuzzy
+msgid "Metric backend configuration"
+msgstr "Varnishバックエンド接続"
+
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr "メトリックバックエンドは無効化されており、自動補完は利用できません。"
 
@@ -87760,10 +87764,6 @@ msgid ""
 "will run on."
 msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
 
-#, fuzzy
-msgid "opentelemetry_config_1"
-msgstr "%sの設定はまだありません"
-
 msgid ""
 "OpenTelemetry is already configured for this site. Select another site or "
 "update the existing configuration."
@@ -87805,10 +87805,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Save Prometheus configuration"
-msgstr "Prometheusの設定を追加する"
-
-#, fuzzy
-msgid "prometheus_config_1"
 msgstr "Prometheusの設定を追加する"
 
 msgid ""
@@ -87973,6 +87969,12 @@ msgstr ""
 #, fuzzy
 msgid "Site is required but not specified."
 msgstr "%s は必須だが指定はない。"
+
+#, fuzzy
+msgid "A configuration with this name already exists. Choose a different name."
+msgstr ""
+"%sという名前のホストが%sフォルダに既に存在します。別のホスト名を選択してくだ"
+"さい。"
 
 #, fuzzy
 msgid "Failed to validate site configuration. Please try again."
@@ -89517,6 +89519,14 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#, fuzzy
+#~ msgid "opentelemetry_config_1"
+#~ msgstr "%sの設定はまだありません"
+
+#, fuzzy
+#~ msgid "prometheus_config_1"
+#~ msgstr "Prometheusの設定を追加する"
 
 #~ msgid "Don't apply compression"
 #~ msgstr "圧縮しないこと"

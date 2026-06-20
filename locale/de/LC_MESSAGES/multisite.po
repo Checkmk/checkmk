@@ -40217,6 +40217,10 @@ msgstr "Informationen zum Metrik-Backend"
 msgid "Metric backend"
 msgstr "Metrik-Backend"
 
+#, fuzzy
+msgid "Metric backend configuration"
+msgstr "Metrik-Backend-Verbindung"
+
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr ""
 "Metrik-Backend ist deaktiviert, Autovervollständigung ist nicht verfügbar."
@@ -90217,9 +90221,6 @@ msgstr ""
 "Geben Sie den Konfigurationsnamen ein und wählen Sie die Instanz aus, auf "
 "welcher der OpenTelemetry Collector laufen soll."
 
-msgid "opentelemetry_config_1"
-msgstr "opentelemetry_config_1"
-
 msgid ""
 "OpenTelemetry is already configured for this site. Select another site or "
 "update the existing configuration."
@@ -90259,9 +90260,6 @@ msgstr ""
 
 msgid "Save Prometheus configuration"
 msgstr "Prometheus-Konfiguration speichern"
-
-msgid "prometheus_config_1"
-msgstr "prometheus_config_1"
 
 msgid ""
 "Prometheus is already configured for this site. Select another site or "
@@ -90413,6 +90411,12 @@ msgstr ""
 
 msgid "Site is required but not specified."
 msgstr "Die Instanz ist erforderlich, wurde jedoch nicht angegeben."
+
+#, fuzzy
+msgid "A configuration with this name already exists. Choose a different name."
+msgstr ""
+"Ein Host mit dem Namen %s existiert bereits im Ordner %s. Bitte wählen Sie "
+"einen anderen Host-Namen."
 
 msgid "Failed to validate site configuration. Please try again."
 msgstr ""
@@ -91868,6 +91872,12 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "opentelemetry_config_1"
+#~ msgstr "opentelemetry_config_1"
+
+#~ msgid "prometheus_config_1"
+#~ msgstr "prometheus_config_1"
 
 #~ msgid "Don't apply compression"
 #~ msgstr "Keine Komprimierung verwenden"

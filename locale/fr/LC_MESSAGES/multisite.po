@@ -42508,6 +42508,10 @@ msgid "Metric backend"
 msgstr "Instances Oracle"
 
 #, fuzzy
+msgid "Metric backend configuration"
+msgstr "Connexions au backend de Varnish"
+
+#, fuzzy
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr "Instances Oracle"
 
@@ -95553,10 +95557,6 @@ msgstr ""
 "Indiquez un, plusieurs ou tous les sites sur lesquels cette connexion doit "
 "être exécutée."
 
-#, fuzzy
-msgid "opentelemetry_config_1"
-msgstr "Configuration de l'hôte"
-
 msgid ""
 "OpenTelemetry is already configured for this site. Select another site or "
 "update the existing configuration."
@@ -95593,10 +95593,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Save Prometheus configuration"
-msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
-msgid "prometheus_config_1"
 msgstr "Ajouter une configuration d'état"
 
 msgid ""
@@ -95756,6 +95752,12 @@ msgstr ""
 #, fuzzy
 msgid "Site is required but not specified."
 msgstr "Informations d'identification JSON pour le compte de service"
+
+#, fuzzy
+msgid "A configuration with this name already exists. Choose a different name."
+msgstr ""
+"Un hôte portant le nom <b><tt>%s</tt></b> existe déjà dans le dossier <a "
+"href=\"%s\">%s</a>."
 
 #, fuzzy
 msgid "Failed to validate site configuration. Please try again."
@@ -97127,6 +97129,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "opentelemetry_config_1"
+#~ msgstr "Configuration de l'hôte"
+
+#, fuzzy
+#~ msgid "prometheus_config_1"
+#~ msgstr "Ajouter une configuration d'état"
 
 #~ msgid "Don't apply compression"
 #~ msgstr "Ne pas appliquer la compression"

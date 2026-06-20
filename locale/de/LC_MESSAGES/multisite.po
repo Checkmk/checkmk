@@ -42559,6 +42559,10 @@ msgstr "Metrik-Backend"
 msgid "Metric backend (custom query)"
 msgstr "Metrik-Backend (benutzerdefinierte Anfrage)"
 
+#, fuzzy
+msgid "Metric backend configuration"
+msgstr "Metrik-Konfiguration"
+
 msgid "Metric backend filter criteria"
 msgstr "Filterkriterien des Metrik-Backends"
 
@@ -69116,6 +69120,15 @@ msgstr ""
 msgid "The message has successfully been sent..."
 msgstr "Die Meldung wurde erfolgreich gesendet..."
 
+msgid ""
+"The metric backend database schema is in an unexpected state: revision "
+"{current_revision_id!r} is applied, but the expected revision is "
+"{head_revision_id!r}. Activation has been blocked to prevent unintended "
+"schema upgrades. To resolve this, upgrade the schema manually as the site "
+"user: `cmk-metric-backend-schema-manager upgrade --config default HEAD` If "
+"the upgrade fails, please contact Checkmk support."
+msgstr ""
+
 msgid "The metric backend snapin shows the number of custom metrics"
 msgstr "Das Snapin zum Metrik-Backend zeigt die Anzahl der Custom Metrics an"
 
@@ -94970,9 +94983,6 @@ msgstr ""
 "Geben Sie den Konfigurationsnamen ein und wählen Sie die Instanz aus, auf "
 "welcher der OpenTelemetry Collector laufen soll."
 
-msgid "opentelemetry_config_1"
-msgstr "opentelemetry_config_1"
-
 msgid ""
 "OpenTelemetry is already configured for this site. Select another site or "
 "update the existing configuration."
@@ -95012,9 +95022,6 @@ msgstr ""
 
 msgid "Save Prometheus configuration"
 msgstr "Prometheus-Konfiguration speichern"
-
-msgid "prometheus_config_1"
-msgstr "prometheus_config_1"
 
 msgid ""
 "Prometheus is already configured for this site. Select another site or "
@@ -95129,6 +95136,12 @@ msgstr ""
 
 msgid "Site is required but not specified."
 msgstr "Die Instanz ist erforderlich, wurde jedoch nicht angegeben."
+
+#, fuzzy
+msgid "A configuration with this name already exists. Choose a different name."
+msgstr ""
+"Ein Host mit dem Namen %s existiert bereits im Ordner %s. Bitte wählen Sie "
+"einen anderen Host-Namen."
 
 msgid "Failed to validate site configuration. Please try again."
 msgstr ""
@@ -96502,6 +96515,12 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "opentelemetry_config_1"
+#~ msgstr "opentelemetry_config_1"
+
+#~ msgid "prometheus_config_1"
+#~ msgstr "prometheus_config_1"
 
 #~ msgid "RCC"
 #~ msgstr "RCC"

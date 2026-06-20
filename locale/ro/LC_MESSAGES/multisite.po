@@ -44634,6 +44634,10 @@ msgstr "Agent de monitorizare"
 msgid "Metric backend (custom query)"
 msgstr ""
 
+#, fuzzy
+msgid "Metric backend configuration"
+msgstr "Configurație gazdă"
+
 msgid "Metric backend filter criteria"
 msgstr ""
 
@@ -72499,6 +72503,15 @@ msgstr ""
 msgid "The message has successfully been sent..."
 msgstr "Mesajul a fost trimis cu succes..."
 
+msgid ""
+"The metric backend database schema is in an unexpected state: revision "
+"{current_revision_id!r} is applied, but the expected revision is "
+"{head_revision_id!r}. Activation has been blocked to prevent unintended "
+"schema upgrades. To resolve this, upgrade the schema manually as the site "
+"user: `cmk-metric-backend-schema-manager upgrade --config default HEAD` If "
+"the upgrade fails, please contact Checkmk support."
+msgstr ""
+
 msgid "The metric backend snapin shows the number of custom metrics"
 msgstr ""
 
@@ -99507,9 +99520,6 @@ msgstr ""
 "Precizați unul, mai multe sau toate site-urile pe care trebuie să "
 "funcționeze această conexiune."
 
-msgid "opentelemetry_config_1"
-msgstr ""
-
 msgid ""
 "OpenTelemetry is already configured for this site. Select another site or "
 "update the existing configuration."
@@ -99546,10 +99556,6 @@ msgstr ""
 #, fuzzy
 msgid "Save Prometheus configuration"
 msgstr "Configurația stilului selectat"
-
-#, fuzzy
-msgid "prometheus_config_1"
-msgstr "Prometheus"
 
 msgid ""
 "Prometheus is already configured for this site. Select another site or "
@@ -99673,6 +99679,12 @@ msgstr ""
 #, fuzzy
 msgid "Site is required but not specified."
 msgstr "credențiale JSON pentru contul de servicii"
+
+#, fuzzy
+msgid "A configuration with this name already exists. Choose a different name."
+msgstr ""
+"O gazdă cu numele <b><tt>%s</tt></b> există deja în folderul <a "
+"href=\"%s\">%s</a>."
 
 msgid "Failed to validate site configuration. Please try again."
 msgstr ""
@@ -100954,6 +100966,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "prometheus_config_1"
+#~ msgstr "Prometheus"
 
 #, fuzzy
 #~ msgid "RCC"

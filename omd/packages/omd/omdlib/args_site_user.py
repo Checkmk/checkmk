@@ -17,6 +17,12 @@ class _Shared(BaseModel, frozen=True):
     verbose: bool
 
 
+class Create(_Shared):
+    command: Literal["create"] = "create"
+    autostart: bool = False
+    tmpfs: bool = False
+
+
 class Restore(_Shared):
     command: Literal["restore"] = "restore"
     old_site: str
@@ -47,7 +53,7 @@ class Backup(_Shared):
     logs: bool
 
 
-type SiteArgs = Annotated[Restore | Move | Copy | Backup, Field(discriminator="command")]
+type SiteArgs = Annotated[Create | Restore | Move | Copy | Backup, Field(discriminator="command")]
 
 
 def args_to_command_line(args: SiteArgs, version: str = omdlib.__version__) -> list[str]:
@@ -56,6 +62,11 @@ def args_to_command_line(args: SiteArgs, version: str = omdlib.__version__) -> l
     if args.verbose:
         cmd_line.append("--verbose")
     match args:
+        case Create():
+            if args.autostart:
+                cmd_line.append("--autostart")
+            if args.tmpfs:
+                cmd_line.append("--tmpfs")
         case Restore():
             cmd_line.extend(["--old-site", args.old_site])
             cmd_line.extend(["--skeleton", args.skeleton.value])
@@ -95,6 +106,24 @@ def parse_arguments(sysv: Sequence[str] | None = None) -> SiteArgs:
     shared_parser = argparse.ArgumentParser(add_help=False)
     shared_parser.add_argument("--site", required=True, help="The target site")
     shared_parser.add_argument("--verbose", action="store_true", help="Provide debug information")
+
+    parser_create = subparser.add_parser(
+        "create",
+        parents=[shared_parser],
+        help="Finalize site creation.",
+    )
+    parser_create.add_argument(
+        "--autostart",
+        default=False,
+        action="store_true",
+        help="Enable autostart for the site",
+    )
+    parser_create.add_argument(
+        "--tmpfs",
+        default=False,
+        action="store_true",
+        help="Enable tmpfs for the site",
+    )
 
     parser_restore = subparser.add_parser(
         "restore",

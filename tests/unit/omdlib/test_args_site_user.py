@@ -8,6 +8,7 @@ import pytest
 from omdlib.args_site_user import (
     args_to_command_line,
     Copy,
+    Create,
     Move,
     parse_arguments,
     Restore,
@@ -19,6 +20,26 @@ from omdlib.type_defs import Skeleton
 @pytest.mark.parametrize(
     "finalize",
     [
+        Create(
+            site="a",
+            verbose=False,
+        ),
+        Create(
+            site="a",
+            verbose=True,
+            autostart=True,
+        ),
+        Create(
+            site="a",
+            verbose=False,
+            tmpfs=True,
+        ),
+        Create(
+            site="a",
+            verbose=True,
+            autostart=True,
+            tmpfs=True,
+        ),
         Restore(
             site="a",
             old_site="b",

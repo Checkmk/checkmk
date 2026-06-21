@@ -5,9 +5,14 @@
 
 from typing import assert_never
 
-from omdlib.args_site_user import Backup, Copy, Move, parse_arguments, Restore
+from omdlib.args_site_user import Backup, Copy, Create, Move, parse_arguments, Restore
 from omdlib.backup import main_site_backup
-from omdlib.main import main_finalize_copy, main_finalize_move, main_finalize_restore
+from omdlib.main import (
+    main_finalize_copy,
+    main_finalize_create,
+    main_finalize_move,
+    main_finalize_restore,
+)
 from omdlib.site_name import site_name_from_uid
 
 
@@ -16,6 +21,8 @@ def main() -> int:
     assert args.site == site_name_from_uid()
 
     match args:
+        case Create():
+            return main_finalize_create(args)
         case Restore():
             return main_finalize_restore(args)
         case Move():

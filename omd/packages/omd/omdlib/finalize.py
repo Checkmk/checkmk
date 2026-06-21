@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
-import os
 import subprocess
 import sys
 from enum import auto, Enum
@@ -14,9 +13,6 @@ import omdlib
 from omdlib.config_api import Config
 from omdlib.config_hooks import (
     config_set_all,
-    create_config_environment,
-    load_config,
-    read_site_config,
     save_site_conf,
     update_cmk_core_config,
 )
@@ -24,8 +20,6 @@ from omdlib.contexts import SiteContext
 from omdlib.instance_id import create_instance_id
 from omdlib.scripts import call_scripts
 from omdlib.site_paths import SitePaths
-from omdlib.site_user import site_environment
-from omdlib.system_apache import register_with_system_apache
 from omdlib.tmpfs import prepare_and_populate_tmpfs
 from omdlib.version_info import VersionInfo
 
@@ -163,63 +157,3 @@ def _crontab_access() -> bool:
         ).returncode
         == 0
     )
-
-
-# Is being called at the end of create, cp and mv.
-# What is "create", "mv" or "cp". It is used for
-# running the appropriate hooks.
-def finalize_site(
-    version_info: VersionInfo,
-    old_site_name: str,
-    site: SiteContext,
-    config_settings: Config,
-    command_type: CommandType,
-    apache_reload: bool,
-    verbose: bool,
-) -> FinalizeOutcome:
-    site_home = SitePaths.from_site_name(site.name).home
-    # Now we need to do a few things as site user. Note:
-    # - We cannot use setuid() here, since we need to get back to root.
-    # - We cannot use seteuid() here, since the id command call will then still
-    #   report root and confuse some tools
-    # - We cannot sue setresuid() here, since that is not supported an Python 2.4
-    # So we need to fork() and use a real setuid() here and leave the main process
-    # at being root.
-    pid = os.fork()
-    if pid == 0:
-        try:
-            # From now on we run as normal site user!
-            site = site_environment(site.name)
-            os.chdir(site_home)
-            site.set_config(load_config(site) | config_settings)
-            create_config_environment(site.conf)
-            # Needed by the post-rename-site script
-            os.environ["OLD_OMD_SITE"] = old_site_name
-
-            outcome = finalize_site_as_user(version_info, site, site.conf, command_type)
-            sys.exit(outcome.value)
-        except Exception as e:
-            sys.stderr.write(f"Failed to finalize site: {e}\n")
-            sys.exit(FinalizeOutcome.ABORTED.value)
-    else:
-        _wpid, status = os.waitpid(pid, 0)
-        if (
-            not os.WIFEXITED(status)
-            or (outcome := FinalizeOutcome(os.WEXITSTATUS(status))) is FinalizeOutcome.ABORTED
-        ):
-            sys.exit("Error in non-privileged sub-process.")
-
-    # The config changes above, made with the site user, have to be also available for
-    # the root user, so load the site config again. Otherwise e.g. changed
-    # APACHE_TCP_PORT would not be recognized
-    config = read_site_config(site_home)
-    register_with_system_apache(
-        version_info,
-        SitePaths.from_site_name(site.name).apache_conf,
-        site.name,
-        config["APACHE_TCP_ADDR"],
-        config["APACHE_TCP_PORT"],
-        apache_reload,
-        verbose=verbose,
-    )
-    return outcome

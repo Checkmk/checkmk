@@ -35,7 +35,7 @@ from typing import (
 
 import omdlib
 import omdlib.backup
-from omdlib.args_site_user import args_to_command_line, Copy, Move, Restore
+from omdlib.args_site_user import args_to_command_line, Copy, Create, Move, Restore
 from omdlib.buffer import BufferWithCopy
 from omdlib.config_api import Config, ConfigHookChoices
 from omdlib.config_choices import ConfigChoiceHasError
@@ -45,6 +45,7 @@ from omdlib.config_hooks import (
     config_set_value,
     ConfigHook,
     ConfigHooks,
+    create_config_environment,
     load_config,
     load_config_hooks,
     load_hook_dependencies,
@@ -62,7 +63,7 @@ from omdlib.dialog import (
     dialog_yesno,
     user_confirms,
 )
-from omdlib.finalize import CommandType, finalize_site, finalize_site_as_user, FinalizeOutcome
+from omdlib.finalize import CommandType, finalize_site_as_user, FinalizeOutcome
 from omdlib.global_options import GlobalOptions
 from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.options import (
@@ -1960,14 +1961,26 @@ def init_site(
     # Change ownership of all files and dirs to site user
     chown_tree(site_home, site.name)
 
-    outcome = finalize_site(
+    create = Create(
+        site=site.name,
+        verbose=global_opts.verbose,
+        autostart=config_settings.get("AUTOSTART") != "off",
+        tmpfs=config_settings.get("TMPFS") != "off",
+    )
+    returncode = run_as_site_user(site.name, args_to_command_line(create), False).returncode
+    if returncode not in (0, 2):  # 2 - ignore warnings.
+        sys.exit("Error in non-privileged sub-process.")
+    outcome = FinalizeOutcome(returncode)
+
+    config = read_site_config(site_home)
+    register_with_system_apache(
         version_info,
+        SitePaths.from_site_name(site.name).apache_conf,
         site.name,
-        site,
-        config_settings,
-        CommandType.create,
+        config["APACHE_TCP_ADDR"],
+        config["APACHE_TCP_PORT"],
         apache_reload,
-        global_opts.verbose,
+        verbose=global_opts.verbose,
     )
     return outcome, admin_password
 
@@ -3384,6 +3397,23 @@ def _escape_to_site_context(version: str, args: Sequence[str]) -> NoReturn:
         case DispatcherError(message):
             sys.stderr.write(message)
             exec_other_omd(version)
+
+
+def main_finalize_create(args: Create) -> int:
+    site = site_environment_as_root(args.site)
+    config_settings: Config = {}
+    if not args.autostart:
+        config_settings["AUTOSTART"] = "off"
+    if not args.tmpfs:
+        config_settings["TMPFS"] = "off"
+    site.set_config(site.conf | config_settings)
+    create_config_environment(site.conf)
+    return finalize_site_as_user(
+        version_info=VersionInfo(),
+        site=site,
+        config=site.conf,
+        command_type=CommandType.create,
+    ).value
 
 
 def main_finalize_restore(args: Restore) -> int:

@@ -1486,11 +1486,11 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
         if self._what == "host" and self._ident is not None:
             host = tree.host(HostName(self._ident))
             if host is not None:
-                choices += host.folder().choices_for_moving_host()
+                choices += host.folder().choices_for_moving_host(user)
 
         elif self._what == "folder" and self._ident is not None:
             folder = tree.folder(self._ident)
-            choices += folder.choices_for_moving_folder()
+            choices += folder.choices_for_moving_folder(user)
 
         else:
             raise NotImplementedError()

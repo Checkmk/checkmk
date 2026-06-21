@@ -1944,14 +1944,14 @@ class Folder(FolderProtocol):
         result.reverse()
         return result
 
-    def choices_for_moving_folder(self) -> Choices:
-        return self._choices_for_moving("folder")
+    def choices_for_moving_folder(self, acting_user: LoggedInUser) -> Choices:
+        return self._choices_for_moving("folder", acting_user)
 
-    def choices_for_moving_host(self) -> Choices:
+    def choices_for_moving_host(self, acting_user: LoggedInUser) -> Choices:
         if self._choices_for_moving_host is not None:
             return self._choices_for_moving_host  # Cached
 
-        self._choices_for_moving_host = self._choices_for_moving("host")
+        self._choices_for_moving_host = self._choices_for_moving("host", acting_user)
         return self._choices_for_moving_host
 
     def folder_should_be_shown(self, how: Literal["read", "write"]) -> bool:
@@ -1966,7 +1966,7 @@ class Folder(FolderProtocol):
 
         return has_permission
 
-    def _choices_for_moving(self, what: str) -> Choices:
+    def _choices_for_moving(self, what: str, acting_user: LoggedInUser) -> Choices:
         choices: Choices = []
 
         if may_use_redis():
@@ -1974,9 +1974,11 @@ class Folder(FolderProtocol):
                 self.tree.redis_client.choices_for_moving(
                     self.path(),
                     _MoveType(what),
-                    may_see_all_folders=user.may("wato.all_folders"),
+                    may_see_all_folders=acting_user.may("wato.all_folders"),
                     user_contact_groups=(
-                        set(userdb.contactgroups_of_user(user.id)) if user.id is not None else set()
+                        set(userdb.contactgroups_of_user(acting_user.id))
+                        if acting_user.id is not None
+                        else set()
                     ),
                 )
             )

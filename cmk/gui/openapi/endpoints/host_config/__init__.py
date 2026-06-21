@@ -945,7 +945,7 @@ def move(params: Mapping[str, Any]) -> Response:
             detail="The host is already part of the specified target folder",
         )
     try:
-        if target_folder.as_choice_for_moving() not in current_folder.choices_for_moving_host():
+        if target_folder.as_choice_for_moving() not in current_folder.choices_for_moving_host(user):
             raise MKAuthException
         current_folder.move_hosts(
             [host_name],

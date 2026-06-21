@@ -681,6 +681,7 @@ class ModeFolder(WatoMode):
                     pending_changes=_pending_changes(
                         config=config, local_site=omd_site(), acting_user=user.id
                     ),
+                    acting_user=user,
                 )
             return redirect(folder_url)
 
@@ -700,6 +701,7 @@ class ModeFolder(WatoMode):
                     pending_changes=_pending_changes(
                         config=config, local_site=omd_site(), acting_user=user.id
                     ),
+                    acting_user=user,
                 )
             return redirect(folder_url)
 
@@ -1687,7 +1689,11 @@ class ModeEditFolder(ABCFolderMode):
         pending_changes: PendingChanges,
     ) -> None:
         self._folder.edit(
-            title, attributes, pprint_value=pprint_value, pending_changes=pending_changes
+            title,
+            attributes,
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
+            acting_user=user,
         )
 
 

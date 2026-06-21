@@ -2382,9 +2382,11 @@ class Folder(FolderProtocol):
         need_sidebar_reload()
         return new_subfolder
 
-    def delete_subfolder(self, name: str, *, pending_changes: PendingChanges) -> None:
+    def delete_subfolder(
+        self, name: str, *, pending_changes: PendingChanges, acting_user: LoggedInUser
+    ) -> None:
         # 1. Check preconditions
-        user.need_permission("wato.manage_folders")
+        acting_user.need_permission("wato.manage_folders")
         self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
 
@@ -2419,9 +2421,10 @@ class Folder(FolderProtocol):
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
         # 1. Check preconditions
-        user.need_permission("wato.manage_folders")
+        acting_user.need_permission("wato.manage_folders")
         self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
         target_folder.permissions.need_permission("write")
@@ -2477,7 +2480,7 @@ class Folder(FolderProtocol):
             # Do not update redis while rewriting a plethora of host files
             # Redis automatically updates on the next request
             moved_subfolder.recursively_save_hosts(
-                pprint_value=pprint_value, acting_user_id=user.id
+                pprint_value=pprint_value, acting_user_id=acting_user.id
             )  # fixes changed inheritance
 
         affected_sites = list(set(affected_sites + moved_subfolder.all_site_ids()))
@@ -2501,9 +2504,10 @@ class Folder(FolderProtocol):
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
         # 1. Check preconditions
-        user.need_permission("wato.edit_folders")
+        acting_user.need_permission("wato.edit_folders")
         self.permissions.need_permission("write")
         self.need_unlocked()
         self.validators.validate_edit_folder(self, new_attributes)
@@ -2512,7 +2516,9 @@ class Folder(FolderProtocol):
         new_cgconf = _get_cgconf_from_attributes(new_attributes)
         old_cgconf = _get_cgconf_from_attributes(self.attributes)
         if new_cgconf != old_cgconf:
-            _validate_contact_group_modification(old_cgconf["groups"], new_cgconf["groups"], user)
+            _validate_contact_group_modification(
+                old_cgconf["groups"], new_cgconf["groups"], acting_user
+            )
 
             if self.has_parent():
                 parent = self.parent()
@@ -2544,7 +2550,7 @@ class Folder(FolderProtocol):
         # in Nagios-relevant attributes.
         self.save_folder_attributes()
         self.tree.invalidate_caches()
-        self.recursively_save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
+        self.recursively_save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
 
         affected_sites = list(set(affected_sites + self.all_site_ids()))
         pending_changes.add(

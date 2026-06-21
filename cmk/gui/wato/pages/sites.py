@@ -1261,7 +1261,9 @@ class ModeDistributedMonitoring(WatoMode):
 
         for empty_folder in empty_folders:
             if (parent := empty_folder.parent()) is not None:
-                parent.delete_subfolder(empty_folder.name(), pending_changes=pending_changes)
+                parent.delete_subfolder(
+                    empty_folder.name(), pending_changes=pending_changes, acting_user=user
+                )
 
         return redirect(mode_url("sites"))
 

@@ -139,7 +139,7 @@ def finalize_site_as_user(
         create_instance_id(site_home=Path(site_home), instance_id=uuid4())
 
     call_scripts(site.name, "post-" + command_type.short, open_pty=sys.stdout.isatty())
-    update_cmk_core_config(site_home, config)
+    update_cmk_core_config(config)
     if not _crontab_access():
         sys.stderr.write("Warning: site user cannot access crontab\n")
         return FinalizeOutcome.WARN

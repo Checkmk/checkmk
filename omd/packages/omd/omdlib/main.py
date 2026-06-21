@@ -1433,7 +1433,7 @@ def config_change(
 
         changed: list[str] = []
         for key, value in settings:
-            config_set_value(site.name, site_home, config, key, value, save=False)
+            config_set_value(site.name, config, key, value, save=False)
             changed.append(key)
 
         save_site_conf(site_home, config)
@@ -1474,7 +1474,6 @@ def validate_config_change_commands(
 
 def config_set(
     site: SiteContext,
-    site_home: str,
     config: Config,
     config_hooks: ConfigHooks,
     args: Arguments,
@@ -1501,7 +1500,7 @@ def config_set(
         sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice.error}\n")
         return []
 
-    config_set_value(site.name, site_home, config, hook_name, value, save=True)
+    config_set_value(site.name, config, hook_name, value, save=True)
     return [hook_name]
 
 
@@ -1651,7 +1650,7 @@ def config_configure_hook(
         assert_never(choices)
 
     if change:
-        config_set_value(site.name, site_home, config, hook.name, new_value, save=False)
+        config_set_value(site.name, config, hook.name, new_value, save=False)
         save_site_conf(site_home, config)
         yield hook_name
 
@@ -2884,7 +2883,7 @@ def main_config(
         if command == "show":
             config_show(config, config_hooks, args)
         elif command == "set":
-            set_hooks = config_set(site, site_home, config, config_hooks, args, global_opts.verbose)
+            set_hooks = config_set(site, config, config_hooks, args, global_opts.verbose)
         elif command == "change":
             set_hooks = config_change(version_info, site, config, config_hooks, global_opts.verbose)
         else:

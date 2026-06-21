@@ -753,7 +753,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
 
         # skip save if no changes were made, presumably due to quick setup lock
         if pending_changes:
-            folder.save_hosts(pprint_value=active_config.wato_pprint_config)
+            folder.save_hosts(pprint_value=active_config.wato_pprint_config, acting_user_id=user.id)
             for host, diff, affected_sites in pending_changes:
                 host.add_edit_host_change(
                     diff,

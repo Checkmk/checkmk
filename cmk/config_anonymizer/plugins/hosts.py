@@ -614,7 +614,10 @@ class HostsSteps(AnonymizeStep):
 
         for folder_rel_path, folder in folder_tree().all_folders().items():
             folder._save_hosts_file(
-                storage_list=[AnonHostsStorage(anon_interface)], pprint_value=False
+                storage_list=[AnonHostsStorage(anon_interface)],
+                pprint_value=False,
+                # The anonymizer runs without a logged-in user.
+                acting_user_id=None,
             )
             folder._save_folder_attributes(
                 storage_list=[AnonFolderAttributesStorage(anon_interface)]

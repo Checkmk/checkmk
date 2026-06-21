@@ -1442,7 +1442,7 @@ class Folder(FolderProtocol):
             clusters=variables["clusters"],
         )
 
-    def save_hosts(self, *, pprint_value: bool) -> None:
+    def save_hosts(self, *, pprint_value: bool, acting_user_id: UserId | None) -> None:
         self.need_unlocked_hosts()
         self.permissions.need_permission("write")
         if self._hosts is not None:
@@ -1453,7 +1453,9 @@ class Folder(FolderProtocol):
                 host.drop_caches()
 
             self._save_hosts_file(
-                storage_list=self.get_storage_formatters(), pprint_value=pprint_value
+                storage_list=self.get_storage_formatters(),
+                pprint_value=pprint_value,
+                acting_user_id=acting_user_id,
             )
             if may_use_redis():
                 # Inform redis that the modified-timestamp of the folder has been updated.
@@ -1462,7 +1464,11 @@ class Folder(FolderProtocol):
         call_hook_hosts_changed(self)
 
     def _save_hosts_file(
-        self, *, storage_list: Sequence[ABCHostsStorage], pprint_value: bool
+        self,
+        *,
+        storage_list: Sequence[ABCHostsStorage],
+        pprint_value: bool,
+        acting_user_id: UserId | None,
     ) -> None:
         Path(self.filesystem_path()).mkdir(mode=0o770, parents=True, exist_ok=True)
         exposed_folder_attributes_for_base = self._folder_attributes_for_base_config()
@@ -1495,7 +1501,7 @@ class Folder(FolderProtocol):
         host_attributes = self.tree.all_host_attributes()
         for hostname, host in sorted(self.hosts().items()):
             effective = host.effective_attributes()
-            cleaned_hosts[hostname] = update_metadata(host.attributes, created_by=user.id)
+            cleaned_hosts[hostname] = update_metadata(host.attributes, created_by=acting_user_id)
             host_labels[hostname] = effective["labels"]
 
             tag_groups = host.tag_groups()
@@ -1612,7 +1618,7 @@ class Folder(FolderProtocol):
     def save(self, *, pprint_value: bool) -> None:
         self.save_folder_attributes()
         self.tree.invalidate_caches()
-        self.save_hosts(pprint_value=pprint_value)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
 
     def serialize(self) -> WATOFolderInfo:
         return {
@@ -2692,7 +2698,7 @@ class Folder(FolderProtocol):
             )
 
         self.save_folder_attributes()  # num_hosts has changed
-        self.save_hosts(pprint_value=pprint_value)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
         self.tree.folder_lookup_cache.delete_hosts(host_names)
 
     def _validate_delete_hosts(
@@ -2822,10 +2828,10 @@ class Folder(FolderProtocol):
             )
 
         self.save_folder_attributes()  # num_hosts has changed
-        self.save_hosts(pprint_value=pprint_value)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
 
         target_folder.save_folder_attributes()
-        target_folder.save_hosts(pprint_value=pprint_value)
+        target_folder.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
 
         folder_path = target_folder.path()
         self.tree.folder_lookup_cache.add_hosts([(x, folder_path) for x in host_names])
@@ -2860,7 +2866,7 @@ class Folder(FolderProtocol):
         self.tree.folder_lookup_cache.delete_hosts([oldname])
         self.tree.folder_lookup_cache.add_hosts([(newname, self.path())])
 
-        self.save_hosts(pprint_value=pprint_value)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
 
     def rename_parent(
         self,
@@ -2893,7 +2899,7 @@ class Folder(FolderProtocol):
 
     def recursively_save_hosts(self, pprint_value: bool) -> None:
         self._load_hosts_on_demand()
-        self.save_hosts(pprint_value=pprint_value)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
         for subfolder in self.subfolders():
             subfolder.recursively_save_hosts(pprint_value=pprint_value)
 
@@ -3670,7 +3676,7 @@ class Host:
         pending_changes: PendingChanges,
     ) -> None:
         diff, affected_sites = self.apply_edit(attributes, cluster_nodes)
-        self.folder().save_hosts(pprint_value=pprint_value)
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
         self.add_edit_host_change(diff, affected_sites, pending_changes=pending_changes)
 
     def update_attributes(
@@ -3711,7 +3717,7 @@ class Host:
                 # Mypy can not help here with the dynamic key access
                 del self.attributes[attrname]  # type: ignore[misc]
         affected_sites = list(set(affected_sites + [self.site_id()]))
-        self.folder().save_hosts(pprint_value=pprint_value)
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
 
         pending_changes.add(
             Change(
@@ -3753,10 +3759,10 @@ class Host:
         if how:
             if not self.attributes.get("inventory_failed"):
                 self.attributes["inventory_failed"] = True
-                self.folder().save_hosts(pprint_value=pprint_value)
+                self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
         elif self.attributes.get("inventory_failed"):
             del self.attributes["inventory_failed"]
-            self.folder().save_hosts(pprint_value=pprint_value)
+            self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
 
     def rename_cluster_node(
         self,
@@ -3787,7 +3793,7 @@ class Host:
             ),
             ChangeScope.sites([self.site_id()]),
         )
-        self.folder().save_hosts(pprint_value=pprint_value)
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
         return True
 
     def rename_parent(
@@ -3814,7 +3820,7 @@ class Host:
             ),
             ChangeScope.sites([self.site_id()]),
         )
-        self.folder().save_hosts(pprint_value=pprint_value)
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
         return True
 
     def rename(self, new_name: HostName, *, pending_changes: PendingChanges) -> None:

@@ -2338,7 +2338,7 @@ class Folder(FolderProtocol):
         self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
         self.validators.validate_create_subfolder(self, attributes)
-        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
+        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"], user)
 
         attributes = update_metadata(attributes, created_by=user.id)
 
@@ -2496,7 +2496,7 @@ class Folder(FolderProtocol):
         new_cgconf = _get_cgconf_from_attributes(new_attributes)
         old_cgconf = _get_cgconf_from_attributes(self.attributes)
         if new_cgconf != old_cgconf:
-            _validate_contact_group_modification(old_cgconf["groups"], new_cgconf["groups"])
+            _validate_contact_group_modification(old_cgconf["groups"], new_cgconf["groups"], user)
 
             if self.has_parent():
                 parent = self.parent()
@@ -2609,7 +2609,7 @@ class Folder(FolderProtocol):
         self, name: HostName, attributes: HostAttributes
     ) -> HostAttributes:
         # MKAuthException, MKUserError
-        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
+        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"], user)
         validate_host_uniqueness(self.tree, "host", name)
         return update_metadata(attributes, created_by=user.id)
 
@@ -3633,6 +3633,7 @@ class Host:
         _validate_contact_group_modification(
             _get_cgconf_from_attributes(self.attributes)["groups"],
             _get_cgconf_from_attributes(attributes)["groups"],
+            user,
         )
 
         diff = diff_attributes(self.attributes, self._cluster_nodes, attributes, cluster_nodes)
@@ -3862,7 +3863,9 @@ def diff_attributes(
 
 
 def _validate_contact_group_modification(
-    old_groups: Sequence[_ContactgroupName], new_groups: Sequence[_ContactgroupName]
+    old_groups: Sequence[_ContactgroupName],
+    new_groups: Sequence[_ContactgroupName],
+    acting_user: LoggedInUser,
 ) -> None:
     """Verifies if a user is allowed to modify the contact groups.
 
@@ -3873,26 +3876,28 @@ def _validate_contact_group_modification(
     group, he should also be able to remove it. And vice versa.
     """
     if diff_groups := set(old_groups) ^ set(new_groups):
-        _must_be_in_contactgroups(diff_groups)
+        _must_be_in_contactgroups(diff_groups, acting_user)
 
 
-def _must_be_in_contactgroups(cgs: Collection[_ContactgroupName]) -> None:
+def _must_be_in_contactgroups(
+    cgs: Collection[_ContactgroupName], acting_user: LoggedInUser
+) -> None:
     """Make sure that the user is in all of cgs contact groups
 
     This is needed when the user assigns contact groups to
     objects. He may only assign such groups he is member himself.
     """
-    if user.may("wato.all_folders"):
+    if acting_user.may("wato.all_folders"):
         return
 
     if not cgs:
         return  # No contact groups specified
 
     users = userdb.load_users()
-    if user.id not in users:
+    if acting_user.id not in users:
         user_cgs = []
     else:
-        user_cgs = users[user.id]["contactgroups"]
+        user_cgs = users[acting_user.id]["contactgroups"]
     for c in cgs:
         if c not in user_cgs:
             raise MKAuthException(

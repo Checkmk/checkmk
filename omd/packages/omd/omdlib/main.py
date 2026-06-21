@@ -2699,8 +2699,8 @@ def main_init_action(
     options: CommandOptions,
 ) -> None:
     if isinstance(site, SiteContext):
-        config = site.conf
         site_home = SitePaths.from_site_name(site.name).home
+        config = read_site_config(site_home)
         exit_status = init_action(version_info, site, config, global_opts, command, args, options)
 
         # When the whole site is about to be stopped check for remaining
@@ -2875,7 +2875,7 @@ def main_config(
 
     config_hooks = load_config_hooks(site.hook_dir)
     set_hooks: list[str] = []
-    config = site.conf
+    config = read_site_config(site_home)
     if len(args) == 0:
         set_hooks = list(config_configure(site, config, config_hooks, global_opts.verbose))
     else:
@@ -3401,23 +3401,24 @@ def _escape_to_site_context(version: str, args: Sequence[str]) -> NoReturn:
 
 def main_finalize_create(args: Create) -> int:
     site = site_environment_as_root(args.site)
-    config_settings: Config = {}
+    site_home = SitePaths.from_site_name(site.name).home
+    config = load_config(site_home, site.hook_dir)
     if not args.autostart:
-        config_settings["AUTOSTART"] = "off"
+        config["AUTOSTART"] = "off"
     if not args.tmpfs:
-        config_settings["TMPFS"] = "off"
-    site.set_config(site.conf | config_settings)
-    create_config_environment(site.conf)
+        config["TMPFS"] = "off"
+    create_config_environment(config)
     return finalize_site_as_user(
         version_info=VersionInfo(),
         site=site,
-        config=site.conf,
+        config=config,
         command_type=CommandType.create,
     ).value
 
 
 def main_finalize_restore(args: Restore) -> int:
     site = site_environment_as_root(args.site)
+    site_home = SitePaths.from_site_name(site.name).home
     if args.reuse:
         prepare_restore_as_site_user(site, args.kill, args.verbose)
     with (
@@ -3431,7 +3432,7 @@ def main_finalize_restore(args: Restore) -> int:
     return finalize_site_as_user(
         version_info=VersionInfo(),
         site=site,
-        config=site.conf,
+        config=read_site_config(site_home),
         command_type=(
             CommandType.restore_existing_site if args.reuse else CommandType.restore_as_new_site
         ),
@@ -3440,23 +3441,27 @@ def main_finalize_restore(args: Restore) -> int:
 
 def main_finalize_move(args: Move) -> int:
     site = site_environment_as_root(args.site)
+    site_home = SitePaths.from_site_name(site.name).home
+    config = read_site_config(site_home)
     patch_skeleton_files(args.skeleton, args.old_site, site)
     os.environ["OLD_OMD_SITE"] = args.old_site
     return finalize_site_as_user(
         version_info=VersionInfo(),
         site=site,
-        config=site.conf,
+        config=config,
         command_type=CommandType.move,
     ).value
 
 
 def main_finalize_copy(args: Copy) -> int:
     site = site_environment_as_root(args.site)
+    site_home = SitePaths.from_site_name(site.name).home
+    config = read_site_config(site_home)
     patch_skeleton_files(args.skeleton, args.old_site, site)
     os.environ["OLD_OMD_SITE"] = args.old_site
     return finalize_site_as_user(
         version_info=VersionInfo(),
         site=site,
-        config=site.conf,
+        config=config,
         command_type=CommandType.copy,
     ).value

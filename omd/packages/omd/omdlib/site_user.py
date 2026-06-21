@@ -76,8 +76,8 @@ def site_environment(site_name: str) -> SiteContext:
 
 def site_environment_as_root(site_name: str) -> SiteContext:
     site = SiteContext(site_name)
-    site.set_config(load_config(site.name, site.hook_dir))
+    config = load_config(site.name, site.hook_dir)
     # Make sure environment is in a defined state
     _clear_environment()
-    set_environment(site.name, site.conf)
+    set_environment(site.name, config)
     return site

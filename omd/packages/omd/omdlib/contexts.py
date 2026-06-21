@@ -7,7 +7,6 @@
 import os
 from pathlib import Path
 
-from omdlib.config_api import Config
 from omdlib.init_scripts import check_status
 from omdlib.site_paths import SitePaths
 from omdlib.skel_permissions import (
@@ -23,17 +22,8 @@ from cmk.ccc.exceptions import MKTerminate
 
 class SiteContext:
     def __init__(self, sitename: str) -> None:
-        self._config_loaded = False
-        self._config: Config = {}
         self._sitename = sitename
         self._paths = SitePaths.from_site_name(sitename)
-
-    @property
-    def conf(self) -> Config:
-        """{ "CORE" : "nagios", ... } (contents of etc/omd/site.conf plus defaults from hooks)"""
-        if not self._config_loaded:
-            raise Exception("Config not loaded yet")
-        return self._config
 
     @property
     def name(self) -> str:
@@ -63,10 +53,6 @@ class SiteContext:
             "###ROOT###": self._paths.home,
             "###EDITION###": version.split(".")[-1],
         }
-
-    def set_config(self, config: Config) -> None:
-        self._config = config
-        self._config_loaded = True
 
     def is_stopped(self, verbose: bool) -> bool:
         """Check if site is completely stopped"""

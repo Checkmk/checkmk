@@ -80,10 +80,9 @@ common --repo_env=GOPROXY="https://bazel-registry.lan.checkmk.net/proxy.golang.o
 common --repo_env=GO_REPOSITORY_USE_HOST_MODCACHE=1
 
 # Control test verbosity
-common --test_output=summary
+common --test_output=errors
 common --test_summary=short
 
-common:ci --test_output=errors
 common:ci --test_summary=terse
 
 # Flags for CI builds

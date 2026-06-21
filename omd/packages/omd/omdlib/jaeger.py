@@ -7,8 +7,14 @@ import os
 import re
 from pathlib import Path
 
-from omdlib.config_api import Config, Hook, null_action, PortHook
-from omdlib.config_choices import IpListenAddressHasError, NetworkPortHasError
+from omdlib.config_api import (
+    Config,
+    Hook,
+    ip_address_list_has_error,
+    network_port_has_error,
+    null_action,
+    PortHook,
+)
 
 
 def write_jaeger_apache_conf(_site_name: str, site_home: Path, config: Config) -> None:
@@ -87,7 +93,7 @@ TRACE_JAEGER_ADMIN_PORT = PortHook(
     display_name="The port",
     default_port=14269,
     activation=_write_jaeger_admin_port_conf,
-    choices=NetworkPortHasError(),
+    choices=network_port_has_error,
     depends=lambda c: c.get("TRACE_RECEIVE") == "on",
 )
 
@@ -96,7 +102,7 @@ TRACE_JAEGER_UI_PORT = PortHook(
     display_name="The port",
     default_port=16686,
     activation=_write_jaeger_ui_port_conf,
-    choices=NetworkPortHasError(),
+    choices=network_port_has_error,
     depends=lambda c: c.get("TRACE_RECEIVE") == "on",
 )
 
@@ -109,7 +115,7 @@ TRACE_RECEIVE = Hook(
 
 TRACE_RECEIVE_ADDRESS = Hook(
     name="TRACE_RECEIVE_ADDRESS",
-    choices=IpListenAddressHasError(),
+    choices=ip_address_list_has_error,
     default=lambda _edition: "[::1]",
     depends=lambda c: c.get("TRACE_RECEIVE") == "on",
     activation=write_jaeger_receiver_conf,
@@ -120,7 +126,7 @@ TRACE_RECEIVE_PORT = PortHook(
     display_name="Trace receiving port",
     default_port=4417,
     activation=write_jaeger_receiver_conf,
-    choices=NetworkPortHasError(),
+    choices=network_port_has_error,
     depends=lambda c: c.get("TRACE_RECEIVE") == "on",
 )
 

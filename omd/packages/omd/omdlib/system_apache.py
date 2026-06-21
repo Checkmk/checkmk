@@ -10,8 +10,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-from omdlib.config_api import Config, Hook, null_action, PortHook
-from omdlib.config_choices import ApacheNetworkPortHasError, ApacheTCPAddrHasError
+import pydantic
+
+from omdlib.config_api import Config, Error, Hook, null_action, PortHook
 from omdlib.console import show_success
 from omdlib.utils import is_containerized
 from omdlib.version_info import VersionInfo
@@ -51,12 +52,37 @@ def write_apache_listen_conf(_site_name: str, site_home: Path, config: Config) -
         f.write(content)
 
 
+def apache_TCP_addr_has_error(value: str) -> None | Error:
+    url = f"http://{value}:80"
+    try:
+        pydantic.TypeAdapter(pydantic.HttpUrl).validate_python(url)
+        return None
+    except pydantic.ValidationError as e:
+        message = f"""OMD uses APACHE_TCP_ADDR and APACHE_TCP_PORT to construct an Apache
+Listen directive. For example, setting APACHE_TCP_PORT to 80 results in: {url}.
+This is invalid because of: """
+        message += ", ".join([error["ctx"]["error"] for error in e.errors()])
+        return Error(message)
+
+
+def apache_network_port_has_error(value: str) -> None | Error:
+    try:
+        port = int(value)
+    except ValueError:
+        return Error("Invalid port number")
+
+    if port < 1 or port > 99999:
+        return Error("Invalid port number")
+
+    return None
+
+
 APACHE_TCP_PORT = PortHook(
     name="APACHE_TCP_PORT",
     display_name="Apache port",
     default_port=5000,
     activation=write_apache_listen_conf,
-    choices=ApacheNetworkPortHasError(),
+    choices=apache_network_port_has_error,
     depends=lambda c: c.get("APACHE_MODE") == "own",
 )
 
@@ -77,10 +103,10 @@ def register_with_system_apache(
 
     Root permissions are needed to make this work.
     """
-    if (err := ApacheTCPAddrHasError()(apache_tcp_addr)).is_error():
-        sys.exit(f"Invalid value for '{apache_tcp_addr}' for APACHE_TCP_ADDR'. {err.error}\n")
-    if (err := ApacheNetworkPortHasError()(apache_tcp_port)).is_error():
-        sys.exit(f"Invalid value for '{apache_tcp_port}' for APACHE_TCP_PORT'. {err.error}\n")
+    if (err := apache_TCP_addr_has_error(apache_tcp_addr)) is not None:
+        sys.exit(f"Invalid value for '{apache_tcp_addr}' for APACHE_TCP_ADDR'. {err}\n")
+    if (err := apache_network_port_has_error(apache_tcp_port)) is not None:
+        sys.exit(f"Invalid value for '{apache_tcp_port}' for APACHE_TCP_PORT'. {err}\n")
 
     create_apache_hook(
         apache_config, site_name, apache_tcp_addr, apache_tcp_port, apache_hook_version()
@@ -322,7 +348,7 @@ APACHE_MODE = Hook(
 
 APACHE_TCP_ADDR = Hook(
     name="APACHE_TCP_ADDR",
-    choices=ApacheTCPAddrHasError(),
+    choices=apache_TCP_addr_has_error,
     default=lambda _edition: "127.0.0.1",
     depends=lambda c: c.get("APACHE_MODE") == "own",
     activation=write_apache_listen_conf,

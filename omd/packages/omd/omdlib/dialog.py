@@ -13,7 +13,7 @@ import termios
 from re import Pattern
 from tty import setraw
 
-from omdlib.config_choices import ConfigChoiceHasError
+from omdlib.config_api import ConfigChoiceHasError
 from omdlib.type_defs import Skeleton
 
 from cmk.ccc import tty
@@ -87,8 +87,8 @@ def dialog_config_choice_has_error(
         if not change:
             return False, value
         validity = pattern(new_value)
-        if validity.is_error():
-            dialog_message(validity.error)
+        if validity is not None:
+            dialog_message(validity)
             value = new_value
         else:
             return True, new_value

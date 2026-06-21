@@ -6,8 +6,7 @@
 import re
 from pathlib import Path
 
-from omdlib.config_api import Config, Hook, null_action, PortHook
-from omdlib.config_choices import IpAddressListHasError
+from omdlib.config_api import Config, Hook, ip_address_list_has_error, null_action, PortHook
 
 LIVESTATUS_CONFIG_HEADER = """# This file is managed by OMD
 # Do not change anything in this file. Use omd config instead.
@@ -101,7 +100,7 @@ LIVESTATUS_TCP_INSTANCES = Hook(
 
 LIVESTATUS_TCP_ONLY_FROM = Hook(
     name="LIVESTATUS_TCP_ONLY_FROM",
-    choices=IpAddressListHasError(),
+    choices=ip_address_list_has_error,
     default=lambda _edition: "0.0.0.0 ::/0",
     depends=lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
     activation=write_livestatus_xinetd_conf,

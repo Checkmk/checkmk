@@ -6,8 +6,7 @@
 import re
 from pathlib import Path
 
-from omdlib.config_api import Config, Hook, null_action, PortHook
-from omdlib.config_choices import IpAddressListHasError
+from omdlib.config_api import Config, Hook, ip_address_list_has_error, null_action, PortHook
 
 
 def write_rabbitmq_default_conf(_site_name: str, site_home: Path, config: Config) -> None:
@@ -53,7 +52,7 @@ RABBITMQ_MANAGEMENT_PORT = PortHook(
 
 RABBITMQ_ONLY_FROM = Hook(
     name="RABBITMQ_ONLY_FROM",
-    choices=IpAddressListHasError(),
+    choices=ip_address_list_has_error,
     default=lambda _edition: ":: 0.0.0.0",
     activation=write_rabbitmq_default_conf,
 )

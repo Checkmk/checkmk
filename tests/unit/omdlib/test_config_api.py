@@ -6,7 +6,13 @@
 
 import pytest
 
-from omdlib import config_choices, main
+from omdlib import main
+from omdlib.config_api import (
+    ip_address_list_has_error,
+    ip_listen_address_has_error,
+    network_port_has_error,
+)
+from omdlib.system_apache import apache_TCP_addr_has_error
 
 
 @pytest.mark.parametrize(
@@ -31,7 +37,7 @@ from omdlib import config_choices, main
     ],
 )
 def test__error_from_config_choice_accept_value(value: str) -> None:
-    assert main._error_from_config_choice(config_choices.IpAddressListHasError(), value).is_ok()
+    assert main._error_from_config_choice(ip_address_list_has_error, value) is None
 
 
 @pytest.mark.parametrize(
@@ -64,7 +70,7 @@ def test__error_from_config_choice_accept_value(value: str) -> None:
     ],
 )
 def test__error_from_config_choice_reject_value(value: str) -> None:
-    assert main._error_from_config_choice(config_choices.IpAddressListHasError(), value).is_error()
+    assert main._error_from_config_choice(ip_address_list_has_error, value) is not None
 
 
 @pytest.mark.parametrize(
@@ -79,7 +85,7 @@ def test__error_from_config_choice_reject_value(value: str) -> None:
     ],
 )
 def test__ok_from_apache_tcp_addr_has_error(value: str) -> None:
-    assert main._error_from_config_choice(config_choices.ApacheTCPAddrHasError(), value).is_ok()
+    assert main._error_from_config_choice(apache_TCP_addr_has_error, value) is None
 
 
 @pytest.mark.parametrize(
@@ -104,8 +110,9 @@ def test__ok_from_apache_tcp_addr_has_error(value: str) -> None:
     ],
 )
 def test__error_from_apache_tcp_addr_has_error(value: str, message: str) -> None:
-    result = main._error_from_config_choice(config_choices.ApacheTCPAddrHasError(), value)
-    assert result.error.endswith(message)
+    result = main._error_from_config_choice(apache_TCP_addr_has_error, value)
+    assert result is not None
+    assert result.endswith(message)
 
 
 @pytest.mark.parametrize(
@@ -130,7 +137,7 @@ def test__error_from_apache_tcp_addr_has_error(value: str, message: str) -> None
     ],
 )
 def test__error_from_config_choice_listen_address_accept_value(value: str) -> None:
-    assert main._error_from_config_choice(config_choices.IpListenAddressHasError(), value).is_ok()
+    assert main._error_from_config_choice(ip_listen_address_has_error, value) is None
 
 
 @pytest.mark.parametrize(
@@ -155,14 +162,14 @@ def test__error_from_config_choice_listen_address_accept_value(value: str) -> No
     ],
 )
 def test__error_from_config_choice_listen_address_has_error(value: str, message: str) -> None:
-    result = main._error_from_config_choice(config_choices.IpListenAddressHasError(), value)
-    assert result.error.endswith(message)
+    result = main._error_from_config_choice(ip_listen_address_has_error, value)
+    assert result is not None
+    assert result.endswith(message)
 
 
 def test__error_from_config_choice_network_port() -> None:
-    choices = config_choices.NetworkPortHasError()
-    assert main._error_from_config_choice(choices, "1024").is_ok()
-    assert main._error_from_config_choice(choices, "65535").is_ok()
-    assert main._error_from_config_choice(choices, "22").error == "Invalid port number"
-    assert main._error_from_config_choice(choices, "65536").error == "Invalid port number"
-    assert main._error_from_config_choice(choices, "").error == "Invalid port number"
+    assert main._error_from_config_choice(network_port_has_error, "1024") is None
+    assert main._error_from_config_choice(network_port_has_error, "65535") is None
+    assert main._error_from_config_choice(network_port_has_error, "22") == "Invalid port number"
+    assert main._error_from_config_choice(network_port_has_error, "65536") == "Invalid port number"
+    assert main._error_from_config_choice(network_port_has_error, "") == "Invalid port number"

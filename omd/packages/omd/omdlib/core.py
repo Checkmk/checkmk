@@ -7,26 +7,20 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import override
 
-from omdlib.config_api import Config, Hook
-from omdlib.config_choices import ConfigChoiceHasError
-
-import cmk.ccc.resulttype as result
+from omdlib.config_api import Config, Error, Hook
 
 
-class CoreHasError(ConfigChoiceHasError):
-    @override
-    def __call__(self, value: str) -> result.Result[None, str]:
-        cores: list[str] = []
-        if Path("bin/cmc").exists():
-            cores.append("cmc")
-        if Path("bin/nagios").exists():
-            cores.append("nagios")
-        cores.append("none")
-        if value not in cores:
-            return result.Error("Allowed are: " + ", ".join(cores))
-        return result.OK(None)
+def core_has_error(value: str) -> None | Error:
+    cores: list[str] = []
+    if Path("bin/cmc").exists():
+        cores.append("cmc")
+    if Path("bin/nagios").exists():
+        cores.append("nagios")
+    cores.append("none")
+    if value not in cores:
+        return Error("Allowed are: " + ", ".join(cores))
+    return None
 
 
 def core_default(_edition: object) -> str:
@@ -95,7 +89,7 @@ monitoring_core = 'cmc'
 
 CORE = Hook(
     name="CORE",
-    choices=CoreHasError(),
+    choices=core_has_error,
     default=core_default,
     activation=write_core_conf,
 )

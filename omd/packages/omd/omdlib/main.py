@@ -37,8 +37,7 @@ import omdlib
 import omdlib.backup
 from omdlib.args_site_user import args_to_command_line, Copy, Create, Move, Restore
 from omdlib.buffer import BufferWithCopy
-from omdlib.config_api import Config, ConfigHookChoices
-from omdlib.config_choices import ConfigChoiceHasError
+from omdlib.config_api import Config, ConfigHookChoices, Error
 from omdlib.config_hooks import (
     _get_hook,
     config_set_all,
@@ -154,7 +153,6 @@ from omdlib.version_utils import (
 
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.version import (
     Edition,
     edition_has_enforced_licensing,
@@ -1468,8 +1466,8 @@ def validate_config_change_commands(
             sys.exit("Invalid config option: %r" % key)
 
         error_from_config_choice = _error_from_config_choice(_get_hook(key).choices, value)
-        if error_from_config_choice.is_error():
-            sys.exit(f"Invalid value for '{value} for {key}'. {error_from_config_choice.error}\n")
+        if error_from_config_choice is not None:
+            sys.exit(f"Invalid value for '{value} for {key}'. {error_from_config_choice}\n")
 
 
 def config_set(
@@ -1496,15 +1494,15 @@ def config_set(
         return []
 
     error_from_config_choice = _error_from_config_choice(_get_hook(hook_name).choices, value)
-    if error_from_config_choice.is_error():
-        sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice.error}\n")
+    if error_from_config_choice is not None:
+        sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice}\n")
         return []
 
     config_set_value(site.name, config, hook_name, value, save=True)
     return [hook_name]
 
 
-def _error_from_config_choice(choices: ConfigHookChoices, value: str) -> Result[None, str]:
+def _error_from_config_choice(choices: ConfigHookChoices, value: str) -> None | Error:
     # Check if value is valid. Choices are either a list of allowed keys or a
     # regular expression
     if isinstance(choices, list):
@@ -1513,11 +1511,9 @@ def _error_from_config_choice(choices: ConfigHookChoices, value: str) -> Result[
     elif isinstance(choices, re.Pattern):
         if not choices.match(value):
             return Error("Does not match allowed pattern.")
-    elif isinstance(choices, ConfigChoiceHasError):
-        return choices(value)
     else:
-        assert_never(choices)
-    return OK(None)
+        return choices(value)
+    return None
 
 
 def config_usage() -> None:
@@ -1642,12 +1638,10 @@ def config_configure_hook(
         change, new_value = dialog_menu(title, descr, choices, value, "Change", "Cancel")
     elif isinstance(choices, re.Pattern):
         change, new_value = dialog_regex(title, descr, choices, value, "Change", "Cancel")
-    elif isinstance(choices, ConfigChoiceHasError):
+    else:
         change, new_value = dialog_config_choice_has_error(
             title, descr, choices, value, "Change", "Cancel"
         )
-    else:
-        assert_never(choices)
 
     if change:
         config_set_value(site.name, config, hook.name, new_value, save=False)

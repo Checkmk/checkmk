@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import subprocess
+import sys
 from pathlib import Path
 from typing import override
 
@@ -97,3 +99,15 @@ CORE = Hook(
     default=core_default,
     activation=write_core_conf,
 )
+
+
+def update_cmk_core_config(config: Config) -> None:
+    if config["CORE"] == "none":
+        return  # No core config is needed in this case
+
+    sys.stdout.write("Updating core configuration...\n")
+    try:
+        # TODO: try to find an easier way to create the default config!
+        subprocess.check_call(["cmk", "-U"], shell=False)
+    except subprocess.SubprocessError:
+        sys.exit("Could not update core configuration. Aborting.")

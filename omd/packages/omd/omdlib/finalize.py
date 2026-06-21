@@ -11,12 +11,9 @@ from uuid import uuid4
 
 import omdlib
 from omdlib.config_api import Config
-from omdlib.config_hooks import (
-    config_set_all,
-    save_site_conf,
-    update_cmk_core_config,
-)
+from omdlib.config_hooks import config_set_all, save_site_conf
 from omdlib.contexts import SiteContext
+from omdlib.core import update_cmk_core_config
 from omdlib.instance_id import create_instance_id
 from omdlib.scripts import call_scripts
 from omdlib.site_paths import SitePaths

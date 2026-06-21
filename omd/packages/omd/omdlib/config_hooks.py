@@ -6,7 +6,6 @@
 
 import dataclasses
 import os
-import subprocess
 import sys
 import traceback
 from collections.abc import Iterable, Mapping, Sequence
@@ -17,7 +16,7 @@ from omdlib.agent_receiver import AGENT_RECEIVER, AGENT_RECEIVER_PORT
 from omdlib.automation_helper import AUTOMATION_HELPER
 from omdlib.autostart import AUTOSTART
 from omdlib.config_api import Config, Hook, PortHook
-from omdlib.core import CORE
+from omdlib.core import CORE, update_cmk_core_config
 from omdlib.jaeger import (
     TRACE_JAEGER_ADMIN_PORT,
     TRACE_JAEGER_UI_PORT,
@@ -365,15 +364,3 @@ def config_set_value(
 
     if save:
         save_site_conf(SitePaths.from_site_name(site_name).home, config)
-
-
-def update_cmk_core_config(config: Config) -> None:
-    if config["CORE"] == "none":
-        return  # No core config is needed in this case
-
-    sys.stdout.write("Updating core configuration...\n")
-    try:
-        # TODO: try to find an easier way to create the default config!
-        subprocess.check_call(["cmk", "-U"], shell=False)
-    except subprocess.SubprocessError:
-        sys.exit("Could not update core configuration. Aborting.")

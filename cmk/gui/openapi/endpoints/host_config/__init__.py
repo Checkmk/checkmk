@@ -445,9 +445,9 @@ class SearchFilter:
 
 
 def _iter_hosts_with_permission(folder: Folder) -> Iterable[Host]:
-    yield from (host for host in folder.hosts().values() if host.permissions.may("read"))
+    yield from (host for host in folder.hosts().values() if host.permissions.may("read", user))
     for subfolder in folder.subfolders():
-        if not subfolder.permissions.may("read"):
+        if not subfolder.permissions.may("read", user):
             continue  # skip all hosts if folder isn't readable
 
         yield from _iter_hosts_with_permission(subfolder)
@@ -764,7 +764,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
 
         # skip save if no changes were made, presumably due to quick setup lock
         if pending_changes:
-            folder.save_hosts(pprint_value=active_config.wato_pprint_config, acting_user_id=user.id)
+            folder.save_hosts(pprint_value=active_config.wato_pprint_config, acting_user=user)
             for host, diff, affected_sites in pending_changes:
                 host.add_edit_host_change(
                     diff,

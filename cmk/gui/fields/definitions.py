@@ -588,12 +588,12 @@ class HostField(base.String):
 
         if host:
             try:
-                host._user_needs_permission("read")
+                host._user_needs_permission("read", user)
             except MKAuthException:
                 raise self.make_error("not_found_or_no_permission", host_name=host.name())
 
             if self._permission_type == "setup_write":
-                host._user_needs_permission("write")
+                host._user_needs_permission("write", user)
 
     @override
     def _deserialize(

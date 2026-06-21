@@ -32,6 +32,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
@@ -100,7 +101,7 @@ class ModeObjectParameters(WatoMode):
         if host is None:
             raise MKUserError("host", _("The given host does not exist."))
         self._host: Host = host
-        self._host.permissions.need_permission("read")
+        self._host.permissions.need_permission("read", user)
 
         # TODO: Validate?
         self._service = request.get_str_input("service")

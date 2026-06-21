@@ -126,9 +126,9 @@ def list_hosts_v1(
 
 
 def _iter_hosts_with_permission(folder: Folder) -> Iterable[Host]:
-    yield from (host for host in folder.hosts().values() if host.permissions.may("read"))
+    yield from (host for host in folder.hosts().values() if host.permissions.may("read", user))
     for subfolder in folder.subfolders():
-        if not subfolder.permissions.may("read"):
+        if not subfolder.permissions.may("read", user):
             continue  # skip all hosts if folder isn't readable
 
         yield from _iter_hosts_with_permission(subfolder)

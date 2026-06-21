@@ -32,6 +32,7 @@ from cmk.gui.config import active_config
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.fields.mixins import CheckmkTuple, Converter
 from cmk.gui.groups import GroupName, GroupType
+from cmk.gui.logged_in import user
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.tags import TagGroupID
@@ -236,9 +237,9 @@ class HostField(base.String):
             return
 
         if host:
-            host._user_needs_permission("read")
+            host._user_needs_permission("read", user)
             if self._permission_type == "setup_write":
-                host._user_needs_permission("write")
+                host._user_needs_permission("write", user)
 
         return
 

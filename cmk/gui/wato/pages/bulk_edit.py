@@ -235,13 +235,13 @@ class ModeBulkCleanup(WatoMode):
             all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic())
         )
         if "contactgroups" in to_clean:
-            self._folder.permissions.need_permission("write")
+            self._folder.permissions.need_permission("write", user)
 
         hosts = get_hosts_from_checkboxes(self._folder)
 
         # Check all permissions before doing any edit
         for host in hosts:
-            host.permissions.need_permission("write")
+            host.permissions.need_permission("write", user)
 
         for host in hosts:
             host.clean_attributes(

@@ -13,7 +13,7 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
-from cmk.gui.logged_in import LoggedInUser, UserDefaultConfig
+from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser, UserDefaultConfig
 from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.permissions import permission_registry
@@ -150,6 +150,13 @@ class ApiContext:
         Used by code that needs a full LoggedInUser (e.g. for permission checks)
         instead of just the user id, without reaching for the global "user" proxy.
         """
+        if self.user_id is None:
+            # Requests authenticated via the site-internal secret (InternalToken,
+            # e.g. the DCD daemon) carry no real user id. The session represents
+            # them as a super user (see CheckmkFileBasedSession.create_pseudo_user_session
+            # / SiteInternalPseudoUser). Mirror that here so permission checks behave
+            # identically to the global "user" proxy for these callers.
+            return LoggedInSuperUser()
         return LoggedInUser(
             self.user_id,
             self.config.user_permissions(),

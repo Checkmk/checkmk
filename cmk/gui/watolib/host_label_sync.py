@@ -31,6 +31,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import sites_ready_for_remote_automation
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -90,7 +91,7 @@ class SiteRequest:
                     )
                     % (enforce_host.host_name, enforce_host.site_id)
                 )
-            host.permissions.need_permission("read")
+            host.permissions.need_permission("read", user)
 
         newest_host_labels = serialized["newest_host_labels"]
         assert isinstance(newest_host_labels, float)

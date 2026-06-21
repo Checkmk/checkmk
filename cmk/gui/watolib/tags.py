@@ -102,7 +102,7 @@ def _update_tag_dependencies(tag_config: TagConfig, *, pprint_value: bool) -> No
 
     tree = folder_tree()
     tree.invalidate_caches()
-    tree.root_folder().recursively_save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
+    tree.root_folder().recursively_save_hosts(pprint_value=pprint_value, acting_user=user)
 
 
 class RepairError(MKGeneralException):
@@ -363,7 +363,7 @@ def _change_host_tags_in_hosts(
 
     if affected_hosts and mode != TagCleanupMode.CHECK:
         try:
-            folder.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
+            folder.save_hosts(pprint_value=pprint_value, acting_user=user)
         except MKAuthException:
             # Ignore MKAuthExceptions of locked host.mk files
             pass

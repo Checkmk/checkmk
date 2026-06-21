@@ -113,7 +113,7 @@ class FetchAgentOutputRequest:
                 )
                 % (host_name, omd_site())
             )
-        host.permissions.need_permission("read")
+        host.permissions.need_permission("read", user)
 
         # For compatibility with 2.4 central sites default to the local sites config
         if "debug" not in serialized:
@@ -165,7 +165,7 @@ class AgentOutputPage(Page, abc.ABC):
                 _('Host is not managed by Setup. Click <a href="%s">here</a> to go back.')
                 % self._back_url
             )
-        host.permissions.need_permission("read")
+        host.permissions.need_permission("read", user)
 
         self._request = FetchAgentOutputRequest(
             host=host,

@@ -148,6 +148,7 @@ def create(params: Mapping[str, Any]) -> Response:
         pending_changes=_pending_changes(
             config=active_config, local_site=omd_site(), acting_user=user.id
         ),
+        acting_user=user,
     )
 
     return _serve_folder(folder)

@@ -117,6 +117,7 @@ def _sanitize_folder_path(
                 attributes={},
                 pprint_value=pprint_value,
                 pending_changes=pending_changes,
+                acting_user=user,
             )
         )
     return folder

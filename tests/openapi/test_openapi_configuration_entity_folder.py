@@ -11,6 +11,7 @@ import pytest
 from livestatus import SiteConfigurations
 
 from cmk.ccc.site import SiteId
+from cmk.gui.logged_in import user
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.shared_typing.configuration_entity import ConfigEntityType
@@ -46,6 +47,7 @@ def create_folder_test_environment(
         attributes={},
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=user,
     )
 
     clients.ContactGroup.create(
@@ -67,6 +69,7 @@ def create_folder_test_environment(
         },
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=user,
     )
 
     yield

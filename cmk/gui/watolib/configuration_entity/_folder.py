@@ -14,6 +14,7 @@ from cmk.gui.form_specs import (
 )
 from cmk.gui.form_specs.unstable import Catalog, Topic, TopicElement
 from cmk.gui.form_specs.unstable.validators import not_empty
+from cmk.gui.logged_in import user
 from cmk.gui.watolib.form_spec_generators import create_full_path_folder_choice
 from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, FolderTree
 from cmk.gui.watolib.pending_changes import PendingChanges
@@ -119,6 +120,7 @@ def save_folder_from_slidein_schema(
         attributes={},
         pprint_value=pprint_value,
         pending_changes=pending_changes,
+        acting_user=user,
     )
     full_title = _append_full_parent_title(folder.title(), parent_folder)
 

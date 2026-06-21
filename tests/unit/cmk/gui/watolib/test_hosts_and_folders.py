@@ -236,7 +236,12 @@ def test_write_and_read_host_attributes(attributes: HostAttributes) -> None:
 def test_create_multiple_hosts() -> None:
     root = folder_tree().root_folder()
     subfolder = root.create_subfolder(
-        "subfolder", "subfolder", {}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "subfolder",
+        "subfolder",
+        {},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     root.create_hosts(
@@ -535,23 +540,53 @@ def three_levels() -> hosts_and_folders.Folder:
     main = folder_tree().root_folder()
 
     a = main.create_subfolder(
-        "a", title="A", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "a",
+        title="A",
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     a.create_subfolder(
-        "c", title="C", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "c",
+        title="C",
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     a.create_subfolder(
-        "d", title="D", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "d",
+        title="D",
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     b = main.create_subfolder(
-        "b", title="B", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "b",
+        title="B",
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     e = b.create_subfolder(
-        "e", title="E", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "e",
+        title="E",
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     e.create_subfolder(
-        "f", title="F", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "f",
+        title="F",
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     return main
@@ -564,27 +599,57 @@ def three_levels_leaf_permissions() -> hosts_and_folders.Folder:
     main.permissions._may_see = False  # type: ignore[attr-defined]
 
     a = main.create_subfolder(
-        "a", title="A", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "a",
+        title="A",
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     a.permissions._may_see = False  # type: ignore[attr-defined]
     c = a.create_subfolder(
-        "c", title="C", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "c",
+        title="C",
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     c.permissions._may_see = False  # type: ignore[attr-defined]
     a.create_subfolder(
-        "d", title="D", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "d",
+        title="D",
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     b = main.create_subfolder(
-        "b", title="B", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "b",
+        title="B",
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     b.permissions._may_see = False  # type: ignore[attr-defined]
     e = b.create_subfolder(
-        "e", title="E", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "e",
+        title="E",
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     e.permissions._may_see = False  # type: ignore[attr-defined]
     e.create_subfolder(
-        "f", title="F", attributes={}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "f",
+        title="F",
+        attributes={},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     return main
@@ -642,7 +707,12 @@ def test_recursive_subfolder_choices_function_calls(mocker: MagicMock) -> None:
 def test_subfolder_creation() -> None:
     folder = folder_tree().root_folder()
     folder.create_subfolder(
-        "foo", "Foo Folder", {}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "foo",
+        "Foo Folder",
+        {},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     # Upon instantiation, all the subfolders should be already known.
@@ -1108,9 +1178,19 @@ def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch) -> None:
 def test_folder_exists() -> None:
     tree = folder_tree()
     tree.root_folder().create_subfolder(
-        "foo", "foo", {}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "foo",
+        "foo",
+        {},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     ).create_subfolder(
-        "bar", "bar", {}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "bar",
+        "bar",
+        {},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     assert tree.folder_exists("foo")
     assert tree.folder_exists("foo/bar")
@@ -1123,9 +1203,19 @@ def test_folder_exists() -> None:
 def test_folder_access() -> None:
     tree = folder_tree()
     tree.root_folder().create_subfolder(
-        "foo", "foo", {}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "foo",
+        "foo",
+        {},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     ).create_subfolder(
-        "bar", "bar", {}, pprint_value=False, pending_changes=_noop_pending_changes()
+        "bar",
+        "bar",
+        {},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     assert isinstance(tree.folder("foo/bar"), hosts_and_folders.Folder)
     assert isinstance(tree.folder(""), hosts_and_folders.Folder)
@@ -1258,6 +1348,7 @@ def test_subfolder_attributes_are_cached() -> None:
         {"alias": "sub1"},
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     subfolder.effective_attributes()
 
@@ -1279,6 +1370,7 @@ def test_subfolder_cache_invalidated() -> None:
             {"alias": "sub1"},
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
+            acting_user=logged_in_user,
         )
     )
     subfolder.effective_attributes()

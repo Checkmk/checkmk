@@ -51,6 +51,7 @@ def test_child_clears_inherited_label() -> None:
         {"clearing_test": "relay1"},
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=LoggedInSuperUser(),
     )
     sub = parent.create_subfolder(
         "sub",
@@ -58,6 +59,7 @@ def test_child_clears_inherited_label() -> None:
         {"clearing_test": ""},
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=LoggedInSuperUser(),
     )
     sub.create_hosts(
         [(HostName("host-1"), {}, [])],
@@ -82,6 +84,7 @@ def test_grandchild_reenables_after_clear() -> None:
         {"clearing_test": "relay1"},
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=LoggedInSuperUser(),
     )
     sub = parent.create_subfolder(
         "sub",
@@ -89,6 +92,7 @@ def test_grandchild_reenables_after_clear() -> None:
         {"clearing_test": ""},
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=LoggedInSuperUser(),
     )
     grandsub = sub.create_subfolder(
         "grandsub",
@@ -96,6 +100,7 @@ def test_grandchild_reenables_after_clear() -> None:
         {"clearing_test": "relay2"},
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=LoggedInSuperUser(),
     )
     grandsub.create_hosts(
         [(HostName("host-2"), {}, [])],
@@ -120,6 +125,7 @@ def test_inherited_relay_label_without_override() -> None:
         {"clearing_test": "relay1"},
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=LoggedInSuperUser(),
     )
     parent.create_hosts(
         [(HostName("host-3"), {}, [])],

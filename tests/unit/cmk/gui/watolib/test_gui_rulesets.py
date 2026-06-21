@@ -30,6 +30,7 @@ from cmk.base.config import LoadingResult, make_host_tags
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.gui.logged_in import user
 from cmk.gui.watolib import password_store, rulesets
 from cmk.gui.watolib import rulesets as gui_rulesets_module
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
@@ -269,7 +270,7 @@ def test_matches_search_with_rules(
     expected_result: bool,
 ) -> None:
     folder_tree().create_missing_folders(
-        folder_name, pprint_value=False, pending_changes=_noop_pending_changes()
+        folder_name, pprint_value=False, pending_changes=_noop_pending_changes(), acting_user=user
     )
     folder = folder_tree().folder(folder_name)
     ruleset = _ruleset("host_contactgroups")

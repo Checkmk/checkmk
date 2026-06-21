@@ -462,7 +462,7 @@ def test_ruleset_to_config_sub_folder(
     ruleset = rulesets.Ruleset(RuleGroup.CheckgroupParameters("local"))
 
     folder_tree().create_missing_folders(
-        "abc", pprint_value=False, pending_changes=_noop_pending_changes()
+        "abc", pprint_value=False, pending_changes=_noop_pending_changes(), acting_user=user
     )
     folder = folder_tree().folder("abc")
 

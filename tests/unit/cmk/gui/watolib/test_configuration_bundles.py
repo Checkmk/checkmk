@@ -18,6 +18,7 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import login
 from cmk.gui.config import active_config, Config
+from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions
@@ -171,7 +172,7 @@ def test_delete_config_bundle_unknown_id() -> None:
 def fixture_other_folder(request_context: None, with_admin_login: UserId) -> str:
     path = "subfolder"
     folder_tree().create_missing_folders(
-        path, pprint_value=False, pending_changes=_noop_pending_changes()
+        path, pprint_value=False, pending_changes=_noop_pending_changes(), acting_user=user
     )
     return path
 
@@ -203,6 +204,7 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
                 attributes={},
                 pprint_value=False,
                 pending_changes=_noop_pending_changes(),
+                acting_user=user,
             ),
             name=HostName("test-host-2"),
             attributes={},

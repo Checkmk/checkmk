@@ -12,6 +12,7 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.site import SiteId
 from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
+from cmk.gui.logged_in import user
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,
     save_folder_from_slidein_schema,
@@ -47,6 +48,7 @@ def create_folder_test_environment(
         attributes={},
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=user,
     )
 
     yield tree

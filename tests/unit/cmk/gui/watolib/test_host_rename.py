@@ -141,6 +141,7 @@ def test_rename_host(
                 {},
                 pprint_value=False,
                 pending_changes=_noop_pending_changes(),
+                acting_user=user,
             )
         )
     else:

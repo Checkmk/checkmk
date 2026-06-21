@@ -380,6 +380,7 @@ class ParentScanBackgroundJob(BackgroundJob):
                 {},
                 pprint_value=pprint_value,
                 pending_changes=pending_changes,
+                acting_user=user,
             )
 
         if where == "there":  # In same folder as host

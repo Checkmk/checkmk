@@ -60,6 +60,7 @@ class TestFolderSiteStats:
             attributes={},
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
+            acting_user=user,
         )
         sub.create_hosts(
             [(HostName("sub_host"), {}, None)],
@@ -73,6 +74,7 @@ class TestFolderSiteStats:
             attributes={},
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
+            acting_user=user,
         )
         nest.create_hosts(
             [(HostName("nested_host"), {}, None)],

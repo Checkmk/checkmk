@@ -152,6 +152,7 @@ class ModeRandomHosts(WatoMode):
                 {},
                 pprint_value=pprint_value,
                 pending_changes=pending_changes,
+                acting_user=user,
             )
             total_created += self._create_random_hosts(
                 subfolder,

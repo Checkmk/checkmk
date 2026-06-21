@@ -1751,7 +1751,12 @@ class ModeCreateFolder(ABCFolderMode):
             name = find_available_folder_name(title, parent_folder)
 
         parent_folder.create_subfolder(
-            name, title, attributes, pprint_value=pprint_value, pending_changes=pending_changes
+            name,
+            title,
+            attributes,
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
+            acting_user=user,
         )
 
 

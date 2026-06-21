@@ -1072,7 +1072,12 @@ class FolderTree:
         raise MKGeneralException("No Setup folder %s." % folder_path)
 
     def create_missing_folders(
-        self, folder_path: PathWithoutSlash, *, pprint_value: bool, pending_changes: PendingChanges
+        self,
+        folder_path: PathWithoutSlash,
+        *,
+        pprint_value: bool,
+        pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
         folder = self.root_folder()
         for subfolder_name in FolderTree._split_folder_path(folder_path):
@@ -1083,6 +1088,7 @@ class FolderTree:
                     {},
                     pprint_value=pprint_value,
                     pending_changes=pending_changes,
+                    acting_user=acting_user,
                 )
             else:
                 folder = existing_folder
@@ -2340,16 +2346,17 @@ class Folder(FolderProtocol):
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> Folder:
         """Create a subfolder of the current folder"""
         # 1. Check preconditions
-        user.need_permission("wato.manage_folders")
+        acting_user.need_permission("wato.manage_folders")
         self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
         self.validators.validate_create_subfolder(self, attributes)
-        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"], user)
+        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"], acting_user)
 
-        attributes = update_metadata(attributes, created_by=user.id)
+        attributes = update_metadata(attributes, created_by=acting_user.id)
 
         # 2. Actual modification
         new_subfolder = Folder.new(
@@ -2360,7 +2367,7 @@ class Folder(FolderProtocol):
             attributes=attributes,
         )
         self._subfolders[name] = new_subfolder
-        new_subfolder.save(pprint_value=pprint_value, acting_user_id=user.id)
+        new_subfolder.save(pprint_value=pprint_value, acting_user_id=acting_user.id)
         pending_changes.add(
             Change(
                 action_name="new-folder",

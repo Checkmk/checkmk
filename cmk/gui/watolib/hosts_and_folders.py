@@ -3647,7 +3647,11 @@ class Host:
     # '--------------------------------------------------------------------'
 
     def apply_edit(
-        self, attributes: HostAttributes, cluster_nodes: Sequence[HostName] | None
+        self,
+        attributes: HostAttributes,
+        cluster_nodes: Sequence[HostName] | None,
+        *,
+        acting_user: LoggedInUser,
     ) -> tuple[str, list[SiteId]]:
         """Apply the changes to the host. This method does not save the changes to file!"""
         # 1. Check preconditions
@@ -3661,7 +3665,7 @@ class Host:
         _validate_contact_group_modification(
             _get_cgconf_from_attributes(self.attributes)["groups"],
             _get_cgconf_from_attributes(attributes)["groups"],
-            user,
+            acting_user,
         )
 
         diff = diff_attributes(self.attributes, self._cluster_nodes, attributes, cluster_nodes)
@@ -3696,9 +3700,10 @@ class Host:
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
-        diff, affected_sites = self.apply_edit(attributes, cluster_nodes)
-        self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
+        diff, affected_sites = self.apply_edit(attributes, cluster_nodes, acting_user=acting_user)
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
         self.add_edit_host_change(diff, affected_sites, pending_changes=pending_changes)
 
     def update_attributes(
@@ -3707,6 +3712,7 @@ class Host:
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
         new_attributes = self.attributes.copy()
         new_attributes.update(changed_attributes)
@@ -3715,6 +3721,7 @@ class Host:
             self._cluster_nodes,
             pprint_value=pprint_value,
             pending_changes=pending_changes,
+            acting_user=acting_user,
         )
 
     def clean_attributes(
@@ -3723,6 +3730,7 @@ class Host:
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
         # 1. Check preconditions
         if "contactgroups" in attrnames_to_clean:
@@ -3739,7 +3747,7 @@ class Host:
                 # Mypy can not help here with the dynamic key access
                 del self.attributes[attrname]  # type: ignore[misc]
         affected_sites = list(set(affected_sites + [self.site_id()]))
-        self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
 
         pending_changes.add(
             Change(

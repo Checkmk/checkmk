@@ -48,6 +48,7 @@ def update_host_v1(
     """Update a host"""
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_hosts")
+    acting_user = api_context.logged_in_user()
     if api_context.etag.enabled:
         api_context.etag.verify(host_etag(host))
 
@@ -66,6 +67,7 @@ def update_host_v1(
             host.cluster_nodes(),
             pprint_value=api_context.config.wato_pprint_config,
             pending_changes=make_pending_changes(api_context),
+            acting_user=acting_user,
         )
 
     if body.update_attributes:
@@ -73,6 +75,7 @@ def update_host_v1(
             body.update_attributes.to_internal(),
             pprint_value=api_context.config.wato_pprint_config,
             pending_changes=make_pending_changes(api_context),
+            acting_user=acting_user,
         )
 
     if body.remove_attributes:
@@ -85,6 +88,7 @@ def update_host_v1(
             body.remove_attributes,
             pprint_value=api_context.config.wato_pprint_config,
             pending_changes=make_pending_changes(api_context),
+            acting_user=acting_user,
         )
 
         if faulty_attributes:

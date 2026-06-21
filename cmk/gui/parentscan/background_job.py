@@ -287,12 +287,18 @@ class ParentScanBackgroundJob(BackgroundJob):
             or host.folder().effective_attributes().get("parents") != parents
         ):
             host.update_attributes(
-                {"parents": parents}, pprint_value=pprint_value, pending_changes=pending_changes
+                {"parents": parents},
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
+                acting_user=user,
             )
         elif "parents" in host.attributes:
             # Check which parents the host would have inherited
             host.clean_attributes(
-                ["parents"], pprint_value=pprint_value, pending_changes=pending_changes
+                ["parents"],
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
+                acting_user=user,
             )
 
         if parents:

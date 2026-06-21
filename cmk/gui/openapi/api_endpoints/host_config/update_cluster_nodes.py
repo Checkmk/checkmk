@@ -74,6 +74,7 @@ def update_cluster_nodes_v1(
         body.nodes,
         pprint_value=api_context.config.wato_pprint_config,
         pending_changes=make_pending_changes(api_context),
+        acting_user=api_context.logged_in_user(),
     )
 
     if nodes := host.cluster_nodes():

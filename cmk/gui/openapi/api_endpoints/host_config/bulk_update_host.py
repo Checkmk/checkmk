@@ -63,6 +63,7 @@ def bulk_update_hosts_v1(
     """
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_hosts")
+    acting_user = api_context.logged_in_user()
 
     succeeded_hosts: list[Host] = []
     failed_hosts: dict[HostName, str] = {}
@@ -97,7 +98,9 @@ def bulk_update_hosts_v1(
                         # mypy expects literal keys for typed dicts
                         del attributes[valid_attribute]  # type: ignore[misc]
 
-                diff, affected_sites = host.apply_edit(attributes, host.cluster_nodes())
+                diff, affected_sites = host.apply_edit(
+                    attributes, host.cluster_nodes(), acting_user=acting_user
+                )
                 pending_changes.append((host, diff, affected_sites))
 
                 if faulty_attributes:

@@ -571,6 +571,7 @@ def update_nodes(params: Mapping[str, Any]) -> Response:
         pending_changes=_pending_changes(
             config=active_config, local_site=omd_site(), acting_user=user.id
         ),
+        acting_user=user,
     )
 
     return serve_json(
@@ -651,6 +652,7 @@ def update_host(params: Mapping[str, Any]) -> Response:
             pending_changes=_pending_changes(
                 config=active_config, local_site=omd_site(), acting_user=user.id
             ),
+            acting_user=user,
         )
 
     if update_attributes := body.get("update_attributes"):
@@ -660,6 +662,7 @@ def update_host(params: Mapping[str, Any]) -> Response:
             pending_changes=_pending_changes(
                 config=active_config, local_site=omd_site(), acting_user=user.id
             ),
+            acting_user=user,
         )
 
     if remove_attributes := body.get("remove_attributes"):
@@ -674,6 +677,7 @@ def update_host(params: Mapping[str, Any]) -> Response:
             pending_changes=_pending_changes(
                 config=active_config, local_site=omd_site(), acting_user=user.id
             ),
+            acting_user=user,
         )  # silently ignores missing attributes
 
         if faulty_attributes:
@@ -748,7 +752,9 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
                         else:
                             faulty_attributes.append(attribute)
 
-                diff, affected_sites = host.apply_edit(attributes, host.cluster_nodes())
+                diff, affected_sites = host.apply_edit(
+                    attributes, host.cluster_nodes(), acting_user=user
+                )
                 pending_changes.append((host, diff, affected_sites))
 
                 if faulty_attributes:

@@ -63,6 +63,7 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
                     {"locked_by": locked_by},
                     pprint_value=active_config.wato_pprint_config,
                     pending_changes=pending_changes,
+                    acting_user=user,
                 )
 
         # Always rewrite the host config: The host_tags need to be updated, even in case there is no

@@ -721,6 +721,7 @@ class ModeEditHost(ABCHostMode):
             pending_changes=_pending_changes(
                 config=config, local_site=omd_site(), acting_user=user.id
             ),
+            acting_user=user,
         )
         self._host = folder.load_host(self._host.name())
 

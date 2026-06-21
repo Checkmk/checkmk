@@ -217,6 +217,7 @@ class ModeDiagHost(WatoMode):
                         index_update_change_hook,
                     ),
                 ),
+                acting_user=user,
             )
 
             flash(_("Updated attributes: ") + ", ".join(return_message))

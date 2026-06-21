@@ -117,6 +117,7 @@ class ModeBulkEdit(WatoMode):
                 pending_changes=_pending_changes(
                     config=config, local_site=omd_site(), acting_user=user.id
                 ),
+                acting_user=user,
             )
             # call_hook_hosts_changed() is called too often.
             # Either offer API in class Host for bulk change or
@@ -249,6 +250,7 @@ class ModeBulkCleanup(WatoMode):
                 pending_changes=_pending_changes(
                     config=config, local_site=omd_site(), acting_user=user.id
                 ),
+                acting_user=user,
             )
 
         return redirect(self._folder.url())

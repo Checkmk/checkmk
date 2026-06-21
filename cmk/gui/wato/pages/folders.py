@@ -406,7 +406,7 @@ class ModeFolder(WatoMode):
     def _page_menu_entries_hosts_in_folder(self) -> Iterator[PageMenuEntry]:
         folder_has_hosts = self._folder.has_hosts()
         folder_or_subfolder_has_hosts = (
-            isinstance(self._folder, Folder) and self._folder.num_hosts_recursively() > 0
+            isinstance(self._folder, Folder) and self._folder.num_hosts_recursively(user) > 0
         )
         add_host_tooltip_text = _("Add host to use this action")
         add_host_or_subfolder_tooltip_text = _("Add host/subfolder to use this action")
@@ -1007,7 +1007,7 @@ class ModeFolder(WatoMode):
 
     def _show_subfolder_delete_button(self, subfolder: Folder, *, show_file_names: bool) -> None:
         confirm_message: str = ""
-        num_hosts = subfolder.num_hosts_recursively()
+        num_hosts = subfolder.num_hosts_recursively(user)
         if num_hosts:
             confirm_message += (
                 _("<b>Beware:</b> The folder contains <b>%d</b> hosts, which will also be deleted!")
@@ -1052,7 +1052,7 @@ class ModeFolder(WatoMode):
                 )
                 break
 
-        num_hosts = subfolder.num_hosts_recursively()
+        num_hosts = subfolder.num_hosts_recursively(user)
         if num_hosts == 1:
             html.write_text_permissive(_("1 Host"))
         elif num_hosts > 0:

@@ -997,7 +997,7 @@ def _run_num_host_test(
         # Old mechanism
         with patch.dict(logged_in_user.attributes, {"contactgroups": user_test.contactgroups}):
             assert (
-                wato_folder.num_hosts_recursively()
+                wato_folder.num_hosts_recursively(logged_in_user)
                 == expected_host_count + legacy_base_folder_host_offset
             )
 
@@ -1008,7 +1008,7 @@ def _run_num_host_test(
             _convert_folder_tree_to_all_folders(wato_folder),
             [_fake_redis_num_hosts_answer(wato_folder)],
         ):
-            assert wato_folder.num_hosts_recursively() == expected_host_count
+            assert wato_folder.num_hosts_recursively(logged_in_user) == expected_host_count
 
 
 def _fake_redis_num_hosts_answer(wato_folder: hosts_and_folders.Folder) -> list[list[str]]:

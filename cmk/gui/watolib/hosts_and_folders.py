@@ -206,24 +206,25 @@ class FolderMetaData:
     def permitted_groups(self) -> list[_ContactgroupName]:
         return self._permitted_groups
 
-    @property
-    def num_hosts_recursively(self) -> int:
+    def num_hosts_recursively(self, acting_user: LoggedInUser) -> int:
         if self._num_hosts_recursively is None:
             if may_use_redis():
                 self._num_hosts_recursively = self.tree.redis_client.num_hosts_recursively_lua(
                     self._path,
                     skip_permission_checks=(
-                        user.may("wato.see_all_folders")
+                        acting_user.may("wato.see_all_folders")
                         or not self.tree.config.wato_hide_folders_without_read_permissions
                     ),
                     user_contact_groups=(
-                        set(userdb.contactgroups_of_user(user.id)) if user.id is not None else set()
+                        set(userdb.contactgroups_of_user(acting_user.id))
+                        if acting_user.id is not None
+                        else set()
                     ),
                 )
             else:
                 self._num_hosts_recursively = self.tree.folder(
                     self._path.rstrip("/")
-                ).num_hosts_recursively()
+                ).num_hosts_recursively(acting_user)
         return self._num_hosts_recursively
 
 
@@ -1822,15 +1823,15 @@ class Folder(FolderProtocol):
         # Do *not* load hosts here! This method must kept cheap
         return self._num_hosts
 
-    def num_hosts_recursively(self) -> int:
+    def num_hosts_recursively(self, acting_user: LoggedInUser) -> int:
         if may_use_redis():
             if folder_metadata := self.tree.redis_client.folder_metadata(self.path()):
-                return folder_metadata.num_hosts_recursively
+                return folder_metadata.num_hosts_recursively(acting_user)
             return 0
 
         num = self.num_hosts()
         for subfolder in self.subfolders(only_visible=True):
-            num += subfolder.num_hosts_recursively()
+            num += subfolder.num_hosts_recursively(acting_user)
         return num
 
     def all_hosts_recursively(self) -> dict[HostName, Host]:

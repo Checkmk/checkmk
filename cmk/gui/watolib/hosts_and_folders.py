@@ -1615,10 +1615,10 @@ class Folder(FolderProtocol):
             }
         return {}
 
-    def save(self, *, pprint_value: bool) -> None:
+    def save(self, *, pprint_value: bool, acting_user_id: UserId | None) -> None:
         self.save_folder_attributes()
         self.tree.invalidate_caches()
-        self.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=acting_user_id)
 
     def serialize(self) -> WATOFolderInfo:
         return {
@@ -2357,7 +2357,7 @@ class Folder(FolderProtocol):
             attributes=attributes,
         )
         self._subfolders[name] = new_subfolder
-        new_subfolder.save(pprint_value=pprint_value)
+        new_subfolder.save(pprint_value=pprint_value, acting_user_id=user.id)
         pending_changes.add(
             Change(
                 action_name="new-folder",
@@ -2467,7 +2467,7 @@ class Folder(FolderProtocol):
             # Do not update redis while rewriting a plethora of host files
             # Redis automatically updates on the next request
             moved_subfolder.recursively_save_hosts(
-                pprint_value=pprint_value
+                pprint_value=pprint_value, acting_user_id=user.id
             )  # fixes changed inheritance
 
         affected_sites = list(set(affected_sites + moved_subfolder.all_site_ids()))
@@ -2534,7 +2534,7 @@ class Folder(FolderProtocol):
         # in Nagios-relevant attributes.
         self.save_folder_attributes()
         self.tree.invalidate_caches()
-        self.recursively_save_hosts(pprint_value=pprint_value)
+        self.recursively_save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
 
         affected_sites = list(set(affected_sites + self.all_site_ids()))
         pending_changes.add(
@@ -2606,7 +2606,7 @@ class Folder(FolderProtocol):
                 host_name, attributes, cluster_nodes, pending_changes=pending_changes
             )
 
-        self.save(pprint_value=pprint_value)  # num_hosts has changed
+        self.save(pprint_value=pprint_value, acting_user_id=user.id)  # num_hosts has changed
 
         folder_path = self.path()
         self.tree.folder_lookup_cache.add_hosts([(x[0], folder_path) for x in entries])
@@ -2894,14 +2894,16 @@ class Folder(FolderProtocol):
             ),
             ChangeScope.sites(self.all_site_ids()),
         )
-        self.save(pprint_value=pprint_value)
+        self.save(pprint_value=pprint_value, acting_user_id=user.id)
         return True
 
-    def recursively_save_hosts(self, pprint_value: bool) -> None:
+    def recursively_save_hosts(self, pprint_value: bool, *, acting_user_id: UserId | None) -> None:
         self._load_hosts_on_demand()
-        self.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=acting_user_id)
         for subfolder in self.subfolders():
-            subfolder.recursively_save_hosts(pprint_value=pprint_value)
+            subfolder.recursively_save_hosts(
+                pprint_value=pprint_value, acting_user_id=acting_user_id
+            )
 
     def _add_host(self, host: Host) -> None:
         self._load_hosts_on_demand()

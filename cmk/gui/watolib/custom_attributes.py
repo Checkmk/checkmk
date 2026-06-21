@@ -10,6 +10,7 @@ from typing import TypedDict
 from cmk.ccc import store
 from cmk.gui import userdb
 from cmk.gui.config import active_config
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import CustomHostAttrSpec, CustomUserAttrSpec
 from cmk.gui.userdb import UserAttribute
 from cmk.gui.watolib.config_domain_name import wato_fileheader
@@ -36,7 +37,7 @@ def update_host_custom_attrs(
 
     tree = folder_tree()
     tree.invalidate_caches()
-    tree.root_folder().recursively_save_hosts(pprint_value=pprint_value)
+    tree.root_folder().recursively_save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
 
 
 def load_custom_attrs_from_mk_file(lock: bool) -> CustomAttrSpecs:

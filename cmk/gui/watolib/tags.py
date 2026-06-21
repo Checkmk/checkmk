@@ -102,7 +102,7 @@ def _update_tag_dependencies(tag_config: TagConfig, *, pprint_value: bool) -> No
 
     tree = folder_tree()
     tree.invalidate_caches()
-    tree.root_folder().recursively_save_hosts(pprint_value=pprint_value)
+    tree.root_folder().recursively_save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
 
 
 class RepairError(MKGeneralException):

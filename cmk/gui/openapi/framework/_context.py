@@ -13,6 +13,7 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInUser, UserDefaultConfig
 from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.permissions import permission_registry
@@ -81,9 +82,11 @@ class ApiConfig:
     # But we also want to limit this to values that are actually used throughout the API.
     agent_controller_certificates: AgentControllerCertificates
     debug: bool
+    default_language: str
     default_temperature_unit: str
     graph_timeranges: list[GraphTimerange]
     password_policy: PasswordPolicy
+    show_mode: str
     sites: SiteConfigurations
     tag_groups: list[TagGroup]
     ui_theme: str
@@ -102,9 +105,11 @@ class ApiConfig:
         return cls(
             agent_controller_certificates=config.agent_controller_certificates,
             debug=config.debug,
+            default_language=config.default_language,
             default_temperature_unit=config.default_temperature_unit,
             graph_timeranges=config.graph_timeranges,
             password_policy=config.password_policy,
+            show_mode=config.show_mode,
             sites=config.sites,
             tag_groups=config.tags.tag_groups,
             ui_theme=config.ui_theme,
@@ -138,6 +143,22 @@ class ApiContext:
     host_url: str
     user_id: UserId | None
     token: AuthToken | None
+
+    def logged_in_user(self) -> LoggedInUser:
+        """Build a LoggedInUser for the acting user from this context.
+
+        Used by code that needs a full LoggedInUser (e.g. for permission checks)
+        instead of just the user id, without reaching for the global "user" proxy.
+        """
+        return LoggedInUser(
+            self.user_id,
+            self.config.user_permissions(),
+            defaults=UserDefaultConfig(
+                users=dict(self.config.multisite_users),
+                default_language=self.config.default_language,
+                default_show_mode=self.config.show_mode,
+            ),
+        )
 
     @classmethod
     def new(

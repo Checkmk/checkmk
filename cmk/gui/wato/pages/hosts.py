@@ -689,6 +689,7 @@ class ModeEditHost(ABCHostMode):
                 pending_changes=_pending_changes(
                     config=config, local_site=omd_site(), acting_user=user.id
                 ),
+                acting_user=user,
             )
             return redirect(mode_url("folder", folder=folder.path()))
 

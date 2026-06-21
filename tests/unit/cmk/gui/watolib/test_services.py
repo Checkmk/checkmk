@@ -168,6 +168,7 @@ def fixture_sample_host(
         pprint_value=False,
         debug=False,
         pending_changes=_TEST_PENDING_CHANGES,
+        acting_user=user,
     )
 
 

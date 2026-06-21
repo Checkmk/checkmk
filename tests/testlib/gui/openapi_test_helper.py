@@ -88,6 +88,7 @@ def create_sample_host_context() -> Iterator[str]:
                 pprint_value=False,
                 debug=False,
                 pending_changes=_pending_changes(),
+                acting_user=user,
             )
 
 

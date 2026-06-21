@@ -737,6 +737,7 @@ class ModeFolder(WatoMode):
                 pending_changes=_pending_changes(
                     config=config, local_site=omd_site(), acting_user=user.id
                 ),
+                acting_user=user,
             )
             return redirect(folder_url)
 
@@ -751,6 +752,7 @@ class ModeFolder(WatoMode):
                     pending_changes=_pending_changes(
                         config=config, local_site=omd_site(), acting_user=user.id
                     ),
+                    acting_user=user,
                 )
                 return redirect(folder_url)
 
@@ -782,6 +784,7 @@ class ModeFolder(WatoMode):
                 pending_changes=_pending_changes(
                     config=config, local_site=omd_site(), acting_user=user.id
                 ),
+                acting_user=user,
             )
             flash(_("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title()))
             return redirect(folder_url)
@@ -1422,6 +1425,7 @@ class ModeFolder(WatoMode):
             pprint_value=pprint_value,
             debug=debug,
             pending_changes=pending_changes,
+            acting_user=user,
         )
         flash(_("Successfully deleted %d hosts") % len(host_names))
         return redirect(self._folder.url())

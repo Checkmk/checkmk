@@ -237,7 +237,13 @@ def _rename_host_in_folder(
     pprint_value: bool,
     pending_changes: PendingChanges,
 ) -> list[str]:
-    folder.rename_host(oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes)
+    folder.rename_host(
+        oldname,
+        newname,
+        pprint_value=pprint_value,
+        pending_changes=pending_changes,
+        acting_user=user,
+    )
     folder_tree().invalidate_caches()
     return ["folder"]
 

@@ -256,6 +256,7 @@ def create_test_hosts() -> Iterator[list[HostName]]:
         pprint_value=False,
         debug=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=user,
     )
 
 

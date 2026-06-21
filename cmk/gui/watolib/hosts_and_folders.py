@@ -2668,9 +2668,10 @@ class Folder(FolderProtocol):
         host_names: Sequence[HostName],
         *,
         allow_locked_deletion: bool = False,
+        acting_user: LoggedInUser,
     ) -> None:
         # Check preconditions
-        user.need_permission("wato.manage_hosts")
+        acting_user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
         self.permissions.need_permission("write")
 
@@ -2689,9 +2690,12 @@ class Folder(FolderProtocol):
         debug: bool,
         pending_changes: PendingChanges,
         allow_locked_deletion: bool = False,
+        acting_user: LoggedInUser,
     ) -> None:
         # 1. Check preconditions and whether hosts can be deleted
-        self.user_may_delete_hosts(host_names, allow_locked_deletion=allow_locked_deletion)
+        self.user_may_delete_hosts(
+            host_names, allow_locked_deletion=allow_locked_deletion, acting_user=acting_user
+        )
 
         # 2. Delete host specific files (caches, tempfiles, ...)
         self._delete_host_files(
@@ -2718,7 +2722,7 @@ class Folder(FolderProtocol):
             )
 
         self.save_folder_attributes()  # num_hosts has changed
-        self.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
         self.tree.folder_lookup_cache.delete_hosts(host_names)
 
     def _validate_delete_hosts(
@@ -2808,11 +2812,12 @@ class Folder(FolderProtocol):
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
         # 1. Check preconditions
-        user.need_permission("wato.manage_hosts")
-        user.need_permission("wato.edit_hosts")
-        user.need_permission("wato.move_hosts")
+        acting_user.need_permission("wato.manage_hosts")
+        acting_user.need_permission("wato.edit_hosts")
+        acting_user.need_permission("wato.move_hosts")
         self.permissions.need_permission("write")
         self.need_unlocked_hosts()
         target_folder.permissions.need_permission("write")
@@ -2848,10 +2853,10 @@ class Folder(FolderProtocol):
             )
 
         self.save_folder_attributes()  # num_hosts has changed
-        self.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
 
         target_folder.save_folder_attributes()
-        target_folder.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
+        target_folder.save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
 
         folder_path = target_folder.path()
         self.tree.folder_lookup_cache.add_hosts([(x, folder_path) for x in host_names])
@@ -2863,10 +2868,11 @@ class Folder(FolderProtocol):
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
         # 1. Check preconditions
-        user.need_permission("wato.manage_hosts")
-        user.need_permission("wato.edit_hosts")
+        acting_user.need_permission("wato.manage_hosts")
+        acting_user.need_permission("wato.edit_hosts")
         self.need_unlocked_hosts()
         host = self.hosts()[oldname]
         host.permissions.need_permission("write")
@@ -2886,7 +2892,7 @@ class Folder(FolderProtocol):
         self.tree.folder_lookup_cache.delete_hosts([oldname])
         self.tree.folder_lookup_cache.add_hosts([(newname, self.path())])
 
-        self.save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
 
     def rename_parent(
         self,
@@ -3269,6 +3275,7 @@ class SearchFolder(FolderProtocol):
         pprint_value: bool,
         debug: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
         auth_errors = []
         for folder, these_host_names in self._group_hostnames_by_folder(host_names):
@@ -3279,6 +3286,7 @@ class SearchFolder(FolderProtocol):
                     pprint_value=pprint_value,
                     debug=debug,
                     pending_changes=pending_changes,
+                    acting_user=acting_user,
                 )
             except MKAuthException as e:
                 auth_errors.append(
@@ -3297,6 +3305,7 @@ class SearchFolder(FolderProtocol):
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
         auth_errors = []
         for folder, host_names1 in self._group_hostnames_by_folder(host_names):
@@ -3307,6 +3316,7 @@ class SearchFolder(FolderProtocol):
                     target_folder,
                     pprint_value=pprint_value,
                     pending_changes=pending_changes,
+                    acting_user=acting_user,
                 )
             except MKAuthException as e:
                 auth_errors.append(

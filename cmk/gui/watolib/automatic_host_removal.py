@@ -122,6 +122,7 @@ def execute_host_removal_job(config: Config) -> None:
                             index_update_change_hook,
                         ),
                     ),
+                    acting_user=user,
                 )
 
         _LOGGER.info("Hosts removed, starting activation of changes")

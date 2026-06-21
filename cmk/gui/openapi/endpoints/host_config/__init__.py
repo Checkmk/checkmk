@@ -965,6 +965,7 @@ def move(params: Mapping[str, Any]) -> Response:
             pending_changes=_pending_changes(
                 config=active_config, local_site=omd_site(), acting_user=user.id
             ),
+            acting_user=user,
         )
     except MKAuthException:
         return problem(
@@ -999,6 +1000,7 @@ def delete(params: Mapping[str, Any]) -> Response:
         pending_changes=_pending_changes(
             config=active_config, local_site=omd_site(), acting_user=user.id
         ),
+        acting_user=user,
     )
     return Response(status=204)
 
@@ -1041,6 +1043,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
             pending_changes=_pending_changes(
                 config=active_config, local_site=omd_site(), acting_user=user.id
             ),
+            acting_user=user,
         )
 
     return Response(status=204)

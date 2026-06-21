@@ -594,6 +594,7 @@ def _user_may_delete_hosts(hosts: Iterable[Host]) -> None:
         folder.user_may_delete_hosts(
             host_names,
             allow_locked_deletion=True,
+            acting_user=user,
         )
 
 
@@ -618,6 +619,7 @@ def _delete_hosts(
             pprint_value=pprint_value,
             debug=debug,
             pending_changes=pending_changes,
+            acting_user=user,
         )
 
 

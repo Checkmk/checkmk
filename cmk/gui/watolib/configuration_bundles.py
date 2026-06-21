@@ -555,13 +555,14 @@ def _prepare_create_hosts(
 
     folder: Folder
     for folder, hosts_iter in groupby(hosts_sorted_by_folder, key=folder_getter):
-        folder.prepare_create_hosts()
+        folder.prepare_create_hosts(acting_user=user)
         valid_hosts = [
             (
                 host["name"],
                 folder.verify_and_update_host_details(
                     host["name"],
                     _get_host_attributes(bundle_ident, host),
+                    acting_user=user,
                 ),
                 host.get("cluster_nodes"),
             )
@@ -573,7 +574,10 @@ def _prepare_create_hosts(
     def create() -> None:
         for f, validated_hosts in folder_and_valid_hosts:
             f.create_validated_hosts(
-                validated_hosts, pprint_value=pprint_value, pending_changes=pending_changes
+                validated_hosts,
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
+                acting_user=user,
             )
 
     return create

@@ -84,14 +84,14 @@ def bulk_create_host_v1(
         sorted(body.entries, key=_folder_key), key=_folder_key
     ):
         validated_entries = []
-        folder.prepare_create_hosts()
+        folder.prepare_create_hosts(acting_user=user)
         for host in grouped_hosts:
             try:
                 validated_entries.append(
                     (
                         host.host_name,
                         folder.verify_and_update_host_details(
-                            host.host_name, host.attributes.to_internal()
+                            host.host_name, host.attributes.to_internal(), acting_user=user
                         ),
                         None,
                     )
@@ -103,6 +103,7 @@ def bulk_create_host_v1(
             validated_entries,
             pprint_value=api_context.config.wato_pprint_config,
             pending_changes=make_pending_changes(api_context),
+            acting_user=user,
         )
         succeeded_hosts.extend(entry[0] for entry in validated_entries)
 

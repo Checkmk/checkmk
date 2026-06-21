@@ -527,7 +527,7 @@ def test_openapi_bulk_with_failed(
     monkeypatch: pytest.MonkeyPatch,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
-    def _raise(_self, _host_name, _attributes):
+    def _raise(_self, _host_name, _attributes, *, acting_user):
         if _host_name == "foobar":
             raise MKUserError(None, "fail")
         return _attributes

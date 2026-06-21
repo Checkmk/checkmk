@@ -2551,8 +2551,8 @@ class Folder(FolderProtocol):
             ChangeScope.sites(affected_sites),
         )
 
-    def prepare_create_hosts(self) -> None:
-        user.need_permission("wato.manage_hosts")
+    def prepare_create_hosts(self, *, acting_user: LoggedInUser) -> None:
+        acting_user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
         self.permissions.need_permission("write")
 
@@ -2576,7 +2576,7 @@ class Folder(FolderProtocol):
 
         """
         # 1. Check preconditions
-        self.prepare_create_hosts()
+        self.prepare_create_hosts(acting_user=user)
         self.validators.validate_create_hosts(entries, self.site_id())
 
         self.create_validated_hosts(
@@ -2586,6 +2586,7 @@ class Folder(FolderProtocol):
                     self.verify_and_update_host_details(
                         host_name,
                         attributes,
+                        acting_user=user,
                     ),
                     _cluster_nodes,
                 )
@@ -2593,6 +2594,7 @@ class Folder(FolderProtocol):
             ],
             pprint_value=pprint_value,
             pending_changes=pending_changes,
+            acting_user=user,
         )
 
     def create_validated_hosts(
@@ -2601,6 +2603,7 @@ class Folder(FolderProtocol):
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
         # 2. Actual modification
         self._load_hosts_on_demand()
@@ -2609,18 +2612,18 @@ class Folder(FolderProtocol):
                 host_name, attributes, cluster_nodes, pending_changes=pending_changes
             )
 
-        self.save(pprint_value=pprint_value, acting_user_id=user.id)  # num_hosts has changed
+        self.save(pprint_value=pprint_value, acting_user_id=acting_user.id)  # num_hosts has changed
 
         folder_path = self.path()
         self.tree.folder_lookup_cache.add_hosts([(x[0], folder_path) for x in entries])
 
     def verify_and_update_host_details(
-        self, name: HostName, attributes: HostAttributes
+        self, name: HostName, attributes: HostAttributes, *, acting_user: LoggedInUser
     ) -> HostAttributes:
         # MKAuthException, MKUserError
-        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"], user)
+        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"], acting_user)
         validate_host_uniqueness(self.tree, "host", name)
-        return update_metadata(attributes, created_by=user.id)
+        return update_metadata(attributes, created_by=acting_user.id)
 
     def _propagate_hosts_changes(
         self,

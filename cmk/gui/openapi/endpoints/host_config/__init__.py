@@ -358,14 +358,16 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
     folder: Folder
     for folder, grouped_hosts in itertools.groupby(entries, operator.itemgetter("folder")):
         validated_entries = []
-        folder.prepare_create_hosts()
+        folder.prepare_create_hosts(acting_user=user)
         for host in grouped_hosts:
             host_name = host["host_name"]
             try:
                 validated_entries.append(
                     (
                         host_name,
-                        folder.verify_and_update_host_details(host_name, host["attributes"]),
+                        folder.verify_and_update_host_details(
+                            host_name, host["attributes"], acting_user=user
+                        ),
                         None,
                     )
                 )
@@ -378,6 +380,7 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
             pending_changes=_pending_changes(
                 config=active_config, local_site=omd_site(), acting_user=user.id
             ),
+            acting_user=user,
         )
         succeeded_hosts.extend(entry[0] for entry in validated_entries)
 

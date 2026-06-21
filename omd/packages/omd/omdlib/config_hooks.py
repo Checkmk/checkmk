@@ -11,7 +11,6 @@ import sys
 import traceback
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from omdlib.admin_mail import ADMIN_MAIL
 from omdlib.agent_receiver import AGENT_RECEIVER, AGENT_RECEIVER_PORT
@@ -63,9 +62,6 @@ from omdlib.tmpfs import TMPFS
 
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import edition
-
-if TYPE_CHECKING:
-    from omdlib.contexts import SiteContext
 
 ConfigHookResult = tuple[int, str]
 
@@ -205,21 +201,21 @@ def _default_port(site_name: str, port_hook: PortHook, site_configs: _SiteConfig
     )
 
 
-def load_config(site: "SiteContext", omd_path: Path = Path("/omd/")) -> Config:
+def load_config(site_name: str, hook_dir: str | None, omd_path: Path = Path("/omd/")) -> Config:
     """Load all variables from omd/sites.conf. These variables always begin with
     CONFIG_. The reason is that this file can be sources with the shell.
 
     Puts these variables into the config dict without the CONFIG_. Also
     puts the variables into the process environment."""
-    site_home = SitePaths.from_site_name(site.name, omd_path).home
+    site_home = SitePaths.from_site_name(site_name, omd_path).home
     config = read_site_config(site_home)
-    site_configs = _build_site_configs(site.name, omd_path)
-    if site.hook_dir and os.path.exists(site.hook_dir):
-        for hook_name in _sort_hooks(os.listdir(site.hook_dir)):
+    site_configs = _build_site_configs(site_name, omd_path)
+    if hook_dir and os.path.exists(hook_dir):
+        for hook_name in _sort_hooks(os.listdir(hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
                 hook = _get_hook(hook_name)
                 if isinstance(hook, PortHook):
-                    config[hook_name] = _default_port(site.name, hook, site_configs)
+                    config[hook_name] = _default_port(site_name, hook, site_configs)
                 else:
                     config[hook_name] = hook.default(edition(Path(site_home)))
     return config
@@ -251,23 +247,25 @@ def _sort_hooks(hook_names: list[str]) -> Iterable[str]:
     return sorted(hook_names, key=lambda n: (n == "CORE", n))
 
 
-def _hook_exists(site: "SiteContext", hook_name: str) -> bool:
-    if not site.hook_dir:
+def _hook_exists(hook_dir: str | None, hook_name: str) -> bool:
+    if not hook_dir:
         return False
-    hook_file = site.hook_dir + hook_name
+    hook_file = hook_dir + hook_name
     return os.path.exists(hook_file)
 
 
-def config_set_all(site: "SiteContext", config: Config, ignored_hooks: Sequence[str]) -> None:
+def config_set_all(
+    site_name: str, hook_dir: str | None, config: Config, ignored_hooks: Sequence[str]
+) -> None:
     for hook_name in _sort_hooks(list(config.keys())):
         # Hooks may vanish after and up- or downdate
-        if not _hook_exists(site, hook_name):
+        if not _hook_exists(hook_dir, hook_name):
             continue
 
         if hook_name in ignored_hooks:
             continue
 
-        _config_set(site.name, config, hook_name)
+        _config_set(site_name, config, hook_name)
 
 
 def _report_error(key: str, sites_with_unreadable_configs: Sequence[str]) -> None:
@@ -353,7 +351,7 @@ def _next_free_port(
 
 
 def config_set_value(
-    site: "SiteContext",
+    site_name: str,
     site_home: str,
     config: Config,
     hook_name: str,
@@ -361,13 +359,13 @@ def config_set_value(
     save: bool = True,
 ) -> None:
     config[hook_name] = value
-    _config_set(site.name, config, hook_name)
+    _config_set(site_name, config, hook_name)
 
     if hook_name in ["CORE", "MKEVENTD", "PNP4NAGIOS"]:
         update_cmk_core_config(site_home, config)
 
     if save:
-        save_site_conf(SitePaths.from_site_name(site.name).home, config)
+        save_site_conf(SitePaths.from_site_name(site_name).home, config)
 
 
 def update_cmk_core_config(site_home: str, config: Config) -> None:

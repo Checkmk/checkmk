@@ -1433,7 +1433,7 @@ def config_change(
 
         changed: list[str] = []
         for key, value in settings:
-            config_set_value(site, site_home, config, key, value, save=False)
+            config_set_value(site.name, site_home, config, key, value, save=False)
             changed.append(key)
 
         save_site_conf(site_home, config)
@@ -1501,7 +1501,7 @@ def config_set(
         sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice.error}\n")
         return []
 
-    config_set_value(site, site_home, config, hook_name, value, save=True)
+    config_set_value(site.name, site_home, config, hook_name, value, save=True)
     return [hook_name]
 
 
@@ -1651,7 +1651,7 @@ def config_configure_hook(
         assert_never(choices)
 
     if change:
-        config_set_value(site, site_home, config, hook.name, new_value, save=False)
+        config_set_value(site.name, site_home, config, hook.name, new_value, save=False)
         save_site_conf(site_home, config)
         yield hook_name
 
@@ -2582,10 +2582,10 @@ def main_update(
 
             # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
             # new settings and default values.
-            config = load_config(site)
+            config = load_config(site.name, site.hook_dir)
 
             # Let hooks of the new(!) version do their work and update configuration.
-            config_set_all(site, config, ())
+            config_set_all(site.name, site.hook_dir, config, ())
             save_site_conf(site_home, config)
 
             # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
@@ -3079,7 +3079,7 @@ def _restore_backup_from_tar_site(
         sys.stdout.write("Restoring site from %s...\n" % source_descr)
         sys.stdout.flush()
 
-        config = load_config(site)
+        config = load_config(site.name, site.hook_dir)
         orig_apache_port = config.get("APACHE_TCP_PORT")
         site = site_environment_as_root(site.name)
         prepare_restore_as_site_user(site, "kill" in options, global_opts.verbose)
@@ -3147,7 +3147,7 @@ def postprocess_restore_as_site_user(
 ) -> None:
     # Keep the apache port the site currently being replaced had before
     # (we can not restart the system apache as site user)
-    config = load_config(site)
+    config = load_config(site.name, site.hook_dir)
     if orig_apache_port is not None:
         config["APACHE_TCP_PORT"] = orig_apache_port
     # Needed by the post-rename-site script

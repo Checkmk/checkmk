@@ -129,7 +129,7 @@ def finalize_site_as_user(
     # configuration settings
     # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
     # see CMK-3067
-    config_set_all(site, config, ["TMPFS"])
+    config_set_all(site.name, site.hook_dir, config, ["TMPFS"])
     initialize_site_ca(site)
     initialize_agent_ca(site)
     initialize_relay_ca(site)

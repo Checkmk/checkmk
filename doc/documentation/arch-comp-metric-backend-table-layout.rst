@@ -1,6 +1,6 @@
-=====================================
+========================================
 Metric Backend — ClickHouse Table Layout
-=====================================
+========================================
 
 This document describes the ClickHouse table schema used by the metric backend,
 the motivation behind key design decisions, and the materialized views that maintain

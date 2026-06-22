@@ -25,11 +25,13 @@ from cmk.graphing_engine import (
     PerformanceValue,
     Quantity,
     RRDMetric,
+    Rule,
     ServiceRef,
     Stack,
     TemplateOptions,
     TimeRange,
     TimeSeries,
+    WarningOf,
 )
 from cmk.graphing_engine._from_api import parse_graph_from_api
 
@@ -543,3 +545,27 @@ def test_discover_graphs_adds_predictive_lines_per_service() -> None:
         not (isinstance(line.quantity, RRDMetric) and line.quantity.metric_name == predict)
         for line in graphs[1].lines
     )
+
+
+def test_build_graphs_applies_threshold_rules_to_fallback_graphs() -> None:
+    service = _service()
+    cpu_user = MetricName("cpu_user")
+    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user, warning=80.0))})
+    available = fetch_translated_metrics(
+        services=[service], translations=[], metrics=_METRICS, localizer=_id, rrd=rrd
+    ).get(service, {})
+
+    def _rules(metric: RRDMetric) -> list[Rule]:
+        return [Rule(quantity=WarningOf(metric=metric, color="#ff0000"), inverse=False, title="W")]
+
+    graphs = build_graphs(
+        service=service,
+        registered_graphs=[],
+        metrics=_METRICS,
+        localizer=_id,
+        available=available,
+        threshold_rules=_rules,
+    )
+    # The fallback single-metric graph carries the GUI-supplied threshold rule.
+    [graph] = [g for g in graphs if g.name == cpu_user]
+    assert [rule.title for rule in graph.rules] == ["W"]

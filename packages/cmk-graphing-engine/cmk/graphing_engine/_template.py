@@ -21,6 +21,7 @@ from ._objects import (
     MetricName,
     RRDMetric,
     RRDMetricData,
+    Rule,
     ServiceRef,
     Stack,
 )
@@ -166,7 +167,12 @@ def build_graphs(
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
     available: Mapping[MetricName, RRDMetricData],
+    threshold_rules: Callable[[RRDMetric], Sequence[Rule]] | None = None,
 ) -> Sequence[Graph]:
+    """Build a service's matching template graphs plus a fallback single-metric graph per unclaimed
+    metric. ``threshold_rules`` (when given) supplies the warn / crit horizontal rules for a fallback
+    metric — the engine cannot build them itself, as their labels / colours live in the GUI; matched
+    plugin graphs already carry their scalar rules from the plugin definition."""
     graphs: list[Graph] = []
     claimed: set[MetricName] = set()
 
@@ -185,22 +191,17 @@ def build_graphs(
     for name in available:
         if name in claimed or name.startswith(_PREDICT_PREFIX):
             continue
+        rrd_metric = RRDMetric(
+            host_name=service.host_name,
+            service_name=service.service_name,
+            metric_name=name,
+        )
         _collect(
             Graph(
                 name=name,
                 title=name,
-                stacks=[
-                    Stack(
-                        members=[
-                            RRDMetric(
-                                host_name=service.host_name,
-                                service_name=service.service_name,
-                                metric_name=name,
-                            )
-                        ],
-                        inverse=False,
-                    )
-                ],
+                stacks=[Stack(members=[rrd_metric], inverse=False)],
+                rules=() if threshold_rules is None else threshold_rules(rrd_metric),
             )
         )
 

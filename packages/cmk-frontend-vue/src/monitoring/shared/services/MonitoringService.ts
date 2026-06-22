@@ -20,7 +20,7 @@ import { ServiceBase } from '@/lib/service/base'
 import type { FilterNode } from '@/monitoring/shared/api/types'
 import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
 
-import { FilterStore, type QuickFilterConfig } from './FilterStore'
+import { FilterStore, type QuickFilter, type QuickFilterConfig } from './FilterStore'
 import { useColumnFilterBridge } from './useColumnFilterBridge'
 
 export interface PagedResponse<T> {
@@ -34,7 +34,7 @@ export interface MonitoringServiceOptions<T> {
   pollIntervalMs?: number | undefined
   /** Column definitions including optional column filters */
   columns?: ColumnDef<T>[]
-  /** Quick-filter chip presets exposed via `this.filters.chips`. */
+  /** Quick-filter presets */
   quickFilters?: QuickFilterConfig[]
 }
 
@@ -47,7 +47,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly searchQuery: Ref<string> = ref('')
   readonly filterState: Ref<FilterNode | undefined> = ref(undefined)
 
-  /** Owns all filter state: quick-filter chips and active conditions. */
+  /** Owns all filter state: quick-filters and active conditions. */
   readonly filters: FilterStore
   /** Column filter state derived from {@link filters}, for binding to the table. */
   readonly tableColumnFilters: ComputedRef<ColumnFiltersState>
@@ -74,7 +74,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
     super(serviceId, shortCutService)
     const { pollIntervalMs = POLL_INTERVAL_MS, quickFilters = [], columns = [] } = options
 
-    this.filters = new FilterStore(quickFilters)
+    this.filters = new FilterStore(quickFilters, this.searchQuery)
     const bridge = useColumnFilterBridge(columns, this.filters)
     this.tableColumnFilters = bridge.tableColumnFilters
     this.onColumnFiltersUpdate = bridge.onColumnFiltersUpdate
@@ -145,6 +145,24 @@ export abstract class MonitoringService<T> extends ServiceBase {
   updateFilters(node: FilterNode | undefined): void {
     this.filterState.value = node
     void this.fetch()
+  }
+
+  /**
+   * Activate a quick-filter: apply its preset filter and, if it declares one,
+   * its search query.
+   */
+  activateQuickFilter(quickFilter: QuickFilter): void {
+    if (quickFilter.searchQuery !== undefined) {
+      this.searchQuery.value = quickFilter.searchQuery
+    }
+    this.filters.activateQuickFilter(quickFilter)
+    // Refresh explicitly: a quick filter may only change the search query, leaving the
+    // filter node unchanged so the filterNode watcher would not fire.
+    this.updateFilters(quickFilter.filter)
+  }
+
+  deactivateQuickFilter(quickFilter: QuickFilter): void {
+    this.filters.deactivateQuickFilter(quickFilter)
   }
 
   stopPolling(): void {

@@ -201,6 +201,11 @@ const hostService = new HostService(new HostApi(), getKeyShortcutServiceInstance
   columns,
   quickFilters: [
     {
+      label: _t('All'),
+      // No filter conditions (filter omitted) and an empty search query: show all results.
+      searchQuery: ''
+    },
+    {
       label: _t('Unhandled Problems'),
       filter: {
         type: 'and',
@@ -250,12 +255,12 @@ function rowKey(row: HostEntry): string {
         />
         <div class="monitoring-all-hosts-app__quick-filters">
           <QuickFilterChip
-            v-for="chip in hostService.filters.chips"
+            v-for="chip in hostService.filters.quickFilters"
             :key="chip.label"
             :label="chip.label"
             :active="chip.isActive.value"
-            @activate="hostService.filters.activateChip(chip)"
-            @deactivate="hostService.filters.deactivateChip(chip)"
+            @activate="hostService.activateQuickFilter(chip)"
+            @deactivate="hostService.deactivateQuickFilter(chip)"
           />
         </div>
       </div>

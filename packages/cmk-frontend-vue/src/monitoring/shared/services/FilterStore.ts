@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type ComputedRef, type Ref, computed, shallowRef } from 'vue'
+import { type ComputedRef, type Ref, computed, ref, shallowRef } from 'vue'
 
 import type { ConditionNode, FilterField, FilterNode } from '@/monitoring/shared/api/types'
 
@@ -11,28 +11,40 @@ import { filterNodesEqual, getTopLevelConditions, setCondition } from './filterN
 
 export interface QuickFilterConfig {
   label: string
-  filter: FilterNode
+  /** Preset conditions applied when the quick filter is activated. Omit for an empty filter. */
+  filter?: FilterNode
+  /**
+   * Search query applied when the quick filter is activated. Set to `''` to clear the search
+   * box (e.g. the "All" quick filter). Omit to leave the current search query untouched.
+   */
+  searchQuery?: string
 }
 
 export interface QuickFilter {
   readonly label: string
-  /** Derived: true when filterNode is structurally equal to this chip's filter. */
+  /** Derived: true when both the filter and search query match this quick filter's preset. */
   readonly isActive: ComputedRef<boolean>
-  readonly filter: FilterNode
+  readonly filter: FilterNode | undefined
+  readonly searchQuery: string | undefined
 }
 
 export class FilterStore {
   /** Single source of truth for all active filter conditions. */
   readonly filterNode: Ref<FilterNode | undefined>
-  readonly chips: readonly QuickFilter[]
+  readonly quickFilters: readonly QuickFilter[]
 
-  constructor(chipConfigs: QuickFilterConfig[]) {
+  constructor(quickFilterConfigs: QuickFilterConfig[], searchQuery: Ref<string> = ref('')) {
     this.filterNode = shallowRef(undefined)
     const filterNode = this.filterNode
-    this.chips = chipConfigs.map((c) => ({
+    this.quickFilters = quickFilterConfigs.map((c) => ({
       label: c.label,
-      isActive: computed(() => filterNodesEqual(filterNode.value, c.filter)),
-      filter: c.filter
+      isActive: computed(
+        () =>
+          filterNodesEqual(filterNode.value, c.filter) &&
+          (c.searchQuery === undefined || searchQuery.value === c.searchQuery)
+      ),
+      filter: c.filter,
+      searchQuery: c.searchQuery
     }))
   }
 
@@ -51,13 +63,13 @@ export class FilterStore {
     this.filterNode.value = node
   }
 
-  /** Replace the entire filterNode with the chip's preset conditions. */
-  activateChip(chip: QuickFilter): void {
-    this.filterNode.value = chip.filter
+  /** Replace the entire filterNode with the quick filter's preset conditions. */
+  activateQuickFilter(quickFilter: QuickFilter): void {
+    this.filterNode.value = quickFilter.filter
   }
 
   /** Clear the entire filterNode. */
-  deactivateChip(_chip: QuickFilter): void {
+  deactivateQuickFilter(_quickFilter: QuickFilter): void {
     this.filterNode.value = undefined
   }
 

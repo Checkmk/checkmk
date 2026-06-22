@@ -288,18 +288,79 @@ describe('MonitoringService', () => {
     expect(fetchBatch).toHaveBeenCalledTimes(1)
     expect(service.filterState.value).toBeUndefined()
 
-    const chip = service.filters.chips[0]!
-    service.filters.activateChip(chip)
+    const chip = service.filters.quickFilters[0]!
+    service.filters.activateQuickFilter(chip)
     await vi.advanceTimersByTimeAsync(0)
 
     expect(service.filterState.value).toStrictEqual(chip.filter)
     expect(fetchBatch).toHaveBeenCalledTimes(2)
 
-    service.filters.deactivateChip(chip)
+    service.filters.deactivateQuickFilter(chip)
     await vi.advanceTimersByTimeAsync(0)
 
     expect(service.filterState.value).toBeUndefined()
     expect(fetchBatch).toHaveBeenCalledTimes(3)
+
+    service.stopPolling()
+  })
+
+  it('a chip with an empty filter and search query shows all results', async () => {
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0))
+    const service = new TestService(fetchBatch, {
+      quickFilters: [
+        { label: 'All', searchQuery: '' },
+        {
+          label: 'Down',
+          filter: { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
+        }
+      ]
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    const allChip = service.filters.quickFilters[0]!
+    const downChip = service.filters.quickFilters[1]!
+    // No filters and no search query yet, so the "All" chip is active.
+    expect(allChip.isActive.value).toBe(true)
+
+    // Apply both a quick filter and a search query.
+    service.activateQuickFilter(downChip)
+    service.updateSearch('web')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(service.filterState.value).toStrictEqual(downChip.filter)
+    expect(service.searchQuery.value).toBe('web')
+    expect(allChip.isActive.value).toBe(false)
+
+    // Activating the "All" chip clears the filter and the search query, and refreshes.
+    const callsBefore = fetchBatch.mock.calls.length
+    service.activateQuickFilter(allChip)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(service.filterState.value).toBeUndefined()
+    expect(service.searchQuery.value).toBe('')
+    expect(allChip.isActive.value).toBe(true)
+    expect(fetchBatch.mock.calls.length).toBeGreaterThan(callsBefore)
+
+    service.stopPolling()
+  })
+
+  it('a chip leaves the search query untouched when it declares no searchQuery', async () => {
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0))
+    const service = new TestService(fetchBatch, {
+      quickFilters: [
+        {
+          label: 'Down',
+          filter: { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
+        }
+      ]
+    })
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.updateSearch('web')
+    service.activateQuickFilter(service.filters.quickFilters[0]!)
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.searchQuery.value).toBe('web')
 
     service.stopPolling()
   })
@@ -336,9 +397,9 @@ describe('MonitoringService', () => {
     })
 
     await vi.advanceTimersByTimeAsync(0)
-    const chip = service.filters.chips[0]!
+    const chip = service.filters.quickFilters[0]!
 
-    service.filters.activateChip(chip)
+    service.filters.activateQuickFilter(chip)
     expect(chip.isActive.value).toBe(true)
 
     // Edit away from the preset via the column-filter path: a fresh node object.
@@ -375,7 +436,7 @@ describe('MonitoringService', () => {
     await vi.advanceTimersByTimeAsync(0)
     service.stopPolling()
 
-    service.filters.activateChip(service.filters.chips[0]!)
+    service.filters.activateQuickFilter(service.filters.quickFilters[0]!)
     await vi.advanceTimersByTimeAsync(0)
 
     expect(fetchBatch).toHaveBeenCalledTimes(1)

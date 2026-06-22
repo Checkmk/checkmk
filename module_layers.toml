@@ -888,7 +888,7 @@ allows = [
   "cmk.licensing",
   "cmk.liveproxyd.gui",
   "cmk.multi_tenancy.shared",
-  "cmk.metric_backend.gui.register",
+  "cmk.metric_backend.gui",
   "cmk.otel_collector.gui",
   "cmk.telemetry.gui.register",
   "cmk.piggyback",

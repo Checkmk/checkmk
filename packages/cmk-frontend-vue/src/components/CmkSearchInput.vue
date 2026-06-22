@@ -38,7 +38,7 @@ function submit(): void {
 
 function clear(): void {
   query.value = ''
-  submit()
+  emit('search', '')
 }
 </script>
 

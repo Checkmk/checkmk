@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
+import { defineComponent, h, ref } from 'vue'
 
 import CmkSearchInput from '@/components/CmkSearchInput.vue'
 
@@ -62,4 +63,33 @@ test('clears the field and emits an empty query when the clear button is clicked
 
   expect(screen.getByRole('searchbox')).toHaveValue('')
   expect(emitted('search')).toEqual([['']])
+})
+
+test('emits an empty query on clear even when the model is parent-controlled', async () => {
+  const model = ref('web01')
+  const searched: string[] = []
+
+  const testComponent = defineComponent({
+    setup() {
+      return () =>
+        h(CmkSearchInput, {
+          placeholder: 'Search hosts…',
+          modelValue: model.value,
+          'onUpdate:modelValue': (v: string) => {
+            model.value = v
+          },
+          onSearch: (q: string) => {
+            searched.push(q)
+          }
+        })
+    }
+  })
+
+  render(testComponent)
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Clear search' }))
+
+  expect(screen.getByRole('searchbox')).toHaveValue('')
+  expect(model.value).toBe('')
+  expect(searched).toEqual([''])
 })

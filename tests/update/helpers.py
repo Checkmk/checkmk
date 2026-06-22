@@ -92,14 +92,8 @@ def create_site(base_package: CMKPackageInfoOld) -> Site:
     assert not site.exists(), "Trying to install existing site!"
     logger.info("Creating new site")
 
-    try:
-        site = site_factory.get_site(site_name)
-        site_factory.initialize_site(site, auto_restart_httpd=True)
-    except FileNotFoundError:
-        pytest.skip(
-            f"Base-version '{base_package.version.version}' is not available for distro "
-            f"{os.environ.get('DISTRO')}"
-        )
+    site = site_factory.get_site(site_name)
+    site_factory.initialize_site(site, auto_restart_httpd=True)
 
     return site
 

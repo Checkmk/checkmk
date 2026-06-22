@@ -35,11 +35,11 @@ genrule(
 genrule(
     name = "hooks",
     srcs = [
-        "@omd_packages//omd/packages/jaeger:TRACE_RECEIVE",
-        "@omd_packages//omd/packages/jaeger:TRACE_RECEIVE_ADDRESS",
-        "@omd_packages//omd/packages/jaeger:TRACE_RECEIVE_PORT",
-        "@omd_packages//omd/packages/jaeger:TRACE_JAEGER_ADMIN_PORT",
-        "@omd_packages//omd/packages/jaeger:TRACE_JAEGER_UI_PORT",
+        "//omd/packages/jaeger:TRACE_RECEIVE",
+        "//omd/packages/jaeger:TRACE_RECEIVE_ADDRESS",
+        "//omd/packages/jaeger:TRACE_RECEIVE_PORT",
+        "//omd/packages/jaeger:TRACE_JAEGER_ADMIN_PORT",
+        "//omd/packages/jaeger:TRACE_JAEGER_UI_PORT",
     ],
     outs = [
         "lib/omd/hooks/TRACE_RECEIVE",
@@ -51,11 +51,11 @@ genrule(
     cmd = """
         mkdir -p $$(realpath $(RULEDIR))/lib/omd/hooks
         cp \
-            $(execpath @omd_packages//omd/packages/jaeger:TRACE_RECEIVE) \
-            $(execpath @omd_packages//omd/packages/jaeger:TRACE_RECEIVE_ADDRESS) \
-            $(execpath @omd_packages//omd/packages/jaeger:TRACE_RECEIVE_PORT) \
-            $(execpath @omd_packages//omd/packages/jaeger:TRACE_JAEGER_ADMIN_PORT) \
-            $(execpath @omd_packages//omd/packages/jaeger:TRACE_JAEGER_UI_PORT) \
+            $(execpath //omd/packages/jaeger:TRACE_RECEIVE) \
+            $(execpath //omd/packages/jaeger:TRACE_RECEIVE_ADDRESS) \
+            $(execpath //omd/packages/jaeger:TRACE_RECEIVE_PORT) \
+            $(execpath //omd/packages/jaeger:TRACE_JAEGER_ADMIN_PORT) \
+            $(execpath //omd/packages/jaeger:TRACE_JAEGER_UI_PORT) \
             $$(realpath $(RULEDIR))/lib/omd/hooks/
     """,
     tags = ["manual"],

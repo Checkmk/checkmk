@@ -1,5 +1,5 @@
-load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@python_modules//:requirements.bzl", "all_requirements")
+load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load(":build-python3-modules.bzl", "build_python_module", "create_requirements_file")
 
 config_setting(

@@ -1,8 +1,10 @@
-load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
+"""Macro to package Python wheels into OMD site-packages tarballs."""
+
 load("@rules_pkg//pkg:mappings.bzl", "filter_directory", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:pip.bzl", "whl_filegroup")
 load("//bazel/rules:patchelf.bzl", "set_runpath_tree")
+load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 
 def _package_wheel_impl(
         name,

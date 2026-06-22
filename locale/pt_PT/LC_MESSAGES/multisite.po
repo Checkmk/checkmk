@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-06-20 17:57+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -89623,7 +89623,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -90137,7 +90136,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -91751,27 +91749,12 @@ msgid "Guided"
 msgstr "Modo aberto"
 
 #, fuzzy
-msgid "%{specifier} parameter"
-msgstr "Parâmetros do modelo"
-
-msgid "rule %{specifier}"
-msgstr ""
+msgid "required"
+msgstr "Porto necessário"
 
 #, fuzzy
 msgid "No options available"
 msgstr "Não há informação disponível"
-
-#, fuzzy
-msgid "New %{entity}"
-msgstr "Novas entradas"
-
-#, fuzzy
-msgid "Edit %{entity}"
-msgstr "Editar métrica"
-
-#, fuzzy
-msgid "required"
-msgstr "Porto necessário"
 
 #, fuzzy
 msgid "Milliseconds"
@@ -93436,10 +93419,6 @@ msgid "and not"
 msgstr "não é"
 
 #, fuzzy
-msgid "Service name template"
-msgstr "Nome do serviço"
-
-#, fuzzy
 msgid "explicit password"
 msgstr "Nova Senha"
 
@@ -93457,6 +93436,21 @@ msgstr "mostrar mais"
 #, fuzzy
 msgid "Preview of matches:"
 msgstr "Esta regra corresponde"
+
+#, fuzzy
+msgid "%{specifier} parameter"
+msgstr "Parâmetros do modelo"
+
+msgid "rule %{specifier}"
+msgstr ""
+
+#, fuzzy
+msgid "New %{entity}"
+msgstr "Novas entradas"
+
+#, fuzzy
+msgid "Edit %{entity}"
+msgstr "Editar métrica"
 
 msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
@@ -93482,6 +93476,10 @@ msgstr "Grupos de agregação"
 #, fuzzy
 msgid "Percentile for histogram aggregation"
 msgstr "Grupos de agregação"
+
+#, fuzzy
+msgid "Service name template"
+msgstr "Nome do serviço"
 
 #, fuzzy
 msgid "Auto"

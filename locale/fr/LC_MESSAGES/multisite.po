@@ -92679,27 +92679,12 @@ msgid "Guided"
 msgstr "Mode ouvert"
 
 #, fuzzy
-msgid "%{specifier} parameter"
-msgstr "Paramètres du modèle"
-
-msgid "rule %{specifier}"
-msgstr ""
+msgid "required"
+msgstr "Port requis"
 
 #, fuzzy
 msgid "No options available"
 msgstr "Aucune information disponible"
-
-#, fuzzy
-msgid "New %{entity}"
-msgstr "Nouvelles entrées"
-
-#, fuzzy
-msgid "Edit %{entity}"
-msgstr "Métrique d'édition"
-
-#, fuzzy
-msgid "required"
-msgstr "Port requis"
 
 #, fuzzy
 msgid "Milliseconds"
@@ -94373,10 +94358,6 @@ msgid "and not"
 msgstr "n'est pas"
 
 #, fuzzy
-msgid "Service name template"
-msgstr "Nom du service : "
-
-#, fuzzy
 msgid "explicit password"
 msgstr "Nouveau mot de passe"
 
@@ -94394,6 +94375,21 @@ msgstr "afficher plus"
 #, fuzzy
 msgid "Preview of matches:"
 msgstr "Cette règle correspond à"
+
+#, fuzzy
+msgid "%{specifier} parameter"
+msgstr "Paramètres du modèle"
+
+msgid "rule %{specifier}"
+msgstr ""
+
+#, fuzzy
+msgid "New %{entity}"
+msgstr "Nouvelles entrées"
+
+#, fuzzy
+msgid "Edit %{entity}"
+msgstr "Métrique d'édition"
 
 msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
@@ -94419,6 +94415,10 @@ msgstr "Groupes d'agrégation"
 #, fuzzy
 msgid "Percentile for histogram aggregation"
 msgstr "Groupes d'agrégation"
+
+#, fuzzy
+msgid "Service name template"
+msgstr "Nom du service : "
 
 #, fuzzy
 msgid "Auto"

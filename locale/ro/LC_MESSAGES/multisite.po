@@ -91984,27 +91984,12 @@ msgid "Guided"
 msgstr "Modul deschis"
 
 #, fuzzy
-msgid "%{specifier} parameter"
-msgstr "Parametrii modelului"
-
-msgid "rule %{specifier}"
-msgstr ""
+msgid "required"
+msgstr "Port necesar"
 
 #, fuzzy
 msgid "No options available"
 msgstr "Nu există informații disponibile"
-
-#, fuzzy
-msgid "New %{entity}"
-msgstr "Noi intrări"
-
-#, fuzzy
-msgid "Edit %{entity}"
-msgstr "Editare metrică"
-
-#, fuzzy
-msgid "required"
-msgstr "Port necesar"
 
 #, fuzzy
 msgid "Milliseconds"
@@ -93676,10 +93661,6 @@ msgid "and not"
 msgstr "nu este"
 
 #, fuzzy
-msgid "Service name template"
-msgstr "Denumirea serviciului"
-
-#, fuzzy
 msgid "explicit password"
 msgstr "Parolă nouă"
 
@@ -93697,6 +93678,21 @@ msgstr "arată mai mult"
 #, fuzzy
 msgid "Preview of matches:"
 msgstr "Această regulă se potrivește cu"
+
+#, fuzzy
+msgid "%{specifier} parameter"
+msgstr "Parametrii modelului"
+
+msgid "rule %{specifier}"
+msgstr ""
+
+#, fuzzy
+msgid "New %{entity}"
+msgstr "Noi intrări"
+
+#, fuzzy
+msgid "Edit %{entity}"
+msgstr "Editare metrică"
 
 msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
@@ -93722,6 +93718,10 @@ msgstr "Grupuri de agregare"
 #, fuzzy
 msgid "Percentile for histogram aggregation"
 msgstr "Grupuri de agregare"
+
+#, fuzzy
+msgid "Service name template"
+msgstr "Denumirea serviciului"
 
 #, fuzzy
 msgid "Auto"

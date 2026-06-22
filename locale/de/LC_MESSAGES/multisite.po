@@ -87604,23 +87604,11 @@ msgstr "Fertigstellen"
 msgid "Guided"
 msgstr "Geführt"
 
-msgid "%{specifier} parameter"
-msgstr "%{specifier} Parameter"
-
-msgid "rule %{specifier}"
-msgstr "Regel %{specifier}"
+msgid "required"
+msgstr "erforderlich"
 
 msgid "No options available"
 msgstr "Keine Optionen vorhanden"
-
-msgid "New %{entity}"
-msgstr "Neuer %{entity}"
-
-msgid "Edit %{entity}"
-msgstr "%{entity} bearbeiten"
-
-msgid "required"
-msgstr "erforderlich"
 
 msgid "Milliseconds"
 msgstr "Millisekunden"
@@ -89081,9 +89069,6 @@ msgstr "Gruppe entfernen"
 msgid "and not"
 msgstr "und nicht"
 
-msgid "Service name template"
-msgstr "Vorlage für den Service-Namen"
-
 msgid "explicit password"
 msgstr "explizites Passwort"
 
@@ -89098,6 +89083,18 @@ msgstr "Vorschau anzeigen"
 
 msgid "Preview of matches:"
 msgstr "Vorschau der Matches:"
+
+msgid "%{specifier} parameter"
+msgstr "%{specifier} Parameter"
+
+msgid "rule %{specifier}"
+msgstr "Regel %{specifier}"
+
+msgid "New %{entity}"
+msgstr "Neuer %{entity}"
+
+msgid "Edit %{entity}"
+msgstr "%{entity} bearbeiten"
 
 msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
@@ -89124,6 +89121,9 @@ msgstr "Perzentile (Histogramme)"
 
 msgid "Percentile for histogram aggregation"
 msgstr "Perzentile der Histogramm-Aggregation"
+
+msgid "Service name template"
+msgstr "Vorlage für den Service-Namen"
 
 msgid "Auto"
 msgstr "Auto"

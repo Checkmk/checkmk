@@ -85022,23 +85022,11 @@ msgstr "完了"
 msgid "Guided"
 msgstr "ガイド付き"
 
-msgid "%{specifier} parameter"
-msgstr "%s{specifier}パラメータ"
-
-msgid "rule %{specifier}"
-msgstr "ルール %{specifier}"
+msgid "required"
+msgstr "必須"
 
 msgid "No options available"
 msgstr "利用可能なオプションはありません"
-
-msgid "New %{entity}"
-msgstr "新しいエントリ"
-
-msgid "Edit %{entity}"
-msgstr "%{entity}を編集"
-
-msgid "required"
-msgstr "必須"
 
 msgid "Milliseconds"
 msgstr "ミリ秒"
@@ -86518,9 +86506,6 @@ msgstr "削除：%r"
 msgid "and not"
 msgstr "ではありません"
 
-msgid "Service name template"
-msgstr "サービス名テンプレート"
-
 #, fuzzy
 msgid "explicit password"
 msgstr "新しいパスワード"
@@ -86538,6 +86523,18 @@ msgstr "もっと表示"
 
 msgid "Preview of matches:"
 msgstr "一致のプレビュー:"
+
+msgid "%{specifier} parameter"
+msgstr "%s{specifier}パラメータ"
+
+msgid "rule %{specifier}"
+msgstr "ルール %{specifier}"
+
+msgid "New %{entity}"
+msgstr "新しいエントリ"
+
+msgid "Edit %{entity}"
+msgstr "%{entity}を編集"
 
 msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
@@ -86565,6 +86562,9 @@ msgstr "集約グループ"
 #, fuzzy
 msgid "Percentile for histogram aggregation"
 msgstr "集約グループ"
+
+msgid "Service name template"
+msgstr "サービス名テンプレート"
 
 msgid "Auto"
 msgstr "自動"

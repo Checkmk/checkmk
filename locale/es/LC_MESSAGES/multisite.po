@@ -92561,27 +92561,12 @@ msgid "Guided"
 msgstr "Modo abierto"
 
 #, fuzzy
-msgid "%{specifier} parameter"
-msgstr "Parámetros del modelo"
-
-msgid "rule %{specifier}"
-msgstr ""
+msgid "required"
+msgstr "Puerto requerido"
 
 #, fuzzy
 msgid "No options available"
 msgstr "No hay información disponible"
-
-#, fuzzy
-msgid "New %{entity}"
-msgstr "No hay entradas"
-
-#, fuzzy
-msgid "Edit %{entity}"
-msgstr "Editar la métrica"
-
-#, fuzzy
-msgid "required"
-msgstr "Puerto requerido"
 
 #, fuzzy
 msgid "Milliseconds"
@@ -94250,10 +94235,6 @@ msgid "and not"
 msgstr "no es"
 
 #, fuzzy
-msgid "Service name template"
-msgstr "Nombre del servicio"
-
-#, fuzzy
 msgid "explicit password"
 msgstr "Nueva contraseña"
 
@@ -94271,6 +94252,21 @@ msgstr "ver más"
 #, fuzzy
 msgid "Preview of matches:"
 msgstr "Esta regla coincide con"
+
+#, fuzzy
+msgid "%{specifier} parameter"
+msgstr "Parámetros del modelo"
+
+msgid "rule %{specifier}"
+msgstr ""
+
+#, fuzzy
+msgid "New %{entity}"
+msgstr "No hay entradas"
+
+#, fuzzy
+msgid "Edit %{entity}"
+msgstr "Editar la métrica"
 
 msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
@@ -94296,6 +94292,10 @@ msgstr "Grupos de agregación"
 #, fuzzy
 msgid "Percentile for histogram aggregation"
 msgstr "Grupos de agregación"
+
+#, fuzzy
+msgid "Service name template"
+msgstr "Nombre del servicio"
 
 #, fuzzy
 msgid "Auto"

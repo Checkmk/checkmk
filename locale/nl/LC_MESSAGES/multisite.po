@@ -91852,27 +91852,12 @@ msgid "Guided"
 msgstr "Open mode"
 
 #, fuzzy
-msgid "%{specifier} parameter"
-msgstr "Modelparameters"
-
-msgid "rule %{specifier}"
-msgstr ""
+msgid "required"
+msgstr "Vereiste poort"
 
 #, fuzzy
 msgid "No options available"
 msgstr "Geen informatie beschikbaar"
-
-#, fuzzy
-msgid "New %{entity}"
-msgstr "Nieuwe inzendingen"
-
-#, fuzzy
-msgid "Edit %{entity}"
-msgstr "Bewerk metriek"
-
-#, fuzzy
-msgid "required"
-msgstr "Vereiste poort"
 
 #, fuzzy
 msgid "Milliseconds"
@@ -93539,10 +93524,6 @@ msgid "and not"
 msgstr "is niet"
 
 #, fuzzy
-msgid "Service name template"
-msgstr "Naam van de dienst"
-
-#, fuzzy
 msgid "explicit password"
 msgstr "Nieuw wachtwoord"
 
@@ -93560,6 +93541,21 @@ msgstr "meer laten zien"
 #, fuzzy
 msgid "Preview of matches:"
 msgstr "Deze regel komt overeen met"
+
+#, fuzzy
+msgid "%{specifier} parameter"
+msgstr "Modelparameters"
+
+msgid "rule %{specifier}"
+msgstr ""
+
+#, fuzzy
+msgid "New %{entity}"
+msgstr "Nieuwe inzendingen"
+
+#, fuzzy
+msgid "Edit %{entity}"
+msgstr "Bewerk metriek"
 
 msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
@@ -93585,6 +93581,10 @@ msgstr "Aggregatiegroepen"
 #, fuzzy
 msgid "Percentile for histogram aggregation"
 msgstr "Aggregatiegroepen"
+
+#, fuzzy
+msgid "Service name template"
+msgstr "Naam van de dienst"
 
 #, fuzzy
 msgid "Auto"

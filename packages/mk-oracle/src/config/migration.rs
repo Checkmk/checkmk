@@ -181,9 +181,14 @@ pub fn convert(
         .get("CACHE_MAXAGE")
         .and_then(|v| v.parse::<u32>().ok());
 
+    let only_sids = parse_sid_list(variables, "ONLY_SIDS");
+    let mut skip_sids = parse_sid_list(variables, "SKIP_SIDS");
+    skip_sids.extend(find_excluded_instances(variables));
+
     out.extend(format_instances(&dbuser, &dbuser_extras));
     out.extend(format_sections(&all, &asyncs, &normals, &asms));
     out.extend(format_cache_age(cache_maxage));
+    out.extend(format_discovery(&only_sids, &skip_sids));
 
     Ok(out)
 }
@@ -262,6 +267,54 @@ fn format_cache_age(cache_maxage: Option<u32>) -> Vec<String> {
         return Vec::new();
     };
     vec![format!("    cache_age: {age}\n")]
+}
+
+fn find_excluded_instances(variables: &HashMap<String, String>) -> Vec<String> {
+    variables
+        .iter()
+        .filter_map(|(name, value)| {
+            let sid = name.strip_prefix("EXCLUDE_")?;
+            (value == "ALL").then(|| sid.to_string())
+        })
+        .collect()
+}
+
+fn parse_sid_list(variables: &HashMap<String, String>, key: &str) -> Vec<String> {
+    variables
+        .get(key)
+        .map(|v| v.split_whitespace().map(String::from).collect())
+        .unwrap_or_default()
+}
+
+fn format_discovery(only_sids: &[String], skip_sids: &[String]) -> Vec<String> {
+    if only_sids.is_empty() && skip_sids.is_empty() {
+        return Vec::new();
+    }
+    let mut lines = vec![
+        "    discovery:\n".to_string(),
+        "      detect: true\n".to_string(),
+    ];
+    if !only_sids.is_empty() {
+        lines.push(format!(
+            "      include: [{}]\n",
+            format_yaml_list(only_sids)
+        ));
+    }
+    if !skip_sids.is_empty() {
+        lines.push(format!(
+            "      exclude: [{}]\n",
+            format_yaml_list(skip_sids)
+        ));
+    }
+    lines
+}
+
+fn format_yaml_list(items: &[String]) -> String {
+    items
+        .iter()
+        .map(|s| s.as_str())
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn format_timestamp() -> String {

@@ -465,6 +465,31 @@ fn test_migrate_reference_config_cache_age() {
 }
 
 #[test]
+fn test_migrate_reference_config_discovery() {
+    let cfg = legacy_cfg_path();
+    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+    let discovery = ora.discovery();
+    assert!(discovery.detect(), "detect must be true");
+    assert_eq!(
+        discovery.include(),
+        &["XE1", "XEXE"],
+        "include must match ONLY_SIDS"
+    );
+    let mut exclude = discovery.exclude().clone();
+    exclude.sort();
+    assert_eq!(
+        exclude,
+        &["AAA", "BBB", "XE2"],
+        "exclude must match SKIP_SIDS + EXCLUDE_*=ALL"
+    );
+}
+
+#[test]
 fn test_migrate_reference_config_sections() {
     use mk_oracle::config::section::SectionKind;
     use mk_oracle::types::SectionAffinity;

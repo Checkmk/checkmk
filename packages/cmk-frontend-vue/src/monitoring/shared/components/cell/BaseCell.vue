@@ -165,10 +165,9 @@ const highlightStyle = computed<CSSProperties>(() =>
   top: 0;
   bottom: 0;
   right: 0;
-  width: 8px;
-  transform: translateX(100%);
+  width: 2px;
   pointer-events: none;
-  background: linear-gradient(to right, rgb(0 0 0 / 30%), rgb(0 0 0 / 0%));
+  background: var(--default-border-color);
 }
 
 .monitoring-base-cell__highlight {

@@ -11,7 +11,7 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
-import type { CmkMultitoneIconNames, CustomIconColor } from '@/components/CmkIcon/types.ts'
+import type { CustomIconColor } from '@/components/CmkIcon/types.ts'
 
 import type { HostState } from '../../api/types.ts'
 import BaseCell from './BaseCell.vue'
@@ -27,19 +27,6 @@ export interface StateCellProps {
 const { _t } = usei18n()
 
 const props = defineProps<StateCellProps>()
-
-const stateIcon = computed<CmkMultitoneIconNames>(() => {
-  switch (props.state) {
-    case 'UP':
-      return 'checkmark'
-    case 'DOWN':
-      return 'error'
-    case 'UNREACHABLE':
-      return 'warning'
-    default:
-      return 'warning'
-  }
-})
 
 const stateLabel = computed<TranslatedString>(() => {
   switch (props.state) {
@@ -82,30 +69,8 @@ const primaryColor = computed<CustomIconColor>(() => {
 </script>
 
 <template>
-  <BaseCell
-    :column-id="columnId"
-    :highlight="stateHighlight"
-    :breakpoints="{
-      s: 108
-    }"
-  >
+  <BaseCell :column-id="columnId" :highlight="stateHighlight">
     <template #default>
-      <CmkMultitoneIcon :name="stateIcon" :primary-color="primaryColor" :title="stateLabel" />
-      <CmkMultitoneIcon
-        v-if="stale"
-        name="stale"
-        :primary-color="primaryColor"
-        :title="_t('Stale state')"
-      />
-      <CmkMultitoneIcon
-        v-if="pending"
-        name="reload"
-        :primary-color="primaryColor"
-        :title="_t('Pending')"
-      />
-    </template>
-    <template #s>
-      <CmkMultitoneIcon :name="stateIcon" :primary-color="primaryColor" :title="stateLabel" />
       <b>{{ stateLabel }}</b>
       <CmkMultitoneIcon
         v-if="stale"

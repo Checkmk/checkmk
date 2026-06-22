@@ -14,6 +14,7 @@ from pydantic import AfterValidator, Discriminator
 from pydantic_core import ErrorDetails
 
 from cmk.ccc.user import UserId
+from cmk.gui import userdb
 from cmk.gui.dashboard.page_edit_dashboard import dashboard_info_handler
 from cmk.gui.dashboard.token_util import get_dashboard_auth_token
 from cmk.gui.dashboard.type_defs import DashboardConfig, DashboardRelativeGridLayoutSpec, WidgetId
@@ -177,6 +178,56 @@ class DashboardVisibility:
             return "sites", self.share.sites
         return False
 
+    def iter_validation_errors(
+        self, location: tuple[str | int, ...], context: ApiContext
+    ) -> Iterable[ErrorDetails]:
+        user_permissions = context.config.user_permissions()
+        user_id = context.user_id
+        share_location = location + ("share",)
+
+        def _may(permission: str) -> bool:
+            return user_permissions.user_may(user_id, permission)
+
+        if isinstance(self.share, DashboardShareWithAllUsers):
+            if not _may("general.publish_dashboards"):
+                yield ErrorDetails(
+                    type="value_error",
+                    msg="You are not allowed to share dashboards with all users.",
+                    loc=share_location,
+                    input="with_all_users",
+                )
+        elif isinstance(self.share, DashboardShareWithContactGroups):
+            may_own_groups = _may("general.publish_dashboards_to_groups")
+            may_foreign_groups = _may("general.publish_dashboards_to_foreign_groups")
+            if not (may_own_groups or may_foreign_groups):
+                yield ErrorDetails(
+                    type="value_error",
+                    msg="You are not allowed to share dashboards with contact groups.",
+                    loc=share_location,
+                    input="with_contact_groups",
+                )
+            elif not may_foreign_groups:
+                own_groups = set(userdb.contactgroups_of_user(user_id)) if user_id else set()
+                foreign_groups = [g for g in self.share.contact_groups if g not in own_groups]
+                if foreign_groups:
+                    yield ErrorDetails(
+                        type="value_error",
+                        msg=(
+                            "You are not allowed to share dashboards with contact groups you are "
+                            "not a member of: " + ", ".join(sorted(foreign_groups))
+                        ),
+                        loc=share_location,
+                        input="with_contact_groups",
+                    )
+        elif isinstance(self.share, DashboardShareWithSites):
+            if not _may("general.publish_dashboards_to_sites"):
+                yield ErrorDetails(
+                    type="value_error",
+                    msg="You are not allowed to share dashboards with users of sites.",
+                    loc=share_location,
+                    input="with_sites",
+                )
+
 
 @api_model
 class DashboardRelativeGridLayout:
@@ -248,6 +299,7 @@ class DashboardGeneralSettings:
         self, location: tuple[str | int, ...], context: ApiContext
     ) -> Iterable[ErrorDetails]:
         yield from self.menu.iter_validation_errors(location + ("menu",), context)
+        yield from self.visibility.iter_validation_errors(location + ("visibility",), context)
 
 
 @api_model

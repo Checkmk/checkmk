@@ -51,7 +51,13 @@ const defaultProps = {
   activeDashboardId: 'my_dashboard',
   dashboardGeneralSettings: makeGeneralSettings(),
   dashboardRestrictedToSingle: [],
-  loggedInUser: 'admin'
+  loggedInUser: 'admin',
+  permissions: {
+    publish_to_all: true,
+    publish_to_contact_groups: true,
+    publish_to_foreign_contact_groups: true,
+    publish_to_sites: true
+  }
 }
 
 async function renderWizard(

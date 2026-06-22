@@ -12,9 +12,12 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import type { DualListElement } from '@/components/CmkDualList'
 import CmkDualList from '@/components/CmkDualList/CmkDualList.vue'
-import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
+import CmkToggleButtonGroup, {
+  type ToggleButtonOption
+} from '@/components/CmkToggleButtonGroup.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
+import type { DashboardPermissions } from '@/dashboard/types/page'
 import { type DashboardShare } from '@/dashboard/types/shared'
 
 import { getContactGroups, getSites } from '../dashboard-settings/api'
@@ -23,9 +26,10 @@ const { _t } = usei18n()
 
 interface AccessSettingsProps {
   errors: TranslatedString[]
+  permissions: DashboardPermissions
 }
 
-defineProps<AccessSettingsProps>()
+const props = defineProps<AccessSettingsProps>()
 
 const share = defineModel<DashboardShare>('share', { required: true })
 
@@ -144,26 +148,40 @@ const displayDualList = computed((): boolean => {
   return !isLoading.value && ['with_contact_groups', 'with_sites'].includes(shareMode.value)
 })
 
+// Only offer share targets the user may publish to (also enforced on save).
+const shareOptions = computed((): ToggleButtonOption[] => {
+  const options: ToggleButtonOption[] = [{ label: _t('Owner (private)'), value: 'no' }]
+
+  if (props.permissions.publish_to_all) {
+    options.push({ label: _t('All users'), value: 'with_all_users' })
+  }
+
+  if (
+    props.permissions.publish_to_contact_groups ||
+    props.permissions.publish_to_foreign_contact_groups
+  ) {
+    options.push({
+      label: _t('Members of contact groups'),
+      value: 'with_contact_groups',
+      disabled: isContactGroupOptionDisabled.value,
+      disabledTooltip: _t('No contact groups found')
+    })
+  }
+
+  if (props.permissions.publish_to_sites) {
+    options.push({ label: _t('Users of site'), value: 'with_sites' })
+  }
+
+  return options
+})
+
 if (shareMode.value === 'with_contact_groups' || shareMode.value === 'with_sites') {
   await loadAvailableElements(shareMode.value as ShareType)
 }
 </script>
 
 <template>
-  <CmkToggleButtonGroup
-    v-model="shareMode"
-    :options="[
-      { label: _t('Owner (private)'), value: 'no' },
-      { label: _t('All users'), value: 'with_all_users' },
-      {
-        label: _t('Members of contact groups'),
-        value: 'with_contact_groups',
-        disabled: isContactGroupOptionDisabled,
-        disabledTooltip: _t('No contact groups found')
-      },
-      { label: _t('Users of site'), value: 'with_sites' }
-    ]"
-  />
+  <CmkToggleButtonGroup v-model="shareMode" :options="shareOptions" />
 
   <CmkInlineValidation v-if="displayDualList && errors.length > 0" :validation="errors" />
   <CmkDualList

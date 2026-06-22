@@ -10,9 +10,17 @@ import { defineComponent, h, ref } from 'vue'
 import { CmkFetchError } from '@/lib/cmkFetch'
 
 import AccessSettings from '@/dashboard/components/Wizard/wizards/components/AccessSettings.vue'
+import type { DashboardPermissions } from '@/dashboard/types/page'
 import type { DashboardShare } from '@/dashboard/types/shared'
 
 import { flushPromises, wrapInSuspense } from '../../../../utils.ts'
+
+const allPermissions: DashboardPermissions = {
+  publish_to_all: true,
+  publish_to_contact_groups: true,
+  publish_to_foreign_contact_groups: true,
+  publish_to_sites: true
+}
 
 const mockGetContactGroups = vi.hoisted(() =>
   vi.fn().mockResolvedValue([
@@ -33,7 +41,11 @@ vi.mock('@/dashboard/components/Wizard/wizards/dashboard-settings/api', () => ({
   getSites: mockGetSites
 }))
 
-async function renderAccessSettings(share: DashboardShare = 'no', errors: string[] = []) {
+async function renderAccessSettings(
+  share: DashboardShare = 'no',
+  errors: string[] = [],
+  permissions: DashboardPermissions = allPermissions
+) {
   const shareRef = ref(share)
   const wrapper = defineComponent({
     setup() {
@@ -41,7 +53,8 @@ async function renderAccessSettings(share: DashboardShare = 'no', errors: string
         h(AccessSettings, {
           share: shareRef.value,
           'onUpdate:share': (v: DashboardShare) => (shareRef.value = v),
-          errors
+          errors,
+          permissions
         })
     }
   })
@@ -173,6 +186,48 @@ describe('AccessSettings', () => {
       await fireEvent.click(getToggleButton('All users'))
       await flushPromises()
       expect(shareRef.value).toEqual({ type: 'with_all_users' })
+    })
+  })
+
+  describe('Permission gating', () => {
+    it('always offers the "Owner (private)" option, even without any publish permission', async () => {
+      await renderAccessSettings('no', [], {
+        publish_to_all: false,
+        publish_to_contact_groups: false,
+        publish_to_foreign_contact_groups: false,
+        publish_to_sites: false
+      })
+      expect(getToggleButton('Owner (private)')).toBeInTheDocument()
+    })
+
+    it('hides "All users" without the publish_to_all permission', async () => {
+      await renderAccessSettings('no', [], { ...allPermissions, publish_to_all: false })
+      expect(screen.queryByRole('button', { name: 'Toggle All users' })).not.toBeInTheDocument()
+    })
+
+    it('hides "Members of contact groups" without any contact group permission', async () => {
+      await renderAccessSettings('no', [], {
+        ...allPermissions,
+        publish_to_contact_groups: false,
+        publish_to_foreign_contact_groups: false
+      })
+      expect(
+        screen.queryByRole('button', { name: 'Toggle Members of contact groups' })
+      ).not.toBeInTheDocument()
+    })
+
+    it('offers "Members of contact groups" with only the foreign contact group permission', async () => {
+      await renderAccessSettings('no', [], {
+        ...allPermissions,
+        publish_to_contact_groups: false,
+        publish_to_foreign_contact_groups: true
+      })
+      expect(getToggleButton('Members of contact groups')).toBeInTheDocument()
+    })
+
+    it('hides "Users of site" without the publish_to_sites permission', async () => {
+      await renderAccessSettings('no', [], { ...allPermissions, publish_to_sites: false })
+      expect(screen.queryByRole('button', { name: 'Toggle Users of site' })).not.toBeInTheDocument()
     })
   })
 })

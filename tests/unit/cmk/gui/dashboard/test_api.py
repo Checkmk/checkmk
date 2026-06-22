@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 from typing import get_args, get_type_hints
 
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.dashboard import DashletConfig, get_all_dashboards
 from cmk.gui.dashboard.api._utils import INTERNAL_TO_API_TYPE_NAME
 from cmk.gui.dashboard.api.model.constants import RESPONSIVE_GRID_BREAKPOINTS
@@ -15,9 +17,11 @@ from cmk.gui.dashboard.api.model.widget import WidgetTitle
 from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
 from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.icon.registry import all_icons
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.rest_api_client import ClientRegistry
 from tests.testlib.unit.gui.dashboard_api_test_helper import (
     check_widget_create,
@@ -666,4 +670,163 @@ class TestNotSupportedContent:
         assert (
             resp.json["fields"]["body.widgets.test_widget.content.not_supported"]["msg"]
             == "Value error, Cannot use unsupported content type."
+        )
+
+
+def _payload_with_share(dashboard_id: str, share: object) -> dict[str, object]:
+    payload = create_dashboard_payload(dashboard_id, {})
+    visibility = payload["general_settings"]["visibility"]  # type: ignore[index]
+    visibility["share"] = share
+    return payload
+
+
+def _admin_roles_without(
+    config: Config, *permissions: str
+) -> dict[str, BuiltInUserRole | CustomUserRole]:
+    roles = copy.deepcopy(config.roles)
+    admin_permissions = dict(roles["admin"].get("permissions", {}))
+    for permission in permissions:
+        admin_permissions[permission] = False
+    roles["admin"]["permissions"] = admin_permissions
+    return roles
+
+
+@pytest.fixture(name="contact_groups")
+def _contact_groups(monkeypatch: pytest.MonkeyPatch) -> tuple[str, str]:
+    """Make two contact groups exist, with the current user a member of only the first.
+
+    Returns the (own, foreign) group names.
+    """
+    own, foreign = "own_cg", "foreign_cg"
+    monkeypatch.setattr(
+        "cmk.gui.watolib.groups_io.load_group_information",
+        lambda: {"host": {}, "service": {}, "contact": {own: {}, foreign: {}}},
+    )
+    monkeypatch.setattr("cmk.gui.userdb.contactgroups_of_user", lambda _user_id: [own])
+    return own, foreign
+
+
+class TestSharePermissionEnforcement:
+    def test_share_with_all_users_allowed_with_permission(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            _payload_with_share("shared_with_all", {"type": "with_all_users"})
+        )
+        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+
+    def test_share_with_all_users_denied_without_permission(
+        self, clients: ClientRegistry, set_config: SetConfig, load_config: Config
+    ) -> None:
+        with set_config(roles=_admin_roles_without(load_config, "general.publish_dashboards")):
+            resp = clients.DashboardClient.create_relative_grid_dashboard(
+                _payload_with_share("shared_with_all_denied", {"type": "with_all_users"}),
+                expect_ok=False,
+            )
+        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert (
+            "You are not allowed to share dashboards with all users."
+            in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
+        )
+
+    def test_share_with_own_contact_group_allowed(
+        self,
+        clients: ClientRegistry,
+        set_config: SetConfig,
+        load_config: Config,
+        contact_groups: tuple[str, str],
+    ) -> None:
+        own, _foreign = contact_groups
+        # Without the foreign-groups permission, sharing with an own group still works.
+        with set_config(
+            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
+        ):
+            resp = clients.DashboardClient.create_relative_grid_dashboard(
+                _payload_with_share(
+                    "share_own_cg",
+                    {"type": "with_contact_groups", "contact_groups": [own]},
+                )
+            )
+        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+
+    def test_share_with_foreign_contact_group_denied_without_foreign_permission(
+        self,
+        clients: ClientRegistry,
+        set_config: SetConfig,
+        load_config: Config,
+        contact_groups: tuple[str, str],
+    ) -> None:
+        _own, foreign = contact_groups
+        with set_config(
+            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
+        ):
+            resp = clients.DashboardClient.create_relative_grid_dashboard(
+                _payload_with_share(
+                    "share_foreign_cg_denied",
+                    {"type": "with_contact_groups", "contact_groups": [foreign]},
+                ),
+                expect_ok=False,
+            )
+        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert (
+            "not a member of"
+            in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
+        )
+
+    def test_share_with_foreign_contact_group_allowed_with_foreign_permission(
+        self, clients: ClientRegistry, contact_groups: tuple[str, str]
+    ) -> None:
+        _own, foreign = contact_groups
+        # The default admin role holds general.publish_dashboards_to_foreign_groups.
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            _payload_with_share(
+                "share_foreign_cg_ok",
+                {"type": "with_contact_groups", "contact_groups": [foreign]},
+            )
+        )
+        assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
+
+    def test_share_with_contact_groups_denied_without_any_group_permission(
+        self,
+        clients: ClientRegistry,
+        set_config: SetConfig,
+        load_config: Config,
+        contact_groups: tuple[str, str],
+    ) -> None:
+        own, _foreign = contact_groups
+        with set_config(
+            roles=_admin_roles_without(
+                load_config,
+                "general.publish_dashboards_to_groups",
+                "general.publish_dashboards_to_foreign_groups",
+            )
+        ):
+            resp = clients.DashboardClient.create_relative_grid_dashboard(
+                _payload_with_share(
+                    "share_cg_no_perm",
+                    {"type": "with_contact_groups", "contact_groups": [own]},
+                ),
+                expect_ok=False,
+            )
+        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert (
+            "You are not allowed to share dashboards with contact groups."
+            in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
+        )
+
+    def test_share_with_sites_denied_without_permission(
+        self, clients: ClientRegistry, set_config: SetConfig, load_config: Config
+    ) -> None:
+        with set_config(
+            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_sites")
+        ):
+            resp = clients.DashboardClient.create_relative_grid_dashboard(
+                _payload_with_share(
+                    "share_sites_denied",
+                    {"type": "with_sites", "sites": ["NO_SITE"]},
+                ),
+                expect_ok=False,
+            )
+        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert (
+            "You are not allowed to share dashboards with users of sites."
+            in resp.json["fields"]["body.general_settings.visibility.share"]["msg"]
         )

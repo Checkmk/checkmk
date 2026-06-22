@@ -142,6 +142,14 @@ def page_dashboard_app(ctx: PageContext) -> None:
             "dashboard_features": dashboard_features,
             "ntop_active": ntop_connection().is_active(),
         },
+        "permissions": {
+            "publish_to_all": user.may("general.publish_dashboards"),
+            "publish_to_contact_groups": user.may("general.publish_dashboards_to_groups"),
+            "publish_to_foreign_contact_groups": user.may(
+                "general.publish_dashboards_to_foreign_groups"
+            ),
+            "publish_to_sites": user.may("general.publish_dashboards_to_sites"),
+        },
         "logged_in_user": user.id,
     }
 

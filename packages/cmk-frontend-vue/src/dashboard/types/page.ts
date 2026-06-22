@@ -32,6 +32,13 @@ export interface LoadedDashboardProperties {
   filter_context: FilterContext
 }
 
+export interface DashboardPermissions {
+  publish_to_all: boolean
+  publish_to_contact_groups: boolean
+  publish_to_foreign_contact_groups: boolean
+  publish_to_sites: boolean
+}
+
 export interface DashboardPageProperties {
   initial_breadcrumb: BreadcrumbItem[]
   dashboard: LoadedDashboardProperties | null
@@ -43,6 +50,7 @@ export interface DashboardPageProperties {
   }
   available_layouts: DashboardLayout[]
   available_features: { dashboard_features: DashboardFeatures; ntop_active: boolean }
+  permissions: DashboardPermissions
   logged_in_user: string
 }
 

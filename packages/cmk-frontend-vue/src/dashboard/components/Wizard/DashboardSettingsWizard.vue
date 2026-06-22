@@ -8,6 +8,7 @@ import CmkIcon from '@/components/CmkIcon'
 import CmkSlideIn from '@/components/CmkSlideIn'
 
 import type { DashboardGeneralSettings } from '@/dashboard/types/dashboard'
+import type { DashboardPermissions } from '@/dashboard/types/page'
 
 import DashboardSettingsWizard from './wizards/dashboard-settings/DashboardSettingsWizard.vue'
 
@@ -16,6 +17,7 @@ defineProps<{
   dashboardGeneralSettings: DashboardGeneralSettings
   dashboardRestrictedToSingle: string[]
   loggedInUser: string
+  permissions: DashboardPermissions
 }>()
 
 const emit = defineEmits<{
@@ -36,6 +38,7 @@ const save = (dashboardId: string, generalSettings: DashboardGeneralSettings) =>
         :dashboard-general-settings="dashboardGeneralSettings"
         :dashboard-restricted-to-single="dashboardRestrictedToSingle"
         :logged-in-user="loggedInUser"
+        :permissions="permissions"
         @cancel="() => emit('cancel')"
         @save="save"
       />

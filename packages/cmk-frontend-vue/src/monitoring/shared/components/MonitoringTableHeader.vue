@@ -227,7 +227,7 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
   vertical-align: middle;
   height: 24px;
   font-weight: var(--font-weight-bold);
-  background: var(--ux-theme-2);
+  background: var(--ux-theme-1);
   white-space: nowrap;
   text-align: left;
 }

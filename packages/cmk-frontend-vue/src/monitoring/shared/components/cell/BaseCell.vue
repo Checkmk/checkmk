@@ -127,6 +127,7 @@ const highlightStyle = computed<CSSProperties>(() =>
   vertical-align: middle;
   height: 24px;
   text-align: v-bind(effectiveJustify);
+  background-color: var(--ux-theme-2);
 
   a {
     text-decoration: underline;

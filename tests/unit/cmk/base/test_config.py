@@ -52,13 +52,13 @@ from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.version import Edition
+from cmk.checkengine import agent_protocol
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.discovery import (
     DiscoveryCheckParameters,
     RediscoveryParameters,
 )
 from cmk.checkengine.fetcher import Mode
-from cmk.checkengine.fetchers._tcp import agent_protocol
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.checkengine.plugin_backend.section_plugins_legacy import convert_legacy_sections

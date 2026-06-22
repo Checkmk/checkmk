@@ -86,8 +86,7 @@ py_library(
         "cmk/checkengine/fetchers/_snmp/_cache.py",
         "cmk/checkengine/fetchers/_snmp/_fetcher.py",
         "cmk/checkengine/fetchers/_snmp/_scan.py",
-        "cmk/checkengine/fetchers/_tcp/__init__.py",
-        "cmk/checkengine/fetchers/_tcp/agent_protocol.py",
+        "cmk/checkengine/fetchers/tcp.py",
         "cmk/checkengine/filecache/__init__.py",
         "cmk/checkengine/filecache/_agent.py",
         "cmk/checkengine/filecache/_cache.py",
@@ -120,6 +119,7 @@ py_library(
 py_library(
     name = "fetcher-protocol",
     srcs = [
+        "cmk/checkengine/agent_protocol.py",
         "cmk/checkengine/fetcher.py",
     ],
     imports = ["."],
@@ -130,6 +130,7 @@ py_library(
         "//packages/cmk-ccc:cpu-tracking",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:resulttype",
+        "//packages/cmk-crypto",
     ],
 )
 
@@ -238,7 +239,10 @@ py_test(
     srcs = glob([
         "tests/cmk/checkengine/fetchers/**/*.py",
         "tests/cmk/checkengine/filecache/**/*.py",
-    ]) + [":__test__.py"],
+    ]) + [
+        "tests/cmk/checkengine/test_agent_protocol.py",
+        ":__test__.py",
+    ],
     main = "__test__.py",
     deps = [
         "__test__",

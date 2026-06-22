@@ -597,6 +597,7 @@ allows = [
   "@ccc",
   "@relay_protocols",
   "cmk.check_helper",
+  "cmk.checkengine.agent_protocol",
   "cmk.check_helper_protocol",
   "cmk.checkengine.fetcher",
   "cmk.checkengine.fetchers",
@@ -651,12 +652,16 @@ allows = ["@ccc", "@crypto", "cmk.gui", "cmk.utils"]
 [components."cmk.ec"]
 allows = ["@ccc", "@livestatus_client", "@mkp_tool", "cmk.events", "cmk.utils"]
 
+[components."cmk.checkengine.agent_protocol"]
+allows = ["@crypto", "cmk.checkengine.fetcher"]
+
 [components."cmk.checkengine.fetchers"]
 allows = [
   "@ccc",
   "@crypto",
   "@plugin_apis",
   "@relay_protocols",
+  "cmk.checkengine.agent_protocol",
   "cmk.checkengine.fetcher",
   "cmk.checkengine.filecache",
   "cmk.checkengine.helper_interface",

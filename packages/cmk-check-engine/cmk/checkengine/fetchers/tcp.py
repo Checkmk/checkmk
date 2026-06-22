@@ -15,16 +15,15 @@ from typing import Final
 
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.fetcher import Fetcher, FetcherError, Mode
-from cmk.checkengine.helper_interface import AgentRawData
-
-from .agent_protocol import (
+from cmk.checkengine.agent_protocol import (
     AgentCtlMessage,
     decrypt_by_agent_protocol,
     TCPEncryptionHandling,
     TransportProtocol,
     validate_agent_protocol,
 )
+from cmk.checkengine.fetcher import Fetcher, FetcherError, Mode
+from cmk.checkengine.helper_interface import AgentRawData
 
 __all__ = [
     "TCPFetcher",

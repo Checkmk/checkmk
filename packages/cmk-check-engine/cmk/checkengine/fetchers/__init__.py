@@ -22,10 +22,6 @@ from ._snmp._fetcher import SNMPFetcher as SNMPFetcher
 from ._snmp._fetcher import SNMPFetcherConfig as SNMPFetcherConfig
 from ._snmp._fetcher import SNMPScanConfig as SNMPScanConfig
 from ._snmp._fetcher import SNMPSectionMeta as SNMPSectionMeta
-from ._tcp import agent_protocol as agent_protocol
-from ._tcp import TCPFetcher as TCPFetcher
-from ._tcp import TCPFetcherConfig as TCPFetcherConfig
-from ._tcp import TLSConfig as TLSConfig
 from ._utils.secrets import ActivatedSecrets as ActivatedSecrets
 from ._utils.secrets import AdHocSecrets as AdHocSecrets
 from ._utils.secrets import FetcherSecrets as FetcherSecrets
@@ -33,3 +29,6 @@ from ._utils.secrets import StoredSecrets as StoredSecrets
 from ._utils.trigger import FetcherTrigger as FetcherTrigger
 from ._utils.trigger import FetcherTriggerFactory as FetcherTriggerFactory
 from ._utils.trigger import PlainFetcherTrigger as PlainFetcherTrigger
+from .tcp import TCPFetcher as TCPFetcher
+from .tcp import TCPFetcherConfig as TCPFetcherConfig
+from .tcp import TLSConfig as TLSConfig

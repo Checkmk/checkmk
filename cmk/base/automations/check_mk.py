@@ -134,7 +134,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName, HostNameValidationError, 
 from cmk.ccc.i18n import _
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import edition_supports_nagvis
-from cmk.checkengine import sources
+from cmk.checkengine import agent_protocol, sources
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
 from cmk.checkengine.discovery import (
@@ -162,7 +162,6 @@ from cmk.checkengine.fetchers import (
     TCPFetcher,
     TLSConfig,
 )
-from cmk.checkengine.fetchers._tcp import agent_protocol
 from cmk.checkengine.fetchers._utils.config import (
     make_persisted_section_dir,
 )

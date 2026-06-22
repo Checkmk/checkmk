@@ -363,7 +363,7 @@ py_test(
     name = "discovery-tests",
     size = "small",
     srcs = glob([
-        "tests/cmk/checkengine/discovery/*.py",
+        "tests/cmk/checkengine/discovery/**/*.py",
     ]) + [
         ":__test__.py",
     ],

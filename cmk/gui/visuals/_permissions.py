@@ -18,10 +18,18 @@ def declare_visual_permissions(what: VisualTypeName, what_plural: str) -> None:
         ["admin", "user"],
     )
 
+    publish_help = _("Make %s visible and usable for all users.") % what_plural
+    if what == "dashboards":
+        # Dashboards also gate public link sharing with this permission.
+        publish_help = _(
+            "Make dashboards visible and usable for all users. For dashboards this "
+            "permission additionally controls whether a dashboard may be shared via a "
+            "public link."
+        )
     declare_permission(
         "general.publish_" + what,
         _("Publish %s") % what_plural,
-        _("Make %s visible and usable for all users.") % what_plural,
+        publish_help,
         ["admin", "user"],
     )
 

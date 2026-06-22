@@ -674,6 +674,7 @@ const reviewFilters = () => {
           :public-token="dashboardsManager.activeDashboard?.value?.model.public_token || null"
           :dashboard-features="available_features.dashboard_features"
           :has-runtime-filters="dashboardHasRuntimeFilters"
+          :may-link-share="permissions.publish_to_all"
           @review-filters="reviewFilters"
           @refresh-dashboard-settings="dashboardsManager.refreshActiveDashboard"
           @close="openDashboardShareDialog = false"

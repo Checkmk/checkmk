@@ -29,6 +29,7 @@ interface ShareDashboardSettingsProps {
   publicToken: DashboardTokenModel | null
   dashboardFeatures: DashboardFeatures
   hasRuntimeFilters: boolean
+  mayLinkShare: boolean
 }
 
 interface ShareDashboardSettingsEmits {
@@ -63,6 +64,7 @@ const clonedToken = computed(() => (props.publicToken ? structuredClone(props.pu
       <InternalAccess class="db-sharing-wizard__internal-access" :dashboard-url="dashboardUrl" />
 
       <PublicAccess
+        v-if="mayLinkShare || publicToken"
         :dashboard-key="dashboardKey"
         :public-token="clonedToken"
         :dashboard-features="dashboardFeatures"

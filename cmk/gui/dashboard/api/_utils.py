@@ -173,6 +173,13 @@ PERMISSIONS_DASHBOARD_EDIT = permissions.AllPerm(
         permissions.Optional(permissions.Perm("general.edit_foreign_dashboards")),
     ]
 )
+PERMISSIONS_DASHBOARD_LINK_SHARE = permissions.AllPerm(
+    [
+        *PERMISSIONS_DASHBOARD_EDIT.perms,
+        # Public link sharing requires the publishing permission on top of edit.
+        permissions.Perm("general.publish_dashboards"),
+    ]
+)
 
 type DashboardOwnerWithBuiltin = Literal[""] | AnnotatedUserId | ApiOmitted
 

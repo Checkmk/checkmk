@@ -15,7 +15,8 @@ from pathlib import Path
 from typing import assert_never, Final, Literal
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.fetchers import Fetcher, TLSConfig
+from cmk.checkengine.fetcher import Fetcher
+from cmk.checkengine.fetchers import TLSConfig
 from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.helper_interface import AgentRawData, FetcherType
 from cmk.checkengine.plugins import AgentBasedPlugins

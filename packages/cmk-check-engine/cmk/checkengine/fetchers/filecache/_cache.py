@@ -60,9 +60,8 @@ from typing import Any, Final, NamedTuple, NoReturn
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.checkengine.fetcher import Mode
 from cmk.checkengine.helper_interface import FetcherError
-
-from .._abstract import Mode
 
 __all__ = [
     "FileCache",

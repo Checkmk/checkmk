@@ -11,7 +11,8 @@ from cmk.base.core.interface import MonitoringCore
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
-from cmk.checkengine.fetchers import Fetcher, FetcherTriggerFactory
+from cmk.checkengine.fetcher import Fetcher
+from cmk.checkengine.fetchers import FetcherTriggerFactory
 from cmk.checkengine.helper_interface import AgentRawData
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.snmplib import SNMPPluginStore

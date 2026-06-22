@@ -72,6 +72,7 @@ from cmk.checkengine.discovery import (
     remove_autochecks_of_host,
 )
 from cmk.checkengine.fetcher import FetcherFunction
+from cmk.checkengine.fetcher import Mode as FetchMode
 from cmk.checkengine.fetchers import (
     AdHocSecrets,
     NoSelectedSNMPSections,
@@ -79,7 +80,6 @@ from cmk.checkengine.fetchers import (
     StoredSecrets,
     TLSConfig,
 )
-from cmk.checkengine.fetchers import Mode as FetchMode
 from cmk.checkengine.fetchers._utils.config import (
     make_persisted_section_dir,
 )

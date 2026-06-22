@@ -12,9 +12,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Final, Self
 
+from cmk.checkengine.fetcher import Fetcher
 from cmk.checkengine.helper_interface import AgentRawData, FetcherError
-
-from ._abstract import Fetcher
 
 
 class AttributeType(Enum):

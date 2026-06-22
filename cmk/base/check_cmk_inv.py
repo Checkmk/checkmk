@@ -32,7 +32,7 @@ from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checking import make_timing_results
-from cmk.checkengine.fetchers import Mode as FetchMode
+from cmk.checkengine.fetcher import Mode as FetchMode
 from cmk.checkengine.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig, StoredSecrets
 from cmk.checkengine.fetchers.filecache import FileCacheOptions
 from cmk.checkengine.inventory import HWSWInventoryParameters

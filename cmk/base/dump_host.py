@@ -26,8 +26,8 @@ from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine import sources
 from cmk.checkengine.checkerplugin import ConfiguredService
+from cmk.checkengine.fetcher import Fetcher
 from cmk.checkengine.fetchers import (
-    Fetcher,
     IPMIFetcher,
     NoSelectedSNMPSections,
     PiggybackFetcher,

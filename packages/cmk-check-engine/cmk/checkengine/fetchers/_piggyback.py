@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.checkengine.fetcher import Fetcher, Mode
 from cmk.checkengine.helper_interface import AgentRawData
-
-from ._abstract import Fetcher, Mode
 
 
 class PiggybackFetcher(Fetcher[AgentRawData]):

@@ -20,10 +20,9 @@ from cmk.base import config
 from cmk.base.community_app import make_app
 from cmk.base.modes import check_mk
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.fetcher import Fetcher, Mode
 from cmk.checkengine.fetchers import (
-    Fetcher,
     FetcherSecrets,
-    Mode,
     PiggybackFetcher,
     PlainFetcherTrigger,
 )

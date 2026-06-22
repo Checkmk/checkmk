@@ -18,6 +18,7 @@ from typing import Any, Final
 
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.fetcher import Fetcher, Mode
 from cmk.checkengine.helper_interface import FetcherError
 from cmk.checkengine.snmplib import (
     get_snmp_table,
@@ -31,7 +32,6 @@ from cmk.checkengine.snmplib import (
     SNMPTimeout,
 )
 
-from .._abstract import Fetcher, Mode
 from ..snmp_backend import make_backend
 from ._cache import ConfiguredFetchIntervallCache, WalkCache
 from ._scan import gather_available_raw_section_names, SNMPScanConfig

@@ -76,7 +76,6 @@ py_library(
     name = "fetchers",
     srcs = [
         "cmk/checkengine/fetchers/__init__.py",
-        "cmk/checkengine/fetchers/_abstract.py",
         "cmk/checkengine/fetchers/_ipmi.py",
         "cmk/checkengine/fetchers/_metric_backend.py",
         "cmk/checkengine/fetchers/_nofetcher.py",
@@ -102,6 +101,7 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
+        ":fetcher-protocol",
         ":helper-interface",
         ":snmp-backends",
         ":snmplib",

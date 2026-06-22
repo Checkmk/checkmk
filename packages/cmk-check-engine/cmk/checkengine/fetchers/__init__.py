@@ -9,10 +9,6 @@ See Also:
 
 """
 
-from ._abstract import Deserializer as Deserializer
-from ._abstract import Fetcher as Fetcher
-from ._abstract import Mode as Mode
-from ._abstract import Serializer as Serializer
 from ._ipmi import IPMICredentials as IPMICredentials
 from ._ipmi import IPMIFetcher as IPMIFetcher
 from ._metric_backend import MetricBackendFetcher as MetricBackendFetcher

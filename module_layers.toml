@@ -382,6 +382,7 @@ allows = [
   "cmk.checkengine.plugins",
   "cmk.fetcher_encoder",
   "cmk.fetcher_helper",
+  "cmk.checkengine.fetcher",
   "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.inventory",
@@ -523,6 +524,7 @@ allows = [
 [components."cmk.check_helper_protocol"]
 allows = [
   "@ccc",
+  "cmk.checkengine.fetcher",
   "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.checkengine.snmplib",
@@ -584,7 +586,7 @@ allows = ["@ccc", "cmk.utils.paths"]
 allows = ["@ccc", "@livestatus_client"]
 
 [components."cmk.fetcher_encoder"]
-allows = ["cmk.checkengine.fetchers"]
+allows = ["cmk.checkengine.fetcher", "cmk.checkengine.fetchers"]
 
 [components."cmk.fetcher_helper"]
 allows = [
@@ -592,6 +594,7 @@ allows = [
   "@relay_protocols",
   "cmk.check_helper",
   "cmk.check_helper_protocol",
+  "cmk.checkengine.fetcher",
   "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.telemetry.fetcher.agent_otel",
@@ -649,6 +652,7 @@ allows = [
   "@crypto",
   "@plugin_apis",
   "@relay_protocols",
+  "cmk.checkengine.fetcher",
   "cmk.checkengine.helper_interface",
   "cmk.checkengine.snmp_backends",
   "cmk.checkengine.snmplib",
@@ -1220,6 +1224,7 @@ allows = [
   "@relay_protocols",
   "cmk.check_helper_protocol",
   "cmk.fetcher_encoder",
+  "cmk.checkengine.fetcher",
   "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.relay_trigger_protocol",

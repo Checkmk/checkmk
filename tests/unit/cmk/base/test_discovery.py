@@ -76,9 +76,9 @@ from cmk.checkengine.discovery._utils.filters import (
     ServiceFilters,
 )
 from cmk.checkengine.discovery.types import DiscoveredItem
+from cmk.checkengine.fetcher import Mode
 from cmk.checkengine.fetchers import (
     AdHocSecrets,
-    Mode,
     NoSelectedSNMPSections,
     PlainFetcherTrigger,
     SNMPFetcherConfig,

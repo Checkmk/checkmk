@@ -57,7 +57,7 @@ from cmk.checkengine.discovery import (
     DiscoveryCheckParameters,
     RediscoveryParameters,
 )
-from cmk.checkengine.fetchers import Mode
+from cmk.checkengine.fetcher import Mode
 from cmk.checkengine.fetchers._tcp import agent_protocol
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins

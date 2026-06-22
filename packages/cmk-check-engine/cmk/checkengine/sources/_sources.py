@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Final, Literal, Protocol
 
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.fetcher import Fetcher
 from cmk.checkengine.fetchers import (
-    Fetcher,
     IPMIFetcher,
     NoFetcher,
     NoFetcherError,

@@ -51,13 +51,11 @@ from cmk.checkengine.discovery import (
     get_plugin_parameters,
     HostLabelPlugin,
 )
-from cmk.checkengine.fetcher import FetcherFunction
+from cmk.checkengine.fetcher import Fetcher, FetcherFunction, Mode
 from cmk.checkengine.fetchers import (
     AdHocSecrets,
-    Fetcher,
     FetcherSecrets,
     FetcherTrigger,
-    Mode,
     ProgramFetcher,
     StoredSecrets,
     TLSConfig,

@@ -8,9 +8,8 @@ from __future__ import annotations
 import enum
 from typing import Final, NoReturn
 
+from cmk.checkengine.fetcher import Fetcher, Mode
 from cmk.checkengine.helper_interface import AgentRawData, FetcherError
-
-from ._abstract import Fetcher, Mode
 
 __all__ = ["NoFetcherError", "NoFetcher"]
 

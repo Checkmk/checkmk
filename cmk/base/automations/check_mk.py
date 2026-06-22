@@ -150,11 +150,10 @@ from cmk.checkengine.discovery import (
 from cmk.checkengine.discovery import (
     automation_discovery as _automation_discovery,
 )
-from cmk.checkengine.fetcher import FetcherFunction
+from cmk.checkengine.fetcher import FetcherFunction, Mode
 from cmk.checkengine.fetchers import (
     ActivatedSecrets,
     AdHocSecrets,
-    Mode,
     NoSelectedSNMPSections,
     PlainFetcherTrigger,
     ProgramFetcher,

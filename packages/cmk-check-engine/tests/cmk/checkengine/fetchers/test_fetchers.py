@@ -20,11 +20,10 @@ import cmk.ccc.resulttype as result
 import cmk.checkengine.fetchers._snmp._fetcher as snmp
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.checkengine.fetcher import Fetcher, Mode
 from cmk.checkengine.fetchers import (
     ActivatedSecrets,
-    Fetcher,
     IPMIFetcher,
-    Mode,
     PiggybackFetcher,
     PlainFetcherTrigger,
     ProgramFetcher,

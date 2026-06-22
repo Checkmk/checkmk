@@ -31,10 +31,9 @@ from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import CheckPreview, CheckPreviewEntry, QualifiedDiscovery
+from cmk.checkengine.fetcher import Fetcher, Mode
 from cmk.checkengine.fetchers import (
-    Fetcher,
     FetcherSecrets,
-    Mode,
     PiggybackFetcher,
     PlainFetcherTrigger,
 )

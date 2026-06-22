@@ -24,6 +24,7 @@ const defaultEmpty6 = ref<string | null>(null)
 const defaultEmpty7 = ref<string | null>(null)
 const defaultEmpty8 = ref<string | null>(null)
 const defaultEmpty9 = ref<string | null>(null)
+const sectionedFreeText = ref<string | null>(null)
 const errorCase = ref<string | null>('invalid_backend_value')
 const callCount = ref<number>(0)
 
@@ -236,6 +237,50 @@ const slowOptions: Suggestions = {
       }
     }"
     input-hint="long dropdown"
+    no-results-hint="no results hint"
+    label="some label"
+    required
+  />
+  <h2>callback, sectioned suggestions with free-text entry</h2>
+  <CmkDropdown
+    v-model="sectionedFreeText"
+    :options="{
+      type: 'callback-filtered',
+      querySuggestions: async (query) => {
+        const sections = [
+          {
+            title: 'Primary',
+            suggestions: [
+              { name: '1', title: 'Option One' },
+              { name: '2', title: 'Option Two' }
+            ]
+          },
+          {
+            title: 'Secondary',
+            suggestions: [
+              { name: '3', title: 'Option One Secondary' },
+              { name: '4', title: 'Option Two Secondary' }
+            ]
+          }
+        ]
+        const q = query.toLowerCase()
+        const filtered = sections.map((section) => ({
+          title: section.title,
+          suggestions: section.suggestions.filter(
+            (s) => s.title.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)
+          )
+        }))
+        // Echo the raw query unless it exactly matches a known option name
+        // so re-resolving the label by name does not pick the echo.
+        const knownNames = sections.flatMap((section) => section.suggestions.map((s) => s.name))
+        const freeText =
+          query.trim() !== '' && !knownNames.includes(query)
+            ? [{ title: '', suggestions: [{ name: query, title: query }] }]
+            : []
+        return new Response([...freeText, ...filtered])
+      }
+    }"
+    input-hint="type to filter or add a free-text entry"
     no-results-hint="no results hint"
     label="some label"
     required

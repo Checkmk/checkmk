@@ -33,6 +33,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext, suppress
 from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 from pathlib import Path
 from pprint import pformat
 from typing import Any, Final, Literal, overload
@@ -89,6 +90,11 @@ class TracingConfig:
     collect_traces: bool
     otlp_endpoint: str
     extra_resource_attributes: Mapping[str, str]
+
+
+class CMKCoreType(StrEnum):
+    CMC = "cmc"
+    NAGIOS = "nagios"
 
 
 NO_TRACING = TracingConfig(collect_traces=False, otlp_endpoint="", extra_resource_attributes={})
@@ -1484,8 +1490,8 @@ class Site:
             logger.error(stderr)
         return stdout.strip() or default
 
-    def core_name(self) -> Literal["cmc", "nagios"]:
-        return "nagios" if self.edition.is_community_edition() else "cmc"
+    def core_name(self) -> CMKCoreType:
+        return CMKCoreType(self.omd("config", "show", "CORE", check=True).stdout.strip())
 
     def core_history_log(self) -> Path:
         core = self.core_name()

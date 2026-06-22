@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Ref, computed, nextTick, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
-import type { TranslatedString } from '@/lib/i18nString'
 import { useDebounceRef } from '@/lib/useDebounce'
 import { immediateWatch } from '@/lib/watch'
 
@@ -23,9 +22,7 @@ import {
   isSectioned
 } from './types'
 
-type DisplayItem =
-  | { kind: 'item'; suggestion: Suggestion }
-  | { kind: 'header'; title: TranslatedString }
+type DisplaySection = Omit<Section, 'title'> & { title: Section['title'] | null }
 
 const { _t } = usei18n()
 
@@ -59,14 +56,9 @@ const filterString = ref<string>(
 )
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
 
-const displayItems = ref<Array<DisplayItem>>([])
+const displaySections = ref<Array<DisplaySection>>([])
 const filteredSuggestions = computed<Array<Suggestion>>(() =>
-  displayItems.value
-    .filter((d): d is { kind: 'item'; suggestion: Suggestion } => d.kind === 'item')
-    .map((d) => d.suggestion)
-)
-const hasSectionHeaders = computed<boolean>(() =>
-  displayItems.value.some((d) => d.kind === 'header')
+  displaySections.value.flatMap((section) => section.suggestions)
 )
 const activeSuggestion: Ref<Suggestion | null> = ref(null) // null means no suggestion is highlighted, (no suggestions are selectable)
 const isSelectedSuggestionSetAsFilter = ref(false)
@@ -101,69 +93,65 @@ function findSuggestionAsIndex(
   return currentElement.index
 }
 
-function flatten(items: Array<Suggestion>): Array<DisplayItem> {
-  return items.map((s) => ({ kind: 'item', suggestion: s }))
+function asSingleSection(suggestions: Array<Suggestion>): Array<DisplaySection> {
+  return suggestions.length > 0 ? [{ title: null, suggestions }] : []
 }
 
-function buildSectionedDisplayItems(
+function buildSectionedDisplaySections(
   sections: Array<Section>,
   query: string,
   doFilter: boolean
-): Array<DisplayItem> {
+): Array<DisplaySection> {
   const lowerCaseQuery = query.toLowerCase()
   const survivingSections = sections
     .map((section) => ({
       title: section.title,
-      items: doFilter
+      suggestions: doFilter
         ? section.suggestions.filter((s) => s.title.toLowerCase().includes(lowerCaseQuery))
         : section.suggestions
     }))
-    .filter((section) => section.items.length > 0)
+    .filter((section) => section.suggestions.length > 0)
 
   if (survivingSections.length <= 1) {
-    return flatten(survivingSections[0]?.items ?? [])
+    return asSingleSection(survivingSections[0]?.suggestions ?? [])
   }
 
-  const sectionedDisplayItems: Array<DisplayItem> = []
-  for (const section of survivingSections) {
-    sectionedDisplayItems.push({ kind: 'header', title: section.title })
-    for (const item of section.items) {
-      sectionedDisplayItems.push({ kind: 'item', suggestion: item })
-    }
-  }
-  return sectionedDisplayItems
+  return survivingSections.map((section) => ({
+    title: section.title.trim() !== '' ? section.title : null,
+    suggestions: section.suggestions
+  }))
 }
 
-function buildDisplayItems(
+function buildDisplaySections(
   input: Array<Suggestion> | Array<Section>,
   query: string,
   doFilter: boolean
-): Array<DisplayItem> {
+): Array<DisplaySection> {
   if (isSectioned(input)) {
-    return buildSectionedDisplayItems(input, query, doFilter)
+    return buildSectionedDisplaySections(input, query, doFilter)
   }
   const lowerCaseQuery = query.toLowerCase()
   const items = doFilter
     ? input.filter((s) => s.title.toLowerCase().includes(lowerCaseQuery))
     : input
-  return flatten(items)
+  return asSingleSection(items)
 }
 
-async function getDisplayItems(
+async function getDisplaySections(
   suggestions: Suggestions,
   query: string
-): Promise<Array<DisplayItem> | ErrorResponse | WarningResponse> {
+): Promise<Array<DisplaySection> | ErrorResponse | WarningResponse> {
   switch (suggestions.type) {
     case 'filtered':
-      return buildDisplayItems(suggestions.suggestions, query, true)
+      return buildDisplaySections(suggestions.suggestions, query, true)
     case 'fixed':
-      return buildDisplayItems(suggestions.suggestions, '', false)
+      return buildDisplaySections(suggestions.suggestions, '', false)
     case 'callback-filtered': {
       const response = await suggestions.querySuggestions(query)
       if (response instanceof ErrorResponse || response instanceof WarningResponse) {
         return response
       }
-      return buildDisplayItems(response.choices, '', false)
+      return buildDisplaySections(response.choices, '', false)
     }
   }
 }
@@ -217,7 +205,7 @@ async function handleSuggestionsUpdate(
   query: string,
   newSelectedSuggestion: SuggestionValue
 ): Promise<void> {
-  const result = await getDisplayItems(newSuggestions, query)
+  const result = await getDisplaySections(newSuggestions, query)
 
   if (result instanceof ErrorResponse) {
     error.value = result.error
@@ -225,13 +213,13 @@ async function handleSuggestionsUpdate(
   } else if (result instanceof WarningResponse) {
     warning.value = result.warning
     error.value = ''
-    displayItems.value = buildDisplayItems(result.choices, '', false)
+    displaySections.value = buildDisplaySections(result.choices, '', false)
     activeSuggestion.value = null
     setSiblingOrFirstActive(0)
   } else {
     error.value = ''
     warning.value = ''
-    displayItems.value = result
+    displaySections.value = result
     const foundSuggestion =
       newSelectedSuggestion instanceof NoSelection
         ? null
@@ -373,46 +361,46 @@ defineExpose({
       <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
       <li v-if="warning" class="cmk-suggestions--warning"><CmkHtml :html="warning" /></li>
       <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
-      <template v-for="(item, idx) in displayItems">
+      <template v-for="(section, sIdx) in displaySections">
         <li
-          v-if="item.kind === 'header'"
-          :key="`h-${idx}`"
+          v-if="section.title !== null"
+          :key="`h-${sIdx}`"
           class="cmk-suggestions__section-header"
           role="heading"
           aria-level="3"
-          :aria-label="item.title"
+          :aria-label="section.title"
           tabindex="-1"
           @mousedown.prevent
         >
-          {{ item.title }}
+          {{ section.title }}
         </li>
         <li
-          v-else
+          v-for="suggestion in section.suggestions"
           ref="suggestionRefs"
           tabindex="-1"
           :role="role"
-          :aria-label="item.suggestion.title"
+          :aria-label="suggestion.title"
           :class="{
-            selectable: item.suggestion.name !== null,
-            selected: item.suggestion.name === activeSuggestion?.name,
-            'cmk-suggestions__item--in-section': hasSectionHeaders
+            selectable: suggestion.name !== null,
+            selected: suggestion.name === activeSuggestion?.name,
+            'cmk-suggestions__item--in-section': section.title !== null
           }"
-          @click="selectSuggestion(item.suggestion)"
+          @click="selectSuggestion(suggestion)"
         >
-          <template v-for="render in [getRowRender(item.suggestion)]">
+          <template v-for="render in [getRowRender(suggestion)]">
             <template v-if="render.kind === 'title-match'">
               <span>{{ render.parts.before }}</span
               ><mark>{{ render.parts.match }}</mark
               ><span>{{ render.parts.after }}</span>
             </template>
             <template v-else-if="render.kind === 'name-match'"
-              >{{ item.suggestion.title
+              >{{ suggestion.title
               }}<span class="cmk-suggestions__name-match">
                 ({{ render.nameParts.before }}<mark>{{ render.nameParts.match }}</mark
                 >{{ render.nameParts.after }})</span
               >
             </template>
-            <template v-else>{{ item.suggestion.title }}</template>
+            <template v-else>{{ suggestion.title }}</template>
           </template>
         </li>
       </template>

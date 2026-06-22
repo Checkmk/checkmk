@@ -295,6 +295,37 @@ test('renders sticky headers and items when more than one section is present', a
   await screen.findByRole('option', { name: 'Beta Two' })
 })
 
+test('renders an empty-title section header-less and flush-left before titled sections', async () => {
+  const sections: Section[] = [
+    { title: '', suggestions: [{ name: 'user-entry', title: 'user-entry' }] },
+    ...twoSections
+  ]
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new NoSelection(),
+      suggestions: { type: 'fixed', suggestions: sections },
+      role: 'option'
+    }
+  })
+
+  const userEntry = await screen.findByRole('option', { name: 'user-entry' })
+  // The empty-title section emits no header, while the titled sections keep theirs.
+  const headerA = await screen.findByRole('heading', { name: 'Section A' })
+  await screen.findByRole('heading', { name: 'Section B' })
+  expect(screen.getAllByRole('heading')).toHaveLength(2)
+
+  // The section-less item renders first, ahead of the section headers.
+  expect(screen.getAllByRole('option')[0]).toBe(userEntry)
+  expect(userEntry.compareDocumentPosition(headerA) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+  // No indentation
+  expect(userEntry).toHaveClass('selectable')
+  expect(userEntry).not.toHaveClass('cmk-suggestions__item--in-section')
+  expect(screen.getByRole('option', { name: 'Alpha One' })).toHaveClass(
+    'cmk-suggestions__item--in-section'
+  )
+})
+
 test('omits headers when only one section is present', async () => {
   render(CmkSuggestions, {
     props: {

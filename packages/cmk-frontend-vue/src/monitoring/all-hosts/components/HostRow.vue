@@ -62,49 +62,69 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     column-id="num_services_ok"
     :value="row.num_services_ok"
     :highlight="OK_HIGHLIGHT"
-    :linked-to="{
-      href: `view.py?host=${row.name}&view_name=host_ok`,
-      target: '_top'
-    }"
+    :linked-to="
+      row.num_services_ok === 0
+        ? undefined
+        : {
+            href: `view.py?host=${row.name}&view_name=host_ok`,
+            target: '_top'
+          }
+    "
   />
   <NumberCell
     v-if="hasColumn('num_services_warn')"
     column-id="num_services_warn"
     :value="row.num_services_warn"
     :highlight="WARN_HIGHLIGHT"
-    :linked-to="{
-      href: `view.py?host=${row.name}&view_name=host_warn`,
-      target: '_top'
-    }"
+    :linked-to="
+      row.num_services_warn === 0
+        ? undefined
+        : {
+            href: `view.py?host=${row.name}&view_name=host_warn`,
+            target: '_top'
+          }
+    "
   />
   <NumberCell
     v-if="hasColumn('num_services_crit')"
     column-id="num_services_crit"
     :value="row.num_services_crit"
     :highlight="CRIT_HIGHLIGHT"
-    :linked-to="{
-      href: `view.py?host=${row.name}&view_name=host_crit`,
-      target: '_top'
-    }"
+    :linked-to="
+      row.num_services_crit === 0
+        ? undefined
+        : {
+            href: `view.py?host=${row.name}&view_name=host_crit`,
+            target: '_top'
+          }
+    "
   />
   <NumberCell
     v-if="hasColumn('num_services_unknown')"
     column-id="num_services_unknown"
     :value="row.num_services_unknown"
     :highlight="UNKNOWN_HIGHLIGHT"
-    :linked-to="{
-      href: `view.py?host=${row.name}&view_name=host_unknown`,
-      target: '_top'
-    }"
+    :linked-to="
+      row.num_services_unknown === 0
+        ? undefined
+        : {
+            href: `view.py?host=${row.name}&view_name=host_unknown`,
+            target: '_top'
+          }
+    "
   />
   <NumberCell
     v-if="hasColumn('num_services_pending')"
     column-id="num_services_pending"
     :value="row.num_services_pending"
     :highlight="PENDING_HIGHLIGHT"
-    :linked-to="{
-      href: `view.py?host=${row.name}&view_name=host_pending`,
-      target: '_top'
-    }"
+    :linked-to="
+      row.num_services_pending === 0
+        ? undefined
+        : {
+            href: `view.py?host=${row.name}&view_name=host_pending`,
+            target: '_top'
+          }
+    "
   />
 </template>

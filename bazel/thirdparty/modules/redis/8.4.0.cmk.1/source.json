@@ -1,0 +1,9 @@
+{
+  "integrity": "sha256-ypCaoVJS8uyzoEjNCGRpgn1ja/gzT1C7lNA/ukv8Vug=",
+  "strip_prefix": "redis-8.4.0",
+  "url": "https://download.redis.io/releases/redis-8.4.0.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-SK4EM1DdfoYSmpBqhiJuApQa4POd4rSfh5tKt1Kjf8k=",
+    "MODULE.bazel": "sha256-I9nM/c5biAKv2+WJE8DV4LciM+HDGPLW02vkKh2glhc="
+  }
+}

@@ -305,6 +305,7 @@ def _default_port(site_name: str, port_hook: PortHook, site_configs: _SiteConfig
 
 
 _HOOK_DEFAULTS: Mapping[str, Callable[[Edition], str]] = {
+    "ADMIN_MAIL": lambda _edition: "",
     "AGENT_RECEIVER": lambda _edition: "on",
     "APACHE_MODE": lambda _edition: apache_mode_default(),
     "APACHE_TCP_ADDR": lambda _edition: "127.0.0.1",

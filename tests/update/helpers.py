@@ -22,7 +22,6 @@ from tests.testlib.utils import (
     version_spec_from_env,
 )
 from tests.testlib.version import (
-    CMKEditionOld,
     CMKPackageInfo,
     CMKPackageInfoOld,
     CMKVersion,
@@ -286,35 +285,27 @@ class BaseVersions:
     @classmethod
     def get_base_packages(cls) -> list[CMKPackageInfoOld]:
         if cls._base_packages is None:
-            if edition_from_env().is_cloud_edition():
-                cls._base_packages = [
-                    CMKPackageInfoOld(
-                        CMKVersion(CMKVersion.DAILY, "2.4.0", "2.4.0"),
-                        CMKEditionOld(CMKEditionOld.CLOUD),
-                    )
-                ]
-            else:
-                base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
-                if not base_versions_pb_file.exists():
-                    base_versions_pb_file = MODULE_PATH / "base_versions.json"
-                base_versions_pb = cls._limit_versions(
-                    json.loads(base_versions_pb_file.read_text(encoding="utf-8")), cls.min_version
-                )
+            base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
+            if not base_versions_pb_file.exists():
+                base_versions_pb_file = MODULE_PATH / "base_versions.json"
+            base_versions_pb = cls._limit_versions(
+                json.loads(base_versions_pb_file.read_text(encoding="utf-8")), cls.min_version
+            )
 
-                base_versions_cb_file = MODULE_PATH / "base_versions_current_branch.json"
-                base_versions_cb = (
-                    cls._limit_versions(
-                        json.loads(base_versions_cb_file.read_text(encoding="utf-8")),
-                        cls.min_version,
-                    )
-                    if base_versions_cb_file.exists()
-                    else []
+            base_versions_cb_file = MODULE_PATH / "base_versions_current_branch.json"
+            base_versions_cb = (
+                cls._limit_versions(
+                    json.loads(base_versions_cb_file.read_text(encoding="utf-8")),
+                    cls.min_version,
                 )
+                if base_versions_cb_file.exists()
+                else []
+            )
 
-                cls._base_packages = [
-                    CMKPackageInfoOld(CMKVersion(base_version_str), edition_from_env_old())
-                    for base_version_str in base_versions_pb + base_versions_cb
-                ]
+            cls._base_packages = [
+                CMKPackageInfoOld(CMKVersion(base_version_str), edition_from_env_old())
+                for base_version_str in base_versions_pb + base_versions_cb
+            ]
         assert cls._base_packages, "No base packages found for the test!"
         return cls._base_packages
 

@@ -9,15 +9,17 @@ from pathlib import Path
 from typing import Final
 
 import cmk.ccc.store as _store
+from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.plugins import SectionName
 
 __all__ = ["SectionStore"]
+PersistedSectionDir = Path
 
 
 class SectionStore[T]:
     def __init__(
         self,
-        path: str | Path,
+        path: PersistedSectionDir,
         *,
         logger: logging.Logger,
     ) -> None:
@@ -27,6 +29,12 @@ class SectionStore[T]:
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.path!r}, logger={self._logger!r})"
+
+    @staticmethod
+    def make_persisted_section_dir(
+        host_name: HostName, *, ident: str, section_cache_path: Path
+    ) -> PersistedSectionDir:
+        return section_cache_path / "persisted_sections" / ident / str(host_name)
 
     def store(self, sections: MutableMapping[SectionName, tuple[int, int, T]]) -> None:
         if not sections:

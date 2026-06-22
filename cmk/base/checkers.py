@@ -60,7 +60,6 @@ from cmk.checkengine.fetchers import (
     StoredSecrets,
     TLSConfig,
 )
-from cmk.checkengine.fetchers._utils.config import make_persisted_section_dir
 from cmk.checkengine.filecache import FileCache, FileCacheOptions, MaxAge, NoCache
 from cmk.checkengine.helper_interface import (
     AgentRawData,
@@ -69,7 +68,7 @@ from cmk.checkengine.helper_interface import (
     SourceInfo,
     SourceType,
 )
-from cmk.checkengine.parser import HostSections, parse_raw_data, SectionNameCollection
+from cmk.checkengine.parser import HostSections, parse_raw_data, SectionNameCollection, SectionStore
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AutocheckEntry,
@@ -235,7 +234,7 @@ class CMKParser:
                     source.ipaddress,
                     source.fetcher_type,
                     omd_root=cmk.utils.paths.omd_root,
-                    persisted_section_dir=make_persisted_section_dir(
+                    persisted_section_dir=SectionStore.make_persisted_section_dir(
                         source.hostname,
                         ident=source.ident,
                         section_cache_path=section_cache_path,

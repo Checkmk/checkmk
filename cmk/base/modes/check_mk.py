@@ -80,9 +80,6 @@ from cmk.checkengine.fetchers import (
     StoredSecrets,
     TLSConfig,
 )
-from cmk.checkengine.fetchers._utils.config import (
-    make_persisted_section_dir,
-)
 from cmk.checkengine.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.helper_interface import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
@@ -91,6 +88,7 @@ from cmk.checkengine.parser import (
     parse_raw_data,
     ParserFunction,
     SectionNameCollection,
+    SectionStore,
 )
 from cmk.checkengine.plugin_backend import (
     filter_relevant_raw_sections,
@@ -819,7 +817,7 @@ def _mode_dump_agent(
                     source_info.ipaddress,
                     source_info.fetcher_type,
                     omd_root=cmk.utils.paths.omd_root,
-                    persisted_section_dir=make_persisted_section_dir(
+                    persisted_section_dir=SectionStore.make_persisted_section_dir(
                         source_info.hostname,
                         ident=source_info.ident,
                         section_cache_path=section_cache_path,

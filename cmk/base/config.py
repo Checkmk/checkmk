@@ -88,10 +88,10 @@ from cmk.checkengine.fetchers import (
     TCPFetcherConfig,
     TLSConfig,
 )
-from cmk.checkengine.fetchers._utils.config import make_persisted_section_dir
 from cmk.checkengine.filecache import MaxAge
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
+from cmk.checkengine.parser import SectionStore
 from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.checkengine.plugin_backend.section_plugins_legacy import (
     convert_legacy_sections,
@@ -2828,7 +2828,7 @@ class ConfigCache:
             return True
 
         return (
-            make_persisted_section_dir(
+            SectionStore.make_persisted_section_dir(
                 host_name=host_name,
                 ident="piggyback",
                 section_cache_path=cmk.utils.paths.var_dir,

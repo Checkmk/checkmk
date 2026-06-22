@@ -43,7 +43,7 @@ class TestSectionStore:
         assert isinstance(
             repr(
                 SectionStore(
-                    "/dev/null",
+                    Path("/dev/null"),
                     logger=logging.getLogger("test"),
                 )
             ),
@@ -933,7 +933,7 @@ class TestSNMPParser:
 
 
 class MockStore(SectionStore):
-    def __init__(self, path: str | Path, sections: object, *, logger: logging.Logger) -> None:
+    def __init__(self, path: Path, sections: object, *, logger: logging.Logger) -> None:
         super().__init__(path, logger=logger)
         self._sections = sections
 
@@ -950,7 +950,7 @@ class TestAgentPersistentSectionHandling:
         return logging.getLogger("test")
 
     def test_update_with_empty_store_and_empty_raw_data(self, logger: logging.Logger) -> None:
-        section_store = MockStore("/dev/null", {}, logger=logger)
+        section_store = MockStore(Path("/dev/null"), {}, logger=logger)
         raw_data = AgentRawData(b"")
         parser = AgentParser(
             HostName("testhost"),
@@ -970,7 +970,7 @@ class TestAgentPersistentSectionHandling:
 
     def test_update_with_store_and_empty_raw_data(self, logger: logging.Logger) -> None:
         section_store = MockStore(
-            "/dev/null",
+            Path("/dev/null"),
             {SectionName("stored"): (0, 0, [])},
             logger=logger,
         )
@@ -993,7 +993,7 @@ class TestAgentPersistentSectionHandling:
 
     def test_update_with_empty_store_and_raw_data(self, logger: logging.Logger) -> None:
         raw_data = AgentRawData(b"<<<fresh>>>")
-        section_store = MockStore("/dev/null", {}, logger=logger)
+        section_store = MockStore(Path("/dev/null"), {}, logger=logger)
         parser = AgentParser(
             HostName("testhost"),
             section_store,
@@ -1012,7 +1012,7 @@ class TestAgentPersistentSectionHandling:
 
     def test_update_with_store_and_non_persisting_raw_data(self, logger: logging.Logger) -> None:
         section_store = MockStore(
-            "/dev/null",
+            Path("/dev/null"),
             {SectionName("stored"): (0, 0, [])},
             logger=logger,
         )
@@ -1041,7 +1041,7 @@ class TestAgentPersistentSectionHandling:
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         section_store = MockStore(
-            "/dev/null",
+            Path("/dev/null"),
             {SectionName("stored"): (0, 0, [["canned", "section"]])},
             logger=logger,
         )
@@ -1073,7 +1073,7 @@ class TestAgentPersistentSectionHandling:
 
     def test_update_store_with_newest(self, logger: logging.Logger) -> None:
         section_store = MockStore(
-            "/dev/null",
+            Path("/dev/null"),
             {SectionName("section"): (0, 0, [["oldest"]])},
             logger=logger,
         )
@@ -1101,7 +1101,7 @@ class TestAgentPersistentSectionHandling:
 
         raw_data = AgentRawData(b"<<<another_section>>>")
         section_store = MockStore(
-            "/dev/null",
+            Path("/dev/null"),
             {SectionName("section"): (500, 600, [])},
             logger=logger,
         )
@@ -1128,7 +1128,7 @@ class TestAgentPersistentSectionHandling:
 
         raw_data = AgentRawData(b"<<<another_section>>>")
         section_store = MockStore(
-            "/dev/null",
+            Path("/dev/null"),
             {SectionName("section"): (500, 600, [])},
             logger=logger,
         )

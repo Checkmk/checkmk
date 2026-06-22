@@ -162,12 +162,9 @@ from cmk.checkengine.fetchers import (
     TCPFetcher,
     TLSConfig,
 )
-from cmk.checkengine.fetchers._utils.config import (
-    make_persisted_section_dir,
-)
 from cmk.checkengine.filecache import FileCacheOptions, MaxAge, NoCache
 from cmk.checkengine.helper_interface import AgentRawData, FetcherType, SourceType
-from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
+from cmk.checkengine.parser import NO_SELECTION, parse_raw_data, SectionStore
 from cmk.checkengine.plugin_backend import (
     get_check_plugin,
 )
@@ -4048,7 +4045,7 @@ def _automation_get_agent_output(
                         source_info.ipaddress,
                         source_info.fetcher_type,
                         omd_root=cmk.utils.paths.omd_root,
-                        persisted_section_dir=make_persisted_section_dir(
+                        persisted_section_dir=SectionStore.make_persisted_section_dir(
                             source_info.hostname,
                             ident=source_info.ident,
                             section_cache_path=section_cache_path,

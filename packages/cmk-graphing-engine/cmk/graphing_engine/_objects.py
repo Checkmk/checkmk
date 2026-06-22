@@ -525,6 +525,9 @@ type VerticalRange = MinimalRange | FixedRange
 class Stack:
     members: Sequence[Quantity]
     inverse: bool
+    # An optional invisible baseline (legacy line_type="ref"): it sets the stack's floor but is not
+    # drawn and not shown in the legend. The members stack on top of it.
+    reference: Quantity | None = None
 
 
 @dataclass(frozen=True)
@@ -595,6 +598,7 @@ class Graph:
                 rrd_metric
                 for quantity in itertools.chain(
                     (m for g in self.stacks for m in g.members),
+                    (g.reference for g in self.stacks if g.reference is not None),
                     (line.quantity for line in self.lines),
                     (rule.quantity for rule in self.rules),
                 )

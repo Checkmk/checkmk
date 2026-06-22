@@ -40,6 +40,9 @@ class EvaluatedCurve:
 class EvaluatedStack:
     members: Sequence[EvaluatedCurve]
     inverse: bool
+    # The evaluated invisible baseline (cf. Stack.reference): the renderer uses it as the stack's
+    # floor but does not draw it. None when the stack has no reference.
+    reference: EvaluatedCurve | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -181,8 +184,11 @@ def evaluate_graph(
             for member in group.members
             if (curve := _evaluate_curve(member, context)) is not None
         ]
+        reference = None if group.reference is None else _evaluate_curve(group.reference, context)
         if members:
-            stacks.append(EvaluatedStack(members=members, inverse=group.inverse))
+            stacks.append(
+                EvaluatedStack(members=members, inverse=group.inverse, reference=reference)
+            )
     lines = [
         EvaluatedLine(curve=curve, inverse=line.inverse)
         for line in graph.lines

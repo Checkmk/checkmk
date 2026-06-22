@@ -84,7 +84,6 @@ from cmk.checkengine.fetchers._utils.config import (
     make_persisted_section_dir,
 )
 from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge
-from cmk.checkengine.fetchers.snmp_backend import make_backend
 from cmk.checkengine.helper_interface import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import (
@@ -107,6 +106,7 @@ from cmk.checkengine.plugins import (
     SNMPSectionPlugin,
 )
 from cmk.checkengine.sectionparser import SectionPlugin
+from cmk.checkengine.snmp_backend import make_backend
 from cmk.checkengine.snmplib import (
     get_single_oid,
     OID,

@@ -654,6 +654,7 @@ allows = [
   "@relay_protocols",
   "cmk.checkengine.fetcher",
   "cmk.checkengine.helper_interface",
+  "cmk.checkengine.snmp_backend",
   "cmk.checkengine.snmp_backends",
   "cmk.checkengine.snmplib",
 ]

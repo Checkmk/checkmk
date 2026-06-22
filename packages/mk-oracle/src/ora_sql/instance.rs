@@ -31,9 +31,13 @@ use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::CustomInstance;
 use crate::config::section::names;
 use crate::ora_sql::detect::dump_detected_sids;
-use crate::ora_sql::spots::{make_spot_work_results, PostProcessing, QueryBlock, SpotWorks};
+use crate::ora_sql::spots::{
+    make_spot_work_results, ClosedSpotWorks, OpenedSpotWorks, PostProcessing, QueryBlock,
+};
 use anyhow::{Context, Result};
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
+
+type ClosedSpotResults = (ClosedSpot, Vec<String>);
 
 impl OracleConfig {
     pub async fn exec(&self, environment: &Env) -> Result<String> {
@@ -138,11 +142,17 @@ pub async fn generate_data(
             ora_sql.params(),
         );
         let results = if ora_sql.options().threads() > 1 {
-            process_spot_works_para(work_spots, ora_sql.options().threads())
+            process_spot_works_para(
+                work_spots
+                    .into_iter()
+                    .map(|(s, w)| (s.close(), w))
+                    .collect(),
+                ora_sql.options().threads(),
+            )
         } else {
             process_spot_works(work_spots)
         };
-        output.extend(results);
+        output.extend(results.into_iter().flat_map(|(_, r)| r));
 
         for error in root_errors {
             output.push(header(names::INSTANCE, '|'));
@@ -177,82 +187,74 @@ fn remap_filter(filter: SectionFilter, ora_sql: &config::ora_sql::Config) -> Opt
     }
 }
 
-fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
+fn process_spot_works(works: Vec<OpenedSpotWorks>) -> Vec<ClosedSpotResults> {
     works
         .into_iter()
-        .flat_map(|(spot, instance_works)| {
+        .map(|(spot, instance_works)| {
             log::info!("Spot: {:?}", spot.target());
-            instance_works
+            let results = instance_works
                 .iter()
                 .flat_map(|(instance, query_blocks)| {
                     log::info!("Instance: {}", instance);
                     let session_timer =
                         PerfTimer::start("session", Label::Block(&instance.to_string()));
-                    let r = {
-                        let connect_timer = PerfTimer::start("connection", Label::Inline);
-                        let conn = spot.clone().connect(None);
-                        connect_timer.stop();
-                        conn
-                    };
-                    let output = match r {
-                        Ok(opened) => query_blocks
-                            .iter()
-                            .filter_map(|query_block| {
-                                log::info!("Query: {}", query_block.title);
-                                with_container(&opened, query_block.container.as_ref(), || {
-                                    let mut results = vec![query_block.title.clone()];
-                                    results.extend(_exec_queries(
-                                        &opened,
-                                        instance,
-                                        &query_block.queries,
-                                        &query_block.post_processing,
-                                        &query_block.title,
-                                    ));
-                                    results.join("\n")
-                                })
-                                .map_err(|e| log::warn!("Cannot switch container: {e}, skipping"))
-                                .ok()
+
+                    let output = query_blocks
+                        .iter()
+                        .filter_map(|query_block| {
+                            log::info!("Query: {}", query_block.title);
+                            with_container(&spot, query_block.container.as_ref(), || {
+                                let mut results = vec![query_block.title.clone()];
+                                results.extend(_exec_queries(
+                                    &spot,
+                                    instance,
+                                    &query_block.queries,
+                                    &query_block.post_processing,
+                                    &query_block.title,
+                                ));
+                                results.join("\n")
                             })
-                            .collect::<Vec<String>>(),
-                        Err(e) => {
-                            log::error!("Failed to connect to instance {}: {}", instance, e);
-                            vec![] // Skip this instance if connection fails
-                        }
-                    };
+                            .map_err(|e| log::warn!("Cannot switch container: {e}, skipping"))
+                            .ok()
+                        })
+                        .collect::<Vec<String>>();
+
                     session_timer.stop();
                     output
                 })
-                .collect::<Vec<_>>()
+                .collect::<Vec<String>>();
+            (spot.close(), results)
         })
         .collect::<Vec<_>>()
 }
 
-fn process_spot_works_para(works: Vec<SpotWorks>, threads: usize) -> Vec<String> {
+fn process_spot_works_para(works: Vec<ClosedSpotWorks>, threads: usize) -> Vec<ClosedSpotResults> {
     let threads = threads.clamp(1, MAX_THREAD_COUNT);
     works
         .into_iter()
-        .flat_map(|(spot, instance_works)| {
-            log::info!("Spot: {:?}", spot.target());
+        .flat_map(|(closed, instance_works)| {
+            log::info!("Spot: {:?}", closed.target());
+
             instance_works
                 .iter()
                 .flat_map(|(instance, query_blocks)| {
                     log::info!("Instance: {}", instance);
                     let session_timer =
                         PerfTimer::start("session", Label::Block(&instance.to_string()));
-                    let spots = open_spots(&spot, instance, threads);
-                    if spots.is_empty() {
+                    let opened_spots = open_spots(&closed, instance, threads);
+                    if opened_spots.is_empty() {
                         log::error!("Failed to connect to instance {}", instance);
                         session_timer.stop();
                         return vec![];
                     }
-                    let job_data: Vec<JobData> = make_job_data(spots, query_blocks);
+                    let job_data: Vec<JobData> = make_job_data(opened_spots, query_blocks);
                     let thread_pool = build_thread_pool(threads);
-                    let global_output = Arc::new(Mutex::new(Vec::new()));
+                    let global_output = Mutex::new(Vec::new());
                     thread_pool.scope(|scope| {
                         for job in job_data {
-                            let thread_output = Arc::clone(&global_output);
+                            let thread_output = &global_output;
                             scope.spawn(move |_| {
-                                let result = job
+                                let results = job
                                     .query_blocks
                                     .iter()
                                     .flat_map(|query_block| {
@@ -280,15 +282,16 @@ fn process_spot_works_para(works: Vec<SpotWorks>, threads: usize) -> Vec<String>
                                         )
                                     })
                                     .collect::<Vec<String>>();
-                                thread_output.lock().unwrap().extend(result);
+
+                                thread_output
+                                    .lock()
+                                    .unwrap()
+                                    .push((job.spot.close(), results));
                             })
                         }
                     });
                     session_timer.stop();
-                    Arc::try_unwrap(global_output)
-                        .unwrap()
-                        .into_inner()
-                        .unwrap()
+                    global_output.into_inner().unwrap()
                 })
                 .collect::<Vec<_>>()
         })
@@ -300,21 +303,16 @@ fn open_spots(
     instance_name: &InstanceName,
     thread_count: usize,
 ) -> Vec<OpenedSpot> {
-    std::iter::repeat_with(|| {
-        let connect_timer = PerfTimer::start("connection", Label::Inline);
-        let conn = spot.clone().connect(None);
-        connect_timer.stop();
-        conn
-    })
-    .take(thread_count)
-    .filter_map(|r| match r {
-        Ok(conn) => Some(conn),
-        Err(e) => {
-            log::error!("Failed to connect to instance {}: {}", instance_name, e);
-            None
-        }
-    })
-    .collect::<Vec<_>>()
+    std::iter::repeat_with(|| spot.clone().connect(None))
+        .take(thread_count)
+        .filter_map(|r| match r {
+            Ok(conn) => Some(conn),
+            Err(e) => {
+                log::error!("Failed to connect to instance {}: {}", instance_name, e);
+                None
+            }
+        })
+        .collect::<Vec<_>>()
 }
 
 fn build_thread_pool(threads: usize) -> rayon::ThreadPool {

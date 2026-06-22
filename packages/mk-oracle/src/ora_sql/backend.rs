@@ -20,6 +20,7 @@ use crate::config::{
     connection::EngineTag,
     ora_sql::Endpoint,
 };
+use crate::ora_sql::perf::{Label, PerfTimer};
 use crate::ora_sql::types::Target;
 use crate::types::{ConnectionStringType, Credentials, InstanceName, PdbName, SqlQuery};
 use anyhow::{Context, Result};
@@ -273,7 +274,11 @@ impl Clone for Spot<Closed> {
 impl Spot<Closed> {
     pub fn connect(mut self, use_instance: Option<&InstanceName>) -> Result<Spot<Opened>> {
         log::info!("Connecting to {:?}", self.target);
+        let connect_timer = PerfTimer::start("connection", Label::Inline);
         self.engine.connect(&self.target, use_instance)?;
+
+        connect_timer.stop();
+
         Ok(Spot {
             target: self.target,
             engine: self.engine,

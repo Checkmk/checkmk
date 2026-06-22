@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Scrape Werks from changes listed in Checkmk repository."""
 
+import netrc
 import os
 import re
 from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
 from dataclasses import dataclass, field, fields
+from functools import cache
 from pathlib import Path
 from typing import Final
 
@@ -17,6 +19,7 @@ from scripts.gerrit_api.werks import werk_details, WerkImpact
 
 ENV_GERRIT_USER: Final = "GERRIT_USER"
 ENV_GERRIT_HTTP_CREDS: Final = "GERRIT_HTTP_CREDS"
+GERRIT_HOST: Final = "review.lan.tribe29.com"
 # TODO: improve detection of master branch's version.
 MASTER_BRANCH: Final = "3.0.0"
 CSV_DELIMITER: Final = ", "
@@ -54,8 +57,24 @@ class CSVEntry:
         )
 
 
+@cache
+def netrc_credentials() -> tuple[str, str]:
+    """Read the `login`/`password` for the gerrit host from the user's `~/.netrc`.
+
+    Return empty strings when the file is missing, unparseable, or has no entry for the host.
+    """
+    try:
+        authenticators = netrc.netrc().authenticators(GERRIT_HOST)
+    except (FileNotFoundError, netrc.NetrcParseError):
+        return "", ""
+    if authenticators is None:
+        return "", ""
+    login, _account, password = authenticators
+    return login or "", password or ""
+
+
 def parsed_arguments() -> type[TCliArgs]:
-    """Parse arguments from the CLI or the environment variables."""
+    """Parse arguments from the CLI, environment variables or `~/.netrc`."""
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
 
     # required arguments
@@ -78,10 +97,13 @@ def parsed_arguments() -> type[TCliArgs]:
     # optional arguments
 
     def gerrit_username(value: str) -> str:
-        """Initialize username using the environment variable, if necessary."""
-        user = value or os.getenv(ENV_GERRIT_USER, "")
+        """Initialize username using the environment variable or `~/.netrc`, if necessary."""
+        user = value or os.getenv(ENV_GERRIT_USER, "") or netrc_credentials()[0]
         if not user:
-            raise ValueError(f"Initialize `{ENV_GERRIT_USER}` to read the gerrit username!")
+            raise ValueError(
+                f"Initialize `{ENV_GERRIT_USER}` or add a `machine {GERRIT_HOST}` entry "
+                "to your `~/.netrc` to read the gerrit username!"
+            )
         return user
 
     parser.add_argument(
@@ -92,16 +114,17 @@ def parsed_arguments() -> type[TCliArgs]:
         default="",
         help=(
             "Provide the username corresponding to the gerrit-account. "
-            f"By default, use the one defined within environment variable `{ENV_GERRIT_USER}`."
+            f"By default, use the one defined within environment variable `{ENV_GERRIT_USER}`, "
+            f"falling back to the `login` of the `machine {GERRIT_HOST}` entry in `~/.netrc`."
         ),
     )
 
     def http_creds(value: str) -> str:
-        creds = value or os.getenv(ENV_GERRIT_HTTP_CREDS, "")
+        creds = value or os.getenv(ENV_GERRIT_HTTP_CREDS, "") or netrc_credentials()[1]
         if not creds:
             raise ValueError(
-                f"Initialize `{ENV_GERRIT_HTTP_CREDS}` to read user specific "
-                "gerrit HTTP credentials!"
+                f"Initialize `{ENV_GERRIT_HTTP_CREDS}` or add a `machine {GERRIT_HOST}` entry "
+                "to your `~/.netrc` to read user specific gerrit HTTP credentials!"
             )
         return creds
 
@@ -113,8 +136,9 @@ def parsed_arguments() -> type[TCliArgs]:
         default="",
         help=(
             "Provide the user specific HTTP credentials required to access gerrit API. "
-            f"By default, these are read from the environment variable `{ENV_GERRIT_HTTP_CREDS}`.\n"
-            "Set it up using `https://review.lan.tribe29.com/settings/#HTTPCredentials`."
+            f"By default, these are read from the environment variable `{ENV_GERRIT_HTTP_CREDS}`, "
+            f"falling back to the `password` of the `machine {GERRIT_HOST}` entry in `~/.netrc`.\n"
+            f"Set it up using `https://{GERRIT_HOST}/settings/#HTTPCredentials`."
         ),
     )
 

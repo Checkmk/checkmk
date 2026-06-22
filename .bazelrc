@@ -18,8 +18,8 @@ startup --host_jvm_args=-XX:ConcGCThreads=2
 common:linux --disk_cache=~/.cache/bazel_disk_cache/
 common:linux --experimental_disk_cache_gc_max_size=100G
 
-# reading WORKSPACE is disabled by default for Bazel 8
-common --enable_workspace
+# WORKSPACE support is fully removed; everything is defined via Bzlmod (MODULE.bazel)
+common --noenable_workspace
 
 # enable visibility checking for config_settings
 common --incompatible_enforce_config_setting_visibility

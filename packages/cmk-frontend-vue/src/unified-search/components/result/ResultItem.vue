@@ -168,7 +168,12 @@ onBeforeUnmount(() => {
         class="result-item-handler inline"
         :class="{ indented: props.indented }"
       >
-        <CmkButton ref="item-focus-inline" :href="ib.target.url" class="inline-button">
+        <CmkButton
+          ref="item-focus-inline"
+          :href="ib.target.url"
+          target="main"
+          class="inline-button"
+        >
           <div v-if="ib.icon" class="result-item-inner-start">
             <CmkDynamicIcon :spec="ib.icon" size="small" class="result-item-icon" />
           </div>

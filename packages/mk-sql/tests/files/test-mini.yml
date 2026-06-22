@@ -1,5 +1,11 @@
 ---
 mssql:
   main: # mandatory, to be used if no specific config
+    options:
+      ignore_inactive_local_instances: true
     authentication: # mandatory
       username: "f" # mandatory
+    sections:
+      - instance:
+
+

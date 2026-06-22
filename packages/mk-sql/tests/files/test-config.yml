@@ -43,6 +43,7 @@ mssql:
     options: # optional
       max_connections: 6 # optional, default: absent, 6
       max_queries: 16 # optional, for the future use
+      ignore_inactive_local_instances: true # optional, default: false
     authentication: # mandatory
       username: "foo" # mandatory
       password: "bar" # optional

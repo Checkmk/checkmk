@@ -8,6 +8,7 @@ pub mod keys {
 
     pub const OPTIONS: &str = "options";
     pub const MAX_CONNECTIONS: &str = "max_connections";
+    pub const IGNORE_INACTIVE_LOCAL_INSTANCES: &str = "ignore_inactive_local_instances";
 
     pub const AUTHENTICATION: &str = "authentication";
     pub const USERNAME: &str = "username";
@@ -75,6 +76,7 @@ pub mod defaults {
     use super::values;
     pub const MAX_CONNECTIONS: u32 = 6;
     pub const MAX_QUERIES: u32 = 64;
+    pub const IGNORE_INACTIVE_LOCAL_INSTANCES: bool = false;
 
     #[cfg(windows)]
     pub const AUTH_TYPE: &str = values::INTEGRATED;

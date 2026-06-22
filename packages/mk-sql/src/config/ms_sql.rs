@@ -38,6 +38,7 @@ pub struct Config {
 pub struct Options {
     max_connections: MaxConnections,
     max_queries: MaxQueries,
+    ignore_inactive_local_instances: bool,
 }
 
 impl Default for Options {
@@ -45,6 +46,7 @@ impl Default for Options {
         Self {
             max_connections: defaults::MAX_CONNECTIONS.into(),
             max_queries: defaults::MAX_QUERIES.into(),
+            ignore_inactive_local_instances: defaults::IGNORE_INACTIVE_LOCAL_INSTANCES,
         }
     }
 }
@@ -54,6 +56,7 @@ impl Options {
         Self {
             max_connections,
             max_queries: defaults::MAX_QUERIES.into(),
+            ignore_inactive_local_instances: defaults::IGNORE_INACTIVE_LOCAL_INSTANCES,
         }
     }
 
@@ -63,6 +66,10 @@ impl Options {
 
     pub fn max_queries(&self) -> MaxQueries {
         self.max_queries.clone()
+    }
+
+    pub fn ignore_inactive_local_instances(&self) -> bool {
+        self.ignore_inactive_local_instances
     }
 
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
@@ -80,6 +87,10 @@ impl Options {
                 })
                 .into(),
             max_queries: defaults::MAX_QUERIES.into(),
+            ignore_inactive_local_instances: options.get_bool(
+                keys::IGNORE_INACTIVE_LOCAL_INSTANCES,
+                defaults::IGNORE_INACTIVE_LOCAL_INSTANCES,
+            ),
         }))
     }
 }
@@ -292,9 +303,14 @@ fn get_additional_registry_instances(
 }
 
 pub fn is_local_endpoint(auth: &Authentication, conn: &Connection) -> bool {
-    auth.auth_type() == &AuthType::Integrated
-        || conn.hostname() == HostName::from("localhost".to_owned())
-        || conn.hostname() == HostName::from("127.0.0.1".to_owned())
+    auth.auth_type() == &AuthType::Integrated || is_local_hostname(conn)
+}
+
+pub fn is_local_hostname(conn: &Connection) -> bool {
+    let h = conn.hostname();
+    h == HostName::from("localhost".to_owned())
+        || h == HostName::from("127.0.0.1".to_owned())
+        || h == HostName::from("::1".to_owned())
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -925,6 +941,7 @@ mssql:
   main: # mandatory, to be used if no specific config
     options:
       max_connections: 5
+      ignore_inactive_local_instances: true
     authentication: # mandatory
       username: "foo" # mandatory
       password: "bar" # optional
@@ -1129,6 +1146,28 @@ piggyback:
         let s = Options::default();
         assert_eq!(s.max_connections(), MAX_CONNECTIONS.into());
         assert_eq!(s.max_queries(), MAX_QUERIES.into());
+        assert!(!s.ignore_inactive_local_instances());
+    }
+
+    #[test]
+    fn test_options_ignore_inactive_local_instances_default() {
+        let yaml = create_yaml("options:\n  max_connections: 3");
+        let opts = Options::from_yaml(&yaml).unwrap().unwrap();
+        assert!(!opts.ignore_inactive_local_instances());
+    }
+
+    #[test]
+    fn test_options_ignore_inactive_local_instances_true() {
+        let yaml = create_yaml("options:\n  ignore_inactive_local_instances: true");
+        let opts = Options::from_yaml(&yaml).unwrap().unwrap();
+        assert!(opts.ignore_inactive_local_instances());
+    }
+
+    #[test]
+    fn test_options_ignore_inactive_local_instances_false() {
+        let yaml = create_yaml("options:\n  ignore_inactive_local_instances: false");
+        let opts = Options::from_yaml(&yaml).unwrap().unwrap();
+        assert!(!opts.ignore_inactive_local_instances());
     }
 
     #[test]
@@ -1610,7 +1649,8 @@ connection:
     fn test_config() {
         let mut c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
         clean_config_from_custom_instances(&mut c);
-        assert_eq!(c.options(), &Options::new(5.into()));
+        assert_eq!(c.options().max_connections(), 5.into());
+        assert!(c.options().ignore_inactive_local_instances());
         assert_eq!(c.instances().len(), 2 + expected_count_in_registry());
         assert!(c.instances()[0].piggyback().is_some());
         assert_eq!(

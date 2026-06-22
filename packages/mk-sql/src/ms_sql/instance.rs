@@ -2074,7 +2074,7 @@ async fn find_working_instances(
     ms_sql: &config::ms_sql::Config,
     environment: &Env,
 ) -> Result<Vec<SqlInstance>> {
-    let builders = find_all_instance_builders(ms_sql).await?;
+    let builders = find_all_instance_builders(ms_sql, get_active_local_instances(ms_sql)).await?;
     if builders.is_empty() {
         log::warn!("Found NO allowed SQL server instances");
         return Ok(Vec::new());
@@ -2093,6 +2093,7 @@ async fn find_working_instances(
 
 pub async fn find_all_instance_builders(
     ms_sql: &config::ms_sql::Config,
+    active: Option<std::collections::HashSet<String>>,
 ) -> Result<Vec<SqlInstanceBuilder>> {
     let detected = if ms_sql.discovery().detect() {
         let builders = detect_instance_builders(ms_sql).await;
@@ -2109,11 +2110,14 @@ pub async fn find_all_instance_builders(
     .into_iter()
     .map(|b| b.piggyback(ms_sql.piggyback_host().map(|h| h.to_string().into())))
     .collect();
+
+    let detected = filter_by_active(detected, &active);
+
     let customizations: HashMap<&InstanceName, &CustomInstance> = ms_sql
         .instances()
         .iter()
         .filter_map(|i| {
-            if ms_sql.is_instance_allowed(i.name()) {
+            if ms_sql.is_instance_allowed(i.name()) && is_instance_active(i.name(), &active) {
                 Some((i.name(), i))
             } else {
                 None
@@ -2171,6 +2175,58 @@ async fn add_custom_instance_builders(
     }
     print_builders("Customization", &builders);
     Ok(builders)
+}
+
+#[cfg(windows)]
+pub fn get_active_local_instances(
+    ms_sql: &config::ms_sql::Config,
+) -> Option<std::collections::HashSet<String>> {
+    use crate::config::ms_sql::is_local_hostname;
+    if !ms_sql.options().ignore_inactive_local_instances() || !is_local_hostname(ms_sql.conn()) {
+        return None;
+    }
+    use std::collections::HashSet;
+    let active: HashSet<String> = crate::platform::processes::find_running_instances()
+        .into_iter()
+        .collect();
+    log::info!("Active local instances: {:?}", active);
+    Some(active)
+}
+
+#[cfg(not(windows))]
+pub fn get_active_local_instances(
+    _ms_sql: &config::ms_sql::Config,
+) -> Option<std::collections::HashSet<String>> {
+    None
+}
+
+fn filter_by_active(
+    builders: Vec<SqlInstanceBuilder>,
+    active: &Option<std::collections::HashSet<String>>,
+) -> Vec<SqlInstanceBuilder> {
+    let Some(active) = active else {
+        return builders;
+    };
+    builders
+        .into_iter()
+        .filter(|b| {
+            let name = b.get_name().to_string().to_uppercase();
+            let allowed = active.contains(&name);
+            if !allowed {
+                log::info!("Filtering out inactive local instance '{name}'");
+            }
+            allowed
+        })
+        .collect()
+}
+
+fn is_instance_active(
+    name: &InstanceName,
+    active: &Option<std::collections::HashSet<String>>,
+) -> bool {
+    active
+        .as_ref()
+        .is_none_or(|a| a.contains(&name.to_string().to_uppercase()))
 }
 
 fn print_builders(title: &str, builders: &[SqlInstanceBuilder]) {
@@ -2625,7 +2681,8 @@ fn to_sql_instance(answers: &UniAnswer) -> Vec<SqlInstanceBuilder> {
 #[cfg(test)]
 mod tests {
     use super::{
-        generate_instance_entries, generate_signaling_blocks, SqlInstance, SqlInstanceBuilder,
+        generate_instance_entries, generate_signaling_blocks, get_active_local_instances,
+        SqlInstance, SqlInstanceBuilder,
     };
     use crate::args::Args;
     use crate::config::ms_sql::{Authentication, Connection, Endpoint};
@@ -2633,6 +2690,51 @@ mod tests {
     use crate::setup::Env;
     use crate::types::Port;
     use std::path::Path;
+
+    #[test]
+    fn test_get_active_local_instances_flag_false_returns_none() {
+        let config = crate::config::ms_sql::Config::from_string(
+            r#"
+---
+mssql:
+  main:
+    options:
+      ignore_inactive_local_instances: false
+    authentication:
+      username: "test_user"
+      type: "sql_server"
+    connection:
+      hostname: "localhost"
+"#,
+        )
+        .unwrap()
+        .unwrap();
+
+        assert!(get_active_local_instances(&config).is_none());
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn test_get_active_local_instances_non_windows_returns_none() {
+        let config = crate::config::ms_sql::Config::from_string(
+            r#"
+---
+mssql:
+  main:
+    options:
+      ignore_inactive_local_instances: true
+    authentication:
+      username: "test_user"
+      type: "sql_server"
+    connection:
+      hostname: "localhost"
+"#,
+        )
+        .unwrap()
+        .unwrap();
+
+        assert!(get_active_local_instances(&config).is_none());
+    }
 
     #[test]
     fn test_generate_state_entry() {

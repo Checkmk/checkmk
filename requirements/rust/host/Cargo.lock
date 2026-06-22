@@ -1710,6 +1710,7 @@ dependencies = [
  "tiberius",
  "tokio",
  "tokio-util",
+ "winapi",
  "winreg",
  "yaml-rust2",
 ]

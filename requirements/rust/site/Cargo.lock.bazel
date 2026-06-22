@@ -1,5 +1,5 @@
 {
-  "checksum": "6762240aaf16c8a4b79e08315f3afdccef9a4d318f288d9e212b1d7e5e6ae886",
+  "checksum": "776d0562312caab2f612aff1b44a18126fc1eb88bf5e2788bbe643858c633cca",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -1621,7 +1621,7 @@
               "target": "log"
             },
             {
-              "id": "openssl 0.10.75",
+              "id": "openssl 0.10.80",
               "target": "openssl"
             },
             {
@@ -6490,7 +6490,7 @@
                 "target": "log"
               },
               {
-                "id": "openssl 0.10.75",
+                "id": "openssl 0.10.80",
                 "target": "openssl"
               },
               {
@@ -6498,7 +6498,7 @@
                 "target": "openssl_probe"
               },
               {
-                "id": "openssl-sys 0.9.111",
+                "id": "openssl-sys 0.9.116",
                 "target": "openssl_sys"
               }
             ],
@@ -6548,7 +6548,7 @@
           "selects": {
             "cfg(not(any(target_os = \"windows\", target_vendor = \"apple\")))": [
               {
-                "id": "openssl-sys 0.9.111",
+                "id": "openssl-sys 0.9.116",
                 "target": "openssl_sys"
               }
             ]
@@ -7185,14 +7185,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl 0.10.75": {
+    "openssl 0.10.80": {
       "name": "openssl",
-      "version": "0.10.75",
+      "version": "0.10.80",
       "package_url": "https://github.com/rust-openssl/rust-openssl",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl/0.10.75/download",
-          "sha256": "08838db121398ad17ab8531ce9de97b244589089e290a384c900cb9ff7434328"
+          "url": "https://static.crates.io/crates/openssl/0.10.80/download",
+          "sha256": "a45fa2aa886c42762255da344f0a0d313e254066c46aad76f300c3d3da62d967"
         }
       },
       "targets": [
@@ -7251,15 +7251,11 @@
               "target": "libc"
             },
             {
-              "id": "once_cell 1.20.3",
-              "target": "once_cell"
-            },
-            {
-              "id": "openssl 0.10.75",
+              "id": "openssl 0.10.80",
               "target": "build_script_build"
             },
             {
-              "id": "openssl-sys 0.9.111",
+              "id": "openssl-sys 0.9.116",
               "target": "openssl_sys",
               "alias": "ffi"
             }
@@ -7276,7 +7272,7 @@
           ],
           "selects": {}
         },
-        "version": "0.10.75"
+        "version": "0.10.80"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -7291,7 +7287,7 @@
         "link_deps": {
           "common": [
             {
-              "id": "openssl-sys 0.9.111",
+              "id": "openssl-sys 0.9.116",
               "target": "openssl_sys",
               "alias": "ffi"
             }
@@ -7400,14 +7396,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl-sys 0.9.111": {
+    "openssl-sys 0.9.116": {
       "name": "openssl-sys",
-      "version": "0.9.111",
+      "version": "0.9.116",
       "package_url": "https://github.com/rust-openssl/rust-openssl",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl-sys/0.9.111/download",
-          "sha256": "82cab2d520aa75e3c58898289429321eb788c3106963d0dc886ec7a5f4adc321"
+          "url": "https://static.crates.io/crates/openssl-sys/0.9.116/download",
+          "sha256": "f28a22dc7140cda5f096e5e7724a6962ca81a7f8bfd2979f9b18c11af56318c4"
         }
       },
       "targets": [
@@ -7448,14 +7444,14 @@
               "target": "libc"
             },
             {
-              "id": "openssl-sys 0.9.111",
+              "id": "openssl-sys 0.9.116",
               "target": "build_script_main"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.9.111"
+        "version": "0.9.116"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -16217,7 +16213,7 @@
     "httpdate 1.0.3",
     "log 0.4.25",
     "mime 0.3.17",
-    "openssl 0.10.75",
+    "openssl 0.10.80",
     "openssl-probe 0.1.6",
     "regex 1.11.1",
     "reqwest 0.12.12",

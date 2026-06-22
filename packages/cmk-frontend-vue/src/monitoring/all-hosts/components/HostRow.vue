@@ -45,16 +45,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     @update:model-value="toggleSelected"
   />
   <StateCell v-if="hasColumn('state')" column-id="state" :state="row.state" />
-  <StringCell
-    v-if="hasColumn('name')"
-    column-id="name"
-    :value="row.name"
-    :linked-to="{
-      href: `view.py?host=${row.name}&view_name=host`,
-      target: '_top',
-      variant: 'icon'
-    }"
-  />
+  <StringCell v-if="hasColumn('name')" column-id="name" :value="row.name" />
   <StringCell v-if="hasColumn('alias')" column-id="alias" :value="row.alias" />
   <StringCell v-if="hasColumn('address')" column-id="address" :value="row.address" />
   <NumberCell

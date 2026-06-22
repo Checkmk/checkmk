@@ -268,7 +268,7 @@ fn test_migrate_config_yaml_structure() {
         Some("c##checkmk:********::localhost:1521:")
     );
     assert_eq!(env_value_of("ASMUSER"), Some("/::SYSASM:::"));
-    assert_eq!(env_value_of("CACHE_MAXAGE"), Some("600"));
+    assert_eq!(env_value_of("CACHE_MAXAGE"), Some("601"));
     // assert_eq!(env_value_of("ONLY_SIDS"), Some("..."));
     // assert_eq!(env_value_of("ORACLE_HOME"), Some("..."));
     // assert_eq!(env_value_of("TNS_ADMIN"), Some("..."));
@@ -347,7 +347,7 @@ fn test_execute_config_reference() {
         Some("xe2user:xe2pwd:SYSDBA:localhost1:1521:")
     );
     assert_eq!(value_of("ASMUSER"), Some("/::SYSASM:::"));
-    assert_eq!(value_of("CACHE_MAXAGE"), Some("600"));
+    assert_eq!(value_of("CACHE_MAXAGE"), Some("601"));
     assert!(
         value_of("SYNC_SECTIONS").unwrap().contains("instance"),
         "SYNC_SECTIONS must contain instance"
@@ -445,6 +445,22 @@ fn test_migrate_reference_config_connection_and_auth() {
     assert_eq!(
         xe2_inst.auth().role().map(|r| r.to_string()),
         Some("sysdba".to_string())
+    );
+}
+
+#[test]
+fn test_migrate_reference_config_cache_age() {
+    let cfg = legacy_cfg_path();
+    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+    assert_eq!(
+        ora.cache_age(),
+        601,
+        "cache_age must match CACHE_MAXAGE from reference config"
     );
 }
 

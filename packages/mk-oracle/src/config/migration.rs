@@ -177,8 +177,13 @@ pub fn convert(
     let asyncs: HashSet<&str> = async_n.union(&async_a).copied().collect();
     let all: HashSet<&str> = normals.union(&asms).copied().collect();
 
+    let cache_maxage = variables
+        .get("CACHE_MAXAGE")
+        .and_then(|v| v.parse::<u32>().ok());
+
     out.extend(format_instances(&dbuser, &dbuser_extras));
     out.extend(format_sections(&all, &asyncs, &normals, &asms));
+    out.extend(format_cache_age(cache_maxage));
 
     Ok(out)
 }
@@ -250,6 +255,13 @@ fn format_sections(
         }
     }
     lines
+}
+
+fn format_cache_age(cache_maxage: Option<u32>) -> Vec<String> {
+    let Some(age) = cache_maxage else {
+        return Vec::new();
+    };
+    vec![format!("    cache_age: {age}\n")]
 }
 
 fn format_timestamp() -> String {

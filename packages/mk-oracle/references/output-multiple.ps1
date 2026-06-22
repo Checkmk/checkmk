@@ -20,4 +20,4 @@ $SYNC_ASM_SECTIONS = @("instance", "processes")
 $ASYNC_ASM_SECTIONS = @("asm_diskgroup")
 
 # Cache time (i.e. check interval) for async sections
-$CACHE_MAXAGE = 600
+$CACHE_MAXAGE = 601

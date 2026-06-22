@@ -134,28 +134,6 @@ pub fn convert(
         out.push_str(&format!("# {name} {value}\n"));
     }
 
-    let sync_normal = parse_sections(variables, "SYNC_SECTIONS");
-    let async_normal = parse_sections(variables, "ASYNC_SECTIONS");
-    let sync_asm = parse_sections(variables, "SYNC_ASM_SECTIONS");
-    let async_asm = parse_sections(variables, "ASYNC_ASM_SECTIONS");
-
-    let all_normal: HashSet<&str> = sync_normal
-        .iter()
-        .chain(async_normal.iter())
-        .map(|s| s.as_str())
-        .collect();
-    let all_asm: HashSet<&str> = sync_asm
-        .iter()
-        .chain(async_asm.iter())
-        .map(|s| s.as_str())
-        .collect();
-    let all_async: HashSet<&str> = async_normal
-        .iter()
-        .chain(async_asm.iter())
-        .map(|s| s.as_str())
-        .collect();
-    let all_sections: HashSet<&str> = all_normal.union(&all_asm).copied().collect();
-
     out.push_str("# --- Unified Config ---\n---\noracle:\n  main:\n");
 
     // connection
@@ -181,61 +159,97 @@ pub fn convert(
         out.push_str(&format!("      role: {}\n", role.to_lowercase()));
     }
 
-    // instances from DBUSER and DBUSER_*
-    out.push_str("    instances:\n");
-    let all_dbusers = std::iter::once(&dbuser).chain(dbuser_extras.iter());
+    let sync_normal = parse_sections(variables, "SYNC_SECTIONS");
+    let async_normal = parse_sections(variables, "ASYNC_SECTIONS");
+    let sync_asm = parse_sections(variables, "SYNC_ASM_SECTIONS");
+    let async_asm = parse_sections(variables, "ASYNC_ASM_SECTIONS");
+
+    fn as_str(s: &HashSet<String>) -> HashSet<&str> {
+        s.iter().map(|s| s.as_str()).collect()
+    }
+    let sync_n = as_str(&sync_normal);
+    let async_n = as_str(&async_normal);
+    let sync_a = as_str(&sync_asm);
+    let async_a = as_str(&async_asm);
+
+    let normals: HashSet<&str> = sync_n.union(&async_n).copied().collect();
+    let asms: HashSet<&str> = sync_a.union(&async_a).copied().collect();
+    let asyncs: HashSet<&str> = async_n.union(&async_a).copied().collect();
+    let all: HashSet<&str> = normals.union(&asms).copied().collect();
+
+    out.extend(format_instances(&dbuser, &dbuser_extras));
+    out.extend(format_sections(&all, &asyncs, &normals, &asms));
+
+    Ok(out)
+}
+
+fn format_instances(dbuser: &LegacyDbUser, dbuser_extras: &[LegacyDbUser]) -> Vec<String> {
+    let mut lines = vec!["    instances:\n".to_string()];
+    let all_dbusers = std::iter::once(dbuser).chain(dbuser_extras.iter());
     for entry in all_dbusers {
         let sid = entry.sid.as_deref().unwrap_or(&entry.alias_or_sid);
-        out.push_str(&format!("      - sid: {sid}\n"));
+        lines.push(format!("      - sid: {sid}\n"));
         if entry.sid.is_some() && entry.alias_or_sid == "$ORACLE_SID" {
             // sid known from variable name suffix, no explicit alias needed
         } else {
-            out.push_str(&format!("        alias: {}\n", entry.alias_or_sid));
+            lines.push(format!("        alias: {}\n", entry.alias_or_sid));
         }
-        // DBUSER (sid=None) uses main-level connection/auth, skip in instance
-        if entry.sid.is_some() {
-            let has_connection = !entry.hostname.is_empty() || entry.port.is_some();
-            if has_connection {
-                out.push_str("        connection:\n");
-                if !entry.hostname.is_empty() {
-                    out.push_str(&format!("          hostname: {}\n", entry.hostname));
-                }
-                if let Some(port) = &entry.port {
-                    out.push_str(&format!("          port: {port}\n"));
-                }
+        if entry.sid.is_none() {
+            continue;
+        }
+
+        let has_connection = !entry.hostname.is_empty() || entry.port.is_some();
+        if has_connection {
+            lines.push("        connection:\n".to_string());
+            if !entry.hostname.is_empty() {
+                lines.push(format!("          hostname: {}\n", entry.hostname));
             }
-            let has_auth = !entry.username.is_empty() || !entry.password.is_empty();
-            if has_auth {
-                out.push_str(&format!(
+            if let Some(port) = &entry.port {
+                lines.push(format!("          port: {port}\n"));
+            }
+        }
+        let has_auth = !entry.username.is_empty() || !entry.password.is_empty();
+        if has_auth {
+            lines.push(format!(
                     "        authentication:\n          username: \"{}\"\n          password: \"{}\"\n          type: standard\n",
                     entry.username, entry.password
                 ));
-                if let Some(role) = &entry.role {
-                    out.push_str(&format!("          role: {}\n", role.to_lowercase()));
-                }
+            if let Some(role) = &entry.role {
+                lines.push(format!("          role: {}\n", role.to_lowercase()));
             }
         }
     }
+    lines
+}
 
-    // sections
-    if !all_sections.is_empty() {
-        let mut sorted: Vec<&str> = all_sections.into_iter().collect();
-        sorted.sort();
-        out.push_str("    sections:\n");
-        for name in sorted {
-            out.push_str(&format!("      - {name}:\n"));
-            if all_async.contains(name) {
-                out.push_str("          is_async: yes\n");
-            }
-            if all_normal.contains(name) && all_asm.contains(name) {
-                out.push_str("          affinity: \"all\"\n");
-            } else if all_asm.contains(name) {
-                out.push_str("          affinity: \"asm\"\n");
-            }
+fn format_sections(
+    all_sections: &HashSet<&str>,
+    all_async: &HashSet<&str>,
+    all_normal: &HashSet<&str>,
+    all_asm: &HashSet<&str>,
+) -> Vec<String> {
+    if all_sections.is_empty() {
+        return Vec::new();
+    }
+    let mut sorted: Vec<&str> = all_sections.iter().copied().collect();
+    sorted.sort();
+    let mut lines = vec!["    sections:\n".to_string()];
+    for name in sorted {
+        let is_async = all_async.contains(name);
+        let affinity = if all_normal.contains(name) && all_asm.contains(name) {
+            Some("all")
+        } else if all_asm.contains(name) {
+            Some("asm")
+        } else {
+            None
+        };
+        lines.push(format!("      - {name}:\n"));
+        lines.push(format!("          is_async: {is_async}\n"));
+        if let Some(aff) = affinity {
+            lines.push(format!("          affinity: \"{aff}\"\n"));
         }
     }
-
-    Ok(out)
+    lines
 }
 
 fn format_timestamp() -> String {
@@ -517,8 +531,8 @@ mod tests {
         let result = convert("", "/test/cfg", &vars, TS).unwrap();
         assert!(result.contains("      - instance:\n"));
         assert!(result.contains("      - locks:\n"));
-        assert!(result.contains("      - rman:\n          is_async: yes\n"));
-        assert!(result.contains("      - tablespaces:\n          is_async: yes\n"));
+        assert!(result.contains("      - rman:\n          is_async: true\n"));
+        assert!(result.contains("      - tablespaces:\n          is_async: true\n"));
     }
 
     #[test]
@@ -533,20 +547,23 @@ mod tests {
         let result = convert("", "/test/cfg", &vars, TS).unwrap();
         // asm_diskgroup: async + asm-only
         assert!(result.contains(
-            "      - asm_diskgroup:\n          is_async: yes\n          affinity: \"asm\"\n"
+            "      - asm_diskgroup:\n          is_async: true\n          affinity: \"asm\"\n"
         ));
-        // instance: sync normal + sync asm → affinity: all, not async
-        assert!(result.contains("      - instance:\n          affinity: \"all\"\n"));
-        assert!(!result.contains("      - instance:\n          is_async:"));
-        // processes: asm-only (not in normal)
-        assert!(result.contains("      - processes:\n          affinity: \"asm\"\n"));
-        // locks: normal-only, sync → no affinity, no async
-        assert!(result.contains("      - locks:\n"));
-        assert!(!result.contains("      - locks:\n          affinity:"));
+        // instance: sync normal + sync asm → is_async: false, affinity: all
+        assert!(result.contains(
+            "      - instance:\n          is_async: false\n          affinity: \"all\"\n"
+        ));
+        // processes: asm-only (not in normal), sync
+        assert!(result.contains(
+            "      - processes:\n          is_async: false\n          affinity: \"asm\"\n"
+        ));
+        // locks: normal-only, sync → is_async: false, no affinity
+        assert!(result.contains("      - locks:\n          is_async: false\n"));
+        assert!(!result.contains("      - locks:\n          is_async: false\n          affinity:"));
         // tablespaces: normal-only, async
-        assert!(result.contains("      - tablespaces:\n          is_async: yes\n"));
+        assert!(result.contains("      - tablespaces:\n          is_async: true\n"));
         assert!(
-            !result.contains("      - tablespaces:\n          is_async: yes\n          affinity:")
+            !result.contains("      - tablespaces:\n          is_async: true\n          affinity:")
         );
     }
 
@@ -741,5 +758,68 @@ mod tests {
         assert_eq!(vars["DBUSER"], "checkmk:secret");
         assert_eq!(vars["CACHE_MAXAGE"], "600");
         assert_eq!(vars["REMOTE_INSTANCE_XE"], "user:pass::host");
+    }
+
+    fn make_dbuser(
+        sid: Option<&str>,
+        username: &str,
+        password: &str,
+        hostname: &str,
+        port: Option<&str>,
+        role: Option<&str>,
+        alias_or_sid: &str,
+    ) -> LegacyDbUser {
+        LegacyDbUser {
+            sid: sid.map(String::from),
+            username: username.to_string(),
+            password: password.to_string(),
+            hostname: hostname.to_string(),
+            port: port.map(String::from),
+            role: role.map(String::from),
+            alias_or_sid: alias_or_sid.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_format_instances() {
+        let dbuser = make_dbuser(
+            None,
+            "checkmk",
+            "secret",
+            "localhost",
+            Some("1521"),
+            None,
+            "$ORACLE_SID",
+        );
+        // XE1: inherits main connection/auth, custom alias
+        let xe1 = make_dbuser(Some("XE1"), "", "", "", None, None, "myalias");
+        // XE2: own connection + auth + role, alias=$ORACLE_SID (omitted)
+        let xe2 = make_dbuser(
+            Some("XE2"),
+            "xe2user",
+            "xe2pwd",
+            "dbhost",
+            Some("1522"),
+            Some("SYSDBA"),
+            "$ORACLE_SID",
+        );
+
+        let out: String = format_instances(&dbuser, &[xe1, xe2]).join("");
+
+        // DBUSER: sid from alias_or_sid, alias emitted
+        assert!(out.contains("      - sid: $ORACLE_SID\n"));
+        assert!(out.contains("        alias: $ORACLE_SID\n"));
+        // XE1: sid=XE1, alias=myalias, no connection/auth block
+        assert!(out.contains("      - sid: XE1\n"));
+        assert!(out.contains("        alias: myalias\n"));
+        assert!(!out.contains("      - sid: XE1\n        alias: myalias\n        connection:"));
+        assert!(!out.contains("      - sid: XE1\n        alias: myalias\n        authentication:"));
+        // XE2: sid=XE2, alias omitted ($ORACLE_SID), has connection + auth + role
+        assert!(out.contains("      - sid: XE2\n"));
+        assert!(!out.contains("      - sid: XE2\n        alias:"));
+        assert!(out.contains("          hostname: dbhost\n"));
+        assert!(out.contains("          port: 1522\n"));
+        assert!(out.contains("          username: \"xe2user\"\n"));
+        assert!(out.contains("          role: sysdba\n"));
     }
 }

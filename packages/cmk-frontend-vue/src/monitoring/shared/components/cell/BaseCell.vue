@@ -124,7 +124,7 @@ const highlightStyle = computed<CSSProperties>(() =>
 
 <style scoped>
 .monitoring-base-cell {
-  vertical-align: middle;
+  vertical-align: top;
   height: 24px;
   text-align: v-bind(effectiveJustify);
   background-color: var(--ux-theme-2);

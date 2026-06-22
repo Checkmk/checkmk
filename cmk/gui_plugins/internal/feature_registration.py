@@ -8,7 +8,6 @@ from dataclasses import dataclass
 
 from cmk.ccc.version import Edition
 from cmk.gui.autocompleters import AutocompleterRegistry
-from cmk.gui.graphing._metric_backend_registry import MetricBackendRegistry
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.sidebar import SnapinRegistry
@@ -25,7 +24,6 @@ class RegistrationContext:
     config_domain_registry: ConfigDomainRegistry
     config_variable_registry: ConfigVariableRegistry
     endpoint_family_registry: EndpointFamilyRegistry
-    metric_backend_registry: MetricBackendRegistry
     replication_path_registry: ReplicationPathRegistry
     snapin_registry: SnapinRegistry
     versioned_endpoint_registry: VersionedEndpointRegistry

@@ -193,11 +193,12 @@ def _use_version_specific_json_if_present(rule_json: str, cmk_version: CMKVersio
     Otherwise, return the default JSON filename present within `RULES_DIR`.
     """
     version_base = cmk_version.version_data.version_base
+    override_dir_name = f"overrides_for_{version_base}"
     try:
-        for rule_json_250 in os.listdir(RULES_DIR / f"overrides_for_{version_base}"):
+        for rule_json_250 in os.listdir(RULES_DIR / override_dir_name):
             if rule_json == rule_json_250:
                 # version-specific JSON file exists.
-                return str(Path(version_base) / rule_json)
+                return str(Path(override_dir_name) / rule_json)
     except FileNotFoundError:
         # version-specific directory does not exist.
         return rule_json

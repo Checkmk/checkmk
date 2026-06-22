@@ -152,11 +152,7 @@ class FileCache[TRawData: Sized](abc.ABC):
             self._logger.debug("Using cache (Simulation mode)")
             return True
 
-        if mode in {
-            Mode.NONE,
-            Mode.FORCE_SECTIONS,
-            Mode.RTC,
-        }:
+        if mode in {Mode.FORCE_SECTIONS, Mode.RTC}:
             self._logger.debug("Not using cache (Mode %s)", mode)
             return False
 

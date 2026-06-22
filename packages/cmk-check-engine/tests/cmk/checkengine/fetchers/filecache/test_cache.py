@@ -23,4 +23,3 @@ class TestMaxAge:
         assert max_age.get(Mode.CHECKING) == 42
         assert max_age.get(Mode.DISCOVERY) == 69
         assert max_age.get(Mode.INVENTORY) == 1337
-        assert max_age.get(Mode.NONE) == 0

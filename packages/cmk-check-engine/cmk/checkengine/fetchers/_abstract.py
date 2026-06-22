@@ -18,7 +18,6 @@ __all__ = ["Fetcher", "Mode", "Serializer", "Deserializer"]
 
 
 class Mode(enum.Enum):
-    NONE = enum.auto()
     CHECKING = enum.auto()
     DISCOVERY = enum.auto()
     INVENTORY = enum.auto()

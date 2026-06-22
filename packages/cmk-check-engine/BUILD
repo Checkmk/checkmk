@@ -93,7 +93,7 @@ py_library(
         "cmk/checkengine/filecache/_snmp.py",
     ] + glob(
         [
-            "cmk/checkengine/fetchers/_utils/*.py",
+            "cmk/checkengine/fetcher_utils/*.py",
         ],
     ),
     data = ["cmk/checkengine/fetchers/py.typed"],
@@ -238,6 +238,7 @@ py_test(
     size = "small",
     srcs = glob([
         "tests/cmk/checkengine/fetchers/**/*.py",
+        "tests/cmk/checkengine/fetcher_utils/**/*.py",
         "tests/cmk/checkengine/filecache/**/*.py",
     ]) + [
         "tests/cmk/checkengine/test_agent_protocol.py",

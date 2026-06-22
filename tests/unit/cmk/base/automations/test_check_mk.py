@@ -32,11 +32,9 @@ from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import CheckPreview, CheckPreviewEntry, QualifiedDiscovery
 from cmk.checkengine.fetcher import Fetcher, Mode
-from cmk.checkengine.fetchers import (
-    FetcherSecrets,
-    PiggybackFetcher,
-    PlainFetcherTrigger,
-)
+from cmk.checkengine.fetcher_utils.secrets import FetcherSecrets
+from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
+from cmk.checkengine.fetchers import PiggybackFetcher
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.snmplib import oids_to_walk, SNMPContextConfig
 from cmk.discover_plugins import PluginLocation

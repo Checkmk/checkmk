@@ -27,6 +27,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine import sources
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.fetcher import Fetcher
+from cmk.checkengine.fetcher_utils.secrets import StoredSecrets
 from cmk.checkengine.fetchers import (
     IPMIFetcher,
     NoSelectedSNMPSections,
@@ -34,7 +35,6 @@ from cmk.checkengine.fetchers import (
     ProgramFetcher,
     SNMPFetcher,
     SNMPFetcherConfig,
-    StoredSecrets,
     TCPFetcher,
     TLSConfig,
 )

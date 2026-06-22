@@ -12,7 +12,7 @@ from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
 from cmk.checkengine.fetcher import Fetcher
-from cmk.checkengine.fetchers import FetcherTriggerFactory
+from cmk.checkengine.fetcher_utils.trigger import FetcherTriggerFactory
 from cmk.checkengine.helper_interface import AgentRawData
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.snmplib import SNMPPluginStore

@@ -383,6 +383,7 @@ allows = [
   "cmk.fetcher_encoder",
   "cmk.fetcher_helper",
   "cmk.checkengine.fetcher",
+  "cmk.checkengine.fetcher_utils",
   "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.inventory",
@@ -588,6 +589,7 @@ allows = ["@ccc", "@livestatus_client"]
 [components."cmk.fetcher_encoder"]
 allows = [
   "cmk.checkengine.fetcher",
+  "cmk.checkengine.fetcher_utils",
   "cmk.checkengine.fetchers",
   "cmk.checkengine.filecache",
 ]
@@ -600,6 +602,7 @@ allows = [
   "cmk.checkengine.agent_protocol",
   "cmk.check_helper_protocol",
   "cmk.checkengine.fetcher",
+  "cmk.checkengine.fetcher_utils",
   "cmk.checkengine.fetchers",
   "cmk.checkengine.filecache",
   "cmk.checkengine.helper_interface",
@@ -1242,6 +1245,7 @@ allows = [
   "cmk.check_helper_protocol",
   "cmk.fetcher_encoder",
   "cmk.checkengine.fetcher",
+  "cmk.checkengine.fetcher_utils",
   "cmk.checkengine.fetchers",
   "cmk.checkengine.helper_interface",
   "cmk.relay_trigger_protocol",

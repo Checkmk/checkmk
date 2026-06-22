@@ -44,7 +44,7 @@ from cmk.base.core.active_config_layout import RELATIVE_PATH_TRUSTED_CAS
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.checkengine.checking import ServiceConfigurer
-from cmk.checkengine.fetchers import FetcherTrigger
+from cmk.checkengine.fetcher_utils.trigger import FetcherTrigger
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils import ip_lookup
 from cmk.utils.labels import LabelManager

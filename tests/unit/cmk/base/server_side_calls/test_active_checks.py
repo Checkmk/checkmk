@@ -15,7 +15,7 @@ import pytest
 
 import cmk.ccc.debug
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.fetchers import StoredSecrets
+from cmk.checkengine.fetcher_utils.secrets import StoredSecrets
 from cmk.discover_plugins import PluginLocation
 from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls.v1 import (

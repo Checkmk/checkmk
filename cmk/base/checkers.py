@@ -52,12 +52,10 @@ from cmk.checkengine.discovery import (
     HostLabelPlugin,
 )
 from cmk.checkengine.fetcher import Fetcher, FetcherFunction, Mode
+from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, FetcherSecrets, StoredSecrets
+from cmk.checkengine.fetcher_utils.trigger import FetcherTrigger
 from cmk.checkengine.fetchers import (
-    AdHocSecrets,
-    FetcherSecrets,
-    FetcherTrigger,
     ProgramFetcher,
-    StoredSecrets,
     TLSConfig,
 )
 from cmk.checkengine.filecache import FileCache, FileCacheOptions, MaxAge, NoCache

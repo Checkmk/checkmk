@@ -33,7 +33,8 @@ from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checking import make_timing_results
 from cmk.checkengine.fetcher import Mode as FetchMode
-from cmk.checkengine.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig, StoredSecrets
+from cmk.checkengine.fetcher_utils.secrets import StoredSecrets
+from cmk.checkengine.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig
 from cmk.checkengine.filecache import FileCacheOptions
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import NO_SELECTION

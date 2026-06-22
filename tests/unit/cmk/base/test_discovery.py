@@ -77,12 +77,11 @@ from cmk.checkengine.discovery._utils.filters import (
 )
 from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.fetcher import Mode
+from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
+from cmk.checkengine.fetcher_utils.trigger import PlainFetcherTrigger
 from cmk.checkengine.fetchers import (
-    AdHocSecrets,
     NoSelectedSNMPSections,
-    PlainFetcherTrigger,
     SNMPFetcherConfig,
-    StoredSecrets,
 )
 from cmk.checkengine.filecache import FileCacheOptions
 from cmk.checkengine.helper_interface import HostKey, SourceType

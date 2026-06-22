@@ -73,11 +73,10 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.fetcher import FetcherFunction
 from cmk.checkengine.fetcher import Mode as FetchMode
+from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.fetchers import (
-    AdHocSecrets,
     NoSelectedSNMPSections,
     SNMPFetcherConfig,
-    StoredSecrets,
     TLSConfig,
 )
 from cmk.checkengine.filecache import FileCacheOptions, MaxAge

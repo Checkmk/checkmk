@@ -49,7 +49,7 @@ from cmk.ccc.config_path import ConfigCreationContext
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
-from cmk.checkengine.fetchers import StoredSecrets
+from cmk.checkengine.fetcher_utils.secrets import StoredSecrets
 from cmk.checkengine.plugin_backend import plugin_index
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,

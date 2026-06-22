@@ -13,6 +13,7 @@ from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     build_graphs,
     ConsolidationFunction,
+    discover_graphs,
     DiscoveredGraph,
     DiscoveredGraphs,
     evaluate_graphs,
@@ -511,3 +512,34 @@ def test_discover_template_graphs_ignores_a_predictive_metric_without_its_base()
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(predict))})
 
     assert _discover(service, registered_graphs, rrd=rrd) == []
+
+
+def test_discover_graphs_adds_predictive_lines_per_service() -> None:
+    # The combined primitive matches one plugin across several services; like the template path it
+    # adds a predictive line wherever predict_* exists for that service, and only there.
+    cpu_user = MetricName("cpu_user")
+    predict = MetricName("predict_cpu_user")
+    with_predict = ServiceRef(host_name="h1", service_name="svc")
+    without_predict = ServiceRef(host_name="h2", service_name="svc")
+    plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
+
+    graphs = discover_graphs(
+        services=[with_predict, without_predict],
+        graph=plugin,
+        metrics=_METRICS,
+        localizer=_id,
+        available={with_predict: {cpu_user, predict}, without_predict: {cpu_user}},
+    )
+
+    assert len(graphs) == 2
+    assert (
+        Line(
+            quantity=RRDMetric(host_name="h1", service_name="svc", metric_name=predict),
+            inverse=False,
+        )
+        in graphs[0].lines
+    )
+    assert all(
+        not (isinstance(line.quantity, RRDMetric) and line.quantity.metric_name == predict)
+        for line in graphs[1].lines
+    )

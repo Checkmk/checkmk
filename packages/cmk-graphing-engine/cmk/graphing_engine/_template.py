@@ -83,7 +83,7 @@ def _walk(
 def _add_predictive_lines(
     graph: Graph,
     service: ServiceRef,
-    available: Mapping[MetricName, RRDMetricData],
+    available: Container[MetricName],
 ) -> tuple[Graph, set[MetricName]]:
     inverse_by_metric: dict[MetricName, bool] = {}
     for group in graph.stacks:
@@ -143,11 +143,20 @@ def discover_graphs(
     localizer: Callable[[str], str],
     available: Mapping[ServiceRef, Container[MetricName]],
 ) -> Sequence[Graph]:
-    return [
-        parse_graph_from_api(graph, service, metrics, localizer)
-        for service in services
-        if _walk(graph, available.get(service, frozenset())).matched
-    ]
+    discovered: list[Graph] = []
+    for service in services:
+        service_available = available.get(service, frozenset())
+        if not _walk(graph, service_available).matched:
+            continue
+        # Add the predictive lines per service exactly as build_graphs does for template graphs, so a
+        # combined graph includes them wherever predict_* exists (legacy combined parity).
+        with_predictive, _names = _add_predictive_lines(
+            parse_graph_from_api(graph, service, metrics, localizer),
+            service,
+            service_available,
+        )
+        discovered.append(with_predictive)
+    return discovered
 
 
 def build_graphs(

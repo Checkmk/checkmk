@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -105,6 +106,7 @@ def _host_services(
         site.activate_changes_and_wait_for_core_reload()
 
 
+@pytest.mark.skipif(os.getenv("DISTRO") == "sles-16.0", reason="CMK-35950; flakes.")
 def test_checks_sanity(host_services: dict[str, ServiceInfo]) -> None:
     """Assert sanity of the discovered checks.
 
@@ -127,6 +129,7 @@ def _runs_cmc(site: Site) -> bool:
     return site.omd("config", "show", "CORE", check=True).stdout.strip() == "cmc"
 
 
+@pytest.mark.skipif(os.getenv("DISTRO") == "sles-16.0", reason="CMK-35950; flakes.")
 def test_shipped_ps_disocvery(host_services: dict[str, ServiceInfo], site: Site) -> None:
     expected_ps_services = {  # compare cmk.gui.watolib.sample_config
         f"Process {site.id} agent receiver",

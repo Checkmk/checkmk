@@ -155,7 +155,7 @@ def check_azure_vm_cpu_utilization(
                 "util",
                 "CPU utilization",
                 render.percent,
-                upper_levels_param="levels",
+                upper_levels_param="util",
             )
         ]
     )(params, section)
@@ -168,7 +168,7 @@ check_plugin_azure_vm_cpu_utilization = CheckPlugin(
     discovery_function=discover_azure_vm_cpu_utilization,
     check_function=check_azure_vm_cpu_utilization,
     check_ruleset_name="cpu_utilization",
-    check_default_parameters={"levels": (65.0, 90.0)},
+    check_default_parameters={"util": (65.0, 90.0)},
 )
 
 

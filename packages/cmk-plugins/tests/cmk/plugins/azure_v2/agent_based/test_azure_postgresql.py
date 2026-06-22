@@ -460,7 +460,7 @@ def test_check_network(
                     ),
                 },
             ),
-            {"levels": (80.0, 90.0)},
+            {"util": (80.0, 90.0)},
             [
                 Result(state=State.OK, summary="CPU utilization: 50.00%"),
                 Metric("util", 50.0, levels=(80.0, 90.0)),
@@ -483,7 +483,7 @@ def test_check_network(
                     ),
                 },
             ),
-            {"levels": (80.0, 90.0)},
+            {"util": (80.0, 90.0)},
             [
                 Result(
                     state=State.CRIT,

@@ -251,7 +251,7 @@ def test_discover_azure_vm_cpu_utilization(
     "params,section,expected_result",
     [
         (
-            {"levels": (0.2, 0.5)},
+            {"util": (0.2, 0.5)},
             SECTION,
             [
                 Result(

@@ -946,7 +946,7 @@ def test_check_memory(
         (
             PARSED_RESOURCE,
             "checkmk-mysql-server",
-            {"levels": (0.0, 0.0)},
+            {"util": (0.0, 0.0)},
             [
                 Result(state=State.CRIT, summary="CPU utilization: 0% (warn/crit at 0%/0%)"),
                 Metric("util", 0.0, levels=(0.0, 0.0)),

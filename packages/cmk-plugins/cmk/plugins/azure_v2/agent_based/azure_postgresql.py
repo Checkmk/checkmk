@@ -75,7 +75,7 @@ check_plugin_azure_postgresql_cpu = CheckPlugin(
     ),
     check_function=check_cpu(),
     check_ruleset_name="cpu_utilization",
-    check_default_parameters={"levels": (65.0, 90.0)},
+    check_default_parameters={"util": (65.0, 90.0)},
 )
 
 

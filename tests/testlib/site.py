@@ -66,7 +66,11 @@ from tests.testlib.common.utils2 import (
     spawn_expect_process,
     write_file,
 )
-from tests.testlib.openapi_session import AgentReceiverApiSession, CMKOpenApiSession
+from tests.testlib.openapi_session import (
+    AgentReceiverApiSession,
+    CMKOpenApiSession,
+    UnexpectedResponse,
+)
 from tests.testlib.version import (
     CMKPackageInfo,
     CMKVersion,
@@ -1373,7 +1377,7 @@ class Site:
 
     def activate_changes_and_wait_for_site_restart(
         self,
-        timeout: int = 120,
+        timeout: int = 180,
         interval: int = 2,
         force_foreign_changes: bool = False,
     ) -> None:
@@ -1387,9 +1391,93 @@ class Site:
             # response is sent back. This is expected — proceed to wait for the site
             # to come back up.
             pass
-        # first wait for the site to change the status to partially running
-        self.wait_for_status_update(2, timeout, interval)
-        # then wait for the site to be fully running
+        self.wait_for_no_running_activations(timeout=timeout, interval=interval)
+
+    def _get_activation_final_status(
+        self, activation_id: str, timeout: int, interval: int = 2
+    ) -> dict[str, Any] | None:
+        """Poll get_activation_status until all per-site states are non-null.
+
+        Returns the final status dict, or None if the activation was already cleaned up (404).
+        Raises TimeoutError if finalization does not complete within *timeout* seconds.
+        """
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            try:
+                status = self.openapi.changes.get_activation_status(activation_id)
+            except UnexpectedResponse as e:
+                if e.status_code == 404:
+                    logger.warning(
+                        "_get_activation_final_status: activation %r not found (404) "
+                        "— already cleaned up before final status could be read",
+                        activation_id,
+                    )
+                    return None
+                raise
+            logger.info("_get_activation_final_status: status for %r: %s", activation_id, status)
+            status_per_site = status["extensions"].get("status_per_site", [])
+            if status_per_site and all(s["state"] is not None for s in status_per_site):
+                return status
+            time.sleep(interval)
+        raise TimeoutError(f"Activation {activation_id!r} did not finalize within {timeout}s")
+
+    def wait_for_no_running_activations(self, timeout: int = 180, interval: int = 2) -> None:
+        seen_activation_ids: set[str] = set()
+
+        def _no_running_activations() -> bool:
+            try:
+                response = self.openapi.changes.session.get(
+                    "/domain-types/activation_run/collections/running"
+                )
+            except requests.exceptions.ConnectionError:
+                logger.info("wait_for_no_running_activations: connection error while polling")
+                # The site restart triggered by the activation may kill httpd while we poll.
+                return False
+            if response.status_code != 200:
+                logger.info(
+                    "wait_for_no_running_activations: unexpected status %d", response.status_code
+                )
+                return False
+            running = response.json()["value"]
+            logger.info(
+                "wait_for_no_running_activations: running entries: %s",
+                [{"id": e["id"], "is_running": e["extensions"]["is_running"]} for e in running],
+            )
+            seen_activation_ids.update(
+                entry["id"] for entry in running if entry["extensions"]["is_running"]
+            )
+            return bool(seen_activation_ids) and not any(
+                entry["extensions"]["is_running"] for entry in running
+            )
+
+        wait_until(
+            _no_running_activations,
+            timeout=timeout,
+            interval=interval,
+            condition_name="no running activations",
+        )
+
+        logger.info("wait_for_no_running_activations: seen activation IDs: %s", seen_activation_ids)
+        assert len(seen_activation_ids) == 1, (
+            f"Expected exactly one activation, got: {seen_activation_ids}"
+        )
+        (activation_id,) = seen_activation_ids
+
+        final_status = self._get_activation_final_status(activation_id, timeout, interval)
+        if final_status is not None:
+            logger.info(
+                "wait_for_no_running_activations: final status for %r: %s",
+                activation_id,
+                final_status,
+            )
+            not_succeeded_sites = [
+                status
+                for status in final_status["extensions"].get("status_per_site", [])
+                if status["state"] != "success"
+            ]
+            assert not not_succeeded_sites, (
+                f"Activation {activation_id!r} did not succeed on all sites: {not_succeeded_sites}"
+            )
         self.wait_for_status_update(0, timeout, interval)
 
     def get_omd_service_names_and_statuses(self, service: str = "") -> dict[str, int]:

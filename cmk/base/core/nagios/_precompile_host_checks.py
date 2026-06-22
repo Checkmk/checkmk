@@ -26,12 +26,10 @@ from typing import assert_never
 
 import cmk.ccc.debug
 import cmk.checkengine.plugin_backend as agent_based_register
-import cmk.utils.password_store
-import cmk.utils.paths
 from cmk.base.config import ConfigCache, FilterMode, save_packed_config
 from cmk.ccc import store, tty
 from cmk.ccc.exceptions import MKIPAddressLookupError
-from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
@@ -138,6 +136,7 @@ def precompile_hostchecks(
                 f"{tty.bold}{tty.blue}{hostname:<16}{tty.normal}:", file=sys.stderr
             )
             host_check = dump_precompiled_hostcheck(
+                hosts_config,
                 config_cache,
                 passive_service_name_config,
                 enforced_services_table,
@@ -162,6 +161,7 @@ def precompile_hostchecks(
 
 
 def dump_precompiled_hostcheck(
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
@@ -177,16 +177,20 @@ def dump_precompiled_hostcheck(
     precompile_mode: PrecompileMode,
 ) -> str:
     locations, legacy_checks_to_load = _make_needed_plugins_locations(
-        config_cache, passive_service_name_config, enforced_services_table, hostname, plugins
+        hosts_config,
+        config_cache,
+        passive_service_name_config,
+        enforced_services_table,
+        hostname,
+        plugins,
     )
     ip_stack_config = get_ip_stack_config(hostname)
 
     # IP addresses
     needed_ipaddresses: dict[HostName, HostAddress] = {}
     needed_ipv6addresses: dict[HostName, HostAddress] = {}
-    if hostname in config_cache.hosts_config.clusters:
-        assert config_cache.nodes(hostname)
-        for node in config_cache.nodes(hostname):
+    if hostname in hosts_config.clusters:
+        for node in hosts_config.clusters[hostname]:
             node_ip_stack_config = get_ip_stack_config(node)
             if IPStackConfig.IPv4 in node_ip_stack_config:
                 needed_ipaddresses[node] = ip_address_of(node, socket.AddressFamily.AF_INET)
@@ -239,6 +243,7 @@ def dump_precompiled_hostcheck(
 
 
 def _make_needed_plugins_locations(
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
@@ -254,9 +259,8 @@ def _make_needed_plugins_locations(
         config_cache, passive_service_name_config, enforced_services_table, hostname, plugins
     )
 
-    if hostname in config_cache.hosts_config.clusters:
-        assert config_cache.nodes(hostname)
-        for node in config_cache.nodes(hostname):
+    if hostname in hosts_config.clusters:
+        for node in hosts_config.clusters[hostname]:
             # we're deduplicating later.
             needed_agent_based_plugins.extend(
                 _get_needed_plugins(

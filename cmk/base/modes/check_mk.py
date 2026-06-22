@@ -1447,7 +1447,7 @@ def _mode_flush(app: CheckmkBaseApp, hosts: list[HostName]) -> None:
             remove_autochecks_of_host(
                 node, host, effective_host_callback, cmk.utils.paths.autochecks_dir
             )
-            for node in (config_cache.nodes(host) or [host])
+            for node in (hosts_config.clusters.get(host) or [host])
         )
         # config_cache.remove_autochecks(host)
         if count:
@@ -1537,6 +1537,7 @@ def _mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> N
     service_name_config = config_cache.make_passive_service_name_config(final_service_name_config)
     _notify_host_files = create_config(
         sys.stdout,
+        hosts_config,
         config_cache,
         core_objects_config,
         NagiosCoreConfig(
@@ -2137,6 +2138,7 @@ def _mode_check_discovery(
     config_cache = loading_result.config_cache
     ruleset_matcher = config_cache.ruleset_matcher
     label_manager = config_cache.label_manager
+    hosts_config = loading_result.hosts_config
 
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     service_name_config = config_cache.make_passive_service_name_config(
@@ -2263,8 +2265,8 @@ def _mode_check_discovery(
                 hostname,
                 omd_root=cmk.utils.paths.omd_root,
                 autodiscovery_dir=cmk.utils.paths.autodiscovery_dir,
-                is_cluster=hostname in config_cache.hosts_config.clusters,
-                cluster_nodes=config_cache.nodes(hostname),
+                is_cluster=hostname in hosts_config.clusters,
+                cluster_nodes=hosts_config.clusters.get(hostname, ()),
                 params=config_cache.discovery_check_parameters(hostname),
                 fetched=((f[0], f[1]) for f in fetched),
                 parser=parser,
@@ -2460,6 +2462,7 @@ _DiscoveryOptions = TypedDict(
 )
 
 
+# TODO(igor): pass hosts_config into this function use it to replace is_cluster and reslove_nodes
 def _preprocess_hostnames(
     arg_host_names: frozenset[HostName],
     is_cluster: Callable[[HostName], bool],
@@ -2621,8 +2624,8 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
     for hostname in sorted(
         _preprocess_hostnames(
             frozenset(hostnames),
-            is_cluster=lambda hn: hn in config_cache.hosts_config.clusters,
-            resolve_nodes=config_cache.nodes,
+            is_cluster=lambda hn: hn in hosts_config.clusters,
+            resolve_nodes=lambda hn: hosts_config.clusters.get(hn, ()),
             config_cache=config_cache,
             only_host_labels="only-host-labels" in options,
         )
@@ -2899,7 +2902,7 @@ def run_checking(
         only_from=config_cache.only_from,
         effective_service_level=config_cache.effective_service_level,
         get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
-        nodes=config_cache.nodes,
+        nodes=lambda hn: hosts_config.clusters.get(hn, ()),
         effective_host=config_cache.effective_host,
         get_snmp_backend=config_cache.get_snmp_backend,
         timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
@@ -3241,7 +3244,7 @@ def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[
             previous_tree = inv_store.load_previous_inventory_tree(host_name=hostname)
             if hostname in hosts_config.clusters:
                 check_results = inventory.inventorize_cluster(
-                    config_cache.nodes(hostname),
+                    hosts_config.clusters[hostname],
                     parameters=parameters,
                     previous_tree=previous_tree,
                 ).check_results
@@ -3307,7 +3310,6 @@ mode_inventory = Mode(
 def execute_active_check_inventory(
     host_name: HostName,
     *,
-    config_cache: ConfigCache,
     hosts_config: Hosts,
     fetcher: FetcherFunction,
     parser: ParserFunction,
@@ -3323,7 +3325,7 @@ def execute_active_check_inventory(
 
     if host_name in hosts_config.clusters:
         result = inventory.inventorize_cluster(
-            config_cache.nodes(host_name),
+            hosts_config.clusters[host_name],
             parameters=parameters,
             previous_tree=previous_tree,
         )
@@ -3571,7 +3573,6 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
 
                 execute_active_check_inventory(
                     host_name,
-                    config_cache=config_cache,
                     hosts_config=hosts_config,
                     parser=parser,
                     fetcher=fetcher,

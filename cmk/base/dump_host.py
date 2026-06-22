@@ -154,9 +154,9 @@ def dump_host(
     label_manager = config_cache.label_manager
 
     if hostname in hosts_config.clusters:
-        assert config_cache.nodes(hostname)
+        the_nodes = hosts_config.clusters[hostname]
         color = tty.bgmagenta
-        add_txt = " (cluster of " + (", ".join(config_cache.nodes(hostname))) + ")"
+        add_txt = " (cluster of " + (", ".join(the_nodes)) + ")"
     else:
         color = tty.bgblue
         add_txt = ""
@@ -201,7 +201,7 @@ def dump_host(
     print_(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     if hostname in hosts_config.clusters:
-        parents_list = config_cache.nodes(hostname)
+        parents_list = hosts_config.clusters[hostname]
     else:
         parents_list = config_cache.parents(hostname)
 

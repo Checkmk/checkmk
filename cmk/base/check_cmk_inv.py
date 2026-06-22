@@ -260,7 +260,6 @@ def _inventory_as_check(
         with CPUTracker(console.debug) as tracker:
             check_results = execute_active_check_inventory(
                 hostname,
-                config_cache=config_cache,
                 hosts_config=hosts_config,
                 fetcher=fetcher,
                 parser=parser,

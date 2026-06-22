@@ -449,7 +449,7 @@ class CMKFetcher(FetcherFunction):
                         else self.ip_address_of_mandatory(node, self.default_address_family(node))
                     ),
                 )
-                for node in self.config_cache.nodes(host_name)
+                for node in hosts_config.clusters.get(host_name, ())
             ]
 
         tls_config = TLSConfig(

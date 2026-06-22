@@ -239,6 +239,7 @@ class IgnoredActiveServices(Container[ServiceName]):
 def _aggregate_check_table_services(
     host_name: HostName,
     *,
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
@@ -270,6 +271,7 @@ def _aggregate_check_table_services(
             yield from (
                 s
                 for s in _get_clustered_services(
+                    hosts_config,
                     config_cache,
                     service_name_config,
                     host_name,
@@ -301,6 +303,7 @@ def _aggregate_check_table_services(
     yield from (
         s
         for s in _get_services_from_cluster_nodes(
+            hosts_config,
             config_cache,
             service_name_config,
             host_name,
@@ -367,6 +370,7 @@ class _ServiceFilter:
 
 
 def _get_services_from_cluster_nodes(
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     node_name: HostName,
@@ -389,10 +393,11 @@ def _get_services_from_cluster_nodes(
     # Failing to exclude node3 might add an undesired service to it.
     # For node1 it was added from the autochecks of the calling function.
     # The effective_host check below adds it for node2 and excludes it for node3.
-    for cluster in config_cache.clusters_of(node_name):
+    for cluster in hosts_config.clusters_of_nodes.get(node_name, ()):
         yield from (
             s
             for s in _get_clustered_services(
+                hosts_config,
                 config_cache,
                 service_name_config,
                 cluster,
@@ -406,6 +411,7 @@ def _get_services_from_cluster_nodes(
 
 
 def _get_clustered_services(
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     cluster_name: HostName,
@@ -419,7 +425,7 @@ def _get_clustered_services(
     ],
     plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Iterable[ConfiguredService]:
-    nodes = config_cache.nodes(cluster_name)
+    nodes = hosts_config.clusters.get(cluster_name, ())
 
     if not config_cache.is_ping_host(cluster_name):
 
@@ -471,12 +477,6 @@ def _get_clustered_services(
             cluster_name, description, disovered_labels
         ),
     )
-
-
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class ClusterCacheInfo:
-    clusters_of: Mapping[HostName, Sequence[HostName]]
-    nodes_of: Mapping[HostName, Sequence[HostName]]
 
 
 CheckContext = dict[str, Any]
@@ -1778,9 +1778,6 @@ class ConfigCache:
         self.__snmp_fetch_interval.clear()
         self.__snmp_backend.clear()
 
-    def host_path(self, hostname: HostName) -> str:
-        return self._hosts_config.host_paths.get(hostname, "/")
-
     def check_table(
         self,
         hostname: HostName,
@@ -1806,6 +1803,7 @@ class ConfigCache:
         host_check_table = HostCheckTable(
             services=_aggregate_check_table_services(
                 hostname,
+                hosts_config=self._hosts_config,
                 config_cache=self,
                 service_name_config=service_name_config,
                 enforced_services_table=enforced_services_table,
@@ -2072,8 +2070,8 @@ class ConfigCache:
                 return False
 
             # for clusters with an auto-piggyback tag check if nodes have piggyback data
-            nodes = self.nodes(host_name)
-            if nodes and host_name in self.hosts_config.clusters:
+            nodes = self._hosts_config.clusters.get(host_name)
+            if nodes:
                 return any(self._has_piggyback_data(node) for node in nodes)
 
             # Legacy automatic detection
@@ -3117,21 +3115,6 @@ class ConfigCache:
 
         return _checktype_ignored_for_host(check_plugin_name_str)
 
-    # TODO: pass `Hosts` into the callsites of this function.
-    def get_cluster_cache_info(self) -> ClusterCacheInfo:
-        return ClusterCacheInfo(
-            clusters_of=self._hosts_config.clusters_of_nodes,
-            nodes_of=self._hosts_config.clusters,
-        )
-
-    def clusters_of(self, hostname: HostName) -> Sequence[HostName]:
-        """Returns names of cluster hosts the host is a node of"""
-        return self._hosts_config.clusters_of_nodes.get(hostname, ())
-
-    def nodes(self, hostname: HostName) -> Sequence[HostName]:
-        """Returns the nodes of a cluster. Returns () if no match."""
-        return self._hosts_config.clusters.get(hostname, ())
-
     def effective_host(
         self,
         host_name: HostName,
@@ -3161,7 +3144,7 @@ class ConfigCache:
         service_name: ServiceName,
         service_labels: Labels,
     ) -> HostName:
-        if not (the_clusters := self.clusters_of(node_name)):
+        if not (the_clusters := self._hosts_config.clusters_of_nodes.get(node_name, ())):
             return node_name
 
         cluster_mapping = self.ruleset_matcher.get_service_values_all(
@@ -3182,7 +3165,9 @@ class ConfigCache:
                 raise MKGeneralException(
                     f"Invalid entry clustered_services_of['{cluster}']: {cluster} is not a cluster."
                 )
-            if node_name in self.nodes(cluster) and self.ruleset_matcher.get_service_bool_value(
+            if node_name in self._hosts_config.clusters.get(
+                cluster, ()
+            ) and self.ruleset_matcher.get_service_bool_value(
                 node_name, service_name, service_labels, conf, self.label_manager.labels_of_host
             ):
                 return cluster

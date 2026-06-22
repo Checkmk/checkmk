@@ -1847,6 +1847,7 @@ def cluster_config_fixture(monkeypatch: MonkeyPatch) -> ConfigCache:
     return ts.apply(monkeypatch)
 
 
+# TODO(igor): Rewrite the next three tests to be streight forward tests of `make_hosts_config`
 def test_config_cache_is_cluster(cluster_config: ConfigCache) -> None:
     assert HostName("node1") not in cluster_config.hosts_config.clusters
     assert HostName("host1") not in cluster_config.hosts_config.clusters
@@ -1854,15 +1855,17 @@ def test_config_cache_is_cluster(cluster_config: ConfigCache) -> None:
 
 
 def test_config_cache_clusters_of(cluster_config: ConfigCache) -> None:
-    assert list(cluster_config.clusters_of(HostName("node1"))) == ["cluster1"]
-    assert not list(cluster_config.clusters_of(HostName("host1")))
-    assert not list(cluster_config.clusters_of(HostName("cluster1")))
+    hosts_config = cluster_config.hosts_config
+    assert hosts_config.clusters_of_nodes[HostName("node1")] == ["cluster1"]
+    assert HostName("host1") not in hosts_config.clusters_of_nodes
+    assert HostName("cluster1") not in hosts_config.clusters_of_nodes
 
 
 def test_config_cache_nodes(cluster_config: ConfigCache) -> None:
-    assert not list(cluster_config.nodes(HostName("node1")))
-    assert not list(cluster_config.nodes(HostName("host1")))
-    assert list(cluster_config.nodes(HostName("cluster1"))) == ["node1"]
+    hosts_config = cluster_config.hosts_config
+    assert HostName("node1") not in hosts_config.clusters
+    assert HostName("host1") not in hosts_config.clusters
+    assert hosts_config.clusters[HostName("cluster1")] == ["node1"]
 
 
 def test_host_config_parents(cluster_config: ConfigCache) -> None:
@@ -2685,12 +2688,14 @@ def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
+    hosts_config = config_cache.hosts_config
+    ruleset_matcher = config_cache.ruleset_matcher
 
-    assert config_cache.host_path(HostName("main-host")) == "/"
-    assert config_cache.host_path(HostName("lvl0-host")) == "/wato/"
-    assert config_cache.host_path(HostName("lvl1-host")) == "/wato/lvl1/"
-    assert config_cache.host_path(HostName("lvl1aaa-host")) == "/wato/lvl1_aaa/"
-    assert config_cache.host_path(HostName("lvl2-host")) == "/wato/lvl1/lvl2/"
+    assert HostName("main-host") not in hosts_config.host_paths
+    assert hosts_config.host_paths[HostName("lvl0-host")] == "/wato/"
+    assert hosts_config.host_paths[HostName("lvl1-host")] == "/wato/lvl1/"
+    assert hosts_config.host_paths[HostName("lvl1aaa-host")] == "/wato/lvl1_aaa/"
+    assert hosts_config.host_paths[HostName("lvl2-host")] == "/wato/lvl1/lvl2/"
 
     assert (
         folder_path_test_config.cmc_host_rrd_config[0]["condition"]["host_folder"]
@@ -2706,7 +2711,6 @@ def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
     assert "host_folder" not in folder_path_test_config.cmc_host_rrd_config[3]["condition"]
     assert "host_folder" not in folder_path_test_config.cmc_host_rrd_config[4]["condition"]
 
-    ruleset_matcher = config_cache.ruleset_matcher
     assert ruleset_matcher.get_host_values_all(
         HostName("main-host"), folder_path_test_config.cmc_host_rrd_config, lambda hn: {}
     ) == [

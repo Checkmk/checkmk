@@ -213,6 +213,7 @@ class NagiosCore(MonitoringCore):
         hosts_config = self._config_cache.hosts_config
         notify_host_files = create_config(
             config_buffer,
+            hosts_config,
             self._config_cache,
             self._core_objects_config,
             self.nagios_core_config,
@@ -321,6 +322,7 @@ def _validate_licensing(
 
 def create_config(
     outfile: IO[str],
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
@@ -356,6 +358,7 @@ def create_config(
     for hostname in hostnames:
         all_notify_host_configs[hostname] = _create_nagios_config_host(
             cfg,
+            hosts_config,
             config_cache,
             core_objects_config,
             nagios_core_config,
@@ -412,6 +415,7 @@ def _output_conf_header(cfg: NagiosConfig) -> None:
 
 def _create_nagios_config_host(
     cfg: NagiosConfig,
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
@@ -442,6 +446,7 @@ def _create_nagios_config_host(
     if nagios_core_config.generate_hostconf:
         host_spec = create_nagios_host_spec(
             cfg,
+            hosts_config,
             config_cache,
             core_objects_config,
             nagios_core_config,
@@ -480,6 +485,7 @@ def _create_nagios_config_host(
 
 def create_nagios_host_spec(
     cfg: NagiosConfig,
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
@@ -494,11 +500,11 @@ def create_nagios_host_spec(
         ip_lookup_config = config_cache.ip_lookup_config()
         nodes = get_cluster_nodes_for_config(
             hostname,
-            config_cache.nodes(hostname),
+            hosts_config.clusters.get(hostname, ()),
             ip_lookup_config.ip_stack_config,
             ip_lookup_config.default_address_family,
             config_cache.host_tags,
-            config_cache.hosts_config.hosts,
+            hosts_config.hosts,
             lambda h: config_cache.is_active(h) and config_cache.is_online(h),
         )
         attrs.update(

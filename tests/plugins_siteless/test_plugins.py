@@ -97,19 +97,20 @@ def test_checks_executor(
     assert not agent_based_plugins.errors
     assert agent_based_plugins.agent_sections
 
+    hosts_config = Hosts(
+        # weird to leave hosts empty, but at the time of writing this works
+        hosts=(),
+        clusters={},
+        shadow_hosts=(),
+        host_paths={},
+    )
     source_info = SourceInfo(HOSTNAME, None, "test_dump", FetcherType.PUSH_AGENT, SourceType.HOST)
     submitter = BasicSubmitter(HOSTNAME)
     config_cache = config.ConfigCache(
         EMPTY_CONFIG,
         (get_builtin_host_labels := make_app(edition(paths.omd_root)).get_builtin_host_labels),
         edition(paths.omd_root),
-        Hosts(
-            # weird to leave hosts empty, but at the time of writing this works
-            hosts=(),
-            clusters={},
-            shadow_hosts=(),
-            host_paths={},
-        ),
+        hosts_config,
         autochecks_dir=paths.autochecks_dir,
         discovered_host_labels_dir=paths.discovered_host_labels_dir,
     ).initialize(get_builtin_host_labels)
@@ -144,7 +145,7 @@ def test_checks_executor(
                 only_from=config_cache.only_from,
                 effective_service_level=config_cache.effective_service_level,
                 get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
-                nodes=config_cache.nodes,
+                nodes=lambda hn: hosts_config.clusters.get(hn, ()),
                 effective_host=config_cache.effective_host,
                 get_snmp_backend=config_cache.get_snmp_backend,
                 timeperiods_active={},

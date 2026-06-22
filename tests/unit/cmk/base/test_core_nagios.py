@@ -350,6 +350,7 @@ def test_create_nagios_host_spec(
 
     host_spec = create_nagios_host_spec(
         cfg,
+        config_cache.hosts_config,
         config_cache,
         _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
@@ -387,6 +388,7 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
     cfg = NagiosConfig(io.StringIO(), [hostname], timeperiods={})
     host_spec = create_nagios_host_spec(
         cfg,
+        config_cache.hosts_config,
         config_cache,
         _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
@@ -480,6 +482,7 @@ def test_dump_precompiled_hostcheck(monkeypatch: MonkeyPatch, config_path: Path)
     config_cache = ts.apply(monkeypatch)
 
     host_check = dump_precompiled_hostcheck(
+        config_cache.hosts_config,
         config_cache,
         passive_service_name_config=lambda *a: "",
         enforced_services_table=lambda hn: {},

@@ -40,7 +40,7 @@ from cmk.base.config import ConfigCache
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.exceptions import OnError
-from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.discovery import (
     ABCDiscoveryConfig,
     analyse_cluster_labels,
@@ -1783,6 +1783,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
 class ClusterScenario(NamedTuple):
     parent: HostName
     config_cache: ConfigCache
+    hosts_config: Hosts
     providers: Mapping[HostKey, Provider]
     node1_hostname: HostName
     node2_hostname: HostName
@@ -1859,6 +1860,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
     return ClusterScenario(
         hostname,
         config_cache,
+        config_cache.hosts_config,
         providers,
         node1_hostname,
         node2_hostname,
@@ -2153,7 +2155,7 @@ def test__discover_services_on_cluster(
     cluster_scenario: ClusterScenario,
 ) -> None:
     assert discovery_by_host(
-        cluster_scenario.config_cache.nodes(cluster_scenario.parent),
+        cluster_scenario.hosts_config.clusters[cluster_scenario.parent],
         cluster_scenario.providers,
         DiscoveryPluginMapper(
             discovery_config=_EmptyDiscoveryConfig(),
@@ -2186,7 +2188,7 @@ def test__perform_host_label_discovery_on_cluster(
     discovery_test_case: DiscoveryTestCase,
 ) -> None:
     scenario = cluster_scenario
-    nodes = scenario.config_cache.nodes(scenario.parent)
+    nodes = scenario.hosts_config.clusters[scenario.parent]
     assert nodes
 
     host_label_result, kept_labels = analyse_cluster_labels(

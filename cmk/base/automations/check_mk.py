@@ -428,7 +428,7 @@ def _automation_service_discovery(
             hostname,
             omd_root=cmk.utils.paths.omd_root,
             is_cluster=is_cluster,
-            cluster_nodes=config_cache.nodes(hostname),
+            cluster_nodes=hosts_config.clusters.get(hostname, ()),
             active_hosts={
                 hn
                 for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
@@ -875,7 +875,7 @@ def _execute_discovery(
         only_from=config_cache.only_from,
         effective_service_level=config_cache.effective_service_level,
         get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
-        nodes=config_cache.nodes,
+        nodes=lambda host_name: hosts_config.clusters.get(host_name, ()),
         effective_host=config_cache.effective_host,
         get_snmp_backend=config_cache.get_snmp_backend,
         timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
@@ -917,7 +917,7 @@ def _execute_discovery(
             ip_address,
             omd_root=cmk.utils.paths.omd_root,
             is_cluster=is_cluster,
-            cluster_nodes=config_cache.nodes(host_name),
+            cluster_nodes=hosts_config.clusters.get(host_name, ()),
             parser=parser,
             fetcher=fetcher,
             summarizer=CMKSummarizer(
@@ -1223,11 +1223,10 @@ def _execute_autodiscovery(
                 if params.commandline_only:
                     console.verbose("  failed: discovery check disabled")
                 else:
-                    hosts_config = env.hosts_config
                     autodiscovery_result = autodiscovery(
                         host_name,
                         omd_root=cmk.utils.paths.omd_root,
-                        cluster_nodes=env.config_cache.nodes(host_name),
+                        cluster_nodes=hosts_config.clusters.get(host_name, ()),
                         active_hosts={
                             hn
                             for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
@@ -1949,6 +1948,7 @@ class AutomationAnalyseServices:
         servicedesc: str,
     ) -> _FoundService | None:
         config_cache = sctx.env.config_cache
+        hosts_config = config_cache.hosts_config
         return next(
             chain(
                 # special case. cheap to check, so check this first:
@@ -1959,6 +1959,7 @@ class AutomationAnalyseServices:
                     sctx.timeperiod_active,
                 ),
                 self._search_discovered_checks(
+                    hosts_config,
                     config_cache,
                     sctx.env.passive_service_name_config,
                     sctx.env.enforced_services_table,
@@ -2019,6 +2020,7 @@ class AutomationAnalyseServices:
 
     @staticmethod
     def _search_discovered_checks(
+        hosts_config: Hosts,
         config_cache: config.ConfigCache,
         service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
@@ -2044,14 +2046,14 @@ class AutomationAnalyseServices:
         services = (
             [
                 service
-                for node in config_cache.nodes(host_name)
+                for node in hosts_config.clusters[host_name]
                 for service in service_configurer.configure_autochecks(
                     node, config_cache.autochecks_memoizer.read(node)
                 )
                 if host_name
                 == config_cache.effective_host(node, service.description, service.labels)
             ]
-            if host_name in config_cache.hosts_config.clusters
+            if host_name in hosts_config.clusters
             else service_configurer.configure_autochecks(
                 host_name, config_cache.autochecks_memoizer.read(host_name)
             )

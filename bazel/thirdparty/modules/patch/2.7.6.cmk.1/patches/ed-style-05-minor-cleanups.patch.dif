@@ -9,22 +9,20 @@ References: bsc#1088420, savannah#53566, CVE-2018-1000156
 
 Backporting notes: adjusted because we don't have commit ff1d3a67da1e
 ("Use gnulib execute module") so the context is very different.
----
- src/pch.c |   56 +++++++++++++++++++++++++++-----------------------------
- 1 file changed, 27 insertions(+), 29 deletions(-)
-
+diff --git a/src/pch.c b/src/pch.c
+index e10282c..c7a1b7d 100644
 --- a/src/pch.c
 +++ b/src/pch.c
-@@ -2395,6 +2395,8 @@ do_ed_script (char const *inname, char c
+@@ -2394,6 +2394,8 @@ do_ed_script (char const *inname, char const *outname,
      char const *tmpname;
      int tmpfd;
      pid_t pid;
 +    int exclusive = *outname_needs_removal ? 0 : O_EXCL;
 +
-
+ 
      if (! dry_run && ! skip_rest_of_patch)
        {
-@@ -2442,7 +2444,7 @@ do_ed_script (char const *inname, char c
+@@ -2441,7 +2443,7 @@ do_ed_script (char const *inname, char const *outname,
  	    break;
  	}
      }
@@ -33,10 +31,10 @@ Backporting notes: adjusted because we don't have commit ff1d3a67da1e
        return;
      if (fwrite ("w\nq\n", sizeof (char), (size_t) 4, tmpfp) == 0
  	|| fflush (tmpfp) != 0)
-@@ -2451,35 +2453,31 @@ do_ed_script (char const *inname, char c
+@@ -2450,35 +2452,31 @@ do_ed_script (char const *inname, char const *outname,
      if (lseek (tmpfd, 0, SEEK_SET) == -1)
        pfatal ("Can't rewind to the beginning of file %s", quotearg (tmpname));
-
+ 
 -    if (! dry_run && ! skip_rest_of_patch) {
 -	int exclusive = *outname_needs_removal ? 0 : O_EXCL;
 +    if (inerrno != ENOENT)
@@ -48,7 +46,10 @@ Backporting notes: adjusted because we don't have commit ff1d3a67da1e
 -	    copy_file (inname, outname, 0, exclusive, instat.st_mode, true);
 -	  }
 -	fflush (stdout);
--
++	copy_file (inname, outname, 0, exclusive, instat.st_mode, true);
++      }
++    fflush (stdout);
+ 
 -	pid = fork();
 -	if (pid == -1)
 -	  pfatal ("Can't fork");
@@ -68,10 +69,6 @@ Backporting notes: adjusted because we don't have commit ff1d3a67da1e
 -	      fatal ("%s FAILED", editor_program);
 -	  }
 -    }
-+	copy_file (inname, outname, 0, exclusive, instat.st_mode, true);
-+      }
-+    fflush (stdout);
-+
 +    pid = fork();
 +    if (pid == -1)
 +      pfatal ("Can't fork");
@@ -90,6 +87,6 @@ Backporting notes: adjusted because we don't have commit ff1d3a67da1e
 +	    || WEXITSTATUS (wstatus) != 0)
 +	  fatal ("%s FAILED", editor_program);
 +      }
-
+ 
      fclose (tmpfp);
      safe_unlink (tmpname);

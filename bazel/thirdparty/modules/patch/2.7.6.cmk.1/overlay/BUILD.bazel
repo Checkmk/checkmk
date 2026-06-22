@@ -1,0 +1,65 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "patch",
+    cpe_format_str = "cpe:2.3:a:gnu:patch:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:GPL-3.0-or-later",
+    license_text = "COPYING",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = module_version(),
+)
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
+    package_metadata = [":dependency_info"],
+)
+
+configure_make(
+    name = "patch",
+    args = ["-j4"],
+    configure_options = [
+        # gnulib's localcharset.c bakes LIBDIR/"charset.alias" into the
+        # binary's .rodata to locate the charset-alias table at runtime.
+        # LIBDIR comes from configmake.h as @libdir@, which by default is
+        # derived from foreign_cc's --prefix=$INSTALLDIR, leaking the bazel
+        # sandbox path into the shipped binary (flagged by package_validator
+        # as an EmbeddedBuildPath).  Bake a stable FHS path instead.  This is
+        # a dead string under correct operation: on glibc Linux `make install`
+        # determines need_charset_alias=false, so charset.alias is never
+        # installed there and get_charset_aliases() falls back to the built-in
+        # table -- the path is never dereferenced.  Because nothing is written
+        # to libdir, leaving it absolute does not escape the sandbox (unlike
+        # bindir/mandir, which stay under the default --prefix).
+        "--libdir=/usr/lib",
+    ],
+    lib_source = ":all_srcs",
+    linkopts = ["-Wl,--strip-all"],
+    out_bin_dir = "bin",
+    out_binaries = ["patch"],
+    out_data_dirs = ["share/man"],
+    # without this foreign_cc complains about missing .a files
+    out_headers_only = True,
+    set_file_prefix_map = True,
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "patch_bin",
+    srcs = [":patch"],
+    output_group = "patch",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":patch"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)

@@ -35,7 +35,7 @@ from cmk.checkengine.fetchers import (
 )
 from cmk.checkengine.fetchers._ipmi import IPMISensor
 from cmk.checkengine.fetchers._tcp import agent_protocol
-from cmk.checkengine.fetchers.filecache import (
+from cmk.checkengine.filecache import (
     AgentFileCache,
     FileCache,
     FileCacheMode,

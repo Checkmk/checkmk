@@ -21,7 +21,7 @@ from cmk.checkengine.fetchers import (
     TCPFetcher,
     TLSConfig,
 )
-from cmk.checkengine.fetchers.filecache import (
+from cmk.checkengine.filecache import (
     AgentFileCache,
     FileCache,
     FileCacheMode,

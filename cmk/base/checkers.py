@@ -61,7 +61,7 @@ from cmk.checkengine.fetchers import (
     TLSConfig,
 )
 from cmk.checkengine.fetchers._utils.config import make_persisted_section_dir
-from cmk.checkengine.fetchers.filecache import FileCache, FileCacheOptions, MaxAge, NoCache
+from cmk.checkengine.filecache import FileCache, FileCacheOptions, MaxAge, NoCache
 from cmk.checkengine.helper_interface import (
     AgentRawData,
     FetcherType,

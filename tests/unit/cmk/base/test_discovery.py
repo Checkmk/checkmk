@@ -84,7 +84,7 @@ from cmk.checkengine.fetchers import (
     SNMPFetcherConfig,
     StoredSecrets,
 )
-from cmk.checkengine.fetchers.filecache import FileCacheOptions
+from cmk.checkengine.filecache import FileCacheOptions
 from cmk.checkengine.helper_interface import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
 from cmk.checkengine.plugins import (

@@ -17,7 +17,7 @@ from typing import assert_never, Final, Literal
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher import Fetcher
 from cmk.checkengine.fetchers import TLSConfig
-from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.checkengine.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.helper_interface import AgentRawData, FetcherType
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.snmplib import SNMPBackendEnum

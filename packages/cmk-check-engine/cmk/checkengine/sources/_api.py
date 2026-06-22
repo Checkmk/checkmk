@@ -9,7 +9,7 @@ import abc
 from collections.abc import Sized
 
 from cmk.checkengine.fetcher import Fetcher
-from cmk.checkengine.fetchers.filecache import FileCache, FileCacheOptions
+from cmk.checkengine.filecache import FileCache, FileCacheOptions
 from cmk.checkengine.helper_interface import SourceInfo
 
 

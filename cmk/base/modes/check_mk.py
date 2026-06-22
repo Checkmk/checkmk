@@ -83,7 +83,7 @@ from cmk.checkengine.fetchers import (
 from cmk.checkengine.fetchers._utils.config import (
     make_persisted_section_dir,
 )
-from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.checkengine.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.helper_interface import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import (

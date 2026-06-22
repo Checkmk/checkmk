@@ -89,7 +89,7 @@ from cmk.checkengine.fetchers import (
     TLSConfig,
 )
 from cmk.checkengine.fetchers._utils.config import make_persisted_section_dir
-from cmk.checkengine.fetchers.filecache import MaxAge
+from cmk.checkengine.filecache import MaxAge
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins

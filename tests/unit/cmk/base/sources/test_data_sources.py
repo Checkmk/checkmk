@@ -28,7 +28,7 @@ from cmk.checkengine.fetchers import (
     TCPFetcher,
     TLSConfig,
 )
-from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.checkengine.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.sources import make_sources, Source
 from cmk.utils.ip_lookup import IPStackConfig

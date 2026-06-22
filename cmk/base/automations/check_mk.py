@@ -166,7 +166,7 @@ from cmk.checkengine.fetchers._tcp import agent_protocol
 from cmk.checkengine.fetchers._utils.config import (
     make_persisted_section_dir,
 )
-from cmk.checkengine.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
+from cmk.checkengine.filecache import FileCacheOptions, MaxAge, NoCache
 from cmk.checkengine.helper_interface import AgentRawData, FetcherError, FetcherType, SourceType
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.plugin_backend import (

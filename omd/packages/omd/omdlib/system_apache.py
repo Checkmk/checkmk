@@ -23,12 +23,7 @@ __all__ = [
     "delete_apache_hook",
     "is_apache_hook_up_to_date",
     "write_apache_listen_conf",
-    "apache_mode_default",
 ]
-
-
-def apache_mode_default() -> str:
-    return os.environ.get("CONFIG_WEBSERVER") or "own"
 
 
 _CONF_HEADER = (
@@ -342,7 +337,7 @@ APACHE_MODE = Hook(
         ("own", "Run an own webserver process for this instance"),
         ("none", "Do not run or configure a webserver"),
     ],
-    default=lambda _edition: apache_mode_default(),
+    default=lambda _edition: "own",
     activation=null_action,
 )
 

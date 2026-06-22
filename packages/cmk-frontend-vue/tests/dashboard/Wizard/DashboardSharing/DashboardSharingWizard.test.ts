@@ -5,10 +5,20 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { describe, expect, it, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, markRaw } from 'vue'
 
 import DashboardSharingWizard from '@/dashboard/components/Wizard/wizards/dashboard-sharing/DashboardSharingWizard.vue'
+import type { DashboardTokenModel } from '@/dashboard/components/Wizard/wizards/dashboard-sharing/api'
 import { DashboardFeatures } from '@/dashboard/types/dashboard'
+
+// markRaw: a reactive proxy can't be structuredClone'd under vitest.
+const exampleToken: DashboardTokenModel = markRaw({
+  token_id: 'tok-abc',
+  is_disabled: false,
+  expires_at: null,
+  issued_at: '',
+  comment: ''
+})
 
 // CmkSlideIn uses Radix-Vue DialogPortal which doesn't work in jsdom.
 vi.mock('@/components/CmkSlideIn', () => ({
@@ -47,7 +57,8 @@ const defaultProps = {
   dashboardKey: { name: 'my-dash', owner: 'admin' },
   publicToken: null,
   dashboardFeatures: DashboardFeatures.UNRESTRICTED,
-  hasRuntimeFilters: false
+  hasRuntimeFilters: false,
+  mayLinkShare: true
 }
 
 describe('DashboardSharingWizard', () => {
@@ -67,8 +78,20 @@ describe('DashboardSharingWizard', () => {
       expect(screen.getByTestId('internal-access')).toBeInTheDocument()
     })
 
-    it('renders the PublicAccess section', () => {
+    it('renders the PublicAccess section when the user may link-share', () => {
       render(DashboardSharingWizard, { props: defaultProps })
+      expect(screen.getByTestId('public-access')).toBeInTheDocument()
+    })
+
+    it('hides the PublicAccess section without permission and without a link', () => {
+      render(DashboardSharingWizard, { props: { ...defaultProps, mayLinkShare: false } })
+      expect(screen.queryByTestId('public-access')).not.toBeInTheDocument()
+    })
+
+    it('still shows the PublicAccess section without permission if a link exists', () => {
+      render(DashboardSharingWizard, {
+        props: { ...defaultProps, mayLinkShare: false, publicToken: exampleToken }
+      })
       expect(screen.getByTestId('public-access')).toBeInTheDocument()
     })
   })

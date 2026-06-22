@@ -9,6 +9,7 @@ from cmk.gui.dashboard.token_util import (
     DashboardTokenExpirationInvalid,
     issue_dashboard_token,
 )
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -28,7 +29,7 @@ from ._family import DASHBOARD_FAMILY
 from ._utils import (
     get_dashboard_for_edit,
     make_pending_changes,
-    PERMISSIONS_DASHBOARD_EDIT,
+    PERMISSIONS_DASHBOARD_LINK_SHARE,
     save_dashboard_to_file,
 )
 from .model.token import CreateDashboardToken, DashboardTokenMetadata, DashboardTokenObjectModel
@@ -39,6 +40,7 @@ def create_dashboard_token_v1(
 ) -> ApiResponse[DashboardTokenObjectModel]:
     """Creates a new dashboard token and returns its metadata."""
     dashboard = get_dashboard_for_edit(body.dashboard_owner, body.dashboard_id)
+    user.need_permission("general.publish_dashboards")
 
     token_store = get_token_store()
     try:
@@ -96,7 +98,7 @@ ENDPOINT_CREATE_DASHBOARD_TOKEN = VersionedEndpoint(
         link_relation="cmk/create_dashboard_token",
         method="post",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD_EDIT),
+    permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD_LINK_SHARE),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=create_dashboard_token_v1)},
 )

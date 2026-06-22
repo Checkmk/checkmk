@@ -3,13 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import datetime as dt
 from collections.abc import Generator
 
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.token_auth import get_token_store, TokenId
+from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.rest_api_client import ClientRegistry
 
 
@@ -98,6 +101,29 @@ def test_create_token_user_dashboard(
     assert resp.json["extensions"]["expires_at"] == expires_at.replace("+00:00", "Z")
     assert resp.json["extensions"]["is_disabled"] is False
     assert resp.json["extensions"]["issued_at"] is not None
+
+
+def test_create_token_requires_publish_permission(
+    clients: ClientRegistry,
+    set_config: SetConfig,
+    load_config: Config,
+    with_automation_user: tuple[UserId, str],
+    user_dashboard: str,
+) -> None:
+    roles = copy.deepcopy(load_config.roles)
+    roles["admin"]["permissions"] = {
+        **roles["admin"].get("permissions", {}),
+        "general.publish_dashboards": False,
+    }
+    payload = {
+        "dashboard_owner": with_automation_user[0],
+        "dashboard_id": user_dashboard,
+        "comment": "Should be denied",
+        "expires_at": (dt.datetime.now(dt.UTC) + dt.timedelta(days=1)).isoformat(),
+    }
+    with set_config(roles=roles):
+        resp = clients.DashboardClient.create_dashboard_token(payload, expect_ok=False)
+    assert resp.status_code == 401, f"Expected 401, got {resp.status_code} {resp.json!r}"
 
 
 def test_create_token_expiration_in_past(

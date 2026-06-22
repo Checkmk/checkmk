@@ -7,7 +7,7 @@ description:
  This check provides information about VM CPU utilization in
  the Microsoft Azure cloud.
 
- The thresholds can be configured using the rule "CPU Utilization".
+ The thresholds can be configured using the rule "CPU utilization (single value)".
 
 discovery:
  One service is created on every VM host. The option

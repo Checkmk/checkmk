@@ -462,7 +462,7 @@ def check_cpu() -> CheckFunctionWithoutItem:
                 "util",
                 "CPU utilization",
                 render.percent,
-                upper_levels_param="levels",
+                upper_levels_param="util",
             )
         ]
     )

@@ -49,7 +49,12 @@ export const panelConfig = {
     ],
     initialState: 'fixed'
   },
-  sectioned: { type: 'boolean' as const, title: 'Sectioned suggestions', initialState: false },
+  sectioned: {
+    type: 'boolean' as const,
+    title: 'Sectioned suggestions',
+    initialState: false,
+    help: 'UCL demo only: Toggle to display suggestions in sections.'
+  },
   width: {
     type: 'list' as const,
     title: 'Width',

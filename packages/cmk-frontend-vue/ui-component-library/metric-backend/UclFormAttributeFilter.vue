@@ -60,6 +60,7 @@ export const panelConfig = {
     type: 'list',
     title: 'Preset',
     options: presetOptions,
+    help: 'UCL demo only: Select a preset to populate the filter with example data.',
     initialState: 'empty'
   },
   operators: {

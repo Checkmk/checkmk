@@ -1147,6 +1147,7 @@ allows = [
   "@plugin_apis",
   "cmk.fields",
   "cmk.gui",
+  "cmk.gui_plugins.internal",
   "cmk.licensing",
   "cmk.shared_typing",
   "cmk.utils",

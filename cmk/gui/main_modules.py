@@ -54,9 +54,9 @@ def load_feature_plugins(module_paths: Iterable[str], ctx: RegistrationContext) 
 
 # TODO: flatten this into Sequence[str]. For this we need to block the imports first
 _FEATURE_PLUGIN_MODULES: Mapping[Edition, Sequence[str]] = {
-    Edition.ULTIMATE: ["cmk.gui.nonfree.ultimate._metric_backend_registration"],
-    Edition.ULTIMATEMT: ["cmk.gui.nonfree.ultimate._metric_backend_registration"],
-    Edition.CLOUD: ["cmk.gui.nonfree.cloud._metric_backend_registration"],
+    Edition.ULTIMATE: ["cmk.metric_backend.gui._registration_ultimate"],
+    Edition.ULTIMATEMT: ["cmk.metric_backend.gui._registration_ultimate"],
+    Edition.CLOUD: ["cmk.metric_backend.gui._registration_cloud"],
 }
 _registered_edition: Edition | None = None
 

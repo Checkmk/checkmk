@@ -1,0 +1,21 @@
+{
+  "integrity": "sha256-jPhuAK06qm0mrKMGQOhrDj4fOV7ZnxibBtTJ90vFik4=",
+  "strip_prefix": "patch-2.7.6",
+  "url": "https://ftpmirror.gnu.org/gnu/patch/patch-2.7.6.tar.gz",
+  "patches": {
+    "ed-style-01-missing-input-files.patch.dif": "sha256-HK/+rBOEucx3kAVt1OKRCf3BpzVLHoazFh9Ai0hpv3M=",
+    "ed-style-02-fix-arbitrary-command-execution.patch.dif": "sha256-Dat6BpYVzj7z4ODxZ9dUdSt13U++gELOUX5gQQVru7A=",
+    "ed-style-03-update-test-Makefile.patch.dif": "sha256-7dLUegH68nxgl68Cx0LQS3fetrD8WIKTaxp+C1BemRI=",
+    "ed-style-04-invoke-ed-directly.patch.dif": "sha256-nvPJrmyj1yX4TP04P+tC2fVYldcIZSRLg7qmtr/cCq4=",
+    "ed-style-05-minor-cleanups.patch.dif": "sha256-ELqVDty/+zPam4ZuDmwCb2e4uG0G870kSc50csxOSjE=",
+    "ed-style-06-fix-test-failure.patch.dif": "sha256-Q+iUWVqArgs0nmCB0MOpDvdjFiReYuauaUFjZRGwzc8=",
+    "ed-style-07-dont-leak-tmp-file.patch.dif": "sha256-gROSz/woOmrDNBe13hT3TBdlpzeCBVUwU4E/3yo1gXU=",
+    "ed-style-08-dont-leak-tmp-file-multi.patch.dif": "sha256-J2TjaW/EmgP7loLr0kbCtm7DqO7Ju3D5s1n/W27ML2w=",
+    "fix-segfault-mangled-rename.patch.dif": "sha256-aV5uiUXluzgL64G5G2xL7A0t1LUV7PMYrbuOt5ACS9k="
+  },
+  "patch_strip": 1,
+  "overlay": {
+    "BUILD.bazel": "sha256-E7R+qFNj3yfWnalhu/I7Deetkmh/cAkLhcY6MHRLeNk=",
+    "MODULE.bazel": "sha256-5yMLoFi6YGtUBUOjOQ9r2LplmtBs/1oeg7O//qdfkFU="
+  }
+}

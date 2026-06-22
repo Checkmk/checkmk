@@ -1,0 +1,6 @@
+{
+  "homepage": "https://www.gnu.org/software/patch/",
+  "maintainers": [],
+  "repository": ["https://git.savannah.gnu.org/cgit/patch.git"],
+  "versions": ["2.7.6.cmk.1"]
+}

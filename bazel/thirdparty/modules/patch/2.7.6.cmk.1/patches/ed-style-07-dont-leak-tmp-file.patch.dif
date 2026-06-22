@@ -18,12 +18,8 @@ This closes bug #53820:
 https://savannah.gnu.org/bugs/index.php?53820
 
 Fixes: 123eaff0d5d1 ("Fix arbitrary command execution in ed-style patches (CVE-2018-1000156)")
----
- src/common.h |    2 ++
- src/patch.c  |    1 +
- src/pch.c    |   11 +++++------
- 3 files changed, 8 insertions(+), 6 deletions(-)
-
+diff --git a/src/common.h b/src/common.h
+index ec50b40..22238b5 100644
 --- a/src/common.h
 +++ b/src/common.h
 @@ -94,10 +94,12 @@ XTERN char const *origsuff;
@@ -31,14 +27,16 @@ Fixes: 123eaff0d5d1 ("Fix arbitrary command execution in ed-style patches (CVE-2
  XTERN char const * TMPOUTNAME;
  XTERN char const * TMPPATNAME;
 +XTERN char const * TMPEDNAME;
-
+ 
  XTERN bool TMPINNAME_needs_removal;
  XTERN bool TMPOUTNAME_needs_removal;
  XTERN bool TMPPATNAME_needs_removal;
 +XTERN bool TMPEDNAME_needs_removal;
-
+ 
  #ifdef DEBUGGING
  XTERN int debug;
+diff --git a/src/patch.c b/src/patch.c
+index 0fe6d72..30fa019 100644
 --- a/src/patch.c
 +++ b/src/patch.c
 @@ -1999,6 +1999,7 @@ cleanup (void)
@@ -49,9 +47,11 @@ Fixes: 123eaff0d5d1 ("Fix arbitrary command execution in ed-style patches (CVE-2
    remove_if_needed (TMPREJNAME, &TMPREJNAME_needs_removal);
    output_files (NULL);
  }
+diff --git a/src/pch.c b/src/pch.c
+index c7a1b7d..da24871 100644
 --- a/src/pch.c
 +++ b/src/pch.c
-@@ -2392,7 +2392,6 @@ do_ed_script (char const *inname, char c
+@@ -2391,7 +2391,6 @@ do_ed_script (char const *inname, char const *outname,
      file_offset beginning_of_this_line;
      size_t chars_read;
      FILE *tmpfp = 0;
@@ -59,10 +59,10 @@ Fixes: 123eaff0d5d1 ("Fix arbitrary command execution in ed-style patches (CVE-2
      int tmpfd;
      pid_t pid;
      int exclusive = *outname_needs_removal ? 0 : O_EXCL;
-@@ -2406,12 +2405,13 @@ do_ed_script (char const *inname, char c
+@@ -2405,12 +2404,13 @@ do_ed_script (char const *inname, char const *outname,
  	   invalid commands and treats the next line as a new command, which
  	   can lead to arbitrary command execution.  */
-
+ 
 -	tmpfd = make_tempfile (&tmpname, 'e', NULL, O_RDWR | O_BINARY, 0);
 +	tmpfd = make_tempfile (&TMPEDNAME, 'e', NULL, O_RDWR | O_BINARY, 0);
  	if (tmpfd == -1)
@@ -74,22 +74,22 @@ Fixes: 123eaff0d5d1 ("Fix arbitrary command execution in ed-style patches (CVE-2
 -	  pfatal ("Can't open stream for file %s", quotearg (tmpname));
 +	  pfatal ("Can't open stream for file %s", quotearg (TMPEDNAME));
        }
-
+ 
      for (;;) {
-@@ -2451,7 +2451,7 @@ do_ed_script (char const *inname, char c
+@@ -2450,7 +2450,7 @@ do_ed_script (char const *inname, char const *outname,
        write_fatal ();
-
+ 
      if (lseek (tmpfd, 0, SEEK_SET) == -1)
 -      pfatal ("Can't rewind to the beginning of file %s", quotearg (tmpname));
 +      pfatal ("Can't rewind to the beginning of file %s", quotearg (TMPEDNAME));
-
+ 
      if (inerrno != ENOENT)
        {
-@@ -2480,7 +2480,6 @@ do_ed_script (char const *inname, char c
+@@ -2479,7 +2479,6 @@ do_ed_script (char const *inname, char const *outname,
        }
-
+ 
      fclose (tmpfp);
 -    safe_unlink (tmpname);
-
+ 
      if (ofp)
        {

@@ -7,14 +7,12 @@ References: bsc#1088420, savannah#53566, CVE-2018-1000156
 
 * src/pch.c (do_ed_script): Allow input files to be missing so that new
 files will be created as with non-ed-style patches.
----
- src/pch.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
+diff --git a/src/pch.c b/src/pch.c
+index ff9ed2c..49c8d33 100644
 --- a/src/pch.c
 +++ b/src/pch.c
-@@ -2394,9 +2394,11 @@ do_ed_script (char const *inname, char c
-
+@@ -2393,9 +2393,11 @@ do_ed_script (char const *inname, char const *outname,
+ 
      if (! dry_run && ! skip_rest_of_patch) {
  	int exclusive = *outname_needs_removal ? 0 : O_EXCL;
 -	assert (! inerrno);

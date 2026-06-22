@@ -7,6 +7,8 @@ from pathlib import Path
 
 from omdlib.config_api import Config, Hook, null_action
 
+from cmk.ccc.version import Edition
+
 
 def write_mkeventd_conf(_site_name: str, site_home: Path, config: Config) -> None:
     enabled = "True" if config["MKEVENTD"] == "on" else "False"
@@ -23,9 +25,7 @@ mkeventd_enabled = {enabled}
 MKEVENTD = Hook(
     name="MKEVENTD",
     choices=[("on", "enable"), ("off", "disable")],
-    default=lambda edition: (
-        "off" if edition.long == "saas" else "on"  # TODO: "saas" was removed.
-    ),
+    default=lambda edition: "off" if edition is Edition.CLOUD else "on",
     activation=write_mkeventd_conf,
 )
 

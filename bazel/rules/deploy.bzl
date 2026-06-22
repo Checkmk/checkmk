@@ -22,6 +22,9 @@ OMD_ROOT="$1"
 WHEELS=()
 {update_wheels}
 UV="$(rlocation "{uv}")"
+# OverlayFS materializes version-dir files read-only; uv overwrites them in
+# place, so restore the owner write bit on the wheels' install targets first.
+chmod -R u+w "${{OMD_ROOT}}"/lib/python3*/site-packages/cmk* 2>/dev/null || true
 "${{UV}}" pip install \
     --python "${{OMD_ROOT}}/bin/python3" \
     --no-deps \

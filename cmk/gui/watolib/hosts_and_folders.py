@@ -4022,6 +4022,27 @@ def rebuild_folder_lookup_cache(config: Config) -> None:
     make_folder_tree(config).folder_lookup_cache.rebuild_outdated(max_age=300)
 
 
+@dataclass(frozen=True)
+class HostActionMenuEntry:
+    """A host action menu item contributed by a feature module.
+
+    ``ident`` doubles as the URL variable flag passed from the folder view to the
+    ``host_action_menu`` ajax endpoint, where ``render`` produces the menu item.
+    """
+
+    ident: str
+    is_shown: Callable[[Host, Folder | SearchFolder], bool]
+    render: Callable[[HostName, str], None]
+
+
+class HostActionMenuRegistry(Registry[HostActionMenuEntry]):
+    def plugin_name(self, instance: HostActionMenuEntry) -> str:
+        return instance.ident
+
+
+host_action_menu_registry = HostActionMenuRegistry()
+
+
 def ajax_popup_host_action_menu(ctx: PageContext) -> None:
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     host = folder_tree().host(hostname)
@@ -4071,6 +4092,10 @@ def ajax_popup_host_action_menu(ctx: PageContext) -> None:
         html.static_icon(StaticIcon(IconNames.tls, emblem="remove"))
         html.write_text_permissive(_("Remove TLS registration"))
         html.close_a()
+
+    for entry in host_action_menu_registry.values():
+        if request.get_str_input(entry.ident):
+            entry.render(hostname, form_name)
 
 
 def find_usages_of_contact_group_in_hosts_and_folders(

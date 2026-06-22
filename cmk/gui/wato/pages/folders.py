@@ -10,11 +10,14 @@
 import abc
 import json
 import re
-from collections.abc import Collection, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
+from dataclasses import dataclass
+from enum import auto, StrEnum
 from typing import override, TypeVar
 
 import cmk.gui.view_utils
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.regex import regex, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
@@ -108,6 +111,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_tree,
     FolderTree,
     Host,
+    host_action_menu_registry,
     make_action_link,
     SearchFolder,
 )
@@ -131,6 +135,56 @@ from ._tile_menu import TileMenuRenderer
 
 _ContactgroupName = str
 TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
+
+
+class FolderMenuLocation(StrEnum):
+    IN_FOLDER = auto()
+    SELECTED_HOSTS = auto()
+
+
+@dataclass(frozen=True)
+class FolderMenuEntry:
+    """A page menu entry contributed to the folder view by a feature module.
+
+    ``func`` receives the current folder and may be passed a ``SearchFolder``;
+    implementations that don't support search results should guard with
+    ``if isinstance(folder, SearchFolder): return``.
+    """
+
+    location: FolderMenuLocation
+    ident: str
+    func: Callable[[Folder | SearchFolder], Iterator[PageMenuEntry]]
+
+
+class FolderMenuEntryRegistry(Registry[FolderMenuEntry]):
+    def plugin_name(self, instance: FolderMenuEntry) -> str:
+        return instance.ident
+
+    def by_location(self, location: FolderMenuLocation) -> list[FolderMenuEntry]:
+        return [entry for entry in self.values() if entry.location == location]
+
+
+folder_menu_entry_registry = FolderMenuEntryRegistry()
+
+
+@dataclass(frozen=True)
+class FolderBulkAction:
+    """A bulk action on selected hosts that redirects to a dedicated mode.
+
+    When the form variable ``request_var`` is set, the folder view redirects to
+    ``mode_name``, carrying the current search text and host selection.
+    """
+
+    request_var: str
+    mode_name: str
+
+
+class FolderBulkActionRegistry(Registry[FolderBulkAction]):
+    def plugin_name(self, instance: FolderBulkAction) -> str:
+        return instance.request_var
+
+
+folder_bulk_action_registry = FolderBulkActionRegistry()
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
@@ -437,6 +491,9 @@ class ModeFolder(WatoMode):
                 item=make_simple_link(self._folder.url([("mode", "random_hosts")])),
             )
 
+        for entry in folder_menu_entry_registry.by_location(FolderMenuLocation.IN_FOLDER):
+            yield from entry.func(self._folder)
+
     def _page_menu_entries_selected_hosts(
         self,
     ) -> Iterator[PageMenuEntry]:
@@ -533,6 +590,9 @@ class ModeFolder(WatoMode):
                 disabled_tooltip=add_host_or_subfolder_tooltip_text,
                 is_enabled=is_enabled,
             )
+
+        for entry in folder_menu_entry_registry.by_location(FolderMenuLocation.SELECTED_HOSTS):
+            yield from entry.func(self._folder)
 
     def _page_menu_entries_this_folder(self) -> Iterator[PageMenuEntry]:
         if isinstance(self._folder, SearchFolder):
@@ -766,6 +826,10 @@ class ModeFolder(WatoMode):
             ("_parentscan", "parentscan"),
             ("_bulk_edit", "bulkedit"),
             ("_bulk_cleanup", "bulkcleanup"),
+            *(
+                (action.request_var, action.mode_name)
+                for action in folder_bulk_action_registry.values()
+            ),
         ]:
             if request.var(request_var):
                 return redirect(
@@ -1352,6 +1416,10 @@ class ModeFolder(WatoMode):
 
         if user.may("wato.manage_hosts"):
             action_menu_show_flags.append("show_remove_tls_link")
+
+        for entry in host_action_menu_registry.values():
+            if entry.is_shown(host, self._folder):
+                action_menu_show_flags.append(entry.ident)
 
         if action_menu_show_flags:
             url_vars: HTTPVariables = [

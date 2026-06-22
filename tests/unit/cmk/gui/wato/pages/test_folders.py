@@ -2,11 +2,48 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Iterator
+
 import pytest
 
 from cmk.gui.http import Request
+from cmk.gui.page_menu import PageMenuEntry
+from cmk.gui.wato.pages.folders import (
+    FolderBulkAction,
+    FolderBulkActionRegistry,
+    FolderMenuEntry,
+    FolderMenuEntryRegistry,
+    FolderMenuLocation,
+)
+from cmk.gui.watolib.hosts_and_folders import Folder, SearchFolder
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.gui.web_test_app import WebTestAppForCMK
+
+
+def test_folder_menu_entry_registry_filters_by_location() -> None:
+    registry = FolderMenuEntryRegistry()
+
+    def _no_entries(_folder: Folder | SearchFolder) -> Iterator[PageMenuEntry]:
+        yield from ()
+
+    in_folder = FolderMenuEntry(FolderMenuLocation.IN_FOLDER, "in_folder", _no_entries)
+    selected = FolderMenuEntry(FolderMenuLocation.SELECTED_HOSTS, "selected", _no_entries)
+    registry.register(in_folder)
+    registry.register(selected)
+
+    assert registry["in_folder"] is in_folder
+    assert registry.by_location(FolderMenuLocation.IN_FOLDER) == [in_folder]
+    assert registry.by_location(FolderMenuLocation.SELECTED_HOSTS) == [selected]
+
+
+def test_folder_bulk_action_registry_keys_by_request_var() -> None:
+    registry = FolderBulkActionRegistry()
+
+    action = FolderBulkAction(request_var="_demo", mode_name="demo")
+    registry.register(action)
+
+    assert registry["_demo"] is action
+    assert list(registry.values()) == [action]
 
 
 @pytest.mark.usefixtures("patch_theme")

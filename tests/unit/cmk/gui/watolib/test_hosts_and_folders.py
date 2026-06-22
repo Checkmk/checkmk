@@ -1279,3 +1279,17 @@ def test_subfolder_cache_invalidated() -> None:
     # subfolders are part of the tree
     with pytest.raises(AssertionError):
         assert subfolder.effective_attributes()["alias"] == "other_alias"
+
+
+def test_host_action_menu_registry_keys_by_ident() -> None:
+    registry = hosts_and_folders.HostActionMenuRegistry()
+
+    entry = hosts_and_folders.HostActionMenuEntry(
+        ident="show_demo_link",
+        is_shown=lambda _host, _folder: True,
+        render=lambda _host_name, _form_name: None,
+    )
+    registry.register(entry)
+
+    assert registry["show_demo_link"] is entry
+    assert list(registry.values()) == [entry]

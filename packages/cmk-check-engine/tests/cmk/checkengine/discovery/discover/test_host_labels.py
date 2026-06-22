@@ -21,7 +21,7 @@ from cmk.checkengine.sectionparser import (
 
 
 class _FakeParser(dict[str, object]):
-    def parse(self, section_name: SectionName, *args: object) -> object:
+    def parse(self, section_name: SectionName, *_args: object) -> object:
         return self.get(str(section_name))
 
     def disable(self, names: Iterable[SectionName]) -> None:
@@ -35,7 +35,7 @@ def _section(
     return SectionName(name), SectionPlugin(
         supersedes={SectionName(n) for n in supersedes},
         parsed_section_name=ParsedSectionName(parsed_section_name),
-        parse_function=lambda *args, **kw: object,
+        parse_function=lambda *_args, **_kw: object,
     )
 
 

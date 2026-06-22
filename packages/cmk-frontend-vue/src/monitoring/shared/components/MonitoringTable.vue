@@ -366,8 +366,9 @@ function tableRowAt(index: number): Row<T> {
 .monitoring-table__table {
   width: v-bind(tableWidth);
   table-layout: fixed;
-  border-collapse: collapse;
-  border-spacing: 0;
+  border-collapse: separate;
+  border-spacing: 1px;
+  background: var(--ux-theme-4);
 }
 
 .monitoring-table__row {

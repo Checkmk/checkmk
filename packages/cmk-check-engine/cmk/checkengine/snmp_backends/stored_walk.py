@@ -9,7 +9,6 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
 
-from cmk.checkengine.helper_interface import FetcherError
 from cmk.checkengine.snmplib import (
     OID,
     SNMPBackend,
@@ -20,7 +19,7 @@ from cmk.checkengine.snmplib import (
     SNMPRowInfo,
 )
 
-from ._utils import strip_snmp_value
+from ._utils import BackendError, strip_snmp_value
 
 __all__ = ["StoredWalkSNMPBackend"]
 
@@ -30,7 +29,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
         super().__init__(snmp_config, logger)
         self.path: Final = snmp_config.stored_walk_path / snmp_config.hostname
         if not self.path.exists():
-            raise FetcherError(f"No snmpwalk file {self.path}")
+            raise BackendError(f"No snmpwalk file {self.path}")
 
     @staticmethod
     def get_type() -> SNMPBackendEnum:
@@ -114,7 +113,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
         try:
             return self.read_walk_from_path(self.path, self._logger)
         except OSError:
-            raise FetcherError(f"No snmpwalk file {self.path}")
+            raise BackendError(f"No snmpwalk file {self.path}")
 
     @staticmethod
     def _compare_oids(a: OID, b: OID) -> int:

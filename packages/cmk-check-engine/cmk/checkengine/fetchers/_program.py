@@ -14,8 +14,8 @@ import subprocess
 from contextlib import suppress
 from typing import Final
 
-from cmk.checkengine.fetcher import Fetcher, Mode
-from cmk.checkengine.helper_interface import AgentRawData, FetcherError
+from cmk.checkengine.fetcher import Fetcher, FetcherError, Mode
+from cmk.checkengine.helper_interface import AgentRawData
 
 
 class ProgramFetcher(Fetcher[AgentRawData]):

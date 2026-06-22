@@ -150,7 +150,7 @@ from cmk.checkengine.discovery import (
 from cmk.checkengine.discovery import (
     automation_discovery as _automation_discovery,
 )
-from cmk.checkengine.fetcher import FetcherFunction, Mode
+from cmk.checkengine.fetcher import FetcherError, FetcherFunction, Mode
 from cmk.checkengine.fetchers import (
     ActivatedSecrets,
     AdHocSecrets,
@@ -167,7 +167,7 @@ from cmk.checkengine.fetchers._utils.config import (
     make_persisted_section_dir,
 )
 from cmk.checkengine.filecache import FileCacheOptions, MaxAge, NoCache
-from cmk.checkengine.helper_interface import AgentRawData, FetcherError, FetcherType, SourceType
+from cmk.checkengine.helper_interface import AgentRawData, FetcherType, SourceType
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.plugin_backend import (
     get_check_plugin,

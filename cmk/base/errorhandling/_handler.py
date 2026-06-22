@@ -14,7 +14,7 @@ from cmk.ccc.exceptions import (
     MKTimeout,
 )
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.helper_interface import FetcherError
+from cmk.checkengine.fetcher import FetcherError
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.checkengine.specs.exitspec import ExitSpec

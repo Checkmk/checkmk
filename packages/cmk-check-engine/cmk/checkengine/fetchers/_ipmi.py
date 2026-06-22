@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress
-from cmk.checkengine.fetcher import Fetcher, Mode
-from cmk.checkengine.helper_interface import AgentRawData, FetcherError
+from cmk.checkengine.fetcher import Fetcher, FetcherError, Mode
+from cmk.checkengine.helper_interface import AgentRawData
 
 __all__ = ["IPMICredentials", "IPMIFetcher"]
 

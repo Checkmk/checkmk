@@ -13,7 +13,7 @@ from cmk.agent_based.v2 import SNMPDetectSpecification
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.ccc.tty import format_warning
-from cmk.checkengine.helper_interface import FetcherError
+from cmk.checkengine.fetcher import FetcherError
 from cmk.checkengine.snmplib import (
     get_single_oid,
     SNMPBackend,

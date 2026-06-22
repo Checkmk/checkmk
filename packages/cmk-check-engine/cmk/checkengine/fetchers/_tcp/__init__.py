@@ -15,8 +15,8 @@ from typing import Final
 
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.fetcher import Fetcher, Mode
-from cmk.checkengine.helper_interface import AgentRawData, FetcherError
+from cmk.checkengine.fetcher import Fetcher, FetcherError, Mode
+from cmk.checkengine.helper_interface import AgentRawData
 
 from .agent_protocol import (
     AgentCtlMessage,

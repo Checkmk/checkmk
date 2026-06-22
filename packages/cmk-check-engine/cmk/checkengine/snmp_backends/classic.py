@@ -9,7 +9,6 @@ from typing import assert_never, Literal
 
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
-from cmk.checkengine.helper_interface import FetcherError
 from cmk.checkengine.snmplib import (
     OID,
     SNMPBackend,
@@ -20,7 +19,7 @@ from cmk.checkengine.snmplib import (
     SNMPVersion,
 )
 
-from ._utils import strip_snmp_value
+from ._utils import BackendError, strip_snmp_value
 
 __all__ = ["ClassicSNMPBackend"]
 
@@ -151,7 +150,7 @@ class ClassicSNMPBackend(SNMPBackend):
 
         if snmp_process.returncode:
             self._logger.debug(f"{tty.red}{tty.bold}ERROR: {tty.normal}SNMP error: {error.strip()}")
-            raise FetcherError(
+            raise BackendError(
                 f"SNMP Error on {ipaddress}: {error.strip()} (Exit-Code: {snmp_process.returncode})"
             )
         return rowinfo

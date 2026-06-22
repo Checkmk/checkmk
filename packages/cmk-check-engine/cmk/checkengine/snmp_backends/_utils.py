@@ -6,7 +6,10 @@
 
 from cmk.checkengine.snmplib import SNMPRawValue
 
-__all__ = ["strip_snmp_value"]
+__all__ = ["BackendError", "strip_snmp_value"]
+
+
+class BackendError(Exception): ...
 
 
 def strip_snmp_value(value: str) -> SNMPRawValue:

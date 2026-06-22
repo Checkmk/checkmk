@@ -10,7 +10,7 @@ import pytest
 
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.helper_interface import FetcherError
+from cmk.checkengine.fetcher import FetcherError
 from cmk.checkengine.parser import HostSections
 from cmk.checkengine.plugins import SectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult

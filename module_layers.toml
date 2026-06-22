@@ -993,7 +993,12 @@ excludes = [
 allows = ["@ccc"]
 
 [components."cmk.checkengine.snmp_backends.inline"]
-allows = ["@ccc", "cmk.checkengine.helper_interface", "cmk.checkengine.snmplib"]
+allows = [
+  "@ccc",
+  "cmk.checkengine.fetcher",
+  "cmk.checkengine.snmp_backends",
+  "cmk.checkengine.snmplib",
+]
 
 [components."cmk.inventory"]
 allows = ["@ccc", "cmk.utils.paths"]
@@ -1051,7 +1056,7 @@ allows = []
 allows = ["@ccc", "@plugin_apis", "cmk.utils.password_store", "cmk.utils.paths"]
 
 [components."cmk.checkengine.snmp_backends"]
-allows = ["@ccc", "cmk.checkengine.helper_interface", "cmk.checkengine.snmplib"]
+allows = ["@ccc", "cmk.checkengine.snmplib"]
 
 [components."cmk.checkengine.snmplib"]
 allows = ["@ccc", "cmk.agent_based.v1"]

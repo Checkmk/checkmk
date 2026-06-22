@@ -50,8 +50,9 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        ":helper-interface",
         ":snmplib",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:tty",
     ],
 )
 
@@ -61,7 +62,6 @@ py_library(
         "cmk/checkengine/helper_interface/__init__.py",
         "cmk/checkengine/helper_interface/_agentdatatype.py",
         "cmk/checkengine/helper_interface/_crashreporting.py",
-        "cmk/checkengine/helper_interface/_exceptions.py",
         "cmk/checkengine/helper_interface/_source_info.py",
     ],
     data = ["cmk/checkengine/helper_interface/py.typed"],
@@ -193,6 +193,7 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
+        ":fetcher-protocol",
         ":helper-interface",
         ":specs",
         "//cmk/piggyback:backend",

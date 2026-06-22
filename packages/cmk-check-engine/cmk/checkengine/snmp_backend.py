@@ -45,6 +45,7 @@ def discover_backends() -> Mapping[SNMPBackendEnum, type[SNMPBackend]]:
     return backends
 
 
+# TODO: Remove global variable so that BackendError can be moved into this file
 _BACKENDS: Mapping[SNMPBackendEnum, type[SNMPBackend]] = discover_backends()
 
 

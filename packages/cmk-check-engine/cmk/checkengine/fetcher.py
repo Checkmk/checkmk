@@ -15,7 +15,7 @@ import cmk.ccc.resulttype as result
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.helper_interface import AgentRawData, FetcherError, SourceInfo
+from cmk.checkengine.helper_interface import AgentRawData, SourceInfo
 from cmk.checkengine.snmplib import SNMPRawData
 
 __all__ = ["FetcherFunction"]
@@ -155,3 +155,7 @@ class Deserializer(Protocol):
     @abc.abstractmethod
     def __hash__(self) -> int:
         raise NotImplementedError
+
+
+class FetcherError(Exception):
+    """An exception common to the fetchers."""

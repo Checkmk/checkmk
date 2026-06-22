@@ -5,7 +5,6 @@
 
 from ._agentdatatype import AgentRawData as AgentRawData
 from ._crashreporting import create_fetcher_crash_dump as create_fetcher_crash_dump
-from ._exceptions import FetcherError as FetcherError
 from ._source_info import FetcherType as FetcherType
 from ._source_info import HostKey as HostKey
 from ._source_info import SourceInfo as SourceInfo

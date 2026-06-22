@@ -18,9 +18,9 @@ from typing import Any, Final
 
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.fetcher import Fetcher, Mode
-from cmk.checkengine.helper_interface import FetcherError
+from cmk.checkengine.fetcher import Fetcher, FetcherError, Mode
 from cmk.checkengine.snmp_backend import make_backend
+from cmk.checkengine.snmp_backends._utils import BackendError
 from cmk.checkengine.snmplib import (
     get_snmp_table,
     SNMPBackend,
@@ -286,7 +286,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                     )
                     for tree in self.plugin_store[section_name].trees
                 ]
-            except SNMPTimeout as exc:
+            except (BackendError, SNMPTimeout) as exc:
                 raise FetcherError(str(exc)) from exc
 
         walk_cache.save()

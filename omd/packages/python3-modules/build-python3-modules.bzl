@@ -1,7 +1,7 @@
 """Macros to build Python modules from source with pip."""
 
-load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@python_modules//:requirements.bzl", "packages")
+load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 
 def get_pip_options(module_name):
     return {

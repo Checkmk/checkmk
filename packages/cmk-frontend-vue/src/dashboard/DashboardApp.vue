@@ -728,6 +728,7 @@ const reviewFilters = () => {
             dashboardsManager.activeDashboard.value!.model.filter_context.restricted_to_single!
           "
           :logged-in-user="logged_in_user"
+          :permissions="permissions"
           @cancel="openDashboardSettings = false"
           @save="updateDashboardSettings"
         />

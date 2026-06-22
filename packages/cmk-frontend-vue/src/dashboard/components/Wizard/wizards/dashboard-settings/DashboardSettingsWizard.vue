@@ -16,6 +16,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import { type DashboardGeneralSettings } from '@/dashboard/types/dashboard'
+import type { DashboardPermissions } from '@/dashboard/types/page'
 
 import ActionBar from '../../components/ActionBar.vue'
 import ActionButton from '../../components/ActionButton.vue'
@@ -32,6 +33,7 @@ const props = defineProps<{
   dashboardGeneralSettings: DashboardGeneralSettings
   dashboardRestrictedToSingle: string[]
   loggedInUser: string
+  permissions: DashboardPermissions
 }>()
 
 const emit = defineEmits<{
@@ -223,6 +225,7 @@ const hasVisibilityErrors = computed(() => sortIndexError.value.length > 0)
             <AccessSettings
               v-model:share="generalSettings.visibility.share"
               :errors="accessErrors"
+              :permissions="permissions"
             />
           </CmkTabContent>
           <CmkTabContent id="visibility" class="db-settings-wizard__box">

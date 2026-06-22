@@ -224,7 +224,6 @@ _KNOWN_UNDECLARED = [
     "pymongo",  # cmk/plugins/mongodb/agents/mk_mongodb.py
     "bson",  # cmk/plugins/mongodb/agents/mk_mongodb.py
     "pyrfc",  # cmk/plugins/sap/agents/mk_sap.py
-    "typeshed",  # shipped with the standard library part of typeshed, which is bundled with mypy
     "rrdtool",  # is built as part of the project
 ]
 

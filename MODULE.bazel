@@ -712,6 +712,9 @@ register_toolchains(
     "@musl_toolchains_hub//:all",
     "//bazel/toolchains/cc/gcc:host_gcc_toolchain",
     "//bazel/toolchains/cc/gcc/local:linux_x86_64",
+    # Python toolchain for the Windows exec platform (rules_pkg's build_zip).
+    # Previously provided implicitly by WORKSPACE; see the BUILD file for why.
+    "//bazel/toolchains/python:runtime_env_python_windows",
 )
 
 include("//bazel/module:py.MODULE.bazel")

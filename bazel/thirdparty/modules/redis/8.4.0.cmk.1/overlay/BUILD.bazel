@@ -1,0 +1,73 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "make")
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "redis",
+    cpe_format_str = "cpe:2.3:a:redis:redis:%s:*:*:*:*:*:*:*",
+    # Redis Open Source is available as both source available and OSI-compliant
+    # open source software. A user may select one of the following three
+    # license options to use Redis Open Source (starting with Redis 8) and
+    # subsequent versions: the Redis Source Available License v2 (RSALv2), the
+    # Server Side Public License v1 (SSPLv1), and the GNU Affero General Public
+    # License v3 (AGPLv3).
+    # https://redis.io/legal/licenses/
+    license_kind = "@package_metadata//licenses/spdx:AGPL-3.0-only",
+    license_text = "LICENSE.txt",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = module_version(),
+)
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
+    package_metadata = [":dependency_info"],
+)
+
+# Redis ships a plain (non-autotools) Makefile.  `make` builds the binaries in
+# src/ and `make install PREFIX=...` copies them into <prefix>/bin.  The default
+# foreign_cc targets (["", "install"]) with the default install_prefix do exactly
+# that; redis-sentinel/redis-check-* are copies of redis-server and the consumer
+# re-creates them as symlinks, so only the three distinct binaries are captured.
+make(
+    name = "redis",
+    args = ["-j4"],
+    lib_source = ":all_srcs",
+    # Strip the binaries, matching the previous (genrule) build's
+    # LDFLAGS="-Wl,--strip-all".
+    linkopts = ["-Wl,--strip-all"],
+    out_bin_dir = "bin",
+    out_binaries = [
+        "redis-benchmark",
+        "redis-cli",
+        "redis-server",
+    ],
+    # without this foreign_cc complains about missing .a files
+    out_headers_only = True,
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "redis-server",
+    srcs = [":redis"],
+    output_group = "redis-server",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "redis-cli",
+    srcs = [":redis"],
+    output_group = "redis-cli",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "redis-benchmark",
+    srcs = [":redis"],
+    output_group = "redis-benchmark",
+    visibility = ["//visibility:public"],
+)

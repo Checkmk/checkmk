@@ -38,6 +38,7 @@ bazel_dep(name = "plantuml", version = "1.2026.2.cmk.1")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "pnp4nagios", version = "0.6.26.cmk.1")
 bazel_dep(name = "protobuf", version = "33.4")
+bazel_dep(name = "redis", version = "8.4.0.cmk.1")
 bazel_dep(name = "rules_cc", version = "0.2.11")
 bazel_dep(name = "rules_foreign_cc", version = "0.15.1")
 bazel_dep(name = "rules_go", version = "0.58.3")
@@ -351,17 +352,6 @@ http_archive(
     urls = [
         "https://github.com/google/re2/archive/refs/tags/2022-12-01.tar.gz",
         UPSTREAM_MIRROR_URL + "re2-2022-12-01.tar.gz",
-    ],
-)
-
-http_archive(
-    name = "redis",
-    build_file = "//omd/packages/redis:BUILD.redis.bazel",
-    sha256 = "ca909aa15252f2ecb3a048cd086469827d636bf8334f50bb94d03fba4bfc56e8",
-    strip_prefix = "redis-8.4.0",
-    urls = [
-        "https://download.redis.io/releases/redis-8.4.0.tar.gz",
-        UPSTREAM_MIRROR_URL + "redis-8.4.0.tar.gz",
     ],
 )
 

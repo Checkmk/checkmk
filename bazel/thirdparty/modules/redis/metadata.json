@@ -1,0 +1,6 @@
+{
+  "homepage": "https://redis.io/",
+  "maintainers": [],
+  "repository": ["github:redis/redis"],
+  "versions": ["8.4.0.cmk.1"]
+}

@@ -6,7 +6,11 @@ exports_files(["skel.permissions"])
 
 set_runpath(
     name = "bin_runpath",
-    srcs = ["@redis//:build"],
+    srcs = [
+        "@redis//:redis-benchmark",
+        "@redis//:redis-cli",
+        "@redis//:redis-server",
+    ],
     rpaths = ["$ORIGIN/../lib"],
     tags = ["manual"],
 )

@@ -44,8 +44,10 @@ pub struct QueryBlock {
 }
 
 type InstanceWorks = (InstanceName, Vec<QueryBlock>);
-type SpotWorkResults = (ClosedSpot, Result<Vec<InstanceWorks>>);
-pub type SpotWorks = (ClosedSpot, Vec<InstanceWorks>);
+type OpenedSpotWorkResults = (OpenedSpot, Result<Vec<InstanceWorks>>);
+pub type OpenedSpotWorks = (OpenedSpot, Vec<InstanceWorks>);
+pub type ClosedSpotWorks = (ClosedSpot, Vec<InstanceWorks>);
+
 type SpotErrors = (ClosedSpot, anyhow::Error);
 
 pub fn make_spot_work_results(
@@ -54,40 +56,36 @@ pub fn make_spot_work_results(
     custom_instances: &[CustomInstance],
     global_cache_age: u32,
     params: &[SqlBindParam],
-) -> (Vec<SpotWorks>, Vec<SpotErrors>) {
+) -> (Vec<OpenedSpotWorks>, Vec<SpotErrors>) {
     let work_results = spots
         .into_iter()
-        .map(|spot| {
-            let instance_candidates = WorkInstances::new(&spot, None);
+        .map(|opened| {
+            let instance_candidates = WorkInstances::new(&opened, None);
             match instance_candidates {
-                Err(ref e) => {
-                    let closed = spot.close();
-                    _make_closed_error(closed, e)
-                }
+                Err(ref e) => _make_work_result_error(opened, e),
                 Ok(mut instances) => {
-                    if let Err(e) = instances.discover_pdbs(&spot) {
-                        log::warn!("PDB discovery failed for {:?}: {e}", spot.target());
+                    if let Err(e) = instances.discover_pdbs(&opened) {
+                        log::warn!("PDB discovery failed for {:?}: {e}", opened.target());
                     }
                     let pdbs = instances.pdbs().clone();
-                    let closed = spot.close();
                     let merged_sections = merge_per_instance_sections(
                         &sections,
-                        &closed,
+                        &opened,
                         custom_instances,
                         global_cache_age,
                     );
-                    _make_closed_ok(closed, instances, &merged_sections, params, &pdbs)
+                    _make_work_result_ok(opened, instances, &merged_sections, params, &pdbs)
                 }
             }
         })
-        .collect::<Vec<SpotWorkResults>>();
+        .collect::<Vec<OpenedSpotWorkResults>>();
 
     work_results.into_iter().fold(
         (Vec::new(), Vec::new()),
         |(mut ok, mut err), (closed, res)| {
             match res {
                 Ok(instance_works) => ok.push((closed, instance_works)),
-                Err(e) => err.push((closed, e)),
+                Err(e) => err.push((closed.close(), e)),
             }
             (ok, err)
         },
@@ -101,7 +99,7 @@ pub fn make_spot_work_results(
 /// per-instance one wins.").
 fn merge_per_instance_sections(
     global: &[Section],
-    spot: &ClosedSpot,
+    spot: &OpenedSpot,
     custom_instances: &[CustomInstance],
     global_cache_age: u32,
 ) -> Vec<Section> {
@@ -139,11 +137,11 @@ fn merge_per_instance_sections(
     merged
 }
 
-fn _make_closed_error(closed: ClosedSpot, e: &anyhow::Error) -> SpotWorkResults {
-    let target = closed.target().clone();
+fn _make_work_result_error(opened: OpenedSpot, e: &anyhow::Error) -> OpenedSpotWorkResults {
+    let target = opened.target().clone();
     log::error!("Failed to get instances for spot {:?}: {}", target, e);
     (
-        closed,
+        opened,
         Err(anyhow::anyhow!(
             "REMOTE_INSTANCE_{}|FAILURE|WARNING: {} ",
             target.display_name(),
@@ -152,13 +150,13 @@ fn _make_closed_error(closed: ClosedSpot, e: &anyhow::Error) -> SpotWorkResults 
     )
 }
 
-fn _make_closed_ok(
-    closed: ClosedSpot,
+fn _make_work_result_ok(
+    opened: OpenedSpot,
     instances: WorkInstances,
     sections: &[Section],
     params: &[SqlBindParam],
     pdbs: &Pdbs,
-) -> SpotWorkResults {
+) -> OpenedSpotWorkResults {
     let instance_works = instances
         .all()
         .keys()
@@ -215,5 +213,5 @@ fn _make_closed_ok(
             (service.clone(), queries)
         })
         .collect::<Vec<InstanceWorks>>();
-    (closed, Ok(instance_works))
+    (opened, Ok(instance_works))
 }

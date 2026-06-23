@@ -337,10 +337,11 @@ def test_create_nagios_host_spec(
     outfile = io.StringIO()
     cfg = NagiosConfig(outfile, [hostname], timeperiods={})
 
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
-        allow_empty=config_cache.hosts_config.clusters,
+        allow_empty=loading_result.hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
 
@@ -350,7 +351,7 @@ def test_create_nagios_host_spec(
 
     host_spec = create_nagios_host_spec(
         cfg,
-        config_cache.hosts_config,
+        loading_result.hosts_config,
         config_cache,
         _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
@@ -379,7 +380,8 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
         },
     )
 
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
 
     host_attrs = config_cache.get_host_attributes(
         hostname, socket.AddressFamily.AF_INET, ip_address_of=lambda *a: HostAddress("")
@@ -388,7 +390,7 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
     cfg = NagiosConfig(io.StringIO(), [hostname], timeperiods={})
     host_spec = create_nagios_host_spec(
         cfg,
-        config_cache.hosts_config,
+        loading_result.hosts_config,
         config_cache,
         _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
@@ -479,10 +481,11 @@ def test_dump_precompiled_hostcheck(monkeypatch: MonkeyPatch, config_path: Path)
         hostname,
         [AutocheckEntry(CheckPluginName("uptime"), None, {}, {})],
     )
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
 
     host_check = dump_precompiled_hostcheck(
-        config_cache.hosts_config,
+        loading_result.hosts_config,
         config_cache,
         passive_service_name_config=lambda *a: "",
         enforced_services_table=lambda hn: {},
@@ -702,7 +705,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
         },
     )
 
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
 
     host_attrs = config_cache.get_host_attributes(
         hostname, socket.AddressFamily.AF_INET, ip_address_of_return_local

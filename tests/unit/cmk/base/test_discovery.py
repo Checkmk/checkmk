@@ -1625,7 +1625,8 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     cache_path.write_text(
         "<<<test_section>>>\nitem_a ok\nitem_b ok\n<<<labels>>>\ncmk/check_mk_server yes\n"
     )
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
 
     plugins = AgentBasedPlugins(
         agent_sections=_TEST_AGENT_SECTIONS,
@@ -1638,7 +1639,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     file_cache_options = FileCacheOptions()
     parser = CMKParser(
         config.make_parser_config(
-            config_cache._loaded_config,
+            loading_result.loaded_config,
             config_cache.ruleset_matcher,
             config_cache.label_manager,
             ip_address_of=config_cache.primary_ip_address_of,
@@ -1648,7 +1649,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         logger=logging.getLogger("tests"),
     )
     service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
     )
     app = make_app()
     fetcher = CMKFetcher(
@@ -1747,7 +1748,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     hostname = HostName("test-realhost")
     ts = Scenario()
     ts.add_host(hostname, ipaddress=HostAddress("127.0.0.1"))
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
 
     DiscoveredHostLabelsStore(hostname, cmk.utils.paths.discovered_host_labels_dir).save(
         [
@@ -1812,7 +1813,8 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
             }
         ],
     )
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
 
     DiscoveredHostLabelsStore(node1_hostname, cmk.utils.paths.discovered_host_labels_dir).save(
         [HostLabel("node1_existing_label", "true", SectionName("node1_plugin"))]
@@ -1860,7 +1862,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
     return ClusterScenario(
         hostname,
         config_cache,
-        config_cache.hosts_config,
+        loading_result.hosts_config,
         providers,
         node1_hostname,
         node2_hostname,

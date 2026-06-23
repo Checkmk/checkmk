@@ -18,7 +18,7 @@ from pytest import MonkeyPatch
 import cmk.utils.paths
 import cmk.utils.tags
 from cmk.base.app import make_app
-from cmk.base.config import ConfigCache, make_hosts_config
+from cmk.base.config import ConfigCache, LoadingResult, make_hosts_config
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
@@ -43,7 +43,7 @@ class _AutochecksMocker(AutochecksMemoizer):
 class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
 
-    def _get_config_cache(self) -> ConfigCache:
+    def _make_loading_result(self) -> LoadingResult:
         loaded_config = replace(
             EMPTY_CONFIG,
             # This only works as long as the attribute names of BaseConfig
@@ -51,13 +51,19 @@ class Scenario:
             # But it's probably less confusing if we stick to that pattern anyway.
             **{k: v for k, v in self.config.items() if k in asdict(EMPTY_CONFIG)},
         )
-        return ConfigCache(
+        hosts_config = make_hosts_config(loaded_config)
+        config_cache = ConfigCache(
             loaded_config,
             self.get_builtin_host_labels,
             self._edition,
-            make_hosts_config(loaded_config),
+            hosts_config,
             autochecks_dir=cmk.utils.paths.autochecks_dir,
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+        )
+        return LoadingResult(
+            loaded_config=loaded_config,
+            hosts_config=hosts_config,
+            config_cache=config_cache,
         )
 
     def __init__(self, site_id: str = "unit", edition: Edition = Edition.COMMUNITY) -> None:
@@ -80,7 +86,7 @@ class Scenario:
             "host_attributes": {},
             "clusters": {},
         }
-        self.config_cache = self._get_config_cache()
+        self.config_cache = self._make_loading_result().config_cache
 
     def add_host(
         self,
@@ -209,8 +215,9 @@ class Scenario:
     def set_autochecks(self, hostname: HostName, entries: Sequence[AutocheckEntry]) -> None:
         self._autochecks_mocker.raw_autochecks[hostname] = entries
 
-    def apply(self, monkeypatch: MonkeyPatch) -> ConfigCache:
-        self.config_cache = self._get_config_cache()
+    def apply(self, monkeypatch: MonkeyPatch) -> LoadingResult:
+        loading_result = self._make_loading_result()
+        self.config_cache = loading_result.config_cache
         self.config_cache.initialize(self.get_builtin_host_labels)
 
         if self._autochecks_mocker.raw_autochecks:
@@ -221,4 +228,4 @@ class Scenario:
                 raising=False,
             )
 
-        return self.config_cache
+        return loading_result

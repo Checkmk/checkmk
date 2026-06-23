@@ -129,7 +129,7 @@ def test_ping_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert [
         type(source.fetcher())
         for source in _make_sources(hostname, config_cache, tmp_path=tmp_path)
@@ -141,7 +141,7 @@ def test_agent_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
     ts = Scenario()
     ts.add_host(hostname)
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert [
         type(source.fetcher())
         for source in _make_sources(hostname, config_cache, tmp_path=tmp_path)
@@ -160,7 +160,7 @@ def test_agent_host_with_special_agents(monkeypatch: pytest.MonkeyPatch, tmp_pat
             "mqtt": [_dummy_rule_spec(hostname, {})],
         },
     )
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert [
         type(source.fetcher())
         for source in _make_sources(hostname, config_cache, tmp_path=tmp_path)
@@ -174,7 +174,7 @@ def test_snmp_host(snmp_ds: TagID, monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
 
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert [
         type(source.fetcher())
         for source in _make_sources(hostname, config_cache, tmp_path=tmp_path)
@@ -187,7 +187,7 @@ def test_dual_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert [
         type(source.fetcher())
         for source in _make_sources(hostname, config_cache, tmp_path=tmp_path)
@@ -208,7 +208,7 @@ def test_all_agents_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
         "special_agents",
         {"jolokia": [_dummy_rule_spec(hostname, {})]},
     )
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert [
         type(source.fetcher())
         for source in _make_sources(hostname, config_cache, tmp_path=tmp_path)
@@ -225,7 +225,7 @@ def test_special_agents_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
         "special_agents",
         {"jolokia": [_dummy_rule_spec(hostname, {})]},
     )
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert [
         type(source.fetcher())
         for source in _make_sources(hostname, config_cache, tmp_path=tmp_path)

@@ -80,7 +80,7 @@ class TestAutomationDiagHost:
         ts = Scenario()
         ts.add_host(hostname)
         ts.set_option("ipaddresses", {hostname: ipaddress})
-        return ts.apply(monkeypatch)
+        return ts.apply(monkeypatch).config_cache
 
     def test_execute(
         self, hostname: str, ipaddress: str, raw_data: str, scenario: ConfigCache

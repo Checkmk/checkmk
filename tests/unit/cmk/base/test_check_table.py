@@ -98,9 +98,10 @@ def test_cluster_ignores_nodes_parameters(
         ],
     )
     ts.set_autochecks(node, [AutocheckEntry(*service_id, {}, {})])
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
     service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
     )
 
     def service_description_callback(hostname: HostName, sid: ServiceID) -> ServiceName:
@@ -193,15 +194,16 @@ def test_check_table_enforced_vs_discovered_precedence(
             }
         ],
     )
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
     service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
     )
     check_plugins = _TEST_CHECK_PLUGINS
     service_configurer = config_cache.make_service_configurer(check_plugins, service_name_config)
     enforced_services_table = EnforcedServicesTable(
         BundledHostRulesetMatcher(
-            config_cache._loaded_config.static_checks,
+            loading_result.loaded_config.static_checks,
             config_cache.ruleset_matcher,
             config_cache.label_manager.labels_of_host,
         ),
@@ -571,13 +573,14 @@ def test_check_table(
         ],
     )
 
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
     service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
     )
     enforced_services_table = EnforcedServicesTable(
         BundledHostRulesetMatcher(
-            config_cache._loaded_config.static_checks,
+            loading_result.loaded_config.static_checks,
             config_cache.ruleset_matcher,
             config_cache.label_manager.labels_of_host,
         ),
@@ -655,9 +658,10 @@ def test_check_table_of_mgmt_boards(
         [AutocheckEntry(CheckPluginName("ipmi_sensors"), "TEMP Y", {}, {})],
     )
 
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
     service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
     )
 
     assert (
@@ -697,13 +701,14 @@ def test_check_table__static_checks_win(
         },
     )
     ts.set_autochecks(hostname, [AutocheckEntry(plugin_name, item, {"source": "auto"}, {})])
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
     service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
+        make_final_service_name_config(loading_result.loaded_config, config_cache.ruleset_matcher)
     )
     enforced_services_table = EnforcedServicesTable(
         BundledHostRulesetMatcher(
-            config_cache._loaded_config.static_checks,
+            loading_result.loaded_config.static_checks,
             config_cache.ruleset_matcher,
             config_cache.label_manager.labels_of_host,
         ),

@@ -47,7 +47,7 @@ def test_mgmt_explicit_settings(
     ts.set_option("management_protocol", {host: protocol})
     ts.set_option(cred_attribute, {host: credentials})
 
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == protocol
     assert config_cache.management_address(host, socket.AddressFamily.AF_INET) == "127.0.0.1"
@@ -63,7 +63,7 @@ def test_mgmt_explicit_address(monkeypatch: MonkeyPatch) -> None:
     ts.set_option("management_protocol", {host: "snmp"})
     ts.set_option("host_attributes", {host: {"management_address": "127.0.0.2"}})
 
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == "snmp"
     assert config_cache.management_address(host, socket.AddressFamily.AF_INET) == "127.0.0.2"
@@ -80,7 +80,7 @@ def test_mgmt_disabled(monkeypatch: MonkeyPatch) -> None:
     ts.set_option("host_attributes", {host: {"management_address": "127.0.0.1"}})
     ts.set_option("management_snmp_credentials", {host: "HOST"})
 
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert config_cache.has_management_board(host) is False
     assert config_cache.management_protocol(host) is None
     assert config_cache.management_address(host, socket.AddressFamily.AF_INET) == "127.0.0.1"
@@ -125,7 +125,7 @@ def test_mgmt_config_ruleset(
     ts.set_option("ipaddresses", {host: "127.0.0.1"})
     ts.set_option("management_protocol", {host: protocol})
 
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == protocol
     assert config_cache.management_address(host, socket.AddressFamily.AF_INET) == "127.0.0.1"
@@ -177,7 +177,7 @@ def test_mgmt_config_ruleset_order(
     ts.set_option("ipaddresses", {host: "127.0.0.1"})
     ts.set_option("management_protocol", {host: "snmp"})
 
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == "snmp"
     assert config_cache.management_address(host, socket.AddressFamily.AF_INET) == "127.0.0.1"
@@ -224,7 +224,7 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(
     ts.set_option("management_protocol", {host: protocol})
     ts.set_option(cred_attribute, {host: host_credentials})
 
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == protocol
     assert config_cache.management_address(host, socket.AddressFamily.AF_INET) == "127.0.0.1"
@@ -443,7 +443,7 @@ def test_mgmt_board_ip_addresses(
     ts.set_option("management_protocol", {hostname: protocol})
     ts.set_option(cred_attribute, {hostname: credentials})
 
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] = (
         socket.AddressFamily.AF_INET6
         if tags.get("address_family") == "ip-v6-only"

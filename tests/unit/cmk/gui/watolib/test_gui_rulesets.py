@@ -135,11 +135,11 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         ts = Scenario()
         ts.add_host(HostName("foobar123"), host_path="/wato/regex_check/hosts.mk")
         ts.add_host(HostName("foobar456"), host_path="/wato/regex_check/hosts.mk")
-        config_cache = ts.apply(monkeypatch)
+        applied = ts.apply(monkeypatch)
         loading_result = LoadingResult(
-            loaded_config=config_cache._loaded_config,
+            loaded_config=applied.loaded_config,
             hosts_config=Hosts(hosts=(), clusters={}, shadow_hosts=(), host_paths={}),
-            config_cache=config_cache,
+            config_cache=applied.config_cache,
         )
 
         with monkeypatch.context() as m:
@@ -288,12 +288,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
     ) -> ABCAutomationResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
-        config_cache = ts.apply(monkeypatch)
-        loading_result = LoadingResult(
-            loaded_config=config_cache._loaded_config,
-            hosts_config=config_cache.hosts_config,
-            config_cache=config_cache,
-        )
+        loading_result = ts.apply(monkeypatch)
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))

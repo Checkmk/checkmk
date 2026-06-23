@@ -601,7 +601,7 @@ def test_ruleset_matcher_get_host_values_tags_duplicate_ids(
             TagGroupID("grp1"): TagID("v1"),
         },
     )
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     matcher = config_cache.ruleset_matcher
 
     assert (
@@ -689,7 +689,7 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(
     ts = Scenario()
     ts.add_host(HostName("host1"))
     ts.add_host(HostName("host2"))
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     matcher = config_cache.ruleset_matcher
 
     assert (

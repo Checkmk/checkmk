@@ -58,7 +58,8 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(HostName(no_ip), {TagGroupID("address_family"): TagID("no-ip")})
     ts.add_host(HostName(dual_stack), {TagGroupID("address_family"): TagID("ip-v4v6")})
     ts.add_cluster(HostName(cluster))
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
     ip_lookup_config = config_cache.ip_lookup_config()
     monkeypatch.setattr(
         socket,
@@ -73,7 +74,7 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        allow_empty=config_cache.hosts_config.clusters,
+        allow_empty=loading_result.hosts_config.clusters,
         error_handler=lambda *a: None,
     )
 
@@ -516,8 +517,9 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(HostName("blub"), tags={TagGroupID("criticality"): TagID("offline")})
     ts.add_host(HostName("bla"))
     ts.add_host(HostName("dual"), tags={TagGroupID("address_family"): TagID("ip-v4v6")})
-    config_cache = ts.apply(monkeypatch)
-    hosts_config = config_cache.hosts_config
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
+    hosts_config = loading_result.hosts_config
     ip_lookup_config = config_cache.ip_lookup_config()
 
     assert not ip_lookup_cache()
@@ -580,7 +582,7 @@ def test_lookup_mgmt_board_ip_address_ipv4_host(
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
 
-    ip_lookup_config = ts.apply(monkeypatch).ip_lookup_config()
+    ip_lookup_config = ts.apply(monkeypatch).config_cache.ip_lookup_config()
     assert (
         ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)(
             hostname, ip_lookup_config.default_address_family(hostname)
@@ -602,7 +604,7 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname, tags={TagGroupID("address_family"): TagID("ip-v6-only")})
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     monkeypatch.setattr(
         socket,
         "getaddrinfo",
@@ -645,7 +647,7 @@ def test_lookup_mgmt_board_ip_address_dual_host(
         },
     )
 
-    ip_lookup_config = ts.apply(monkeypatch).ip_lookup_config()
+    ip_lookup_config = ts.apply(monkeypatch).config_cache.ip_lookup_config()
     assert (
         ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)(
             hostname, ip_lookup_config.default_address_family(hostname)
@@ -670,7 +672,7 @@ def test_lookup_mgmt_board_ip_address_unresolvable(
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
 
-    ip_lookup_config = ts.apply(monkeypatch).ip_lookup_config()
+    ip_lookup_config = ts.apply(monkeypatch).config_cache.ip_lookup_config()
     assert (
         ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)(
             hostname, ip_lookup_config.default_address_family(hostname)
@@ -688,7 +690,7 @@ def test_lookup_mgmt_board_ip_address_unresolvable_2(
     hostname = HostName("hostname")
     ts = Scenario()
     ts.add_host(hostname)
-    config_cache = ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch).config_cache
     monkeypatch.setattr(ip_lookup, "_lookup_ip_address", fake_lookup_ip_address)
 
     ip_lookup_config = config_cache.ip_lookup_config()

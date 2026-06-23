@@ -31,7 +31,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
             },
         },
     )
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
 
     label_sources: dict[str, LabelSource] = {
         "cmk/site": "discovered",
@@ -43,8 +43,8 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         AgentBasedPlugins.empty(),
         LoadingResult(
             loaded_config=EMPTY_CONFIG,
-            hosts_config=config_cache.hosts_config,
-            config_cache=config_cache,
+            hosts_config=loading_result.hosts_config,
+            config_cache=loading_result.config_cache,
         ),
     ) == AnalyseHostResult(
         label_sources=label_sources | additional_label_sources,
@@ -81,7 +81,7 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
             ]
         ),
     )
-    config_cache = ts.apply(monkeypatch)
+    loading_result = ts.apply(monkeypatch)
 
     assert automations.automation_get_services_labels.handler(
         make_app(),
@@ -89,8 +89,8 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
         AgentBasedPlugins.empty(),
         LoadingResult(
             loaded_config=EMPTY_CONFIG,
-            hosts_config=config_cache.hosts_config,
-            config_cache=config_cache,
+            hosts_config=loading_result.hosts_config,
+            config_cache=loading_result.config_cache,
         ),
     ) == GetServicesLabelsResult(
         {

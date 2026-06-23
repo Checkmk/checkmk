@@ -209,3 +209,16 @@ def test_check_jbod() -> None:
     assert result == [
         Result(state=State.OK, summary="Size: 10.914 TB, Disk State: JBOD"),
     ]
+
+
+def test_check_v2_simple() -> None:
+    result = list(
+        check_storcli_pdisks(
+            item="C0.308:16-293",
+            params=megaraid.PDISKS_DEFAULTS,
+            section=parse_storcli_pdisks(_to_string_table(SECTION_V2)),
+        )
+    )
+    assert result == [
+        Result(state=State.UNKNOWN, summary="Size: 6.985 TiB, Disk State: Online"),
+    ]

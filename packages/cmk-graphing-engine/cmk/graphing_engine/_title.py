@@ -7,7 +7,7 @@ import json
 import re
 from collections.abc import Callable, Mapping
 
-from ._objects import MetricName, RRDMetricData, ServiceRef
+from ._objects import MetricName, RRDMetricData
 
 _TITLE_EXPRESSION_PREFIX = "_EXPRESSION:"
 _TITLE_EXPRESSION_PATTERN = re.compile(re.escape(_TITLE_EXPRESSION_PREFIX) + r"\{.*?\}")
@@ -38,23 +38,12 @@ def _evaluate_title_expression(
     return scalar(translated)
 
 
-def _flatten(
-    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
-) -> Mapping[MetricName, RRDMetricData]:
-    return {
-        name: data
-        for per_service in translated_metrics.values()
-        for name, data in per_service.items()
-    }
-
-
 def evaluate_title(
     title: str,
-    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
+    translated_metrics: Mapping[MetricName, RRDMetricData],
 ) -> str:
-    flattened = _flatten(translated_metrics)
     for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
-        value = _evaluate_title_expression(raw, flattened)
+        value = _evaluate_title_expression(raw, translated_metrics)
         if value is None:
             return title.split("-", maxsplit=1)[0].strip()
         title = title.replace(raw, str(int(value)), 1)

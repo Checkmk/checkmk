@@ -146,15 +146,16 @@ def _evaluate_rule(rule: Rule, context: EvaluationContext) -> EvaluatedRule | No
 def _title_metrics(
     graph: Graph,
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
-) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
+) -> Mapping[MetricName, RRDMetricData]:
     services = {
         ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
         for metric in graph.rrd_metrics()
     }
     return {
-        service: translated_metrics[service]
+        name: data
         for service in services
         if service in translated_metrics
+        for name, data in translated_metrics[service].items()
     }
 
 

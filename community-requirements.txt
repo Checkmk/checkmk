@@ -4637,9 +4637,9 @@ redfish==3.3.4 \
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
-redis==7.2.1 \
-    --hash=sha256:49e231fbc8df2001436ae5252b3f0f3dc930430239bfeb6da4c7ee92b16e5d33 \
-    --hash=sha256:6163c1a47ee2d9d01221d8456bc1c75ab953cbda18cfbc15e7140e9ba16ca3a5
+redis==7.2.2 \
+    --hash=sha256:8bd20727048c01a1fb4741f98c4194f5aa64781b7dd28386ca74ce6b41e42dcf \
+    --hash=sha256:91125c133362620d9f2caec11c70e6febc2745bbb8a0ce15ad8542811bd2dfd1
     # via
     #   -c constraints.txt
     #   -c requirements.txt

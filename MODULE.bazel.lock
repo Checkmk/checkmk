@@ -7160,8 +7160,8 @@
             "https://files.pythonhosted.org/packages/df/b9/e0441673427e982c7cc705dfe4ecb4746ecdf70e9c9eb343a33d86789197/redfish-3.3.4.tar.gz": "77257477a8bc3880ae740be5ded6bc0a6803e0c1c9f71289051be1d5ff2ed0e2"
           },
           "redis": {
-            "https://files.pythonhosted.org/packages/ca/98/1dd1a5c060916cf21d15e67b7d6a7078e26e2605d5c37cbc9f4f5454c478/redis-7.2.1-py3-none-any.whl": "49e231fbc8df2001436ae5252b3f0f3dc930430239bfeb6da4c7ee92b16e5d33",
-            "https://files.pythonhosted.org/packages/e9/31/1476f206482dd9bc53fdbbe9f6fbd5e05d153f18e54667ce839df331f2e6/redis-7.2.1.tar.gz": "6163c1a47ee2d9d01221d8456bc1c75ab953cbda18cfbc15e7140e9ba16ca3a5"
+            "https://files.pythonhosted.org/packages/7f/b3/fddae1baaf88100f0bd52e726d9dd140997f513258d22429b0da1d889170/redis-7.2.2.tar.gz": "91125c133362620d9f2caec11c70e6febc2745bbb8a0ce15ad8542811bd2dfd1",
+            "https://files.pythonhosted.org/packages/f6/f4/062f77785c590d62a323e92ba9d179ce80286c4f31369f799612d5d1d0f2/redis-7.2.2-py3-none-any.whl": "8bd20727048c01a1fb4741f98c4194f5aa64781b7dd28386ca74ce6b41e42dcf"
           },
           "referencing": {
             "https://files.pythonhosted.org/packages/2f/db/98b5c277be99dd18bfd91dd04e1b759cad18d1a338188c936e92f921c7e2/referencing-0.36.2.tar.gz": "df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa",

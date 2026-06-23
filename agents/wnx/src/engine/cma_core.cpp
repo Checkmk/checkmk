@@ -1032,21 +1032,15 @@ namespace {
 constexpr std::chrono::milliseconds time_grane{250};
 }  // namespace
 
-void TheMiniBox::readAndAppend(HANDLE read_handle,
-                               std::chrono::milliseconds timeout) {
+void TheMiniBox::readAndAppend(HANDLE read_handle) {
     const auto buf = wtools::ReadFromHandle(read_handle);
     if (buf.empty()) {
         return;
     }
 
-    if (process_->getData().empty()) {
-        // after getting first data, we need to decrease timeout to
-        // prevent too long waiting for nothing
-        timeout = std::min(timeout, 10 * time_grane);
-    }
     appendResult(read_handle, buf);
-    XLOG::d.t("Appended [{}] bytes from '{}', timeout is [{}ms]", buf.size(),
-              wtools::ToUtf8(exec_), timeout.count());
+    XLOG::d.t("Appended [{}] bytes from '{}'", buf.size(),
+              wtools::ToUtf8(exec_));
 }
 
 bool TheMiniBox::waitForBreakLoop(std::chrono::milliseconds timeout) {
@@ -1071,25 +1065,38 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
     }
 
     auto *read_handle = getReadHandle();
+    auto remaining_timeout = timeout;
 
-    while (true) {
-        readAndAppend(read_handle, timeout);
-        if (waitForBreakLoop(timeout)) {
+    const auto pid = getProcessId();
+    while (remaining_timeout > std::chrono::milliseconds::zero()) {
+        readAndAppend(read_handle);
+        if (waitForStop(time_grane)) {
             break;
         }
-        timeout -= time_grane;
+
+        // Check if process has exited
+        auto [exitCode, error] = wtools::GetProcessExitCode(pid);
+        if (error == 0 && exitCode != STILL_ACTIVE) {
+            // Process has exited, read any remaining data
+            readWhatLeft();
+            return true;
+        }
+        remaining_timeout -= time_grane;
     }
 
-    if (process_->getData().empty()) {
-        auto process_id = getProcessId();
-        failed_ = timeout < time_grane;
-        process_->kill(true);
-        XLOG::l("Process '{}' [{}] is killed", wtools::ToUtf8(exec_),
-                process_id);
-        return false;
-    }
-
+    // Timeout expired or break condition met
     readWhatLeft();
+    auto [exitCode, error] = wtools::GetProcessExitCode(pid);
+    failed_ = remaining_timeout <= std::chrono::milliseconds::zero();
+    if (error != 0 || exitCode == STILL_ACTIVE) {
+        // Process is running or status is unknown
+        process_->kill(true);
+        XLOG::l("Process '{}' [{}] is killed", wtools::ToUtf8(exec_), pid);
+    } else {
+        XLOG::t("Process '{}' [{}] exits with [{}]", wtools::ToUtf8(exec_), pid,
+                exitCode);
+    }
+
     return true;
 }
 

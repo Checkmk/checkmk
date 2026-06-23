@@ -1856,6 +1856,7 @@
   "pkg:pypi/pynacl@1.6.2": "Apache-2.0",
   "pkg:pypi/pyparsing@3.3.2": "MIT",
   "pkg:pypi/pypdf@6.12.2": "BSD-3-Clause",
+  "pkg:pypi/pypdf@6.14.1": "BSD-3-Clause",
   "pkg:pypi/pypdf@6.7.0": "BSD-3-Clause",
   "pkg:pypi/pyprof2calltree@1.4.5": "MIT",
   "pkg:pypi/pysaml2@7.5.0": "Apache-2.0",

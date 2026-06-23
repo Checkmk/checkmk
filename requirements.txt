@@ -4023,9 +4023,9 @@ pyparsing==3.3.2 \
     #   httplib2
     #   matplotlib
     #   pyspdx
-pypdf==6.12.2 \
-    --hash=sha256:111669eb6680c04495ae0c113a1476e3bf93a95761d23c7406b591c80a6490b1 \
-    --hash=sha256:67b2699357a1f3f4c945940ea80826349ee507c9e2577724a14b4941982c104d
+pypdf==6.14.1 \
+    --hash=sha256:03c76aa9cc6dfda76d33d8e19f17d271efb6a7606913a72cf973a649db9743a3 \
+    --hash=sha256:f12434c49fd4c771b92ea2cc176df16d6c5488fc123d4ab4ee3a344e151f685c
     # via
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-robotmk/dev-requirements.in

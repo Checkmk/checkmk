@@ -12,6 +12,7 @@ void main() {
     def branch_base_folder = package_helper.branch_base_folder(true);
     def force_build = params.DISABLE_JENKINS_CACHE == true;
     def do_rebase = params.CIPARAM_GATED_TRIGGER_REBASE;
+    def do_automerge = params.CIPARAM_GATED_TRIGGER_AUTOMERGE;
 
     def edition_medium_chain = "pro";
     def distro_medium_chain = "ubuntu-24.04";
@@ -32,6 +33,7 @@ void main() {
         |branch_base_folder: │${branch_base_folder}│
         |force_build:....... │${force_build}│
         |do_rebase:......... │${do_rebase}│
+        |do_automerge:...... │${do_automerge}│
         |===================================================
         """.stripMargin());
 
@@ -115,6 +117,27 @@ void main() {
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";
+    }
+
+    smart_stage(
+        name: "Vote Medium-Chain-Verified and submit",
+        condition: do_automerge,
+        raiseOnError: false,
+    ) {
+        def vote = "${currentBuild.result}" == "SUCCESS" ? "+1" : "-1";
+        withCredentials([sshUserPrivateKey(
+            credentialsId: "jenkins-gerrit-fips-compliant-ssh-key",
+            keyFileVariable: "GERRIT_SSH_KEY",
+        )]) {
+            sh("""
+                ssh -i "${GERRIT_SSH_KEY}" -o StrictHostKeyChecking=no \
+                    -p 29418 jenkins@review.lan.tribe29.com \
+                    gerrit review \
+                    --medium-chain-verified=${vote} \
+                    ${currentBuild.result == "SUCCESS" ? "--submit" : ""} \
+                    ${env.GERRIT_PATCHSET_REVISION}
+            """);
+        }
     }
 }
 

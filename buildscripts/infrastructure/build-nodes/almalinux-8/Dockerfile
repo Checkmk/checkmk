@@ -4,7 +4,8 @@ ARG DISTRO_IMAGE_BASE
 # Create base image
 FROM ${DISTRO_IMAGE_BASE} AS base
 
-SHELL ["/bin/bash", "-c"]
+# kaniko is based on alpine, only shipping /bin/sh instead of /bin/bash
+SHELL ["/bin/sh", "-c"]
 ENV \
     LC_ALL=C.UTF-8 \
     LANG=C.UTF-8 \

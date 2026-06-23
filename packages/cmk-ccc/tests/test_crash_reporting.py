@@ -7,6 +7,7 @@ import base64
 import copy
 import json
 from collections.abc import Mapping
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -15,6 +16,7 @@ import pytest
 from cmk.ccc.crash_reporting import (
     _FINGERPRINT_INDEX_FILE,
     ABCCrashReport,
+    cleanup_crash_reports,
     crash_fingerprint,
     CrashInfo,
     CrashReportStore,
@@ -258,6 +260,65 @@ def test_crash_report_store_cleanup(tmp_path: Path, n_crashes: int) -> None:
     crash_dirs = {e for e in crashes.glob("*") if e.is_dir()}
     assert len(crash_dirs) <= crash_store.keep_num_crashes
     assert {e.name for e in crash_dirs} == set(crash_ids[-crash_store.keep_num_crashes :])
+
+
+def _saved_crash_ids(tmp_path: Path, timestamps: list[float]) -> tuple[Path, list[str]]:
+    """Save one crash per timestamp and return the crashes base path and the crash ids."""
+    crash_store = CrashReportStore()
+    crash_ids = []
+    for num, timestamp in enumerate(timestamps):
+        crash = _make_unique_crash(tmp_path, num, timestamp=timestamp)
+        crash_store.save(crash)
+        crash_ids.append(crash.ident_to_text())
+    return make_crash_report_base_path(tmp_path), crash_ids
+
+
+def _remaining_crash_dirs(base_path: Path) -> set[str]:
+    return {e.name for e in (base_path / UnitTestCrashReport.type()).iterdir() if e.is_dir()}
+
+
+def test_cleanup_crash_reports_removes_too_old(tmp_path: Path) -> None:
+    base_path, crash_ids = _saved_crash_ids(tmp_path, [1000.0, 100000.0])
+
+    cleanup_crash_reports(
+        base_path,
+        max_age=timedelta(seconds=10),
+        max_total_size=10**12,
+        reference_time=100000.0,
+    )
+
+    assert _remaining_crash_dirs(base_path) == {crash_ids[1]}
+
+
+def test_cleanup_crash_reports_keeps_newest_per_type(tmp_path: Path) -> None:
+    base_path, crash_ids = _saved_crash_ids(tmp_path, [0.0, 1.0, 2.0, 3.0, 4.0])
+
+    cleanup_crash_reports(
+        base_path,
+        keep_num_crashes=2,
+        max_age=timedelta(days=365),
+        max_total_size=10**12,
+        reference_time=1000.0,
+    )
+
+    assert _remaining_crash_dirs(base_path) == set(crash_ids[-2:])
+
+
+def test_cleanup_crash_reports_enforces_total_size(tmp_path: Path) -> None:
+    base_path, crash_ids = _saved_crash_ids(tmp_path, [0.0, 1.0, 2.0])
+    # Add a large payload to each crash so the on-disk crash.info size is negligible.
+    for crash_id in crash_ids:
+        (base_path / UnitTestCrashReport.type() / crash_id / "payload").write_bytes(b"x" * 100_000)
+
+    # Budget only fits the newest crash; the two older ones must be evicted oldest-first.
+    cleanup_crash_reports(
+        base_path,
+        max_age=timedelta(days=365),
+        max_total_size=150_000,
+        reference_time=1000.0,
+    )
+
+    assert _remaining_crash_dirs(base_path) == {crash_ids[-1]}
 
 
 def test_crash_report_store_ignores_non_directories_in_base_dir(tmp_path: Path) -> None:

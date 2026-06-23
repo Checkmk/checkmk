@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import timedelta
+
+import cmk.utils.paths
+from cmk.ccc.crash_reporting import cleanup_crash_reports, make_crash_report_base_path
+from cmk.gui.config import Config
+from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0 import PainterRegistry
@@ -50,6 +56,10 @@ from .views import (
 )
 
 
+def _cleanup_crashes_job(config: Config) -> None:
+    cleanup_crash_reports(make_crash_report_base_path(cmk.utils.paths.omd_root))
+
+
 def register(
     page_registry: PageRegistry,
     data_source_registry: DataSourceRegistry,
@@ -59,6 +69,7 @@ def register(
     config_variable_group_registry: ConfigVariableGroupRegistry,
     config_variable_registry: ConfigVariableRegistry,
     filter_registry: FilterRegistry,
+    cron_job_registry: CronJobRegistry,
 ) -> None:
     crash_reporting_pages.register(page_registry)
     data_source_registry.register(DataSourceCrashReports)
@@ -98,3 +109,11 @@ def register(
     filter_registry.register(FilterCrashTime)
     filter_registry.register(FilterCrashType)
     filter_registry.register(FilterCrashVersion)
+    cron_job_registry.register(
+        CronJob[Config](
+            name="cleanup_crash_reports",
+            callable=_cleanup_crashes_job,
+            interval=timedelta(days=1),
+            run_in_thread=True,
+        )
+    )

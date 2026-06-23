@@ -22,6 +22,7 @@ def test_registered_jobs() -> None:
         "cleanup_topology_layouts",
         "execute_autodiscovery",
         "execute_deprecation_tests_and_notify_users",
+        "cleanup_crash_reports",
     ]
 
     found_jobs = sorted([f.name for f in cron.cron_job_registry.values()])

@@ -16,11 +16,13 @@ import itertools
 import json
 import pprint
 import sys
+import time
 import traceback
 import urllib.parse
 import uuid
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
+from datetime import timedelta
 from itertools import islice
 from pathlib import Path
 from typing import Any, Final, NotRequired, TypedDict, TypeVar
@@ -160,6 +162,126 @@ def _save_fingerprint_index(base_dir: Path, index: dict[str, str]) -> None:
         base_dir / _FINGERPRINT_INDEX_FILE,
         json.dumps(index) + "\n",
     )
+
+
+def _uuid_crash_dirs(type_dir: Path) -> Iterator[Path]:
+    """Yield the per-crash directories (named after a UUID) inside a crash-type directory."""
+    for p in type_dir.iterdir():
+        try:
+            uuid.UUID(str(p.name))
+        except (ValueError, TypeError):
+            continue
+        if p.is_dir():
+            yield p
+
+
+def _remove_crash_dir(crash_dir: Path) -> None:
+    """Remove a single crash report directory and its contents."""
+    for f in crash_dir.iterdir():
+        with suppress(OSError):
+            f.unlink()
+    with suppress(OSError):
+        crash_dir.rmdir()
+
+
+def _drop_from_index(index: dict[str, str], dir_name: str) -> None:
+    """Remove the index entry pointing at ``dir_name`` (if any) to keep it in sync with disk."""
+    for fp_hash, name in list(index.items()):
+        if name == dir_name:
+            del index[fp_hash]
+            break
+
+
+def _crash_dir_last_seen(crash_dir: Path) -> float:
+    """Best-effort last-seen timestamp (epoch seconds) for age and ordering decisions.
+
+    Falls back to the directory's modification time when the crash.info is missing or
+    unreadable, so a corrupted report is never considered "infinitely new"."""
+    try:
+        info = json.loads(store.load_text_from_file(crash_dir / "crash.info"))
+        return normalize_crash_time(info["time"])["last_seen"]
+    except Exception:
+        try:
+            return crash_dir.stat().st_mtime
+        except OSError:
+            return 0.0
+
+
+def _crash_dir_size(crash_dir: Path) -> int:
+    """Total size in bytes of the files contained in a crash report directory."""
+    total = 0
+    for f in crash_dir.iterdir():
+        try:
+            if f.is_file():
+                total += f.stat().st_size
+        except OSError:
+            continue
+    return total
+
+
+DEFAULT_MAX_CRASH_AGE: Final = timedelta(days=90)
+DEFAULT_MAX_CRASHES_TOTAL_SIZE: Final = 5 * 1024**3  # 5 GiB
+
+
+def cleanup_crash_reports(
+    base_path: Path,
+    *,
+    keep_num_crashes: int = 200,
+    max_age: timedelta = DEFAULT_MAX_CRASH_AGE,
+    max_total_size: int = DEFAULT_MAX_CRASHES_TOTAL_SIZE,
+    reference_time: float | None = None,
+) -> None:
+    """Bound the on-disk crashes directory by count (per type), age and total size.
+
+    Intended to be run regularly (independent of new crashes arriving). Within each crash-type
+    directory the newest ``keep_num_crashes`` reports are kept and reports older than ``max_age``
+    are removed. Afterwards, if the surviving reports still exceed ``max_total_size`` in sum across
+    all types, the oldest ones are evicted until the budget is met."""
+    if not base_path.exists():
+        return
+
+    ref = time.time() if reference_time is None else reference_time
+    age_cutoff = ref - max_age.total_seconds()
+
+    # (last_seen, size, crash_dir, type_dir) of every report that survived the per-type pruning.
+    survivors: list[tuple[float, int, Path, Path]] = []
+
+    for type_dir in base_path.iterdir():
+        if not type_dir.is_dir():
+            continue
+        with store.locked(type_dir / ".crash_report_lock"):
+            index = _load_fingerprint_index(type_dir)
+            crashes = sorted(
+                (
+                    (_crash_dir_last_seen(p), _crash_dir_size(p), p)
+                    for p in _uuid_crash_dirs(type_dir)
+                ),
+                key=lambda c: c[0],
+                reverse=True,  # newest first
+            )
+            for position, (last_seen, size, crash_dir) in enumerate(crashes):
+                if position >= keep_num_crashes or last_seen < age_cutoff:
+                    _remove_crash_dir(crash_dir)
+                    _drop_from_index(index, crash_dir.name)
+                else:
+                    survivors.append((last_seen, size, crash_dir, type_dir))
+            _save_fingerprint_index(type_dir, index)
+
+    total_size = sum(size for _, size, _, _ in survivors)
+    if total_size <= max_total_size:
+        return
+
+    for last_seen, size, crash_dir, type_dir in sorted(
+        survivors, key=lambda c: c[0]
+    ):  # oldest first
+        if total_size <= max_total_size:
+            break
+        with store.locked(type_dir / ".crash_report_lock"):
+            index = _load_fingerprint_index(type_dir)
+            _remove_crash_dir(crash_dir)
+            _drop_from_index(index, crash_dir.name)
+            _save_fingerprint_index(type_dir, index)
+        total_size -= size
 
 
 class CrashReportStore:
@@ -305,34 +427,17 @@ class CrashReportStore:
 
     def _cleanup_old_crashes(self, base_dir: Path, index: dict[str, str]) -> None:
         """Simple cleanup mechanism: For each crash type we keep up to X crashes"""
-
-        def uuid_paths(path: Path) -> Iterator[Path]:
-            for p in path.iterdir():
-                try:
-                    uuid.UUID(str(p.name))
-                except (ValueError, TypeError):
-                    continue
-                yield p
-
         for crash_dir in islice(
-            sorted(uuid_paths(base_dir), key=lambda p: uuid.UUID(str(p.name)).time, reverse=True),
+            sorted(
+                _uuid_crash_dirs(base_dir),
+                key=lambda p: uuid.UUID(str(p.name)).time,
+                reverse=True,
+            ),
             self.keep_num_crashes,
             None,
         ):
-            # Remove crash report contents
-            for f in crash_dir.iterdir():
-                with suppress(OSError):
-                    f.unlink()
-
-            # And finally remove the crash report directory
-            with suppress(OSError):
-                crash_dir.rmdir()
-
-            # Keep the index in sync with what's on disk.
-            for fp_hash, dir_name in list(index.items()):
-                if dir_name == crash_dir.name:
-                    del index[fp_hash]
-                    break
+            _remove_crash_dir(crash_dir)
+            _drop_from_index(index, crash_dir.name)
 
 
 class SerializedCrashReport[T](TypedDict):

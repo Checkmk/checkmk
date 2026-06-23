@@ -244,6 +244,7 @@ def register(
         config_variable_group_registry,
         config_variable_registry,
         filter_registry,
+        cron_job_registry,
     )
     watolib_registration.register(
         edition,

@@ -312,6 +312,7 @@ defineExpose({
 <template>
   <span
     class="metric-backend-attribute-filter-pill"
+    :class="{ 'metric-backend-attribute-filter-pill--editing': editing }"
     :aria-label="ariaLabel ?? fullLabel"
     role="group"
   >
@@ -459,10 +460,18 @@ defineExpose({
 .metric-backend-attribute-filter-pill {
   display: inline-flex;
   align-items: stretch;
-  background: var(--ux-theme-3);
+  background: var(--default-form-element-bg-color);
   border: 1px solid var(--ux-theme-4);
   padding-right: var(--dimension-3);
   white-space: nowrap;
+}
+
+.metric-backend-attribute-filter-pill:not(.metric-backend-attribute-filter-pill--editing):hover {
+  background-color: var(--input-hover-bg-color);
+}
+
+.metric-backend-attribute-filter-pill--editing {
+  background: var(--ux-theme-3);
 }
 
 .metric-backend-attribute-filter-pill__edit {
@@ -487,10 +496,6 @@ defineExpose({
   font: inherit;
   color: inherit;
   cursor: pointer;
-}
-
-.metric-backend-attribute-filter-pill__main:hover {
-  background-color: var(--default-form-element-bg-color);
 }
 
 .metric-backend-attribute-filter-pill__main:focus-visible {
@@ -518,7 +523,7 @@ defineExpose({
   padding: 0 var(--dimension-2);
 }
 
-.metric-backend-attribute-filter-pill__remove:hover {
+.metric-backend-attribute-filter-pill--editing .metric-backend-attribute-filter-pill__remove:hover {
   background-color: var(--default-form-element-bg-color);
 }
 </style>

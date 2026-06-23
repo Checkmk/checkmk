@@ -1792,6 +1792,7 @@
   "pkg:pypi/httpx@0.28.1": "BSD-3-Clause",
   "pkg:pypi/icalendar@6.3.2": "BSD-2-Clause",
   "pkg:pypi/idna@3.11": "BSD-3-Clause",
+  "pkg:pypi/idna@3.18": "BSD-3-Clause",
   "pkg:pypi/importlib-metadata@8.7.1": "Apache-2.0",
   "pkg:pypi/iniconfig@2.3.0": "MIT",
   "pkg:pypi/isort@7.0.0": "MIT",

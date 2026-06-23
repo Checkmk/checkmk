@@ -216,7 +216,8 @@ const hostService = new HostService(new HostApi(), getKeyShortcutServiceInstance
             op: 'one_of',
             value: ['DOWN', 'UNREACHABLE'] as HostState[]
           },
-          { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
+          { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
+          { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
         ]
       }
     }

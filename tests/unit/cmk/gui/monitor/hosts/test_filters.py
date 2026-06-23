@@ -105,6 +105,18 @@ def test_query_builder_boolean_condition(value: bool, ls_value: int) -> None:
     assert parse_as_livestatus_filter(condition) == f"Filter: acknowledged = {ls_value}"
 
 
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (True, "Filter: scheduled_downtime_depth > 0"),
+        (False, "Filter: scheduled_downtime_depth = 0"),
+    ],
+)
+def test_query_builder_downtime_condition(value: bool, expected: str) -> None:
+    condition = BooleanCondition(type="condition", field="in_downtime", op="eq", value=value)
+    assert parse_as_livestatus_filter(condition) == expected
+
+
 def test_query_builder_state_choice_single_no_or() -> None:
     condition = StateChoiceCondition(type="condition", field="state", op="one_of", value=["DOWN"])
     assert parse_as_livestatus_filter(condition) == "Filter: state = 1"

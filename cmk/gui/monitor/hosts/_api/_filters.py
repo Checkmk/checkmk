@@ -80,8 +80,8 @@ class BooleanCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
     )
-    field: Literal["acknowledged"] = api_field(
-        description="Host acknowledgement field", example="acknowledged"
+    field: Literal["acknowledged", "in_downtime"] = api_field(
+        description="Host boolean field to filter on", example="acknowledged"
     )
     op: Literal["eq"] = api_field(description="Equality operation", example="eq")
     value: bool = api_field(description="Boolean value to compare against", example=False)
@@ -144,7 +144,14 @@ def _accumulate_filters(node: FilterNode, filters: list[str]) -> None:
             filters.append(f"Filter: {node.field} {_NUMERIC_OP_TO_LS[node.op]} {node.value}")
 
         case BooleanCondition():
-            filters.append(f"Filter: {node.field} = {int(node.value)}")
+            match node.field:
+                case "in_downtime":
+                    # Livestatus has no boolean downtime column; a host is in a scheduled
+                    # downtime when scheduled_downtime_depth is greater than zero.
+                    op = ">" if node.value else "="
+                    filters.append(f"Filter: scheduled_downtime_depth {op} 0")
+                case _:
+                    filters.append(f"Filter: {node.field} = {int(node.value)}")
 
         case StateChoiceCondition():
             for value in node.value:

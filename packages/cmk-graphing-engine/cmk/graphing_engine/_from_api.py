@@ -17,7 +17,6 @@ from ._objects import (
     AutoPrecision,
     Bound,
     Constant,
-    CriticalOf,
     DecimalNotation,
     Difference,
     DisplayAttributes,
@@ -26,19 +25,17 @@ from ._objects import (
     Graph,
     IECNotation,
     Line,
-    LowerCriticalOf,
-    LowerWarningOf,
-    MaximumOf,
     MetricName,
     MetricTranslation,
     MinimalRange,
-    MinimumOf,
     Notation,
     Precision,
     Product,
     Quantity,
     RRDMetric,
     Rule,
+    ScalarKind,
+    ScalarOf,
     ServiceRef,
     SINotation,
     Stack,
@@ -47,7 +44,6 @@ from ._objects import (
     Sum,
     TimeNotation,
     Unit,
-    WarningOf,
 )
 
 type _ApiQuantity = (
@@ -184,33 +180,39 @@ def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
                 value=quantity.value,
             )
         case metrics_v2_unstable.LowerWarningOf():
-            return LowerWarningOf(
+            return ScalarOf(
                 metric=context.rrd_metric(quantity.metric_name),
+                kind=ScalarKind.LOWER_WARNING,
                 color=context.metric_color(quantity.metric_name),
             )
         case metrics_v2_unstable.LowerCriticalOf():
-            return LowerCriticalOf(
+            return ScalarOf(
                 metric=context.rrd_metric(quantity.metric_name),
+                kind=ScalarKind.LOWER_CRITICAL,
                 color=context.metric_color(quantity.metric_name),
             )
         case metrics_v1.WarningOf():
-            return WarningOf(
+            return ScalarOf(
                 metric=context.rrd_metric(quantity.metric_name),
+                kind=ScalarKind.WARNING,
                 color=context.metric_color(quantity.metric_name),
             )
         case metrics_v1.CriticalOf():
-            return CriticalOf(
+            return ScalarOf(
                 metric=context.rrd_metric(quantity.metric_name),
+                kind=ScalarKind.CRITICAL,
                 color=context.metric_color(quantity.metric_name),
             )
         case metrics_v1.MinimumOf():
-            return MinimumOf(
+            return ScalarOf(
                 metric=context.rrd_metric(quantity.metric_name),
+                kind=ScalarKind.MINIMUM,
                 color=_parse_color(quantity.color),
             )
         case metrics_v1.MaximumOf():
-            return MaximumOf(
+            return ScalarOf(
                 metric=context.rrd_metric(quantity.metric_name),
+                kind=ScalarKind.MAXIMUM,
                 color=_parse_color(quantity.color),
             )
         case metrics_v1.Sum():

@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import enum
 import itertools
 import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -235,9 +236,32 @@ class RRDMetric:
         )
 
 
+class ScalarKind(enum.StrEnum):
+    WARNING = "warning"
+    CRITICAL = "critical"
+    LOWER_WARNING = "lower_warning"
+    LOWER_CRITICAL = "lower_critical"
+    MINIMUM = "minimum"
+    MAXIMUM = "maximum"
+
+
+_SCALAR_VALUE: Mapping[ScalarKind, Callable[[RRDMetricData], float | None]] = {
+    ScalarKind.WARNING: lambda data: data.warning,
+    ScalarKind.CRITICAL: lambda data: data.critical,
+    ScalarKind.LOWER_WARNING: lambda data: data.lower_warning,
+    ScalarKind.LOWER_CRITICAL: lambda data: data.lower_critical,
+    ScalarKind.MINIMUM: lambda data: data.minimum,
+    ScalarKind.MAXIMUM: lambda data: data.maximum,
+}
+
+
 @dataclass(frozen=True)
-class WarningOf:
+class ScalarOf:
+    # A scalar reference of a metric (warn / crit / lower warn / lower crit / min / max bound),
+    # drawn as a flat horizontal line. Unifies the former WarningOf / CriticalOf / LowerWarningOf /
+    # LowerCriticalOf / MinimumOf / MaximumOf, which differed only in the data field they read.
     metric: RRDMetric
+    kind: ScalarKind
     color: str
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
@@ -245,127 +269,7 @@ class WarningOf:
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
         data = context.metric_data.get(self.metric)
-        return None if data is None else data.warning
-
-    def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries:
-        return _constant_time_series(self.evaluate_value(context), context.time_range)
-
-    def evaluate_attributes(self, context: EvaluationContext) -> DisplayAttributes | None:
-        data = context.metric_data.get(self.metric)
-        return (
-            None
-            if data is None
-            else DisplayAttributes(title=data.title, unit=data.unit, color=self.color)
-        )
-
-
-@dataclass(frozen=True)
-class CriticalOf:
-    metric: RRDMetric
-    color: str
-
-    def rrd_metrics(self) -> Iterable[RRDMetric]:
-        yield self.metric
-
-    def evaluate_value(self, context: EvaluationContext) -> float | None:
-        data = context.metric_data.get(self.metric)
-        return None if data is None else data.critical
-
-    def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries:
-        return _constant_time_series(self.evaluate_value(context), context.time_range)
-
-    def evaluate_attributes(self, context: EvaluationContext) -> DisplayAttributes | None:
-        data = context.metric_data.get(self.metric)
-        return (
-            None
-            if data is None
-            else DisplayAttributes(title=data.title, unit=data.unit, color=self.color)
-        )
-
-
-@dataclass(frozen=True)
-class LowerWarningOf:
-    metric: RRDMetric
-    color: str
-
-    def rrd_metrics(self) -> Iterable[RRDMetric]:
-        yield self.metric
-
-    def evaluate_value(self, context: EvaluationContext) -> float | None:
-        data = context.metric_data.get(self.metric)
-        return None if data is None else data.lower_warning
-
-    def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries:
-        return _constant_time_series(self.evaluate_value(context), context.time_range)
-
-    def evaluate_attributes(self, context: EvaluationContext) -> DisplayAttributes | None:
-        data = context.metric_data.get(self.metric)
-        return (
-            None
-            if data is None
-            else DisplayAttributes(title=data.title, unit=data.unit, color=self.color)
-        )
-
-
-@dataclass(frozen=True)
-class LowerCriticalOf:
-    metric: RRDMetric
-    color: str
-
-    def rrd_metrics(self) -> Iterable[RRDMetric]:
-        yield self.metric
-
-    def evaluate_value(self, context: EvaluationContext) -> float | None:
-        data = context.metric_data.get(self.metric)
-        return None if data is None else data.lower_critical
-
-    def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries:
-        return _constant_time_series(self.evaluate_value(context), context.time_range)
-
-    def evaluate_attributes(self, context: EvaluationContext) -> DisplayAttributes | None:
-        data = context.metric_data.get(self.metric)
-        return (
-            None
-            if data is None
-            else DisplayAttributes(title=data.title, unit=data.unit, color=self.color)
-        )
-
-
-@dataclass(frozen=True)
-class MinimumOf:
-    metric: RRDMetric
-    color: str
-
-    def rrd_metrics(self) -> Iterable[RRDMetric]:
-        yield self.metric
-
-    def evaluate_value(self, context: EvaluationContext) -> float | None:
-        data = context.metric_data.get(self.metric)
-        return None if data is None else data.minimum
-
-    def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries:
-        return _constant_time_series(self.evaluate_value(context), context.time_range)
-
-    def evaluate_attributes(self, context: EvaluationContext) -> DisplayAttributes | None:
-        data = context.metric_data.get(self.metric)
-        return (
-            None
-            if data is None
-            else DisplayAttributes(title=data.title, unit=data.unit, color=self.color)
-        )
-
-
-@dataclass(frozen=True)
-class MaximumOf:
-    metric: RRDMetric
-    color: str
-
-    def rrd_metrics(self) -> Iterable[RRDMetric]:
-        yield self.metric
-
-    def evaluate_value(self, context: EvaluationContext) -> float | None:
-        data = context.metric_data.get(self.metric)
-        return None if data is None else data.maximum
+        return None if data is None else _SCALAR_VALUE[self.kind](data)
 
     def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries:
         return _constant_time_series(self.evaluate_value(context), context.time_range)

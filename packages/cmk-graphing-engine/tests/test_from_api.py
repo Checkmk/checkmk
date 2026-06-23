@@ -11,23 +11,20 @@ from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     AutoPrecision,
     Constant,
-    CriticalOf,
     DecimalNotation,
     Difference,
     Fraction,
     Graph,
     IECNotation,
     Line,
-    LowerCriticalOf,
-    LowerWarningOf,
-    MaximumOf,
     MetricName,
     MinimalRange,
-    MinimumOf,
     Product,
     Quantity,
     RRDMetric,
     Rule,
+    ScalarKind,
+    ScalarOf,
     ServiceRef,
     SINotation,
     Stack,
@@ -35,7 +32,6 @@ from cmk.graphing_engine import (
     Sum,
     TimeNotation,
     Unit,
-    WarningOf,
 )
 from cmk.graphing_engine._from_api import parse_graph_from_api
 
@@ -97,7 +93,7 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
         stacks=[_stack(_rrd("a"), _rrd("b"))],
         lines=[_line(_rrd("c"))],
         # The scalar threshold becomes a horizontal rule, not a drawn line.
-        rules=[_rule(WarningOf(metric=_rrd("a"), color="#28a2f3"))],
+        rules=[_rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING, color="#28a2f3"))],
     )
 
 
@@ -134,7 +130,9 @@ def test_parse_graph_from_api_threshold_uses_fallback_color_for_undefined_metric
     parsed = parse_graph_from_api(graph, _SERVICE, {}, _id)
     assert isinstance(parsed, Graph)
     assert parsed.lines == []
-    assert parsed.rules == [_rule(WarningOf(metric=_rrd("u"), color="#8c8c8c"))]
+    assert parsed.rules == [
+        _rule(ScalarOf(metric=_rrd("u"), kind=ScalarKind.WARNING, color="#8c8c8c"))
+    ]
 
 
 def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
@@ -233,11 +231,11 @@ def test_parse_graph_from_api_maps_warning_critical_minimum_maximum() -> None:
     assert parsed.lines == []
     assert parsed.rules == [
         # WarningOf/CriticalOf inherit the colour of the referenced metric (#28a2f3).
-        _rule(WarningOf(metric=_rrd("a"), color="#28a2f3")),
-        _rule(CriticalOf(metric=_rrd("a"), color="#28a2f3")),
+        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING, color="#28a2f3")),
+        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.CRITICAL, color="#28a2f3")),
         # MinimumOf/MaximumOf keep their own colour from the API.
-        _rule(MinimumOf(metric=_rrd("a"), color="#15d1a0")),
-        _rule(MaximumOf(metric=_rrd("a"), color="#ed3b3b")),
+        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.MINIMUM, color="#15d1a0")),
+        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.MAXIMUM, color="#ed3b3b")),
     ]
 
 
@@ -254,8 +252,8 @@ def test_parse_graph_from_api_maps_lower_warning_and_critical() -> None:
     assert isinstance(parsed, Graph)
     assert parsed.lines == []
     assert parsed.rules == [
-        _rule(LowerWarningOf(metric=_rrd("a"), color="#28a2f3")),
-        _rule(LowerCriticalOf(metric=_rrd("a"), color="#28a2f3")),
+        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.LOWER_WARNING, color="#28a2f3")),
+        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.LOWER_CRITICAL, color="#28a2f3")),
     ]
 
 

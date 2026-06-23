@@ -26,12 +26,13 @@ from cmk.graphing_engine import (
     Quantity,
     RRDMetric,
     Rule,
+    ScalarKind,
+    ScalarOf,
     ServiceRef,
     Stack,
     TemplateOptions,
     TimeRange,
     TimeSeries,
-    WarningOf,
 )
 from cmk.graphing_engine._from_api import parse_graph_from_api
 
@@ -556,7 +557,13 @@ def test_build_graphs_applies_threshold_rules_to_fallback_graphs() -> None:
     ).get(service, {})
 
     def _rules(metric: RRDMetric) -> list[Rule]:
-        return [Rule(quantity=WarningOf(metric=metric, color="#ff0000"), inverse=False, title="W")]
+        return [
+            Rule(
+                quantity=ScalarOf(metric=metric, kind=ScalarKind.WARNING, color="#ff0000"),
+                inverse=False,
+                title="W",
+            )
+        ]
 
     graphs = build_graphs(
         service=service,

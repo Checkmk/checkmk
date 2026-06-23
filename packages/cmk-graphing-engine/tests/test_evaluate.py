@@ -26,12 +26,13 @@ from cmk.graphing_engine import (
     Product,
     RRDMetric,
     Rule,
+    ScalarKind,
+    ScalarOf,
     Stack,
     Sum,
     TimeRange,
     TimeSeries,
     Unit,
-    WarningOf,
 )
 from cmk.graphing_engine._evaluate import evaluate_graph
 from cmk.graphing_engine._objects import EvaluationContext, Quantity, RRDMetricData
@@ -103,7 +104,8 @@ def test_evaluate_value_of_a_scalar_reference() -> None:
     a = _metric("a")
     assert (
         _evaluate_value(
-            WarningOf(metric=a, color="#000000"), {a: _data("a", value=1.0, warning=80.0)}
+            ScalarOf(metric=a, kind=ScalarKind.WARNING, color="#000000"),
+            {a: _data("a", value=1.0, warning=80.0)},
         )
         == 80.0
     )
@@ -111,7 +113,12 @@ def test_evaluate_value_of_a_scalar_reference() -> None:
 
 def test_evaluate_value_of_a_scalar_reference_without_the_bound_is_none() -> None:
     a = _metric("a")
-    assert _evaluate_value(WarningOf(metric=a, color="#000000"), {a: _data("a", value=1.0)}) is None
+    assert (
+        _evaluate_value(
+            ScalarOf(metric=a, kind=ScalarKind.WARNING, color="#000000"), {a: _data("a", value=1.0)}
+        )
+        is None
+    )
 
 
 def test_evaluate_value_of_a_sum() -> None:
@@ -194,7 +201,7 @@ def test_evaluate_time_series_of_a_scalar_reference_is_a_constant_line() -> None
     a = _metric("a")
     metric_data = {a: _data("a", value=1.0, warning=80.0)}
     assert _evaluate_time_series(
-        WarningOf(metric=a, color="#000000"), metric_data, {}, _TR
+        ScalarOf(metric=a, kind=ScalarKind.WARNING, color="#000000"), metric_data, {}, _TR
     ) == _time_series(80.0, 80.0, 80.0)
 
 
@@ -327,7 +334,11 @@ def test_evaluate_graph_builds_rules_from_thresholds_and_constants() -> None:
         rules=[
             # A threshold rule: the title is overridden ("Warning"); the colour falls back to the
             # quantity's own (the WarningOf colour).
-            Rule(quantity=WarningOf(metric=a, color="#ff0000"), inverse=False, title="Warning"),
+            Rule(
+                quantity=ScalarOf(metric=a, kind=ScalarKind.WARNING, color="#ff0000"),
+                inverse=False,
+                title="Warning",
+            ),
             # A constant is a scalar too, so it is a rule carrying its own title/colour/value.
             Rule(quantity=_constant(42.0), inverse=False),
         ],
@@ -346,9 +357,14 @@ def test_evaluate_graph_drops_rules_without_a_value() -> None:
         title="g",
         rules=[
             # The metric has no warn level (value None) ...
-            Rule(quantity=WarningOf(metric=a, color="#ff0000"), inverse=False),
+            Rule(
+                quantity=ScalarOf(metric=a, kind=ScalarKind.WARNING, color="#ff0000"), inverse=False
+            ),
             # ... and "gone" has no data at all (attributes None).
-            Rule(quantity=WarningOf(metric=_metric("gone"), color="#ff0000"), inverse=False),
+            Rule(
+                quantity=ScalarOf(metric=_metric("gone"), kind=ScalarKind.WARNING, color="#ff0000"),
+                inverse=False,
+            ),
         ],
     )
     result = evaluate_graph(graph, {a: _data("a", value=3.0)}, {}, {}, _TR)

@@ -161,12 +161,12 @@ def test_parse_v1():
 
 def test_parse_v2():
     assert parse_storcli_pdisks(_to_string_table(SECTION_V2)) == {
-        "C0.308:0-283": StorcliPDisk(state="Conf", size=(223.062, "GiB")),
-        "C0.308:4-287": StorcliPDisk(state="Conf", size=(223.062, "GiB")),
-        "C0.308:8-291": StorcliPDisk(state="Conf", size=(6.985, "TiB")),
-        "C0.308:12-292": StorcliPDisk(state="Conf", size=(6.985, "TiB")),
-        "C0.308:16-293": StorcliPDisk(state="Conf", size=(6.985, "TiB")),
-        "C0.308:20-294": StorcliPDisk(state="Conf", size=(6.985, "TiB")),
+        "C0.308:0-283": StorcliPDisk(state="Online", size=(223.062, "GiB")),
+        "C0.308:4-287": StorcliPDisk(state="Online", size=(223.062, "GiB")),
+        "C0.308:8-291": StorcliPDisk(state="Online", size=(6.985, "TiB")),
+        "C0.308:12-292": StorcliPDisk(state="Online", size=(6.985, "TiB")),
+        "C0.308:16-293": StorcliPDisk(state="Online", size=(6.985, "TiB")),
+        "C0.308:20-294": StorcliPDisk(state="Online", size=(6.985, "TiB")),
     }
 
 

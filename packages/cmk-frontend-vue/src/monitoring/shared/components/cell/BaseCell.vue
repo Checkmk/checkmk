@@ -103,12 +103,18 @@ const highlightStyle = computed<CSSProperties>(() =>
       :href="linkedTo.href"
       :target="linkedTo.target"
     >
-      <div :class="linkedHighlightClasses" :style="highlightStyle">
+      <div v-if="highlight" :class="linkedHighlightClasses" :style="highlightStyle">
+        <slot :name="activeSlot" />
+      </div>
+      <div v-else class="monitoring-base-cell__plain">
         <slot :name="activeSlot" />
       </div>
     </a>
     <div v-else class="monitoring-base-cell__wrapper">
-      <div :class="highlightClasses" :style="highlightStyle">
+      <div v-if="highlight" :class="highlightClasses" :style="highlightStyle">
+        <slot :name="activeSlot" />
+      </div>
+      <div v-else class="monitoring-base-cell__plain">
         <slot :name="activeSlot" />
       </div>
       <a
@@ -125,7 +131,8 @@ const highlightStyle = computed<CSSProperties>(() =>
 <style scoped>
 .monitoring-base-cell {
   vertical-align: top;
-  height: 24px;
+  min-height: 31px;
+  line-height: 21px;
   text-align: v-bind(effectiveJustify);
   background-color: var(--ux-theme-2);
 
@@ -140,19 +147,26 @@ const highlightStyle = computed<CSSProperties>(() =>
 
   .monitoring-base-cell__link {
     display: flex;
+    align-items: flex-start;
+    min-height: 31px;
     justify-content: v-bind(justifyContent);
   }
 
   .monitoring-base-cell__wrapper {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     flex-direction: row;
+    min-height: 31px;
     justify-content: v-bind(justifyContent);
 
     .monitoring-base-cell__link-icon {
       flex: 0 0 auto;
       margin: 0 var(--dimension-3) 0 var(--dimension-2);
     }
+  }
+
+  .monitoring-base-cell__plain {
+    padding: 5px var(--dimension-4);
   }
 }
 

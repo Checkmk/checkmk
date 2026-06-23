@@ -140,36 +140,27 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
           >
             <div class="monitoring-table-header__sort-icon-wrapper">
               <CmkMultitoneIcon
-                v-if="header.column.getIsSorted() === 'asc'"
                 name="chevron-up"
+                class="monitoring-table-header__sort-icon"
+                :class="{
+                  'monitoring-table-header__sort-icon--active':
+                    header.column.getIsSorted() === 'asc'
+                }"
                 primary-color="font"
                 aria-hidden="true"
                 size="xsmall"
               />
-
               <CmkMultitoneIcon
-                v-else-if="header.column.getIsSorted() === 'desc'"
                 name="chevron-down"
+                class="monitoring-table-header__sort-icon"
+                :class="{
+                  'monitoring-table-header__sort-icon--active':
+                    header.column.getIsSorted() === 'desc'
+                }"
                 primary-color="font"
                 aria-hidden="true"
                 size="xsmall"
               />
-              <template v-else>
-                <CmkMultitoneIcon
-                  name="chevron-up"
-                  class="monitoring-table-header__sort-icon--inactive"
-                  primary-color="font"
-                  aria-hidden="true"
-                  size="xsmall"
-                />
-                <CmkMultitoneIcon
-                  class="monitoring-table-header__sort-icon--inactive"
-                  name="chevron-down"
-                  primary-color="font"
-                  aria-hidden="true"
-                  size="xsmall"
-                />
-              </template>
             </div>
 
             <span class="monitoring-table-header__label">
@@ -330,7 +321,7 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
   margin-right: var(--dimension-2);
 }
 
-.monitoring-table-header__sort-icon--inactive {
+.monitoring-table-header__sort-icon {
   opacity: 0.4;
 
   &:first-child {
@@ -339,6 +330,10 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
 
   &:last-child {
     margin-top: calc(-1 * var(--dimension-3));
+  }
+
+  &.monitoring-table-header__sort-icon--active {
+    opacity: 1;
   }
 }
 </style>

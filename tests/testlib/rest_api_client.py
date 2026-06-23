@@ -4125,15 +4125,6 @@ class MetricBackendClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def names_with_types(self, value: str | None = None, expect_ok: bool = True) -> Response:
-        body: dict[str, Any] = {} if value is None else {"value": value}
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/actions/names_with_types/invoke",
-            body=body,
-            expect_ok=expect_ok,
-        )
-
 
 class PagetypeTopicClient(RestApiClient):
     domain: DomainType = "pagetype_topic"

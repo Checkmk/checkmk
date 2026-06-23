@@ -25,7 +25,7 @@ _cpe = rule(
     },
 )
 
-def _strip_version_suffix(version):
+def strip_version_suffix(version):
     parts = version.split(".")
     if len(parts) >= 2 and parts[-1].isdigit() and parts[-2] in ("cmk", "bcr"):
         return ".".join(parts[:-2])
@@ -54,7 +54,7 @@ def dependency_info(
         purl_namespace: Optional: Used in the PURL
 
     """
-    stripped_version = _strip_version_suffix(version)
+    stripped_version = strip_version_suffix(version)
 
     purl_name = "{}/{}".format(purl_namespace, package_name) if purl_namespace else package_name
     purl = "pkg:{}/{}@{}".format(purl_type, purl_name, stripped_version)

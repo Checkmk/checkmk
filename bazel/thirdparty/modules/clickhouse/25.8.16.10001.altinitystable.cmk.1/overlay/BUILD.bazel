@@ -1,4 +1,4 @@
-load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info", "strip_version_suffix")
 load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 
 package(
@@ -13,7 +13,7 @@ dependency_info(
     license_text = "usr/share/doc/clickhouse-common-static/LICENSE",
     purl_namespace = "ClickHouse",
     purl_type = "github",
-    version = module_version().removesuffix(".altinitystable"),
+    version = strip_version_suffix(module_version()).removesuffix(".altinitystable"),
 )
 
 native_binary(

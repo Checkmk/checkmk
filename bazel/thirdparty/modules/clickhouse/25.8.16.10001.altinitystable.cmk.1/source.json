@@ -3,7 +3,7 @@
   "strip_prefix": "clickhouse-common-static-25.8.16.10001.altinitystable",
   "url": "https://builds.altinity.cloud/tgz-repo/clickhouse-common-static-25.8.16.10001.altinitystable-amd64.tgz",
   "overlay": {
-    "BUILD.bazel": "sha256-ltz+Kda+scul4kMzpV0fSDzOQCxRkbEmxi6YmunswfY=",
+    "BUILD.bazel": "sha256-bT63HXfX/E2n2vD8xKEsSKKxfpOalvZjh/bV2OS0Yhs=",
     "MODULE.bazel": "sha256-WQ4EJZ50Cj2UKCBHDMfIHVWFUpJZKL4PpbvpU72XLAk="
   }
 }

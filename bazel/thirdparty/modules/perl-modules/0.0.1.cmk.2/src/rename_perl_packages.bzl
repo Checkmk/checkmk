@@ -12,7 +12,7 @@ def rename_perl_package(name, srcs, outs, **kwargs):
     package_metadata(
         name = "{}-package_metadata".format(name),
         # This is very hacky but IMHO fits our current packages, might be improved as soon as we see gaps
-        purl = "pkg:cpan/{}@{}".format(package_name.replace("-", "%3A%3A"), package_version),
+        purl = "pkg:cpan/{}@{}".format(package_name, package_version),
         attributes = [],
     )
     native.genrule(

@@ -17,6 +17,7 @@ from cmk.ccc.version import Edition
 from cmk.gui.autocompleters import AutocompleterBackendWarning
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
+from cmk.gui.log import logger
 from cmk.gui.openapi.endpoints.autocomplete.request_schemas import RequestSchema
 from cmk.gui.openapi.endpoints.autocomplete.response_schemas import ResponseSchema
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
@@ -76,6 +77,9 @@ def show(params: Mapping[str, Any]) -> Response:
     try:
         choices = function(active_config, value, parameters)
     except AutocompleterBackendWarning as e:
+        logger.warning(
+            "Autocompleter %r backend unavailable", internal_autocompleter, exc_info=True
+        )
         return serve_json(
             {
                 "choices": [{"id": k, "value": v} for k, v in e.choices if k is not None],

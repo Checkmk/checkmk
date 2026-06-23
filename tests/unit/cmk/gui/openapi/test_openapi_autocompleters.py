@@ -3,8 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
+
 import pytest
 
+from cmk.gui.autocompleters import AutocompleterBackendWarning
+from cmk.gui.config import Config
+from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.common.repo import is_pro_repo
@@ -154,3 +159,28 @@ def test_openapi_combined_graphs_autocompleter(
 
 def test_openapi_available_graph_templates(clients: ClientRegistry) -> None:
     clients.AutoComplete.invoke("available_graph_templates", {"strict": True, "context": {}}, "")
+
+
+def test_openapi_autocompleter_backend_warning_is_logged(
+    clients: ClientRegistry, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify AutocompleterBackendWarning's are logged with the full traceback (CMK-34044)."""
+    ident = "test_backend_warning_autocompleter"
+
+    def _raising_autocompleter(config: Config, value: str, params: dict[str, object]) -> Choices:
+        try:
+            raise RuntimeError("backend unreachable")
+        except RuntimeError as exc:
+            raise AutocompleterBackendWarning("autocompleter backend unavailable", []) from exc
+
+    autocompleter_registry.register_autocompleter(ident, _raising_autocompleter)
+    try:
+        with caplog.at_level(logging.WARNING, logger="cmk.web"):
+            response = clients.AutoComplete.invoke(ident, {}, "value")
+    finally:
+        autocompleter_registry.unregister(ident)
+
+    assert response.json["warning"] == "autocompleter backend unavailable"
+    assert response.json["choices"] == []
+    assert "autocompleter backend unavailable" in caplog.text
+    assert "backend unreachable" in caplog.text

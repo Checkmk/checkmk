@@ -100,6 +100,16 @@ PDISKS_DEFAULTS: Final[dict[RawState, int]] = {
     "onln": State.OK.value,
     "ofln": State.WARN.value,
     "jbod": State.OK.value,
+    "good": State.OK.value,
+    "online": State.OK.value,
+    "various": State.WARN.value,
+    "replace": State.CRIT.value,
+    "missing": State.CRIT.value,
+    "unusable": State.CRIT.value,
+    "bad": State.CRIT.value,
+    "offline": State.CRIT.value,
+    "failed": State.CRIT.value,
+    "unknown": State.UNKNOWN.value,
 }
 
 

@@ -252,6 +252,7 @@ function rowKey(row: HostEntry): string {
   height: 100%;
   min-height: 0;
   padding-bottom: var(--spacing);
+  padding-right: var(--spacing);
 }
 
 .monitoring-all-hosts-app__header {

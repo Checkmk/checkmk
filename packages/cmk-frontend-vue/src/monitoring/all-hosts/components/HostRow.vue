@@ -52,16 +52,20 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     v-if="hasColumn('num_services')"
     column-id="num_services"
     :value="row.num_services"
-    :linked-to="{
-      href: `view.py?host=${row.name}&view_name=host`,
-      target: '_top'
-    }"
+    :linked-to="
+      row.num_services === 0
+        ? undefined
+        : {
+            href: `view.py?host=${row.name}&view_name=host`,
+            target: '_top'
+          }
+    "
   />
   <NumberCell
     v-if="hasColumn('num_services_ok')"
     column-id="num_services_ok"
     :value="row.num_services_ok"
-    :highlight="OK_HIGHLIGHT"
+    :highlight="row.num_services_ok === 0 ? undefined : OK_HIGHLIGHT"
     :linked-to="
       row.num_services_ok === 0
         ? undefined
@@ -75,7 +79,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     v-if="hasColumn('num_services_warn')"
     column-id="num_services_warn"
     :value="row.num_services_warn"
-    :highlight="WARN_HIGHLIGHT"
+    :highlight="row.num_services_warn === 0 ? undefined : WARN_HIGHLIGHT"
     :linked-to="
       row.num_services_warn === 0
         ? undefined
@@ -89,7 +93,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     v-if="hasColumn('num_services_crit')"
     column-id="num_services_crit"
     :value="row.num_services_crit"
-    :highlight="CRIT_HIGHLIGHT"
+    :highlight="row.num_services_crit === 0 ? undefined : CRIT_HIGHLIGHT"
     :linked-to="
       row.num_services_crit === 0
         ? undefined
@@ -103,7 +107,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     v-if="hasColumn('num_services_unknown')"
     column-id="num_services_unknown"
     :value="row.num_services_unknown"
-    :highlight="UNKNOWN_HIGHLIGHT"
+    :highlight="row.num_services_unknown === 0 ? undefined : UNKNOWN_HIGHLIGHT"
     :linked-to="
       row.num_services_unknown === 0
         ? undefined
@@ -117,7 +121,7 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     v-if="hasColumn('num_services_pending')"
     column-id="num_services_pending"
     :value="row.num_services_pending"
-    :highlight="PENDING_HIGHLIGHT"
+    :highlight="row.num_services_pending === 0 ? undefined : PENDING_HIGHLIGHT"
     :linked-to="
       row.num_services_pending === 0
         ? undefined

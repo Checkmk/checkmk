@@ -14,6 +14,7 @@ import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import { type QualityLevel, extractQualityLevel, stripQualityLineFromText } from '@/ai/lib/markdown'
 import { getInjectedAiTemplate } from '@/ai/lib/provider/ai-template'
 import type {
   AlertConversationElementContent,
@@ -29,6 +30,7 @@ import type {
 import { loadUserActions } from '@/ai/lib/user-actions'
 import { AiRole } from '@/ai/lib/utils'
 
+import AiQualityBadge from './AiQualityBadge.vue'
 import AlertContent from './content/AlertContent.vue'
 import CodeContent from './content/CodeContent.vue'
 import DialogContent from './content/DialogContent.vue'
@@ -41,6 +43,28 @@ const { _t } = usei18n()
 const props = defineProps<IAiConversationElement & { elementIndex?: number }>()
 const emit = defineEmits<{ close: [] }>()
 const aiTemplate = getInjectedAiTemplate()
+const contentItems = computed<TAiConversationElementContent[]>(() =>
+  Array.isArray(props.content) ? props.content : []
+)
+
+function isQualityBearingItem(
+  item: TAiConversationElementContent
+): item is MarkdownConversationElementContent {
+  return item.content_type === 'markdown' && item.title !== 'thinking'
+}
+
+function withQualityLineStripped(
+  item: TAiConversationElementContent
+): TAiConversationElementContent {
+  if (isQualityBearingItem(item)) {
+    return { ...item, content: stripQualityLineFromText(item.content) }
+  }
+  return item
+}
+
+const cleanedContentItems = computed<TAiConversationElementContent[]>(() =>
+  contentItems.value.map(withQualityLineStripped)
+)
 
 function filterThinkingForReopen(
   items: TAiConversationElementContent[]
@@ -63,7 +87,7 @@ function filterThinkingForReopen(
 }
 
 function initContentData(): TAiConversationElementContent[] | null {
-  const items = Array.isArray(props.content) ? props.content : []
+  const items = contentItems.value
   if (props.streaming) {
     return items.length > 0 ? filterThinkingForReopen(items) : null
   }
@@ -79,22 +103,37 @@ const contentData = ref<TAiConversationElementContent[] | null>(initContentData(
 // Separate display list for non-streaming animation; streaming uses contentData directly.
 const contentsToDisplay = ref<TAiConversationElementContent[]>([])
 const displayItems = computed(() => (props.streaming ? contentData.value : contentsToDisplay.value))
+const cleanedDisplayItems = computed<TAiConversationElementContent[] | null>(
+  () => displayItems.value?.map(withQualityLineStripped) ?? null
+)
 const hasDisplayableContent = computed(
   () => displayItems.value?.some((cnt) => cnt.content_type !== 'text') ?? false
 )
-const copyableAnswerText = computed(() => {
-  const items = Array.isArray(props.content) ? props.content : []
+const dataQualityLevel = computed<QualityLevel | null>(() => {
+  for (const item of contentItems.value) {
+    if (!isQualityBearingItem(item)) {
+      continue
+    }
+    const level = extractQualityLevel(item.content)
+    if (level) {
+      return level
+    }
+  }
+  return null
+})
+
+const copyableAnswerText = computed<string>(() => {
+  const items = cleanedContentItems.value
   const chunks: string[] = []
 
   for (const item of items) {
     if (item.title === 'thinking') {
       continue
     }
-
     // We can remove unwanted supported content types as needed
     switch (item.content_type) {
       case 'markdown':
-        chunks.push(item.content)
+        chunks.push(item.content.trimEnd())
         break
       case 'text':
         chunks.push(item.text)
@@ -110,14 +149,14 @@ const copyableAnswerText = computed(() => {
 
   return chunks.join('\n\n').trim()
 })
-const hasFinalAnswerChunk = computed(() => {
-  const items = Array.isArray(props.content) ? props.content : []
+const hasFinalAnswerChunk = computed<boolean>(() => {
+  const items = contentItems.value
   return items.some(
     (item) =>
       item.title === 'answer' || item.content_type === 'alert' || item.content_type === 'rate_limit'
   )
 })
-const showExtraButtons = computed(
+const showExtraButtons = computed<boolean>(
   () =>
     props.role === AiRole.ai &&
     hasFinalAnswerChunk.value &&
@@ -381,11 +420,12 @@ watch(
           <label>{{ _t('Please review to ensure factual correctness.') }}</label>
         </div>
       </div>
+      <AiQualityBadge :level="dataQualityLevel" />
     </div>
 
     <template v-if="contentData !== null">
       <div v-if="hasDisplayableContent" class="ai-conversation-element__text">
-        <template v-for="(cnt, i) in displayItems" :key="i">
+        <template v-for="(cnt, i) in cleanedDisplayItems" :key="i">
           <AlertContent
             v-if="cnt.content_type === 'alert'"
             v-bind="cnt as AlertConversationElementContent"
@@ -526,6 +566,7 @@ watch(
     flex-direction: row;
     align-items: flex-start;
     margin-bottom: var(--dimension-6);
+    width: 100%;
 
     > img {
       margin-right: var(--dimension-4);

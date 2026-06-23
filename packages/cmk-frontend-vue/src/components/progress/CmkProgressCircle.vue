@@ -194,7 +194,7 @@ const cmkProgressCircleId = useId()
 }
 
 .cmk-progress-circle--color-danger {
-  --cmk-progress-circle-color: var(--color-danger);
+  --cmk-progress-circle-color: var(--color-dark-red-40);
 }
 
 .cmk-progress-circle--color-font {
@@ -210,11 +210,37 @@ const cmkProgressCircleId = useId()
 }
 
 .cmk-progress-circle--font-color-danger {
-  --cmk-progress-circle-font-color: var(--color-danger);
+  --cmk-progress-circle-font-color: var(--color-dark-red-40);
 }
 
 .cmk-progress-circle--font-color-font {
   --cmk-progress-circle-font-color: var(--font-color);
+}
+
+body[data-theme='facelift'] {
+  .cmk-progress-circle--color-success {
+    --cmk-progress-circle-color: var(--color-corporate-green-70);
+  }
+
+  .cmk-progress-circle--color-warning {
+    --cmk-progress-circle-color: var(--color-yellow-70);
+  }
+
+  .cmk-progress-circle--color-danger {
+    --cmk-progress-circle-color: var(--color-dark-red-50);
+  }
+
+  .cmk-progress-circle--font-color-success {
+    --cmk-progress-circle-font-color: var(--color-corporate-green-70);
+  }
+
+  .cmk-progress-circle--font-color-warning {
+    --cmk-progress-circle-font-color: var(--color-yellow-70);
+  }
+
+  .cmk-progress-circle--font-color-danger {
+    --cmk-progress-circle-font-color: var(--color-dark-red-50);
+  }
 }
 
 .cmk-progress-circle--small .cmk-progress-circle__label {

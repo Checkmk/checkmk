@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { markdown } from '@/ai/lib/markdown'
+import { extractQualityLevel, parseMarkdown, stripQualityLineFromText } from '@/ai/lib/markdown'
 
 function badge(state: 'ok' | 'warn' | 'crit' | 'unknown'): string {
   const label = state.toUpperCase()
@@ -15,7 +15,7 @@ function tableWithBodyCell(cell: string): string {
 }
 
 async function parse(md: string): Promise<string> {
-  return await markdown.parse(md)
+  return await parseMarkdown(md)
 }
 
 describe('markdown.parse - state badges in tables', () => {
@@ -120,7 +120,7 @@ describe('markdown.parse - representative explain_this_service output', () => {
       'Confidence: **High**',
       ''
     ].join('\n')
-    const html = await parse(md)
+    const html = await parse(stripQualityLineFromText(md))
 
     expect(html).toContain(badge('warn'))
     expect(html).toContain(badge('ok'))
@@ -137,6 +137,39 @@ describe('markdown.parse - representative explain_this_service output', () => {
 
     // Bold state word in the inline summary stays bold and is NOT badged.
     expect(html).toContain('<strong>WARN</strong>')
+
+    expect(html).not.toContain('Confidence:')
+  })
+
+  test.each([
+    [
+      'no blank line before the marker',
+      'The answer body.\nData Quality: **High**\n',
+      'The answer body.'
+    ],
+    [
+      'marker as its own paragraph',
+      'The answer body.\n\nData Quality: **High**\n',
+      'The answer body.'
+    ],
+    [
+      'marker precedes body text',
+      'Data Quality: **High**\n\nBody after the marker.\n',
+      'Body after the marker.'
+    ]
+  ])('stripQualityLineFromText removes the quality line (%s)', (_desc, md, retainedBody) => {
+    const stripped = stripQualityLineFromText(md)
+
+    expect(stripped).toContain(retainedBody)
+    expect(stripped).not.toContain('Data Quality:')
+  })
+
+  test('parseMarkdown never strips the quality line — stripping happens before parsing', async () => {
+    const md = ['The answer body.', '', 'Data Quality: **High**', ''].join('\n')
+    const html = await parse(md)
+
+    expect(html).toContain('The answer body.')
+    expect(html).toContain('Data Quality:')
   })
 })
 
@@ -153,9 +186,61 @@ describe('markdown.parse - special list tagging', () => {
     expect(html).toContain('class="ai-markdown-content__recommended-actions"')
   })
 
+  test('tags a special list in a document whose quality line has been stripped', async () => {
+    const md = [
+      '# Service context',
+      '',
+      '* item one',
+      '* item two',
+      '',
+      'Data Quality: **High**',
+      ''
+    ].join('\n')
+    const html = await parse(stripQualityLineFromText(md))
+
+    expect(html).toContain('class="ai-markdown-content__service-context"')
+    expect(html).not.toContain('Data Quality:')
+  })
+
   test('matching is case-insensitive for the heading text', async () => {
     const md = ['# SERVICE CONTEXT', '', '* item', ''].join('\n')
     const html = await parse(md)
     expect(html).toContain('class="ai-markdown-content__service-context"')
+  })
+})
+
+describe('extractQualityLevel', () => {
+  test.each([
+    ['canonical High', 'Data Quality: **High**', 'high'],
+    ['Medium', 'Data Quality: **Medium**', 'medium'],
+    ['Low', 'Data Quality: **Low**', 'low'],
+    ['legacy Confidence label', 'Confidence: **High**', 'high'],
+    ['lowercase label and level', 'data quality: **low**', 'low'],
+    ['leading whitespace and tab', '\t  Data Quality: **Medium**', 'medium'],
+    ['marker among other lines', 'Answer body.\n\nData Quality: **Low**\n', 'low']
+  ])('parses the level from %s', (_desc, text, expected) => {
+    expect(extractQualityLevel(text)).toBe(expected)
+  })
+
+  test.each([
+    ['no marker', 'Just an answer with no quality line.'],
+    ['unbolded level', 'Data Quality: High'],
+    ['unknown level word', 'Data Quality: **Unknown**'],
+    ['label not on its own line', 'The Data Quality: **High** is inline here'],
+    ['empty string', '']
+  ])('returns null for %s', (_desc, text) => {
+    expect(extractQualityLevel(text)).toBeNull()
+  })
+})
+
+describe('stripQualityLineFromText - single-strip invariant', () => {
+  test('removes only the first of two quality lines', () => {
+    const text = ['Data Quality: **High**', '', 'Body.', '', 'Data Quality: **Low**', ''].join('\n')
+    const stripped = stripQualityLineFromText(text)
+
+    const remaining = stripped.match(/Data Quality:/g) ?? []
+    expect(remaining).toHaveLength(1)
+    expect(stripped).toContain('Data Quality: **Low**')
+    expect(stripped).toContain('Body.')
   })
 })

@@ -27,7 +27,7 @@ const copyProxyStub = defineComponent({
   template: '<div data-testid="copy-proxy" :data-text="text"><slot /></div>'
 })
 
-function renderAiConversationElement(props: IAiConversationElement) {
+function renderAiConversationElement(props: IAiConversationElement): ReturnType<typeof render> {
   return render(AiConversationElement, {
     props,
     global: {
@@ -42,7 +42,15 @@ function renderAiConversationElement(props: IAiConversationElement) {
           props: ['title'],
           template: '<button type="button" :title="title"><slot /></button>'
         },
-        MarkdownContent: true,
+        MarkdownContent: {
+          props: ['content', 'title', 'noAnimation', 'streaming'],
+          template:
+            '<div data-testid="markdown-content-stub" :data-content="content" :data-title="title"></div>'
+        },
+        CmkTooltipProvider: { template: '<div><slot /></div>' },
+        CmkTooltip: { template: '<div><slot /></div>' },
+        CmkTooltipTrigger: { template: '<div><slot /></div>' },
+        CmkTooltipContent: { template: '<div><slot /></div>' },
         AlertContent: true,
         CodeContent: true,
         ListContent: true,
@@ -97,6 +105,103 @@ test('renders RateLimitContent when content_type is rate_limit', async () => {
 
   await waitFor(() => {
     expect(screen.getByTestId('ai-rate-limit-content')).toBeInTheDocument()
+  })
+})
+
+test.each([
+  ['canonical High', 'Data Quality: **High**', 'high'],
+  ['lowercase label and level', 'data quality: **low**', 'low'],
+  ['legacy Confidence Medium', 'Confidence: **Medium**', 'medium']
+])('shows the parsed badge level for %s', async (_desc, qualityLine, level) => {
+  renderAiConversationElement({
+    role: AiRole.ai,
+    streaming: false,
+    noAnimation: true,
+    content: [{ content_type: 'markdown', content: `Answer\n\n${qualityLine}`, title: 'answer' }]
+  })
+
+  await waitFor(() => {
+    const levelWord = ({ high: 'High', medium: 'Medium', low: 'Low' } as const)[
+      level as 'high' | 'medium' | 'low'
+    ]
+    expect(screen.getByRole('img', { name: `Data quality: ${levelWord}` })).toBeInTheDocument()
+  })
+})
+
+test.each([
+  [
+    'answer is complete but has no quality line',
+    {
+      streaming: false,
+      content: [
+        { content_type: 'markdown', content: 'Answer without a quality line', title: 'answer' }
+      ]
+    }
+  ],
+  [
+    'the only quality line lives in a thinking chunk',
+    {
+      streaming: false,
+      content: [
+        { content_type: 'markdown', content: 'Data Quality: **High**', title: 'thinking' },
+        { content_type: 'markdown', content: 'Answer without a quality line', title: 'answer' }
+      ]
+    }
+  ],
+  [
+    'response is a rate-limit (no answer chunk, no fallback)',
+    { streaming: false, content: [{ content_type: 'rate_limit' }] }
+  ],
+  [
+    'still streaming a thinking chunk',
+    {
+      streaming: true,
+      content: [{ content_type: 'markdown', content: 'still thinking', title: 'thinking' }]
+    }
+  ],
+  [
+    'streaming an answer that has no quality line yet',
+    {
+      streaming: true,
+      content: [
+        { content_type: 'markdown', content: 'Answer so far, no line yet', title: 'answer' }
+      ]
+    }
+  ]
+] as const)('keeps the badge hidden (never low) when %s', async (_desc, { streaming, content }) => {
+  renderAiConversationElement({
+    role: AiRole.ai,
+    streaming,
+    noAnimation: true,
+    content: content as unknown as IAiConversationElement['content']
+  })
+
+  await waitFor(() => {
+    expect(screen.queryByRole('img', { name: /Data quality/ })).not.toBeInTheDocument()
+  })
+})
+
+test('quality line is stripped from both screen and copy', async () => {
+  renderAiConversationElement({
+    role: AiRole.ai,
+    streaming: false,
+    noAnimation: true,
+    content: [
+      {
+        content_type: 'markdown',
+        content: 'Answer text\n\nData Quality: **High**',
+        title: 'answer'
+      }
+    ]
+  })
+
+  await waitFor(() => {
+    const stub = screen.getByTestId('markdown-content-stub')
+    expect(stub.getAttribute('data-content')).toContain('Answer text')
+    expect(stub.getAttribute('data-content')).not.toContain('Data Quality:')
+    const dataText = screen.getByTestId('copy-proxy').getAttribute('data-text')
+    expect(dataText).toContain('Answer text')
+    expect(dataText).not.toContain('Data Quality:')
   })
 })
 

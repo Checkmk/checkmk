@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-import { markdown } from '@/ai/lib/markdown'
+import { parseMarkdown } from '@/ai/lib/markdown'
 import type {
   MarkdownConversationElementContent,
   TBaseConversationElementEmits
@@ -19,8 +19,13 @@ const parsedMarkdown = ref<string>()
 const typedText = ref<string>('')
 const emit = defineEmits<TBaseConversationElementEmits>()
 
-async function renderMarkdown() {
-  parsedMarkdown.value = await markdown.parse(props.content)
+async function renderMarkdown(): Promise<void> {
+  const renderedContent = props.content
+  const parsed = await parseMarkdown(renderedContent)
+  if (renderedContent !== props.content) {
+    return
+  }
+  parsedMarkdown.value = parsed
 
   if (props.noAnimation) {
     typedText.value = parsedMarkdown.value

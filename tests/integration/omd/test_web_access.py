@@ -143,6 +143,15 @@ def test_cmk_deploy_agent(site: Site) -> None:
     assert response.json()["result"].startswith("Missing")
 
 
+def test_cmk_webapi_removed(site: Site) -> None:
+    """Regression test pinning the current apache.conf behaviour for the removed
+    legacy webapi endpoint. It documents what apache.conf does today, not a
+    business requirement, and may be deleted if those requirements change."""
+    web = CMKWebSession(site)
+    web.get("/%s/check_mk/webapi.py" % site.id, expected_code=410)
+    web.get("/%s/check_mk/webapi.py?foo=bar" % site.id, expected_code=410)
+
+
 def test_cmk_pnp_template_removed(site: Site) -> None:
     web = CMKWebSession(site)
     web.get("/%s/check_mk/pnp_template.py" % site.id, expected_code=404)

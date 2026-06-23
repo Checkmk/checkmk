@@ -170,7 +170,7 @@ if [[ "$DO_UPLOAD" == true ]]; then
     [[ "$UPLOAD_PER_MODULE" == true ]] && UPLOAD_ARGS+=(--upload-per-module)
 
     echo "Uploading coverage for commit $COMMIT_HASH at $COMMIT_TIME (${UPLOAD_ARGS[*]})"
-    "$SCRIPT_DIR/store_code_coverage.py" \
+    python -m tests.qa_metrics.unit_test_coverage.store_code_coverage \
         --csv-file "$RESULT_CSV" \
         --git-commit-hash "$COMMIT_HASH" \
         --commit-time "$COMMIT_TIME" \

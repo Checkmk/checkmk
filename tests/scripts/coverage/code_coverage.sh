@@ -70,20 +70,11 @@ if [[ "$RUN" == false && "$GENERATE_HTML" == false && "$DO_UPLOAD" == false ]]; 
     exit 1
 fi
 
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
-
 # ---------------------------------------------------------------------------
 # Fail fast: validate all upload prerequisites before doing any work
 # ---------------------------------------------------------------------------
 
 if [[ "$DO_UPLOAD" == true ]]; then
-    TRACKED_BRANCHES=(master main)
-    if [[ ! " ${TRACKED_BRANCHES[*]} " == *" ${BRANCH} "* ]] && [[ ! "$BRANCH" =~ ^[0-9]+\.[0-9]+ ]]; then
-        echo "Error: branch '$BRANCH' is not tracked in the coverage database." >&2
-        echo "Upload is only supported for master and release branches (e.g. 2.4.0)." >&2
-        exit 1
-    fi
-
     REQUIRED_VARS=(POSTGRES_HOST POSTGRES_PORT POSTGRES_DB QA_POSTGRES_USER QA_POSTGRES_PASSWORD)
     for var in "${REQUIRED_VARS[@]}"; do
         if [ -z "${!var}" ]; then
@@ -93,7 +84,7 @@ if [[ "$DO_UPLOAD" == true ]]; then
     done
 
     read -r COMMIT_HASH COMMIT_DATE COMMIT_TIME COMMIT_TZ _ <<< \
-        "$(git log --first-parent --pretty=format:'%h %ci %s' "$BRANCH" | head -1)"
+        "$(git log --first-parent --pretty=format:'%h %ci %s' | head -1)"
     COMMIT_TIME="${COMMIT_DATE}T${COMMIT_TIME}${COMMIT_TZ}"
     if ! date -d "$COMMIT_TIME" >/dev/null 2>&1; then
         echo "Error: Invalid COMMIT_TIME format: $COMMIT_TIME" >&2

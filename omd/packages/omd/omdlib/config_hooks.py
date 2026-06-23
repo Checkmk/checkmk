@@ -103,12 +103,10 @@ def save_site_conf(site_home: str, config: Config) -> None:
 # the "omd config" command.
 def load_config_hooks(hook_dir: str | None) -> ConfigHooks:
     config_hooks: ConfigHooks = {}
+    if hook_dir is None:
+        return config_hooks
 
-    hook_files = []
-    if hook_dir:
-        hook_files = os.listdir(hook_dir)
-
-    for hook_name in hook_files:
+    for hook_name in os.listdir(hook_dir):
         try:
             if hook_name[0] != ".":
                 hook = _config_load_hook(hook_dir, hook_name)
@@ -120,11 +118,7 @@ def load_config_hooks(hook_dir: str | None) -> ConfigHooks:
     return config_hooks
 
 
-def _config_load_hook(hook_dir: str | None, hook_name: str) -> ConfigHook:
-    if not hook_dir:
-        # IMHO this should be unreachable...
-        raise MKTerminate("Site has no version and therefore no hooks")
-
+def _config_load_hook(hook_dir: str, hook_name: str) -> ConfigHook:
     alias = None
     description = ""
     menu = "Other"

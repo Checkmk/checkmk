@@ -417,7 +417,7 @@ function renderFixedValue(formSpec: FixedValue): VNode {
 
 function renderStaticText(formSpec: StaticText, value: string): VNode {
   const text = typeof value === 'string' ? value : ''
-  if (formSpec.multiline) {
+  if (formSpec.style === 'preformatted') {
     return h('pre', { class: 'vs_fixed_value' }, text)
   }
   return h('div', text)

@@ -811,11 +811,13 @@
             "value": {
               "type": "string"
             },
-            "multiline": {
-              "type": "boolean"
+            "style": {
+              "title": "StaticTextStyle",
+              "enum": ["text", "preformatted", "alert_info", "alert_warning", "alert_error"],
+              "default": "text"
             }
           },
-          "required": ["type", "value", "multiline"]
+          "required": ["type", "value", "style"]
         }
       ]
     },

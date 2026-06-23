@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
+from typing import Literal
 
 from cmk.rulesets.v1.form_specs import FormSpec
+
+StaticTextStyle = Literal["text", "preformatted", "alert_info", "alert_warning", "alert_error"]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -17,8 +20,13 @@ class StaticText(FormSpec[str]):
     but are not editable (e.g. URLs assembled from other fields, or summary
     blocks describing inherited configuration).
 
-    ``multiline=True`` preserves newlines and renders the text inside a
-    ``<pre>`` block so an indented multi-line summary stays formatted.
+    ``style`` selects the presentation mode.
+
+    - ``"text"`` (default): plain inline label.
+    - ``"preformatted"``: preserves newlines and renders the text inside a
+      ``<pre>`` block so an indented multi-line summary stays formatted.
+    - ``"alert_info"`` / ``"alert_warning"`` / ``"alert_error"``: renders the
+      string inside a small alert box of the matching severity.
     """
 
-    multiline: bool = False
+    style: StaticTextStyle = "text"

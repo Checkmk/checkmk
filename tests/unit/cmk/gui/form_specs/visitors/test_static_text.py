@@ -6,9 +6,9 @@
 
 ``StaticText`` renders read-only text injected at render time. There is no
 input field, no validation, and the parsed value round-trips through
-``to_disk`` unchanged. ``multiline=True`` toggles the ``<pre>``-style
-preservation on the frontend (verified at the visitor level by the
-``multiline`` flag passed through to the shared-typing payload).
+``to_disk`` unchanged. ``style`` selects a mutually-exclusive presentation
+mode (plain text, preformatted ``<pre>`` block, or an alert box) that is
+propagated to the frontend via the shared-typing payload.
 """
 
 from cmk.gui.form_specs import (
@@ -16,17 +16,18 @@ from cmk.gui.form_specs import (
     RawDiskData,
     VisitorOptions,
 )
-from cmk.gui.form_specs.unstable.static_text import StaticText
+from cmk.gui.form_specs.unstable.static_text import StaticText, StaticTextStyle
 from cmk.gui.form_specs.visitors.static_text import StaticTextVisitor
 from cmk.rulesets.v1 import Help, Title
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
-def _visitor(*, multiline: bool = False) -> StaticTextVisitor:
+def _visitor(*, style: StaticTextStyle = "text") -> StaticTextVisitor:
     return StaticTextVisitor(
         StaticText(
             title=Title("X"),
             help_text=Help("Y"),
-            multiline=multiline,
+            style=style,
         ),
         VisitorOptions(migrate_values=False, mask_values=False),
     )
@@ -36,13 +37,22 @@ def test_to_vue_passes_through_injected_string() -> None:
     spec, value = _visitor().to_vue(RawDiskData("hello"))
     assert value == "hello"
     assert spec.value == "hello"  # type: ignore[attr-defined]
-    assert spec.multiline is False  # type: ignore[attr-defined]
 
 
-def test_to_vue_multiline_flag_propagates() -> None:
-    spec, _ = _visitor(multiline=True).to_vue(RawDiskData("first\n    second"))
-    assert spec.multiline is True  # type: ignore[attr-defined]
+def test_to_vue_style_defaults_to_text() -> None:
+    spec, _ = _visitor().to_vue(RawDiskData("hello"))
+    assert spec.style == shared_type_defs.StaticTextStyle.text  # type: ignore[attr-defined]
+
+
+def test_to_vue_preformatted_style_propagates() -> None:
+    spec, _ = _visitor(style="preformatted").to_vue(RawDiskData("first\n    second"))
+    assert spec.style == shared_type_defs.StaticTextStyle.preformatted  # type: ignore[attr-defined]
     assert spec.value == "first\n    second"  # type: ignore[attr-defined]
+
+
+def test_to_vue_alert_style_propagates() -> None:
+    spec, _ = _visitor(style="alert_info").to_vue(RawDiskData("generated on save"))
+    assert spec.style == shared_type_defs.StaticTextStyle.alert_info  # type: ignore[attr-defined]
 
 
 def test_default_value_renders_empty_string() -> None:

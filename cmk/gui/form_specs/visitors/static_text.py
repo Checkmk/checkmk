@@ -42,7 +42,7 @@ class StaticTextVisitor(FormSpecVisitor[StaticText, _ParsedValueModel, _Fallback
                 help=help_text,
                 validators=[],
                 value=value,
-                multiline=self.form_spec.multiline,
+                style=shared_type_defs.StaticTextStyle(self.form_spec.style),
             ),
             value,
         )

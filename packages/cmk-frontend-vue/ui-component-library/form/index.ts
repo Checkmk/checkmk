@@ -33,6 +33,7 @@ import UclFormRegex from './UclFormRegex.vue'
 import UclFormSimplePassword from './UclFormSimplePassword.vue'
 import UclFormSingleChoice from './UclFormSingleChoice.vue'
 import UclFormSingleChoiceEditable from './UclFormSingleChoiceEditable.vue'
+import UclFormStaticText from './UclFormStaticText.vue'
 import UclFormString from './UclFormString.vue'
 import UclFormTimePicker from './UclFormTimePicker.vue'
 import UclFormTimeSpan from './UclFormTimeSpan.vue'
@@ -71,5 +72,6 @@ export const pages: Array<Folder | Page> = [
   new Page('FormTimeSpecific', UclFormTimeSpecific),
   new Page('FormMultilineText', UclFormMultilineText),
   new Page('FormString', UclFormString),
+  new Page('FormStaticText', UclFormStaticText),
   new Page('FormCatalog', UclFormCatalog)
 ]

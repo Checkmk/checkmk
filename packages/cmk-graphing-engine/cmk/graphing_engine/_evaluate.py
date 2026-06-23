@@ -125,7 +125,10 @@ def _evaluate_vertical_range(
 
 
 def _evaluate_curve(quantity: Quantity, context: EvaluationContext) -> EvaluatedCurve | None:
-    if (attributes := quantity.evaluate_attributes(context)) is None:
+    if not quantity.is_present(context):
+        return None
+    attributes = quantity.evaluate_attributes(context)
+    if attributes is None:
         return None
     return EvaluatedCurve(
         title=attributes.title,
@@ -137,6 +140,8 @@ def _evaluate_curve(quantity: Quantity, context: EvaluationContext) -> Evaluated
 
 
 def _evaluate_rule(rule: Rule, context: EvaluationContext) -> EvaluatedRule | None:
+    if not rule.quantity.is_present(context):
+        return None
     attributes = rule.quantity.evaluate_attributes(context)
     value = rule.quantity.evaluate_value(context)
     if attributes is None or value is None:

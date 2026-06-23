@@ -115,6 +115,8 @@ class EvaluationContext:
 class Quantity(Protocol):
     def rrd_metrics(self) -> Iterable[RRDMetric]: ...
 
+    def is_present(self, context: EvaluationContext) -> bool: ...
+
     def evaluate_value(self, context: EvaluationContext) -> float | None: ...
 
     def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries: ...
@@ -198,6 +200,9 @@ class Constant:
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         return ()
 
+    def is_present(self, context: EvaluationContext) -> bool:  # noqa: ARG002
+        return True
+
     def evaluate_value(self, context: EvaluationContext) -> float | None:  # noqa: ARG002
         return self.value
 
@@ -218,6 +223,9 @@ class RRDMetric:
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield self
+
+    def is_present(self, context: EvaluationContext) -> bool:
+        return self in context.metric_data
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
         data = context.metric_data.get(self)
@@ -267,6 +275,9 @@ class ScalarOf:
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield self.metric
 
+    def is_present(self, context: EvaluationContext) -> bool:
+        return self.metric in context.metric_data
+
     def evaluate_value(self, context: EvaluationContext) -> float | None:
         data = context.metric_data.get(self.metric)
         return None if data is None else _SCALAR_VALUE[self.kind](data)
@@ -292,6 +303,9 @@ class Sum:
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         for summand in self.summands:
             yield from summand.rrd_metrics()
+
+    def is_present(self, context: EvaluationContext) -> bool:
+        return bool(self.summands) and self.summands[0].is_present(context)
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
         return _operands_value(_op_sum, self.summands, context)
@@ -319,6 +333,9 @@ class Product:
         for factor in self.factors:
             yield from factor.rrd_metrics()
 
+    def is_present(self, context: EvaluationContext) -> bool:  # noqa: ARG002
+        return True
+
     def evaluate_value(self, context: EvaluationContext) -> float | None:
         return _operands_value(_op_product, self.factors, context)
 
@@ -340,6 +357,9 @@ class Difference:
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield from self.minuend.rrd_metrics()
         yield from self.subtrahend.rrd_metrics()
+
+    def is_present(self, context: EvaluationContext) -> bool:
+        return self.minuend.is_present(context)
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
         return _operands_value(_op_difference, [self.minuend, self.subtrahend], context)
@@ -368,6 +388,9 @@ class Fraction:
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield from self.dividend.rrd_metrics()
         yield from self.divisor.rrd_metrics()
+
+    def is_present(self, context: EvaluationContext) -> bool:  # noqa: ARG002
+        return True
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
         return _operands_value(_op_fraction, [self.dividend, self.divisor], context)

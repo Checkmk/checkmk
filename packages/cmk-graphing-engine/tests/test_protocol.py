@@ -52,6 +52,9 @@ class Negated:
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield from self.operand.rrd_metrics()
 
+    def is_present(self, context: EvaluationContext) -> bool:
+        return self.operand.is_present(context)
+
     def evaluate_value(self, context: EvaluationContext) -> float | None:
         value = self.operand.evaluate_value(context)
         return None if value is None else -value

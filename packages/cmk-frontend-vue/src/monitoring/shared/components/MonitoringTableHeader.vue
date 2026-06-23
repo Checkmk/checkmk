@@ -230,6 +230,7 @@ function labelStyle(columnDef: ColumnDef<T>): CSSProperties {
   height: 24px;
   font-weight: var(--font-weight-bold);
   background: var(--ux-theme-1);
+  box-shadow: 0 0 0 1px var(--ux-theme-4);
   white-space: nowrap;
   text-align: left;
 }

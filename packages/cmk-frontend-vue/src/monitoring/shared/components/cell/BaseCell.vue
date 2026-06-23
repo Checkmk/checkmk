@@ -172,6 +172,7 @@ const highlightStyle = computed<CSSProperties>(() =>
 
 .monitoring-base-cell--pinned {
   background: var(--ux-theme-1);
+  box-shadow: 0 0 0 1px var(--ux-theme-4);
 }
 
 .monitoring-base-cell--last-pinned::after {

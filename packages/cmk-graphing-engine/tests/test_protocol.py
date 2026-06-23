@@ -19,6 +19,7 @@ from cmk.graphing_engine import (
     Line,
     MetricName,
     RRDMetric,
+    ServiceRef,
     TimeRange,
     TimeSeries,
     Unit,
@@ -85,9 +86,8 @@ def test_engine_evaluates_a_custom_quantity_without_engine_changes() -> None:
     )
     result = evaluate_graph(
         graph,
-        {a: _data(value=3.0)},
+        {ServiceRef(host_name="h", service_name="svc"): {MetricName("a"): _data(value=3.0)}},
         {a: TimeSeries(time_range=_TR, values=[1.0, None, 3.0])},
-        {},
         _TR,
     )
     assert result.lines[0].curve == EvaluatedCurve(

@@ -30,6 +30,7 @@ from cmk.graphing_engine import (
     Rule,
     ScalarKind,
     ScalarOf,
+    ServiceRef,
     Stack,
     Sum,
     TimeRange,
@@ -38,6 +39,17 @@ from cmk.graphing_engine import (
 )
 from cmk.graphing_engine._evaluate import evaluate_graph
 from cmk.graphing_engine._objects import EvaluationContext, Quantity, RRDMetricData
+
+
+def _perf(
+    metric_data: Mapping[RRDMetric, RRDMetricData],
+) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
+    result: dict[ServiceRef, dict[MetricName, RRDMetricData]] = {}
+    for metric, data in metric_data.items():
+        service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
+        result.setdefault(service, {})[metric.metric_name] = data
+    return result
+
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TR = TimeRange(start=0, end=30, step=10)  # three data points
@@ -68,7 +80,7 @@ def _evaluate_value(
     metric_data: Mapping[RRDMetric, RRDMetricData],
 ) -> float | None:
     return quantity.evaluate_value(
-        EvaluationContext(metric_data=metric_data, time_series={}, time_range=_TR)
+        EvaluationContext(performance_data=_perf(metric_data), time_series={}, time_range=_TR)
     )
 
 
@@ -79,7 +91,9 @@ def _evaluate_time_series(
     time_range: TimeRange,
 ) -> TimeSeries:
     return quantity.evaluate_time_series(
-        EvaluationContext(metric_data=metric_data, time_series=time_series, time_range=time_range)
+        EvaluationContext(
+            performance_data=_perf(metric_data), time_series=time_series, time_range=time_range
+        )
     )
 
 
@@ -222,7 +236,7 @@ def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
 
     # Stacks (filled areas) and lines stay separate, each keeping its direction; curves carry
     # their definition title/unit/colour.
-    assert evaluate_graph(graph, metric_data, time_series, {}, _TR) == EvaluatedGraph(
+    assert evaluate_graph(graph, _perf(metric_data), time_series, _TR) == EvaluatedGraph(
         name="g",
         title="g",
         vertical_range=None,
@@ -267,7 +281,7 @@ def test_evaluate_graph_evaluates_the_stack_reference_baseline() -> None:
     # The reference baseline is part of the graph's metrics (so it gets fetched) ...
     assert floor in graph.rrd_metrics()
     # ... and is evaluated onto EvaluatedStack.reference, separate from the drawn members.
-    [stack] = evaluate_graph(graph, metric_data, time_series, {}, _TR).stacks
+    [stack] = evaluate_graph(graph, _perf(metric_data), time_series, _TR).stacks
     assert [member.attributes.title for member in stack.members] == ["band"]
     assert stack.reference is not None and stack.reference.attributes.title == "floor"
 
@@ -281,7 +295,9 @@ def test_evaluate_graph_drops_curves_of_missing_metrics() -> None:
         lines=[Line(curve=_curve(a, "a"), inverse=False)],
     )
     # "gone" has no metric data, so its stack is dropped; only the line for "a" remains.
-    result = evaluate_graph(graph, {a: _data(value=3.0)}, {a: _time_series(1.0, 2.0, 3.0)}, {}, _TR)
+    result = evaluate_graph(
+        graph, _perf({a: _data(value=3.0)}), {a: _time_series(1.0, 2.0, 3.0)}, _TR
+    )
     assert result.stacks == []
     assert [line.curve.attributes.title for line in result.lines] == ["a"]
 
@@ -310,7 +326,7 @@ def test_evaluate_graph_builds_rules_from_thresholds_and_constants() -> None:
             ),
         ],
     )
-    result = evaluate_graph(graph, {a: _data(value=3.0, warning=80.0)}, {}, {}, _TR)
+    result = evaluate_graph(graph, _perf({a: _data(value=3.0, warning=80.0)}), {}, _TR)
     assert result.rules == [
         EvaluatedRule(
             value=80.0,
@@ -349,18 +365,18 @@ def test_evaluate_graph_drops_rules_without_a_value() -> None:
             ),
         ],
     )
-    result = evaluate_graph(graph, {a: _data(value=3.0)}, {}, {}, _TR)
+    result = evaluate_graph(graph, _perf({a: _data(value=3.0)}), {}, _TR)
     assert result.rules == []
 
 
 def test_evaluate_graph_carries_the_name() -> None:
     graph = Graph(name="my_graph", title="My graph")
-    assert evaluate_graph(graph, {}, {}, {}, _TR).name == "my_graph"
+    assert evaluate_graph(graph, {}, {}, _TR).name == "my_graph"
 
 
 def test_evaluate_graph_evaluates_a_fixed_range_of_constants() -> None:
     graph = Graph(name="g", title="g", vertical_range=FixedRange(lower=0, upper=100))
-    assert evaluate_graph(graph, {}, {}, {}, _TR).vertical_range == EvaluatedFixedRange(
+    assert evaluate_graph(graph, {}, {}, _TR).vertical_range == EvaluatedFixedRange(
         lower=0.0, upper=100.0
     )
 
@@ -369,11 +385,11 @@ def test_evaluate_graph_resolves_a_minimal_range_bound_expression() -> None:
     a = _metric("a")
     # The upper bound is a metric reference, resolved against the metric data; the lower is a number.
     graph = Graph(name="g", title="g", vertical_range=MinimalRange(lower=0, upper=a))
-    result = evaluate_graph(graph, {a: _data(value=42.0)}, {}, {}, _TR)
+    result = evaluate_graph(graph, _perf({a: _data(value=42.0)}), {}, _TR)
     assert result.vertical_range == EvaluatedMinimalRange(lower=0.0, upper=42.0)
 
 
 def test_evaluate_graph_range_bound_of_a_missing_metric_is_none() -> None:
     graph = Graph(name="g", title="g", vertical_range=MinimalRange(lower=0, upper=_metric("gone")))
-    result = evaluate_graph(graph, {}, {}, {}, _TR)
+    result = evaluate_graph(graph, {}, {}, _TR)
     assert result.vertical_range == EvaluatedMinimalRange(lower=0.0, upper=None)

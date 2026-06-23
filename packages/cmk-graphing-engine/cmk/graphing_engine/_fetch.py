@@ -71,7 +71,7 @@ def _merge(series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
 def _fetch_series(
     *,
     graph: Graph,
-    metric_data: Mapping[RRDMetric, RRDMetricData],
+    performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
     rrd: RRDSource,
@@ -81,7 +81,8 @@ def _fetch_series(
     ] = {}
     rrd_metrics_per_function: dict[ConsolidationFunction, list[RRDMetric]] = {}
     for metric in graph.rrd_metrics():
-        if (data := metric_data.get(metric)) is None:
+        service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
+        if (data := performance_data.get(service, {}).get(metric.metric_name)) is None:
             continue
         function = _consolidation_function(metric, consolidation_function)
         rrd_metrics = [
@@ -122,7 +123,7 @@ def _fetch_series(
     return result
 
 
-def fetch_translated_metrics(
+def fetch_performance_data(
     *,
     services: Iterable[ServiceRef],
     translations: Iterable[translations_v1.Translation],
@@ -136,45 +137,39 @@ def fetch_translated_metrics(
     }
 
 
-def _metric_data_of(
+def performance_data_of(
     graph: Graph,
-    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
-) -> Mapping[RRDMetric, RRDMetricData]:
-    result: dict[RRDMetric, RRDMetricData] = {}
-    for metric in graph.rrd_metrics():
-        service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
-        if (translated := translated_metrics.get(service, {}).get(metric.metric_name)) is not None:
-            result[metric] = translated
-    return result
+    performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
+) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
+    services = {
+        ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
+        for metric in graph.rrd_metrics()
+    }
+    return {
+        service: performance_data[service] for service in services if service in performance_data
+    }
 
 
-def evaluate_graphs(
+def update_graph_time_series(
     *,
-    graphs: Sequence[Graph],
-    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
+    graph: Graph,
+    performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
     rrd: RRDSource,
-) -> Sequence[EvaluatedGraph]:
-    evaluated = []
-    for graph in graphs:
-        metric_data = _metric_data_of(graph, translated_metrics)
-        evaluated.append(
-            evaluate_graph(
-                graph,
-                metric_data,
-                _fetch_series(
-                    graph=graph,
-                    metric_data=metric_data,
-                    consolidation_function=consolidation_function,
-                    time_range=time_range,
-                    rrd=rrd,
-                ),
-                translated_metrics,
-                time_range,
-            )
-        )
-    return evaluated
+) -> EvaluatedGraph:
+    return evaluate_graph(
+        graph,
+        performance_data,
+        _fetch_series(
+            graph=graph,
+            performance_data=performance_data,
+            consolidation_function=consolidation_function,
+            time_range=time_range,
+            rrd=rrd,
+        ),
+        time_range,
+    )
 
 
 def update_graph_data(
@@ -185,7 +180,7 @@ def update_graph_data(
     time_range: TimeRange,
     rrd: RRDSource,
 ) -> Sequence[EvaluatedGraph]:
-    translated_metrics = fetch_translated_metrics(
+    performance_data = fetch_performance_data(
         services=(
             ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
             for graph in graphs
@@ -194,10 +189,13 @@ def update_graph_data(
         translations=translations,
         rrd=rrd,
     )
-    return evaluate_graphs(
-        graphs=graphs,
-        translated_metrics=translated_metrics,
-        consolidation_function=consolidation_function,
-        time_range=time_range,
-        rrd=rrd,
-    )
+    return [
+        update_graph_time_series(
+            graph=graph,
+            performance_data=performance_data,
+            consolidation_function=consolidation_function,
+            time_range=time_range,
+            rrd=rrd,
+        )
+        for graph in graphs
+    ]

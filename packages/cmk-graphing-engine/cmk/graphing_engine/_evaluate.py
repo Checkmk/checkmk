@@ -84,7 +84,7 @@ class EvaluatedGraph:
 @dataclass(frozen=True, kw_only=True)
 class DiscoveredGraph:
     graph: Graph
-    evaluated: EvaluatedGraph
+    performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -161,13 +161,12 @@ def _title_metrics(
 
 def evaluate_graph(
     graph: Graph,
-    metric_data: Mapping[RRDMetric, RRDMetricData],
+    performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     time_series: Mapping[RRDMetric, TimeSeries],
-    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     time_range: TimeRange,
 ) -> EvaluatedGraph:
     context = EvaluationContext(
-        metric_data=metric_data,
+        performance_data=performance_data,
         time_series=time_series,
         time_range=time_range,
     )
@@ -195,7 +194,7 @@ def evaluate_graph(
     ]
     return EvaluatedGraph(
         name=graph.name,
-        title=evaluate_title(graph.title, _title_metrics(graph, translated_metrics)),
+        title=evaluate_title(graph.title, _title_metrics(graph, performance_data)),
         vertical_range=_evaluate_vertical_range(graph.vertical_range, context),
         stacks=stacks,
         lines=lines,

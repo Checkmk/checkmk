@@ -20,11 +20,12 @@ from cmk.graphing_engine import (
     discover_graphs,
     DiscoveredGraph,
     DiscoveredGraphs,
-    evaluate_graphs,
-    fetch_translated_metrics,
+    EvaluatedGraph,
+    fetch_performance_data,
     Graph,
     Line,
     MetricName,
+    performance_data_of,
     PerformanceData,
     PerformanceValue,
     Quantity,
@@ -38,6 +39,7 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
     Unit,
+    update_graph_time_series,
 )
 from cmk.graphing_engine._from_api import parse_graph_from_api
 
@@ -169,31 +171,29 @@ def _discover(
     *,
     rrd: _FakeFetchRRD,
 ) -> Sequence[DiscoveredGraph]:
-    # Compose the discovery steps the way the GUI does: fetch -> build -> evaluate -> wrap.
-    translated_metrics = fetch_translated_metrics(services=[service], translations=[], rrd=rrd)
+    # Compose the discovery steps the way the GUI does: fetch performance data -> build -> wrap.
+    performance_data = fetch_performance_data(services=[service], translations=[], rrd=rrd)
     graphs = build_graphs(
         service=service,
         registered_graphs=registered_graphs,
         metrics=_METRICS,
         localizer=_id,
-        available=translated_metrics.get(service, {}),
+        available=performance_data.get(service, {}),
     )
     return [
-        DiscoveredGraph(
-            graph=graph,
-            evaluated=evaluated,
-        )
-        for graph, evaluated in zip(
-            graphs,
-            evaluate_graphs(
-                graphs=graphs,
-                translated_metrics=translated_metrics,
-                consolidation_function=ConsolidationFunction.AVERAGE,
-                time_range=_time_range(),
-                rrd=rrd,
-            ),
-        )
+        DiscoveredGraph(graph=graph, performance_data=performance_data_of(graph, performance_data))
+        for graph in graphs
     ]
+
+
+def _evaluate(discovered: DiscoveredGraph, rrd: _FakeFetchRRD) -> EvaluatedGraph:
+    return update_graph_time_series(
+        graph=discovered.graph,
+        performance_data=discovered.performance_data,
+        consolidation_function=ConsolidationFunction.AVERAGE,
+        time_range=_time_range(),
+        rrd=rrd,
+    )
 
 
 def test_discover_template_graphs_empty_service_returns_no_graphs() -> None:
@@ -216,10 +216,10 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
 
     assert discovered.graph == Graph(name=cpu_user, title=cpu_user, stacks=[_stack(_rrd(cpu_user))])
     # The single metric is drawn as a stacked curve carrying its value.
-    assert [curve.value for stack in discovered.evaluated.stacks for curve in stack.members] == [
-        1.0
-    ]
-    assert discovered.evaluated.lines == []
+    assert [
+        curve.value for stack in _evaluate(discovered, rrd).stacks for curve in stack.members
+    ] == [1.0]
+    assert _evaluate(discovered, rrd).lines == []
 
 
 def test_discovered_graphs_groups_options_with_graphs() -> None:
@@ -258,8 +258,8 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
     assert len(discovered) == 1
     assert discovered[0].graph == parse_graph_from_api(plugin, service, _METRICS, _id)
     # A plain title without expressions is carried through unchanged.
-    assert discovered[0].evaluated.title == "CPU"
-    assert [line.curve.value for line in discovered[0].evaluated.lines] == [1.0, 1.0]
+    assert _evaluate(discovered[0], rrd).title == "CPU"
+    assert [line.curve.value for line in _evaluate(discovered[0], rrd).lines] == [1.0, 1.0]
 
 
 def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() -> None:
@@ -383,8 +383,8 @@ def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantit
     # own fallback graph.
     assert {d.graph.name for d in discovered} == {"cpu", "cpu_system"}
     cpu = next(d for d in discovered if d.graph.name == "cpu")
-    assert [line.curve.value for line in cpu.evaluated.lines] == [1.0]
-    assert [rule.value for rule in cpu.evaluated.rules] == [50.0]
+    assert [line.curve.value for line in _evaluate(cpu, rrd).lines] == [1.0]
+    assert [rule.value for rule in _evaluate(cpu, rrd).rules] == [50.0]
 
 
 def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics() -> None:
@@ -408,8 +408,8 @@ def test_discover_template_graphs_carries_scalars_for_scalar_referenced_metrics(
     # fallback graph.
     assert {d.graph.name for d in discovered} == {"cpu", "cpu_system"}
     cpu = next(d for d in discovered if d.graph.name == "cpu")
-    assert [line.curve.value for line in cpu.evaluated.lines] == [1.0]
-    assert [rule.value for rule in cpu.evaluated.rules] == [50.0]
+    assert [line.curve.value for line in _evaluate(cpu, rrd).lines] == [1.0]
+    assert [rule.value for rule in _evaluate(cpu, rrd).rules] == [50.0]
 
 
 def test_discover_template_graphs_evaluates_the_title_expression() -> None:
@@ -426,7 +426,7 @@ def test_discover_template_graphs_evaluates_the_title_expression() -> None:
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
     # The evaluated title is exposed via title; the graph keeps its raw title.
-    assert discovered.evaluated.title == "CPU - 8 cores"
+    assert _evaluate(discovered, rrd).title == "CPU - 8 cores"
     assert "_EXPRESSION:" in discovered.graph.title
 
 
@@ -444,7 +444,7 @@ def test_discover_template_graphs_title_expression_falls_back_when_unresolvable(
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert discovered.evaluated.title == "CPU"
+    assert _evaluate(discovered, rrd).title == "CPU"
 
 
 def test_discover_template_graphs_matches_despite_a_metric_referenced_only_in_the_title() -> None:
@@ -464,7 +464,7 @@ def test_discover_template_graphs_matches_despite_a_metric_referenced_only_in_th
     discovered = _discover(service, registered_graphs, rrd=rrd)
 
     assert [d.graph.name for d in discovered] == ["cpu"]
-    assert discovered[0].evaluated.title == "CPU"
+    assert _evaluate(discovered[0], rrd).title == "CPU"
 
 
 def test_discover_template_graphs_does_not_claim_a_metric_referenced_only_in_the_title() -> None:
@@ -487,7 +487,7 @@ def test_discover_template_graphs_does_not_claim_a_metric_referenced_only_in_the
     # the title, so it is not claimed and still gets its own fallback graph.
     assert {d.graph.name for d in discovered} == {"cpu", "cpu_user"}
     cpu = next(d for d in discovered if d.graph.name == "cpu")
-    assert cpu.evaluated.title == "CPU - 8 cores"
+    assert _evaluate(cpu, rrd).title == "CPU - 8 cores"
 
 
 def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> None:
@@ -506,7 +506,7 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> 
     assert isinstance(graph, Graph)
     assert _line(_rrd(predict), _predict_attrs(predict)) in graph.lines
     # cpu_user and its predictive companion are both drawn (neither dropped for missing data).
-    assert len(discovered[0].evaluated.lines) == 2
+    assert len(_evaluate(discovered[0], rrd).lines) == 2
 
 
 def test_discover_template_graphs_adds_predictive_lines_to_a_fallback_graph() -> None:
@@ -575,7 +575,7 @@ def test_build_graphs_applies_threshold_rules_to_fallback_graphs() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user, warning=80.0))})
-    available = fetch_translated_metrics(services=[service], translations=[], rrd=rrd).get(
+    available = fetch_performance_data(services=[service], translations=[], rrd=rrd).get(
         service, {}
     )
 

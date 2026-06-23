@@ -19,10 +19,11 @@ from ._evaluate import (
     EvaluatedStack,
 )
 from ._fetch import (
-    evaluate_graphs,
-    fetch_translated_metrics,
+    fetch_performance_data,
+    performance_data_of,
     RRDSource,
     update_graph_data,
+    update_graph_time_series,
 )
 from ._from_api import metric_display_attributes
 from ._objects import (
@@ -117,8 +118,9 @@ __all__ = [
     "VerticalRange",
     "build_graphs",
     "discover_graphs",
-    "evaluate_graphs",
-    "fetch_translated_metrics",
+    "fetch_performance_data",
     "metric_display_attributes",
+    "performance_data_of",
     "update_graph_data",
+    "update_graph_time_series",
 ]

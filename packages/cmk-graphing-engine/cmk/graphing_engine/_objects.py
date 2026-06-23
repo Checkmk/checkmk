@@ -104,9 +104,13 @@ class TimeSeries:
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluationContext:
-    metric_data: Mapping[RRDMetric, RRDMetricData]
+    performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]
     time_series: Mapping[RRDMetric, TimeSeries]
     time_range: TimeRange
+
+    def data_of(self, metric: RRDMetric) -> RRDMetricData | None:
+        service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
+        return self.performance_data.get(service, {}).get(metric.metric_name)
 
 
 class Quantity(Protocol):
@@ -214,10 +218,10 @@ class RRDMetric:
         yield self
 
     def is_present(self, context: EvaluationContext) -> bool:
-        return self in context.metric_data
+        return context.data_of(self) is not None
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
-        data = context.metric_data.get(self)
+        data = context.data_of(self)
         return None if data is None else data.value
 
     def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries:
@@ -256,10 +260,10 @@ class ScalarOf:
         yield self.metric
 
     def is_present(self, context: EvaluationContext) -> bool:
-        return self.metric in context.metric_data
+        return context.data_of(self.metric) is not None
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
-        data = context.metric_data.get(self.metric)
+        data = context.data_of(self.metric)
         return None if data is None else _SCALAR_VALUE[self.kind](data)
 
     def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries:

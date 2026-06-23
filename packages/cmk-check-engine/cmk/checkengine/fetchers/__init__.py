@@ -9,19 +9,19 @@ See Also:
 
 """
 
-from ._ipmi import IPMICredentials as IPMICredentials
-from ._ipmi import IPMIFetcher as IPMIFetcher
-from ._metric_backend import MetricBackendFetcher as MetricBackendFetcher
-from ._metric_backend import MetricBackendFetcherConfig as MetricBackendFetcherConfig
-from ._nofetcher import NoFetcher as NoFetcher
-from ._nofetcher import NoFetcherError as NoFetcherError
-from ._piggyback import PiggybackFetcher as PiggybackFetcher
-from ._program import ProgramFetcher as ProgramFetcher
-from ._snmp._fetcher import NoSelectedSNMPSections as NoSelectedSNMPSections
-from ._snmp._fetcher import SNMPFetcher as SNMPFetcher
-from ._snmp._fetcher import SNMPFetcherConfig as SNMPFetcherConfig
-from ._snmp._fetcher import SNMPScanConfig as SNMPScanConfig
-from ._snmp._fetcher import SNMPSectionMeta as SNMPSectionMeta
+from .ipmi import IPMICredentials as IPMICredentials
+from .ipmi import IPMIFetcher as IPMIFetcher
+from .metric_backend import MetricBackendFetcher as MetricBackendFetcher
+from .metric_backend import MetricBackendFetcherConfig as MetricBackendFetcherConfig
+from .nofetcher import NoFetcher as NoFetcher
+from .nofetcher import NoFetcherError as NoFetcherError
+from .piggyback import PiggybackFetcher as PiggybackFetcher
+from .program import ProgramFetcher as ProgramFetcher
+from .snmp._fetcher import NoSelectedSNMPSections as NoSelectedSNMPSections
+from .snmp._fetcher import SNMPFetcher as SNMPFetcher
+from .snmp._fetcher import SNMPFetcherConfig as SNMPFetcherConfig
+from .snmp._fetcher import SNMPScanConfig as SNMPScanConfig
+from .snmp._fetcher import SNMPSectionMeta as SNMPSectionMeta
 from .tcp import TCPFetcher as TCPFetcher
 from .tcp import TCPFetcherConfig as TCPFetcherConfig
 from .tcp import TLSConfig as TLSConfig

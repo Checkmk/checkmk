@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 import cmk.ccc.resulttype as result
-import cmk.checkengine.fetchers._snmp._fetcher as _snmp_module
+import cmk.checkengine.fetchers.snmp._fetcher as _snmp_module
 import cmk.checkengine.sources._sources as _sources_module
 import cmk.utils.paths as cmk_paths
 from cmk.base import config

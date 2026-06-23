@@ -71,7 +71,7 @@ def register(host_attribute_topic_registry_: HostAttributeTopicRegistry) -> None
     host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_META_DATA)
 
 
-# Keep in sync with cmk.fetchers._ipmi.IPMICredentials
+# Keep in sync with cmk.fetchers.ipmi.IPMICredentials
 # C&P to avoid the dependency which pulls in pyghmi
 class IPMICredentials(TypedDict, total=False):
     username: str

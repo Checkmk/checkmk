@@ -5,7 +5,7 @@
 
 import json
 
-from cmk.checkengine.fetchers._metric_backend import AttributeFilter, MetricBackendFetcherConfig
+from cmk.checkengine.fetchers.metric_backend import AttributeFilter, MetricBackendFetcherConfig
 
 _FILTERS = {
     "resource_attributes": [{"key": "team", "value": "infra"}],

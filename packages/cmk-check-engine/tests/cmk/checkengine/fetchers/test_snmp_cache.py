@@ -8,7 +8,7 @@ import logging
 from collections.abc import Iterable, MutableMapping
 from pathlib import Path
 
-from cmk.checkengine.fetchers._snmp._cache import WalkCache
+from cmk.checkengine.fetchers.snmp._cache import WalkCache
 from cmk.checkengine.snmplib import SNMPRowInfo
 
 

@@ -17,7 +17,7 @@ from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped,unuse
 from pytest import MonkeyPatch
 
 import cmk.ccc.resulttype as result
-import cmk.checkengine.fetchers._snmp._fetcher as snmp
+import cmk.checkengine.fetchers.snmp._fetcher as snmp
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine import agent_protocol
@@ -34,7 +34,7 @@ from cmk.checkengine.fetchers import (
     TCPFetcher,
     TLSConfig,
 )
-from cmk.checkengine.fetchers._ipmi import IPMISensor
+from cmk.checkengine.fetchers.ipmi import IPMISensor
 from cmk.checkengine.filecache import (
     AgentFileCache,
     FileCache,

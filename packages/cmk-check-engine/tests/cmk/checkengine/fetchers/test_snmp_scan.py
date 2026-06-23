@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import NoReturn
 
-import cmk.checkengine.fetchers._snmp._scan as snmp_scan
+import cmk.checkengine.fetchers.snmp._scan as snmp_scan
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.snmplib import (

@@ -144,8 +144,8 @@ from ._status_links import make_host_status_link
 
 # These must match the error message constants defined in cmk.fetchers:
 # - cmk.filecache._cache.NO_CACHED_DATA_MSG
-# - cmk.fetchers._program.AGENT_EXITED_WITH_CODE_PREFIX
-# - cmk.fetchers._program.PROGRAM_NOT_FOUND_SUFFIX
+# - cmk.fetchers.program.AGENT_EXITED_WITH_CODE_PREFIX
+# - cmk.fetchers.program.PROGRAM_NOT_FOUND_SUFFIX
 _NO_CACHED_DATA_MSG = "No cached data available"
 _AGENT_EXITED_WITH_CODE_PREFIX = "Agent exited with code"
 _PROGRAM_NOT_FOUND_SUFFIX = "not found (exit code 127)"

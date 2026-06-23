@@ -36,6 +36,9 @@ from .api_endpoints import (
     icon,
     site_management,
 )
+from .api_endpoints import (
+    autocomplete as api_autocomplete,
+)
 from .api_endpoints import background_job as api_background_job
 from .api_endpoints import (
     comment as api_comment,
@@ -145,6 +148,10 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     api_user_config.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
+    api_autocomplete.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

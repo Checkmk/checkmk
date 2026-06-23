@@ -44,7 +44,6 @@ from cmk.gui.openapi import (
     endpoint_registry,
     versioned_endpoint_registry,
 )
-from cmk.gui.openapi.endpoints import autocomplete
 from cmk.gui.openapi.endpoints import metric as metric_endpoint
 from cmk.gui.pages import page_registry, PageEndpoint
 from cmk.gui.pagetypes import builtin_pagetype_topic_registry
@@ -370,5 +369,4 @@ def register(
 
 
 def _openapi_registration() -> None:
-    autocomplete.register(endpoint_registry)
     metric_endpoint.register(endpoint_registry)

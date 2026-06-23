@@ -6,6 +6,8 @@
 import pytest
 
 from cmk.gui.autocompleters import autocompleter_registry
+from cmk.gui.config import Config
+from cmk.gui.type_defs import Choices
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
 
@@ -113,3 +115,33 @@ def test_openapi_lenny_autocompleter(
 
 def test_openapi_available_graph_templates(clients: ClientRegistry) -> None:
     clients.AutoComplete.invoke("available_graph_templates", {"strict": True, "context": {}}, "")
+
+
+def test_extra_parameters_are_forwarded_to_autocompleter(clients: ClientRegistry) -> None:
+    """Extra fields in `parameters` must reach the autocompleter unchanged.
+
+    The union type AutocompleteRequestParametersModel | dict[str, object] is designed
+    so that when unknown fields are present, Pydantic falls back to dict[str, object]
+    and all fields are forwarded verbatim. This test verifies that behavior at the
+    HTTP level, not just at the Python model level.
+    """
+    received: dict[str, object] = {}
+
+    def echo_autocompleter(config: Config, value: str, params: dict[str, object]) -> Choices:
+        received.update(params)
+        return []
+
+    autocompleter_registry.register_autocompleter("test_echo", echo_autocompleter)
+    try:
+        clients.AutoComplete.invoke(
+            "test_echo",
+            parameters={"strict": True, "unknown_custom_field": "must_survive"},
+            value="",
+        )
+    finally:
+        autocompleter_registry.unregister("test_echo")
+
+    assert received.get("unknown_custom_field") == "must_survive", (
+        "Extra parameters were silently dropped before reaching the autocompleter. "
+        "The dict[str, object] fallback branch in the union type is not being reached."
+    )

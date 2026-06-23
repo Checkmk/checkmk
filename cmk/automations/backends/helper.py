@@ -16,7 +16,12 @@ from cmk.automations.backends._base import (
     AutomationExecutor,
     LocalAutomationResult,
 )
-from cmk.automations.models.helper import AutomationPayload, AutomationResponse
+from cmk.automations.models.helper import (
+    AUTOMATION_HELPER_BASE_URL,
+    AUTOMATION_HELPER_SOCKET_RELATIVE_PATH,
+    AutomationPayload,
+    AutomationResponse,
+)
 from cmk.automations.types import AutomationID
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
@@ -29,8 +34,8 @@ class AutomationHelperUnavailable(MKGeneralException):
 
 
 class HelperExecutor(AutomationExecutor):
-    _SOCKET_PATH = paths.omd_root.joinpath("tmp/run/automation-helper.sock")
-    _BASE_URL: Final = "http://local-automation"
+    _SOCKET_PATH = paths.omd_root.joinpath(AUTOMATION_HELPER_SOCKET_RELATIVE_PATH)
+    _BASE_URL: Final = AUTOMATION_HELPER_BASE_URL
 
     def execute(
         self,

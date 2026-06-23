@@ -133,7 +133,7 @@ class AutomationEnvironment:
 
     @property
     def hosts_config(self) -> Hosts:
-        return self.config_cache.hosts_config
+        return self.loading_result.hosts_config
 
     @property
     def latest_config_path(self) -> Path:
@@ -221,7 +221,7 @@ class AutomationEnvironment:
                 error_handler = config.handle_ip_lookup_failure
         return ip_lookup.ConfiguredIPLookup(
             ip_lookup.make_lookup_ip_address(self.ip_lookup_config),
-            allow_empty=self.config_cache.hosts_config.clusters,
+            allow_empty=self.hosts_config.clusters,
             error_handler=error_handler,
         )
 

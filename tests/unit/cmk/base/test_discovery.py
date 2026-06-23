@@ -1674,6 +1674,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
             ),
         ),
         plugins=plugins,
+        clusters=loading_result.hosts_config.clusters,
         default_address_family=lambda *a: socket.AddressFamily.AF_INET,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,

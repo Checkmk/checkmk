@@ -284,6 +284,7 @@ def _schedule_discovery_check(
 
 def _trigger_discovery_check(
     config_cache: config.ConfigCache,
+    hosts_config: Hosts,
     host_name: HostName,
     monitoring_core: Literal["nagios", "cmc"],
     inventory_check_autotrigger: bool,
@@ -296,7 +297,7 @@ def _trigger_discovery_check(
     if config_cache.discovery_check_parameters(host_name).commandline_only:
         return
 
-    if host_name in config_cache.hosts_config.clusters:
+    if host_name in hosts_config.clusters:
         return
 
     _schedule_discovery_check(host_name, monitoring_core, use_new_descriptions_for)
@@ -381,6 +382,7 @@ def _automation_service_discovery(
             ),
         ),
         plugins=plugins,
+        clusters=env.hosts_config.clusters,
         get_ip_stack_config=env.ip_lookup_config.ip_stack_config,
         default_address_family=env.ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
@@ -469,6 +471,7 @@ def _automation_service_discovery(
             # make the service reflect the new state as soon as possible.
             _trigger_discovery_check(
                 config_cache,
+                env.hosts_config,
                 hostname,
                 env.loaded_config.monitoring_core,
                 env.loaded_config.inventory_check_autotrigger,
@@ -617,6 +620,7 @@ def _automation_discovery_preview(
             ),
         ),
         plugins=env.plugins,
+        clusters=env.hosts_config.clusters,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=not prevent_fetching,
@@ -1128,6 +1132,7 @@ def _execute_autodiscovery(
             ),
         ),
         plugins=env.plugins,
+        clusters=env.hosts_config.clusters,
         default_address_family=env.ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1437,6 +1442,7 @@ def _automation_set_autochecks_v2(
 
     _trigger_discovery_check(
         env.config_cache,
+        env.hosts_config,
         set_autochecks_input.discovered_host,
         env.loaded_config.monitoring_core,
         env.loaded_config.inventory_check_autotrigger,
@@ -1468,6 +1474,7 @@ def _automation_update_host_labels(
         )
     _trigger_discovery_check(
         loading_result.config_cache,
+        loading_result.hosts_config,
         hostname,
         loading_result.loaded_config.monitoring_core,
         loading_result.loaded_config.inventory_check_autotrigger,
@@ -1934,7 +1941,7 @@ class AutomationAnalyseServices:
                     found.discovered_labels,
                 ),
             )
-            if (found := self._search_service(sctx, servicedesc))
+            if (found := self._search_service(sctx, env.hosts_config, servicedesc))
             else AnalyseServiceResult(
                 service_info={},
                 labels={},
@@ -1945,10 +1952,10 @@ class AutomationAnalyseServices:
     def _search_service(
         self,
         sctx: ServiceSearchContext,
+        hosts_config: Hosts,
         servicedesc: str,
     ) -> _FoundService | None:
         config_cache = sctx.env.config_cache
-        hosts_config = config_cache.hosts_config
         return next(
             chain(
                 # special case. cheap to check, so check this first:
@@ -2261,10 +2268,11 @@ def _automation_analyze_host_rule_effectiveness(
             get_builtin_host_labels=app.get_builtin_host_labels,
             edition=app.edition,
         )
+
+    hosts_config = loading_result.hosts_config
     config_cache = loading_result.config_cache
     ruleset_matcher = config_cache.ruleset_matcher
     label_manager = config_cache.label_manager
-    hosts_config = config_cache.hosts_config
 
     host_names = list(
         filter(
@@ -3225,6 +3233,7 @@ class AutomationDiagHost:
                 return DiagHostResult(
                     *self._execute_agent(
                         app,
+                        env.hosts_config,
                         env.loaded_config,
                         env.config_cache,
                         env.label_manager,
@@ -3306,6 +3315,7 @@ class AutomationDiagHost:
     def _execute_agent(
         self,
         app: CheckmkBaseApp,
+        hosts_config: Hosts,
         loaded_config: BaseConfig,
         config_cache: config.ConfigCache,
         label_manager: LabelManager,
@@ -3321,7 +3331,6 @@ class AutomationDiagHost:
         file_cache_options: FileCacheOptions,
         ip_address_of: ip_lookup.IPLookup,
     ) -> tuple[int, str]:
-        hosts_config = config_cache.hosts_config
         if host_name in hosts_config.clusters:
             return 0, ""  # I think we never even call this for cluster hosts?
 

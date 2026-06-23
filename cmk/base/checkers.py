@@ -367,6 +367,7 @@ class CMKFetcher(FetcherFunction):
         factory: FetcherFactory,
         plugins: AgentBasedPlugins,
         *,
+        clusters: Mapping[HostName, Sequence[HostName]],
         # alphabetically sorted
         default_address_family: Callable[
             [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -387,6 +388,7 @@ class CMKFetcher(FetcherFunction):
         self.config_cache: Final = config_cache
         self.get_relay_id: Final = get_relay_id
         self.make_trigger: Final = make_trigger
+        self.clusters: Final = clusters
         self.default_address_family: Final = default_address_family
         self.factory: Final = factory
         self.plugins: Final = plugins
@@ -412,12 +414,10 @@ class CMKFetcher(FetcherFunction):
             Snapshot,
         ]
     ]:
-        hosts_config = self.config_cache.hosts_config
-
         # we might be checking a cluster, but the relay id is always the same.
         relay_id = self.get_relay_id(host_name)
 
-        is_cluster = host_name in hosts_config.clusters
+        is_cluster = host_name in self.clusters
         if not is_cluster:
             # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
             # address is unknown). When called as non keepalive ipaddress may be None or
@@ -449,7 +449,7 @@ class CMKFetcher(FetcherFunction):
                         else self.ip_address_of_mandatory(node, self.default_address_family(node))
                     ),
                 )
-                for node in hosts_config.clusters.get(host_name, ())
+                for node in self.clusters[host_name]
             ]
 
         tls_config = TLSConfig(

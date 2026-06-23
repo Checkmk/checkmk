@@ -1866,20 +1866,21 @@ def cluster_config_fixture(monkeypatch: MonkeyPatch) -> ConfigCache:
 
 # TODO(igor): Rewrite the next three tests to be streight forward tests of `make_hosts_config`
 def test_config_cache_is_cluster(cluster_config: ConfigCache) -> None:
-    assert HostName("node1") not in cluster_config.hosts_config.clusters
-    assert HostName("host1") not in cluster_config.hosts_config.clusters
-    assert HostName("cluster1") in cluster_config.hosts_config.clusters
+    hosts_config = config.make_hosts_config(cluster_config.base_config)
+    assert HostName("node1") not in hosts_config.clusters
+    assert HostName("host1") not in hosts_config.clusters
+    assert HostName("cluster1") in hosts_config.clusters
 
 
 def test_config_cache_clusters_of(cluster_config: ConfigCache) -> None:
-    hosts_config = cluster_config.hosts_config
+    hosts_config = config.make_hosts_config(cluster_config.base_config)
     assert hosts_config.clusters_of_nodes[HostName("node1")] == ["cluster1"]
     assert HostName("host1") not in hosts_config.clusters_of_nodes
     assert HostName("cluster1") not in hosts_config.clusters_of_nodes
 
 
 def test_config_cache_nodes(cluster_config: ConfigCache) -> None:
-    hosts_config = cluster_config.hosts_config
+    hosts_config = config.make_hosts_config(cluster_config.base_config)
     assert HostName("node1") not in hosts_config.clusters
     assert HostName("host1") not in hosts_config.clusters
     assert hosts_config.clusters[HostName("cluster1")] == ["node1"]
@@ -2481,7 +2482,7 @@ def test_config_cache_max_cachefile_age_no_cluster() -> None:
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
 
-    assert xyz_host not in config_cache.hosts_config.clusters
+    assert xyz_host not in config.make_hosts_config(loaded_config).clusters
     assert (
         config_cache.max_cachefile_age(xyz_host).get(Mode.CHECKING)
         == EMPTY_CONFIG.check_max_cachefile_age
@@ -2504,7 +2505,7 @@ def test_config_cache_max_cachefile_age_cluster() -> None:
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
 
-    assert clu in config_cache.hosts_config.clusters
+    assert clu in config.make_hosts_config(loaded_config).clusters
     assert (
         config_cache.max_cachefile_age(clu).get(Mode.CHECKING)
         != EMPTY_CONFIG.check_max_cachefile_age
@@ -2705,7 +2706,7 @@ def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
-    hosts_config = config_cache.hosts_config
+    hosts_config = config.make_hosts_config(folder_path_test_config)
     ruleset_matcher = config_cache.ruleset_matcher
 
     assert HostName("main-host") not in hosts_config.host_paths
@@ -2939,12 +2940,13 @@ def fixture_config_path() -> Path:
 def test_save_packed_config(monkeypatch: MonkeyPatch, config_path: Path) -> None:
     ts = Scenario()
     ts.add_host(HostName("bla1"))
-    config_cache = ts.apply(monkeypatch).config_cache
+    loading_result = ts.apply(monkeypatch)
+    config_cache = loading_result.config_cache
     precompiled_check_config = config_path / "precompiled_check_config.mk"
 
     assert not precompiled_check_config.exists()
 
-    config.save_packed_config(config_path, config_cache)
+    config.save_packed_config(config_path, config_cache, loading_result.hosts_config)
 
     assert precompiled_check_config.exists()
 

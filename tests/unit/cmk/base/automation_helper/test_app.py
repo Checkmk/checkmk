@@ -36,6 +36,7 @@ from cmk.base.automation_helper._config import ReloaderConfig
 from cmk.base.automations.automations import AutomationError
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache, LoadingResult, make_hosts_config
+from cmk.ccc.hostaddress import Hosts
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, Version
 from cmk.checkengine.plugins import AgentBasedPlugins
@@ -112,7 +113,7 @@ def _make_test_client(
         ],
         LoadingResult,
     ],
-    clear_caches_before_each_call: Callable[[ConfigCache], None],
+    clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None],
     reloader_config: ReloaderConfig = ReloaderConfig(
         active=True,
         poll_interval=1.0,
@@ -137,7 +138,7 @@ def test_reloader_is_running(mocker: MockerFixture, cache: Cache) -> None:
         _DummyAutomationEngineSuccess(),
         cache,
         mock_reload_config,
-        lambda ruleset_matcher: None,
+        lambda config_cache, hosts_config: None,
         reloader_config=ReloaderConfig(
             active=True,
             poll_interval=0.0,
@@ -271,7 +272,7 @@ def test_health_check(cache: Cache) -> None:
                 discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             ),
         ),
-        lambda ruleset_matcher: None,
+        lambda config_cache, hosts_config: None,
     ) as client:
         resp = client.get("/health")
 
@@ -480,7 +481,7 @@ def test_automation_cache_error_on_stale_config() -> None:
                 discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             ),
         ),
-        lambda ruleset_matcher: None,
+        lambda config_cache, hosts_config: None,
     ) as client:
         resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
 

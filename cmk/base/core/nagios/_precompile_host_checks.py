@@ -106,6 +106,7 @@ class HostCheckStore:
 
 def precompile_hostchecks(
     config_path: Path,
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
@@ -118,9 +119,8 @@ def precompile_hostchecks(
     precompile_mode: PrecompileMode,
 ) -> None:
     console.verbose("Creating precompiled host check config...")
-    hosts_config = config_cache.hosts_config
 
-    save_packed_config(config_path, config_cache)
+    save_packed_config(config_path, config_cache, hosts_config)
 
     console.verbose("Precompiling host checks...")
 

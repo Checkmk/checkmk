@@ -261,7 +261,7 @@ def _aggregate_check_table_services(
         skip_ignored=skip_ignored,
     )
 
-    is_cluster = host_name in config_cache.hosts_config.clusters
+    is_cluster = host_name in hosts_config.clusters
 
     # process all entries that are specific to the host
     # in search (single host) or that might match the host.
@@ -571,7 +571,7 @@ def load(
     )
 
     if validate_hosts:
-        hosts_config = loading_result.config_cache.hosts_config
+        hosts_config = loading_result.hosts_config
         if duplicates := sorted(
             hosts_config.duplicates(
                 lambda hn: (
@@ -797,12 +797,14 @@ def get_config_file_paths(with_conf_d: bool) -> list[Path]:
 def save_packed_config(
     config_path: Path,
     config_cache: ConfigCache,
+    hosts_config: Hosts,
 ) -> None:
     """Create and store a precompiled configuration for Checkmk helper processes"""
     base_config = config_cache.base_config
     PackedConfigStore.from_serial(config_path).write(
         PackedConfigGenerator(
             config_cache,
+            hosts_config,
             {f.name: getattr(base_config, f.name) for f in dataclasses.fields(base_config)},
         ).generate()
     )
@@ -838,19 +840,20 @@ class PackedConfigGenerator:
     def __init__(
         self,
         config_cache: ConfigCache,
+        hosts_config: Hosts,
         loaded_config: Mapping[str, object],
     ) -> None:
         self._config_cache = config_cache
+        self._hosts_config = hosts_config
         self._loaded_config = loaded_config
 
     def generate(self) -> Mapping[str, Any]:
         helper_config: dict[str, Any] = {}
 
         # These functions purpose is to filter out hosts which are monitored on different sites
-        hosts_config = self._config_cache.hosts_config
         active_hosts = frozenset(
             hn
-            for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
+            for hn in itertools.chain(self._hosts_config.hosts, self._hosts_config.clusters)
             if self._config_cache.is_active(hn) and self._config_cache.is_online(hn)
         )
 
@@ -870,7 +873,7 @@ class PackedConfigGenerator:
                 clustername = HostName(cluster_entry.split("|", 1)[0])
                 # Include offline cluster HOSTS.
                 # Otherwise, services clustered to those hosts will wrongly be checked by the NODES.
-                if clustername in hosts_config.clusters and self._config_cache.is_active(
+                if clustername in self._hosts_config.clusters and self._config_cache.is_active(
                     clustername
                 ):
                     # But exclude offline cluster NODES.
@@ -1512,12 +1515,6 @@ class ConfigCache:
         # Please do not use this.
         return self._loaded_config
 
-    @property
-    def hosts_config(self) -> Hosts:
-        # Currently needed during nagios core config creation.
-        # Please do not use this.
-        return self._hosts_config
-
     def make_passive_service_name_config(
         self,
         final_service_name_config: Callable[
@@ -1887,7 +1884,7 @@ class ConfigCache:
 
     def hwsw_inventory_parameters(self, host_name: HostName) -> HWSWInventoryParameters:
         def get_hwsw_inventory_parameters() -> HWSWInventoryParameters:
-            if host_name in self.hosts_config.clusters:
+            if host_name in self._hosts_config.clusters:
                 return HWSWInventoryParameters.from_raw({})
 
             # 'get_host_values' is already cached thus we can
@@ -2024,7 +2021,7 @@ class ConfigCache:
 
         return list(
             parent_candidates.intersection(
-                hn for hn in self.hosts_config.hosts if self.is_active(hn) and self.is_online(hn)
+                hn for hn in self._hosts_config.hosts if self.is_active(hn) and self.is_online(hn)
             )
         )
 
@@ -2554,7 +2551,7 @@ class ConfigCache:
         return MaxAge(
             checking=(
                 self._loaded_config.cluster_max_cachefile_age
-                if hostname in self.hosts_config.clusters
+                if hostname in self._hosts_config.clusters
                 else self._loaded_config.check_max_cachefile_age
             ),
             discovery=1.5 * check_interval,
@@ -3161,7 +3158,7 @@ class ConfigCache:
 
         # 1. New style: explicitly assigned services
         for cluster, conf in self._loaded_config.clustered_services_of.items():
-            if cluster not in self.hosts_config.clusters:
+            if cluster not in self._hosts_config.clusters:
                 raise MKGeneralException(
                     f"Invalid entry clustered_services_of['{cluster}']: {cluster} is not a cluster."
                 )

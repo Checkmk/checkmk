@@ -664,6 +664,7 @@ def test_create_nagios_servicedefs_active_check(
     license_counter = Counter("services")
     create_nagios_servicedefs(
         cfg,
+        config.make_hosts_config(config_cache.base_config),
         config_cache,
         _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
@@ -715,6 +716,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
     license_counter = Counter("services")
     create_nagios_servicedefs(
         cfg,
+        config.make_hosts_config(config_cache.base_config),
         config_cache,
         _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
@@ -856,6 +858,7 @@ def test_create_nagios_servicedefs_with_warnings(
     license_counter = Counter("services")
     create_nagios_servicedefs(
         cfg,
+        config.make_hosts_config(config_cache.base_config),
         config_cache,
         _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
@@ -940,6 +943,7 @@ def test_create_nagios_servicedefs_omit_service(
     license_counter = Counter("services")
     create_nagios_servicedefs(
         cfg,
+        config.make_hosts_config(config_cache.base_config),
         config_cache,
         _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
@@ -1024,6 +1028,7 @@ def test_create_nagios_servicedefs_invalid_args(
 
     create_nagios_servicedefs(
         cfg,
+        config.make_hosts_config(config_cache.base_config),
         config_cache,
         _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
@@ -1127,6 +1132,7 @@ def test_create_nagios_config_commands(
     license_counter = Counter("services")
     create_nagios_servicedefs(
         cfg,
+        config.make_hosts_config(config_cache.base_config),
         config_cache,
         _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,

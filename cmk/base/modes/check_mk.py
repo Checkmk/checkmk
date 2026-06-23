@@ -383,6 +383,7 @@ def _mode_list_hosts(app: CheckmkBaseApp, options: dict, args: list[str]) -> Non
     )
     hosts = _list_all_hosts(
         config_cache,
+        loading_result.hosts_config,
         core_objects_config,
         args,
         options,
@@ -395,11 +396,11 @@ def _mode_list_hosts(app: CheckmkBaseApp, options: dict, args: list[str]) -> Non
 # TODO: Does not care about internal group "check_mk"
 def _list_all_hosts(
     config_cache: ConfigCache,
+    hosts_config: Hosts,
     core_objects_config: config.CoreObjectsConfig,
     hostgroups: list[str],
     options: dict,
 ) -> list[HostName]:
-    hosts_config = config_cache.hosts_config
     hostnames: Iterable[HostName]
 
     all_sites = options.get("all-sites")
@@ -467,20 +468,23 @@ mode_list_hosts = Mode(
 
 
 def _mode_list_tag(app: CheckmkBaseApp, args: list[str]) -> None:
-    config_cache = config.load(
+    loading_result = config.load(
         get_builtin_host_labels=app.get_builtin_host_labels,
         edition=app.edition,
-    ).config_cache
-    hosts = _list_all_hosts_with_tags(tuple(TagID(_) for _ in args), config_cache)
+    )
+    hosts = _list_all_hosts_with_tags(
+        tuple(TagID(_) for _ in args), loading_result.config_cache, loading_result.hosts_config
+    )
     print_("\n".join(sorted(hosts)))
     if hosts:
         print_("\n")
 
 
 def _list_all_hosts_with_tags(
-    tags: Sequence[TagID], config_cache: ConfigCache
+    tags: Sequence[TagID],
+    config_cache: ConfigCache,
+    hosts_config: Hosts,
 ) -> Sequence[HostName]:
-    hosts_config = config_cache.hosts_config
 
     if "offline" in tags:
         hostnames = filter(
@@ -884,7 +888,7 @@ def _mode_dump_hosts(app: CheckmkBaseApp, hostlist: Iterable[HostName]) -> None:
     label_manager = loading_result.config_cache.label_manager
     config_cache = loading_result.config_cache
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
-    hosts_config = config_cache.hosts_config
+    hosts_config = loading_result.hosts_config
     ip_lookup_config = config_cache.ip_lookup_config()
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
@@ -1000,11 +1004,12 @@ mode_package = Mode(
 
 
 def _mode_update_dns_cache(app: CheckmkBaseApp) -> None:
-    config_cache = config.load(
+    loading_result = config.load(
         get_builtin_host_labels=app.get_builtin_host_labels,
         edition=app.edition,
-    ).config_cache
-    hosts_config = config_cache.hosts_config
+    )
+    config_cache = loading_result.config_cache
+    hosts_config = loading_result.hosts_config
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_lookup.update_dns_cache(
         hosts=(
@@ -1304,7 +1309,7 @@ def _mode_snmpget(app: CheckmkBaseApp, options: Mapping[str, object], args: Sequ
         edition=app.edition,
     )
     config_cache = loading_result.config_cache
-    hosts_config = config_cache.hosts_config
+    hosts_config = loading_result.hosts_config
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
@@ -1373,7 +1378,7 @@ def _mode_flush(app: CheckmkBaseApp, hosts: list[HostName]) -> None:
     )
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
-    hosts_config = loading_result.config_cache.hosts_config
+    hosts_config = loading_result.hosts_config
     config_cache = loading_result.config_cache
 
     service_name_config = config_cache.make_passive_service_name_config(
@@ -1506,7 +1511,7 @@ def _mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> N
     label_manager = loading_result.config_cache.label_manager
     config_cache = loading_result.config_cache
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
-    hosts_config = config_cache.hosts_config
+    hosts_config = loading_result.hosts_config
 
     ip_lookup_config = config_cache.ip_lookup_config()
 
@@ -1651,7 +1656,7 @@ def _mode_update(app: CheckmkBaseApp) -> None:
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
-    hosts_config = loading_result.config_cache.hosts_config
+    hosts_config = loading_result.hosts_config
 
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
@@ -1760,7 +1765,7 @@ def _mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
-    hosts_config = loading_result.config_cache.hosts_config
+    hosts_config = loading_result.hosts_config
 
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
@@ -1860,7 +1865,7 @@ def _mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
-    hosts_config = loading_result.config_cache.hosts_config
+    hosts_config = loading_result.hosts_config
 
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
@@ -2165,7 +2170,7 @@ def _mode_check_discovery(
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        allow_empty=config_cache.hosts_config.clusters,
+        allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
     check_interval = config_cache.check_mk_check_interval(hostname)
@@ -2197,6 +2202,7 @@ def _mode_check_discovery(
             ),
         ),
         plugins=plugins,
+        clusters=hosts_config.clusters,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2252,7 +2258,7 @@ def _mode_check_discovery(
         host_name=hostname,
         service_name="Check_MK Discovery",
         plugin_name="discover",
-        is_cluster=hostname in config_cache.hosts_config.clusters,
+        is_cluster=hostname in hosts_config.clusters,
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=False,
     )
@@ -2462,11 +2468,11 @@ _DiscoveryOptions = TypedDict(
 )
 
 
-# TODO(igor): pass hosts_config into this function use it to replace is_cluster and reslove_nodes
 def _preprocess_hostnames(
     arg_host_names: frozenset[HostName],
     is_cluster: Callable[[HostName], bool],
     resolve_nodes: Callable[[HostName], Iterable[HostName]],
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     only_host_labels: bool,
 ) -> set[HostName]:
@@ -2474,7 +2480,6 @@ def _preprocess_hostnames(
     svc = "" if only_host_labels else "services and "
     if not arg_host_names:
         console.verbose(f"Discovering {svc}host labels on all hosts")
-        hosts_config = config_cache.hosts_config
         return {
             hn
             for hn in hosts_config.hosts
@@ -2493,6 +2498,7 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
     plugins = load_checks()
     loading_result = load_config(app.get_builtin_host_labels, app.edition)
     loaded_config = loading_result.loaded_config
+    hosts_config = loading_result.hosts_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     config_cache = loading_result.config_cache
@@ -2518,7 +2524,7 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        allow_empty=config_cache.hosts_config.clusters,
+        allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
 
@@ -2590,6 +2596,7 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
             ),
         ),
         plugins=plugins,
+        clusters=hosts_config.clusters,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2626,6 +2633,7 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
             frozenset(hostnames),
             is_cluster=lambda hn: hn in hosts_config.clusters,
             resolve_nodes=lambda hn: hosts_config.clusters.get(hn, ()),
+            hosts_config=hosts_config,
             config_cache=config_cache,
             only_host_labels="only-host-labels" in options,
         )
@@ -2808,7 +2816,7 @@ def run_checking(
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        allow_empty=config_cache.hosts_config.clusters,
+        allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
@@ -2866,6 +2874,7 @@ def run_checking(
             ),
         ),
         plugins=plugins,
+        clusters=hosts_config.clusters,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -3107,7 +3116,7 @@ def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        allow_empty=config_cache.hosts_config.clusters,
+        allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
 
@@ -3168,6 +3177,7 @@ def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[
             ),
         ),
         plugins=plugins,
+        clusters=hosts_config.clusters,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -3436,6 +3446,7 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
     plugins = load_checks()
     loading_result = load_config(app.get_builtin_host_labels, app.edition)
     loaded_config = loading_result.loaded_config
+    hosts_config = loading_result.hosts_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     config_cache = loading_result.config_cache
@@ -3455,7 +3466,7 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         _forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        allow_empty=config_cache.hosts_config.clusters,
+        allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
 
@@ -3497,6 +3508,7 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
             ),
         ),
         plugins=plugins,
+        clusters=hosts_config.clusters,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -3534,7 +3546,6 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
             override_non_ok_state=config_cache.hwsw_inventory_parameters(host_name).fail_status,
         )
 
-    hosts_config = config_cache.hosts_config
     all_hosts = frozenset(
         itertools.chain(hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts)
     )

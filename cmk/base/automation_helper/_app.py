@@ -27,6 +27,7 @@ from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache
 from cmk.ccc import tty
 from cmk.ccc import version as cmk_version
+from cmk.ccc.hostaddress import Hosts
 from cmk.ccc.site import SiteId
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils.labels import Labels
@@ -88,7 +89,7 @@ class _ApplicationDependencies:
     automation_engine: AutomationEngine
     changes_cache: Cache
     reloader_config: ReloaderConfig
-    clear_caches_before_each_call: Callable[[ConfigCache], None]
+    clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None]
     state: _State
 
 
@@ -109,7 +110,7 @@ def make_application(
         ],
         config.LoadingResult,
     ],
-    clear_caches_before_each_call: Callable[[ConfigCache], None],
+    clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None],
 ) -> FastAPI:
     app = FastAPI(
         lifespan=_lifespan,
@@ -250,7 +251,7 @@ def _execute_automation_endpoint(
     payload: AutomationPayload,
     engine: AutomationEngine,
     cache: Cache,
-    clear_caches_before_each_call: Callable[[ConfigCache], None],
+    clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None],
     state: _State,
 ) -> AutomationResponse:
     LOGGER.info(
@@ -285,7 +286,9 @@ def _execute_automation_endpoint(
         temporary_log_level(cmk_logger, payload.log_level),
     ):
         if state.loading_result:
-            clear_caches_before_each_call(state.loading_result.config_cache)
+            clear_caches_before_each_call(
+                state.loading_result.config_cache, state.loading_result.hosts_config
+            )
         try:
             automation_start_time = time.time()
             result_or_error_code: ABCAutomationResult | int = engine.execute(

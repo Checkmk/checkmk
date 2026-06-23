@@ -168,7 +168,7 @@ def _inventory_as_check(
     ip_address_of_bare = make_lookup_ip_address(ip_lookup_config)
     ip_address_of = ConfiguredIPLookup(
         ip_address_of_bare,
-        allow_empty=config_cache.hosts_config.clusters,
+        allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
     file_cache_options = FileCacheOptions()
@@ -199,6 +199,7 @@ def _inventory_as_check(
             ),
         ),
         plugins=plugins,
+        clusters=hosts_config.clusters,
         default_address_family=ip_lookup_config.default_address_family,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,

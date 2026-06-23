@@ -151,6 +151,7 @@ class NagiosCore(MonitoringCore):
         self._core_objects_config = core_objects_config
         self._create_core_config(
             config_creation_context.path_created,
+            hosts_config,
             final_service_name_config,
             passive_service_name_config,
             enforced_services_table,
@@ -168,6 +169,7 @@ class NagiosCore(MonitoringCore):
         )
         self._precompile_hostchecks(
             config_creation_context.path_created,
+            hosts_config,
             passive_service_name_config,
             enforced_services_table,
             plugins,
@@ -183,6 +185,7 @@ class NagiosCore(MonitoringCore):
     def _create_core_config(
         self,
         config_path: Path,
+        hosts_config: Hosts,
         final_service_name_config: Callable[
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
         ],
@@ -210,7 +213,6 @@ class NagiosCore(MonitoringCore):
         """
 
         config_buffer = StringIO()
-        hosts_config = self._config_cache.hosts_config
         notify_host_files = create_config(
             config_buffer,
             hosts_config,
@@ -247,6 +249,7 @@ class NagiosCore(MonitoringCore):
     def _precompile_hostchecks(
         self,
         config_path: Path,
+        hosts_config: Hosts,
         passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
@@ -262,6 +265,7 @@ class NagiosCore(MonitoringCore):
             sys.stdout.flush()
         precompile_hostchecks(
             config_path,
+            hosts_config,
             self._config_cache,
             passive_service_name_config,
             enforced_services_table,
@@ -377,7 +381,7 @@ def create_config(
             descendants=descendants_per_host.get(hostname, ()),
         )
 
-    _validate_licensing(config_cache.hosts_config, licensing_handler, licensing_counter)
+    _validate_licensing(hosts_config, licensing_handler, licensing_counter)
 
     notify_host_files = create_notify_host_files(all_notify_host_configs)
 
@@ -462,6 +466,7 @@ def _create_nagios_config_host(
         host_labels=get_labels_from_attributes(list(host_attrs.items())),
         service_labels=create_nagios_servicedefs(
             cfg,
+            hosts_config,
             config_cache,
             core_objects_config,
             nagios_core_config,
@@ -496,7 +501,7 @@ def create_nagios_host_spec(
 ) -> ObjectSpec:
     ip = attrs["address"]
 
-    if hostname in config_cache.hosts_config.clusters:
+    if hostname in hosts_config.clusters:
         ip_lookup_config = config_cache.ip_lookup_config()
         nodes = get_cluster_nodes_for_config(
             hostname,
@@ -521,7 +526,7 @@ def create_nagios_host_spec(
         "host_name": hostname,
         "use": (
             nagios_core_config.cluster_template
-            if hostname in config_cache.hosts_config.clusters
+            if hostname in hosts_config.clusters
             else nagios_core_config.host_template
         ),
         "address": (ip if ip else ip_lookup.fallback_ip_for(host_ip_family)),
@@ -565,7 +570,7 @@ def create_nagios_host_spec(
         hostname,
         host_ip_family,
         ip,
-        hostname in config_cache.hosts_config.clusters,
+        hostname in hosts_config.clusters,
         "ping",
         host_check_via_service_status,
         host_check_via_custom_check,
@@ -586,7 +591,7 @@ def create_nagios_host_spec(
         host_spec["contact_groups"] = ",".join(sorted(contactgroups))
         cfg.contactgroups_to_define.update(contactgroups)
 
-    if hostname not in config_cache.hosts_config.clusters:
+    if hostname not in hosts_config.clusters:
         # Parents for non-clusters
 
         # Get parents explicitly defined for host/folder via extra_host_conf["parents"]. Only honor
@@ -596,7 +601,7 @@ def create_nagios_host_spec(
             if parents_list:
                 host_spec["parents"] = ",".join(sorted(parents_list))
 
-    elif hostname in config_cache.hosts_config.clusters:
+    elif hostname in hosts_config.clusters:
         # Special handling of clusters
         host_spec["parents"] = ",".join(sorted(nodes))
 
@@ -607,7 +612,7 @@ def create_nagios_host_spec(
     ).items():
         if key in ("cmk_agent_connection", "metrics_association"):
             continue
-        if hostname in config_cache.hosts_config.clusters and key == "parents":
+        if hostname in hosts_config.clusters and key == "parents":
             continue
         host_spec[key] = value
 
@@ -733,6 +738,7 @@ _PingServiceNames = Literal["PING", "PING IPv4", "PING IPv6"]
 
 def create_nagios_servicedefs(
     cfg: NagiosConfig,
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
@@ -968,6 +974,7 @@ def create_nagios_servicedefs(
     for ping_service in ping_services:
         _add_ping_service(
             cfg,
+            hosts_config,
             config_cache,
             core_objects_config,
             hostname,
@@ -1138,6 +1145,7 @@ def _get_dependencies(
 
 def _add_ping_service(
     cfg: NagiosConfig,
+    hosts_config: Hosts,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     host_name: HostName,
@@ -1168,7 +1176,7 @@ def _add_ping_service(
 
     arguments = check_icmp_arguments_of(config_cache, host_name, family)
 
-    if host_name in config_cache.hosts_config.clusters:
+    if host_name in hosts_config.clusters:
         arguments += " -m 1 " + host_attrs[node_ips_name]  # may raise exception - it's intentional
     else:
         arguments += " " + ipaddress

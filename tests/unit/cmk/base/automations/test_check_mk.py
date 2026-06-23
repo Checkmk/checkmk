@@ -270,7 +270,7 @@ def test_automation_active_check(
             AgentBasedPlugins.empty(),
             config.LoadingResult(
                 loaded_config=EMPTY_CONFIG,
-                hosts_config=config_cache.hosts_config,
+                hosts_config=config.make_hosts_config(EMPTY_CONFIG),
                 config_cache=config_cache,
             ),
         )
@@ -349,7 +349,7 @@ def test_automation_active_check_invalid_args(
         AgentBasedPlugins.empty(),
         config.LoadingResult(
             loaded_config=loaded_config,
-            hosts_config=config_cache.hosts_config,
+            hosts_config=config.make_hosts_config(loaded_config),
             config_cache=config_cache,
         ),
     )

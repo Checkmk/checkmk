@@ -21,6 +21,7 @@ from cmk.base import config
 from cmk.base.automations.automations import Automations, discover_automations
 from cmk.base.config import ConfigCache
 from cmk.ccc.daemon import daemonize, pid_file_lock
+from cmk.ccc.hostaddress import Hosts
 from cmk.ccc.site import SiteId
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils.caching import cache_manager
@@ -143,11 +144,11 @@ def _reload_automation_config(
     )
 
 
-def _clear_caches_before_each_call(config_cache: ConfigCache) -> None:
+def _clear_caches_before_each_call(config_cache: ConfigCache, hosts_config: Hosts) -> None:
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
         {
             hn
-            for hn in set(config_cache.hosts_config.hosts).union(config_cache.hosts_config.clusters)
+            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
             if config_cache.is_active(hn) and config_cache.is_online(hn)
         }
     )

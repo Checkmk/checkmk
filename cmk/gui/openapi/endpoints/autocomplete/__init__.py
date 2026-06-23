@@ -71,6 +71,7 @@ def show(params: Mapping[str, Any]) -> Response:
     function = autocompleter_registry.get(internal_autocompleter)
 
     if function is None:
+        logger.error("Autocompleter %r not found", autocompleter)
         return problem(404, f"Autocompleter {autocompleter} not found.")
 
     try:
@@ -87,9 +88,11 @@ def show(params: Mapping[str, Any]) -> Response:
         )
 
     except ValueError as e:
+        logger.exception("Autocompleter %r received invalid input", internal_autocompleter)
         return problem(400, "Invalid input", str(e))
 
     except KeyError as e:
+        logger.exception("Autocompleter %r missing field", internal_autocompleter)
         return problem(400, "Missing field", f"Missing field: {e}")
 
     result = {"choices": [{"id": k, "value": v} for k, v in choices if k is not None]}

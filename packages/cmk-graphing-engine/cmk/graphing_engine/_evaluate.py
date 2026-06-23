@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never
@@ -56,19 +57,17 @@ class EvaluatedRule:
     inverse: bool
 
 
-@dataclass(frozen=True, kw_only=True)
-class EvaluatedMinimalRange:
-    lower: float | None
-    upper: float | None
+class VerticalRangeKind(enum.StrEnum):
+    # MINIMAL: a lower bound on the axis range (it may grow past it); FIXED: a hard clamp.
+    MINIMAL = "minimal"
+    FIXED = "fixed"
 
 
 @dataclass(frozen=True, kw_only=True)
-class EvaluatedFixedRange:
+class EvaluatedVerticalRange:
+    kind: VerticalRangeKind
     lower: float | None
     upper: float | None
-
-
-type EvaluatedVerticalRange = EvaluatedMinimalRange | EvaluatedFixedRange
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -107,12 +106,14 @@ def _evaluate_vertical_range(
         case None:
             return None
         case MinimalRange():
-            return EvaluatedMinimalRange(
+            return EvaluatedVerticalRange(
+                kind=VerticalRangeKind.MINIMAL,
                 lower=_evaluate_bound(vertical_range.lower, context),
                 upper=_evaluate_bound(vertical_range.upper, context),
             )
         case FixedRange():
-            return EvaluatedFixedRange(
+            return EvaluatedVerticalRange(
+                kind=VerticalRangeKind.FIXED,
                 lower=_evaluate_bound(vertical_range.lower, context),
                 upper=_evaluate_bound(vertical_range.upper, context),
             )

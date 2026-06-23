@@ -13,12 +13,11 @@ from cmk.graphing_engine import (
     DecimalNotation,
     Difference,
     EvaluatedCurve,
-    EvaluatedFixedRange,
     EvaluatedGraph,
     EvaluatedLine,
-    EvaluatedMinimalRange,
     EvaluatedRule,
     EvaluatedStack,
+    EvaluatedVerticalRange,
     FixedRange,
     Fraction,
     Graph,
@@ -36,6 +35,7 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
     Unit,
+    VerticalRangeKind,
 )
 from cmk.graphing_engine._evaluate import evaluate_graph
 from cmk.graphing_engine._objects import EvaluationContext, Quantity, RRDMetricData
@@ -376,8 +376,8 @@ def test_evaluate_graph_carries_the_name() -> None:
 
 def test_evaluate_graph_evaluates_a_fixed_range_of_constants() -> None:
     graph = Graph(name="g", title="g", vertical_range=FixedRange(lower=0, upper=100))
-    assert evaluate_graph(graph, {}, {}, _TR).vertical_range == EvaluatedFixedRange(
-        lower=0.0, upper=100.0
+    assert evaluate_graph(graph, {}, {}, _TR).vertical_range == EvaluatedVerticalRange(
+        kind=VerticalRangeKind.FIXED, lower=0.0, upper=100.0
     )
 
 
@@ -386,10 +386,14 @@ def test_evaluate_graph_resolves_a_minimal_range_bound_expression() -> None:
     # The upper bound is a metric reference, resolved against the metric data; the lower is a number.
     graph = Graph(name="g", title="g", vertical_range=MinimalRange(lower=0, upper=a))
     result = evaluate_graph(graph, _perf({a: _data(value=42.0)}), {}, _TR)
-    assert result.vertical_range == EvaluatedMinimalRange(lower=0.0, upper=42.0)
+    assert result.vertical_range == EvaluatedVerticalRange(
+        kind=VerticalRangeKind.MINIMAL, lower=0.0, upper=42.0
+    )
 
 
 def test_evaluate_graph_range_bound_of_a_missing_metric_is_none() -> None:
     graph = Graph(name="g", title="g", vertical_range=MinimalRange(lower=0, upper=_metric("gone")))
     result = evaluate_graph(graph, {}, {}, _TR)
-    assert result.vertical_range == EvaluatedMinimalRange(lower=0.0, upper=None)
+    assert result.vertical_range == EvaluatedVerticalRange(
+        kind=VerticalRangeKind.MINIMAL, lower=0.0, upper=None
+    )

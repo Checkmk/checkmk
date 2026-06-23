@@ -27,16 +27,20 @@ test('seeds the input from the model value', () => {
   expect(screen.getByRole('searchbox', { name: 'Search hosts…' })).toHaveValue('web01')
 })
 
-test('does not show the clear button while the field is empty', () => {
+test('hides the clear button while the field is empty', () => {
   renderInput()
 
-  expect(screen.queryByRole('button', { name: 'Clear search' })).toBeNull()
+  expect(screen.getByRole('button', { name: 'Clear search' })).toHaveClass(
+    'cmk-search-input__clear--hidden'
+  )
 })
 
 test('shows the clear button once the field has content', () => {
   renderInput('web')
 
-  expect(screen.getByRole('button', { name: 'Clear search' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Clear search' })).not.toHaveClass(
+    'cmk-search-input__clear--hidden'
+  )
 })
 
 test('emits the typed query on Enter', async () => {

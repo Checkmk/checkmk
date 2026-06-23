@@ -62,8 +62,8 @@ function clear(): void {
       @keydown.enter="submit"
     />
     <CmkIconButton
-      v-if="query.length > 0"
       class="cmk-search-input__clear"
+      :class="{ 'cmk-search-input__clear--hidden': query.length === 0 }"
       name="close"
       size="small"
       :title="_t('Clear search')"
@@ -80,7 +80,7 @@ function clear(): void {
   padding: 0 var(--spacing);
   background-color: var(--default-form-element-bg-color);
   border: 1px solid var(--default-form-element-border-color);
-  border-radius: 9999px;
+  border-radius: var(--border-radius);
 
   &:focus-within {
     border-color: var(--success);
@@ -116,5 +116,10 @@ function clear(): void {
   &:hover {
     opacity: 1;
   }
+}
+
+.cmk-search-input__clear--hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 </style>

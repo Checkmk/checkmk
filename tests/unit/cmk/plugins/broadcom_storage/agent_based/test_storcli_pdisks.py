@@ -106,7 +106,7 @@ NS-Namespace|LU-Logical Unit|LUN-Logical Unit Number|NSID-Namespace ID|Alt-EID-A
 
 
 # SUP-23147
-SECTION_V3 = """CLI Version = 007.3205.0000.0000 Oct 09, 2024
+SECTION_V1_01 = """CLI Version = 007.3205.0000.0000 Oct 09, 2024
 Operating system = Windows Server 2019
 Controller = 0
 Status = Success
@@ -170,8 +170,8 @@ def test_parse_v2():
     }
 
 
-def test_parse_v3():
-    assert parse_storcli_pdisks(_to_string_table(SECTION_V3)) == {
+def test_parse_v1_01():
+    assert parse_storcli_pdisks(_to_string_table(SECTION_V1_01)) == {
         "C0.8:0-10": StorcliPDisk(size=(10.914, "TB"), state="JBOD"),
         "C0.8:1-15": StorcliPDisk(size=(10.914, "TB"), state="JBOD"),
         "C0.8:2-11": StorcliPDisk(size=(10.914, "TB"), state="JBOD"),
@@ -202,7 +202,7 @@ def test_check_jbod() -> None:
             item="C0.8:0-10",
             params=megaraid.PDISKS_DEFAULTS,
             section=parse_storcli_pdisks(
-                _to_string_table(SECTION_V3),
+                _to_string_table(SECTION_V1_01),
             ),
         )
     )

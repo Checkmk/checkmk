@@ -128,13 +128,13 @@ def check_storcli_pdisks(
     if item not in section:
         return
 
-    size = section[item].size
-    infotext = (
-        f"Size: {size[0]} {size[1]}, "
-        f"Disk State: {megaraid.expand_abbreviation(section[item].state)}"
-    )
-    status = params.get(section[item].state.lower(), State.UNKNOWN)
+    disk = section[item]
 
+    size_value, size_unit = disk.size
+    infotext = (
+        f"Size: {size_value} {size_unit}, Disk State: {megaraid.expand_abbreviation(disk.state)}"
+    )
+    status = params.get(disk.state.lower(), State.UNKNOWN)
     yield Result(state=State(status), summary=infotext)
 
 

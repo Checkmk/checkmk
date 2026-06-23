@@ -439,7 +439,6 @@ sh_library(
         "performance/database/mk_client_cert.sh",
         "performance/database/mk_server_cert.sh",
         "performance/perftest.sh",
-        "scripts/coverage/code_coverage.sh",
         "scripts/find_modified_lock_files",
         "scripts/setup_openldap.sh",
         "scripts/setup_postfix.sh",

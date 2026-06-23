@@ -587,7 +587,7 @@ test-unit-all() {
 }
 
 test-unit-all-coverage() {
-    "$SCRIPT_DIR/scripts/coverage/code_coverage.sh" --run --generate-html
+    "$SCRIPT_DIR/qa_metrics/unit_test_coverage/code_coverage.sh" --run --generate-html
 }
 
 test-unit-testlib() {

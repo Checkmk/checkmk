@@ -6,6 +6,7 @@
 
 import argparse
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -17,6 +18,7 @@ from cmk.plugins.vsphere.special_agent.agent_vsphere import (
     fetch_virtual_machines,
     get_section_snapshot_summary,
 )
+from cmk.server_side_programs.v1_unstable import Storage
 
 
 def _build_id(lun_id: str) -> str:
@@ -120,6 +122,60 @@ class FakeConnection(ESXConnection):
             'achinePowerState">poweredOff</val></propSet></objects></returnval></RetrievePropertiesExResp'
             "onse></soapenv:Body></soapenv:Envelope>"
         )
+
+
+_STORE_AGENT = "agent_vsphere"
+_STORE_HOST = "vcenter.example.com"
+
+
+class StoreBackedConnection(ESXConnection):
+    """Connection wired to a real Storage, without performing any vCenter I/O."""
+
+    def __init__(self) -> None:
+        self._store = Storage(_STORE_AGENT, _STORE_HOST)
+        self._perf_samples = None
+
+    def read_stored_float(self, key: str, default: float) -> float:
+        return self._read_stored_float(key, default)
+
+
+class TestStoreBackedReads:
+    @pytest.fixture(autouse=True)
+    def patch_env(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+
+    def test_read_stored_float_falls_back_on_empty_content(self) -> None:
+        Storage(_STORE_AGENT, _STORE_HOST).write("timer", "")
+        connection = StoreBackedConnection()
+
+        result = connection.read_stored_float("timer", 12.5)
+
+        assert result == 12.5
+
+    def test_read_stored_float_falls_back_on_unparsable_content(self) -> None:
+        Storage(_STORE_AGENT, _STORE_HOST).write("timer", "not-a-float")
+        connection = StoreBackedConnection()
+
+        result = connection.read_stored_float("timer", 12.5)
+
+        assert result == 12.5
+
+    def test_read_stored_float_parses_valid_content(self) -> None:
+        Storage(_STORE_AGENT, _STORE_HOST).write("timer", "123.0")
+        connection = StoreBackedConnection()
+
+        result = connection.read_stored_float("timer", 12.5)
+
+        assert result == 123.0
+
+    def test_perf_samples_does_not_crash_on_empty_timer_store(self) -> None:
+        store = Storage(_STORE_AGENT, _STORE_HOST)
+        store.write("timer", "")
+
+        perf_samples = StoreBackedConnection().perf_samples
+
+        assert perf_samples >= 1
+        assert float(store.read("timer", ""))
 
 
 def test_cloning_vm_is_processed() -> None:

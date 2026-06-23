@@ -1195,6 +1195,13 @@ class ESXConnection:
 
         return "".join(response_data)
 
+    def _read_stored_float[T](self, key: str, default: T) -> float | T:
+        raw = self._store.read(key, "")
+        try:
+            return float(raw)
+        except ValueError:
+            return default
+
     @property
     def perf_samples(self) -> int:
         """Return and cache the needed number of real-time samples
@@ -1206,7 +1213,7 @@ class ESXConnection:
             return self._perf_samples
 
         now = time.time()
-        last_time = float(self._store.read("timer", now - 60.0))
+        last_time = self._read_stored_float("timer", now - 60.0)
         self._store.write("timer", str(now))
         delta = min(3600.0, now - last_time)
 
@@ -1238,12 +1245,13 @@ class ESXConnection:
         self._session.headers["Cookie"] = server_cookie
 
     def _get_valid_stored_cookie(self) -> str | None:
-        if (cookie := self._store.read("cookie.value", None)) is None or (
-            cookie_mtime_raw := self._store.read("cookie.time", None)
-        ) is None:
+        if (cookie := self._store.read("cookie.value", None)) is None:
             return None
 
-        return cookie if time.time() - float(cookie_mtime_raw) < COOKIE_MAX_AGE else None
+        if (cookie_time := self._read_stored_float("cookie.time", None)) is None:
+            return None
+
+        return cookie if time.time() - cookie_time < COOKIE_MAX_AGE else None
 
     def delete_server_cookie(self) -> None:
         self._store.unset("cookie.value")

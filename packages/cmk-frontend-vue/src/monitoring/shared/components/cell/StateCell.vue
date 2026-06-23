@@ -14,6 +14,7 @@ import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkTag, { type Colors, type Variants } from '@/components/CmkTag.vue'
 
 import type { HostState } from '../../api/types.ts'
+import StateIcon from '../StateIcon.vue'
 import BaseCell from './BaseCell.vue'
 
 export interface StateCellProps {
@@ -61,20 +62,34 @@ const stateVariant = computed<Variants>(() => {
 <template>
   <BaseCell :column-id="columnId">
     <template #default>
-      <CmkTag
-        :color="stateColor"
-        :variant="stateVariant"
-        :content="stateLabel"
-        class="monitoring-state-cell__tag"
-        size="small"
-      />
-      <CmkMultitoneIcon v-if="stale" name="stale" primary-color="font" :title="_t('Stale state')" />
-      <CmkMultitoneIcon v-if="pending" name="reload" primary-color="font" :title="_t('Pending')" />
+      <div class="monitoring-state-cell">
+        <CmkTag
+          :color="stateColor"
+          :variant="stateVariant"
+          :content="stateLabel"
+          class="monitoring-state-cell__tag"
+          size="small"
+        />
+        <StateIcon v-if="stale">
+          <CmkMultitoneIcon name="stale" primary-color="font" :title="_t('Stale state')" />
+        </StateIcon>
+        <StateIcon v-if="pending">
+          <CmkMultitoneIcon name="reload" primary-color="font" :title="_t('Pending')" />
+        </StateIcon>
+      </div>
     </template>
   </BaseCell>
 </template>
 
 <style scoped>
+.monitoring-state-cell {
+  display: flex;
+  flex-direction: row;
+  gap: var(--dimension-4);
+  align-items: center;
+  justify-content: center;
+}
+
 .monitoring-state-cell__tag {
   margin: 0;
 }

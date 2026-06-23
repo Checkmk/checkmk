@@ -1666,7 +1666,7 @@ sql_jobs() {
                      ||''|''|| j.ENABLED
                      ||''|''|| NVL(j.NEXT_RUN_DATE, to_date(''1970-01-01'', ''YYYY-mm-dd''))
                      ||''|''|| NVL(j.SCHEDULE_NAME, ''-'')
-                     ||''|''|| jd.STATUS
+                     ||''|''|| CASE WHEN (j.JOB_CLASS = ''SCHED\$_LOG_ON_ERRORS_CLASS'' AND j.LAST_START_DATE > jd.ACTUAL_START_DATE) THEN '''' ELSE jd.STATUS END
               FROM cdb_scheduler_jobs j
               JOIN ( SELECT vp.con_id
                            ,d.name || ''|'' || vp.name name
@@ -1731,7 +1731,7 @@ sql_jobs() {
                      ||''|''|| j.ENABLED
                      ||''|''|| NVL(j.NEXT_RUN_DATE, to_date(''1970-01-01'', ''YYYY-mm-dd''))
                      ||''|''|| NVL(j.SCHEDULE_NAME, ''-'')
-                     ||''|''|| jd.STATUS
+                     ||''|''|| CASE WHEN (j.JOB_CLASS = ''SCHED\$_LOG_ON_ERRORS_CLASS'' AND j.LAST_START_DATE > jd.ACTUAL_START_DATE) THEN '''' ELSE jd.STATUS END
               FROM dba_scheduler_jobs j
               join v\$database vd on 1 = 1
               join v\$instance i on 1 = 1

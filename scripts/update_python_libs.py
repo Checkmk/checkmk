@@ -141,6 +141,8 @@ def _main() -> None:
     else:
         requirements_txt_path.write_text("")
         subprocess.check_call(["bazel", "run", "//:lock_python_requirements"])
+
+    subprocess.check_call(["bazel", "mod", "deps", "--lockfile_mode=update"])
     after = RequriementsTxtParser.parse(requirements_txt_path)
     # there is also a omd/requirements_lock.txt file, it looks like it will vanish soon
     # I'm not sure how we would want to update that anyways. Special commit or all in one?
@@ -148,8 +150,16 @@ def _main() -> None:
     # Relocking would work like this:
     # echo > omd/requirements_lock.txt; bazel run //omd:requirements_lock
     with open(".git-commit-msg", "w") as f:
-        f.write("Update Python libraries\n\n")
+        if args.packages:
+            f.write(f"Update Python libraries: {', '.join(args.packages)}\n\n")
+        else:
+            f.write("Update Python libraries\n\n")
         f.write(_diff(before.info, after.info))
+
+    subprocess.check_call(
+        ["bazel", "run", "--cmk_edition=ultimate", "//omd/dependency_management:research_licenses"]
+    )
+
     if args.commit:
         subprocess.check_call(
             [
@@ -157,6 +167,10 @@ def _main() -> None:
                 "add",
             ]
             + _get_lock_files()
+            + [
+                "MODULE.bazel.lock",
+                "omd/dependency_management/automatically_researched_licenses.json",
+            ]
         )
         subprocess.check_call(["git", "commit", "-F", ".git-commit-msg"])
     else:

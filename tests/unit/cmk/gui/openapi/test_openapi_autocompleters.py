@@ -184,3 +184,53 @@ def test_openapi_autocompleter_backend_warning_is_logged(
     assert response.json["choices"] == []
     assert "autocompleter backend unavailable" in caplog.text
     assert "backend unreachable" in caplog.text
+
+
+def test_openapi_unknown_autocompleter_is_logged(
+    clients: ClientRegistry, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.ERROR, logger="cmk.web"):
+        response = clients.AutoComplete.invoke("does_not_exist", {}, "value", expect_ok=False)
+
+    assert response.status_code == 404
+    assert "not found" in caplog.text
+
+
+def test_openapi_autocompleter_invalid_input_is_logged(
+    clients: ClientRegistry, caplog: pytest.LogCaptureFixture
+) -> None:
+    ident = "test_invalid_input_autocompleter"
+
+    def _raising_autocompleter(config: Config, value: str, params: dict[str, object]) -> Choices:
+        raise ValueError("bad value")
+
+    autocompleter_registry.register_autocompleter(ident, _raising_autocompleter)
+    try:
+        with caplog.at_level(logging.ERROR, logger="cmk.web"):
+            response = clients.AutoComplete.invoke(ident, {}, "value", expect_ok=False)
+    finally:
+        autocompleter_registry.unregister(ident)
+
+    assert response.status_code == 400
+    assert "invalid input" in caplog.text
+    assert "bad value" in caplog.text
+
+
+def test_openapi_autocompleter_missing_field_is_logged(
+    clients: ClientRegistry, caplog: pytest.LogCaptureFixture
+) -> None:
+    ident = "test_missing_field_autocompleter"
+
+    def _raising_autocompleter(config: Config, value: str, params: dict[str, object]) -> Choices:
+        raise KeyError("required_field")
+
+    autocompleter_registry.register_autocompleter(ident, _raising_autocompleter)
+    try:
+        with caplog.at_level(logging.ERROR, logger="cmk.web"):
+            response = clients.AutoComplete.invoke(ident, {}, "value", expect_ok=False)
+    finally:
+        autocompleter_registry.unregister(ident)
+
+    assert response.status_code == 400
+    assert "missing field" in caplog.text
+    assert "required_field" in caplog.text

@@ -89,12 +89,13 @@ def parse_storcli_pdisks(string_table: StringTable) -> Section:
         if table.name != "Drive Information":
             continue
         if table.header[:6] == ["EID:Slt", "PID", "State", "Status", "DG", "Size"]:
+            # storecliv2
             for line in table.body:
                 # size is split into two elements:
-                eid_and_slot, device_id, state, _status, _driver_group, size, size_unit = line[:7]
+                eid_and_slot, device_id, _state, status, _driver_group, size, size_unit = line[:7]
                 item_name = "C%i.%s-%s" % (controller_num, eid_and_slot, device_id)
                 section[item_name] = StorcliPDisk(
-                    state=state,
+                    state=status,
                     size=(float(size), size_unit),
                 )
         else:

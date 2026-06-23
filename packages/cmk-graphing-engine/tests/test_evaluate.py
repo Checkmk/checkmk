@@ -8,6 +8,8 @@ from collections.abc import Mapping
 from cmk.graphing_engine import (
     AutoPrecision,
     Constant,
+    Curve,
+    CurveAttributes,
     DecimalNotation,
     Difference,
     EvaluatedCurve,
@@ -45,19 +47,16 @@ def _metric(name: str) -> RRDMetric:
     return RRDMetric(host_name="h", service_name="svc", metric_name=MetricName(name))
 
 
-def _data(name: str, *, value: float | None, warning: float | None = None) -> RRDMetricData:
-    return RRDMetricData(
-        value=value,
-        originals=[],
-        title=name,
-        unit=_UNIT,
-        color="#28a2f3",
-        warning=warning,
-    )
+def _data(*, value: float | None, warning: float | None = None) -> RRDMetricData:
+    return RRDMetricData(value=value, originals=[], warning=warning)
 
 
-def _constant(value: float) -> Constant:
-    return Constant(title="c", unit=_UNIT, color="#000000", value=value)
+def _attrs(title: str, *, color: str = "#28a2f3") -> CurveAttributes:
+    return CurveAttributes(title=title, unit=_UNIT, color=color)
+
+
+def _curve(quantity: Quantity, title: str, *, color: str = "#28a2f3") -> Curve:
+    return Curve(quantity=quantity, attributes=_attrs(title, color=color))
 
 
 def _time_series(*values: float | None) -> TimeSeries:
@@ -89,7 +88,7 @@ def _evaluate_time_series(
 
 def test_evaluate_value_of_a_metric() -> None:
     a = _metric("a")
-    assert _evaluate_value(a, {a: _data("a", value=10.0)}) == 10.0
+    assert _evaluate_value(a, {a: _data(value=10.0)}) == 10.0
 
 
 def test_evaluate_value_of_a_missing_metric_is_none() -> None:
@@ -97,15 +96,15 @@ def test_evaluate_value_of_a_missing_metric_is_none() -> None:
 
 
 def test_evaluate_value_of_a_constant() -> None:
-    assert _evaluate_value(_constant(5.0), {}) == 5.0
+    assert _evaluate_value(Constant(5.0), {}) == 5.0
 
 
 def test_evaluate_value_of_a_scalar_reference() -> None:
     a = _metric("a")
     assert (
         _evaluate_value(
-            ScalarOf(metric=a, kind=ScalarKind.WARNING, color="#000000"),
-            {a: _data("a", value=1.0, warning=80.0)},
+            ScalarOf(metric=a, kind=ScalarKind.WARNING),
+            {a: _data(value=1.0, warning=80.0)},
         )
         == 80.0
     )
@@ -114,70 +113,44 @@ def test_evaluate_value_of_a_scalar_reference() -> None:
 def test_evaluate_value_of_a_scalar_reference_without_the_bound_is_none() -> None:
     a = _metric("a")
     assert (
-        _evaluate_value(
-            ScalarOf(metric=a, kind=ScalarKind.WARNING, color="#000000"), {a: _data("a", value=1.0)}
-        )
-        is None
+        _evaluate_value(ScalarOf(metric=a, kind=ScalarKind.WARNING), {a: _data(value=1.0)}) is None
     )
 
 
 def test_evaluate_value_of_a_sum() -> None:
     a, b = _metric("a"), _metric("b")
-    metric_data = {a: _data("a", value=10.0), b: _data("b", value=2.0)}
-    assert _evaluate_value(Sum(title="s", color="#000000", summands=[a, b]), metric_data) == 12.0
+    metric_data = {a: _data(value=10.0), b: _data(value=2.0)}
+    assert _evaluate_value(Sum(summands=[a, b]), metric_data) == 12.0
 
 
 def test_evaluate_value_of_an_operation_with_a_missing_operand_is_none() -> None:
     a = _metric("a")
-    metric_data = {a: _data("a", value=10.0)}
-    assert (
-        _evaluate_value(Sum(title="s", color="#000000", summands=[a, _metric("b")]), metric_data)
-        is None
-    )
+    metric_data = {a: _data(value=10.0)}
+    assert _evaluate_value(Sum(summands=[a, _metric("b")]), metric_data) is None
 
 
 def test_evaluate_value_of_a_product() -> None:
     a, b = _metric("a"), _metric("b")
-    metric_data = {a: _data("a", value=10.0), b: _data("b", value=2.0)}
-    assert (
-        _evaluate_value(
-            Product(title="p", unit=_UNIT, color="#000000", factors=[a, b]), metric_data
-        )
-        == 20.0
-    )
+    metric_data = {a: _data(value=10.0), b: _data(value=2.0)}
+    assert _evaluate_value(Product(factors=[a, b]), metric_data) == 20.0
 
 
 def test_evaluate_value_of_a_difference() -> None:
     a, b = _metric("a"), _metric("b")
-    metric_data = {a: _data("a", value=10.0), b: _data("b", value=2.0)}
-    assert (
-        _evaluate_value(
-            Difference(title="d", color="#000000", minuend=a, subtrahend=b), metric_data
-        )
-        == 8.0
-    )
+    metric_data = {a: _data(value=10.0), b: _data(value=2.0)}
+    assert _evaluate_value(Difference(minuend=a, subtrahend=b), metric_data) == 8.0
 
 
 def test_evaluate_value_of_a_fraction() -> None:
     a, b = _metric("a"), _metric("b")
-    metric_data = {a: _data("a", value=10.0), b: _data("b", value=2.0)}
-    assert (
-        _evaluate_value(
-            Fraction(title="f", unit=_UNIT, color="#000000", dividend=a, divisor=b), metric_data
-        )
-        == 5.0
-    )
+    metric_data = {a: _data(value=10.0), b: _data(value=2.0)}
+    assert _evaluate_value(Fraction(dividend=a, divisor=b), metric_data) == 5.0
 
 
 def test_evaluate_value_of_a_fraction_by_zero_is_none() -> None:
     a, b = _metric("a"), _metric("b")
-    metric_data = {a: _data("a", value=10.0), b: _data("b", value=0.0)}
-    assert (
-        _evaluate_value(
-            Fraction(title="f", unit=_UNIT, color="#000000", dividend=a, divisor=b), metric_data
-        )
-        is None
-    )
+    metric_data = {a: _data(value=10.0), b: _data(value=0.0)}
+    assert _evaluate_value(Fraction(dividend=a, divisor=b), metric_data) is None
 
 
 # --- evaluate_time_series ----------------------------------------------------------------------------
@@ -194,53 +167,42 @@ def test_evaluate_time_series_of_a_missing_metric_is_all_none() -> None:
 
 
 def test_evaluate_time_series_of_a_constant() -> None:
-    assert _evaluate_time_series(_constant(5.0), {}, {}, _TR) == _time_series(5.0, 5.0, 5.0)
+    assert _evaluate_time_series(Constant(5.0), {}, {}, _TR) == _time_series(5.0, 5.0, 5.0)
 
 
 def test_evaluate_time_series_of_a_scalar_reference_is_a_constant_line() -> None:
     a = _metric("a")
-    metric_data = {a: _data("a", value=1.0, warning=80.0)}
+    metric_data = {a: _data(value=1.0, warning=80.0)}
     assert _evaluate_time_series(
-        ScalarOf(metric=a, kind=ScalarKind.WARNING, color="#000000"), metric_data, {}, _TR
+        ScalarOf(metric=a, kind=ScalarKind.WARNING), metric_data, {}, _TR
     ) == _time_series(80.0, 80.0, 80.0)
 
 
 def test_evaluate_time_series_of_a_sum_drops_none_points() -> None:
     a, b = _metric("a"), _metric("b")
     time_series = {a: _time_series(1.0, None, 3.0), b: _time_series(10.0, 20.0, None)}
-    result = _evaluate_time_series(
-        Sum(title="s", color="#000000", summands=[a, b]), {}, time_series, _TR
-    )
+    result = _evaluate_time_series(Sum(summands=[a, b]), {}, time_series, _TR)
     assert result == _time_series(11.0, 20.0, 3.0)
 
 
 def test_evaluate_time_series_of_a_product_is_none_at_points_with_a_gap() -> None:
     a, b = _metric("a"), _metric("b")
     time_series = {a: _time_series(2.0, None, 4.0), b: _time_series(3.0, 5.0, None)}
-    result = _evaluate_time_series(
-        Product(title="p", unit=_UNIT, color="#000000", factors=[a, b]), {}, time_series, _TR
-    )
+    result = _evaluate_time_series(Product(factors=[a, b]), {}, time_series, _TR)
     assert result == _time_series(6.0, None, None)
 
 
 def test_evaluate_time_series_of_a_difference() -> None:
     a, b = _metric("a"), _metric("b")
     time_series = {a: _time_series(10.0, None, 4.0), b: _time_series(3.0, 5.0, 1.0)}
-    result = _evaluate_time_series(
-        Difference(title="d", color="#000000", minuend=a, subtrahend=b), {}, time_series, _TR
-    )
+    result = _evaluate_time_series(Difference(minuend=a, subtrahend=b), {}, time_series, _TR)
     assert result == _time_series(7.0, None, 3.0)
 
 
 def test_evaluate_time_series_of_a_fraction_guards_zero_and_gaps() -> None:
     a, b = _metric("a"), _metric("b")
     time_series = {a: _time_series(10.0, 6.0, 4.0), b: _time_series(2.0, 0.0, None)}
-    result = _evaluate_time_series(
-        Fraction(title="f", unit=_UNIT, color="#000000", dividend=a, divisor=b),
-        {},
-        time_series,
-        _TR,
-    )
+    result = _evaluate_time_series(Fraction(dividend=a, divisor=b), {}, time_series, _TR)
     assert result == _time_series(5.0, None, None)
 
 
@@ -252,14 +214,14 @@ def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
     graph = Graph(
         name="g",
         title="g",
-        stacks=[Stack(members=[a], inverse=True)],
-        lines=[Line(quantity=b, inverse=False)],
+        stacks=[Stack(members=[_curve(a, "a")], inverse=True)],
+        lines=[Line(curve=_curve(b, "b"), inverse=False)],
     )
     time_series = {a: _time_series(1.0, 2.0, 3.0), b: _time_series(4.0, 5.0, 6.0)}
-    metric_data = {a: _data("a", value=3.0), b: _data("b", value=6.0)}
+    metric_data = {a: _data(value=3.0), b: _data(value=6.0)}
 
     # Stacks (filled areas) and lines stay separate, each keeping its direction; curves carry
-    # their resolved title/unit/colour.
+    # their definition title/unit/colour.
     assert evaluate_graph(graph, metric_data, time_series, {}, _TR) == EvaluatedGraph(
         name="g",
         title="g",
@@ -268,9 +230,7 @@ def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
             EvaluatedStack(
                 members=[
                     EvaluatedCurve(
-                        title="a",
-                        unit=_UNIT,
-                        color="#28a2f3",
+                        attributes=_attrs("a"),
                         value=3.0,
                         time_series=_time_series(1.0, 2.0, 3.0),
                     )
@@ -281,9 +241,7 @@ def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
         lines=[
             EvaluatedLine(
                 curve=EvaluatedCurve(
-                    title="b",
-                    unit=_UNIT,
-                    color="#28a2f3",
+                    attributes=_attrs("b"),
                     value=6.0,
                     time_series=_time_series(4.0, 5.0, 6.0),
                 ),
@@ -297,17 +255,21 @@ def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
 def test_evaluate_graph_evaluates_the_stack_reference_baseline() -> None:
     floor, band = _metric("floor"), _metric("band")
     graph = Graph(
-        name="g", title="g", stacks=[Stack(members=[band], inverse=False, reference=floor)]
+        name="g",
+        title="g",
+        stacks=[
+            Stack(members=[_curve(band, "band")], inverse=False, reference=_curve(floor, "floor"))
+        ],
     )
-    metric_data = {floor: _data("floor", value=1.0), band: _data("band", value=2.0)}
+    metric_data = {floor: _data(value=1.0), band: _data(value=2.0)}
     time_series = {floor: _time_series(1.0), band: _time_series(2.0)}
 
     # The reference baseline is part of the graph's metrics (so it gets fetched) ...
     assert floor in graph.rrd_metrics()
     # ... and is evaluated onto EvaluatedStack.reference, separate from the drawn members.
     [stack] = evaluate_graph(graph, metric_data, time_series, {}, _TR).stacks
-    assert [member.title for member in stack.members] == ["band"]
-    assert stack.reference is not None and stack.reference.title == "floor"
+    assert [member.attributes.title for member in stack.members] == ["band"]
+    assert stack.reference is not None and stack.reference.attributes.title == "floor"
 
 
 def test_evaluate_graph_drops_curves_of_missing_metrics() -> None:
@@ -315,15 +277,13 @@ def test_evaluate_graph_drops_curves_of_missing_metrics() -> None:
     graph = Graph(
         name="g",
         title="g",
-        stacks=[Stack(members=[_metric("gone")], inverse=False)],
-        lines=[Line(quantity=a, inverse=False)],
+        stacks=[Stack(members=[_curve(_metric("gone"), "gone")], inverse=False)],
+        lines=[Line(curve=_curve(a, "a"), inverse=False)],
     )
     # "gone" has no metric data, so its stack is dropped; only the line for "a" remains.
-    result = evaluate_graph(
-        graph, {a: _data("a", value=3.0)}, {a: _time_series(1.0, 2.0, 3.0)}, {}, _TR
-    )
+    result = evaluate_graph(graph, {a: _data(value=3.0)}, {a: _time_series(1.0, 2.0, 3.0)}, {}, _TR)
     assert result.stacks == []
-    assert [line.curve.title for line in result.lines] == ["a"]
+    assert [line.curve.attributes.title for line in result.lines] == ["a"]
 
 
 def test_evaluate_graph_builds_rules_from_thresholds_and_constants() -> None:
@@ -332,21 +292,36 @@ def test_evaluate_graph_builds_rules_from_thresholds_and_constants() -> None:
         name="g",
         title="g",
         rules=[
-            # A threshold rule: the title is overridden ("Warning"); the colour falls back to the
-            # quantity's own (the WarningOf colour).
+            # A threshold rule: the title and colour are carried by the rule's curve attributes.
             Rule(
-                quantity=ScalarOf(metric=a, kind=ScalarKind.WARNING, color="#ff0000"),
+                curve=Curve(
+                    quantity=ScalarOf(metric=a, kind=ScalarKind.WARNING),
+                    attributes=CurveAttributes(title="Warning", unit=_UNIT, color="#ff0000"),
+                ),
                 inverse=False,
-                title="Warning",
             ),
             # A constant is a scalar too, so it is a rule carrying its own title/colour/value.
-            Rule(quantity=_constant(42.0), inverse=False),
+            Rule(
+                curve=Curve(
+                    quantity=Constant(42.0),
+                    attributes=CurveAttributes(title="c", unit=_UNIT, color="#000000"),
+                ),
+                inverse=False,
+            ),
         ],
     )
-    result = evaluate_graph(graph, {a: _data("a", value=3.0, warning=80.0)}, {}, {}, _TR)
+    result = evaluate_graph(graph, {a: _data(value=3.0, warning=80.0)}, {}, {}, _TR)
     assert result.rules == [
-        EvaluatedRule(value=80.0, title="Warning", color="#ff0000", unit=_UNIT, inverse=False),
-        EvaluatedRule(value=42.0, title="c", color="#000000", unit=_UNIT, inverse=False),
+        EvaluatedRule(
+            value=80.0,
+            attributes=CurveAttributes(title="Warning", unit=_UNIT, color="#ff0000"),
+            inverse=False,
+        ),
+        EvaluatedRule(
+            value=42.0,
+            attributes=CurveAttributes(title="c", unit=_UNIT, color="#000000"),
+            inverse=False,
+        ),
     ]
 
 
@@ -358,16 +333,23 @@ def test_evaluate_graph_drops_rules_without_a_value() -> None:
         rules=[
             # The metric has no warn level (value None) ...
             Rule(
-                quantity=ScalarOf(metric=a, kind=ScalarKind.WARNING, color="#ff0000"), inverse=False
+                curve=Curve(
+                    quantity=ScalarOf(metric=a, kind=ScalarKind.WARNING),
+                    attributes=CurveAttributes(title="w", unit=_UNIT, color="#ff0000"),
+                ),
+                inverse=False,
             ),
-            # ... and "gone" has no data at all (attributes None).
+            # ... and "gone" has no data at all (not present).
             Rule(
-                quantity=ScalarOf(metric=_metric("gone"), kind=ScalarKind.WARNING, color="#ff0000"),
+                curve=Curve(
+                    quantity=ScalarOf(metric=_metric("gone"), kind=ScalarKind.WARNING),
+                    attributes=CurveAttributes(title="w", unit=_UNIT, color="#ff0000"),
+                ),
                 inverse=False,
             ),
         ],
     )
-    result = evaluate_graph(graph, {a: _data("a", value=3.0)}, {}, {}, _TR)
+    result = evaluate_graph(graph, {a: _data(value=3.0)}, {}, {}, _TR)
     assert result.rules == []
 
 
@@ -387,7 +369,7 @@ def test_evaluate_graph_resolves_a_minimal_range_bound_expression() -> None:
     a = _metric("a")
     # The upper bound is a metric reference, resolved against the metric data; the lower is a number.
     graph = Graph(name="g", title="g", vertical_range=MinimalRange(lower=0, upper=a))
-    result = evaluate_graph(graph, {a: _data("a", value=42.0)}, {}, {}, _TR)
+    result = evaluate_graph(graph, {a: _data(value=42.0)}, {}, {}, _TR)
     assert result.vertical_range == EvaluatedMinimalRange(lower=0.0, upper=42.0)
 
 

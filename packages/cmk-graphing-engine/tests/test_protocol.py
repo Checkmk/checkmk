@@ -11,6 +11,8 @@ from dataclasses import dataclass
 
 from cmk.graphing_engine import (
     AutoPrecision,
+    Curve,
+    CurveAttributes,
     DecimalNotation,
     EvaluatedCurve,
     Graph,
@@ -23,7 +25,6 @@ from cmk.graphing_engine import (
 )
 from cmk.graphing_engine._evaluate import evaluate_graph
 from cmk.graphing_engine._objects import (
-    DisplayAttributes,
     EvaluationContext,
     Quantity,
     RRDMetricData,
@@ -37,16 +38,14 @@ def _metric(name: str) -> RRDMetric:
     return RRDMetric(host_name="h", service_name="svc", metric_name=MetricName(name))
 
 
-def _data(name: str, *, value: float | None) -> RRDMetricData:
-    return RRDMetricData(value=value, originals=[], title=name, unit=_UNIT, color="#28a2f3")
+def _data(*, value: float | None) -> RRDMetricData:
+    return RRDMetricData(value=value, originals=[])
 
 
 @dataclass(frozen=True)
 class Negated:
     """A custom quantity, unknown to the engine, that flips the sign of another quantity."""
 
-    title: str
-    color: str
     operand: Quantity
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
@@ -66,40 +65,33 @@ class Negated:
             values=[None if v is None else -v for v in evaluated.values],
         )
 
-    def evaluate_attributes(self, context: EvaluationContext) -> DisplayAttributes | None:
-        operand = self.operand.evaluate_attributes(context)
-        return (
-            None
-            if operand is None
-            else DisplayAttributes(title=self.title, unit=operand.unit, color=self.color)
-        )
-
 
 def test_custom_quantity_is_accepted_as_a_quantity() -> None:
     # Static structural conformance: a Negated is usable wherever a Quantity is expected.
     a = _metric("a")
-    quantity: Quantity = Negated(title="neg", color="#000000", operand=a)
+    quantity: Quantity = Negated(operand=a)
     assert list(quantity.rrd_metrics()) == [a]
 
 
 def test_engine_evaluates_a_custom_quantity_without_engine_changes() -> None:
     a = _metric("a")
+    attributes = CurveAttributes(title="neg a", unit=_UNIT, color="#000000")
     graph = Graph(
         name="g",
         title="g",
-        lines=[Line(quantity=Negated(title="neg a", color="#000000", operand=a), inverse=False)],
+        lines=[
+            Line(curve=Curve(quantity=Negated(operand=a), attributes=attributes), inverse=False)
+        ],
     )
     result = evaluate_graph(
         graph,
-        {a: _data("a", value=3.0)},
+        {a: _data(value=3.0)},
         {a: TimeSeries(time_range=_TR, values=[1.0, None, 3.0])},
         {},
         _TR,
     )
     assert result.lines[0].curve == EvaluatedCurve(
-        title="neg a",
-        unit=_UNIT,
-        color="#000000",
+        attributes=attributes,
         value=-3.0,
         time_series=TimeSeries(time_range=_TR, values=[-1.0, None, -3.0]),
     )

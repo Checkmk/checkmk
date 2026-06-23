@@ -7,7 +7,11 @@ from collections.abc import Mapping, Sequence
 
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
+    AutoPrecision,
     ConsolidationFunction,
+    Curve,
+    CurveAttributes,
+    DecimalNotation,
     EvaluatedGraph,
     Graph,
     Line,
@@ -19,12 +23,11 @@ from cmk.graphing_engine import (
     ServiceRef,
     TimeRange,
     TimeSeries,
+    Unit,
     update_graph_data,
 )
 
-
-def _id(text: str) -> str:
-    return text
+_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
 
 def _service() -> ServiceRef:
@@ -52,8 +55,15 @@ def _source(name: str) -> RRDMetric:
     return RRDMetric(host_name="h", service_name="svc", metric_name=MetricName(name))
 
 
-def _line(quantity: Quantity) -> Line:
-    return Line(quantity=quantity, inverse=False)
+def _curve(quantity: Quantity) -> Curve:
+    return Curve(
+        quantity=quantity,
+        attributes=CurveAttributes(title="t", unit=_UNIT, color="#000000"),
+    )
+
+
+def _line(quantity: Quantity, *, inverse: bool = False) -> Line:
+    return Line(curve=_curve(quantity), inverse=inverse)
 
 
 def _perf(name: str, *, value: float = 1.0) -> PerformanceValue:
@@ -112,8 +122,6 @@ def _update(
     return update_graph_data(
         graphs=graphs,
         translations=translations or [],
-        metrics={},
-        localizer=_id,
         consolidation_function=consolidation_function,
         time_range=_time_range(),
         rrd=rrd,
@@ -164,7 +172,7 @@ def test_evaluates_lines_in_both_directions() -> None:
     graph = Graph(
         name="if",
         title="Interface",
-        lines=[_line(out), Line(quantity=in_, inverse=True)],
+        lines=[_line(out), _line(in_, inverse=True)],
     )
     rrd = _FakeRRDSource(
         performance_response={_service(): _perf_data(_perf("if_in"), _perf("if_out"))},

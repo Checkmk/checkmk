@@ -25,13 +25,15 @@ from ._fetch import (
     RRDSource,
     update_graph_data,
 )
+from ._from_api import metric_display_attributes
 from ._objects import (
     AutoPrecision,
     Bound,
     Constant,
+    Curve,
+    CurveAttributes,
     DecimalNotation,
     Difference,
-    DisplayAttributes,
     EngineeringScientificNotation,
     EvaluationContext,
     FixedRange,
@@ -78,11 +80,12 @@ __all__ = [
     "Bound",
     "ConsolidationFunction",
     "Constant",
+    "Curve",
+    "CurveAttributes",
     "DecimalNotation",
     "Difference",
     "DiscoveredGraph",
     "DiscoveredGraphs",
-    "DisplayAttributes",
     "EngineeringScientificNotation",
     "EvaluatedCurve",
     "EvaluatedFixedRange",
@@ -128,5 +131,6 @@ __all__ = [
     "discover_graphs",
     "evaluate_graphs",
     "fetch_translated_metrics",
+    "metric_display_attributes",
     "update_graph_data",
 ]

@@ -13,9 +13,12 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._from_api import (
     drawn_metric_names_of_graph,
+    metric_display_attributes,
     parse_graph_from_api,
 )
 from ._objects import (
+    Curve,
+    CurveAttributes,
     Graph,
     Line,
     MetricName,
@@ -85,14 +88,16 @@ def _add_predictive_lines(
     graph: Graph,
     service: ServiceRef,
     available: Container[MetricName],
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
 ) -> tuple[Graph, set[MetricName]]:
     inverse_by_metric: dict[MetricName, bool] = {}
     for group in graph.stacks:
         for member in group.members:
-            for metric in member.rrd_metrics():
+            for metric in member.quantity.rrd_metrics():
                 inverse_by_metric.setdefault(metric.metric_name, group.inverse)
     for line in graph.lines:
-        for metric in line.quantity.rrd_metrics():
+        for metric in line.curve.quantity.rrd_metrics():
             inverse_by_metric.setdefault(metric.metric_name, line.inverse)
 
     added: list[Line] = []
@@ -105,10 +110,13 @@ def _add_predictive_lines(
             if predictive in available and predictive not in names:
                 added.append(
                     Line(
-                        quantity=RRDMetric(
-                            host_name=service.host_name,
-                            service_name=service.service_name,
-                            metric_name=predictive,
+                        curve=Curve(
+                            quantity=RRDMetric(
+                                host_name=service.host_name,
+                                service_name=service.service_name,
+                                metric_name=predictive,
+                            ),
+                            attributes=metric_display_attributes(predictive, metrics, localizer),
                         ),
                         inverse=inverse,
                     )
@@ -155,6 +163,8 @@ def discover_graphs(
             parse_graph_from_api(graph, service, metrics, localizer),
             service,
             service_available,
+            metrics,
+            localizer,
         )
         discovered.append(with_predictive)
     return discovered
@@ -167,17 +177,20 @@ def build_graphs(
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
     available: Mapping[MetricName, RRDMetricData],
-    threshold_rules: Callable[[RRDMetric], Sequence[Rule]] | None = None,
+    threshold_rules: Callable[[RRDMetric, CurveAttributes], Sequence[Rule]] | None = None,
 ) -> Sequence[Graph]:
     """Build a service's matching template graphs plus a fallback single-metric graph per unclaimed
     metric. ``threshold_rules`` (when given) supplies the warn / crit horizontal rules for a fallback
-    metric — the engine cannot build them itself, as their labels / colours live in the GUI; matched
-    plugin graphs already carry their scalar rules from the plugin definition."""
+    metric from its ``CurveAttributes`` — the engine cannot build them itself, as their labels /
+    colours live in the GUI; matched plugin graphs already carry their scalar rules from the plugin
+    definition."""
     graphs: list[Graph] = []
     claimed: set[MetricName] = set()
 
     def _collect(base: Graph) -> None:
-        graph, predictive_names = _add_predictive_lines(base, service, available)
+        graph, predictive_names = _add_predictive_lines(
+            base, service, available, metrics, localizer
+        )
         claimed.update(predictive_names)
         graphs.append(graph)
 
@@ -196,12 +209,17 @@ def build_graphs(
             service_name=service.service_name,
             metric_name=name,
         )
+        attributes = metric_display_attributes(name, metrics, localizer)
         _collect(
             Graph(
                 name=name,
                 title=name,
-                stacks=[Stack(members=[rrd_metric], inverse=False)],
-                rules=() if threshold_rules is None else threshold_rules(rrd_metric),
+                stacks=[
+                    Stack(
+                        members=[Curve(quantity=rrd_metric, attributes=attributes)], inverse=False
+                    )
+                ],
+                rules=() if threshold_rules is None else threshold_rules(rrd_metric, attributes),
             )
         )
 

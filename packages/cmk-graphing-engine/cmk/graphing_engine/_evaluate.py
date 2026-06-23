@@ -9,18 +9,18 @@ from typing import assert_never
 
 from ._objects import (
     Bound,
+    Curve,
+    CurveAttributes,
     EvaluationContext,
     FixedRange,
     Graph,
     MetricName,
     MinimalRange,
-    Quantity,
     RRDMetric,
     RRDMetricData,
     Rule,
     ServiceRef,
     TimeSeries,
-    Unit,
     VerticalRange,
 )
 from ._options import TimeRange
@@ -29,9 +29,7 @@ from ._title import evaluate_title
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluatedCurve:
-    title: str
-    unit: Unit
-    color: str
+    attributes: CurveAttributes
     value: float | None
     time_series: TimeSeries
 
@@ -53,10 +51,8 @@ class EvaluatedLine:
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluatedRule:
+    attributes: CurveAttributes
     value: float
-    title: str
-    color: str
-    unit: Unit
     inverse: bool
 
 
@@ -124,33 +120,25 @@ def _evaluate_vertical_range(
             assert_never(vertical_range)
 
 
-def _evaluate_curve(quantity: Quantity, context: EvaluationContext) -> EvaluatedCurve | None:
-    if not quantity.is_present(context):
-        return None
-    attributes = quantity.evaluate_attributes(context)
-    if attributes is None:
+def _evaluate_curve(curve: Curve, context: EvaluationContext) -> EvaluatedCurve | None:
+    if not curve.quantity.is_present(context):
         return None
     return EvaluatedCurve(
-        title=attributes.title,
-        unit=attributes.unit,
-        color=attributes.color,
-        value=quantity.evaluate_value(context),
-        time_series=quantity.evaluate_time_series(context),
+        attributes=curve.attributes,
+        value=curve.quantity.evaluate_value(context),
+        time_series=curve.quantity.evaluate_time_series(context),
     )
 
 
 def _evaluate_rule(rule: Rule, context: EvaluationContext) -> EvaluatedRule | None:
-    if not rule.quantity.is_present(context):
+    if not rule.curve.quantity.is_present(context):
         return None
-    attributes = rule.quantity.evaluate_attributes(context)
-    value = rule.quantity.evaluate_value(context)
-    if attributes is None or value is None:
+    value = rule.curve.quantity.evaluate_value(context)
+    if value is None:
         return None
     return EvaluatedRule(
+        attributes=rule.curve.attributes,
         value=value,
-        title=attributes.title if rule.title is None else rule.title,
-        color=attributes.color if rule.color is None else rule.color,
-        unit=attributes.unit,
         inverse=rule.inverse,
     )
 
@@ -197,7 +185,7 @@ def evaluate_graph(
     lines = [
         EvaluatedLine(curve=curve, inverse=line.inverse)
         for line in graph.lines
-        if (curve := _evaluate_curve(line.quantity, context)) is not None
+        if (curve := _evaluate_curve(line.curve, context)) is not None
     ]
     rules = [
         evaluated

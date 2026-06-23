@@ -11,6 +11,8 @@ from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     AutoPrecision,
     Constant,
+    Curve,
+    CurveAttributes,
     DecimalNotation,
     Difference,
     Fraction,
@@ -42,8 +44,7 @@ def _id(s: str) -> str:
 
 _SERVICE = ServiceRef(host_name="host", service_name="svc")
 
-# Every test metric is registered as blue (#28a2f3); only the colour is consulted by parsing now,
-# to colour threshold lines. _rrd() below mirrors the bare metric the parser produces for a curve.
+# Every test metric is registered with title "Metric", a plain decimal unit and blue (#28a2f3).
 _TITLE = Title("Metric")
 _METRICS = {
     name: metrics_v1.Metric(
@@ -55,6 +56,10 @@ _METRICS = {
     for name in ("a", "b", "c", "x", "y")
 }
 
+_DECIMAL = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
+# The display attributes a registered test metric (or a threshold over one) resolves to.
+_METRIC_ATTRS = CurveAttributes(title="Metric", unit=_DECIMAL, color="#28a2f3")
+
 
 def _rrd(name: str) -> RRDMetric:
     return RRDMetric(
@@ -64,16 +69,20 @@ def _rrd(name: str) -> RRDMetric:
     )
 
 
-def _line(quantity: Quantity) -> Line:
-    return Line(quantity=quantity, inverse=False)
+def _curve(quantity: Quantity, attributes: CurveAttributes = _METRIC_ATTRS) -> Curve:
+    return Curve(quantity=quantity, attributes=attributes)
 
 
-def _stack(*members: Quantity) -> Stack:
-    return Stack(members=list(members), inverse=False)
+def _line(quantity: Quantity, attributes: CurveAttributes = _METRIC_ATTRS) -> Line:
+    return Line(curve=_curve(quantity, attributes), inverse=False)
 
 
-def _rule(quantity: Quantity) -> Rule:
-    return Rule(quantity=quantity, inverse=False)
+def _stack(*curves: Curve) -> Stack:
+    return Stack(members=list(curves), inverse=False)
+
+
+def _rule(quantity: Quantity, attributes: CurveAttributes = _METRIC_ATTRS) -> Rule:
+    return Rule(curve=_curve(quantity, attributes), inverse=False)
 
 
 def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group() -> None:
@@ -90,10 +99,10 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
         name="g",
         title="Title",
         vertical_range=MinimalRange(lower=0, upper=100),
-        stacks=[_stack(_rrd("a"), _rrd("b"))],
+        stacks=[_stack(_curve(_rrd("a")), _curve(_rrd("b")))],
         lines=[_line(_rrd("c"))],
         # The scalar threshold becomes a horizontal rule, not a drawn line.
-        rules=[_rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING, color="#28a2f3"))],
+        rules=[_rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING))],
     )
 
 
@@ -131,13 +140,16 @@ def test_parse_graph_from_api_threshold_uses_fallback_color_for_undefined_metric
     assert isinstance(parsed, Graph)
     assert parsed.lines == []
     assert parsed.rules == [
-        _rule(ScalarOf(metric=_rrd("u"), kind=ScalarKind.WARNING, color="#8c8c8c"))
+        _rule(
+            ScalarOf(metric=_rrd("u"), kind=ScalarKind.WARNING),
+            CurveAttributes(title="u", unit=_DECIMAL, color="#8c8c8c"),
+        )
     ]
 
 
 def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
     # A curve parses to a bare RRDMetric carrying the service's host/service; the consolidation
-    # function and display attributes are supplied later (request / data layer), not by parsing.
+    # function is supplied later (request / data layer), not by parsing.
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
     parsed = parse_graph_from_api(
         graph,
@@ -188,28 +200,28 @@ def test_parse_graph_from_api_maps_unit_notations_and_precisions() -> None:
     assert parsed.lines == []
     assert parsed.rules == [
         _rule(
-            Constant(
+            Constant(1),
+            CurveAttributes(
                 title="c1",
                 unit=Unit(notation=SINotation("bytes"), precision=AutoPrecision(2)),
                 color="#28a2f3",
-                value=1,
-            )
+            ),
         ),
         _rule(
-            Constant(
+            Constant(2),
+            CurveAttributes(
                 title="c2",
                 unit=Unit(notation=IECNotation("bits"), precision=StrictPrecision(3)),
                 color="#ed3b3b",
-                value=2,
-            )
+            ),
         ),
         _rule(
-            Constant(
+            Constant(3),
+            CurveAttributes(
                 title="c3",
                 unit=Unit(notation=TimeNotation(), precision=AutoPrecision(2)),
                 color="#15d1a0",
-                value=3,
-            )
+            ),
         ),
     ]
 
@@ -231,11 +243,17 @@ def test_parse_graph_from_api_maps_warning_critical_minimum_maximum() -> None:
     assert parsed.lines == []
     assert parsed.rules == [
         # WarningOf/CriticalOf inherit the colour of the referenced metric (#28a2f3).
-        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING, color="#28a2f3")),
-        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.CRITICAL, color="#28a2f3")),
+        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING)),
+        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.CRITICAL)),
         # MinimumOf/MaximumOf keep their own colour from the API.
-        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.MINIMUM, color="#15d1a0")),
-        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.MAXIMUM, color="#ed3b3b")),
+        _rule(
+            ScalarOf(metric=_rrd("a"), kind=ScalarKind.MINIMUM),
+            CurveAttributes(title="Metric", unit=_DECIMAL, color="#15d1a0"),
+        ),
+        _rule(
+            ScalarOf(metric=_rrd("a"), kind=ScalarKind.MAXIMUM),
+            CurveAttributes(title="Metric", unit=_DECIMAL, color="#ed3b3b"),
+        ),
     ]
 
 
@@ -252,8 +270,8 @@ def test_parse_graph_from_api_maps_lower_warning_and_critical() -> None:
     assert isinstance(parsed, Graph)
     assert parsed.lines == []
     assert parsed.rules == [
-        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.LOWER_WARNING, color="#28a2f3")),
-        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.LOWER_CRITICAL, color="#28a2f3")),
+        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.LOWER_WARNING)),
+        _rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.LOWER_CRITICAL)),
     ]
 
 
@@ -282,31 +300,21 @@ def test_parse_graph_from_api_maps_sum_product_difference_fraction() -> None:
     parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id)
     assert isinstance(parsed, Graph)
     assert parsed.lines == [
-        _line(Sum(title="s", color="#28a2f3", summands=[_rrd("a"), _rrd("b")])),
         _line(
-            Product(
-                title="p",
-                unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
-                color="#ed3b3b",
-                factors=[_rrd("x"), _rrd("y")],
-            )
+            Sum(summands=[_rrd("a"), _rrd("b")]),
+            CurveAttributes(title="s", unit=_DECIMAL, color="#28a2f3"),
         ),
         _line(
-            Difference(
-                title="d",
-                color="#15d1a0",
-                minuend=_rrd("a"),
-                subtrahend=_rrd("b"),
-            )
+            Product(factors=[_rrd("x"), _rrd("y")]),
+            CurveAttributes(title="p", unit=_DECIMAL, color="#ed3b3b"),
         ),
         _line(
-            Fraction(
-                title="f",
-                unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
-                color="#ffd703",
-                dividend=_rrd("a"),
-                divisor=_rrd("b"),
-            )
+            Difference(minuend=_rrd("a"), subtrahend=_rrd("b")),
+            CurveAttributes(title="d", unit=_DECIMAL, color="#15d1a0"),
+        ),
+        _line(
+            Fraction(dividend=_rrd("a"), divisor=_rrd("b")),
+            CurveAttributes(title="f", unit=_DECIMAL, color="#ffd703"),
         ),
     ]
 
@@ -330,19 +338,8 @@ def test_parse_graph_from_api_recurses_into_nested_quantities() -> None:
     assert isinstance(parsed, Graph)
     assert parsed.lines == [
         _line(
-            Sum(
-                title="outer",
-                color="#28a2f3",
-                summands=[
-                    _rrd("a"),
-                    Product(
-                        title="inner",
-                        unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
-                        color="#ed3b3b",
-                        factors=[_rrd("b"), _rrd("c")],
-                    ),
-                ],
-            )
+            Sum(summands=[_rrd("a"), Product(factors=[_rrd("b"), _rrd("c")])]),
+            CurveAttributes(title="outer", unit=_DECIMAL, color="#28a2f3"),
         ),
     ]
 
@@ -382,8 +379,8 @@ def test_parse_graph_from_api_collapses_bidirectional_into_one_graph() -> None:
         name="b",
         title="title",
         stacks=[
-            Stack(members=[_rrd("b")], inverse=False),
-            Stack(members=[_rrd("a")], inverse=True),
+            Stack(members=[_curve(_rrd("b"))], inverse=False),
+            Stack(members=[_curve(_rrd("a"))], inverse=True),
         ],
         lines=[],
         rules=[],

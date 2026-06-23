@@ -108,8 +108,6 @@ def _discover(
     translated_metrics = fetch_translated_metrics(
         services=[_SERVICE],
         translations=translations,
-        metrics=_METRICS,
-        localizer=_id,
         rrd=rrd,
     )
     graphs = build_graphs(
@@ -146,8 +144,6 @@ def _refresh(
     return update_graph_data(
         graphs=[discovered.graph for discovered in discovered],
         translations=translations,
-        metrics=_METRICS,
-        localizer=_id,
         consolidation_function=ConsolidationFunction.AVERAGE,
         time_range=_TIME_RANGE,
         rrd=rrd,
@@ -430,7 +426,10 @@ def test_refresh_drops_a_curve_whose_metric_disappeared() -> None:
     )
 
     [discovered] = _discover(at_discovery, [plugin])
-    assert [line.curve.title for line in discovered.evaluated.lines] == ["Metric", "Metric"]
+    assert [line.curve.attributes.title for line in discovered.evaluated.lines] == [
+        "Metric",
+        "Metric",
+    ]
 
     [evaluated] = _refresh(later, [discovered])
     # The curve of the vanished metric is dropped; cpu_user's line remains.

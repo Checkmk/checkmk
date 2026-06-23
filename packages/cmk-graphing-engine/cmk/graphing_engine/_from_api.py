@@ -17,9 +17,10 @@ from ._objects import (
     AutoPrecision,
     Bound,
     Constant,
+    Curve,
+    CurveAttributes,
     DecimalNotation,
     Difference,
-    DisplayAttributes,
     EngineeringScientificNotation,
     Fraction,
     Graph,
@@ -139,10 +140,10 @@ def metric_display_attributes(
     metric_name: str,
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
-) -> DisplayAttributes:
+) -> CurveAttributes:
     if (definition := metrics.get(metric_name)) is None:
-        return DisplayAttributes(title=metric_name, unit=_FALLBACK_UNIT, color=_FALLBACK_COLOR)
-    return DisplayAttributes(
+        return CurveAttributes(title=metric_name, unit=_FALLBACK_UNIT, color=_FALLBACK_COLOR)
+    return CurveAttributes(
         title=definition.title.localize(localizer),
         unit=_parse_unit(definition.unit),
         color=_parse_color(definition.color),
@@ -173,78 +174,112 @@ def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
         case str():
             return context.rrd_metric(quantity)
         case metrics_v1.Constant():
-            return Constant(
-                title=quantity.title.localize(context.localizer),
-                unit=_parse_unit(quantity.unit),
-                color=_parse_color(quantity.color),
-                value=quantity.value,
-            )
+            return Constant(quantity.value)
         case metrics_v2_unstable.LowerWarningOf():
             return ScalarOf(
-                metric=context.rrd_metric(quantity.metric_name),
-                kind=ScalarKind.LOWER_WARNING,
-                color=context.metric_color(quantity.metric_name),
+                metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.LOWER_WARNING
             )
         case metrics_v2_unstable.LowerCriticalOf():
             return ScalarOf(
-                metric=context.rrd_metric(quantity.metric_name),
-                kind=ScalarKind.LOWER_CRITICAL,
-                color=context.metric_color(quantity.metric_name),
+                metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.LOWER_CRITICAL
             )
         case metrics_v1.WarningOf():
             return ScalarOf(
-                metric=context.rrd_metric(quantity.metric_name),
-                kind=ScalarKind.WARNING,
-                color=context.metric_color(quantity.metric_name),
+                metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.WARNING
             )
         case metrics_v1.CriticalOf():
             return ScalarOf(
-                metric=context.rrd_metric(quantity.metric_name),
-                kind=ScalarKind.CRITICAL,
-                color=context.metric_color(quantity.metric_name),
+                metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.CRITICAL
             )
         case metrics_v1.MinimumOf():
             return ScalarOf(
-                metric=context.rrd_metric(quantity.metric_name),
-                kind=ScalarKind.MINIMUM,
-                color=_parse_color(quantity.color),
+                metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.MINIMUM
             )
         case metrics_v1.MaximumOf():
             return ScalarOf(
-                metric=context.rrd_metric(quantity.metric_name),
-                kind=ScalarKind.MAXIMUM,
-                color=_parse_color(quantity.color),
+                metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.MAXIMUM
             )
         case metrics_v1.Sum():
-            return Sum(
-                title=quantity.title.localize(context.localizer),
-                color=_parse_color(quantity.color),
-                summands=[_parse_quantity(s, context) for s in quantity.summands],
-            )
+            return Sum(summands=[_parse_quantity(s, context) for s in quantity.summands])
         case metrics_v1.Product():
-            return Product(
-                title=quantity.title.localize(context.localizer),
-                unit=_parse_unit(quantity.unit),
-                color=_parse_color(quantity.color),
-                factors=[_parse_quantity(f, context) for f in quantity.factors],
-            )
+            return Product(factors=[_parse_quantity(f, context) for f in quantity.factors])
         case metrics_v1.Difference():
             return Difference(
-                title=quantity.title.localize(context.localizer),
-                color=_parse_color(quantity.color),
                 minuend=_parse_quantity(quantity.minuend, context),
                 subtrahend=_parse_quantity(quantity.subtrahend, context),
             )
         case metrics_v1.Fraction():
             return Fraction(
-                title=quantity.title.localize(context.localizer),
-                unit=_parse_unit(quantity.unit),
-                color=_parse_color(quantity.color),
                 dividend=_parse_quantity(quantity.dividend, context),
                 divisor=_parse_quantity(quantity.divisor, context),
             )
         case _:
             assert_never(quantity)
+
+
+def _curve_display(quantity: _ApiQuantity, context: _ParseContext) -> CurveAttributes:
+    match quantity:
+        case str():
+            return metric_display_attributes(quantity, context.metrics, context.localizer)
+        case metrics_v1.Constant():
+            return CurveAttributes(
+                title=quantity.title.localize(context.localizer),
+                unit=_parse_unit(quantity.unit),
+                color=_parse_color(quantity.color),
+            )
+        case (
+            metrics_v2_unstable.LowerWarningOf()
+            | metrics_v2_unstable.LowerCriticalOf()
+            | metrics_v1.WarningOf()
+            | metrics_v1.CriticalOf()
+        ):
+            metric = metric_display_attributes(
+                quantity.metric_name, context.metrics, context.localizer
+            )
+            return CurveAttributes(
+                title=metric.title,
+                unit=metric.unit,
+                color=context.metric_color(quantity.metric_name),
+            )
+        case metrics_v1.MinimumOf() | metrics_v1.MaximumOf():
+            metric = metric_display_attributes(
+                quantity.metric_name, context.metrics, context.localizer
+            )
+            return CurveAttributes(
+                title=metric.title, unit=metric.unit, color=_parse_color(quantity.color)
+            )
+        case metrics_v1.Sum():
+            return CurveAttributes(
+                title=quantity.title.localize(context.localizer),
+                unit=_curve_display(quantity.summands[0], context).unit,
+                color=_parse_color(quantity.color),
+            )
+        case metrics_v1.Product():
+            return CurveAttributes(
+                title=quantity.title.localize(context.localizer),
+                unit=_parse_unit(quantity.unit),
+                color=_parse_color(quantity.color),
+            )
+        case metrics_v1.Difference():
+            return CurveAttributes(
+                title=quantity.title.localize(context.localizer),
+                unit=_curve_display(quantity.minuend, context).unit,
+                color=_parse_color(quantity.color),
+            )
+        case metrics_v1.Fraction():
+            return CurveAttributes(
+                title=quantity.title.localize(context.localizer),
+                unit=_parse_unit(quantity.unit),
+                color=_parse_color(quantity.color),
+            )
+        case _:
+            assert_never(quantity)
+
+
+def _parse_curve(quantity: _ApiQuantity, context: _ParseContext) -> Curve:
+    return Curve(
+        quantity=_parse_quantity(quantity, context), attributes=_curve_display(quantity, context)
+    )
 
 
 def _metric_names_in_quantity(quantity: _ApiQuantity) -> Iterable[MetricName]:
@@ -381,15 +416,15 @@ def _parse_lines(
 ) -> tuple[list[Stack], list[Line], list[Rule]]:
     # Scalar quantities (thresholds/constants) become horizontal rules rather than drawn curves;
     # everything else stacks (compound_lines) or draws as a line (simple_lines).
-    stack_members = [_parse_quantity(q, context) for q in graph.compound_lines if not _is_scalar(q)]
+    stack_members = [_parse_curve(q, context) for q in graph.compound_lines if not _is_scalar(q)]
     stacks = [Stack(members=stack_members, inverse=inverse)] if stack_members else []
     lines = [
-        Line(quantity=_parse_quantity(q, context), inverse=inverse)
+        Line(curve=_parse_curve(q, context), inverse=inverse)
         for q in graph.simple_lines
         if not _is_scalar(q)
     ]
     rules = [
-        Rule(quantity=_parse_quantity(q, context), inverse=inverse)
+        Rule(curve=_parse_curve(q, context), inverse=inverse)
         for q in (*graph.compound_lines, *graph.simple_lines)
         if _is_scalar(q)
     ]

@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Protocol
 
-from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import translations as translations_v1
 
 from ._evaluate import evaluate_graph, EvaluatedGraph
@@ -127,14 +126,12 @@ def fetch_translated_metrics(
     *,
     services: Iterable[ServiceRef],
     translations: Iterable[translations_v1.Translation],
-    metrics: Mapping[str, metrics_v1.Metric],
-    localizer: Callable[[str], str],
     rrd: RRDSource,
 ) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
     parsed_translations = parse_translations_from_api(translations)
     performance_data = rrd.fetch_performance_data(list(dict.fromkeys(services)))
     return {
-        service: translate_performance_data(perf, parsed_translations, metrics, localizer)
+        service: translate_performance_data(perf, parsed_translations)
         for service, perf in performance_data.items()
     }
 
@@ -184,8 +181,6 @@ def update_graph_data(
     *,
     graphs: Sequence[Graph],
     translations: Iterable[translations_v1.Translation],
-    metrics: Mapping[str, metrics_v1.Metric],
-    localizer: Callable[[str], str],
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
     rrd: RRDSource,
@@ -197,8 +192,6 @@ def update_graph_data(
             for metric in graph.rrd_metrics()
         ),
         translations=translations,
-        metrics=metrics,
-        localizer=localizer,
         rrd=rrd,
     )
     return evaluate_graphs(

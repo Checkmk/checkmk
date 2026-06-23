@@ -11,8 +11,12 @@ from cmk.graphing.v1 import Title
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
+    AutoPrecision,
     build_graphs,
     ConsolidationFunction,
+    Curve,
+    CurveAttributes,
+    DecimalNotation,
     discover_graphs,
     DiscoveredGraph,
     DiscoveredGraphs,
@@ -33,12 +37,18 @@ from cmk.graphing_engine import (
     TemplateOptions,
     TimeRange,
     TimeSeries,
+    Unit,
 )
 from cmk.graphing_engine._from_api import parse_graph_from_api
 
 
 def _id(s: str) -> str:
     return s
+
+
+_DECIMAL = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
+# Display attributes a registered test metric resolves to (title "Metric", decimal unit, blue).
+_METRIC_ATTRS = CurveAttributes(title="Metric", unit=_DECIMAL, color="#28a2f3")
 
 
 # Uniform definitions for every metric referenced below: the title "Metric", plain decimal unit,
@@ -71,12 +81,21 @@ def _rrd(name: MetricName) -> RRDMetric:
     )
 
 
-def _line(quantity: Quantity) -> Line:
-    return Line(quantity=quantity, inverse=False)
+def _curve(quantity: Quantity, attributes: CurveAttributes = _METRIC_ATTRS) -> Curve:
+    return Curve(quantity=quantity, attributes=attributes)
 
 
-def _stack(*members: Quantity) -> Stack:
-    return Stack(members=list(members), inverse=False)
+def _line(quantity: Quantity, attributes: CurveAttributes = _METRIC_ATTRS) -> Line:
+    return Line(curve=_curve(quantity, attributes), inverse=False)
+
+
+def _stack(quantity: Quantity, attributes: CurveAttributes = _METRIC_ATTRS) -> Stack:
+    return Stack(members=[_curve(quantity, attributes)], inverse=False)
+
+
+def _predict_attrs(name: str) -> CurveAttributes:
+    # A predictive metric is not registered, so its line falls back to the default display.
+    return CurveAttributes(title=name, unit=_DECIMAL, color="#8c8c8c")
 
 
 def _perf(
@@ -151,9 +170,7 @@ def _discover(
     rrd: _FakeFetchRRD,
 ) -> Sequence[DiscoveredGraph]:
     # Compose the discovery steps the way the GUI does: fetch -> build -> evaluate -> wrap.
-    translated_metrics = fetch_translated_metrics(
-        services=[service], translations=[], metrics=_METRICS, localizer=_id, rrd=rrd
-    )
+    translated_metrics = fetch_translated_metrics(services=[service], translations=[], rrd=rrd)
     graphs = build_graphs(
         service=service,
         registered_graphs=registered_graphs,
@@ -487,7 +504,7 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_matched_graph() -> 
     assert len(discovered) == 1
     graph = discovered[0].graph
     assert isinstance(graph, Graph)
-    assert _line(_rrd(predict)) in graph.lines
+    assert _line(_rrd(predict), _predict_attrs(predict)) in graph.lines
     # cpu_user and its predictive companion are both drawn (neither dropped for missing data).
     assert len(discovered[0].evaluated.lines) == 2
 
@@ -505,7 +522,7 @@ def test_discover_template_graphs_adds_predictive_lines_to_a_fallback_graph() ->
     assert [d.graph.name for d in discovered] == ["cpu_user"]
     graph = discovered[0].graph
     assert isinstance(graph, Graph)
-    assert _line(_rrd(predict)) in graph.lines
+    assert _line(_rrd(predict), _predict_attrs(predict)) in graph.lines
 
 
 def test_discover_template_graphs_ignores_a_predictive_metric_without_its_base() -> None:
@@ -537,13 +554,19 @@ def test_discover_graphs_adds_predictive_lines_per_service() -> None:
     assert len(graphs) == 2
     assert (
         Line(
-            quantity=RRDMetric(host_name="h1", service_name="svc", metric_name=predict),
+            curve=_curve(
+                RRDMetric(host_name="h1", service_name="svc", metric_name=predict),
+                _predict_attrs(predict),
+            ),
             inverse=False,
         )
         in graphs[0].lines
     )
     assert all(
-        not (isinstance(line.quantity, RRDMetric) and line.quantity.metric_name == predict)
+        not (
+            isinstance(line.curve.quantity, RRDMetric)
+            and line.curve.quantity.metric_name == predict
+        )
         for line in graphs[1].lines
     )
 
@@ -552,16 +575,18 @@ def test_build_graphs_applies_threshold_rules_to_fallback_graphs() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user, warning=80.0))})
-    available = fetch_translated_metrics(
-        services=[service], translations=[], metrics=_METRICS, localizer=_id, rrd=rrd
-    ).get(service, {})
+    available = fetch_translated_metrics(services=[service], translations=[], rrd=rrd).get(
+        service, {}
+    )
 
-    def _rules(metric: RRDMetric) -> list[Rule]:
+    def _rules(metric: RRDMetric, attributes: CurveAttributes) -> list[Rule]:
         return [
             Rule(
-                quantity=ScalarOf(metric=metric, kind=ScalarKind.WARNING, color="#ff0000"),
+                curve=Curve(
+                    quantity=ScalarOf(metric=metric, kind=ScalarKind.WARNING),
+                    attributes=CurveAttributes(title="W", unit=attributes.unit, color="#ff0000"),
+                ),
                 inverse=False,
-                title="W",
             )
         ]
 
@@ -575,4 +600,4 @@ def test_build_graphs_applies_threshold_rules_to_fallback_graphs() -> None:
     )
     # The fallback single-metric graph carries the GUI-supplied threshold rule.
     [graph] = [g for g in graphs if g.name == cpu_user]
-    assert [rule.title for rule in graph.rules] == ["W"]
+    assert [rule.curve.attributes.title for rule in graph.rules] == ["W"]

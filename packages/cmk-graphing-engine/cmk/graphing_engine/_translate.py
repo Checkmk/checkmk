@@ -4,11 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 
-from cmk.graphing.v1 import metrics as metrics_v1
-
-from ._from_api import metric_display_attributes
 from ._objects import (
     MetricName,
     MetricTranslation,
@@ -55,8 +52,6 @@ def _find_translation(
 def translate_performance_data(
     performance_data: PerformanceData,
     translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
-    metrics: Mapping[str, metrics_v1.Metric],
-    localizer: Callable[[str], str],
 ) -> Mapping[MetricName, RRDMetricData]:
     command_translations = _translations_for_command(performance_data.check_command, translations)
     result: dict[MetricName, RRDMetricData] = {}
@@ -70,14 +65,10 @@ def translate_performance_data(
             return None if value is None else value * scale
 
         original = RRDOriginal(metric_name=perf_value.metric_name, scale=scale)
-        attributes = metric_display_attributes(name, metrics, localizer)
         originals = [*result[name].originals, original] if name in result else [original]
         result[name] = RRDMetricData(
             value=_scaled(perf_value.value),
             originals=originals,
-            title=attributes.title,
-            unit=attributes.unit,
-            color=attributes.color,
             lower_warning=_scaled(perf_value.lower_warning),
             lower_critical=_scaled(perf_value.lower_critical),
             warning=_scaled(perf_value.warning),

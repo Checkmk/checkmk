@@ -14,6 +14,7 @@ void main() {
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "DISABLE_CACHE",
         "FAKE_ARTIFACTS",
+        "CIPARAM_GATED_REBASE_ONTO",     // git rev of target branch tip; if set, rebase workspace onto it
     ]);
 
     check_environment_variables([
@@ -68,6 +69,7 @@ void main() {
     def fake_artifacts = params.FAKE_ARTIFACTS ? "--//:use_faked_artifacts=true" : "";
     def enable_compression = versioning.is_official_release(cmk_version_rc_aware) ? "" : "--//:low_zstd_compression=true";
     def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def rebase_onto = params.CIPARAM_GATED_REBASE_ONTO;
 
     print(
         """
@@ -90,6 +92,14 @@ void main() {
     if (params.CIPARAM_OVERRIDE_BUILD_NODE == "fips") {
         // Builds can not be done on FIPS node
         error("Package builds can not be done on FIPS node");
+    }
+
+    smart_stage(
+        name: "Rebase",
+        condition: "${rebase_onto}" != "",
+        raiseOnError: true,
+    ) {
+        versioning.rebase_workspace(safe_branch_name, rebase_onto);
     }
 
     stage("Prepare workspace") {

@@ -554,6 +554,8 @@ def test_community_not_contains_nonfree_files(package_path: str) -> None:
 
 
 def test_package_is_identifiable_by_commit(package_path: str) -> None:
+    if os.environ.get("CIPARAM_GATED_REBASE_ONTO"):
+        pytest.skip("Package was built from a rebased commit, HEAD mismatch is expected")
     commit = _get_file_from_package(
         package_path,
         version_rel_path="COMMIT" if package_path.endswith(".tar.gz") else "share/doc/COMMIT",

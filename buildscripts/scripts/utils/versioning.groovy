@@ -238,4 +238,56 @@ boolean is_official_release(String version) {
     }
 }
 
+void rebase_workspace(String branch_name, String rebase_onto) {
+    container("minimal-container") {
+        dir("${checkout_dir}") {
+            withCredentials([
+                sshUserPrivateKey(
+                    credentialsId: "jenkins-gerrit-fips-compliant-ssh-key",
+                    keyFileVariable: 'KEYFILE',
+                    usernameVariable: 'user'
+                )
+            ]) {
+                withEnv(["GIT_SSH_COMMAND=ssh -o 'StrictHostKeyChecking no' -i ${KEYFILE} -l jenkins"]) {
+                    sh("""
+                        git config --add user.name ${user};
+                        git config --add user.email ${JENKINS_MAIL};
+                        time git fetch --no-tags --shallow-since=\$(date --date='2 weeks ago' --iso=seconds) origin \
+                            refs/heads/${branch_name}:refs/remotes/origin/${branch_name}
+                        git rebase ${rebase_onto}
+                    """);
+                }
+            }
+        }
+    }
+}
+
+String compute_rebase_onto(String branch_name) {
+    def commit = get_branch_tip_commit(branch_name);
+    print("Rebase anchor for '${branch_name}': ${commit}");
+    return commit;
+}
+
+String get_branch_tip_commit(String branch_name) {
+    def gitiles_log_url = "https://review.lan.tribe29.com/a/plugins/gitiles/check_mk/+log";
+    def commit;
+    withCredentials([
+        usernamePassword(
+            credentialsId: 'sheriff_http_credentials_for_gerrit',
+            usernameVariable: 'GERRIT_USER',
+            passwordVariable: 'GERRIT_PASSWORD'),
+    ]) {
+        def auth_header = "Basic " + "${GERRIT_USER}:${GERRIT_PASSWORD}".bytes.encodeBase64().toString();
+        def connection = new URL("${gitiles_log_url}/refs/heads/${branch_name}?n=1&format=JSON").openConnection();
+        connection.setRequestProperty("Authorization", auth_header);
+        // Strip Gitiles XSS protection prefix (5 bytes) before parsing
+        def json = new groovy.json.JsonSlurper().parseText(connection.inputStream.text.drop(5));
+        if (json.log == null || json.log.isEmpty()) {
+            raise("Branch '${branch_name}' can not find latest HEAD commit on remote");
+        }
+        commit = json.log[0].commit;
+    }
+    return commit;
+}
+
 return this;

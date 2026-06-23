@@ -17,6 +17,7 @@ void main() {
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "DISABLE_CACHE",
         "FAKE_ARTIFACTS",
+        "CIPARAM_GATED_REBASE_ONTO",     // git rev of target branch tip; if set, rebase workspace onto it
     ]);
 
     def distro = params.DISTRO;
@@ -24,6 +25,7 @@ void main() {
     def version = params.VERSION;
     def disable_cache = params.DISABLE_CACHE;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def rebase_onto = params.CIPARAM_GATED_REBASE_ONTO;
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
@@ -108,6 +110,7 @@ void main() {
                     DISTRO: distro,
                     DISABLE_CACHE: disable_cache,
                     FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
+                    CIPARAM_GATED_REBASE_ONTO: rebase_onto,
                     CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
                 ],
                 build_params_no_check: [
@@ -138,6 +141,7 @@ void main() {
                     DISTRO: distro,
                     DISABLE_CACHE: disable_cache,
                     FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
+                    CIPARAM_GATED_REBASE_ONTO: rebase_onto,
                 ],
                 build_params_no_check: [
                     CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

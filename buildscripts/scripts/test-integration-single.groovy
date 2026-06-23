@@ -9,15 +9,18 @@ void main() {
         ["FAKE_ARTIFACTS", true],  // forwarded to package build job
         "TEST_FILTER",  // a filter string to select which tests to run
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
+        "CIPARAM_GATED_REBASE_ONTO",     // git rev of target branch tip; if set, rebase workspace onto it
     ]);
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def test_filter = params.TEST_FILTER;
+    def rebase_onto = params.CIPARAM_GATED_REBASE_ONTO;
 
     def make_target = "test-integration";
     def download_dir = "package_download";
@@ -51,6 +54,14 @@ void main() {
     );
 
     dir("${checkout_dir}") {
+        smart_stage(
+            name: "Rebase",
+            condition: "${rebase_onto}" != "",
+            raiseOnError: true,
+        ) {
+            versioning.rebase_workspace(setup_values.safe_branch_name, rebase_onto);
+        }
+
         stage("Fetch Checkmk package") {
             single_tests.fetch_package(
                 // use the cross edition target or fall back to the value of edition
@@ -61,6 +72,7 @@ void main() {
                 fake_artifacts: fake_artifacts,
                 docker_tag: setup_values.docker_tag,
                 safe_branch_name: setup_values.safe_branch_name,
+                rebase_onto: rebase_onto,
             );
         }
 

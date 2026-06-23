@@ -11,6 +11,7 @@ void main() {
         "FAKE_ARTIFACTS",
         "TEST_FILTER",  // a filter string to select which tests to run
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
+        "CIPARAM_GATED_REBASE_ONTO",     // git rev of target branch tip; if set, rebase workspace onto it
     ]);
 
     check_environment_variables([
@@ -21,12 +22,14 @@ void main() {
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
     helper.assert_fips_testing(use_case, NODE_LABELS);
+    def rebase_onto = params.CIPARAM_GATED_REBASE_ONTO;
 
     def download_dir = "package_download";
     def test_results_dir = "test-results";
@@ -37,6 +40,14 @@ void main() {
         make_target: make_target,
         docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD
     );
+
+    smart_stage(
+        name: "Rebase",
+        condition: "${rebase_onto}" != "",
+        raiseOnError: true,
+    ) {
+        versioning.rebase_workspace(setup_values.safe_branch_name, rebase_onto);
+    }
 
     dir("${checkout_dir}") {
         stage("Fetch Checkmk package") {
@@ -49,6 +60,7 @@ void main() {
                 fake_artifacts: fake_artifacts,
                 docker_tag: setup_values.docker_tag,
                 safe_branch_name: setup_values.safe_branch_name,
+                rebase_onto: rebase_onto,
             );
         }
 

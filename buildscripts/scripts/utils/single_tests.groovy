@@ -61,9 +61,6 @@ void fetch_package(Map args) {
         def this_parameters = [
             relative_job_name: relative_job_name,
             build_params: [
-                /// currently CUSTOM_GIT_REF must match, but in the future
-                /// we should define dependency paths for build-cmk-distro-package
-                CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD"),
                 EDITION: args.edition,
                 DISTRO: args.distro,
                 FAKE_ARTIFACTS: args.fake_artifacts,
@@ -80,13 +77,26 @@ void fetch_package(Map args) {
             omit_build_venv: true,  // do not check or build a venv first
             no_raise: false,        // abort on problems of upstream build
         ];
+        def custom_git_ref = cmd_output("git rev-parse HEAD");
+        if (args.rebase_onto) {
+            this_parameters.build_params += [
+                CUSTOM_GIT_REF: params.CUSTOM_GIT_REF,
+                CIPARAM_GATED_REBASE_ONTO: args.rebase_onto,
+            ];
+        } else {
+            this_parameters.build_params += [
+                CUSTOM_GIT_REF: custom_git_ref,
+            ];
+        }
         if (args.dependency_paths) {
             this_parameters["build_params"].remove("CUSTOM_GIT_REF");
 
             // do not use map[keyX] += [key: value] as this would overwrite all existing values of keyX with [key: value]
             // using the dot operator does not do this
             this_parameters.build_params += [CIPARAM_PATH_HASH: args.dependency_paths];
-            this_parameters.build_params_no_check += [CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD")];
+            this_parameters.build_params_no_check += [
+                CUSTOM_GIT_REF: args.rebase_onto ? params.CUSTOM_GIT_REF : cmd_output("git rev-parse HEAD")
+            ];
         }
         upstream_build(this_parameters);
     }

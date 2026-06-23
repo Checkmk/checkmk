@@ -5,6 +5,7 @@
 /// Signs a distribution package (.rpm, .dep, etc.) for a given edition/distribution
 /// at a given git hash
 
+// groovylint-disable MethodSize
 void main() {
     check_job_parameters([
         ["EDITION", true],
@@ -12,11 +13,13 @@ void main() {
         ["VERSION", true],
         "DISABLE_CACHE",
         "FAKE_ARTIFACTS",
+        "CIPARAM_GATED_REBASE_ONTO",     // accepted for parameter consistency; no rebase needed (downloads pre-built artifacts)
     ]);
 
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def version = params.VERSION;
+    def rebase_onto = params.CIPARAM_GATED_REBASE_ONTO;
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
@@ -55,8 +58,17 @@ void main() {
         |checkout_dir:............. │${checkout_dir}│
         |triggerd_by:.............. │${triggerd_by}│
         |package_type:............. │${package_type}│
+        |rebase_onto:.............. |${rebase_onto}|
         |===================================================
         """.stripMargin());
+
+    smart_stage(
+        name: "Rebase",
+        condition: "${rebase_onto}" != "",
+        raiseOnError: true,
+    ) {
+        versioning.rebase_workspace(safe_branch_name, rebase_onto);
+    }
 
     dir("${checkout_dir}") {
         container("deb-package-signer") {
@@ -87,6 +99,7 @@ void main() {
                     docker_tag: docker_tag,
                     safe_branch_name: safe_branch_name,
                     no_remove_others: true,
+                    rebase_onto: rebase_onto,
                 );
             }
 

@@ -33,7 +33,7 @@ function makeSeries(kind: StackedSeriesKind): StackedSeries {
 }
 
 function makeMetric(name: string, color: string): Metric {
-  return { metadata: { name, color }, render: { stack: '', inverse: false } } as unknown as Metric
+  return { metadata: { name, color }, render: { stack: null, inverse: false } } as unknown as Metric
 }
 
 const xScale = (() => 0) as unknown as ScaleTime<number, number>

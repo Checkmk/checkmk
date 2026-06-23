@@ -6,18 +6,19 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 
 import GraphLegend from '@/graphing/components/GraphLegend.vue'
-import type { HorizontalLine, Metric, UnitFormat } from '@/graphing/components/TimeSeriesGraph'
+import type { HorizontalLine, Metric } from '@/graphing/components/TimeSeriesGraph'
 
-const UNIT: UnitFormat = {
+const UNIT: Metric['metadata']['unit'] = {
   notation: 'decimal',
   symbol: '',
-  precision: { type: 'auto', digits: 2 }
+  precision: { type: 'auto', digits: 2 },
+  convertible: true
 }
 
 function makeMetric(name: string, title: string, dataPoints: (number | null)[]): Metric {
   return {
-    metadata: { name, title, unit: UNIT, color: '#ff0000', expression: '' },
-    render: { stack: 'area', inverse: false },
+    metadata: { name, title, unit: UNIT, color: '#ff0000' },
+    render: { stack: 'area', inverse: false, hidden: false },
     data_points: dataPoints
   }
 }

@@ -40,14 +40,14 @@ function makeGapBucket(): M4Bucket {
 }
 
 // computeStackedSeries only consults render.stack; the rest of Metric is irrelevant here.
-function makeMetric(stack: string): Metric {
+function makeMetric(stack: string | null): Metric {
   return { render: { stack, inverse: false } } as unknown as Metric
 }
 
 describe('computeStackedSeries', () => {
   test('an unstacked metric becomes a line resting on the zero baseline', () => {
     const value = 5
-    const metrics = [makeMetric('')]
+    const metrics = [makeMetric(null)]
     const buckets = [[makeBucket(value)]]
 
     const [lineSeries] = computeStackedSeries(metrics, buckets, 'avg')
@@ -83,7 +83,7 @@ describe('computeStackedSeries', () => {
     const baseValue = 2
     const lineValue = 99
     const topValue = 3
-    const metrics = [makeMetric('g1'), makeMetric(''), makeMetric('g1')]
+    const metrics = [makeMetric('g1'), makeMetric(null), makeMetric('g1')]
     const buckets = [[makeBucket(baseValue)], [makeBucket(lineValue)], [makeBucket(topValue)]]
 
     const [base, middle, top] = computeStackedSeries(metrics, buckets, 'avg')

@@ -22,6 +22,7 @@ from cmk.gui.data_source._openapi._registration import (
     register_endpoints as data_source_register_endpoints,
 )
 from cmk.gui.default_permissions import register as default_permissions_register
+from cmk.gui.graphing.openapi import register as graphing_openapi_register
 from cmk.gui.i18n import _
 from cmk.gui.inventory._openapi import register as inventory_register
 from cmk.gui.ldap_integration._openapi import register as ldap_register
@@ -102,6 +103,7 @@ def register_for_community() -> None:
     bi_register(endpoint_registry)
     user_message_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     agent_registration_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
+    graphing_openapi_register(versioned_endpoint_registry, endpoint_family_registry)
     openapi_central_register(
         endpoint_registry,
         versioned_endpoint_registry,

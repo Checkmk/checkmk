@@ -3,7 +3,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "graphing",
-    srcs = glob(include = ["**/*.py"]),
+    srcs = glob(
+        include = ["**/*.py"],
+        exclude = ["openapi/**"],
+    ),
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -43,5 +46,27 @@ py_library(
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         requirement("python-dateutil"),
         requirement("tzlocal"),
+    ],
+)
+
+py_library(
+    name = "openapi",
+    srcs = glob(["openapi/**/*.py"]),
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":graphing",
+        "//cmk/gui:config",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/framework:types",
+        "//cmk/gui/openapi/restful_objects",
+        "//cmk/gui/openapi/restful_objects:type_defs",
+        "//packages/cmk-graphing-engine",
+        "//packages/cmk-livestatus-client:py_livestatus",
     ],
 )

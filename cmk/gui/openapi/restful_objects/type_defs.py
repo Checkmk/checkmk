@@ -43,6 +43,7 @@ DomainType = Literal[
     "form_spec",
     "folder",
     "folder_config",
+    "graph",
     "graph_timerange",
     "historical_event",
     "host",

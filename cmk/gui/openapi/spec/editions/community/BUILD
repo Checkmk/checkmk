@@ -18,6 +18,7 @@ py_library(
         "//cmk/gui/bi",
         "//cmk/gui/dashboard",
         "//cmk/gui/data_source",
+        "//cmk/gui/graphing:openapi",
         "//cmk/gui/inventory",
         "//cmk/gui/ldap_integration",
         "//cmk/gui/mkeventd",

@@ -750,6 +750,7 @@ py_library(
         "//cmk/gui/data_source",
         "//cmk/gui/form_specs",
         "//cmk/gui/graphing",
+        "//cmk/gui/graphing:openapi",
         "//cmk/gui/inventory",
         "//cmk/gui/ldap_integration",
         "//cmk/gui/mkeventd",

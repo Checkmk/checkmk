@@ -35,8 +35,9 @@ export function computeStackedSeries(
   for (let i = 0; i < metrics.length; i++) {
     const metric = metrics[i]!
     const buckets = metricsBuckets[i]!
+    const stack = metric.render.stack
 
-    if (metric.render.stack === '') {
+    if (stack === null) {
       series.push({
         kind: 'line',
         bands: buckets.map((bucket) => ({
@@ -50,7 +51,7 @@ export function computeStackedSeries(
       continue
     }
 
-    const sum = sums.get(metric.render.stack) ?? new Array<number>(buckets.length).fill(0)
+    const sum = sums.get(stack) ?? new Array<number>(buckets.length).fill(0)
     const bands = new Array<StackedBand>(buckets.length)
     for (let j = 0; j < buckets.length; j++) {
       const bucket = buckets[j]!
@@ -66,7 +67,7 @@ export function computeStackedSeries(
         endTime: bucket.endTime
       }
     }
-    sums.set(metric.render.stack, sum)
+    sums.set(stack, sum)
     series.push({ kind: 'area-stacked', bands })
   }
 

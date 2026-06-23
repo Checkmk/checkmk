@@ -1229,6 +1229,32 @@ class GraphTimerangeClient(RestApiClient):
         )
 
 
+class GraphClient(RestApiClient):
+    domain: DomainType = "graph"
+    default_version = APIVersion.INTERNAL
+
+    def fetch_data(
+        self,
+        graph_type: str,
+        internal: Mapping[str, object],
+        requested_time_range: Mapping[str, int],
+        consolidation_function: Literal["min", "max", "avg"],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/fetch_data/invoke",
+            body={
+                "graph_type": graph_type,
+                # `internal` is an Annotated[..., Json] field, i.e. a JSON-encoded string on the wire
+                "internal": json.dumps(internal),
+                "requested_time_range": requested_time_range,
+                "consolidation_function": consolidation_function,
+            },
+            expect_ok=expect_ok,
+        )
+
+
 class SidebarElementClient(RestApiClient):
     domain: DomainType = "sidebar_element"
     default_version = APIVersion.UNSTABLE
@@ -4389,6 +4415,7 @@ class ClientRegistry:
     AuxTag: AuxTagClient
     TimePeriod: TimePeriodClient
     GraphTimerange: GraphTimerangeClient
+    Graph: GraphClient
     MasterControl: MasterControlClient
     Rule: RuleClient
     Ruleset: RulesetClient
@@ -4452,6 +4479,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Host=HostClient(request_handler, url_prefix),
         Folder=FolderClient(request_handler, url_prefix),
         GraphTimerange=GraphTimerangeClient(request_handler, url_prefix),
+        Graph=GraphClient(request_handler, url_prefix),
         MasterControl=MasterControlClient(request_handler, url_prefix),
         AuxTag=AuxTagClient(request_handler, url_prefix),
         TimePeriod=TimePeriodClient(request_handler, url_prefix),

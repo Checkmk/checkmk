@@ -12,12 +12,17 @@ py_cmk_test(
     deps = [
         "//cmk/gui:core_toolkit",
         "//cmk/gui/graphing",
+        "//cmk/gui/graphing:openapi",
         "//cmk/gui/utils:roles",
         "//cmk/gui/utils:temperate_unit",
         "//cmk/utils",
+        "//packages/cmk-graphing-engine",
         "//packages/cmk-livestatus-client:livestatus-api",
+        "//packages/cmk-livestatus-client:py_livestatus",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
+        requirement("pydantic"),
         requirement("time-machine"),
     ],
 )

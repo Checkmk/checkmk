@@ -6,17 +6,13 @@
     "size": { "$ref": "#/$defs/size" },
     "options": { "$ref": "#/$defs/graph_options" },
     "interaction": { "$ref": "#/$defs/interaction" },
-    "time_range": { "$ref": "#/$defs/time_range" },
-    "metrics": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/metric" }
+    "time_range": {
+      "anyOf": [{ "$ref": "#/$defs/time_range" }, { "type": "null" }]
     },
-    "horizontal_lines": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/horizontal_line" }
-    }
+    "graph_type": { "type": "string" },
+    "internal": { "type": "string" }
   },
-  "required": ["size", "options", "interaction", "time_range", "metrics", "horizontal_lines"],
+  "required": ["size", "options", "interaction", "graph_type", "internal"],
   "$defs": {
     "size": {
       "title": "Size",
@@ -88,57 +84,11 @@
       "title": "TimeRange",
       "type": "object",
       "properties": {
-        "start": { "type": "number" },
-        "end": { "type": "number" },
-        "step": { "type": "number" }
+        "start": { "type": "integer" },
+        "end": { "type": "integer" },
+        "step": { "type": "integer" }
       },
       "required": ["start", "end", "step"]
-    },
-    "metric_metadata": {
-      "title": "MetricMetadata",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "title": { "type": "string" },
-        "unit": { "$ref": "unit_format.json#" },
-        "color": { "type": "string" },
-        "expression": { "type": "string" }
-      },
-      "required": ["name", "title", "unit", "color", "expression"]
-    },
-    "metric_render": {
-      "title": "MetricRender",
-      "type": "object",
-      "properties": {
-        "stack": { "type": "string" },
-        "inverse": { "type": "boolean" }
-      },
-      "required": ["stack", "inverse"]
-    },
-    "metric": {
-      "title": "Metric",
-      "type": "object",
-      "properties": {
-        "metadata": { "$ref": "#/$defs/metric_metadata" },
-        "render": { "$ref": "#/$defs/metric_render" },
-        "data_points": {
-          "anyOf": [
-            { "type": "array", "items": { "type": ["number", "null"] } },
-            { "type": "null" }
-          ]
-        }
-      },
-      "required": ["metadata", "render", "data_points"]
-    },
-    "horizontal_line": {
-      "title": "HorizontalLine",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "value": { "type": "number" },
-        "color": { "type": "string" }
-      },
-      "required": ["name", "value", "color"]
     }
   }
 }

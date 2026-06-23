@@ -64,10 +64,33 @@ function tagSpecialLists(html: string): string {
     )
 }
 
-export const markdown = new Marked({
+export type QualityLevel = 'high' | 'medium' | 'low'
+
+const QUALITY_LABELS = 'Confidence|Data Quality'
+const QUALITY_LEVELS = 'High|Medium|Low'
+
+const QUALITY_LINE_RE = new RegExp(
+  `^[ \\t]*(?:${QUALITY_LABELS}):[ \\t]*\\*\\*(${QUALITY_LEVELS})\\*\\*[ \\t]*$`,
+  'im'
+)
+
+export function extractQualityLevel(text: string): QualityLevel | null {
+  const level = QUALITY_LINE_RE.exec(text)?.[1]?.toLowerCase()
+  return level === 'high' || level === 'medium' || level === 'low' ? level : null
+}
+
+export function stripQualityLineFromText(text: string): string {
+  return text.replace(QUALITY_LINE_RE, '')
+}
+
+const markdown = new Marked({
   breaks: true,
   walkTokens,
   hooks: {
     postprocess: tagSpecialLists
   }
 })
+
+export async function parseMarkdown(text: string): Promise<string> {
+  return markdown.parse(text)
+}

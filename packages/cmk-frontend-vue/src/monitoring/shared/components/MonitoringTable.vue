@@ -31,14 +31,15 @@ import {
   COLUMN_LAYOUT_KEY,
   type ColumnJustify,
   type ColumnLayoutInfo,
-  MONITORING_SERVICE
+  MONITORING_SERVICE,
+  TABLE_BORDER_SPACING,
+  TABLE_BORDER_SPACING_PX
 } from './MonitoringTableContext'
 import MonitoringTableHeader from './MonitoringTableHeader.vue'
 
 const DEFAULT_COLUMN_MIN_SIZE = 20
 const DEFAULT_COLUMN_MAX_SIZE = Number.POSITIVE_INFINITY
-const BORDER_SPACING = 1
-const borderSpacing = `${BORDER_SPACING}px`
+const borderSpacing = TABLE_BORDER_SPACING_PX
 
 const props = defineProps<{
   rows: T[]
@@ -163,7 +164,7 @@ const totalMinWidth = computed(() =>
   columnMetrics.value.reduce((sum, metric) => sum + metric.min, 0)
 )
 
-const borderSpacingTotal = computed(() => (columnMetrics.value.length + 1) * BORDER_SPACING)
+const borderSpacingTotal = computed(() => (columnMetrics.value.length + 1) * TABLE_BORDER_SPACING)
 
 function distributeWidths(available: number, metrics: ColumnMetric[]): number[] {
   const columns = metrics.map((metric) => ({ width: metric.min, max: metric.max }))
@@ -234,7 +235,7 @@ const columnLayout = computed<ColumnLayout[]>(() => {
       ? Number.POSITIVE_INFINITY
       : containerWidth.value - borderSpacingTotal.value
   const widths = distributeWidths(available, metrics)
-  let pinnedOffset = 0
+  let pinnedOffset = TABLE_BORDER_SPACING
   return metrics.map((metric, index) => {
     const width = widths[index] ?? metric.min
     const isPinned = pinningActive.value && metric.isLeftPinned
@@ -247,7 +248,7 @@ const columnLayout = computed<ColumnLayout[]>(() => {
       justify: metric.justify
     }
     if (isPinned) {
-      pinnedOffset += width
+      pinnedOffset += width + TABLE_BORDER_SPACING
     }
     return entry
   })

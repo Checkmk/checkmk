@@ -18,8 +18,10 @@ import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 
-import { COLUMN_LAYOUT_KEY } from './MonitoringTableContext'
+import { COLUMN_LAYOUT_KEY, TABLE_BORDER_SPACING_PX } from './MonitoringTableContext'
 import FilterDropdown from './filter/FilterDropdown.vue'
+
+const borderSpacing = TABLE_BORDER_SPACING_PX
 
 defineProps<{
   headerGroups: HeaderGroup<T>[]
@@ -222,7 +224,7 @@ function labelStyle(columnDef: ColumnDef<T>): CSSProperties {
 <style scoped>
 .monitoring-table-header__header-cell {
   position: sticky;
-  top: 0;
+  top: v-bind(borderSpacing);
   z-index: 2;
   vertical-align: middle;
   height: 24px;

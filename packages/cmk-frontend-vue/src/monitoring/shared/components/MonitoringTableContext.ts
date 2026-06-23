@@ -50,6 +50,9 @@ export type CellBreakpoints = Readonly<Record<string, BreakpointValue>>
 export const MONITORING_SERVICE: InjectionKey<MonitoringService<unknown>> =
   Symbol('MonitoringService')
 
+export const TABLE_BORDER_SPACING = 1
+export const TABLE_BORDER_SPACING_PX = `${TABLE_BORDER_SPACING}px`
+
 export interface ColumnLayoutInfo {
   width: number | null
   pinnedLeft: number | null

@@ -209,6 +209,7 @@ const currentWidth = computed(() => `${effectiveCellWidth.value} px`)
           <MonitoringTable
             :rows="rows"
             :loading="false"
+            :has-loaded="true"
             :columns="columns"
             :sort-state="sortState"
             :filter-state="filterState"

@@ -194,6 +194,7 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
         <MonitoringTable
           :rows="rows"
           :loading="false"
+          :has-loaded="true"
           :columns="columns"
           :sort-state="sortState"
           :filter-state="filterState"

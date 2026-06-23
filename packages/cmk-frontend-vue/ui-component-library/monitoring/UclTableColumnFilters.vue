@@ -212,6 +212,7 @@ const rows: HostEntry[] = [
           <MonitoringTable
             :rows="rows"
             :loading="false"
+            :has-loaded="true"
             :columns="columns"
             :sort-state="[]"
             :filter-state="filterState"

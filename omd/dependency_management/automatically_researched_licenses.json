@@ -1844,6 +1844,7 @@
   "pkg:pypi/propcache@0.4.1": "Apache-2.0",
   "pkg:pypi/psutil@7.2.2": "BSD-3-Clause",
   "pkg:pypi/pyasn1@0.6.2": "BSD-2-Clause",
+  "pkg:pypi/pyasn1@0.6.3": "BSD-2-Clause",
   "pkg:pypi/pycparser@3.0": "BSD-3-Clause",
   "pkg:pypi/pydantic-core@2.41.5": "MIT",
   "pkg:pypi/pydantic@2.12.5": "MIT",

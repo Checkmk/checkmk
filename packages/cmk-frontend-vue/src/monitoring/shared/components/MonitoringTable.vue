@@ -37,6 +37,8 @@ import MonitoringTableHeader from './MonitoringTableHeader.vue'
 
 const DEFAULT_COLUMN_MIN_SIZE = 20
 const DEFAULT_COLUMN_MAX_SIZE = Number.POSITIVE_INFINITY
+const BORDER_SPACING = 1
+const borderSpacing = `${BORDER_SPACING}px`
 
 const props = defineProps<{
   rows: T[]
@@ -161,6 +163,8 @@ const totalMinWidth = computed(() =>
   columnMetrics.value.reduce((sum, metric) => sum + metric.min, 0)
 )
 
+const borderSpacingTotal = computed(() => (columnMetrics.value.length + 1) * BORDER_SPACING)
+
 function distributeWidths(available: number, metrics: ColumnMetric[]): number[] {
   const columns = metrics.map((metric) => ({ width: metric.min, max: metric.max }))
   const totalMin = metrics.reduce((sum, metric) => sum + metric.min, 0)
@@ -210,7 +214,7 @@ const pinningActive = computed(
   () =>
     pinningEnabled.value &&
     containerWidth.value !== null &&
-    containerWidth.value < totalMinWidth.value
+    containerWidth.value - borderSpacingTotal.value < totalMinWidth.value
 )
 
 interface ColumnLayout {
@@ -225,7 +229,11 @@ interface ColumnLayout {
 const columnLayout = computed<ColumnLayout[]>(() => {
   const metrics = columnMetrics.value
   // Unmeasured (null) → treat as unconstrained so columns size to their min.
-  const widths = distributeWidths(containerWidth.value ?? Number.POSITIVE_INFINITY, metrics)
+  const available =
+    containerWidth.value === null
+      ? Number.POSITIVE_INFINITY
+      : containerWidth.value - borderSpacingTotal.value
+  const widths = distributeWidths(available, metrics)
   let pinnedOffset = 0
   return metrics.map((metric, index) => {
     const width = widths[index] ?? metric.min
@@ -367,7 +375,7 @@ function tableRowAt(index: number): Row<T> {
   width: v-bind(tableWidth);
   table-layout: fixed;
   border-collapse: separate;
-  border-spacing: 1px;
+  border-spacing: v-bind(borderSpacing);
   background: var(--ux-theme-4);
 }
 

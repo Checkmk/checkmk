@@ -235,7 +235,7 @@ onBeforeUnmount(() => {
 
       <div class="monitoring-filter-dropdown__footer">
         <CmkInlineButton icon="checkmark" @click="apply">{{ _t('Apply') }}</CmkInlineButton>
-        <CmkInlineButton icon="cancel" @click="cancel">{{ _t('Cancel') }}</CmkInlineButton>
+        <CmkInlineButton icon="cancel" @click="cancel">{{ _t('Close') }}</CmkInlineButton>
       </div>
     </div>
   </span>

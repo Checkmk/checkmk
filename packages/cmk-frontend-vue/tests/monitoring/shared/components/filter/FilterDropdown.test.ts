@@ -73,25 +73,25 @@ test('Apply commits the staged selection and closes the dropdown', async () => {
   expect(screen.queryByRole('button', { name: 'Apply' })).not.toBeInTheDocument()
 })
 
-test('Cancel discards the staged selection and leaves the model untouched', async () => {
+test('Close discards the staged selection and leaves the model untouched', async () => {
   const user = userEvent.setup()
   const { model } = renderDropdown()
 
   await user.click(screen.getByRole('button', { name: 'Open' }))
   await user.click(screen.getByRole('checkbox', { name: 'UP' }))
-  await user.click(screen.getByRole('button', { name: 'Cancel' }))
+  await user.click(screen.getByRole('button', { name: 'Close' }))
 
   expect(model.value).toBeUndefined()
-  expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument()
 })
 
-test('a cancelled edit is gone when the dropdown is reopened', async () => {
+test('a closed edit is gone when the dropdown is reopened', async () => {
   const user = userEvent.setup()
   const { model } = renderDropdown(upFilter())
 
   await user.click(screen.getByRole('button', { name: 'Open' }))
   await user.click(screen.getByRole('checkbox', { name: 'DOWN' }))
-  await user.click(screen.getByRole('button', { name: 'Cancel' }))
+  await user.click(screen.getByRole('button', { name: 'Close' }))
 
   await user.click(screen.getByRole('button', { name: 'Open' }))
 

@@ -57,6 +57,7 @@ const monitoringService = inject(MONITORING_SERVICE, null)
 
 const isOpen = ref(false)
 const flipUp = ref(false)
+const flipLeft = ref(false)
 // Swallow the click-outside fired by the same click that opened the popover.
 const suppressNextClickOutside = ref(false)
 
@@ -131,6 +132,20 @@ function positionPanel(): void {
   const triggerRect = triggerEl.getBoundingClientRect()
   const spaceBelow = window.innerHeight - triggerRect.bottom
   flipUp.value = spaceBelow < panelEl.offsetHeight && triggerRect.top > spaceBelow
+  const clipLeft = clippingLeft(triggerEl)
+  flipLeft.value = triggerRect.right - clipLeft >= panelEl.offsetWidth
+}
+
+function clippingLeft(el: HTMLElement): number {
+  let node: HTMLElement | null = el.parentElement
+  while (node) {
+    const overflowX = getComputedStyle(node).overflowX
+    if (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden') {
+      return node.getBoundingClientRect().left
+    }
+    node = node.parentElement
+  }
+  return 0
 }
 
 // The focusable rows are whatever the mounted filter component renders (search
@@ -208,7 +223,10 @@ onBeforeUnmount(() => {
       ref="panel"
       v-click-outside="onClickOutside"
       class="monitoring-filter-dropdown__panel"
-      :class="{ 'monitoring-filter-dropdown__panel--up': flipUp }"
+      :class="{
+        'monitoring-filter-dropdown__panel--up': flipUp,
+        'monitoring-filter-dropdown__panel--left': flipLeft
+      }"
       role="group"
       :aria-label="`Filter ${label}`"
       @focusout="onFocusOut"
@@ -250,6 +268,11 @@ onBeforeUnmount(() => {
   bottom: 100%;
   margin-top: 0;
   margin-bottom: var(--dimension-2);
+}
+
+.monitoring-filter-dropdown__panel--left {
+  left: auto;
+  right: 0;
 }
 
 .monitoring-filter-dropdown__footer {

@@ -117,7 +117,40 @@ def update_global_config(
         logger,
         new_settings,
     )
-    return _transform_global_config_values(new_settings, ui_config)
+    new_settings = _transform_global_config_values(new_settings, ui_config)
+    return _normalize_user_icons_and_actions(logger, new_settings)
+
+
+def _normalize_user_icons_and_actions(
+    logger: Logger,
+    global_settings: GlobalSettings,
+) -> GlobalSettings:
+    user_icons = global_settings.get("user_icons_and_actions")
+    if not isinstance(user_icons, Mapping):
+        return global_settings
+
+    normalized_icons = {
+        icon_id: _normalize_user_icon_spec(icon_spec) for icon_id, icon_spec in user_icons.items()
+    }
+
+    if normalized_icons == user_icons:
+        return global_settings
+
+    logger.log(VERBOSE, "Normalizing invalid user_icons_and_actions icon values")
+    return {
+        **global_settings,
+        "user_icons_and_actions": normalized_icons,
+    }
+
+
+def _normalize_user_icon_spec(icon_spec: object) -> object:
+    # Only migrate non-string icon values: they can never resolve. A string is
+    # kept untouched - it may resolve later once its icon file is added.
+    if not isinstance(icon_spec, Mapping):
+        return icon_spec
+    if isinstance(icon_spec.get("icon"), str):
+        return icon_spec
+    return {**icon_spec, "icon": "missing"}
 
 
 def _update_renamed_global_config_vars(

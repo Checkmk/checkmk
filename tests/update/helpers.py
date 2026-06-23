@@ -35,6 +35,11 @@ MODULE_PATH = Path(__file__).parent.resolve()
 RULES_DIR = MODULE_PATH / "rules"
 DUMPS_DIR = MODULE_PATH / "dumps"
 
+# The following distros do not have previous-branch cmk packages available, so we skip them
+DISTROS_SKIP_PREVIOUS_BRANCH = [
+    "ubuntu-26.04",
+]
+
 logger = logging.getLogger(__name__)
 
 
@@ -324,10 +329,16 @@ class BaseVersions:
                 if base_versions_cb_file.exists()
                 else []
             )
-            cls._base_packages = [
-                CMKPackageInfoOld(CMKVersion(base_version_str), edition_from_env_old())
-                for base_version_str in base_versions_pb
-            ] + [
+
+            cls._base_packages = []
+
+            if os.environ.get("DISTRO") not in DISTROS_SKIP_PREVIOUS_BRANCH:
+                cls._base_packages += [
+                    CMKPackageInfoOld(CMKVersion(base_version_str), edition_from_env_old())
+                    for base_version_str in base_versions_pb
+                ]
+
+            cls._base_packages += [
                 CMKPackageInfo(CMKVersion(base_version_str), edition_from_env())
                 for base_version_str in base_versions_cb
             ]

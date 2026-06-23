@@ -171,7 +171,7 @@ const highlightStyle = computed<CSSProperties>(() =>
 }
 
 .monitoring-base-cell--pinned {
-  background: inherit;
+  background: var(--ux-theme-1);
 }
 
 .monitoring-base-cell--last-pinned::after {

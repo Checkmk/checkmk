@@ -17,8 +17,6 @@ from ._objects import (
     PerformanceData,
     RRDMetric,
     RRDMetricData,
-    RRDMetricRef,
-    RRDMetricWithCF,
     ServiceRef,
     TimeSeries,
 )
@@ -42,13 +40,14 @@ class RRDSource(Protocol):
 
 
 def _consolidation_function(
-    metric: RRDMetricRef, consolidation_function: ConsolidationFunction
+    metric: RRDMetric, consolidation_function: ConsolidationFunction
 ) -> ConsolidationFunction:
-    match metric:
-        case RRDMetricWithCF():
-            return metric.consolidation_function
-        case RRDMetric():
-            return consolidation_function
+    # A metric may pin its own consolidation function; otherwise the graph-wide one applies.
+    return (
+        consolidation_function
+        if metric.consolidation_function is None
+        else metric.consolidation_function
+    )
 
 
 def _scaled(time_series: TimeSeries, scale: float) -> TimeSeries:
@@ -73,13 +72,13 @@ def _merge(series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
 def _fetch_series(
     *,
     graph: Graph,
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
+    metric_data: Mapping[RRDMetric, RRDMetricData],
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
     rrd: RRDSource,
-) -> Mapping[RRDMetricRef, TimeSeries]:
+) -> Mapping[RRDMetric, TimeSeries]:
     rrd_metrics_per_metric: dict[
-        RRDMetricRef, tuple[ConsolidationFunction, list[tuple[RRDMetric, float]]]
+        RRDMetric, tuple[ConsolidationFunction, list[tuple[RRDMetric, float]]]
     ] = {}
     rrd_metrics_per_function: dict[ConsolidationFunction, list[RRDMetric]] = {}
     for metric in graph.rrd_metrics():
@@ -111,7 +110,7 @@ def _fetch_series(
         for function, rrd_metrics in rrd_metrics_per_function.items()
     }
 
-    result: dict[RRDMetricRef, TimeSeries] = {}
+    result: dict[RRDMetric, TimeSeries] = {}
     for metric, (function, rrd_metrics) in rrd_metrics_per_metric.items():
         raw = raw_per_function[function]
         scaled = [
@@ -143,8 +142,8 @@ def fetch_translated_metrics(
 def _metric_data_of(
     graph: Graph,
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
-) -> Mapping[RRDMetricRef, RRDMetricData]:
-    result: dict[RRDMetricRef, RRDMetricData] = {}
+) -> Mapping[RRDMetric, RRDMetricData]:
+    result: dict[RRDMetric, RRDMetricData] = {}
     for metric in graph.rrd_metrics():
         service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
         if (translated := translated_metrics.get(service, {}).get(metric.metric_name)) is not None:

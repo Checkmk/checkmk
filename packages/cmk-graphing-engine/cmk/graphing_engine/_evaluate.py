@@ -15,8 +15,8 @@ from ._objects import (
     MetricName,
     MinimalRange,
     Quantity,
+    RRDMetric,
     RRDMetricData,
-    RRDMetricRef,
     Rule,
     ServiceRef,
     TimeSeries,
@@ -167,8 +167,8 @@ def _title_metrics(
 
 def evaluate_graph(
     graph: Graph,
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
-    time_series: Mapping[RRDMetricRef, TimeSeries],
+    metric_data: Mapping[RRDMetric, RRDMetricData],
+    time_series: Mapping[RRDMetric, TimeSeries],
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     time_range: TimeRange,
 ) -> EvaluatedGraph:

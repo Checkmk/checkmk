@@ -25,7 +25,6 @@ from cmk.graphing_engine import (
     MinimalRange,
     Product,
     RRDMetric,
-    RRDMetricRef,
     Rule,
     Stack,
     Sum,
@@ -41,7 +40,7 @@ _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TR = TimeRange(start=0, end=30, step=10)  # three data points
 
 
-def _metric(name: str) -> RRDMetricRef:
+def _metric(name: str) -> RRDMetric:
     return RRDMetric(host_name="h", service_name="svc", metric_name=MetricName(name))
 
 
@@ -66,7 +65,7 @@ def _time_series(*values: float | None) -> TimeSeries:
 
 def _evaluate_value(
     quantity: Quantity,
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
+    metric_data: Mapping[RRDMetric, RRDMetricData],
 ) -> float | None:
     return quantity.evaluate_value(
         EvaluationContext(metric_data=metric_data, time_series={}, time_range=_TR)
@@ -75,8 +74,8 @@ def _evaluate_value(
 
 def _evaluate_time_series(
     quantity: Quantity,
-    metric_data: Mapping[RRDMetricRef, RRDMetricData],
-    time_series: Mapping[RRDMetricRef, TimeSeries],
+    metric_data: Mapping[RRDMetric, RRDMetricData],
+    time_series: Mapping[RRDMetric, TimeSeries],
     time_range: TimeRange,
 ) -> TimeSeries:
     return quantity.evaluate_time_series(

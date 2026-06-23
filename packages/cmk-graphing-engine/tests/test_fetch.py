@@ -16,7 +16,6 @@ from cmk.graphing_engine import (
     PerformanceValue,
     Quantity,
     RRDMetric,
-    RRDMetricWithCF,
     ServiceRef,
     TimeRange,
     TimeSeries,
@@ -39,8 +38,8 @@ def _time_range() -> TimeRange:
 def _rrd_with_cf(
     name: str,
     consolidation_function: ConsolidationFunction = ConsolidationFunction.AVERAGE,
-) -> RRDMetricWithCF:
-    return RRDMetricWithCF(
+) -> RRDMetric:
+    return RRDMetric(
         host_name="h",
         service_name="svc",
         metric_name=MetricName(name),
@@ -294,7 +293,7 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
 
 
 def test_bare_metric_uses_the_fallback_consolidation_function() -> None:
-    # A bare RRDMetric uses the fallback function; a pinned RRDMetricWithCF keeps its own.
+    # A bare RRDMetric uses the fallback function; one pinning its own keeps it.
     bare = RRDMetric(host_name="h", service_name="svc", metric_name=MetricName("load"))
     pinned = _rrd_with_cf("peak", ConsolidationFunction.MAX)
     graph = Graph(name="g", title="g", lines=[_line(bare), _line(pinned)])

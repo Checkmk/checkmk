@@ -17,7 +17,6 @@ from cmk.graphing_engine import (
     Line,
     MetricName,
     RRDMetric,
-    RRDMetricRef,
     TimeRange,
     TimeSeries,
     Unit,
@@ -50,7 +49,7 @@ class Negated:
     color: str
     operand: Quantity
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield from self.operand.rrd_metrics()
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:

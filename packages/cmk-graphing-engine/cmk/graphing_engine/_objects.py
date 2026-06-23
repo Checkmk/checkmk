@@ -106,13 +106,13 @@ class TimeSeries:
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluationContext:
-    metric_data: Mapping[RRDMetricRef, RRDMetricData]
-    time_series: Mapping[RRDMetricRef, TimeSeries]
+    metric_data: Mapping[RRDMetric, RRDMetricData]
+    time_series: Mapping[RRDMetric, TimeSeries]
     time_range: TimeRange
 
 
 class Quantity(Protocol):
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]: ...
+    def rrd_metrics(self) -> Iterable[RRDMetric]: ...
 
     def evaluate_value(self, context: EvaluationContext) -> float | None: ...
 
@@ -194,7 +194,7 @@ class Constant:
     color: str
     value: int | float
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         return ()
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:  # noqa: ARG002
@@ -212,8 +212,10 @@ class RRDMetric:
     host_name: str
     service_name: str
     metric_name: MetricName
+    # An optional per-metric consolidation function; when None the graph-wide one is used at fetch.
+    consolidation_function: ConsolidationFunction | None = None
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield self
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
@@ -231,44 +233,14 @@ class RRDMetric:
             if data is None
             else DisplayAttributes(title=data.title, unit=data.unit, color=data.color)
         )
-
-
-@dataclass(frozen=True, kw_only=True)
-class RRDMetricWithCF:
-    host_name: str
-    service_name: str
-    metric_name: MetricName
-    consolidation_function: ConsolidationFunction
-
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
-        yield self
-
-    def evaluate_value(self, context: EvaluationContext) -> float | None:
-        data = context.metric_data.get(self)
-        return None if data is None else data.value
-
-    def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries:
-        existing = context.time_series.get(self)
-        return existing if existing is not None else _constant_time_series(None, context.time_range)
-
-    def evaluate_attributes(self, context: EvaluationContext) -> DisplayAttributes | None:
-        data = context.metric_data.get(self)
-        return (
-            None
-            if data is None
-            else DisplayAttributes(title=data.title, unit=data.unit, color=data.color)
-        )
-
-
-type RRDMetricRef = RRDMetric | RRDMetricWithCF
 
 
 @dataclass(frozen=True)
 class WarningOf:
-    metric: RRDMetricRef
+    metric: RRDMetric
     color: str
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield self.metric
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
@@ -289,10 +261,10 @@ class WarningOf:
 
 @dataclass(frozen=True)
 class CriticalOf:
-    metric: RRDMetricRef
+    metric: RRDMetric
     color: str
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield self.metric
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
@@ -313,10 +285,10 @@ class CriticalOf:
 
 @dataclass(frozen=True)
 class LowerWarningOf:
-    metric: RRDMetricRef
+    metric: RRDMetric
     color: str
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield self.metric
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
@@ -337,10 +309,10 @@ class LowerWarningOf:
 
 @dataclass(frozen=True)
 class LowerCriticalOf:
-    metric: RRDMetricRef
+    metric: RRDMetric
     color: str
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield self.metric
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
@@ -361,10 +333,10 @@ class LowerCriticalOf:
 
 @dataclass(frozen=True)
 class MinimumOf:
-    metric: RRDMetricRef
+    metric: RRDMetric
     color: str
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield self.metric
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
@@ -385,10 +357,10 @@ class MinimumOf:
 
 @dataclass(frozen=True)
 class MaximumOf:
-    metric: RRDMetricRef
+    metric: RRDMetric
     color: str
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield self.metric
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
@@ -413,7 +385,7 @@ class Sum:
     color: str
     summands: Sequence[Quantity]
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         for summand in self.summands:
             yield from summand.rrd_metrics()
 
@@ -439,7 +411,7 @@ class Product:
     color: str
     factors: Sequence[Quantity]
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         for factor in self.factors:
             yield from factor.rrd_metrics()
 
@@ -461,7 +433,7 @@ class Difference:
     minuend: Quantity
     subtrahend: Quantity
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield from self.minuend.rrd_metrics()
         yield from self.subtrahend.rrd_metrics()
 
@@ -489,7 +461,7 @@ class Fraction:
     dividend: Quantity
     divisor: Quantity
 
-    def rrd_metrics(self) -> Iterable[RRDMetricRef]:
+    def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield from self.dividend.rrd_metrics()
         yield from self.divisor.rrd_metrics()
 
@@ -592,7 +564,7 @@ class Graph:
     lines: Sequence[Line] = ()
     rules: Sequence[Rule] = ()
 
-    def rrd_metrics(self) -> Sequence[RRDMetricRef]:
+    def rrd_metrics(self) -> Sequence[RRDMetric]:
         return list(
             dict.fromkeys(
                 rrd_metric

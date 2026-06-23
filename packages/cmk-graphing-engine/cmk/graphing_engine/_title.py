@@ -5,7 +5,7 @@
 
 import json
 import re
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Mapping
 
 from ._objects import MetricName, RRDMetricData, ServiceRef
 
@@ -36,11 +36,6 @@ def _evaluate_title_expression(
     if (scalar := _TITLE_SCALARS.get(expression["scalar"])) is None:
         return None
     return scalar(translated)
-
-
-def metric_names_in_title(title: str) -> Iterable[MetricName]:
-    for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
-        yield MetricName(_parse_title_expression(raw)["metric"])
 
 
 def _flatten(

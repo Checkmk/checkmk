@@ -203,7 +203,6 @@ json2python(
         "--use-generic-container-types",
         "--frozen-dataclasses",
         "--keyword-only",
-        "--use-subclass-enum",
     ],
     formatter = ":cmk_shared_typing_formatter",
     source_dir = "source",

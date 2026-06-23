@@ -10,10 +10,10 @@ making them invisible in the report.  This script finds every .py file under the
 given source directories, compares against the paths already in the lcov coverage
 file, and appends zero-coverage entries for each missing file so they show up as 0%.
 
-Must be run from the repository root.
+Source directories are interpreted relative to ``--repo-root``.
 
 Usage:
-    add_missing_coverage.py --coverage-file <path> <source-dir> [...]
+    add_missing_coverage.py --coverage-file <path> --repo-root <dir> <source-dir> [...]
 """
 
 import argparse
@@ -32,9 +32,9 @@ def files_in_coverage_file(coverage_file: Path) -> set[str]:
     }
 
 
-def _tracked_py_files(source_dirs: list[str]) -> list[str]:
+def _tracked_py_files(source_dirs: list[str], repo_root: Path) -> list[str]:
     result = subprocess.run(
-        ["git", "ls-files"] + source_dirs,
+        ["git", "-C", str(repo_root), "ls-files", *source_dirs],
         capture_output=True,
         text=True,
         check=True,
@@ -72,19 +72,19 @@ def _coverage_data(source: str) -> tuple[set[int], list[tuple[int, str]]]:
     return lines, functions
 
 
-def append_zero_entries(coverage_file: Path, source_dirs: list[str]) -> int:
+def append_zero_entries(coverage_file: Path, source_dirs: list[str], repo_root: Path) -> int:
     already_present = files_in_coverage_file(coverage_file)
     candidates = 0
     added = 0
 
     with coverage_file.open("a") as out:
-        for rel in _tracked_py_files(source_dirs):
+        for rel in _tracked_py_files(source_dirs, repo_root):
             if "tests" in Path(rel).parts:
                 continue
             candidates += 1
             if rel in already_present:
                 continue
-            source = Path(rel).read_text(errors="replace")
+            source = (repo_root / rel).read_text(errors="replace")
             executable_lines, functions = _coverage_data(source)
             if not executable_lines:
                 continue
@@ -112,14 +112,21 @@ def main() -> None:
     parser.add_argument(
         "--coverage-file", required=True, type=Path, help="lcov coverage file to append to"
     )
-    parser.add_argument("dirs", nargs="+", help="source directories relative to repo root")
+    parser.add_argument(
+        "--repo-root",
+        type=Path,
+        required=True,
+        help="Repository root the source directories are relative to. Needed because "
+        "the working directory is not the repo under `bazel run`.",
+    )
+    parser.add_argument("dirs", nargs="+", help="source directories relative to --repo-root")
     args = parser.parse_args()
 
     if not args.coverage_file.exists():
         print(f"Error: coverage file not found: {args.coverage_file}", file=sys.stderr)
         sys.exit(1)
 
-    append_zero_entries(args.coverage_file, args.dirs)
+    append_zero_entries(args.coverage_file, args.dirs, args.repo_root)
 
 
 if __name__ == "__main__":

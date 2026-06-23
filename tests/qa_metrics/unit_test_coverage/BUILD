@@ -7,8 +7,6 @@ py_library(
     name = "unit_test_coverage",
     srcs = [
         "__init__.py",
-        "add_missing_coverage.py",
-        "code_coverage_summary.py",
         "rows.py",
     ],
     data = ["schema.sql"],
@@ -27,6 +25,16 @@ py_binary(
         requirement("psycopg"),
         "//tests/qa_metrics/db",
     ],
+)
+
+py_binary(
+    name = "add_missing_coverage",
+    srcs = ["add_missing_coverage.py"],
+)
+
+py_binary(
+    name = "code_coverage_summary",
+    srcs = ["code_coverage_summary.py"],
 )
 
 sh_library(

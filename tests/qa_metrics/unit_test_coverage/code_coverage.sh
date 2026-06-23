@@ -8,7 +8,19 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_PATH="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 
+# Operate from the repo root for the rest of the script: the git metadata
+# queries below and bazel (which locates the workspace from the working
+# directory) all need to run inside the workspace.
+cd "$REPO_PATH"
+
 SOURCE_DIRS=(cmk non-free omd packages agents)
+
+# Every tool is invoked through `bazel run` so Bazel provides it hermetically --
+# no venv activation, no PATH manipulation. The edition flag is passed to every
+# bazel command (not just `bazel coverage`) so they all share one build
+# configuration and don't thrash the analysis cache.
+EDITION_FLAG="--cmk_edition=ultimate"
+PKG="//tests/qa_metrics/unit_test_coverage"
 
 # ---------------------------------------------------------------------------
 # Parse arguments
@@ -93,27 +105,15 @@ if [[ "$DO_UPLOAD" == true ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Prepare and activate venv — mirrors scripts/run-uvenv behaviour
-# ---------------------------------------------------------------------------
-make --silent -C "$REPO_PATH" .venv 1>&2
-# shellcheck source=/dev/null
-source "$REPO_PATH/.venv/bin/activate"
-
-# ---------------------------------------------------------------------------
 # Execute
 # ---------------------------------------------------------------------------
 
-cd "$REPO_PATH"
-
-COVERAGE_DAT="bazel-out/_coverage/_coverage_report.dat"
-COVERAGE_FILTERED_DAT="bazel-out/_coverage/_coverage_report_filtered.dat"
-COVERAGE_HTML_DIR="results/coverage"
+# File arguments are absolute, since `bazel run` executes its targets in the
+# runfiles tree, not in this directory.
+COVERAGE_DAT="$REPO_PATH/bazel-out/_coverage/_coverage_report.dat"
+COVERAGE_FILTERED_DAT="$REPO_PATH/bazel-out/_coverage/_coverage_report_filtered.dat"
+COVERAGE_HTML_DIR="$REPO_PATH/results/coverage"
 RESULT_CSV="$COVERAGE_HTML_DIR/coverage.csv"
-
-if [[ "$RUN" == true || "$GENERATE_HTML" == true ]]; then
-    bazel_env_path="$(bazel run //bazel/tools:bazel_env print-path)"
-    export PATH="$PATH:$bazel_env_path"
-fi
 
 if [[ "$RUN" == true ]]; then
     filter=$(
@@ -121,7 +121,7 @@ if [[ "$RUN" == true ]]; then
         echo "${SOURCE_DIRS[*]}"
     )
     bazel coverage //... \
-        --cmk_edition=ultimate \
+        "$EDITION_FLAG" \
         --test_tag_filters=-component,-cpp,-requires-git \
         --keep_going \
         --build_tests_only \
@@ -130,13 +130,18 @@ if [[ "$RUN" == true ]]; then
         --instrumentation_filter="//(${filter})[/:@]"
     # Strip the repo root prefix so paths are workspace-relative
     sed -i "s|^SF:${REPO_PATH}/|SF:|g" "$COVERAGE_DAT"
-    lcov --extract "$COVERAGE_DAT" \
+    bazel run @lcov//:lcov "$EDITION_FLAG" -- \
+        --extract "$COVERAGE_DAT" \
         "${SOURCE_DIRS[@]/%//*.py}" \
         --output-file "$COVERAGE_FILTERED_DAT"
-    lcov --remove "$COVERAGE_FILTERED_DAT" \
+    bazel run @lcov//:lcov "$EDITION_FLAG" -- \
+        --remove "$COVERAGE_FILTERED_DAT" \
         '*/.cache/bazel/*' '*/tests/*' 'tests/*' \
         --output-file "$COVERAGE_FILTERED_DAT"
-    "$SCRIPT_DIR/add_missing_coverage.py" \
+    # Source dirs are relative to the repo root, passed explicitly because
+    # `bazel run` executes in the runfiles tree, not the workspace.
+    bazel run "$PKG:add_missing_coverage" "$EDITION_FLAG" -- \
+        --repo-root "$REPO_PATH" \
         --coverage-file "$COVERAGE_FILTERED_DAT" \
         "${SOURCE_DIRS[@]}"
 fi
@@ -146,7 +151,8 @@ if [[ "$GENERATE_HTML" == true ]]; then
         echo "Error: Coverage data file not found at $COVERAGE_FILTERED_DAT" >&2
         exit 1
     fi
-    genhtml --title "Checkmk Unit Test Coverage" \
+    bazel run @lcov//:genhtml "$EDITION_FLAG" -- \
+        --title "Checkmk Unit Test Coverage" \
         --quiet \
         --output "$COVERAGE_HTML_DIR" \
         "$COVERAGE_FILTERED_DAT"
@@ -159,7 +165,8 @@ if [[ "$DO_UPLOAD" == true ]]; then
     fi
 
     mkdir -p "$COVERAGE_HTML_DIR"
-    "$SCRIPT_DIR/code_coverage_summary.py" -i "$COVERAGE_FILTERED_DAT" -o "$RESULT_CSV"
+    bazel run "$PKG:code_coverage_summary" "$EDITION_FLAG" -- \
+        -i "$COVERAGE_FILTERED_DAT" -o "$RESULT_CSV"
     if [ ! -f "$RESULT_CSV" ]; then
         echo "Error: $RESULT_CSV not created." >&2
         exit 1
@@ -170,7 +177,7 @@ if [[ "$DO_UPLOAD" == true ]]; then
     [[ "$UPLOAD_PER_MODULE" == true ]] && UPLOAD_ARGS+=(--upload-per-module)
 
     echo "Uploading coverage for commit $COMMIT_HASH at $COMMIT_TIME (${UPLOAD_ARGS[*]})"
-    python -m tests.qa_metrics.unit_test_coverage.store_code_coverage \
+    bazel run "$PKG:store_code_coverage" "$EDITION_FLAG" -- \
         --csv-file "$RESULT_CSV" \
         --git-commit-hash "$COMMIT_HASH" \
         --commit-time "$COMMIT_TIME" \

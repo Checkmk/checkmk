@@ -137,6 +137,10 @@ def check_storcli_pdisks(
     )
     status = params.get(disk.state.lower(), State.UNKNOWN)
     yield Result(state=State(status), summary=infotext)
+    if disk.state.lower() not in params:
+        yield Result(
+            state=State.UNKNOWN, summary=f"Disk State {disk.state!r} not known in Checkmk."
+        )
 
 
 check_plugin_storcli_pdisks = CheckPlugin(

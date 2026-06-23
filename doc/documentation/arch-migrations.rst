@@ -104,7 +104,23 @@ Integration, composition and GUI end-to-end tests as well as parts of the OMD pa
 
 See ``BAZEL.md`` in the repository root.
 
-Monolith decomposition: disolve global ``BaseConfig`` and ``ConfigCache``
+Packaging: centralized ``bin/BUILD`` to self-contained CLI entry points
+=======================================================================
+
+:Phase: starting
+:Old: shipped ``bin/`` entry points aggregated centrally in ``bin/BUILD`` via ``//bin:pkg_tar``, even when the source lives under ``cmk/``
+:New: each owning package ships its own entry point and wires it directly into ``omd/BUILD``'s ``deps_packages_base``
+
+Routing every shipped CLI through ``bin/BUILD`` makes it a cross-cutting hub that must know about files owned by many other components, and it forces those components to re-export their sources via ``exports_files``.
+For example, ``cmk-pwstore`` (source ``//cmk/utils:password_store/cli.py``) and ``cmk-product-usage`` (source ``//cmk/product_usage:cli.py``) both define their ``pkg_files`` in ``bin/BUILD`` while their code lives under ``cmk/``.
+
+Example for the new pattern: ``cmk/post_rename_site`` (``//cmk/post_rename_site:post-rename-site-pkg``) and ``cmk/update_config`` (``//cmk/update_config:cmk-update-config-pkg``).
+In the new pattern the owning package defines its own ``pkg_files`` target (named ``<binary-name>-pkg``) with ``prefix = "bin"``, ``mode = "0755"``, a ``renames`` mapping the source to the final binary name, and ``visibility = ["//omd:__pkg__"]``.
+That target is listed directly in ``omd/BUILD``'s ``deps_packages_base`` ``pkg_tar``, so ``bin/BUILD`` is not touched and no ``exports_files`` is needed.
+
+When adding a *new* shipped CLI entry point, use the self-contained pattern.
+
+Monolith decomposition: dissolve global ``BaseConfig`` and ``ConfigCache``
 =========================================================================
 
 :Phase: in progress (long-running)

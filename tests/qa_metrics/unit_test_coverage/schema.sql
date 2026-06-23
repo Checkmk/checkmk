@@ -1,6 +1,8 @@
 -- PostgreSQL table creation script for Code Coverage Data Tables
-
-BEGIN;
+--
+-- Applied (idempotently) on every upload via tests.qa_metrics.db.apply_schema_file,
+-- which runs the statements on an autocommit connection -- no explicit
+-- transaction wrapper, mirroring the other qa_metrics schemas.
 
 -- Per-module coverage of the most recent run. Rewritten in full on every
 -- nightly upload, so it always reflects the latest state of the code base.
@@ -45,5 +47,3 @@ COMMENT ON COLUMN cmk_code_coverage_total.total_lines IS 'Total number of lines 
 COMMENT ON COLUMN cmk_code_coverage_total.covered_functions IS 'Number of covered functions across all modules';
 COMMENT ON COLUMN cmk_code_coverage_total.total_functions IS 'Total number of functions across all modules';
 COMMENT ON COLUMN cmk_code_coverage_total.commit_time IS 'Committer time of the measured commit';
-
-COMMIT;

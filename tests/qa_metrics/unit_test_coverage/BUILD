@@ -9,16 +9,21 @@ py_library(
         "__init__.py",
         "add_missing_coverage.py",
         "code_coverage_summary.py",
+        "rows.py",
     ],
+    data = ["schema.sql"],
     imports = ["../../.."],
+    deps = [
+        "//tests/qa_metrics/db",
+    ],
 )
 
 py_binary(
     name = "store_code_coverage",
     srcs = ["store_code_coverage.py"],
-    data = ["code_coverage_tables.sql"],
     imports = ["../../.."],
     deps = [
+        ":unit_test_coverage",
         requirement("psycopg"),
         "//tests/qa_metrics/db",
     ],

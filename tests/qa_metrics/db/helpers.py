@@ -3,11 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Generic UPSERT helper.
-
-Lifted from ``tests/scripts/store_code_coverage.py`` and parameterised so any
-metric can use the same idempotent-insert pattern without copy-paste.
-"""
+"""Generic UPSERT helper shared by the qa_metrics pipelines."""
 
 import logging
 from collections.abc import Mapping

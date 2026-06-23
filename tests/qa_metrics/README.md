@@ -10,6 +10,9 @@ push the result to the QA Metabase postgres for dashboarding.
   row dataclass to postgres table. Every metric depends on this.
 - `change_quality/` — first metric. Per-werk row of "did the introducing
   commit include a test?", written to `cmk_change_tested`.
+- `unit_test_coverage/` — unit-test code coverage. Uploads overall coverage history to
+  `cmk_code_coverage_total` and the latest per-module breakdown to
+  `cmk_code_coverage_per_module`.
 
 ## Adding a new metric
 
@@ -20,8 +23,7 @@ push the result to the QA Metabase postgres for dashboarding.
 
 ## Environment
 
-The lib reads its connection from these env vars (mirrors
-`tests/scripts/coverage/store_code_coverage.py`):
+The lib reads its connection from these env vars (used by every metric):
 
 - `POSTGRES_HOST`, `POSTGRES_PORT` (default 5432), `POSTGRES_DB`, `QA_POSTGRES_USER` — required.
 - Auth: `QA_POSTGRES_PASSWORD` _or_ the SSL trio
@@ -43,13 +45,9 @@ Per-target test invocations:
 ```bash
 bazel test //tests/unit/qa_metrics/db:db                            # shared-lib tests
 bazel test //tests/unit/qa_metrics/change_quality:change_quality    # change-quality metric tests
+bazel test //tests/unit/qa_metrics/unit_test_coverage:unit_test_coverage                # code-coverage metric tests
 ```
 
 The change-quality test target opts out of the bazel sandbox (`tags =
 ["no-sandbox"]`) because `test_walk.py` shells out to the host `git` binary
 against a fixture repo built in `tmp_path`.
-
-## Out of scope (today)
-
-- Migrating `tests/scripts/coverage/store_code_coverage.py` onto this lib. Planned as
-  a follow-up once the lib has shipped its first consumer.

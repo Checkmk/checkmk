@@ -9,6 +9,7 @@ py_library(
     srcs = [
         "__init__.py",
         "_db_stubs.py",
+        "_schema.py",
     ],
     deps = [requirement("psycopg")],
 )

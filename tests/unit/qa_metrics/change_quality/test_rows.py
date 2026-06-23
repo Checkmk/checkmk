@@ -5,10 +5,10 @@
 
 from __future__ import annotations
 
-import re
 from datetime import datetime, UTC
 
 from tests.qa_metrics.change_quality.rows import CHANGE_TESTED, ChangeTestedRow
+from tests.unit.qa_metrics._schema import schema_columns
 
 
 def _row() -> ChangeTestedRow:
@@ -32,33 +32,10 @@ def _row() -> ChangeTestedRow:
     )
 
 
-def _row_required_columns(schema_text: str) -> set[str]:
-    """Columns from ``CREATE TABLE`` that the row dataclass must supply.
-
-    Excludes columns with a ``DEFAULT`` clause -- those are populated by the
-    DB on first insert (see schema.sql's note about ``first_inserted_at``).
-    """
-    body_match = re.search(r"CREATE TABLE[^(]*\((.*?)\);", schema_text, re.DOTALL | re.IGNORECASE)
-    assert body_match is not None, "CREATE TABLE block not found in schema"
-    skip_keywords = {"PRIMARY", "FOREIGN", "CONSTRAINT", "UNIQUE", "CHECK", "LIKE"}
-    columns: set[str] = set()
-    for raw in body_match.group(1).splitlines():
-        line = raw.strip().rstrip(",")
-        if not line or line.startswith("--"):
-            continue
-        first = line.split()[0]
-        if first.upper() in skip_keywords:
-            continue
-        if re.search(r"\bDEFAULT\b", line, re.IGNORECASE):
-            continue
-        columns.add(first)
-    return columns
-
-
 def test_to_db_dict_keys_match_schema_columns() -> None:
     """Catches dataclass/schema drift -- the gap called out in db/table.py."""
     schema_text = CHANGE_TESTED.schema_path.read_text(encoding="utf-8")
-    expected = _row_required_columns(schema_text)
+    expected = schema_columns(schema_text, CHANGE_TESTED.name, skip_defaults=True)
     assert expected, "schema parser found no columns -- parser is broken"
     assert set(_row().to_db_dict()) == expected
 

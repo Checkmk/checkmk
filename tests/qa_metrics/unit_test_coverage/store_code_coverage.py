@@ -7,7 +7,7 @@
 
 The CSV is produced by ``code_coverage_summary.py`` and holds one row per source
 module plus a ``TOTAL`` row. This script writes that data into two tables (see
-``code_coverage_tables.sql``), independently selected via ``--upload-totals`` and
+``schema.sql``), independently selected via ``--upload-totals`` and
 ``--upload-per-module`` (at least one is required):
 
 * ``cmk_code_coverage_total`` (``--upload-totals``): overall coverage history,
@@ -29,20 +29,21 @@ import argparse
 import csv
 import logging
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from datetime import datetime
 from pathlib import Path
 
 from psycopg import sql
 
-from tests.qa_metrics.db import MetabasePostgres
+from tests.qa_metrics.db import apply_schema_file, MetabasePostgres
+from tests.qa_metrics.unit_test_coverage.rows import (
+    ModuleCoverageRow,
+    PER_MODULE,
+    TOTAL,
+    TotalCoverageRow,
+)
 
 logger = logging.getLogger(__name__)
-
-_TABLE_TOTAL = "cmk_code_coverage_total"
-_TABLE_PER_MODULE = "cmk_code_coverage_per_module"
-
-_SCHEMA_FILE = Path(__file__).with_name("code_coverage_tables.sql")
 
 
 @dataclass(frozen=True)
@@ -63,86 +64,24 @@ class ModuleCoverage:
     counts: CoverageCounts
 
 
-def apply_schema(db: MetabasePostgres, schema_file: Path) -> None:
-    """Apply the idempotent table DDL so the target tables exist.
+def replace_module_coverage(db: MetabasePostgres, rows: Sequence[ModuleCoverageRow]) -> None:
+    """Atomically replace the per-module table with the given rows.
 
-    The schema carries its own BEGIN/COMMIT and has no query parameters, so the
-    autocommit connection runs all statements via the simple-query protocol in a
-    single call.
+    ``Table.upsert`` can only insert-or-update single rows, so the full rewrite
+    keeps a bespoke ``TRUNCATE`` + bulk ``INSERT`` in one transaction: concurrent
+    readers keep seeing the previous run's data until the swap commits. Columns
+    are derived from the row dataclass so they stay aligned with ``to_db_dict``.
     """
-    with db.cursor() as cursor:
-        cursor.execute(schema_file.read_text(encoding="utf-8"))
-    logger.info("Applied schema from %s", schema_file)
-
-
-def store_total_coverage(
-    db: MetabasePostgres, counts: CoverageCounts, commit_hash: str, commit_time: datetime
-) -> None:
-    """Append the overall coverage for a commit, updating it if it exists."""
-    query = sql.SQL(
-        """
-        INSERT INTO {table}
-            (commit_hash, covered_lines, total_lines, covered_functions,
-             total_functions, commit_time)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        ON CONFLICT (commit_hash) DO UPDATE SET
-            covered_lines = EXCLUDED.covered_lines,
-            total_lines = EXCLUDED.total_lines,
-            covered_functions = EXCLUDED.covered_functions,
-            total_functions = EXCLUDED.total_functions,
-            commit_time = EXCLUDED.commit_time
-        """
-    ).format(table=sql.Identifier(_TABLE_TOTAL))
-    with db.cursor() as cursor:
-        cursor.execute(
-            query,
-            (
-                commit_hash,
-                counts.covered_lines,
-                counts.total_lines,
-                counts.covered_functions,
-                counts.total_functions,
-                commit_time,
-            ),
-        )
-    logger.info("Stored total coverage for commit %s", commit_hash)
-
-
-def replace_module_coverage(
-    db: MetabasePostgres,
-    modules: Sequence[ModuleCoverage],
-    commit_hash: str,
-    commit_time: datetime,
-) -> None:
-    """Atomically replace the per-module table with the given modules.
-
-    The truncate and inserts run in a single transaction, so concurrent readers
-    keep seeing the previous run's data until the swap commits.
-    """
-    truncate = sql.SQL("TRUNCATE {table}").format(table=sql.Identifier(_TABLE_PER_MODULE))
-    insert = sql.SQL(
-        """
-        INSERT INTO {table}
-            (module_path, covered_lines, total_lines, covered_functions,
-             total_functions, commit_hash, commit_time)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """
-    ).format(table=sql.Identifier(_TABLE_PER_MODULE))
-    rows = [
-        (
-            module.module_path,
-            module.counts.covered_lines,
-            module.counts.total_lines,
-            module.counts.covered_functions,
-            module.counts.total_functions,
-            commit_hash,
-            commit_time,
-        )
-        for module in modules
-    ]
+    columns = [field.name for field in fields(ModuleCoverageRow)]
+    truncate = sql.SQL("TRUNCATE {table}").format(table=sql.Identifier(PER_MODULE.name))
+    insert = sql.SQL("INSERT INTO {table} ({columns}) VALUES ({placeholders})").format(
+        table=sql.Identifier(PER_MODULE.name),
+        columns=sql.SQL(", ").join(sql.Identifier(column) for column in columns),
+        placeholders=sql.SQL(", ").join([sql.Placeholder()] * len(columns)),
+    )
     with db.connection.transaction(), db.cursor() as cursor:
         cursor.execute(truncate)
-        cursor.executemany(insert, rows)
+        cursor.executemany(insert, [list(row.to_db_dict().values()) for row in rows])
     logger.info("Replaced per-module coverage with %d modules", len(rows))
 
 
@@ -235,11 +174,36 @@ def main() -> None:
     logger.info("Read coverage for %d modules from %s", len(modules), args.csv_file)
 
     with MetabasePostgres.from_env() as db:
-        apply_schema(db, _SCHEMA_FILE)
+        apply_schema_file(db, TOTAL.schema_path)
         if args.upload_totals:
-            store_total_coverage(db, total, args.git_commit_hash, args.commit_time)
+            TOTAL.upsert(
+                db,
+                TotalCoverageRow(
+                    commit_hash=args.git_commit_hash,
+                    covered_lines=total.covered_lines,
+                    total_lines=total.total_lines,
+                    covered_functions=total.covered_functions,
+                    total_functions=total.total_functions,
+                    commit_time=args.commit_time,
+                ),
+            )
+            logger.info("Stored total coverage for commit %s", args.git_commit_hash)
         if args.upload_per_module:
-            replace_module_coverage(db, modules, args.git_commit_hash, args.commit_time)
+            replace_module_coverage(
+                db,
+                [
+                    ModuleCoverageRow(
+                        module_path=module.module_path,
+                        covered_lines=module.counts.covered_lines,
+                        total_lines=module.counts.total_lines,
+                        covered_functions=module.counts.covered_functions,
+                        total_functions=module.counts.total_functions,
+                        commit_hash=args.git_commit_hash,
+                        commit_time=args.commit_time,
+                    )
+                    for module in modules
+                ],
+            )
 
     logger.info("Code coverage storage completed successfully")
 

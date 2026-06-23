@@ -2,7 +2,7 @@
 # PYTHON_VERSION and PYTHON_VERSION_WINDOWS are sed-ed into defines.make.
 # This file won't be necessary anymore when we finished porting
 # to rules_py.
-PYTHON_VERSION = "3.13.13"
+PYTHON_VERSION = "3.13.14"
 
 # The python version used in the windows agent modules is kept separate from
 # PYTHON_VERSION as they are not directly connected, but should stay as close

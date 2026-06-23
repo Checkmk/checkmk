@@ -1,10 +1,10 @@
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.single_version_platform_override(
     platform = "x86_64-unknown-linux-gnu",
-    python_version = "3.13.13",
-    sha256 = "e5ec3b2c5693215d153c434ac018e75511b2c4f96d2bce30468a477cb3a89d5e",
+    python_version = "3.13.14",
+    sha256 = "31ebbb024fecb446d7f25a5b59ca1d4955597ca3f5b4b76f55b30a8987eb61c9",
     urls = [
-        "https://github.com/astral-sh/python-build-standalone/releases/download/20260414/cpython-3.13.13+20260414-x86_64-unknown-linux-gnu-install_only.tar.gz",
+        "https://github.com/astral-sh/python-build-standalone/releases/download/20260610/cpython-3.13.14+20260610-x86_64-unknown-linux-gnu-install_only.tar.gz",
     ],
 )
 python.defaults(python_version = "3.13")

@@ -5,7 +5,7 @@
 
 """Store code coverage statistics from a CSV file into the coverage database.
 
-The CSV is produced by ``code_coverage_summary.py`` and holds one row per source
+The CSV is produced by ``summary.py`` and holds one row per source
 module plus a ``TOTAL`` row. This script writes that data into two tables (see
 ``schema.sql``), independently selected via ``--upload-totals`` and
 ``--upload-per-module`` (at least one is required):
@@ -95,7 +95,7 @@ def _sum_counts(modules: Sequence[ModuleCoverage]) -> CoverageCounts:
 
 
 def read_coverage_csv(csv_file: Path) -> tuple[CoverageCounts, list[ModuleCoverage]]:
-    """Read total and per-module coverage from a ``code_coverage_summary.py`` CSV.
+    """Read total and per-module coverage from a ``summary.py`` CSV.
 
     The total is taken from the ``TOTAL`` row if present, otherwise summed from
     the per-module rows.

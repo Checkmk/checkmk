@@ -140,7 +140,7 @@ if [[ "$RUN" == true ]]; then
         --output-file "$COVERAGE_FILTERED_DAT"
     # Source dirs are relative to the repo root, passed explicitly because
     # `bazel run` executes in the runfiles tree, not the workspace.
-    bazel run "$PKG:add_missing_coverage" "$EDITION_FLAG" -- \
+    bazel run "$PKG:add_missing" "$EDITION_FLAG" -- \
         --repo-root "$REPO_PATH" \
         --coverage-file "$COVERAGE_FILTERED_DAT" \
         "${SOURCE_DIRS[@]}"
@@ -165,7 +165,7 @@ if [[ "$DO_UPLOAD" == true ]]; then
     fi
 
     mkdir -p "$COVERAGE_HTML_DIR"
-    bazel run "$PKG:code_coverage_summary" "$EDITION_FLAG" -- \
+    bazel run "$PKG:summary" "$EDITION_FLAG" -- \
         -i "$COVERAGE_FILTERED_DAT" -o "$RESULT_CSV"
     if [ ! -f "$RESULT_CSV" ]; then
         echo "Error: $RESULT_CSV not created." >&2
@@ -177,7 +177,7 @@ if [[ "$DO_UPLOAD" == true ]]; then
     [[ "$UPLOAD_PER_MODULE" == true ]] && UPLOAD_ARGS+=(--upload-per-module)
 
     echo "Uploading coverage for commit $COMMIT_HASH at $COMMIT_TIME (${UPLOAD_ARGS[*]})"
-    bazel run "$PKG:store_code_coverage" "$EDITION_FLAG" -- \
+    bazel run "$PKG:upload" "$EDITION_FLAG" -- \
         --csv-file "$RESULT_CSV" \
         --git-commit-hash "$COMMIT_HASH" \
         --commit-time "$COMMIT_TIME" \

@@ -17,8 +17,8 @@ py_library(
 )
 
 py_binary(
-    name = "store_code_coverage",
-    srcs = ["store_code_coverage.py"],
+    name = "upload",
+    srcs = ["upload.py"],
     imports = ["../../.."],
     deps = [
         ":unit_test_coverage",
@@ -28,16 +28,16 @@ py_binary(
 )
 
 py_binary(
-    name = "add_missing_coverage",
-    srcs = ["add_missing_coverage.py"],
+    name = "add_missing",
+    srcs = ["add_missing.py"],
 )
 
 py_binary(
-    name = "code_coverage_summary",
-    srcs = ["code_coverage_summary.py"],
+    name = "summary",
+    srcs = ["summary.py"],
 )
 
 sh_library(
-    name = "code_coverage_sh",
-    srcs = ["code_coverage.sh"],
+    name = "main_sh",
+    srcs = ["main.sh"],
 )

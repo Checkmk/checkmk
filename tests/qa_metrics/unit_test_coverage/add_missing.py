@@ -13,7 +13,7 @@ file, and appends zero-coverage entries for each missing file so they show up as
 Source directories are interpreted relative to ``--repo-root``.
 
 Usage:
-    add_missing_coverage.py --coverage-file <path> --repo-root <dir> <source-dir> [...]
+    add_missing.py --coverage-file <path> --repo-root <dir> <source-dir> [...]
 """
 
 import argparse

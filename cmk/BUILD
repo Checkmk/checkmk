@@ -16,6 +16,7 @@ LEGACY_CHECKS_DICT = {"base/legacy_checks/" + name + ".py": name for name in LEG
 
 exports_files([
     "requirements.in",
+    "automations/client.py",
     "product_usage/cli.py",
     "utils/password_store/cli.py",
     "gui/openapi/spec/spec_generator/generate_api_spec.py",

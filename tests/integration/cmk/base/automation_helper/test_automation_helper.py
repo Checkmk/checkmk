@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
-import logging
 import subprocess
 from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
@@ -13,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.automations.helper_api import AutomationPayload, AutomationResponse
+from cmk.automations.helper_api import AutomationResponse
 from cmk.automations.results import AnalyseServiceResult, SerializedResult
 from cmk.base.automation_helper._app import HealthCheckResponse
 from cmk.base.automation_helper._config import (
@@ -28,8 +27,6 @@ from tests.integration.linux_test_host import create_linux_test_host
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 
-from ._helper_query_automation_helper import AutomationMode, HealthMode
-
 
 def test_config_reloading_without_reloader(site: Site) -> None:
     with (
@@ -38,17 +35,8 @@ def test_config_reloading_without_reloader(site: Site) -> None:
         _reload_ensurer(site) as wait_for_reload,
     ):
         site.write_file(file, "")
-        _query_automation_helper(
-            site,
-            AutomationMode(
-                payload=AutomationPayload(
-                    name="non-existing-automation",  # we just want to trigger a reload
-                    args=[],
-                    stdin="",
-                    log_level=logging.INFO,
-                )
-            ).model_dump_json(),
-        )
+        # we just want to trigger a reload
+        _run_automation(site, "non-existing-automation", [])
         wait_for_reload(0)
 
 
@@ -270,27 +258,19 @@ def reload_timeout() -> float:
     )
 
 
-def _query_automation_helper(site: Site, serialized_input: str) -> str:
-    return site.python_helper("_helper_query_automation_helper.py").check_output(
-        input_=serialized_input
-    )
+def _run_automation(site: Site, name: str, args: Sequence[str], stdin: str = "") -> str:
+    return site.check_output(["cmk-automation-client", name, *args], input_=stdin)
+
+
+def _query_health(site: Site) -> str:
+    return site.check_output(["cmk-automation-client", "--health"])
 
 
 def _query_analyse_service(site: Site, args: Sequence[str]) -> AnalyseServiceResult:
     return AnalyseServiceResult.deserialize(
         SerializedResult(
             AutomationResponse.model_validate_json(
-                _query_automation_helper(
-                    site,
-                    AutomationMode(
-                        payload=AutomationPayload(
-                            name="analyse-service",
-                            args=args,
-                            stdin="",
-                            log_level=logging.INFO,
-                        )
-                    ).model_dump_json(),
-                )
+                _run_automation(site, "analyse-service", args)
             ).serialized_result_or_error_code
         )
     )
@@ -299,9 +279,7 @@ def _query_analyse_service(site: Site, args: Sequence[str]) -> AnalyseServiceRes
 def _restart_automation_helper_and_wait_until_reachable(site: Site) -> None:
     def health_endpoint_is_reachable() -> bool:
         try:
-            HealthCheckResponse.model_validate_json(
-                _query_automation_helper(site, HealthMode().model_dump_json())
-            )
+            HealthCheckResponse.model_validate_json(_query_health(site))
         except subprocess.CalledProcessError:
             return False
         return True
@@ -317,15 +295,13 @@ def _restart_automation_helper_and_wait_until_reachable(site: Site) -> None:
 @contextmanager
 def _reload_ensurer(site: Site) -> Generator[Callable[[float], None]]:
     last_reload_timestamp = HealthCheckResponse.model_validate_json(
-        _query_automation_helper(site, HealthMode().model_dump_json())
+        _query_health(site)
     ).last_reload_at
 
     def _wait_for_reload(timeout: float) -> None:
         wait_until(
             lambda: (
-                HealthCheckResponse.model_validate_json(
-                    _query_automation_helper(site, HealthMode().model_dump_json())
-                ).last_reload_at
+                HealthCheckResponse.model_validate_json(_query_health(site)).last_reload_at
                 > last_reload_timestamp
             ),
             timeout=timeout,

@@ -5,5 +5,7 @@
 
 import socket
 
+from cmk.automations.helper_api import AUTOMATION_HELPER_SOCKET_RELATIVE_PATH
+
 with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
-    client.connect("tmp/run/automation-helper.sock")
+    client.connect(AUTOMATION_HELPER_SOCKET_RELATIVE_PATH)

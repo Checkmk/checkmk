@@ -104,12 +104,22 @@ pkg_tar(
     srcs = [
         ":bin_750",
         ":bin_755",
+        ":cmk-automation-client",
         ":cmk-product-usage",
         ":cmk-pwstore",
         ":cmk_link",
     ],
     stamp = 1,
     visibility = ["//visibility:public"],
+)
+
+pkg_files(
+    name = "cmk-automation-client",
+    srcs = ["//cmk:automations/client.py"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    renames = {"//cmk:automations/client.py": "bin/cmk-automation-client"},
 )
 
 pkg_files(

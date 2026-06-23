@@ -7,6 +7,13 @@ from collections.abc import Sequence
 
 from pydantic import BaseModel
 
+# Location of the automation helper's unix socket, relative to OMD_ROOT.
+AUTOMATION_HELPER_SOCKET_RELATIVE_PATH = "tmp/run/automation-helper.sock"
+
+# Arbitrary host label used to mount the unix-socket transport on a requests session; the actual
+# routing is done via the socket, so the host part of the URL is irrelevant to the server.
+AUTOMATION_HELPER_BASE_URL = "http://local-automation"
+
 
 class AutomationPayload(BaseModel, frozen=True):
     name: str

@@ -102,6 +102,11 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
   }
   return {}
 }
+
+function labelStyle(columnDef: ColumnDef<T>): CSSProperties {
+  const justify = columnDef.meta?.justify
+  return justify !== undefined ? { textAlign: justify } : {}
+}
 </script>
 
 <template>
@@ -120,20 +125,23 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
         :style="[columnStyle(header.column.columnDef), stickyStyle(header.column.id)]"
         :aria-sort="ariaSortFor(header.column.getIsSorted())"
       >
-        <div
-          class="monitoring-table-header__cell-content"
-          :style="contentStyle(header.column.columnDef)"
-        >
-          <CmkCheckbox
+        <div class="monitoring-table-header__cell-content">
+          <div
             v-if="!header.isPlaceholder && header.column.columnDef.meta?.selectColumn"
-            :allow-indeterminate="true"
-            :model-value="selectAllModel(header.getContext().table)"
-            @update:model-value="setSelectAll(header.getContext().table, $event)"
-          />
+            class="monitoring-table-header__select"
+            :style="contentStyle(header.column.columnDef)"
+          >
+            <CmkCheckbox
+              :allow-indeterminate="true"
+              :model-value="selectAllModel(header.getContext().table)"
+              @update:model-value="setSelectAll(header.getContext().table, $event)"
+            />
+          </div>
           <button
             v-else-if="!header.isPlaceholder && header.column.getCanSort()"
             type="button"
             class="monitoring-table-header__header-button"
+            :style="contentStyle(header.column.columnDef)"
             :title="header.column.columnDef.header?.toString()"
             :disabled="disabled"
             @click="header.column.getToggleSortingHandler()?.($event)"
@@ -169,7 +177,8 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
           </button>
           <span
             v-else-if="!header.isPlaceholder"
-            class="monitoring-table-header__label"
+            class="monitoring-table-header__label monitoring-table-header__label--standalone"
+            :style="labelStyle(header.column.columnDef)"
             :title="header.column.columnDef.header?.toString()"
           >
             <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
@@ -240,13 +249,20 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
   height: 100%;
 }
 
+.monitoring-table-header__select {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+}
+
 .monitoring-table-header__header-button {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-2);
   max-width: 100%;
   height: 100%;
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   background: transparent;
   border: none;
   margin: 0;
@@ -278,6 +294,10 @@ function contentStyle(columnDef: ColumnDef<T>): CSSProperties {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.monitoring-table-header__label--standalone {
+  flex: 1 1 auto;
 }
 
 .monitoring-table-header__filter-button {

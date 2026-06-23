@@ -221,4 +221,5 @@ def test_check_v2_simple() -> None:
     )
     assert result == [
         Result(state=State.UNKNOWN, summary="Size: 6.985 TiB, Disk State: Online"),
+        Result(state=State.UNKNOWN, summary="Disk State 'Online' not known in Checkmk."),
     ]

@@ -53,5 +53,4 @@ APACHE_INIT_NAME  = httpd
 APACHE_USER       = apache
 APACHE_CTL        = /usr/sbin/apachectl
 APACHE_MODULE_DIR_64 = /usr/lib64/httpd/modules
-MOUNT_OPTIONS     =
 INIT_CMD          = systemctl %(action)s %(name)s.service

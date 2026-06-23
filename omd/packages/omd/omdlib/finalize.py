@@ -18,7 +18,6 @@ from omdlib.instance_id import create_instance_id
 from omdlib.scripts import call_scripts
 from omdlib.site_paths import SitePaths
 from omdlib.tmpfs import prepare_and_populate_tmpfs
-from omdlib.version_info import VersionInfo
 
 from cmk.ccc.site import SiteId
 from cmk.utils.certs import (
@@ -100,7 +99,6 @@ class FinalizeOutcome(enum.Enum):
 
 
 def finalize_site_as_user(
-    version_info: VersionInfo,
     site: SiteContext,
     config: Config,
     command_type: CommandType,
@@ -113,7 +111,6 @@ def finalize_site_as_user(
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     prepare_and_populate_tmpfs(
         config,
-        version_info,
         site.name,
         site_home,
         site.tmp_dir,

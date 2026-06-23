@@ -18,7 +18,6 @@ class VersionInfo:
         self.USERADD_OPTIONS = ""
         self.APACHE_USER = ""
         self.ADD_USER_TO_GROUP = ""
-        self.MOUNT_OPTIONS = ""
         self.INIT_CMD = ""
         self.APACHE_CTL = ""
         self.APACHE_INIT_NAME = ""

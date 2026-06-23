@@ -20,7 +20,6 @@ from omdlib.options import CommandOptions
 from omdlib.skel_permissions import Permissions
 from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
 from omdlib.type_defs import Replacements, Skeleton
-from omdlib.version_info import VersionInfo
 
 from cmk.ccc.crash_reporting import make_crash_report_base_path
 
@@ -235,14 +234,12 @@ class ManageUpdate:
 
     def prepare_and_populate_tmpfs(
         self,
-        version: VersionInfo,
         config: Config,
         replacements: Replacements,
         skel_permissions: Permissions,
     ) -> None:
         prepare_and_populate_tmpfs(
             config,
-            version,
             self.site_name,
             str(self.site_home),
             str(self.tmp_dir),

@@ -8,7 +8,6 @@
 import errno
 import os
 import re
-import shlex
 import subprocess
 import sys
 import tarfile
@@ -22,7 +21,6 @@ from omdlib.skel_permissions import Permissions
 from omdlib.type_defs import Replacements
 from omdlib.users_and_groups import run_as_site_user
 from omdlib.utils import create_skeleton_files, delete_directory_contents, is_containerized
-from omdlib.version_info import VersionInfo
 
 from cmk.ccc import tty
 from cmk.ccc.archive import CheckmkTarArchive
@@ -44,7 +42,7 @@ def tmpfs_mounted(sitename: str) -> bool:
     return False
 
 
-def prepare_tmpfs(version_info: VersionInfo, site_name: str, tmp_dir: str, tmpfs_hook: str) -> None:
+def prepare_tmpfs(site_name: str, tmp_dir: str, tmpfs_hook: str) -> None:
     if tmpfs_mounted(site_name):
         return  # Fine: Mounted
 
@@ -69,9 +67,8 @@ def prepare_tmpfs(version_info: VersionInfo, site_name: str, tmp_dir: str, tmpfs
         os.mkdir(tmp_dir)
         os.chmod(tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
 
-    mount_options = shlex.split(version_info.MOUNT_OPTIONS)
     completed_process = subprocess.run(
-        ["mount"] + mount_options + [tmp_dir],
+        ["mount", tmp_dir],
         shell=False,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
@@ -299,7 +296,6 @@ def _restore_tmpfs_dump(site_dir: str, site_tmp_dir: str) -> None:
 
 def prepare_and_populate_tmpfs(
     config: Config,
-    version_info: VersionInfo,
     site_name: str,
     site_home: str,
     site_tmp_dir: str,
@@ -307,7 +303,7 @@ def prepare_and_populate_tmpfs(
     skel_permissions: Permissions,
     skelroot: str,
 ) -> None:
-    prepare_tmpfs(version_info, site_name, site_tmp_dir, config["TMPFS"])
+    prepare_tmpfs(site_name, site_tmp_dir, config["TMPFS"])
 
     if not os.listdir(site_tmp_dir):
         create_skeleton_files(site_home, replacements, skelroot, skel_permissions, "tmp")

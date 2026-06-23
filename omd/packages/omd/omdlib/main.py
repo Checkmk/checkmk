@@ -238,12 +238,11 @@ def stop_site(site_name: str, capture_output: bool) -> subprocess.CompletedProce
     return run_as_site_user(site_name, ["omd", "stop"], capture_output=capture_output)
 
 
-def start_site(version_info: VersionInfo, site: SiteContext, config: Config) -> None:
+def start_site(site: SiteContext, config: Config) -> None:
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     site_home = SitePaths.from_site_name(site.name).home
     prepare_and_populate_tmpfs(
         config,
-        version_info,
         site.name,
         site_home,
         site.tmp_dir,
@@ -1408,7 +1407,6 @@ def _instantiate_skel(path: str, replacements: Replacements) -> bytes:
 
 
 def config_change(
-    version_info: VersionInfo,
     site: SiteContext,
     config: Config,
     config_hooks: ConfigHooks,
@@ -1438,7 +1436,7 @@ def config_change(
         return changed
     finally:
         if site_was_stopped:
-            start_site(version_info, site, config)
+            start_site(site, config)
 
 
 def read_config_change_commands() -> ConfigChangeCommands:
@@ -1650,7 +1648,6 @@ def config_configure_hook(
 
 
 def init_action(
-    version_info: VersionInfo,
     site: SiteContext,
     config: Config,
     global_opts: GlobalOptions,
@@ -1667,7 +1664,6 @@ def init_action(
         skelroot = "/omd/versions/%s/skel" % omdlib.__version__
         prepare_and_populate_tmpfs(
             config,
-            version_info,
             site.name,
             site_home,
             site.tmp_dir,
@@ -2473,7 +2469,6 @@ def print_diff(
 
 
 def main_update(
-    version_info: VersionInfo,
     site: SiteContext,
     global_opts: GlobalOptions,
     _args: object,
@@ -2583,9 +2578,7 @@ def main_update(
 
             # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
             # initialized tmpfs.
-            mu.prepare_and_populate_tmpfs(
-                version_info, config, site.replacements(), site.skel_permissions
-            )
+            mu.prepare_and_populate_tmpfs(config, site.replacements(), site.skel_permissions)
 
             additional_update_env = {
                 "OMD_FROM_EDITION": new_from_edition,
@@ -2684,7 +2677,6 @@ def main_umount(
 
 
 def main_init_action(
-    version_info: VersionInfo,
     site: SiteContext | RootContext,
     global_opts: GlobalOptions,
     command: Literal["start", "stop", "restart", "reload", "status"],
@@ -2694,7 +2686,7 @@ def main_init_action(
     if isinstance(site, SiteContext):
         site_home = SitePaths.from_site_name(site.name).home
         config = read_site_config(site_home)
-        exit_status = init_action(version_info, site, config, global_opts, command, args, options)
+        exit_status = init_action(site, config, global_opts, command, args, options)
 
         # When the whole site is about to be stopped check for remaining
         # processes and terminate them
@@ -2849,7 +2841,6 @@ def _update_license_usage(site: SiteContext) -> None:
 
 
 def main_config(
-    version_info: VersionInfo,
     site: SiteContext,
     global_opts: GlobalOptions,
     args: Arguments,
@@ -2879,7 +2870,7 @@ def main_config(
         elif command == "set":
             set_hooks = config_set(site, config, config_hooks, args, global_opts.verbose)
         elif command == "change":
-            set_hooks = config_change(version_info, site, config, config_hooks, global_opts.verbose)
+            set_hooks = config_change(site, config, config_hooks, global_opts.verbose)
         else:
             config_usage()
 
@@ -2893,7 +2884,7 @@ def main_config(
         )
 
     if need_start:
-        start_site(version_info, site, config)
+        start_site(site, config)
 
 
 def main_su(
@@ -3080,9 +3071,7 @@ def _restore_backup_from_tar_site(
             tar, global_opts.verbose, _get_conflict_mode(options), old_site_name, site
         )
         site = site_environment_as_root(site.name)
-        postprocess_restore_as_site_user(
-            version_info, old_site_name, site, options, orig_apache_port
-        )
+        postprocess_restore_as_site_user(old_site_name, site, options, orig_apache_port)
 
 
 def main_restore(
@@ -3132,7 +3121,6 @@ def main_restore(
 
 
 def postprocess_restore_as_site_user(
-    version_info: VersionInfo,
     old_site_name: str,
     site: SiteContext,
     options: CommandOptions,
@@ -3147,7 +3135,6 @@ def postprocess_restore_as_site_user(
     os.environ["OLD_OMD_SITE"] = old_site_name
 
     finalize_site_as_user(
-        version_info,
         site,
         config,
         (
@@ -3299,25 +3286,25 @@ def _run_command(
                 )
             case "update":
                 assert command.needs_site == 1 and isinstance(site, SiteContext)
-                main_update(version_info, site, global_opts, object(), command_options)
+                main_update(site, global_opts, object(), command_options)
             case "start":
                 assert isinstance(site, SiteContext | RootContext)
-                main_init_action(version_info, site, global_opts, "start", args, command_options)
+                main_init_action(site, global_opts, "start", args, command_options)
             case "stop":
                 assert isinstance(site, SiteContext | RootContext)
-                main_init_action(version_info, site, global_opts, "stop", args, command_options)
+                main_init_action(site, global_opts, "stop", args, command_options)
             case "restart":
                 assert isinstance(site, SiteContext | RootContext)
-                main_init_action(version_info, site, global_opts, "restart", args, command_options)
+                main_init_action(site, global_opts, "restart", args, command_options)
             case "reload":
                 assert isinstance(site, SiteContext | RootContext)
-                main_init_action(version_info, site, global_opts, "reload", args, command_options)
+                main_init_action(site, global_opts, "reload", args, command_options)
             case "status":
                 assert isinstance(site, SiteContext | RootContext)
-                main_init_action(version_info, site, global_opts, "status", args, command_options)
+                main_init_action(site, global_opts, "status", args, command_options)
             case "config":
                 assert command.needs_site == 1 and isinstance(site, SiteContext)
-                main_config(version_info, site, global_opts, args, object())
+                main_config(site, global_opts, args, object())
             case "diff":
                 assert command.needs_site == 1 and isinstance(site, SiteContext)
                 main_diff(object(), site, global_opts, args, command_options)
@@ -3401,7 +3388,6 @@ def main_finalize_create(args: Create) -> int:
         config["TMPFS"] = "off"
     create_config_environment(config)
     return finalize_site_as_user(
-        version_info=VersionInfo(),
         site=site,
         config=config,
         command_type=CommandType.create,
@@ -3422,7 +3408,6 @@ def main_finalize_restore(args: Restore) -> int:
     site = site_environment_as_root(args.site)
     os.environ["OLD_OMD_SITE"] = args.old_site
     return finalize_site_as_user(
-        version_info=VersionInfo(),
         site=site,
         config=read_site_config(site_home),
         command_type=(
@@ -3438,7 +3423,6 @@ def main_finalize_move(args: Move) -> int:
     patch_skeleton_files(args.skeleton, args.old_site, site)
     os.environ["OLD_OMD_SITE"] = args.old_site
     return finalize_site_as_user(
-        version_info=VersionInfo(),
         site=site,
         config=config,
         command_type=CommandType.move,
@@ -3452,7 +3436,6 @@ def main_finalize_copy(args: Copy) -> int:
     patch_skeleton_files(args.skeleton, args.old_site, site)
     os.environ["OLD_OMD_SITE"] = args.old_site
     return finalize_site_as_user(
-        version_info=VersionInfo(),
         site=site,
         config=config,
         command_type=CommandType.copy,

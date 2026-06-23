@@ -53,5 +53,4 @@ APACHE_INIT_NAME  = apache2
 APACHE_USER       = wwwrun
 APACHE_CTL        = /usr/sbin/apache2ctl
 APACHE_MODULE_DIR_64 = /usr/lib64/apache2-prefork
-MOUNT_OPTIONS     =
 INIT_CMD          = systemctl %(action)s %(name)s.service

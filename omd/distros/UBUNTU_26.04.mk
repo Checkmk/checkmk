@@ -57,5 +57,4 @@ APACHE_USER       = www-data
 APACHE_CTL        = /usr/sbin/apache2ctl
 APACHE_MODULE_DIR_64 = /usr/lib/apache2/modules
 ARCH              = $(shell dpkg --print-architecture)
-MOUNT_OPTIONS     =
 INIT_CMD          = /etc/init.d/%(name)s %(action)s

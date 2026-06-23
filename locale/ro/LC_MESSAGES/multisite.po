@@ -17670,10 +17670,6 @@ msgstr "Macros pentru clienți"
 msgid "Custom metrics"
 msgstr "Clienți"
 
-#, fuzzy, python-format
-msgid "Custom metrics (%s):"
-msgstr "Clienți"
-
 #, python-format
 msgid "Custom notification table for user %s"
 msgstr "Tabel de notificare personalizat pentru utilizatorul %s"
@@ -25463,11 +25459,6 @@ msgstr ""
 "regulii. Puteți încerca să remediați acest lucru deschizând regula pentru "
 "editare și salvând din nou regula fără modificări."
 
-#, fuzzy, python-format
-msgid ""
-"Failed to query metric backend of site %s. Check the web log for details."
-msgstr "Nu a reușit să execute testul %s: %s."
-
 msgid "Failed to read the Apache process ID"
 msgstr "Nu a reușit să citească ID-ul procesului Apache"
 
@@ -28298,9 +28289,6 @@ msgstr "Date HTTP POST"
 msgid "HTTP Parameters"
 msgstr "Parametrii HTTP"
 
-msgid "HTTP SSL/TLS default port (queries)"
-msgstr ""
-
 msgid "HTTP accelerator statistics"
 msgstr "Statistici privind acceleratorul HTTP"
 
@@ -28317,9 +28305,6 @@ msgstr "Răspunsuri fixe HTTP"
 
 msgid "HTTP method"
 msgstr "Metoda HTTP"
-
-msgid "HTTP port (useful for accessing web UI)"
-msgstr ""
 
 msgid "HTTP proxies"
 msgstr "Proxies HTTP"
@@ -32723,6 +32708,11 @@ msgid ""
 "the database name."
 msgstr ""
 
+msgid ""
+"If enabled, the plug-in will not attempt to connect to locally detected "
+"instances that are currently stopped.Only applicable for Windows."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If enabled, the service details will contain the username of a process owner."
@@ -33344,12 +33334,6 @@ msgid ""
 msgstr ""
 "Dacă sunteți în căutarea unei modalități de a testa setările de notificare, "
 "încercați '%s' în Configurare > Notificări."
-
-msgid ""
-"If you are running a distributed Checkmk setup with multiple sites on the "
-"same machine, please configure different port numbers per each site via the "
-"site-specific global settings to avoid port binding conflicts."
-msgstr ""
 
 msgid ""
 "If you are running the Event Console as a non-root (such as in an OMD site) "
@@ -34180,6 +34164,9 @@ msgstr "Ignoră limita de interogare dură"
 #, fuzzy
 msgid "Ignore if older than"
 msgstr "Avertisment dacă este mai veche de"
+
+msgid "Ignore inactive local instances(Windows)"
+msgstr ""
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Ignoră intervalele mai mici sau egale"
@@ -41926,10 +41913,6 @@ msgstr ""
 "operare mai complexe"
 
 #, fuzzy
-msgid "Memory limit"
-msgstr "Dimensiunea memoriei"
-
-#, fuzzy
 msgid "Memory pages"
 msgstr "Pagini de memorie"
 
@@ -42237,23 +42220,11 @@ msgid "Metric Backend Information"
 msgstr "Conexiuni Varnish Backend"
 
 #, fuzzy
-msgid "Metric backend"
-msgstr "Instanțe Oracle"
-
-#, fuzzy
-msgid "Metric backend configuration"
-msgstr "Conexiuni Varnish Backend"
-
-#, fuzzy
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr "Instanțe Oracle"
 
 #, fuzzy
 msgid "Metric backend is not reachable, autocompletion is not available."
-msgstr "Instanțe Oracle"
-
-#, fuzzy, python-format
-msgid "Metric backend of site %s is disabled"
 msgstr "Instanțe Oracle"
 
 #, fuzzy
@@ -44232,9 +44203,6 @@ msgstr ""
 
 msgid "Native cluster mode"
 msgstr "Modul cluster nativ"
-
-msgid "Native protocol SSL/TLS port (ingress)"
-msgstr ""
 
 #, fuzzy
 msgid ""
@@ -51744,10 +51712,6 @@ msgstr "Vă rugăm să furnizați un nume valid"
 
 #, fuzzy
 msgid "Please provide an absolute path"
-msgstr "Vă rugăm să furnizați o cale absolută pentru Windows"
-
-#, fuzzy
-msgid "Please provide unique ports."
 msgstr "Vă rugăm să furnizați o cale absolută pentru Windows"
 
 #, fuzzy
@@ -61280,6 +61244,9 @@ msgstr ""
 "Omiteți gazdele gazde cu părinți care nu sunt goale (de asemenea, dacă sunt "
 "moștenite)"
 
+msgid "Skip local instances that are not running"
+msgstr ""
+
 # georgem ##############
 #, fuzzy
 msgid "Skip pack"
@@ -61719,27 +61686,6 @@ msgstr ""
 
 msgid "Someone before 1.6"
 msgstr "Cineva înainte de 1.6"
-
-#, python-brace-format
-msgid ""
-"Something went wrong trying to enable the metric backend. Details can be "
-"found in the log file: {_CH_ERROR_LOG}"
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"Something went wrong trying to stop the metric backend service after a "
-"failed schema upgrade. Details can be found in the log file: "
-"{_CH_ERROR_LOG}. Note that a rogue ClickHouse process might still be "
-"running, which you should stop manually. Also, please check the web and ui-"
-"job-scheduler logs for any errors related to the schema upgrade. "
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"Something went wrong trying to stop the metric backend. Details can be found "
-"in the log file: {_CH_ERROR_LOG}"
-msgstr ""
 
 #, python-format
 msgid "Something went wrong: %s"
@@ -66074,11 +66020,6 @@ msgid ""
 "your account credentials here!"
 msgstr ""
 
-msgid ""
-"The HTTP port can be used to access the ClickHouse web UI. It is not needed "
-"for standard operations."
-msgstr ""
-
 #, fuzzy, python-format
 msgid "The ID %s is already used by another connection."
 msgstr "Acest id este deja utilizat de o altă conexiune."
@@ -68542,12 +68483,6 @@ msgstr ""
 msgid "The maximum allowed value is %s."
 msgstr "Valoarea maximă admisă este %s."
 
-msgid ""
-"The maximum amount of memory that the metric backend is allowed to use, "
-"expressed as a fraction of the total available memory. Allows limiting the "
-"memory usage on low-memory systems."
-msgstr ""
-
 #, fuzzy
 msgid ""
 "The maximum average round trip time in ms before this service goes into "
@@ -68644,18 +68579,6 @@ msgstr ""
 
 msgid "The message has successfully been sent..."
 msgstr "Mesajul a fost trimis cu succes..."
-
-msgid ""
-"The metric backend database schema is in an unexpected state: revision "
-"{current_revision_id!r} is applied, but the expected revision is "
-"{head_revision_id!r}. Activation has been blocked to prevent unintended "
-"schema upgrades. To resolve this, upgrade the schema manually as the site "
-"user: `cmk-metric-backend-schema-manager upgrade --config default HEAD` If "
-"the upgrade fails, please contact Checkmk support."
-msgstr ""
-
-msgid "The metric backend snapin shows the number of custom metrics"
-msgstr ""
 
 msgid ""
 "The metric label is displayed alongside the queried value in the status "
@@ -69405,11 +69328,6 @@ msgstr ""
 msgid "The port description"
 msgstr "Descrierea portului"
 
-msgid ""
-"The port on which the metric backend listens to incoming data. This setting "
-"also defines where the site's OpenTelemetry Collector sends its data."
-msgstr ""
-
 msgid "The port on which the ntopng instance is reachable."
 msgstr "Portul pe care se poate ajunge la instanța ntopng."
 
@@ -69422,10 +69340,6 @@ msgstr "Portul care este utilizat pentru apelul api."
 
 msgid "The port the DBMS listens to"
 msgstr "Portul la care ascultă SGBD"
-
-#, fuzzy
-msgid "The port to query data from the metric backend."
-msgstr "Configurația stilului selectat"
 
 msgid ""
 "The power state can be displayed additionally either on the ESX host or the "
@@ -95470,6 +95384,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Unhandled Problems"
+msgstr "Probleme de gazde nerezolvate"
+
+#, fuzzy
 msgid "Search hosts…"
 msgstr "Căutare gazde"
 
@@ -96443,6 +96361,39 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid "Custom metrics (%s):"
+#~ msgstr "Clienți"
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Failed to query metric backend of site %s. Check the web log for details."
+#~ msgstr "Nu a reușit să execute testul %s: %s."
+
+#, fuzzy
+#~ msgid "Memory limit"
+#~ msgstr "Dimensiunea memoriei"
+
+#, fuzzy
+#~ msgid "Metric backend"
+#~ msgstr "Instanțe Oracle"
+
+#, fuzzy
+#~ msgid "Metric backend configuration"
+#~ msgstr "Conexiuni Varnish Backend"
+
+#, fuzzy, python-format
+#~ msgid "Metric backend of site %s is disabled"
+#~ msgstr "Instanțe Oracle"
+
+#, fuzzy
+#~ msgid "Please provide unique ports."
+#~ msgstr "Vă rugăm să furnizați o cale absolută pentru Windows"
+
+#, fuzzy
+#~ msgid "The port to query data from the metric backend."
+#~ msgstr "Configurația stilului selectat"
 
 #, fuzzy
 #~ msgid "opentelemetry_config_1"

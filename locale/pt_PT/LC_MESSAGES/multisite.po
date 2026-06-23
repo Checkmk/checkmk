@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-20 17:57+0000\n"
+"PO-Revision-Date: 2026-06-22 17:57+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -17665,10 +17665,6 @@ msgstr "Macros de Cliente"
 msgid "Custom metrics"
 msgstr "Clientes"
 
-#, fuzzy, python-format
-msgid "Custom metrics (%s):"
-msgstr "Clientes"
-
 #, python-format
 msgid "Custom notification table for user %s"
 msgstr "Tabela de notificação personalizada para usuários %s"
@@ -25412,11 +25408,6 @@ msgstr ""
 "pode tentar corrigir isso abrindo a regra para edição e salvando a regra "
 "novamente sem modificação."
 
-#, fuzzy, python-format
-msgid ""
-"Failed to query metric backend of site %s. Check the web log for details."
-msgstr "Falha na execução do teste %s: %s"
-
 msgid "Failed to read the Apache process ID"
 msgstr "Falha ao ler o ID do processo do Apache"
 
@@ -28265,9 +28256,6 @@ msgstr "Dados do HTTP POST"
 msgid "HTTP Parameters"
 msgstr "Parâmetros HTTP"
 
-msgid "HTTP SSL/TLS default port (queries)"
-msgstr ""
-
 msgid "HTTP accelerator statistics"
 msgstr "Estatísticas do acelerador HTTP"
 
@@ -28286,9 +28274,6 @@ msgstr "Respostas fixas HTTP"
 #, fuzzy
 msgid "HTTP method"
 msgstr "método HTTP"
-
-msgid "HTTP port (useful for accessing web UI)"
-msgstr ""
 
 msgid "HTTP proxies"
 msgstr "procuradores HTTP"
@@ -32686,6 +32671,11 @@ msgid ""
 "the database name."
 msgstr ""
 
+msgid ""
+"If enabled, the plug-in will not attempt to connect to locally detected "
+"instances that are currently stopped.Only applicable for Windows."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If enabled, the service details will contain the username of a process owner."
@@ -33299,12 +33289,6 @@ msgstr ""
 msgid ""
 "If you are looking for a way to test your notification settings, try '%s' in "
 "Setup > Test notifications"
-msgstr ""
-
-msgid ""
-"If you are running a distributed Checkmk setup with multiple sites on the "
-"same machine, please configure different port numbers per each site via the "
-"site-specific global settings to avoid port binding conflicts."
 msgstr ""
 
 msgid ""
@@ -34117,6 +34101,9 @@ msgstr "Ignorar limite de consulta rígido"
 #, fuzzy
 msgid "Ignore if older than"
 msgstr "Alerta se for mais velho que"
+
+msgid "Ignore inactive local instances(Windows)"
+msgstr ""
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Ignorar intervalos mais curtos ou iguais"
@@ -41862,10 +41849,6 @@ msgstr ""
 "complexos"
 
 #, fuzzy
-msgid "Memory limit"
-msgstr "Tamanho da memória"
-
-#, fuzzy
 msgid "Memory pages"
 msgstr "Páginas de Memória"
 
@@ -42172,23 +42155,11 @@ msgid "Metric Backend Information"
 msgstr "Conexões do verniz backend"
 
 #, fuzzy
-msgid "Metric backend"
-msgstr "instâncias Oracle"
-
-#, fuzzy
-msgid "Metric backend configuration"
-msgstr "Conexões do verniz backend"
-
-#, fuzzy
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr "instâncias Oracle"
 
 #, fuzzy
 msgid "Metric backend is not reachable, autocompletion is not available."
-msgstr "instâncias Oracle"
-
-#, fuzzy, python-format
-msgid "Metric backend of site %s is disabled"
 msgstr "instâncias Oracle"
 
 #, fuzzy
@@ -44154,9 +44125,6 @@ msgstr ""
 
 msgid "Native cluster mode"
 msgstr "Modo de cluster nativo"
-
-msgid "Native protocol SSL/TLS port (ingress)"
-msgstr ""
 
 #, fuzzy
 msgid ""
@@ -51660,10 +51628,6 @@ msgstr "Por favor, forneça um nome válido"
 
 #, fuzzy
 msgid "Please provide an absolute path"
-msgstr "Por favor, forneça um nome válido"
-
-#, fuzzy
-msgid "Please provide unique ports."
 msgstr "Por favor, forneça um nome válido"
 
 #, fuzzy
@@ -61182,6 +61146,9 @@ msgstr ""
 msgid "Skip hosts with non-empty parents (also if inherited)"
 msgstr "Saltar anfitriões com pais não vazios (também se herdados)"
 
+msgid "Skip local instances that are not running"
+msgstr ""
+
 #, fuzzy
 msgid "Skip pack"
 msgstr "Pacotes de Serviços"
@@ -61620,27 +61587,6 @@ msgstr ""
 
 msgid "Someone before 1.6"
 msgstr "Alguém antes de 1.6"
-
-#, python-brace-format
-msgid ""
-"Something went wrong trying to enable the metric backend. Details can be "
-"found in the log file: {_CH_ERROR_LOG}"
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"Something went wrong trying to stop the metric backend service after a "
-"failed schema upgrade. Details can be found in the log file: "
-"{_CH_ERROR_LOG}. Note that a rogue ClickHouse process might still be "
-"running, which you should stop manually. Also, please check the web and ui-"
-"job-scheduler logs for any errors related to the schema upgrade. "
-msgstr ""
-
-#, python-brace-format
-msgid ""
-"Something went wrong trying to stop the metric backend. Details can be found "
-"in the log file: {_CH_ERROR_LOG}"
-msgstr ""
 
 #, python-format
 msgid "Something went wrong: %s"
@@ -65966,11 +65912,6 @@ msgid ""
 "your account credentials here!"
 msgstr ""
 
-msgid ""
-"The HTTP port can be used to access the ClickHouse web UI. It is not needed "
-"for standard operations."
-msgstr ""
-
 #, fuzzy, python-format
 msgid "The ID %s is already used by another connection."
 msgstr "Esta identificação já está a ser usada por outra ligação."
@@ -68414,12 +68355,6 @@ msgstr ""
 msgid "The maximum allowed value is %s."
 msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 
-msgid ""
-"The maximum amount of memory that the metric backend is allowed to use, "
-"expressed as a fraction of the total available memory. Allows limiting the "
-"memory usage on low-memory systems."
-msgstr ""
-
 #, fuzzy
 msgid ""
 "The maximum average round trip time in ms before this service goes into "
@@ -68516,18 +68451,6 @@ msgstr ""
 
 msgid "The message has successfully been sent..."
 msgstr "A mensagem foi enviada com sucesso..."
-
-msgid ""
-"The metric backend database schema is in an unexpected state: revision "
-"{current_revision_id!r} is applied, but the expected revision is "
-"{head_revision_id!r}. Activation has been blocked to prevent unintended "
-"schema upgrades. To resolve this, upgrade the schema manually as the site "
-"user: `cmk-metric-backend-schema-manager upgrade --config default HEAD` If "
-"the upgrade fails, please contact Checkmk support."
-msgstr ""
-
-msgid "The metric backend snapin shows the number of custom metrics"
-msgstr ""
 
 msgid ""
 "The metric label is displayed alongside the queried value in the status "
@@ -69265,11 +69188,6 @@ msgstr ""
 msgid "The port description"
 msgstr "A Descrição do Porto"
 
-msgid ""
-"The port on which the metric backend listens to incoming data. This setting "
-"also defines where the site's OpenTelemetry Collector sends its data."
-msgstr ""
-
 msgid "The port on which the ntopng instance is reachable."
 msgstr "A porta em que a instância superior é alcançável."
 
@@ -69282,10 +69200,6 @@ msgstr "O porto que é usado para a chamada da api."
 
 msgid "The port the DBMS listens to"
 msgstr "A porta que o SGBD ouve"
-
-#, fuzzy
-msgid "The port to query data from the metric backend."
-msgstr "Adicionar configuração do estado"
 
 msgid ""
 "The power state can be displayed additionally either on the ESX host or the "
@@ -95216,6 +95130,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Unhandled Problems"
+msgstr "Problemas com o anfitrião"
+
+#, fuzzy
 msgid "Search hosts…"
 msgstr "Anfitriões de busca"
 
@@ -96182,6 +96100,39 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid "Custom metrics (%s):"
+#~ msgstr "Clientes"
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Failed to query metric backend of site %s. Check the web log for details."
+#~ msgstr "Falha na execução do teste %s: %s"
+
+#, fuzzy
+#~ msgid "Memory limit"
+#~ msgstr "Tamanho da memória"
+
+#, fuzzy
+#~ msgid "Metric backend"
+#~ msgstr "instâncias Oracle"
+
+#, fuzzy
+#~ msgid "Metric backend configuration"
+#~ msgstr "Conexões do verniz backend"
+
+#, fuzzy, python-format
+#~ msgid "Metric backend of site %s is disabled"
+#~ msgstr "instâncias Oracle"
+
+#, fuzzy
+#~ msgid "Please provide unique ports."
+#~ msgstr "Por favor, forneça um nome válido"
+
+#, fuzzy
+#~ msgid "The port to query data from the metric backend."
+#~ msgstr "Adicionar configuração do estado"
 
 #, fuzzy
 #~ msgid "opentelemetry_config_1"

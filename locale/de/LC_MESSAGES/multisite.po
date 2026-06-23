@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-18 10:30+0000\n"
+"PO-Revision-Date: 2026-06-22 17:57+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -820,6 +820,8 @@ msgid ""
 "%s<br><br>This is a temporary release flag. It is scheduled for removal in "
 "version %s and must not be relied on for permanent configuration."
 msgstr ""
+"%s<br><br>Dies ist ein vorläufiges Release-Flag. Es wird in Version %s "
+"entfernt und sollte nicht für dauerhafte Konfigurationen verwendet werden."
 
 msgid "&lt;None&gt;"
 msgstr "&lt;keine&gt;"
@@ -4843,9 +4845,8 @@ msgstr "Erweiterte Simulation der Bedingungen"
 msgid "Advanced configuration options"
 msgstr "Erweiterte Konfigurationsmöglichkeiten"
 
-#, fuzzy
 msgid "Advanced connection options"
-msgstr "Erweiterte Konfigurationsmöglichkeiten"
+msgstr "Erweiterte Verbindungsmöglichkeiten"
 
 msgid "Advanced options"
 msgstr "Erweiterte Optionen"
@@ -7402,6 +7403,8 @@ msgid ""
 "Assuming your Proxmox username is 'checkmk', it needs to be configured as "
 "'checkmk@pve' here"
 msgstr ""
+"Angenommen, Ihr Proxmox-Benutzername lautet 'checkmk', dann muss er hier als "
+"'checkmk@pve' konfiguriert werden"
 
 msgid "Asynchronous"
 msgstr "Asynchron"
@@ -14414,21 +14417,17 @@ msgstr "Microsoft Azure (veraltet) Monitoring in Checkmk konfigurieren"
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "Microsoft Azure Monitoring in Checkmk konfigurieren"
 
-#, fuzzy
 msgid "Configure Proxmox VE authentication"
-msgstr "Proxmox VE Replikation"
+msgstr "Proxmox VE Authentifizierung konfigurieren"
 
-#, fuzzy
 msgid "Configure Proxmox VE authentication for Checkmk"
-msgstr "Microsoft Azure Monitoring in Checkmk konfigurieren"
+msgstr "Proxmox VE Authentifizierung in Checkmk konfigurieren"
 
-#, fuzzy
 msgid "Configure Proxmox VE host"
-msgstr "Konfiguriere Host"
+msgstr "Proxmox VE Host konfigurieren"
 
-#, fuzzy
 msgid "Configure Proxmox VE monitoring in Checkmk"
-msgstr "Microsoft Azure Monitoring in Checkmk konfigurieren"
+msgstr "Proxmox VE Monitoring in Checkmk konfigurieren"
 
 msgid "Configure SNMP related settings using rule sets"
 msgstr "Konfigurieren Sie SNMP-bezogene Einstellungen mithilfe von Regelsätzen"
@@ -14445,6 +14444,8 @@ msgstr "Konfiguriere Windows Firewall so, dass Host-Monitoring erlaubt ist"
 
 msgid "Configure a Proxmox VE API user to fetch node and VM information"
 msgstr ""
+"Konfigurieren Sie einen Proxmox VE-API-Benutzer, um Informationen zu Knoten "
+"und VMs abzurufen"
 
 msgid "Configure a log file section"
 msgstr "Konfiguriere eine Log-Datei-Sektion"
@@ -15692,12 +15693,11 @@ msgstr ""
 "Der Zugriff auf Ihr GCP-Konto war nicht möglich. Bitte überprüfen Sie Ihre "
 "Zugangsdaten."
 
-#, fuzzy
 msgid ""
 "Could not access your Proxmox VE account. Please check your credentials."
 msgstr ""
-"Der Zugriff auf Ihr GCP-Konto war nicht möglich. Bitte überprüfen Sie Ihre "
-"Zugangsdaten."
+"Der Zugriff auf Ihr Proxmox VE-Konto war nicht möglich. Bitte überprüfen Sie "
+"Ihre Zugangsdaten."
 
 #, python-format
 msgid ""
@@ -16109,6 +16109,9 @@ msgid ""
 "Create a user in the 'Proxmox VE authentication server' realm in Proxmox, "
 "which you use exclusively for monitoring with Checkmk"
 msgstr ""
+"Legen Sie in Proxmox einen Benutzer im Bereich 'Proxmox VE-"
+"Authentifizierungsserver' an, den Sie ausschließlich für das Monitoring mit "
+"Checkmk verwenden."
 
 msgid ""
 "Create a workflow 'Post to a channel when a webhook request is received' for "
@@ -16951,10 +16954,6 @@ msgstr "Benutzerdefinierte Makros"
 
 msgid "Custom metrics"
 msgstr "Custom Metrics"
-
-#, python-format
-msgid "Custom metrics (%s):"
-msgstr "Custom Metrics (%s):"
 
 #, python-format
 msgid "Custom notification table for user %s"
@@ -22687,6 +22686,9 @@ msgid ""
 "Enter a unique configuration ID, your Proxmox VE node's host name and define "
 "the folder path where nodes and VMs should be created"
 msgstr ""
+"Geben Sie eine eindeutige Konfigurations-ID und den Host-Namen Ihres Proxmox "
+"VE-Knotens ein und legen Sie den Ordnerpfad fest, in dem Knoten und VMs "
+"erstellt werden sollen."
 
 msgid "Enter a valid IP address or host name."
 msgstr "Geben Sie eine gültige IP-Adresse oder einen gültigen Host-Namen ein."
@@ -22833,9 +22835,8 @@ msgstr ""
 "Geben Sie hier den Dienstnamen für Uniserv an (dies hat nichts mit dem "
 "Service-Namen zu tun)."
 
-#, fuzzy
 msgid "Enter the user credentials below"
-msgstr "Anmeldedaten des Datenbankbenutzers"
+msgstr "Anmeldedaten des Benutzers unten eingeben"
 
 msgid "Enter the workflow name for the project here. E.g. \"in progress\"."
 msgstr ""
@@ -24403,13 +24404,6 @@ msgstr ""
 "Regelspezifikation kompatibel. Sie können versuchen, dies zu beheben, indem "
 "Sie die Regel zur Bearbeitung öffnen und die Regel ohne Änderung erneut "
 "speichern."
-
-#, python-format
-msgid ""
-"Failed to query metric backend of site %s. Check the web log for details."
-msgstr ""
-"Die Abfrage des Metrik-Backends der Instanz %s ist fehlgeschlagen. Details "
-"finden Sie im Web-Log."
 
 msgid "Failed to read the Apache process ID"
 msgstr "Lesen der Apache-Prozess-ID fehlgeschlagen"
@@ -26682,6 +26676,8 @@ msgid ""
 "Grant the user the permissions \"Role: PVEAuditor\" and \"Path: /\" (via "
 "User permissions or Group permissions)"
 msgstr ""
+"Weisen Sie dem Benutzer die Berechtigungen \"Rolle: PVEAuditor\" und "
+"\"Pfad: /\" zu (über Benutzerberechtigungen oder Gruppenberechtigungen)"
 
 msgid "Grants modify access to all maps the user is contact for."
 msgstr ""
@@ -27138,9 +27134,6 @@ msgstr "HTTP POST Daten"
 msgid "HTTP Parameters"
 msgstr "HTTP-Parameter"
 
-msgid "HTTP SSL/TLS default port (queries)"
-msgstr "HTTP SSL/TLS Standardport (Anfragen)"
-
 msgid "HTTP accelerator statistics"
 msgstr "HTTP Geschwindigkeitsstatistiken"
 
@@ -27155,9 +27148,6 @@ msgstr "Festgelegte HTTP-Antworten"
 
 msgid "HTTP method"
 msgstr "HTTP Methode"
-
-msgid "HTTP port (useful for accessing web UI)"
-msgstr "HTTP-Port (sinnvoll für den Zugriff auf das Web-UI)"
 
 msgid "HTTP proxies"
 msgstr "HTTP-Proxies"
@@ -31134,6 +31124,11 @@ msgstr ""
 "Datenbanknamens aus der Datenbank abgefragt."
 
 msgid ""
+"If enabled, the plug-in will not attempt to connect to locally detected "
+"instances that are currently stopped.Only applicable for Windows."
+msgstr ""
+
+msgid ""
 "If enabled, the service details will contain the username of a process owner."
 msgstr ""
 "Bei Aktivierung enthalten die Service-Details den Benutzernamen des "
@@ -31756,16 +31751,6 @@ msgid ""
 msgstr ""
 "Wenn Sie nach einer Möglichkeit suchen, Ihre Benachrichtigungseinstellungen "
 "zu testen, versuchen Sie es mit '%s' in Setup > Benachrichtigungen testen"
-
-msgid ""
-"If you are running a distributed Checkmk setup with multiple sites on the "
-"same machine, please configure different port numbers per each site via the "
-"site-specific global settings to avoid port binding conflicts."
-msgstr ""
-"Wenn Sie eine verteilte Checkmk-Konfiguration mit mehreren Instanzen auf "
-"derselben Maschine betreiben, konfigurieren Sie bitte über die Instanz-"
-"spezifischen globalen Einstellungen für jede Instanz unterschiedliche "
-"Portnummern, um Konflikte bei der Portzuweisung zu vermeiden."
 
 msgid ""
 "If you are running the Event Console as a non-root (such as in an OMD site) "
@@ -32575,6 +32560,9 @@ msgstr "Hartes Abfragelimit ignorieren"
 
 msgid "Ignore if older than"
 msgstr "Ignorieren, wenn älter als"
+
+msgid "Ignore inactive local instances(Windows)"
+msgstr ""
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Kürzere oder gleiche Intervalle ignorieren"
@@ -39924,9 +39912,6 @@ msgstr ""
 "Speicher-Levels für einfache Geräte, auf denen keine komplexeren "
 "Betriebssysteme laufen"
 
-msgid "Memory limit"
-msgstr "Speichergrenze"
-
 msgid "Memory pages"
 msgstr "Speicherseiten"
 
@@ -40214,13 +40199,6 @@ msgstr "Metrik-Backend"
 msgid "Metric Backend Information"
 msgstr "Informationen zum Metrik-Backend"
 
-msgid "Metric backend"
-msgstr "Metrik-Backend"
-
-#, fuzzy
-msgid "Metric backend configuration"
-msgstr "Metrik-Backend-Verbindung"
-
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr ""
 "Metrik-Backend ist deaktiviert, Autovervollständigung ist nicht verfügbar."
@@ -40229,10 +40207,6 @@ msgid "Metric backend is not reachable, autocompletion is not available."
 msgstr ""
 "Metrik-Backend ist nicht erreichbar, Autovervollständigung ist nicht "
 "verfügbar."
-
-#, python-format
-msgid "Metric backend of site %s is disabled"
-msgstr "Das Metrik-Backend der Instanz %s ist deaktiviert"
 
 msgid "Metric forecast"
 msgstr "Metrik-Vorhersage"
@@ -42035,9 +42009,6 @@ msgstr "Natives VLAN"
 msgid "Native cluster mode"
 msgstr "Nativer Cluster-Modus"
 
-msgid "Native protocol SSL/TLS port (ingress)"
-msgstr "Natives Protokoll SSL/TLS Port (ingress)"
-
 msgid ""
 "Native: Use the cluster check function implemented by the check plug-in. If "
 "it is available, it is probably the best choice, as it implements logic "
@@ -42587,9 +42558,8 @@ msgstr "Für dieses Bündel wurde keine Prometheus-Konfiguration gefunden."
 msgid "No Prometheus configuration yet"
 msgstr "Noch keine Prometheus-Konfiguration vorhanden"
 
-#, fuzzy
 msgid "No Proxmox VE services found."
-msgstr "Keine GCP-Services gefunden."
+msgstr "Keine Proxmox VE-Services gefunden."
 
 msgid "No Relay ID specified."
 msgstr "Keine Relay-ID spezifiziert."
@@ -43560,6 +43530,10 @@ msgid ""
 "supported in the Quick Setup. Hosts created here have no explicit IP "
 "address, so please use 'Host name' or 'Custom host' instead."
 msgstr ""
+"Hinweis: Die Option 'IP-Adresse' unter 'Proxmox VE-Host angeben über …' wird "
+"beim Quick Setup nicht unterstützt. Die hier erstellten Hosts verfügen über "
+"keine explizite IP-Adresse; verwenden Sie daher bitte stattdessen 'Host-"
+"Name' oder 'Benutzerdefinierter Host'."
 
 #, no-python-format
 msgid ""
@@ -48962,9 +48936,6 @@ msgstr "Bitte geben Sie einen gültigen Namen an"
 msgid "Please provide an absolute path"
 msgstr "Bitte geben Sie einen absoluten Pfad an"
 
-msgid "Please provide unique ports."
-msgstr "Bitte geben Sie eindeutige Pfade an."
-
 msgid ""
 "Please refer to the [dashboards#host_problems|Checkmk User Guide] for more "
 "details."
@@ -50251,9 +50222,8 @@ msgstr "Proxmox VE Speicher in Prozent verwendet"
 msgid "Proxmox VE network throughput"
 msgstr "Proxmox VE Netzwerkdurchsatz"
 
-#, fuzzy
 msgid "Proxmox VE services found!"
-msgstr "GCP Services gefunden!"
+msgstr "Proxmox VE-Services gefunden!"
 
 msgid "Proxmox cluster"
 msgstr "Proxmox-Cluster"
@@ -51768,9 +51738,8 @@ msgstr "Relays"
 msgid "Release extension package \"%s\""
 msgstr "Erweiterungspaket \"%s\" freigeben"
 
-#, fuzzy
 msgid "Release flags"
-msgstr "Paket freigeben"
+msgstr "Flags freigeben"
 
 msgid "Release package"
 msgstr "Paket freigeben"
@@ -53280,9 +53249,8 @@ msgstr "Fremde Änderungen rückgängig machen"
 msgid "Reverting pending changes."
 msgstr "Ausstehenden Änderungen werden rückgängig gemacht."
 
-#, fuzzy
 msgid "Review and run connection test"
-msgstr "Speichern & Verbindungstests durchführen"
+msgstr "Überprüfen und Verbindungstest durchführen"
 
 msgid "Review and run preview service discovery"
 msgstr "Überprüfen und Ausführen einer Vorschau der Service-Erkennung"
@@ -57982,6 +57950,9 @@ msgstr "Hosts mit expliziten Parent-Zuordnungen überspringen (auch wenn leer)"
 msgid "Skip hosts with non-empty parents (also if inherited)"
 msgstr "Hosts mit nicht leeren Parents überspringen (auch wenn vererbt)"
 
+msgid "Skip local instances that are not running"
+msgstr ""
+
 msgid "Skip pack"
 msgstr "Paket überspringen"
 
@@ -58399,37 +58370,6 @@ msgstr ""
 
 msgid "Someone before 1.6"
 msgstr "Jemand vor 1.6"
-
-#, python-brace-format
-msgid ""
-"Something went wrong trying to enable the metric backend. Details can be "
-"found in the log file: {_CH_ERROR_LOG}"
-msgstr ""
-"Beim Versuch, das Metrik-Backend zu aktivieren, ist ein Fehler aufgetreten. "
-"Details finden Sie in der Log-Datei: {_CH_ERROR_LOG}"
-
-#, python-brace-format
-msgid ""
-"Something went wrong trying to stop the metric backend service after a "
-"failed schema upgrade. Details can be found in the log file: "
-"{_CH_ERROR_LOG}. Note that a rogue ClickHouse process might still be "
-"running, which you should stop manually. Also, please check the web and ui-"
-"job-scheduler logs for any errors related to the schema upgrade. "
-msgstr ""
-"Beim Versuch, den Metrik-Backend-Service nach einem fehlgeschlagenen Schema-"
-"Upgrade zu beenden, ist ein Fehler aufgetreten. Einzelheiten finden Sie in "
-"der Log-Datei: {_CH_ERROR_LOG}. Beachten Sie, dass möglicherweise noch ein "
-"fehlerhafter ClickHouse-Prozess läuft, den Sie manuell beenden sollten. "
-"Überprüfen Sie außerdem die Protokolle von Web und \"ui-job-scheduler\" auf "
-"Fehler im Zusammenhang mit dem Schema-Upgrade. "
-
-#, python-brace-format
-msgid ""
-"Something went wrong trying to stop the metric backend. Details can be found "
-"in the log file: {_CH_ERROR_LOG}"
-msgstr ""
-"Beim Versuch, das Metrik-Backend zu stoppen, ist ein Fehler aufgetreten. "
-"Details finden Sie in der Log-Datei: {_CH_ERROR_LOG}"
 
 #, python-format
 msgid "Something went wrong: %s"
@@ -62580,13 +62520,6 @@ msgstr ""
 "#HTTPCredentials' oder über die REST-API erstellt werden. HINWEIS: Sie "
 "sollten hier NICHT Ihre Anmeldedaten für das Konto eingeben!"
 
-msgid ""
-"The HTTP port can be used to access the ClickHouse web UI. It is not needed "
-"for standard operations."
-msgstr ""
-"Der HTTP-Port kann für den Zugriff auf die ClickHouse Web-UI genutzt werden. "
-"Für Standard-Operationen wird er nicht benötigt."
-
 #, python-format
 msgid "The ID %s is already used by another connection."
 msgstr "Diese ID %s wird bereits von einer anderen Verbindung verwendet."
@@ -63800,15 +63733,15 @@ msgstr ""
 "gefunden. Wenn dies nicht beabsichtigt ist, überprüfen Sie bitte Ihre "
 "Konfiguration."
 
-#, fuzzy
 msgid ""
 "The connection to Proxmox VE was successful, but no services were found. "
 "This can be the case if your chosen host name does not match a node name "
 "within Proxmox VE. Otherwise, please verify your configuration."
 msgstr ""
-"Die Verbindung zu AWS war erfolgreich, aber es wurden keine Services "
-"gefunden. Wenn dies nicht beabsichtigt ist, überprüfen Sie bitte Ihre "
-"Konfiguration."
+"Die Verbindung zu Proxmox VE war erfolgreich, aber es wurden keine Services "
+"gefunden. Dies kann der Fall sein, wenn der von Ihnen gewählte Host-Name "
+"nicht mit einem Knotennamen innerhalb von Proxmox VE übereinstimmt. "
+"Andernfalls überprüfen Sie bitte Ihre Konfiguration."
 
 msgid "The connection to this site has been disabled."
 msgstr "Die Verbindung zu dieser Instanz wurde deaktiviert."
@@ -65136,15 +65069,6 @@ msgid "The maximum allowed value is %s."
 msgstr "Der maximal erlaubte Wert ist %s."
 
 msgid ""
-"The maximum amount of memory that the metric backend is allowed to use, "
-"expressed as a fraction of the total available memory. Allows limiting the "
-"memory usage on low-memory systems."
-msgstr ""
-"Die maximale Speichermenge, die das Metrik-Backend verwenden darf, "
-"ausgedrückt als Bruchteil des insgesamt verfügbaren Speichers. Ermöglicht "
-"die Begrenzung der Speichernutzung auf Systemen mit geringem Speicherplatz."
-
-msgid ""
 "The maximum average round trip time in ms before this service goes into "
 "WARNING/CRITICAL. This alarm only applies to the target host, not the hops "
 "in between."
@@ -65238,25 +65162,6 @@ msgstr ""
 
 msgid "The message has successfully been sent..."
 msgstr "Die Meldung wurde erfolgreich gesendet..."
-
-msgid ""
-"The metric backend database schema is in an unexpected state: revision "
-"{current_revision_id!r} is applied, but the expected revision is "
-"{head_revision_id!r}. Activation has been blocked to prevent unintended "
-"schema upgrades. To resolve this, upgrade the schema manually as the site "
-"user: `cmk-metric-backend-schema-manager upgrade --config default HEAD` If "
-"the upgrade fails, please contact Checkmk support."
-msgstr ""
-"Das Datenbank-Schema des Metrik-Backends befindet sich in einem unerwarteten "
-"Zustand: Die Revision {current_revision_id!r} ist angewendet, aber die "
-"erwartete Revision ist {head_revision_id!r}. Die Aktivierung wurde "
-"blockiert, um unbeabsichtigte Schema-Upgrades zu verhindern. Um dies zu "
-"beheben, führen Sie das Schema-Upgrade manuell als Instanzbenutzer durch: "
-"`cmk-metric-backend-schema-manager --config default upgrade HEAD` Sollte das "
-"Upgrade fehlschlagen, wenden Sie sich bitte an den Checkmk-Support."
-
-msgid "The metric backend snapin shows the number of custom metrics"
-msgstr "Das Snapin zum Metrik-Backend zeigt die Anzahl der Custom Metrics an"
 
 msgid ""
 "The metric label is displayed alongside the queried value in the status "
@@ -66023,14 +65928,6 @@ msgstr ""
 msgid "The port description"
 msgstr "Die Port-Beschreibung"
 
-msgid ""
-"The port on which the metric backend listens to incoming data. This setting "
-"also defines where the site's OpenTelemetry Collector sends its data."
-msgstr ""
-"Der Port, auf dem das Metrik-Backend auf eingehende Daten wartet. Diese "
-"Einstellung legt auch fest, wohin der OpenTelemetry Collector der Instanz "
-"seine Daten sendet."
-
 msgid "The port on which the ntopng instance is reachable."
 msgstr "Der Port unter dem die ntopng Instanz erreichbar ist."
 
@@ -66042,9 +65939,6 @@ msgstr "Der Port, der für den API-Aufruf verwendet wird."
 
 msgid "The port the DBMS listens to"
 msgstr "Der TCP-Port des Datenbankservers"
-
-msgid "The port to query data from the metric backend."
-msgstr "Der Port zum Abfragen von Daten aus dem Metrik-Backend."
 
 msgid ""
 "The power state can be displayed additionally either on the ESX host or the "
@@ -80822,6 +80716,9 @@ msgid ""
 "nodes — this will provide you with much more interesting information about "
 "your Proxmox VE environment."
 msgstr ""
+"Wir empfehlen Ihnen außerdem, Checkmk-Linux-Agenten auf den Proxmox VE-"
+"Knoten zu installieren – dadurch erhalten Sie deutlich mehr interessante "
+"Informationen über Ihre Proxmox VE-Umgebung."
 
 #, python-format
 msgid ""
@@ -90412,11 +90309,10 @@ msgstr ""
 msgid "Site is required but not specified."
 msgstr "Die Instanz ist erforderlich, wurde jedoch nicht angegeben."
 
-#, fuzzy
 msgid "A configuration with this name already exists. Choose a different name."
 msgstr ""
-"Ein Host mit dem Namen %s existiert bereits im Ordner %s. Bitte wählen Sie "
-"einen anderen Host-Namen."
+"Eine Konfiguration mit diesem Namen existiert bereits. Wählen Sie einen "
+"anderen Namen."
 
 msgid "Failed to validate site configuration. Please try again."
 msgstr ""
@@ -90833,6 +90729,10 @@ msgid ""
 "The Relay is officially supported to run on the following operating systems:"
 msgstr ""
 "Das Relay wird offiziell für die folgenden Betriebssysteme unterstützt:"
+
+#, fuzzy
+msgid "Unhandled Problems"
+msgstr "Unbehandelte Hostprobleme"
 
 msgid "Search hosts…"
 msgstr "Hosts suchen…"
@@ -91872,6 +91772,134 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#, python-format
+#~ msgid "Custom metrics (%s):"
+#~ msgstr "Custom Metrics (%s):"
+
+#, python-format
+#~ msgid ""
+#~ "Failed to query metric backend of site %s. Check the web log for details."
+#~ msgstr ""
+#~ "Die Abfrage des Metrik-Backends der Instanz %s ist fehlgeschlagen. "
+#~ "Details finden Sie im Web-Log."
+
+#~ msgid "HTTP SSL/TLS default port (queries)"
+#~ msgstr "HTTP SSL/TLS Standardport (Anfragen)"
+
+#~ msgid "HTTP port (useful for accessing web UI)"
+#~ msgstr "HTTP-Port (sinnvoll für den Zugriff auf das Web-UI)"
+
+#~ msgid ""
+#~ "If you are running a distributed Checkmk setup with multiple sites on the "
+#~ "same machine, please configure different port numbers per each site via "
+#~ "the site-specific global settings to avoid port binding conflicts."
+#~ msgstr ""
+#~ "Wenn Sie eine verteilte Checkmk-Konfiguration mit mehreren Instanzen auf "
+#~ "derselben Maschine betreiben, konfigurieren Sie bitte über die Instanz-"
+#~ "spezifischen globalen Einstellungen für jede Instanz unterschiedliche "
+#~ "Portnummern, um Konflikte bei der Portzuweisung zu vermeiden."
+
+#~ msgid "Memory limit"
+#~ msgstr "Speichergrenze"
+
+#~ msgid "Metric backend"
+#~ msgstr "Metrik-Backend"
+
+#~ msgid "Metric backend configuration"
+#~ msgstr "Konfiguration des Metrik-Backends"
+
+#, python-format
+#~ msgid "Metric backend of site %s is disabled"
+#~ msgstr "Das Metrik-Backend der Instanz %s ist deaktiviert"
+
+#~ msgid "Native protocol SSL/TLS port (ingress)"
+#~ msgstr "Natives Protokoll SSL/TLS Port (ingress)"
+
+#~ msgid "Please provide unique ports."
+#~ msgstr "Bitte geben Sie eindeutige Pfade an."
+
+#, python-brace-format
+#~ msgid ""
+#~ "Something went wrong trying to enable the metric backend. Details can be "
+#~ "found in the log file: {_CH_ERROR_LOG}"
+#~ msgstr ""
+#~ "Beim Versuch, das Metrik-Backend zu aktivieren, ist ein Fehler "
+#~ "aufgetreten. Details finden Sie in der Log-Datei: {_CH_ERROR_LOG}"
+
+#, python-brace-format
+#~ msgid ""
+#~ "Something went wrong trying to stop the metric backend service after a "
+#~ "failed schema upgrade. Details can be found in the log file: "
+#~ "{_CH_ERROR_LOG}. Note that a rogue ClickHouse process might still be "
+#~ "running, which you should stop manually. Also, please check the web and "
+#~ "ui-job-scheduler logs for any errors related to the schema upgrade. "
+#~ msgstr ""
+#~ "Beim Versuch, den Metrik-Backend-Service nach einem fehlgeschlagenen "
+#~ "Schema-Upgrade zu beenden, ist ein Fehler aufgetreten. Einzelheiten "
+#~ "finden Sie in der Log-Datei: {_CH_ERROR_LOG}. Beachten Sie, dass "
+#~ "möglicherweise noch ein fehlerhafter ClickHouse-Prozess läuft, den Sie "
+#~ "manuell beenden sollten. Überprüfen Sie außerdem die Protokolle von Web "
+#~ "und \"ui-job-scheduler\" auf Fehler im Zusammenhang mit dem Schema-"
+#~ "Upgrade. "
+
+#, python-brace-format
+#~ msgid ""
+#~ "Something went wrong trying to stop the metric backend. Details can be "
+#~ "found in the log file: {_CH_ERROR_LOG}"
+#~ msgstr ""
+#~ "Beim Versuch, das Metrik-Backend zu stoppen, ist ein Fehler aufgetreten. "
+#~ "Details finden Sie in der Log-Datei: {_CH_ERROR_LOG}"
+
+#~ msgid ""
+#~ "The HTTP port can be used to access the ClickHouse web UI. It is not "
+#~ "needed for standard operations."
+#~ msgstr ""
+#~ "Der HTTP-Port kann für den Zugriff auf die ClickHouse Web-UI genutzt "
+#~ "werden. Für Standard-Operationen wird er nicht benötigt."
+
+#~ msgid ""
+#~ "The maximum amount of memory that the metric backend is allowed to use, "
+#~ "expressed as a fraction of the total available memory. Allows limiting "
+#~ "the memory usage on low-memory systems."
+#~ msgstr ""
+#~ "Die maximale Speichermenge, die das Metrik-Backend verwenden darf, "
+#~ "ausgedrückt als Bruchteil des insgesamt verfügbaren Speichers. Ermöglicht "
+#~ "die Begrenzung der Speichernutzung auf Systemen mit geringem "
+#~ "Speicherplatz."
+
+#~ msgid ""
+#~ "The metric backend database schema is in an unexpected state: revision "
+#~ "{current_revision_id!r} is applied, but the expected revision is "
+#~ "{head_revision_id!r}. Activation has been blocked to prevent unintended "
+#~ "schema upgrades. To resolve this, upgrade the schema manually as the site "
+#~ "user: `cmk-metric-backend-schema-manager upgrade --config default HEAD` "
+#~ "If the upgrade fails, please contact Checkmk support."
+#~ msgstr ""
+#~ "Das Datenbankschema des Metrik-Backends befindet sich in einem "
+#~ "unerwarteten Zustand: Die Revision {current_revision_id!r} ist "
+#~ "angewendet, die erwartete Revision ist jedoch {head_revision_id!r}. Die "
+#~ "Aktivierung wurde blockiert, um unbeabsichtigte Schema-Upgrades zu "
+#~ "verhindern. Um dieses Problem zu beheben, führen Sie das Schema-Upgrade "
+#~ "manuell als Instanzbenutzer durch: `cmk-metric-backend-schema-manager "
+#~ "upgrade --config default HEAD`. Sollte das Upgrade fehlschlagen, wenden "
+#~ "Sie sich bitte an den Checkmk-Support."
+
+#~ msgid "The metric backend snapin shows the number of custom metrics"
+#~ msgstr ""
+#~ "Das Snapin zum Metrik-Backend zeigt die Anzahl der Custom Metrics an"
+
+#~ msgid ""
+#~ "The port on which the metric backend listens to incoming data. This "
+#~ "setting also defines where the site's OpenTelemetry Collector sends its "
+#~ "data."
+#~ msgstr ""
+#~ "Der Port, auf dem das Metrik-Backend auf eingehende Daten wartet. Diese "
+#~ "Einstellung legt auch fest, wohin der OpenTelemetry Collector der Instanz "
+#~ "seine Daten sendet."
+
+#~ msgid "The port to query data from the metric backend."
+#~ msgstr "Der Port zum Abfragen von Daten aus dem Metrik-Backend."
 
 #~ msgid "opentelemetry_config_1"
 #~ msgstr "opentelemetry_config_1"

@@ -11,11 +11,10 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
-import type { CustomIconColor } from '@/components/CmkIcon/types.ts'
+import CmkTag, { type Colors, type Variants } from '@/components/CmkTag.vue'
 
 import type { HostState } from '../../api/types.ts'
 import BaseCell from './BaseCell.vue'
-import type { CellHighlight } from './base/highlight'
 
 export interface StateCellProps {
   state: HostState
@@ -40,8 +39,8 @@ const stateLabel = computed<TranslatedString>(() => {
   }
 })
 
-const stateHighlight = computed<CellHighlight>(() => {
-  let color: CellHighlight['color'] = 'warning'
+const stateColor = computed<Colors>(() => {
+  let color: Colors = 'warning'
 
   switch (props.state) {
     case 'UP':
@@ -51,39 +50,32 @@ const stateHighlight = computed<CellHighlight>(() => {
       color = 'danger'
       break
   }
-  return {
-    type: 'inline',
-    color: color
-  }
+  return color
 })
 
-const primaryColor = computed<CustomIconColor>(() => {
-  switch (props.state) {
-    case 'DOWN':
-      return { custom: 'var(--white)' }
-
-    default:
-      return { custom: 'var(--black)' }
-  }
+const stateVariant = computed<Variants>(() => {
+  return props.state === 'UP' ? 'outline' : 'fill'
 })
 </script>
 
 <template>
-  <BaseCell :column-id="columnId" :highlight="stateHighlight">
+  <BaseCell :column-id="columnId">
     <template #default>
-      <b>{{ stateLabel }}</b>
-      <CmkMultitoneIcon
-        v-if="stale"
-        name="stale"
-        :primary-color="primaryColor"
-        :title="_t('Stale state')"
+      <CmkTag
+        :color="stateColor"
+        :variant="stateVariant"
+        :content="stateLabel"
+        class="monitoring-state-cell__tag"
+        size="small"
       />
-      <CmkMultitoneIcon
-        v-if="pending"
-        name="reload"
-        :primary-color="primaryColor"
-        :title="_t('Pending')"
-      />
+      <CmkMultitoneIcon v-if="stale" name="stale" primary-color="font" :title="_t('Stale state')" />
+      <CmkMultitoneIcon v-if="pending" name="reload" primary-color="font" :title="_t('Pending')" />
     </template>
   </BaseCell>
 </template>
+
+<style scoped>
+.monitoring-state-cell__tag {
+  margin: 0;
+}
+</style>

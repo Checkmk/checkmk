@@ -57,7 +57,7 @@ test('renders host name, alias and ip in their cells', () => {
 test('renders state badge with success color for state UP', () => {
   const { container } = mountRow(makeHost({ state: 'UP' }))
 
-  const stateTag = container.querySelector('.monitoring-base-cell__highlight--color-success')
+  const stateTag = container.querySelector('.cmk-tag--color-success')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UP')
 })
@@ -65,7 +65,7 @@ test('renders state badge with success color for state UP', () => {
 test('renders state badge with danger color for state DOWN', () => {
   const { container } = mountRow(makeHost({ state: 'DOWN' }))
 
-  const stateTag = container.querySelector('.monitoring-base-cell__highlight--color-danger')
+  const stateTag = container.querySelector('.cmk-tag--color-danger')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('DOWN')
 })
@@ -73,7 +73,7 @@ test('renders state badge with danger color for state DOWN', () => {
 test('renders state badge with warning color for state UNREACHABLE', () => {
   const { container } = mountRow(makeHost({ state: 'UNREACHABLE' }))
 
-  const stateTag = container.querySelector('.monitoring-base-cell__highlight--color-warning')
+  const stateTag = container.querySelector('.cmk-tag--color-warning')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UNREACH')
 })

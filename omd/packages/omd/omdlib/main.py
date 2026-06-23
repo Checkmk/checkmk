@@ -3394,8 +3394,7 @@ def _escape_to_site_context(version: str, args: Sequence[str]) -> NoReturn:
 
 def main_finalize_create(args: Create) -> int:
     site = site_environment_as_root(args.site)
-    site_home = SitePaths.from_site_name(site.name).home
-    config = load_config(site_home, site.hook_dir)
+    config = load_config(site.name, site.hook_dir)
     if not args.autostart:
         config["AUTOSTART"] = "off"
     if not args.tmpfs:

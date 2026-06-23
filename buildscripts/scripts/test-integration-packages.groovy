@@ -4,6 +4,7 @@
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
+// groovylint-disable MethodSize
 void main() {
     check_job_parameters([
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
@@ -32,6 +33,7 @@ void main() {
     // this is save on master as there are no tags/versions built other than daily
     def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
     def disable_cache = params.DISABLE_CACHE;
+    def disable_signing = params.DISABLE_CMK_DISTRO_PACKAGE_SIGNING;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
     // TODO: we should always use USE_CASE directly from the job parameters
@@ -67,6 +69,7 @@ void main() {
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |disable_cache:............ │${disable_cache}│
+        |disable_signing:.......... │${disable_signing}│
         |docker_tag:............... │${docker_tag}│
         |fake_artifacts:........... │${fake_artifacts}│
         |force_build:.............. │${force_build}│
@@ -114,6 +117,7 @@ void main() {
                         CUSTOM_GIT_REF: effective_git_ref,
                         FAKE_ARTIFACTS: fake_artifacts,
                         DISABLE_CACHE: disable_cache,
+                        DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
                         // FIPS node specifier has to be respected
                         CIPARAM_OVERRIDE_BUILD_NODE: (params.USE_CASE == "fips") ? "fips" : params.CIPARAM_OVERRIDE_BUILD_NODE,
                     ],

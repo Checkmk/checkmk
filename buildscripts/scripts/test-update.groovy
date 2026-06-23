@@ -35,6 +35,7 @@ void main() {
 
     def cross_edition_target = params.CROSS_EDITION_TARGET ?: "";
     def disable_cache = params.DISABLE_CACHE;
+    def disable_signing = params.DISABLE_CMK_DISTRO_PACKAGE_SIGNING;
     def edition = params.EDITION;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
     def fake_artifacts = params.FAKE_ARTIFACTS;
@@ -68,6 +69,7 @@ void main() {
         |cross_edition_target:..... │${cross_edition_target}│
         |deliverables_dir:......... │${deliverables_dir}│
         |disable_cache:............ │${disable_cache}│
+        |disable_signing:.......... │${disable_signing}│
         |docker_tag:............... │${docker_tag}│
         |edition:.................. │${edition}│
         |fake_artifacts:........... │${fake_artifacts}│
@@ -121,6 +123,7 @@ void main() {
                         CUSTOM_GIT_REF: effective_git_ref,
                         FAKE_ARTIFACTS: fake_artifacts,
                         DISABLE_CACHE: disable_cache,
+                        DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

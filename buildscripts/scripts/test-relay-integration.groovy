@@ -26,6 +26,7 @@ void main() {
 
     def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
     def disable_cache = params.DISABLE_CACHE;
+    def disable_signing = params.DISABLE_CMK_DISTRO_PACKAGE_SIGNING;
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
@@ -61,6 +62,7 @@ void main() {
         |cmk_version:........... │${cmk_version}
         |cmk_version_rc_aware:.. │${cmk_version_rc_aware}
         |disable_cache:......... │${disable_cache}│
+        |disable_signing:....... │${disable_signing}│
         |docker_tag:............ │${setup_values.docker_tag}│
         |edition:............... │${edition}│
         |fake_artifacts:........ │${fake_artifacts}│
@@ -90,6 +92,7 @@ void main() {
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
                 fake_artifacts: fake_artifacts,
                 disable_cache: disable_cache,
+                disable_signing: disable_signing,
                 force_build: force_build,
                 docker_tag: setup_values.docker_tag,
                 safe_branch_name: setup_values.safe_branch_name,

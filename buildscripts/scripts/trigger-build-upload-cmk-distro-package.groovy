@@ -28,6 +28,7 @@ void main() {
 
     def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
     def disable_cache = params.DISABLE_CACHE;
+    def disable_signing = params.DISABLE_CMK_DISTRO_PACKAGE_SIGNING;
     def distro = params.DISTRO;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
@@ -82,6 +83,7 @@ void main() {
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |disable_cache:............ │${disable_cache}│
+        |disable_signing:.......... │${disable_signing}│
         |distro:................... │${distro}│
         |force_build:.............. │${force_build}│
         |safe_branch_name:......... │${safe_branch_name}│
@@ -121,6 +123,7 @@ void main() {
                         EDITION: edition,
                         DISTRO: distro,
                         DISABLE_CACHE: params.DISABLE_CACHE,
+                        DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
                         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: setup_values.docker_tag,
                         FAKE_ARTIFACTS: fake_artifacts,
                     ],
@@ -157,6 +160,7 @@ void main() {
                         DISABLE_CACHE: params.DISABLE_CACHE,
                         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: setup_values.docker_tag,
                         FAKE_ARTIFACTS: fake_artifacts,
+                        DISABLE_SIGNING: disable_signing,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: build_node,
@@ -227,6 +231,7 @@ void main() {
                 stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: params.CIPARAM_OVERRIDE_BUILD_NODE),
                 stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: params.CIPARAM_CLEANUP_WORKSPACE),
                 stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
+                booleanParam(name: "DISABLE_SIGNING", value: disable_signing),
             ],
             wait: false,
         );
@@ -244,6 +249,7 @@ void main() {
                 stringParam(name: "CIPARAM_OVERRIDE_BUILD_NODE", value: ""),
                 stringParam(name: "CIPARAM_CLEANUP_WORKSPACE", value: CIPARAM_CLEANUP_WORKSPACE),
                 stringParam(name: "CIPARAM_BISECT_COMMENT", value: CIPARAM_BISECT_COMMENT),
+                booleanParam(name: "DISABLE_SIGNING", value: disable_signing),
             ],
             wait: false,
         );

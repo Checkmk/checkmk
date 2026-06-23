@@ -10,6 +10,8 @@ void main() {
     def branch_base_folder = package_helper.branch_base_folder(true);
     def safe_branch_name = versioning.safe_branch_name();
 
+    def disable_cache = params.DISABLE_CACHE;
+    def disable_signing = params.DISABLE_CMK_DISTRO_PACKAGE_SIGNING;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
@@ -51,6 +53,7 @@ void main() {
         """
         |===== CONFIGURATION ===============================
         |branch_base_folder:.. │${checkout_dir}│
+        |disable_signing:..... │${disable_signing}│
         |fake_artifacts:...... │${fake_artifacts}│
         |force_build:......... │${force_build}│
         |job_names:........... │${job_names}│
@@ -73,6 +76,7 @@ void main() {
                         CUSTOM_GIT_REF: effective_git_ref,
                         FAKE_ARTIFACTS: fake_artifacts,
                         DISABLE_CACHE: disable_cache,
+                        DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
@@ -100,6 +104,8 @@ void main() {
                 build_params: [
                     CUSTOM_GIT_REF: effective_git_ref,
                     FAKE_ARTIFACTS: fake_artifacts,
+                    DISABLE_CACHE: disable_cache,
+                    DISABLE_SIGNING: disable_signing,
                 ],
                 build_params_no_check: [
                     CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

@@ -42,6 +42,7 @@ Map common_prepare(Map args) {
         |fake_artifacts:........ │${params.FAKE_ARTIFACTS}│
         |force_build:........... │${params.DISABLE_JENKINS_CACHE == true}│
         |disable_cache:......... │${params.DISABLE_CACHE}│
+        |disable_signing:....... │${params.DISABLE_CMK_DISTRO_PACKAGE_SIGNING}│
         |===================================================
         """.stripMargin());
 
@@ -72,6 +73,7 @@ void fetch_package(Map args) {
                 DISTRO: args.distro,
                 FAKE_ARTIFACTS: args.fake_artifacts,
                 DISABLE_CACHE: args.disable_cache ?: false,
+                DISABLE_CMK_DISTRO_PACKAGE_SIGNING: args.disable_signing ?: false,
             ],
             build_params_no_check: [
                 CIPARAM_OVERRIDE_BUILD_NODE: build_node,

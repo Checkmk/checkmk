@@ -20,6 +20,7 @@ void main() {
     def safe_branch_name = versioning.safe_branch_name();
 
     def disable_cache = params.DISABLE_CACHE;
+    def disable_signing = params.DISABLE_CMK_DISTRO_PACKAGE_SIGNING;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
@@ -31,6 +32,7 @@ void main() {
         OVERRIDE_DISTROS: params.OVERRIDE_DISTROS,
         FAKE_ARTIFACTS: fake_artifacts,
         DISABLE_CACHE: disable_cache,
+        DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
         CUSTOM_GIT_REF: effective_git_ref,
 
         /// Hardcode the USE_CASE to fips, because this is our only use case here
@@ -48,6 +50,7 @@ void main() {
         |===== CONFIGURATION ===============================
         |custom_git_ref:........ │${effective_git_ref}│
         |disable_cache:......... │${disable_cache}│
+        |disable_signing:....... │${disable_signing}│
         |edition:............... │${params.EDITION}│
         |fake_artifacts:........ │${fake_artifacts}│
         |force_build:........... │${force_build}│

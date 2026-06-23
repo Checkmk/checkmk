@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-06-11 08:33+0000\n"
+"PO-Revision-Date: 2026-06-23 09:29+0000\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/stable/"
 "fr/>\n"
 "Language: fr\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 5.11.4\n"
+"X-Generator: Weblate 5.16.2\n"
 
 msgid " "
 msgstr ""
@@ -872,6 +872,12 @@ msgstr "%s : Découverte du service : Permission refusée"
 #, python-format
 msgid "%s: Uses SSL"
 msgstr "%s : Utilise SSL"
+
+#, python-format
+msgid ""
+"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
+"version %s and must not be relied on for permanent configuration."
+msgstr ""
 
 msgid "&lt;None&gt;"
 msgstr "&lt;None&gt;"
@@ -26839,9 +26845,9 @@ msgstr "Extension"
 msgid "Extension package \"%s\" disabled."
 msgstr "Fichiers d'extension"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Extension package \"%s\" released."
-msgstr "Paquets d'extension"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "Extension package \"%s\" removed."
@@ -58179,20 +58185,23 @@ msgstr ""
 msgid "Relays"
 msgstr "Retard :"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Release extension package \"%s\""
-msgstr "Création d'un nouveau paquet d'extension %s"
-
-msgid "Release package"
-msgstr "Paquet de libération"
+msgstr ""
 
 #, fuzzy
-msgid "Release this package"
+msgid "Release flags"
 msgstr "Paquet de libération"
 
-#, fuzzy, python-format
+msgid "Release package"
+msgstr ""
+
+msgid "Release this package"
+msgstr ""
+
+#, python-format
 msgid "Released extension package %s %s"
-msgstr "Suppression du paquet d'extensions %s %s"
+msgstr ""
 
 #, fuzzy
 msgid ""

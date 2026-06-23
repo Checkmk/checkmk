@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-24 17:50+0000\n"
+"PO-Revision-Date: 2026-06-23 09:29+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -864,6 +864,12 @@ msgstr "%s:サービス検出:パーミッションが拒否されました"
 #, python-format
 msgid "%s: Uses SSL"
 msgstr "%s: SSLを使用"
+
+#, python-format
+msgid ""
+"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
+"version %s and must not be relied on for permanent configuration."
+msgstr ""
 
 msgid "&lt;None&gt;"
 msgstr "&lt;なし&gt;"
@@ -54689,8 +54695,12 @@ msgstr "ディレイ:"
 msgid "Release extension package \"%s\""
 msgstr "非推奨拡張パッケージ: %s"
 
-msgid "Release package"
+#, fuzzy
+msgid "Release flags"
 msgstr "リリースパッケージ"
+
+msgid "Release package"
+msgstr ""
 
 #, fuzzy
 msgid "Release this package"

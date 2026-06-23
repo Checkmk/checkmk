@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-18 10:30+0000\n"
+"PO-Revision-Date: 2026-06-23 10:29+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -884,6 +884,14 @@ msgstr "%s: Service-Erkennung: Berechtigung verweigert"
 #, python-format
 msgid "%s: Uses SSL"
 msgstr "%s: Verwendet SSL"
+
+#, python-format
+msgid ""
+"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
+"version %s and must not be relied on for permanent configuration."
+msgstr ""
+"%s<br><br>Dies ist ein vorläufiges Release-Flag. Es wird in Version %s "
+"entfernt und sollte nicht für dauerhafte Konfigurationen verwendet werden."
 
 msgid "&lt;None&gt;"
 msgstr "&lt;keine&gt;"
@@ -42559,9 +42567,8 @@ msgstr "Metrik-Backend"
 msgid "Metric backend (custom query)"
 msgstr "Metrik-Backend (benutzerdefinierte Anfrage)"
 
-#, fuzzy
 msgid "Metric backend configuration"
-msgstr "Metrik-Konfiguration"
+msgstr "Konfiguration des Metrik-Backends"
 
 msgid "Metric backend filter criteria"
 msgstr "Filterkriterien des Metrik-Backends"
@@ -54837,10 +54844,13 @@ msgstr "Relays"
 
 #, python-format
 msgid "Release extension package \"%s\""
-msgstr "Erweiterungspaket \"%s\" freigeben"
+msgstr "Das Erweiterungspaket \"%s\" freigeben"
+
+msgid "Release flags"
+msgstr "Release-Flags"
 
 msgid "Release package"
-msgstr "Paket freigeben"
+msgstr "Dieses Paket freigeben"
 
 msgid "Release this package"
 msgstr "Dieses Paket freigeben"
@@ -69128,6 +69138,13 @@ msgid ""
 "user: `cmk-metric-backend-schema-manager upgrade --config default HEAD` If "
 "the upgrade fails, please contact Checkmk support."
 msgstr ""
+"Das Datenbankschema des Metrik-Backends befindet sich in einem unerwarteten "
+"Zustand: Die Revision {current_revision_id!r} ist angewendet, die erwartete "
+"Revision ist jedoch {head_revision_id!r}. Die Aktivierung wurde blockiert, "
+"um unbeabsichtigte Schema-Upgrades zu verhindern. Um dieses Problem zu "
+"beheben, führen Sie das Schema-Upgrade manuell als Instanzbenutzer durch: "
+"`cmk-metric-backend-schema-manager upgrade --config default HEAD`. Sollte "
+"das Upgrade fehlschlagen, wenden Sie sich bitte an den Checkmk-Support."
 
 msgid "The metric backend snapin shows the number of custom metrics"
 msgstr "Das Snapin zum Metrik-Backend zeigt die Anzahl der Custom Metrics an"
@@ -95137,11 +95154,10 @@ msgstr ""
 msgid "Site is required but not specified."
 msgstr "Die Instanz ist erforderlich, wurde jedoch nicht angegeben."
 
-#, fuzzy
 msgid "A configuration with this name already exists. Choose a different name."
 msgstr ""
-"Ein Host mit dem Namen %s existiert bereits im Ordner %s. Bitte wählen Sie "
-"einen anderen Host-Namen."
+"Eine Konfiguration mit diesem Namen existiert bereits. Wählen Sie einen "
+"anderen Namen."
 
 msgid "Failed to validate site configuration. Please try again."
 msgstr ""

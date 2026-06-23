@@ -499,8 +499,8 @@ function onGroupClickOutside(group: FilterGroup): void {
 .metric-backend-form-attribute-filter__connector {
   flex-shrink: 0;
   appearance: none;
-  background-color: var(--default-button-form-color);
-  border: 1px solid var(--button-form-border-color);
+  background-color: var(--default-form-element-bg-color);
+  border: 1px solid var(--ux-theme-4);
   color: var(--button-form-text-color);
   cursor: pointer;
   font: inherit;

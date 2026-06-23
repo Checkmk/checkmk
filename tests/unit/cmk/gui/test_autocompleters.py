@@ -35,7 +35,6 @@ def test_builtin_autocompleters_registered() -> None:
             "graph_template_for_combined_graph",
             "combined_graphs",
             "custom_graphs",
-            "monitored_metrics_backend",
             "monitored_resource_attributes_keys_backend",
             "monitored_resource_attributes_values_backend",
             "monitored_scope_attributes_keys_backend",

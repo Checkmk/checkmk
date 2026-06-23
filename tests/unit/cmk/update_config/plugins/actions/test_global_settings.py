@@ -105,3 +105,42 @@ def test_remove_options() -> None:
         "global_b": 14,
         "unknown": "How did this get here?",
     }
+
+
+def test_update_global_config_normalizes_only_non_string_user_icons(
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch.object(
+        global_settings, "filter_unknown_settings", lambda global_config: global_config
+    )
+    mocker.patch.object(
+        global_settings, "_transform_global_config_values", lambda settings, _: settings
+    )
+
+    assert global_settings.update_global_config(
+        logging.getLogger(),
+        {
+            "user_icons_and_actions": {
+                # string icon values are left untouched (recoverable / runtime-handled)
+                "valid": {"icon": "status", "title": "Valid"},
+                "empty_string": {"icon": "", "title": "Empty string"},
+                "non_dict": "broken",
+                # non-string icon values are migrated to the missing icon
+                "none_icon": {"icon": None, "title": "None icon"},
+                "missing_key": {"title": "Missing key"},
+                "bool_icon": {"icon": True, "title": "Bool icon"},
+                "int_icon": {"icon": 123, "title": "Integer icon"},
+            }
+        },
+        active_config,
+    ) == {
+        "user_icons_and_actions": {
+            "valid": {"icon": "status", "title": "Valid"},
+            "empty_string": {"icon": "", "title": "Empty string"},
+            "non_dict": "broken",
+            "none_icon": {"icon": "missing", "title": "None icon"},
+            "missing_key": {"icon": "missing", "title": "Missing key"},
+            "bool_icon": {"icon": "missing", "title": "Bool icon"},
+            "int_icon": {"icon": "missing", "title": "Integer icon"},
+        }
+    }

@@ -5,6 +5,7 @@
 
 
 from pathlib import Path
+from typing import TypeGuard
 
 from cmk.gui.theme import Theme
 from cmk.gui.type_defs import DynamicIcon
@@ -15,13 +16,23 @@ from cmk.shared_typing import icon as st
 # don't use this if you handle icons that are known at build time!
 
 
+def _is_non_empty_str(value: object) -> TypeGuard[str]:
+    return isinstance(value, str) and bool(value)
+
+
 def resolve_icon_name(icon: DynamicIcon, theme: Theme) -> st.DynamicIcon:
     if isinstance(icon, dict):
-        icon_name = icon["icon"]
-        emblem_name = icon["emblem"]
+        icon_name = icon.get("icon")
+        emblem_name = icon.get("emblem")
     else:
         icon_name = icon
         emblem_name = None
+
+    if not _is_non_empty_str(icon_name):
+        missing_icon = st.DefaultIcon(id="missing")
+        if _is_non_empty_str(emblem_name):
+            return st.EmblemIcon(icon=missing_icon, emblem=emblem_name)
+        return missing_icon
 
     icon_result: st.DefaultIcon | st.UserIcon
 
@@ -42,7 +53,7 @@ def resolve_icon_name(icon: DynamicIcon, theme: Theme) -> st.DynamicIcon:
         else:
             return st.DefaultIcon(id="missing")
 
-    if emblem_name:
+    if _is_non_empty_str(emblem_name):
         # we don't have to solve the emblem name in any special way,
         # as they can not be configured by the user
         return st.EmblemIcon(icon=icon_result, emblem=emblem_name)

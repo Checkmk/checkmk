@@ -5,8 +5,12 @@
 resolve_docker_image_alias = { alias_name ->
     // same as docker.build("build-image:${env.BUILD_ID}",
     //   "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/${alias_name}")
+    def additional_arg = "";
+    if (kubernetes_inherit_from != "UNSET") {
+        additional_arg = " --no-docker";
+    }
     return cmd_output(
-        "${checkout_dir}/buildscripts/docker_image_aliases/resolve.py ${alias_name}"
+        "${checkout_dir}/buildscripts/docker_image_aliases/resolve.py ${alias_name} ${additional_arg}"
     ).replaceAll("[\r\n]+", "");
 }
 

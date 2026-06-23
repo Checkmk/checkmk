@@ -2,7 +2,8 @@ ARG BASE_IMAGE
 # hadolint ignore=DL3006
 FROM ${BASE_IMAGE}
 
-SHELL ["/bin/bash", "-c"]
+# kaniko is based on alpine, only shipping /bin/sh instead of /bin/bash
+SHELL ["/bin/sh", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8
 
 ARG NEXUS_ARCHIVES_URL

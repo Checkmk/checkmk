@@ -18,6 +18,11 @@ def parse_arguments() -> argparse.Namespace:
 
     parser.add_argument("alias_name")
     parser.add_argument(
+        "--no-docker",
+        action="store_true",
+        help="Do not invoke any docker commands, just print the resolved image ID",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="Check whether the docker image is already locally available and print the resolved repo tag",
@@ -76,12 +81,13 @@ def main() -> None:
 
     if args.check:
         print(f"Resolved repo tag: {repo_tag}")
-        result = run(["docker", "images", "-q", repo_tag], capture_output=True, check=False)
-        if not result.stdout.splitlines():
-            print("Does not exist locally, might perform image pull as next step ...")
+        if not args.no_docker:
+            result = run(["docker", "images", "-q", repo_tag], capture_output=True, check=False)
+            if not result.stdout.splitlines():
+                print("Does not exist locally, might perform image pull as next step ...")
     else:
         print(image_id_value)
-        if repo_tag:
+        if repo_tag and not args.no_docker:
             # We need to pull also the tag, otherwise Nexus may delete those images
             run(["docker", "pull", repo_tag], capture_output=True, check=False)
 

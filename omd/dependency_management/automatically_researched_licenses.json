@@ -1803,6 +1803,7 @@
   "pkg:pypi/jsonschema@4.26.0": "MIT",
   "pkg:pypi/lazy-object-proxy@1.12.0": "BSD-2-Clause",
   "pkg:pypi/lxml@6.0.2": "BSD-3-Clause",
+  "pkg:pypi/lxml@6.1.1": "BSD-3-Clause",
   "pkg:pypi/markdown@3.10.2": "BSD-3-Clause",
   "pkg:pypi/markupsafe@3.0.3": "BSD-3-Clause",
   "pkg:pypi/meraki@2.1.1": "MIT",

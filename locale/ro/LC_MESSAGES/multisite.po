@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-06-23 09:29+0000\n"
 "Language-Team: Romanian <https://translate.checkmk.com/projects/checkmk/"
@@ -34570,6 +34570,11 @@ msgid ""
 "the database name."
 msgstr ""
 
+msgid ""
+"If enabled, the plug-in will not attempt to connect to locally detected "
+"instances that are currently stopped.Only applicable for Windows."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If enabled, the service details will contain the username of a process owner."
@@ -36125,6 +36130,9 @@ msgstr "Ignoră limita de interogare dură"
 #, fuzzy
 msgid "Ignore if older than"
 msgstr "Avertisment dacă este mai veche de"
+
+msgid "Ignore inactive local instances(Windows)"
+msgstr ""
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Ignoră intervalele mai mici sau egale"
@@ -42791,6 +42799,12 @@ msgstr "Efectuați verificarea OK"
 
 msgid "Make check WARNING"
 msgstr "Efectuați o verificare AVERTISMENT"
+
+msgid ""
+"Make dashboards visible and usable for all users. For dashboards this "
+"permission additionally controls whether a dashboard may be shared via a "
+"public link."
+msgstr ""
 
 #, python-format
 msgid "Make own published %s override built-in %s for all users."
@@ -64753,6 +64767,9 @@ msgid "Skip hosts with non-empty parents (also if inherited)"
 msgstr ""
 "Omiteți gazdele gazde cu părinți care nu sunt goale (de asemenea, dacă sunt "
 "moștenite)"
+
+msgid "Skip local instances that are not running"
+msgstr ""
 
 # georgem ##############
 #, fuzzy

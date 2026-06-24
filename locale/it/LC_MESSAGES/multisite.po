@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-06-23 09:29+0000\n"
 "Language-Team: Italian <https://translate.checkmk.com/projects/checkmk/"
@@ -34243,6 +34243,11 @@ msgid ""
 "the database name."
 msgstr ""
 
+msgid ""
+"If enabled, the plug-in will not attempt to connect to locally detected "
+"instances that are currently stopped.Only applicable for Windows."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If enabled, the service details will contain the username of a process owner."
@@ -35789,6 +35794,9 @@ msgstr "Ignorare il limite delle query"
 #, fuzzy
 msgid "Ignore if older than"
 msgstr "Attenzione se più vecchio di"
+
+msgid "Ignore inactive local instances(Windows)"
+msgstr ""
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Ignora gli intervalli più brevi o uguali"
@@ -42444,6 +42452,12 @@ msgstr "Fare il controllo OK"
 
 msgid "Make check WARNING"
 msgstr "Fare il controllo ATTENZIONE"
+
+msgid ""
+"Make dashboards visible and usable for all users. For dashboards this "
+"permission additionally controls whether a dashboard may be shared via a "
+"public link."
+msgstr ""
 
 #, python-format
 msgid "Make own published %s override built-in %s for all users."
@@ -64280,6 +64294,9 @@ msgstr "Salta gli host con definizioni genitoriali esplicite (anche se vuote)"
 #, fuzzy
 msgid "Skip hosts with non-empty parents (also if inherited)"
 msgstr "Salta gli host con genitori non vuoti (anche se ereditati)"
+
+msgid "Skip local instances that are not running"
+msgstr ""
 
 #, fuzzy
 msgid "Skip pack"

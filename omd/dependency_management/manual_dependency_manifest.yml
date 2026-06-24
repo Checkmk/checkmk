@@ -1,0 +1,24 @@
+dependencies:
+  - purl: pkg:generic/asio@1.34.2
+    license: BSL-1.0
+    comment: third_party/asio
+
+  - purl: pkg:generic/fmt@11.1.4
+    license: MIT
+    comment: third_party/fmt
+
+  - purl: pkg:generic/yaml-cpp@0.8.0
+    license: MIT
+    comment: third_party/yaml-cpp
+
+  - purl: pkg:generic/simpleini@2af65fc
+    license: MIT
+    comment: third_party/simpleini
+
+  - purl: pkg:generic/openhardwaremonitor@0.9.6
+    license: MPL-2.0
+    comment: third_party/openhardwaremonitor
+
+  - purl: pkg:generic/python@3.13.13
+    license: PSF-2.0
+    comment: windows python

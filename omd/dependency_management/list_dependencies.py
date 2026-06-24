@@ -7,12 +7,13 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import IO
+from typing import Annotated, IO
 
 import toml
+import yaml
 from cyclonedx import Component, Hash, LicenseInfo, PUrl, SPDXId
 from pnpm_parser import read_pnpm_lock
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, PlainValidator
 
 
 @dataclass(frozen=True)
@@ -173,6 +174,41 @@ class RequirementsTxtParser:
         ]
 
 
+class CustomManifestEntry(BaseModel):
+    """A single hand-maintained dependency entry."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    purl: Annotated[PUrl, PlainValidator(PUrl.from_str)]
+    license_: SPDXId = Field(validation_alias="license")
+    cpe: str | None = None
+    comment: str | None = None
+
+    def component(self, path: Path) -> Component:
+        return Component(
+            type_="library",
+            purl=self.purl,
+            files=frozenset({path}),
+            license_info=LicenseInfo(id_=self.license_, text=None),
+            cpe=self.cpe,
+        )
+
+
+class CustomManifest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    dependencies: list[CustomManifestEntry]
+
+
+def read_custom_manifest(path: Path) -> list[Component]:
+    """Read manual maintained dependency manifest
+
+    used for not bazelized dependencies, e.g. windows agent, agent updater
+    """
+    manifest = CustomManifest.model_validate(yaml.safe_load(path.read_text()))
+    return [entry.component(path) for entry in manifest.dependencies]
+
+
 def read_cargo_lock(path: Path) -> list[Component]:
     """Read a Cargo.lock file and return a list of components"""
     with path.open() as cargofile_fh:
@@ -206,6 +242,8 @@ def read_manifests(paths: list[Path]) -> list[Component]:
                 components.extend(read_pnpm_lock(path))
             case Path(name="Cargo.lock"):
                 components.extend(read_cargo_lock(path))
+            case Path(name="manual_dependency_manifest.yml"):
+                components.extend(read_custom_manifest(path))
             case _:
                 raise NotImplementedError(f"Cannot handle manifest {path}")
     return components

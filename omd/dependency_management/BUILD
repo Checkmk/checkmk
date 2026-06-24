@@ -80,6 +80,7 @@ dependency_list(
         "//requirements/rust/host:Cargo.lock",
         "//:pnpm-lock.yaml",
         "//:runtime-requirements.txt",
+        "manual_dependency_manifest.yml",
     ],
     sbom_target = select({
         "@cmk//edition:" + edition: "//omd:deps_packages_" + edition + "_base"

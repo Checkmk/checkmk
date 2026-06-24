@@ -147,6 +147,8 @@ function onSearchEscape(event: KeyboardEvent): void {
       />
     </div>
 
+    <hr class="monitoring-filter-checkbox-list__row-separator" />
+
     <div class="monitoring-filter-checkbox-list__options">
       <div
         v-for="option in visibleOptions"
@@ -199,10 +201,18 @@ function onSearchEscape(event: KeyboardEvent): void {
   overflow-y: auto;
 }
 
+.monitoring-filter-checkbox-list__row-separator {
+  width: 100%;
+  height: var(--dimension-1);
+  border: 0;
+  background-color: var(--ux-theme-4);
+  margin: var(--dimension-1) 0;
+}
+
 .monitoring-filter-checkbox-list__row {
   display: flex;
   align-items: center;
-  padding: 0 var(--dimension-4);
+  padding: 0 var(--dimension-2) var(--dimension-2) var(--dimension-2);
 
   &:hover,
   &:focus-within {
@@ -211,7 +221,6 @@ function onSearchEscape(event: KeyboardEvent): void {
 }
 
 .monitoring-filter-checkbox-list__row--all {
-  border-bottom: 1px solid var(--ux-theme-4);
   font-weight: var(--font-weight-bold);
 }
 

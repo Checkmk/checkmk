@@ -66,6 +66,15 @@ def test_hooks(site: Site) -> None:
             "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT",
         ]
 
+    if (
+        site.edition.is_cloud_edition()
+        or site.edition.is_ultimate_edition()
+        or site.edition.is_ultimatemt_edition()
+    ):
+        hooks += [
+            "MCP_SERVER_PORT",
+        ]
+
     installed_hooks = os.listdir(site.root / "lib" / "omd" / "hooks")
 
     assert sorted(hooks) == sorted(installed_hooks)

@@ -207,6 +207,7 @@ py_library(
         "omdlib/livestatus.py",
         "omdlib/main.py",
         "omdlib/main_site_user.py",
+        "omdlib/mcp.py",
         "omdlib/mkeventd.py",
         "omdlib/multisite.py",
         "omdlib/opentelemetry.py",

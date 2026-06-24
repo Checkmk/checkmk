@@ -32,6 +32,8 @@ edition_deps = select({
     "@cmk//edition:cloud": [
         "//non-free/packages/cmk-bakery:pkg_tar",
         "//non-free/packages/cmk-cloud:pkg_tar",
+        "//non-free/packages/cmk-mcp:omd_skel_tar",
+        "//non-free/packages/cmk-mcp:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -89,6 +91,8 @@ edition_deps = select({
     ],
     "@cmk//edition:ultimate": [
         "//non-free/packages/cmk-bakery:pkg_tar",
+        "//non-free/packages/cmk-mcp:omd_skel_tar",
+        "//non-free/packages/cmk-mcp:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -124,6 +128,8 @@ edition_deps = select({
     ],
     "@cmk//edition:ultimatemt": [
         "//non-free/packages/cmk-bakery:pkg_tar",
+        "//non-free/packages/cmk-mcp:omd_skel_tar",
+        "//non-free/packages/cmk-mcp:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -163,6 +169,7 @@ edition_deps = select({
 
 edition_skel_permissions = select({
     "@cmk//edition:cloud": [
+        "//non-free/packages/cmk-mcp:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
         "//omd/non-free/packages/cmk-dcd:skel.permissions",
@@ -226,6 +233,7 @@ edition_skel_permissions = select({
     ],
     "@cmk//edition:ultimate": [
         "//omd/packages/apache-omd:skel.permissions",
+        "//non-free/packages/cmk-mcp:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//non-free/packages/otel-collector:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
@@ -252,6 +260,7 @@ edition_skel_permissions = select({
     ],
     "@cmk//edition:ultimatemt": [
         "//omd/packages/apache-omd:skel.permissions",
+        "//non-free/packages/cmk-mcp:skel.permissions",
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//non-free/packages/otel-collector:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",

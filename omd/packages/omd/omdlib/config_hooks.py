@@ -36,6 +36,7 @@ from omdlib.livestatus import (
     LIVESTATUS_TCP_PORT,
     LIVESTATUS_TCP_TLS,
 )
+from omdlib.mcp import MCP_SERVER_PORT
 from omdlib.mkeventd import MKEVENTD, MKEVENTD_SNMPTRAP, MKEVENTD_SYSLOG, MKEVENTD_SYSLOG_TCP
 from omdlib.multisite import MULTISITE_AUTHORISATION, MULTISITE_COOKIE_AUTH
 from omdlib.opentelemetry import (
@@ -157,6 +158,7 @@ _HOOKS: Sequence[Hook | PortHook] = [
     LIVESTATUS_TCP_PER_SOURCE,
     LIVESTATUS_TCP_PORT,
     LIVESTATUS_TCP_TLS,
+    MCP_SERVER_PORT,
     MKEVENTD,
     MKEVENTD_SNMPTRAP,
     MKEVENTD_SYSLOG,

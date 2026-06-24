@@ -722,7 +722,7 @@ def main_new(args: argparse.Namespace) -> None:
         sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
     paths = make_paths_object(Path.home())
-    stash = load_or_update_stash(paths, WerkIDsClient())
+    stash = load_or_update_stash(paths, WerkIDsClient(get_config().werk_ids_server_url))
     werk_id = pick_id_from_stash(stash, get_config().project)
 
     metadata: WerkMetadata = {}
@@ -804,7 +804,7 @@ def get_werk_arg(arg: WerkId | None) -> WerkId:
 
 
 def main_init() -> None:
-    werk_ids_client = WerkIDsClient()
+    werk_ids_client = WerkIDsClient(get_config().werk_ids_server_url)
 
     if not werk_ids_client.ensure_connection():
         return

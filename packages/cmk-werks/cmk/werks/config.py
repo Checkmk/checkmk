@@ -25,6 +25,7 @@ class Config(BaseModel):
     Should the werk tool automatically create a commit when reserving ids or creating a werk?
     This option was introduced for cloudmk, they have special requirements for commit messages.
     """
+    werk_ids_server_url: str = "https://werk-ids.lan.checkmk.net"
     current_version: str
 
     def all_components(self) -> list[tuple[str, str]]:

@@ -130,12 +130,13 @@ def _server_error_message(response: requests.Response) -> str:
     return response.text.strip()
 
 
+@dataclass(frozen=True)
 class WerkIDsClient:
-    URL: Final = "https://werk-ids.lan.checkmk.net"
+    url: str
 
     def ensure_connection(self) -> bool:
         try:
-            response = requests.get(self.URL, timeout=_TIMEOUT)
+            response = requests.get(self.url, timeout=_TIMEOUT)
             response.raise_for_status()
             return True
         except requests.exceptions.RequestException:
@@ -147,7 +148,7 @@ class WerkIDsClient:
         secret = secret_file_path.read_text(encoding="utf-8").strip()
         try:
             response = requests.get(
-                f"{self.URL}/v1/connect",
+                f"{self.url}/v1/connect",
                 verify=True,
                 headers={"Authorization": f"Bearer {secret}"},
                 timeout=_TIMEOUT,
@@ -170,7 +171,7 @@ class WerkIDsClient:
         secret = secret_file_path.read_text(encoding="utf-8").strip()
         try:
             response = requests.post(
-                f"{self.URL}/v1/reserve",
+                f"{self.url}/v1/reserve",
                 verify=True,
                 headers={"Authorization": f"Bearer {secret}"},
                 json={"local_werk_ids_count": local_werk_ids_count},
@@ -188,7 +189,7 @@ class WerkIDsClient:
 
         sys.stderr.write(
             f"{TTY_RED}Could not reserve werk IDs "
-            f"(status {response.status_code}, server: {self.URL}): "
+            f"(status {response.status_code}, server: {self.url}): "
             f"{_server_error_message(response)}{TTY_NORMAL}\n"
         )
         return []

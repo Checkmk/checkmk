@@ -226,7 +226,7 @@ def test_load_or_update_stash_legacy_stash_skips_server(tmp_path: Path) -> None:
     legacy = LegacyStash(ids_by_project={"cmk": [1, 2]})
     paths.legacy_stash_file.write_text(legacy.model_dump_json(by_alias=True), encoding="utf-8")
 
-    stash = load_or_update_stash(paths, FakeWerkIDsClient())
+    stash = load_or_update_stash(paths, FakeWerkIDsClient("http://werk-ids.test"))
 
     assert isinstance(stash, LegacyStash)
     assert stash.ids_by_project == {"cmk": [1, 2]}
@@ -241,7 +241,7 @@ def test_load_or_update_stash_no_secret_skips_server(tmp_path: Path) -> None:
         Stash(ids=[10, 20]).model_dump_json(by_alias=True), encoding="utf-8"
     )
 
-    stash = load_or_update_stash(paths, FakeWerkIDsClient())
+    stash = load_or_update_stash(paths, FakeWerkIDsClient("http://werk-ids.test"))
 
     assert isinstance(stash, LegacyStash)
     assert stash.count() == 0
@@ -256,7 +256,7 @@ def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
         Stash(ids=[10, 20]).model_dump_json(by_alias=True), encoding="utf-8"
     )
 
-    stash = load_or_update_stash(paths, FakeWerkIDsClient())
+    stash = load_or_update_stash(paths, FakeWerkIDsClient("http://werk-ids.test"))
 
     assert isinstance(stash, Stash)
     assert stash.ids == [10, 20, 30, 40]
@@ -271,7 +271,7 @@ def test_load_or_update_stash_uses_local_ids_when_server_empty(tmp_path: Path) -
         Stash(ids=[10, 20]).model_dump_json(by_alias=True), encoding="utf-8"
     )
 
-    stash = load_or_update_stash(paths, FakeEmptyServerClient())
+    stash = load_or_update_stash(paths, FakeEmptyServerClient("http://werk-ids.test"))
 
     assert isinstance(stash, Stash)
     assert stash.ids == [10, 20]
@@ -285,7 +285,7 @@ def test_load_or_update_stash_no_ids_anywhere_bails_out(tmp_path: Path) -> None:
     paths.stash_file.write_text(Stash(ids=[]).model_dump_json(by_alias=True), encoding="utf-8")
 
     with pytest.raises(SystemExit):
-        load_or_update_stash(paths, FakeEmptyServerClient())
+        load_or_update_stash(paths, FakeEmptyServerClient("http://werk-ids.test"))
 
 
 def test_load_stash_from_file_bails_when_both_files_exist(tmp_path: Path) -> None:

@@ -25,7 +25,7 @@ from cmk.gui.openapi import (
     endpoint_registry,
     versioned_endpoint_registry,
 )
-from cmk.gui.openapi.spec import editions
+from tests.testlib.openapi_slim_registration import register_edition_into_empty_registries
 
 VersionedKey = tuple[str, str, str, str]
 LegacyKey = tuple[str, str, str]
@@ -64,12 +64,7 @@ def assert_slim_registration_matches_app(
     assert app_versioned, "app registration left versioned registry empty"
     assert app_families, "app registration left family registry empty"
 
-    monkeypatch.setattr(versioned_endpoint_registry, "_versions", {})
-    monkeypatch.setattr(endpoint_registry, "_endpoints", {})
-    monkeypatch.setattr(endpoint_registry, "_endpoint_list", [])
-    monkeypatch.setattr(endpoint_family_registry, "_families", {})
-
-    editions.register(edition)
+    register_edition_into_empty_registries(edition, monkeypatch)
 
     slim_versioned = _versioned_keys()
     slim_legacy = _legacy_keys()

@@ -58,6 +58,12 @@ py_library(
 py_library(
     name = "bakery",
     srcs = [
+        "cmk/bakery/internal/__init__.py",
+        "cmk/bakery/internal/_artifacts.py",
+        "cmk/bakery/internal/_common_config.py",
+        "cmk/bakery/internal/_constants.py",
+        "cmk/bakery/internal/_core_bakelet.py",
+        "cmk/bakery/internal/_types.py",
         "cmk/bakery/v1/__init__.py",
         "cmk/bakery/v1/_artifact_types.py",
         "cmk/bakery/v1/_constants.py",
@@ -70,6 +76,9 @@ py_library(
     data = ["cmk/bakery/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
+    deps = [
+        requirement("pydantic"),
+    ],
 )
 
 py_library(

@@ -15,6 +15,8 @@ plugin_apis = [
   "cmk.agent_based.v1",
   "cmk.agent_based.v2",
   "cmk.agent_based.v3_unstable",
+  "cmk.bakery.internal",
+  "cmk.bakery.v1",
   "cmk.bakery.v2_unstable",
   "cmk.dcd_connector_parameters.internal",
   "cmk.dcd_connectors.internal",
@@ -274,9 +276,6 @@ allows = [
 [components."cmk.astrein"]
 allows = []
 
-[components."cmk.bakery.shared"]
-allows = ["@ccc", "@crypto", "@plugin_apis"]
-
 [components."cmk.bakery.base"]
 allows = [
   "@ccc",
@@ -298,6 +297,22 @@ allows = [
   "cmk.robotmk.bakery",
   "cmk.utils",
 ]
+
+[components."cmk.bakery.internal"]
+allows = ["cmk.bakery.v1"]
+
+[components."cmk.bakery.shared"]
+allows = ["@ccc", "@crypto", "@plugin_apis"]
+
+[components."cmk.bakery.v1"]
+allows = []
+
+[components."cmk.bakery.v2_unstable"]
+allows = ["cmk.bakery.v1"]
+
+# only allow itself, this is the future :-)
+[components."cmk.bakery"]
+allows = []
 
 [components."cmk.backup"]
 allows = [
@@ -327,10 +342,6 @@ allows = [
   "cmk.rulesets.v1",
   "cmk.utils",
 ]
-
-# only allow itself, this is the future :-)
-[components."cmk.bakery"]
-allows = []
 
 [components."cmk.base.api.bakery"]
 allows = ["@ccc", "cmk.bakery", "cmk.utils"]
@@ -768,6 +779,7 @@ allows = [
   "@mkp_tool",
   "@plugin_apis",
   "cmk.backup",
+  "cmk.bakery.internal",
   "cmk.bakery.shared",
   "cmk.dcd.gui",
   "cmk.discover_plugins",
@@ -1197,6 +1209,7 @@ allows = [
   "@plugin_apis",
   # I don't think we have any idea of how to fix this.
   "cmk.bakery.base",
+  "cmk.bakery.internal",
   "cmk.bakery.shared",
   "cmk.base.plugins.bakery",
   "cmk.checkengine",

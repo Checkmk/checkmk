@@ -156,7 +156,7 @@ defineProps<CmkChipProps>()
 
   &.cmk-chip--size-small {
     .cmk-chip__content {
-      font-size: 10px;
+      font-size: var(--font-size-small);
       padding: var(--dimension-1) var(--dimension-3);
       gap: var(--dimension-2);
     }
@@ -164,7 +164,7 @@ defineProps<CmkChipProps>()
 
   &.cmk-chip--size-medium {
     .cmk-chip__content {
-      font-size: 12px;
+      font-size: var(--font-size-normal);
       padding: var(--dimension-2) var(--dimension-4);
       gap: var(--dimension-3);
     }
@@ -172,7 +172,7 @@ defineProps<CmkChipProps>()
 
   &.cmk-chip--size-large {
     .cmk-chip__content {
-      font-size: 14px;
+      font-size: var(--font-size-large);
       padding: 3px var(--dimension-4);
       gap: 6px;
     }

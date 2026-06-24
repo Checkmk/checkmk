@@ -11,6 +11,7 @@ import { useDebounceRef } from '@/lib/useDebounce'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkHtml from '@/components/CmkHtml.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 import { ErrorResponse, type Suggestion, WarningResponse } from './suggestions'
@@ -30,12 +31,14 @@ const {
   selectedSuggestion,
   suggestions,
   role,
-  noResultsHint = ''
+  noResultsHint = '',
+  markSelected = false
 } = defineProps<{
   selectedSuggestion: SuggestionValue
   suggestions: Suggestions
   role: 'suggestion' | 'option'
   noResultsHint?: string
+  markSelected?: boolean
 }>()
 
 const showFilter = computed<boolean>(() => {
@@ -380,10 +383,16 @@ defineExpose({
           tabindex="-1"
           :role="role"
           :aria-label="suggestion.title"
+          :aria-selected="
+            markSelected && suggestion.name !== null
+              ? suggestion.name === selectedSuggestion.getName()
+              : undefined
+          "
           :class="{
             selectable: suggestion.name !== null,
             selected: suggestion.name === activeSuggestion?.name,
-            'cmk-suggestions__item--in-section': section.title !== null
+            'cmk-suggestions__item--in-section': section.title !== null,
+            'cmk-suggestions__item--markable': markSelected
           }"
           @click="selectSuggestion(suggestion)"
         >
@@ -402,6 +411,17 @@ defineExpose({
             </template>
             <template v-else>{{ suggestion.title }}</template>
           </template>
+          <CmkIcon
+            v-if="
+              markSelected &&
+              suggestion.name !== null &&
+              suggestion.name === selectedSuggestion.getName()
+            "
+            name="checkmark-bare"
+            size="small"
+            aria-hidden="true"
+            class="cmk-suggestions__selected-mark"
+          />
         </li>
       </template>
       <!-- eslint-enable vue/valid-v-for vue/require-v-for-key -->
@@ -417,8 +437,8 @@ defineExpose({
   position: absolute;
   z-index: var(--z-index-dropdown-offset);
   color: var(--font-color);
-  background-color: var(--default-form-element-bg-color);
-  border: 1px solid var(--ux-theme-6);
+  background-color: var(--cmk-suggestions-background, var(--default-form-element-bg-color));
+  border: 1px solid var(--cmk-suggestions-border-color, var(--ux-theme-6));
   box-sizing: border-box;
   border-radius: 0;
   width: fit-content;
@@ -482,7 +502,7 @@ defineExpose({
 
       /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
       &.selected {
-        color: var(--default-select-focus-color);
+        color: var(--cmk-suggestions-item-active-color, var(--default-select-focus-color));
 
         mark {
           font-weight: 700;
@@ -490,12 +510,24 @@ defineExpose({
       }
 
       &:hover {
-        color: var(--default-select-hover-color);
+        color: var(--cmk-suggestions-item-active-color, var(--default-select-hover-color));
+        background-color: var(--cmk-suggestions-item-hover-background, transparent);
       }
+    }
+
+    &.cmk-suggestions__item--markable {
+      display: flex;
+      align-items: center;
     }
 
     &.cmk-suggestions__item--in-section {
       padding-left: 18px;
+    }
+
+    .cmk-suggestions__selected-mark {
+      flex-shrink: 0;
+      margin-left: auto;
+      padding-left: 8px;
     }
   }
 }
@@ -514,6 +546,12 @@ defineExpose({
 .cmk-suggestions--error,
 .cmk-suggestions--warning {
   width: fit-content;
+}
+
+/* checkmark-bare ships a dark stroke with no dark-theme variant; tint it so it reads as
+   --font-color on the dark theme. */
+body[data-theme='modern-dark'] .cmk-suggestions__selected-mark {
+  filter: brightness(0) invert(1);
 }
 
 .cmk-suggestions--error {

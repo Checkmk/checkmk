@@ -421,3 +421,36 @@ test('keyboard navigation skips headers and clicking a header does not select', 
   expect(emitted('select-suggestion')).toBeTruthy()
   expect(emitted('select-suggestion')![0]).toEqual([{ name: 'b1', title: 'Beta One' }])
 })
+
+test('markSelected renders a checkmark only on the selected option', async () => {
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new SelectionWithTitle('option2', 'Option Two'),
+      suggestions: { type: 'fixed', suggestions: flatSuggestions },
+      role: 'option',
+      markSelected: true
+    }
+  })
+
+  const selectedRow = await screen.findByRole('option', { name: 'Option Two' })
+  expect(selectedRow.querySelector('.cmk-suggestions__selected-mark')).not.toBeNull()
+  expect(selectedRow).toHaveAttribute('aria-selected', 'true')
+
+  const otherRow = screen.getByRole('option', { name: 'Option One' })
+  expect(otherRow.querySelector('.cmk-suggestions__selected-mark')).toBeNull()
+  expect(otherRow).toHaveAttribute('aria-selected', 'false')
+})
+
+test('markSelected defaults to off so no checkmark is rendered', async () => {
+  const { container } = render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new SelectionWithTitle('option2', 'Option Two'),
+      suggestions: { type: 'fixed', suggestions: flatSuggestions },
+      role: 'option'
+    }
+  })
+
+  const selectedRow = await screen.findByRole('option', { name: 'Option Two' })
+  expect(container.querySelectorAll('.cmk-suggestions__selected-mark')).toHaveLength(0)
+  expect(selectedRow).not.toHaveAttribute('aria-selected')
+})

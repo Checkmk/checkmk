@@ -23,18 +23,13 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::Duration;
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Default)]
 pub enum EngineTag {
     Auto,
+    #[default]
     Std,
     SqlPlus,
     Jdbc,
-}
-
-impl Default for EngineTag {
-    fn default() -> Self {
-        Self::Std
-    }
 }
 
 impl EngineTag {

@@ -244,17 +244,12 @@ fn _extract_endpoint_if_env_var<T: AsRef<str> + Sized>(value: T) -> Option<SqlDb
     SqlDbEndpoint::from_env(&v[1..]).ok()
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Default)]
 pub enum AuthType {
+    #[default]
     Standard,
     Os,
     Wallet,
-}
-
-impl Default for AuthType {
-    fn default() -> Self {
-        Self::Standard
-    }
 }
 
 impl TryFrom<&str> for AuthType {

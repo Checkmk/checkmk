@@ -225,8 +225,13 @@ function removeShortcuts(): void {
 
 // Closing on Tab-out: only when focus genuinely leaves the panel for another
 // element (relatedTarget is null for internal clicks on non-focusable area).
+// Focus moving to the trigger is left to the trigger's own click handler, so a
+// click on the trigger toggles closed instead of close-then-reopen.
 function onFocusOut(event: FocusEvent): void {
   const next = event.relatedTarget as Node | null
+  if (next && trigger.value?.contains(next)) {
+    return
+  }
   if (next && panel.value && !panel.value.contains(next)) {
     close()
   }

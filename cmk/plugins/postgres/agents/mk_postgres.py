@@ -793,10 +793,10 @@ class PostgresLinux(PostgresBase):
         # type: (str, str, str, bool, bool) -> str
         base_cmd_list = [
             "su",
-            "-",
-            self.db_user,
             "-c",
             r"""PGPASSFILE=%s %s -X %s -A0 -F'%s' -f %s""",
+            "--login",
+            self.db_user,
         ]
         extra_args += " -U %s" % self.pg_user
         extra_args += " -d %s" % self.pg_database
@@ -809,7 +809,7 @@ class PostgresLinux(PostgresBase):
         if rows_only:
             extra_args += " -t"
 
-        base_cmd_list[-1] = base_cmd_list[-1] % (
+        base_cmd_list[-3] = base_cmd_list[-3] % (
             self.pg_passfile,
             self.psql_binary_path,
             extra_args,

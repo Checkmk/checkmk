@@ -11,7 +11,7 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
-import CmkTag, { type Colors, type Variants } from '@/components/CmkTag.vue'
+import CmkTag, { type Colors } from '@/components/CmkTag.vue'
 
 import type { HostState } from '../../api/types.ts'
 import StateIcon from '../StateIcon.vue'
@@ -53,10 +53,6 @@ const stateColor = computed<Colors>(() => {
   }
   return color
 })
-
-const stateVariant = computed<Variants>(() => {
-  return props.state === 'UP' ? 'outline' : 'fill'
-})
 </script>
 
 <template>
@@ -65,7 +61,7 @@ const stateVariant = computed<Variants>(() => {
       <div class="monitoring-state-cell">
         <CmkTag
           :color="stateColor"
-          :variant="stateVariant"
+          variant="weighted"
           :content="stateLabel"
           class="monitoring-state-cell__tag"
           size="small"

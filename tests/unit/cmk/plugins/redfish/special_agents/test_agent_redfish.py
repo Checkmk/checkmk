@@ -10,12 +10,14 @@ the rest of the run."""
 
 import io
 import sys
+import time
 from typing import Any
 from unittest import mock
 
 import pytest
 
 from cmk.plugins.redfish.special_agents import agent_redfish
+from cmk.special_agents.v0_unstable.agent_common import CannotRecover
 
 
 def _make_redfishobj(debug: bool = False) -> agent_redfish.RedfishData:
@@ -216,3 +218,104 @@ def test_process_result_flushes_stdout(monkeypatch: pytest.MonkeyPatch) -> None:
 
     # Streaming depends on flushing, else a later abort could lose buffered data.
     assert flush.call_count >= 1
+
+
+# --- _fetch_systems: retry transient /redfish/v1/Systems failures, then abort ---------
+
+
+def _systems_obj(retries: int) -> agent_redfish.RedfishData:
+    redfishobj = _make_redfishobj()
+    redfishobj.redfish_connection = object()  # type: ignore[assignment]  # fetch_data is mocked
+    redfishobj.systems_retries = retries
+    redfishobj.systems_retry_delay = 0.0
+    return redfishobj
+
+
+def test_fetch_systems_retries_then_aborts(monkeypatch: pytest.MonkeyPatch) -> None:
+    redfishobj = _systems_obj(retries=2)
+    calls = {"fetch": 0}
+
+    def fake_fetch_data(*_a: Any, **_kw: Any) -> Any:
+        calls["fetch"] += 1
+        return {"error": "System data could not be fetched\n"}
+
+    sleep = mock.Mock()
+    monkeypatch.setattr(agent_redfish, "fetch_data", fake_fetch_data)
+    monkeypatch.setattr(agent_redfish, "fetch_collection", lambda *_a, **_k: [])
+    monkeypatch.setattr(time, "sleep", sleep)
+
+    with pytest.raises(CannotRecover):
+        agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")
+
+    assert calls["fetch"] == 3  # initial attempt + 2 retries
+    assert sleep.call_count == 2
+
+
+def test_fetch_systems_succeeds_on_later_attempt(monkeypatch: pytest.MonkeyPatch) -> None:
+    redfishobj = _systems_obj(retries=3)
+    sequence = iter(
+        [
+            ({"error": "x"}, []),
+            ({"error": "x"}, []),
+            ({"@odata.type": "#ComputerSystemCollection"}, [{"Id": "System.Embedded.1"}]),
+        ]
+    )
+    current: dict[str, Any] = {}
+
+    def fake_fetch_data(*_a: Any, **_kw: Any) -> Any:
+        current["col"], current["data"] = next(sequence)
+        return current["col"]
+
+    sleep = mock.Mock()
+    monkeypatch.setattr(agent_redfish, "fetch_data", fake_fetch_data)
+    monkeypatch.setattr(agent_redfish, "fetch_collection", lambda *_a, **_k: current["data"])
+    monkeypatch.setattr(time, "sleep", sleep)
+
+    result = agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")
+
+    assert result == [{"Id": "System.Embedded.1"}]
+    assert sleep.call_count == 2
+
+
+def test_fetch_systems_zero_retries_aborts_immediately(monkeypatch: pytest.MonkeyPatch) -> None:
+    redfishobj = _systems_obj(retries=0)
+    sleep = mock.Mock()
+    monkeypatch.setattr(agent_redfish, "fetch_data", lambda *_a, **_k: {"error": "x"})
+    monkeypatch.setattr(agent_redfish, "fetch_collection", lambda *_a, **_k: [])
+    monkeypatch.setattr(time, "sleep", sleep)
+
+    with pytest.raises(CannotRecover):
+        agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")
+
+    assert sleep.call_count == 0
+
+
+def test_fetch_systems_healthy_no_retry(monkeypatch: pytest.MonkeyPatch) -> None:
+    redfishobj = _systems_obj(retries=3)
+    sleep = mock.Mock()
+    monkeypatch.setattr(agent_redfish, "fetch_data", lambda *_a, **_k: {"@odata.type": "#x"})
+    monkeypatch.setattr(agent_redfish, "fetch_collection", lambda *_a, **_k: [{"Id": "S1"}])
+    monkeypatch.setattr(time, "sleep", sleep)
+
+    result = agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")
+
+    assert result == [{"Id": "S1"}]
+    assert sleep.call_count == 0
+
+
+def test_fetch_systems_mixed_members_not_aborted(monkeypatch: pytest.MonkeyPatch) -> None:
+    # One good system + one errored member => still usable, must not abort.
+    redfishobj = _systems_obj(retries=3)
+    sleep = mock.Mock()
+    monkeypatch.setattr(agent_redfish, "fetch_data", lambda *_a, **_k: {"@odata.type": "#x"})
+    monkeypatch.setattr(
+        agent_redfish,
+        "fetch_collection",
+        lambda *_a, **_k: [{"Id": "S1"}, {"error": "x"}],
+    )
+    monkeypatch.setattr(time, "sleep", sleep)
+
+    result = agent_redfish._fetch_systems(redfishobj, "/redfish/v1/Systems")
+
+    assert any(isinstance(s, dict) and "Id" in s for s in result)
+    assert sleep.call_count == 0

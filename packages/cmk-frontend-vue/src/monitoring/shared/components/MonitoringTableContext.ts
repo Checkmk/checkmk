@@ -6,6 +6,8 @@
 import type { RowData } from '@tanstack/vue-table'
 import type { ComputedRef, InjectionKey } from 'vue'
 
+import type { TranslatedString } from '@/lib/i18nString'
+
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
 import type { ColumnFilterDefinition } from './filter/types'
@@ -15,6 +17,7 @@ export type ColumnJustify = 'left' | 'center' | 'right'
 declare module '@tanstack/vue-table' {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
+    headerTitle?: TranslatedString
     justify?: ColumnJustify
     filter?: ColumnFilterDefinition
     selectColumn?: boolean

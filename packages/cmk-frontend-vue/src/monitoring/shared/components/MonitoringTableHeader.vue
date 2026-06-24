@@ -144,7 +144,10 @@ function labelStyle(columnDef: ColumnDef<T>): CSSProperties {
             type="button"
             class="monitoring-table-header__header-button"
             :style="contentStyle(header.column.columnDef)"
-            :title="header.column.columnDef.header?.toString()"
+            :title="
+              header.column.columnDef.meta?.headerTitle?.toString() ??
+              header.column.columnDef.header?.toString()
+            "
             :disabled="disabled"
             @click="header.column.getToggleSortingHandler()?.($event)"
           >
@@ -181,7 +184,10 @@ function labelStyle(columnDef: ColumnDef<T>): CSSProperties {
             v-else-if="!header.isPlaceholder"
             class="monitoring-table-header__label monitoring-table-header__label--standalone"
             :style="labelStyle(header.column.columnDef)"
-            :title="header.column.columnDef.header?.toString()"
+            :title="
+              header.column.columnDef.meta?.headerTitle?.toString() ??
+              header.column.columnDef.header?.toString()
+            "
           >
             <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
           </span>
@@ -203,7 +209,9 @@ function labelStyle(columnDef: ColumnDef<T>): CSSProperties {
                 :class="{
                   'monitoring-table-header__filter-button--active': isActive || isOpen
                 }"
-                :title="`Filter ${header.column.columnDef.header?.toString() ?? ''}`.trim()"
+                :title="
+                  `Filter ${header.column.columnDef.meta?.headerTitle?.toString() ?? header.column.columnDef.header?.toString() ?? ''}`.trim()
+                "
                 aria-haspopup="true"
                 :aria-expanded="isOpen"
                 @click="toggle"

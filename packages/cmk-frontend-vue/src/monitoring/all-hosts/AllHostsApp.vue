@@ -148,7 +148,11 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services',
     header: _t('Total'),
     sortDescFirst: true,
-    meta: { justify: 'right', filter: totalServicesFilter },
+    meta: {
+      justify: 'right',
+      filter: totalServicesFilter,
+      headerTitle: _t('Total number of services')
+    },
     minSize: 64,
     maxSize: 90
   },
@@ -156,7 +160,11 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_ok',
     header: _t('OK'),
     sortDescFirst: true,
-    meta: { justify: 'right', filter: okServicesFilter },
+    meta: {
+      justify: 'right',
+      filter: okServicesFilter,
+      headerTitle: _t('Number of services OK state')
+    },
     minSize: 64,
     maxSize: 90
   },
@@ -164,7 +172,11 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_warn',
     header: _t('Wa'),
     sortDescFirst: true,
-    meta: { justify: 'right', filter: warnServicesFilter },
+    meta: {
+      justify: 'right',
+      filter: warnServicesFilter,
+      headerTitle: _t('Number of services warning state')
+    },
     minSize: 64,
     maxSize: 90
   },
@@ -172,7 +184,11 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_crit',
     header: _t('Cr'),
     sortDescFirst: true,
-    meta: { justify: 'right', filter: critServicesFilter },
+    meta: {
+      justify: 'right',
+      filter: critServicesFilter,
+      headerTitle: _t('Number of services critical state')
+    },
     minSize: 64,
     maxSize: 90
   },
@@ -180,7 +196,11 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_unknown',
     header: _t('Un'),
     sortDescFirst: true,
-    meta: { justify: 'right', filter: unknownServicesFilter },
+    meta: {
+      justify: 'right',
+      filter: unknownServicesFilter,
+      headerTitle: _t('Number of services unknown state')
+    },
     minSize: 64,
     maxSize: 90
   },
@@ -188,7 +208,11 @@ const columns: ColumnDef<HostEntry>[] = [
     accessorKey: 'num_services_pending',
     header: _t('Pd'),
     sortDescFirst: true,
-    meta: { justify: 'right', filter: pendingServicesFilter },
+    meta: {
+      justify: 'right',
+      filter: pendingServicesFilter,
+      headerTitle: _t('Number of services pending state')
+    },
     minSize: 64,
     maxSize: 90
   }

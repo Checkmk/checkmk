@@ -108,14 +108,21 @@ watch(selected, (value) => {
 
 <template>
   <div class="monitoring-filter-numeric">
-    <CmkRadioGroup v-model="selected">
-      <CmkRadioButton :value="ANY_OPTION" :label="_t('Any (>0)')" />
-      <CmkRadioButton :value="NONE_OPTION" :label="_t('None (=0)')" />
-      <CmkRadioButton :value="RANGE_OPTION" :label="_t('Range')" />
+    <CmkRadioGroup v-model="selected" class="monitoring-filter-numeric__radio-group">
+      <div class="monitoring-filter-numeric__radio-row">
+        <CmkRadioButton :value="ANY_OPTION" :label="_t('Any (>0)')" />
+      </div>
+      <div class="monitoring-filter-numeric__radio-row">
+        <CmkRadioButton :value="NONE_OPTION" :label="_t('None (=0)')" />
+      </div>
+      <div class="monitoring-filter-numeric__radio-row">
+        <CmkRadioButton :value="RANGE_OPTION" :label="_t('Range')" />
+      </div>
     </CmkRadioGroup>
 
     <CmkNumberRange
       v-model="range"
+      class="monitoring-filter-numeric__number-range"
       :unit="definition.unit ?? ''"
       :disabled="selected !== RANGE_OPTION"
       @update:model-value="createFilterNode"
@@ -129,5 +136,24 @@ watch(selected, (value) => {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-3);
+}
+
+.monitoring-filter-numeric__radio-group {
+  gap: var(--dimension-2);
+}
+
+.monitoring-filter-numeric__radio-row {
+  display: flex;
+  align-items: center;
+  padding: var(--dimension-2);
+
+  &:hover,
+  &:focus-within {
+    background-color: var(--ux-theme-3);
+  }
+}
+
+.monitoring-filter-numeric__number-range {
+  margin-left: var(--dimension-8);
 }
 </style>

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
@@ -12,18 +13,18 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     AutoPrecision,
-    build_graphs,
+    build_service_graphs,
     ConsolidationFunction,
     Curve,
     CurveAttributes,
     DecimalNotation,
-    discover_graphs,
     DiscoveredGraph,
     DiscoveredGraphs,
     EvaluatedGraph,
     fetch_performance_data,
     Graph,
     Line,
+    match_graph_for_services,
     MetricName,
     performance_data_of,
     PerformanceData,
@@ -35,7 +36,6 @@ from cmk.graphing_engine import (
     ScalarOf,
     ServiceRef,
     Stack,
-    TemplateOptions,
     TimeRange,
     TimeSeries,
     Unit,
@@ -173,7 +173,7 @@ def _discover(
 ) -> Sequence[DiscoveredGraph]:
     # Compose the discovery steps the way the GUI does: fetch performance data -> build -> wrap.
     performance_data = fetch_performance_data(services=[service], translations=[], rrd=rrd)
-    graphs = build_graphs(
+    graphs = build_service_graphs(
         service=service,
         registered_graphs=registered_graphs,
         metrics=_METRICS,
@@ -222,6 +222,14 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
     assert _evaluate(discovered, rrd).lines == []
 
 
+@dataclass(frozen=True, kw_only=True)
+class _Options:
+    # A stand-in for a consumer's options object: DiscoveredGraphs is generic over it, so the engine
+    # holds no concrete options type of its own.
+    time_range: TimeRange
+    consolidation_function: ConsolidationFunction
+
+
 def test_discovered_graphs_groups_options_with_graphs() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
@@ -229,13 +237,13 @@ def test_discovered_graphs_groups_options_with_graphs() -> None:
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user))})
 
     discovered = DiscoveredGraphs(
-        options=TemplateOptions(
+        options=_Options(
             time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
         ),
         graphs=_discover(service, registered_graphs, rrd=rrd),
     )
 
-    assert discovered.options == TemplateOptions(
+    assert discovered.options == _Options(
         time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
     )
     assert [graph.graph.name for graph in discovered.graphs] == [cpu_user]
@@ -534,7 +542,7 @@ def test_discover_template_graphs_ignores_a_predictive_metric_without_its_base()
     assert _discover(service, registered_graphs, rrd=rrd) == []
 
 
-def test_discover_graphs_adds_predictive_lines_per_service() -> None:
+def test_match_graph_for_services_adds_predictive_lines_per_service() -> None:
     # The combined primitive matches one plugin across several services; like the template path it
     # adds a predictive line wherever predict_* exists for that service, and only there.
     cpu_user = MetricName("cpu_user")
@@ -543,7 +551,7 @@ def test_discover_graphs_adds_predictive_lines_per_service() -> None:
     without_predict = ServiceRef(host_name="h2", service_name="svc")
     plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
 
-    graphs = discover_graphs(
+    graphs = match_graph_for_services(
         services=[with_predict, without_predict],
         graph=plugin,
         metrics=_METRICS,
@@ -571,7 +579,7 @@ def test_discover_graphs_adds_predictive_lines_per_service() -> None:
     )
 
 
-def test_build_graphs_applies_threshold_rules_to_fallback_graphs() -> None:
+def test_build_service_graphs_applies_threshold_rules_to_fallback_graphs() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")
     rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user, warning=80.0))})
@@ -590,7 +598,7 @@ def test_build_graphs_applies_threshold_rules_to_fallback_graphs() -> None:
             )
         ]
 
-    graphs = build_graphs(
+    graphs = build_service_graphs(
         service=service,
         registered_graphs=[],
         metrics=_METRICS,

@@ -5,7 +5,6 @@
 
 from collections.abc import Callable, Container, Mapping, Sequence
 from dataclasses import dataclass
-from typing import ClassVar, Literal
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
@@ -28,16 +27,8 @@ from ._objects import (
     ServiceRef,
     Stack,
 )
-from ._options import ConsolidationFunction, TimeRange
 
 _PREDICT_PREFIX = "predict_"
-
-
-@dataclass(frozen=True, kw_only=True)
-class TemplateOptions:
-    kind: ClassVar[Literal["template"]] = "template"
-    time_range: TimeRange
-    consolidation_function: ConsolidationFunction
 
 
 def _matches(
@@ -144,7 +135,7 @@ type _GraphPlugin = (
 )
 
 
-def discover_graphs(
+def match_graph_for_services(
     *,
     services: Sequence[ServiceRef],
     graph: _GraphPlugin,
@@ -157,8 +148,9 @@ def discover_graphs(
         service_available = available.get(service, frozenset())
         if not _walk(graph, service_available).matched:
             continue
-        # Add the predictive lines per service exactly as build_graphs does for template graphs, so a
-        # combined graph includes them wherever predict_* exists (legacy combined parity).
+        # Add the predictive lines per service exactly as build_service_graphs does for template
+        # graphs, so a combined graph includes them wherever predict_* exists (legacy combined
+        # parity).
         with_predictive, _names = _add_predictive_lines(
             parse_graph_from_api(graph, service, metrics, localizer),
             service,
@@ -170,7 +162,7 @@ def discover_graphs(
     return discovered
 
 
-def build_graphs(
+def build_service_graphs(
     *,
     service: ServiceRef,
     registered_graphs: Sequence[_GraphPlugin],

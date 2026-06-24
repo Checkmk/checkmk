@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Public interface of the package: the discovery and update entry points, the objects they take
-# and return, and the objects for constructing a graph. Everything else is an implementation
-# detail and must not be imported from outside the package.
-
+# Public interface of the package. By role: the objects for constructing a (data-free) graph
+# definition (Graph, Stack, Line, Rule, Curve, the quantities, the ranges, Unit / notations);
+# the data objects fed into evaluation (RRDMetricData, TimeSeries, PerformanceData, the
+# EvaluationContext, ConsolidationFunction, TimeRange); the evaluation result objects (Evaluated*,
+# DiscoveredGraph(s)); and the entry points discovery / evaluation / update build from them
+# (build_service_graphs, match_graph_for_services, fetch_performance_data, performance_data_of,
+# update_graph_time_series, update_graph_data, metric_display_attributes). Everything else is an
+# implementation detail and must not be imported from outside the package.
 from ._evaluate import (
     DiscoveredGraph,
     DiscoveredGraphs,
@@ -65,9 +69,8 @@ from ._options import (
     TimeRange,
 )
 from ._template import (
-    build_graphs,
-    discover_graphs,
-    TemplateOptions,
+    build_service_graphs,
+    match_graph_for_services,
 )
 
 __all__ = [
@@ -109,16 +112,15 @@ __all__ = [
     "Stack",
     "StrictPrecision",
     "Sum",
-    "TemplateOptions",
     "TimeNotation",
     "TimeRange",
     "TimeSeries",
     "Unit",
     "VerticalRange",
     "VerticalRangeKind",
-    "build_graphs",
-    "discover_graphs",
+    "build_service_graphs",
     "fetch_performance_data",
+    "match_graph_for_services",
     "metric_display_attributes",
     "performance_data_of",
     "update_graph_data",

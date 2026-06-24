@@ -19,7 +19,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
-    build_graphs,
+    build_service_graphs,
     ConsolidationFunction,
     DiscoveredGraph,
     EvaluatedGraph,
@@ -112,7 +112,7 @@ def _discover(
         translations=translations,
         rrd=rrd,
     )
-    graphs = build_graphs(
+    graphs = build_service_graphs(
         service=_SERVICE,
         registered_graphs=registered_graphs,
         metrics=_METRICS,

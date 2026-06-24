@@ -114,7 +114,6 @@ const addressFilter = computed<StringInputFilter>(() => ({
 const servicesFilter = computed<NumericFilter>(() => ({
   type: 'numeric',
   field: 'num_services',
-  unit: 'services',
   presets: [
     { label: 'Any', op: 'gt', value: 0 },
     { label: 'None', op: 'eq', value: 0 }

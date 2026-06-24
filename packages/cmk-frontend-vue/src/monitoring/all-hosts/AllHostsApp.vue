@@ -61,8 +61,7 @@ const addressFilter: StringInputFilter<'address'> = {
 
 const totalServicesFilter: NumericFilter<'num_services'> = {
   type: 'numeric',
-  field: 'num_services',
-  unit: _t('services')
+  field: 'num_services'
 }
 
 const okServicesFilter: NumericFilter<'num_services_ok'> = {

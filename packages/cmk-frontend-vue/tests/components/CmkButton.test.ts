@@ -56,3 +56,13 @@ test('CmkButton does not submit form with click callback', async () => {
   expect(clicked).toBe(true)
   expect(submitHandler).not.toHaveBeenCalled()
 })
+
+test('CmkButton defaults to medium size', () => {
+  render(CmkButton)
+  expect(screen.getByRole('button')).toHaveClass('cmk-button--size-medium')
+})
+
+test('CmkButton applies small size class', () => {
+  render(CmkButton, { props: { size: 'small' } })
+  expect(screen.getByRole('button')).toHaveClass('cmk-button--size-small')
+})

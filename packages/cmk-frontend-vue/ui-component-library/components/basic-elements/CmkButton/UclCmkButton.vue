@@ -42,6 +42,15 @@ export const panelConfig = {
     ] satisfies Options<ButtonVariants['variant']>[],
     initialState: 'optional' as const
   },
+  size: {
+    type: 'list' as const,
+    title: 'Size',
+    options: [
+      { title: 'Medium', name: 'medium' },
+      { title: 'Small', name: 'small' }
+    ] satisfies Options<ButtonVariants['size']>[],
+    initialState: 'medium' as const
+  },
   disabled: {
     type: 'boolean' as const,
     title: 'Disabled',
@@ -100,6 +109,7 @@ const propState = new PanelStateCreator<typeof CmkButton>().createRef(panelConfi
     <UclDetailPageComponent>
       <CmkButton
         :variant="propState.variant"
+        :size="propState.size"
         :disabled="propState.disabled"
         :href="propState.href || undefined"
         :target="propState.target || undefined"

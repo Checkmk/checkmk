@@ -16,6 +16,10 @@ const buttonVariants = cva('', {
       danger: 'cmk-button--variant-danger',
       info: 'cmk-button--variant-info'
     },
+    size: {
+      medium: 'cmk-button--size-medium',
+      small: 'cmk-button--size-small'
+    },
     disabled: {
       true: 'cmk-button--disabled',
       false: ''
@@ -23,6 +27,7 @@ const buttonVariants = cva('', {
   },
   defaultVariants: {
     variant: 'optional',
+    size: 'medium',
     disabled: false
   }
 })
@@ -33,6 +38,7 @@ export type ButtonVariants = VariantProps<typeof buttonVariants>
 
 export interface ButtonProps {
   variant?: ButtonVariants['variant']
+  size?: ButtonVariants['size']
   disabled?: boolean | string | undefined
   title?: string | undefined
   href?: string | undefined

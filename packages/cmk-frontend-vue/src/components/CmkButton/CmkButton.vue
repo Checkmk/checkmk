@@ -30,7 +30,7 @@ defineEmits(['click'])
     v-if="isLink"
     ref="buttonRef"
     class="cmk-button"
-    :class="buttonVariants({ variant: props.variant, disabled: isDisabled })"
+    :class="buttonVariants({ variant: props.variant, size: props.size, disabled: isDisabled })"
     :href="isDisabled ? undefined : props.href"
     :target="props.target"
     :title="title || ''"
@@ -50,7 +50,7 @@ defineEmits(['click'])
     v-else
     ref="buttonRef"
     class="cmk-button"
-    :class="buttonVariants({ variant: props.variant, disabled: isDisabled })"
+    :class="buttonVariants({ variant: props.variant, size: props.size, disabled: isDisabled })"
     :disabled="isDisabled"
     :aria-disabled="isDisabled"
     :title="title || ''"
@@ -78,6 +78,14 @@ defineEmits(['click'])
   text-decoration: none;
   cursor: pointer;
   box-sizing: border-box;
+}
+
+.cmk-button--size-medium {
+  height: var(--dimension-10);
+}
+
+.cmk-button--size-small {
+  height: var(--dimension-7);
 }
 
 .cmk-button--variant-primary,

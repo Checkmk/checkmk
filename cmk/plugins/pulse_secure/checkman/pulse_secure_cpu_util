@@ -8,7 +8,7 @@ description:
  appliances.
 
  The default upper levels are 80% (warn) and 90% (critical). These values
- can be changed using the rule "CPU utilization for Appliances".
+ can be changed using the rule "CPU utilization (single value)".
 
 discovery:
  One service is created.

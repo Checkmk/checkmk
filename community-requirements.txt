@@ -2898,11 +2898,10 @@ mypy-extensions==1.1.0 \
     #   -c requirements.txt
     #   black
     #   mypy
-mypy-protobuf==3.7.0 \
-    --hash=sha256:85256e9d4da935722ce8fbaa8d19397e1a2989aa8075c96577987de9fe7cea4d \
-    --hash=sha256:912fb281f7c7b3e3a7c9b8695712618a716fddbab70f6ad63eaf68eda80c5efe
+mypy-protobuf==5.1.0 \
+    --hash=sha256:8493758852a9cdc075a11dbe96c6e37ea2feba5fd5f33ef7442b9a275322a94c \
+    --hash=sha256:d7031f563f806b8bcd448a3e86768bf0994c0af5b0017b344a4fbbba4191f43c
     # via
-    #   -c constraints.txt
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
 netapp-ontap==9.17.1.0 \

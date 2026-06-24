@@ -5759,8 +5759,8 @@
             "https://files.pythonhosted.org/packages/a2/6e/371856a3fb9d31ca8dac321cda606860fa4548858c0cc45d9d1d4ca2628b/mypy_extensions-1.1.0.tar.gz": "52e68efc3284861e772bbcd66823fde5ae21fd2fdb51c62a211403730b916558"
           },
           "mypy-protobuf": {
-            "https://files.pythonhosted.org/packages/69/32/709df4390d155bd72e75f2a9bce6004c2958a21f31817f3a2c7750299f70/mypy_protobuf-3.7.0-py3-none-any.whl": "85256e9d4da935722ce8fbaa8d19397e1a2989aa8075c96577987de9fe7cea4d",
-            "https://files.pythonhosted.org/packages/99/bd/92ee9e7d2ff30cb57b36bd6f61ee4da8a05acf32f6a6121883b58720e9d4/mypy_protobuf-3.7.0.tar.gz": "912fb281f7c7b3e3a7c9b8695712618a716fddbab70f6ad63eaf68eda80c5efe"
+            "https://files.pythonhosted.org/packages/87/07/7ffb897eee5c01e816e037f51a6720bf1a0a8c17cca1a2382ae554f43044/mypy_protobuf-5.1.0.tar.gz": "8493758852a9cdc075a11dbe96c6e37ea2feba5fd5f33ef7442b9a275322a94c",
+            "https://files.pythonhosted.org/packages/e8/ec/5ffcf8f5f53757e01afdece10c664e694ac60d2f17c2036811b85b842a5b/mypy_protobuf-5.1.0-py3-none-any.whl": "d7031f563f806b8bcd448a3e86768bf0994c0af5b0017b344a4fbbba4191f43c"
           },
           "netapp-ontap": {
             "https://files.pythonhosted.org/packages/06/e4/3c75a6ce6732861413f99183c43a6a2c4ac296f41cc2dd888b1dd763f7ba/netapp_ontap-9.17.1.0-py3-none-any.whl": "d80ace80f2e54f68e2fafffae580a9923393bac4a472ff50da6c84ca4c78d9cd",

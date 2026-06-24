@@ -13,8 +13,7 @@ from typing import Any, TypedDict
 
 import pytest
 
-from cmk.ccc.crash_reporting import (
-    _FINGERPRINT_INDEX_FILE,
+from cmk.crash import (
     ABCCrashReport,
     cleanup_crash_reports,
     crash_fingerprint,
@@ -26,6 +25,7 @@ from cmk.ccc.crash_reporting import (
     REDACTED_STRING,
     VersionInfo,
 )
+from cmk.crash._fingerprint import _FINGERPRINT_INDEX_FILE
 
 
 def test_format_var_for_export_strip_large_data() -> None:

@@ -14,10 +14,17 @@ py_library(
     name = "crash",
     srcs = [
         "cmk/crash/__init__.py",
+        "cmk/crash/_crash.py",
+        "cmk/crash/_fingerprint.py",
+        "cmk/crash/_store.py",
     ],
     data = [":crash_py_typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
+    deps = [
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:version-info",
+    ],
 )
 
 py_library(

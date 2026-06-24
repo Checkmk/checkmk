@@ -224,6 +224,14 @@ py_library(
 )
 
 py_library(
+    name = "version-info",
+    srcs = ["cmk/ccc/version_info.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = ["_init"],
+)
+
+py_library(
     name = "timeout",
     srcs = ["cmk/ccc/timeout.py"],
     imports = ["."],
@@ -266,6 +274,7 @@ _ALL = [
     "tty",
     "user",
     "version",
+    "version-info",
 ]
 
 py_doc_test(
@@ -417,21 +426,6 @@ py_test(
     deps = [
         "__test__",
         "cpu-tracking",
-        requirement("pytest"),
-    ],
-)
-
-py_test(
-    name = "crash-reporting-tests",
-    size = "small",
-    srcs = [
-        "__test__.py",
-        "tests/test_crash_reporting.py",
-    ],
-    main = "__test__.py",
-    deps = [
-        "__test__",
-        "crash-reporting",
         requirement("pytest"),
     ],
 )

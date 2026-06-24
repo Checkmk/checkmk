@@ -4,18 +4,33 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts" generic="F extends FilterField">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+
+import usei18n from '@/lib/i18n'
+
+import { CmkRadioButton, CmkRadioGroup } from '@/components/user-input/CmkRadioButton'
 
 import type { ColumnFilterNode, FilterField, NumericOp } from '@/monitoring/shared/api/types'
 
 import CmkNumberRange, { type NumberRange } from './CmkNumberRange.vue'
-import type { NumericFilter, NumericPreset } from './types'
+import type { NumericFilter } from './types'
 
 const props = defineProps<{ definition: NumericFilter<F> }>()
 
 const model = defineModel<ColumnFilterNode<F> | undefined>({ default: undefined })
 
 const emit = defineEmits<{ 'update:valid': [valid: boolean] }>()
+
+const { _t } = usei18n()
+
+const ANY_OPTION = 'any'
+const NONE_OPTION = 'none'
+const RANGE_OPTION = 'range'
+
+const optionRanges: Record<string, NumberRange> = {
+  [ANY_OPTION]: { from: 1, to: undefined },
+  [NONE_OPTION]: { from: 0, to: 0 }
+}
 
 function extractRange(node: ColumnFilterNode<F> | undefined): NumberRange {
   const range: NumberRange = { from: undefined, to: undefined }
@@ -37,6 +52,26 @@ function extractRange(node: ColumnFilterNode<F> | undefined): NumberRange {
 }
 
 const range = ref<NumberRange>(extractRange(model.value))
+
+function matchesOption(option: string): boolean {
+  const preset = optionRanges[option]
+  return preset !== undefined && range.value.from === preset.from && range.value.to === preset.to
+}
+
+function initialSelection(): string {
+  if (matchesOption(ANY_OPTION)) {
+    return ANY_OPTION
+  }
+  if (matchesOption(NONE_OPTION)) {
+    return NONE_OPTION
+  }
+  if (range.value.from !== undefined || range.value.to !== undefined) {
+    return RANGE_OPTION
+  }
+  return ''
+}
+
+const selected = ref<string>(initialSelection())
 
 function condition(op: NumericOp, value: number): ColumnFilterNode<F> {
   return {
@@ -64,40 +99,25 @@ function createFilterNode(next: NumberRange): void {
   }
 }
 
-function isPresetActive(preset: NumericPreset): boolean {
-  return range.value.from === preset.from && range.value.to === preset.to
-}
-
-function applyPreset(preset: NumericPreset): void {
-  range.value = isPresetActive(preset)
-    ? { from: undefined, to: undefined }
-    : { from: preset.from, to: preset.to }
+watch(selected, (value) => {
+  const preset = optionRanges[value]
+  range.value = preset ? { ...preset } : { from: undefined, to: undefined }
   createFilterNode(range.value)
-}
+})
 </script>
 
 <template>
   <div class="monitoring-filter-numeric">
-    <div
-      v-if="definition.presets && definition.presets.length > 0"
-      class="monitoring-filter-numeric__presets"
-    >
-      <button
-        v-for="preset in definition.presets"
-        :key="preset.label"
-        type="button"
-        class="monitoring-filter-numeric__chip"
-        :class="{ 'monitoring-filter-numeric__chip--active': isPresetActive(preset) }"
-        :aria-pressed="isPresetActive(preset)"
-        @click="applyPreset(preset)"
-      >
-        {{ preset.label }}
-      </button>
-    </div>
+    <CmkRadioGroup v-model="selected">
+      <CmkRadioButton :value="ANY_OPTION" :label="_t('Any (>0)')" />
+      <CmkRadioButton :value="NONE_OPTION" :label="_t('None (=0)')" />
+      <CmkRadioButton :value="RANGE_OPTION" :label="_t('Range')" />
+    </CmkRadioGroup>
 
     <CmkNumberRange
       v-model="range"
       :unit="definition.unit ?? ''"
+      :disabled="selected !== RANGE_OPTION"
       @update:model-value="createFilterNode"
       @update:valid="emit('update:valid', $event)"
     />
@@ -109,35 +129,5 @@ function applyPreset(preset: NumericPreset): void {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-3);
-}
-
-.monitoring-filter-numeric__presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--dimension-2);
-}
-
-.monitoring-filter-numeric__chip {
-  padding: var(--dimension-2) var(--dimension-4);
-  font: inherit;
-  color: var(--font-color);
-  background: var(--default-form-element-bg-color);
-  border: 1px solid var(--default-form-element-border-color);
-  border-radius: 9999px;
-  cursor: pointer;
-
-  &:hover {
-    background: var(--ux-theme-3);
-  }
-
-  &:focus-visible {
-    outline: 1px solid var(--success);
-    outline-offset: 1px;
-  }
-}
-
-.monitoring-filter-numeric__chip--active {
-  color: var(--success);
-  border-color: var(--success);
 }
 </style>

@@ -31,9 +31,47 @@ function renderFilter(initial: ColumnFilterNode<'num_services'> | undefined = un
   return { model }
 }
 
+test('selecting "Any (>0)" applies a lone lower bound of 1', async () => {
+  const { model } = renderFilter()
+
+  await userEvent.click(screen.getByRole('radio', { name: 'Any (>0)' }))
+
+  expect(model.value).toEqual({
+    type: 'condition',
+    field: 'num_services',
+    op: 'gte',
+    value: 1
+  })
+})
+
+test('selecting "None (=0)" applies a 0-to-0 range', async () => {
+  const { model } = renderFilter()
+
+  await userEvent.click(screen.getByRole('radio', { name: 'None (=0)' }))
+
+  expect(model.value).toEqual({
+    type: 'and',
+    children: [
+      { type: 'condition', field: 'num_services', op: 'gte', value: 0 },
+      { type: 'condition', field: 'num_services', op: 'lte', value: 0 }
+    ]
+  })
+})
+
+test('the range inputs are disabled until the "Range" radio is selected', async () => {
+  renderFilter()
+
+  expect(screen.getByRole('spinbutton', { name: 'From' })).toBeDisabled()
+
+  await userEvent.click(screen.getByRole('radio', { name: 'Range' }))
+
+  expect(screen.getByRole('spinbutton', { name: 'From' })).toBeEnabled()
+})
+
 test('both bounds produce an "and" of gte and lte conditions', async () => {
   const { model } = renderFilter()
 
+  await userEvent.click(screen.getByRole('radio', { name: 'Range' }))
   await userEvent.type(screen.getByRole('spinbutton', { name: 'From' }), '3')
   await userEvent.type(screen.getByRole('spinbutton', { name: 'To' }), '10')
 
@@ -49,6 +87,7 @@ test('both bounds produce an "and" of gte and lte conditions', async () => {
 test('a lone lower bound produces a single gte condition', async () => {
   const { model } = renderFilter()
 
+  await userEvent.click(screen.getByRole('radio', { name: 'Range' }))
   await userEvent.type(screen.getByRole('spinbutton', { name: 'From' }), '1')
 
   expect(model.value).toEqual({
@@ -62,6 +101,7 @@ test('a lone lower bound produces a single gte condition', async () => {
 test('a lone upper bound produces a single lte condition', async () => {
   const { model } = renderFilter()
 
+  await userEvent.click(screen.getByRole('radio', { name: 'Range' }))
   await userEvent.type(screen.getByRole('spinbutton', { name: 'To' }), '5')
 
   expect(model.value).toEqual({
@@ -70,19 +110,6 @@ test('a lone upper bound produces a single lte condition', async () => {
     op: 'lte',
     value: 5
   })
-})
-
-test('an existing node is reflected back into the fields', () => {
-  renderFilter({
-    type: 'and',
-    children: [
-      { type: 'condition', field: 'num_services', op: 'gte', value: 2 },
-      { type: 'condition', field: 'num_services', op: 'lte', value: 8 }
-    ]
-  })
-
-  expect(screen.getByRole('spinbutton', { name: 'From' })).toHaveValue(2)
-  expect(screen.getByRole('spinbutton', { name: 'To' })).toHaveValue(8)
 })
 
 test('clearing both bounds removes the filter', async () => {
@@ -98,99 +125,40 @@ test('clearing both bounds removes the filter', async () => {
   expect(model.value).toBeUndefined()
 })
 
-const withPresets: NumericFilter<'num_services_crit'> = {
-  type: 'numeric',
-  field: 'num_services_crit',
-  presets: [
-    { label: 'Any', from: 1 },
-    { label: 'None', from: 0, to: 0 }
-  ]
-}
-
-function renderWithPresets(initial: ColumnFilterNode<'num_services_crit'> | undefined = undefined) {
-  const model = ref<ColumnFilterNode<'num_services_crit'> | undefined>(initial)
-  render(
-    defineComponent({
-      components: { FilterNumeric },
-      setup() {
-        return { model, withPresets }
-      },
-      template: '<FilterNumeric v-model="model" :definition="withPresets" />'
-    })
-  )
-  return { model }
-}
-
-test('no preset chips are rendered without a presets definition', () => {
-  renderFilter()
-
-  expect(screen.queryByRole('button', { name: 'Any' })).not.toBeInTheDocument()
-})
-
-test('selecting a preset chip prefills the range inputs', async () => {
-  const { model } = renderWithPresets()
-
-  await userEvent.click(screen.getByRole('button', { name: 'None' }))
-
-  expect(screen.getByRole('spinbutton', { name: 'From' })).toHaveValue(0)
-  expect(screen.getByRole('spinbutton', { name: 'To' })).toHaveValue(0)
-  expect(model.value).toEqual({
+test('an existing custom range pre-selects "Range" and reflects the bounds', () => {
+  renderFilter({
     type: 'and',
     children: [
-      { type: 'condition', field: 'num_services_crit', op: 'gte', value: 0 },
-      { type: 'condition', field: 'num_services_crit', op: 'lte', value: 0 }
+      { type: 'condition', field: 'num_services', op: 'gte', value: 2 },
+      { type: 'condition', field: 'num_services', op: 'lte', value: 8 }
     ]
   })
+
+  expect(screen.getByRole('radio', { name: 'Range' })).toBeChecked()
+  expect(screen.getByRole('spinbutton', { name: 'From' })).toHaveValue(2)
+  expect(screen.getByRole('spinbutton', { name: 'To' })).toHaveValue(8)
 })
 
-test('a single-bound preset prefills only the lower bound', async () => {
-  const { model } = renderWithPresets()
-
-  await userEvent.click(screen.getByRole('button', { name: 'Any' }))
-
-  expect(screen.getByRole('spinbutton', { name: 'From' })).toHaveValue(1)
-  expect(screen.getByRole('spinbutton', { name: 'To' })).toHaveValue(null)
-  expect(model.value).toEqual({
+test('an existing lone gte of 1 pre-selects "Any (>0)"', () => {
+  renderFilter({
     type: 'condition',
-    field: 'num_services_crit',
-    op: 'gte',
-    value: 1
-  })
-})
-
-test('selecting the active preset chip again clears the filter', async () => {
-  const { model } = renderWithPresets({
-    type: 'condition',
-    field: 'num_services_crit',
+    field: 'num_services',
     op: 'gte',
     value: 1
   })
 
-  expect(screen.getByRole('button', { name: 'Any' })).toHaveAttribute('aria-pressed', 'true')
-
-  await userEvent.click(screen.getByRole('button', { name: 'Any' }))
-
-  expect(model.value).toBeUndefined()
+  expect(screen.getByRole('radio', { name: 'Any (>0)' })).toBeChecked()
+  expect(screen.getByRole('spinbutton', { name: 'From' })).toBeDisabled()
 })
 
-test('editing a prefilled bound deactivates the preset', async () => {
-  const { model } = renderWithPresets({
-    type: 'condition',
-    field: 'num_services_crit',
-    op: 'gte',
-    value: 1
-  })
-
-  expect(screen.getByRole('button', { name: 'Any' })).toHaveAttribute('aria-pressed', 'true')
-
-  await userEvent.type(screen.getByRole('spinbutton', { name: 'To' }), '5')
-
-  expect(model.value).toEqual({
+test('an existing 0-to-0 range pre-selects "None (=0)"', () => {
+  renderFilter({
     type: 'and',
     children: [
-      { type: 'condition', field: 'num_services_crit', op: 'gte', value: 1 },
-      { type: 'condition', field: 'num_services_crit', op: 'lte', value: 5 }
+      { type: 'condition', field: 'num_services', op: 'gte', value: 0 },
+      { type: 'condition', field: 'num_services', op: 'lte', value: 0 }
     ]
   })
-  expect(screen.getByRole('button', { name: 'Any' })).toHaveAttribute('aria-pressed', 'false')
+
+  expect(screen.getByRole('radio', { name: 'None (=0)' })).toBeChecked()
 })

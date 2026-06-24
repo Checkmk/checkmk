@@ -51,6 +51,7 @@ test('applying a numeric range commits the condition node', async () => {
   const { model } = renderDropdown()
 
   await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.click(screen.getAllByRole('radio')[2]!)
   await user.type(screen.getByRole('spinbutton', { name: 'From' }), '3')
   await user.click(screen.getByRole('button', { name: 'Apply' }))
 
@@ -71,6 +72,7 @@ test('a range entered from scratch survives apply and reopen', async () => {
   const { model } = renderDropdown()
 
   await user.click(screen.getByRole('button', { name: 'Open' }))
+  await user.click(screen.getAllByRole('radio')[2]!)
   await user.type(screen.getByRole('spinbutton', { name: 'From' }), '3')
   await user.type(screen.getByRole('spinbutton', { name: 'To' }), '10')
   await user.click(screen.getByRole('button', { name: 'Apply' }))

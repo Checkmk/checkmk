@@ -19,7 +19,6 @@ import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterCh
 import type {
   CheckboxListFilter,
   NumericFilter,
-  NumericPreset,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 
@@ -60,11 +59,6 @@ const addressFilter: StringInputFilter<'address'> = {
   field: 'address'
 }
 
-const anyNonePresets: NumericPreset[] = [
-  { label: _t('Any'), from: 1 },
-  { label: _t('None'), from: 0, to: 0 }
-]
-
 const totalServicesFilter: NumericFilter<'num_services'> = {
   type: 'numeric',
   field: 'num_services',
@@ -73,37 +67,27 @@ const totalServicesFilter: NumericFilter<'num_services'> = {
 
 const okServicesFilter: NumericFilter<'num_services_ok'> = {
   type: 'numeric',
-  field: 'num_services_ok',
-  unit: _t('services'),
-  presets: anyNonePresets
+  field: 'num_services_ok'
 }
 
 const warnServicesFilter: NumericFilter<'num_services_warn'> = {
   type: 'numeric',
-  field: 'num_services_warn',
-  unit: _t('services'),
-  presets: anyNonePresets
+  field: 'num_services_warn'
 }
 
 const critServicesFilter: NumericFilter<'num_services_crit'> = {
   type: 'numeric',
-  field: 'num_services_crit',
-  unit: _t('services'),
-  presets: anyNonePresets
+  field: 'num_services_crit'
 }
 
 const unknownServicesFilter: NumericFilter<'num_services_unknown'> = {
   type: 'numeric',
-  field: 'num_services_unknown',
-  unit: _t('services'),
-  presets: anyNonePresets
+  field: 'num_services_unknown'
 }
 
 const pendingServicesFilter: NumericFilter<'num_services_pending'> = {
   type: 'numeric',
-  field: 'num_services_pending',
-  unit: _t('services'),
-  presets: anyNonePresets
+  field: 'num_services_pending'
 }
 
 const columns: ColumnDef<HostEntry>[] = [

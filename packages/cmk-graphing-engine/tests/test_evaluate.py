@@ -7,6 +7,7 @@ from collections.abc import Mapping
 
 from cmk.graphing_engine import (
     AutoPrecision,
+    ConcreteGraph,
     Constant,
     Curve,
     CurveAttributes,
@@ -20,7 +21,6 @@ from cmk.graphing_engine import (
     EvaluatedVerticalRange,
     FixedRange,
     Fraction,
-    Graph,
     Line,
     MetricName,
     MinimalRange,
@@ -225,7 +225,7 @@ def test_evaluate_time_series_of_a_fraction_guards_zero_and_gaps() -> None:
 
 def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
     a, b = _metric("a"), _metric("b")
-    graph = Graph(
+    graph = ConcreteGraph(
         name="g",
         title="g",
         stacks=[Stack(members=[_curve(a, "a")], inverse=True)],
@@ -268,7 +268,7 @@ def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
 
 def test_evaluate_graph_evaluates_the_stack_reference_baseline() -> None:
     floor, band = _metric("floor"), _metric("band")
-    graph = Graph(
+    graph = ConcreteGraph(
         name="g",
         title="g",
         stacks=[
@@ -288,7 +288,7 @@ def test_evaluate_graph_evaluates_the_stack_reference_baseline() -> None:
 
 def test_evaluate_graph_drops_curves_of_missing_metrics() -> None:
     a = _metric("a")
-    graph = Graph(
+    graph = ConcreteGraph(
         name="g",
         title="g",
         stacks=[Stack(members=[_curve(_metric("gone"), "gone")], inverse=False)],
@@ -304,7 +304,7 @@ def test_evaluate_graph_drops_curves_of_missing_metrics() -> None:
 
 def test_evaluate_graph_builds_rules_from_thresholds_and_constants() -> None:
     a = _metric("a")
-    graph = Graph(
+    graph = ConcreteGraph(
         name="g",
         title="g",
         rules=[
@@ -343,7 +343,7 @@ def test_evaluate_graph_builds_rules_from_thresholds_and_constants() -> None:
 
 def test_evaluate_graph_drops_rules_without_a_value() -> None:
     a = _metric("a")
-    graph = Graph(
+    graph = ConcreteGraph(
         name="g",
         title="g",
         rules=[
@@ -370,12 +370,12 @@ def test_evaluate_graph_drops_rules_without_a_value() -> None:
 
 
 def test_evaluate_graph_carries_the_name() -> None:
-    graph = Graph(name="my_graph", title="My graph")
+    graph = ConcreteGraph(name="my_graph", title="My graph")
     assert evaluate_graph(graph, {}, {}, _TR).name == "my_graph"
 
 
 def test_evaluate_graph_evaluates_a_fixed_range_of_constants() -> None:
-    graph = Graph(name="g", title="g", vertical_range=FixedRange(lower=0, upper=100))
+    graph = ConcreteGraph(name="g", title="g", vertical_range=FixedRange(lower=0, upper=100))
     assert evaluate_graph(graph, {}, {}, _TR).vertical_range == EvaluatedVerticalRange(
         kind=VerticalRangeKind.FIXED, lower=0.0, upper=100.0
     )
@@ -384,7 +384,7 @@ def test_evaluate_graph_evaluates_a_fixed_range_of_constants() -> None:
 def test_evaluate_graph_resolves_a_minimal_range_bound_expression() -> None:
     a = _metric("a")
     # The upper bound is a metric reference, resolved against the metric data; the lower is a number.
-    graph = Graph(name="g", title="g", vertical_range=MinimalRange(lower=0, upper=a))
+    graph = ConcreteGraph(name="g", title="g", vertical_range=MinimalRange(lower=0, upper=a))
     result = evaluate_graph(graph, _perf({a: _data(value=42.0)}), {}, _TR)
     assert result.vertical_range == EvaluatedVerticalRange(
         kind=VerticalRangeKind.MINIMAL, lower=0.0, upper=42.0
@@ -392,7 +392,9 @@ def test_evaluate_graph_resolves_a_minimal_range_bound_expression() -> None:
 
 
 def test_evaluate_graph_range_bound_of_a_missing_metric_is_none() -> None:
-    graph = Graph(name="g", title="g", vertical_range=MinimalRange(lower=0, upper=_metric("gone")))
+    graph = ConcreteGraph(
+        name="g", title="g", vertical_range=MinimalRange(lower=0, upper=_metric("gone"))
+    )
     result = evaluate_graph(graph, {}, {}, _TR)
     assert result.vertical_range == EvaluatedVerticalRange(
         kind=VerticalRangeKind.MINIMAL, lower=0.0, upper=None

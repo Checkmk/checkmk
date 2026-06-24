@@ -10,11 +10,12 @@ from typing import assert_never
 
 from ._objects import (
     Bound,
+    ConcreteGraph,
     Curve,
     CurveAttributes,
+    DiscoveredGraph,
     EvaluationContext,
     FixedRange,
-    Graph,
     MetricName,
     MinimalRange,
     RRDMetric,
@@ -81,12 +82,6 @@ class EvaluatedGraph:
 
 
 @dataclass(frozen=True, kw_only=True)
-class DiscoveredGraph:
-    graph: Graph
-    performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]
-
-
-@dataclass(frozen=True, kw_only=True)
 class DiscoveredGraphs[Options]:
     options: Options
     graphs: Sequence[DiscoveredGraph]
@@ -145,7 +140,7 @@ def _evaluate_rule(rule: Rule, context: EvaluationContext) -> EvaluatedRule | No
 
 
 def _title_metrics(
-    graph: Graph,
+    graph: ConcreteGraph,
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
 ) -> Mapping[MetricName, RRDMetricData]:
     services = {
@@ -161,7 +156,7 @@ def _title_metrics(
 
 
 def evaluate_graph(
-    graph: Graph,
+    graph: ConcreteGraph,
     performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     time_series: Mapping[RRDMetric, TimeSeries],
     time_range: TimeRange,

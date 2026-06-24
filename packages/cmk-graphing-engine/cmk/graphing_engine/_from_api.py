@@ -16,14 +16,18 @@ from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from ._objects import (
     AutoPrecision,
     Bound,
+    ConcreteGraph,
     Constant,
     Curve,
     CurveAttributes,
     DecimalNotation,
     Difference,
+    DiscoveredGraph,
+    DiscoveredLine,
+    DiscoveredRule,
+    DiscoveredStack,
     EngineeringScientificNotation,
     Fraction,
-    Graph,
     IECNotation,
     Line,
     MetricName,
@@ -135,6 +139,21 @@ def _parse_unit(unit: metrics_v1.Unit) -> Unit:
 _FALLBACK_COLOR = _COLORS[metrics_v1.Color.GRAY]
 _FALLBACK_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
+# The warn / crit colours threshold rules render in (cf. cmk.gui.color.Color.WARN / .CRIT). They live
+# here so concretize can give a scalar rule its label + colour from the ScalarKind, with no GUI input.
+_WARN_COLOR = "#ffd000"
+_CRIT_COLOR = "#ff3232"
+# The English rule label per scalar kind; concretize localizes it. A None colour means "use the
+# metric's own colour" (the min / max bound has no warn / crit colour of its own).
+_RULE_DISPLAY: Mapping[ScalarKind, tuple[str, str | None]] = {
+    ScalarKind.WARNING: ("Warning", _WARN_COLOR),
+    ScalarKind.CRITICAL: ("Critical", _CRIT_COLOR),
+    ScalarKind.LOWER_WARNING: ("Warning (lower)", _WARN_COLOR),
+    ScalarKind.LOWER_CRITICAL: ("Critical (lower)", _CRIT_COLOR),
+    ScalarKind.MINIMUM: ("Minimum", None),
+    ScalarKind.MAXIMUM: ("Maximum", None),
+}
+
 
 def metric_display_attributes(
     metric_name: str,
@@ -170,11 +189,14 @@ class _ParseContext:
 
 
 def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
+    # Plain metrics and scalars carry no display — concretize resolves those from the registry / kind.
+    # Constants and operations carry their intrinsic plugin display (title / unit / colour), which the
+    # registry cannot reproduce, so it is computed here and read back by concretize.
     match quantity:
         case str():
             return context.rrd_metric(quantity)
         case metrics_v1.Constant():
-            return Constant(quantity.value)
+            return Constant(quantity.value, display=_curve_display(quantity, context))
         case metrics_v2_unstable.LowerWarningOf():
             return ScalarOf(
                 metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.LOWER_WARNING
@@ -200,18 +222,26 @@ def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
                 metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.MAXIMUM
             )
         case metrics_v1.Sum():
-            return Sum(summands=[_parse_quantity(s, context) for s in quantity.summands])
+            return Sum(
+                summands=[_parse_quantity(s, context) for s in quantity.summands],
+                display=_curve_display(quantity, context),
+            )
         case metrics_v1.Product():
-            return Product(factors=[_parse_quantity(f, context) for f in quantity.factors])
+            return Product(
+                factors=[_parse_quantity(f, context) for f in quantity.factors],
+                display=_curve_display(quantity, context),
+            )
         case metrics_v1.Difference():
             return Difference(
                 minuend=_parse_quantity(quantity.minuend, context),
                 subtrahend=_parse_quantity(quantity.subtrahend, context),
+                display=_curve_display(quantity, context),
             )
         case metrics_v1.Fraction():
             return Fraction(
                 dividend=_parse_quantity(quantity.dividend, context),
                 divisor=_parse_quantity(quantity.divisor, context),
+                display=_curve_display(quantity, context),
             )
         case _:
             assert_never(quantity)
@@ -274,12 +304,6 @@ def _curve_display(quantity: _ApiQuantity, context: _ParseContext) -> CurveAttri
             )
         case _:
             assert_never(quantity)
-
-
-def _parse_curve(quantity: _ApiQuantity, context: _ParseContext) -> Curve:
-    return Curve(
-        quantity=_parse_quantity(quantity, context), attributes=_curve_display(quantity, context)
-    )
 
 
 def _metric_names_in_quantity(quantity: _ApiQuantity) -> Iterable[MetricName]:
@@ -413,18 +437,18 @@ def _parse_lines(
     context: _ParseContext,
     *,
     inverse: bool,
-) -> tuple[list[Stack], list[Line], list[Rule]]:
+) -> tuple[list[DiscoveredStack], list[DiscoveredLine], list[DiscoveredRule]]:
     # Scalar quantities (thresholds/constants) become horizontal rules rather than drawn curves;
     # everything else stacks (compound_lines) or draws as a line (simple_lines).
-    stack_members = [_parse_curve(q, context) for q in graph.compound_lines if not _is_scalar(q)]
-    stacks = [Stack(members=stack_members, inverse=inverse)] if stack_members else []
+    stack_members = [_parse_quantity(q, context) for q in graph.compound_lines if not _is_scalar(q)]
+    stacks = [DiscoveredStack(members=stack_members, inverse=inverse)] if stack_members else []
     lines = [
-        Line(curve=_parse_curve(q, context), inverse=inverse)
+        DiscoveredLine(quantity=_parse_quantity(q, context), inverse=inverse)
         for q in graph.simple_lines
         if not _is_scalar(q)
     ]
     rules = [
-        Rule(curve=_parse_curve(q, context), inverse=inverse)
+        DiscoveredRule(quantity=_parse_quantity(q, context), inverse=inverse)
         for q in (*graph.compound_lines, *graph.simple_lines)
         if _is_scalar(q)
     ]
@@ -441,7 +465,7 @@ def parse_graph_from_api(
     service: ServiceRef,
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
-) -> Graph:
+) -> DiscoveredGraph:
     context = _ParseContext(
         service=service,
         metrics=metrics,
@@ -450,7 +474,7 @@ def parse_graph_from_api(
     match graph:
         case graphs_v1.Graph() | graphs_v2_unstable.Graph():
             stacks, lines, rules = _parse_lines(graph, context, inverse=False)
-            return Graph(
+            return DiscoveredGraph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
                 vertical_range=_parse_range(graph, context),
@@ -465,7 +489,7 @@ def parse_graph_from_api(
             lower_stacks, lower_lines, lower_rules = _parse_lines(
                 graph.lower, context, inverse=True
             )
-            return Graph(
+            return DiscoveredGraph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
                 vertical_range=_bidirectional_range(graph, context),
@@ -475,6 +499,79 @@ def parse_graph_from_api(
             )
         case _:
             assert_never(graph)
+
+
+def _attributes_for(
+    quantity: Quantity,
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
+) -> CurveAttributes:
+    """The display of a discovered quantity: plain metrics from the registry, scalar rules from their
+    kind, operations / constants from the intrinsic display they carry."""
+    match quantity:
+        case RRDMetric():
+            return metric_display_attributes(quantity.metric_name, metrics, localizer)
+        case ScalarOf():
+            metric = metric_display_attributes(quantity.metric.metric_name, metrics, localizer)
+            label, color = _RULE_DISPLAY[quantity.kind]
+            return CurveAttributes(
+                title=localizer(label),
+                unit=metric.unit,
+                color=metric.color if color is None else color,
+            )
+        case _:
+            # Any other quantity carries its own intrinsic display: an engine operation / constant, or
+            # a consumer aggregation inserted into the discovered graph (e.g. combined graphs). Read it
+            # generically so consumer quantities resolve without the engine knowing their type.
+            display = getattr(quantity, "display", None)
+            return (
+                display
+                if isinstance(display, CurveAttributes)
+                else CurveAttributes(title="", unit=_FALLBACK_UNIT, color=_FALLBACK_COLOR)
+            )
+
+
+def _concrete_curve(
+    quantity: Quantity,
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
+) -> Curve:
+    return Curve(quantity=quantity, attributes=_attributes_for(quantity, metrics, localizer))
+
+
+def concretize(
+    discovered: DiscoveredGraph,
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
+) -> ConcreteGraph:
+    """Resolve a DiscoveredGraph's display into a ConcreteGraph: wrap every quantity in a Curve whose
+    attributes come from the registry (plain metrics), the scalar kind (rules) or the quantity's own
+    intrinsic display (operations / constants). Pure structure in, drawable graph out."""
+    return ConcreteGraph(
+        name=discovered.name,
+        title=discovered.title,
+        vertical_range=discovered.vertical_range,
+        stacks=[
+            Stack(
+                members=[_concrete_curve(m, metrics, localizer) for m in stack.members],
+                inverse=stack.inverse,
+                reference=(
+                    None
+                    if stack.reference is None
+                    else _concrete_curve(stack.reference, metrics, localizer)
+                ),
+            )
+            for stack in discovered.stacks
+        ],
+        lines=[
+            Line(curve=_concrete_curve(line.quantity, metrics, localizer), inverse=line.inverse)
+            for line in discovered.lines
+        ],
+        rules=[
+            Rule(curve=_concrete_curve(rule.quantity, metrics, localizer), inverse=rule.inverse)
+            for rule in discovered.rules
+        ],
+    )
 
 
 def _parse_check_command(

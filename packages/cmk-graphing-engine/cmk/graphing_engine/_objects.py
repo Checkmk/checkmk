@@ -192,6 +192,10 @@ def _operands_time_series(
 @dataclass(frozen=True)
 class Constant:
     value: int | float
+    # Intrinsic display chosen by the plugin author (cmk.graphing.v1 Constant carries title / unit /
+    # colour). Set at parse for plugin graphs; read by ``concretize``. None for consumer-built
+    # constants that wrap their own Curve attributes (the direct graph types).
+    display: CurveAttributes | None = None
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         return ()
@@ -273,6 +277,8 @@ class ScalarOf:
 @dataclass(frozen=True)
 class Sum:
     summands: Sequence[Quantity]
+    # Intrinsic display from the plugin author (read by ``concretize``); None for consumer-built sums.
+    display: CurveAttributes | None = None
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         for summand in self.summands:
@@ -291,6 +297,8 @@ class Sum:
 @dataclass(frozen=True)
 class Product:
     factors: Sequence[Quantity]
+    # Intrinsic display from the plugin author (read by ``concretize``); None for consumer-built ones.
+    display: CurveAttributes | None = None
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         for factor in self.factors:
@@ -311,6 +319,8 @@ class Difference:
     _: KW_ONLY
     minuend: Quantity
     subtrahend: Quantity
+    # Intrinsic display from the plugin author (read by ``concretize``); None for consumer-built ones.
+    display: CurveAttributes | None = None
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield from self.minuend.rrd_metrics()
@@ -331,6 +341,8 @@ class Fraction:
     _: KW_ONLY
     dividend: Quantity
     divisor: Quantity
+    # Intrinsic display from the plugin author (read by ``concretize``); None for consumer-built ones.
+    display: CurveAttributes | None = None
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield from self.dividend.rrd_metrics()
@@ -428,7 +440,11 @@ class RRDOriginal:
 
 
 @dataclass(frozen=True, kw_only=True)
-class Graph:
+class ConcreteGraph:
+    """A graph with its display resolved: every drawn curve carries CurveAttributes (title / unit /
+    colour). Produced from a DiscoveredGraph by ``concretize`` (template / combined) or built directly
+    by the graph types that have no discovery step. This is what ``update_graph_data`` evaluates."""
+
     name: str
     title: str
     vertical_range: VerticalRange | None = None
@@ -445,6 +461,55 @@ class Graph:
                     (g.reference.quantity for g in self.stacks if g.reference is not None),
                     (line.curve.quantity for line in self.lines),
                     (rule.curve.quantity for rule in self.rules),
+                )
+                for rrd_metric in quantity.rrd_metrics()
+            )
+        )
+
+
+@dataclass(frozen=True)
+class DiscoveredStack:
+    members: Sequence[Quantity]
+    inverse: bool
+    # An optional invisible baseline (legacy line_type="ref"): it sets the stack's floor but is not
+    # drawn and not shown in the legend. The members stack on top of it.
+    reference: Quantity | None = None
+
+
+@dataclass(frozen=True)
+class DiscoveredLine:
+    quantity: Quantity
+    inverse: bool
+
+
+@dataclass(frozen=True)
+class DiscoveredRule:
+    quantity: Quantity
+    inverse: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class DiscoveredGraph:
+    """The structural result of discovery: the quantities and how they are drawn (stacks / lines /
+    rules / range), with **no display attributes** — title / unit / colour are resolved later by
+    ``concretize``. Data-free and attribute-free, so it is the stable artefact discovery returns."""
+
+    name: str
+    title: str
+    vertical_range: VerticalRange | None = None
+    stacks: Sequence[DiscoveredStack] = ()
+    lines: Sequence[DiscoveredLine] = ()
+    rules: Sequence[DiscoveredRule] = ()
+
+    def rrd_metrics(self) -> Sequence[RRDMetric]:
+        return list(
+            dict.fromkeys(
+                rrd_metric
+                for quantity in itertools.chain(
+                    (m for g in self.stacks for m in g.members),
+                    (g.reference for g in self.stacks if g.reference is not None),
+                    (line.quantity for line in self.lines),
+                    (rule.quantity for rule in self.rules),
                 )
                 for rrd_metric in quantity.rrd_metrics()
             )

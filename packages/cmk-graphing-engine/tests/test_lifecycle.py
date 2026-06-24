@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""End-to-end tests of the discover -> update lifecycle, exercising the entry points together.
+"""End-to-end tests of the discover -> concretize -> update lifecycle, exercising the entry points
+together.
 
-Discovery builds the graph and gathers its performance data; update_graph_time_series then fetches
-the time series over that data. The central invariant: evaluating a discovered graph through
-update_graph_time_series yields exactly what a full update_graph_data does (title, vertical range,
-stacks and lines), because both go through the same evaluation against the same data. Each test fakes
-a different shape of performance / time series data to cover that invariant from several angles.
+Discovery (build_service_graphs) builds the structural DiscoveredGraph; concretize resolves its
+display into a ConcreteGraph; update_graph_data fetches the performance data and time series afresh
+and evaluates each into an EvaluatedGraph. Discovery stores no data, so a refresh always re-fetches.
+Each test fakes a different shape of performance / time series data to cover the pipeline from
+several angles.
 """
 
 from collections.abc import Mapping, Sequence
@@ -20,12 +21,12 @@ from cmk.graphing.v1 import Title
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
     build_service_graphs,
+    concretize,
     ConsolidationFunction,
     DiscoveredGraph,
     EvaluatedGraph,
     fetch_performance_data,
     MetricName,
-    performance_data_of,
     PerformanceData,
     PerformanceValue,
     RRDMetric,
@@ -33,7 +34,6 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
     update_graph_data,
-    update_graph_time_series,
 )
 
 _SERVICE = ServiceRef(host_name="h", service_name="svc")
@@ -72,8 +72,8 @@ class _FakeRRD:
     ) -> None:
         self._performance_data = performance_data
         self._time_series = time_series
-        # The runtime parameters of every fetch_time_series call, so a test can assert how the two
-        # entry points drove the source.
+        # The runtime parameters of every fetch_time_series call, so a test can assert how update
+        # drove the source.
         self.time_series_requests: list[tuple[TimeRange, ConsolidationFunction]] = []
 
     def fetch_performance_data(
@@ -106,32 +106,19 @@ def _discover(
     *,
     translations: Sequence[translations_v1.Translation] = (),
 ) -> Sequence[DiscoveredGraph]:
-    # Compose the discovery steps the way the GUI does: fetch performance data -> build -> wrap.
+    # Discovery the way the GUI does it: fetch performance data only, then build the structural
+    # graphs from the metric names that are present.
     performance_data = fetch_performance_data(
         services=[_SERVICE],
         translations=translations,
         rrd=rrd,
     )
-    graphs = build_service_graphs(
+    return build_service_graphs(
         service=_SERVICE,
         registered_graphs=registered_graphs,
         metrics=_METRICS,
         localizer=_id,
         available=performance_data.get(_SERVICE, {}),
-    )
-    return [
-        DiscoveredGraph(graph=graph, performance_data=performance_data_of(graph, performance_data))
-        for graph in graphs
-    ]
-
-
-def _evaluate(discovered: DiscoveredGraph, rrd: _FakeRRD) -> EvaluatedGraph:
-    return update_graph_time_series(
-        graph=discovered.graph,
-        performance_data=discovered.performance_data,
-        consolidation_function=ConsolidationFunction.AVERAGE,
-        time_range=_TIME_RANGE,
-        rrd=rrd,
     )
 
 
@@ -141,8 +128,9 @@ def _refresh(
     *,
     translations: Sequence[translations_v1.Translation] = (),
 ) -> Sequence[EvaluatedGraph]:
+    # concretize each discovered graph, then evaluate them all through the sole update entry point.
     return update_graph_data(
-        graphs=[discovered.graph for discovered in discovered],
+        graphs=[concretize(graph, _METRICS, _id) for graph in discovered],
         translations=translations,
         consolidation_function=ConsolidationFunction.AVERAGE,
         time_range=_TIME_RANGE,
@@ -150,12 +138,14 @@ def _refresh(
     )
 
 
-def _assert_refresh_reproduces_discovery(
-    discovered: Sequence[DiscoveredGraph],
-    evaluated: Sequence[EvaluatedGraph],
+def _evaluate(
+    discovered: DiscoveredGraph,
     rrd: _FakeRRD,
-) -> None:
-    assert list(evaluated) == [_evaluate(discovered_graph, rrd) for discovered_graph in discovered]
+    *,
+    translations: Sequence[translations_v1.Translation] = (),
+) -> EvaluatedGraph:
+    [evaluated] = _refresh(rrd, [discovered], translations=translations)
+    return evaluated
 
 
 def test_update_reproduces_a_title_expression_for_a_non_drawn_metric() -> None:
@@ -181,11 +171,8 @@ def test_update_reproduces_a_title_expression_for_a_non_drawn_metric() -> None:
     # cpu_cores is referenced only by the title, so it is not claimed and gets its own fallback
     # graph alongside the cpu plugin graph.
     discovered = _discover(rrd, [plugin])
-    cpu = next(d for d in discovered if d.graph.name == "cpu")
+    cpu = next(d for d in discovered if d.name == "cpu")
     assert _evaluate(cpu, rrd).title == "CPU - 8 cores"
-
-    evaluated = _refresh(rrd, discovered)
-    _assert_refresh_reproduces_discovery(discovered, evaluated, rrd)
 
 
 def test_update_reproduces_a_compound_and_simple_line_graph() -> None:
@@ -215,17 +202,10 @@ def test_update_reproduces_a_compound_and_simple_line_graph() -> None:
     )
 
     [discovered] = _discover(rrd, [plugin])
+    evaluated = _evaluate(discovered, rrd)
     # A compound group becomes a stack; the simple line stays a line.
-    assert [
-        curve.value for stack in _evaluate(discovered, rrd).stacks for curve in stack.members
-    ] == [
-        10.0,
-        20.0,
-    ]
-    assert [line.curve.value for line in _evaluate(discovered, rrd).lines] == [30.0]
-
-    evaluated = _refresh(rrd, [discovered])
-    _assert_refresh_reproduces_discovery([discovered], evaluated, rrd)
+    assert [curve.value for stack in evaluated.stacks for curve in stack.members] == [10.0, 20.0]
+    assert [line.curve.value for line in evaluated.lines] == [30.0]
 
 
 def test_update_reproduces_a_fallback_single_metric_graph() -> None:
@@ -241,13 +221,9 @@ def test_update_reproduces_a_fallback_single_metric_graph() -> None:
     )
 
     [discovered] = _discover(rrd, [])
-    assert discovered.graph.name == "temp"
-    assert [
-        curve.value for stack in _evaluate(discovered, rrd).stacks for curve in stack.members
-    ] == [42.0]
-
-    evaluated = _refresh(rrd, [discovered])
-    _assert_refresh_reproduces_discovery([discovered], evaluated, rrd)
+    assert discovered.name == "temp"
+    evaluated = _evaluate(discovered, rrd)
+    assert [curve.value for stack in evaluated.stacks for curve in stack.members] == [42.0]
 
 
 def test_update_reproduces_a_renamed_and_scaled_metric() -> None:
@@ -271,13 +247,11 @@ def test_update_reproduces_a_renamed_and_scaled_metric() -> None:
     )
 
     [discovered] = _discover(rrd, [], translations=translations)
-    assert discovered.graph.name == "temp"
-    [curve] = [curve for stack in _evaluate(discovered, rrd).stacks for curve in stack.members]
+    assert discovered.name == "temp"
+    evaluated = _evaluate(discovered, rrd, translations=translations)
+    [curve] = [curve for stack in evaluated.stacks for curve in stack.members]
     assert curve.value == 42.0
     assert curve.time_series == _ts(20.0, 20.0, 20.0, 20.0, 20.0, 20.0)
-
-    evaluated = _refresh(rrd, [discovered], translations=translations)
-    _assert_refresh_reproduces_discovery([discovered], evaluated, rrd)
 
 
 def test_update_reproduces_several_graphs_in_order() -> None:
@@ -300,15 +274,15 @@ def test_update_reproduces_several_graphs_in_order() -> None:
     )
 
     discovered = _discover(rrd, [plugin])
-    assert [graph.graph.name for graph in discovered] == ["cpu", "temp"]
+    assert [graph.name for graph in discovered] == ["cpu", "temp"]
 
     evaluated = _refresh(rrd, discovered)
-    _assert_refresh_reproduces_discovery(discovered, evaluated, rrd)
+    assert [graph.name for graph in evaluated] == ["cpu", "temp"]
 
 
 def test_update_reproduces_a_natively_gridded_series() -> None:
-    # The source serves a finer native grid (step 5); both entry points align it to the requested
-    # grid (step 10) the same way.
+    # The source serves a finer native grid (step 5); update aligns it to the requested grid (step
+    # 10).
     native = TimeRange(start=0, end=60, step=5)
     plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
     rrd = _FakeRRD(
@@ -326,12 +300,10 @@ def test_update_reproduces_a_natively_gridded_series() -> None:
     )
 
     [discovered] = _discover(rrd, [plugin])
+    evaluated = _evaluate(discovered, rrd)
     # The fetched series is aligned to the six requested points.
-    assert len(_evaluate(discovered, rrd).lines[0].curve.time_series.values) == 6
-    assert _evaluate(discovered, rrd).lines[0].curve.time_series.time_range == _TIME_RANGE
-
-    evaluated = _refresh(rrd, [discovered])
-    _assert_refresh_reproduces_discovery([discovered], evaluated, rrd)
+    assert len(evaluated.lines[0].curve.time_series.values) == 6
+    assert evaluated.lines[0].curve.time_series.time_range == _TIME_RANGE
 
 
 # --- the realistic case: data has moved on by the time the graph is refreshed -------------------
@@ -357,8 +329,8 @@ def test_refresh_picks_up_a_changed_value_and_series() -> None:
 
     [evaluated] = _refresh(later, [discovered])
 
-    # Same graph identity, but the curve now carries the newer value and series.
-    assert evaluated.name == discovered.graph.name
+    # Same graph identity, but the curve now carries the newer value and series (update re-fetches).
+    assert evaluated.name == discovered.name
     assert evaluated.lines[0].curve.value == 9.0
     assert evaluated.lines[0].curve.time_series == _ts(7.0, 8.0, 9.0, 10.0, 11.0, 12.0)
 
@@ -389,7 +361,7 @@ def test_refresh_picks_up_a_changed_title_scalar() -> None:
     # cpu_cores is referenced only by the title, so it is not claimed and gets its own fallback
     # graph; pick the cpu plugin graph out of the discovered set.
     discovered = _discover(_rrd(8.0), [plugin])
-    cpu = next(d for d in discovered if d.graph.name == "cpu")
+    cpu = next(d for d in discovered if d.name == "cpu")
     assert _evaluate(cpu, _rrd(8.0)).title == "CPU - 8 cores"
 
     # The machine grew to 16 cores; the refreshed title reflects the new scalar.

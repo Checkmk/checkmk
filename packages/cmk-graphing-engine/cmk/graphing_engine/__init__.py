@@ -3,16 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Public interface of the package. By role: the objects for constructing a (data-free) graph
-# definition (Graph, Stack, Line, Rule, Curve, the quantities, the ranges, Unit / notations);
-# the data objects fed into evaluation (RRDMetricData, TimeSeries, PerformanceData, the
-# EvaluationContext, ConsolidationFunction, TimeRange); the evaluation result objects (Evaluated*,
-# DiscoveredGraph(s)); and the entry points discovery / evaluation / update build from them
-# (build_service_graphs, match_graph_for_services, fetch_performance_data, performance_data_of,
-# update_graph_time_series, update_graph_data, metric_display_attributes). Everything else is an
-# implementation detail and must not be imported from outside the package.
+# Public interface of the package. By role: the structural discovery graph (DiscoveredGraph and its
+# DiscoveredStack / DiscoveredLine / DiscoveredRule — quantities only, no display); the concrete graph
+# with its display resolved (ConcreteGraph, plus Stack / Line / Rule / Curve / CurveAttributes, the
+# quantities, the ranges, Unit / notations); the data objects fed into evaluation (RRDMetricData,
+# TimeSeries, PerformanceData, the EvaluationContext, ConsolidationFunction, TimeRange); the
+# evaluation result objects (Evaluated*, DiscoveredGraphs); and the entry points the graph types build
+# from them (build_service_graphs, match_graph_for_services, concretize, fetch_performance_data,
+# update_graph_data, metric_display_attributes). Everything else is an implementation detail and must
+# not be imported from outside the package.
 from ._evaluate import (
-    DiscoveredGraph,
     DiscoveredGraphs,
     EvaluatedCurve,
     EvaluatedGraph,
@@ -24,23 +24,25 @@ from ._evaluate import (
 )
 from ._fetch import (
     fetch_performance_data,
-    performance_data_of,
     RRDSource,
     update_graph_data,
-    update_graph_time_series,
 )
-from ._from_api import metric_display_attributes
+from ._from_api import concretize, metric_display_attributes
 from ._objects import (
     AutoPrecision,
+    ConcreteGraph,
     Constant,
     Curve,
     CurveAttributes,
     DecimalNotation,
     Difference,
+    DiscoveredGraph,
+    DiscoveredLine,
+    DiscoveredRule,
+    DiscoveredStack,
     EvaluationContext,
     FixedRange,
     Fraction,
-    Graph,
     IECNotation,
     Line,
     MetricName,
@@ -75,6 +77,7 @@ from ._template import (
 
 __all__ = [
     "AutoPrecision",
+    "ConcreteGraph",
     "ConsolidationFunction",
     "Constant",
     "Curve",
@@ -83,6 +86,9 @@ __all__ = [
     "Difference",
     "DiscoveredGraph",
     "DiscoveredGraphs",
+    "DiscoveredLine",
+    "DiscoveredRule",
+    "DiscoveredStack",
     "EvaluatedCurve",
     "EvaluatedGraph",
     "EvaluatedLine",
@@ -92,7 +98,6 @@ __all__ = [
     "EvaluationContext",
     "FixedRange",
     "Fraction",
-    "Graph",
     "IECNotation",
     "Line",
     "MetricName",
@@ -119,10 +124,9 @@ __all__ = [
     "VerticalRange",
     "VerticalRangeKind",
     "build_service_graphs",
+    "concretize",
     "fetch_performance_data",
     "match_graph_for_services",
     "metric_display_attributes",
-    "performance_data_of",
     "update_graph_data",
-    "update_graph_time_series",
 ]

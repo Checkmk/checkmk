@@ -11,11 +11,11 @@ from dataclasses import dataclass
 
 from cmk.graphing_engine import (
     AutoPrecision,
+    ConcreteGraph,
     Curve,
     CurveAttributes,
     DecimalNotation,
     EvaluatedCurve,
-    Graph,
     Line,
     MetricName,
     RRDMetric,
@@ -77,7 +77,7 @@ def test_custom_quantity_is_accepted_as_a_quantity() -> None:
 def test_engine_evaluates_a_custom_quantity_without_engine_changes() -> None:
     a = _metric("a")
     attributes = CurveAttributes(title="neg a", unit=_UNIT, color="#000000")
-    graph = Graph(
+    graph = ConcreteGraph(
         name="g",
         title="g",
         lines=[

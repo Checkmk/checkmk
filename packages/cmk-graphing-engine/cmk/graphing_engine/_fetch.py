@@ -11,7 +11,7 @@ from cmk.graphing.v1 import translations as translations_v1
 from ._evaluate import evaluate_graph, EvaluatedGraph
 from ._from_api import parse_translations_from_api
 from ._objects import (
-    Graph,
+    ConcreteGraph,
     MetricName,
     PerformanceData,
     RRDMetric,
@@ -70,7 +70,7 @@ def _merge(series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
 
 def _fetch_series(
     *,
-    graph: Graph,
+    graph: ConcreteGraph,
     performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
@@ -137,49 +137,17 @@ def fetch_performance_data(
     }
 
 
-def performance_data_of(
-    graph: Graph,
-    performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
-) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
-    services = {
-        ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
-        for metric in graph.rrd_metrics()
-    }
-    return {
-        service: performance_data[service] for service in services if service in performance_data
-    }
-
-
-def update_graph_time_series(
-    *,
-    graph: Graph,
-    performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
-    consolidation_function: ConsolidationFunction,
-    time_range: TimeRange,
-    rrd: RRDSource,
-) -> EvaluatedGraph:
-    return evaluate_graph(
-        graph,
-        performance_data,
-        _fetch_series(
-            graph=graph,
-            performance_data=performance_data,
-            consolidation_function=consolidation_function,
-            time_range=time_range,
-            rrd=rrd,
-        ),
-        time_range,
-    )
-
-
 def update_graph_data(
     *,
-    graphs: Sequence[Graph],
+    graphs: Sequence[ConcreteGraph],
     translations: Iterable[translations_v1.Translation],
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
     rrd: RRDSource,
 ) -> Sequence[EvaluatedGraph]:
+    """The sole update entry point: (re-)fetch the performance data and the time series for the given
+    concrete graphs over the range / consolidation function, and evaluate each into an EvaluatedGraph.
+    Discovery stores no data, so update always fetches afresh."""
     performance_data = fetch_performance_data(
         services=(
             ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
@@ -190,12 +158,17 @@ def update_graph_data(
         rrd=rrd,
     )
     return [
-        update_graph_time_series(
-            graph=graph,
-            performance_data=performance_data,
-            consolidation_function=consolidation_function,
-            time_range=time_range,
-            rrd=rrd,
+        evaluate_graph(
+            graph,
+            performance_data,
+            _fetch_series(
+                graph=graph,
+                performance_data=performance_data,
+                consolidation_function=consolidation_function,
+                time_range=time_range,
+                rrd=rrd,
+            ),
+            time_range,
         )
         for graph in graphs
     ]

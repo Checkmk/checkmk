@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-06-11 09:15+0000\n"
+"PO-Revision-Date: 2026-06-23 10:27+0000\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/dev/fr/"
 ">\n"
 "Language: fr\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 5.11.4\n"
+"X-Generator: Weblate 5.16.2\n"
 
 msgid " "
 msgstr ""
@@ -25172,9 +25172,9 @@ msgstr "Extension"
 msgid "Extension package \"%s\" disabled."
 msgstr "Fichiers d'extension"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Extension package \"%s\" released."
-msgstr "Paquets d'extension"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "Extension package \"%s\" removed."
@@ -40760,6 +40760,12 @@ msgstr "Faire un contrôle OK"
 msgid "Make check WARNING"
 msgstr "Faire un contrôle AVERTISSEMENT"
 
+msgid ""
+"Make dashboards visible and usable for all users. For dashboards this "
+"permission additionally controls whether a dashboard may be shared via a "
+"public link."
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Make own published %s override built-in %s for all users."
 msgstr ""
@@ -42485,14 +42491,6 @@ msgstr "Instances Oracle"
 #, fuzzy
 msgid "Metric Backend Information"
 msgstr "Connexions au backend de Varnish"
-
-#, fuzzy
-msgid "Metric backend is disabled, autocompletion is not available."
-msgstr "Instances Oracle"
-
-#, fuzzy
-msgid "Metric backend is not reachable, autocompletion is not available."
-msgstr "Instances Oracle"
 
 #, fuzzy
 msgid "Metric forecast"
@@ -55092,24 +55090,23 @@ msgstr ""
 msgid "Relays"
 msgstr "Retard :"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Release extension package \"%s\""
-msgstr "Création d'un nouveau paquet d'extension %s"
+msgstr ""
 
 #, fuzzy
 msgid "Release flags"
 msgstr "Paquet de libération"
 
 msgid "Release package"
-msgstr "Paquet de libération"
+msgstr ""
 
-#, fuzzy
 msgid "Release this package"
-msgstr "Paquet de libération"
+msgstr ""
 
-#, fuzzy, python-format
+#, python-format
 msgid "Released extension package %s %s"
-msgstr "Suppression du paquet d'extensions %s %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -92593,6 +92590,117 @@ msgid "Guided"
 msgstr "Mode ouvert"
 
 #, fuzzy
+msgid "Save date"
+msgstr "Date de l'échantillon"
+
+#, fuzzy
+msgid "Choose a date"
+msgstr "Choisir tous"
+
+#, fuzzy
+msgid "Save date & time"
+msgstr "Pourcentage et temps"
+
+#, fuzzy
+msgid "Choose date & time"
+msgstr "Heure de fin du temps d'arrêt"
+
+#, fuzzy
+msgid "Choose a time"
+msgstr "Choisir tous"
+
+msgid "Range reordered: start %{start}, end %{end}"
+msgstr ""
+
+#, fuzzy
+msgid "Save range"
+msgstr "A changé"
+
+#, fuzzy
+msgid "Enter a complete start and end"
+msgstr "Reclasser l'état complet"
+
+#, fuzzy
+msgid "Choose a date & time range"
+msgstr "Plage de dates et d'heures"
+
+#, fuzzy
+msgid "From date"
+msgstr "Temps de création"
+
+#, fuzzy
+msgid "From time"
+msgstr "pas de temps"
+
+#, fuzzy
+msgid "To date"
+msgstr "Pas de données"
+
+#, fuzzy
+msgid "To time"
+msgstr "pas de temps"
+
+#, fuzzy
+msgid "Quick range presets"
+msgstr "Réinitialisation de la cible TCP"
+
+#, fuzzy
+msgid "Custom"
+msgstr "Client"
+
+#, fuzzy
+msgid "Start time"
+msgstr "Type de départ"
+
+#, fuzzy
+msgid "End time"
+msgstr "pas de temps"
+
+#, fuzzy
+msgid "Timezone:"
+msgstr "Horizon temporel"
+
+#, fuzzy
+msgid "Current server time:"
+msgstr "Événements actuels"
+
+#, fuzzy
+msgid "Unknown Timezone"
+msgstr "Entités inconnues"
+
+#, fuzzy
+msgid "not set"
+msgstr "pas présent"
+
+#, fuzzy
+msgid "Timezone"
+msgstr "Horizon temporel"
+
+#, fuzzy
+msgid "Save & apply"
+msgstr "Sauvegarder et tester"
+
+#, fuzzy
+msgid "Saving…"
+msgstr "Economies d'espace"
+
+#, fuzzy
+msgid "Open time selector"
+msgstr "Heure de fin du temps d'arrêt"
+
+#, fuzzy
+msgid "Empty"
+msgstr "vide"
+
+#, fuzzy
+msgid "AM or PM"
+msgstr " ou "
+
+#, fuzzy
+msgid "Time selection"
+msgstr "Sélection des dossiers"
+
+#, fuzzy
 msgid "required"
 msgstr "Port requis"
 
@@ -93690,10 +93798,6 @@ msgstr "Non enregistré"
 #, fuzzy
 msgid "Specific host"
 msgstr "Sites spécifiques"
-
-#, fuzzy
-msgid "Custom"
-msgstr "Client"
 
 #, fuzzy
 msgid "Select at least one scope."
@@ -97047,6 +97151,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Metric backend is disabled, autocompletion is not available."
+#~ msgstr "Instances Oracle"
+
+#, fuzzy
+#~ msgid "Metric backend is not reachable, autocompletion is not available."
+#~ msgstr "Instances Oracle"
 
 #, fuzzy, python-format
 #~ msgid "Custom metrics (%s):"

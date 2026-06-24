@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-24 17:50+0000\n"
+"PO-Revision-Date: 2026-06-23 10:27+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -37570,6 +37570,12 @@ msgstr "チェックをOKにします"
 msgid "Make check WARNING"
 msgstr "警告を確認してください"
 
+msgid ""
+"Make dashboards visible and usable for all users. For dashboards this "
+"permission additionally controls whether a dashboard may be shared via a "
+"public link."
+msgstr ""
+
 #, python-format
 msgid "Make own published %s override built-in %s for all users."
 msgstr ""
@@ -39158,12 +39164,6 @@ msgstr "メトリックバックエンド"
 #, fuzzy
 msgid "Metric Backend Information"
 msgstr "Varnishバックエンド接続"
-
-msgid "Metric backend is disabled, autocompletion is not available."
-msgstr "メトリックバックエンドは無効化されており、自動補完は利用できません。"
-
-msgid "Metric backend is not reachable, autocompletion is not available."
-msgstr "メトリックバックエンドに接続できません。自動補完は利用できません。"
 
 msgid "Metric forecast"
 msgstr "メトリック予測"
@@ -50480,7 +50480,7 @@ msgid "Release flags"
 msgstr "リリースパッケージ"
 
 msgid "Release package"
-msgstr "リリースパッケージ"
+msgstr ""
 
 msgid "Release this package"
 msgstr "このパッケージをリリースする"
@@ -84910,6 +84910,116 @@ msgstr "完了"
 msgid "Guided"
 msgstr "ガイド付き"
 
+#, fuzzy
+msgid "Save date"
+msgstr "サンプル日付"
+
+#, fuzzy
+msgid "Choose a date"
+msgstr "すべて選択する"
+
+#, fuzzy
+msgid "Save date & time"
+msgstr "イベント日時"
+
+#, fuzzy
+msgid "Choose date & time"
+msgstr "日付と時刻を表示"
+
+#, fuzzy
+msgid "Choose a time"
+msgstr "すべて選択する"
+
+msgid "Range reordered: start %{start}, end %{end}"
+msgstr ""
+
+#, fuzzy
+msgid "Save range"
+msgstr "変更を保存"
+
+#, fuzzy
+msgid "Enter a complete start and end"
+msgstr "完全な状態を再分類します"
+
+#, fuzzy
+msgid "Choose a date & time range"
+msgstr "日付と時刻の範囲"
+
+#, fuzzy
+msgid "From date"
+msgstr "作成日"
+
+#, fuzzy
+msgid "From time"
+msgstr "ノータイム"
+
+#, fuzzy
+msgid "To date"
+msgstr "データなし"
+
+#, fuzzy
+msgid "To time"
+msgstr "ノータイム"
+
+#, fuzzy
+msgid "Quick range presets"
+msgstr "TCPターゲットのリセット"
+
+msgid "Custom"
+msgstr "カスタム"
+
+#, fuzzy
+msgid "Start time"
+msgstr "開始タイプ"
+
+#, fuzzy
+msgid "End time"
+msgstr "ノータイム"
+
+#, fuzzy
+msgid "Timezone:"
+msgstr "タイムゾーン"
+
+#, fuzzy
+msgid "Current server time:"
+msgstr "現在のイベント"
+
+#, fuzzy
+msgid "Unknown Timezone"
+msgstr "不明なエンティティ"
+
+#, fuzzy
+msgid "not set"
+msgstr "現在ではない"
+
+#, fuzzy
+msgid "Timezone"
+msgstr "タイムゾーン"
+
+#, fuzzy
+msgid "Save & apply"
+msgstr "保存と編集"
+
+#, fuzzy
+msgid "Saving…"
+msgstr "スペースの節約"
+
+#, fuzzy
+msgid "Open time selector"
+msgstr "タイムピッカーを開く"
+
+#, fuzzy
+msgid "Empty"
+msgstr "空の"
+
+#, fuzzy
+msgid "AM or PM"
+msgstr " または "
+
+#, fuzzy
+msgid "Time selection"
+msgstr "ファイル選択"
+
 msgid "required"
 msgstr "必須"
 
@@ -85866,9 +85976,6 @@ msgstr "制限なし"
 
 msgid "Specific host"
 msgstr "特定のサイト"
-
-msgid "Custom"
-msgstr "カスタム"
 
 msgid "Select at least one scope."
 msgstr "少なくとも1つのスコープを選択してください。"
@@ -89411,6 +89518,13 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Metric backend is disabled, autocompletion is not available."
+#~ msgstr ""
+#~ "メトリックバックエンドは無効化されており、自動補完は利用できません。"
+
+#~ msgid "Metric backend is not reachable, autocompletion is not available."
+#~ msgstr "メトリックバックエンドに接続できません。自動補完は利用できません。"
 
 #, python-format
 #~ msgid "Custom metrics (%s):"

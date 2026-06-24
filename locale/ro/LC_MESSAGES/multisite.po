@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-06-11 09:16+0000\n"
+"PO-Revision-Date: 2026-06-23 10:27+0000\n"
 "Language-Team: Romanian <https://translate.checkmk.com/projects/checkmk/dev/"
 "ro/>\n"
 "Language: ro\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2;\n"
-"X-Generator: Weblate 5.11.4\n"
+"X-Generator: Weblate 5.16.2\n"
 
 msgid " "
 msgstr ""
@@ -25018,9 +25018,9 @@ msgstr "Extensie"
 msgid "Extension package \"%s\" disabled."
 msgstr "Fișiere de pachete de extensie"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Extension package \"%s\" released."
-msgstr "Pachete de extensie"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "Extension package \"%s\" removed."
@@ -40508,6 +40508,12 @@ msgstr "Efectuați verificarea OK"
 msgid "Make check WARNING"
 msgstr "Efectuați o verificare AVERTISMENT"
 
+msgid ""
+"Make dashboards visible and usable for all users. For dashboards this "
+"permission additionally controls whether a dashboard may be shared via a "
+"public link."
+msgstr ""
+
 #, python-format
 msgid "Make own published %s override built-in %s for all users."
 msgstr ""
@@ -42218,14 +42224,6 @@ msgstr "Instanțe Oracle"
 #, fuzzy
 msgid "Metric Backend Information"
 msgstr "Conexiuni Varnish Backend"
-
-#, fuzzy
-msgid "Metric backend is disabled, autocompletion is not available."
-msgstr "Instanțe Oracle"
-
-#, fuzzy
-msgid "Metric backend is not reachable, autocompletion is not available."
-msgstr "Instanțe Oracle"
 
 #, fuzzy
 msgid "Metric forecast"
@@ -54719,24 +54717,23 @@ msgstr ""
 msgid "Relays"
 msgstr "Întârziere:"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Release extension package \"%s\""
-msgstr "A fost creat un nou pachet de extensii %s."
+msgstr ""
 
 #, fuzzy
 msgid "Release flags"
 msgstr "Pachet de lansare"
 
 msgid "Release package"
-msgstr "Pachet de lansare"
+msgstr ""
 
-#, fuzzy
 msgid "Release this package"
-msgstr "Pachet de lansare"
+msgstr ""
 
-#, fuzzy, python-format
+#, python-format
 msgid "Released extension package %s %s"
-msgstr "Pachet de extensie eliminat %s %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -91898,6 +91895,117 @@ msgid "Guided"
 msgstr "Modul deschis"
 
 #, fuzzy
+msgid "Save date"
+msgstr "Data eșantionului"
+
+#, fuzzy
+msgid "Choose a date"
+msgstr "Alegeți toate"
+
+#, fuzzy
+msgid "Save date & time"
+msgstr "Data și ora evenimentului"
+
+#, fuzzy
+msgid "Choose date & time"
+msgstr "Data și ora"
+
+#, fuzzy
+msgid "Choose a time"
+msgstr "Alegeți toate"
+
+msgid "Range reordered: start %{start}, end %{end}"
+msgstr ""
+
+#, fuzzy
+msgid "Save range"
+msgstr "Schimbare de stare"
+
+#, fuzzy
+msgid "Enter a complete start and end"
+msgstr "Reclasificarea statului complet"
+
+#, fuzzy
+msgid "Choose a date & time range"
+msgstr "Data & interval de timp"
+
+#, fuzzy
+msgid "From date"
+msgstr "Timp de creare"
+
+#, fuzzy
+msgid "From time"
+msgstr "fără timp"
+
+#, fuzzy
+msgid "To date"
+msgstr "Nu există date"
+
+#, fuzzy
+msgid "To time"
+msgstr "fără timp"
+
+#, fuzzy
+msgid "Quick range presets"
+msgstr "Resetarea țintei TCP"
+
+#, fuzzy
+msgid "Custom"
+msgstr "Client"
+
+#, fuzzy
+msgid "Start time"
+msgstr "Tipul de start"
+
+#, fuzzy
+msgid "End time"
+msgstr "fără timp"
+
+#, fuzzy
+msgid "Timezone:"
+msgstr "Orizont de timp"
+
+#, fuzzy
+msgid "Current server time:"
+msgstr "Evenimente curente"
+
+#, fuzzy
+msgid "Unknown Timezone"
+msgstr "Entități necunoscute"
+
+#, fuzzy
+msgid "not set"
+msgstr "nu este prezent"
+
+#, fuzzy
+msgid "Timezone"
+msgstr "Orizont de timp"
+
+#, fuzzy
+msgid "Save & apply"
+msgstr "Salvați și testați"
+
+#, fuzzy
+msgid "Saving…"
+msgstr "Economii de spațiu"
+
+#, fuzzy
+msgid "Open time selector"
+msgstr "Timepicker pentru timpul de nefuncționare"
+
+#, fuzzy
+msgid "Empty"
+msgstr "gol"
+
+#, fuzzy
+msgid "AM or PM"
+msgstr " sau "
+
+#, fuzzy
+msgid "Time selection"
+msgstr "Selecția fișierelor"
+
+#, fuzzy
 msgid "required"
 msgstr "Port necesar"
 
@@ -92996,10 +93104,6 @@ msgstr "Neînregistrat"
 #, fuzzy
 msgid "Specific host"
 msgstr "Situri specifice"
-
-#, fuzzy
-msgid "Custom"
-msgstr "Client"
 
 #, fuzzy
 msgid "Select at least one scope."
@@ -96361,6 +96465,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Metric backend is disabled, autocompletion is not available."
+#~ msgstr "Instanțe Oracle"
+
+#, fuzzy
+#~ msgid "Metric backend is not reachable, autocompletion is not available."
+#~ msgstr "Instanțe Oracle"
 
 #, fuzzy, python-format
 #~ msgid "Custom metrics (%s):"

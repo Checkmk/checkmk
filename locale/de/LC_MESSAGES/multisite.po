@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-22 17:57+0000\n"
+"PO-Revision-Date: 2026-06-23 10:27+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -31127,6 +31127,9 @@ msgid ""
 "If enabled, the plug-in will not attempt to connect to locally detected "
 "instances that are currently stopped.Only applicable for Windows."
 msgstr ""
+"Wenn diese Option aktiviert ist, versucht das Plugin nicht, eine Verbindung "
+"zu lokal erkannten Instanzen herzustellen, die derzeit angehalten sind. Gilt "
+"nur für Windows."
 
 msgid ""
 "If enabled, the service details will contain the username of a process owner."
@@ -32562,7 +32565,7 @@ msgid "Ignore if older than"
 msgstr "Ignorieren, wenn älter als"
 
 msgid "Ignore inactive local instances(Windows)"
-msgstr ""
+msgstr "Inaktive lokale Instanzen ignorieren (Windows)"
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Kürzere oder gleiche Intervalle ignorieren"
@@ -38583,6 +38586,12 @@ msgstr "Setze Check auf OK"
 msgid "Make check WARNING"
 msgstr "Setze Check auf WARN"
 
+msgid ""
+"Make dashboards visible and usable for all users. For dashboards this "
+"permission additionally controls whether a dashboard may be shared via a "
+"public link."
+msgstr ""
+
 #, python-format
 msgid "Make own published %s override built-in %s for all users."
 msgstr "Eigene(r) %s soll mitgelieferte(n) %s für alle Benutzer überschreiben."
@@ -40198,15 +40207,6 @@ msgstr "Metrik-Backend"
 
 msgid "Metric Backend Information"
 msgstr "Informationen zum Metrik-Backend"
-
-msgid "Metric backend is disabled, autocompletion is not available."
-msgstr ""
-"Metrik-Backend ist deaktiviert, Autovervollständigung ist nicht verfügbar."
-
-msgid "Metric backend is not reachable, autocompletion is not available."
-msgstr ""
-"Metrik-Backend ist nicht erreichbar, Autovervollständigung ist nicht "
-"verfügbar."
 
 msgid "Metric forecast"
 msgstr "Metrik-Vorhersage"
@@ -51736,13 +51736,13 @@ msgstr "Relays"
 
 #, python-format
 msgid "Release extension package \"%s\""
-msgstr "Erweiterungspaket \"%s\" freigeben"
+msgstr "Das Erweiterungspaket \"%s\" freigeben"
 
 msgid "Release flags"
-msgstr "Flags freigeben"
+msgstr "Release-Flags"
 
 msgid "Release package"
-msgstr "Paket freigeben"
+msgstr "Dieses Paket freigeben"
 
 msgid "Release this package"
 msgstr "Dieses Paket freigeben"
@@ -57951,7 +57951,7 @@ msgid "Skip hosts with non-empty parents (also if inherited)"
 msgstr "Hosts mit nicht leeren Parents überspringen (auch wenn vererbt)"
 
 msgid "Skip local instances that are not running"
-msgstr ""
+msgstr "Lokale Instanzen überspringen, die nicht laufen"
 
 msgid "Skip pack"
 msgstr "Paket überspringen"
@@ -87501,6 +87501,116 @@ msgstr "Fertigstellen"
 msgid "Guided"
 msgstr "Geführt"
 
+#, fuzzy
+msgid "Save date"
+msgstr "Beispiel-Datum"
+
+#, fuzzy
+msgid "Choose a date"
+msgstr "Alle auswählen"
+
+#, fuzzy
+msgid "Save date & time"
+msgstr "Tag und Zeit des Ereignisses"
+
+#, fuzzy
+msgid "Choose date & time"
+msgstr "Tag und Zeit anzeigen"
+
+#, fuzzy
+msgid "Choose a time"
+msgstr "Alle auswählen"
+
+msgid "Range reordered: start %{start}, end %{end}"
+msgstr ""
+
+#, fuzzy
+msgid "Save range"
+msgstr "Änderungen speichern"
+
+#, fuzzy
+msgid "Enter a complete start and end"
+msgstr "Reklassifizierung des kompletten Zustands"
+
+#, fuzzy
+msgid "Choose a date & time range"
+msgstr "Datums- & Zeitraum"
+
+#, fuzzy
+msgid "From date"
+msgstr "Erstelldatum"
+
+#, fuzzy
+msgid "From time"
+msgstr "keine Zeit"
+
+#, fuzzy
+msgid "To date"
+msgstr "Keine Daten"
+
+#, fuzzy
+msgid "To time"
+msgstr "keine Zeit"
+
+#, fuzzy
+msgid "Quick range presets"
+msgstr "TCP-Ziel-Resets"
+
+msgid "Custom"
+msgstr "Benutzerdefiniert"
+
+#, fuzzy
+msgid "Start time"
+msgstr "Starttyp"
+
+#, fuzzy
+msgid "End time"
+msgstr "keine Zeit"
+
+#, fuzzy
+msgid "Timezone:"
+msgstr "Zeitzone"
+
+#, fuzzy
+msgid "Current server time:"
+msgstr "Aktuelle Ereignisse"
+
+#, fuzzy
+msgid "Unknown Timezone"
+msgstr "Unbekannte Entitäten"
+
+#, fuzzy
+msgid "not set"
+msgstr "nicht vorhanden"
+
+#, fuzzy
+msgid "Timezone"
+msgstr "Zeitzone"
+
+#, fuzzy
+msgid "Save & apply"
+msgstr "Speichern & bearbeiten"
+
+#, fuzzy
+msgid "Saving…"
+msgstr "Wird gespeichert"
+
+#, fuzzy
+msgid "Open time selector"
+msgstr "Zeitauswahl öffnen"
+
+#, fuzzy
+msgid "Empty"
+msgstr "leer"
+
+#, fuzzy
+msgid "AM or PM"
+msgstr " oder "
+
+#, fuzzy
+msgid "Time selection"
+msgstr "Dateiauswahl"
+
 msgid "required"
 msgstr "erforderlich"
 
@@ -88466,9 +88576,6 @@ msgstr "Unbegrenzt"
 
 msgid "Specific host"
 msgstr "Spezifischer Host"
-
-msgid "Custom"
-msgstr "Benutzerdefiniert"
 
 msgid "Select at least one scope."
 msgstr "Wählen Sie mindestens einen Bereich aus."
@@ -90730,9 +90837,8 @@ msgid ""
 msgstr ""
 "Das Relay wird offiziell für die folgenden Betriebssysteme unterstützt:"
 
-#, fuzzy
 msgid "Unhandled Problems"
-msgstr "Unbehandelte Hostprobleme"
+msgstr "Unbehandelte Probleme"
 
 msgid "Search hosts…"
 msgstr "Hosts suchen…"
@@ -91772,6 +91878,15 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Metric backend is disabled, autocompletion is not available."
+#~ msgstr ""
+#~ "Metrik-Backend ist deaktiviert, Autovervollständigung ist nicht verfügbar."
+
+#~ msgid "Metric backend is not reachable, autocompletion is not available."
+#~ msgstr ""
+#~ "Metrik-Backend ist nicht erreichbar, Autovervollständigung ist nicht "
+#~ "verfügbar."
 
 #, python-format
 #~ msgid "Custom metrics (%s):"

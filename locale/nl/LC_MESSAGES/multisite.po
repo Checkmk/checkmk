@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-06-24 23:12+0000\n"
+"PO-Revision-Date: 2026-06-23 10:27+0000\n"
 "Language-Team: Dutch <https://translate.checkmk.com/projects/checkmk/dev/nl/"
 ">\n"
 "Language: nl\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.0.2\n"
+"X-Generator: Weblate 5.16.2\n"
 
 msgid " "
 msgstr ""
@@ -24968,9 +24968,9 @@ msgstr "Uitbreiding"
 msgid "Extension package \"%s\" disabled."
 msgstr "Uitbreiding pakketbestanden"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Extension package \"%s\" released."
-msgstr "Uitbreidingspakketten"
+msgstr ""
 
 #, fuzzy, python-format
 msgid "Extension package \"%s\" removed."
@@ -40432,6 +40432,12 @@ msgstr "Maak controle OK"
 msgid "Make check WARNING"
 msgstr "Maak controle WAARSCHUWING"
 
+msgid ""
+"Make dashboards visible and usable for all users. For dashboards this "
+"permission additionally controls whether a dashboard may be shared via a "
+"public link."
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Make own published %s override built-in %s for all users."
 msgstr ""
@@ -42144,14 +42150,6 @@ msgstr "Oracle gevallen"
 #, fuzzy
 msgid "Metric Backend Information"
 msgstr "Varnish Backend Verbindingen"
-
-#, fuzzy
-msgid "Metric backend is disabled, autocompletion is not available."
-msgstr "Oracle gevallen"
-
-#, fuzzy
-msgid "Metric backend is not reachable, autocompletion is not available."
-msgstr "Oracle gevallen"
 
 #, fuzzy
 msgid "Metric forecast"
@@ -54650,24 +54648,23 @@ msgstr ""
 msgid "Relays"
 msgstr "Vertraging:"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Release extension package \"%s\""
-msgstr "Nieuw uitbreidingspakket %s aangemaakt"
+msgstr ""
 
 #, fuzzy
 msgid "Release flags"
 msgstr "Release pakket"
 
 msgid "Release package"
-msgstr "Release pakket"
+msgstr ""
 
-#, fuzzy
 msgid "Release this package"
-msgstr "Release pakket"
+msgstr ""
 
-#, fuzzy, python-format
+#, python-format
 msgid "Released extension package %s %s"
-msgstr "Uitbreidingspakket verwijderd %s %s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -91766,6 +91763,117 @@ msgid "Guided"
 msgstr "Open mode"
 
 #, fuzzy
+msgid "Save date"
+msgstr "Voorbeeld datum"
+
+#, fuzzy
+msgid "Choose a date"
+msgstr "Kies alle"
+
+#, fuzzy
+msgid "Save date & time"
+msgstr "Percentage en tijd"
+
+#, fuzzy
+msgid "Choose date & time"
+msgstr "Eindtijd downtime"
+
+#, fuzzy
+msgid "Choose a time"
+msgstr "Kies alle"
+
+msgid "Range reordered: start %{start}, end %{end}"
+msgstr ""
+
+#, fuzzy
+msgid "Save range"
+msgstr "Is veranderd"
+
+#, fuzzy
+msgid "Enter a complete start and end"
+msgstr "Herindelen volledige staat"
+
+#, fuzzy
+msgid "Choose a date & time range"
+msgstr "Datum & tijd bereik"
+
+#, fuzzy
+msgid "From date"
+msgstr "Creatie tijd"
+
+#, fuzzy
+msgid "From time"
+msgstr "geen tijd"
+
+#, fuzzy
+msgid "To date"
+msgstr "Geen gegevens"
+
+#, fuzzy
+msgid "To time"
+msgstr "geen tijd"
+
+#, fuzzy
+msgid "Quick range presets"
+msgstr "TCP Doel Resets"
+
+#, fuzzy
+msgid "Custom"
+msgstr "Klant"
+
+#, fuzzy
+msgid "Start time"
+msgstr "Start type"
+
+#, fuzzy
+msgid "End time"
+msgstr "geen tijd"
+
+#, fuzzy
+msgid "Timezone:"
+msgstr "Tijdshorizon"
+
+#, fuzzy
+msgid "Current server time:"
+msgstr "Actuele gebeurtenissen"
+
+#, fuzzy
+msgid "Unknown Timezone"
+msgstr "Onbekende entiteiten"
+
+#, fuzzy
+msgid "not set"
+msgstr "niet aanwezig"
+
+#, fuzzy
+msgid "Timezone"
+msgstr "Tijdshorizon"
+
+#, fuzzy
+msgid "Save & apply"
+msgstr "Opslaan en testen"
+
+#, fuzzy
+msgid "Saving…"
+msgstr "Ruimtebesparing"
+
+#, fuzzy
+msgid "Open time selector"
+msgstr "Eindtijd downtime"
+
+#, fuzzy
+msgid "Empty"
+msgstr "leeg"
+
+#, fuzzy
+msgid "AM or PM"
+msgstr " of "
+
+#, fuzzy
+msgid "Time selection"
+msgstr "Map Selectie"
+
+#, fuzzy
 msgid "required"
 msgstr "Vereiste poort"
 
@@ -92860,10 +92968,6 @@ msgstr "Niet-geregistreerd"
 #, fuzzy
 msgid "Specific host"
 msgstr "Specifieke sites"
-
-#, fuzzy
-msgid "Custom"
-msgstr "Klant"
 
 #, fuzzy
 msgid "Select at least one scope."
@@ -96204,6 +96308,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Metric backend is disabled, autocompletion is not available."
+#~ msgstr "Oracle gevallen"
+
+#, fuzzy
+#~ msgid "Metric backend is not reachable, autocompletion is not available."
+#~ msgstr "Oracle gevallen"
 
 #, fuzzy, python-format
 #~ msgid "Custom metrics (%s):"

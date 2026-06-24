@@ -1787,7 +1787,7 @@ def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress_: str) -> 
         priority=5,  # notice
         facility=31,  # not used by syslog -> we use this for all traps
         application=scrub_string(trapOIDs[0][1] if trapOIDs else ""),
-        text=scrub_string(", ".join(f"{oid}: {value}" for oid, value in other)),
+        text="\x01".join(scrub_string(f"{oid}: {value}") for oid, value in other),
         core_host=None,
         host_in_downtime=False,
     )

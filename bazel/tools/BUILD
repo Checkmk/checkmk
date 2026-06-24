@@ -183,6 +183,7 @@ py_binary(
             '    \\! -path "${REPO_PATH}/.cache/*" \\',
             '    \\! -path "${REPO_PATH}/bazel/registry/*" \\',
             '    \\! -path "${REPO_PATH}/bazel/thirdparty/*" \\',
+            '    \\! -path "${REPO_PATH}/.bazelbsp/*" \\',
             '    \\( -name "*.bzl" -o -name "*.sky" -o -name BUILD.bazel -o -name BUILD \\',
             '    -o -name "*.BUILD" -o -name "BUILD.*.bazel" -o -name "BUILD.*.oss" \\',
             '    -o -name "MODULE.bazel" -o -name WORKSPACE -o -name WORKSPACE.bazel \\',

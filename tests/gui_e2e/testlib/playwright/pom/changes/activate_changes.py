@@ -231,7 +231,7 @@ class ActivateChangesSlideout(LocatorHelper):
         """Trigger activation and close the slideout without waiting for the success banner.
 
         Use for activations that cause a site restart; follow with
-        site.wait_for_no_running_activations() to wait for the site to come back up.
+        site.wait_for_site_restarting_changes_to_complete() to wait for the site to come back up.
         """
         self._click_activate_button()
         self.close()

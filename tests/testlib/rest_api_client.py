@@ -2789,6 +2789,7 @@ class DcdMetricBackendClient(RestApiClient):
         validity_period: int | None = None,
         maximum_number_of_hosts: int | None = None,
         creation_rules: list[dict[str, Any]] | None = None,
+        host_name_lookup_rules: list[dict[str, Any]] | None = None,
         expect_ok: bool = True,
     ) -> Response:
         body: dict[str, Any] = _only_set_keys(
@@ -2807,6 +2808,7 @@ class DcdMetricBackendClient(RestApiClient):
                         "validity_period": validity_period,
                         "maximum_number_of_hosts": maximum_number_of_hosts,
                         "creation_rules": creation_rules,
+                        "host_name_lookup_rules": host_name_lookup_rules,
                     }
                 ),
             }

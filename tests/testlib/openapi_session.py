@@ -1434,28 +1434,32 @@ class DcdAPI(BaseAPI):
                 "connector": {
                     "connector_type": "metric_backend",
                     "interval": interval,
-                    "resource_attribute_filters": [
+                    "host_name_lookup_rules": [
                         {
-                            "key": attribute_filter.key,
-                            "value": attribute_filter.value,
+                            "host_name_template": host_name_template,
+                            "resource_attribute_filters": [
+                                {
+                                    "key": attribute_filter.key,
+                                    "value": attribute_filter.value,
+                                }
+                                for attribute_filter in resource_attribute_filters
+                            ],
+                            "scope_attribute_filters": [
+                                {
+                                    "key": attribute_filter.key,
+                                    "value": attribute_filter.value,
+                                }
+                                for attribute_filter in scope_attribute_filters
+                            ],
+                            "data_point_attribute_filters": [
+                                {
+                                    "key": attribute_filter.key,
+                                    "value": attribute_filter.value,
+                                }
+                                for attribute_filter in data_point_attribute_filters
+                            ],
                         }
-                        for attribute_filter in resource_attribute_filters
                     ],
-                    "scope_attribute_filters": [
-                        {
-                            "key": attribute_filter.key,
-                            "value": attribute_filter.value,
-                        }
-                        for attribute_filter in scope_attribute_filters
-                    ],
-                    "data_point_attribute_filters": [
-                        {
-                            "key": attribute_filter.key,
-                            "value": attribute_filter.value,
-                        }
-                        for attribute_filter in data_point_attribute_filters
-                    ],
-                    "host_name_template": host_name_template,
                     "creation_rules": [
                         {
                             "folder_path": "/",

@@ -903,7 +903,7 @@ section_bonding_interfaces() {
     (
         cd /proc/net/bonding 2>/dev/null || return
         echo '<<<lnx_bonding:sep(58)>>>'
-        head -v -n 1000 ./*
+        [ -n "$(ls)" ] && head -v -n 1000 ./*
     )
 }
 

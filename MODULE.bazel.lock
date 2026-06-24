@@ -7956,8 +7956,8 @@
             "https://files.pythonhosted.org/packages/c1/06/962d4f364f779d7389cd31a1bb581907b057f52f0ace2c119a8dd8409db6/types_jsonschema-4.26.0.20260202-py3-none-any.whl": "41c95343abc4de9264e333a55e95dfb4d401e463856d0164eec9cb182e8746da"
           },
           "types-lxml": {
-            "https://files.pythonhosted.org/packages/6e/30/63ad18e633f61d848444fe4f1b95fcfcf80283bc5578f308501ef7210437/types_lxml-2025.11.25.tar.gz": "30e7ff9a2d8d7c2ea7967c5d71c8169dd1806b58503ed4972af1ce602919b0e4",
-            "https://files.pythonhosted.org/packages/b5/83/ab792ad6d91cb25eca5547f1f9e593994310ad5bc19c2baf9e85cd4d506c/types_lxml-2025.11.25-py3-none-any.whl": "c9e56aad336076f245e38d7f9b6bd6cdd9ffadda64ce650b9d3aa3a9ae4a8890"
+            "https://files.pythonhosted.org/packages/5f/5c/03ec9befbf4bb5309bfd576c6a5ac1c75633f78f6b64cf1f594e97cd3d23/types_lxml-2026.2.16-py3-none-any.whl": "5dd81ffa54830e5f361988737c5f1d6a0ae48b2742790637ec560df790ea0401",
+            "https://files.pythonhosted.org/packages/dd/ad/c70ac8cbdc28eb58a17301c69b4925af54b614e47f9b2ebc9de5cc10f786/types_lxml-2026.2.16.tar.gz": "b3a1340cc06db98d541c785732f6f68bea438daff4e2b7809ef748d545d01406"
           },
           "types-markdown": {
             "https://files.pythonhosted.org/packages/54/c9/659fa2df04b232b0bfcd05d2418e683080e91ec68f636f3c0a5a267350e7/types_markdown-3.10.2.20260211-py3-none-any.whl": "2d94d08587e3738203b3c4479c449845112b171abe8b5cadc9b0c12fcf3e99da",

@@ -5608,11 +5608,10 @@ types-jsonschema==4.26.0.20260202 \
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-types-lxml==2025.11.25 \
-    --hash=sha256:30e7ff9a2d8d7c2ea7967c5d71c8169dd1806b58503ed4972af1ce602919b0e4 \
-    --hash=sha256:c9e56aad336076f245e38d7f9b6bd6cdd9ffadda64ce650b9d3aa3a9ae4a8890
+types-lxml==2026.2.16 \
+    --hash=sha256:5dd81ffa54830e5f361988737c5f1d6a0ae48b2742790637ec560df790ea0401 \
+    --hash=sha256:b3a1340cc06db98d541c785732f6f68bea438daff4e2b7809ef748d545d01406
     # via
-    #   -c constraints.txt
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
 types-oauthlib==3.3.0.20250822 \

@@ -1,6 +1,5 @@
 marshmallow<4 # breaking changes CMK-25251
 datamodel-code-generator==0.42.0 #CMK-29509
-types-lxml==2025.11.25  # CMK-28940
 google-cloud-asset==4.1.0  # CMK-29107
 redis~=7.2.1 # CMK-31558
 mypy<2 # CMK-34707 pytokens pulls in mypy 2.0.0 and ast-serialize, which requires rustc>=1.91 (build image has 1.90); pulled in by pytokens via mypyc

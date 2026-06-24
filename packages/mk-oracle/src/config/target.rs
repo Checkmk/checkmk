@@ -121,8 +121,11 @@ impl TargetId {
         let instance_name = TargetId::get_string(keys::INSTANCE_NAME, yaml, conn)
             .as_deref()
             .map(InstanceName::from);
-        let sid = TargetId::get_string(keys::SID, yaml, conn);
-        let alias = yaml.get_string(keys::ALIAS).map(InstanceAlias::from);
+        let sid = TargetId::get_string(keys::SID, yaml, conn).and_then(|s| resolve_env_ref(&s));
+        let alias = yaml
+            .get_string(keys::ALIAS)
+            .and_then(|s| resolve_env_ref(&s))
+            .map(InstanceAlias::from);
 
         let result = TargetIdBuilder::new()
             .service_name(service_name.as_ref())
@@ -139,6 +142,23 @@ impl TargetId {
     fn get_string(name: &str, main: &Yaml, fallback: Option<&Yaml>) -> Option<String> {
         main.get_string(name)
             .or_else(|| fallback.and_then(|bk| bk.get_string(name)))
+    }
+}
+
+/// If `value` starts with `$`, treat it as an env var reference and resolve it.
+/// Returns `None` if the env var is not set, otherwise returns the resolved value.
+/// Non-env-ref values are returned as-is.
+pub fn resolve_env_ref(value: &str) -> Option<String> {
+    if let Some(var_name) = value.strip_prefix('$') {
+        match std::env::var(var_name) {
+            Ok(v) if !v.is_empty() => Some(v),
+            _ => {
+                log::info!("env var ${var_name} not set, treating as absent");
+                None
+            }
+        }
+    } else {
+        Some(value.to_string())
     }
 }
 

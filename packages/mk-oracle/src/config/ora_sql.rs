@@ -111,11 +111,21 @@ impl Config {
         let discovery = Discovery::from_yaml(main)?.unwrap_or_else(|| default.discovery().clone());
         let section_info = Sections::from_yaml(main, &default.sections)?;
 
-        let mut custom_instances = main
+        let mut custom_instances: Vec<CustomInstance> = main
             .get_yaml_vector(keys::INSTANCES)
             .into_iter()
             .map(|v| CustomInstance::from_yaml(&v, &auth, &conn, &section_info))
-            .collect::<Result<Vec<CustomInstance>>>()?;
+            .collect::<Result<Vec<CustomInstance>>>()?
+            .into_iter()
+            .filter(|i| {
+                if i.target_id().is_none() && i.alias().is_none() {
+                    log::warn!("skipping instance with no resolvable sid or alias");
+                    false
+                } else {
+                    true
+                }
+            })
+            .collect();
         if discovery.detect() {
             let local_instances = get_additional_local_instances(&custom_instances, &auth, &conn);
             log::info!(
@@ -419,7 +429,10 @@ impl CustomInstance {
             auth: ensure_auth(yaml, main_auth)?,
             conn: ensure_conn(yaml, main_conn)?,
             target_id: TargetId::from_yaml(yaml)?,
-            alias: yaml.get_string(keys::ALIAS).map(InstanceAlias::from),
+            alias: yaml
+                .get_string(keys::ALIAS)
+                .and_then(|s| crate::config::target::resolve_env_ref(&s))
+                .map(InstanceAlias::from),
             piggyback: Piggyback::from_yaml(yaml, sections)?,
             custom_metrics: Sections::get_sections(
                 yaml.get(keys::CUSTOM_METRICS),
@@ -1496,5 +1509,82 @@ oracle:
             config.instances()[0].service_name().unwrap().to_string(),
             "FREE.service_name"
         );
+    }
+
+    const CONFIG_WITH_NON_EXISTING_ENV: &str = r#"---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+    authentication:
+      username: "c##checkmk"
+      password: "********"
+    instances:
+      - sid: $NON_EXISTING_ENV_VAR_FDFDD
+        alias: $NON_EXISTING_ENV_VAR_FDFDD
+      - sid: XE1
+        alias: oooo
+"#;
+
+    #[cfg(not(windows))]
+    const CONFIG_WITH_EXISTING_ENV: &str = r#"---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+    authentication:
+      username: "c##checkmk"
+      password: "********"
+    instances:
+      - sid: $USER
+        alias: $USER
+      - sid: XE1
+        alias: oooo
+"#;
+
+    #[cfg(windows)]
+    const CONFIG_WITH_EXISTING_ENV: &str = r#"---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+    authentication:
+      username: "c##checkmk"
+      password: "********"
+    instances:
+      - sid: $USERNAME
+        alias: $USERNAME
+      - sid: XE1
+        alias: oooo
+"#;
+
+    #[test]
+    fn test_env_ref_absent_skips_instance() {
+        let yaml = create_yaml(CONFIG_WITH_NON_EXISTING_ENV);
+        let config = Config::from_yaml(&yaml).unwrap().unwrap();
+        assert_eq!(
+            config.instances().len(),
+            1,
+            "instance with unresolvable env ref must be skipped"
+        );
+    }
+
+    #[test]
+    fn test_env_ref_present_keeps_instance() {
+        let env_var = if cfg!(windows) { "USERNAME" } else { "USER" };
+        let user = std::env::var(env_var).expect("USER/USERNAME must be set");
+        let yaml = create_yaml(CONFIG_WITH_EXISTING_ENV);
+        let config = Config::from_yaml(&yaml).unwrap().unwrap();
+        assert_eq!(
+            config.instances().len(),
+            2,
+            "instance with resolvable env ref must be kept"
+        );
+        let resolved = config
+            .instances()
+            .iter()
+            .find(|i| i.target_id().map(|t| t.display_name()).as_deref() == Some(&user))
+            .expect("must find instance resolved from env var");
+        assert!(resolved.target_id().is_some());
     }
 }

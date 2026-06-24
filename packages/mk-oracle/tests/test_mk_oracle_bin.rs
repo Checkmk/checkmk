@@ -395,21 +395,14 @@ fn test_migrate_reference_config_connection_and_auth() {
     assert_eq!(auth.auth_type().to_string(), "standard");
     assert!(auth.role().is_none(), "empty role must be None");
 
-    // Instances: DBUSER (empty tnsalias), DBUSER_XE1 (tnsalias=oooo), DBUSER_XE2
+    // Instances: DBUSER_XE1 (tnsalias=oooo), DBUSER_XE2
+    // DBUSER with $ORACLE_SID is skipped: env var absent at load time
     let instances = ora.instances();
     assert_eq!(
         instances.len(),
-        3,
-        "must have 3 instances from DBUSER + DBUSER_XE1 + DBUSER_XE2"
+        2,
+        "must have 2 instances from DBUSER_XE1 + DBUSER_XE2"
     );
-
-    // DBUSER instance: sid=$ORACLE_SID, alias=$ORACLE_SID, connection=localhost:1521, auth=c##checkmk
-    let dbuser_inst = instances
-        .iter()
-        .find(|i| i.alias().as_ref().map(|a| a.to_string()).as_deref() == Some("$ORACLE_SID"))
-        .expect("DBUSER instance with alias $ORACLE_SID");
-    assert!(dbuser_inst.conn().is_local());
-    assert_eq!(dbuser_inst.auth().username(), "c##checkmk");
 
     // DBUSER_XE1: sid=XE1, alias=oooo, inherits main connection and auth
     #[cfg(not(windows))]

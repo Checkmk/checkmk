@@ -5,7 +5,6 @@ time-machine<3.0.0 # breaks agent-receiver tests CMK-27768
 datamodel-code-generator==0.39.0  # CMK-28525
 vcrpy==7.0.0  # CMK-28526
 mypy-protobuf==3.7.0  # CMK-28939
-types-lxml==2025.11.25  # CMK-28940
 telnetlib3==2.0.8  # CMK-31264
 pika<1.4  # stub changes break ChannelP CMK-35065
 types-pika-ts<1.4  # keep in sync with pika CMK-35065

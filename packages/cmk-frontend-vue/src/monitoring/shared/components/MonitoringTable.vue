@@ -396,6 +396,18 @@ function tableRowAt(index: number): Row<T> {
   background: var(--ux-theme-3);
 }
 
+.monitoring-table__row:hover,
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+.monitoring-table__row:hover :deep(td) {
+  background-color: var(--color-dark-blue-90);
+}
+
+body[data-theme='facelift'] .monitoring-table__row:hover,
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+body[data-theme='facelift'] .monitoring-table__row:hover :deep(td) {
+  background-color: var(--color-light-blue-0);
+}
+
 .monitoring-table__spacer {
   background: transparent;
 }

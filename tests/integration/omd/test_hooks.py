@@ -72,6 +72,7 @@ def test_hooks(site: Site) -> None:
         or site.edition.is_ultimatemt_edition()
     ):
         hooks += [
+            "MCP_SERVER",
             "MCP_SERVER_PORT",
         ]
 

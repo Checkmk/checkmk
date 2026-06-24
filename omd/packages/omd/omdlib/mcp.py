@@ -3,7 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from omdlib.config_api import network_port_has_error, null_action, PortHook
+from omdlib.config_api import Hook, network_port_has_error, null_action, PortHook
+
+MCP_SERVER = Hook(
+    name="MCP_SERVER",
+    default=lambda _edition: "off",
+    activation=null_action,
+    choices=[("on", "enable"), ("off", "disable")],
+)
 
 MCP_SERVER_PORT = PortHook(
     name="MCP_SERVER_PORT",

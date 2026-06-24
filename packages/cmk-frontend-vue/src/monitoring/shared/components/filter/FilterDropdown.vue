@@ -67,6 +67,11 @@ const suppressNextClickOutside = ref(false)
 // this back to the model; cancelling discards it.
 const draft = ref<ColumnFilterNode<FilterField> | undefined>(undefined)
 
+// Bumped to force the mounted filter component to re-initialise from the draft.
+// The per-type filter components derive their internal display state from the
+// model only at setup, so resetting the draft (Clear) needs a remount to take.
+const draftKey = ref(0)
+
 const isValid = ref(true)
 
 const panel = ref<HTMLElement | null>(null)
@@ -123,6 +128,12 @@ function apply(): void {
 
 function cancel(): void {
   close()
+}
+
+function clear(): void {
+  draft.value = undefined
+  isValid.value = true
+  draftKey.value += 1
 }
 
 function onClickOutside(): void {
@@ -247,8 +258,15 @@ onBeforeUnmount(() => {
       @focusout="onFocusOut"
     >
       <div class="monitoring-filter-dropdown__content">
+        <button class="monitoring-filter-dropdown__clear" @click="clear">
+          {{ _t('Clear') }}
+        </button>
+
+        <hr class="monitoring-filter-dropdown__content-row-separator" />
+
         <component
           :is="filterComponent"
+          :key="draftKey"
           v-model="draft"
           :definition="definition"
           @update:valid="isValid = $event"
@@ -290,6 +308,28 @@ onBeforeUnmount(() => {
 .monitoring-filter-dropdown__content {
   width: calc(100% - 2 * var(--dimension-2));
   margin: var(--dimension-2);
+}
+
+.monitoring-filter-dropdown__clear {
+  border: 0;
+  background-color: transparent;
+  text-decoration: underline;
+  font-weight: var(--font-weight-default);
+  padding: 0;
+  margin: var(--dimension-3);
+  float: right;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.monitoring-filter-dropdown__content-row-separator {
+  width: 100%;
+  height: var(--dimension-1);
+  border: 0;
+  background-color: var(--ux-theme-4);
+  margin: var(--dimension-2) 0;
 }
 
 .monitoring-filter-dropdown__panel--up {

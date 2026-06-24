@@ -230,7 +230,9 @@ class ParserState(abc.ABC):
             "%s: Ignoring invalid data %r",
             type(self).__name__,
             line,
-            exc_info=True,
+            # to_error() is only ever called from within an `except` block,
+            # so exc_info is valid here.
+            exc_info=True,  # noqa: LOG014
         )
         return self.to_noop_parser()
 

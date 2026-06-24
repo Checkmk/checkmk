@@ -38,6 +38,7 @@ select = [
   "N805",   # pep8-naming: invalid-first-argument-name-for-method (self)
   "I",      # isort
   "ISC",    # flake8: implicit string concat
+  "LOG014", # flake8-logging: no exc_info= outside exception handlers
   "PL",     # pylint
   "RUF100", # ruff: unused noqa
   "SLF",    # flake8: self

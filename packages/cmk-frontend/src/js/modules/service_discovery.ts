@@ -173,6 +173,11 @@ function finish(response: AjaxServiceDiscovery) {
   // Only unlock the "per service" actions here. The page menu entries are unlocked by individual
   // calls to enable_page_menu_entry depending on the state of the page.
   lock_controls(false, get_state_independent_controls())
+
+  // The service table is rebuilt on every poll update, so we only execute the delayed active
+  // checks once the table is stable. This triggers the checks that are initially visible; the
+  // remaining ones are triggered by the scroll / resize handlers.
+  trigger_delayed_active_checks()
 }
 
 function error(response: string) {
@@ -232,9 +237,6 @@ function update(handler_data: ServiceDiscoveryHandlerData, response: AjaxService
   if (response.pending_changes_info) {
     update_pending_changes(response.pending_changes_info, response.pending_changes_tooltip)
   }
-
-  // Also execute delayed active checks once to trigger delayed checks that are initially visible.
-  trigger_delayed_active_checks()
 }
 
 function get_state_independent_controls() {
@@ -285,6 +287,12 @@ export function register_delayed_active_check(
   item: string | null,
   divid: string
 ) {
+  // The service table is rebuilt on every poll update, which re-runs these registration calls.
+  // Avoid queueing (and later executing) the same active check more than once.
+  if (g_delayed_active_checks.some((check) => check.divid === divid)) {
+    return
+  }
+
   // Register event listeners on first call
   if (g_delayed_active_checks.length == 0) {
     //2531: Object is possibly 'null'

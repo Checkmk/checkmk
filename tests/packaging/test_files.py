@@ -927,9 +927,9 @@ def _verify_signature(file_path: Path, file_name: str) -> None | str:
     except FileNotFoundError:
         # osslsigncode not found - it should be available in CI (via test-packaging Makefile target)
         # -> should only occur in local test environments
-        LOGGER.error("osslsigncode not found in PATH")
+        LOGGER.exception("osslsigncode not found in PATH")
         if os.environ.get("CI"):
-            LOGGER.error("THIS SHOULD NOT HAPPEN in CI! PLEASE REPORT!")
+            LOGGER.exception("THIS SHOULD NOT HAPPEN in CI! PLEASE REPORT!")
         else:
             LOGGER.warning("Please build it locally via bazel (and add it to your PATH), e.g.:")
             LOGGER.warning(
@@ -1020,8 +1020,8 @@ def test_windows_artifacts_are_signed(
                         stdout=subprocess.DEVNULL,
                     )
                 except FileNotFoundError:
-                    LOGGER.error("msiextract not found in PATH")
-                    LOGGER.error("IF IN CI - THIS SHOULD NOT HAPPEN! PLEASE REPORT!")
+                    LOGGER.exception("msiextract not found in PATH")
+                    LOGGER.exception("IF IN CI - THIS SHOULD NOT HAPPEN! PLEASE REPORT!")
                     LOGGER.warning("can be installed locally")
                     LOGGER.warning("  ubuntu: sudo apt install msitools")
                     raise

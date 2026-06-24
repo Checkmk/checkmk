@@ -134,7 +134,8 @@ def do_localize(args: list[str]) -> None:
             f(lang)
             _write_alias(lang, alias)
         except LocalizeException as e:
-            logger.error("%s", e)
+            # Expected CLI error, the traceback adds no value here.
+            logger.error("%s", e)  # noqa: TRY400
             sys.exit(1)
     else:
         allc = sorted(commands.keys())

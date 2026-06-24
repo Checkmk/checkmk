@@ -2168,12 +2168,11 @@ class StatusServer(ECServerThread):
                     self._perfcounters.count_time("request", duration)
 
             except Exception as e:
-                msg = f"Error handling client {addr_info}: {e}"
                 # Do not log a stack trace for client errors, they are not *our* fault.
                 if isinstance(e, MKClientError):
-                    self._logger.error(msg)
+                    self._logger.error("Error handling client %s: %s", addr_info, e)  # noqa: TRY400
                 else:
-                    self._logger.exception(msg)
+                    self._logger.exception("Error handling client %s", addr_info)
                 if client_socket:
                     client_socket.close()
                     client_socket = None
@@ -3234,7 +3233,9 @@ def replication_pull(
                 if "takeover" in repl_settings and mode != "takeover":
                     if not slave_status["last_sync"]:
                         if repl_settings.get("logging"):
-                            logger.error("Replication: no takeover since master was never reached.")
+                            logger.exception(
+                                "Replication: no takeover since master was never reached."
+                            )
                     else:
                         offline = now - slave_status["last_sync"]
                         if offline < repl_settings["takeover"]:
@@ -3305,7 +3306,7 @@ def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logge
         )
     except Exception:
         if is_replication_slave(config):
-            logger.error("Replication: no previously saved master state available")
+            logger.exception("Replication: no previously saved master state available")
 
 
 def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:

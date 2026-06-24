@@ -236,8 +236,8 @@ def agent_prism_main(args: argparse.Namespace) -> int:
         requests.exceptions.ReadTimeout,
         requests.exceptions.HTTPError,
         requests.exceptions.ConnectionError,
-    ) as e:
-        LOGGING.error("Error fetching data from gateway: %s", e)
+    ):
+        LOGGING.exception("Error fetching data from gateway")
         return 1
 
     output_entities(gateway_objs["containers"], "containers")

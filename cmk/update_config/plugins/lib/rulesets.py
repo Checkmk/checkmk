@@ -258,7 +258,7 @@ def transform_wato_rulesets_params(
         try:
             value_model = ruleset.rulespec.value_model
         except Exception:
-            logger.error(
+            logger.exception(
                 "ERROR: Failed to load Ruleset: %s. "
                 "There is likely an error in the implementation.",
                 ruleset.name,
@@ -275,17 +275,16 @@ def transform_wato_rulesets_params(
                 else:
                     rule.value = value_model.transform_value(rule.value)
                 migrated_rulesets.add(ruleset.name)
-            except Exception as e:
+            except Exception:
                 if raise_errors:
                     raise
-                logger.error(
+                logger.exception(
                     "ERROR: Failed to transform rule: (Ruleset: %s, Folder: %s, "
-                    "Rule: %d, Value: %s: %s",
+                    "Rule: %d, Value: %s",
                     ruleset.name,
                     folder.path(),
                     folder_index,
                     rule.value,
-                    e,
                 )
     return migrated_rulesets
 
@@ -337,16 +336,15 @@ def transform_remove_null_host_tag_conditions_from_rulesets(
 
                 ruleset.edit_rule(old_rule, new_rule, pending_changes=pending_changes)
                 migrated_rulesets.add(ruleset.name)
-            except Exception as e:
+            except Exception:
                 if raise_errors:
                     raise
-                logger.error(
+                logger.exception(
                     "ERROR: Failed to transform rule: (Ruleset: %s, Folder: %s, "
-                    "Rule: %d, Value: %s: %s",
+                    "Rule: %d, Value: %s",
                     ruleset.name,
                     folder.path(),
                     folder_index,
                     old_rule.value,
-                    e,
                 )
     return migrated_rulesets

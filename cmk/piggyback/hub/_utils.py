@@ -70,12 +70,13 @@ class ReceivingProcess[ModelT: BaseModel](multiprocessing.Process):
                         self.logger.info(
                             "Interrupted by failed connection: %s: %s", self.task_name, exc
                         )
-        except CMKConnectionError as exc:
-            self.logger.error("Reconnecting failed: %s: %s", self.task_name, exc)
+        except CMKConnectionError:
+            self.logger.exception("Reconnecting failed: %s", self.task_name)
         except Exception as exc:
             self.logger.exception("Exception: %s: %s", self.task_name, exc)
             crash_report_msg = self.crash_report_callback()
-            self.logger.error(crash_report_msg)
+            # The traceback was already logged above; this only adds the crash report reference.
+            self.logger.error(crash_report_msg)  # noqa: TRY400
             raise
 
 

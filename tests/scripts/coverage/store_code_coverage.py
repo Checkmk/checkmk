@@ -188,8 +188,8 @@ class CodeCoverageDb:
             logger.debug("Executing select query:\n%s", select_query.as_string(cursor))
             try:
                 cursor.execute(select_query, list(select_conditions.values()))
-            except PsycopgError as e:
-                logger.error("Error executing select query: %s", e)
+            except PsycopgError:
+                logger.exception("Error executing select query")
                 raise
             if result := cursor.fetchone():
                 return int(result[0])
@@ -208,8 +208,8 @@ class CodeCoverageDb:
             logger.debug("Executing insert query:\n%s", insert_query.as_string(cursor))
             try:
                 cursor.execute(insert_query, list(insert_values.values()))
-            except PsycopgError as e:
-                logger.error("Error executing insert query: %s", e)
+            except PsycopgError:
+                logger.exception("Error executing insert query")
                 raise
             result = cursor.fetchone()
             if not result:
@@ -249,8 +249,8 @@ class CodeCoverageDb:
             logger.debug("Executing select query:\n%s", select_query.as_string(cursor))
             try:
                 cursor.execute(select_query, (test_run_type_id, git_commit_hash, git_branch))
-            except PsycopgError as e:
-                logger.error("Error executing select query: %s", e)
+            except PsycopgError:
+                logger.exception("Error executing select query")
                 raise
             if result := cursor.fetchone():
                 return int(result[0])
@@ -302,8 +302,8 @@ class CodeCoverageDb:
                         commit_time,
                     ),
                 )
-            except PsycopgError as e:
-                logger.error("Error executing insert query: %s", e)
+            except PsycopgError:
+                logger.exception("Error executing insert query")
                 raise
             result = cursor.fetchone()
             if not result:
@@ -354,8 +354,8 @@ class CodeCoverageDb:
             logger.debug("Executing upsert query: %s", query.as_string(cursor))
             try:
                 cursor.execute(query, list(insert_values.values()))
-            except PsycopgError as e:
-                logger.error("Error executing upsert query: %s", e)
+            except PsycopgError:
+                logger.exception("Error executing upsert query")
                 raise
 
     def insert_coverage_summary(
@@ -730,8 +730,8 @@ def main() -> None:
         total_stats, module_data = _process_coverage_data(args.csv_file)
         _insert_coverage_data(args, total_stats, module_data)
         logger.info("Code coverage insertion completed successfully")
-    except Exception as e:
-        logger.error("Failed to process coverage data: %s", e)
+    except Exception:
+        logger.exception("Failed to process coverage data")
         raise
 
 

@@ -228,8 +228,8 @@ def purge_queues_messages(sites: Sequence[Site]) -> None:
                 .stdout.strip()
                 .splitlines()
             )
-        except Exception as e:
-            logger.error("Failed to list RabbitMQ queues on %s: %s", site.id, e)
+        except Exception:
+            logger.exception("Failed to list RabbitMQ queues on %s", site.id)
             raise
 
     def _purge_queues(site: Site, queues: list[str]) -> None:
@@ -237,8 +237,8 @@ def purge_queues_messages(sites: Sequence[Site]) -> None:
             try:
                 logger.info("Purging RabbitMQ queue %s on %s", queue, site.id)
                 site.run(["rabbitmqctl", "purge_queue", queue])
-            except Exception as e:
-                logger.error("Failed to purge RabbitMQ queue %s on %s: %s", queue, site.id, e)
+            except Exception:
+                logger.exception("Failed to purge RabbitMQ queue %s on %s", queue, site.id)
                 raise
 
     for site in sites:

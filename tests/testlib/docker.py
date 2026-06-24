@@ -217,13 +217,15 @@ def build_checkmk(
             forcerm=True,
         )
     except docker.errors.BuildError as e:
-        logger.error("= Build log ==================")
+        # Log the failure with traceback once, then dump the build log without repeating it.
+        logger.exception("Failed to build the Checkmk Docker image")
+        logger.error("= Build log ==================")  # noqa: TRY400
         for entry in e.build_log:
             if "stream" in entry:
-                logger.error(entry["stream"].rstrip())
+                logger.error(entry["stream"].rstrip())  # noqa: TRY400
             elif "errorDetail" not in entry:
-                logger.error("UNEXPECTED FORMAT: %r", entry)
-        logger.error("= Build log ==================")
+                logger.error("UNEXPECTED FORMAT: %r", entry)  # noqa: TRY400
+        logger.error("= Build log ==================")  # noqa: TRY400
         raise
 
     logger.info("(Set pytest log level to DEBUG (--log-cli-level=DEBUG) to see the build log)")
@@ -434,7 +436,7 @@ class CheckmkApp:
 
                 assert "STARTING SITE" in output
             except TimeoutError:
-                logger.error(
+                logger.exception(
                     "TIMEOUT while starting Checkmk. Log output: %s", c.logs().decode("utf-8")
                 )
                 raise

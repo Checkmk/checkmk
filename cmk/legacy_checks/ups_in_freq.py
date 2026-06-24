@@ -3,51 +3,66 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-
-# mypy: disable-error-code="var-annotated"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    OIDEnd,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.ups.lib import DETECT_UPS_GENERIC
 
-check_info = {}
+Section = Mapping[str, float | None]
 
 
-def parse_ups_in_freq(string_table):
-    parsed = {}
+def parse_ups_in_freq(string_table: StringTable) -> Section:
+    parsed: dict[str, float | None] = {}
     for name, freq_str in string_table:
         try:
-            freq = int(freq_str) / 10.0
+            freq: float | None = int(freq_str) / 10.0
         except ValueError:
             freq = None
         parsed.setdefault(name, freq)
     return parsed
 
 
-def discover_ups_in_freq(parsed):
-    yield from ((item, {}) for item, freq in parsed.items() if freq is not None and freq > 0)
+def discover_ups_in_freq(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=item) for item, freq in section.items() if freq is not None and freq > 0
+    )
 
 
-def check_ups_in_freq(item, params, parsed):
-    freq = parsed.get(item)
+def check_ups_in_freq(
+    item: str, params: Mapping[str, tuple[float, float]], section: Section
+) -> CheckResult:
+    freq = section.get(item)
     if freq is None:
-        return None
+        return
+
+    warn, crit = params["levels_lower"]
+    state = State.OK
+    if freq < crit:
+        state = State.CRIT
+    elif freq < warn:
+        state = State.WARN
 
     infotext = "%.1f Hz" % freq
-    state = 0
-    warn, crit = params["levels_lower"]
-    if freq < crit:
-        state = 2
-    elif freq < warn:
-        state = 1
-    if state:
+    if state is not State.OK:
         infotext += f" (warn/crit below {warn} Hz/{crit} Hz)"
-    return state, infotext, [("in_freq", freq, warn, crit, 30, 70)]
+
+    yield Result(state=state, summary=infotext)
+    yield Metric("in_freq", freq, levels=(warn, crit), boundaries=(30, 70))
 
 
-check_info["ups_in_freq"] = LegacyCheckDefinition(
+snmp_section_ups_in_freq = SimpleSNMPSection(
     name="ups_in_freq",
     detect=DETECT_UPS_GENERIC,
     fetch=SNMPTree(
@@ -55,6 +70,11 @@ check_info["ups_in_freq"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "2"],
     ),
     parse_function=parse_ups_in_freq,
+)
+
+
+check_plugin_ups_in_freq = CheckPlugin(
+    name="ups_in_freq",
     service_name="IN frequency phase %s",
     discovery_function=discover_ups_in_freq,
     check_function=check_ups_in_freq,

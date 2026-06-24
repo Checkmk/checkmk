@@ -1087,6 +1087,7 @@ fastapi==0.129.0 \
     --hash=sha256:b4946880e48f462692b31c083be0432275cbfb6e2274566b1be91479cc1a84ec
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
 feedparser==6.0.12 \
     --hash=sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228 \
@@ -1598,6 +1599,7 @@ httpx==0.28.1 \
     --hash=sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
+    #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
 hypothesis==6.151.7 \
@@ -4068,6 +4070,7 @@ pytest==8.4.2 \
     #   -r non-free/packages/cmk-dcd/dev-requirements.in
     #   -r non-free/packages/cmk-licensing-nonfree/dev-requirements.in
     #   -r non-free/packages/cmk-liveproxyd/dev-requirements.in
+    #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-metric-backend/dev-requirements.in
     #   -r non-free/packages/cmk-mknotifyd/dev-requirements.in
     #   -r non-free/packages/cmk-multi-tenancy/dev-requirements.in
@@ -4195,6 +4198,7 @@ pytest-xdist==3.8.0 \
     --hash=sha256:202ca578cfeb7370784a8c33d6d05bc6e13b4f25b5053c30a152269fd10f0b88 \
     --hash=sha256:7e578125ec9bc6050861aa93f2d59f1d8d085595d6551c2c90b6f4fad8d3a9f1
     # via
+    #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
     #   -r tests/dev-requirements.in
@@ -5648,6 +5652,7 @@ uvicorn==0.48.0 \
     --hash=sha256:a5504207195d08c2511bf9125ede5ac4a4b71725d519e758d01dcf0bc2d31c37
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   uvicorn-worker
 uvicorn-worker==0.4.0 \

@@ -773,6 +773,7 @@ fastapi==0.129.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
 feedparser==6.0.12 \
     --hash=sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228 \
@@ -3759,6 +3760,7 @@ uvicorn==0.48.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   uvicorn-worker
 uvicorn-worker==0.4.0 \

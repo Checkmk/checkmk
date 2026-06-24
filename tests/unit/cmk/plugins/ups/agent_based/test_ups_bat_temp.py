@@ -6,8 +6,8 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks import ups_bat_temp
-from cmk.legacy_checks.ups_bat_temp import (
+from cmk.plugins.ups.agent_based import ups_bat_temp
+from cmk.plugins.ups.agent_based.ups_bat_temp import (
     check_ups_bat_temp,
     discover_ups_bat_temp,
     parse_ups_bat_temp,

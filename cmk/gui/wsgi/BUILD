@@ -53,6 +53,8 @@ py_library(
         "//cmk/gui/utils:timeout_manager",
         "//cmk/gui/utils:urls",
         "//cmk/gui/utils:user_errors",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:config_infra",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:site",

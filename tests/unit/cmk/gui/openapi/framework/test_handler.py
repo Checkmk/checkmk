@@ -11,6 +11,7 @@ import json
 from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Annotated, cast, override
+from unittest.mock import MagicMock
 
 import pytest
 from pydantic import PlainSerializer
@@ -246,6 +247,8 @@ def test_handle_endpoint_request_wato_disabled(permission_validator: PermissionV
             request_data,
             _api_context(),
             permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
             wato_enabled=False,
         )
 
@@ -259,6 +262,8 @@ def test_handle_endpoint_request_accept_required(permission_validator: Permissio
             request_data,
             _api_context(),
             permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
         )
 
     assert "Accept Header" in exc_info.value.detail
@@ -277,6 +282,8 @@ def test_handle_endpoint_request_empty_handler(permission_validator: PermissionV
         request_data,
         _api_context(),
         permission_validator,
+        update_config_generation=lambda: None,
+        do_git_commit=lambda: None,
         wato_enabled=True,
         wato_use_git=False,
         is_testing=False,
@@ -302,6 +309,8 @@ def test_handle_endpoint_request_missing_parameters_header(
             request_data,
             _api_context(),
             permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
             wato_enabled=True,
             wato_use_git=False,
             is_testing=False,
@@ -331,6 +340,8 @@ def test_handle_endpoint_request_missing_parameters_query(
             request_data,
             _api_context(),
             permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
             wato_enabled=True,
             wato_use_git=False,
             is_testing=False,
@@ -360,6 +371,8 @@ def test_handle_endpoint_request_missing_parameters_path(
             request_data,
             _api_context(),
             permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
             wato_enabled=True,
             wato_use_git=False,
             is_testing=False,
@@ -393,6 +406,8 @@ def test_handle_endpoint_request_missing_parameters_body(
             request_data,
             _api_context(),
             permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
             wato_enabled=True,
             wato_use_git=False,
             is_testing=False,
@@ -434,6 +449,8 @@ def test_handle_endpoint_request_complex_handler(
         request_data,
         _api_context(),
         permission_validator,
+        update_config_generation=lambda: None,
+        do_git_commit=lambda: None,
         wato_enabled=True,
         wato_use_git=False,
         is_testing=False,
@@ -445,6 +462,69 @@ def test_handle_endpoint_request_complex_handler(
         "Content-Type": "application/json",
         "Content-Length": "18",
     }
+
+
+@pytest.mark.parametrize(
+    ["wato_use_git", "expected_git_calls"],
+    [(False, 0), (True, 1)],
+)
+def test_handle_endpoint_request_runs_config_hooks_on_write(
+    permission_validator: PermissionValidator,
+    wato_use_git: bool,
+    expected_git_calls: int,
+) -> None:
+    request_endpoint = RequestEndpointFactory.build(
+        method="post",
+        update_config_generation=True,
+    )
+    request_data = RawRequestDataFactory.build(
+        headers=Headers({"Accept": request_endpoint.content_type}),
+    )
+    update_config_generation = MagicMock()
+    do_git_commit = MagicMock()
+
+    response = handle_endpoint_request(
+        request_endpoint,
+        request_data,
+        _api_context(),
+        permission_validator,
+        update_config_generation=update_config_generation,
+        do_git_commit=do_git_commit,
+        wato_enabled=True,
+        wato_use_git=wato_use_git,
+    )
+
+    assert response.status_code == 204, response.get_data(as_text=True)
+    update_config_generation.assert_called_once_with()
+    assert do_git_commit.call_count == expected_git_calls
+
+
+def test_handle_endpoint_request_skips_config_hooks_for_read(
+    permission_validator: PermissionValidator,
+) -> None:
+    request_endpoint = RequestEndpointFactory.build(
+        method="get",
+        update_config_generation=True,
+    )
+    request_data = RawRequestDataFactory.build(
+        headers=Headers({"Accept": request_endpoint.content_type}),
+    )
+    update_config_generation = MagicMock()
+    do_git_commit = MagicMock()
+
+    handle_endpoint_request(
+        request_endpoint,
+        request_data,
+        _api_context(),
+        permission_validator,
+        update_config_generation=update_config_generation,
+        do_git_commit=do_git_commit,
+        wato_enabled=True,
+        wato_use_git=True,
+    )
+
+    update_config_generation.assert_not_called()
+    do_git_commit.assert_not_called()
 
 
 def _handler_permission_check() -> None:
@@ -467,6 +547,8 @@ def test_handle_endpoint_request_permissions() -> None:
         request_data,
         _api_context(),
         permission_validator,
+        update_config_generation=lambda: None,
+        do_git_commit=lambda: None,
         wato_enabled=True,
         wato_use_git=False,
         is_testing=False,
@@ -493,6 +575,8 @@ def test_handle_endpoint_request_permissions_not_declared() -> None:
             request_data,
             _api_context(),
             permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
             wato_enabled=True,
             wato_use_git=False,
             is_testing=True,
@@ -517,6 +601,8 @@ def test_handle_endpoint_request_permissions_not_checked() -> None:
             request_data,
             _api_context(),
             permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
             wato_enabled=True,
             wato_use_git=False,
             is_testing=False,
@@ -541,6 +627,8 @@ def test_handle_endpoint_request_permission_denied_is_forbidden(
             request_data,
             _api_context(),
             permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
             wato_enabled=True,
             wato_use_git=False,
             is_testing=False,
@@ -569,6 +657,8 @@ def test_handle_endpoint_request_unauthenticated_stays_unauthorized(
             request_data,
             _api_context(),
             permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
             wato_enabled=True,
             wato_use_git=False,
             is_testing=False,
@@ -602,6 +692,8 @@ def test_handle_endpoint_with_fields_filter(permission_validator: PermissionVali
         request_data,
         _api_context(),
         permission_validator,
+        update_config_generation=lambda: None,
+        do_git_commit=lambda: None,
         wato_enabled=True,
         wato_use_git=False,
         is_testing=False,
@@ -620,6 +712,8 @@ def test_handle_endpoint_with_context(permission_validator: PermissionValidator)
         request_data,
         _api_context(),
         permission_validator,
+        update_config_generation=lambda: None,
+        do_git_commit=lambda: None,
         wato_enabled=True,
         wato_use_git=False,
         is_testing=False,
@@ -641,6 +735,8 @@ def test_handle_endpoint_output_etag(permission_validator: PermissionValidator) 
         request_data,
         _api_context(),
         permission_validator,
+        update_config_generation=lambda: None,
+        do_git_commit=lambda: None,
         wato_enabled=True,
         wato_use_git=False,
         is_testing=False,
@@ -662,6 +758,8 @@ def test_handle_endpoint_missing_etag(permission_validator: PermissionValidator)
             request_data,
             _api_context(),
             permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
             wato_enabled=True,
             wato_use_git=False,
             is_testing=False,
@@ -713,6 +811,8 @@ def test_handle_endpoint_request_union_body_dispatches(
             request_data,
             _api_context(),
             permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
             wato_enabled=True,
             wato_use_git=False,
             is_testing=False,
@@ -741,6 +841,8 @@ def test_handle_endpoint_request_type_alias_body(
         request_data,
         _api_context(),
         permission_validator,
+        update_config_generation=lambda: None,
+        do_git_commit=lambda: None,
         wato_enabled=True,
         wato_use_git=False,
         is_testing=False,

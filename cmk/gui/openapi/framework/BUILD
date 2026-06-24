@@ -115,7 +115,6 @@ py_library(
         "//cmk/gui/utils:roles",
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib",
-        "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:groups_io",
         "//cmk/gui/watolib:passwords",
         "//cmk/utils",

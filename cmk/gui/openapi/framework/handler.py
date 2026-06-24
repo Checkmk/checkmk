@@ -9,6 +9,7 @@ import contextlib
 import http.client
 import json
 import types
+from collections.abc import Callable
 from inspect import BoundArguments
 from typing import get_origin, TypeAliasType
 
@@ -34,8 +35,6 @@ from cmk.gui.openapi.utils import (
     RestAPIResponseException,
     RestAPIWatoDisabledException,
 )
-from cmk.gui.watolib.activate_changes import update_config_generation
-from cmk.gui.watolib.git import do_git_commit
 from cmk.utils.paths import configuration_lockfile
 
 from ._context import ApiContext
@@ -172,6 +171,8 @@ def handle_endpoint_request(
     api_context: ApiContext,
     permission_validator: PermissionValidator,
     *,
+    update_config_generation: Callable[[], None],
+    do_git_commit: Callable[[], None],
     wato_enabled: bool = True,
     wato_use_git: bool = False,
     is_testing: bool = False,

@@ -71,6 +71,8 @@ from cmk.gui.openapi.utils import (
 from cmk.gui.openapi.versioned_endpoint_map import discover_endpoints
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.token_auth import AuthToken, parse_token_and_validate
+from cmk.gui.watolib.activate_changes import update_config_generation
+from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
 from cmk.gui.wsgi.wrappers import ParameterDict
 from cmk.utils import paths
@@ -265,6 +267,8 @@ class VersionedEndpointAdapter(AbstractWSGIApp):
             request_data=request_data,
             api_context=api_context,
             permission_validator=permission_validator,
+            update_config_generation=update_config_generation,
+            do_git_commit=do_git_commit,
             wato_enabled=active_config.wato_enabled,
             wato_use_git=active_config.wato_use_git,
             is_testing=is_testing,

@@ -5,15 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
-import useClickOutside from '@/lib/useClickOutside'
 
 import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import type { QuerySuggestionsFn } from '@/components/CmkSuggestions/types'
 
+import useInlineEdit, { type InlineEditLeaveReason } from '../useInlineEdit'
 import { ATTRIBUTE_TYPE_LABELS, attributeTypePrefix, operatorPhrase, pillLabel } from './pill-label'
 import {
   EXISTENCE_OPERATORS,
@@ -25,8 +25,6 @@ import {
 import type { AttributeType, ConnectedCondition, Operator } from './types'
 
 const { _t } = usei18n()
-
-const vClickOutside = useClickOutside()
 
 const props = withDefaults(
   defineProps<{
@@ -89,39 +87,18 @@ const validationVisible = computed(() => showValidationErrors.value)
 const closedPillRef = useTemplateRef<HTMLElement>('closedPillRef')
 let returnFocusToClosedPill = false
 
-// The click that creates a pill in edit mode keeps bubbling after Vue mounts
-// the new edit branch. Defer arming the outside-click handler by one task so
-// that tail bubble does not turn into the pill's own first commit attempt.
-let outsideArmed = false
-let armTimer: ReturnType<typeof setTimeout> | null = null
-function armOutsideNextTask(): void {
-  if (armTimer !== null) {
-    clearTimeout(armTimer)
-  }
-  armTimer = setTimeout(() => {
-    outsideArmed = true
-    armTimer = null
-  }, 0)
-}
-
 // Guided edit chain: each watcher auto-opens the next dropdown that still
 // needs input, minimizing clicks on the common path.
 watch(
   () => props.editing,
   (now) => {
     if (now) {
-      armOutsideNextTask()
       if (!props.condition.key) {
         void nextTick(() => keyDropdownRef.value?.open())
       } else {
         void nextTick(() => attributeTypeDropdownRef.value?.focus())
       }
     } else {
-      outsideArmed = false
-      if (armTimer !== null) {
-        clearTimeout(armTimer)
-        armTimer = null
-      }
       showValidationErrors.value = false
       if (returnFocusToClosedPill) {
         returnFocusToClosedPill = false
@@ -249,55 +226,28 @@ const operatorOptions = computed(() => {
 
 const hasValidationErrors = computed(() => !isConditionValid(props.condition))
 
+// Clicking outside the edit pane, or pressing Escape, commits the pill — unless
+// a required field is still empty, in which case the errors are revealed and the
+// pill stays open. Escape additionally returns focus to the closed pill.
+function onLeave(reason: InlineEditLeaveReason): void {
+  if (hasValidationErrors.value) {
+    showValidationErrors.value = true
+    return
+  }
+  if (reason === 'escape') {
+    returnFocusToClosedPill = true
+  }
+  emit('done')
+}
+
 const editPaneRef = useTemplateRef<HTMLElement>('editPaneRef')
 
-// Prevent a click inside the edit pane from counting as outside and commiting the pill.
-let mousedownInside = false
-function onBodyMousedown(event: MouseEvent): void {
-  const target = event.target
-  mousedownInside =
-    editPaneRef.value !== null && target instanceof Node && editPaneRef.value.contains(target)
-}
-onMounted(() => {
-  document.addEventListener('mousedown', onBodyMousedown, true)
-})
-onBeforeUnmount(() => {
-  document.removeEventListener('mousedown', onBodyMousedown, true)
-})
-
-function onOutside(): void {
-  if (mousedownInside) {
-    mousedownInside = false
-    return
-  }
-  if (!outsideArmed) {
-    return
-  }
-  if (hasValidationErrors.value) {
-    showValidationErrors.value = true
-    return
-  }
-  emit('done')
-}
-
-// Escape should close open Dropdown without commiting the pill
-let escapeAteDropdown = false
-function onEditEscapeCapture(): void {
-  escapeAteDropdown =
-    editPaneRef.value !== null && editPaneRef.value.querySelector('[aria-expanded="true"]') !== null
-}
-function onEditEscape(): void {
-  if (escapeAteDropdown) {
-    escapeAteDropdown = false
-    return
-  }
-  if (hasValidationErrors.value) {
-    showValidationErrors.value = true
-    return
-  }
-  returnFocusToClosedPill = true
-  emit('done')
-}
+const {
+  vClickOutside,
+  onOutsideClick: onOutside,
+  onEscapeCapture: onEditEscapeCapture,
+  onEscape: onEditEscape
+} = useInlineEdit({ isOpen: () => props.editing, paneRef: editPaneRef, onLeave })
 
 defineExpose({
   revealValidationErrors: () => {

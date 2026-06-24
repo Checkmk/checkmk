@@ -436,6 +436,9 @@ fn test_migrate_reference_config_connection_and_auth() {
         "XE1 auth must inherit main username"
     );
 
+    // No MAX_TASKS in output-multiple.cfg → threads defaults to 1
+    assert_eq!(ora.options().threads(), 1, "threads must default to 1");
+
     // DBUSER_XE2: sid=XE2, no alias, connection=localhost1:1521, auth=xe2user, role=SYSDBA
     let xe2_inst = instances
         .iter()
@@ -583,5 +586,21 @@ fn test_migrate_no_tnsalias_falls_back_to_oracle_sid() {
     assert!(
         stdout.contains("        alias: $ORACLE_SID"),
         "alias must fall back to $ORACLE_SID"
+    );
+}
+
+#[test]
+fn test_migrate_optional_config_threads() {
+    let cfg = reference_path("output-optional");
+    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+    assert_eq!(
+        ora.options().threads(),
+        7,
+        "MAX_TASKS=7 must set threads to 7"
     );
 }

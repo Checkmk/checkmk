@@ -173,6 +173,8 @@ rust_test_suite(
     data = [
         "references/output-multiple.cfg",
         "references/output-multiple.ps1",
+        "references/output-optional.cfg",
+        "references/output-optional.ps1",
         "references/output-xe-no-tnsalias.cfg",
     ],
     env_inherit = [

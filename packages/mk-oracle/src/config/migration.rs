@@ -181,16 +181,35 @@ pub fn convert(
         .get("CACHE_MAXAGE")
         .and_then(|v| v.parse::<u32>().ok());
 
+    let max_tasks = variables
+        .get("MAX_TASKS")
+        .and_then(|v| v.parse::<u32>().ok());
+
     let only_sids = parse_sid_list(variables, "ONLY_SIDS");
     let mut skip_sids = parse_sid_list(variables, "SKIP_SIDS");
     skip_sids.extend(find_excluded_instances(variables));
 
+    out.extend(format_options(max_tasks));
     out.extend(format_instances(&dbuser, &dbuser_extras));
     out.extend(format_sections(&all, &asyncs, &normals, &asms));
     out.extend(format_cache_age(cache_maxage));
     out.extend(format_discovery(&only_sids, &skip_sids));
 
     Ok(out)
+}
+
+fn format_options(max_tasks: Option<u32>) -> Vec<String> {
+    let threads = max_tasks.and_then(|v| (v >= 2).then(|| v.min(8)));
+
+    if threads.is_none() {
+        return Vec::new();
+    }
+
+    let mut lines = vec!["    options:\n".to_string()];
+    if let Some(v) = threads {
+        lines.push(format!("      threads: {v}\n"));
+    }
+    lines
 }
 
 fn format_instances(dbuser: &LegacyDbUser, dbuser_extras: &[LegacyDbUser]) -> Vec<String> {
@@ -886,5 +905,39 @@ mod tests {
         assert!(out.contains("          port: 1522\n"));
         assert!(out.contains("          username: \"xe2user\"\n"));
         assert!(out.contains("          role: sysdba\n"));
+    }
+
+    #[test]
+    fn test_format_options_none() {
+        assert!(format_options(None).is_empty());
+    }
+
+    #[test]
+    fn test_format_options_zero() {
+        assert!(format_options(Some(0)).is_empty());
+    }
+
+    #[test]
+    fn test_format_options_one() {
+        assert!(format_options(Some(1)).is_empty());
+    }
+
+    #[test]
+    fn test_format_options_two() {
+        let out: String = format_options(Some(2)).join("");
+        assert!(out.contains("threads: 2"));
+    }
+
+    #[test]
+    fn test_format_options_eight() {
+        let out: String = format_options(Some(8)).join("");
+        assert!(out.contains("threads: 8"));
+    }
+
+    #[test]
+    fn test_format_options_nine_clamped() {
+        let out: String = format_options(Some(9)).join("");
+        assert!(out.contains("threads: 8"));
+        assert!(!out.contains("threads: 9"));
     }
 }

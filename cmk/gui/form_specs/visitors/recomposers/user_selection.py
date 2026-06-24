@@ -64,6 +64,7 @@ def _from_disk(value: object) -> object:
 def _to_disk(value: object) -> object:
     if value is None:
         return None
-    if not isinstance(value, UserId):
-        raise ValueError(f"UserSelection to disk transform expected UserId, got '{value}'")
+    # Accept string here as base visitor normalizes builtin subclasses.
+    if not isinstance(value, str):
+        raise ValueError(f"UserSelection to disk transform expected str, got '{value}'")
     return str(value)

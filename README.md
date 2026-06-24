@@ -42,7 +42,7 @@ Checkmk Pro, Ultimate and Ultimate with Multi-Tenancy are also available as virt
 
 ## Getting started
 
-Please have a look at the [beginners guide](https://docs.checkmk.com/master/en/intro.html) on how to get started with Checkmk.
+Please have a look at the [beginners guide](https://docs.checkmk.com/latest/en/intro_welcome.html) on how to get started with Checkmk.
 
 ## Want to contribute?
 

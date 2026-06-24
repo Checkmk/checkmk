@@ -153,10 +153,9 @@ def run_process(job_parameters: JobParameters) -> None:
         final_status_update = {"state": JobStatusStates.STOPPED}
     except Exception:
         crash = create_gui_crash_report()
-        logger.error(
+        logger.exception(
             "Exception while preparing background function environment (Crash ID: %s)",
             crash.ident_to_text(),
-            exc_info=True,
         )
         final_status_update = {"state": JobStatusStates.EXCEPTION}
     finally:

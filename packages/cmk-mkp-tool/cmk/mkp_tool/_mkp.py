@@ -116,7 +116,7 @@ def read_manifest_optionally(manifest_path: Path) -> Manifest | None:
     try:
         return Manifest.parse_python_string(manifest_path.read_text())
     except (OSError, SyntaxError, TypeError, ValueError, ValidationError):
-        _logger.error("[%s]: Failed to read package manifest", manifest_path, exc_info=True)
+        _logger.exception("[%s]: Failed to read package manifest", manifest_path)
     return None
 
 
@@ -144,7 +144,7 @@ def extract_manifest_optionally(pkg_path: Path) -> Manifest | None:
         return _extract_manifest_cached(pkg_path, pkg_path.stat().st_mtime)
     except Exception:
         # Do not make broken files / packages fail the whole mechanism
-        _logger.error("[%s]: Failed to read package manifest", pkg_path, exc_info=True)
+        _logger.exception("[%s]: Failed to read package manifest", pkg_path)
     return None
 
 

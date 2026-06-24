@@ -295,7 +295,7 @@ def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
                     raise
                 except Exception:
                     has_errors = True
-                    logger.error(f' + "{action.title}" failed', exc_info=True)
+                    logger.exception(f' + "{action.title}" failed')
                     if not action.continue_on_failure or debug.enabled():
                         raise
 

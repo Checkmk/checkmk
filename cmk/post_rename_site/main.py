@@ -133,7 +133,7 @@ def run(
                 rename_action.run(old_site_id, new_site_id, logger)
             except Exception:
                 has_errors = True
-                logger.error(' + "%s" failed', rename_action.title, exc_info=True)
+                logger.exception(' + "%s" failed', rename_action.title)
                 if debug:
                     raise
 

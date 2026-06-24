@@ -56,7 +56,7 @@ def _run_scheduler(
                 run_scheduled_jobs(list(cron_job_registry.values()), state, crash_report_callback)
             except Exception as exc:
                 crash_msg = crash_report_callback(exc)
-                logger.error("Exception in scheduler (Crash ID: %s)", crash_msg, exc_info=True)
+                logger.exception("Exception in scheduler (Crash ID: %s)", crash_msg)
 
             if (sleep_time := 5 - (time.time() - cycle_start)) > 0:
                 state.next_cycle_start = int(time.time() + sleep_time)
@@ -160,11 +160,10 @@ def _run_scheduled_jobs(
                     logger.debug("Finished [%s]", job.name)
         except Exception as exc:
             crash_msg = crash_report_callback(exc)
-            logger.error(
+            logger.exception(
                 "Exception in cron job (Job: %s Crash ID: %s)",
                 job.name,
                 crash_msg,
-                exc_info=True,
             )
         job_runs[job.name] = datetime.datetime.now()
 
@@ -201,11 +200,10 @@ def job_thread_main(
             job.callable(active_config)
     except Exception as exc:
         crash_msg = crash_report_callback(exc)
-        logger.error(
+        logger.exception(
             "Exception in cron job thread (Job: %s Crash ID: %s)",
             job.name,
             crash_msg,
-            exc_info=True,
         )
     finally:
         # The UI code does not clean up locks properly in all cases, so we need to do it here

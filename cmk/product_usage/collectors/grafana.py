@@ -35,7 +35,7 @@ def store_usage_data(headers: Headers, var_dir: Path, logger: Logger) -> None:
         grafana_file_path.parent.mkdir(parents=True, exist_ok=True)
         store.save_text_to_file(grafana_file_path, data.model_dump_json())
     except Exception:
-        logger.error("Store Grafana usage failed", exc_info=True)
+        logger.exception("Store Grafana usage failed")
 
 
 def _grafana_usage_file_path(var_dir: Path) -> Path:

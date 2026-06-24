@@ -109,7 +109,7 @@ def test_grafana_data_collector_unexpected_error() -> None:
 
     grafana_collector.store_usage_data(headers=headers_mock, var_dir=var_dir, logger=logger_mock)
 
-    logger_mock.error.assert_called_once_with("Store Grafana usage failed", exc_info=True)
+    logger_mock.exception.assert_called_once_with("Store Grafana usage failed")
 
 
 def test_grafana_data_collector_store_usage_data_twice() -> None:

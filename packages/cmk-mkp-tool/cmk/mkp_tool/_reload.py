@@ -27,4 +27,4 @@ def _omd_service(command: Literal["reload", "restart"], service_name: str) -> No
     try:
         subprocess.run(["omd", command, service_name], capture_output=True, check=True)
     except subprocess.CalledProcessError:
-        _LOGGER.error("Error %sing %s", command, service_name, exc_info=True)
+        _LOGGER.exception("Error %sing %s", command, service_name)

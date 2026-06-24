@@ -141,7 +141,7 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
         raise
     except Exception as exc:
         crash_msg = crash_report_callback(exc)
-        logger.error("Unhandled exception (Crash ID: %s)", crash_msg, exc_info=True)
+        logger.exception("Unhandled exception (Crash ID: %s)", crash_msg)
         return 1
     return 0
 

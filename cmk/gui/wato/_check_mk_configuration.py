@@ -6072,6 +6072,15 @@ def _valuespec_piggyback_translation() -> Dictionary:
             "If that is not the case, then with this rule you can define a host name translation. "
             'Note: This rule must be configured for the "pig" - i.e. the host that the '
             "agent is running on. It is not applied to the translated piggybacked hosts."
+            "<br><br>"
+            "The 'Multiple regular expressions' and 'Explicit name mapping' options match against "
+            "the raw host names as sent by the agent. Keep in mind that Checkmk only allows "
+            "letters, digits, dashes, underscores and dots in host names, so any other characters "
+            "are automatically converted to underscores when the piggybacked host is created in "
+            "monitoring. This means that if, for example, an agent sends the host name "
+            "'My Virtual Machine', Checkmk will store it as 'My_Virtual_Machine'. Your translation "
+            "rules should therefore be written to match the original name as sent by the agent, not"
+            " the converted underscore variant."
         ),
     )
 

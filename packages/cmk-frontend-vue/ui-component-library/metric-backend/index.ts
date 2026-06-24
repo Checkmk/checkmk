@@ -6,5 +6,9 @@
 import { Page } from '@ucl/_ucl/types/page'
 
 import UclFormAttributeFilter from './UclFormAttributeFilter.vue'
+import UclFormConsolidation from './UclFormConsolidation.vue'
 
-export const pages = [new Page('FormAttributeFilter', UclFormAttributeFilter)]
+export const pages = [
+  new Page('FormAttributeFilter', UclFormAttributeFilter),
+  new Page('FormConsolidation', UclFormConsolidation)
+]

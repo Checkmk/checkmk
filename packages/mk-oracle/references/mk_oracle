@@ -711,6 +711,7 @@ set_ora_version() {
 #TODO Create subsections in query and parse them in related check plugin.
 sql_iostats() {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+        echo 'PROMPT '
         echo 'PROMPT <<<oracle_performance:sep(124)>>>'
         echo "WITH iostat_file AS (
                 SELECT con_id,
@@ -760,12 +761,14 @@ sql_iostats() {
                 JOIN v\$database d ON 1 = 1
             ORDER BY vd.con_id,
                 io.filetype_name;"
+        echo 'PROMPT '
     fi
 }
 
 sql_performance() {
 
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+        echo 'PROMPT '
         echo 'PROMPT <<<oracle_performance:sep(124)>>>'
         echo "        select upper(DECODE(cdb,'NO',instance_name
                                              ,instance_name || '.' || con_name) )
@@ -900,8 +903,10 @@ EXCEPTION
 END;
 /
 "
+        echo 'PROMPT '
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 101 ]; then
+        echo 'PROMPT '
         echo "PROMPT <<<oracle_performance:sep(124)>>>"
         echo "select upper(i.INSTANCE_NAME)
                      ||'|'|| 'sys_time_model'
@@ -937,6 +942,7 @@ END;
                      ||'|'|| b.reloads
                      ||'|'|| b.invalidations
               from v\$instance i, V\$librarycache b;"
+        echo 'PROMPT '
     fi
 }
 
@@ -949,7 +955,10 @@ sql_tablespaces() {
               DECLARE
                   type x is table of varchar2(20000) index by pls_integer;
                   xx x;
+                  l_open varchar2(32);
               begin
+                  select open_mode into l_open from v\$database;
+                  if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                   begin
                       execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}
                                  , 0, decode(vp.con_id, null, d.NAME
@@ -998,6 +1007,7 @@ sql_tablespaces() {
                               dbms_output.put_line(cur1.name || '| Debug (121) 1: ' ||sqlerrm);
                           end loop;
                   end;
+                  end if;
               END;
               /
               set serverout off"
@@ -1006,7 +1016,10 @@ sql_tablespaces() {
               DECLARE
                   type x is table of varchar2(20000) index by pls_integer;
                   xx x;
+                  l_open varchar2(32);
               begin
+                  select open_mode into l_open from v\$database;
+                  if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                   begin
                       execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}
                                  , 0, decode(dbf.con_id, null, d.NAME
@@ -1090,16 +1103,21 @@ sql_tablespaces() {
                               dbms_output.put_line(cur1.name || '| Debug (121) 2: ' ||sqlerrm);
                           end loop;
                   end;
+                  end if;
               END;
               /
               set serverout off"
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo 'PROMPT '
         echo "SET SERVEROUTPUT ON feedback off
               DECLARE
                   type x is table of varchar2(20000) index by pls_integer;
                   xx x;
+                  l_open varchar2(32);
               begin
+                  select open_mode into l_open from v\$database;
+                  if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                   begin
                       execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                   || ''|'' || file_name ||''|''|| tablespace_name ||''|''|| fstatus ||''|''|| AUTOEXTENSIBLE
@@ -1132,6 +1150,7 @@ sql_tablespaces() {
                               dbms_output.put_line(cur1.name || '| Debug (102) 1: ' ||sqlerrm);
                           end loop;
                   end;
+                  end if;
               END;
               /
               set serverout off"
@@ -1140,7 +1159,10 @@ sql_tablespaces() {
               DECLARE
                   type x is table of varchar2(20000) index by pls_integer;
                   xx x;
+                  l_open varchar2(32);
               begin
+                  select open_mode into l_open from v\$database;
+                  if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                   begin
                       execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}
                                  , 0, dbf.name
@@ -1210,41 +1232,70 @@ sql_tablespaces() {
                               dbms_output.put_line(cur1.name || '| Debug (102) 2: ' ||sqlerrm);
                           end loop;
                   end;
+                  end if;
               END;
               /
               set serverout off"
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 92 ]; then
-        echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
-                  || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
-                  ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
-                  ||'|'|| ONLINE_STATUS ||'|'|| BLOCK_SIZE
-                  ||'|'|| decode(tstatus,'READ ONLY', 'READONLY', tstatus) || '|' || free_blocks
-                  ||'|'|| contents
+        echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+                  l_open varchar2(32);
+              begin
+                  select open_mode into l_open from v\$database;
+                  if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
+                  begin
+                      execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                  || ''|'' || file_name ||''|''|| tablespace_name ||''|''|| fstatus ||''|''|| AUTOEXTENSIBLE
+                  ||''|''|| blocks ||''|''|| maxblocks ||''|''|| USER_BLOCKS ||''|''|| INCREMENT_BY
+                  ||''|''|| ONLINE_STATUS ||''|''|| BLOCK_SIZE
+                  ||''|''|| decode(tstatus,''READ ONLY'', ''READONLY'', tstatus) || ''|'' || free_blocks
+                  ||''|''|| contents
            from v\$database d , v\$instance i, (
                     select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
                     f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
-                    'ONLINE' ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
+                    ''ONLINE'' ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
                     from dba_data_files f, dba_tablespaces t, dba_free_space fs
                     where f.tablespace_name = t.tablespace_name
                     and f.file_id = fs.file_id(+)
                     group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
-                    f.blocks, f.maxblocks, f.user_blocks, f.increment_by, 'ONLINE',
+                    f.blocks, f.maxblocks, f.user_blocks, f.increment_by, ''ONLINE'',
                     t.block_size, t.status, t.contents
                     UNION
-                    select f.file_name, f.tablespace_name, 'ONLINE' status, f.AUTOEXTENSIBLE,
-                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, 'TEMP',
-                    t.BLOCK_SIZE, 'TEMP' status, sum(sh.blocks_free) free_blocks, 'TEMPORARY'
+                    select f.file_name, f.tablespace_name, ''ONLINE'' status, f.AUTOEXTENSIBLE,
+                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, ''TEMP'',
+                    t.BLOCK_SIZE, ''TEMP'' status, sum(sh.blocks_free) free_blocks, ''TEMPORARY''
                     from v\$thread th, dba_temp_files f, dba_tablespaces t, v\$temp_space_header sh
                     WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
-                    GROUP BY th.instance, f.file_name, f.tablespace_name, 'ONLINE',
+                    GROUP BY th.instance, f.file_name, f.tablespace_name, ''ONLINE'',
                     f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
-                    'TEMP', t.block_size, t.status);"
+                    ''TEMP'', t.block_size, t.status)'
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug (92): ' || sqlerrm);
+                          end loop;
+                  end;
+                  end if;
+              END;
+              /
+              set serverout off"
     fi
+
+    echo 'PROMPT '
 }
 
 sql_dataguard_stats() {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo 'PROMPT '
         echo 'PROMPT <<<oracle_dataguard_stats:sep(124)>>>'
         echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||'|'|| upper(d.DB_UNIQUE_NAME)
@@ -1270,10 +1321,12 @@ sql_dataguard_stats() {
               WHERE vp.name = 'log_archive_config'
               AND   vp.value is not null
               ORDER BY 1;"
+        echo 'PROMPT '
     fi
 }
 
 sql_recovery_status() {
+    echo 'PROMPT '
     echo 'PROMPT <<<oracle_recovery_status:sep(124)>>>'
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
         echo "SELECT upper(decode(${IGNORE_DB_NAME:-0}
@@ -1329,6 +1382,7 @@ sql_recovery_status() {
               ORDER BY dh.file#;
              "
     fi
+    echo 'PROMPT '
 }
 
 sql_rman() {
@@ -1338,7 +1392,7 @@ sql_rman() {
         if [ "$NUMERIC_ORACLE_VERSION" -ge 122 ]; then
             archive_target="'PRIMARY', 'LOCAL'"
         fi
-
+        echo 'PROMPT '
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
         echo "select /*$HINT_RMAN check_mk rman1 */ upper(name)
                      || '|'|| 'COMPLETED'
@@ -1408,6 +1462,7 @@ sql_rman() {
                            , case when a.backup_count > 0 then 1 else 0 end);"
 
     elif [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo 'PROMPT '
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
         echo "select /*${HINT_RMAN} check_mk rman1 */ upper(name)
                      || '|'|| 'COMPLETED'
@@ -1475,10 +1530,12 @@ sql_rman() {
                     group by d.NAME, i.instance_name
                            , case when a.backup_count > 0 then 1 else 0 end);"
     fi
+    echo 'PROMPT '
 }
 
 sql_recovery_area() {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 102 ]; then
+        echo 'PROMPT '
         echo 'PROMPT <<<oracle_recovery_area:sep(124)>>>'
         echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
                      ||'|'|| round((SPACE_USED-SPACE_RECLAIMABLE)/
@@ -1488,10 +1545,12 @@ sql_recovery_area() {
                      ||'|'|| round(SPACE_RECLAIMABLE/1024/1024)
                      ||'|'|| d.FLASHBACK_ON
               from V\$RECOVERY_FILE_DEST, v\$database d, v\$instance i;"
+        echo 'PROMPT '
     fi
 }
 
 sql_undostat() {
+    echo 'PROMPT '
     echo 'PROMPT <<<oracle_undostat:sep(124)>>>'
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
         echo "select decode(vp.con_id, null, upper(i.INSTANCE_NAME)
@@ -1542,16 +1601,20 @@ sql_undostat() {
                             where rownum = 1
                   );"
     fi
+    echo 'PROMPT '
 }
 
 sql_resumable() {
-
+    echo 'PROMPT '
     echo 'PROMPT <<<oracle_resumable:sep(124)>>>'
     echo "SET SERVEROUTPUT ON feedback off
               DECLARE
                   type x is table of varchar2(20000) index by pls_integer;
                   xx x;
+                  l_open varchar2(32);
               begin
+                  select open_mode into l_open from v\$database;
+                  if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                   begin
                       execute immediate 'select upper(i.INSTANCE_NAME)
                          ||''|''|| u.username
@@ -1583,13 +1646,15 @@ sql_resumable() {
                               dbms_output.put_line(cur1.instance_name || '| Debug: '||sqlerrm);
                           end loop;
                   end;
+                  end if;
               END;
               /
               set serverout off"
+    echo 'PROMPT '
 }
 
 sql_jobs() {
-
+    echo 'PROMPT '
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
 
         echo 'PROMPT <<<oracle_jobs:sep(124)>>>'
@@ -1597,7 +1662,10 @@ sql_jobs() {
               DECLARE
                   type x is table of varchar2(20000) index by pls_integer;
                   xx x;
+                  l_open varchar2(32);
               begin
+                  select open_mode into l_open from v\$database;
+                  if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                   begin
                       execute immediate 'SELECT upper(vp.name)
                      ||''|''|| j.OWNER
@@ -1647,6 +1715,7 @@ sql_jobs() {
                               dbms_output.put_line(cur1.name || '| Debug (121): ' ||sqlerrm);
                           end loop;
                   end;
+                  end if;
               END;
               /
               set serverout off"
@@ -1658,7 +1727,10 @@ sql_jobs() {
               DECLARE
                   type x is table of varchar2(20000) index by pls_integer;
                   xx x;
+                  l_open varchar2(32);
               begin
+                  select open_mode into l_open from v\$database;
+                  if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                   begin
                       execute immediate 'SELECT upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name))
                      ||''|''|| j.OWNER
@@ -1697,40 +1769,72 @@ sql_jobs() {
                               dbms_output.put_line(cur1.name || '| Debug (102): ' ||sqlerrm);
                           end loop;
                   end;
+                  end if;
               END;
               /
               set serverout off"
 
     fi
+    echo 'PROMPT '
 }
 
 sql_ts_quotas() {
+    echo 'PROMPT '
     echo 'PROMPT <<<oracle_ts_quotas:sep(124)>>>'
-    echo "select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
-                 ||'|'|| Q.USERNAME
-                 ||'|'|| Q.TABLESPACE_NAME
-                 ||'|'|| Q.BYTES
-                 ||'|'|| Q.MAX_BYTES
+    echo "SET SERVEROUTPUT ON feedback off
+              DECLARE
+                  type x is table of varchar2(20000) index by pls_integer;
+                  xx x;
+                  l_open varchar2(32);
+              begin
+                  select open_mode into l_open from v\$database;
+                  if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
+                  begin
+                      execute immediate 'select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
+                 ||''|''|| Q.USERNAME
+                 ||''|''|| Q.TABLESPACE_NAME
+                 ||''|''|| Q.BYTES
+                 ||''|''|| Q.MAX_BYTES
           from dba_ts_quotas Q, v\$database d, v\$instance i
           where max_bytes > 0
           union all
           select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
-                 ||'|||'
+                 ||''|||''
           from v\$database d, v\$instance i
-          order by 1;"
+          order by 1'
+                      bulk collect into xx;
+                      if xx.count >= 1 then
+                          for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                          end loop;
+                      end if;
+                  exception
+                      when others then
+                          for cur1 in (select upper(name) name from v\$database) loop
+                              dbms_output.put_line(cur1.name || '| Debug ts_quotas: ' || sqlerrm);
+                          end loop;
+                  end;
+                  end if;
+              END;
+              /
+              set serverout off"
+    echo 'PROMPT '
 }
 
 sql_version() {
+    echo 'PROMPT '
     echo 'PROMPT <<<oracle_version>>>'
     echo "select upper(i.INSTANCE_NAME)
          || ' ' || banner
          from v\$version, v\$instance i
          where banner like 'Oracle%';"
+    echo 'PROMPT '
 }
 
 sql_systemparameter() {
     # TODO In the future, all data needed for HW/SW Inventory, should
     # implement a "persist:$UNTIL" to reduce amount of data transmission
+    echo 'PROMPT '
     echo "PROMPT <<<oracle_systemparameter:sep(124)>>>"
     echo "select upper(i.instance_name)
          || '|' || NAME
@@ -1738,9 +1842,11 @@ sql_systemparameter() {
          || '|' || ISDEFAULT
          from v\$system_parameter, v\$instance i
          where name not like '!_%' ESCAPE '!';"
+    echo 'PROMPT '
 }
 
 sql_instance() {
+    echo 'prompt '
     echo 'prompt <<<oracle_instance:sep(124)>>>'
 
     if [ "$NUMERIC_ORACLE_VERSION" -ge 180 ]; then
@@ -1756,8 +1862,7 @@ sql_instance() {
     if [ "${ORACLE_SID:0:1}" = '+' ]; then
         # ASM
         echo "select upper(i.instance_name)
-                     || '|' || i.version      -- older than 18
-                     || '|' || i.version_full -- 18+  we need if possible
+                     || '|' || i.${version_column}
                      || '|' || i.STATUS
                      || '|' || i.LOGINS
                      || '|' || i.ARCHIVER
@@ -1840,9 +1945,11 @@ sql_instance() {
                      || '|' || i.host_name
                 from v\$instance i, v\$database d;"
     fi
+    echo 'prompt '
 }
 
 sql_sessions() {
+    echo 'prompt '
     echo 'prompt <<<oracle_sessions:sep(124)>>>'
 
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
@@ -1873,18 +1980,22 @@ sql_sessions() {
               from v\$resource_limit, v\$instance i
               where RESOURCE_NAME = 'sessions';"
     fi
+    echo 'prompt '
 }
 
 sql_processes() {
+    echo 'prompt '
     echo 'prompt <<<oracle_processes:sep(124)>>>'
     echo "select upper(i.instance_name)
                   || '|' || CURRENT_UTILIZATION
                   || '|' || ltrim(rtrim(LIMIT_VALUE))
            from v\$resource_limit, v\$instance i
            where RESOURCE_NAME = 'processes';"
+    echo 'prompt '
 }
 
 sql_logswitches() {
+    echo 'prompt '
     echo 'prompt <<<oracle_logswitches:sep(124)>>>'
     echo "select upper(i.instance_name)
                   || '|' || logswitches
@@ -1894,9 +2005,11 @@ sql_logswitches() {
                  where h.first_time > sysdate - 1/24
                  and h.thread# = i.instance_number
                 );"
+    echo 'prompt '
 }
 
 sql_locks() {
+    echo 'prompt '
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
         echo 'prompt <<<oracle_locks:sep(124)>>>'
         echo "select upper(vp.name)
@@ -1974,16 +2087,21 @@ sql_locks() {
                      || '|||||||||||||||||'
               from v\$instance i;"
     fi
+    echo 'prompt '
 }
 
 sql_locks_old() {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 101 ]; then
+        echo 'prompt '
         echo 'prompt <<<oracle_locks:sep(124)>>>'
         echo "SET SERVEROUTPUT ON feedback off
               DECLARE
                   type x is table of varchar2(20000) index by pls_integer;
                   xx x;
+                  l_open varchar2(32);
               begin
+                  select open_mode into l_open from v\$database;
+                  if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                   begin
                       execute immediate 'select upper(i.instance_name)
                          || ''|'' || a.sid
@@ -2019,13 +2137,16 @@ sql_locks_old() {
                               dbms_output.put_line(cur1.instance_name || '| Debug (101): '||sqlerrm);
                           end loop;
                   end;
+                  end if;
               END;
               /
               set serverout off"
+        echo 'prompt '
     fi
 }
 
 sql_longactivesessions() {
+    echo 'prompt '
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
 
         echo 'prompt <<<oracle_longactivesessions:sep(124)>>>'
@@ -2089,9 +2210,11 @@ sql_longactivesessions() {
                      || '||||||||'
               from v\$instance i;"
     fi
+    echo 'prompt '
 }
 
 sql_asm_diskgroup() {
+    echo 'prompt '
     echo 'prompt <<<oracle_asm_diskgroup:sep(124)>>>'
     if [ "$NUMERIC_ORACLE_VERSION" -ge 112 ]; then
 
@@ -2142,6 +2265,7 @@ sql_asm_diskgroup() {
                      || '|' || name || '/'
                 from v\$asm_diskgroup;"
     fi
+    echo 'prompt '
 }
 
 # .
@@ -2772,7 +2896,8 @@ mk_ora_db_connect() {
             assysdbaconnect=" as "${DBSYSCONNECT}
         fi
 
-        TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(SID=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
+        ID=${ID_BY:-SID}
+        TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(${ID}=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
 
         # ORADBUSER = '/'? => ignore DBPASSWORD and use the wallet
         if [ "${ORADBUSER:0:1}" = '/' ]; then
@@ -3326,7 +3451,11 @@ main_queries() {
 
     wait
 
-    cat "${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}/SID"*
+    for file in "${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}/SID"*; do
+        # in case there are no SID files available (when connecting to a remote database),
+        # $file will hold '/some/path/SID*' and the cat will fail, so we test before.
+        [[ -f $file ]] && cat "$file"
+    done
 
     cleanup_queries() {
         logging "[local] cleaning up intermediate query result directory '${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}'"

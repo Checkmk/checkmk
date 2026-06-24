@@ -259,6 +259,9 @@ class ScalarOf:
     # LowerCriticalOf / MinimumOf / MaximumOf, which differed only in the data field they read.
     metric: RRDMetric
     kind: ScalarKind
+    # The author-chosen colour the cmk.graphing.v1 MinimumOf / MaximumOf carry (warn / crit references
+    # carry none — their colour comes from the kind). Read by concretize; None for the others.
+    color: str | None = None
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield self.metric

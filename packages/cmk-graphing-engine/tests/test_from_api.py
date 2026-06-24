@@ -182,7 +182,8 @@ def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
 
 
 def test_parse_graph_from_api_routes_scalars_to_rules_without_display() -> None:
-    # Plain metrics and scalars carry no display in the DiscoveredGraph; concretize resolves it.
+    # Warn / crit scalars carry no display in the DiscoveredGraph (concretize resolves it from the
+    # kind); MinimumOf / MaximumOf carry only their author-chosen colour, which is not kind-derivable.
     graph = graphs_v1.Graph(
         name="g",
         title=Title("t"),
@@ -198,8 +199,8 @@ def test_parse_graph_from_api_routes_scalars_to_rules_without_display() -> None:
     assert parsed.rules == [
         _drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING)),
         _drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.CRITICAL)),
-        _drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.MINIMUM)),
-        _drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.MAXIMUM)),
+        _drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.MINIMUM, color="#15d1a0")),
+        _drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.MAXIMUM, color="#ed3b3b")),
     ]
 
 
@@ -449,8 +450,8 @@ def test_concretize_resolves_threshold_rules_from_the_scalar_kind() -> None:
         _id,
     )
     concrete = concretize(discovered, _METRICS, _id)
-    # warn / crit get their semantic label and the WARN / CRIT colour; min / max fall back to the
-    # metric's own colour (their API colour is not carried through the structural DiscoveredGraph).
+    # warn / crit get their semantic label and the WARN / CRIT colour; min / max keep their
+    # author-chosen colour (GREEN / RED), carried on the ScalarOf through the DiscoveredGraph.
     assert concrete.rules == [
         _rule(
             ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING),
@@ -461,12 +462,12 @@ def test_concretize_resolves_threshold_rules_from_the_scalar_kind() -> None:
             CurveAttributes(title="Critical", unit=_DECIMAL, color=_CRIT_COLOR),
         ),
         _rule(
-            ScalarOf(metric=_rrd("a"), kind=ScalarKind.MINIMUM),
-            CurveAttributes(title="Minimum", unit=_DECIMAL, color="#28a2f3"),
+            ScalarOf(metric=_rrd("a"), kind=ScalarKind.MINIMUM, color="#15d1a0"),
+            CurveAttributes(title="Minimum", unit=_DECIMAL, color="#15d1a0"),
         ),
         _rule(
-            ScalarOf(metric=_rrd("a"), kind=ScalarKind.MAXIMUM),
-            CurveAttributes(title="Maximum", unit=_DECIMAL, color="#28a2f3"),
+            ScalarOf(metric=_rrd("a"), kind=ScalarKind.MAXIMUM, color="#ed3b3b"),
+            CurveAttributes(title="Maximum", unit=_DECIMAL, color="#ed3b3b"),
         ),
     ]
 

@@ -215,11 +215,15 @@ def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
             )
         case metrics_v1.MinimumOf():
             return ScalarOf(
-                metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.MINIMUM
+                metric=context.rrd_metric(quantity.metric_name),
+                kind=ScalarKind.MINIMUM,
+                color=_parse_color(quantity.color),
             )
         case metrics_v1.MaximumOf():
             return ScalarOf(
-                metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.MAXIMUM
+                metric=context.rrd_metric(quantity.metric_name),
+                kind=ScalarKind.MAXIMUM,
+                color=_parse_color(quantity.color),
             )
         case metrics_v1.Sum():
             return Sum(
@@ -513,11 +517,13 @@ def _attributes_for(
             return metric_display_attributes(quantity.metric_name, metrics, localizer)
         case ScalarOf():
             metric = metric_display_attributes(quantity.metric.metric_name, metrics, localizer)
-            label, color = _RULE_DISPLAY[quantity.kind]
+            label, kind_color = _RULE_DISPLAY[quantity.kind]
+            # The author colour (MinimumOf / MaximumOf) wins; otherwise the kind's warn / crit colour;
+            # otherwise the metric's own colour.
             return CurveAttributes(
                 title=localizer(label),
                 unit=metric.unit,
-                color=metric.color if color is None else color,
+                color=quantity.color or kind_color or metric.color,
             )
         case _:
             # Any other quantity carries its own intrinsic display: an engine operation / constant, or

@@ -175,7 +175,6 @@ json2python(
         "--custom-file-header-path=$(location :header_py.txt)",
         "--custom-formatters=utils.format",
         "--output-model-type=dataclasses.dataclass",
-        "--collapse-root-models",
         "--enum-field-as-literal=all",
         "--use-generic-container-types",
         "--frozen-dataclasses",

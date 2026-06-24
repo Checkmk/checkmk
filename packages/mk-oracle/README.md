@@ -399,10 +399,12 @@ options:
   max_queries: 16 # optional, reserved for future use
   use_host_client: never # optional, default: "auto"
   IGNORE_DB_NAME: 0 # optional, default: 0
+  threads: 1 # optional, default: 1, parallel worker threads (range 1–8)
 ```
 
 - `use_host_client` controls whether the plugin uses the OCI library installed on the host or the one bundled with the plugin. Values: `auto`, `never`, `always`, or a path to a specific OCI library.
 - `IGNORE_DB_NAME`: when set to `1`, the plugin will not verify that the database name matches the instance name.
+- `threads`: number of worker threads used to process instances in parallel. Default is `1`, meaning sequential execution. The supported range is `1` to `8`. Higher values are clamped down to `8`.
 
 ### Sections
 

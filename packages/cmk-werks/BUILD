@@ -88,8 +88,10 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
+        ":cmk-werk-ids-server",
         ":cmk-werks",
         requirement("pytest"),
+        requirement("flask"),
         requirement("gitpython"),
         requirement("requests"),
         requirement("vcrpy"),

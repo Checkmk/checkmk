@@ -56,8 +56,8 @@ def _collect_hosts() -> Sequence[str]:
                 ).splitlines()
             )
         )
-    except subprocess.CalledProcessError as e:
-        logger.error("Failed to collect all host names: %s", e)
+    except subprocess.CalledProcessError:
+        logger.exception("Failed to collect all host names")
         return []
 
 
@@ -72,8 +72,8 @@ def main() -> int:
             filter_host_names=args.host_name,
             all_host_names=_collect_hosts(),
         )
-    except Exception as e:
-        logger.error("Failed to transform inventory trees: %s", e)
+    except Exception:
+        logger.exception("Failed to transform inventory trees")
         return 1
 
 

@@ -235,8 +235,8 @@ class UserSyncBackgroundJob(BackgroundJob):
                     default_user_profile=default_user_profile,
                 )
                 logger.info(_("[%s] Finished sync for connection") % connection_id)
-            except Exception as e:
-                logger.error(_("[%s] Exception: %s") % (connection_id, e))
+            except Exception:
+                logger.exception(_("[%s] Exception") % connection_id)
                 gui_logger.error(
                     "Exception (%s, userdb_job): %s", connection_id, traceback.format_exc()
                 )

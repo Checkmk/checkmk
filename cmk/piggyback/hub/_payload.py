@@ -108,12 +108,13 @@ class SendingPayloadProcess(multiprocessing.Process):
                     except CMKConnectionError as exc:
                         failed_message = piggyback_message
                         self.logger.info("Reconnecting: %s: %s", self.task_name, exc)
-        except CMKConnectionError as exc:
-            self.logger.error("Connection error: %s: %s", self.task_name, exc)
+        except CMKConnectionError:
+            self.logger.exception("Connection error: %s", self.task_name)
         except Exception as exc:
             self.logger.exception("Exception: %s: %s", self.task_name, exc)
             crash_report_msg = self.crash_report_callback()
-            self.logger.error(crash_report_msg)
+            # The traceback was already logged above; this only adds the crash report reference.
+            self.logger.error(crash_report_msg)  # noqa: TRY400
             raise
 
     def _handle_message(
@@ -172,5 +173,5 @@ def send_messages_oneshot(
                 )
                 channel.publish_for_site(site, payload, routing=RoutingKey("payload"))
 
-    except CMKConnectionError as exc:
-        logger.error("Connection error: %s: %s", task_name, exc)
+    except CMKConnectionError:
+        logger.exception("Connection error: %s", task_name)

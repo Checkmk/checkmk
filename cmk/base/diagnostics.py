@@ -594,9 +594,12 @@ class DiagnosticsDump:
             except DiagnosticsElementWarning as e:
                 self._logger.warn(str(e))
             except DiagnosticsElementError as e:
-                self._logger.error(str(e))
+                # ConsoleLogger has no .exception(); keep .error() (mirrors the Info/Warning
+                # handlers above and logs the element message at its level).
+                self._logger.error(str(e))  # noqa: TRY400
             except Exception:
-                self._logger.error(traceback.format_exc())
+                # ConsoleLogger has no .exception(); format_exc() gives it the traceback.
+                self._logger.error(traceback.format_exc())  # noqa: TRY400
         return filepaths
 
     def _cleanup_dump_folder(self, omd_root: Path) -> None:

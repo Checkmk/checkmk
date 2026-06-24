@@ -183,7 +183,8 @@ class ParentScanBackgroundJob(BackgroundJob):
                 msg = _("ERROR %s: %s") % (task.host_name, e)
 
             if isinstance(e, MKUserError):
-                self._logger.error(msg)
+                # Expected user error, the traceback adds no value here.
+                self._logger.error(msg)  # noqa: TRY400
             else:
                 self._logger.exception(msg)
 

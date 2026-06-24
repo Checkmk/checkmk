@@ -44,7 +44,7 @@ def _check_http(site: Site) -> Iterator[tuple[str, dict[str, ServiceInfo]]]:
         site.activate_changes_and_wait_for_core_reload()
         yield rule_id, site.get_host_services(hostname)
     except UnexpectedResponse:
-        logger.error("Failed to create check_http rule.")
+        logger.exception("Failed to create check_http rule.")
         raise
     finally:
         if rule_id:
@@ -96,7 +96,7 @@ def _check_https(site: Site, tmp_path: Path) -> Iterator[tuple[str, dict[str, Se
         site.activate_changes_and_wait_for_core_reload()
         yield rule_id, site.get_host_services(hostname)
     except UnexpectedResponse:
-        logger.error("Failed to create check_https rule.")
+        logger.exception("Failed to create check_https rule.")
         raise
     finally:
         if rule_id:

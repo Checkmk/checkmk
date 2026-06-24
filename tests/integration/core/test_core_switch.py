@@ -51,8 +51,8 @@ def test_core_switch(site: Site, switch_core: Iterator[None]) -> None:
             "test_host_core_switch", attributes={"ipaddress": site.http_address, "site": site.id}
         )
         site.openapi.changes.activate_and_wait_for_completion()
-    except Exception as e:
-        logger.error(e)
+    except Exception:
+        logger.exception("Failed to create host and activate changes")
         raise
 
     finally:

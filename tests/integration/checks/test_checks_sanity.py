@@ -96,7 +96,7 @@ def _host_services(
 
         yield host_services
     except Exception as e:
-        logger.error("Failed to retrieve services from the host. Reason: %s", str(e))
+        logger.exception("Failed to retrieve services from the host.")
         raise e
     finally:
         if rule_id:

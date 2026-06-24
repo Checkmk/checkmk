@@ -176,8 +176,8 @@ class GitChanges:
                 logger.info(
                     "%d files have been simulated as being added from git ls-files", len(all_files)
                 )
-            except subprocess.CalledProcessError as e:
-                logger.error("Failed to get files from git ls-files: %s", e)
+            except subprocess.CalledProcessError:
+                logger.exception("Failed to get files from git ls-files")
 
         return cls(added=added, modified=modified, removed=removed)
 

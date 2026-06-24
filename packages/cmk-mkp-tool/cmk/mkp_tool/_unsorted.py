@@ -68,8 +68,8 @@ def format_file_name(package_id: PackageID) -> str:
 def _log_exception(m: Manifest, name: str) -> Iterator[None]:
     try:
         yield
-    except Exception as e:
-        _logger.error("[%s %s]: Error in post %s hook: %s", m.name, m.version, name, e)
+    except Exception:
+        _logger.exception("[%s %s]: Error in post %s hook", m.name, m.version, name)
 
 
 def release(

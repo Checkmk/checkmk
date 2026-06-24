@@ -41,8 +41,8 @@ def all_python_files() -> Sequence[str]:
         )
         files = result.stdout.strip().split("\n")
         return [f for f in files if f]  # Filter out empty strings
-    except subprocess.CalledProcessError as e:
-        logger.error("Failed to run find-python-files script: %s", e)
+    except subprocess.CalledProcessError:
+        logger.exception("Failed to run find-python-files script")
         pytest.skip("Could not retrieve Python files from find-python-files script")
 
 
@@ -73,8 +73,8 @@ def python_files(request: pytest.FixtureRequest) -> Sequence[str]:
             )
             files = result.stdout.strip().split("\n")
             return [f for f in files if f]  # Filter out empty strings
-        except subprocess.CalledProcessError as e:
-            logger.error("Failed to run find-python-files script: %s", e)
+        except subprocess.CalledProcessError:
+            logger.exception("Failed to run find-python-files script")
             pytest.skip("Could not retrieve Python files from find-python-files script")
 
     if not python_files_option:

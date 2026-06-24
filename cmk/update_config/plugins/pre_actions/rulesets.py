@@ -51,7 +51,7 @@ class PreUpdateRulesets(PreUpdateAction):
                 set_global_vars()
                 rulesets = AllRulesets.load_all_rulesets()
         except Exception as exc:
-            logger.error(f"Exception while trying to load rulesets: {exc}\n\n")
+            logger.exception("Exception while trying to load rulesets")
             if _continue_on_ruleset_exception(conflict_mode).is_abort():
                 raise MKUserError(None, "an incompatible ruleset") from exc
 
@@ -68,7 +68,7 @@ class PreUpdateRulesets(PreUpdateAction):
                     # Returns and instance of valuespec or form spec
                     ruleset.rulespec.value_model
                 except Exception:
-                    logger.error(
+                    logger.exception(
                         "ERROR: Failed to load Ruleset: %s. "
                         "There is likely an error in the implementation.",
                         ruleset.name,
@@ -213,17 +213,16 @@ def _validate_rule_values(
                     add_info = _additional_info(ruleset, rule.value, contact_groups)
                     logger.warning("\n".join(error_messages + add_info.messages))
 
-                except (MKUserError, AssertionError, ValueError, TypeError) as e:
+                except (MKUserError, AssertionError, ValueError, TypeError):
                     error_messages = [
                         "WARNING: Invalid rule configuration detected",
                         f"Ruleset: {ruleset.name}",
                         f"Title: {ruleset.title()}",
                         f"Folder: {folder.path() or 'main'}",
                         f"Rule nr: {index + 1}",
-                        f"Exception: {e}\n",
                     ]
                     add_info = _additional_info(ruleset, rule.value, contact_groups)
-                    logger.error("\n".join(error_messages + add_info.messages))
+                    logger.exception("\n".join(error_messages + add_info.messages))
                     if add_info.skip_user_input:
                         continue
                     if _continue_on_invalid_rule(conflict_mode).is_abort():

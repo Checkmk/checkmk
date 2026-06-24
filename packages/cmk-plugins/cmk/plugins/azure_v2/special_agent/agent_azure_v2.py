@@ -1552,16 +1552,16 @@ class AzureAsyncCache(DataCache):
                     # if not empty
                     return cached_data
                 LOGGER.debug("Cache file is empty, getting live data from cache: %s", self._key)
-            except (OSError, ValueError) as exc:
-                LOGGER.error("Getting live data (failed to read from cache: %s).", exc)
+            except (OSError, ValueError):
+                LOGGER.exception("Getting live data (failed to read from cache).")
                 if self.debug:
                     raise
 
         live_data = await self.get_live_data(*args)
         try:
             await self._write_to_cache(live_data)
-        except (OSError, TypeError) as exc:
-            LOGGER.error("Failed to write data to cache file: %s", exc)
+        except (OSError, TypeError):
+            LOGGER.exception("Failed to write data to cache file")
             if self.debug:
                 raise
         return live_data

@@ -298,7 +298,7 @@ def version_from_json(
     try:
         version_json = json.loads(raw_version)
     except Exception as e:
-        LOGGER.error("Failed to parse /version endpoint response as JSON: %s", raw_version)
+        LOGGER.exception("Failed to parse /version endpoint response as JSON: %s", raw_version)
         raise UnsupportedEndpointData(
             "Unknown endpoint information at endpoint /version, HTTP(S) response was "
             f"'{raw_version.replace('\n', '')}'."

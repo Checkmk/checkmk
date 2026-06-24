@@ -39,10 +39,13 @@ function createFilterNode(raw: string | undefined): void {
 </script>
 
 <template>
-  <CmkInput
-    v-model="value"
-    class="monitoring-filter-string-input"
-    field-size="medium"
-    @update:model-value="createFilterNode($event)"
-  />
+  <div class="monitoring-filter-string-input__container">
+    <CmkInput v-model="value" field-size="medium" @update:model-value="createFilterNode($event)" />
+  </div>
 </template>
+
+<style scoped>
+.monitoring-filter-string-input__container {
+  margin: 4px 2px;
+}
+</style>

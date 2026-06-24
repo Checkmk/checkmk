@@ -86,14 +86,6 @@ void build(Map args) {
                 "pwsh -File build-msi.ps1 -ProductVersion ${args.VERSION} -OutputDir ..\\..\\..\\..\\${artifacts_dir} -Sign",
                 "CheckmkRelayInstaller.msi"] :
 
-            (args.TARGET == "relay_msi_test") ? [
-                "non-free/packages/cmk-relay-engine/windows-installer",
-                "pwsh -File test-msi.ps1" +
-                    " -MsiPath ..\\..\\..\\..\\${artifacts_dir}\\CheckmkRelayInstaller.msi" +
-                    " -ResultsDir ..\\..\\..\\..\\${artifacts_dir}" +
-                    ((args.REQUIRE_SIGNATURE == true) ? " -RequireSignature" : ""),
-                ""] :
-
             (args.TARGET == "test_integration") ? [
                 "agents/wnx",
                 "call run_tests.cmd --component --integration",

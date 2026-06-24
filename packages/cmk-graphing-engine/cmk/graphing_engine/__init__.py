@@ -8,12 +8,11 @@
 # with its display resolved (ConcreteGraph, plus Stack / Line / Rule / Curve / CurveAttributes, the
 # quantities, the ranges, Unit / notations); the data objects fed into evaluation (RRDMetricData,
 # TimeSeries, PerformanceData, the EvaluationContext, ConsolidationFunction, TimeRange); the
-# evaluation result objects (Evaluated*, DiscoveredGraphs); and the entry points the graph types build
+# evaluation result objects (Evaluated*); and the entry points the graph types build
 # from them (build_service_graphs, match_graph_for_services, concretize, fetch_performance_data,
 # update_graph_data, metric_display_attributes). Everything else is an implementation detail and must
 # not be imported from outside the package.
 from ._evaluate import (
-    DiscoveredGraphs,
     EvaluatedCurve,
     EvaluatedGraph,
     EvaluatedLine,
@@ -87,7 +86,6 @@ __all__ = [
     "DecimalNotation",
     "Difference",
     "DiscoveredGraph",
-    "DiscoveredGraphs",
     "DiscoveredLine",
     "DiscoveredRule",
     "DiscoveredStack",

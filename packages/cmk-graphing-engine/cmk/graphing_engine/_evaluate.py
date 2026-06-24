@@ -13,7 +13,6 @@ from ._objects import (
     ConcreteGraph,
     Curve,
     CurveAttributes,
-    DiscoveredGraph,
     EvaluationContext,
     FixedRange,
     MetricName,
@@ -79,12 +78,6 @@ class EvaluatedGraph:
     stacks: Sequence[EvaluatedStack]
     lines: Sequence[EvaluatedLine]
     rules: Sequence[EvaluatedRule] = ()
-
-
-@dataclass(frozen=True, kw_only=True)
-class DiscoveredGraphs[Options]:
-    options: Options
-    graphs: Sequence[DiscoveredGraph]
 
 
 def _evaluate_bound(bound: Bound, context: EvaluationContext) -> float | None:

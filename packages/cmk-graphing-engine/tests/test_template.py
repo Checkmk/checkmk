@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
@@ -16,7 +15,6 @@ from cmk.graphing_engine import (
     concretize,
     ConsolidationFunction,
     DiscoveredGraph,
-    DiscoveredGraphs,
     DiscoveredLine,
     DiscoveredRule,
     DiscoveredStack,
@@ -215,33 +213,6 @@ def test_discover_template_graphs_falls_back_to_single_metric_graph_for_unclaime
         curve.value for stack in _evaluate(discovered, rrd).stacks for curve in stack.members
     ] == [1.0]
     assert _evaluate(discovered, rrd).lines == []
-
-
-@dataclass(frozen=True, kw_only=True)
-class _Options:
-    # A stand-in for a consumer's options object: DiscoveredGraphs is generic over it, so the engine
-    # holds no concrete options type of its own.
-    time_range: TimeRange
-    consolidation_function: ConsolidationFunction
-
-
-def test_discovered_graphs_groups_options_with_graphs() -> None:
-    service = _service()
-    cpu_user = MetricName("cpu_user")
-    registered_graphs: list[graphs_v1.Graph] = []
-    rrd = _FakeFetchRRD(performance_response={service: _perf_data(_perf(cpu_user))})
-
-    discovered = DiscoveredGraphs(
-        options=_Options(
-            time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
-        ),
-        graphs=_discover(service, registered_graphs, rrd=rrd),
-    )
-
-    assert discovered.options == _Options(
-        time_range=_time_range(), consolidation_function=ConsolidationFunction.AVERAGE
-    )
-    assert [graph.name for graph in discovered.graphs] == [cpu_user]
 
 
 def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:

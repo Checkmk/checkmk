@@ -6,7 +6,7 @@
 import type { ColumnDef, ColumnFiltersState } from '@tanstack/vue-table'
 import { describe, expect, it } from 'vitest'
 
-import type { ConditionNode, FilterField } from '@/monitoring/shared/api/types'
+import type { ConditionNode, FilterField, FilterNode } from '@/monitoring/shared/api/types'
 import '@/monitoring/shared/components/MonitoringTableContext'
 import { FilterStore } from '@/monitoring/shared/services/FilterStore'
 import { useColumnFilterBridge } from '@/monitoring/shared/services/useColumnFilterBridge'
@@ -43,6 +43,10 @@ const columns: ColumnDef<Host>[] = [
       }
     }
   },
+  {
+    accessorKey: 'services_col',
+    meta: { filter: { type: 'numeric', field: 'num_services' } }
+  },
   // No filter meta -> the bridge must ignore this column in both directions.
   { accessorKey: 'unfilterable' }
 ]
@@ -50,6 +54,13 @@ const columns: ColumnDef<Host>[] = [
 const name: ConditionNode = { type: 'condition', field: 'name', op: 'contains', value: 'heute' }
 const alias: ConditionNode = { type: 'condition', field: 'alias', op: 'contains', value: 'db' }
 const state: ConditionNode = { type: 'condition', field: 'state', op: 'one_of', value: ['DOWN'] }
+const servicesRange: FilterNode = {
+  type: 'and',
+  children: [
+    { type: 'condition', field: 'num_services', op: 'gte', value: 3 },
+    { type: 'condition', field: 'num_services', op: 'lte', value: 10 }
+  ]
+}
 
 function makeBridge(): {
   store: FilterStore
@@ -70,8 +81,8 @@ describe('useColumnFilterBridge round trip', () => {
   it('derives table column filters from the store, keyed by accessorKey', () => {
     const { store, bridge } = makeBridge()
 
-    store.setColumnConditions(
-      new Map<FilterField, ConditionNode | undefined>([
+    store.setColumnFilters(
+      new Map<FilterField, FilterNode | undefined>([
         ['name', name],
         ['state', state]
       ])
@@ -91,9 +102,9 @@ describe('useColumnFilterBridge round trip', () => {
       { id: 'alias_col', value: alias }
     ])
 
-    expect(store.getColumnCondition('name')).toStrictEqual(name)
-    expect(store.getColumnCondition('alias')).toStrictEqual(alias)
-    expect(store.getColumnCondition('state')).toBeUndefined()
+    expect(store.getColumnFilter('name')).toStrictEqual(name)
+    expect(store.getColumnFilter('alias')).toStrictEqual(alias)
+    expect(store.getColumnFilter('state')).toBeUndefined()
   })
 
   it('preserves the column filter state across a table -> store -> table round trip', () => {
@@ -113,8 +124,8 @@ describe('useColumnFilterBridge round trip', () => {
   it('preserves the store conditions across a store -> table -> store round trip', () => {
     const { store, bridge } = makeBridge()
 
-    store.setColumnConditions(
-      new Map<FilterField, ConditionNode | undefined>([
+    store.setColumnFilters(
+      new Map<FilterField, FilterNode | undefined>([
         ['name', name],
         ['alias', alias],
         ['state', state]
@@ -125,18 +136,45 @@ describe('useColumnFilterBridge round trip', () => {
     // Feed the derived table state straight back through the update handler.
     bridge.onColumnFiltersUpdate(bridge.tableColumnFilters.value)
 
-    expect(store.getColumnCondition('name')).toStrictEqual(name)
-    expect(store.getColumnCondition('alias')).toStrictEqual(alias)
-    expect(store.getColumnCondition('state')).toStrictEqual(state)
+    expect(store.getColumnFilter('name')).toStrictEqual(name)
+    expect(store.getColumnFilter('alias')).toStrictEqual(alias)
+    expect(store.getColumnFilter('state')).toStrictEqual(state)
     expect(store.activeFilterCount).toBe(3)
     // The set of top-level conditions is unchanged by the round trip.
     expect(store.filterNode.value).toStrictEqual(before)
   })
 
+  it('round trips a numeric range (two conditions on one field) without dropping a bound', () => {
+    const { store, bridge } = makeBridge()
+
+    bridge.onColumnFiltersUpdate([{ id: 'services_col', value: servicesRange }])
+
+    // Both bounds survive: the column value is recovered as the full and node.
+    expect(store.getColumnFilter('num_services')).toStrictEqual(servicesRange)
+    expect(bridge.tableColumnFilters.value).toStrictEqual([
+      { id: 'services_col', value: servicesRange }
+    ])
+    // A range counts as a single active column filter, not two.
+    expect(store.activeFilterCount).toBe(1)
+  })
+
+  it('keeps a numeric range intact alongside other column filters', () => {
+    const { store, bridge } = makeBridge()
+
+    bridge.onColumnFiltersUpdate([
+      { id: 'name_col', value: name },
+      { id: 'services_col', value: servicesRange }
+    ])
+
+    expect(store.getColumnFilter('name')).toStrictEqual(name)
+    expect(store.getColumnFilter('num_services')).toStrictEqual(servicesRange)
+    expect(store.activeFilterCount).toBe(2)
+  })
+
   it('clears a condition when the column is dropped from the table state', () => {
     const { store, bridge } = makeBridge()
 
-    store.setColumnConditions(
+    store.setColumnFilters(
       new Map([
         ['name', name],
         ['alias', alias]
@@ -146,8 +184,8 @@ describe('useColumnFilterBridge round trip', () => {
     // Drop the alias filter: the next table state only carries name.
     bridge.onColumnFiltersUpdate([{ id: 'name_col', value: name }])
 
-    expect(store.getColumnCondition('name')).toStrictEqual(name)
-    expect(store.getColumnCondition('alias')).toBeUndefined()
+    expect(store.getColumnFilter('name')).toStrictEqual(name)
+    expect(store.getColumnFilter('alias')).toBeUndefined()
     expect(bridge.tableColumnFilters.value).toStrictEqual([{ id: 'name_col', value: name }])
   })
 
@@ -163,14 +201,14 @@ describe('useColumnFilterBridge round trip', () => {
     ])
 
     expect(store.activeFilterCount).toBe(1)
-    expect(store.getColumnCondition('name')).toStrictEqual(name)
+    expect(store.getColumnFilter('name')).toStrictEqual(name)
     expect(bridge.tableColumnFilters.value).toStrictEqual([{ id: 'name_col', value: name }])
   })
 
   it('clears every condition when the table state goes empty', () => {
     const { store, bridge } = makeBridge()
 
-    store.setColumnConditions(new Map([['name', name]]))
+    store.setColumnFilters(new Map([['name', name]]))
 
     bridge.onColumnFiltersUpdate([])
 

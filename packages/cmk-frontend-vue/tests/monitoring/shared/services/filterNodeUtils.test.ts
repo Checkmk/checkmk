@@ -84,6 +84,29 @@ describe('setCondition', () => {
     expect(setCondition(node, 'state', undefined)).toStrictEqual(node)
   })
 
+  it('flattens an and-of-conditions value for the same field into the top level', () => {
+    const gte: ConditionNode = { type: 'condition', field: 'num_services', op: 'gte', value: 3 }
+    const lte: ConditionNode = { type: 'condition', field: 'num_services', op: 'lte', value: 10 }
+    const range: FilterNode = { type: 'and', children: [gte, lte] }
+
+    expect(setCondition(name, 'num_services', range)).toStrictEqual({
+      type: 'and',
+      children: [name, gte, lte]
+    })
+  })
+
+  it('replaces both bounds of a range when re-setting the same field', () => {
+    const gte: ConditionNode = { type: 'condition', field: 'num_services', op: 'gte', value: 3 }
+    const lte: ConditionNode = { type: 'condition', field: 'num_services', op: 'lte', value: 10 }
+    const node: FilterNode = { type: 'and', children: [name, gte, lte] }
+    const single: ConditionNode = { type: 'condition', field: 'num_services', op: 'gte', value: 5 }
+
+    expect(setCondition(node, 'num_services', single)).toStrictEqual({
+      type: 'and',
+      children: [name, single]
+    })
+  })
+
   it('does not mutate the input node', () => {
     const node: FilterNode = { type: 'and', children: [name, acknowledged] }
     const snapshot = structuredClone(node)

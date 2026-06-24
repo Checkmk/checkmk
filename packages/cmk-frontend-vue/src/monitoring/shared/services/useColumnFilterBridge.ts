@@ -6,7 +6,7 @@
 import { type ColumnDef, type ColumnFiltersState } from '@tanstack/vue-table'
 import { type ComputedRef, computed } from 'vue'
 
-import type { ConditionNode, FilterField } from '@/monitoring/shared/api/types'
+import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 
 import type { FilterStore } from './FilterStore'
 
@@ -31,13 +31,13 @@ export function useColumnFilterBridge<TData>(
       if (field === undefined || !('accessorKey' in col)) {
         return []
       }
-      const condition = filterStore.getColumnCondition(field)
+      const condition = filterStore.getColumnFilter(field)
       return condition !== undefined ? [{ id: col.accessorKey as string, value: condition }] : []
     })
   )
 
   function onColumnFiltersUpdate(next: ColumnFiltersState): void {
-    const map = new Map<FilterField, ConditionNode | undefined>()
+    const map = new Map<FilterField, ColumnFilterNode<FilterField> | undefined>()
     for (const col of columns) {
       const field = col.meta?.filter?.field
       if (field === undefined || !('accessorKey' in col)) {
@@ -45,9 +45,9 @@ export function useColumnFilterBridge<TData>(
       }
       const id = col.accessorKey as string
       const entry = next.find((f) => f.id === id)
-      map.set(field, entry?.value as ConditionNode | undefined)
+      map.set(field, entry?.value as ColumnFilterNode<FilterField> | undefined)
     }
-    filterStore.setColumnConditions(map)
+    filterStore.setColumnFilters(map)
   }
 
   return { tableColumnFilters, onColumnFiltersUpdate }

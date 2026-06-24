@@ -17,18 +17,21 @@ function getTopChildren(node: FilterNode): FilterNode[] {
 }
 
 /**
- * Immutably replace, add, or remove the top-level condition for a field in a flat AND node.
- * Passing `undefined` for condition removes it.
+ * Immutably replace, add, or remove the top-level condition(s) for a field in a flat
+ * AND node. `value` may itself be an AND of conditions on the same field (e.g. a numeric
+ * range's lower and upper bound); its conditions are flattened into the top level so the
+ * store keeps a single flat AND. Passing `undefined` removes all conditions for the field.
  */
 export function setCondition(
   node: FilterNode | undefined,
   field: FilterField,
-  condition: ConditionNode | undefined
+  value: FilterNode | undefined
 ): FilterNode | undefined {
-  const children = (node !== undefined ? getTopChildren(node) : []).filter(
+  const others = (node !== undefined ? getTopChildren(node) : []).filter(
     (c) => !(isCondition(c) && c.field === field)
   )
-  const next = condition !== undefined ? [...children, condition] : children
+  const additions = value !== undefined ? getTopChildren(value) : []
+  const next = [...others, ...additions]
   if (next.length === 0) {
     return undefined
   }

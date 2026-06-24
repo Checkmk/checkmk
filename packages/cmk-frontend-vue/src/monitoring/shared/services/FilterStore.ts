@@ -5,7 +5,7 @@
  */
 import { type ComputedRef, type Ref, computed, ref, shallowRef } from 'vue'
 
-import type { ConditionNode, FilterField, FilterNode } from '@/monitoring/shared/api/types'
+import type { ColumnFilterNode, FilterField, FilterNode } from '@/monitoring/shared/api/types'
 
 import { filterNodesEqual, getTopLevelConditions, setCondition } from './filterNodeUtils'
 
@@ -48,14 +48,22 @@ export class FilterStore {
     }))
   }
 
-  getColumnCondition(field: FilterField): ConditionNode | undefined {
-    return this.filterNode.value !== undefined
-      ? getTopLevelConditions(this.filterNode.value).find((c) => c.field === field)
-      : undefined
+  getColumnFilter(field: FilterField): ColumnFilterNode<FilterField> | undefined {
+    if (this.filterNode.value === undefined) {
+      return undefined
+    }
+    const matching = getTopLevelConditions(this.filterNode.value).filter((c) => c.field === field)
+    if (matching.length === 0) {
+      return undefined
+    }
+    if (matching.length === 1) {
+      return matching[0]!
+    }
+    return { type: 'and', children: matching }
   }
 
   /** Batch-update column conditions. Fields mapped to `undefined` are cleared. */
-  setColumnConditions(map: Map<FilterField, ConditionNode | undefined>): void {
+  setColumnFilters(map: Map<FilterField, ColumnFilterNode<FilterField> | undefined>): void {
     let node = this.filterNode.value
     for (const [field, condition] of map) {
       node = setCondition(node, field, condition)
@@ -79,8 +87,9 @@ export class FilterStore {
   }
 
   get activeFilterCount(): number {
-    return this.filterNode.value !== undefined
-      ? getTopLevelConditions(this.filterNode.value).length
-      : 0
+    if (this.filterNode.value === undefined) {
+      return 0
+    }
+    return new Set(getTopLevelConditions(this.filterNode.value).map((c) => c.field)).size
   }
 }

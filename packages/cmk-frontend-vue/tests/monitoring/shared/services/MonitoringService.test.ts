@@ -403,7 +403,7 @@ describe('MonitoringService', () => {
     expect(chip.isActive.value).toBe(true)
 
     // Edit away from the preset via the column-filter path: a fresh node object.
-    service.filters.setColumnConditions(
+    service.filters.setColumnFilters(
       new Map([
         ['acknowledged', { type: 'condition', field: 'acknowledged', op: 'eq', value: true }]
       ])
@@ -411,7 +411,7 @@ describe('MonitoringService', () => {
     expect(chip.isActive.value).toBe(false)
 
     // Rebuild the same filter as the preset: a different object, but equal value.
-    service.filters.setColumnConditions(
+    service.filters.setColumnFilters(
       new Map([
         ['acknowledged', { type: 'condition', field: 'acknowledged', op: 'eq', value: false }]
       ])

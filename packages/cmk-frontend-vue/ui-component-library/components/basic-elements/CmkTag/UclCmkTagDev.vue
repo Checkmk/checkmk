@@ -29,6 +29,7 @@ defineProps<{ screenshotMode: boolean }>()
           <th>Color / Variant</th>
           <th>Fill</th>
           <th>Outline</th>
+          <th>Weighted</th>
         </tr>
       </thead>
       <tbody>
@@ -36,21 +37,25 @@ defineProps<{ screenshotMode: boolean }>()
           <td class="ucl-cmk-tag-dev__color-label">Default</td>
           <td><CmkTag color="default" variant="fill" content="Default Fill"></CmkTag></td>
           <td><CmkTag color="default" variant="outline" content="Default Outline"></CmkTag></td>
+          <td><CmkTag color="default" variant="weighted" content="Default Weighted"></CmkTag></td>
         </tr>
         <tr>
           <td class="ucl-cmk-tag-dev__color-label">Success</td>
           <td><CmkTag color="success" variant="fill" content="Success Fill"></CmkTag></td>
           <td><CmkTag color="success" variant="outline" content="Success Outline"></CmkTag></td>
+          <td><CmkTag color="success" variant="weighted" content="Success Weighted"></CmkTag></td>
         </tr>
         <tr>
           <td class="ucl-cmk-tag-dev__color-label">Warning</td>
           <td><CmkTag color="warning" variant="fill" content="Warning Fill"></CmkTag></td>
           <td><CmkTag color="warning" variant="outline" content="Warning Outline"></CmkTag></td>
+          <td><CmkTag color="warning" variant="weighted" content="Warning Weighted"></CmkTag></td>
         </tr>
         <tr>
           <td class="ucl-cmk-tag-dev__color-label">Danger</td>
           <td><CmkTag color="danger" variant="fill" content="Danger Fill"></CmkTag></td>
           <td><CmkTag color="danger" variant="outline" content="Danger Outline"></CmkTag></td>
+          <td><CmkTag color="danger" variant="weighted" content="Danger Weighted"></CmkTag></td>
         </tr>
       </tbody>
     </table>
@@ -66,6 +71,7 @@ defineProps<{ screenshotMode: boolean }>()
   <h2>Variants (default color)</h2>
   <CmkTag variant="fill" content="Fill"></CmkTag>
   <CmkTag variant="outline" content="Outline"></CmkTag>
+  <CmkTag variant="weighted" content="Weighted"></CmkTag>
 </template>
 
 <style scoped>

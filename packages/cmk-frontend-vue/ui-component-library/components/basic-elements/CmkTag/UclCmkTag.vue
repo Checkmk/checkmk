@@ -42,7 +42,8 @@ export const panelConfig = {
     title: 'Variant',
     options: [
       { title: 'Outline', name: 'outline' },
-      { title: 'Fill', name: 'fill' }
+      { title: 'Fill', name: 'fill' },
+      { title: 'Weighted', name: 'weighted' }
     ] satisfies Options<Variants>[],
     initialState: 'outline' as const
   }

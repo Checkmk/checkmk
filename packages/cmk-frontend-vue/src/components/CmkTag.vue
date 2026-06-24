@@ -23,7 +23,8 @@ const propsCva = cva('', {
     },
     variant: {
       fill: 'cmk-tag--variant-fill',
-      outline: 'cmk-tag--variant-outline'
+      outline: 'cmk-tag--variant-outline',
+      weighted: 'cmk-tag--variant-weighted'
     }
   },
   defaultVariants: {
@@ -92,10 +93,41 @@ defineProps<CmkTagProps>()
   --tag-fill-color: var(--color-midnight-grey-50);
 }
 
+/* weighted variant: success -> danger gets more recognizable in color and contrast */
+.cmk-tag--variant-weighted.cmk-tag--color-default {
+  --tag-color: var(--font-color);
+  --tag-border-color: var(--color-midnight-grey-0);
+  --tag-fill-color: var(--color-midnight-grey-100);
+}
+
+.cmk-tag--variant-weighted.cmk-tag--color-success {
+  --tag-color: var(--color-corporate-green-40);
+  --tag-border-color: var(--color-corporate-green-60);
+  --tag-fill-color: var(--color-corporate-green-100);
+}
+
+.cmk-tag--variant-weighted.cmk-tag--color-warning {
+  --tag-color: var(--color-orange-0);
+  --tag-border-color: var(--color-orange-40);
+  --tag-fill-color: var(--color-orange-90);
+}
+
+.cmk-tag--variant-weighted.cmk-tag--color-danger {
+  --tag-color: var(--color-dark-red-0);
+  --tag-border-color: var(--color-dark-red-40);
+  --tag-fill-color: var(--color-dark-red-70);
+}
+
 .cmk-tag--variant-fill {
   background: var(--tag-fill-color, var(--tag-color));
   border: 1px solid var(--tag-fill-color, var(--tag-color));
   color: var(--white);
+}
+
+.cmk-tag--variant-weighted {
+  background: var(--tag-fill-color, var(--tag-color));
+  border: 1px solid var(--tag-border-color, var(--tag-color));
+  color: var(--tag-color, var(--white));
 }
 
 .cmk-tag--variant-outline {
@@ -121,6 +153,12 @@ body[data-theme='facelift'] {
     &.cmk-tag--variant-fill {
       color: var(--font-color);
     }
+  }
+
+  .cmk-tag--variant-weighted.cmk-tag--color-default {
+    --tag-color: var(--font-color);
+    --tag-border-color: var(--color-daylight-grey-100);
+    --tag-fill-color: var(--color-daylight-grey-20);
   }
 }
 </style>

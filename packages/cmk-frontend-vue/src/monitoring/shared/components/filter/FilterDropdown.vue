@@ -281,8 +281,6 @@ onBeforeUnmount(() => {
   width: max-content;
   min-width: 180px;
   max-width: min(90vw, 32rem);
-  margin-top: var(--dimension-2);
-  padding: var(--dimension-2);
   background: var(--ux-theme-1);
   border: 1px solid var(--ux-theme-4);
   border-radius: 4px;
@@ -290,7 +288,8 @@ onBeforeUnmount(() => {
 }
 
 .monitoring-filter-dropdown__content {
-  width: 100%;
+  width: calc(100% - 2 * var(--dimension-2));
+  margin: var(--dimension-2);
 }
 
 .monitoring-filter-dropdown__panel--up {
@@ -308,9 +307,9 @@ onBeforeUnmount(() => {
 .monitoring-filter-dropdown__footer {
   display: flex;
   gap: var(--dimension-4);
-  justify-content: space-around;
-  margin-top: var(--dimension-4);
-  padding: var(--dimension-3) 0 var(--dimension-2);
+  justify-content: flex-end;
+  margin-top: var(--dimension-2);
+  padding: var(--dimension-4) var(--dimension-3);
   border-top: 1px solid var(--ux-theme-4);
   align-items: center;
 }

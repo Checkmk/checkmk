@@ -259,7 +259,7 @@ onBeforeUnmount(() => {
         <CmkInlineButton icon="checkmark" :disabled="!isValid" @click="apply">{{
           _t('Apply')
         }}</CmkInlineButton>
-        <CmkInlineButton icon="cancel" @click="cancel">{{ _t('Close') }}</CmkInlineButton>
+        <CmkInlineButton icon="cancel" @click="cancel">{{ _t('Cancel') }}</CmkInlineButton>
       </div>
     </div>
   </span>

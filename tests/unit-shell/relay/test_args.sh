@@ -341,5 +341,47 @@ test_parse_args_empty_token_value_fails() {
     assertEquals 1 $?
 }
 
+# Test: --update-systemd selects the update-systemd mode
+test_parse_args_update_systemd_mode() {
+    parse_args --update-systemd
+    assertEquals "update-systemd" "$MODE"
+}
+
+# Test: --update-systemd and --uninstall are mutually exclusive modes
+test_parse_args_update_systemd_and_uninstall_fails() {
+    (parse_args --update-systemd --uninstall 2>/dev/null)
+    assertEquals 1 $?
+}
+
+# Test: mode exclusivity is order-independent
+test_parse_args_uninstall_and_update_systemd_fails() {
+    (parse_args --uninstall --update-systemd 2>/dev/null)
+    assertEquals 1 $?
+}
+
+# Test: repeating the same mode flag is harmless
+test_parse_args_repeated_update_systemd_ok() {
+    parse_args --update-systemd --update-systemd
+    assertEquals "update-systemd" "$MODE"
+}
+
+# Test: registration arguments cannot be combined with --uninstall
+test_parse_args_install_arg_and_uninstall_fails() {
+    (parse_args --relay-name "test-relay" --uninstall 2>/dev/null)
+    assertEquals 1 $?
+}
+
+# Test: registration arguments cannot be combined with --update-systemd
+test_parse_args_install_arg_and_update_systemd_fails() {
+    (parse_args --token-stdin --update-systemd 2>/dev/null)
+    assertEquals 1 $?
+}
+
+# Test: registration-vs-mode exclusivity is order-independent
+test_parse_args_uninstall_and_install_arg_fails() {
+    (parse_args --uninstall --relay-name "test-relay" 2>/dev/null)
+    assertEquals 1 $?
+}
+
 # shellcheck disable=SC1090
 source "$UNIT_SH_SHUNIT2"

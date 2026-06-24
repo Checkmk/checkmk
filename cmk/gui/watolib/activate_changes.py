@@ -41,7 +41,7 @@ from urllib.parse import urlparse
 from pydantic import BaseModel
 from setproctitle import setthreadtitle
 
-from livestatus import BrokerConnections, SiteConfiguration, SiteId
+from livestatus import BrokerConnections, SiteConfiguration, SiteConfigurations, SiteId
 
 from cmk.ccc import store, version
 from cmk.ccc.exceptions import MKGeneralException
@@ -130,6 +130,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
     folder_preserving_link,
     folder_tree,
+    FolderTree,
     validate_all_hosts,
 )
 from cmk.gui.watolib.paths import wato_var_dir
@@ -1332,6 +1333,76 @@ def _debug_log_message(msg: str) -> Iterator[None]:
     logger.debug(f"{msg} ... done (%ss)", round(time.time() - start, 2))
 
 
+def _activate_central_steps(
+    activation_features: ActivationFeatures,
+    all_site_configs: SiteConfigurations,
+    rabbitmq_definitions: Mapping[str, rabbitmq.Definitions],
+    sites: Collection[SiteId],
+    pending_changes: Sequence[tuple[str, ChangeSpec]],
+    tree: FolderTree,
+) -> None:
+    """Run the activation steps that must only happen on the central site.
+
+    This is not only run on the central site: cron-driven local activations (e.g.
+    agent auto-registration, automatic host removal) call it on remote sites too.
+    Remote sites receive and apply their broker definitions via config sync (see
+    `execute_activate_changes`, which calls `_activate_local_rabbitmq_changes` when
+    `is_wato_slave_site`), so they must not run these steps during a local activation.
+    """
+    if is_wato_slave_site():
+        return
+
+    _activate_central_rabbitmq_definitions(rabbitmq_definitions)
+    _distribute_central_piggyback_configs(
+        activation_features,
+        all_site_configs,
+        sites,
+        pending_changes,
+        tree,
+    )
+
+
+def _activate_central_rabbitmq_definitions(
+    rabbitmq_definitions: Mapping[str, rabbitmq.Definitions],
+) -> None:
+    """Compute and apply the broker definitions for the local site."""
+    with _debug_log_message("Update and activate central rabbitmq changes"):
+        create_rabbitmq_new_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
+        rabbitmq.update_and_activate_rabbitmq_definitions(paths.omd_root, logger)
+
+
+def _distribute_central_piggyback_configs(
+    activation_features: ActivationFeatures,
+    all_site_configs: SiteConfigurations,
+    sites: Collection[SiteId],
+    pending_changes: Sequence[tuple[str, ChangeSpec]],
+    tree: FolderTree,
+) -> None:
+    # rabbitmq must be running on the central site if one of the remote sites
+    # has piggyback-hub running
+    if not (
+        _piggyback_hub_enabled_in_omd_config()
+        and rabbitmq.rabbitmqctl_running()
+        and has_piggyback_hub_relevant_changes([change for _, change in pending_changes])
+    ):
+        return
+
+    with (
+        tracer.start_as_current_span("distribute_piggyback_hub_configs"),
+        _debug_log_message("Starting piggyback hub config distribution"),
+    ):
+        activation_features.distribute_piggyback_hub_configs(
+            logger,
+            load_configuration_settings(),
+            all_site_configs,
+            sites,
+            {
+                host_name: host.site_id()
+                for host_name, host in tree.root_folder().all_hosts_recursively().items()
+            },
+        )
+
+
 class ActivateChangesManager(ActivateChanges):
     """Manages the activation of pending configuration changes
 
@@ -1495,34 +1566,14 @@ class ActivateChangesManager(ActivateChanges):
         with _debug_log_message("Starting activation"):
             self._start_activation()
 
-        with _debug_log_message("Update and activate central rabbitmq changes"):
-            create_rabbitmq_new_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
-            rabbitmq.update_and_activate_rabbitmq_definitions(paths.omd_root, logger)
-
-        # rabbitmq must be running on the central site if one of the remote sites
-        # has piggyback-hub running
-        if (
-            _piggyback_hub_enabled_in_omd_config()
-            and rabbitmq.rabbitmqctl_running()
-            and has_piggyback_hub_relevant_changes([change for _, change in self._pending_changes])
-        ):
-            with (
-                tracer.start_as_current_span("distribute_piggyback_hub_configs"),
-                _debug_log_message("Starting piggyback hub config distribution"),
-            ):
-                activation_features.distribute_piggyback_hub_configs(
-                    logger,
-                    load_configuration_settings(),
-                    configured_sites(),
-                    {site_id for site_id, _site_config in self.dirty_sites()},
-                    {
-                        host_name: host.site_id()
-                        for host_name, host in folder_tree()
-                        .root_folder()
-                        .all_hosts_recursively()
-                        .items()
-                    },
-                )
+        _activate_central_steps(
+            activation_features,
+            configured_sites(),
+            rabbitmq_definitions,
+            {site_id for site_id, _site_config in self.dirty_sites()},
+            self._pending_changes,
+            folder_tree(),
+        )
 
         return self._activation_id
 

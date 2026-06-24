@@ -302,7 +302,7 @@ rulespec_registry.register(
         check_group_name="cpu_utilization",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_cpu_utilization,
-        title=lambda: _("CPU utilization for appliances"),
+        title=lambda: _("CPU utilization (single value)"),
     )
 )
 

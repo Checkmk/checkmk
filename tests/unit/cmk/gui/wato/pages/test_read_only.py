@@ -7,9 +7,14 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.type_defs import ReadOnlySpec
-from cmk.gui.wato.pages.read_only import _ReadOnlyFormSpecAdapter
+from cmk.gui.wato.pages.read_only import _ReadOnlyFormSpecAdapter, _TOPIC
 
 ADAPTER = _ReadOnlyFormSpecAdapter()
+
+
+def _form_data(**elements: object) -> dict[str, dict[str, object]]:
+    """Wrap flat element values into the catalog's single-topic shape."""
+    return {_TOPIC: elements}
 
 
 @pytest.mark.parametrize(
@@ -33,15 +38,16 @@ def test_to_form_spec_uses_plain_strings_for_users() -> None:
         ReadOnlySpec(enabled=False, message="", rw_users=[UserId("cmkadmin")])
     ).value
     assert isinstance(form_data, dict)
-    assert form_data["rw_users"] == ["cmkadmin"]
-    assert all(type(name) is str for name in form_data["rw_users"])
+    rw_users = form_data[_TOPIC]["rw_users"]
+    assert rw_users == ["cmkadmin"]
+    assert all(type(name) is str for name in rw_users)
 
 
 def test_from_form_spec_wraps_users_into_user_id() -> None:
     # Regression for crash SUP-29570: a plain user name string from the form
     # must be turned back into a UserId for the on-disk model.
     settings = ADAPTER.from_form_spec(
-        {"enabled": ("disabled", None), "rw_users": ["cmkadmin"], "message": ""}
+        _form_data(enabled=("disabled", None), rw_users=["cmkadmin"], message="")
     )
     assert settings["rw_users"] == [UserId("cmkadmin")]
     assert all(isinstance(name, UserId) for name in settings["rw_users"])
@@ -51,7 +57,7 @@ def test_to_form_spec_maps_enabled_states() -> None:
     def _enabled(model: ReadOnlySpec) -> object:
         value = ADAPTER.to_form_spec(model).value
         assert isinstance(value, dict)
-        return value["enabled"]
+        return value[_TOPIC]["enabled"]
 
     assert _enabled(ReadOnlySpec(enabled=False, message="", rw_users=[])) == ("disabled", None)
     assert _enabled(ReadOnlySpec(enabled=True, message="", rw_users=[])) == ("permanent", None)
@@ -62,12 +68,13 @@ def test_to_form_spec_maps_enabled_states() -> None:
 
 
 def test_from_form_spec_accepts_list_timerange_payload() -> None:
+    # Parsed frontend data may carry the inner pair as a list.
     settings = ADAPTER.from_form_spec(
-        {"enabled": ("timerange", [1.0, 2.0]), "rw_users": [], "message": ""}
+        _form_data(enabled=("timerange", [1.0, 2.0]), rw_users=[], message="")
     )
     assert settings["enabled"] == (1.0, 2.0)
 
 
 def test_from_form_spec_rejects_unknown_enabled_shape() -> None:
     with pytest.raises(ValueError):
-        ADAPTER.from_form_spec({"enabled": ("bogus", None), "rw_users": [], "message": ""})
+        ADAPTER.from_form_spec(_form_data(enabled=("bogus", None), rw_users=[], message=""))

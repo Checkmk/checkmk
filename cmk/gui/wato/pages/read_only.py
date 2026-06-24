@@ -21,12 +21,8 @@ from cmk.gui.form_specs import (
     read_data_from_frontend,
     render_form_spec,
 )
-from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
-from cmk.gui.form_specs.unstable import LegacyValueSpec
-from cmk.gui.form_specs.unstable.legacy_converter import (
-    TransformDataForLegacyFormatOrRecomposeFunction,
-    Tuple,
-)
+from cmk.gui.form_specs.unstable import Catalog, LegacyValueSpec, Topic, TopicElement
+from cmk.gui.form_specs.unstable.legacy_converter import Tuple
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -49,106 +45,113 @@ from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DefaultValue,
-    DictElement,
-    Dictionary,
     FixedValue,
     MultilineText,
 )
+
+# The catalog groups all elements under a single topic. Its name is internal to the
+# form representation and never reaches the flat ``ReadOnlySpec`` stored on disk.
+_TOPIC = "properties"
 
 
 def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeManageReadOnly)
 
 
-class _ReadOnlyFormSpecAdapter(
-    FormSpecAdapter[ReadOnlySpec, TransformDataForLegacyFormatOrRecomposeFunction]
-):
-    def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
-        return create_flat_catalog_from_dictionary(
-            Dictionary(
-                title=Title("Read-only mode"),
-                elements={
-                    "enabled": DictElement(
-                        required=True,
-                        parameter_form=CascadingSingleChoice(
-                            title=Title("Read-only mode"),
-                            prefill=DefaultValue("disabled"),
-                            elements=[
-                                CascadingSingleChoiceElement(
-                                    name="disabled",
-                                    title=Title("Disabled"),
-                                    parameter_form=FixedValue(
-                                        value=None,
+class _ReadOnlyFormSpecAdapter(FormSpecAdapter[ReadOnlySpec, Catalog]):
+    def form_spec(self) -> Catalog:
+        return Catalog(
+            elements={
+                _TOPIC: Topic(
+                    title=Title("Read-only mode"),
+                    elements={
+                        "enabled": TopicElement(
+                            required=True,
+                            parameter_form=CascadingSingleChoice(
+                                title=Title("Read-only mode"),
+                                prefill=DefaultValue("disabled"),
+                                elements=[
+                                    CascadingSingleChoiceElement(
+                                        name="disabled",
                                         title=Title("Disabled"),
-                                        label=Label("Not enabled"),
+                                        parameter_form=FixedValue(
+                                            value=None,
+                                            title=Title("Disabled"),
+                                            label=Label("Not enabled"),
+                                        ),
                                     ),
-                                ),
-                                CascadingSingleChoiceElement(
-                                    name="permanent",
-                                    title=Title("Enabled permanently"),
-                                    parameter_form=FixedValue(
-                                        value=None,
+                                    CascadingSingleChoiceElement(
+                                        name="permanent",
                                         title=Title("Enabled permanently"),
-                                        label=Label("Enabled until disabling"),
+                                        parameter_form=FixedValue(
+                                            value=None,
+                                            title=Title("Enabled permanently"),
+                                            label=Label("Enabled until disabling"),
+                                        ),
                                     ),
-                                ),
-                                CascadingSingleChoiceElement(
-                                    name="timerange",
-                                    title=Title("Enabled in time range"),
-                                    parameter_form=Tuple(
+                                    CascadingSingleChoiceElement(
+                                        name="timerange",
                                         title=Title("Enabled in time range"),
-                                        elements=[
-                                            LegacyValueSpec.wrap(
-                                                AbsoluteDate(
-                                                    title=_("Start"),
-                                                    include_time=True,
-                                                )
-                                            ),
-                                            LegacyValueSpec.wrap(
-                                                AbsoluteDate(
-                                                    title=_("Until"),
-                                                    include_time=True,
-                                                    default_value=time.time() + 3600,
-                                                )
-                                            ),
-                                        ],
+                                        parameter_form=Tuple(
+                                            title=Title("Enabled in time range"),
+                                            elements=[
+                                                LegacyValueSpec.wrap(
+                                                    AbsoluteDate(
+                                                        title=_("Start"),
+                                                        include_time=True,
+                                                    )
+                                                ),
+                                                LegacyValueSpec.wrap(
+                                                    AbsoluteDate(
+                                                        title=_("Until"),
+                                                        include_time=True,
+                                                        default_value=time.time() + 3600,
+                                                    )
+                                                ),
+                                            ],
+                                        ),
                                     ),
+                                ],
+                            ),
+                        ),
+                        "rw_users": TopicElement(
+                            required=True,
+                            parameter_form=ListExtended(
+                                element_template=_rw_users_choice(),
+                                title=Title("Can still edit"),
+                                help_text=Help(
+                                    "Users listed here are still allowed to modify things."
                                 ),
-                            ],
+                                editable_order=False,
+                                add_element_label=Label("Add user"),
+                                prefill=DefaultValue([str(user.id)]),
+                            ),
                         ),
-                    ),
-                    "rw_users": DictElement(
-                        required=True,
-                        parameter_form=ListExtended(
-                            element_template=_rw_users_choice(),
-                            title=Title("Can still edit"),
-                            help_text=Help("Users listed here are still allowed to modify things."),
-                            editable_order=False,
-                            add_element_label=Label("Add user"),
-                            prefill=DefaultValue([str(user.id)]),
+                        "message": TopicElement(
+                            required=True, parameter_form=MultilineText(title=Title("Message"))
                         ),
-                    ),
-                    "message": DictElement(
-                        required=True, parameter_form=MultilineText(title=Title("Message"))
-                    ),
-                },
-            )
+                    },
+                ),
+            },
         )
 
     def from_form_spec(self, data: object) -> ReadOnlySpec:
         assert isinstance(data, dict)
+        topic = data[_TOPIC]
         return ReadOnlySpec(
-            enabled=_enabled_from_form_spec(data["enabled"]),
-            rw_users=[UserId(name) for name in data["rw_users"]],
-            message=data["message"],
+            enabled=_enabled_from_form_spec(topic["enabled"]),
+            rw_users=[UserId(name) for name in topic["rw_users"]],
+            message=topic["message"],
         )
 
     def to_form_spec(self, model: ReadOnlySpec) -> RawDiskData:
         return RawDiskData(
             {
-                "enabled": _enabled_to_form_spec(model["enabled"]),
-                "rw_users": [str(name) for name in model["rw_users"]],
-                "message": model["message"],
+                _TOPIC: {
+                    "enabled": _enabled_to_form_spec(model["enabled"]),
+                    "rw_users": [str(name) for name in model["rw_users"]],
+                    "message": model["message"],
+                }
             }
         )
 

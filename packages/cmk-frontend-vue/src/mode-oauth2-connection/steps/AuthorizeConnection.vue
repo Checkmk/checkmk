@@ -14,6 +14,7 @@ import { randomId } from '@/lib/randomId.ts'
 import CmkButton from '@/components/CmkButton'
 import CmkCopy from '@/components/CmkCopy.vue'
 import CmkIcon from '@/components/CmkIcon'
+import CmkPaste from '@/components/CmkPaste.vue'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
@@ -107,11 +108,21 @@ const authorizationUrl = computed(() =>
               )
             }}
           </p>
-          <CmkInput
-            v-model="model.overrideCode"
-            field-size="fill"
-            :placeholder="_t('Paste the code from the redirect page here')"
-          />
+          <CmkPaste input-first>
+            <template #input>
+              <CmkInput
+                v-model="model.overrideCode"
+                field-size="fill"
+                :placeholder="_t('Paste the code from the redirect page here')"
+              />
+            </template>
+            <template #trigger>
+              <CmkButton>
+                <CmkIcon name="clipboard" variant="inline" size="medium" />
+                {{ _t('Paste') }}
+              </CmkButton>
+            </template>
+          </CmkPaste>
         </div>
       </template>
     </template>

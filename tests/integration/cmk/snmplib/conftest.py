@@ -318,7 +318,7 @@ def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
             return None
         return psutil.Process(process_def.process.pid)
     except psutil.NoSuchProcess:
-        logger.exception("No such process", exc_info=True)
+        logger.exception("No such process")
         return None
 
 

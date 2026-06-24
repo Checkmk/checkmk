@@ -117,3 +117,21 @@ def test_migrate_redfish_adds_missing_sections_to_existing_fetching() -> None:
     assert fetching["EnvironmentMetrics"] == ("always", 0.0)
     # Existing sections must be preserved
     assert fetching["FirmwareInventory"] == ("never", -1.0)
+
+
+def test_migrate_redfish_preserves_system_retry() -> None:
+    """The system_retry setting must survive migration on both code paths."""
+    base = {
+        "user": "admin",
+        "password": ("cmk_postprocessed", "explicit_password", ("uuid", "pw")),
+        "port": 443,
+        "proto": "https",
+        "retries": 2,
+        "timeout": 3.0,
+        "system_retry": {"count": 3, "delay": 2.0},
+    }
+    # no-fetching branch
+    assert migrate_redfish(base)["system_retry"] == {"count": 3, "delay": 2.0}
+    # fetching branch + idempotency
+    with_fetching = {**base, "fetching": {"Memory": ("always", 0.0)}}
+    assert migrate_redfish(with_fetching)["system_retry"] == {"count": 3, "delay": 2.0}

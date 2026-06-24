@@ -129,6 +129,8 @@ class RedfishData:
     vendor_data: Vendor | None = None
     section_data: dict[str, Any] = field(default_factory=dict)
     emitted_sections: set[str] = field(default_factory=set)
+    systems_retries: int = 3
+    systems_retry_delay: float = 2.0
 
 
 def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -220,6 +222,20 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         default=2,
         type=int,
         help="""Number auf connection retries before failing""",
+    )
+    parser.add_argument(
+        "--systems_retries",
+        default=3,
+        type=int,
+        help="""How often to retry fetching the system data (/redfish/v1/Systems) when the
+                device returns a transient error (e.g. HTTP 503/404), before aborting the run.
+                0 disables retrying (abort immediately).""",
+    )
+    parser.add_argument(
+        "--systems_retry_delay",
+        default=2.0,
+        type=float,
+        help="""Delay in seconds between system-data retries (see --systems_retries).""",
     )
     # required
     parser.add_argument(
@@ -460,6 +476,49 @@ def _phase(redfishobj: RedfishData, name: str) -> Iterator[None]:
         _emit_pending(redfishobj)
 
 
+def _fetch_systems(redfishobj: RedfishData, systems_url: str) -> Sequence[Mapping[str, Any]]:
+    """Fetch the Systems collection and its members, retrying transient failures.
+
+    ``/redfish/v1/Systems`` is the parent of every system-scoped section (Memory,
+    Processors, Storage, Drives, Volumes, Ethernet/NetworkInterfaces). Some BMCs
+    (notably Dell iDRAC) intermittently answer it with a fast HTTP 503/404. If we
+    just continued, the run would emit a *successful* but incomplete dataset and
+    the affected services would vanish in the monitoring.
+
+    Instead we retry up to ``redfishobj.systems_retries`` times (sleeping
+    ``redfishobj.systems_retry_delay`` between attempts) and, if it still cannot be
+    fetched, raise ``CannotRecover``. That makes the agent exit non-zero, so Checkmk
+    keeps the previously monitored data instead of dropping the services. A 503/404
+    is a fast response, so the retries add at most delay*retries seconds.
+    """
+
+    def _unusable(col: Mapping[str, Any], data: Sequence[Mapping[str, Any]]) -> bool:
+        # Treat as failure when the collection errored, no members came back, or
+        # every member is an error. A mix (at least one usable system) is fine.
+        return "error" in col or not data or all("error" in entry for entry in data)
+
+    for attempt in range(redfishobj.systems_retries + 1):
+        if attempt:
+            logging.warning(
+                "redfish: %s unusable, retry %d/%d in %.1fs",
+                systems_url,
+                attempt,
+                redfishobj.systems_retries,
+                redfishobj.systems_retry_delay,
+            )
+            time.sleep(redfishobj.systems_retry_delay)
+        systems_col = fetch_data(redfishobj.redfish_connection, systems_url, "System")
+        systems_data = fetch_collection(redfishobj.redfish_connection, systems_col, "System")
+        if not _unusable(systems_col, systems_data):
+            return systems_data
+
+    raise CannotRecover(
+        f"ERROR: {systems_url} could not be fetched after {redfishobj.systems_retries} "
+        "retries (transient device error); aborting to preserve previously "
+        "monitored data"
+    )
+
+
 def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     """get a the information from the Redfish management interface"""
     load_section_data(storage, redfishobj)
@@ -518,8 +577,7 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     sys.stdout.write(f"<<<labels:sep(0)>>>\n{json.dumps({k: v for k, v in labels.items() if v})}\n")
 
     # fetch systems
-    systems_col = fetch_data(redfishobj.redfish_connection, systems_url, "System")
-    systems_data = fetch_collection(redfishobj.redfish_connection, systems_col, "System")
+    systems_data = _fetch_systems(redfishobj, systems_url)
 
     if data_model in ["Hpe", "Hp"]:
         data_model_links = []
@@ -778,6 +836,8 @@ def agent_redfish_main(args: argparse.Namespace) -> int:
     # Start Redfish Session Object
     redfishobj = get_session(args)
     redfishobj.debug = args.debug
+    redfishobj.systems_retries = args.systems_retries
+    redfishobj.systems_retry_delay = args.systems_retry_delay
     redfishobj.cache_per_section = {
         n: int(m) for n, m, *_ in (element.split("-") for element in args.cached_sections)
     }

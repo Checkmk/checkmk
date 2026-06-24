@@ -19,6 +19,11 @@ from cmk.server_side_calls.v1 import (
 FetchingOptions = Mapping[str, tuple[Literal["always", "cached", "never"], float]]
 
 
+class SystemRetry(BaseModel):
+    count: int
+    delay: float
+
+
 class ParamsRedfish(BaseModel):
     user: str
     password: Secret
@@ -27,6 +32,7 @@ class ParamsRedfish(BaseModel):
     proto: Literal["http", "https"]
     retries: int
     timeout: float
+    system_retry: SystemRetry | None = None
 
 
 class ParamsRedfishPower(BaseModel):
@@ -58,6 +64,17 @@ def _fetching_args(fetching: FetchingOptions | None) -> Iterable[str]:
     )
 
 
+def _system_retry_args(system_retry: SystemRetry | None) -> Iterable[str]:
+    if system_retry is None:
+        return ()
+    return (
+        "--systems_retries",
+        str(system_retry.count),
+        "--systems_retry_delay",
+        str(int(system_retry.delay)),
+    )
+
+
 def _agent_redfish_arguments(
     params: ParamsRedfish, host_config: HostConfig
 ) -> Iterator[SpecialAgentCommand]:
@@ -76,6 +93,7 @@ def _agent_redfish_arguments(
             str(int(params.timeout)),
             "--retries",
             str(params.retries),
+            *_system_retry_args(params.system_retry),
             host_config.primary_ip_config.address or host_config.name,
         ]
     )

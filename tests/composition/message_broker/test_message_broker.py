@@ -225,6 +225,42 @@ class TestMessageBrokerChangeActivation:
                 assert_message_exchange_working(central_site, remote_site)
 
 
+def _broker_users(site: Site) -> set[str]:
+    return {
+        user["user"]
+        for user in json.loads(
+            site.check_output(["rabbitmqctl", "list_users", "--formatter", "json"])
+        )
+    }
+
+
+@pytest.mark.skip_if_edition("cloud")
+class TestRemoteLocalActivationBrokerSafety:
+    @pytest.mark.medium_test_chain
+    def test_local_activation_on_remote_keeps_central_broker_user(
+        self, central_site: Site, remote_site: Site
+    ) -> None:
+        """A local activation on a remote site must not delete the central broker user.
+
+        Cron-driven local activations (e.g. agent auto-registration) run the activation
+        on remote sites too; the broker definitions must not be recomputed there from the
+        remote's local-only site list, which would delete the central site's user and
+        break EXTERNAL authentication (SUP-29435). We reproduce that local
+        broker-activation step in isolation on the remote and verify the connection
+        survives.
+        """
+        with rabbitmq_info_on_failure([central_site, remote_site]):
+            assert central_site.id in _broker_users(remote_site)
+            assert_message_exchange_working(central_site, remote_site)
+
+            remote_site.python_helper("helper_local_broker_activation.py").check_output()
+
+            assert central_site.id in _broker_users(remote_site), (
+                "Local activation on the remote deleted the central site's broker user"
+            )
+            assert_message_exchange_working(central_site, remote_site)
+
+
 @pytest.fixture(scope="session", name="broker_ca")
 def site_ca_fixture(central_site: Site, tmp_path_factory: pytest.TempPathFactory) -> Path:
     path = tmp_path_factory.mktemp("ca") / "broker.pem"

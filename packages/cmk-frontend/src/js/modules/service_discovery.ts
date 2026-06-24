@@ -101,6 +101,8 @@ export function start(
   waiting_message: string | null = null
 ) {
   g_current_action = discovery_options.action
+  // A new discovery run begins: suspend lazy active-check execution until it finishes.
+  g_delayed_active_checks_enabled = false
   if (waiting_message === '') {
     hide_msg()
   } else {
@@ -177,6 +179,7 @@ function finish(response: AjaxServiceDiscovery) {
   // The service table is rebuilt on every poll update, so we only execute the delayed active
   // checks once the table is stable. This triggers the checks that are initially visible; the
   // remaining ones are triggered by the scroll / resize handlers.
+  g_delayed_active_checks_enabled = true
   trigger_delayed_active_checks()
 }
 
@@ -279,6 +282,12 @@ function lock_controls(lock: boolean, elements: HTMLElement[]) {
 
 const g_delayed_active_checks: Check[] = []
 
+// Active checks are executed lazily once their table row scrolls into the viewport. While a
+// discovery run is in progress the service table is rebuilt on every poll, which would wipe an
+// executed check's result and cause it to be fetched again. We therefore keep the scroll / resize
+// handlers inert until the current run has finished.
+let g_delayed_active_checks_enabled = false
+
 export function register_delayed_active_check(
   site: string,
   folder_path: string,
@@ -316,6 +325,9 @@ export function register_delayed_active_check(
 // Is executed on scroll / resize events in case at least one graph is
 // using the delayed graph rendering mechanism
 function trigger_delayed_active_checks() {
+  // Don't execute active checks while a discovery run is still rebuilding the table.
+  if (!g_delayed_active_checks_enabled) return
+
   const num_delayed = g_delayed_active_checks.length
   if (num_delayed == 0) return // no delayed graphs: Nothing to do
 

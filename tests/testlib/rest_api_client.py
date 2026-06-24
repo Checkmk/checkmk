@@ -1313,12 +1313,23 @@ class RuleClient(RestApiClient):
             ),
         )
 
-    def delete(self, rule_id: str, expect_ok: bool = True) -> Response:
-        etag = self.get(rule_id).headers["ETag"]
+    def _set_etag_header(
+        self, rule_id: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(rule_id).headers["ETag"]}
+        return set_if_match_header(etag)
+
+    def delete(
+        self, rule_id: str, expect_ok: bool = True, etag: IF_MATCH_HEADER_OPTIONS = "star"
+    ) -> Response:
+        headers: dict[str, str] = {"Accept": "application/json"}
+        if (etag_header := self._set_etag_header(rule_id, etag)) is not None:
+            headers.update(etag_header)
         resp = self.request(
             "delete",
             url=f"/objects/{self.domain}/{rule_id}",
-            headers={"If-Match": etag, "Accept": "application/json"},
+            headers=headers,
             expect_ok=expect_ok,
         )
         if expect_ok:
@@ -1351,11 +1362,18 @@ class RuleClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def move(self, rule_id: str, options: dict[str, Any], expect_ok: bool = True) -> Response:
+    def move(
+        self,
+        rule_id: str,
+        options: dict[str, Any],
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
         return self.request(
             "post",
             url=f"/objects/{self.domain}/{rule_id}/actions/move/invoke",
             body=options,
+            headers=self._set_etag_header(rule_id, etag),
             expect_ok=expect_ok,
         )
 
@@ -1366,6 +1384,7 @@ class RuleClient(RestApiClient):
         conditions: RuleConditions | None = None,
         properties: RuleProperties | None = None,
         expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
         body = _only_set_keys(
             {
@@ -1379,6 +1398,7 @@ class RuleClient(RestApiClient):
             "put",
             url=f"/objects/{self.domain}/{rule_id}",
             body=body,
+            headers=self._set_etag_header(rule_id, etag),
             expect_ok=expect_ok,
         )
 

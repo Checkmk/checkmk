@@ -19,7 +19,6 @@ from cmk.gui.openapi.endpoints import (
     host_internal,
     host_tag_group,
     notification_rules,
-    rule,
     ruleset,
     service,
     service_group_config,
@@ -33,6 +32,7 @@ from .api_endpoints import (
     custom_host_attributes,
     host,
     icon,
+    rule,
     site_management,
 )
 from .api_endpoints import (
@@ -82,7 +82,6 @@ def register(
     host_internal.register(endpoint_registry)
     host_tag_group.register(endpoint_registry)
     notification_rules.register(endpoint_registry)
-    rule.register(endpoint_registry)
     ruleset.register(endpoint_registry)
     service.register(endpoint_registry)
     service_group_config.register(endpoint_registry)
@@ -110,6 +109,10 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     api_service_discovery.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
+    rule.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

@@ -70,6 +70,7 @@ snmp_section_hp_hh3c_ext = SNMPSection(
     name="hp_hh3c_ext",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.239"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.189"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.87"),
     ),
     fetch=[

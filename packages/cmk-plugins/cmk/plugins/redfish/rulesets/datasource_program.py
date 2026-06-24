@@ -180,6 +180,43 @@ def _fetching_settings() -> DictElement:
     )
 
 
+def _system_retry_settings() -> DictElement:
+    return DictElement(
+        required=False,
+        parameter_form=Dictionary(
+            title=Title("Retry fetching system data"),
+            help_text=Help(
+                "Some management controllers intermittently fail the central "
+                "'/redfish/v1/Systems' request (e.g. HTTP 503 or 404). Without a retry the "
+                "system-related services (CPUs, memory, storage, drives, volumes, network "
+                "interfaces) would briefly disappear. The special agent retries this request "
+                "and, if it still fails, aborts the run so the previously monitored data is "
+                "kept instead of dropping those services. Setting the number of retries to 0 "
+                "disables retrying (abort immediately)."
+            ),
+            elements={
+                "count": DictElement(
+                    required=True,
+                    parameter_form=Integer(
+                        title=Title("Number of retries"),
+                        prefill=DefaultValue(3),
+                        custom_validate=(validators.NumberInRange(min_value=0, max_value=10),),
+                    ),
+                ),
+                "delay": DictElement(
+                    required=True,
+                    parameter_form=TimeSpan(
+                        title=Title("Delay between retries"),
+                        prefill=DefaultValue(2.0),
+                        displayed_magnitudes=(TimeMagnitude.SECOND,),
+                        custom_validate=(validators.NumberInRange(min_value=0, max_value=30),),
+                    ),
+                ),
+            },
+        ),
+    )
+
+
 def migrate_redfish(data: object) -> Mapping[str, object]:
     if not isinstance(data, Mapping):
         raise TypeError(data)
@@ -209,6 +246,7 @@ def migrate_redfish(data: object) -> Mapping[str, object]:
             if all(mode == "always" for (mode, _) in fetching.values())
             else {"fetching": fetching}
         ),
+        **({"system_retry": data["system_retry"]} if "system_retry" in data else {}),
     }
 
 
@@ -218,6 +256,7 @@ def _valuespec_special_agents_redfish() -> Dictionary:
         elements={
             **_auth_elements(),
             "fetching": _fetching_settings(),
+            "system_retry": _system_retry_settings(),
             **_connection_elements(),
         },
         migrate=migrate_redfish,

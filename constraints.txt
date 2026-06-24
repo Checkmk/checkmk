@@ -1,4 +1,3 @@
-pluggy<1.6.0  # test-unit target fails with some weird constraint error CMK-24026
 marshmallow<4 # breaking changes CMK-25251
 datamodel-code-generator==0.42.0 #CMK-29509
 types-lxml==2025.11.25  # CMK-28940

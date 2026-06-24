@@ -25,7 +25,7 @@ import usei18n from '@/lib/i18n'
 import { getKeyShortcutServiceInstance } from '@/lib/keyShortcuts'
 import useClickOutside from '@/lib/useClickOutside'
 
-import CmkInlineButton from '@/components/user-input/CmkInlineButton.vue'
+import CmkButton from '@/components/CmkButton/CmkButton.vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 
@@ -256,10 +256,10 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="monitoring-filter-dropdown__footer">
-        <CmkInlineButton icon="checkmark" :disabled="!isValid" @click="apply">{{
+        <CmkButton variant="primary" :disabled="!isValid" @click="apply">{{
           _t('Apply')
-        }}</CmkInlineButton>
-        <CmkInlineButton icon="cancel" @click="cancel">{{ _t('Cancel') }}</CmkInlineButton>
+        }}</CmkButton>
+        <CmkButton @click="cancel">{{ _t('Cancel') }}</CmkButton>
       </div>
     </div>
   </span>

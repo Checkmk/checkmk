@@ -39,6 +39,7 @@ DUMPS_DIR = MODULE_PATH / "dumps"
 DISTROS_SKIP_PREVIOUS_BRANCH = [
     "ubuntu-26.04",
 ]
+DISTRO_SKIP_PB = os.environ.get("DISTRO") in DISTROS_SKIP_PREVIOUS_BRANCH
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ def _get_site_factory(package: CMKPackageInfo | CMKPackageInfoOld) -> SiteFactor
     )
 
 
-def create_site(base_package: CMKPackageInfoOld) -> Site:
+def create_site(base_package: CMKPackageInfoOld | CMKPackageInfo) -> Site:
     site_name = "central"
     site_factory = _get_site_factory(base_package)
     site = site_factory.get_existing_site(site_name)
@@ -332,7 +333,7 @@ class BaseVersions:
 
             cls._base_packages = []
 
-            if os.environ.get("DISTRO") not in DISTROS_SKIP_PREVIOUS_BRANCH:
+            if not DISTRO_SKIP_PB:
                 cls._base_packages += [
                     CMKPackageInfoOld(CMKVersion(base_version_str), edition_from_env_old())
                     for base_version_str in base_versions_pb

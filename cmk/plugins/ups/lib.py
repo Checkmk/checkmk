@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from enum import Enum, unique
-from typing import Final, TypedDict
+from typing import Any, Final, TypedDict
 
+from cmk.agent_based.legacy.conversion import check_levels_legacy_compatible
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     any_of,
@@ -93,6 +95,39 @@ def optional_int(value: str, *, factor: int = 1) -> int | None:
 
 def optional_yes_or_no(value: str) -> bool | None:
     return True if value.strip() == "1" else False if value.strip() == "2" else None
+
+
+def check_ups_in_voltage(
+    item: str, params: Mapping[str, Any], section: Sequence[Sequence[str]]
+) -> CheckResult:
+    for line in section:
+        if line[0] != item:
+            continue
+        yield from check_levels_legacy_compatible(
+            int(line[1]),
+            "in_voltage",
+            params.get("levels_upper", (None, None)) + params["levels_lower"],
+            human_readable_func=lambda v: f"{v}V",
+            infoname="In voltage",
+            boundaries=(150, None),
+        )
+        return
+
+
+def check_ups_out_voltage(
+    item: str, params: Mapping[str, Any], section: Sequence[Sequence[str]]
+) -> CheckResult:
+    for line in section:
+        if line[0] != item:
+            continue
+        yield from check_levels_legacy_compatible(
+            int(line[1]),
+            "out_voltage",
+            params.get("levels_upper", (None, None)) + params["levels_lower"],
+            human_readable_func=lambda v: f"{v}V",
+            infoname="Out voltage",
+        )
+        return
 
 
 def discover_ups_capacity(

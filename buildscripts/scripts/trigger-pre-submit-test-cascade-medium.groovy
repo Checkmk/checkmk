@@ -23,7 +23,7 @@ void main() {
     def do_rebase = params.CIPARAM_GATED_TRIGGER_REBASE;
     def do_automerge = params.CIPARAM_GATED_TRIGGER_AUTOMERGE;
 
-    def edition_medium_chain = "pro";
+    def edition_medium_chain = "ultimate";
     def distro_medium_chain = "ubuntu-24.04";
 
     def job_names = [

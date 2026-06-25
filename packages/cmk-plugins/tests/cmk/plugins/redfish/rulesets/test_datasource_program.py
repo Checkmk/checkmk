@@ -109,7 +109,8 @@ def test_migrate_redfish_adds_missing_sections_to_existing_fetching() -> None:
         "timeout": 3.0,
     }
     result = migrate_redfish(old)
-    assert isinstance(fetching := result["fetching"], dict)
+    fetching = result["fetching"]
+    assert isinstance(fetching, dict)
     # New sections must be added with default
     assert fetching["Sensors"] == ("always", 0.0)
     assert fetching["ThermalSubsystem"] == ("always", 0.0)

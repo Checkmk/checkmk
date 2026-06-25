@@ -90,7 +90,11 @@ void main() {
                 );
             }
 
-            stage("Download built Windows artifacts") {
+            smart_stage(
+                name: "Download built Windows artifacts",
+                condition: !params.FAKE_ARTIFACTS,
+                raiseOnError: true,
+            ) {
                 single_tests.fetch_package(
                     relative_job_name: "${branch_base_folder}/winagt-build",
                     edition: "",

@@ -164,9 +164,6 @@ void main() {
                                 SECRET_VARS: item.SEC_VAR_LIST ? item.SEC_VAR_LIST.join(" ") : "",
                             ];
                             break;
-                        case "Package cmk-agent-receiver":  // Tries to start docker containers, CMK-29585
-                            relative_job_name = "${branch_base_folder}/cv/test-gerrit-single-node";
-                            break;
                         case "GitHub actions":
                             relative_job_name = "${branch_base_folder}/cv/test-github-actions";
                             build_params = [

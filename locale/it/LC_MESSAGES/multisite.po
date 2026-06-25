@@ -59700,6 +59700,10 @@ msgstr "Livello di potenza Rx"
 msgid "S."
 msgstr "S."
 
+#, fuzzy
+msgid "S3 Buckets"
+msgstr "Secchielli AWS/S3"
+
 msgid "S3 backend cache hits"
 msgstr "Hit della cache del backend S3"
 

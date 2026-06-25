@@ -56994,6 +56994,10 @@ msgstr "Rx-Leistungspegel"
 msgid "S."
 msgstr "s."
 
+#, fuzzy
+msgid "S3 Buckets"
+msgstr "AWS/S3 Buckets"
+
 msgid "S3 backend cache hits"
 msgstr "S3 Backend Cache-Treffer"
 

@@ -59964,6 +59964,10 @@ msgstr "Rx vermogensniveau"
 msgid "S."
 msgstr "S."
 
+#, fuzzy
+msgid "S3 Buckets"
+msgstr "AWS/S3 emmers"
+
 msgid "S3 backend cache hits"
 msgstr ""
 

@@ -7,9 +7,25 @@
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.graylog.agent_based.graylog_cluster_stats import (
     check_graylog_cluster_stats,
+    ClusterStatsParams,
     discover_graylog_cluster_stats,
+    parse_graylog_cluster_stats,
 )
-from cmk.plugins.graylog.lib import deserialize_and_merge_json
+
+_PARAMS: ClusterStatsParams = {
+    "input_count_lower": ("no_levels", None),
+    "input_count_upper": ("no_levels", None),
+    "output_count_lower": ("no_levels", None),
+    "output_count_upper": ("no_levels", None),
+    "stream_count_lower": ("no_levels", None),
+    "stream_count_upper": ("no_levels", None),
+    "stream_rule_count_lower": ("no_levels", None),
+    "stream_rule_count_upper": ("no_levels", None),
+    "extractor_count_lower": ("no_levels", None),
+    "extractor_count_upper": ("no_levels", None),
+    "user_count_lower": ("no_levels", None),
+    "user_count_upper": ("no_levels", None),
+}
 
 _SECTION = [
     [
@@ -19,13 +35,13 @@ _SECTION = [
 
 
 def test_discover_graylog_cluster_stats() -> None:
-    parsed = deserialize_and_merge_json(_SECTION)
+    parsed = parse_graylog_cluster_stats(_SECTION)
     assert list(discover_graylog_cluster_stats(parsed)) == [Service()]
 
 
 def test_check_graylog_cluster_stats() -> None:
-    parsed = deserialize_and_merge_json(_SECTION)
-    assert list(check_graylog_cluster_stats({}, parsed)) == [
+    parsed = parse_graylog_cluster_stats(_SECTION)
+    assert list(check_graylog_cluster_stats(_PARAMS, parsed)) == [
         Result(state=State.OK, summary="Number of inputs: 4"),
         Metric("num_input", 4),
         Result(state=State.OK, summary="Number of outputs: 0"),

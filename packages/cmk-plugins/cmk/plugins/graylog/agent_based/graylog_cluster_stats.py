@@ -4,23 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
-from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     render,
     Result,
     Service,
     State,
+    StringTable,
 )
 from cmk.plugins.graylog.lib import deserialize_and_merge_json
-
-Section = dict[str, Any]
 
 # <<<graylog_cluster_stats>>>
 # [[u'{"stream_rule_count": 7, "input_count_by_type":
@@ -62,38 +63,362 @@ Section = dict[str, Any]
 # "alarmcallback_count_by_type": {}}}']]
 
 
+@dataclass(frozen=True)
+class ClusterHealth:
+    number_of_nodes: int | None
+    number_of_data_nodes: int | None
+    active_shards: int | None
+    active_primary_shards: int | None
+    initializing_shards: int | None
+    relocating_shards: int | None
+    unassigned_shards: int | None
+    pending_tasks: int | None
+    timed_out: bool | None
+
+
+@dataclass(frozen=True)
+class IndicesStats:
+    index_count: int | None
+    store_size: int | None
+    id_cache_size: int | None
+    field_data_size: int | None
+
+
+@dataclass(frozen=True)
+class Elasticsearch:
+    cluster_name: str | None
+    cluster_version: str | None
+    status: str | None
+    cluster_health: ClusterHealth | None
+    indices_stats: IndicesStats | None
+
+
+@dataclass(frozen=True)
+class DatabaseStats:
+    db: str | None
+    indexes: int | None
+    storage_size: int | None
+    index_size: int | None
+    data_size: int | None
+    file_size: int | None
+    ns_size_mb: int | None
+    avg_obj_size: float | None
+    num_extents: int | None
+    collections: int | None
+    objects: int | None
+
+
+@dataclass(frozen=True)
+class Mongo:
+    version: str | None
+    database_stats: DatabaseStats | None
+
+
+@dataclass(frozen=True)
+class Section:
+    input_count: int | None
+    output_count: int | None
+    stream_count: int | None
+    stream_rule_count: int | None
+    extractor_count: int | None
+    user_count: int | None
+    elasticsearch: Elasticsearch | None
+    mongo: Mongo | None
+
+
+class ClusterStatsParams(TypedDict):
+    input_count_lower: LevelsT[int]
+    input_count_upper: LevelsT[int]
+    output_count_lower: LevelsT[int]
+    output_count_upper: LevelsT[int]
+    stream_count_lower: LevelsT[int]
+    stream_count_upper: LevelsT[int]
+    stream_rule_count_lower: LevelsT[int]
+    stream_rule_count_upper: LevelsT[int]
+    extractor_count_lower: LevelsT[int]
+    extractor_count_upper: LevelsT[int]
+    user_count_lower: LevelsT[int]
+    user_count_upper: LevelsT[int]
+
+
+class ClusterStatsElasticParams(TypedDict):
+    green: int
+    yellow: int
+    red: int
+    number_of_nodes_lower: LevelsT[int]
+    number_of_nodes_upper: LevelsT[int]
+    number_of_data_nodes_lower: LevelsT[int]
+    number_of_data_nodes_upper: LevelsT[int]
+    active_shards_lower: LevelsT[int]
+    active_shards_upper: LevelsT[int]
+    active_primary_shards_lower: LevelsT[int]
+    active_primary_shards_upper: LevelsT[int]
+    unassigned_shards_upper: LevelsT[int]
+    initializing_shards_upper: LevelsT[int]
+    relocating_shards_upper: LevelsT[int]
+    index_count_lower: LevelsT[int]
+    index_count_upper: LevelsT[int]
+
+
+class ClusterStatsMongodbParams(TypedDict):
+    indexes_lower: LevelsT[int]
+    indexes_upper: LevelsT[int]
+    storage_size_upper: LevelsT[int]
+    index_size_upper: LevelsT[int]
+    data_size_upper: LevelsT[int]
+    file_size_upper: LevelsT[int]
+    ns_size_mb_upper: LevelsT[int]
+    avg_obj_size_upper: LevelsT[int]
+    num_extents_lower: LevelsT[int]
+    num_extents_upper: LevelsT[int]
+    collections_lower: LevelsT[int]
+    collections_upper: LevelsT[int]
+    objects_upper: LevelsT[int]
+
+
+def _render_count(value: float) -> str:
+    return f"{int(value)}"
+
+
+# value, metric_name, label, render_func, upper levels, lower levels
+_MetricRow = tuple[
+    float | None,
+    str,
+    str,
+    Callable[[float], str],
+    LevelsT[int] | None,
+    LevelsT[int] | None,
+]
+
+
+def _parse_cluster_health(value: object) -> ClusterHealth | None:
+    match value:
+        case {
+            "number_of_nodes": int() | None as number_of_nodes,
+            "number_of_data_nodes": int() | None as number_of_data_nodes,
+            "active_shards": int() | None as active_shards,
+            "active_primary_shards": int() | None as active_primary_shards,
+            "initializing_shards": int() | None as initializing_shards,
+            "relocating_shards": int() | None as relocating_shards,
+            "unassigned_shards": int() | None as unassigned_shards,
+            "pending_tasks": int() | None as pending_tasks,
+            "timed_out": bool() | None as timed_out,
+        }:
+            return ClusterHealth(
+                number_of_nodes=number_of_nodes,
+                number_of_data_nodes=number_of_data_nodes,
+                active_shards=active_shards,
+                active_primary_shards=active_primary_shards,
+                initializing_shards=initializing_shards,
+                relocating_shards=relocating_shards,
+                unassigned_shards=unassigned_shards,
+                pending_tasks=pending_tasks,
+                timed_out=timed_out,
+            )
+        case _:
+            return None
+
+
+def _parse_indices_stats(value: object) -> IndicesStats | None:
+    match value:
+        case {
+            "index_count": int() | None as index_count,
+            "store_size": int() | None as store_size,
+            "id_cache_size": int() | None as id_cache_size,
+            "field_data_size": int() | None as field_data_size,
+        }:
+            return IndicesStats(
+                index_count=index_count,
+                store_size=store_size,
+                id_cache_size=id_cache_size,
+                field_data_size=field_data_size,
+            )
+        case _:
+            return None
+
+
+def _parse_elasticsearch(value: object) -> Elasticsearch | None:
+    match value:
+        case {
+            "cluster_name": str() | None as cluster_name,
+            "status": str() | None as status,
+            "cluster_health": cluster_health_raw,
+            "indices_stats": indices_stats_raw,
+            **rest,
+        }:
+            match rest.get("cluster_version"):
+                case str() | None as cluster_version:
+                    pass
+                case _:
+                    cluster_version = None
+            return Elasticsearch(
+                cluster_name=cluster_name,
+                cluster_version=cluster_version,
+                status=status,
+                cluster_health=_parse_cluster_health(cluster_health_raw),
+                indices_stats=_parse_indices_stats(indices_stats_raw),
+            )
+        case _:
+            return None
+
+
+def _parse_database_stats(value: object) -> DatabaseStats | None:
+    match value:
+        case {
+            "db": str() | None as db,
+            "indexes": int() | None as indexes,
+            "storage_size": int() | None as storage_size,
+            "index_size": int() | None as index_size,
+            "data_size": int() | None as data_size,
+            "file_size": int() | None as file_size,
+            "ns_size_mb": int() | None as ns_size_mb,
+            "avg_obj_size": int() | float() | None as avg_obj_size,
+            "num_extents": int() | None as num_extents,
+            "collections": int() | None as collections,
+            "objects": int() | None as objects,
+        }:
+            return DatabaseStats(
+                db=db,
+                indexes=indexes,
+                storage_size=storage_size,
+                index_size=index_size,
+                data_size=data_size,
+                file_size=file_size,
+                ns_size_mb=ns_size_mb,
+                avg_obj_size=avg_obj_size,
+                num_extents=num_extents,
+                collections=collections,
+                objects=objects,
+            )
+        case _:
+            return None
+
+
+def _parse_mongo(value: object) -> Mongo | None:
+    match value:
+        case {"database_stats": database_stats_raw, **rest}:
+            match rest.get("build_info"):
+                case {"version": str() | None as version}:
+                    return Mongo(
+                        version=version,
+                        database_stats=_parse_database_stats(database_stats_raw),
+                    )
+                case _:
+                    return None
+        case _:
+            return None
+
+
+def parse_graylog_cluster_stats(string_table: StringTable) -> Section:
+    match deserialize_and_merge_json(string_table):
+        case {
+            "input_count": int() | None as input_count,
+            "output_count": int() | None as output_count,
+            "stream_count": int() | None as stream_count,
+            "stream_rule_count": int() | None as stream_rule_count,
+            "extractor_count": int() | None as extractor_count,
+            "user_count": int() | None as user_count,
+            **rest,
+        }:
+            return Section(
+                input_count=input_count,
+                output_count=output_count,
+                stream_count=stream_count,
+                stream_rule_count=stream_rule_count,
+                extractor_count=extractor_count,
+                user_count=user_count,
+                elasticsearch=_parse_elasticsearch(rest.get("elasticsearch")),
+                mongo=_parse_mongo(rest.get("mongo")),
+            )
+        case _:
+            return Section(
+                input_count=None,
+                output_count=None,
+                stream_count=None,
+                stream_rule_count=None,
+                extractor_count=None,
+                user_count=None,
+                elasticsearch=None,
+                mongo=None,
+            )
+
+
 def discover_graylog_cluster_stats(section: Section) -> DiscoveryResult:
-    if section:
+    if any(
+        value is not None
+        for value in (
+            section.input_count,
+            section.output_count,
+            section.stream_count,
+            section.stream_rule_count,
+            section.extractor_count,
+            section.user_count,
+        )
+    ):
         yield Service()
 
 
-def check_graylog_cluster_stats(params: Mapping[str, Any], section: Section) -> CheckResult:
-    if not section:
-        return
-
-    for key, infotext, m_name in [
-        ("input_count", "Number of inputs", "num_input"),
-        ("output_count", "Number of outputs", "num_output"),
-        ("stream_count", "Number of streams", "streams"),
-        ("stream_rule_count", "Number of stream rules", "num_stream_rule"),
-        ("extractor_count", "Number of extractors", "num_extractor"),
-        ("user_count", "Number of user", "num_user"),
+def check_graylog_cluster_stats(params: ClusterStatsParams, section: Section) -> CheckResult:
+    for value, metric_name, infotext, levels_upper, levels_lower in [
+        (
+            section.input_count,
+            "num_input",
+            "Number of inputs",
+            params["input_count_upper"],
+            params["input_count_lower"],
+        ),
+        (
+            section.output_count,
+            "num_output",
+            "Number of outputs",
+            params["output_count_upper"],
+            params["output_count_lower"],
+        ),
+        (
+            section.stream_count,
+            "streams",
+            "Number of streams",
+            params["stream_count_upper"],
+            params["stream_count_lower"],
+        ),
+        (
+            section.stream_rule_count,
+            "num_stream_rule",
+            "Number of stream rules",
+            params["stream_rule_count_upper"],
+            params["stream_rule_count_lower"],
+        ),
+        (
+            section.extractor_count,
+            "num_extractor",
+            "Number of extractors",
+            params["extractor_count_upper"],
+            params["extractor_count_lower"],
+        ),
+        (
+            section.user_count,
+            "num_user",
+            "Number of user",
+            params["user_count_upper"],
+            params["user_count_lower"],
+        ),
     ]:
-        data = section.get(key)
-        if data is not None:
-            yield from check_levels_v1(
-                value=data,
-                metric_name=m_name,
-                levels_upper=params.get(f"{key}_upper", (None, None)),
-                levels_lower=params.get(f"{key}_lower", (None, None)),
-                render_func=lambda v: f"{int(v)}",
-                label=infotext,
-            )
+        if value is None:
+            continue
+
+        yield from check_levels(
+            value=value,
+            metric_name=metric_name,
+            levels_upper=levels_upper,
+            levels_lower=levels_lower,
+            render_func=_render_count,
+            label=infotext,
+        )
 
 
 agent_section_graylog_cluster_stats = AgentSection(
     name="graylog_cluster_stats",
-    parse_function=deserialize_and_merge_json,
+    parse_function=parse_graylog_cluster_stats,
 )
 
 
@@ -103,95 +428,164 @@ check_plugin_graylog_cluster_stats = CheckPlugin(
     discovery_function=discover_graylog_cluster_stats,
     check_function=check_graylog_cluster_stats,
     check_ruleset_name="graylog_cluster_stats",
-    check_default_parameters={},
+    check_default_parameters={
+        "input_count_lower": ("no_levels", None),
+        "input_count_upper": ("no_levels", None),
+        "output_count_lower": ("no_levels", None),
+        "output_count_upper": ("no_levels", None),
+        "stream_count_lower": ("no_levels", None),
+        "stream_count_upper": ("no_levels", None),
+        "stream_rule_count_lower": ("no_levels", None),
+        "stream_rule_count_upper": ("no_levels", None),
+        "extractor_count_lower": ("no_levels", None),
+        "extractor_count_upper": ("no_levels", None),
+        "user_count_lower": ("no_levels", None),
+        "user_count_upper": ("no_levels", None),
+    },
 )
 
 
 def discover_graylog_cluster_stats_elastic(section: Section) -> DiscoveryResult:
-    if section.get("elasticsearch") is not None:
+    if section.elasticsearch is not None:
         yield Service()
 
 
 def check_graylog_cluster_stats_elastic(
-    params: Mapping[str, Any],
+    params: ClusterStatsElasticParams,
     section: Section,
 ) -> CheckResult:
-    elastic_data = section.get("elasticsearch")
-    if elastic_data is None:
+    elastic = section.elasticsearch
+    if elastic is None:
         return
 
-    for key, infotext in [
-        ("cluster_name", "Name"),
-        ("cluster_version", "Version"),
+    for text_value, infotext in [
+        (elastic.cluster_name, "Name"),
+        (elastic.cluster_version, "Version"),
     ]:
-        value = elastic_data.get(key)
-        if value is not None:
-            yield Result(state=State.OK, summary=f"{infotext}: {value.title()}")
+        if text_value is not None:
+            yield Result(state=State.OK, summary=f"{infotext}: {text_value.title()}")
 
-    status_data = elastic_data.get("status")
-    if status_data:
+    if elastic.status is not None:
+        status_states = {
+            "green": params["green"],
+            "yellow": params["yellow"],
+            "red": params["red"],
+        }
         yield Result(
-            state=State(params.get(status_data.lower(), 3)),
-            summary=f"Status: {status_data.title()}",
+            state=State(status_states.get(elastic.status.lower(), 3)),
+            summary=f"Status: {elastic.status.title()}",
         )
 
-    health_data = elastic_data.get("cluster_health")
-    if health_data:
-        for health_section, health_info in [
-            ("number_of_nodes", "Nodes"),
-            ("number_of_data_nodes", "Data nodes"),
-            ("active_shards", "Active shards"),
-            ("active_primary_shards", "Active primary shards"),
-            ("initializing_shards", "Initializing shards"),
-            ("relocating_shards", "Relocating shards"),
-            ("unassigned_shards", "Unassigned shards"),
-            ("pending_tasks", "Pending tasks"),
+    if (health := elastic.cluster_health) is not None:
+        for value, metric_name, infotext, levels_upper, levels_lower in [
+            (
+                health.number_of_nodes,
+                "number_of_nodes",
+                "Nodes",
+                params["number_of_nodes_upper"],
+                params["number_of_nodes_lower"],
+            ),
+            (
+                health.number_of_data_nodes,
+                "number_of_data_nodes",
+                "Data nodes",
+                params["number_of_data_nodes_upper"],
+                params["number_of_data_nodes_lower"],
+            ),
+            (
+                health.active_shards,
+                "active_shards",
+                "Active shards",
+                params["active_shards_upper"],
+                params["active_shards_lower"],
+            ),
+            (
+                health.active_primary_shards,
+                "active_primary_shards",
+                "Active primary shards",
+                params["active_primary_shards_upper"],
+                params["active_primary_shards_lower"],
+            ),
+            (
+                health.initializing_shards,
+                "initializing_shards",
+                "Initializing shards",
+                params["initializing_shards_upper"],
+                None,
+            ),
+            (
+                health.relocating_shards,
+                "relocating_shards",
+                "Relocating shards",
+                params["relocating_shards_upper"],
+                None,
+            ),
+            (
+                health.unassigned_shards,
+                "unassigned_shards",
+                "Unassigned shards",
+                params["unassigned_shards_upper"],
+                None,
+            ),
+            (health.pending_tasks, "number_of_pending_tasks", "Pending tasks", None, None),
         ]:
-            health_value = health_data.get(health_section)
-            if health_value is None:
+            if value is None:
                 continue
 
-            metric_name = (
-                f"number_of_{health_section}"
-                if health_section == "pending_tasks"
-                else health_section
-            )
-
-            yield from check_levels_v1(
-                value=health_value,
+            yield from check_levels(
+                value=value,
                 metric_name=metric_name,
-                levels_upper=params.get(f"{health_section}_upper", (None, None)),
-                levels_lower=params.get(f"{health_section}_lower", (None, None)),
-                render_func=lambda v: f"{int(v)}",
-                label=health_info,
+                levels_upper=levels_upper,
+                levels_lower=levels_lower,
+                render_func=_render_count,
+                label=infotext,
             )
 
-        timedout_data = health_data.get("timed_out")
-        if timedout_data is not None:
+        if health.timed_out is not None:
             yield Result(
                 state=State.OK,
-                summary=f"Timed out: {'yes' if timedout_data else 'no'}",
+                summary=f"Timed out: {'yes' if health.timed_out else 'no'}",
             )
 
-    indice_data = elastic_data.get("indices_stats")
-    if indice_data:
-        for section_name, info, hr_func in [
-            ("index_count", "Index count", lambda v: f"{int(v)}"),
-            ("store_size", "Store size", render.bytes),
-            ("id_cache_size", "ID cache size", render.bytes),
-            ("field_data_size", "Field data size", render.bytes),
-        ]:
-            indice_value = indice_data.get(section_name)
-            if indice_value is None:
+    if (indices := elastic.indices_stats) is not None:
+        indices_rows: list[_MetricRow] = [
+            (
+                indices.index_count,
+                "index_count",
+                "Index count",
+                _render_count,
+                params["index_count_upper"],
+                params["index_count_lower"],
+            ),
+            (indices.store_size, "store_size", "Store size", render.bytes, None, None),
+            (indices.id_cache_size, "id_cache_size", "ID cache size", render.bytes, None, None),
+            (
+                indices.field_data_size,
+                "field_data_size",
+                "Field data size",
+                render.bytes,
+                None,
+                None,
+            ),
+        ]
+        for (
+            index_value,
+            metric_name,
+            infotext,
+            render_func,
+            levels_upper,
+            levels_lower,
+        ) in indices_rows:
+            if index_value is None:
                 continue
 
-            yield from check_levels_v1(
-                value=indice_value,
-                metric_name=section_name,
-                levels_upper=params.get(f"{section_name}_upper", (None, None)),
-                levels_lower=params.get(f"{section_name}_lower", (None, None)),
-                render_func=hr_func,
-                label=info,
+            yield from check_levels(
+                value=index_value,
+                metric_name=metric_name,
+                levels_upper=levels_upper,
+                levels_lower=levels_lower,
+                render_func=render_func,
+                label=infotext,
             )
 
 
@@ -206,64 +600,134 @@ check_plugin_graylog_cluster_stats_elastic = CheckPlugin(
         "green": 0,
         "yellow": 1,
         "red": 2,
+        "number_of_nodes_lower": ("no_levels", None),
+        "number_of_nodes_upper": ("no_levels", None),
+        "number_of_data_nodes_lower": ("no_levels", None),
+        "number_of_data_nodes_upper": ("no_levels", None),
+        "active_shards_lower": ("no_levels", None),
+        "active_shards_upper": ("no_levels", None),
+        "active_primary_shards_lower": ("no_levels", None),
+        "active_primary_shards_upper": ("no_levels", None),
+        "unassigned_shards_upper": ("no_levels", None),
+        "initializing_shards_upper": ("no_levels", None),
+        "relocating_shards_upper": ("no_levels", None),
+        "index_count_lower": ("no_levels", None),
+        "index_count_upper": ("no_levels", None),
     },
 )
 
 
 def discover_graylog_cluster_stats_mongodb(section: Section) -> DiscoveryResult:
-    if section.get("mongo") is not None:
+    if section.mongo is not None:
         yield Service()
 
 
-def check_graylog_cluster_stats_mongodb(params: Mapping[str, Any], section: Section) -> CheckResult:
-    mongo_data = section.get("mongo")
-    if mongo_data is None:
+def check_graylog_cluster_stats_mongodb(
+    params: ClusterStatsMongodbParams, section: Section
+) -> CheckResult:
+    if section.mongo is None or (db := section.mongo.database_stats) is None:
         return
 
-    db_data = mongo_data.get("database_stats")
-    if db_data:
-        db_name = db_data.get("db")
-        if db_name:
-            yield Result(state=State.OK, summary=f"Name: {db_name.title()}")
+    if db.db is not None:
+        yield Result(state=State.OK, summary=f"Name: {db.db.title()}")
 
-        version = mongo_data.get("build_info", {}).get("version")
-        if version:
-            yield Result(state=State.OK, summary=f"Version: {version}")
+    if section.mongo.version is not None:
+        yield Result(state=State.OK, summary=f"Version: {section.mongo.version}")
 
-        for key, infotext, metric_name, hr_func in [
-            ("indexes", "Indices", "index_count", lambda v: f"{int(v)}"),
-            (
-                "storage_size",
-                "Allocated storage",
-                "mongodb_collection_storage_size",
-                render.bytes,
-            ),
-            ("index_size", "Total size", "indexes_size", render.bytes),
-            (
-                "data_size",
-                "Total size of uncompressed data",
-                "mongodb_collection_size",
-                render.bytes,
-            ),
-            ("file_size", "Total data files size", "file_size", render.bytes),
-            ("ns_size_mb", "Total namespace size", "namespace_size", render.bytes),
-            ("avg_obj_size", "Average document size", "avg_doc_size", render.bytes),
-            ("num_extents", "Number of extents", "num_extents", lambda v: f"{int(v)}"),
-            ("collections", "Number of collections", "num_collections", lambda v: f"{int(v)}"),
-            ("objects", "Number of objects", "num_objects", lambda v: f"{int(v)}"),
-        ]:
-            db_value = db_data.get(key)
-            if db_value is None:
-                continue
+    mongo_rows: list[_MetricRow] = [
+        (
+            db.indexes,
+            "index_count",
+            "Indices",
+            _render_count,
+            params["indexes_upper"],
+            params["indexes_lower"],
+        ),
+        (
+            db.storage_size,
+            "mongodb_collection_storage_size",
+            "Allocated storage",
+            render.bytes,
+            params["storage_size_upper"],
+            None,
+        ),
+        (
+            db.index_size,
+            "indexes_size",
+            "Total size",
+            render.bytes,
+            params["index_size_upper"],
+            None,
+        ),
+        (
+            db.data_size,
+            "mongodb_collection_size",
+            "Total size of uncompressed data",
+            render.bytes,
+            params["data_size_upper"],
+            None,
+        ),
+        (
+            db.file_size,
+            "file_size",
+            "Total data files size",
+            render.bytes,
+            params["file_size_upper"],
+            None,
+        ),
+        (
+            db.ns_size_mb,
+            "namespace_size",
+            "Total namespace size",
+            render.bytes,
+            params["ns_size_mb_upper"],
+            None,
+        ),
+        (
+            db.avg_obj_size,
+            "avg_doc_size",
+            "Average document size",
+            render.bytes,
+            params["avg_obj_size_upper"],
+            None,
+        ),
+        (
+            db.num_extents,
+            "num_extents",
+            "Number of extents",
+            _render_count,
+            params["num_extents_upper"],
+            params["num_extents_lower"],
+        ),
+        (
+            db.collections,
+            "num_collections",
+            "Number of collections",
+            _render_count,
+            params["collections_upper"],
+            params["collections_lower"],
+        ),
+        (
+            db.objects,
+            "num_objects",
+            "Number of objects",
+            _render_count,
+            params["objects_upper"],
+            None,
+        ),
+    ]
+    for value, metric_name, infotext, render_func, levels_upper, levels_lower in mongo_rows:
+        if value is None:
+            continue
 
-            yield from check_levels_v1(
-                value=db_value,
-                metric_name=metric_name,
-                levels_upper=params.get(f"{key}_upper", (None, None)),
-                levels_lower=params.get(f"{key}_lower", (None, None)),
-                render_func=hr_func,
-                label=infotext,
-            )
+        yield from check_levels(
+            value=value,
+            metric_name=metric_name,
+            levels_upper=levels_upper,
+            levels_lower=levels_lower,
+            render_func=render_func,
+            label=infotext,
+        )
 
 
 check_plugin_graylog_cluster_stats_mongodb = CheckPlugin(
@@ -273,5 +737,19 @@ check_plugin_graylog_cluster_stats_mongodb = CheckPlugin(
     discovery_function=discover_graylog_cluster_stats_mongodb,
     check_function=check_graylog_cluster_stats_mongodb,
     check_ruleset_name="graylog_cluster_stats_mongodb",
-    check_default_parameters={},
+    check_default_parameters={
+        "indexes_lower": ("no_levels", None),
+        "indexes_upper": ("no_levels", None),
+        "storage_size_upper": ("no_levels", None),
+        "index_size_upper": ("no_levels", None),
+        "data_size_upper": ("no_levels", None),
+        "file_size_upper": ("no_levels", None),
+        "ns_size_mb_upper": ("no_levels", None),
+        "avg_obj_size_upper": ("no_levels", None),
+        "num_extents_lower": ("no_levels", None),
+        "num_extents_upper": ("no_levels", None),
+        "collections_lower": ("no_levels", None),
+        "collections_upper": ("no_levels", None),
+        "objects_upper": ("no_levels", None),
+    },
 )

@@ -279,10 +279,10 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="monitoring-filter-dropdown__footer">
-        <CmkButton variant="primary" :disabled="!isValid" @click="apply">{{
+        <CmkButton variant="primary" size="small" :disabled="!isValid" @click="apply">{{
           _t('Apply')
         }}</CmkButton>
-        <CmkButton @click="cancel">{{ _t('Cancel') }}</CmkButton>
+        <CmkButton size="small" @click="cancel">{{ _t('Cancel') }}</CmkButton>
       </div>
     </div>
   </span>

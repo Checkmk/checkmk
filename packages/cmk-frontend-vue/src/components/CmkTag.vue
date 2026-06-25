@@ -19,6 +19,7 @@ const propsCva = cva('', {
       default: 'cmk-tag--color-default',
       success: 'cmk-tag--color-success',
       warning: 'cmk-tag--color-warning',
+      unknown: 'cmk-tag--color-unknown',
       danger: 'cmk-tag--color-danger'
     },
     variant: {
@@ -84,6 +85,10 @@ defineProps<CmkTagProps>()
   --tag-color: var(--color-warning);
 }
 
+.cmk-tag--color-unknown {
+  --tag-color: var(--color-unknown);
+}
+
 .cmk-tag--color-success {
   --tag-color: var(--success);
 }
@@ -107,6 +112,12 @@ defineProps<CmkTagProps>()
 }
 
 .cmk-tag--variant-weighted.cmk-tag--color-warning {
+  --tag-color: var(--color-yellow-0);
+  --tag-border-color: var(--color-yellow-40);
+  --tag-fill-color: var(--color-yellow-90);
+}
+
+.cmk-tag--variant-weighted.cmk-tag--color-unknown {
   --tag-color: var(--color-orange-0);
   --tag-border-color: var(--color-orange-40);
   --tag-fill-color: var(--color-orange-90);

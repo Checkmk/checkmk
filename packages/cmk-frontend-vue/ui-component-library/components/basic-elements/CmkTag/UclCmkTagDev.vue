@@ -52,6 +52,12 @@ defineProps<{ screenshotMode: boolean }>()
           <td><CmkTag color="warning" variant="weighted" content="Warning Weighted"></CmkTag></td>
         </tr>
         <tr>
+          <td class="ucl-cmk-tag-dev__color-label">Unknown</td>
+          <td><CmkTag color="unknown" variant="fill" content="Unknown Fill"></CmkTag></td>
+          <td><CmkTag color="unknown" variant="outline" content="Unknown Outline"></CmkTag></td>
+          <td><CmkTag color="unknown" variant="weighted" content="Unknown Weighted"></CmkTag></td>
+        </tr>
+        <tr>
           <td class="ucl-cmk-tag-dev__color-label">Danger</td>
           <td><CmkTag color="danger" variant="fill" content="Danger Fill"></CmkTag></td>
           <td><CmkTag color="danger" variant="outline" content="Danger Outline"></CmkTag></td>
@@ -66,6 +72,7 @@ defineProps<{ screenshotMode: boolean }>()
   <CmkTag color="default" content="Default"></CmkTag>
   <CmkTag color="success" content="Success"></CmkTag>
   <CmkTag color="warning" content="Warning"></CmkTag>
+  <CmkTag color="unknown" content="Unknown"></CmkTag>
   <CmkTag color="danger" content="Danger"></CmkTag>
 
   <h2>Variants (default color)</h2>

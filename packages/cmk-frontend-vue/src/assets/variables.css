@@ -13,6 +13,7 @@
   --success: var(--color-corporate-green-50);
   --success-dimmed: rgb(17 188 122);
   --success-dimmed-2: rgb(13 141 91);
+  --color-unknown: var(--color-orange-60);
   --white: rgb(255 255 255);
   --white-dimmed: rgb(255 255 255 / 50%);
   --black: rgb(0 0 0);

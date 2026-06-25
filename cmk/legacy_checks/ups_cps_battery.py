@@ -3,18 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
-from cmk.legacy_includes.temperature import check_temperature
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 from cmk.plugins.ups.lib import DETECT_UPS_CPS
 
-check_info = {}
+Section = Mapping[str, float]
 
 
-def parse_ups_cps_battery(string_table):
+def parse_ups_cps_battery(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
 
@@ -44,24 +54,31 @@ def parse_ups_cps_battery(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def discover_ups_cps_battery_temp(parsed):
-    if "temperature" in parsed:
-        yield "Battery", {}
+def discover_ups_cps_battery_temp(section: Section | None) -> DiscoveryResult:
+    if section is not None and "temperature" in section:
+        yield Service(item="Battery")
 
 
-def check_ups_cps_battery_temp(item, params, parsed):
-    if "temperature" in parsed:
-        return check_temperature(parsed["temperature"], params, "ups_cps_battery_temp")
-    return None
+def check_ups_cps_battery_temp(
+    item: str, params: TempParamType, section: Section | None
+) -> CheckResult:
+    if section is not None and "temperature" in section:
+        yield from check_temperature(
+            section["temperature"],
+            params,
+            unique_name="ups_cps_battery_temp",
+            value_store=get_value_store(),
+        )
 
 
-check_info["ups_cps_battery.temp"] = LegacyCheckDefinition(
+check_plugin_ups_cps_battery_temp = CheckPlugin(
     name="ups_cps_battery_temp",
     service_name="Temperature %s",
     sections=["ups_cps_battery"],
     discovery_function=discover_ups_cps_battery_temp,
     check_function=check_ups_cps_battery_temp,
     check_ruleset_name="temperature",
+    check_default_parameters={},
 )
 
 # .
@@ -75,43 +92,50 @@ check_info["ups_cps_battery.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ups_cps_battery(parsed):
-    if "capacity" in parsed:
-        yield None, {}
+def discover_ups_cps_battery(section: Section | None) -> DiscoveryResult:
+    if section is not None and "capacity" in section:
+        yield Service()
 
 
-def check_ups_cps_battery(item, params, parsed):
-    def check_lower_levels(value, levels):
-        if not levels:
-            return 0
-        warn, crit = levels
-        if value < crit:
-            return 2
-        if value < warn:
-            return 1
-        return 0
+def _check_lower_levels(value: float, levels: tuple[int, int] | None) -> State:
+    if not levels:
+        return State.OK
+    warn, crit = levels
+    if value < crit:
+        return State.CRIT
+    if value < warn:
+        return State.WARN
+    return State.OK
 
-    capacity = parsed["capacity"]
+
+def check_ups_cps_battery(params: Mapping[str, Any], section: Section | None) -> CheckResult:
+    if section is None:
+        return
+
+    capacity = section["capacity"]
     capacity_params = params["capacity"]
-    capacity_status = check_lower_levels(capacity, capacity_params)
-    if capacity_status:
+    capacity_status = _check_lower_levels(capacity, capacity_params)
+    if capacity_status is not State.OK:
         levelstext = " (warn/crit at %d/%d%%)" % capacity_params
     else:
         levelstext = ""
-    yield capacity_status, ("Capacity at %d%%" % capacity) + levelstext
+    yield Result(state=capacity_status, summary=("Capacity at %d%%" % capacity) + levelstext)
 
-    battime = parsed["battime"]
+    battime = section["battime"]
     # WATO rule stores remaining time in minutes
     battime_params = params.get("battime")
-    battime_status = check_lower_levels(battime / 60.0, battime_params)
-    if battime_status:
+    battime_status = _check_lower_levels(battime / 60.0, battime_params)
+    if battime_status is not State.OK and battime_params is not None:
         levelstext = " (warn/crit at %d/%d min)" % battime_params
     else:
         levelstext = ""
-    yield battime_status, ("%.0f minutes remaining on battery" % (battime / 60.0)) + levelstext
+    yield Result(
+        state=battime_status,
+        summary=("%.0f minutes remaining on battery" % (battime / 60.0)) + levelstext,
+    )
 
 
-check_info["ups_cps_battery"] = LegacyCheckDefinition(
+snmp_section_ups_cps_battery = SimpleSNMPSection(
     name="ups_cps_battery",
     detect=DETECT_UPS_CPS,
     fetch=SNMPTree(
@@ -119,6 +143,11 @@ check_info["ups_cps_battery"] = LegacyCheckDefinition(
         oids=["1", "3", "4"],
     ),
     parse_function=parse_ups_cps_battery,
+)
+
+
+check_plugin_ups_cps_battery = CheckPlugin(
+    name="ups_cps_battery",
     service_name="UPS Battery",
     discovery_function=discover_ups_cps_battery,
     check_function=check_ups_cps_battery,

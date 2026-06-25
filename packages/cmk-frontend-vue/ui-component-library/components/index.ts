@@ -9,7 +9,6 @@ import { pages as aiPages } from '../ai'
 import { pages as formSpecPages } from '../form'
 import UclBreakpoints from '../foundations/Breakpoints/UclBreakpoints.vue'
 import UclColors from '../foundations/Colors/UclColors.vue'
-import UclIcons from '../foundations/Icons/UclIcons.vue'
 import { pages as i18nPages } from '../i18n'
 import { pages as metricBackendPages } from '../metric-backend'
 import { pages as monitoringPages } from '../monitoring'
@@ -129,11 +128,7 @@ const formElementsPages = [
   ])
 ]
 
-const foundationsPages = [
-  new Page('Breakpoints', UclBreakpoints),
-  new Page('Colors', UclColors),
-  new Page('Icons', UclIcons)
-]
+const foundationsPages = [new Page('Breakpoints', UclBreakpoints), new Page('Colors', UclColors)]
 
 const foundationElementsPages = [
   new Page('CmkIcon', UclCmkIcon),

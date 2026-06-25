@@ -21,7 +21,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.notify_types import Contact, ContactName
 from cmk.utils.oauth2_connection import OAuth2Connection
 from cmk.utils.password_store import PasswordConfig
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec, TagsOfHosts
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagConfigSpec
 
@@ -200,7 +200,7 @@ special_agents: dict[str, list[RuleSpec[SSCConfigSet]]] = {}
 custom_checks: list[RuleSpec[dict[Any, Any]]] = []
 all_hosts: list = []
 # store host tag config per host
-host_tags: TagsOfHosts = {}
+host_tags: object = {}
 # store explicit host labels per host
 host_labels: dict[HostName, Labels] = {}
 # Assign labels via ruleset to hosts

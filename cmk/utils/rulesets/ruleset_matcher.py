@@ -25,7 +25,7 @@ from cmk.utils.labels import (
 )
 from cmk.utils.parameters import merge_parameters
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.tags import HostTagsMap, TagGroupID, TagID
 
 from .conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
 
@@ -73,10 +73,6 @@ def is_tag_condition_ne(condition: TagCondition) -> TypeGuard[TagConditionNE]:
 def is_tag_condition_tag_id(condition: TagCondition) -> TypeGuard[TagID]:
     return isinstance(condition, str)
 
-
-# Here, we have data structures such as
-# {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
-type TagsOfHosts = Mapping[HostName | HostAddress, Mapping[TagGroupID, TagID]]
 
 LabelGroupsCacheId = tuple[tuple[AndOrNotLiteral, tuple[tuple[AndOrNotLiteral, str], ...]], ...]
 
@@ -149,7 +145,7 @@ class RulesetMatcher:
 
     def __init__(
         self,
-        host_tags: TagsOfHosts,
+        host_tags: HostTagsMap,
         host_paths: Mapping[HostName, str],
         all_configured_hosts: frozenset[HostName],
         clusters_of: Mapping[HostName, Sequence[HostName]],
@@ -372,7 +368,7 @@ class RulesetOptimizer:
     def __init__(
         self,
         ruleset_matcher: RulesetMatcher,
-        host_tags: TagsOfHosts,
+        host_tags: HostTagsMap,
         host_paths: Mapping[HostName, str],
         all_configured_hosts: frozenset[HostName],
         clusters_of: Mapping[HostName, Sequence[HostName]],

@@ -24,22 +24,37 @@ TagID = NewType("TagID", str)
 TagGroupID = NewType("TagGroupID", str)
 TAG_GROUP_NAME_PATTERN = r"^\A[-a-z0-9A-Z_]*\Z"
 
+# Here, we have data structures such as
+# {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
+type HostTagsMap = Mapping[HostName, Mapping[TagGroupID, TagID]]
+
 
 class HostTags:
     def __init__(
         self,
         host_tags_sequences: Mapping[HostName, Sequence[TagID]],
-        host_tags_maps: Mapping[HostName, Mapping[TagGroupID, TagID]],
+        host_tags_maps: HostTagsMap,
     ) -> None:
         self.host_tags_sequences: Final = host_tags_sequences
         self.host_tags_maps: Final = host_tags_maps
+
+    @staticmethod
+    def _parse_raw_host_tags(
+        raw_host_tags: object,
+    ) -> Iterable[tuple[HostName, Mapping[TagGroupID, TagID]]]:
+        if not isinstance(raw_host_tags, Mapping):
+            raise TypeError(raw_host_tags)
+        for raw_host, raw_tags in raw_host_tags.items():
+            if not isinstance(raw_tags, Mapping):
+                raise TypeError(raw_tags)
+            yield HostName(raw_host), {TagGroupID(k): TagID(v) for k, v in raw_tags.items()}
 
     @classmethod
     def make(
         cls,
         host_paths: Mapping[HostName, str],
         tag_config_spec: TagConfigSpec,
-        raw_host_tags: Mapping[HostName, Mapping[TagGroupID, TagID]],
+        raw_host_tags: object,
         tagged_hosts: Iterable[str],
         shadow_hosts: Mapping[HostName, Mapping[str, Any]],
     ) -> Self:
@@ -51,7 +66,8 @@ class HostTags:
         """
         tag_to_group_map = _get_tag_to_group_map(get_effective_tag_config(tag_config_spec))
         tags_sequences = dict[HostName, Sequence[TagID]]()
-        tags_maps = {**raw_host_tags}
+        tags_maps = dict[HostName, Mapping[TagGroupID, TagID]]()
+        tags_maps.update(cls._parse_raw_host_tags(raw_host_tags))
         for tagged_host in tagged_hosts:
             raw_hostname, *raw_tags = tagged_host.split("|")
             hostname = HostName(raw_hostname)

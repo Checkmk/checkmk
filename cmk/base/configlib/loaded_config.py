@@ -40,7 +40,6 @@ from cmk.utils.notify_types import (
     NotifyPluginParamsDict,
 )
 from cmk.utils.oauth2_connection import OAuth2Connection
-from cmk.utils.rulesets import ruleset_matcher
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
 
@@ -108,7 +107,7 @@ class BaseConfig:
     inventory_check_interval: object
     fake_dns: str | None
     tag_config: cmk.utils.tags.TagConfigSpec
-    host_tags: ruleset_matcher.TagsOfHosts
+    host_tags: object
     cmc_log_rrdcreation: Literal["terse", "full"] | None
     cmc_host_rrd_config: Sequence[RuleSpec[Any]]
     cmc_statehist_cache: Mapping[str, object] | None

@@ -142,7 +142,6 @@ def test_default_config_from_plugins() -> None:
         "sites",
         "tags",
         "enable_login_via_get",
-        "enable_deprecated_automation_user_authentication",
         "default_temperature_unit",
         "vue_experimental_features",
         "inject_js_profiling_code",

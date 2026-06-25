@@ -314,10 +314,12 @@ def test_openapi_delete_rule(
     new_rule: tuple[Response, dict[str, typing.Any]],
 ) -> None:
     resp, values = new_rule
+    _resp = clients.Ruleset.get(ruleset_id=values["ruleset"])
+    assert _resp.json["extensions"]["number_of_rules"] == 1
     api_client.follow_link(
         resp.json,
         ".../delete",
-        headers={"If-Match": resp.headers["ETag"]},
+        headers={"If-Match": _resp.headers["ETag"]},
     ).assert_status_code(204)
     list_resp = clients.Ruleset.get(ruleset_id=values["ruleset"])
     assert list_resp.json["extensions"]["number_of_rules"] == 0
@@ -421,10 +423,9 @@ def test_create_rule_old_and_new_label_formats(
     )
 
     resp.assert_status_code(400)
-    assert (
-        resp.json["fields"]["body.conditions"]["msg"]
-        == "Value error, Please provide the field 'host_labels' OR 'host_label_groups', not both."
-    )
+    assert resp.json["fields"]["conditions"]["_schema"] == [
+        "Please provide the field 'host_labels' OR 'host_label_groups', not both."
+    ]
 
 
 def test_create_rule_missing_operator(clients: ClientRegistry) -> None:

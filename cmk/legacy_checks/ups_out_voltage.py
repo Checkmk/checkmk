@@ -3,35 +3,40 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
 
-
-from collections.abc import Iterable
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
-from cmk.legacy_includes.ups_out_voltage import check_ups_out_voltage
-from cmk.plugins.ups.lib import DETECT_UPS_GENERIC
-
-check_info = {}
-
-
-def discover_ups_out_voltage(info: list[list[str]]) -> Iterable[tuple[str, dict]]:
-    yield from ((item, {}) for item, value, *_rest in info if int(value) > 0)
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    DiscoveryResult,
+    OIDEnd,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.ups.lib import check_ups_out_voltage, DETECT_UPS_GENERIC
 
 
 def parse_ups_out_voltage(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["ups_out_voltage"] = LegacyCheckDefinition(
+def discover_ups_out_voltage(section: StringTable) -> DiscoveryResult:
+    yield from (Service(item=item) for item, value, *_rest in section if int(value) > 0)
+
+
+snmp_section_ups_out_voltage = SimpleSNMPSection(
     name="ups_out_voltage",
-    parse_function=parse_ups_out_voltage,
     detect=DETECT_UPS_GENERIC,
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.33.1.4.4.1",
         oids=[OIDEnd(), "2"],
     ),
+    parse_function=parse_ups_out_voltage,
+)
+
+
+check_plugin_ups_out_voltage = CheckPlugin(
+    name="ups_out_voltage",
     service_name="OUT voltage phase %s",
     discovery_function=discover_ups_out_voltage,
     check_function=check_ups_out_voltage,

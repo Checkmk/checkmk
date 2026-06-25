@@ -1,4 +1,18 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+package(default_package_metadata = [":dependency_info"])
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "openssl",
+    cpe_format_str = "cpe:2.3:a:openssl:openssl:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:OpenSSL",
+    license_text = "LICENSE.txt",
+    purl_namespace = "openssl",
+    purl_type = "github",
+    version = module_version(),
+)
 
 filegroup(
     name = "all_srcs",

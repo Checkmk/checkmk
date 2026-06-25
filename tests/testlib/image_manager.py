@@ -111,6 +111,10 @@ class RelayImageManager(ABCImageManager):
     """Resolves the ``check-mk-relay`` image for a given Checkmk version."""
 
     REGISTRY: Final = "artifacts.lan.tribe29.com:4000"
+    # The image is published under the ``checkmk`` namespace, i.e.
+    # ``<registry>/checkmk/check-mk-relay`` (see the oci_push targets in
+    # omd/non-free/relay/BUILD). The registry_ref must include it or the pull 404s.
+    REGISTRY_NAMESPACE: Final = "checkmk"
     IMAGE_NAME: Final = "check-mk-relay"
     BAZEL_TARGET: Final = "//omd/non-free/relay:image_docker"
     # The bazel rule always loads under this tag (see omd/non-free/relay/BUILD).
@@ -120,7 +124,7 @@ class RelayImageManager(ABCImageManager):
         return f"{self.IMAGE_NAME}:{version}"
 
     def registry_ref(self, version: str) -> str:
-        return f"{self.REGISTRY}/{self.IMAGE_NAME}:{version}"
+        return f"{self.REGISTRY}/{self.REGISTRY_NAMESPACE}/{self.IMAGE_NAME}:{version}"
 
     def build(self, version: str) -> str:
         # Remove any stale ``:latest`` so a previous run's image can't shadow this build.

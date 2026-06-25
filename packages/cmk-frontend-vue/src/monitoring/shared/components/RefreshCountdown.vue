@@ -88,6 +88,12 @@ const accessibilityLabel = computed<string>(() =>
   border: none;
   background: transparent;
   cursor: pointer;
+  border-radius: 50%;
+}
+
+.monitoring-refresh-countdown:focus-visible {
+  outline: 1px solid var(--success);
+  outline-offset: 2px;
 }
 
 .monitoring-refresh-countdown--paused {

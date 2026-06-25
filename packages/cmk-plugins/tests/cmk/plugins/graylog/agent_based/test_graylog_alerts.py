@@ -9,9 +9,17 @@ import pytest
 
 from cmk.agent_based.v2 import Result, State, StringTable
 from cmk.plugins.graylog.agent_based.graylog_alerts import (
+    AlertsParams,
     check_graylog_alerts,
     parse_graylog_alerts,
 )
+
+_PARAMS: AlertsParams = {
+    "alerts_upper": ("no_levels", None),
+    "alerts_lower": ("no_levels", None),
+    "alerts_in_range_upper": ("no_levels", None),
+    "alerts_in_range_lower": ("no_levels", None),
+}
 
 
 @pytest.mark.parametrize(
@@ -52,7 +60,7 @@ def test_check_graylog_alerts(
     assert (
         list(
             check_graylog_alerts(
-                params={},
+                params=_PARAMS,
                 section=parsed_section,
             )
         )

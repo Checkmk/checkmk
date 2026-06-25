@@ -3595,6 +3595,14 @@ class OtelConfigClient(RestApiClient):
             api_version=APIVersion.INTERNAL,
         )
 
+    def get_receiver(self, config_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.receivers_domain}/{config_id}",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
     def get_prom_scrapers(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",

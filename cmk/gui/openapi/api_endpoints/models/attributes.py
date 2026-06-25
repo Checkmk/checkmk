@@ -807,6 +807,15 @@ class MetricsAssociationEnabledModel:
         "this host. Left unset for hosts created by the Dynamic Host Management connection.",
         default_factory=ApiOmitted,
     )
+    attribute_filter_groups: Sequence[MetricsAssociationAttributeFiltersModel] | ApiOmitted = (
+        api_field(
+            description="One attribute filter group per host name lookup rule that produced this "
+            "host. The host's series are the union of all groups (logical OR across groups, logical "
+            "AND within each group). Set by the Dynamic Host Management connection for hosts "
+            "produced by more than one rule; single-rule hosts use ``attribute_filters`` only.",
+            default_factory=ApiOmitted,
+        )
+    )
 
 
 MetricsAssociationModel = Literal["disabled"] | MetricsAssociationEnabledModel

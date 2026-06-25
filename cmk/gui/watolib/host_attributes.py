@@ -138,6 +138,10 @@ class MetricsAssociationEnabled(TypedDict):
     # host's own name. Used for hosts configured manually; hosts created by the DCD connector leave
     # this unset and store the resolved values directly in attribute_filters.
     host_name_template: NotRequired[str]
+    # One filter group per host name lookup rule that produced this host (DCD multi-rule
+    # connections). The host's series are the union of every group's matches. Set only for hosts
+    # produced by more than one rule; single-rule hosts use ``attribute_filters`` alone.
+    attribute_filter_groups: NotRequired[Sequence[MetricsAssociationAttributeFilters]]
 
 
 # Possible improvements for the future:

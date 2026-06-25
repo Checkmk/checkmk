@@ -355,6 +355,36 @@ class HostViewAttributeModel(
                         ],
                     ),
                     host_name_template=_metrics_association_host_name_template(metrics_assoc[1]),
+                    attribute_filter_groups=(
+                        [
+                            MetricsAssociationAttributeFiltersModel(
+                                resource_attributes=[
+                                    MetricsAssociationAttributeFilterModel(
+                                        key=attribute_filter["key"],
+                                        value=attribute_filter["value"],
+                                    )
+                                    for attribute_filter in group["resource_attributes"]
+                                ],
+                                scope_attributes=[
+                                    MetricsAssociationAttributeFilterModel(
+                                        key=attribute_filter["key"],
+                                        value=attribute_filter["value"],
+                                    )
+                                    for attribute_filter in group["scope_attributes"]
+                                ],
+                                data_point_attributes=[
+                                    MetricsAssociationAttributeFilterModel(
+                                        key=attribute_filter["key"],
+                                        value=attribute_filter["value"],
+                                    )
+                                    for attribute_filter in group["data_point_attributes"]
+                                ],
+                            )
+                            for group in metrics_assoc[1]["attribute_filter_groups"]
+                        ]
+                        if "attribute_filter_groups" in metrics_assoc[1]
+                        else ApiOmitted()
+                    ),
                 )
             )
             if (metrics_assoc := value.get("metrics_association"))
@@ -506,4 +536,23 @@ def _metrics_association_to_internal(
     # Optional manual host name template; absent for hosts created by the DCD connector.
     if not isinstance(model.host_name_template, ApiOmitted):
         enabled["host_name_template"] = model.host_name_template
+    # Multiple filter groups for hosts produced by more than one host name lookup rule.
+    if not isinstance(model.attribute_filter_groups, ApiOmitted):
+        enabled["attribute_filter_groups"] = [
+            MetricsAssociationAttributeFilters(
+                resource_attributes=[
+                    MetricsAssociationAttributeFilter(key=f.key, value=f.value)
+                    for f in group.resource_attributes
+                ],
+                scope_attributes=[
+                    MetricsAssociationAttributeFilter(key=f.key, value=f.value)
+                    for f in group.scope_attributes
+                ],
+                data_point_attributes=[
+                    MetricsAssociationAttributeFilter(key=f.key, value=f.value)
+                    for f in group.data_point_attributes
+                ],
+            )
+            for group in model.attribute_filter_groups
+        ]
     return ("enabled", enabled)

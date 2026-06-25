@@ -149,6 +149,14 @@ class MetricsAssociationConfig(BaseSchema):
         required=True,
         description="List of filters to apply",
     )
+    attribute_filter_groups = fields.List(
+        fields.Nested(AttributeFiltersSchema),
+        required=False,
+        description="One attribute filter group per host name lookup rule that produced this host "
+        "(Dynamic Host Management multi-rule connection). The host's series are the union of all "
+        "groups. Set only for hosts produced by more than one rule; single-rule hosts use "
+        "'attribute_filters' alone.",
+    )
     host_name_template = fields.String(
         required=False,
         minLength=1,

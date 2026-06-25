@@ -70,10 +70,10 @@ test('renders state badge with danger color for state DOWN', () => {
   expect(stateTag).toHaveTextContent('DOWN')
 })
 
-test('renders state badge with warning color for state UNREACHABLE', () => {
+test('renders state badge with unknown color for state UNREACHABLE', () => {
   const { container } = mountRow(makeHost({ state: 'UNREACHABLE' }))
 
-  const stateTag = container.querySelector('.cmk-tag--color-warning')
+  const stateTag = container.querySelector('.cmk-tag--color-unknown')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UNREACH')
 })

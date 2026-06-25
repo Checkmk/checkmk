@@ -41,7 +41,7 @@ const stateLabel = computed<TranslatedString>(() => {
 })
 
 const stateColor = computed<Colors>(() => {
-  let color: Colors = 'warning'
+  let color: Colors = 'unknown'
 
   switch (props.state) {
     case 'UP':

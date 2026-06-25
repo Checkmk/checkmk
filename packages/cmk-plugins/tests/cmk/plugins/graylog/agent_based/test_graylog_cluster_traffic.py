@@ -12,8 +12,15 @@ from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.graylog.agent_based.graylog_cluster_traffic import (
     check_graylog_cluster_traffic,
     discover_graylog_cluster_traffic,
+    GraylogClusterTrafficParams,
+    parse_graylog_cluster_traffic,
 )
-from cmk.plugins.graylog.lib import deserialize_and_merge_json
+
+_PARAMS: GraylogClusterTrafficParams = {
+    "input": ("no_levels", None),
+    "output": ("no_levels", None),
+    "decoded": ("no_levels", None),
+}
 
 _SECTION = [
     [
@@ -23,14 +30,14 @@ _SECTION = [
 
 
 def test_discover_graylog_cluster_traffic() -> None:
-    parsed = deserialize_and_merge_json(_SECTION)
+    parsed = parse_graylog_cluster_traffic(_SECTION)
     assert list(discover_graylog_cluster_traffic(parsed)) == [Service()]
 
 
 def test_check_graylog_cluster_traffic(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
-    parsed = deserialize_and_merge_json(_SECTION)
-    assert list(check_graylog_cluster_traffic({}, parsed)) == [
+    parsed = parse_graylog_cluster_traffic(_SECTION)
+    assert list(check_graylog_cluster_traffic(_PARAMS, parsed)) == [
         Result(state=State.OK, summary="Input: 789 MiB"),
         Metric("graylog_input", 827199820),
         Result(state=State.OK, summary="Output: 4.48 GiB"),

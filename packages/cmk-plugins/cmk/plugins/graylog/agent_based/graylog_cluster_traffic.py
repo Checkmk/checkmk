@@ -7,22 +7,23 @@
 import calendar
 import time
 from collections.abc import Mapping
-from typing import Any
+from dataclasses import dataclass
+from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     render,
     Result,
     Service,
     State,
+    StringTable,
 )
 from cmk.plugins.graylog.lib import deserialize_and_merge_json
-
-Section = dict[str, Any]
 
 # <<<graylog_cluster_traffic>>>
 # {"to": "2019-09-20T12:00:00.000Z", "output": {"2019-09-17T03:00:00.000Z":
@@ -40,38 +41,60 @@ Section = dict[str, Any]
 # 15022425, "2019-09-10T21:00:00.000Z": 7688443}}
 
 
+@dataclass(frozen=True)
+class Section:
+    input: Mapping[str, int] | None
+    output: Mapping[str, int] | None
+    decoded: Mapping[str, int] | None
+    to: str | None
+
+
+class GraylogClusterTrafficParams(TypedDict):
+    input: LevelsT[int]
+    output: LevelsT[int]
+    decoded: LevelsT[int]
+
+
+def parse_graylog_cluster_traffic(string_table: StringTable) -> Section:
+    match deserialize_and_merge_json(string_table):
+        case {
+            "input": dict() | None as input_,
+            "output": dict() | None as output,
+            "decoded": dict() | None as decoded,
+            "to": str() | None as to,
+        }:
+            return Section(input=input_, output=output, decoded=decoded, to=to)
+        case _:
+            return Section(input=None, output=None, decoded=None, to=None)
+
+
 def discover_graylog_cluster_traffic(section: Section) -> DiscoveryResult:
-    if section:
+    if section.input or section.output or section.decoded or section.to:
         yield Service()
 
 
-def check_graylog_cluster_traffic(params: Mapping[str, Any], section: Section) -> CheckResult:
-    if not section:
-        return
-
-    for key, infotext in [
-        ("input", "Input"),
-        ("output", "Output"),
-        ("decoded", "Decoded"),
+def check_graylog_cluster_traffic(
+    params: GraylogClusterTrafficParams, section: Section
+) -> CheckResult:
+    for traffic, metric_name, infotext, levels_upper in [
+        (section.input, "graylog_input", "Input", params["input"]),
+        (section.output, "graylog_output", "Output", params["output"]),
+        (section.decoded, "graylog_decoded", "Decoded", params["decoded"]),
     ]:
-        traffic_value = section.get(key)
-        if traffic_value is not None:
-            try:
-                latest_entry = sorted(traffic_value, reverse=True)[0]
-            except IndexError:
-                continue
+        if not traffic:
+            continue
 
-            yield from check_levels_v1(
-                value=traffic_value[latest_entry],
-                metric_name=f"graylog_{key}",
-                levels_upper=params.get(key),
-                render_func=render.bytes,
-                label=infotext,
-            )
+        latest_entry = sorted(traffic, reverse=True)[0]
+        yield from check_levels(
+            value=traffic[latest_entry],
+            metric_name=metric_name,
+            levels_upper=levels_upper,
+            render_func=render.bytes,
+            label=infotext,
+        )
 
-    last_updated = section.get("to")
-    if last_updated is not None:
-        local_timestamp = calendar.timegm(time.strptime(last_updated, "%Y-%m-%dT%H:%M:%S.%fZ"))
+    if section.to is not None:
+        local_timestamp = calendar.timegm(time.strptime(section.to, "%Y-%m-%dT%H:%M:%S.%fZ"))
         yield Result(
             state=State.OK,
             summary=f"Last updated: {render.datetime(local_timestamp)}",
@@ -80,7 +103,7 @@ def check_graylog_cluster_traffic(params: Mapping[str, Any], section: Section) -
 
 agent_section_graylog_cluster_traffic = AgentSection(
     name="graylog_cluster_traffic",
-    parse_function=deserialize_and_merge_json,
+    parse_function=parse_graylog_cluster_traffic,
 )
 
 
@@ -90,5 +113,9 @@ check_plugin_graylog_cluster_traffic = CheckPlugin(
     discovery_function=discover_graylog_cluster_traffic,
     check_function=check_graylog_cluster_traffic,
     check_ruleset_name="graylog_cluster_traffic",
-    check_default_parameters={},
+    check_default_parameters={
+        "input": ("no_levels", None),
+        "output": ("no_levels", None),
+        "decoded": ("no_levels", None),
+    },
 )

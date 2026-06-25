@@ -165,6 +165,10 @@ export abstract class MonitoringService<T> extends ServiceBase {
     this.filters.deactivateQuickFilter(quickFilter)
   }
 
+  clearAllFilters(): void {
+    this.filters.clearAllFilters()
+  }
+
   stopPolling(): void {
     if (this.stopFilterWatch !== null) {
       this.stopFilterWatch()

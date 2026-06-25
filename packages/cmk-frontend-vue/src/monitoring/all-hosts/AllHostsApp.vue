@@ -208,11 +208,6 @@ const hostService = new HostService(new HostApi(), getKeyShortcutServiceInstance
   columns,
   quickFilters: [
     {
-      label: _t('All'),
-      // No filter conditions (filter omitted) and an empty search query: show all results.
-      searchQuery: ''
-    },
-    {
       label: _t('Unhandled Problems'),
       filter: {
         type: 'and',
@@ -271,6 +266,12 @@ function rowKey(row: HostEntry): string {
             @deactivate="hostService.deactivateQuickFilter(chip)"
           />
         </div>
+        <button
+          class="monitoring-all-hosts-app__clear-filters"
+          @click="hostService.clearAllFilters()"
+        >
+          {{ _t('Reset all filters') }}
+        </button>
       </div>
       <RefreshCountdown
         :remaining="hostService.secondsRemaining.value"
@@ -338,6 +339,23 @@ function rowKey(row: HostEntry): string {
   display: flex;
   flex-wrap: wrap;
   gap: var(--dimension-4);
+}
+
+.monitoring-all-hosts-app__clear-filters {
+  border: 0;
+  background-color: transparent;
+  text-decoration: underline;
+  font-weight: var(--font-weight-default);
+  padding: 0;
+
+  &:focus-visible {
+    outline: 1px solid var(--success);
+    outline-offset: 2px;
+  }
+
+  &:hover {
+    color: var(--color-corporate-green-50);
+  }
 }
 
 .monitoring-all-hosts-app__results-count {

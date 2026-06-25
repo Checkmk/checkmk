@@ -81,6 +81,10 @@ export class FilterStore {
     this.filterNode.value = undefined
   }
 
+  clearAllFilters(): void {
+    this.filterNode.value = undefined
+  }
+
   /** Direct write for a future query-filter UI. */
   setQueryNode(node: FilterNode | undefined): void {
     this.filterNode.value = node

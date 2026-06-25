@@ -22,7 +22,12 @@ from cmk.gui.script_helpers import application_and_request_context
 from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 global_request = request
-MAX_FORM_SIZE = 200  # MBs, as seen in cmk.gui.http::Request.max_form_memory_size
+# The form size limit enforced by cmk.gui.http.Request.max_form_memory_size.
+MAX_FORM_SIZE = 200 * 1024 * 1024  # 200 MiB
+# A small stand-in limit used to exercise the boundary logic without allocating
+# hundreds of MiB (let alone GiB) of payload. The real limit is monkeypatched
+# down to this value in the size-limit test.
+TEST_FORM_SIZE = 1024 * 1024  # 1 MiB
 
 RequestContextFixture = Iterator[None]
 
@@ -378,28 +383,38 @@ def test_response_del_cookie(monkeypatch: MonkeyPatch) -> None:
 
 
 @pytest.mark.parametrize(
-    ["size_mb", "error"],
+    ["size", "error"],
     [
-        pytest.param(1024 * 1024 * (MAX_FORM_SIZE - 1), False, id="under_limit"),
-        pytest.param(1024 * 1024 * MAX_FORM_SIZE, True, id="at_limit"),
-        pytest.param(1024 * 1024 * (MAX_FORM_SIZE * 10), True, id="over_limit"),
+        pytest.param(TEST_FORM_SIZE - 4096, False, id="under_limit"),
+        pytest.param(TEST_FORM_SIZE, True, id="at_limit"),
+        pytest.param(TEST_FORM_SIZE + 1, True, id="just_over_limit"),
     ],
 )
 def test_response_413_form_size_limit(
     wsgi_app: WebTestAppForCMK,
     patch_theme: None,
-    size_mb: int,
+    monkeypatch: MonkeyPatch,
+    size: int,
     error: bool,
 ) -> None:
-    """Validate the maximum form size remains under 20MB.
+    """Validate that form data exceeding the limit is rejected with 413.
+
+    The real limit (200 MiB) is monkeypatched down to a small stand-in value so
+    the boundary logic is exercised with KiB/MiB-sized payloads. Previously the
+    ``over_limit`` case built a ~2 GiB string and could OOM the test runner.
 
     Args:
         wsgi_app (WebTestAppForCMK): wsgi client of the flask application.
         patch_theme (None): patch frontend configuration for unit testing.
-        size_mb (int): size of data added to the form.
+        monkeypatch (MonkeyPatch): used to shrink the enforced form size limit.
+        size (int): size in bytes of the data added to the form.
         error (bool): whether an error is raised or not.
     """
-    content = "a" * size_mb
+    # Guard the assumed default so this stays in sync with the production limit.
+    assert http.Request.max_form_memory_size == MAX_FORM_SIZE
+    monkeypatch.setattr(http.Request, "max_form_memory_size", TEST_FORM_SIZE)
+
+    content = "a" * size
     with pytest.raises(RequestEntityTooLarge) if error else nullcontext():
         wsgi_app.post(
             "/NO_SITE/check_mk/login.py",

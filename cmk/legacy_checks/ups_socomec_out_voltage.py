@@ -3,15 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.ups_out_voltage import check_ups_out_voltage
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.ups.lib import check_ups_out_voltage
 from cmk.plugins.ups.lib_socomec import DETECT_SOCOMEC
-
-check_info = {}
 
 
 def saveint(i: str) -> int:
@@ -27,31 +33,34 @@ def saveint(i: str) -> int:
         return 0
 
 
-def discover_socomec_ups_out_voltage(info):
-    if len(info) > 0:
-        return [(x[0], {}) for x in info if int(x[1]) > 0]
-    return []
-
-
-def check_socomec_ups_out_voltage(item, params, info):
-    conv_info = []
-    for line in info:
-        conv_info.append([line[0], saveint(line[1]) // 10, line[1]])
-    return check_ups_out_voltage(item, params, conv_info)
-
-
 def parse_ups_socomec_out_voltage(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["ups_socomec_out_voltage"] = LegacyCheckDefinition(
+def discover_socomec_ups_out_voltage(section: StringTable) -> DiscoveryResult:
+    yield from (Service(item=line[0]) for line in section if int(line[1]) > 0)
+
+
+def check_socomec_ups_out_voltage(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
+    conv_info = [[line[0], str(saveint(line[1]) // 10), line[1]] for line in section]
+    yield from check_ups_out_voltage(item, params, conv_info)
+
+
+snmp_section_ups_socomec_out_voltage = SimpleSNMPSection(
     name="ups_socomec_out_voltage",
-    parse_function=parse_ups_socomec_out_voltage,
     detect=DETECT_SOCOMEC,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.4.4.1",
         oids=["1", "2"],
     ),
+    parse_function=parse_ups_socomec_out_voltage,
+)
+
+
+check_plugin_ups_socomec_out_voltage = CheckPlugin(
+    name="ups_socomec_out_voltage",
     service_name="OUT voltage phase %s",
     discovery_function=discover_socomec_ups_out_voltage,
     check_function=check_socomec_ups_out_voltage,

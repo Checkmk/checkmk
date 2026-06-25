@@ -53,6 +53,7 @@ import UclCmkDatePicker from './form-elements/date-time/UclCmkDatePicker.vue'
 import UclCmkDateTimePicker from './form-elements/date-time/UclCmkDateTimePicker.vue'
 import UclCmkTimePicker from './form-elements/date-time/UclCmkTimePicker.vue'
 import UclCmkTimeRangePicker from './form-elements/date-time/UclCmkTimeRangePicker.vue'
+import UclCmkTimeRangeTooltip from './form-elements/date-time/UclCmkTimeRangeTooltip.vue'
 import UclCmkHtml from './foundation-elements/CmkHtml/UclCmkHtml.vue'
 import UclCmkIcon from './foundation-elements/CmkIcon/UclCmkIcon.vue'
 import UclCmkIconEmblem from './foundation-elements/CmkIcon/UclCmkIconEmblem.vue'
@@ -129,7 +130,8 @@ const formElementsPages = [
     new Page('CmkTimePicker', UclCmkTimePicker),
     new Page('CmkDatePicker', UclCmkDatePicker),
     new Page('CmkDateTimePicker', UclCmkDateTimePicker),
-    new Page('CmkTimeRangePicker', UclCmkTimeRangePicker)
+    new Page('CmkTimeRangePicker', UclCmkTimeRangePicker),
+    new Page('CmkTimeRangeTooltip', UclCmkTimeRangeTooltip)
   ])
 ]
 

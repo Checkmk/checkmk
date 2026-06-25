@@ -45,8 +45,7 @@ class AttributeFilterGroup:
     # A free-form host name template (e.g. "$RESOURCE_ATTR.service.name$") that, by convention,
     # resolves to this host's own name. Carried through verbatim and resolved into concrete
     # attribute filters by the telemetry fetcher (which has backend access and the template logic).
-    # Hosts created by the DCD connector instead carry the resolved values directly in the attribute
-    # filters and leave this empty.
+    # ``None`` when no template applies and the configured filters are queried as-is.
     host_name_template: str | None
 
 
@@ -73,14 +72,14 @@ class MetricBackendFetcherConfig:
         # filters as a list of groups. Single-rule and manually configured hosts keep the legacy
         # single ``attribute_filters`` shape, which is read as exactly one group.
         if (groups := metrics_association.get("attribute_filter_groups")) is not None:
-            # Multi-rule DCD host: the connector stored the resolved filters of every rule directly,
-            # so there is no host name template left to resolve at fetch time.
+            # Multi-rule DCD host: each group carries the rule's configured filters and its host name
+            # template, resolved at fetch time (a group without a template is queried as-is).
             attribute_filter_groups = [
                 AttributeFilterGroup(
                     resource_attribute_filters=_parse_filters(group["resource_attributes"]),
                     scope_attribute_filters=_parse_filters(group["scope_attributes"]),
                     data_point_attribute_filters=_parse_filters(group["data_point_attributes"]),
-                    host_name_template=None,
+                    host_name_template=group.get("host_name_template"),
                 )
                 for group in groups
             ]

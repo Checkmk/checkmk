@@ -10,10 +10,9 @@ import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
-import CmkIconButton from '@/components/CmkIconButton.vue'
 import type { QuerySuggestionsFn } from '@/components/CmkSuggestions/types'
 
-import useInlineEdit, { type InlineEditLeaveReason } from '../useInlineEdit'
+import InlineEditPill from '../InlineEditPill.vue'
 import { ATTRIBUTE_TYPE_LABELS, attributeTypePrefix, operatorPhrase, pillLabel } from './pill-label'
 import {
   EXISTENCE_OPERATORS,
@@ -84,8 +83,7 @@ const showValidationErrors = ref(false)
 
 const validationVisible = computed(() => showValidationErrors.value)
 
-const closedPillRef = useTemplateRef<HTMLElement>('closedPillRef')
-let returnFocusToClosedPill = false
+const pillRef = useTemplateRef<InstanceType<typeof InlineEditPill>>('pillRef')
 
 // Guided edit chain: each watcher auto-opens the next dropdown that still
 // needs input, minimizing clicks on the common path.
@@ -100,10 +98,6 @@ watch(
       }
     } else {
       showValidationErrors.value = false
-      if (returnFocusToClosedPill) {
-        returnFocusToClosedPill = false
-        void nextTick(() => closedPillRef.value?.focus())
-      }
     }
   },
   { immediate: true }
@@ -226,57 +220,45 @@ const operatorOptions = computed(() => {
 
 const hasValidationErrors = computed(() => !isConditionValid(props.condition))
 
-// Clicking outside the edit pane, or pressing Escape, commits the pill — unless
-// a required field is still empty, in which case the errors are revealed and the
-// pill stays open. Escape additionally returns focus to the closed pill.
-function onLeave(reason: InlineEditLeaveReason): void {
+// Veto committing the pill while a required field is still empty: reveal the
+// errors and keep editing. The pill handles emitting `done` and the focus
+// return when leaving is allowed.
+function canLeave(): boolean {
   if (hasValidationErrors.value) {
     showValidationErrors.value = true
-    return
+    return false
   }
-  if (reason === 'escape') {
-    returnFocusToClosedPill = true
-  }
-  emit('done')
+  return true
 }
-
-const editPaneRef = useTemplateRef<HTMLElement>('editPaneRef')
-
-const {
-  vClickOutside,
-  onOutsideClick: onOutside,
-  onEscapeCapture: onEditEscapeCapture,
-  onEscape: onEditEscape
-} = useInlineEdit({ isOpen: () => props.editing, paneRef: editPaneRef, onLeave })
 
 defineExpose({
   revealValidationErrors: () => {
     showValidationErrors.value = true
   },
   focus: () => {
-    closedPillRef.value?.focus()
+    pillRef.value?.focus()
   }
 })
 </script>
 
 <template>
-  <span
-    class="metric-backend-attribute-filter-pill"
-    :class="{ 'metric-backend-attribute-filter-pill--editing': editing }"
+  <InlineEditPill
+    ref="pillRef"
+    :editing="editing"
+    :removable="removable"
+    :tab-focusable="tabFocusable"
     :aria-label="ariaLabel ?? fullLabel"
-    role="group"
+    :title="fullLabel"
+    :edit-aria-label="`${_t('Edit condition')}: ${fullLabel}`"
+    :remove-label="_t('Remove condition')"
+    :can-leave="canLeave"
+    scope-marker-attr="data-af-scope"
+    item-marker-attr="data-af-item"
+    @edit="emit('edit')"
+    @remove="emit('remove')"
+    @done="emit('done')"
   >
-    <span
-      v-if="editing"
-      ref="editPaneRef"
-      v-click-outside="onOutside"
-      class="metric-backend-attribute-filter-pill__edit"
-      data-af-scope
-      :title="fullLabel"
-      @keydown.tab.capture.stop
-      @keydown.esc.capture="onEditEscapeCapture"
-      @keydown.esc.stop="onEditEscape"
-    >
+    <template #edit>
       <span
         v-if="condition.key"
         data-af-item
@@ -321,7 +303,7 @@ defineExpose({
       </span>
       <span
         v-else
-        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator metric-backend-attribute-filter-pill__segment--operator-static"
+        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator metric-backend-attribute-filter-pill__segment--dimmed"
         >{{ operatorText }}</span
       >
       <span
@@ -340,140 +322,39 @@ defineExpose({
           @update:model-value="onValueUpdate"
         />
       </span>
-      <CmkIconButton
-        v-if="removable"
-        data-af-item
-        class="metric-backend-attribute-filter-pill__remove"
-        name="close"
-        size="small"
-        :title="_t('Remove condition')"
-        :aria-label="_t('Remove condition')"
-        @mousedown.prevent
-        @click.stop="emit('remove')"
-      />
-    </span>
-    <span
-      v-else
-      ref="closedPillRef"
-      data-af-item
-      class="metric-backend-attribute-filter-pill__closed"
-      :tabindex="tabFocusable ? 0 : -1"
-      @keydown.enter.prevent="emit('edit')"
-      @keydown.space.prevent="emit('edit')"
-      @keydown.delete.prevent="emit('remove')"
-    >
-      <button
-        type="button"
-        class="metric-backend-attribute-filter-pill__main"
-        tabindex="-1"
-        :title="fullLabel"
-        :aria-label="`${_t('Edit condition')}: ${fullLabel}`"
-        @mousedown.prevent
-        @click.stop="emit('edit')"
-        @keydown.delete.prevent="emit('remove')"
+    </template>
+    <template #read-only>
+      <span
+        v-if="attributeTypeText !== ''"
+        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--attribute-type metric-backend-attribute-filter-pill__segment--dimmed"
+        >{{ attributeTypeText }}</span
       >
-        <span
-          v-if="attributeTypeText !== ''"
-          class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--attribute-type"
-          >{{ attributeTypeText }}</span
-        >
-        <span
-          class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--key"
-          >{{ condition.key }}</span
-        >
-        <span
-          class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator"
-          >{{ operatorText }}</span
-        >
-        <span
-          v-if="showValue"
-          class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--value"
-          >{{ condition.value }}</span
-        >
-      </button>
-      <CmkIconButton
-        v-if="removable"
-        class="metric-backend-attribute-filter-pill__remove"
-        name="close"
-        size="small"
-        tabindex="-1"
-        :title="_t('Remove condition')"
-        :aria-label="_t('Remove condition')"
-        @mousedown.prevent
-        @click.stop="emit('remove')"
-      />
-    </span>
-  </span>
+      <span
+        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--key"
+        >{{ condition.key }}</span
+      >
+      <span
+        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator metric-backend-attribute-filter-pill__segment--dimmed"
+        >{{ operatorText }}</span
+      >
+      <span
+        v-if="showValue"
+        class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--value"
+        >{{ condition.value }}</span
+      >
+    </template>
+  </InlineEditPill>
 </template>
 
 <style scoped>
-.metric-backend-attribute-filter-pill {
-  display: inline-flex;
-  align-items: stretch;
-  background: var(--default-form-element-bg-color);
-  border: 1px solid var(--ux-theme-4);
-  padding-right: var(--dimension-3);
-  white-space: nowrap;
-}
-
-.metric-backend-attribute-filter-pill:not(.metric-backend-attribute-filter-pill--editing):hover {
-  background-color: var(--input-hover-bg-color);
-}
-
-.metric-backend-attribute-filter-pill--editing {
-  background: var(--ux-theme-3);
-}
-
-.metric-backend-attribute-filter-pill__edit {
-  display: inline-flex;
-}
-
-.metric-backend-attribute-filter-pill__closed {
-  display: inline-flex;
-  align-items: stretch;
-}
-
-.metric-backend-attribute-filter-pill__closed:focus-visible {
-  outline: revert;
-}
-
-.metric-backend-attribute-filter-pill__main {
-  display: inline-flex;
-  background: transparent;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-}
-
-.metric-backend-attribute-filter-pill__main:focus-visible {
-  outline: revert;
-}
-
 .metric-backend-attribute-filter-pill__segment {
   padding: var(--dimension-2) var(--dimension-3);
   display: inline-flex;
   align-items: center;
 }
 
-.metric-backend-attribute-filter-pill__main
-  .metric-backend-attribute-filter-pill__segment--attribute-type,
-.metric-backend-attribute-filter-pill__main
-  .metric-backend-attribute-filter-pill__segment--operator,
-.metric-backend-attribute-filter-pill__segment--operator-static {
+.metric-backend-attribute-filter-pill__segment--dimmed {
   color: var(--font-color-dimmed);
   font-style: italic;
-}
-
-.metric-backend-attribute-filter-pill__remove {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 var(--dimension-2);
-}
-
-.metric-backend-attribute-filter-pill--editing .metric-backend-attribute-filter-pill__remove:hover {
-  background-color: var(--default-form-element-bg-color);
 }
 </style>

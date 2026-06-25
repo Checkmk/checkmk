@@ -1,6 +1,7 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 package(default_visibility = [":__subpackages__"])
 
@@ -48,27 +49,23 @@ write_file(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "smoke",
     size = "small",
     srcs = [
         "__test__.py",
         "test_cannot_fail.py",
     ],
-    args = [
-        "--config-file=$(location @//:pyproject.toml)",
-        "--import-mode=importlib",
-    ],
-    data = ["@//:pyproject.toml"],
     env = {"EDITION": "community"},
     main = ":__test__.py",
+    use_project_pytest_config = True,
     deps = [
         ":__test__",
         ":conftest",
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "repo_community",
     size = "small",
     timeout = "moderate",
@@ -77,13 +74,11 @@ py_test(
         "__test__.py",
     ] + glob(include = ["test_*.py"]),
     args = [
-        "--config-file=$(location @//:pyproject.toml)",
-        "--import-mode=importlib",
         "--random-order-bucket=global",
     ],
-    data = ["@//:pyproject.toml"],
     env = {"EDITION": "community"},
     main = ":__test__.py",
+    use_project_pytest_config = True,
     deps = [
         ":__test__",
         ":conftest",

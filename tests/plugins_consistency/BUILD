@@ -1,5 +1,6 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 py_library(
     name = "conftest",
@@ -21,7 +22,7 @@ py_pytest_main(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "community",
     srcs = ["__test__.py"] + glob(
         include = ["**/*.py"],

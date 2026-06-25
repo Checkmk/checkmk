@@ -1,11 +1,12 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
-load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
@@ -81,7 +82,7 @@ py_pytest_main(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/**/*.py"]) + [":__test__.py"],

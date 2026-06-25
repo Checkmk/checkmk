@@ -1,9 +1,10 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
@@ -292,7 +293,7 @@ py_pytest_main(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "daemon-tests",
     size = "small",
     srcs = [
@@ -309,7 +310,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "hostaddress-tests",
     size = "small",
     srcs = [
@@ -324,7 +325,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "regex-tests",
     size = "small",
     srcs = [
@@ -339,7 +340,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "resulttype-tests",
     size = "small",
     srcs = [
@@ -354,7 +355,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "translations-tests",
     size = "small",
     srcs = [
@@ -369,7 +370,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "tty-tests",
     size = "small",
     srcs = [
@@ -384,7 +385,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "store-tests",
     size = "small",
     srcs = [
@@ -400,7 +401,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "config-path-tests",
     size = "small",
     srcs = [
@@ -415,7 +416,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "cpu-tracking-tests",
     size = "small",
     srcs = [
@@ -430,7 +431,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "archive-tests",
     size = "small",
     srcs = [
@@ -445,7 +446,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "user-tests",
     size = "small",
     srcs = [
@@ -460,7 +461,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "observer-tests",
     size = "small",
     srcs = [

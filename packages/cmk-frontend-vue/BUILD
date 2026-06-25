@@ -1,6 +1,6 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library", "js_run_binary", "js_run_devserver")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
-load("@aspect_rules_py//py:defs.bzl", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_pytest_main")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
@@ -12,6 +12,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:css_library.bzl", "css_library")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:vue_library.bzl", "vue_library")
 
 exports_files([
@@ -407,7 +408,7 @@ py_pytest_main(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "test-code-integrity",
     srcs = ["__test__.py"] + [
         "scripts/test_license_headers.py",

@@ -1,5 +1,6 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "all_requirements", "requirement")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:requirements_mapping.bzl", "requirements_mapping")
 
 py_library(
@@ -23,13 +24,10 @@ py_pytest_main(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "requirements_files",
     size = "small",
     srcs = ["__test__.py"] + ["test_requirements_files.py"],
-    args = [
-        "--import-mode=importlib",
-    ],
     data = [
         "//:constraints.txt",
         "//:requirements.txt",

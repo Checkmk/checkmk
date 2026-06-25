@@ -1,9 +1,10 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files(
@@ -233,7 +234,7 @@ py_library(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "fetchers-tests",
     size = "small",
     srcs = glob([
@@ -262,7 +263,7 @@ py_pytest_main(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "snmplib-tests",
     size = "small",
     srcs = glob(["tests/cmk/checkengine/snmplib/**/*.py"]) + [":__test__.py"],
@@ -276,7 +277,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "snmp-backends-tests",
     size = "small",
     srcs = glob(["tests/cmk/checkengine/snmp_backends/**/*.py"]) + [
@@ -292,7 +293,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "specs-tests",
     size = "small",
     srcs = glob(["tests/cmk/checkengine/specs/*.py"]) + [":__test__.py"],
@@ -304,7 +305,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "parser-tests",
     size = "small",
     srcs = glob([
@@ -320,7 +321,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "section-parser-tests",
     size = "small",
     srcs = glob([
@@ -336,7 +337,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "lib-tests",
     size = "small",
     srcs = [
@@ -355,7 +356,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "plugin-backend-tests",
     size = "small",
     srcs = glob([
@@ -371,7 +372,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "discovery-tests",
     size = "small",
     srcs = glob([
@@ -388,7 +389,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "inventory-tests",
     size = "small",
     srcs = [
@@ -403,7 +404,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "checking-tests",
     size = "small",
     srcs = glob([

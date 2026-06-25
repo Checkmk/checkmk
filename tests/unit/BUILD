@@ -1,6 +1,7 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 package(default_visibility = [":__subpackages__"])
 
@@ -45,7 +46,7 @@ write_file(
     ],
 )
 
-py_test(
+py_cmk_test(
     # Start the collection and load the conftests.  The complexity
     # of those warrants this target.
     name = "smoke",
@@ -54,13 +55,9 @@ py_test(
         "__test__.py",
         "test_cannot_fail.py",
     ],
-    args = [
-        "--config-file=$(location @//:pyproject.toml)",
-        "--import-mode=importlib",
-    ],
-    data = ["@//:pyproject.toml"],
     env = {"EDITION": "community"},
     main = ":__test__.py",
+    use_project_pytest_config = True,
     deps = [
         ":__test__",
         ":conftest",
@@ -68,7 +65,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "repo_community",
     size = "small",
     timeout = "moderate",
@@ -96,11 +93,9 @@ py_test(
         exclude = ["**/nonfree/**"],
     ),
     args = [
-        "--config-file=$(location @//:pyproject.toml)",
-        "--import-mode=importlib",
         "--random-order-bucket=global",
     ],
-    data = ["@//:pyproject.toml"] + glob(
+    data = glob(
         include = [
             # canned data
             "**/tree_test_data/**",
@@ -109,6 +104,7 @@ py_test(
         exclude = ["**/*.py"],
     ),
     main = ":__test__.py",
+    use_project_pytest_config = True,
     visibility = ["//tests:__subpackages__"],
     deps = [
         ":__test__",

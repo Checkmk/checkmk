@@ -1,9 +1,10 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files(
@@ -275,7 +276,7 @@ py_pytest_main(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "agent_based-test",
     size = "small",
     srcs = glob(["tests/cmk/agent_based/**/*.py"]) + [":__test__.py"],
@@ -287,7 +288,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "bakery-test",
     size = "small",
     srcs = glob(["tests/cmk/bakery/**/*.py"]) + [":__test__.py"],
@@ -299,7 +300,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "dcd_connectors-test",
     size = "small",
     srcs = glob(["tests/cmk/dcd_connectors/**/*.py"]) + [":__test__.py"],
@@ -311,7 +312,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "dcd_connector_parameters-test",
     size = "small",
     srcs = glob(["tests/cmk/dcd_connector_parameters/**/*.py"]) + [":__test__.py"],
@@ -324,7 +325,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "discover_plugins-test",
     size = "small",
     srcs = glob(["tests/cmk/discover_plugins/**/*.py"]) + [":__test__.py"],
@@ -338,7 +339,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "graphing-test",
     size = "small",
     srcs = glob(["tests/cmk/graphing/**/*.py"]) + [":__test__.py"],
@@ -350,7 +351,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "rulesets-test",
     size = "small",
     srcs = glob(["tests/cmk/rulesets/**/*.py"]) + [":__test__.py"],
@@ -362,7 +363,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "password_store-test",
     size = "small",
     srcs = glob(["tests/cmk/password_store/**/*.py"]) + [":__test__.py"],
@@ -375,7 +376,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "server_side_calls-test",
     size = "small",
     srcs = glob(["tests/cmk/server_side_calls/**/*.py"]) + [":__test__.py"],
@@ -387,7 +388,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "server_side_programs-test",
     size = "small",
     srcs = glob(["tests/cmk/server_side_programs/**/*.py"]) + [":__test__.py"],
@@ -400,7 +401,7 @@ py_test(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "inventory_ui-test",
     size = "small",
     srcs = glob(["tests/cmk/inventory_ui/**/*.py"]) + [":__test__.py"],

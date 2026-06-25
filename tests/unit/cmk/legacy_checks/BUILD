@@ -1,5 +1,6 @@
-load("@aspect_rules_py//py:defs.bzl", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 package(default_visibility = [":__subpackages__"])
 
@@ -11,19 +12,17 @@ py_pytest_main(
     ],
 )
 
-py_test(
+py_cmk_test(
     name = "legacy_checks",
     size = "small",
     timeout = "moderate",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
     args = [
-        "--config-file=$(location @//:pyproject.toml)",
-        "--import-mode=importlib",
         "--random-order-bucket=global",
     ],
-    data = ["@//:pyproject.toml"],
     env = {"EDITION": "community"},
     main = ":__test__.py",
+    use_project_pytest_config = True,
     visibility = ["//visibility:private"],
     deps = [
         ":__test__",

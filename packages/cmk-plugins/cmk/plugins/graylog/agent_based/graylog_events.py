@@ -4,16 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     render,
     Service,
     StringTable,
@@ -34,23 +34,34 @@ class EventsInfo:
     num_of_events_in_range: int
 
 
-EventsInfoSection = EventsInfo | None
+class EventsParams(TypedDict):
+    events_upper: LevelsT[int]
+    events_lower: LevelsT[int]
+    events_in_range_upper: LevelsT[int]
+    events_in_range_lower: LevelsT[int]
 
 
-def parse_graylog_events(string_table: StringTable) -> EventsInfoSection:
+def parse_graylog_events(string_table: StringTable) -> EventsInfo | None:
     try:
-        events_data = json.loads(string_table[0][0]).get("events")
+        raw = json.loads(string_table[0][0])
     except IndexError:
         return None
 
-    return EventsInfo(
-        num_of_events=int(events_data.get("num_of_events")),
-        has_since_argument=events_data.get("has_since_argument"),
-        events_since=(
-            int(events_data.get("events_since")) if events_data.get("events_since") else None
-        ),
-        num_of_events_in_range=int(events_data.get("num_of_events_in_range")),
-    )
+    match raw.get("events"):
+        case {
+            "num_of_events": int(num_of_events),
+            "has_since_argument": bool(has_since_argument),
+            "events_since": int() | None as events_since,
+            "num_of_events_in_range": int(num_of_events_in_range),
+        }:
+            return EventsInfo(
+                num_of_events=num_of_events,
+                has_since_argument=has_since_argument,
+                events_since=events_since,
+                num_of_events_in_range=num_of_events_in_range,
+            )
+        case _:
+            return None
 
 
 agent_section_graylog_events = AgentSection(
@@ -59,28 +70,24 @@ agent_section_graylog_events = AgentSection(
 )
 
 
-def discover_graylog_events(section: EventsInfoSection) -> DiscoveryResult:
-    if section:
-        yield Service(item=None)
+def discover_graylog_events(section: EventsInfo) -> DiscoveryResult:
+    yield Service(item=None)
 
 
-def check_graylog_events(params: Mapping[str, Any], section: EventsInfoSection) -> CheckResult:
-    if not section:
-        return
-
-    yield from check_levels_v1(
+def check_graylog_events(params: EventsParams, section: EventsInfo) -> CheckResult:
+    yield from check_levels(
         value=section.num_of_events,
-        levels_upper=params.get("events_upper", (None, None)),
-        levels_lower=params.get("events_lower", (None, None)),
+        levels_upper=params["events_upper"],
+        levels_lower=params["events_lower"],
         render_func=str,
         label="Total number of events in the last 24 hours",
     )
 
     if section.has_since_argument and section.events_since:
-        yield from check_levels_v1(
+        yield from check_levels(
             value=section.num_of_events_in_range,
-            levels_upper=params.get("events_in_range_upper", (None, None)),
-            levels_lower=params.get("events_in_range_lower", (None, None)),
+            levels_upper=params["events_in_range_upper"],
+            levels_lower=params["events_in_range_lower"],
             render_func=str,
             label=f"Total number of events in the last {render.timespan(section.events_since)}",
         )
@@ -91,6 +98,11 @@ check_plugin_graylog_events = CheckPlugin(
     check_function=check_graylog_events,
     discovery_function=discover_graylog_events,
     service_name="Graylog Cluster Events",
-    check_default_parameters={},
+    check_default_parameters={
+        "events_upper": ("no_levels", None),
+        "events_lower": ("no_levels", None),
+        "events_in_range_upper": ("no_levels", None),
+        "events_in_range_lower": ("no_levels", None),
+    },
     check_ruleset_name="graylog_events",
 )

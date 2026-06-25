@@ -10,8 +10,16 @@ import pytest
 from cmk.agent_based.v2 import Result, State, StringTable
 from cmk.plugins.graylog.agent_based.graylog_events import (
     check_graylog_events,
+    EventsParams,
     parse_graylog_events,
 )
+
+_PARAMS: EventsParams = {
+    "events_upper": ("no_levels", None),
+    "events_lower": ("no_levels", None),
+    "events_in_range_upper": ("no_levels", None),
+    "events_in_range_lower": ("no_levels", None),
+}
 
 
 @pytest.mark.parametrize(
@@ -47,11 +55,13 @@ def test_check_graylog_events(
     section: StringTable,
     expected_check_result: Sequence[Result],
 ) -> None:
+    parsed_section = parse_graylog_events(section)
+    assert parsed_section is not None
     assert (
         list(
             check_graylog_events(
-                params={},
-                section=parse_graylog_events(section),
+                params=_PARAMS,
+                section=parsed_section,
             )
         )
         == expected_check_result

@@ -1,0 +1,10 @@
+# === Source for each paseo worktree's user.bazelrc (copied by paseo.json setup) ===
+# Per-worktree Bazel profile for parallel AI agents on a resource-bounded host.
+# CPU/RAM caps scale to the host so this is portable across machines; -Xmx is
+# absolute because Checkmk's analysis graph needs ~3g regardless of host size.
+startup --host_jvm_args=-Xmx3g
+startup --max_idle_secs=300
+startup --shutdown_on_low_sys_mem
+common --local_resources=cpu=HOST_CPUS*0.4
+common --local_resources=memory=HOST_RAM*.45
+common --jobs=HOST_CPUS*0.5

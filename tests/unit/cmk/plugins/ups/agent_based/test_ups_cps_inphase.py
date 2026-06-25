@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.ups_cps_inphase import (
+from cmk.plugins.ups.agent_based.ups_cps_inphase import (
     check_ups_cps_inphase,
     discover_ups_cps_inphase,
     parse_ups_cps_inphase,

@@ -68,7 +68,6 @@ import { ref } from 'vue'
 import { untranslated } from '@/lib/i18n'
 
 import CmkButton from '@/components/CmkButton'
-import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
@@ -155,7 +154,7 @@ function saveEntity(objectId: string | null, close: () => void) {
               <CmkButton variant="secondary" @click="() => saveEntity(objectId, close)">
                 <CmkIcon variant="inline" name="save" />Save
               </CmkButton>
-              <CmkButtonCancel @click="close">Cancel</CmkButtonCancel>
+              <CmkButton @click="close"><CmkIcon variant="inline" name="cancel" />Cancel</CmkButton>
             </div>
           </div>
         </template>

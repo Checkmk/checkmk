@@ -6,7 +6,6 @@
 import { render, screen, within } from '@testing-library/vue'
 import UclCmkBadge from '@ucl/components/basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from '@ucl/components/basic-elements/CmkButton/UclCmkButton.vue'
-import UclCmkButtonCancel from '@ucl/components/basic-elements/CmkButtonCancel/UclCmkButtonCancel.vue'
 import UclCmkChip from '@ucl/components/basic-elements/CmkChip/UclCmkChip.vue'
 import UclCmkCode from '@ucl/components/basic-elements/CmkCode/UclCmkCode.vue'
 import UclCmkColorPicker from '@ucl/components/basic-elements/CmkColorPicker/UclCmkColorPicker.vue'
@@ -153,11 +152,6 @@ test('CmkBadge page renders its component', () => {
 
 test('CmkButton page renders its component', () => {
   render(UclCmkButton, { props: { screenshotMode: false } })
-  within(componentPreview()).getAllByRole('button')
-})
-
-test('CmkButtonCancel page renders its component', () => {
-  render(UclCmkButtonCancel, { props: { screenshotMode: false } })
   within(componentPreview()).getAllByRole('button')
 })
 

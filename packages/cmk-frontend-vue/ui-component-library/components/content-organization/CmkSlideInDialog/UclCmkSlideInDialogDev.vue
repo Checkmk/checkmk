@@ -16,7 +16,6 @@ import type {
 import { ref } from 'vue'
 
 import CmkButton from '@/components/CmkButton'
-import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible'
 import CmkIcon from '@/components/CmkIcon'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
@@ -96,7 +95,9 @@ const catalog = ref<Catalog>({
   >
     <div style="margin-bottom: 1em">
       <CmkButton variant="secondary"><CmkIcon variant="inline" name="save" />save</CmkButton>
-      <CmkButtonCancel @click="slideOut1 = false">cancel</CmkButtonCancel>
+      <CmkButton @click="slideOut1 = false"
+        ><CmkIcon variant="inline" name="cancel" />cancel</CmkButton
+      >
     </div>
     <div class="ucl-cmk-slide-in-dialog-dev__content">
       <FormEdit v-model:data="data" :spec="catalog" :backend-validation="[]" />

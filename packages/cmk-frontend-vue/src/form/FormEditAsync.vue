@@ -19,7 +19,6 @@ import { immediateWatch } from '@/lib/watch'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton'
-import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import CmkIcon from '@/components/CmkIcon'
 import CmkSpace from '@/components/CmkSpace.vue'
@@ -148,9 +147,11 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
           }}</CmkButton
         >
         <CmkSpace />
-        <CmkButtonCancel @click="cancel">{{
-          props.cancelButtonLabel ?? _t('Cancel')
-        }}</CmkButtonCancel>
+        <CmkButton @click="cancel">
+          <CmkIcon variant="inline" name="cancel" />{{
+            props.cancelButtonLabel ?? _t('Cancel')
+          }}</CmkButton
+        >
         <!-- the validation error could be scrolled out of the viewport, so we have to show an error bar at the top -->
         <CmkAlertBox v-if="backendValidation.length !== 0" variant="error">
           {{ _t('Could not validate form, errors are shown in the form') }}

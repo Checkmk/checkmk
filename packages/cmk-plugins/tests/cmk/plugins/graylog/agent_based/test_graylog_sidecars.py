@@ -8,14 +8,28 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from typing import Any
-
 from cmk.agent_based.v2 import Result, State
 from cmk.plugins.graylog.agent_based.graylog_sidecars import (
     check_graylog_sidecars,
     discover_graylog_sidecars,
     parse_graylog_sidecars,
+    SidecarsParams,
 )
+
+_PARAMS: SidecarsParams = {
+    "active_state": 2,
+    "last_seen": ("no_levels", None),
+    "running_lower": ("fixed", (1, 0)),
+    "running_upper": ("no_levels", None),
+    "stopped_lower": ("no_levels", None),
+    "stopped_upper": ("fixed", (1, 1)),
+    "failing_lower": ("no_levels", None),
+    "failing_upper": ("fixed", (1, 1)),
+    "running": 0,
+    "stopped": 2,
+    "failing": 2,
+    "no_ping": 2,
+}
 
 
 def test_discovery_graylog_sidecars() -> None:
@@ -39,9 +53,8 @@ def test_check_graylog_sidecars_active_node() -> None:
         ['{"node_name": "test-node-1", "active": true, "last_seen": "2024-01-01T12:00:00.000Z"}'],
     ]
     parsed = parse_graylog_sidecars(string_table)
-    params: dict[str, Any] = {}
 
-    results = list(check_graylog_sidecars("test-node-1", params, parsed))
+    results = list(check_graylog_sidecars("test-node-1", _PARAMS, parsed))
     summaries = [r.summary for r in results if isinstance(r, Result)]
     assert any("Active: yes" in s for s in summaries)
     assert any("Last seen:" in s for s in summaries)
@@ -52,10 +65,9 @@ def test_check_graylog_sidecars_inactive_node() -> None:
         ['{"node_name": "test-node-2", "active": false, "last_seen": "2024-01-01T11:00:00.000Z"}'],
     ]
     parsed = parse_graylog_sidecars(string_table)
-    params: dict[str, Any] = {"active_state": 2}
 
     results = [
-        r for r in check_graylog_sidecars("test-node-2", params, parsed) if isinstance(r, Result)
+        r for r in check_graylog_sidecars("test-node-2", _PARAMS, parsed) if isinstance(r, Result)
     ]
     active_result = next((r for r in results if "Active:" in r.summary), None)
     assert active_result is not None
@@ -68,4 +80,4 @@ def test_check_graylog_sidecars_missing_item() -> None:
         ['{"node_name": "test-node-1", "active": true, "last_seen": "2024-01-01T12:00:00.000Z"}'],
     ]
     parsed = parse_graylog_sidecars(string_table)
-    assert list(check_graylog_sidecars("nonexistent-node", {}, parsed)) == []
+    assert list(check_graylog_sidecars("nonexistent-node", _PARAMS, parsed)) == []

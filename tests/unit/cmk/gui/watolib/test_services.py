@@ -1250,6 +1250,135 @@ def test_perform_discovery_single_update__ignore(
     assert add_disabled_rule == {"MSSQL S2DT Instance"}
 
 
+def test_perform_discovery_single_update__ignore_does_not_re_add_existing_disabled_services(
+    mocker: MockerFixture,
+    sample_host_name: HostName,
+    sample_host: Host,
+    mock_set_autochecks: MagicMock,
+) -> None:
+    """Disabling a single service must not funnel all already-disabled services of the host into
+    add_disabled_rule again.
+
+    Each entry in add_disabled_rule triggers a separate analyze_service_rule_matches automation in
+    EnabledDisabledServicesEditor. On a host with many already-disabled services this caused one
+    automation call per service and ran into the automation timeout, even though the user only
+    toggled a single service. See SUP-29608, CMK-26792, CMK-33299.
+    """
+    already_disabled = [f"Disabled service {i}" for i in range(5)]
+    mock_save_function = mocker.patch(
+        "cmk.gui.watolib.services.Discovery._save_host_service_enable_disable_rules",
+        return_value=None,
+    )
+    mocker.patch(
+        "cmk.gui.watolib.services.local_discovery_preview",
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
+            check_table=[],
+            nodes_check_table={},
+            host_labels={},
+            new_labels={},
+            vanished_labels={},
+            changed_labels={},
+            source_results={"agent": (0, "Success")},
+            labels_by_host={sample_host_name: []},
+            config_warnings=(),
+        ),
+    )
+
+    previous_discovery_result = DiscoveryResult(
+        job_status={
+            "state": "finished",
+            "started": 1764593093.764405,
+            "pid": 604583,
+            "loginfo": {"JobProgressUpdate": [], "JobResult": [], "JobException": []},
+            "is_active": False,
+            "duration": 0.36932802200317383,
+            "title": "Refresh",
+            "stoppable": True,
+            "deletable": True,
+            "user": "cmkadmin",
+            "estimated_duration": 0.0,
+            "ppid": 604485,
+            "logfile_path": "~/var/log/web.log",
+            "acknowledged_by": None,
+            "lock_wato": False,
+            "host_name": sample_host_name,
+        },
+        check_table_created=1764596025,
+        check_table=[
+            # The single monitored service the user explicitly disables.
+            CheckPreviewEntry(
+                check_source="unchanged",
+                check_plugin_name="mssql_instance",
+                ruleset_name="mssql_instance",
+                discovery_ruleset_name=None,
+                item="S2DT",
+                old_discovered_parameters={},
+                new_discovered_parameters={},
+                effective_parameters={},
+                description="MSSQL S2DT Instance",
+                state=0,
+                output="nobody cares",
+                metrics=[],
+                old_labels={},
+                new_labels={},
+                found_on_nodes=[sample_host_name],
+            ),
+            # A large number of services that are already disabled and stay disabled. These are
+            # not selected by the user and must not end up in add_disabled_rule.
+            *[
+                CheckPreviewEntry(
+                    check_source="ignored",
+                    check_plugin_name="local",
+                    ruleset_name=None,
+                    discovery_ruleset_name=None,
+                    item=descr,
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
+                    effective_parameters={},
+                    description=descr,
+                    state=0,
+                    output="nobody cares",
+                    metrics=[],
+                    old_labels={},
+                    new_labels={},
+                    found_on_nodes=[sample_host_name],
+                )
+                for descr in already_disabled
+            ],
+        ],
+        nodes_check_table={},
+        host_labels={},
+        new_labels={},
+        vanished_labels={},
+        changed_labels={},
+        labels_by_host={sample_host_name: []},
+        sources={"agent": (0, "[agent] Success")},
+        config_warnings=(),
+    )
+
+    perform_service_discovery(
+        action=DiscoveryAction.SINGLE_UPDATE,
+        discovery_result=previous_discovery_result,
+        selected_services=(("mssql_instance", "S2DT"),),
+        update_source="unchanged",
+        update_target="ignored",
+        host=sample_host,
+        raise_errors=True,
+        automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+        pprint_value=False,
+        debug=False,
+        use_git=False,
+    )
+
+    mock_save_function.assert_called_once()
+    remove_disabled_rule, add_disabled_rule, *_ = mock_save_function.call_args_list[0][0]
+    assert len(remove_disabled_rule) == 0
+    # Only the explicitly selected service, none of the already-disabled ones.
+    assert add_disabled_rule == {"MSSQL S2DT Instance"}
+
+
 @pytest.mark.usefixtures("inline_background_jobs")
 class TestPerformDiscoverySingleUpdate:
     check_table = [

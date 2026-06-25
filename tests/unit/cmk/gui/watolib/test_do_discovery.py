@@ -167,8 +167,11 @@ known_results = {
         {MOCK_DESC},
     ),
     (DiscoveryState.IGNORED, DiscoveryState.IGNORED): (
+        # An already-disabled service that stays disabled must not be written to the autochecks
+        # file (empty autochecks_to_save), but it is registered in saved_services so that
+        # compute_discovery_transition cancels it out of add_disabled_rule again. See CMK-26792.
         {},
-        set(),
+        {MOCK_DESC},
         {MOCK_DESC},
         set(),
     ),

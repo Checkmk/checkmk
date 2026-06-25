@@ -1050,6 +1050,13 @@ def _case_ignored(
         remove_disabled_rule.add(descr)
     if table_target == DiscoveryState.MONITORED:
         autochecks_to_save[key] = value
+    # Note: disabled services must not be written to the autochecks file (CMK-33299), hence
+    # they are excluded from autochecks_to_save above. They must, however, still be registered
+    # in saved_services: this set is what cancels already-disabled, unchanged services out of
+    # add_disabled_rule in compute_discovery_transition. Omitting them here would push every
+    # already-disabled service of the host into add_disabled_rule on each save, causing one
+    # rule-match automation per service in EnabledDisabledServicesEditor (automation timeout).
+    if table_target in [DiscoveryState.MONITORED, DiscoveryState.IGNORED]:
         saved_services.add(descr)
     if table_target == DiscoveryState.IGNORED:
         add_disabled_rule.add(descr)

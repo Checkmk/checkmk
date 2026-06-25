@@ -13,6 +13,8 @@ import {
 } from '@tanstack/vue-table'
 import { type CSSProperties, inject } from 'vue'
 
+import usei18n from '@/lib/i18n'
+
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
@@ -20,6 +22,8 @@ import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/type
 
 import { COLUMN_LAYOUT_KEY, TABLE_BORDER_SPACING_PX } from './MonitoringTableContext'
 import FilterDropdown from './filter/FilterDropdown.vue'
+
+const { _t } = usei18n()
 
 const borderSpacing = TABLE_BORDER_SPACING_PX
 
@@ -135,6 +139,7 @@ function labelStyle(columnDef: ColumnDef<T>): CSSProperties {
           >
             <CmkCheckbox
               :allow-indeterminate="true"
+              :aria-label="_t('Select all rows')"
               :model-value="selectAllModel(header.getContext().table)"
               @update:model-value="setSelectAll(header.getContext().table, $event)"
             />

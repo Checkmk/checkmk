@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Row } from '@tanstack/vue-table'
 import { inject } from 'vue'
 
+import usei18n from '@/lib/i18n'
+
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
@@ -18,6 +20,8 @@ const props = defineProps<{
   row: HostEntry
   tableRow: Row<HostEntry>
 }>()
+
+const { _t } = usei18n()
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
 
@@ -34,6 +38,7 @@ function toggleSelected(selected: boolean): void {
   <CheckboxCell
     v-if="hasColumn('select')"
     column-id="select"
+    :aria-label="_t('Select host %{name}', { name: row.name })"
     :model-value="tableRow.getIsSelected()"
     @update:model-value="toggleSelected"
   />

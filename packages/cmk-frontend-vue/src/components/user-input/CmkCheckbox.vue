@@ -24,10 +24,16 @@ const value = defineModel<CheckboxValue>({ required: false, default: false })
 const {
   padding = 'both',
   label,
+  ariaLabel,
   disabled = false,
   externalErrors
 } = defineProps<{
   label?: TranslatedString
+  /**
+   * Accessible name for the checkbox to be used when no visible `label` is rendered
+   * (e.g. a row-select checkbox in a table).
+   */
+  ariaLabel?: TranslatedString
   padding?: 'top' | 'bottom' | 'both'
   help?: TranslatedString
   externalErrors?: string[]
@@ -59,6 +65,7 @@ const hasValidationErrors = computed(() => {
         class="cmk-checkbox__button"
         :class="{ 'cmk-checkbox__button--error': hasValidationErrors }"
         :disabled="disabled"
+        :aria-label="ariaLabel"
       >
         <CheckboxIndicator class="cmk-checkbox__indicator">
           <span v-if="value === 'indeterminate'" class="cmk-checkbox__dash" />

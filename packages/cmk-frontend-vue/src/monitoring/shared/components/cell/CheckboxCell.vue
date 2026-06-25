@@ -5,12 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import type { TranslatedString } from '@/lib/i18nString'
+
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import BaseCell from './BaseCell.vue'
 
 defineProps<{
   columnId?: string | undefined
+  ariaLabel?: TranslatedString | undefined
 }>()
 
 const value = defineModel<boolean>({ required: false, default: false })
@@ -19,7 +22,7 @@ const value = defineModel<boolean>({ required: false, default: false })
 <template>
   <BaseCell class="monitoring-checkbox-cell" :column-id="columnId">
     <template #default>
-      <CmkCheckbox v-model="value"></CmkCheckbox>
+      <CmkCheckbox v-model="value" :aria-label="ariaLabel"></CmkCheckbox>
     </template>
   </BaseCell>
 </template>

@@ -10,30 +10,34 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.html import HTML
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.valuespec import TimerangeValue, ValueSpec
 from cmk.gui.view_utils import CSSClass
 from cmk.utils.servicename import ServiceName
 
-AVMode = str  # TODO: Improve this type
+AVMode = Literal["availability", "timeline"]
 AVObjectType = Literal["host", "service", "bi"]
-AVOptions = dict[str, Any]  # TODO: Improve this type
 AVOptionValueSpecs = list[tuple[str, Literal["double", "single"], bool, ValueSpec[Any]]]
 AVBIObjectSpec = tuple[None, None, str]
 AVHostOrServiceObjectSpec = tuple[SiteId, HostName, ServiceName]
 AVObjectSpec = None | AVBIObjectSpec | AVHostOrServiceObjectSpec
 AVOutageStatisticsAggregations = list[Literal["min", "max", "avg", "cnt"]]
-AVOutageStatisticsStates = list[
-    Literal[
-        "ok",
-        "warn",
-        "crit",
-        "unknown",
-        "flapping",
-        "host_down",
-        "in_downtime",
-        "outof_notification_period",
-    ]
+# The stored option offers only service states; for host availability the
+# computation additionally appends the equivalent host states ("up", "down",
+# "unreach"), so they are part of the value set as well.
+AVOutageStatisticsState = Literal[
+    "ok",
+    "warn",
+    "crit",
+    "unknown",
+    "flapping",
+    "host_down",
+    "in_downtime",
+    "outof_notification_period",
+    "up",
+    "down",
+    "unreach",
 ]
+AVOutageStatisticsStates = list[AVOutageStatisticsState]
 AVOutageStatistics = tuple[AVOutageStatisticsAggregations, AVOutageStatisticsStates]
 
 # The functional TypedDict form is required here because "from" and "until" are Python keywords
@@ -76,7 +80,7 @@ AVSpan = TypedDict(
 SiteHost = tuple[SiteId, HostName]
 AVRawServices = dict[ServiceName, list[AVSpan]]
 AVRawData = dict[SiteHost, AVRawServices]
-AVTimelineSpan = tuple[int | None, str, float, CSSClass]
+AVTimelineSpan = tuple[int | None, str, float, str]  # row_nr, title, width, css class
 AVObjectCells = list[tuple[str, str]]
 AVRowCells = list[tuple[HTML | str, CSSClass]]
 HostOrServiceGroupName = str
@@ -96,12 +100,14 @@ AVTimeformatSpecLegacy = Literal[
     "hours",
     "hhmmss",
 ]
+# The percentage and time slots are None when the selected mode ("perc" / "time")
+# does not use them; only the slot relevant to the mode carries a format.
 AVTimeformatSpec = (
     AVTimeformatSpecLegacy
     | tuple[
         Literal["both", "perc", "time"],
-        Literal["percentage_0", "percentage_1", "percentage_2", "percentage_3"],
-        Literal["seconds", "minutes", "hours", "hhmmss"],
+        Literal["percentage_0", "percentage_1", "percentage_2", "percentage_3"] | None,
+        Literal["seconds", "minutes", "hours", "hhmmss"] | None,
     ]
 )
 AVTimelineLabelling = Literal[
@@ -162,16 +168,116 @@ AVAnnotationKey = tuple[SiteId, HostName, ServiceName | None]
 AVAnnotationEntry = dict[str, Any]
 AVAnnotations = dict[AVAnnotationKey, list[AVAnnotationEntry]]
 
-AVLayoutTimeline = dict[str, Any]  # TODO: Improve this type
-AVLayoutTimelineRow = dict[str, Any]  # TODO: Improve this type
-AVLayoutTable = dict[str, Any]  # TODO: Improve this type
-AVLayoutTableRow = dict[str, Any]  # TODO: Improve this type
+# The functional TypedDict form is required here because "from" and "until" are
+# Python keywords and cannot be used as identifiers in the class-body syntax.
+AVLayoutTimelineRow = TypedDict(
+    "AVLayoutTimelineRow",
+    {
+        "state": AVTimelineStateName,
+        "css": str,
+        "state_name": str,
+        "from": int,
+        "until": int,
+        "from_text": str,
+        "until_text": str,
+        "duration_text": str,
+        "site": SiteId,
+        "log_output": NotRequired[str],
+        "long_log_output": NotRequired[str],
+    },
+)
+
+
+class AVLayoutTimeline(TypedDict):
+    range: AVTimeRange
+    spans: list[AVTimelineSpan]
+    time_choords: list[tuple[float, str]]
+    render_date: Callable[[AVTimeStamp], str]
+    table: list[AVLayoutTimelineRow]
+
+
+class AVLayoutTableRow(TypedDict):
+    urls: list[AVIconSpec]
+    object: AVObjectCells
+    cells: AVRowCells
+    timeline: NotRequired[AVLayoutTimeline]
+
+
+class AVLayoutTable(TypedDict):
+    title: str | None
+    rows: list[AVLayoutTableRow]
+    object_titles: list[str]
+    cell_titles: list[tuple[str, str | None]]
+    summary: NotRequired[AVRowCells]
+
 
 AVBIPhaseData = dict[tuple[HostName, ServiceName], Row]
 AVBIPhases = list[tuple[int, AVBIPhaseData]]
 AVBITimelineState = tuple[int, str, bool, bool]  # state, output, in_downtime, in_service_period
 AVBITimelineStates = dict[tuple[SiteId, HostName, ServiceName], AVBITimelineState]
 AVLevels = tuple[float, float]
+
+
+class AVOptionDowntimes(TypedDict):
+    include: Literal["honor", "ignore", "exclude"]
+    exclude_ok: bool
+
+
+class AVOptionConsider(TypedDict):
+    flapping: bool
+    host_down: bool
+    unmonitored: bool
+
+
+class AVOptionStateGrouping(TypedDict):
+    warn: Literal["ok", "warn", "crit", "unknown"]
+    unknown: Literal["ok", "warn", "crit", "unknown"]
+    host_down: Literal["ok", "warn", "crit", "unknown", "host_down"]
+
+
+class AVOptionHostStateGrouping(TypedDict):
+    unreach: Literal["up", "down", "unreach"]
+
+
+# The functional TypedDict form is required here because "non-ok" is not a valid
+# Python identifier and cannot be used as a key in the class-body syntax.
+AVOptionFilterOutages = TypedDict(
+    "AVOptionFilterOutages",
+    {
+        "warn": float,
+        "crit": float,
+        "non-ok": float,
+    },
+)
+
+
+class AVOptions(TypedDict):
+    range: AVRangeSpec
+    rangespec: TimerangeValue
+    labelling: list[AVTimelineLabelling]
+    av_levels: AVLevels | None
+    outage_statistics: AVOutageStatistics
+    timeformat: AVTimeformatSpec
+    av_mode: bool
+    grouping: Literal["host", "host_groups", "service_groups"] | None
+    dateformat: Literal["yyyy-mm-dd hh:mm:ss", "epoch"]
+    summary: Literal["sum", "average"] | None
+    show_timeline: bool
+    downtimes: AVOptionDowntimes
+    consider: AVOptionConsider
+    state_grouping: AVOptionStateGrouping
+    av_filter_outages: AVOptionFilterOutages
+    host_state_grouping: AVOptionHostStateGrouping
+    service_period: Literal["honor", "ignore", "exclude"]
+    notification_period: Literal["honor", "exclude", "ignore"]
+    short_intervals: int
+    dont_merge: bool
+    timelimit: int
+    logrow_limit: int
+    # Only present in the reporting context, where the stored report element
+    # configuration selects which parts of the availability output to render.
+    elements: NotRequired[list[Literal["timebar", "timeline", "table"]]]
+
 
 _ColumnSpec = tuple[str, str, str, str | None]
 

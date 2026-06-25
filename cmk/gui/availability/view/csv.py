@@ -35,12 +35,10 @@ def _output_csv(
 ) -> None:
     if av_mode == "availability":
         _output_availability_csv(what, av_data, avoptions, table_row_limit=table_row_limit)
-    elif av_mode == "timeline":
+    else:
         _output_availability_timelines_csv(
             what, av_data, avoptions, table_row_limit=table_row_limit
         )
-    else:
-        raise NotImplementedError("Unhandled availability mode: %r" % av_mode)
 
 
 def _output_availability_timelines_csv(
@@ -101,7 +99,7 @@ def _output_availability_csv(
         group_titles: list[str],
         group_cells: list[str],
         object_titles: list[str],
-        cell_titles: list[tuple[str, str]],
+        cell_titles: list[tuple[str, str | None]],
         row_object: AVObjectCells,
         row_cells: AVRowCells,
     ) -> None:

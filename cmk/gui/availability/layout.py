@@ -5,7 +5,7 @@
 
 import functools
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -75,19 +75,19 @@ def layout_availability_table(
     summary: dict[str, float] = {}
     summary_counts: dict[str, int] = {}
     unmonitored_objects = 0
-    av_table: AVLayoutTable = {
-        "title": group_title,
-        "rows": [],
-    }
-
-    # Titles for the columns that specify the object
-    av_table["object_titles"] = object_column_titles(labelling, what)
 
     # Headers for availability cells
     os_aggrs, os_states = get_outage_statistic_options(avoptions)
-    av_table["cell_titles"] = _availability_cell_headers(
-        avoptions, os_aggrs, os_states, timeformats, what
-    )
+    av_table: AVLayoutTable = {
+        "title": group_title,
+        "rows": [],
+        # Titles for the columns that specify the object
+        "object_titles": object_column_titles(labelling, what),
+        # Headers for availability cells
+        "cell_titles": _availability_cell_headers(
+            avoptions, os_aggrs, os_states, timeformats, what
+        ),
+    }
 
     summary["ok_level"] = 0
 
@@ -97,26 +97,26 @@ def layout_availability_table(
         host = entry["host"]
         service = entry["service"]
 
-        row: AVLayoutTableRow = {}
-        av_table["rows"].append(row)
-
         # Iconbuttons with URLs
         if "omit_buttons" not in labelling:
             urls = make_object_urls(host, service, site, time_range, what)
         else:
             urls = []
-        row["urls"] = urls
-        row["object"] = get_object_cells(what, entry, labelling)
+
+        # Actual cells with availability data
+        cells: AVRowCells = []
+        row: AVLayoutTableRow = {
+            "urls": urls,
+            "object": get_object_cells(what, entry, labelling),
+            "cells": cells,
+        }
+        av_table["rows"].append(row)
 
         # Inline timeline
         if show_timeline:
             row["timeline"] = layout_timeline(
                 what, entry["timeline"], entry["considered_duration"], avoptions, style="inline"
             )
-
-        # Actuall cells with availability data
-        cells: AVRowCells = []
-        row["cells"] = cells
 
         for timeformat, render_number in timeformats:
             for sid, css, _sname, _help_txt in availability_columns(what):
@@ -280,7 +280,7 @@ def make_object_urls(
     return urls
 
 
-def object_column_titles(labelling: AVTimelineLabelling, what: AVObjectType) -> list[str]:
+def object_column_titles(labelling: Sequence[AVTimelineLabelling], what: AVObjectType) -> list[str]:
     titles = []
     if what == "bi":
         titles.append(_("Aggregate"))
@@ -329,7 +329,9 @@ def _availability_cell_headers(
     return cell_titles
 
 
-def get_object_cells(what: AVObjectType, av_entry: AVEntry, labelling: list[str]) -> AVObjectCells:
+def get_object_cells(
+    what: AVObjectType, av_entry: AVEntry, labelling: Sequence[AVTimelineLabelling]
+) -> AVObjectCells:
     host = av_entry["host"]
     service = av_entry["service"]
 

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from typing import Any
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
@@ -32,6 +33,8 @@ from .type_defs import (
     AVOptions,
     AVOptionValueSpecs,
     AVOutageStatistics,
+    AVOutageStatisticsState,
+    AVOutageStatisticsStates,
     AVTimeFormats,
     AVTimeformatSpec,
     AVTimeStamp,
@@ -572,14 +575,19 @@ def prepare_avo_timeformats(timeformat: AVTimeformatSpec) -> AVTimeFormats:
     """
     this_timeformat = [("percentage_2", render_number_function("percentage_2"))]
     if isinstance(timeformat, list | tuple):
+        # The slot unused by the selected mode is None; the mode only reads the
+        # slot(s) it populated.
         if timeformat[0] == "both":
+            assert timeformat[1] is not None and timeformat[2] is not None
             this_timeformat = [
                 (timeformat[1], render_number_function(timeformat[1])),
                 (timeformat[2], render_number_function(timeformat[2])),
             ]
         elif timeformat[0] == "perc":
+            assert timeformat[1] is not None
             this_timeformat = [(timeformat[1], render_number_function(timeformat[1]))]
         elif timeformat[0] == "time":
+            assert timeformat[2] is not None
             this_timeformat = [(timeformat[2], render_number_function(timeformat[2]))]
     elif timeformat.startswith("percentage_") or timeformat in [
         "seconds",
@@ -592,6 +600,40 @@ def prepare_avo_timeformats(timeformat: AVTimeformatSpec) -> AVTimeFormats:
     return this_timeformat
 
 
+def _build_avoptions(values: Mapping[str, Any]) -> AVOptions:
+    """Assemble a fully typed AVOptions from a mapping of option values.
+
+    The option values originate from valuespecs (and stored user files), which
+    are populated under dynamic, non-literal keys that a TypedDict cannot
+    express. Reading them back into an explicit TypedDict constructor keeps the
+    structure verified (mypy flags a missing key) without resorting to a cast.
+    """
+    return AVOptions(
+        range=values["range"],
+        rangespec=values["rangespec"],
+        labelling=values["labelling"],
+        av_levels=values["av_levels"],
+        outage_statistics=values["outage_statistics"],
+        timeformat=values["timeformat"],
+        av_mode=values["av_mode"],
+        grouping=values["grouping"],
+        dateformat=values["dateformat"],
+        summary=values["summary"],
+        show_timeline=values["show_timeline"],
+        downtimes=values["downtimes"],
+        consider=values["consider"],
+        state_grouping=values["state_grouping"],
+        av_filter_outages=values["av_filter_outages"],
+        host_state_grouping=values["host_state_grouping"],
+        service_period=values["service_period"],
+        notification_period=values["notification_period"],
+        short_intervals=values["short_intervals"],
+        dont_merge=values["dont_merge"],
+        timelimit=values["timelimit"],
+        logrow_limit=values["logrow_limit"],
+    )
+
+
 def get_default_avoptions(range_spec: tuple[float, float] | None = None) -> AVOptions:
     if range_spec is None:
         range_spec = time.time() - 86400, time.time()
@@ -599,19 +641,19 @@ def get_default_avoptions(range_spec: tuple[float, float] | None = None) -> AVOp
     # Derive the defaults from the option valuespecs so that the editable
     # options have a single source of truth (their own ``default_value=``) and
     # the defaults cannot silently drift from what the option editor offers.
-    avoptions: AVOptions = {"range": (range_spec, "")}
+    values: dict[str, Any] = {"range": (range_spec, "")}
     for name, _height, _show, valuespec in (
         get_av_display_options("host") + get_av_computation_options()
     ):
-        avoptions[name] = valuespec.default_value()
+        values[name] = valuespec.default_value()
 
     # The third ("absolute time") format is intentionally left unset for the
     # default "percent only" mode; that dropdown has no own default and would
     # otherwise fall back to its first choice.
-    timeformat = avoptions["timeformat"]
-    avoptions["timeformat"] = (timeformat[0], timeformat[1], None)
+    timeformat = values["timeformat"]
+    values["timeformat"] = (timeformat[0], timeformat[1], None)
 
-    return avoptions
+    return _build_avoptions(values)
 
 
 def get_outage_statistic_options(avoptions: AVOptions) -> AVOutageStatistics:
@@ -619,19 +661,28 @@ def get_outage_statistic_options(avoptions: AVOptions) -> AVOutageStatistics:
     # For hosts we use the same checkbox but mean "up" and "down". We simply add these states
     # to the list of selected states.
     aggrs, states = avoptions.get("outage_statistics", ([], []))
-    fixed_states = states[:]
-    for service_state, host_state in [("ok", "up"), ("crit", "down"), ("unknown", "unreach")]:
+    # The stored option only offers service states; for host availability the
+    # equivalent host states are added here.
+    fixed_states: AVOutageStatisticsStates = list(states)
+    host_state_equivalents: list[tuple[str, AVOutageStatisticsState]] = [
+        ("ok", "up"),
+        ("crit", "down"),
+        ("unknown", "unreach"),
+    ]
+    for service_state, host_state in host_state_equivalents:
         if service_state in fixed_states:
             fixed_states.append(host_state)
     return aggrs, fixed_states
 
 
 def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
-    avoptions = get_default_avoptions()
+    # Option values are gathered under dynamic (non-literal) keys, so collect
+    # them in a plain mapping and build the typed AVOptions at the end.
+    values: dict[str, Any] = dict(get_default_avoptions())
 
     # Users of older versions might not have all keys set. The following
     # trick will merge their options with our default options.
-    avoptions.update(user.load_file("avoptions", {}))
+    values.update(user.load_file("avoptions", {}))
 
     form_name = request.get_ascii_input("filled_in")
     if form_name == "avoptions_display":
@@ -644,19 +695,19 @@ def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
     if request.var("avoptions") == "set":
         for name, _height, _show_in_reporting, vs in avoption_entries:
             try:
-                avoptions[name] = vs.from_html_vars("avo_" + name)
-                vs.validate_value(avoptions[name], "avo_" + name)
+                values[name] = vs.from_html_vars("avo_" + name)
+                vs.validate_value(values[name], "avo_" + name)
             except MKUserError as e:
                 user_errors.add(e)
 
     range_vs = vs_rangespec()
     try:
-        range_, range_title = range_vs.compute_range(avoptions["rangespec"])
-        avoptions["range"] = range_, range_title
+        range_, range_title = range_vs.compute_range(values["rangespec"])
+        values["range"] = range_, range_title
     except MKUserError as e:
         user_errors.add(e)
 
     if request.var("_unset_logrow_limit") == "1":
-        avoptions["logrow_limit"] = 0
+        values["logrow_limit"] = 0
 
-    return avoptions
+    return _build_avoptions(values)

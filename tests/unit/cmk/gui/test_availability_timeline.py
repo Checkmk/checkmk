@@ -144,7 +144,7 @@ def test_layout_timeline_spans(
     considered_duration: int,
     avoptions: AVOptions,
     style: AVTimelineStyle,
-    expected: AVTimelineSpan,
+    expected: list[AVTimelineSpan],
 ) -> None:
     with time_machine.travel(
         datetime.datetime(2022, 11, 4, 14, 2, 30, 439, tzinfo=ZoneInfo("CET"))

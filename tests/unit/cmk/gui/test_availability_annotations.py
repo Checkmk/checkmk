@@ -268,13 +268,10 @@ def test_get_annotation_date_render_function(
         ((SiteId("foo"), HostName("checkmk.com"), None), {"from": s, "until": e})
         for s, e in annotation_times
     ]
+    avoptions = availability.get_default_avoptions()
+    avoptions["range"] = ((1543446000, 1543446000 + 86399), "bla")
     with time_machine.travel(datetime.datetime.fromtimestamp(1572253746, tz=ZoneInfo("CET"))):
-        assert (
-            availability.get_annotation_date_render_function(
-                annotations, {"range": ((1543446000, 1543446000 + 86399), "bla")}
-            )
-            == result
-        )
+        assert availability.get_annotation_date_render_function(annotations, avoptions) == result
 
 
 @pytest.mark.parametrize(

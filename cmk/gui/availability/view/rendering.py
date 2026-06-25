@@ -6,6 +6,7 @@
 import json
 import time
 from collections.abc import Iterator, Sequence
+from typing import cast
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
@@ -66,10 +67,12 @@ from cmk.gui.painter.v0.helpers import format_plugin_output
 from cmk.gui.table import table_element
 from cmk.gui.top_heading import top_heading
 from cmk.gui.type_defs import (
+    DynamicIconName,
     FilterHeader,
     FilterName,
     IconNames,
     InfoName,
+    Row,
     Rows,
     StaticIcon,
     ViewName,
@@ -217,7 +220,11 @@ def show_availability_page(
     # - Show availability table (stats) "availability"
     # - Show timeline                   "timeline"
     # --> controlled by URL variable "av_mode"
-    av_mode = request.get_ascii_input_mandatory("av_mode", "availability")
+    av_mode: AVMode = (
+        "timeline"
+        if request.get_ascii_input_mandatory("av_mode", "availability") == "timeline"
+        else "availability"
+    )
 
     if av_mode == "timeline":
         title = _("Availability Timeline")
@@ -691,19 +698,23 @@ def _render_availability_timeline(
             table.cell(
                 _("State"),
                 HTMLWriter.render_span(row["state_name"], class_=["state_rounded_fill"]),
-                css=row["css"] + " state narrow",
+                css=[row["css"] + " state narrow"],
             )
 
             if "omit_timeline_plugin_output" not in avoptions["labelling"]:
                 table.cell(
                     _("Summary at last status change"),
-                    format_plugin_output(row.get("log_output", ""), request=request, row=row),
+                    format_plugin_output(
+                        row.get("log_output", ""), request=request, row=cast(Row, row)
+                    ),
                 )
 
             if "timeline_long_output" in avoptions["labelling"]:
                 table.cell(
                     _("Last known details"),
-                    format_plugin_output(row.get("long_log_output", ""), request=request, row=row),
+                    format_plugin_output(
+                        row.get("long_log_output", ""), request=request, row=cast(Row, row)
+                    ),
                 )
 
     # Legend for timeline
@@ -766,7 +777,7 @@ def render_availability_table(
                 show_urls = True
                 table.cell("", css=["buttons"])
                 for image, tooltip, url in row["urls"]:
-                    html.icon_button(url, tooltip, image)
+                    html.icon_button(url, tooltip, DynamicIconName(image))
                     if image == "timeline":
                         timeline_url = url
 
@@ -783,7 +794,12 @@ def render_availability_table(
 
             # Columns with the actual availability data
             for (title, help_txt), (text, css) in zip(av_table["cell_titles"], row["cells"]):
-                table.cell(title, HTMLWriter.render_span(text), css=css, help_txt=help_txt)
+                table.cell(
+                    title,
+                    HTMLWriter.render_span(text),
+                    css=[css] if css else None,
+                    help_txt=help_txt,
+                )
 
         if "summary" in av_table:
             table.row(css=["summary"], fixed=True)
@@ -797,7 +813,10 @@ def render_availability_table(
 
             for (title, help_txt), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):
                 table.cell(
-                    title, HTMLWriter.render_span(text), css="heading " + css, help_txt=help_txt
+                    title,
+                    HTMLWriter.render_span(text),
+                    css=["heading " + (css or "")],
+                    help_txt=help_txt,
                 )
 
 
@@ -822,26 +841,24 @@ def render_timeline_bar(
     html.open_table(id_="timeline_%d" % timeline_nr, class_=["timeline", style])
     html.open_tr(class_="timeline")
     for row_nr, title, width, css in timeline_layout["spans"]:
-        td_attrs = {
-            "style": "width: %.3f%%" % width,
-            "title": title,
-            "class": css,
-        }
-
+        id_: str | None = None
+        onmouseover: str | None = None
+        onmouseout: str | None = None
         if row_nr is not None:
-            td_attrs.update({"id_": "timeline_%d_entry_%d" % (timeline_nr, row_nr)})
-
+            id_ = "timeline_%d_entry_%d" % (timeline_nr, row_nr)
             if style == "standalone":
-                td_attrs.update(
-                    {
-                        "onmouseover": "cmk.availability.timeline_hover(%d, %d, 1);"
-                        % (timeline_nr, row_nr),
-                        "onmouseout": "cmk.availability.timeline_hover(%d, %d, 0);"
-                        % (timeline_nr, row_nr),
-                    }
-                )
+                onmouseover = "cmk.availability.timeline_hover(%d, %d, 1);" % (timeline_nr, row_nr)
+                onmouseout = "cmk.availability.timeline_hover(%d, %d, 0);" % (timeline_nr, row_nr)
 
-        html.td("", **td_attrs)
+        html.td(
+            "",
+            style="width: %.3f%%" % width,
+            title=title,
+            class_=css,
+            id_=id_,
+            onmouseover=onmouseover,
+            onmouseout=onmouseout,
+        )
 
     html.close_tr()
     html.close_table()
@@ -870,7 +887,11 @@ def show_bi_availability(
 ) -> None:
     user.need_permission("general.see_availability")
 
-    av_mode = request.get_ascii_input_mandatory("av_mode", "availability")
+    av_mode: AVMode = (
+        "timeline"
+        if request.get_ascii_input_mandatory("av_mode", "availability") == "timeline"
+        else "availability"
+    )
 
     _handle_availability_option_reset()
     avoptions = get_availability_options_from_request("bi")
@@ -1090,15 +1111,14 @@ def show_bi_availability(
         # If we abolish the limit we have to fetch the data again
         # with changed logrow_limit = 0, which means no limit
         if has_reached_logrow_limit:
-            text = (
+            text = HTML.with_escaping(
                 _(
                     "Your query matched more than %d log entries. "
                     "<b>Note:</b> The shown data does not necessarily reflect the "
                     "matched entries and the result might be incomplete. "
                 )
                 % avoptions["logrow_limit"]
-            )
-            text += HTMLWriter.render_a(
+            ) + HTMLWriter.render_a(
                 _("Repeat query without limit."), makeuri(request, [("_unset_logrow_limit", "1")])
             )
             html.show_warning(text)

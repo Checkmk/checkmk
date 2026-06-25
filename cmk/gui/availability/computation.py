@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import Counter
-from typing import cast
+from collections.abc import Mapping
+from typing import cast, Literal
 
 from livestatus import (
     lqencode,
@@ -129,8 +130,9 @@ def get_host_service_availability_rawdata(
         columns.append("host_alias")
 
     # If we group by host/service group then make sure that that information is available
-    if avoptions["grouping"] not in [None, "host"]:
-        columns.append(avoptions["grouping"])
+    grouping = avoptions["grouping"]
+    if grouping is not None and grouping != "host":
+        columns.append(grouping)
 
     headers = av_filter
     headers += "Timelimit: %d\n" % avoptions["timelimit"]
@@ -337,11 +339,16 @@ def classify_span_state(span: AVSpan, avoptions: AVOptions, what: AVObjectType) 
     else:
         s = {0: "up", 1: "down", 2: "unreach"}.get(state, "unmonitored")
 
-    # Reclassification due to state grouping
-    if s in avoptions["state_grouping"]:
-        return avoptions["state_grouping"][s], True
-    if s in avoptions["host_state_grouping"]:
-        return avoptions["host_state_grouping"][s], True
+    # Reclassification due to state grouping. ``s`` is a dynamically computed
+    # state name, so the typed dicts are accessed through a string-keyed mapping.
+    state_grouping: Mapping[str, str] = cast(Mapping[str, str], avoptions["state_grouping"])
+    if s in state_grouping:
+        return state_grouping[s], True
+    host_state_grouping: Mapping[str, str] = cast(
+        Mapping[str, str], avoptions["host_state_grouping"]
+    )
+    if s in host_state_grouping:
+        return host_state_grouping[s], True
     return s, True
 
 
@@ -485,7 +492,7 @@ def pass_availability_filter(row: AVEntry, avoptions: AVOptions) -> bool:
     if row["considered_duration"] == 0:
         return True
 
-    for key, level in avoptions["av_filter_outages"].items():
+    for key, level in cast(Mapping[str, float], avoptions["av_filter_outages"]).items():
         if level == 0.0:
             continue
         if key == "warn":
@@ -528,7 +535,9 @@ def compute_availability_groups(
     # 2. Compute names for the groups and sort according to these names
     group_titles: dict[str, str] = {}
     if grouping != "host":
-        group_titles = dict(all_groups(grouping[:-7]))
+        # grouping is "host_groups" or "service_groups"; map to the group type.
+        group_type: Literal["host", "service"] = "host" if grouping == "host_groups" else "service"
+        group_titles = dict(all_groups(group_type))
 
     titled_groups: list[tuple[str, AVGroupKey]] = []
     for group_id in all_group_ids:

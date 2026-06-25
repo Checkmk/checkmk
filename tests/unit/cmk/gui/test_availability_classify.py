@@ -3,13 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.availability.computation import classify_span_state
 from cmk.gui.availability.options import get_default_avoptions
-from cmk.gui.availability.type_defs import AVObjectType, AVOptions, AVSpan
+from cmk.gui.availability.type_defs import (
+    AVObjectType,
+    AVOptionConsider,
+    AVOptionDowntimes,
+    AVOptionHostStateGrouping,
+    AVOptions,
+    AVOptionStateGrouping,
+    AVSpan,
+)
 
 
 def _span(
@@ -39,9 +49,28 @@ def _span(
     }
 
 
-def _avoptions(**overrides: object) -> AVOptions:
+def _avoptions(
+    *,
+    service_period: Literal["honor", "ignore", "exclude"] | None = None,
+    notification_period: Literal["honor", "exclude", "ignore"] | None = None,
+    consider: AVOptionConsider | None = None,
+    downtimes: AVOptionDowntimes | None = None,
+    host_state_grouping: AVOptionHostStateGrouping | None = None,
+    state_grouping: AVOptionStateGrouping | None = None,
+) -> AVOptions:
     avoptions = get_default_avoptions((0.0, 60.0))
-    avoptions.update(overrides)
+    if service_period is not None:
+        avoptions["service_period"] = service_period
+    if notification_period is not None:
+        avoptions["notification_period"] = notification_period
+    if consider is not None:
+        avoptions["consider"] = consider
+    if downtimes is not None:
+        avoptions["downtimes"] = downtimes
+    if host_state_grouping is not None:
+        avoptions["host_state_grouping"] = host_state_grouping
+    if state_grouping is not None:
+        avoptions["state_grouping"] = state_grouping
     return avoptions
 
 

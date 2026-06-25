@@ -12,20 +12,31 @@
 # upsBatteryTemperature         1.3.6.1.4.1.4555.1.1.1.1.2.6
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.ups.lib_socomec import DETECT_SOCOMEC
 
-check_info = {}
+
+def parse_ups_socomec_capacity(string_table: StringTable) -> StringTable:
+    return string_table
 
 
-def discover_ups_socomec_capacity(info: StringTable) -> list[tuple[None, dict[str, object]]]:
-    if len(info) > 0:
-        return [(None, {})]
-    return []
+def discover_ups_socomec_capacity(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_ups_socomec_capacity(item: None, params: object, info: StringTable) -> LegacyCheckResult:
+def check_ups_socomec_capacity(params: object, section: StringTable) -> CheckResult:
     # To support inventories with the old version
     # TODO This needs to be reworked. Defaults should not be coded into a check in such a fashion.
     if isinstance(params, tuple):  # old format with 2 params in tuple
@@ -38,62 +49,57 @@ def check_ups_socomec_capacity(item: None, params: object, info: StringTable) ->
         warn, crit = (0, 0)
         cap_warn, cap_crit = (95, 90)
 
-    time_on_bat, minutes_left, percent_fuel = map(int, info[0])
+    time_on_bat, minutes_left, percent_fuel = map(int, section[0])
 
     # Check time left on battery
     if minutes_left != -1:
         levelsinfo = ""
         if minutes_left <= crit:
-            state = 2
+            state = State.CRIT
             levelsinfo = " (crit at %d min)" % cap_crit
         elif minutes_left < warn:
-            state = 1
+            state = State.WARN
             levelsinfo = " (warn at %d min)" % cap_warn
         else:
-            state = 0
-        warn_float: float | int | None = float(warn) if warn else None
-        crit_float: float | int | None = float(crit) if crit else None
-        yield (
-            state,
-            "%d min left on battery" % minutes_left + levelsinfo,
-            [("capacity", float(minutes_left), warn_float, crit_float)],
-        )
+            state = State.OK
+        warn_float: float | None = float(warn) if warn else None
+        crit_float: float | None = float(crit) if crit else None
+        yield Result(state=state, summary="%d min left on battery" % minutes_left + levelsinfo)
+        yield Metric("capacity", float(minutes_left), levels=(warn_float, crit_float))
 
     # Check percentual capacity
     levelsinfo = ""
     if percent_fuel <= cap_crit:
-        state = 2
+        state = State.CRIT
         levelsinfo = " (crit at %d%%)" % cap_crit
     elif percent_fuel < cap_warn:
-        state = 1
+        state = State.WARN
         levelsinfo = " (warn at %d%%)" % cap_warn
     else:
-        state = 0
-    cap_warn_float: float | int | None = float(cap_warn) if cap_warn else None
-    cap_crit_float: float | int | None = float(cap_crit) if cap_crit else None
-    yield (
-        state,
-        "capacity: %d%%" % percent_fuel + levelsinfo,
-        [("percent", float(percent_fuel), cap_warn_float, cap_crit_float)],
-    )
+        state = State.OK
+    cap_warn_float: float | None = float(cap_warn) if cap_warn else None
+    cap_crit_float: float | None = float(cap_crit) if cap_crit else None
+    yield Result(state=state, summary="capacity: %d%%" % percent_fuel + levelsinfo)
+    yield Metric("percent", float(percent_fuel), levels=(cap_warn_float, cap_crit_float))
 
     # Output time on battery
     if time_on_bat > 0:
-        yield 0, "On battery for %d min" % time_on_bat
+        yield Result(state=State.OK, summary="On battery for %d min" % time_on_bat)
 
 
-def parse_ups_socomec_capacity(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["ups_socomec_capacity"] = LegacyCheckDefinition(
+snmp_section_ups_socomec_capacity = SimpleSNMPSection(
     name="ups_socomec_capacity",
-    parse_function=parse_ups_socomec_capacity,
     detect=DETECT_SOCOMEC,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.2",
         oids=["2", "3", "4"],
     ),
+    parse_function=parse_ups_socomec_capacity,
+)
+
+
+check_plugin_ups_socomec_capacity = CheckPlugin(
+    name="ups_socomec_capacity",
     service_name="Battery capacity",
     discovery_function=discover_ups_socomec_capacity,
     check_function=check_ups_socomec_capacity,

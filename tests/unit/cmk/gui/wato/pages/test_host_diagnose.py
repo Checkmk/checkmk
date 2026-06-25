@@ -181,7 +181,7 @@ def _render_vs_host(value: dict[str, object]) -> BeautifulSoup:
 
 
 def _input_by_name(soup: BeautifulSoup, name: str) -> dict[str, str]:
-    el = soup.find(attrs={"name": name})
+    el = soup.find(None, attrs={"name": name})
     assert el is not None, f"missing form element with name={name!r}"
     return {k: str(v) for k, v in el.attrs.items()}
 

@@ -29,7 +29,7 @@ from azure.mgmt.compute.models import (
     GalleryOSDiskImage,
     TargetRegion,
 )
-from azure.mgmt.resource import ResourceManagementClient
+from azure.mgmt.resource.resources import ResourceManagementClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from cmk.ccc.version import _BaseVersion, ReleaseType, Version

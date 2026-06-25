@@ -40,6 +40,8 @@ py_library(
         "//packages/cmk-graphing-engine",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
         requirement("python-dateutil"),
+        requirement("tzlocal"),
     ],
 )

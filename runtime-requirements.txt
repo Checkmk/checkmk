@@ -3784,6 +3784,7 @@ tzlocal==5.3.1 \
     --hash=sha256:eb1a66c3ef5847adf7a834f1be0800581b683b5608e74f86ecbcef8ab91bb85d
     # via
     #   -c requirements.txt
+    #   -r cmk/requirements.in
     #   exchangelib
 uritemplate==4.2.0 \
     --hash=sha256:480c2ed180878955863323eea31b0ede668795de182617fef9c6ca09e6ec9d0e \

@@ -63,6 +63,7 @@ setproctitle
 setuptools
 setuptools-scm
 starlette
+tzlocal
 urllib3
 uvicorn
 watchdog

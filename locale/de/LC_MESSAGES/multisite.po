@@ -47846,9 +47846,6 @@ msgstr "Offene DNS-Anfragen"
 msgid "Pending changes"
 msgstr "Ausstehende Änderungen"
 
-msgid "Pending changes reverted."
-msgstr "Ausstehende Änderungen rückgängig gemacht."
-
 msgid "Pending create"
 msgstr "Erstellung ausstehend"
 
@@ -53249,6 +53246,9 @@ msgstr "Fremde Änderungen rückgängig machen"
 msgid "Reverting pending changes."
 msgstr "Ausstehenden Änderungen werden rückgängig gemacht."
 
+msgid "Reverting pending changes. Reload this page to see the current status."
+msgstr ""
+
 msgid "Review and run connection test"
 msgstr "Überprüfen und Verbindungstest durchführen"
 
@@ -53785,6 +53785,10 @@ msgstr "Rx-Leistungspegel"
 
 msgid "S."
 msgstr "s."
+
+#, fuzzy
+msgid "S3 Buckets"
+msgstr "AWS/S3 Buckets"
 
 msgid "S3 back-end cache hits"
 msgstr "S3 Backend Cache-Treffer"
@@ -57783,6 +57787,10 @@ msgstr "Instanz nutzt den Livestatus Proxy Daemon"
 
 msgid "Site management"
 msgstr "Instanzverwaltung"
+
+#, fuzzy
+msgid "Site management configuration (OMD)"
+msgstr "SSH Daemon Konfiguration (Linux)"
 
 msgid "Site name"
 msgstr "Instanzname"
@@ -87483,6 +87491,24 @@ msgstr "Ziehen, um neu anzuordnen"
 msgid "Remove element"
 msgstr "Element entfernen"
 
+#, fuzzy
+msgid "Paste from clipboard failed with error: %{error}"
+msgstr "Kopieren in die Zwischenablage fehlgeschlagen mit Fehler: "
+
+#, fuzzy
+msgid "Pasted from clipboard"
+msgstr "In die Zwischenablage kopiert"
+
+msgid "No input field found to paste into"
+msgstr ""
+
+msgid "Clipboard access was blocked. Allow it or paste manually with Ctrl+V."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to read from clipboard"
+msgstr "Kopie in die Zwischenablage fehlgeschlagen"
+
 msgid "Clear search"
 msgstr "Suche leeren"
 
@@ -89531,14 +89557,9 @@ msgstr "endet nicht mit"
 msgid "does not exist"
 msgstr "existiert nicht"
 
-msgid "Resource attributes"
-msgstr "Ressource-Attribute"
-
-msgid "Scope attributes"
-msgstr "Umfang-Attribute"
-
-msgid "Data point attributes"
-msgstr "Attribute des Datenpunkts"
+#, fuzzy
+msgid "Unknown error"
+msgstr "Unbekannter Fehler: %s"
 
 msgid "Agent connection test running"
 msgstr "Test der Agentenverbindung läuft"
@@ -90080,6 +90101,10 @@ msgstr ""
 
 msgid "Paste the code from the redirect page here"
 msgstr "Fügen Sie hier den Code von der Weiterleitungsseite ein"
+
+#, fuzzy
+msgid "Paste"
+msgstr "Master"
 
 msgid "Start authorization"
 msgstr "Autorisierung starten"
@@ -90837,6 +90862,26 @@ msgid ""
 msgstr ""
 "Das Relay wird offiziell für die folgenden Betriebssysteme unterstützt:"
 
+#, fuzzy
+msgid "Number of services OK state"
+msgstr "Anzahl von Services im Zustand OK"
+
+#, fuzzy
+msgid "Number of services warning state"
+msgstr "Anzahl von Services im Zustand OK"
+
+#, fuzzy
+msgid "Number of services critical state"
+msgstr "Anzahl von Services im Zustand OK"
+
+#, fuzzy
+msgid "Number of services unknown state"
+msgstr "Anzahl von Services im Zustand OK"
+
+#, fuzzy
+msgid "Number of services pending state"
+msgstr "Anzahl von Services im Zustand OK"
+
 msgid "Unhandled Problems"
 msgstr "Unbehandelte Probleme"
 
@@ -90845,6 +90890,14 @@ msgstr "Hosts suchen…"
 
 msgid "Stale state"
 msgstr "Veraltet-Zustand"
+
+#, fuzzy
+msgid "Only number values are allowed."
+msgstr "Es sind nur Großbuchstaben erlaubt"
+
+#, fuzzy
+msgid "The lower bound must not exceed the upper bound."
+msgstr "Die Untergrenze muss kleiner sein als die Obergrenze"
 
 msgid "Filter values"
 msgstr "Werte filtern"
@@ -91878,6 +91931,18 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Pending changes reverted."
+#~ msgstr "Ausstehende Änderungen rückgängig gemacht."
+
+#~ msgid "Resource attributes"
+#~ msgstr "Ressource-Attribute"
+
+#~ msgid "Scope attributes"
+#~ msgstr "Umfang-Attribute"
+
+#~ msgid "Data point attributes"
+#~ msgstr "Attribute des Datenpunkts"
 
 #~ msgid "Metric backend is disabled, autocompletion is not available."
 #~ msgstr ""

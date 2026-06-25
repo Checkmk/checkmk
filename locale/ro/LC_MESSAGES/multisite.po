@@ -50545,10 +50545,6 @@ msgstr "Cereri în așteptare"
 msgid "Pending changes"
 msgstr "Modificări în așteptare"
 
-#, fuzzy
-msgid "Pending changes reverted."
-msgstr "Modificări în așteptare"
-
 msgid "Pending create"
 msgstr "În curs de creare"
 
@@ -56278,6 +56274,9 @@ msgstr "Activați modificările străine"
 msgid "Reverting pending changes."
 msgstr "Nu există modificări în așteptare."
 
+msgid "Reverting pending changes. Reload this page to see the current status."
+msgstr ""
+
 #, fuzzy
 msgid "Review and run connection test"
 msgstr "Salvați & executați testele de conectare"
@@ -56857,6 +56856,10 @@ msgstr "Nivelul de putere Rx"
 
 msgid "S."
 msgstr "S."
+
+#, fuzzy
+msgid "S3 Buckets"
+msgstr "Grămezi AWS/S3"
 
 #, fuzzy
 msgid "S3 back-end cache hits"
@@ -61052,6 +61055,10 @@ msgstr "Site-ul utilizează Livestatus Proxy Daemon"
 
 msgid "Site management"
 msgstr "Managementul site-ului"
+
+#, fuzzy
+msgid "Site management configuration (OMD)"
+msgstr "Configurarea daemonului SSH (Linux)"
 
 msgid "Site name"
 msgstr "Numele sitului"
@@ -91870,6 +91877,23 @@ msgstr ""
 msgid "Remove element"
 msgstr "Eliminați acest element"
 
+msgid "Paste from clipboard failed with error: %{error}"
+msgstr ""
+
+#, fuzzy
+msgid "Pasted from clipboard"
+msgstr "Secret copiat în clipboard"
+
+msgid "No input field found to paste into"
+msgstr ""
+
+msgid "Clipboard access was blocked. Allow it or paste manually with Ctrl+V."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to read from clipboard"
+msgstr "Secret copiat în clipboard"
+
 #, fuzzy
 msgid "Clear search"
 msgstr "Căutarea regulilor"
@@ -94213,16 +94237,8 @@ msgid "does not exist"
 msgstr "Nu există"
 
 #, fuzzy
-msgid "Resource attributes"
-msgstr "Resetarea atributelor"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Atributul rolului"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Atributele timpilor morți:"
+msgid "Unknown error"
+msgstr "Utilizator necunoscut: %s."
 
 #, fuzzy
 msgid "Agent connection test running"
@@ -94731,6 +94747,10 @@ msgstr ""
 
 msgid "Paste the code from the redirect page here"
 msgstr ""
+
+#, fuzzy
+msgid "Paste"
+msgstr "master"
 
 #, fuzzy
 msgid "Start authorization"
@@ -95488,6 +95508,26 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Number of services OK state"
+msgstr "Numărul de servicii în stat OK"
+
+#, fuzzy
+msgid "Number of services warning state"
+msgstr "Numărul de servicii în stat OK"
+
+#, fuzzy
+msgid "Number of services critical state"
+msgstr "Numărul de servicii în stat OK"
+
+#, fuzzy
+msgid "Number of services unknown state"
+msgstr "Numărul de servicii în stat OK"
+
+#, fuzzy
+msgid "Number of services pending state"
+msgstr "Numărul de servicii în stat OK"
+
+#, fuzzy
 msgid "Unhandled Problems"
 msgstr "Probleme de gazde nerezolvate"
 
@@ -95498,6 +95538,14 @@ msgstr "Căutare gazde"
 #, fuzzy
 msgid "Stale state"
 msgstr "toate statele"
+
+#, fuzzy
+msgid "Only number values are allowed."
+msgstr "Sunt permise doar literele majuscule"
+
+#, fuzzy
+msgid "The lower bound must not exceed the upper bound."
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
 
 #, fuzzy
 msgid "Filter values"
@@ -96465,6 +96513,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Pending changes reverted."
+#~ msgstr "Modificări în așteptare"
+
+#, fuzzy
+#~ msgid "Resource attributes"
+#~ msgstr "Resetarea atributelor"
+
+#, fuzzy
+#~ msgid "Scope attributes"
+#~ msgstr "Atributul rolului"
+
+#, fuzzy
+#~ msgid "Data point attributes"
+#~ msgstr "Atributele timpilor morți:"
 
 #, fuzzy
 #~ msgid "Metric backend is disabled, autocompletion is not available."

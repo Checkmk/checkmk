@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-23 17:57+0000\n"
+"PO-Revision-Date: 2026-06-24 17:57+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -50455,10 +50455,6 @@ msgstr "Pedidos pendentes"
 msgid "Pending changes"
 msgstr "Alterações pendentes"
 
-#, fuzzy
-msgid "Pending changes reverted."
-msgstr "Alterações pendentes"
-
 msgid "Pending create"
 msgstr "Pendente de criação"
 
@@ -56210,6 +56206,9 @@ msgstr "Ativar mudanças estrangeiras"
 msgid "Reverting pending changes."
 msgstr "Não há alterações pendentes."
 
+msgid "Reverting pending changes. Reload this page to see the current status."
+msgstr ""
+
 #, fuzzy
 msgid "Review and run connection test"
 msgstr "Guardar & executar testes de ligação"
@@ -56787,6 +56786,10 @@ msgstr "Nível de potência Rx"
 
 msgid "S."
 msgstr "S."
+
+#, fuzzy
+msgid "S3 Buckets"
+msgstr "AWS/S3 Baldes"
 
 #, fuzzy
 msgid "S3 back-end cache hits"
@@ -60957,6 +60960,10 @@ msgstr "O site está usando o Livestatus Proxy Daemon"
 
 msgid "Site management"
 msgstr "Gestão do site"
+
+#, fuzzy
+msgid "Site management configuration (OMD)"
+msgstr "Configuração do daemon SSH (Linux)"
 
 msgid "Site name"
 msgstr "Nome do local"
@@ -91635,6 +91642,23 @@ msgstr ""
 msgid "Remove element"
 msgstr "Remover este elemento"
 
+msgid "Paste from clipboard failed with error: %{error}"
+msgstr ""
+
+#, fuzzy
+msgid "Pasted from clipboard"
+msgstr "Segredo copiado para a área de transferência"
+
+msgid "No input field found to paste into"
+msgstr ""
+
+msgid "Clipboard access was blocked. Allow it or paste manually with Ctrl+V."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to read from clipboard"
+msgstr "Segredo copiado para a área de transferência"
+
 #, fuzzy
 msgid "Clear search"
 msgstr "Pesquisa de regras"
@@ -93970,16 +93994,8 @@ msgid "does not exist"
 msgstr "Não existe"
 
 #, fuzzy
-msgid "Resource attributes"
-msgstr "Redefinir atributos"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Atributo de função"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Atributos modificados"
+msgid "Unknown error"
+msgstr "Usuário desconhecido: %s"
 
 #, fuzzy
 msgid "Agent connection test running"
@@ -94481,6 +94497,10 @@ msgstr ""
 
 msgid "Paste the code from the redirect page here"
 msgstr ""
+
+#, fuzzy
+msgid "Paste"
+msgstr "mestre"
 
 #, fuzzy
 msgid "Start authorization"
@@ -95234,6 +95254,26 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Number of services OK state"
+msgstr "Número de serviços no estado OK"
+
+#, fuzzy
+msgid "Number of services warning state"
+msgstr "Número de serviços no estado OK"
+
+#, fuzzy
+msgid "Number of services critical state"
+msgstr "Número de serviços no estado OK"
+
+#, fuzzy
+msgid "Number of services unknown state"
+msgstr "Número de serviços no estado OK"
+
+#, fuzzy
+msgid "Number of services pending state"
+msgstr "Número de serviços no estado OK"
+
+#, fuzzy
 msgid "Unhandled Problems"
 msgstr "Problemas com o anfitrião"
 
@@ -95244,6 +95284,14 @@ msgstr "Anfitriões de busca"
 #, fuzzy
 msgid "Stale state"
 msgstr "todos os Estados"
+
+#, fuzzy
+msgid "Only number values are allowed."
+msgstr "Somente letras maiúsculas são permitidas"
+
+#, fuzzy
+msgid "The lower bound must not exceed the upper bound."
+msgstr "O agrupamento deve ter pelo menos um nó"
 
 #, fuzzy
 msgid "Filter values"
@@ -96204,6 +96252,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Pending changes reverted."
+#~ msgstr "Alterações pendentes"
+
+#, fuzzy
+#~ msgid "Resource attributes"
+#~ msgstr "Redefinir atributos"
+
+#, fuzzy
+#~ msgid "Scope attributes"
+#~ msgstr "Atributo de função"
+
+#, fuzzy
+#~ msgid "Data point attributes"
+#~ msgstr "Atributos modificados"
 
 #, fuzzy
 #~ msgid "Metric backend is disabled, autocompletion is not available."

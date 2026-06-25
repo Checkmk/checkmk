@@ -46674,9 +46674,6 @@ msgstr "保留中のDNS リクエスト"
 msgid "Pending changes"
 msgstr "保留中の変更"
 
-msgid "Pending changes reverted."
-msgstr "保留中の変更が取り消されました。"
-
 msgid "Pending create"
 msgstr "保留中の更新"
 
@@ -51967,6 +51964,9 @@ msgstr "他者の変更を戻す"
 msgid "Reverting pending changes."
 msgstr "保留中の変更を戻す。"
 
+msgid "Reverting pending changes. Reload this page to see the current status."
+msgstr ""
+
 #, fuzzy
 msgid "Review and run connection test"
 msgstr "保存して接続テストを実行"
@@ -52494,6 +52494,10 @@ msgstr "Rxパワーレベル"
 
 msgid "S."
 msgstr "S."
+
+#, fuzzy
+msgid "S3 Buckets"
+msgstr "AWS/S3 バケット"
 
 msgid "S3 back-end cache hits"
 msgstr "S3バックエンドキャッシュヒット"
@@ -56385,6 +56389,10 @@ msgstr "サイトはLivestatusプロキシデーモンを使用しています"
 
 msgid "Site management"
 msgstr "サイト管理"
+
+#, fuzzy
+msgid "Site management configuration (OMD)"
+msgstr "SSHデーモン設定(Linux)"
 
 msgid "Site name"
 msgstr "サイト名"
@@ -84892,6 +84900,24 @@ msgstr "ドラッグし並び替え"
 msgid "Remove element"
 msgstr "要素を削除"
 
+#, fuzzy
+msgid "Paste from clipboard failed with error: %{error}"
+msgstr "クリップボードへのコピーがエラーで失敗しました： "
+
+#, fuzzy
+msgid "Pasted from clipboard"
+msgstr "クリップボードにコピー"
+
+msgid "No input field found to paste into"
+msgstr ""
+
+msgid "Clipboard access was blocked. Allow it or paste manually with Ctrl+V."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to read from clipboard"
+msgstr "秘密をクリップボードにコピーする"
+
 msgid "Clear search"
 msgstr "検索をクリア"
 
@@ -87018,14 +87044,9 @@ msgstr "\"%s\"で終わることはできません"
 msgid "does not exist"
 msgstr "存在しない"
 
-msgid "Resource attributes"
-msgstr "リソース属性"
-
-msgid "Scope attributes"
-msgstr "スコープ属性"
-
-msgid "Data point attributes"
-msgstr "データポイント属性"
+#, fuzzy
+msgid "Unknown error"
+msgstr "不明なエラー: %s"
 
 #, fuzzy
 msgid "Agent connection test running"
@@ -87605,6 +87626,10 @@ msgstr ""
 
 msgid "Paste the code from the redirect page here"
 msgstr "リダイレクトページのコードをここに貼り付けてください"
+
+#, fuzzy
+msgid "Paste"
+msgstr "マスター"
 
 #, fuzzy
 msgid "Start authorization"
@@ -88414,6 +88439,26 @@ msgstr ""
 "Relayは、以下のオペレーティングシステムでの動作が公式にサポートされています："
 
 #, fuzzy
+msgid "Number of services OK state"
+msgstr "OK状態のサービスの数"
+
+#, fuzzy
+msgid "Number of services warning state"
+msgstr "OK状態のサービスの数"
+
+#, fuzzy
+msgid "Number of services critical state"
+msgstr "OK状態のサービスの数"
+
+#, fuzzy
+msgid "Number of services unknown state"
+msgstr "OK状態のサービスの数"
+
+#, fuzzy
+msgid "Number of services pending state"
+msgstr "OK状態のサービスの数"
+
+#, fuzzy
 msgid "Unhandled Problems"
 msgstr "未処理のホストの問題"
 
@@ -88424,6 +88469,14 @@ msgstr "ホストを検索"
 #, fuzzy
 msgid "Stale state"
 msgstr "すべての状態"
+
+#, fuzzy
+msgid "Only number values are allowed."
+msgstr "大文字のみ使用できます"
+
+#, fuzzy
+msgid "The lower bound must not exceed the upper bound."
+msgstr "下限値は上限値より小さくなければなりません"
 
 #, fuzzy
 msgid "Filter values"
@@ -89518,6 +89571,18 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Pending changes reverted."
+#~ msgstr "保留中の変更が取り消されました。"
+
+#~ msgid "Resource attributes"
+#~ msgstr "リソース属性"
+
+#~ msgid "Scope attributes"
+#~ msgstr "スコープ属性"
+
+#~ msgid "Data point attributes"
+#~ msgstr "データポイント属性"
 
 #~ msgid "Metric backend is disabled, autocompletion is not available."
 #~ msgstr ""

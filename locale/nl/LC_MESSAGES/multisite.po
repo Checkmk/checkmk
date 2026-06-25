@@ -50475,10 +50475,6 @@ msgstr "Hangende aanvragen"
 msgid "Pending changes"
 msgstr "Hangende wijzigingen (%s)"
 
-#, fuzzy
-msgid "Pending changes reverted."
-msgstr "Hangende wijzigingen (%s)"
-
 msgid "Pending create"
 msgstr "In afwachting van creatie"
 
@@ -56204,6 +56200,9 @@ msgstr "Buitenlandse wijzigingen activeren"
 msgid "Reverting pending changes."
 msgstr "Geen hangende wijzigingen"
 
+msgid "Reverting pending changes. Reload this page to see the current status."
+msgstr ""
+
 #, fuzzy
 msgid "Review and run connection test"
 msgstr "Bewaar & voer verbindingstests uit"
@@ -56776,6 +56775,10 @@ msgstr "Rx vermogensniveau"
 
 msgid "S."
 msgstr "S."
+
+#, fuzzy
+msgid "S3 Buckets"
+msgstr "AWS/S3 emmers"
 
 #, fuzzy
 msgid "S3 back-end cache hits"
@@ -60950,6 +60953,10 @@ msgstr "De site gebruikt de Livestatus Proxy Daemon"
 
 msgid "Site management"
 msgstr "Beheer van de site"
+
+#, fuzzy
+msgid "Site management configuration (OMD)"
+msgstr "SSH daemon configuratie (Linux)"
 
 msgid "Site name"
 msgstr "Naam site"
@@ -91738,6 +91745,23 @@ msgstr ""
 msgid "Remove element"
 msgstr "Verwijder dit element"
 
+msgid "Paste from clipboard failed with error: %{error}"
+msgstr ""
+
+#, fuzzy
+msgid "Pasted from clipboard"
+msgstr "Geheim gekopieerd naar klembord"
+
+msgid "No input field found to paste into"
+msgstr ""
+
+msgid "Clipboard access was blocked. Allow it or paste manually with Ctrl+V."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to read from clipboard"
+msgstr "Geheim gekopieerd naar klembord"
+
 #, fuzzy
 msgid "Clear search"
 msgstr "Regel zoeken"
@@ -94076,16 +94100,8 @@ msgid "does not exist"
 msgstr "Bestaat niet"
 
 #, fuzzy
-msgid "Resource attributes"
-msgstr "Rolkenmerk"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Rolkenmerk"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Gewijzigde attributen"
+msgid "Unknown error"
+msgstr "Onbekende gebruiker: %s"
 
 #, fuzzy
 msgid "Agent connection test running"
@@ -94588,6 +94604,10 @@ msgstr ""
 
 msgid "Paste the code from the redirect page here"
 msgstr ""
+
+#, fuzzy
+msgid "Paste"
+msgstr "master"
 
 #, fuzzy
 msgid "Start authorization"
@@ -95340,6 +95360,26 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Number of services OK state"
+msgstr "Aantal diensten in staat OK"
+
+#, fuzzy
+msgid "Number of services warning state"
+msgstr "Aantal diensten in staat OK"
+
+#, fuzzy
+msgid "Number of services critical state"
+msgstr "Aantal diensten in staat OK"
+
+#, fuzzy
+msgid "Number of services unknown state"
+msgstr "Aantal diensten in staat OK"
+
+#, fuzzy
+msgid "Number of services pending state"
+msgstr "Aantal diensten in staat OK"
+
+#, fuzzy
 msgid "Unhandled Problems"
 msgstr "Onbehandelde host problemen"
 
@@ -95350,6 +95390,14 @@ msgstr "Zoek hosts"
 #, fuzzy
 msgid "Stale state"
 msgstr "alle staten"
+
+#, fuzzy
+msgid "Only number values are allowed."
+msgstr "Alleen hoofdletters zijn toegestaan"
+
+#, fuzzy
+msgid "The lower bound must not exceed the upper bound."
+msgstr "Het cluster moet ten minste één knooppunt hebben"
 
 #, fuzzy
 msgid "Filter values"
@@ -96308,6 +96356,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Pending changes reverted."
+#~ msgstr "Hangende wijzigingen (%s)"
+
+#, fuzzy
+#~ msgid "Resource attributes"
+#~ msgstr "Rolkenmerk"
+
+#, fuzzy
+#~ msgid "Scope attributes"
+#~ msgstr "Rolkenmerk"
+
+#, fuzzy
+#~ msgid "Data point attributes"
+#~ msgstr "Gewijzigde attributen"
 
 #, fuzzy
 #~ msgid "Metric backend is disabled, autocompletion is not available."

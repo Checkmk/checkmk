@@ -50866,10 +50866,6 @@ msgstr "Solicitudes pendientes"
 msgid "Pending changes"
 msgstr "Cambios pendientes (%s)"
 
-#, fuzzy
-msgid "Pending changes reverted."
-msgstr "Cambios pendientes (%s)"
-
 msgid "Pending create"
 msgstr "Pendiente de crear"
 
@@ -56671,6 +56667,9 @@ msgstr "Activar los cambios en el extranjero"
 msgid "Reverting pending changes."
 msgstr "No hay cambios pendientes"
 
+msgid "Reverting pending changes. Reload this page to see the current status."
+msgstr ""
+
 #, fuzzy
 msgid "Review and run connection test"
 msgstr "Guardar & ejecutar pruebas de conexión"
@@ -57255,6 +57254,10 @@ msgstr "Nivel de potencia Rx"
 
 msgid "S."
 msgstr "S."
+
+#, fuzzy
+msgid "S3 Buckets"
+msgstr "AWS/S3 Buckets"
 
 #, fuzzy
 msgid "S3 back-end cache hits"
@@ -61473,6 +61476,10 @@ msgstr "El sitio utiliza el demonio proxy de Livestatus"
 
 msgid "Site management"
 msgstr "Gestión del sitio"
+
+#, fuzzy
+msgid "Site management configuration (OMD)"
+msgstr "Configuración del demonio SSH (Linux)"
 
 msgid "Site name"
 msgstr "Nombre del sitio"
@@ -92447,6 +92454,23 @@ msgstr ""
 msgid "Remove element"
 msgstr "Eliminar este elemento"
 
+msgid "Paste from clipboard failed with error: %{error}"
+msgstr ""
+
+#, fuzzy
+msgid "Pasted from clipboard"
+msgstr "Secreto copiado en el portapapeles"
+
+msgid "No input field found to paste into"
+msgstr ""
+
+msgid "Clipboard access was blocked. Allow it or paste manually with Ctrl+V."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to read from clipboard"
+msgstr "Secreto copiado en el portapapeles"
+
 #, fuzzy
 msgid "Clear search"
 msgstr "Búsqueda de reglas"
@@ -94786,16 +94810,8 @@ msgid "does not exist"
 msgstr "No existe"
 
 #, fuzzy
-msgid "Resource attributes"
-msgstr "Atributo de función"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Atributo de función"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Atributos modificados"
+msgid "Unknown error"
+msgstr "Usuario desconocido: %s"
 
 #, fuzzy
 msgid "Agent connection test running"
@@ -95302,6 +95318,10 @@ msgstr ""
 
 msgid "Paste the code from the redirect page here"
 msgstr ""
+
+#, fuzzy
+msgid "Paste"
+msgstr "maestro"
 
 #, fuzzy
 msgid "Start authorization"
@@ -96057,6 +96077,26 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Number of services OK state"
+msgstr "Número de servicios en el estado OK"
+
+#, fuzzy
+msgid "Number of services warning state"
+msgstr "Número de servicios en el estado OK"
+
+#, fuzzy
+msgid "Number of services critical state"
+msgstr "Número de servicios en el estado OK"
+
+#, fuzzy
+msgid "Number of services unknown state"
+msgstr "Número de servicios en el estado OK"
+
+#, fuzzy
+msgid "Number of services pending state"
+msgstr "Número de servicios en el estado OK"
+
+#, fuzzy
 msgid "Unhandled Problems"
 msgstr "Problemas de host no gestionados"
 
@@ -96067,6 +96107,14 @@ msgstr "Buscar hosts"
 #, fuzzy
 msgid "Stale state"
 msgstr "todos los estados"
+
+#, fuzzy
+msgid "Only number values are allowed."
+msgstr "Sólo se permiten las letras mayúsculas"
+
+#, fuzzy
+msgid "The lower bound must not exceed the upper bound."
+msgstr "El clúster debe tener al menos un nodo"
 
 #, fuzzy
 msgid "Filter values"
@@ -97026,6 +97074,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Pending changes reverted."
+#~ msgstr "Cambios pendientes (%s)"
+
+#, fuzzy
+#~ msgid "Resource attributes"
+#~ msgstr "Atributo de función"
+
+#, fuzzy
+#~ msgid "Scope attributes"
+#~ msgstr "Atributo de función"
+
+#, fuzzy
+#~ msgid "Data point attributes"
+#~ msgstr "Atributos modificados"
 
 #, fuzzy
 #~ msgid "Metric backend is disabled, autocompletion is not available."

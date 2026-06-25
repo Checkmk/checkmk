@@ -3,13 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import any_of, equals, SNMPTree, StringTable
-
-check_info = {}
+from cmk.agent_based.legacy.conversion import check_levels_legacy_compatible
+from cmk.agent_based.v2 import (
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 
 
 def saveint(i: str) -> int:
@@ -25,38 +34,36 @@ def saveint(i: str) -> int:
         return 0
 
 
-def discover_ups_eaton_enviroment(info):
-    if len(info) > 0:
-        return [(None, {})]
-    return []
-
-
-def check_ups_eaton_enviroment(item, params, info):
-    wert = list(map(saveint, info[0]))
-    i = 0
-    for sensor, sensor_name, unit_symbol in [
-        ("temp", "Temperature", " °C"),
-        ("remote_temp", "Remote-Temperature", " °C"),
-        ("humidity", "Humidity", "%"),
-    ]:
-        levels = params.get(sensor)
-        yield check_levels(
-            wert[i],
-            sensor,
-            levels,
-            human_readable_func=lambda x: f"{x:.1f}{unit_symbol}",
-            infoname=sensor_name,
-        )
-        i += 1
-
-
 def parse_ups_eaton_enviroment(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["ups_eaton_enviroment"] = LegacyCheckDefinition(
+def discover_ups_eaton_enviroment(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
+def check_ups_eaton_enviroment(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    wert = list(map(saveint, section[0]))
+    for i, (sensor, sensor_name, unit_symbol) in enumerate(
+        [
+            ("temp", "Temperature", " °C"),
+            ("remote_temp", "Remote-Temperature", " °C"),
+            ("humidity", "Humidity", "%"),
+        ]
+    ):
+        levels = params.get(sensor)
+        yield from check_levels_legacy_compatible(
+            wert[i],
+            sensor,
+            levels,
+            human_readable_func=lambda x, u=unit_symbol: f"{x:.1f}{u}",
+            infoname=sensor_name,
+        )
+
+
+snmp_section_ups_eaton_enviroment = SimpleSNMPSection(
     name="ups_eaton_enviroment",
-    parse_function=parse_ups_eaton_enviroment,
     detect=any_of(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1.2"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.534.1"),
@@ -66,6 +73,12 @@ check_info["ups_eaton_enviroment"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.534.1.6",
         oids=["1", "5", "6"],
     ),
+    parse_function=parse_ups_eaton_enviroment,
+)
+
+
+check_plugin_ups_eaton_enviroment = CheckPlugin(
+    name="ups_eaton_enviroment",
     service_name="Enviroment",
     discovery_function=discover_ups_eaton_enviroment,
     check_function=check_ups_eaton_enviroment,

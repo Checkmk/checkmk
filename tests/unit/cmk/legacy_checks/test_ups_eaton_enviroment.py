@@ -3,15 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.ups_eaton_enviroment import (
     check_ups_eaton_enviroment,
     discover_ups_eaton_enviroment,
@@ -22,41 +18,39 @@ from cmk.legacy_checks.ups_eaton_enviroment import (
 @pytest.mark.parametrize(
     "string_table, expected_discoveries",
     [
-        ([["1", "40", "3"]], [(None, {})]),
+        ([["1", "40", "3"]], [Service()]),
+        ([], []),
     ],
 )
 def test_discover_ups_eaton_enviroment(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: list[Service]
 ) -> None:
-    """Test discovery function for ups_eaton_enviroment check."""
     parsed = parse_ups_eaton_enviroment(string_table)
-    result = list(discover_ups_eaton_enviroment(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert list(discover_ups_eaton_enviroment(parsed)) == expected_discoveries
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "params, string_table, expected_results",
     [
         (
-            None,
             {"humidity": (65, 80), "remote_temp": (40, 50), "temp": (40, 50)},
             [["1", "40", "3"]],
             [
-                (0, "Temperature: 1.0 °C", [("temp", 1, 40, 50)]),
-                (
-                    1,
-                    "Remote-Temperature: 40.0 °C (warn/crit at 40.0 °C/50.0 °C)",
-                    [("remote_temp", 40, 40, 50)],
+                Result(state=State.OK, summary="Temperature: 1.0 °C"),
+                Metric("temp", 1.0, levels=(40.0, 50.0)),
+                Result(
+                    state=State.WARN,
+                    summary="Remote-Temperature: 40.0 °C (warn/crit at 40.0 °C/50.0 °C)",
                 ),
-                (0, "Humidity: 3.0%", [("humidity", 3, 65, 80)]),
+                Metric("remote_temp", 40.0, levels=(40.0, 50.0)),
+                Result(state=State.OK, summary="Humidity: 3.0%"),
+                Metric("humidity", 3.0, levels=(65.0, 80.0)),
             ],
         ),
     ],
 )
 def test_check_ups_eaton_enviroment(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    params: Mapping[str, object], string_table: StringTable, expected_results: list[object]
 ) -> None:
-    """Test check function for ups_eaton_enviroment check."""
     parsed = parse_ups_eaton_enviroment(string_table)
-    result = list(check_ups_eaton_enviroment(item, params, parsed))
-    assert result == expected_results
+    assert list(check_ups_eaton_enviroment(params, parsed)) == expected_results

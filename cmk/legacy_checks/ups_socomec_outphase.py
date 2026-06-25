@@ -4,44 +4,51 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.elphase import check_elphase
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
 from cmk.plugins.ups.lib_socomec import DETECT_SOCOMEC
 
-check_info = {}
-
-Section = dict[str, dict[str, tuple[int, None]]]
+Section = Mapping[str, ElPhase]
 
 
 def parse_ups_socomec_outphase(string_table: StringTable) -> Section:
-    parsed: Section = {}
+    parsed: dict[str, ElPhase] = {}
     for index, rawvolt, rawcurr, rawload in string_table:
-        parsed["Phase " + index] = {
-            "voltage": (int(rawvolt) // 10, None),  # The actual precision does not appear to
-            "current": (int(rawcurr) // 10, None),  # go beyond degrees, thus we drop the trailing 0
-            "output_load": (int(rawload), None),
-        }
+        parsed["Phase " + index] = ElPhase(
+            # The actual precision does not appear to go beyond degrees, thus we drop the trailing 0
+            voltage=ReadingWithState(value=int(rawvolt) // 10),
+            current=ReadingWithState(value=int(rawcurr) // 10),
+            output_load=ReadingWithState(value=int(rawload)),
+        )
     return parsed
 
 
+def discover_ups_socomec_outphase(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
 def check_ups_socomec_outphase(
-    item: str, params: Mapping[str, Any], parsed: Section
-) -> Iterator[tuple[int, str] | tuple[int, str, list[Any]]]:
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     if not item.startswith("Phase"):
         # fix item names discovered before 1.2.7
         item = "Phase %s" % item
-    yield from check_elphase(item, params, parsed)
+    if phase := section.get(item):
+        yield from check_elphase(params, phase)
 
 
-def discover_ups_socomec_outphase(section: Section) -> Iterator[tuple[str, dict[str, object]]]:
-    yield from ((item, {}) for item in section)
-
-
-check_info["ups_socomec_outphase"] = LegacyCheckDefinition(
+snmp_section_ups_socomec_outphase = SimpleSNMPSection(
     name="ups_socomec_outphase",
     detect=DETECT_SOCOMEC,
     fetch=SNMPTree(
@@ -49,6 +56,11 @@ check_info["ups_socomec_outphase"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4"],
     ),
     parse_function=parse_ups_socomec_outphase,
+)
+
+
+check_plugin_ups_socomec_outphase = CheckPlugin(
+    name="ups_socomec_outphase",
     service_name="Output %s",
     discovery_function=discover_ups_socomec_outphase,
     check_function=check_ups_socomec_outphase,

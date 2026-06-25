@@ -229,7 +229,7 @@ def discover_mssql_transactionlogs(
 
 def _datafile_usage(
     instances: Sequence[MSSQLInstanceData],
-    available_bytes: Mapping[str, float],
+    free_bytes_per_mountpoint: Mapping[str, float],
 ) -> DatafileUsage:
     max_size_sum = 0.0
     allocated_size_sum = 0.0
@@ -241,8 +241,8 @@ def _datafile_usage(
         unlimited |= instance["unlimited"]
         allocated_size_sum += instance["allocated_size"] or 0
         used_size_sum += (used_size := instance["used_size"] or 0)
-        mountpoint = _get_mountpoint(available_bytes, instance["mountpoint"])
-        filesystem_free_size = available_bytes.get(mountpoint)
+        mountpoint = _get_mountpoint(free_bytes_per_mountpoint, instance["mountpoint"])
+        filesystem_free_size = free_bytes_per_mountpoint.get(mountpoint)
         if mountpoint in used_mointpoints:
             filesystem_free_size = 0
         else:
@@ -263,22 +263,22 @@ def _datafile_usage(
 
 
 def _effective_max_size(
-    max_size: float | None,
-    free_size: float | None,
-    used_size: float,
+    instance_max_size: float | None,
+    filesystem_free_size: float | None,
+    instance_used_size: float,
     unlimited: bool,
 ) -> float:
-    max_size_float = max_size or 0
+    instance_max_size_float = instance_max_size or 0
 
-    if free_size is None:
-        return max_size_float
+    if filesystem_free_size is None:
+        return instance_max_size_float
 
-    total_size = free_size + used_size
+    total_size = filesystem_free_size + instance_used_size
 
     if unlimited:
         return total_size
 
-    return min(max_size_float, total_size)
+    return min(instance_max_size_float, total_size)
 
 
 def check_mssql_common(
@@ -305,7 +305,7 @@ def check_mssql_common(
         params,
         _datafile_usage(
             instances_for_item,
-            available_bytes=(
+            free_bytes_per_mountpoint=(
                 {f.mountpoint.lower(): f.avail_mb * 1024 * 1024 for f in section_df[0]}
                 if section_df
                 else {}

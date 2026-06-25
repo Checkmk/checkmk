@@ -115,6 +115,11 @@ const wizardMode = computed({
             <template #actions>
               <CmkWizardButton type="next" />
             </template>
+            <template #recap>
+              <CmkParagraph
+                >I can also display a recap of the information provided in this step.</CmkParagraph
+              >
+            </template>
           </CmkWizardStep>
 
           <CmkWizardStep :index="2" :is-completed="() => wizardStep > 2">

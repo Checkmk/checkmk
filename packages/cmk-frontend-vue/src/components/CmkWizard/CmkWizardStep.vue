@@ -60,18 +60,26 @@ function onClickGoTo() {
           <slot name="actions" />
         </div>
       </div>
-      <CmkCollapsible
-        v-else
-        :open="context.isSelected(props.index)"
-        class="cmk-wizard-step__slots-inner"
-      >
-        <div ref="contentRef" class="cmk-wizard-step__content">
-          <slot name="content"></slot>
-        </div>
-        <div class="cmk-wizard-step__actions" @click.stop>
-          <slot name="actions"></slot>
-        </div>
-      </CmkCollapsible>
+      <template v-else>
+        <CmkCollapsible
+          :open="context.isSelected(props.index)"
+          class="cmk-wizard-step__slots-inner"
+        >
+          <div ref="contentRef" class="cmk-wizard-step__content">
+            <slot name="content"></slot>
+          </div>
+          <div class="cmk-wizard-step__actions" @click.stop>
+            <slot name="actions"></slot>
+          </div>
+        </CmkCollapsible>
+        <CmkCollapsible
+          :open="isCompleted() && context.mode() !== 'overview'"
+          class="cmk-wizard-step__slots-inner cmk-wizard-step__slot-recap"
+          @click.stop
+        >
+          <slot name="recap" />
+        </CmkCollapsible>
+      </template>
     </div>
   </li>
 </template>
@@ -174,6 +182,10 @@ function onClickGoTo() {
   gap: var(--dimension-4);
   width: 100%;
   align-items: flex-start;
+}
+
+.cmk-wizard-step__slot-recap {
+  cursor: default;
 }
 
 .cmk-wizard-step__content {

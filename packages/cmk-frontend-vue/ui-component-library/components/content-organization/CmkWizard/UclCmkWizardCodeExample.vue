@@ -27,6 +27,9 @@ const mode = ref<'guided' | 'overview'>('guided')
         ><p>Welcome to the setup wizard. Please provide your initial details.</p></template
       >
       <template #actions><CmkWizardButton type="next" /></template>
+      <template #recap
+        ><p>I can also display a recap of the information provided in this step.</p></template
+      >
     </CmkWizardStep>
 
     <CmkWizardStep :index="2" :is-completed="() => step > 2">

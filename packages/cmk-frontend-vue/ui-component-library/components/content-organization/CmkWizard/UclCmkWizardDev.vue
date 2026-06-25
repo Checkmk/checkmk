@@ -25,8 +25,8 @@ const currentMode = ref<'guided' | 'overview'>('guided')
 <template>
   <CmkWizardModeToggle v-model="currentMode" />
   <CmkWizard v-model="currentStep" :mode="currentMode">
-    <StepOne :index="1" :is-completed="() => currentStep >= 1" />
-    <CmkWizardStep :index="2" :is-completed="() => currentStep >= 2">
+    <StepOne :index="1" :is-completed="() => currentStep > 1" />
+    <CmkWizardStep :index="2" :is-completed="() => currentStep > 2">
       <template #header>
         <CmkHeading>Step 2</CmkHeading>
       </template>
@@ -38,7 +38,7 @@ const currentMode = ref<'guided' | 'overview'>('guided')
         <CmkWizardButton type="next" />
       </template>
     </CmkWizardStep>
-    <CmkWizardStep :index="3" :is-completed="() => currentStep >= 3">
+    <CmkWizardStep :index="3" :is-completed="() => currentStep > 3">
       <template #header>
         <CmkHeading>Step 3</CmkHeading>
       </template>

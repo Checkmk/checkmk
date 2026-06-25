@@ -10,8 +10,8 @@ import { computed, ref } from 'vue'
 import useId from '@/lib/useId'
 
 import CmkLabel from '@/components/CmkLabel.vue'
-import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
+import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
@@ -85,6 +85,9 @@ async function validate(): Promise<boolean> {
     </template>
     <template #actions>
       <CmkWizardButton type="next" :validation-cb="validate" />
+    </template>
+    <template #recap>
+      <p>Thank you, {{ yourName }}</p>
     </template>
   </CmkWizardStep>
 </template>

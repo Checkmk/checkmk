@@ -6,16 +6,18 @@
 # mypy: disable-error-code="exhaustive-match"
 
 import json
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Sequence
+from typing import TypedDict
 
 from pydantic import BaseModel, Field
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     render,
     Result,
     Service,
@@ -23,6 +25,11 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.graylog.lib import deserialize_and_merge_json
+
+
+class FailuresParams(TypedDict):
+    failures: LevelsT[int]
+    failures_last: LevelsT[int]
 
 
 class FailureMessage(BaseModel):
@@ -121,15 +128,15 @@ def _failure_results(failures: Collection[Failure]) -> CheckResult:
 
 
 def check(
-    params: Mapping[str, tuple[int, int] | None],
+    params: FailuresParams,
     section: Section,
 ) -> CheckResult:
     if section.failures is None or section.total is None:
         return
 
-    yield from check_levels_v1(
+    yield from check_levels(
         value=section.total,
-        levels_upper=params.get("failures"),
+        levels_upper=params["failures"],
         metric_name="failures",
         render_func=str,
         label="Total number of failures",
@@ -138,9 +145,9 @@ def check(
     if section.count is None:
         return
 
-    yield from check_levels_v1(
+    yield from check_levels(
         value=section.count,
-        levels_upper=params.get("failures_last"),
+        levels_upper=params["failures_last"],
         metric_name=None,
         render_func=str,
         label=f"Failures in last {render.timespan(section.ds_param_since)}",
@@ -157,6 +164,9 @@ check_plugin_graylog_failures = CheckPlugin(
     service_name="Graylog Index Failures",
     discovery_function=discover,
     check_function=check,
-    check_default_parameters={},
+    check_default_parameters={
+        "failures": ("no_levels", None),
+        "failures_last": ("no_levels", None),
+    },
     check_ruleset_name="graylog_failures",
 )

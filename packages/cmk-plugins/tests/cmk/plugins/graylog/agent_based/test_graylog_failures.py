@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-
 import pytest
 
 from cmk.agent_based.v2 import (
@@ -92,7 +90,7 @@ def test_discover(
     [
         pytest.param(
             _STRING_TABLE_ZERO_FAILURES,
-            {},
+            {"failures": ("no_levels", None), "failures_last": ("no_levels", None)},
             [
                 Result(state=State.OK, summary="Total number of failures: 198508"),
                 Metric("failures", 198508.0),
@@ -102,7 +100,7 @@ def test_discover(
         ),
         pytest.param(
             _STRING_TABLE_MSG_DICT,
-            {},
+            {"failures": ("no_levels", None), "failures_last": ("no_levels", None)},
             [
                 Result(state=State.OK, summary="Total number of failures: 198508"),
                 Metric("failures", 198508.0),
@@ -121,8 +119,8 @@ def test_discover(
         pytest.param(
             _STRING_TABLE_MSG_DICT,
             {
-                "failures": (5000, 2000),
-                "failures_last": (1, 10),
+                "failures": ("fixed", (5000, 2000)),
+                "failures_last": ("fixed", (1, 10)),
             },
             [
                 Result(
@@ -147,7 +145,7 @@ def test_discover(
         ),
         pytest.param(
             _STRING_TABLE_MSG_STR,
-            {},
+            {"failures": ("no_levels", None), "failures_last": ("no_levels", None)},
             [
                 Result(state=State.OK, summary="Total number of failures: 131346"),
                 Metric("failures", 131346.0),
@@ -167,7 +165,7 @@ def test_discover(
 )
 def test_check(
     string_table: StringTable,
-    params: Mapping[str, tuple[int, int] | None],
+    params: graylog_failures.FailuresParams,
     expected_result: CheckResult,
 ) -> None:
     section = graylog_failures.parse(string_table)

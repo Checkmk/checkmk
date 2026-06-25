@@ -4,23 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
-from typing import Any
+from dataclasses import dataclass
+from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     render,
-    Result,
     Service,
-    State,
+    StringTable,
 )
 from cmk.plugins.graylog.lib import deserialize_and_merge_json
-
-Section = dict[str, Any]
 
 # <<<graylog_jvm>>>
 # {"jvm.memory.heap.init": 1073741824, "jvm.memory.heap.used": 357154208,
@@ -28,40 +26,52 @@ Section = dict[str, Any]
 # "jvm.memory.heap.usage": 0.35012789737592354}
 
 
-def discover_graylog_jvm(section: Section) -> DiscoveryResult:
-    if section:
-        yield Service()
+@dataclass(frozen=True)
+class GraylogJvmSection:
+    used: int
+    committed: int
 
 
-def check_graylog_jvm(params: Mapping[str, Any], section: Section) -> CheckResult:
-    if not section:
-        return
+class GraylogJvmParams(TypedDict):
+    used: LevelsT[int]
+    committed: LevelsT[int]
 
-    has_mem_data = False
-    for key, metric_name in [
-        ("used", "mem_heap"),
-        ("committed", "mem_heap_committed"),
+
+def parse_graylog_jvm(string_table: StringTable) -> GraylogJvmSection | None:
+    match deserialize_and_merge_json(string_table):
+        case {
+            "jvm.memory.heap.used": int(heap_used),
+            "jvm.memory.heap.committed": int(heap_committed),
+        }:
+            return GraylogJvmSection(
+                used=heap_used,
+                committed=heap_committed,
+            )
+        case _:
+            return None
+
+
+def discover_graylog_jvm(section: GraylogJvmSection) -> DiscoveryResult:
+    yield Service()
+
+
+def check_graylog_jvm(params: GraylogJvmParams, section: GraylogJvmSection) -> CheckResult:
+    for key, value, metric_name, levels_upper in [
+        ("used", section.used, "mem_heap", params["used"]),
+        ("committed", section.committed, "mem_heap_committed", params["committed"]),
     ]:
-        mem_data = section.get(f"jvm.memory.heap.{key}")
-        if mem_data is None:
-            continue
-
-        has_mem_data = True
-        yield from check_levels_v1(
-            value=mem_data,
+        yield from check_levels(
+            value=value,
             metric_name=metric_name,
-            levels_upper=params.get(key),
+            levels_upper=levels_upper,
             render_func=render.bytes,
             label=f"{key.title()} heap space",
         )
 
-    if not has_mem_data:
-        yield Result(state=State.UNKNOWN, summary="No heap space data available")
-
 
 agent_section_graylog_jvm = AgentSection(
     name="graylog_jvm",
-    parse_function=deserialize_and_merge_json,
+    parse_function=parse_graylog_jvm,
 )
 
 
@@ -71,5 +81,8 @@ check_plugin_graylog_jvm = CheckPlugin(
     discovery_function=discover_graylog_jvm,
     check_function=check_graylog_jvm,
     check_ruleset_name="graylog_jvm",
-    check_default_parameters={},
+    check_default_parameters={
+        "used": ("no_levels", None),
+        "committed": ("no_levels", None),
+    },
 )

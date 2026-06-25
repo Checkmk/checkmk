@@ -5,8 +5,17 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.graylog.agent_based.graylog_jvm import check_graylog_jvm, discover_graylog_jvm
-from cmk.plugins.graylog.lib import deserialize_and_merge_json
+from cmk.plugins.graylog.agent_based.graylog_jvm import (
+    check_graylog_jvm,
+    discover_graylog_jvm,
+    GraylogJvmParams,
+    parse_graylog_jvm,
+)
+
+_PARAMS: GraylogJvmParams = {
+    "used": ("no_levels", None),
+    "committed": ("no_levels", None),
+}
 
 _SECTION = [
     [
@@ -16,13 +25,15 @@ _SECTION = [
 
 
 def test_discover_graylog_jvm() -> None:
-    parsed = deserialize_and_merge_json(_SECTION)
+    parsed = parse_graylog_jvm(_SECTION)
+    assert parsed is not None
     assert list(discover_graylog_jvm(parsed)) == [Service()]
 
 
 def test_check_graylog_jvm() -> None:
-    parsed = deserialize_and_merge_json(_SECTION)
-    assert list(check_graylog_jvm({}, parsed)) == [
+    parsed = parse_graylog_jvm(_SECTION)
+    assert parsed is not None
+    assert list(check_graylog_jvm(_PARAMS, parsed)) == [
         Result(state=State.OK, summary="Used heap space: 441 MiB"),
         Metric("mem_heap", 461934992),
         Result(state=State.OK, summary="Committed heap space: 973 MiB"),
@@ -30,7 +41,6 @@ def test_check_graylog_jvm() -> None:
     ]
 
 
-def test_check_graylog_jvm_no_data() -> None:
-    assert list(check_graylog_jvm({}, {"jvm.memory.other": 1})) == [
-        Result(state=State.UNKNOWN, summary="No heap space data available"),
-    ]
+def test_parse_graylog_jvm_no_heap_data() -> None:
+    # Without both heap used and committed there is no section (and no service).
+    assert parse_graylog_jvm([['{"jvm.memory.other": 1}']]) is None

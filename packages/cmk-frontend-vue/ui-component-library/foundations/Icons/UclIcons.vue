@@ -67,7 +67,6 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
-  UclDetailPageAccessibility,
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
@@ -314,8 +313,6 @@ function htmlSnippet(icon: IconEntry): string {
         <UclPropertiesPanel v-model="propState" :config="panelConfig" title="Filters" />
       </template>
     </UclDetailPageComponent>
-
-    <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>
 </template>
 

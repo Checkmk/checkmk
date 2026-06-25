@@ -1,5 +1,5 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
-load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
@@ -74,24 +74,13 @@ py_doc_test(
     tags = ["no-mypy"],
 )
 
-py_pytest_main(
-    name = "__test__",
-    tags = ["no-mypy"],
-    deps = [
-        requirement("coverage"),
-    ],
-)
-
 py_cmk_test(
     name = "unit",
     size = "small",
-    srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/**/*.py"]),
     deps = [
-        ":__test__",
         ":cmk-werk-ids-server",
         ":cmk-werks",
-        requirement("pytest"),
         requirement("flask"),
         requirement("gitpython"),
         requirement("requests"),

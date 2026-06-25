@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
@@ -29,14 +29,6 @@ py_library(
     ],
 )
 
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-    ],
-)
-
 write_file(
     name = "cannot_fail",
     out = "test_cannot_fail.py",
@@ -52,14 +44,11 @@ py_cmk_test(
     name = "smoke",
     size = "small",
     srcs = [
-        "__test__.py",
         "test_cannot_fail.py",
     ],
     env = {"EDITION": "community"},
-    main = ":__test__.py",
     use_project_pytest_config = True,
     deps = [
-        ":__test__",
         ":conftest",
         "//tests/testlib",
     ],
@@ -72,7 +61,6 @@ py_cmk_test(
     # This is the "catch all" target. Don't add new stuff here.
     srcs = [
         "__init__.py",
-        "__test__.py",
     ] + glob(
         include = [
             "cmk/*.py",
@@ -103,11 +91,9 @@ py_cmk_test(
         ],
         exclude = ["**/*.py"],
     ),
-    main = ":__test__.py",
     use_project_pytest_config = True,
     visibility = ["//tests:__subpackages__"],
     deps = [
-        ":__test__",
         ":conftest",
         "//cmk:cmkpasswd",
         "//cmk/product_usage:product_usage_cli",

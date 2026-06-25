@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
@@ -50,21 +50,10 @@ py_library(
 py_cmk_test(
     name = "plugins-test",
     size = "small",
-    srcs = glob(["tests/unit/cmk/plugins/logwatch/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/unit/cmk/plugins/logwatch/**/*.py"]),
     deps = [
-        ":__test__",
         ":plugins",
-        requirement("pytest"),
         requirement("pytest-mock"),
-    ],
-)
-
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
     ],
 )
 

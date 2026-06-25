@@ -1,27 +1,15 @@
-load("@aspect_rules_py//py:defs.bzl", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-    ],
-)
-
 py_cmk_test(
     name = "validation",
-    srcs = ["__test__.py"] + ["test_validate_werks.py"],
+    srcs = ["test_validate_werks.py"],
     data = [
         "//:defines.make",
         "//.werks",
         "//.werks:werks_config",
     ],
-    main = ":__test__.py",
     deps = [
-        ":__test__",
-        requirement("pytest"),
         "//cmk/utils",
         "//cmk/utils:werks",
         "//packages/cmk-werks",
@@ -31,7 +19,7 @@ py_cmk_test(
 
 py_cmk_test(
     name = "werks",
-    srcs = ["__test__.py"] + [
+    srcs = [
         "test_werks.py",
         "test_werks_commands.py",
     ],
@@ -41,7 +29,6 @@ py_cmk_test(
         "//.werks:werks_config",
     ],
     imports = ["../../.."],
-    main = ":__test__.py",
     # This test requires git, however, adding git as a dependency
     # would constantly invalidate the cache, forgoing most advantages
     # of running in Bazel.  Instead, we depend on `//.werks` and run
@@ -51,9 +38,7 @@ py_cmk_test(
         "requires-git",
     ],
     deps = [
-        ":__test__",
         requirement("gitpython"),
-        requirement("pytest"),
         "//:pyproject-toml",
         "//cmk/utils",
         "//cmk/utils:werks",

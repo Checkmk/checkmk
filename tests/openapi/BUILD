@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
@@ -32,14 +32,6 @@ py_library(
     ],
 )
 
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-    ],
-)
-
 write_file(
     name = "cannot_fail",
     out = "test_cannot_fail.py",
@@ -53,14 +45,11 @@ py_cmk_test(
     name = "smoke",
     size = "small",
     srcs = [
-        "__test__.py",
         "test_cannot_fail.py",
     ],
     env = {"EDITION": "community"},
-    main = ":__test__.py",
     use_project_pytest_config = True,
     deps = [
-        ":__test__",
         ":conftest",
     ],
 )
@@ -71,16 +60,13 @@ py_cmk_test(
     timeout = "moderate",
     srcs = [
         "__init__.py",
-        "__test__.py",
     ] + glob(include = ["test_*.py"]),
     args = [
         "--random-order-bucket=global",
     ],
     env = {"EDITION": "community"},
-    main = ":__test__.py",
     use_project_pytest_config = True,
     deps = [
-        ":__test__",
         ":conftest",
         "//cmk:validate_config",
         "//cmk/gui:auth_core",

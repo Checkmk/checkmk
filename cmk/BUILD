@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
@@ -195,16 +195,6 @@ package_wheel(
     name = "cmk_tar",
     visibility = ["//visibility:public"],
     whl = "whl",
-)
-
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-        # pytest-xdist for `--numprocesses=NPROC`
-        requirement("pytest-xdist"),
-    ],
 )
 
 sh_library(

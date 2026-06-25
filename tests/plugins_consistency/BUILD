@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
@@ -14,17 +14,9 @@ py_library(
     ],
 )
 
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-    ],
-)
-
 py_cmk_test(
     name = "community",
-    srcs = ["__test__.py"] + glob(
+    srcs = glob(
         include = ["**/*.py"],
         exclude = ["conftest.py"],
     ),
@@ -34,9 +26,7 @@ py_cmk_test(
         "//packages/cmk-plugins:checkman_all",
         "//packages/cmk-plugins:libexec_all",
     ],
-    main = ":__test__.py",
     deps = [
-        ":__test__",
         ":conftest",
         "//:pyproject-toml",
         "//cmk/plugins",

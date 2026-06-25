@@ -1,5 +1,4 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 # Owns __init__.py so the source-presence check finds it without putting it in
@@ -28,14 +27,9 @@ py_cmk_test(
     # test_walk.py shells out to git; depend on the host git binary by
     # opting out of the bazel sandbox (same pattern as tests/code_quality/werks).
     imports = ["../../../.."],
-    pytest_main = True,
     tags = ["no-sandbox"],
     use_project_pytest_config = True,
     deps = [
-        # marshmallow is referenced by the workspace pyproject.toml's
-        # filterwarnings list; pytest needs it importable to parse config.
-        requirement("marshmallow"),
-        requirement("pytest"),
         "//tests/qa_metrics/change_quality",
         "//tests/unit/qa_metrics",
     ],

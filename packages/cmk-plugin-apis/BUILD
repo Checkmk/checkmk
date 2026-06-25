@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
@@ -268,135 +268,97 @@ py_doc_test(
     tags = ["no-mypy"],
 )
 
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-    ],
-)
-
 py_cmk_test(
     name = "agent_based-test",
     size = "small",
-    srcs = glob(["tests/cmk/agent_based/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/cmk/agent_based/**/*.py"]),
     deps = [
-        ":__test__",
         ":agent_based",
-        requirement("pytest"),
     ],
 )
 
 py_cmk_test(
     name = "bakery-test",
     size = "small",
-    srcs = glob(["tests/cmk/bakery/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/cmk/bakery/**/*.py"]),
     deps = [
-        ":__test__",
         ":bakery",
-        requirement("pytest"),
     ],
 )
 
 py_cmk_test(
     name = "dcd_connectors-test",
     size = "small",
-    srcs = glob(["tests/cmk/dcd_connectors/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/cmk/dcd_connectors/**/*.py"]),
     deps = [
-        ":__test__",
         ":dcd_connectors",
-        requirement("pytest"),
     ],
 )
 
 py_cmk_test(
     name = "dcd_connector_parameters-test",
     size = "small",
-    srcs = glob(["tests/cmk/dcd_connector_parameters/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/cmk/dcd_connector_parameters/**/*.py"]),
     deps = [
-        ":__test__",
         ":dcd_connector_parameters",
         ":rulesets",
-        requirement("pytest"),
     ],
 )
 
 py_cmk_test(
     name = "discover_plugins-test",
     size = "small",
-    srcs = glob(["tests/cmk/discover_plugins/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/cmk/discover_plugins/**/*.py"]),
     deps = [
-        ":__test__",
         ":dcd_connector_parameters",
         ":dcd_connectors",
         ":discover_plugins",
-        requirement("pytest"),
     ],
 )
 
 py_cmk_test(
     name = "graphing-test",
     size = "small",
-    srcs = glob(["tests/cmk/graphing/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/cmk/graphing/**/*.py"]),
     deps = [
-        ":__test__",
         ":graphing",
-        requirement("pytest"),
     ],
 )
 
 py_cmk_test(
     name = "rulesets-test",
     size = "small",
-    srcs = glob(["tests/cmk/rulesets/**/*.py"]) + [":__test__.py"],
-    main = "__test__.py",
+    srcs = glob(["tests/cmk/rulesets/**/*.py"]),
     deps = [
-        ":__test__",
         ":rulesets",
-        requirement("pytest"),
     ],
 )
 
 py_cmk_test(
     name = "password_store-test",
     size = "small",
-    srcs = glob(["tests/cmk/password_store/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/cmk/password_store/**/*.py"]),
     deps = [
-        ":__test__",
         ":password_store",
         requirement("cryptography"),
-        requirement("pytest"),
     ],
 )
 
 py_cmk_test(
     name = "server_side_calls-test",
     size = "small",
-    srcs = glob(["tests/cmk/server_side_calls/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/cmk/server_side_calls/**/*.py"]),
     deps = [
-        ":__test__",
         ":server_side_calls",
-        requirement("pytest"),
     ],
 )
 
 py_cmk_test(
     name = "server_side_programs-test",
     size = "small",
-    srcs = glob(["tests/cmk/server_side_programs/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/cmk/server_side_programs/**/*.py"]),
     deps = [
-        ":__test__",
         ":server_side_programs",
-        requirement("pytest"),
         requirement("requests"),
     ],
 )
@@ -404,12 +366,9 @@ py_cmk_test(
 py_cmk_test(
     name = "inventory_ui-test",
     size = "small",
-    srcs = glob(["tests/cmk/inventory_ui/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/cmk/inventory_ui/**/*.py"]),
     deps = [
-        ":__test__",
         ":inventory_ui",
-        requirement("pytest"),
     ],
 )
 

@@ -1,6 +1,5 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
@@ -75,24 +74,12 @@ py_binary(
     deps = [":cmk-dev-deploy"],
 )
 
-py_pytest_main(
-    name = "__test__",
-    tags = ["no-mypy"],
-    deps = [
-        requirement("coverage"),
-    ],
-)
-
 py_cmk_test(
     name = "unit",
     size = "small",
-    srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
-    main = ":__test__.py",
+    srcs = glob(["tests/**/*.py"]),
     deps = [
-        ":__test__",
         ":cmk-dev-deploy",
-        requirement("coverage"),
-        requirement("pytest"),
     ],
 )
 

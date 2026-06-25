@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
@@ -243,37 +243,22 @@ py_cmk_test(
         "tests/cmk/checkengine/filecache/**/*.py",
     ]) + [
         "tests/cmk/checkengine/test_agent_protocol.py",
-        ":__test__.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
-        requirement("pytest"),
         requirement("pyghmi"),
         ":fetchers",
         "//packages/cmk-plugin-apis:agent_based",
     ],
 )
 
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-    ],
-)
-
 py_cmk_test(
     name = "snmplib-tests",
     size = "small",
-    srcs = glob(["tests/cmk/checkengine/snmplib/**/*.py"]) + [":__test__.py"],
-    main = "__test__.py",
+    srcs = glob(["tests/cmk/checkengine/snmplib/**/*.py"]),
     deps = [
-        "__test__",
         "snmplib",
         "//cmk/utils",
         "//packages/cmk-plugin-apis:agent_based",
-        requirement("pytest"),
     ],
 )
 
@@ -282,26 +267,19 @@ py_cmk_test(
     size = "small",
     srcs = glob(["tests/cmk/checkengine/snmp_backends/**/*.py"]) + [
         "tests/cmk/checkengine/test_snmp_backend.py",
-        ":__test__.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "snmp-backends",
         "snmplib",
-        requirement("pytest"),
     ],
 )
 
 py_cmk_test(
     name = "specs-tests",
     size = "small",
-    srcs = glob(["tests/cmk/checkengine/specs/*.py"]) + [":__test__.py"],
-    main = "__test__.py",
+    srcs = glob(["tests/cmk/checkengine/specs/*.py"]),
     deps = [
-        "__test__",
         "specs",
-        requirement("pytest"),
     ],
 )
 
@@ -310,14 +288,9 @@ py_cmk_test(
     size = "small",
     srcs = glob([
         "tests/cmk/checkengine/parser/*.py",
-    ]) + [
-        ":__test__.py",
-    ],
-    main = "__test__.py",
+    ]),
     deps = [
-        "__test__",
         "//packages/cmk-check-engine/cmk/checkengine/parser",
-        requirement("pytest"),
     ],
 )
 
@@ -326,14 +299,9 @@ py_cmk_test(
     size = "small",
     srcs = glob([
         "tests/cmk/checkengine/sectionparser/*.py",
-    ]) + [
-        ":__test__.py",
-    ],
-    main = "__test__.py",
+    ]),
     deps = [
-        "__test__",
         ":section-parser",
-        requirement("pytest"),
     ],
 )
 
@@ -344,15 +312,11 @@ py_cmk_test(
         "tests/cmk/checkengine/test_submitters.py",
         "tests/cmk/checkengine/test_summarizers.py",
         "tests/cmk/checkengine/test_value_store.py",
-        ":__test__.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         ":lib",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-plugin-apis:agent_based",
-        requirement("pytest"),
     ],
 )
 
@@ -361,14 +325,9 @@ py_cmk_test(
     size = "small",
     srcs = glob([
         "tests/cmk/checkengine/plugin_backend/*.py",
-    ]) + [
-        ":__test__.py",
-    ],
-    main = "__test__.py",
+    ]),
     deps = [
-        "__test__",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
-        requirement("pytest"),
     ],
 )
 
@@ -377,14 +336,9 @@ py_cmk_test(
     size = "small",
     srcs = glob([
         "tests/cmk/checkengine/discovery/**/*.py",
-    ]) + [
-        ":__test__.py",
-    ],
-    main = "__test__.py",
+    ]),
     deps = [
-        "__test__",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
-        requirement("pytest"),
         requirement("time_machine"),
     ],
 )
@@ -394,13 +348,9 @@ py_cmk_test(
     size = "small",
     srcs = [
         "tests/cmk/checkengine/test_inventory.py",
-        ":__test__.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         ":inventory",
-        requirement("pytest"),
     ],
 )
 
@@ -409,14 +359,9 @@ py_cmk_test(
     size = "small",
     srcs = glob([
         "tests/cmk/checkengine/checking/*.py",
-    ]) + [
-        ":__test__.py",
-    ],
-    main = "__test__.py",
+    ]),
     deps = [
-        "__test__",
         "//packages/cmk-check-engine/cmk/checkengine/checking",
-        requirement("pytest"),
     ],
 )
 

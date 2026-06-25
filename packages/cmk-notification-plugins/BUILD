@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
@@ -31,23 +31,12 @@ py_library(
     ],
 )
 
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-    ],
-)
-
 py_cmk_test(
     name = "unit",
     size = "small",
-    srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
-    main = "__test__.py",
+    srcs = glob(["tests/**/*.py"]),
     deps = [
-        ":__test__",
         ":cmk-notification-plugins",
-        requirement("pytest"),
         requirement("pytest-mock"),
         requirement("jinja2"),
         requirement("requests"),

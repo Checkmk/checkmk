@@ -1,6 +1,5 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
@@ -285,28 +284,16 @@ py_doc_test(
     tags = ["no-mypy"],
 )
 
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-    ],
-)
-
 py_cmk_test(
     name = "daemon-tests",
     size = "small",
     srcs = [
-        "__test__.py",
         "tests/test_daemon.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "daemon",
         "exceptions",
         "store",
-        requirement("pytest"),
     ],
 )
 
@@ -314,14 +301,10 @@ py_cmk_test(
     name = "hostaddress-tests",
     size = "small",
     srcs = [
-        "__test__.py",
         "tests/test_hostaddress.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "hostaddress",
-        requirement("pytest"),
     ],
 )
 
@@ -329,14 +312,10 @@ py_cmk_test(
     name = "regex-tests",
     size = "small",
     srcs = [
-        "__test__.py",
         "tests/test_regex.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "regex",
-        requirement("pytest"),
     ],
 )
 
@@ -344,14 +323,10 @@ py_cmk_test(
     name = "resulttype-tests",
     size = "small",
     srcs = [
-        "__test__.py",
         "tests/test_resulttype.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "resulttype",
-        requirement("pytest"),
     ],
 )
 
@@ -359,14 +334,10 @@ py_cmk_test(
     name = "translations-tests",
     size = "small",
     srcs = [
-        "__test__.py",
         "tests/test_translations.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "translations",
-        requirement("pytest"),
     ],
 )
 
@@ -374,14 +345,10 @@ py_cmk_test(
     name = "tty-tests",
     size = "small",
     srcs = [
-        "__test__.py",
         "tests/test_tty.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "tty",
-        requirement("pytest"),
     ],
 )
 
@@ -389,15 +356,11 @@ py_cmk_test(
     name = "store-tests",
     size = "small",
     srcs = [
-        "__test__.py",
         "tests/test_store.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "debug",
         "store",
-        requirement("pytest"),
     ],
 )
 
@@ -405,14 +368,10 @@ py_cmk_test(
     name = "config-path-tests",
     size = "small",
     srcs = [
-        "__test__.py",
         "tests/test_config_path.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "config-path",
-        requirement("pytest"),
     ],
 )
 
@@ -420,14 +379,10 @@ py_cmk_test(
     name = "cpu-tracking-tests",
     size = "small",
     srcs = [
-        "__test__.py",
         "tests/test_cpu_tracking.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "cpu-tracking",
-        requirement("pytest"),
     ],
 )
 
@@ -435,14 +390,10 @@ py_cmk_test(
     name = "archive-tests",
     size = "small",
     srcs = [
-        "__test__.py",
         "tests/test_archive.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "archive",
-        requirement("pytest"),
     ],
 )
 
@@ -450,14 +401,10 @@ py_cmk_test(
     name = "user-tests",
     size = "small",
     srcs = [
-        "__test__.py",
         "tests/test_user.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "user",
-        requirement("pytest"),
     ],
 )
 
@@ -465,14 +412,10 @@ py_cmk_test(
     name = "observer-tests",
     size = "small",
     srcs = [
-        "__test__.py",
         "tests/test_observer.py",
     ],
-    main = "__test__.py",
     deps = [
-        "__test__",
         "observer",
-        requirement("pytest"),
     ],
 )
 

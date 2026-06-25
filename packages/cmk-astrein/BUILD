@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
@@ -74,25 +74,14 @@ alias(
     visibility = ["//visibility:public"],
 )
 
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-    ],
-)
-
 py_cmk_test(
     name = "test",
-    srcs = ["__test__"] + glob(["tests/test_*.py"]),
+    srcs = glob(["tests/test_*.py"]),
     data = ["//:module_layers.toml"],
-    main = "__test__.py",
     deps = [
-        ":__test__",
         ":library",
         requirement("lsprotocol"),
         requirement("pygls"),
-        requirement("pytest"),
     ],
 )
 

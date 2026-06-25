@@ -1,19 +1,10 @@
-load("@aspect_rules_py//py:defs.bzl", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
-
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-    ],
-)
 
 py_cmk_test(
     name = "unit",
     size = "small",
-    srcs = glob(["**/*.py"]) + [":__test__.py"],
+    srcs = glob(["**/*.py"]),
     args = [
         "--random-order",
         "--random-order-bucket=global",
@@ -23,15 +14,12 @@ py_cmk_test(
         "-W",
         "error",
     ],
-    main = "__test__.py",
     deps = [
-        ":__test__",
         ":unit_testlib",
         "//packages/cmk-agent-receiver",
         "//packages/cmk-agent-receiver:testlib",
         requirement("cryptography"),
         requirement("fastapi"),
-        requirement("pytest"),
         requirement("httpx"),
         requirement("pytest-asyncio"),
         requirement("pytest-xdist"),
@@ -45,27 +33,16 @@ py_cmk_test(
     ],
 )
 
-py_pytest_main(
-    name = "__testlib_test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-    ],
-)
-
 py_cmk_test(
     name = "unit_testlib",
-    srcs = glob(["testlib/**/*.py"]) + [":__testlib_test__.py"],
+    srcs = glob(["testlib/**/*.py"]),
     args = [
         "--random-order",
         "--random-order-bucket=global",
         "--durations=5",
     ],
-    main = "__testlib_test__.py",
     deps = [
-        ":__testlib_test__",
         "//packages/cmk-agent-receiver:testlib",
-        requirement("pytest"),
         requirement("pytest-xdist"),
         requirement("httpx"),
         requirement("pytest-random-order"),

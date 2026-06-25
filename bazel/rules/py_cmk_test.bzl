@@ -1,6 +1,7 @@
 """Wrapper macro for py_test that enforces standard Checkmk pytest defaults."""
 
 load("@aspect_rules_py//py:defs.bzl", "py_test")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 
 def py_cmk_test(
         name,
@@ -13,6 +14,8 @@ def py_cmk_test(
 
     Always sets --import-mode=importlib so tests are isolated from each other
     and work correctly with namespace packages and duplicate test filenames.
+    Always enables the built-in pytest entry-point and makes pytest and
+    coverage available as deps.
 
     Args:
         name: Name of the test target.
@@ -34,8 +37,12 @@ def py_cmk_test(
 
     py_test(
         name = name,
+        pytest_main = True,
         args = ["--import-mode=importlib"] + args + extra_args,
         data = data + extra_data,
-        deps = deps + extra_deps,
+        deps = deps + extra_deps + [
+            requirement("coverage"),
+            requirement("pytest"),
+        ],
         **kwargs
     )

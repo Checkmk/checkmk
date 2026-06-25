@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
@@ -41,27 +41,17 @@ py_library(
     ],
 )
 
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("coverage"),
-        requirement("pytest"),
-    ],
-)
-
 py_cmk_test(
     name = "tests",
-    srcs = ["__test__.py"] + glob(["test_*.py"]),
+    srcs = glob(["test_*.py"]),
     args = [
         "tests/unit/cmk/gui",
     ],
     env = {
         "EDITION": "community",
     },
-    main = ":__test__.py",
     use_project_pytest_config = True,
     deps = [
-        ":__test__",
         ":compare_html",
         ":conftest",
         "//cmk/gui:app",

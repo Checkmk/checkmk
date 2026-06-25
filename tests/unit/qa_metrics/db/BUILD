@@ -18,14 +18,9 @@ py_cmk_test(
         "test_table.py",
     ],
     imports = ["../../../.."],
-    pytest_main = True,
     use_project_pytest_config = True,
     deps = [
-        # marshmallow is referenced by the workspace pyproject.toml's
-        # filterwarnings list; pytest needs it importable to parse config.
-        requirement("marshmallow"),
         requirement("psycopg"),
-        requirement("pytest"),
         "//tests/qa_metrics/db",
         "//tests/unit/qa_metrics",
     ],

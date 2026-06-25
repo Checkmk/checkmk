@@ -127,8 +127,6 @@ allows = [
 allows = [
   # FIXME
   "cmk.agent_based.v1",
-  # Discovery API for the built-in ("core") bakelets.
-  "cmk.bakery.internal",
   "cmk.base",
   "cmk.bi",
   "cmk.ccc",

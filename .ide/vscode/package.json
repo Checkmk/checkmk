@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.4.16",
+  "version": "0.4.17",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -502,6 +502,24 @@
           "default": false,
           "scope": "application",
           "description": "Suppress the cockpit recommendation to enable jemalloc for dmypy. Persists across workspaces (user scope)."
+        },
+        "cmk.devServer.openBrowserOnStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "When a dev-server command (e.g. CMK ▸ Cmd: Run UI Component Library) is started, open its URL once the server responds."
+        },
+        "cmk.devServer.browser": {
+          "type": "string",
+          "enum": [
+            "builtin",
+            "external"
+          ],
+          "enumDescriptions": [
+            "Open the URL inside VS Code in the built-in Simple Browser tab.",
+            "Open the URL in your system default browser."
+          ],
+          "default": "builtin",
+          "description": "Which browser to use when a dev-server command opens its URL on start (see cmk.devServer.openBrowserOnStart)."
         }
       }
     },

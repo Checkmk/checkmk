@@ -13,8 +13,34 @@ import {
   getExtensionIds,
   resolveVariables
 } from '../core/config'
+import { waitForHttp } from '../core/http'
+import { log, warn } from '../core/log'
 import { runCommand, waitForTask } from '../core/tasks'
 import * as profileManager from '../profiles/profileManager'
+
+// Poll a dev-server URL after launching its command and, once it answers, open
+// it in the built-in Simple Browser or the system default browser. Gated by
+// cmk.devServer.openBrowserOnStart; cmk.devServer.browser picks the target.
+function openBrowserWhenReady(name: string, url: string): void {
+  const cfg = vscode.workspace.getConfiguration('cmk')
+  if (!cfg.get<boolean>('devServer.openBrowserOnStart', true)) {
+    return
+  }
+  const external = cfg.get<string>('devServer.browser', 'builtin') === 'external'
+  void waitForHttp(url).then((up) => {
+    if (!up) {
+      warn(`${name}: ${url} did not respond; not opening browser`)
+      return
+    }
+    if (external) {
+      log(`${name}: server ready, opening ${url} in the default browser`)
+      vscode.env.openExternal(vscode.Uri.parse(url))
+    } else {
+      log(`${name}: server ready, opening ${url} in Simple Browser`)
+      vscode.commands.executeCommand('simpleBrowser.show', url)
+    }
+  })
+}
 
 async function promptReload(message: string): Promise<void> {
   const action = await vscode.window.showInformationMessage(
@@ -364,13 +390,20 @@ export function updateContextKeys(extensionSets: ExtensionSets): void {
 
 export function registerBuildCommands(
   context: vscode.ExtensionContext,
-  commands: Record<string, { name: string; command: string; postAction?: string; force?: boolean }>
+  commands: Record<
+    string,
+    { name: string; command: string; postAction?: string; force?: boolean; openBrowser?: string }
+  >
 ): void {
   for (const [id, entry] of Object.entries(commands)) {
     context.subscriptions.push(
       vscode.commands.registerCommand(id, async () => {
         const execution = await runCommand(entry.name, entry.command, { force: entry.force })
         if (!execution) return
+
+        if (entry.openBrowser) {
+          openBrowserWhenReady(entry.name, entry.openBrowser)
+        }
 
         if (entry.postAction) {
           const exitCode = await waitForTask(execution)

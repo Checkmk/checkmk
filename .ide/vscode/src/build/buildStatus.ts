@@ -26,6 +26,9 @@ export interface CommandEntry {
   // Long-running commands (e.g. a dev server): on re-run, force any live
   // instance to quit and reuse its terminal instead of just being killed.
   force?: boolean
+  // Dev-server URL to open in the built-in Simple Browser once the server
+  // answers. The command is fired and the URL is polled until it responds.
+  openBrowser?: string
 }
 
 export function checkBuildStatus(wsPath: string): BuildStatus {

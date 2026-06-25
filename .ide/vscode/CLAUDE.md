@@ -152,6 +152,7 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 | `core/config.ts`                      | JSON config loading (workspace-first), variable resolution, shell escape |
 | `core/constants.ts`                   | Display names for families (`FAMILY_DISPLAY`) and profile labels         |
 | `core/shell.ts`                       | `safeExec()` wrapper around `execSync`, returns empty string on failure  |
+| `core/http.ts`                        | `waitForHttp()` — poll a URL until it answers (dev-server readiness for `openBrowser`) |
 | `core/tasks.ts`                       | Shell task execution helpers (`runCommand`, `waitForTask`)               |
 | `core/log.ts`                         | Logging and error handling utilities                                     |
 | `core/version.ts`                     | Semver parsing, `versionNewer()`, `versionAtLeast()` comparisons         |
@@ -182,7 +183,7 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 
 | File               | Purpose                                                          |
 | ------------------ | ---------------------------------------------------------------- |
-| `commands.json`    | Build commands (name, shell cmd, required profile, post-actions) |
+| `commands.json`    | Build commands (name, shell cmd, required profile, post-actions, `force`, `openBrowser` URL) |
 | `extensions.json`  | Extension families (IDs, required flag, disable-settings)        |
 | `settings.json`    | Expected settings per family at folder/workspace/user scope      |
 | `snippets.json`    | Code snippets                                                    |

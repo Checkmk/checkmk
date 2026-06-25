@@ -23,7 +23,8 @@
     "name": "Run UI Component Library",
     "command": "cd packages/cmk-frontend-vue && { ibazel build //packages/cmk-frontend:dist //packages/cmk-frontend-vue:compile_i18n & deps=$!; trap 'kill $deps 2>/dev/null' EXIT; ./node_modules/.bin/vite --config vite.config.ucl.ts; }",
     "requires": "frontend",
-    "force": true
+    "force": true,
+    "openBrowser": "http://localhost:5174/"
   },
   "cmk.installNodeModules": {
     "name": "Install node_modules",

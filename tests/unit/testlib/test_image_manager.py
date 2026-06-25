@@ -20,7 +20,7 @@ from unittest.mock import MagicMock
 import docker.errors
 import pytest
 
-from tests.testlib.image_manager import ABCImageManager
+from tests.testlib.image_manager import ABCImageManager, RelayImageManager
 
 _REGISTRY_REF = "registry.example/test-image:1.0"
 _LOCAL_TAG = "test-image:1.0"
@@ -158,3 +158,16 @@ def test_lookup_order_pull_skipped_when_override_present(
     manager.get("1.0")
 
     docker_client.images.pull.assert_not_called()
+
+
+def test_relay_image_manager_registry_ref_includes_namespace() -> None:
+    """The relay image is published under ``<registry>/checkmk/check-mk-relay``; the
+    registry ref must include that namespace or the pull 404s and forces a rebuild."""
+    manager = RelayImageManager(MagicMock(name="DockerClient"))
+
+    assert (
+        manager.registry_ref("2.5.0p8")
+        == "artifacts.lan.tribe29.com:4000/checkmk/check-mk-relay:2.5.0p8"
+    )
+    # the local-override / bazel-loaded tag stays un-namespaced
+    assert manager.local_tag("2.5.0p8") == "check-mk-relay:2.5.0p8"

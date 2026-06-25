@@ -1,0 +1,6 @@
+# Alias: Start Checkmk Maps backend
+# Menu: Web GUI
+# Description:
+#  This option enables the Checkmk Maps backend daemon, which serves
+#  the Maps web application and its API. The daemon binds a Unix socket
+#  under tmp/run and is reverse-proxied by Apache under /<site>/check_mk/maps.

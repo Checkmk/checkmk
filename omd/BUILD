@@ -69,9 +69,11 @@ edition_deps = select({
         "//omd/non-free/packages/reporting:pkg_tar",
         "//omd/non-free/packages/robotmk:pkg_tar",
         "//omd/non-free/packages/saml2:pkg_tar",
+        "//omd/packages/cmk-maps:pkg_tar",
     ],
     "@cmk//edition:community": [
         "//omd/packages/jaeger:pkg_tar",
+        "//omd/packages/cmk-maps:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
     "@cmk//edition:pro": [
@@ -102,6 +104,7 @@ edition_deps = select({
         "//omd/non-free/packages/robotmk:pkg_tar",
         "//omd/non-free/packages/saml2:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
+        "//omd/packages/cmk-maps:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
     "@cmk//edition:ultimate": [
@@ -146,6 +149,7 @@ edition_deps = select({
         "//omd/non-free/packages/saml2:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/non-free/packages/cmk-network-flow:pkg_tar",
+        "//omd/packages/cmk-maps:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
     "@cmk//edition:ultimatemt": [
@@ -192,6 +196,7 @@ edition_deps = select({
         "//omd/non-free/packages/saml2:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/non-free/packages/cmk-network-flow:pkg_tar",
+        "//omd/packages/cmk-maps:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
 })
@@ -221,6 +226,7 @@ edition_skel_permissions = select({
         "//omd/packages/openssl:skel.permissions",
         "//omd/packages/perl-modules:skel.permissions",
         "//packages/cmk-agent-receiver:skel.permissions",
+        "//omd/packages/cmk-maps:skel.permissions",
     ],
     "@cmk//edition:community": [
         "//omd/packages/apache-omd:skel.permissions",
@@ -228,6 +234,7 @@ edition_skel_permissions = select({
         "//omd/packages/jaeger:skel.permissions",
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/cmk-maps:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",
@@ -253,6 +260,7 @@ edition_skel_permissions = select({
         "//omd/packages/jaeger:skel.permissions",
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/cmk-maps:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",
@@ -282,6 +290,7 @@ edition_skel_permissions = select({
         "//omd/non-free/packages/cmk-network-flow:skel_permissions_gated",
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/cmk-maps:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",
@@ -311,6 +320,7 @@ edition_skel_permissions = select({
         "//omd/non-free/packages/cmk-network-flow:skel_permissions_gated",
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
+        "//omd/packages/cmk-maps:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/omd:skel.permissions",
         "//omd/packages/pnp4nagios:skel.permissions",

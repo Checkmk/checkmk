@@ -44,6 +44,7 @@ def test_hooks(site: Site) -> None:
         "RABBITMQ_MANAGEMENT_PORT",
         "RABBITMQ_DIST_PORT",
         "AUTOMATION_HELPER",
+        "MAPS",
     ]
 
     if not site.edition.is_community_edition():

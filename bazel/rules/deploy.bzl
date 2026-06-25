@@ -185,6 +185,7 @@ COMMUNITY_WHEELS = [
     "//packages/cmk-livestatus-client:cmk-livestatus-client_whl",
     "//packages/cmk-livestatus-client:livestatus_whl",
     "//packages/cmk-logwatch:wheel",
+    "//packages/cmk-maps:wheel",
     "//packages/cmk-messaging:wheel",
     "//packages/cmk-mkp-tool:wheel",
     "//packages/cmk-notification-plugins:wheel",

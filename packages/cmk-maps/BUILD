@@ -2,6 +2,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
@@ -28,7 +29,12 @@ py_library(
 
 py_library(
     name = "backend",
-    srcs = glob(["cmk/maps/backend/**/*.py"]),
+    srcs = glob(
+        ["cmk/maps/backend/**/*.py"],
+        # The daemon-control entry point is a __main__ script shipped to bin/
+        # (see :cmk-maps-server / :cmk-maps-server-pkg), not library code.
+        exclude = ["cmk/maps/backend/server/cmk-maps-server.py"],
+    ),
     data = ["cmk/maps/py.typed"],
     imports = ["."],
     visibility = [
@@ -55,6 +61,26 @@ py_library(
         requirement("uvicorn"),
         requirement("uvicorn-worker"),
     ],
+)
+
+# Daemon-control entry point, run by etc/init.d/maps as `cmk-maps-server <cmd>`.
+py_binary(
+    name = "cmk-maps-server",
+    srcs = ["cmk/maps/backend/server/cmk-maps-server.py"],
+    main = "cmk/maps/backend/server/cmk-maps-server.py",
+    visibility = ["//visibility:public"],
+    deps = [":backend"],
+)
+
+# Ship the entry script to the site's bin/ (downstream packaging pulls this into
+# the omd skel tar; mirrors cmk-wsgi's cmk-wsgi-server-pkg).
+pkg_files(
+    name = "cmk-maps-server-pkg",
+    srcs = ["cmk/maps/backend/server/cmk-maps-server.py"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "bin",
+    renames = {"cmk/maps/backend/server/cmk-maps-server.py": "cmk-maps-server"},
+    visibility = ["//omd/packages/cmk-maps:__pkg__"],
 )
 
 # The SPA's daemon types are generated from this schema rather than written by
@@ -218,7 +244,7 @@ build_test(
 )
 
 package_wheel(
-    name = "pkg_tar",
+    name = "wheel_pkg",
     visibility = ["//visibility:public"],
     whl = "wheel",
 )
@@ -232,6 +258,7 @@ py_requirements_test(
     ],
     libs = [
         ":backend",
+        ":cmk-maps-server",
         ":dump_openapi_spec",
     ],
     requirements_in = "requirements.in",

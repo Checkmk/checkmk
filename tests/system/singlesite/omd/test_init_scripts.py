@@ -16,6 +16,7 @@ def test_init_scripts(site: Site) -> None:
         "ui-job-scheduler",
         "core",
         "crontab",
+        "maps",
         "mkeventd",
         "nagios",
         "npcd",

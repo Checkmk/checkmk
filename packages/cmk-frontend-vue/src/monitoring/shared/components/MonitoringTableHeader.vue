@@ -212,6 +212,9 @@ function labelStyle(columnDef: ColumnDef<T>): CSSProperties {
                 :title="
                   `Filter ${header.column.columnDef.meta?.headerTitle?.toString() ?? header.column.columnDef.header?.toString() ?? ''}`.trim()
                 "
+                :aria-label="
+                  `Filter ${header.column.columnDef.meta?.headerTitle?.toString() ?? header.column.columnDef.header?.toString() ?? ''}`.trim()
+                "
                 aria-haspopup="true"
                 :aria-expanded="isOpen"
                 @click="toggle"
@@ -219,6 +222,7 @@ function labelStyle(columnDef: ColumnDef<T>): CSSProperties {
                 <CmkMultitoneIcon
                   name="filter"
                   :primary-color="isActive ? { custom: 'var(--success)' } : 'font'"
+                  aria-hidden="true"
                 />
               </button>
             </template>

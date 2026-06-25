@@ -127,7 +127,9 @@ class DesignGraph(BaseGraph):
 
     def add_graph_line_otel(self, metric_name: str) -> None:
         self.main_area.get_text("Metric name", exact=False).click()
-        self.main_area.get_text(metric_name).click()
+        # The metric-name autocompleter renders suggestions as "<name> (<type>)", so match the
+        # metric name as a substring rather than requiring an exact match.
+        self.main_area.get_text(metric_name, exact=False).click()
         self.main_area.get_text("Add").click()
 
     def save_graph(self) -> None:

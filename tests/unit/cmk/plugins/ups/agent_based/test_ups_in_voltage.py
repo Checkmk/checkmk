@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.ups_in_voltage import (
+from cmk.plugins.ups.agent_based.ups_in_voltage import (
     discover_ups_in_voltage,
     parse_ups_in_voltage,
 )

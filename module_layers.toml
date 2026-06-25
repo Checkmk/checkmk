@@ -938,6 +938,7 @@ allows = [
   "cmk.discover_plugins",
   "cmk.diskspace",
   "cmk.fields",
+  "cmk.graphing_engine",
   "cmk.gui_plugins.internal",
   "cmk.inventory",
   "cmk.inventory_ui",

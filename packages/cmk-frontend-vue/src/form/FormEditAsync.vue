@@ -18,8 +18,8 @@ import { useDismissDialog } from '@/lib/useDismissDialog'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
-import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import CmkIcon from '@/components/CmkIcon'
 import CmkSpace from '@/components/CmkSpace.vue'
@@ -139,12 +139,13 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         }}
       </CmkAlertBox>
       <div class="form-edit-async__buttons">
-        <CmkButtonSubmit @click="save">
+        <CmkButton variant="secondary" @click="save">
+          <CmkIcon variant="inline" name="save" />
           {{
             objectId === undefined
               ? (props.createButtonLabel ?? _t('Create'))
               : (props.saveButtonLabel ?? _t('Save'))
-          }}</CmkButtonSubmit
+          }}</CmkButton
         >
         <CmkSpace />
         <CmkButtonCancel @click="cancel">{{

@@ -23,7 +23,6 @@ import { useDismissDialog } from '@/lib/useDismissDialog'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton'
-import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
@@ -411,14 +410,16 @@ onMounted(async () => {
     </div>
     <div class="cmk-div-mainmenu-container">
       <div class="cmk-div-buttons-container">
-        <CmkButtonSubmit
+        <CmkButton
+          variant="secondary"
           class="cmk-button-submit"
           :disabled="activateChangesButtonDisabled"
           :title="activateChangesButtonTooltip"
           @click="() => activateAllChanges()"
         >
+          <CmkIcon variant="inline" name="save" />
           {{ _t('Activate pending changes') }}
-        </CmkButtonSubmit>
+        </CmkButton>
         <CmkButton
           variant="secondary"
           class="cmk-button-secondary"

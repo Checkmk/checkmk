@@ -7,7 +7,6 @@ import { render } from '@testing-library/vue'
 import UclCmkBadgeCodeExample from '@ucl/components/basic-elements/CmkBadge/UclCmkBadgeCodeExample.vue'
 import UclCmkButtonCodeExample from '@ucl/components/basic-elements/CmkButton/UclCmkButtonCodeExample.vue'
 import UclCmkButtonCancelCodeExample from '@ucl/components/basic-elements/CmkButtonCancel/UclCmkButtonCancelCodeExample.vue'
-import UclCmkButtonSubmitCodeExample from '@ucl/components/basic-elements/CmkButtonSubmit/UclCmkButtonSubmitCodeExample.vue'
 import UclCmkChipCodeExample from '@ucl/components/basic-elements/CmkChip/UclCmkChipCodeExample.vue'
 import UclCmkCodeCodeExample from '@ucl/components/basic-elements/CmkCode/UclCmkCodeCodeExample.vue'
 import UclCmkColorPickerCodeExample from '@ucl/components/basic-elements/CmkColorPicker/UclCmkColorPickerCodeExample.vue'
@@ -78,11 +77,6 @@ test('CmkButton code example renders without errors', () => {
 
 test('CmkButtonCancel code example renders without errors', () => {
   const { container } = render(UclCmkButtonCancelCodeExample)
-  expect(container.firstChild).toBeTruthy()
-})
-
-test('CmkButtonSubmit code example renders without errors', () => {
-  const { container } = render(UclCmkButtonSubmitCodeExample)
   expect(container.firstChild).toBeTruthy()
 })
 

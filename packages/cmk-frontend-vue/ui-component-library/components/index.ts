@@ -17,7 +17,6 @@ import { pages as twoFactorAuthPages } from '../two-factor-authentication'
 import UclCmkBadge from './basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from './basic-elements/CmkButton/UclCmkButton.vue'
 import UclCmkButtonCancel from './basic-elements/CmkButtonCancel/UclCmkButtonCancel.vue'
-import UclCmkButtonSubmit from './basic-elements/CmkButtonSubmit/UclCmkButtonSubmit.vue'
 import UclCmkChip from './basic-elements/CmkChip/UclCmkChip.vue'
 import UclCmkCode from './basic-elements/CmkCode/UclCmkCode.vue'
 import UclCmkColorPicker from './basic-elements/CmkColorPicker/UclCmkColorPicker.vue'
@@ -88,7 +87,6 @@ const basicElementsPages = [
   new Page('CmkBadge', UclCmkBadge),
   new Page('CmkButton', UclCmkButton),
   new Page('CmkButtonCancel', UclCmkButtonCancel),
-  new Page('CmkButtonSubmit', UclCmkButtonSubmit),
   new Page('CmkIconButton', UclCmkIconButton),
   new Page('CmkInlineButton', UclCmkInlineButton),
   new Page('CmkChip', UclCmkChip),

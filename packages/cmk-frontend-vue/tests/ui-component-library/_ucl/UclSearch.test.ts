@@ -40,10 +40,10 @@ test('only lists pages whose name contains the query', async () => {
   render(UclSearch, { global: renderOptions })
   const input = screen.getByPlaceholderText('Search...')
 
-  await fireEvent.update(input, 'CmkButtonSubmit')
+  await fireEvent.update(input, 'CmkColorPicker')
 
   const links = within(screen.getByRole('list')).getAllByRole('link')
-  expect(links.map((l) => l.textContent?.trim())).toEqual(['CmkButtonSubmit'])
+  expect(links.map((l) => l.textContent?.trim())).toEqual(['CmkColorPicker'])
 })
 
 test('shows no results message when query matches nothing', async () => {

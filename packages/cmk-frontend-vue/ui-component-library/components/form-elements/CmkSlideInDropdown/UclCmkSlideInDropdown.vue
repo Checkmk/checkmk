@@ -67,8 +67,9 @@ import { ref } from 'vue'
 
 import { untranslated } from '@/lib/i18n'
 
+import CmkButton from '@/components/CmkButton'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
-import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
@@ -151,7 +152,9 @@ function saveEntity(objectId: string | null, close: () => void) {
               />
             </div>
             <div class="ucl-cmk-slide-in-dropdown__demo-actions">
-              <CmkButtonSubmit @click="() => saveEntity(objectId, close)">Save</CmkButtonSubmit>
+              <CmkButton variant="secondary" @click="() => saveEntity(objectId, close)">
+                <CmkIcon variant="inline" name="save" />Save
+              </CmkButton>
               <CmkButtonCancel @click="close">Cancel</CmkButtonCancel>
             </div>
           </div>

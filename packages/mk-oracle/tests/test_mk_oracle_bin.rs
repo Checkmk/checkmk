@@ -267,7 +267,10 @@ fn test_migrate_config_yaml_structure() {
         env_value_of("DBUSER"),
         Some("c##checkmk:********::localhost:1521:")
     );
-    assert_eq!(env_value_of("ASMUSER"), Some("/::SYSASM:::"));
+    assert_eq!(
+        env_value_of("ASMUSER"),
+        Some("asm-user:asm-password:SYSASM:ignored:ignored:")
+    );
     assert_eq!(env_value_of("CACHE_MAXAGE"), Some("601"));
     // assert_eq!(env_value_of("ONLY_SIDS"), Some("..."));
     // assert_eq!(env_value_of("ORACLE_HOME"), Some("..."));
@@ -346,7 +349,10 @@ fn test_execute_config_reference() {
         value_of("DBUSER_XE2"),
         Some("xe2user:xe2pwd:SYSDBA:localhost1:1521:")
     );
-    assert_eq!(value_of("ASMUSER"), Some("/::SYSASM:::"));
+    assert_eq!(
+        value_of("ASMUSER"),
+        Some("asm-user:asm-password:SYSASM:ignored:ignored:")
+    );
     assert_eq!(value_of("CACHE_MAXAGE"), Some("601"));
     assert!(
         value_of("SYNC_SECTIONS").unwrap().contains("instance"),

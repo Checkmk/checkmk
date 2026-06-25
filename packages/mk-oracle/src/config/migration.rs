@@ -69,10 +69,18 @@ fn parse_sections(variables: &HashMap<String, String>, key: &str) -> HashSet<Str
 }
 
 // TODO(sk): parse whole config and return Vec<LegacyDbUser> instead of just DBUSER
+fn parse_asmuser(value: &str) -> Result<LegacyDbUser> {
+    parse_dbuser_raw("ASMUSER", value)
+}
+
 fn parse_dbuser(name: &str, value: &str) -> Result<LegacyDbUser> {
     if name != "DBUSER" && !name.starts_with("DBUSER_") {
         bail!("invalid variable name: {name}, expected DBUSER or DBUSER_*");
     }
+    parse_dbuser_raw(name, value)
+}
+
+fn parse_dbuser_raw(name: &str, value: &str) -> Result<LegacyDbUser> {
     let fields: Vec<&str> = value.splitn(6, ':').collect();
     if fields.len() < 2 {
         bail!("DBUSER must have at least username:password, got: {value}");
@@ -157,6 +165,19 @@ pub fn convert(
     ));
     if let Some(role) = &dbuser.role {
         out.push_str(&format!("      role: {}\n", role.to_lowercase()));
+    }
+    if let Some(asm_raw) = variables.get("ASMUSER") {
+        if let Ok(asm) = parse_asmuser(asm_raw) {
+            if !asm.username.is_empty() {
+                out.push_str(&format!("      asm_username: \"{}\"\n", asm.username));
+            }
+            if !asm.password.is_empty() {
+                out.push_str(&format!("      asm_password: \"{}\"\n", asm.password));
+            }
+            if let Some(role) = &asm.role {
+                out.push_str(&format!("      asm_role: {}\n", role.to_lowercase()));
+            }
+        }
     }
 
     let sync_normal = parse_sections(variables, "SYNC_SECTIONS");
@@ -570,6 +591,44 @@ mod tests {
         let config = super::super::OracleConfig::load_str(&result);
         assert!(config.is_ok(), "generated YAML must be loadable: {result}");
         assert!(config.unwrap().ora_sql().is_some());
+    }
+
+    #[test]
+    fn test_convert_asmuser_fields_in_yaml() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("ASMUSER".into(), "asm-user:asm-password:SYSASM:::".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        let ms = config.ora_sql().expect("ora_sql must be present");
+        let auth = ms.auth();
+        assert_eq!(auth.asm_username(), "asm-user");
+        assert_eq!(auth.asm_password(), Some("asm-password"));
+        assert_eq!(
+            auth.asm_role(),
+            Some(&crate::config::authentication::Role::SysASM)
+        );
+    }
+
+    #[test]
+    fn test_convert_asmuser_without_password() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("ASMUSER".into(), "/::SYSASM:::".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        let ms = config.ora_sql().expect("ora_sql must be present");
+        let auth = ms.auth();
+        assert_eq!(auth.asm_username(), "checkmk");
+        assert_eq!(auth.asm_password(), Some("secret"));
+        assert_eq!(
+            auth.asm_role(),
+            Some(&crate::config::authentication::Role::SysASM)
+        );
     }
 
     #[test]

@@ -88,6 +88,13 @@ defineEmits(['click'])
   height: var(--dimension-7);
 }
 
+.cmk-button--size-icon-only {
+  height: var(--dimension-7);
+  padding: 0;
+  border-radius: var(--dimension-2);
+  aspect-ratio: 1;
+}
+
 .cmk-button--variant-primary,
 .cmk-button--variant-success {
   color: var(--button-primary-text-color);

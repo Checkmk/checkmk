@@ -47,9 +47,11 @@ export const panelConfig = {
     title: 'Size',
     options: [
       { title: 'Medium', name: 'medium' },
-      { title: 'Small', name: 'small' }
+      { title: 'Small', name: 'small' },
+      { title: 'Icon only', name: 'iconOnly' }
     ] satisfies Options<ButtonVariants['size']>[],
-    initialState: 'medium' as const
+    initialState: 'medium' as const,
+    help: 'Icon only renders a fixed 20px square button with no padding, for an icon-only button.'
   },
   disabled: {
     type: 'boolean' as const,

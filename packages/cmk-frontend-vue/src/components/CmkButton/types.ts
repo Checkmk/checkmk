@@ -18,7 +18,8 @@ const buttonVariants = cva('', {
     },
     size: {
       medium: 'cmk-button--size-medium',
-      small: 'cmk-button--size-small'
+      small: 'cmk-button--size-small',
+      iconOnly: 'cmk-button--size-icon-only'
     },
     disabled: {
       true: 'cmk-button--disabled',

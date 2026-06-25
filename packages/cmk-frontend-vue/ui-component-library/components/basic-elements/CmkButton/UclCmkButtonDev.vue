@@ -78,6 +78,18 @@ defineProps<{ screenshotMode: boolean }>()
     <dd>
       <CmkButton href="https://checkmk.com" target="_blank">link</CmkButton>
     </dd>
+
+    <dt>
+      <code
+        >&lt;CmkButton size="iconOnly"&gt;&lt;CmkIcon name="about-checkmk" size="small"
+        /&gt;&lt;/CmkButton&gt;</code
+      >
+    </dt>
+    <dd>
+      <CmkButton size="iconOnly">
+        <CmkIcon name="about-checkmk" size="small" />
+      </CmkButton>
+    </dd>
   </dl>
 </template>
 

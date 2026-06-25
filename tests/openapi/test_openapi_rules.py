@@ -31,6 +31,7 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.rulesets.definition import RuleGroup
+from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.rest_api_client import (
     ClientRegistry,
     Response,
@@ -812,3 +813,77 @@ def test_move_rule_before_itself_fails(clients: ClientRegistry) -> None:
         rule, {"position": "before_specific_rule", "rule_id": rule}, expect_ok=False
     ).assert_status_code(400)
     assert resp.json["detail"] == "You cannot move a rule before/after itself."
+
+
+def test_edit_rule_does_not_verify_etag(
+    clients: ClientRegistry,
+    new_rule: tuple[Response, dict[str, typing.Any]],
+    set_config: SetConfig,
+) -> None:
+    resp, values = new_rule
+    rule_id = resp.json["id"]
+    body = {
+        "value_raw": values["value_raw"],
+        "properties": values["properties"],
+        "conditions": values["conditions"],
+    }
+    with set_config(rest_api_etag_locking=True):
+        clients.Rule.request(
+            "put", url=f"/objects/rule/{rule_id}", body=body, expect_ok=False
+        ).assert_status_code(200)
+        clients.Rule.request(
+            "put",
+            url=f"/objects/rule/{rule_id}",
+            body=body,
+            headers={"If-Match": "invalid-etag"},
+            expect_ok=False,
+        ).assert_status_code(200)
+
+
+def test_move_rule_does_not_verify_etag(
+    clients: ClientRegistry,
+    new_rule: tuple[Response, dict[str, typing.Any]],
+    set_config: SetConfig,
+) -> None:
+    resp, _ = new_rule
+    rule_id = resp.json["id"]
+    options = {"position": "top_of_folder", "folder": "/"}
+    with set_config(rest_api_etag_locking=True):
+        clients.Rule.request(
+            "post",
+            url=f"/objects/rule/{rule_id}/actions/move/invoke",
+            body=options,
+            expect_ok=False,
+        ).assert_status_code(200)
+        clients.Rule.request(
+            "post",
+            url=f"/objects/rule/{rule_id}/actions/move/invoke",
+            body=options,
+            headers={"If-Match": "invalid-etag"},
+            expect_ok=False,
+        ).assert_status_code(200)
+
+
+def test_delete_rule_does_not_require_or_verify_etag(
+    clients: ClientRegistry,
+    set_config: SetConfig,
+) -> None:
+    missing = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+    invalid = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+    with set_config(rest_api_etag_locking=True):
+        clients.Rule.request(
+            "delete",
+            url=f"/objects/rule/{missing}",
+            headers={"Accept": "application/json"},
+            expect_ok=False,
+        ).assert_status_code(204)
+        clients.Rule.request(
+            "delete",
+            url=f"/objects/rule/{invalid}",
+            headers={"If-Match": "invalid-etag", "Accept": "application/json"},
+            expect_ok=False,
+        ).assert_status_code(204)

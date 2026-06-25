@@ -290,6 +290,7 @@ const group = computed<ButtonVariants['group']>(() => {
       <ArrowDown
         class="cmk-dropdown--arrow"
         :class="{ rotated: suggestionsShown, disabled: disabled || !canOpenDropdown }"
+        aria-hidden="true"
     /></CmkDropdownButton>
     <slot name="buttons-end"></slot>
     <CmkSuggestions

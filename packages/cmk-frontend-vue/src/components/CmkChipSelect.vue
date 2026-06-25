@@ -136,6 +136,7 @@ function handleSelect(selected: Suggestion | null): void {
         <ArrowDown
           class="cmk-chip-select__arrow"
           :class="{ 'cmk-chip-select__arrow--open': open }"
+          aria-hidden="true"
         />
       </span>
     </button>

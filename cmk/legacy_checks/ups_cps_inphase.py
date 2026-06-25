@@ -3,40 +3,48 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.elphase import check_elphase
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.elphase import check_elphase, ElPhase
 from cmk.plugins.ups.lib import DETECT_UPS_CPS
 
-check_info = {}
+Section = Mapping[str, ElPhase]
 
 
-def parse_ups_cps_inphase(
-    string_table: StringTable,
-) -> Mapping[str, Mapping[str, float]] | None:
+def parse_ups_cps_inphase(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
 
-    parsed = {}
+    parsed: dict[str, float] = {}
     for index, stat_name in enumerate(("voltage", "frequency")):
         try:
             parsed[stat_name] = float(string_table[0][index]) / 10
         except ValueError:
             continue
 
-    return {"1": parsed} if parsed else {}
+    return {"1": ElPhase.from_dict(parsed)} if parsed else {}
 
 
-def discover_ups_cps_inphase(parsed):
-    if parsed:
-        yield "1", {}
+def discover_ups_cps_inphase(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["ups_cps_inphase"] = LegacyCheckDefinition(
+def check_ups_cps_inphase(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if phase := section.get(item):
+        yield from check_elphase(params, phase)
+
+
+snmp_section_ups_cps_inphase = SimpleSNMPSection(
     name="ups_cps_inphase",
     detect=DETECT_UPS_CPS,
     fetch=SNMPTree(
@@ -44,8 +52,14 @@ check_info["ups_cps_inphase"] = LegacyCheckDefinition(
         oids=["1", "4"],
     ),
     parse_function=parse_ups_cps_inphase,
+)
+
+
+check_plugin_ups_cps_inphase = CheckPlugin(
+    name="ups_cps_inphase",
     service_name="UPS Input Phase %s",
     discovery_function=discover_ups_cps_inphase,
-    check_function=check_elphase,
+    check_function=check_ups_cps_inphase,
     check_ruleset_name="el_inphase",
+    check_default_parameters={},
 )

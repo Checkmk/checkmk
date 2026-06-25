@@ -19,7 +19,6 @@ from tests.composition.cmk.piggyback.piggyback_test_helper import (
 )
 from tests.composition.utils import await_broker_ready
 
-from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
 
 from cmk.piggyback.backend._paths import source_status_dir
@@ -28,7 +27,6 @@ from cmk.piggyback.hub import RELATIVE_CONFIG_PATH
 _HOSTNAME_SOURCE_CENTRAL = "source_central_host"
 _HOSTNAME_SOURCE_REMOTE = "source_remote_host"
 LOGGER = logging.getLogger(__name__)
-_TIMEOUT = 60  # seconds
 
 
 @contextmanager
@@ -240,21 +238,14 @@ def _change_remote_site_customer(
 
 def _check_update_config_timestamps(sites: Sequence[Site], timestamps_dict: dict[str, int]) -> None:
     for site in sites:
-        if site.id in timestamps_dict:
-            previous_timestamp = timestamps_dict[site.id]
-
-            def _conf_updated() -> bool:
-                current_timestamp = _piggybackhub_conf_timestamp(site)
-                return current_timestamp is not None and current_timestamp > previous_timestamp
-
-            wait_until(
-                _conf_updated,
-                timeout=_TIMEOUT,
-                interval=1,
-            )
-
         file_timestamp = _piggybackhub_conf_timestamp(site)
         assert file_timestamp is not None, f"piggyback_hub.conf should exist for site {site.id}"
+
+        if site.id in timestamps_dict:
+            assert (
+                file_timestamp > timestamps_dict[site.id]
+            ), f"piggyback_hub.conf should be updated for site {site.id}"
+
         timestamps_dict[site.id] = file_timestamp
 
 

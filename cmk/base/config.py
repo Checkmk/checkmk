@@ -633,7 +633,7 @@ def perform_post_config_loading_actions(
         hosts_config,
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
-    ).initialize(get_builtin_host_labels)
+    )
 
     set_global_logwatch_config(
         loaded_config,
@@ -1443,6 +1443,9 @@ class ConfigCache:
         self.initialize(get_builtin_host_labels)
 
     def initialize(self, get_builtin_host_labels: Callable[[SiteId], Labels]) -> ConfigCache:
+        # other than directly above, this is only called between the autodiscovery and the
+        # subsequent activation. When moving things out of here, carefully consider if
+        # they care about changes that could result from that (like the check table)
         self.invalidate_host_config()
 
         self._check_table_cache = cache_manager.obtain_cache("check_tables")

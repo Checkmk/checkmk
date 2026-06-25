@@ -218,7 +218,6 @@ class Scenario:
     def apply(self, monkeypatch: MonkeyPatch) -> LoadingResult:
         loading_result = self._make_loading_result()
         self.config_cache = loading_result.config_cache
-        self.config_cache.initialize(self.get_builtin_host_labels)
 
         if self._autochecks_mocker.raw_autochecks:
             monkeypatch.setattr(

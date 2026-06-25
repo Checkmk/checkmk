@@ -13,7 +13,6 @@ import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
-import type { CellHighlight } from '@/monitoring/shared/components/cell/base/highlight'
 
 const props = defineProps<{
   row: HostEntry
@@ -29,12 +28,6 @@ function hasColumn(columnId: string): boolean {
 function toggleSelected(selected: boolean): void {
   props.tableRow.toggleSelected(selected)
 }
-
-const OK_HIGHLIGHT: CellHighlight = { type: 'inline', color: 'success' }
-const WARN_HIGHLIGHT: CellHighlight = { type: 'inline', color: 'warning' }
-const CRIT_HIGHLIGHT: CellHighlight = { type: 'inline', color: 'danger' }
-const UNKNOWN_HIGHLIGHT: CellHighlight = { type: 'inline', color: 'default' }
-const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
 </script>
 
 <template>
@@ -52,6 +45,10 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     v-if="hasColumn('num_services')"
     column-id="num_services"
     :value="row.num_services"
+    :tag-properties="{
+      variant: 'fill',
+      color: 'default'
+    }"
     :linked-to="
       row.num_services === 0
         ? undefined
@@ -65,7 +62,14 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     v-if="hasColumn('num_services_ok')"
     column-id="num_services_ok"
     :value="row.num_services_ok"
-    :highlight="row.num_services_ok === 0 ? undefined : OK_HIGHLIGHT"
+    :tag-properties="
+      row.num_services_ok === 0
+        ? undefined
+        : {
+            variant: 'weighted',
+            color: 'success'
+          }
+    "
     :linked-to="
       row.num_services_ok === 0
         ? undefined
@@ -79,7 +83,14 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     v-if="hasColumn('num_services_warn')"
     column-id="num_services_warn"
     :value="row.num_services_warn"
-    :highlight="row.num_services_warn === 0 ? undefined : WARN_HIGHLIGHT"
+    :tag-properties="
+      row.num_services_warn === 0
+        ? undefined
+        : {
+            variant: 'weighted',
+            color: 'warning'
+          }
+    "
     :linked-to="
       row.num_services_warn === 0
         ? undefined
@@ -93,7 +104,14 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     v-if="hasColumn('num_services_crit')"
     column-id="num_services_crit"
     :value="row.num_services_crit"
-    :highlight="row.num_services_crit === 0 ? undefined : CRIT_HIGHLIGHT"
+    :tag-properties="
+      row.num_services_crit === 0
+        ? undefined
+        : {
+            variant: 'weighted',
+            color: 'danger'
+          }
+    "
     :linked-to="
       row.num_services_crit === 0
         ? undefined
@@ -107,7 +125,14 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     v-if="hasColumn('num_services_unknown')"
     column-id="num_services_unknown"
     :value="row.num_services_unknown"
-    :highlight="row.num_services_unknown === 0 ? undefined : UNKNOWN_HIGHLIGHT"
+    :tag-properties="
+      row.num_services_unknown === 0
+        ? undefined
+        : {
+            variant: 'weighted',
+            color: 'unknown'
+          }
+    "
     :linked-to="
       row.num_services_unknown === 0
         ? undefined
@@ -121,7 +146,14 @@ const PENDING_HIGHLIGHT: CellHighlight = { type: 'outline', color: 'default' }
     v-if="hasColumn('num_services_pending')"
     column-id="num_services_pending"
     :value="row.num_services_pending"
-    :highlight="row.num_services_pending === 0 ? undefined : PENDING_HIGHLIGHT"
+    :tag-properties="
+      row.num_services_pending === 0
+        ? undefined
+        : {
+            variant: 'weighted',
+            color: 'default'
+          }
+    "
     :linked-to="
       row.num_services_pending === 0
         ? undefined

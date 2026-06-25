@@ -9,14 +9,21 @@ import { computed } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
+import CmkTag, { type Colors, type Sizes, type Variants } from '@/components/CmkTag.vue'
+
 import BaseCell, { type CellLink } from './BaseCell.vue'
-import type { CellHighlight } from './base/highlight'
+
+export interface NumberTagProps {
+  size?: Sizes
+  color?: Colors
+  variant?: Variants
+}
 
 export interface NumberCellProps {
   value: number
   linkedTo?: CellLink | undefined
   decimals?: number | undefined
-  highlight?: CellHighlight | undefined
+  tagProperties?: NumberTagProps | undefined
   columnId?: string | undefined
 }
 
@@ -28,9 +35,18 @@ const valueString = computed(() => {
 </script>
 
 <template>
-  <BaseCell :column-id="columnId" :highlight="highlight" :linked-to="linkedTo">
+  <BaseCell :column-id="columnId" :linked-to="linkedTo">
     <template #default>
-      {{ valueString }}
+      <CmkTag
+        v-if="tagProperties"
+        :variant="tagProperties.variant"
+        :size="tagProperties.size"
+        :color="tagProperties.color"
+        :content="valueString"
+      />
+      <template v-else>
+        {{ valueString }}
+      </template>
     </template>
   </BaseCell>
 </template>

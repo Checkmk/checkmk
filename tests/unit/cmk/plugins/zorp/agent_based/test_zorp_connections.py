@@ -12,24 +12,23 @@ from cmk.plugins.zorp.agent_based.zorp_connections import (
 
 
 def _section() -> Section:
-    assert (
-        section := agent_section_zorp_connections.parse_function(
-            [
-                ["Instance", "scb_ssh:", "walking"],
-                ["zorp.stats.active_connections:", "0"],
-                ["Instance", "scb_rdp:", "walking"],
-                ["zorp.stats.active_connections:", "15"],
-                ["Instance", "scb_telnet:", "walking"],
-                ["zorp.stats.active_connections:", "None"],
-                ["Instance", "scb_vnc:", "walking"],
-                ["zorp.stats.active_connections:", "None"],
-                ["Instance", "scb_ica:", "walking"],
-                ["zorp.stats.active_connections:", "None"],
-                ["Instance", "scb_http:", "walking"],
-                ["zorp.stats.active_connections:", "None"],
-            ]
-        )
-    ) is not None
+    section = agent_section_zorp_connections.parse_function(
+        [
+            ["Instance", "scb_ssh:", "walking"],
+            ["zorp.stats.active_connections:", "0"],
+            ["Instance", "scb_rdp:", "walking"],
+            ["zorp.stats.active_connections:", "15"],
+            ["Instance", "scb_telnet:", "walking"],
+            ["zorp.stats.active_connections:", "None"],
+            ["Instance", "scb_vnc:", "walking"],
+            ["zorp.stats.active_connections:", "None"],
+            ["Instance", "scb_ica:", "walking"],
+            ["zorp.stats.active_connections:", "None"],
+            ["Instance", "scb_http:", "walking"],
+            ["zorp.stats.active_connections:", "None"],
+        ]
+    )
+    assert section is not None
     return section
 
 

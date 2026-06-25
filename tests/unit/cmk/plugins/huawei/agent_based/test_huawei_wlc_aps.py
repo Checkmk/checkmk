@@ -143,7 +143,7 @@ def test_huawei_wlc_aps_check_mem() -> None:
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.huawei.agent_based.huawei_wlc_aps.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

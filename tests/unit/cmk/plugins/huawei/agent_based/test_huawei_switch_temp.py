@@ -54,7 +54,7 @@ STRING_TABLE: list[StringTable] = [
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.huawei.agent_based.huawei_switch_temp.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

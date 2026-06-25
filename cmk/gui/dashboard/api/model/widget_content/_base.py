@@ -42,7 +42,6 @@ class BaseWidgetContent(ABC):
         """The internal config representation of the widget content.
 
         This will then be merged with the general widget config."""
-        pass
 
     def iter_validation_errors(
         self,

@@ -52,7 +52,7 @@ def test_check_alcatel_timetra_cpu(
     expected_text: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(alcatel_timetra_cpu, "get_value_store", lambda: {})
+    monkeypatch.setattr(alcatel_timetra_cpu, "get_value_store", dict)
     parsed = parse_alcatel_timetra_cpu(string_table)
     assert parsed is not None
     results = list(check_alcatel_timetra_cpu(params, parsed))

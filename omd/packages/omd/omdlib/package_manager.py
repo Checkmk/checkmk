@@ -64,7 +64,7 @@ def package_manager_factory(distro_code: str) -> PackageManager | None:
     if os.path.exists("/etc/cma"):
         return None
 
-    if distro_code.startswith("el") or distro_code.startswith("sles"):
+    if distro_code.startswith(("el", "sles")):
         return _PackageManagerRPM()
     return _PackageManagerDEB()
 

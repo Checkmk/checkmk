@@ -275,7 +275,7 @@ class VirtualHostTree(SidebarSnapin):
         urlvars = []
         folder_components = {}
         for level_spec in node_values:
-            if level_spec.startswith("folder:") or level_spec.startswith("foldertree:"):
+            if level_spec.startswith(("folder:", "foldertree:")):
                 level_str, component = level_spec.split(":")[1:]
                 folder_components[int(level_str)] = component
 

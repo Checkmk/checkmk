@@ -111,7 +111,7 @@ class _ProxmoxVeSession:
     def _get_raw(self, sub_url: str) -> object:
         return (
             self._get_logs_or_tasks_paginated(sub_url)
-            if (sub_url.endswith("/log") or sub_url.endswith("/tasks"))
+            if sub_url.endswith(("/log", "/tasks"))
             else self._validate_response(
                 self._session.get(
                     url=self._base_url + sub_url,

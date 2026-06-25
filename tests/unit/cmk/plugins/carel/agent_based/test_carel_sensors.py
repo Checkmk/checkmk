@@ -48,7 +48,7 @@ def test_carel_sensors_discovery() -> None:
 def test_carel_sensors_check_room_ok(monkeypatch: pytest.MonkeyPatch) -> None:
     from cmk.plugins.carel.agent_based import carel_sensors
 
-    monkeypatch.setattr(carel_sensors, "get_value_store", lambda: {})
+    monkeypatch.setattr(carel_sensors, "get_value_store", dict)
 
     params = (30.0, 35.0)
     results = list(check_carel_sensors_temp("Room", params, parsed()))
@@ -61,7 +61,7 @@ def test_carel_sensors_check_room_ok(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_carel_sensors_check_missing_item(monkeypatch: pytest.MonkeyPatch) -> None:
     from cmk.plugins.carel.agent_based import carel_sensors
 
-    monkeypatch.setattr(carel_sensors, "get_value_store", lambda: {})
+    monkeypatch.setattr(carel_sensors, "get_value_store", dict)
 
     params = (30.0, 35.0)
     results = list(check_carel_sensors_temp("Nonexistent", params, parsed()))

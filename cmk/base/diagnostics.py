@@ -929,7 +929,7 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementTextDump):
         result = livestatus.LocalConnection().query("GET status\nColumnHeaders: on")
         performance_data = {
             key: result[1][i]
-            for i in range(0, len(result[0]))
+            for i in range(len(result[0]))
             if (key := result[0][i]) not in ["license_usage_history"]
         }
         performance_data.update(self._core_performance_settings(self._loaded_config))

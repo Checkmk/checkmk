@@ -164,7 +164,7 @@ def parse_md(string_table: StringTable) -> Section:
 
             if len(line) >= 2 and line[0].startswith("[") and line[0].endswith("]"):
                 for idx, e in enumerate(line[1:]):
-                    if e.startswith("finish=") or e.startswith("speed="):
+                    if e.startswith(("finish=", "speed=")):
                         k, v = e.split("=")
                         instance[k] = v
                     elif e in ["recovery", "resync", "check"]:

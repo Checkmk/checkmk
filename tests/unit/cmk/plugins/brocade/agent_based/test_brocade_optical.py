@@ -101,7 +101,7 @@ def test_discover_brocade_optical(
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.brocade.agent_based.brocade_optical.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

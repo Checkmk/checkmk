@@ -472,7 +472,7 @@ class DocReference(Enum):
     INFLUXDB_CONNECTIONS = "metrics_exporter"
     INTRO_BESTPRACTICE = "intro_bestpractise"
     INTRO_CREATING_FOLDERS = "intro_setup_monitor#folders"
-    INTRO_FOLDERS = "intro_setup_monitor#folders"
+    INTRO_FOLDERS = "intro_setup_monitor#folders"  # noqa: PIE796 # keep duplicate; values may diverge
     INTRO_GUI = "intro_gui"
     INTRO_LINUX = "intro_setup_monitor#linux"
     INTRO_SERVICES = "intro_setup_monitor#services"

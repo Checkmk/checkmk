@@ -1123,7 +1123,7 @@ def test_lnx_if_regression(
         == discovery_results
     )
 
-    monkeypatch.setattr(interfaces, "get_value_store", lambda: {})
+    monkeypatch.setattr(interfaces, "get_value_store", dict)
     for item, par, res in items_params_results:
         assert (
             list(
@@ -1271,7 +1271,7 @@ def test_lnx_if_with_bonding(monkeypatch: pytest.MonkeyPatch) -> None:
         },
     }
 
-    monkeypatch.setattr(interfaces, "get_value_store", lambda: {})
+    monkeypatch.setattr(interfaces, "get_value_store", dict)
     assert list(
         lnx_if.check_lnx_if(
             "4",

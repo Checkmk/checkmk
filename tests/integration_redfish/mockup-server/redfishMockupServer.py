@@ -565,7 +565,6 @@ class RfMockupServer(BaseHTTPRequestHandler):
                     pass
 
                 output_data["Members"] = my_members
-                pass
 
             # Handling expand
             expand_str = query_pieces.get("$expand", [""])[0]

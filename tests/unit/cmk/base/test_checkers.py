@@ -273,7 +273,7 @@ def test_prediction_injection() -> None:
     prediction = (42.0, (50.0, 60.0))
 
     p_config = checkers.PostprocessingServiceConfig(
-        only_from=lambda: [],
+        only_from=list,
         prediction=lambda: InjectedParameters(
             meta_file_path_template="",
             predictions={_make_hash(params, "upper", metric): prediction},

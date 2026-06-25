@@ -96,7 +96,7 @@ _ALL_BOARDS = [
 
 @pytest.mark.parametrize("item", _ALL_BOARDS)
 def test_check_alcatel_temp_aos7(item: str, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(alcatel_temp_aos7, "get_value_store", lambda: {})
+    monkeypatch.setattr(alcatel_temp_aos7, "get_value_store", dict)
     params: TempParamType = {"levels": (45, 50)}
     parsed_section = parse_alcatel_aos7_temp(_INFO_ALL_44)
     results = list(check_alcatel_aos7_temp(item, params, parsed_section))

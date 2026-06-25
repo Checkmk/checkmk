@@ -450,7 +450,7 @@ def patch_skeleton_files(
 
 
 def _is_unpatchable_file(path: str) -> bool:
-    return path.endswith(".png") or path.endswith(".pdf")
+    return path.endswith((".png", ".pdf"))
 
 
 def _patch_template_file(

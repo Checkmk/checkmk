@@ -125,7 +125,7 @@ def is_heat_index_name(name: str) -> bool:
 
 
 def name_to_index(name: str) -> int | None:
-    if name.startswith("Sensor ") or name.startswith("Heat Index "):
+    if name.startswith(("Sensor ", "Heat Index ")):
         return int(name.replace("Sensor ", "").replace("Heat Index ", "")) - 1
     return None
 

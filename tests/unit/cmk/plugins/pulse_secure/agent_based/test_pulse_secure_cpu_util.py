@@ -21,7 +21,7 @@ from cmk.plugins.pulse_secure.agent_based.pulse_secure_cpu_util import (
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.pulse_secure.agent_based.pulse_secure_cpu_util.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

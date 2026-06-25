@@ -33,8 +33,6 @@ class MKGeneralException(Exception):
     Important: This should not be used for errors that indicate actual bugs.
     """
 
-    pass
-
 
 # This exception is raises when the current program execution should be
 # terminated. For example it is raised by the SIGINT signal handler to

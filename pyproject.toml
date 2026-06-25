@@ -40,6 +40,7 @@ select = [
   "I",      # isort
   "ISC",    # flake8: implicit string concat
   "LOG014", # flake8-logging: no exc_info= outside exception handlers
+  "PIE",    # flake8: misc lints
   "PL",     # pylint
   "RUF100", # ruff: unused noqa
   "SLF",    # flake8: self

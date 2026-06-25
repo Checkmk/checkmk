@@ -29,7 +29,7 @@ def check_ibm_imm_health(section: StringTable) -> CheckResult:
 
     num_alerts = int((len(section) - 1) / 3)
     infotext = ""
-    for i in range(0, num_alerts):
+    for i in range(num_alerts):
         state = section[num_alerts + 1 + i][0]
         text = section[num_alerts * 2 + 1 + i][0]
         if infotext != "":

@@ -40,7 +40,7 @@ def parsed_section_fixture() -> Section:
 def test_check_cisco_cpu_multiitem(
     parsed_section: Section, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(cisco_cpu_multiitem, "get_value_store", lambda: {})
+    monkeypatch.setattr(cisco_cpu_multiitem, "get_value_store", dict)
     params = Params({"levels": (80, 90)})
 
     assert list(check_cisco_cpu_multiitem("2", params, parsed_section)) == [

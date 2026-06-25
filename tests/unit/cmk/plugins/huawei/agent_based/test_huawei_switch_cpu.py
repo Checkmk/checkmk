@@ -55,7 +55,7 @@ STRING_TABLE: Sequence[StringTable] = [
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.huawei.agent_based.huawei_switch_cpu.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

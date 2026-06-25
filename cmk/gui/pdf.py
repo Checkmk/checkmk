@@ -1489,11 +1489,7 @@ class TextCell(CellRenderer):
         self._alignment: Align = "left"
 
         state_in_css: bool = any(
-            css.startswith("hstate")
-            or css.startswith("state")
-            or css.startswith("svcstate")
-            or css.startswith("if_state")
-            for css in csses
+            css.startswith(("hstate", "state", "svcstate", "if_state")) for css in csses
         )
 
         # TODO: Sollte das nicht lieber raus aus dem allgemeinen pdf.py? Ist eigentlich

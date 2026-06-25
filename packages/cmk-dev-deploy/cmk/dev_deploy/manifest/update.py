@@ -110,9 +110,8 @@ def _derive_editions(source_prefix: str, package_target: str) -> Sequence[str]:
     """
     if (
         "non-free/" in package_target
-        or source_prefix.startswith("non-free/")
         or "/nonfree/" in source_prefix
-        or source_prefix.startswith("nonfree/")
+        or source_prefix.startswith(("non-free/", "nonfree/"))
     ):
         return _NONFREE_EDITIONS
     return []
@@ -368,7 +367,7 @@ def _discover_config_specs(
 
 def _is_external_src(src: str) -> bool:
     """True if a Bazel source path lives outside the local checkout."""
-    return src.startswith("../") or src.startswith("external/")
+    return src.startswith(("../", "external/"))
 
 
 def _common_directory(paths: list[str]) -> str:
@@ -986,7 +985,7 @@ def _query_install_spec_extensions(
 
         # Match against install spec source prefixes (longest first)
         for sp in sorted_prefixes:
-            if path.startswith(sp + "/") or path.startswith(sp + ":"):
+            if path.startswith((sp + "/", sp + ":")):
                 # Extract extension
                 if "." in path.rsplit("/", 1)[-1]:
                     ext = "." + path.rsplit(".", 1)[-1]
@@ -1182,14 +1181,14 @@ def _compute_deploy_deps(
             if prefix:
                 all_prefixes.add(prefix)
                 stripped = prefix.rstrip("/")
-                if stripped.startswith("packages/") or stripped.startswith("non-free/packages/"):
+                if stripped.startswith(("packages/", "non-free/packages/")):
                     deployable_packages.add(stripped)
 
     # Wheel packages are deployable too (by the wheel step), so install
     # specs depending on them must keep watching their directories.
     for prefix in manifest_data.get("wheel_prefixes", []):
         stripped = prefix.rstrip("/")
-        if stripped.startswith("packages/") or stripped.startswith("non-free/packages/"):
+        if stripped.startswith(("packages/", "non-free/packages/")):
             deployable_packages.add(stripped)
 
     if not deployable_packages:

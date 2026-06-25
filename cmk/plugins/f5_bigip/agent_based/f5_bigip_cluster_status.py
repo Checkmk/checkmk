@@ -61,7 +61,7 @@ def _node_result(
     Result(state=<State.OK: 0>, summary='Node is active')
     """
     state_mapping_from_params = {int(k): v for k, v in params.get("v11_2_states", {}).items()}
-    state_mapping = {**{0: 3, 1: 2, 2: 2, 3: 0, 4: 0}, **state_mapping_from_params}
+    state_mapping = {0: 3, 1: 2, 2: 2, 3: 0, 4: 0, **state_mapping_from_params}
     return Result(
         state=State(state_mapping[node_state] if is_gt_v11_2 else 0),
         summary="Node %sis %s"

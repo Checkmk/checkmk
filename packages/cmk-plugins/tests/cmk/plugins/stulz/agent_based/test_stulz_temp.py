@@ -29,7 +29,7 @@ _STRING_TABLE: list[list[str]] = [
 
 @pytest.fixture
 def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(stulz_temp, "get_value_store", lambda: {})
+    monkeypatch.setattr(stulz_temp, "get_value_store", dict)
 
 
 def test_parse_stulz_temp_filters_sentinel_and_unknown_types() -> None:

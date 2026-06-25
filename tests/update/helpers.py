@@ -202,7 +202,6 @@ def inject_rules(site: Site) -> None:
 def cleanup_cmk_package(site: Site, request: pytest.FixtureRequest) -> None:
     if is_cleanup_enabled() and not request.config.getoption(name="--skip-uninstall"):
         site.uninstall_cmk()
-    pass
 
 
 def check_errors_in_log_files(site: Site) -> None:

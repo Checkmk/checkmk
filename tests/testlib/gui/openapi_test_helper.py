@@ -61,7 +61,7 @@ def create_test_groups(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     yield
     groups.delete_group("windows", "host", pprint_value=False, pending_changes=pending_changes)
     groups.delete_group("routers", "service", pprint_value=False, pending_changes=pending_changes)
-    monkeypatch.setattr(mkeventd, "_get_rule_stats_from_ec", lambda: {})
+    monkeypatch.setattr(mkeventd, "_get_rule_stats_from_ec", dict)
     groups.delete_group("admins", "contact", pprint_value=False, pending_changes=pending_changes)
 
 

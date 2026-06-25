@@ -179,7 +179,7 @@ def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
 
         raw_color = color_mapping.get(color_id, "")
         # For toners or drum units add the color (if available)
-        if name.startswith("Toner Cartridge") or name.startswith("Image Drum Unit"):
+        if name.startswith(("Toner Cartridge", "Image Drum Unit")):
             if raw_color:
                 colors += [raw_color]
             elif raw_color == "" and colors:

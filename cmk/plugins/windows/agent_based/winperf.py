@@ -44,7 +44,7 @@ def check_win_cpuusage(section: StringTable) -> CheckResult:
             # I've forgotton what's it for (idle?)
             num_cpus = len(line) - 4
             overall_perc = 0.0
-            for cpu in range(0, num_cpus):
+            for cpu in range(num_cpus):
                 ticks = int(line[2 + cpu])
                 ticks_per_sec = get_rate(
                     get_value_store(), f"cpuusage.{cpu}", this_time, ticks, raise_overflow=True

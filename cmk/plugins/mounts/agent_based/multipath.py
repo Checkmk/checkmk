@@ -80,11 +80,13 @@ def parse_multipath(
         l = " ".join(line)
 
         # Skip output when multipath is not present
-        if (
-            l.endswith("kernel driver not loaded")
-            or l.endswith("does not exist, blacklisting all devices.")
-            or l.endswith("A sample multipath.conf file is located at")
-            or l.endswith("multipath.conf")
+        if l.endswith(
+            (
+                "kernel driver not loaded",
+                "does not exist, blacklisting all devices.",
+                "A sample multipath.conf file is located at",
+                "multipath.conf",
+            )
         ):
             uuid = None
             continue

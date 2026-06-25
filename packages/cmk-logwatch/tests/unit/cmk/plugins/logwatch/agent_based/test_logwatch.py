@@ -198,7 +198,7 @@ def test_check_single(
     expected_result: Iterable[Result],
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr(logwatch, "get_value_store", lambda: {})
+    monkeypatch.setattr(logwatch, "get_value_store", dict)
     with _logwatch_state(_LogwatchConfigDummy(msg_dir=tmp_path)):
         monkeypatch.setattr(
             logwatch_,
@@ -258,7 +258,7 @@ def test_check_logwatch_groups_node(
     expected_result: Iterable[Result],
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr(logwatch, "get_value_store", lambda: {})
+    monkeypatch.setattr(logwatch, "get_value_store", dict)
     with _logwatch_state(_LogwatchConfigDummy(msg_dir=tmp_path)):
         monkeypatch.setattr(
             logwatch_,

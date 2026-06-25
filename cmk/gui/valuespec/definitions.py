@@ -4557,7 +4557,7 @@ class RelativeDate(OptionalDropdownChoice[int]):
         for w in range(2, 7):
             wd = (weekday + w) % 7
             choices.append((w, dateutils.weekday_name(wd)))
-        for w in range(0, 7):
+        for w in range(7):
             wd = (weekday + w) % 7
             if w < 2:
                 title = _(" next week")

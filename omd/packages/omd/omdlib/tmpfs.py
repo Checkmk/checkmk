@@ -162,7 +162,7 @@ def unmount_tmpfs_without_save(
     if output:
         sys.stdout.write("Unmounting temporary filesystem...")
 
-    for _t in range(0, 10):
+    for _t in range(10):
         if not tmpfs_mounted(site_name):
             if output:
                 ok()

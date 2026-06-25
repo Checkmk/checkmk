@@ -715,7 +715,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
                     filters.append(_parse_line(table_class, line))
                 except AttributeError:
                     raise ValueError(f"Table {table_name!r}: Could not decode line {line!r}")
-            elif line.startswith("Or: ") or line.startswith("And: "):
+            elif line.startswith(("Or: ", "And: ")):
                 op, _count = line.split(": ")
                 count = int(_count)
                 # I'm sorry. :)
@@ -726,7 +726,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
                     raise ValueError(f"Could not parse {op} for {filters!r}")
                 filters = filters[:-count]
                 filters.append(expr)
-            elif line.startswith("Negate:") or line.startswith("Not:"):
+            elif line.startswith(("Negate:", "Not:")):
                 filters[-1] = Not(filters[-1])
 
         if len(filters) > 1:

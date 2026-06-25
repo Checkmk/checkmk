@@ -1391,7 +1391,7 @@ def _build_children_hierarchy(
     # Depth 0 nodes are always automatically assigned to the topology_central node
     assigned_node_ids.update(list(nodes_by_depth[0].keys()))
     try:
-        for i in range(0, max(nodes_by_depth.keys()) + 1):
+        for i in range(max(nodes_by_depth.keys()) + 1):
             # logger.warning(f"CHECKING LEVEL {i}")
             nodes_of_depth = nodes_by_depth[i]
             for node_id, node_result in sorted(nodes_of_depth.items()):

@@ -133,7 +133,7 @@ if not opt_foreground:
         os.setsid()
 
         # Close all fd
-        for fd in range(0, 256):
+        for fd in range(256):
             try:
                 os.close(fd)
             except OSError:

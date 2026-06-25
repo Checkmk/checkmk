@@ -829,7 +829,7 @@ def render_nowiki_werk_description(
                         html.div(file_name, class_="filename")
                     html.open_pre(class_="file")
                     in_code = True
-                elif line.startswith("C-:") or line.startswith("F-:"):
+                elif line.startswith(("C-:", "F-:")):
                     html.close_pre()
                     in_code = False
                 elif line.startswith("OM:"):

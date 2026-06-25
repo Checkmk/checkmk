@@ -271,10 +271,7 @@ class _RRDSocket(contextlib.AbstractContextManager["_RRDSocket"]):
         site_rel_path = tarinfo_name[len(self._site_name) + 1 :]
         return (
             self._site_requires_suspension
-            and (
-                site_rel_path.startswith("var/pnp4nagios/perfdata")
-                or site_rel_path.startswith("var/check_mk/rrd")
-            )
+            and site_rel_path.startswith(("var/pnp4nagios/perfdata", "var/check_mk/rrd"))
             and tarinfo_name.endswith(".rrd")
         )
 

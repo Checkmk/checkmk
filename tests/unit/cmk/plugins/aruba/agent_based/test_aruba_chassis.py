@@ -53,7 +53,7 @@ def test_discover_aruba_chassis_temp(
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.aruba.agent_based.aruba_chassis.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

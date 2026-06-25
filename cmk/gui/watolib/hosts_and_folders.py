@@ -3150,7 +3150,7 @@ class SearchFolder(FolderProtocol):
     def __init__(self, tree: FolderTree, base_folder: Folder, criteria: SearchCriteria) -> None:
         super().__init__()
         self.attributes: dict[str, Any] = {"meta_data": {}}
-        self.effective_attributes = EffectiveAttributes(lambda: {})
+        self.effective_attributes = EffectiveAttributes(lambda: {})  # noqa: PIE807
         self.permissions = PermissionChecker(lambda _unused: None)
         self.tree = tree
         self._criteria = criteria
@@ -3226,7 +3226,7 @@ class SearchFolder(FolderProtocol):
         url_vars: HTTPVariables = [("host_search", "1"), *add_vars]
 
         for varname, value in request.itervars():
-            if varname.startswith("host_search_") or varname.startswith("_change"):
+            if varname.startswith(("host_search_", "_change")):
                 url_vars.append((varname, value))
         return self.parent().url(url_vars)
 

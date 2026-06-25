@@ -36,7 +36,7 @@ TEST_INFO: list[StringTable] = [
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.apc.agent_based.apc_netbotz_sensors.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

@@ -2576,7 +2576,7 @@ class ABCEditRuleMode(WatoMode):
         if not isinstance(rule_conditions := self._get_rule_conditions_from_rule().value, dict):
             raise TypeError(rule_conditions)
         return RawDiskData(
-            {**rule_properties, **{"value": {"value": self._rule.value}}, **rule_conditions}
+            {**rule_properties, "value": {"value": self._rule.value}, **rule_conditions}
         )
 
     def _page_form_frontend(self, *, catalog: Catalog, debug: bool) -> None:

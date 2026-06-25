@@ -185,7 +185,7 @@ def manage_plugins_engine(request, plugin_dir):
     yield
     if platform.system() == "Windows":
         for plugin in [request.param, Globals.binaryplugin]:
-            for _ in range(0, 5):
+            for _ in range(5):
                 try:
                     os.unlink(os.path.join(plugin_dir, plugin))
                     break

@@ -202,5 +202,5 @@ def get_oauth2_connection(
     assert isinstance(values, Mapping)
     return OAuth2ConnectionData(
         description=connection["title"],
-        data={**values, **{"ident": oauth2_connection_id}},
+        data={**values, "ident": oauth2_connection_id},
     )

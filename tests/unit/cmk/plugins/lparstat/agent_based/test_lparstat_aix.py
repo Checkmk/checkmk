@@ -112,7 +112,7 @@ def test_check_lparstat_aix_regression_1() -> None:
 
 
 def test_check_lparstat_aix_cpu_util_regression_1(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(la, "get_value_store", lambda: {})
+    monkeypatch.setattr(la, "get_value_store", dict)
     assert list(la.check_lparstat_aix_cpu({}, _parse(STRING_TABLE_REGRESSION_1))) == [
         Result(state=State.OK, notice="User: 0.20%"),
         Metric("user", 0.2),
@@ -201,7 +201,7 @@ def test_check_lparstat_aix_regression_2() -> None:
 
 
 def test_check_lparstat_aix_cpu_util_regression_2(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(la, "get_value_store", lambda: {})
+    monkeypatch.setattr(la, "get_value_store", dict)
     assert list(la.check_lparstat_aix_cpu({}, _parse(STRING_TABLE_REGRESSION_2))) == [
         Result(state=State.OK, notice="User: 0.20%"),
         Metric("user", 0.2),
@@ -312,7 +312,7 @@ STRING_TABLE_REGRESSION_5 = [
 
 
 def test_check_lparstat_aix_regression_5(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(la, "get_value_store", lambda: {})
+    monkeypatch.setattr(la, "get_value_store", dict)
     assert list(
         la.check_lparstat_aix_cpu({"util": (0.5, 1.3)}, _parse(STRING_TABLE_REGRESSION_5))
     ) == [

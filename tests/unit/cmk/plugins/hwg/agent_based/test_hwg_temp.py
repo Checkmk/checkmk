@@ -18,7 +18,7 @@ from cmk.plugins.lib.temperature import TempParamType
 
 @pytest.fixture(autouse=True)
 def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(hwg_temp, "get_value_store", lambda: {})
+    monkeypatch.setattr(hwg_temp, "get_value_store", dict)
 
 
 @pytest.mark.parametrize(

@@ -96,11 +96,13 @@ class ClassicSNMPBackend(SNMPBackend):
         item = parts[0]
         value = parts[1].strip()
         self._logger.debug(f"SNMP answer: ==> [{value}]")
-        if (
-            value.startswith("No more variables")
-            or value.startswith("End of MIB")
-            or value.startswith("No Such Object available")
-            or value.startswith("No Such Instance currently exists")
+        if value.startswith(
+            (
+                "No more variables",
+                "End of MIB",
+                "No Such Object available",
+                "No Such Instance currently exists",
+            )
         ):
             return None
 
@@ -176,11 +178,13 @@ class ClassicSNMPBackend(SNMPBackend):
             oid = parts[0].strip()
             value = parts[1].strip()
             # Filter out silly error messages from snmpwalk >:-P
-            if (
-                value.startswith("No more variables")
-                or value.startswith("End of MIB")
-                or value.startswith("No Such Object available")
-                or value.startswith("No Such Instance currently exists")
+            if value.startswith(
+                (
+                    "No more variables",
+                    "End of MIB",
+                    "No Such Object available",
+                    "No Such Instance currently exists",
+                )
             ):
                 continue
 

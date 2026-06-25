@@ -10,4 +10,3 @@ def assert_never_without_raising(value: Never) -> None:
     """
     Same as typing.assert_never but does not raise an exception.
     """
-    pass

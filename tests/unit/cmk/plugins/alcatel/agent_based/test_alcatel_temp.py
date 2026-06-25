@@ -50,7 +50,7 @@ def test_check_function(
     expected_text: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(alcatel_temp, "get_value_store", lambda: {})
+    monkeypatch.setattr(alcatel_temp, "get_value_store", dict)
     params: TempParamType = {"levels": (30.0, 40.0)}
     parsed_section = parse_alcatel_temp(info)
     results = list(check_alcatel_temp(item, params, parsed_section))

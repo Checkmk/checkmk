@@ -514,7 +514,7 @@ def test_discover_azure_vm_network_io(
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.azure_deprecated.agent_based.azure_virtual_machine.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

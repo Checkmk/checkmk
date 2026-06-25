@@ -19,7 +19,7 @@ from cmk.plugins.quanta.lib import parse_quanta
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.quanta.agent_based.quanta_temperature.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

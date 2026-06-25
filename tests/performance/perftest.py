@@ -171,7 +171,7 @@ class PerformanceTest:
     def _generate_ips(offset: int, max_count: int) -> list[str]:
         ips: list[str] = []
         for idx, (x, y, z) in enumerate(
-            [(x, y, z) for x in range(0, 256) for y in range(0, 256) for z in range(1, 255)]
+            [(x, y, z) for x in range(256) for y in range(256) for z in range(1, 255)]
         ):
             if idx < offset:
                 continue

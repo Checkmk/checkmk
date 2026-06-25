@@ -332,7 +332,7 @@ async def run_cmd(
         # This is to make Python scripts behave, i.e. not buffer stdout.
         # this works only for Python of course but a general solution would be nice of course.
         # If someone knows a better way to deactivate buffering, drop me a line please.
-        env={**os.environ, **{"PYTHONUNBUFFERED": "1"}, **env},
+        env={**os.environ, "PYTHONUNBUFFERED": "1", **env},
     )
 
     assert process.stdout and process.stderr

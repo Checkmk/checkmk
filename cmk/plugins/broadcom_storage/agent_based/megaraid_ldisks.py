@@ -30,11 +30,7 @@ from cmk.plugins.broadcom_storage.lib import megaraid
 
 
 def megaraid_ldisks_is_new_drive(l: str) -> bool:
-    return (
-        l.startswith("Virtual Disk:")
-        or l.startswith("Virtual Drive:")
-        or l.startswith("CacheCade Virtual Drive:")
-    )
+    return l.startswith(("Virtual Disk:", "Virtual Drive:", "CacheCade Virtual Drive:"))
 
 
 def parse_megaraid_ldisks(string_table: StringTable) -> megaraid.SectionLDisks:

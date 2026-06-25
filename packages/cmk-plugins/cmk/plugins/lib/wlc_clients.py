@@ -12,7 +12,7 @@ VsResult = Mapping[Literal["levels", "levels_lower"], tuple[float, float]]
 
 @dataclass
 class ClientsPerInterface:
-    per_interface: dict[str, int] = field(default_factory=lambda: {})
+    per_interface: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass

@@ -147,7 +147,7 @@ class _DeleteDCDConnection(Protocol):
 
 
 class DCDConnectionHook:
-    load_dcd_connections: Callable[[], DCDConnectionDict] = lambda: {}
+    load_dcd_connections: Callable[[], DCDConnectionDict] = lambda: {}  # noqa: PIE807
     create_dcd_connection: _CreateDCDConnection = _dcd_unsupported
     delete_dcd_connection: _DeleteDCDConnection = _dcd_unsupported
     stamp_dcd_locked_by: Callable[[str, GlobalIdent], None] = _dcd_unsupported
@@ -155,7 +155,7 @@ class DCDConnectionHook:
 
 
 class OTelCollectorHook:
-    load_otel_configs: Callable[[], OTelCollectorConfigDict] = lambda: {}
+    load_otel_configs: Callable[[], OTelCollectorConfigDict] = lambda: {}  # noqa: PIE807
     delete_otel_config: Callable[[str], None] = _otel_unsupported
 
 

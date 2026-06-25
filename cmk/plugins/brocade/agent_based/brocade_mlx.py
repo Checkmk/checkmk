@@ -143,9 +143,10 @@ def discover_brocade_mlx_module_mem(section: Sequence[StringTable]) -> Discovery
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
         descr = data["descr"]
-        if data["state_readable"] not in ["Slot is empty", "Blocked for full height card"] and (
-            descr.startswith("NI-MLX") or descr.startswith("BR-MLX")
-        ):
+        if data["state_readable"] not in [
+            "Slot is empty",
+            "Blocked for full height card",
+        ] and descr.startswith(("NI-MLX", "BR-MLX")):
             yield Service(item=item)
 
 
@@ -201,9 +202,7 @@ def discover_brocade_mlx_module_cpu(section: Sequence[StringTable]) -> Discovery
     for module_id, module_descr, module_state, _mem_total, _mem_avail in section[0]:
         # do not inventorize modules reported as empty or "Blocked for full height card"
         # and: monitor cpu only on NI-MLX and BR-MLX modules
-        if module_state not in {"0", "11"} and (
-            module_descr.startswith("NI-MLX") or module_descr.startswith("BR-MLX")
-        ):
+        if module_state not in {"0", "11"} and module_descr.startswith(("NI-MLX", "BR-MLX")):
             yield Service(item=_brocade_mlx_combine_item(module_id, module_descr))
 
 

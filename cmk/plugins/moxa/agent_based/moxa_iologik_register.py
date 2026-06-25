@@ -33,7 +33,7 @@ def check_iologik_register(item: str, section: StringTable) -> CheckResult:
     for line in section:
         if line[0] == item:
             val = int(line[2])
-            if val in range(0, 2):
+            if val in range(2):
                 yield Result(state=_STATE_MAP.get(val, State.UNKNOWN), summary=line[1])
             else:
                 yield Result(state=State.UNKNOWN, summary=f"Invalid value {line[2]} for register")

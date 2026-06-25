@@ -502,18 +502,16 @@ def _image_build_binds() -> Mapping[str, DockerBind]:
 def _git_repos() -> Mapping[str, DockerBind]:
     checkout_dir = repo_path()
     return {
+        # This ensures that we can also work with git-worktrees and reference clones.
+        # For this, the original git repository needs to be mapped into the container as well.
         **{
-            # This ensures that we can also work with git-worktrees and reference clones.
-            # For this, the original git repository needs to be mapped into the container as well.
             path: DockerBind(bind=path, mode="ro")
             for path in git_essential_directories(checkout_dir)
         },
-        **{
-            # To get access to the test scripts and for updating the version from
-            # the current git checkout. Will also be used for updating the image with
-            # the current git state
-            checkout_dir.as_posix(): DockerBind(bind="/git-lowerdir", mode="ro"),
-        },
+        # To get access to the test scripts and for updating the version from
+        # the current git checkout. Will also be used for updating the image with
+        # the current git state
+        checkout_dir.as_posix(): DockerBind(bind="/git-lowerdir", mode="ro"),
     }
 
 

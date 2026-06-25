@@ -2972,7 +2972,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
     duplicate_legacy_plugin = LegacyCheckDefinition(
         name="duplicate_plugin",
         service_name="blah",
-        check_function=lambda: [],
+        check_function=list,
     )
 
     def _noop_disco(section: None) -> Iterable[Service]:

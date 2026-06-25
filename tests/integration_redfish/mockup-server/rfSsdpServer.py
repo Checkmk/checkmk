@@ -100,8 +100,6 @@ class RfSSDPServer:
                 continue
             except Exception as e:
                 logger.info("error occurred " + str(e))
-                pass
-        pass
 
     def check(self, data, addr):
         logger.info(f"SSDP Packet received from {addr}")

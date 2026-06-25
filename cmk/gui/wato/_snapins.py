@@ -270,7 +270,7 @@ def compute_foldertree() -> dict[str, FolderEntry]:
         # Loop through all levels of this folder to add the
         # host count to all parent levels
         path_parts = wato_folder_path.split("/")
-        for num_parts in range(0, len(path_parts)):
+        for num_parts in range(len(path_parts)):
             this_folder_path = "/".join(path_parts[:num_parts])
 
             if tree.folder_exists(this_folder_path):

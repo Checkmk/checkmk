@@ -20,9 +20,7 @@ from cmk.plugins.prism.agent_based.prism_storage_pools import (
 
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        "cmk.plugins.prism.agent_based.prism_storage_pools.get_value_store", lambda: {}
-    )
+    monkeypatch.setattr("cmk.plugins.prism.agent_based.prism_storage_pools.get_value_store", dict)
 
 
 SECTION = {

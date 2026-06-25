@@ -315,7 +315,7 @@ class BackupTask:
                             f"Error for VM {error_vmid!r} while another VM {current_vmid!r} was active",
                         )
                     LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
-                    result[error_vmid] = {**current_dataset, **{"error": error_msg}}
+                    result[error_vmid] = {**current_dataset, "error": error_msg}
                     current_vmid, current_dataset = "", {}
 
                 elif started_time := extract_single_value(line, "started_time"):

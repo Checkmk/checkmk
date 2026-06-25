@@ -33,7 +33,7 @@ def test_fetcher_memory_observer_before_steady() -> None:
         logger=logger,
         allowed_growth=100,
         get_vm_size=lambda: memory_used,
-        config_cache_dump_sizes=lambda: {},
+        config_cache_dump_sizes=dict,
     )
     initial_memory_usage = observer.memory_usage()
     _change_state(observer)
@@ -53,7 +53,7 @@ def test_fetcher_memory_observer_steady_setup() -> None:
         logger=logger,
         allowed_growth=100,
         get_vm_size=lambda: memory_usage,
-        config_cache_dump_sizes=lambda: {},
+        config_cache_dump_sizes=dict,
     )
     _change_state(observer, steady=True, log=LOG_MESSAGE)
     assert observer._context() == f'[cycle {STEADY_CYCLE}, command "{LOG_MESSAGE}"]'  # noqa: SLF001
@@ -66,7 +66,7 @@ def test_fetcher_memory_observer_overflow() -> None:
         logger=logger,
         allowed_growth=100,
         get_vm_size=lambda: memory_used,
-        config_cache_dump_sizes=lambda: {},
+        config_cache_dump_sizes=dict,
     )
     _change_state(observer, steady=True, log=LOG_MESSAGE)
     steady_state_memory_usage = observer.memory_usage()
@@ -92,7 +92,7 @@ def test_fetcher_memory_observer_no_overflow(delta: int) -> None:
         logger=logger,
         allowed_growth=factor * 100,
         get_vm_size=lambda: memory_used,
-        config_cache_dump_sizes=lambda: {},
+        config_cache_dump_sizes=dict,
     )
     _change_state(observer, steady=True, log=LOG_MESSAGE)
     steady_state_memory_usage = observer.memory_usage()
@@ -125,7 +125,7 @@ def test_fetcher_memory_observer_hard_limit(growth_factor: float) -> None:
         logger=logger,
         allowed_growth=int(growth_factor * 100),
         get_vm_size=lambda: ram_size,
-        config_cache_dump_sizes=lambda: {},
+        config_cache_dump_sizes=dict,
     )
     assert observer.hard_limit() == 0, "Updates itself ONLY at steady state!"
     _change_state(observer, steady=True, log=LOG_MESSAGE)

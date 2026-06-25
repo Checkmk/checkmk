@@ -188,7 +188,7 @@ def _get_build_file_packages(changes: ChangeSet) -> list[str]:
         if f == "MODULE.bazel" or f.startswith("bazel/"):
             # Global build files changed -- conservative full rebuild
             return ["//..."]
-        if f.endswith("/BUILD") or f.endswith("/BUILD.bazel"):
+        if f.endswith(("/BUILD", "/BUILD.bazel")):
             # Package-specific BUILD file
             dirname = f.rsplit("/", 1)[0]
             packages.add(f"//{dirname}/...")

@@ -235,7 +235,7 @@ def test_network_fs_mounts_check(
     with time_machine.travel(datetime.datetime.fromtimestamp(NOW_SIMULATED, tz=ZoneInfo("UTC"))):
         actual_check_results = list(
             network_fs_mounts.check_network_fs_mount(
-                item, {**FILESYSTEM_DEFAULT_PARAMS, **{"has_perfdata": True}}, section
+                item, {**FILESYSTEM_DEFAULT_PARAMS, "has_perfdata": True}, section
             )
         )
     assert [r for r in actual_check_results if isinstance(r, Result)] == [

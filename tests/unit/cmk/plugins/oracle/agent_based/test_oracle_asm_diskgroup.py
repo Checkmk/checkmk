@@ -382,9 +382,7 @@ def test_discovery(section: asm.Section, expected: Sequence[Service]) -> None:
             SECTION_WITH_FG,
             {
                 **asm.ASM_DISKGROUP_DEFAULT_LEVELS,
-                **{
-                    "req_mir_free": True,
-                },  # Ignore Requirre mirror free space in DG
+                "req_mir_free": True,  # Ignore Requirre mirror free space in DG
             },
             [
                 Metric(
@@ -420,9 +418,7 @@ def test_discovery(section: asm.Section, expected: Sequence[Service]) -> None:
             SECTION_WITH_FG_FLEX,
             {
                 **asm.ASM_DISKGROUP_DEFAULT_LEVELS,
-                **{
-                    "req_mir_free": True,
-                },  # Ignore Requirre mirror free space in DG
+                "req_mir_free": True,  # Ignore Requirre mirror free space in DG
             },
             [
                 Metric(

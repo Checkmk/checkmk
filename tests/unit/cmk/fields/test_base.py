@@ -22,7 +22,7 @@ def test_nested_unique_items_detects_duplicates() -> None:
             many=True,
             uniqueItems=True,
             required=False,
-            load_default=lambda: [],
+            load_default=list,
         )
 
     entries = [
@@ -44,7 +44,7 @@ def test_nested_load_default() -> None:
             many=True,
             uniqueItems=True,
             required=False,
-            load_default=lambda: [],
+            load_default=list,
         )
 
     schema = Bulk()

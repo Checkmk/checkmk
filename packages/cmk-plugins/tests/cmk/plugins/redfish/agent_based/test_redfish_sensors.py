@@ -276,7 +276,7 @@ class TestCheckSensorLevels:
 @pytest.fixture
 def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     """Stub the global value store so check_temperature can run in tests."""
-    monkeypatch.setattr(redfish_sensors, "get_value_store", lambda: {})
+    monkeypatch.setattr(redfish_sensors, "get_value_store", dict)
 
 
 def _section_with(*entries: dict[str, Any]) -> Mapping[str, Any]:

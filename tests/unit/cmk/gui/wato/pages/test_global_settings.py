@@ -45,7 +45,7 @@ def test_match_item_generator_settings(
                 )
             ]
 
-    monkeypatch.setattr(ABCConfigDomain, "get_all_default_globals", lambda: {})
+    monkeypatch.setattr(ABCConfigDomain, "get_all_default_globals", dict)
 
     assert list(
         MatchItemGeneratorSettings(

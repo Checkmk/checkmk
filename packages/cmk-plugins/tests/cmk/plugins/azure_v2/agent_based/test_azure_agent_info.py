@@ -23,7 +23,7 @@ from cmk.plugins.azure_v2.agent_based.azure_agent_info import (
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.azure_v2.agent_based.azure_agent_info.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

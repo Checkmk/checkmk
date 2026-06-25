@@ -28,7 +28,7 @@ def test_oauth2_connection_setup_to_disk(
     request_context: None,
     with_user: tuple[UserId, str],
 ) -> None:
-    monkeypatch.setattr(oauth2_modes, "get_configured_site_choices", lambda: [])
+    monkeypatch.setattr(oauth2_modes, "get_configured_site_choices", list)
     user_id = with_user[0]
     with UserContext(user_id, UserPermissions({}, {}, {}, [])):
         visitor = get_visitor(

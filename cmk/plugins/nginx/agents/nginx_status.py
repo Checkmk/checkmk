@@ -34,7 +34,7 @@ USER_AGENT = "checkmk-agent-nginx_status-" + __version__
 
 import urllib  # noqa: E402
 
-urllib.getproxies = lambda: {}  # type: ignore[attr-defined]
+urllib.getproxies = dict  # type: ignore[attr-defined]
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3

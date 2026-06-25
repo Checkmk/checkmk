@@ -594,7 +594,7 @@ def extract_snapshot(
             return []
 
         def path_valid(_prefix: str | Path, path: str) -> bool:
-            if path.startswith("/") or path.startswith(".."):
+            if path.startswith(("/", "..")):
                 return False
             return True
 

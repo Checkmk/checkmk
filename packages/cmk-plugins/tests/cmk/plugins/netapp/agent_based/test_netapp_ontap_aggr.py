@@ -81,7 +81,7 @@ def test_check_netapp_ontap_aggr_warn(
     result = list(
         check_netapp_ontap_aggr(
             item="aggregate1",
-            params={**FILESYSTEM_DEFAULT_PARAMS, **{"levels": (10.0, 90.0)}},
+            params={**FILESYSTEM_DEFAULT_PARAMS, "levels": (10.0, 90.0)},
             section=section,
         )
     )

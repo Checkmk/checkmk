@@ -106,23 +106,19 @@ CRE_GLOBAL_SERVICES = {
 }
 ALL_GLOBAL_SERVICES = {
     **CRE_GLOBAL_SERVICES,
-    **{
-        "cloudfront": ("none", None),
-        "route53": ("none", None),
-    },
+    "cloudfront": ("none", None),
+    "route53": ("none", None),
 }
 
 
 def _expected_params_with_defaults(ed: Edition) -> dict[str, object]:
     return {
         **EXPECTED_PARAMS,
-        **{
-            "piggyback_naming_convention": "ip_region_instance",
-            "access": {},
-            "global_services": (
-                CRE_GLOBAL_SERVICES if ed is Edition.COMMUNITY else ALL_GLOBAL_SERVICES
-            ),
-        },
+        "piggyback_naming_convention": "ip_region_instance",
+        "access": {},
+        "global_services": (
+            CRE_GLOBAL_SERVICES if ed is Edition.COMMUNITY else ALL_GLOBAL_SERVICES
+        ),
     }
 
 

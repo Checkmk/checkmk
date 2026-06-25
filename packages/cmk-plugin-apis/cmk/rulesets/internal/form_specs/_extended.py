@@ -176,8 +176,6 @@ class SimplePassword(FormSpec[str]):
     For password store integration, use the appropriate GUI-specific form spec.
     """
 
-    pass
-
 
 @dataclass(frozen=True, kw_only=True)
 class StringAutocompleter(FormSpec[str]):

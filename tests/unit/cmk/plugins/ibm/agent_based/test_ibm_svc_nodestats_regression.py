@@ -34,7 +34,7 @@ from cmk.plugins.ibm.agent_based.ibm_svc_nodestats import (
 
 @pytest.fixture
 def patched_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(ibm_svc_nodestats, "get_value_store", lambda: {})
+    monkeypatch.setattr(ibm_svc_nodestats, "get_value_store", dict)
 
 
 @pytest.fixture(name="parsed")

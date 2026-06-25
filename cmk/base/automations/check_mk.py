@@ -1399,7 +1399,7 @@ def _automation_set_autochecks_v2(
     service_descriptions: Mapping[tuple[HostName, CheckPluginName, str | None], ServiceName] = {
         (host, autocheck_entry.check_plugin_name, autocheck_entry.item): service_name
         for host, services in {
-            **{set_autochecks_input.discovered_host: set_autochecks_input.target_services},
+            set_autochecks_input.discovered_host: set_autochecks_input.target_services,
             **set_autochecks_input.nodes_services,
         }.items()
         for service_name, autocheck_entry in services.items()

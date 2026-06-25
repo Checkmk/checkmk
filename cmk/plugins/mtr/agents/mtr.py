@@ -112,7 +112,7 @@ def read_status():
                 lasttime = int(parts[1])
                 current_status[host] = {"hops": {}, "lasttime": lasttime}
                 hops = int(parts[2])
-                for i in range(0, hops):
+                for i in range(hops):
                     current_status[host]["hops"][i + 1] = {
                         "hopname": parts[i * 8 + 3].rstrip(),
                         "loss": parts[i * 8 + 4].rstrip(),

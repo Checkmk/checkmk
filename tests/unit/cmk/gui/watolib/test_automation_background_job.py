@@ -132,7 +132,7 @@ class TestCheckmkAutomationBackgroundJob:
             ),
             api_request,
             cmk_version.Version.from_str(version),
-            lambda: {},
+            dict,
         )
         assert RESULT == expected_result
 

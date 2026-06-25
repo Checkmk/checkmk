@@ -1879,11 +1879,9 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
     mock_discovery_preview.assert_called_once()
     expected_autochecks_2: Mapping[ServiceName, AutocheckEntry] = {
         **expected_autochecks,
-        **{
-            "Filesystem /boot": AutocheckEntry(
-                CheckPluginName("df"), "/boot", {"include_volume_name": False}, {}
-            )
-        },
+        "Filesystem /boot": AutocheckEntry(
+            CheckPluginName("df"), "/boot", {"include_volume_name": False}, {}
+        ),
     }
     mock_set_autochecks.assert_called_once_with(
         LocalAutomationConfig(),

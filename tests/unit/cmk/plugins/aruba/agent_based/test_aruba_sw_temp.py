@@ -260,7 +260,7 @@ def test_aruba_sw_temp_handles_extra_mib_status(
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.aruba.agent_based.aruba_sw_temp.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

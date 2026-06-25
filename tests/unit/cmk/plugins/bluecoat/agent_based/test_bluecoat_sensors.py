@@ -196,7 +196,7 @@ def test_discover_bluecoat_sensors_temp() -> None:
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.bluecoat.agent_based.bluecoat_sensors.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

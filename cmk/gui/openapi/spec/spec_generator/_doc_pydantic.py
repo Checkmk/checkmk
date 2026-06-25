@@ -433,7 +433,7 @@ class PydanticResponses:
                 raise ValueError("Content-Type must be set for 200 responses.")
             if response_type_adapter:
                 content: ContentObject = {content_type: {"schema": response_type_adapter}}
-            elif content_type.startswith("application/") or content_type.startswith("image/"):
+            elif content_type.startswith(("application/", "image/")):
                 content = {
                     content_type: {
                         "schema": {

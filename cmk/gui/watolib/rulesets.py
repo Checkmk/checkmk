@@ -2484,17 +2484,15 @@ def create_rule_catalog(
             **_create_rule_properties_catalog_topic(
                 rule_identifier=rule_identifier, locked_conditions=locked_conditions
             ),
-            **{
-                "value": Topic(
-                    title=Title("%s") % title if title else Title("Value"),
-                    elements={
-                        "value": TopicElement(
-                            parameter_form=value_parameter_form,
-                            required=True,
-                        )
-                    },
-                )
-            },
+            "value": Topic(
+                title=Title("%s") % title if title else Title("Value"),
+                elements={
+                    "value": TopicElement(
+                        parameter_form=value_parameter_form,
+                        required=True,
+                    )
+                },
+            ),
             **_create_rule_conditions_catalog_topic(
                 locked_conditions=locked_conditions,
                 tree=tree,

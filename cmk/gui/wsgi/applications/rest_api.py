@@ -184,10 +184,8 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
         ext_info = EXT(
             {
                 **crash.crash_info,
-                **{
-                    "occurrences": (occurrences := _serialize_crash_time(crash.crash_info["time"])),
-                    "time": occurrences["last_seen"],
-                },
+                "occurrences": (occurrences := _serialize_crash_time(crash.crash_info["time"])),
+                "time": occurrences["last_seen"],
             }
         )
 

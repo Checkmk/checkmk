@@ -58,7 +58,7 @@ def number_of_blowers(info: StringTable) -> int:
 
 def discover_blade_blowers(section: StringTable) -> DiscoveryResult:
     n = number_of_blowers(section)
-    for i in range(0, n):
+    for i in range(n):
         if section[i + n][0] != "0":  # skip unknown blowers
             yield Service(item="%d/%d" % (i + 1, n))
 

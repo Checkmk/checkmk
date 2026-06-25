@@ -61,7 +61,7 @@ def etherbox_convert(string_table: Sequence[StringTable]) -> Section | None:
         return None
     unit_of_measurement = {"0": "c", "1": "f", "2": "k"}[string_table[0][0][0]]
     data: dict[Index, dict[Type, SensorData]] = {}
-    for i in range(0, len(string_table[1])):
+    for i in range(len(string_table[1])):
         index, sensor_type = string_table[1][i][1], string_table[1][i][3]
         if index not in data:
             data[index] = {}

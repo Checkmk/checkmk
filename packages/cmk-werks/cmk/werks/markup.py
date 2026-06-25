@@ -28,7 +28,7 @@ def nowiki_to_markdown(description: list[str]) -> str:
                 if filename:
                     yield "`" + filename + "`"
                 yield "```"
-            elif line.startswith("C-:") or line.startswith("F-:"):
+            elif line.startswith(("C-:", "F-:")):
                 yield "```"
             elif line.startswith("OM:"):
                 yield "OMD[mysite]:~$ " + line.removeprefix("OM:")

@@ -290,7 +290,6 @@ class DashboardTokenAuthenticatedPage(TokenAuthenticatedPage):
 
     def _before_method_handler(self, ctx: PageContext) -> None:
         """Override this to implement any pre-method logic"""
-        pass
 
     def _after_method_handler(self, result: PageResult, ctx: PageContext) -> PageResult:
         """Override this to implement any post-method logic"""

@@ -343,7 +343,6 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
     @abstractmethod
     def _iter_widgets_with_ids(self) -> Iterable[tuple[WidgetId, BaseWidgetRequest]]:
         """Iterate over all widgets with their IDs."""
-        pass
 
     def _iter_widgets(self) -> Iterable[BaseWidgetRequest]:
         """Iterate over all widgets that are part of this dashboard."""
@@ -357,7 +356,6 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
         public_token_id: str | None,
     ) -> DashboardConfig:
         """Convert the API model to the internal representation."""
-        pass
 
     def _get_used_embedded_views(self) -> dict[str, SingleInfos]:
         """Return all embedded view IDs (and their single infos) that are used in this dashboard."""

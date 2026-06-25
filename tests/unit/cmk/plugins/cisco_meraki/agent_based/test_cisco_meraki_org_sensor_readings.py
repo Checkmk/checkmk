@@ -40,7 +40,7 @@ def test_discover_sensor_temperature() -> None:
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.plugins.cisco_meraki.agent_based.cisco_meraki_org_sensor_readings.get_value_store",
-        lambda: {},
+        dict,
     )
 
 

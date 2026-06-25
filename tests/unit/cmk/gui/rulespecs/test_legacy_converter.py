@@ -592,7 +592,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                             "global",
                             _("Globally configured proxy"),
                             legacy_valuespecs.DropdownChoice(
-                                choices=lambda: [],
+                                choices=list,
                                 sorted=True,
                             ),
                         ),
@@ -661,7 +661,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                             "global",
                             _("Globally configured proxy"),
                             legacy_valuespecs.DropdownChoice(
-                                choices=lambda: [],
+                                choices=list,
                                 sorted=True,
                             ),
                         ),

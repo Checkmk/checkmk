@@ -45,7 +45,7 @@ def test_indexed_color_raises(idx: int, total: int) -> None:
 
 @pytest.mark.parametrize(
     "idx",
-    range(0, _COLOR_WHEEL_SIZE),
+    range(_COLOR_WHEEL_SIZE),
 )
 def test_indexed_color_uses_color_wheel_first(idx: int) -> None:
     assert "/" in indexed_color(idx, _COLOR_WHEEL_SIZE)

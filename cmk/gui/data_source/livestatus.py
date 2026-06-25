@@ -187,7 +187,7 @@ def _merge_data(
 
     for c in columns:
         _tablename, col = c.split("_", 1)
-        if col.startswith("num_") or col.startswith("members"):
+        if col.startswith(("num_", "members")):
             mergefunc = lambda a, b: a + b
         elif col.startswith("worst_service"):
             mergefunc = functools.partial(worst_service_state, default=3)

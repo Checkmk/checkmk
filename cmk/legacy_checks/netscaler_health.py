@@ -163,9 +163,7 @@ def check_netscaler_health_psu(
     )
 
     for name, state in info:
-        if name.startswith("PowerSupply" + item) and (
-            name.endswith("Status") or name.endswith("FailureStatus")
-        ):
+        if name.startswith("PowerSupply" + item) and name.endswith(("Status", "FailureStatus")):
             return psu_status_map[int(state)]
     return None
 

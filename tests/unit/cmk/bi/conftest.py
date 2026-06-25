@@ -39,7 +39,7 @@ def mock_query_callback(
 
 
 DUMMY_SITES_CALLBACK = SitesCallback(
-    all_sites_with_id_and_online=lambda: [],
+    all_sites_with_id_and_online=list,
     query=mock_query_callback,
     translate=lambda s: s,
 )

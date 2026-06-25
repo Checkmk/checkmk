@@ -43,12 +43,12 @@ from cmk.plugins.lib.cache_helper import CacheInfo, render_cache_info
 
 @dataclass
 class Instance:
-    details: list[str] = field(default_factory=lambda: [])
-    metrics: list[Metric] = field(default_factory=lambda: [])
-    long: list[str] = field(default_factory=lambda: [])
+    details: list[str] = field(default_factory=list)
+    metrics: list[Metric] = field(default_factory=list)
+    long: list[str] = field(default_factory=list)
     exit: int = 0
     elapsed: float | None = None
-    parsing_error: dict[tuple[str, str, int], list[str]] = field(default_factory=lambda: {})
+    parsing_error: dict[tuple[str, str, int], list[str]] = field(default_factory=dict)
     cache_info: CacheInfo | None = None
 
 

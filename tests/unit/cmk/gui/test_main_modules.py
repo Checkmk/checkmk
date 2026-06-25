@@ -81,18 +81,24 @@ def test_plugins_loaded(plugin_module_dir: str) -> None:
         for module_name in sys.modules
         # None entries are only an import optimization of cPython and can be removed:
         # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
-        if module_name.startswith("cmk.gui.plugins.")
-        or module_name.startswith("cmk.gui.nonfree.pro.plugins.")
-        or module_name.startswith("cmk.gui.nonfree.ultimatemt.plugins.")
+        if module_name.startswith(
+            (
+                "cmk.gui.plugins.",
+                "cmk.gui.nonfree.pro.plugins.",
+                "cmk.gui.nonfree.ultimatemt.plugins.",
+            )
+        )
     ]
 
     plugin_module_name = plugin_module_dir.replace("/", ".")
     assert [
         n
         for n in loaded_module_names
-        if (
-            n.startswith("cmk.gui.plugins." + plugin_module_name)
-            or n.startswith("cmk.gui.nonfree.pro.plugins." + plugin_module_name)  #
-            or n.startswith("cmk.gui.nonfree.ultimatemt.plugins." + plugin_module_name)  #
+        if n.startswith(
+            (
+                "cmk.gui.plugins." + plugin_module_name,
+                "cmk.gui.nonfree.pro.plugins." + plugin_module_name,
+                "cmk.gui.nonfree.ultimatemt.plugins." + plugin_module_name,
+            )
         )
     ]

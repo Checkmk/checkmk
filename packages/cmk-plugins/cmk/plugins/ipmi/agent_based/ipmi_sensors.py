@@ -36,9 +36,9 @@ class Status(NamedTuple):
 
 
 def _parse_status_txt(status_txt: str) -> Status:
-    if status_txt.startswith("[") or status_txt.startswith("'"):
+    if status_txt.startswith(("[", "'")):
         status_txt = status_txt[1:]
-    if status_txt.endswith("]") or status_txt.endswith("'"):
+    if status_txt.endswith(("]", "'")):
         status_txt = status_txt[:-1]
     if status_txt in ["NA", "N/A", "Unknown"] or "_=_" in status_txt:
         return Status(txt=status_txt.replace("_", " "), is_ok=False)
@@ -163,9 +163,7 @@ def _status_txt_mapping(status_txt: str) -> State:
             "transition to ok",
         ]
         or status_txt.startswith("Fully Redundant")
-        or status_txt.endswith("is connected")
-        or status_txt.endswith("Presence detected")
-        or status_txt.endswith("Device Present")
+        or status_txt.endswith(("is connected", "Presence detected", "Device Present"))
     ):
         return State.OK
     return State.CRIT

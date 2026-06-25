@@ -14,6 +14,7 @@ Source:    check-mk-agent-%{_version}.tar.gz
 BuildRoot: %{_topdir}/buildroot
 AutoReq:   off
 AutoProv:  off
+BuildArch: aarch64
 Obsoletes: check_mk-agent check_mk_agent check_mk-agent-logwatch
 Provides:  check_mk-agent check_mk_agent
 

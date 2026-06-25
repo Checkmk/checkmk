@@ -8,21 +8,32 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from typing import Any
-
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.graylog.agent_based.graylog_license import (
     check_graylog_license,
     discover_graylog_license,
+    LicenseParams,
+    parse_graylog_license,
 )
-from cmk.plugins.graylog.lib import deserialize_and_merge_json
+
+_PARAMS: LicenseParams = {
+    "no_enterprise": 0,
+    "expired": 2,
+    "violated": 2,
+    "valid": 2,
+    "traffic_exceeded": 1,
+    "cluster_not_covered": 1,
+    "nodes_exceeded": 1,
+    "remote_checks_failed": 1,
+    "expiration": ("no_levels", None),
+}
 
 
 def test_discovery_graylog_license() -> None:
     info = [
         ['{"status": [{"valid": true, "expired": false, "violated": false}]}'],
     ]
-    parsed = deserialize_and_merge_json(info)
+    parsed = parse_graylog_license(info)
     assert list(discover_graylog_license(parsed)) == [Service()]
 
 
@@ -32,10 +43,9 @@ def test_check_graylog_license() -> None:
             '{"status": [{"expired": false, "violated": false, "valid": true, "traffic_exceeded": false, "cluster_not_covered": false, "nodes_exceeded": false, "remote_checks_failed": false, "license": {"traffic_limit": 5368709120, "expiration_date": "2024-12-31T23:59:59Z", "subject": "/license/enterprise", "trial": false, "enterprise": {"require_remote_check": true}}}]}'
         ],
     ]
-    parsed = deserialize_and_merge_json(info)
-    params: dict[str, Any] = {}
+    parsed = parse_graylog_license(info)
 
-    summaries = [r.summary for r in check_graylog_license(params, parsed) if isinstance(r, Result)]
+    summaries = [r.summary for r in check_graylog_license(_PARAMS, parsed) if isinstance(r, Result)]
     assert "Is expired: no" in summaries
     assert "Is violated: no" in summaries
     assert "Is valid: yes" in summaries
@@ -51,7 +61,7 @@ def test_check_graylog_license() -> None:
 
 def test_check_graylog_license_no_enterprise() -> None:
     info = [['{"status": []}']]
-    parsed = deserialize_and_merge_json(info)
-    assert list(check_graylog_license({"no_enterprise": 1}, parsed)) == [
+    parsed = parse_graylog_license(info)
+    assert list(check_graylog_license({**_PARAMS, "no_enterprise": 1}, parsed)) == [
         Result(state=State.WARN, summary="No enterprise license found"),
     ]

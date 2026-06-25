@@ -13,6 +13,12 @@ import pytest
 import cmk.plugins.graylog.agent_based.graylog_streams as gs
 from cmk.agent_based.v2 import Metric, Result, State
 
+_PARAMS: gs.StreamsParams = {
+    "stream_count_lower": ("no_levels", None),
+    "stream_count_upper": ("no_levels", None),
+    "stream_disabled": 1,
+}
+
 STRING_TABLE_NO_STREAMS: Final = [['{"total": 5, "streams": []}']]
 
 
@@ -67,13 +73,13 @@ def test_discover_no_streams_discovers(section_no_streams: gs.Section) -> None:
 
 
 def test_check_no_streams(section_no_streams: gs.Section) -> None:
-    assert list(gs.check_graylog_streams({}, section_no_streams)) == [
+    assert list(gs.check_graylog_streams(_PARAMS, section_no_streams)) == [
         Result(state=State.WARN, summary="Number of streams: 0"),
     ]
 
 
 def test_check_streams(section: gs.Section) -> None:
-    assert list(gs.check_graylog_streams({}, section)) == [
+    assert list(gs.check_graylog_streams(_PARAMS, section)) == [
         Result(state=State.OK, summary="Number of streams: 5"),
         Metric("num_streams", 5),
         Result(state=State.OK, notice="Stream: All events"),

@@ -3,17 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 import json
 from collections.abc import Mapping
+from typing import TypedDict
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     Result,
     Service,
     State,
@@ -58,31 +58,39 @@ from cmk.agent_based.v2 import (
 # "alert_receivers": {"emails": [], "users": []}, "id":
 # "000000000000000000000003"}]}
 
-Section = Mapping
+
+class StreamInfo(TypedDict):
+    disabled: bool
+    is_default: bool
+
+
+Section = Mapping[str, StreamInfo]
+
+
+class StreamsParams(TypedDict):
+    stream_count_lower: LevelsT[int]
+    stream_count_upper: LevelsT[int]
+    stream_disabled: int
 
 
 def parse_graylog_streams(string_table: StringTable) -> Section:
-    section: dict = {}
+    section: dict[str, StreamInfo] = {}
 
-    for (word,) in string_table:
+    for word in string_table[0]:
         streams = json.loads(word)
 
-        stream_data = streams.get("streams")
-        if stream_data is None:
-            continue
-
-        for stream in stream_data:
-            stream_title = stream.get("title")
-            if stream_title is None:
-                continue
-
-            section.setdefault(
-                stream_title,
-                {
-                    "disabled": stream.get("disabled", False),
-                    "is_default": stream.get("is_default", False),
-                },
-            )
+        for stream in streams.get("streams", []):
+            match stream:
+                case {"title": str() as stream_title, **rest}:
+                    section.setdefault(
+                        stream_title,
+                        StreamInfo(
+                            disabled=rest.get("disabled") is True,
+                            is_default=rest.get("is_default") is True,
+                        ),
+                    )
+                case _:
+                    continue
 
     return section
 
@@ -91,16 +99,16 @@ def discovery_graylog_streams(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_graylog_streams(params: Mapping, section: Section) -> CheckResult:
+def check_graylog_streams(params: StreamsParams, section: Section) -> CheckResult:
     if not section:
         yield Result(state=State.WARN, summary="Number of streams: 0")
         return
 
-    yield from check_levels_v1(
+    yield from check_levels(
         len(section),
         metric_name="num_streams",
-        levels_lower=params.get("stream_count_lower"),
-        levels_upper=params.get("stream_count_upper"),
+        levels_lower=params["stream_count_lower"],
+        levels_upper=params["stream_count_upper"],
         render_func=str,
         label="Number of streams",
     )
@@ -129,6 +137,8 @@ check_plugin_graylog_streams = CheckPlugin(
     discovery_function=discovery_graylog_streams,
     check_function=check_graylog_streams,
     check_default_parameters={
+        "stream_count_lower": ("no_levels", None),
+        "stream_count_upper": ("no_levels", None),
         "stream_disabled": 1,
     },
     check_ruleset_name="graylog_streams",

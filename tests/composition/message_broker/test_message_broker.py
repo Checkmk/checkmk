@@ -52,6 +52,7 @@ class TestCMKBrokerTest:
         with rabbitmq_info_on_failure([central_site]):
             check_broker_ping(central_site, central_site.id)
 
+    @pytest.mark.medium_test_chain
     def test_ping_fail(self, central_site: Site) -> None:
         """Test if we can't ping a non-existing site"""
         with rabbitmq_info_on_failure([central_site]):
@@ -64,7 +65,6 @@ class TestCMKBrokerTest:
             with broker_pong(central_site) as pong:
                 assert pong.returncode is None  # it's running
 
-    @pytest.mark.medium_test_chain
     def test_pong_received_message(self, central_site: Site, remote_site: Site) -> None:
         """Test if the `pong_received_message` works as intended"""
         with rabbitmq_info_on_failure([central_site, remote_site]):
@@ -202,7 +202,6 @@ def _setup_host(site: Site, hostname: str) -> Iterator[None]:
 
 
 class TestMessageBrokerChangeActivation:
-    @pytest.mark.medium_test_chain
     @pytest.mark.skip_if_edition("cloud")
     def test_message_broker_activation(self, central_site: Site, remote_site: Site) -> None:
         """Test if a change on a single site still correctly keeps the definitions in RabbitMQ consistent and the broker working"""

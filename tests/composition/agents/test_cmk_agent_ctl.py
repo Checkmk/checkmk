@@ -22,6 +22,7 @@ def test_agent_controller_installed(agent_ctl: Path) -> None:
     assert "Checkmk agent controller.\n\nUsage:" in res.stdout
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_not_containerized
 def test_dump(agent_ctl: Path) -> None:
     res = run([agent_ctl.as_posix(), "dump"], sudo=True)

@@ -72,6 +72,7 @@ def test_rename_preserves_registration_central(
     )
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_not_containerized
 def test_rename_preserves_registration_remote(
     central_site: Site,

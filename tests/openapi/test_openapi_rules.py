@@ -424,9 +424,10 @@ def test_create_rule_old_and_new_label_formats(
     )
 
     resp.assert_status_code(400)
-    assert resp.json["fields"]["conditions"]["_schema"] == [
-        "Please provide the field 'host_labels' OR 'host_label_groups', not both."
-    ]
+    assert (
+        resp.json["fields"]["body.conditions"]["msg"]
+        == "Value error, Please provide the field 'host_labels' OR 'host_label_groups', not both."
+    )
 
 
 def test_create_rule_missing_operator(clients: ClientRegistry) -> None:

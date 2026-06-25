@@ -13,7 +13,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.ups_cps_battery import (
+from cmk.plugins.ups.agent_based.ups_cps_battery import (
     check_ups_cps_battery,
     check_ups_cps_battery_temp,
     discover_ups_cps_battery,

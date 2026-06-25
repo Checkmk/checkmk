@@ -4527,6 +4527,10 @@
             "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad",
             "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz": "75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc"
           },
+          "httpx-sse": {
+            "https://files.pythonhosted.org/packages/0f/4c/751061ffa58615a32c31b2d82e8482be8dd4a89154f003147acee90f2be9/httpx_sse-0.4.3.tar.gz": "9b1ed0127459a66014aec3c56bebd93da3c1bc8bb6618c8082039a44889a755d",
+            "https://files.pythonhosted.org/packages/d2/fd/6668e5aec43ab844de6fc74927e155a3b37bf40d7c3790e49fc0406b6578/httpx_sse-0.4.3-py3-none-any.whl": "0ac1c9fe3c0afad2e0ebb25a934a59f4c7823b60792691f779fad2c5568830fc"
+          },
           "hypothesis": {
             "https://files.pythonhosted.org/packages/56/7f/d17758aecced81efdf4d90d49d56b1144769260241dc31693eec8189bcc8/hypothesis-6.151.7.tar.gz": "d1a3a3bba940677737e5d2e784653f2e6fa572af5ddf95093d9c73349cc3de9b",
             "https://files.pythonhosted.org/packages/c5/c0/1afd6994ce370c58932449e303068ad44e971dbcc7c5f60170604951cfc1/hypothesis-6.151.7-py3-none-any.whl": "d57bfed05fddc61aaea04c7316c6a5a7776b325244c2670c9e9b3fa706fcfd04"
@@ -5495,6 +5499,10 @@
             "https://files.pythonhosted.org/packages/f5/43/31d59500bb950b0d188e149a2e552040528c13d6e3d6e84d0cccac593dcd/matplotlib-3.10.8-pp310-pypy310_pp73-macosx_10_15_x86_64.whl": "f97aeb209c3d2511443f8797e3e5a569aebb040d4f8bc79aa3ee78a8fb9e3dd8",
             "https://files.pythonhosted.org/packages/f8/86/de7e3a1cdcfc941483af70609edc06b83e7c8a0e0dc9ac325200a3f4d220/matplotlib-3.10.8-cp311-cp311-macosx_10_12_x86_64.whl": "6be43b667360fef5c754dda5d25a32e6307a03c204f3c0fc5468b78fa87b4160",
             "https://files.pythonhosted.org/packages/fd/14/baad3222f424b19ce6ad243c71de1ad9ec6b2e4eb1e458a48fdc6d120401/matplotlib-3.10.8-cp311-cp311-macosx_11_0_arm64.whl": "a2b336e2d91a3d7006864e0990c83b216fcdca64b5a6484912902cef87313d78"
+          },
+          "mcp": {
+            "https://files.pythonhosted.org/packages/2e/e1/4c1dc1fbb688641a712d34650c3d58bbbdcb314ddb75bc5817bbf33515a4/mcp-1.28.0-py3-none-any.whl": "9c1e7cf3a9125557e418ecd4fed8e9adddce81b0dfdae4d6601d700f5beb71a4",
+            "https://files.pythonhosted.org/packages/c1/ee/94c6c50ffc5b5cf4737052275d11b57367f32d1a8516e31dcd60591b3916/mcp-1.28.0.tar.gz": "559d3f9943674cafbe5744c5d3794f3237e8b47f9bbc58e20c0fad680d8487c2"
           },
           "mdit-py-plugins": {
             "https://files.pythonhosted.org/packages/b2/fd/a756d36c0bfba5f6e39a1cdbdbfdd448dc02692467d83816dff4592a1ebc/mdit_py_plugins-0.5.0.tar.gz": "f4918cb50119f50446560513a8e311d574ff6aaed72606ddae6d35716fe809c6",
@@ -6611,6 +6619,10 @@
             "https://files.pythonhosted.org/packages/fd/21/4e287865504b3edc0136c89c9c09431be326168b1eb7841911cbc877a995/pydantic_core-2.41.5-cp310-cp310-manylinux_2_17_s390x.manylinux2014_s390x.whl": "6f52298fbd394f9ed112d56f3d11aabd0d5bd27beb3084cc3d8ad069483b8941",
             "https://files.pythonhosted.org/packages/fe/e6/8c9e81bb6dd7560e33b9053351c29f30c8194b72f2d6932888581f503482/pydantic_core-2.41.5-cp311-cp311-win32.whl": "2c010c6ded393148374c0f6f0bf89d206bf3217f201faa0635dcd56bd1520f6b"
           },
+          "pydantic-settings": {
+            "https://files.pythonhosted.org/packages/5c/b5/8f48e906c3e0205276e8bd8cb7512217a87b2685304d64be27cad5b3019f/pydantic_settings-2.14.2.tar.gz": "c19dd64b19097f1de80184f0cc7b0272a13ae6e170cbf240a3e27e381ed14a5f",
+            "https://files.pythonhosted.org/packages/77/c1/6e422f34e569cf8e18df68d1939c81c099d2b61e4f7d9621c8a77560799c/pydantic_settings-2.14.2-py3-none-any.whl": "a20c97b37910b6550d5ea50fbcc2d4187defe58cd57070b73863d069419c9440"
+          },
           "pyee": {
             "https://files.pythonhosted.org/packages/8b/04/e7c1fe4dc78a6fdbfd6c337b1c3732ff543b8a397683ab38378447baa331/pyee-13.0.1.tar.gz": "0b931f7c14535667ed4c7e0d531716368715e860b988770fc7eb8578d1f67fc8",
             "https://files.pythonhosted.org/packages/a0/c4/b4d4827c93ef43c01f599ef31453ccc1c132b353284fc6c87d535c233129/pyee-13.0.1-py3-none-any.whl": "af2f8fede4171ef667dfded53f96e2ed0d6e6bd7ee3bb46437f77e3b57689228"
@@ -6960,6 +6972,10 @@
           "python-docx": {
             "https://files.pythonhosted.org/packages/a9/f7/eddfe33871520adab45aaa1a71f0402a2252050c14c7e3009446c8f4701c/python_docx-1.2.0.tar.gz": "7bc9d7b7d8a69c9c02ca09216118c86552704edc23bac179283f2e38f86220ce",
             "https://files.pythonhosted.org/packages/d0/00/1e03a4989fa5795da308cd774f05b704ace555a70f9bf9d3be057b680bcf/python_docx-1.2.0-py3-none-any.whl": "3fd478f3250fbbbfd3b94fe1e985955737c145627498896a8a6bf81f4baf66c7"
+          },
+          "python-dotenv": {
+            "https://files.pythonhosted.org/packages/0b/d7/1959b9648791274998a9c3526f6d0ec8fd2233e4d4acce81bbae76b44b2a/python_dotenv-1.2.2-py3-none-any.whl": "1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a",
+            "https://files.pythonhosted.org/packages/82/ed/0301aeeac3e5353ef3d94b6ec08bbcabd04a72018415dcb29e588514bba8/python_dotenv-1.2.2.tar.gz": "2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3"
           },
           "python-jenkins": {
             "https://files.pythonhosted.org/packages/46/e8/4cb6c251d32b440bdd5400b53ed7941d7e9301011f805d0b89d6987fc978/python_jenkins-1.8.3.tar.gz": "8f4761c391ac11e8c1f23f771010920c10440497705ab7175d52358f5a12dc98",
@@ -7633,6 +7649,10 @@
           "sgmllib3k": {
             "https://files.pythonhosted.org/packages/9e/bd/3704a8c3e0942d711c1299ebf7b9091930adae6675d7c8f476a7ce48653c/sgmllib3k-1.0.0.tar.gz": "7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9"
           },
+          "shellingham": {
+            "https://files.pythonhosted.org/packages/58/15/8b3609fd3830ef7b27b655beb4b4e9c62313a4e8da8c676e142cc210d58e/shellingham-1.5.4.tar.gz": "8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de",
+            "https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl": "7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686"
+          },
           "six": {
             "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz": "ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81",
             "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"
@@ -7797,6 +7817,10 @@
             "https://files.pythonhosted.org/packages/fa/a8/5fb0deb13930b4f2f698c5541ae076c18981173e27dd00376dbaea7a9c82/sqlalchemy-2.0.48-cp314-cp314-win32.whl": "1182437cb2d97988cfea04cf6cdc0b0bb9c74f4d56ec3d08b81e23d621a28cc6",
             "https://files.pythonhosted.org/packages/fe/88/cb59509e4668d8001818d7355d9995be90c321313078c912420603a7cb95/sqlalchemy-2.0.48-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl": "b19151e76620a412c2ac1c6f977ab1b9fa7ad43140178345136456d5265b32ed"
           },
+          "sse-starlette": {
+            "https://files.pythonhosted.org/packages/78/75/c88d3f5dafd59c791da1ce27650d30bf5b70cbf1cbf01cd00e5f9e360915/sse_starlette-3.4.5-py3-none-any.whl": "e71bad53323f65573c3864a6c3bd0c1eb6e5f092b2e48082b0c35927d19ca296",
+            "https://files.pythonhosted.org/packages/d2/1b/bc9e3e7a72dcdad7dc7888758f5d00f56f8909ed5cfdff822bd72bb4c520/sse_starlette-3.4.5.tar.gz": "83072538bc211a2f68b7b0422226c4af3e9b62e106e07034664b832ca019842a"
+          },
           "starlette": {
             "https://files.pythonhosted.org/packages/81/0d/13d1d239a25cbfb19e740db83143e95c772a1fe10202dda4b76792b114dd/starlette-0.52.1-py3-none-any.whl": "0029d43eb3d273bc4f83a08720b4912ea4b071087a3b48db01b7c839f7954d74",
             "https://files.pythonhosted.org/packages/c4/68/79977123bb7be889ad680d79a40f339082c1978b5cfcf62c2d8d196873ac/starlette-0.52.1.tar.gz": "834edd1b0a23167694292e94f597773bc3f89f362be6effee198165a35d62933"
@@ -7930,6 +7954,10 @@
           "typeguard": {
             "https://files.pythonhosted.org/packages/7e/ec/adfe3dd6b5f7c5fc0b3cecdf6f893f1756dbd23cf749cd1ae49db069414f/typeguard-4.5.0.tar.gz": "749bea21cdb2553e12831bc29f1eae980b22c7de8331ab67ae7db9e85470b5a7",
             "https://files.pythonhosted.org/packages/d4/35/7541d1f046491fac8ce05d543d3f0de0af02086ad864dd3a23535ec703b9/typeguard-4.5.0-py3-none-any.whl": "cfda388fc88a9ce42a41890900d6f31ee124bea9b73bb84701a32438e92165c3"
+          },
+          "typer": {
+            "https://files.pythonhosted.org/packages/24/25/2201973529af2c954de0bb725323c3aaed6d7f0ceee8f550dec9185df013/typer-0.26.7-py3-none-any.whl": "5c87cfbc5d34491c5346ebf49c23e18d56ccb863268d3a8d592b26087c2f5e58",
+            "https://files.pythonhosted.org/packages/5e/ed/ef06584ccdd5c410df0837951ecd7e15d9a6144ea1bd4c73cecab1a89891/typer-0.26.7.tar.gz": "e314a34c617e419c091b2830dda3ea1f257134ff593061a8f5b9717ab8dddb3a"
           },
           "types-awscrt": {
             "https://files.pythonhosted.org/packages/3e/e5/47a573bbbd0a790f8f9fe452f7188ea72b212d21c9be57d5fc0cbc442075/types_awscrt-0.31.3-py3-none-any.whl": "e5ce65a00a2ab4f35eacc1e3d700d792338d56e4823ee7b4dbe017f94cfc4458",
@@ -8695,6 +8723,7 @@
           "httpcore": "/simple/httpcore/",
           "httplib2": "/simple/httplib2/",
           "httpx": "/simple/httpx/",
+          "httpx_sse": "/simple/httpx-sse/",
           "hypothesis": "/simple/hypothesis/",
           "icalendar": "/simple/icalendar/",
           "id": "/simple/id/",
@@ -8745,6 +8774,7 @@
           "marshmallow": "/simple/marshmallow/",
           "marshmallow_oneofschema": "/simple/marshmallow-oneofschema/",
           "matplotlib": "/simple/matplotlib/",
+          "mcp": "/simple/mcp/",
           "mdit_py_plugins": "/simple/mdit-py-plugins/",
           "mdurl": "/simple/mdurl/",
           "meraki": "/simple/meraki/",
@@ -8821,6 +8851,7 @@
           "pycparser": "/simple/pycparser/",
           "pydantic": "/simple/pydantic/",
           "pydantic_core": "/simple/pydantic-core/",
+          "pydantic_settings": "/simple/pydantic-settings/",
           "pyee": "/simple/pyee/",
           "pyenchant": "/simple/pyenchant/",
           "pyghmi": "/simple/pyghmi/",
@@ -8863,6 +8894,7 @@
           "python_active_directory": "/simple/python-active-directory/",
           "python_dateutil": "/simple/python-dateutil/",
           "python_docx": "/simple/python-docx/",
+          "python_dotenv": "/simple/python-dotenv/",
           "python_jenkins": "/simple/python-jenkins/",
           "python_ldap": "/simple/python-ldap/",
           "python_lsp_jsonrpc": "/simple/python-lsp-jsonrpc/",
@@ -8909,6 +8941,7 @@
           "setuptools": "/simple/setuptools/",
           "setuptools_scm": "/simple/setuptools-scm/",
           "sgmllib3k": "/simple/sgmllib3k/",
+          "shellingham": "/simple/shellingham/",
           "six": "/simple/six/",
           "smmap": "/simple/smmap/",
           "sniffio": "/simple/sniffio/",
@@ -8931,6 +8964,7 @@
           "sphinxcontrib_serializinghtml": "/simple/sphinxcontrib-serializinghtml/",
           "sphinxcontrib_spelling": "/simple/sphinxcontrib-spelling/",
           "sqlalchemy": "/simple/sqlalchemy/",
+          "sse_starlette": "/simple/sse-starlette/",
           "starlette": "/simple/starlette/",
           "stevedore": "/simple/stevedore/",
           "svglib": "/simple/svglib/",
@@ -8945,6 +8979,7 @@
           "trickkiste": "/simple/trickkiste/",
           "twine": "/simple/twine/",
           "typeguard": "/simple/typeguard/",
+          "typer": "/simple/typer/",
           "types_awscrt": "/simple/types-awscrt/",
           "types_docker": "/simple/types-docker/",
           "types_docutils": "/simple/types-docutils/",

@@ -158,6 +158,8 @@ anyio==4.12.1 \
     # via
     #   -c requirements.txt
     #   httpx
+    #   mcp
+    #   sse-starlette
     #   starlette
 apispec==6.10.0 \
     --hash=sha256:0a888555cd4aa5fb7176041be15684154fd8961055e1672e703abf737e8761bf \
@@ -1145,6 +1147,13 @@ httpx==0.28.1 \
     #   -c requirements.txt
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   mcp
+httpx-sse==0.4.3 \
+    --hash=sha256:0ac1c9fe3c0afad2e0ebb25a934a59f4c7823b60792691f779fad2c5568830fc \
+    --hash=sha256:9b1ed0127459a66014aec3c56bebd93da3c1bc8bb6618c8082039a44889a755d
+    # via
+    #   -c requirements.txt
+    #   mcp
 icalendar==6.3.2 \
     --hash=sha256:d400e9c9bb8c025e5a3c77c236941bb690494be52528a0b43cc7e8b7c9505064 \
     --hash=sha256:e0c10ecbfcebe958d33af7d491f6e6b7580d11d475f2eeb29532d0424f9110a1
@@ -1253,6 +1262,7 @@ jsonschema==4.26.0 \
     --hash=sha256:d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce
     # via
     #   -c requirements.txt
+    #   mcp
     #   openapi-schema-validator
     #   openapi-spec-validator
 jsonschema-path==0.3.4 \
@@ -1718,6 +1728,12 @@ marshmallow-oneofschema==3.2.0 \
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-dcd/requirements.in
     #   apispec-oneofschema
+mcp==1.28.0 \
+    --hash=sha256:559d3f9943674cafbe5744c5d3794f3237e8b47f9bbc58e20c0fad680d8487c2 \
+    --hash=sha256:9c1e7cf3a9125557e418ecd4fed8e9adddce81b0dfdae4d6601d700f5beb71a4
+    # via
+    #   -c requirements.txt
+    #   -r non-free/packages/cmk-mcp/requirements.in
 mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
@@ -2649,6 +2665,8 @@ pydantic==2.12.5 \
     #   -r packages/cmk-werks/requirements.in
     #   datamodel-code-generator
     #   fastapi
+    #   mcp
+    #   pydantic-settings
 pydantic-core==2.41.5 \
     --hash=sha256:0177272f88ab8312479336e1d777f6b124537d47f2123f89cb37e0accea97f90 \
     --hash=sha256:01a3d0ab748ee531f4ea6c3e48ad9dac84ddba4b0d82291f87248f2f9de8d740 \
@@ -2777,6 +2795,12 @@ pydantic-core==2.41.5 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   pydantic
+pydantic-settings==2.14.2 \
+    --hash=sha256:a20c97b37910b6550d5ea50fbcc2d4187defe58cd57070b73863d069419c9440 \
+    --hash=sha256:c19dd64b19097f1de80184f0cc7b0272a13ae6e170cbf240a3e27e381ed14a5f
+    # via
+    #   -c requirements.txt
+    #   mcp
 pyghmi==1.6.13 \
     --hash=sha256:a998a25a8a5e8222d207dd38dad1f2a46675cc254ed54010a79ff46c0dc368ad \
     --hash=sha256:dd02dca001c5f7681ee770bfde1d3cb2f57f0f94a2559ac95c943902213936c5
@@ -2797,6 +2821,7 @@ pyjwt[crypto]==2.13.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   mcp
     #   msal
 pymongo==4.16.0 \
     --hash=sha256:03f42396c1b2c6f46f5401c5b185adc25f6113716e16d9503977ee5386fca0fb \
@@ -3092,6 +3117,12 @@ python-dateutil==2.9.0.post0 \
     #   pyghmi
     #   pysaml2
     #   recurring-ical-events
+python-dotenv==1.2.2 \
+    --hash=sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a \
+    --hash=sha256:2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3
+    # via
+    #   -c requirements.txt
+    #   pydantic-settings
 python-ldap==3.4.5 \
     --hash=sha256:b2f6ef1c37fe2c6a5a85212efe71311ee21847766a7d45fcb711f3b270a5f79a
     # via
@@ -3104,6 +3135,7 @@ python-multipart==0.0.32 \
     # via
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   mcp
 python-snap7==2.0.2 \
     --hash=sha256:10714da0d198f2c51b521c79dc00a0e273ae42c0abc5d44605a298266960d016 \
     --hash=sha256:686e62b087a57c121758cba724ece2fb178d86a8e79f512bb40bf5160a6be833 \
@@ -3660,6 +3692,12 @@ smmap==5.0.2 \
     # via
     #   -c requirements.txt
     #   gitdb
+sse-starlette==3.4.5 \
+    --hash=sha256:83072538bc211a2f68b7b0422226c4af3e9b62e106e07034664b832ca019842a \
+    --hash=sha256:e71bad53323f65573c3864a6c3bd0c1eb6e5f092b2e48082b0c35927d19ca296
+    # via
+    #   -c requirements.txt
+    #   mcp
 starlette==0.52.1 \
     --hash=sha256:0029d43eb3d273bc4f83a08720b4912ea4b071087a3b48db01b7c839f7954d74 \
     --hash=sha256:834edd1b0a23167694292e94f597773bc3f89f362be6effee198165a35d62933
@@ -3668,6 +3706,8 @@ starlette==0.52.1 \
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   fastapi
+    #   mcp
+    #   sse-starlette
 tenacity==9.1.4 \
     --hash=sha256:6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55 \
     --hash=sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a
@@ -3700,6 +3740,7 @@ typing-extensions==4.15.0 \
     #   fastapi
     #   grpcio
     #   jira
+    #   mcp
     #   opentelemetry-api
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
@@ -3716,7 +3757,9 @@ typing-inspection==0.4.2 \
     # via
     #   -c requirements.txt
     #   fastapi
+    #   mcp
     #   pydantic
+    #   pydantic-settings
 tzdata==2025.3 \
     --hash=sha256:06a47e5700f3081aab02b2e513160914ff0694bce9947d6b76ebd6bf57cfc5d1 \
     --hash=sha256:de39c2ca5dc7b0344f2eba86f49d614019d29f060fc4ebc8a417896a620b56a7
@@ -3762,6 +3805,7 @@ uvicorn==0.48.0 \
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   mcp
     #   uvicorn-worker
 uvicorn-worker==0.4.0 \
     --hash=sha256:8ee5306070d8f38dce124adce488c3c0b50f20cf0c0222b12c66188da7214493 \

@@ -146,7 +146,7 @@ const columns: ColumnDef<HostEntry>[] = [
     meta: {
       justify: 'right',
       filter: okServicesFilter,
-      headerTitle: _t('Number of services OK state')
+      headerTitle: _t('Number of services in OK state')
     },
     minSize: 64,
     maxSize: 90
@@ -158,7 +158,7 @@ const columns: ColumnDef<HostEntry>[] = [
     meta: {
       justify: 'right',
       filter: warnServicesFilter,
-      headerTitle: _t('Number of services warning state')
+      headerTitle: _t('Number of services in warning state')
     },
     minSize: 64,
     maxSize: 90
@@ -170,7 +170,7 @@ const columns: ColumnDef<HostEntry>[] = [
     meta: {
       justify: 'right',
       filter: critServicesFilter,
-      headerTitle: _t('Number of services critical state')
+      headerTitle: _t('Number of services in critical state')
     },
     minSize: 64,
     maxSize: 90
@@ -182,7 +182,7 @@ const columns: ColumnDef<HostEntry>[] = [
     meta: {
       justify: 'right',
       filter: unknownServicesFilter,
-      headerTitle: _t('Number of services unknown state')
+      headerTitle: _t('Number of services in unknown state')
     },
     minSize: 64,
     maxSize: 90
@@ -194,7 +194,7 @@ const columns: ColumnDef<HostEntry>[] = [
     meta: {
       justify: 'right',
       filter: pendingServicesFilter,
-      headerTitle: _t('Number of services pending state')
+      headerTitle: _t('Number of services in pending state')
     },
     minSize: 64,
     maxSize: 90

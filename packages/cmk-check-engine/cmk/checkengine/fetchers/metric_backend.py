@@ -10,7 +10,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Final, Self
+from typing import Any, Final, Self
 
 from cmk.checkengine.fetcher import Fetcher, FetcherError
 from cmk.checkengine.helper_interface import AgentRawData
@@ -29,18 +29,34 @@ class AttributeFilter:
 
 
 @dataclass(frozen=True)
-class MetricBackendFetcherConfig:
+class AttributeFilterGroup:
+    """One conjunctive (AND) set of attribute filters. A host's series are the union (OR) of the
+    matches of all its groups, so a host produced by several DCD host name lookup rules collects the
+    series of every rule that named it."""
+
     resource_attribute_filters: Sequence[AttributeFilter]
     scope_attribute_filters: Sequence[AttributeFilter]
     data_point_attribute_filters: Sequence[AttributeFilter]
+    # A free-form host name template (e.g. "$RESOURCE_ATTR.service.name$") that, by convention,
+    # resolves to this host's own name. Carried through verbatim and resolved into concrete
+    # attribute filters by the telemetry fetcher (which has backend access and the template logic).
+    # Hosts created by the DCD connector instead carry the resolved values directly in the attribute
+    # filters and leave this empty.
+    host_name_template: str | None
+
+
+def _parse_filters(raw: object) -> list[AttributeFilter]:
+    assert isinstance(raw, list)
+    return [AttributeFilter(key=f["key"], value=f["value"]) for f in raw]
+
+
+@dataclass(frozen=True)
+class MetricBackendFetcherConfig:
+    # One or more filter groups, ORed together when fetching the host's series. Each group may carry
+    # its own host name template (resolved at fetch time); see AttributeFilterGroup.
+    attribute_filter_groups: Sequence[AttributeFilterGroup]
     check_interval: float
     host_name: str
-    # A free-form host name template (e.g. "$RESOURCE_ATTR.service.name$") that, by convention,
-    # resolves to this host's own name. It is carried through verbatim and resolved into concrete
-    # attribute filters by the telemetry fetcher (which has backend access and the template logic).
-    # Hosts created by the DCD connector instead carry the resolved values directly in the
-    # attribute filters and leave this empty.
-    host_name_template: str | None
 
     @classmethod
     def from_serialized(
@@ -48,7 +64,36 @@ class MetricBackendFetcherConfig:
     ) -> Self:
         metrics_association = json.loads(metrics_association_raw)
 
+        # Hosts produced by more than one DCD host name lookup rule store the union of the rules'
+        # filters as a list of groups. Single-rule and manually configured hosts keep the legacy
+        # single ``attribute_filters`` shape, which is read as exactly one group.
+        if (groups := metrics_association.get("attribute_filter_groups")) is not None:
+            # Multi-rule DCD host: the connector stored the resolved filters of every rule directly,
+            # so there is no host name template left to resolve at fetch time.
+            attribute_filter_groups = [
+                AttributeFilterGroup(
+                    resource_attribute_filters=_parse_filters(group["resource_attributes"]),
+                    scope_attribute_filters=_parse_filters(group["scope_attributes"]),
+                    data_point_attribute_filters=_parse_filters(group["data_point_attributes"]),
+                    host_name_template=None,
+                )
+                for group in groups
+            ]
+        else:
+            attribute_filter_groups = [cls._single_group_from_legacy(metrics_association)]
+
+        return cls(
+            attribute_filter_groups=attribute_filter_groups,
+            check_interval=check_interval,
+            host_name=host_name,
+        )
+
+    @staticmethod
+    def _single_group_from_legacy(
+        metrics_association: dict[str, Any],
+    ) -> AttributeFilterGroup:
         attribute_filters = metrics_association["attribute_filters"]
+        assert isinstance(attribute_filters, dict)
 
         host_name_template = metrics_association.get("host_name_template")
         if host_name_template is None and (
@@ -60,21 +105,10 @@ class MetricBackendFetcherConfig:
             # runs. Mirrors cmk.telemetry.host_name_template.macro_for_key.
             host_name_template = f"$RESOURCE_ATTR.{legacy_key}$"
 
-        return cls(
-            resource_attribute_filters=[
-                AttributeFilter(key=attribute_filter["key"], value=attribute_filter["value"])
-                for attribute_filter in attribute_filters["resource_attributes"]
-            ],
-            scope_attribute_filters=[
-                AttributeFilter(key=attribute_filter["key"], value=attribute_filter["value"])
-                for attribute_filter in attribute_filters["scope_attributes"]
-            ],
-            data_point_attribute_filters=[
-                AttributeFilter(key=attribute_filter["key"], value=attribute_filter["value"])
-                for attribute_filter in attribute_filters["data_point_attributes"]
-            ],
-            check_interval=check_interval,
-            host_name=host_name,
+        return AttributeFilterGroup(
+            resource_attribute_filters=_parse_filters(attribute_filters["resource_attributes"]),
+            scope_attribute_filters=_parse_filters(attribute_filters["scope_attributes"]),
+            data_point_attribute_filters=_parse_filters(attribute_filters["data_point_attributes"]),
             host_name_template=host_name_template,
         )
 

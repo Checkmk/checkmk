@@ -11,6 +11,7 @@ See Also:
 
 from .ipmi import IPMICredentials as IPMICredentials
 from .ipmi import IPMIFetcher as IPMIFetcher
+from .metric_backend import AttributeFilterGroup as AttributeFilterGroup
 from .metric_backend import MetricBackendFetcher as MetricBackendFetcher
 from .metric_backend import MetricBackendFetcherConfig as MetricBackendFetcherConfig
 from .nofetcher import NoFetcher as NoFetcher

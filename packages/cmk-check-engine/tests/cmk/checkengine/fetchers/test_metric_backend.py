@@ -20,9 +20,11 @@ def test_from_serialized_carries_configured_filters_only() -> None:
         check_interval=60.0,
         host_name="my-host",
     )
-    assert config.resource_attribute_filters == [AttributeFilter(key="team", value="infra")]
     assert config.host_name == "my-host"
-    assert config.host_name_template is None
+    assert len(config.attribute_filter_groups) == 1
+    group = config.attribute_filter_groups[0]
+    assert group.resource_attribute_filters == [AttributeFilter(key="team", value="infra")]
+    assert group.host_name_template is None
 
 
 def test_from_serialized_reads_host_name_template() -> None:
@@ -36,10 +38,12 @@ def test_from_serialized_reads_host_name_template() -> None:
         check_interval=60.0,
         host_name="my-host",
     )
-    # The template is carried through verbatim and resolved by the telemetry fetcher; the config
-    # does not add any derived filter itself.
-    assert config.host_name_template == "deployment_$RESOURCE_ATTR.k8s.deployment.name$"
-    assert config.resource_attribute_filters == [AttributeFilter(key="team", value="infra")]
+    # The template is carried through verbatim on the single group and resolved by the telemetry
+    # fetcher; the config does not add any derived filter itself.
+    assert len(config.attribute_filter_groups) == 1
+    group = config.attribute_filter_groups[0]
+    assert group.host_name_template == "deployment_$RESOURCE_ATTR.k8s.deployment.name$"
+    assert group.resource_attribute_filters == [AttributeFilter(key="team", value="infra")]
 
 
 def test_from_serialized_maps_legacy_single_key_to_template() -> None:
@@ -55,8 +59,10 @@ def test_from_serialized_maps_legacy_single_key_to_template() -> None:
         check_interval=60.0,
         host_name="my-host",
     )
-    assert config.host_name_template == "$RESOURCE_ATTR.service.name$"
-    assert config.resource_attribute_filters == [AttributeFilter(key="team", value="infra")]
+    assert len(config.attribute_filter_groups) == 1
+    group = config.attribute_filter_groups[0]
+    assert group.host_name_template == "$RESOURCE_ATTR.service.name$"
+    assert group.resource_attribute_filters == [AttributeFilter(key="team", value="infra")]
 
 
 def test_from_serialized_prefers_template_over_legacy_key() -> None:
@@ -71,4 +77,32 @@ def test_from_serialized_prefers_template_over_legacy_key() -> None:
         check_interval=60.0,
         host_name="my-host",
     )
-    assert config.host_name_template == "$SCOPE_ATTR.scope.name$"
+    assert len(config.attribute_filter_groups) == 1
+    assert config.attribute_filter_groups[0].host_name_template == "$SCOPE_ATTR.scope.name$"
+
+
+def test_from_serialized_reads_attribute_filter_groups_union() -> None:
+    # Hosts produced by multiple DCD rules carry the union of the rules' filters as groups. The
+    # resolved filters are stored directly, so the groups carry no host name template.
+    config = MetricBackendFetcherConfig.from_serialized(
+        json.dumps(
+            {
+                "attribute_filters": _FILTERS,
+                "attribute_filter_groups": [
+                    _FILTERS,
+                    {
+                        "resource_attributes": [{"key": "k8s.pod.name", "value": "pod-1"}],
+                        "scope_attributes": [],
+                        "data_point_attributes": [],
+                    },
+                ],
+            }
+        ),
+        check_interval=60.0,
+        host_name="my-host",
+    )
+    assert [g.resource_attribute_filters for g in config.attribute_filter_groups] == [
+        [AttributeFilter(key="team", value="infra")],
+        [AttributeFilter(key="k8s.pod.name", value="pod-1")],
+    ]
+    assert all(g.host_name_template is None for g in config.attribute_filter_groups)

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.ups_socomec_outphase import (
+from cmk.plugins.ups.agent_based.ups_socomec_outphase import (
     check_ups_socomec_outphase,
     discover_ups_socomec_outphase,
     parse_ups_socomec_outphase,

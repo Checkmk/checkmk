@@ -60,8 +60,9 @@ const accessibilityLabel = computed<string>(() =>
       :color="manualPaused ? pauseColor : color"
       :label="false"
       :reverse="true"
+      aria-hidden="true"
     />
-    <span class="monitoring-refresh-countdown__content">
+    <span class="monitoring-refresh-countdown__content" aria-hidden="true">
       <CmkMultitoneIcon v-if="paused" name="play" primary-color="font" size="large" />
       <template v-else>
         <span class="monitoring-refresh-countdown__seconds">{{ secondsLabel }}</span>

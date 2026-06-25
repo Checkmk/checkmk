@@ -49,6 +49,7 @@ function clear(): void {
       name="search"
       primary-color="others"
       size="small"
+      aria-hidden="true"
     />
     <input
       ref="input"

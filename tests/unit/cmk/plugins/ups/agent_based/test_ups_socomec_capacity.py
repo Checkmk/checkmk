@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.ups_socomec_capacity import (
+from cmk.plugins.ups.agent_based.ups_socomec_capacity import (
     check_ups_socomec_capacity,
     discover_ups_socomec_capacity,
     parse_ups_socomec_capacity,

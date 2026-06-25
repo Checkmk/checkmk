@@ -384,7 +384,7 @@ class TestSyslogMessage:
                     service_level=20,
                 ),
                 r'<10>1 2021-04-08T06:47:17.230000+00:00 - - - - [exampleSDID@32473 iut="3" eventSource="Application"][needEscaping@123 escapeMe="\"abc\\\]"][Checkmk@18662 ipaddress="1.2.3.4" sl="20" host="herbert härry" application="somé_deamon" pid="ìd" msg_id="mässage"]'
-                + " \ufeffsomething is wrong with he\ufeffrbert härry",
+                " \ufeffsomething is wrong with he\ufeffrbert härry",
                 id="nothing rfc conform",
             ),
         ],

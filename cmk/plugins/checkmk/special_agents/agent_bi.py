@@ -242,8 +242,8 @@ class AggregationRawdataGenerator:
 
         response = requests.get(
             f"{self._site_url}"
-            + "/check_mk/api/1.0"
-            + "/domain-types/bi_aggregation/actions/aggregation_state/invoke",
+            "/check_mk/api/1.0"
+            "/domain-types/bi_aggregation/actions/aggregation_state/invoke",
             headers={"Authorization": self._get_authentication_token()},
             params={
                 "filter_names": filter_query.names,

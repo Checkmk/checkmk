@@ -69,8 +69,8 @@ def run_proc(command: list[str], *, cwd: Path | None = None) -> None:
         ret = process.wait()
     assert ret == 0, (
         f"Code {ret}\n"
-        + f"Pipe:\n{pipe.decode('utf-8') if pipe else ''}\n"
-        + f"Err\n{err.decode('utf-8') if err else ''}"
+        f"Pipe:\n{pipe.decode('utf-8') if pipe else ''}\n"
+        f"Err\n{err.decode('utf-8') if err else ''}"
     )
 
 

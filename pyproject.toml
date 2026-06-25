@@ -25,6 +25,7 @@ select = [
   "N804",   # pep8-naming: invalid-first-argument-name-for-class-method (cls)
   "N805",   # pep8-naming: invalid-first-argument-name-for-method (self)
   "I",      # isort
+  "ISC",    # flake8: implicit string concat
   "PL",     # pylint
   "RUF100", # ruff: unused noqa
   "SLF",    # flake8: self

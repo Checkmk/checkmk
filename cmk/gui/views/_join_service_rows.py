@@ -250,10 +250,7 @@ def _livestatus_filter_from_macros(
     for host_name, filters in filters_by_hostname.items():
         join_filters.append(
             f"Filter: host_name = {host_name}"
-            + "\n"
-            + "\n".join(filters)
-            + f"\nOr: {len(filters)}"
-            + "\nAnd: 2"
+            "\n" + "\n".join(filters) + f"\nOr: {len(filters)}" + "\nAnd: 2"
         )
 
     joined_filters = "\n".join(join_filters)

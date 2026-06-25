@@ -12,7 +12,8 @@ from cmk.plugins.liebert.agent_based.liebert_bat_temp import (
 
 
 def _section() -> Section:
-    assert (section := snmp_section_liebert_bat_temp.parse_function([[["37"]]])) is not None
+    section = snmp_section_liebert_bat_temp.parse_function([[["37"]]])
+    assert section is not None
     return section
 
 

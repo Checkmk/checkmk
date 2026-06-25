@@ -1654,6 +1654,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     app = make_app()
     fetcher = CMKFetcher(
         config_cache,
+        loading_result.host_tags,
         get_relay_id=lambda hn: None,
         make_trigger=lambda hn: PlainFetcherTrigger(Path("/")),
         factory=config_cache.fetcher_factory(

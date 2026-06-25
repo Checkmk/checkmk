@@ -352,6 +352,7 @@ def test_create_nagios_host_spec(
     host_spec = create_nagios_host_spec(
         cfg,
         loading_result.hosts_config,
+        loading_result.host_tags,
         config_cache,
         _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
@@ -391,6 +392,7 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
     host_spec = create_nagios_host_spec(
         cfg,
         loading_result.hosts_config,
+        loading_result.host_tags,
         config_cache,
         _make_core_objects_config(config_cache),
         EMPTY_NAGIOS_CORE_CONFIG,
@@ -643,6 +645,7 @@ def test_create_nagios_servicedefs_active_check(
         (app := make_app()).get_builtin_host_labels,
         app.edition,
         config.make_hosts_config(EMPTY_CONFIG),
+        config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -843,6 +846,7 @@ def test_create_nagios_servicedefs_with_warnings(
         (app := make_app()).get_builtin_host_labels,
         app.edition,
         config.make_hosts_config(EMPTY_CONFIG),
+        config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -931,6 +935,7 @@ def test_create_nagios_servicedefs_omit_service(
         (app := make_app()).get_builtin_host_labels,
         app.edition,
         config.make_hosts_config(EMPTY_CONFIG),
+        config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -1014,6 +1019,7 @@ def test_create_nagios_servicedefs_invalid_args(
         (app := make_app()).get_builtin_host_labels,
         app.edition,
         config.make_hosts_config(EMPTY_CONFIG),
+        config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -1118,6 +1124,7 @@ def test_create_nagios_config_commands(
         (app := make_app()).get_builtin_host_labels,
         app.edition,
         config.make_hosts_config(EMPTY_CONFIG),
+        config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )

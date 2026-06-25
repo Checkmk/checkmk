@@ -74,6 +74,7 @@ from cmk.utils.notify import (
 )
 from cmk.utils.notify_types import Contact
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
+from cmk.utils.tags import HostTags
 from cmk.utils.timeperiod import TimeperiodSpecs
 
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
@@ -127,6 +128,7 @@ class NagiosCore(MonitoringCore):
         config_cache: ConfigCache,
         core_objects_config: CoreObjectsConfig,
         hosts_config: Hosts,
+        host_tags: HostTags,
         final_service_name_config: Callable[
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
         ],
@@ -152,6 +154,7 @@ class NagiosCore(MonitoringCore):
         self._create_core_config(
             config_creation_context.path_created,
             hosts_config,
+            host_tags,
             final_service_name_config,
             passive_service_name_config,
             enforced_services_table,
@@ -186,6 +189,7 @@ class NagiosCore(MonitoringCore):
         self,
         config_path: Path,
         hosts_config: Hosts,
+        host_tags: HostTags,
         final_service_name_config: Callable[
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
         ],
@@ -216,6 +220,7 @@ class NagiosCore(MonitoringCore):
         notify_host_files = create_config(
             config_buffer,
             hosts_config,
+            host_tags,
             self._config_cache,
             self._core_objects_config,
             self.nagios_core_config,
@@ -327,6 +332,7 @@ def _validate_licensing(
 def create_config(
     outfile: IO[str],
     hosts_config: Hosts,
+    host_tags: HostTags,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
@@ -363,6 +369,7 @@ def create_config(
         all_notify_host_configs[hostname] = _create_nagios_config_host(
             cfg,
             hosts_config,
+            host_tags,
             config_cache,
             core_objects_config,
             nagios_core_config,
@@ -420,6 +427,7 @@ def _output_conf_header(cfg: NagiosConfig) -> None:
 def _create_nagios_config_host(
     cfg: NagiosConfig,
     hosts_config: Hosts,
+    host_tags: HostTags,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
@@ -451,6 +459,7 @@ def _create_nagios_config_host(
         host_spec = create_nagios_host_spec(
             cfg,
             hosts_config,
+            host_tags,
             config_cache,
             core_objects_config,
             nagios_core_config,
@@ -491,6 +500,7 @@ def _create_nagios_config_host(
 def create_nagios_host_spec(
     cfg: NagiosConfig,
     hosts_config: Hosts,
+    host_tags: HostTags,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     nagios_core_config: NagiosCoreConfig,
@@ -508,7 +518,7 @@ def create_nagios_host_spec(
             hosts_config.clusters.get(hostname, ()),
             ip_lookup_config.ip_stack_config,
             ip_lookup_config.default_address_family,
-            config_cache.host_tags,
+            host_tags,
             hosts_config.hosts,
             lambda h: config_cache.is_active(h) and config_cache.is_online(h),
         )

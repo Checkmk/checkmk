@@ -16,7 +16,7 @@ from typing import Literal, Never
 import pytest
 
 from cmk.base.community_app import make_app
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, make_host_tags, make_hosts_config
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetchers import (
@@ -101,7 +101,9 @@ def _make_sources(
         ),
         computed_datasources=config_cache.computed_datasources(hostname),
         datasource_programs=config_cache.datasource_programs(hostname),
-        tag_list=config_cache.host_tags.tag_list(hostname),
+        tag_list=make_host_tags(
+            config_cache.base_config, make_hosts_config(config_cache.base_config)
+        ).tag_list(hostname),
         management_ip=ipaddress,
         management_protocol=config_cache.management_protocol(hostname),
         special_agent_command_lines=config_cache.special_agent_command_lines(

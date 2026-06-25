@@ -18,7 +18,7 @@ from pytest import MonkeyPatch
 import cmk.utils.paths
 import cmk.utils.tags
 from cmk.base.app import make_app
-from cmk.base.config import ConfigCache, LoadingResult, make_hosts_config
+from cmk.base.config import ConfigCache, LoadingResult, make_host_tags, make_hosts_config
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition
@@ -52,17 +52,20 @@ class Scenario:
             **{k: v for k, v in self.config.items() if k in asdict(EMPTY_CONFIG)},
         )
         hosts_config = make_hosts_config(loaded_config)
+        host_tags = make_host_tags(loaded_config, hosts_config)
         config_cache = ConfigCache(
             loaded_config,
             self.get_builtin_host_labels,
             self._edition,
             hosts_config,
+            host_tags,
             autochecks_dir=cmk.utils.paths.autochecks_dir,
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         )
         return LoadingResult(
             loaded_config=loaded_config,
             hosts_config=hosts_config,
+            host_tags=host_tags,
             config_cache=config_cache,
         )
 

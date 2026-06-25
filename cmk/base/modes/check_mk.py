@@ -149,7 +149,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
 )
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.servicename import ServiceName
-from cmk.utils.tags import TagID
+from cmk.utils.tags import HostTags, TagID
 
 from .modes import Mode, Option
 
@@ -473,7 +473,10 @@ def _mode_list_tag(app: CheckmkBaseApp, args: list[str]) -> None:
         edition=app.edition,
     )
     hosts = _list_all_hosts_with_tags(
-        tuple(TagID(_) for _ in args), loading_result.config_cache, loading_result.hosts_config
+        tuple(TagID(_) for _ in args),
+        loading_result.config_cache,
+        loading_result.hosts_config,
+        loading_result.host_tags,
     )
     print_("\n".join(sorted(hosts)))
     if hosts:
@@ -484,6 +487,7 @@ def _list_all_hosts_with_tags(
     tags: Sequence[TagID],
     config_cache: ConfigCache,
     hosts_config: Hosts,
+    host_tags: HostTags,
 ) -> Sequence[HostName]:
 
     if "offline" in tags:
@@ -499,7 +503,7 @@ def _list_all_hosts_with_tags(
 
     hosts = []
     for h in set(hostnames):
-        if hosttags_match_taglist(config_cache.host_tags.tag_list(h), tags):
+        if hosttags_match_taglist(host_tags.tag_list(h), tags):
             hosts.append(h)
     return hosts
 
@@ -766,7 +770,7 @@ def _mode_dump_agent(
             tls_config=tls_config,
             computed_datasources=config_cache.computed_datasources(hostname),
             datasource_programs=config_cache.datasource_programs(hostname),
-            tag_list=config_cache.host_tags.tag_list(hostname),
+            tag_list=loading_result.host_tags.tag_list(hostname),
             management_ip=ip_address_of_mgmt(hostname, ip_family),
             management_protocol=config_cache.management_protocol(hostname),
             special_agent_command_lines=config_cache.special_agent_command_lines(
@@ -928,6 +932,7 @@ def _mode_dump_hosts(app: CheckmkBaseApp, hostlist: Iterable[HostName]) -> None:
         cmk.base.dump_host.dump_host(
             loading_result.loaded_config,
             loading_result.hosts_config,
+            loading_result.host_tags,
             config_cache,
             core_objects_config,
             service_name_config,
@@ -1543,6 +1548,7 @@ def _mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> N
     _notify_host_files = create_config(
         sys.stdout,
         hosts_config,
+        loading_result.host_tags,
         config_cache,
         core_objects_config,
         NagiosCoreConfig(
@@ -1589,7 +1595,7 @@ def _mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> N
             error_handler=config.handle_ip_lookup_failure,
         ),
         service_depends_on=config.ServiceDependsOn(
-            tag_list=config_cache.host_tags.tag_list,
+            tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
         ),
         timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
@@ -1695,6 +1701,7 @@ def _mode_update(app: CheckmkBaseApp) -> None:
                     plugins,
                 ),
                 hosts_config=hosts_config,
+                host_tags=loading_result.host_tags,
                 config_cache=loading_result.config_cache,
                 core_objects_config=core_objects_config,
                 final_service_name_config=final_service_name_config,
@@ -1708,7 +1715,7 @@ def _mode_update(app: CheckmkBaseApp) -> None:
                 or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
                 hosts_to_update=None,
                 service_depends_on=config.ServiceDependsOn(
-                    tag_list=loading_result.config_cache.host_tags.tag_list,
+                    tag_list=loading_result.host_tags.tag_list,
                     service_dependencies=loading_result.loaded_config.service_dependencies,
                 ),
                 duplicates=sorted(
@@ -1786,6 +1793,7 @@ def _mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
         loading_result.config_cache,
         core_objects_config,
         hosts_config,
+        loading_result.host_tags,
         final_service_name_config,
         passive_service_name_config,
         config.EnforcedServicesTable(
@@ -1814,7 +1822,7 @@ def _mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
         hosts_to_update=set(args) if args else None,
         locking_mode=loaded_config.restart_locking,
         service_depends_on=config.ServiceDependsOn(
-            tag_list=loading_result.config_cache.host_tags.tag_list,
+            tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
         ),
         duplicates=sorted(
@@ -1886,6 +1894,7 @@ def _mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
         loading_result.config_cache,
         core_objects_config,
         hosts_config,
+        loading_result.host_tags,
         final_service_name_config,
         passive_service_name_config,
         config.EnforcedServicesTable(
@@ -1914,7 +1923,7 @@ def _mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
         hosts_to_update=set(args) if args else None,
         locking_mode=loaded_config.restart_locking,
         service_depends_on=config.ServiceDependsOn(
-            tag_list=loading_result.config_cache.host_tags.tag_list,
+            tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
         ),
         duplicates=sorted(
@@ -2144,6 +2153,7 @@ def _mode_check_discovery(
     ruleset_matcher = config_cache.ruleset_matcher
     label_manager = config_cache.label_manager
     hosts_config = loading_result.hosts_config
+    host_tags = loading_result.host_tags
 
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     service_name_config = config_cache.make_passive_service_name_config(
@@ -2177,6 +2187,7 @@ def _mode_check_discovery(
     discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
         config_cache,
+        host_tags,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
         make_trigger=lambda relay_id: app.make_fetcher_trigger(
             relay_id, latest_config_path / RELATIVE_PATH_TRUSTED_CAS
@@ -2499,6 +2510,7 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
     loading_result = load_config(app.get_builtin_host_labels, app.edition)
     loaded_config = loading_result.loaded_config
     hosts_config = loading_result.hosts_config
+    host_tags = loading_result.host_tags
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     config_cache = loading_result.config_cache
@@ -2528,7 +2540,7 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
         error_handler=config.handle_ip_lookup_failure,
     )
 
-    hostnames = config.parse_hostname_list(config_cache, hosts_config, args)
+    hostnames = config.parse_hostname_list(config_cache, hosts_config, host_tags, args)
     if hostnames:
         # In case of discovery with host restriction, do not use the cache
         # file by default as -I and -II are used for debugging.
@@ -2565,6 +2577,7 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
     )
     fetcher = CMKFetcher(
         config_cache,
+        host_tags,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
         make_trigger=lambda relay_id: app.make_fetcher_trigger(
             relay_id, cmk.utils.paths.trusted_ca_file
@@ -2763,9 +2776,10 @@ def _mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str])
         plugins,
         loading_result.config_cache,
         config.make_hosts_config(loaded_config),
+        loading_result.host_tags,
         loaded_config.monitoring_core,
         config.ServiceDependsOn(
-            tag_list=loading_result.config_cache.host_tags.tag_list,
+            tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
         ),
         options,
@@ -2792,6 +2806,7 @@ def run_checking(
     plugins: AgentBasedPlugins,
     config_cache: ConfigCache,
     hosts_config: Hosts,
+    host_tags: HostTags,
     monitoring_core: Literal["cmc", "nagios"],
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     options: _CheckingOptions,
@@ -2845,6 +2860,7 @@ def run_checking(
     logger = logging.getLogger("cmk.base.checking")
     fetcher = CMKFetcher(
         config_cache,
+        host_tags,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
         make_trigger=lambda relay_id: app.make_fetcher_trigger(relay_id, trusted_ca_file),
         factory=config_cache.fetcher_factory(
@@ -3096,6 +3112,7 @@ def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[
     plugins = load_checks()
     loading_result = load_config(app.get_builtin_host_labels, app.edition)
     loaded_config = loading_result.loaded_config
+    host_tags = loading_result.host_tags
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     config_cache = loading_result.config_cache
@@ -3121,7 +3138,9 @@ def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[
     )
 
     if args:
-        hostnames = config.parse_hostname_list(config_cache, hosts_config, args, with_clusters=True)
+        hostnames = config.parse_hostname_list(
+            config_cache, hosts_config, host_tags, args, with_clusters=True
+        )
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
         console.verbose(f"Doing HW/SW Inventory on: {', '.join(hostnames)}")
     else:
@@ -3146,6 +3165,7 @@ def _mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[
     )
     fetcher = CMKFetcher(
         config_cache,
+        host_tags,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
         make_trigger=lambda relay_id: app.make_fetcher_trigger(
             relay_id, cmk.utils.paths.trusted_ca_file
@@ -3447,6 +3467,7 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
     loading_result = load_config(app.get_builtin_host_labels, app.edition)
     loaded_config = loading_result.loaded_config
     hosts_config = loading_result.hosts_config
+    host_tags = loading_result.host_tags
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     config_cache = loading_result.config_cache
@@ -3483,6 +3504,7 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
     )
     fetcher = CMKFetcher(
         config_cache,
+        host_tags,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
         make_trigger=lambda relay_id: app.make_fetcher_trigger(
             relay_id, latest_config_path / RELATIVE_PATH_TRUSTED_CAS

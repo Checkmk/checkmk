@@ -43,7 +43,6 @@ import cmk.ccc.version as cmk_version
 import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils
 import cmk.utils.paths
-import cmk.utils.tags
 from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, find_legacy_check_modules
 from cmk.base import default_config
@@ -167,7 +166,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     SingleServiceRulesetMatcherFirstParsed,
 )
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
+from cmk.utils.tags import ComputedDataSources, HostTags, TagGroupID, TagID
 
 tracer = trace.get_tracer()
 
@@ -553,6 +552,7 @@ class LoadingResult:
 
     loaded_config: BaseConfig
     hosts_config: Hosts
+    host_tags: HostTags
     config_cache: ConfigCache
 
 
@@ -625,12 +625,14 @@ def perform_post_config_loading_actions(
     )
 
     hosts_config = make_hosts_config(loaded_config)
+    host_tags = make_host_tags(loaded_config, hosts_config)
 
     config_cache = ConfigCache(
         loaded_config,
         get_builtin_host_labels,
         edition,
         hosts_config,
+        host_tags,
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -647,6 +649,7 @@ def perform_post_config_loading_actions(
     return LoadingResult(
         loaded_config=loaded_config,
         hosts_config=hosts_config,
+        host_tags=host_tags,
         config_cache=config_cache,
     )
 
@@ -972,6 +975,7 @@ class PackedConfigStore:
 def parse_hostname_list(
     config_cache: ConfigCache,
     hosts_config: Hosts,
+    host_tags: HostTags,
     args: list[str],
     with_clusters: bool = True,
     with_foreign_hosts: bool = False,
@@ -1005,7 +1009,7 @@ def parse_hostname_list(
             num_found = 0
             for hostname in valid_hosts:
                 if tuple_rulesets.hosttags_match_taglist(
-                    config_cache.host_tags.tag_list(hostname), (TagID(_) for _ in tagspec)
+                    host_tags.tag_list(hostname), (TagID(_) for _ in tagspec)
                 ):
                     hostlist.append(hostname)
                     num_found += 1
@@ -1349,6 +1353,16 @@ def make_hosts_config(loaded_config: BaseConfig) -> Hosts:
     )
 
 
+def make_host_tags(loaded_config: BaseConfig, hosts_config: Hosts) -> HostTags:
+    return HostTags.make(
+        hosts_config.host_paths,
+        loaded_config.tag_config,
+        loaded_config.host_tags,
+        [*loaded_config.all_hosts, *loaded_config.clusters],
+        loaded_config.shadow_hosts,
+    )
+
+
 class AutochecksConfigurer:
     """Implementation of the autochecks configuration"""
 
@@ -1411,6 +1425,7 @@ class ConfigCache:
         get_builtin_host_labels: Callable[[SiteId], Labels],
         edition: cmk_version.Edition,
         hosts_config: Hosts,
+        host_tags: HostTags,
         *,
         autochecks_dir: Path,
         discovered_host_labels_dir: Path,
@@ -1421,6 +1436,7 @@ class ConfigCache:
         self._autochecks_dir = autochecks_dir
         self._discovered_host_labels_dir = discovered_host_labels_dir
         self._hosts_config = hosts_config
+        self._host_tags = host_tags
         self.__enforced_services_table: dict[
             HostName,
             Mapping[
@@ -1462,16 +1478,8 @@ class ConfigCache:
             HostName,
         ] = {}
 
-        self.host_tags = cmk.utils.tags.HostTags.make(
-            self._hosts_config.host_paths,
-            self._loaded_config.tag_config,
-            self._loaded_config.host_tags,
-            [*self._loaded_config.all_hosts, *self._loaded_config.clusters],
-            self._loaded_config.shadow_hosts,
-        )
-
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
-            host_tags=self.host_tags.host_tags_maps,
+            host_tags=self._host_tags.host_tags_maps,
             host_paths=self._hosts_config.host_paths,
             clusters_of=self._hosts_config.clusters_of_nodes,
             nodes_of=self._hosts_config.clusters,
@@ -2058,12 +2066,12 @@ class ConfigCache:
             return self.__computed_datasources[host_name]
 
         return self.__computed_datasources.setdefault(
-            host_name, cmk.utils.tags.compute_datasources(self.host_tags.tags(host_name))
+            host_name, cmk.utils.tags.compute_datasources(self._host_tags.tags(host_name))
         )
 
     def is_piggyback_host(self, host_name: HostName) -> bool:
         def get_is_piggyback_host() -> bool:
-            tag_groups: Final = self.host_tags.tags(host_name)
+            tag_groups: Final = self._host_tags.tags(host_name)
             if tag_groups[TagGroupID("piggyback")] == TagID("piggyback"):
                 return True
             if tag_groups[TagGroupID("piggyback")] == TagID("no-piggyback"):
@@ -2760,7 +2768,7 @@ class ConfigCache:
 
     def ip_stack_config(self, host_name: HostName | HostAddress) -> IPStackConfig:
         # TODO(ml): [IPv6] clarify tag_groups vs tag_groups["address_family"]
-        tag_groups = self.host_tags.tags(host_name)
+        tag_groups = self._host_tags.tags(host_name)
         if (
             TagGroupID("no-ip") in tag_groups
             or TagID("no-ip") == tag_groups[TagGroupID("address_family")]
@@ -2908,8 +2916,8 @@ class ConfigCache:
         # Pre 1.6 legacy attribute. We have changed our whole code to use the
         # livestatus column "tags" which is populated by all attributes starting with
         # "__TAG_" instead. We may deprecate this is one day.
-        attrs["_TAGS"] = " ".join(sorted(self.host_tags.tag_list(hostname)))
-        attrs.update(ConfigCache._get_tag_attributes(self.host_tags.tags(hostname), "TAG"))
+        attrs["_TAGS"] = " ".join(sorted(self._host_tags.tag_list(hostname)))
+        attrs.update(ConfigCache._get_tag_attributes(self._host_tags.tags(hostname), "TAG"))
         attrs.update(
             ConfigCache._get_tag_attributes(self.label_manager.labels_of_host(hostname), "LABEL")
         )
@@ -3267,7 +3275,7 @@ class ConfigCache:
 
     def _site_of_host(self, host_name: HostName) -> SiteId:
         return SiteId(
-            self.host_tags.tags(host_name).get(
+            self._host_tags.tags(host_name).get(
                 TagGroupID("site"), self._loaded_config.distributed_wato_site or omd_site()
             )
         )

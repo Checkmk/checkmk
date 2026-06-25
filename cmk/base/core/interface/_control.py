@@ -31,6 +31,7 @@ from cmk.utils import config_warnings, ip_lookup
 from cmk.utils.labels import Labels
 from cmk.utils.log import console
 from cmk.utils.servicename import ServiceName
+from cmk.utils.tags import HostTags
 
 from ._base_core import MonitoringCore
 from ._snapshot_local_dir import snapshot_local_dir
@@ -46,6 +47,7 @@ def do_reload(
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
+    host_tags: HostTags,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Mapping[str, str]]], ServiceName
     ],
@@ -73,6 +75,7 @@ def do_reload(
         config_cache,
         core_objects_config,
         hosts_config,
+        host_tags,
         final_service_name_config,
         passive_service_name_config,
         enforced_services_table,
@@ -96,6 +99,7 @@ def do_restart(
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     host_config: Hosts,
+    host_tags: HostTags,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Mapping[str, str]]], ServiceName
     ],
@@ -129,6 +133,7 @@ def do_restart(
                 config_cache=config_cache,
                 core_objects_config=core_objects_config,
                 hosts_config=host_config,
+                host_tags=host_tags,
                 final_service_name_config=final_service_name_config,
                 passive_service_name_config=passive_service_name_config,
                 enforced_services_table=enforced_services_table,
@@ -156,6 +161,7 @@ def do_create_config(
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
+    host_tags: HostTags,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
@@ -201,6 +207,7 @@ def do_create_config(
                 config_cache,
                 core_objects_config,
                 hosts_config,
+                host_tags,
                 final_service_name_config,
                 passive_service_name_config,
                 enforced_services_table,
@@ -272,6 +279,7 @@ def _create_active_config(
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
+    host_tags: HostTags,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
@@ -313,6 +321,7 @@ def _create_active_config(
             config_cache,
             core_objects_config,
             hosts_config,
+            host_tags,
             final_service_name_config,
             passive_service_name_config,
             enforced_services_table,

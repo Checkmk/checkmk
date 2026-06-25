@@ -119,6 +119,7 @@ from cmk.utils.metrics import MetricTuple
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import ServiceName
+from cmk.utils.tags import HostTags
 
 __all__ = [
     "CheckerPluginMapper",
@@ -362,6 +363,7 @@ class CMKFetcher(FetcherFunction):
     def __init__(
         self,
         config_cache: ConfigCache,
+        host_tags: HostTags,
         get_relay_id: Callable[[HostName], str | None],
         make_trigger: Callable[[str | None], FetcherTrigger],
         factory: FetcherFactory,
@@ -386,6 +388,7 @@ class CMKFetcher(FetcherFunction):
         max_cachefile_age: MaxAge | None = None,
     ) -> None:
         self.config_cache: Final = config_cache
+        self.host_tags: Final = host_tags
         self.get_relay_id: Final = get_relay_id
         self.make_trigger: Final = make_trigger
         self.clusters: Final = clusters
@@ -486,7 +489,7 @@ class CMKFetcher(FetcherFunction):
                     tls_config=tls_config,
                     computed_datasources=self.config_cache.computed_datasources(current_host_name),
                     datasource_programs=self.config_cache.datasource_programs(current_host_name),
-                    tag_list=self.config_cache.host_tags.tag_list(current_host_name),
+                    tag_list=self.host_tags.tag_list(current_host_name),
                     management_ip=self.ip_address_of_mgmt(
                         current_host_name, self.default_address_family(current_host_name)
                     ),

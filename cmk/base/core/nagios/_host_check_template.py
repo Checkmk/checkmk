@@ -125,12 +125,13 @@ def main() -> int:
             plugins,
             loading_result.config_cache,
             config.make_hosts_config(loading_result.loaded_config),
+            loading_result.host_tags,
             # NOTE: At the time of writing we do respect the "monitoring_core" setting even in
             # the raw edition (which will fail if it is set to "cmc").
             # But here we are run by the Nagios core, so we can safely hardcode it.
             "nagios",
             config.ServiceDependsOn(
-                tag_list=loading_result.config_cache.host_tags.tag_list,
+                tag_list=loading_result.host_tags.tag_list,
                 service_dependencies=loading_result.loaded_config.service_dependencies,
             ),
             {},

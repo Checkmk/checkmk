@@ -114,11 +114,13 @@ class TestAutomationDiagHost:
             config.LoadingResult(
                 loaded_config=loaded_config,
                 hosts_config=hosts_config,
+                host_tags=config.make_host_tags(loaded_config, hosts_config),
                 config_cache=ConfigCache(
                     loaded_config,
                     app.get_builtin_host_labels,
                     app.edition,
                     hosts_config,
+                    config.make_host_tags(loaded_config, hosts_config),
                     autochecks_dir=cmk.utils.paths.autochecks_dir,
                     discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
                 ),
@@ -257,6 +259,7 @@ def test_automation_active_check(
         app.get_builtin_host_labels,
         app.edition,
         config.make_hosts_config(EMPTY_CONFIG),
+        config.make_host_tags(EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -271,6 +274,9 @@ def test_automation_active_check(
             config.LoadingResult(
                 loaded_config=EMPTY_CONFIG,
                 hosts_config=config.make_hosts_config(EMPTY_CONFIG),
+                host_tags=config.make_host_tags(
+                    EMPTY_CONFIG, config.make_hosts_config(EMPTY_CONFIG)
+                ),
                 config_cache=config_cache,
             ),
         )
@@ -335,6 +341,7 @@ def test_automation_active_check_invalid_args(
         app.get_builtin_host_labels,
         app.edition,
         config.make_hosts_config(loaded_config),
+        config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
@@ -350,6 +357,7 @@ def test_automation_active_check_invalid_args(
         config.LoadingResult(
             loaded_config=loaded_config,
             hosts_config=config.make_hosts_config(loaded_config),
+            host_tags=config.make_host_tags(loaded_config, config.make_hosts_config(loaded_config)),
             config_cache=config_cache,
         ),
     )

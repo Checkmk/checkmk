@@ -47,7 +47,7 @@ from cmk.checkengine.specs.parameters import IsTimeperiodActiveCallback, Timespe
 from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import ExecutableFinder
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
-from cmk.utils.tags import ComputedDataSources
+from cmk.utils.tags import ComputedDataSources, HostTags
 
 
 def dump_source(source: Source) -> str:
@@ -126,6 +126,7 @@ def print_(txt: str) -> None:
 def dump_host(
     loaded_config: BaseConfig,
     hosts_config: Hosts,
+    host_tags: HostTags,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     service_name_config: PassiveServiceNameConfig,
@@ -190,9 +191,7 @@ def dump_host(
     )
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
-    tags = [
-        (tag_template % ":".join(t)) for t in sorted(config_cache.host_tags.tags(hostname).items())
-    ]
+    tags = [(tag_template % ":".join(t)) for t in sorted(host_tags.tags(hostname).items())]
     print_(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
 
     labels = [
@@ -285,7 +284,7 @@ def dump_host(
                 tls_config=tls_config,
                 computed_datasources=config_cache.computed_datasources(hostname),
                 datasource_programs=config_cache.datasource_programs(hostname),
-                tag_list=config_cache.host_tags.tag_list(hostname),
+                tag_list=host_tags.tag_list(hostname),
                 management_ip=ip_address_of_mgmt(hostname, primary_family),
                 management_protocol=config_cache.management_protocol(hostname),
                 special_agent_command_lines=config_cache.special_agent_command_lines(

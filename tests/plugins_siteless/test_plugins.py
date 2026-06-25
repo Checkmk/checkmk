@@ -111,6 +111,7 @@ def test_checks_executor(
         (get_builtin_host_labels := make_app(edition(paths.omd_root)).get_builtin_host_labels),
         edition(paths.omd_root),
         hosts_config,
+        config.make_host_tags(EMPTY_CONFIG, hosts_config),
         autochecks_dir=paths.autochecks_dir,
         discovered_host_labels_dir=paths.discovered_host_labels_dir,
     ).initialize(get_builtin_host_labels)

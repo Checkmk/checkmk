@@ -175,6 +175,7 @@ def _inventory_as_check(
 
     fetcher = CMKFetcher(
         config_cache,
+        loading_result.host_tags,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
         make_trigger=lambda relay_id: app.make_fetcher_trigger(
             relay_id, latest_config_path / RELATIVE_PATH_TRUSTED_CAS

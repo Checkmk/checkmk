@@ -35,7 +35,7 @@ from cmk.base.automation_helper._cache import Cache, CacheError
 from cmk.base.automation_helper._config import ReloaderConfig
 from cmk.base.automations.automations import AutomationError
 from cmk.base.base_app import CheckmkBaseApp
-from cmk.base.config import ConfigCache, LoadingResult, make_hosts_config
+from cmk.base.config import ConfigCache, LoadingResult, make_host_tags, make_hosts_config
 from cmk.ccc.hostaddress import Hosts
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, Version
@@ -263,11 +263,13 @@ def test_health_check(cache: Cache) -> None:
         lambda plugins, get_builtin_host_labels: LoadingResult(
             loaded_config=loaded_config,
             hosts_config=make_hosts_config(loaded_config),
+            host_tags=make_host_tags(loaded_config, make_hosts_config(loaded_config)),
             config_cache=ConfigCache(
                 loaded_config,
                 get_builtin_host_labels,
                 Edition.COMMUNITY,
                 make_hosts_config(loaded_config),
+                make_host_tags(loaded_config, make_hosts_config(loaded_config)),
                 autochecks_dir=cmk.utils.paths.autochecks_dir,
                 discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             ),
@@ -472,11 +474,13 @@ def test_automation_cache_error_on_stale_config() -> None:
         lambda plugins, get_builtin_host_labels: LoadingResult(
             loaded_config=EMPTY_CONFIG,
             hosts_config=make_hosts_config(EMPTY_CONFIG),
+            host_tags=make_host_tags(EMPTY_CONFIG, make_hosts_config(EMPTY_CONFIG)),
             config_cache=ConfigCache(
                 EMPTY_CONFIG,
                 get_builtin_host_labels,
                 Edition.COMMUNITY,
                 make_hosts_config(EMPTY_CONFIG),
+                make_host_tags(EMPTY_CONFIG, make_hosts_config(EMPTY_CONFIG)),
                 autochecks_dir=cmk.utils.paths.autochecks_dir,
                 discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             ),

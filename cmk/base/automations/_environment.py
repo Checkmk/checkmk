@@ -52,6 +52,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     BundledHostRulesetMatcher,
     RulesetMatcher,
 )
+from cmk.utils.tags import HostTags
 
 
 class ConfigSource(enum.Enum):
@@ -134,6 +135,10 @@ class AutomationEnvironment:
     @property
     def hosts_config(self) -> Hosts:
         return self.loading_result.hosts_config
+
+    @property
+    def host_tags(self) -> HostTags:
+        return self.loading_result.host_tags
 
     @property
     def latest_config_path(self) -> Path:

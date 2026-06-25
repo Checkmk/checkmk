@@ -23,6 +23,7 @@ from cmk.password_store.v1_unstable import Secret
 from cmk.utils import ip_lookup, paths
 from cmk.utils.labels import Labels
 from cmk.utils.servicename import ServiceName
+from cmk.utils.tags import HostTags
 
 tracer = trace.get_tracer()
 
@@ -45,6 +46,7 @@ class MonitoringCore(abc.ABC):
         config_cache: ConfigCache,
         core_objects_config: CoreObjectsConfig,
         hosts_config: Hosts,
+        host_tags: HostTags,
         final_service_name_config: Callable[
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
         ],
@@ -70,6 +72,7 @@ class MonitoringCore(abc.ABC):
             config_cache,
             core_objects_config,
             hosts_config,
+            host_tags,
             final_service_name_config,
             passive_service_name_config,
             enforced_services_table,
@@ -91,6 +94,7 @@ class MonitoringCore(abc.ABC):
         config_cache: ConfigCache,
         core_objects_config: CoreObjectsConfig,
         hosts_config: Hosts,
+        host_tags: HostTags,
         final_service_name_config: Callable[
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
         ],

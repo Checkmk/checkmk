@@ -26,7 +26,7 @@ from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_matches,
 )
 from cmk.base.community_app import make_app
-from cmk.base.config import LoadingResult
+from cmk.base.config import LoadingResult, make_host_tags
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -136,9 +136,11 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         ts.add_host(HostName("foobar123"), host_path="/wato/regex_check/hosts.mk")
         ts.add_host(HostName("foobar456"), host_path="/wato/regex_check/hosts.mk")
         applied = ts.apply(monkeypatch)
+        hosts_config = Hosts(hosts=(), clusters={}, shadow_hosts=(), host_paths={})
         loading_result = LoadingResult(
             loaded_config=applied.loaded_config,
-            hosts_config=Hosts(hosts=(), clusters={}, shadow_hosts=(), host_paths={}),
+            hosts_config=hosts_config,
+            host_tags=make_host_tags(applied.loaded_config, hosts_config),
             config_cache=applied.config_cache,
         )
 

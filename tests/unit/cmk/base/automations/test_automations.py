@@ -44,6 +44,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         LoadingResult(
             loaded_config=EMPTY_CONFIG,
             hosts_config=loading_result.hosts_config,
+            host_tags=loading_result.host_tags,
             config_cache=loading_result.config_cache,
         ),
     ) == AnalyseHostResult(
@@ -90,6 +91,7 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
         LoadingResult(
             loaded_config=EMPTY_CONFIG,
             hosts_config=loading_result.hosts_config,
+            host_tags=loading_result.host_tags,
             config_cache=loading_result.config_cache,
         ),
     ) == GetServicesLabelsResult(

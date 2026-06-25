@@ -251,6 +251,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
 )
 from cmk.utils.security_event import InputValidationFailureEvent, log_security_event
 from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.tags import HostTags
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
@@ -358,6 +359,7 @@ def _automation_service_discovery(
     )
     fetcher = CMKFetcher(
         config_cache,
+        env.host_tags,
         get_relay_id=lambda hn: config.get_relay_id(label_manager.labels_of_host(hn)),
         make_trigger=lambda relay_id: env.make_fetcher_trigger(
             relay_id, config_source=ConfigSource.PENDING
@@ -594,6 +596,7 @@ def _automation_discovery_preview(
 
     fetcher = CMKFetcher(
         config_cache,
+        env.host_tags,
         get_relay_id=lambda hn: relay_id,
         make_trigger=lambda relay_id: env.make_fetcher_trigger(
             relay_id, config_source=ConfigSource.PENDING
@@ -1106,6 +1109,7 @@ def _execute_autodiscovery(
     )
     fetcher = CMKFetcher(
         env.config_cache,
+        env.host_tags,
         get_relay_id=lambda hn: config.get_relay_id(env.label_manager.labels_of_host(hn)),
         make_trigger=lambda relay_id: env.make_fetcher_trigger(
             relay_id, config_source=ConfigSource.ACTIVATED
@@ -1304,6 +1308,7 @@ def _execute_autodiscovery(
                 env.config_cache,
                 core_objects_config,
                 hosts_config,
+                env.host_tags,
                 env.final_service_name_config,
                 env.passive_service_name_config,
                 env.enforced_services_table,
@@ -1316,7 +1321,7 @@ def _execute_autodiscovery(
                 locking_mode=env.loaded_config.restart_locking,
                 hosts_to_update=None,
                 service_depends_on=config.ServiceDependsOn(
-                    tag_list=env.config_cache.host_tags.tag_list,
+                    tag_list=env.host_tags.tag_list,
                     service_dependencies=env.loaded_config.service_dependencies,
                 ),
                 duplicates=sorted(
@@ -1332,6 +1337,7 @@ def _execute_autodiscovery(
                 env.config_cache,
                 core_objects_config,
                 hosts_config,
+                env.host_tags,
                 env.final_service_name_config,
                 env.passive_service_name_config,
                 env.enforced_services_table,
@@ -1342,7 +1348,7 @@ def _execute_autodiscovery(
                 core,
                 env.plugins,
                 service_depends_on=config.ServiceDependsOn(
-                    tag_list=env.config_cache.host_tags.tag_list,
+                    tag_list=env.host_tags.tag_list,
                     service_dependencies=env.loaded_config.service_dependencies,
                 ),
                 locking_mode=env.loaded_config.restart_locking,
@@ -1558,7 +1564,7 @@ class AutomationRenameHosts:
                             env.ip_lookup_config
                         ),
                         service_depends_on=config.ServiceDependsOn(
-                            tag_list=env.config_cache.host_tags.tag_list,
+                            tag_list=env.host_tags.tag_list,
                             service_dependencies=env.loaded_config.service_dependencies,
                         ),
                         bake_on_restart=app.make_bake_on_restart(
@@ -2489,7 +2495,7 @@ class AutomationRestart:
             ip_address_of=env.ip_address_of(on_failure=IPLookupFailureMode.COLLECT),
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(env.ip_lookup_config),
             service_depends_on=config.ServiceDependsOn(
-                tag_list=env.config_cache.host_tags.tag_list,
+                tag_list=env.host_tags.tag_list,
                 service_dependencies=env.loaded_config.service_dependencies,
             ),
             bake_on_restart=app.make_bake_on_restart(env.loading_result, hosts_config.hosts),
@@ -2590,6 +2596,7 @@ def _execute_silently(
                 config_cache,
                 core_objects_config,
                 hosts_config,
+                env.host_tags,
                 env.final_service_name_config,
                 env.passive_service_name_config,
                 env.enforced_services_table,
@@ -3236,6 +3243,7 @@ class AutomationDiagHost:
                         env.hosts_config,
                         env.loaded_config,
                         env.config_cache,
+                        env.host_tags,
                         env.label_manager,
                         env.passive_service_name_config,
                         env.service_configurer,
@@ -3318,6 +3326,7 @@ class AutomationDiagHost:
         hosts_config: Hosts,
         loaded_config: BaseConfig,
         config_cache: config.ConfigCache,
+        host_tags: HostTags,
         label_manager: LabelManager,
         service_name_config: PassiveServiceNameConfig,
         service_configurer: ServiceConfigurer,
@@ -3410,7 +3419,7 @@ class AutomationDiagHost:
             tls_config=tls_config,
             computed_datasources=config_cache.computed_datasources(host_name),
             datasource_programs=config_cache.datasource_programs(host_name),
-            tag_list=config_cache.host_tags.tag_list(host_name),
+            tag_list=host_tags.tag_list(host_name),
             management_ip=make_lookup_mgmt_board_ip_address(ip_lookup_config)(
                 host_name, ip_lookup_config.default_address_family(host_name)
             ),
@@ -4000,7 +4009,7 @@ def _automation_get_agent_output(
                 tls_config=tls_config,
                 computed_datasources=env.config_cache.computed_datasources(hostname),
                 datasource_programs=env.config_cache.datasource_programs(hostname),
-                tag_list=env.config_cache.host_tags.tag_list(hostname),
+                tag_list=env.host_tags.tag_list(hostname),
                 management_ip=make_lookup_mgmt_board_ip_address(env.ip_lookup_config)(
                     hostname, ip_family
                 ),

@@ -17,12 +17,14 @@ INFO = [["518"]]
 
 
 def test_discovery_function() -> None:
-    assert (parsed := parse_apc_inrow_fanspeed(INFO)) is not None
+    parsed = parse_apc_inrow_fanspeed(INFO)
+    assert parsed is not None
     assert list(discover_apc_inrow_fanspeed(parsed)) == [Service()]
 
 
 def test_check_function() -> None:
-    assert (parsed := parse_apc_inrow_fanspeed(INFO)) is not None
+    parsed = parse_apc_inrow_fanspeed(INFO)
+    assert parsed is not None
     assert list(check_apc_inrow_fanspeed(parsed)) == [
         Result(state=State.OK, summary="Current: 51.80%"),
         Metric("fan_perc", 51.8),

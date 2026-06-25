@@ -12,7 +12,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.ups_eaton_enviroment import (
+from cmk.plugins.ups.agent_based.ups_eaton_enviroment import (
     check_ups_eaton_enviroment,
     discover_ups_eaton_enviroment,
     parse_ups_eaton_enviroment,

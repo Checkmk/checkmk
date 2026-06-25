@@ -109,8 +109,10 @@ def test_jolokia_yield_configured_instances() -> None:
         }
     )
 
-    assert next(yci) == {"server": "s1", "port": 1234}
-    assert next(yci) == {"server": "s2", "port": 1234}
+    assert list(yci) == [
+        {"server": "s1", "port": 1234},
+        {"server": "s2", "port": 1234},
+    ]
 
 
 class _MockHttpResponse:

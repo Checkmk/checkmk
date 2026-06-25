@@ -105,7 +105,7 @@ ignore = [
 "non-free/packages/cmk-plugins-nonfree/cmk/plugins/*" = ["ARG001", "ARG002"]
 # Core bakelet functions share one fixed signature (agconf, conf, aghash); not
 # every bakelet uses all three.
-"non-free/packages/cmk-bakery/cmk/bakery/base/core_bakelets/*" = ["ARG001"]
+"non-free/packages/cmk-bakery/cmk/plugins/checkmk/bakery/*" = ["ARG001"]
 "non-free/packages/cmk-robotmk/cmk/robotmk/bakery/core_bakelets/*" = ["ARG001"]
 "tests/*" = ["ARG001", "ARG002", "ARG003", "ARG004", "ARG005", "SLF001", "T20"]
 "buildscripts/*" = ["T20"]

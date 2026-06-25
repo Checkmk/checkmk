@@ -127,11 +127,15 @@ allows = [
 allows = [
   # FIXME
   "cmk.agent_based.v1",
+  # Discovery API for the built-in ("core") bakelets.
+  "cmk.bakery.internal",
   "cmk.base",
   "cmk.bi",
   "cmk.ccc",
   "cmk.checkengine",
   "cmk.checkengine.fetchers",
+  # The agent_controller_connections core bakelet reads the site certificate.
+  "cmk.crypto",
   "cmk.gui",
   "cmk.server_side_calls_backend",
   "cmk.utils",

@@ -13,6 +13,7 @@ void main() {
 
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
     def branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -29,6 +30,23 @@ void main() {
             TARGET: should_sign ? 'relay_msi_with_sign' : 'relay_msi_no_sign',
             VERSION: cmk_version,
         );
+
+        // Unit tests: validate the MSI we just built (structure + signature).
+        // test-msi.ps1 gates via exit code AND emits a JUnit XML.
+        try {
+            windows.build(
+                TARGET: 'relay_msi_test',
+                REQUIRE_SIGNATURE: should_sign,
+            );
+        } finally {
+            // Publish the JUnit XML
+            archiveArtifacts(
+                allowEmptyArchive: true,
+                artifacts: "artefacts/relay_msi_test_results.xml",
+                fingerprint: true,
+            );
+            test_jenkins_helper.analyse_issues("JUNIT", "artefacts/relay_msi_test_results.xml");
+        }
     }
 }
 

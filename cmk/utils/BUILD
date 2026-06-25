@@ -192,6 +192,7 @@ py_library(
         "//omd/packages:__subpackages__",
         "//packages/cmk-backup:__subpackages__",
         "//packages/cmk-check-engine:__subpackages__",
+        "//packages/cmk-maps:__subpackages__",
         "//packages/cmk-notification-plugins:__subpackages__",
         "//tests:__subpackages__",
     ],

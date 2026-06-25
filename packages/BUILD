@@ -17,6 +17,7 @@ filegroup(
         "//packages/cmk-licensing:requirements.in",
         "//packages/cmk-livestatus-client:requirements.in",
         "//packages/cmk-logwatch:requirements.in",
+        "//packages/cmk-maps:requirements.in",
         "//packages/cmk-messaging:requirements.in",
         "//packages/cmk-mkp-tool:requirements.in",
         "//packages/cmk-notification-plugins:requirements.in",

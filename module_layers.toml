@@ -756,6 +756,28 @@ allows = [
   "cmk.utils",
 ]
 
+[components."cmk.maps"]
+allows = []
+
+[components."cmk.maps.backend"]
+allows = [
+  "@ccc",
+  "@livestatus_client",
+  "@trace",
+  "cmk.bi",
+  "cmk.crash",
+  "cmk.maps.shared",
+  "cmk.utils",
+]
+
+# Pure shared domain layer (state/severity maps, row extractors, geo resolver,
+# filter allow-list, perf parser, autocomplete builder, ticket protocol,
+# config-var names). A top-level sibling of backend/gui/rest_api so none of them
+# reach into another's package; it depends on nothing but stdlib (mirrors
+# cmk.dcd.protocols / cmk.liveproxyd.shared).
+[components."cmk.maps.shared"]
+allows = ["@ccc", "cmk.utils"]
+
 [components."cmk.mcp"]
 allows = ["@ccc", "@trace", "@crash"]
 

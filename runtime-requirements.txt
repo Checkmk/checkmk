@@ -921,6 +921,7 @@ fastapi==0.141.1 \
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-maps/requirements.in
 feedparser==6.0.12 \
     --hash=sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228 \
     --hash=sha256:6bbff10f5a52662c00a2e3f86a38928c37c48f77b3c511aedcd51de933549324
@@ -1333,6 +1334,7 @@ gunicorn==26.2.0 \
     # via
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-maps/requirements.in
     #   uvicorn-worker
 h11==0.16.0 \
     --hash=sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1 \
@@ -1367,6 +1369,7 @@ httpx==0.28.1 \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
     #   -c requirements.txt
+    #   -r packages/cmk-maps/requirements.in
     #   meraki
 httpx2==2.12.0 \
     --hash=sha256:7631fe9887a8a2275f4a2540e053aa670fcc50742864a9ae7c66e609fdcf12cf \
@@ -2575,6 +2578,7 @@ opentelemetry-instrumentation-fastapi==0.65b0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r packages/cmk-maps/requirements.in
 opentelemetry-instrumentation-httpx==0.65b0 \
     --hash=sha256:400f1b78afa4ee2332b5debe58e1ed1b317913d58812c952576be76660aeadb1 \
     --hash=sha256:4627aa9c6bb99bf4462c8b565b0ef6aeb9ffad95c6c92868be1ef7895de112ee
@@ -3163,6 +3167,7 @@ pydantic==2.13.5 \
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-events/requirements.in
     #   -r packages/cmk-flags/requirements.in
+    #   -r packages/cmk-maps/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
@@ -4198,6 +4203,7 @@ starlette==1.6.0 \
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-maps/requirements.in
     #   fastapi
     #   mcp
     #   sse-starlette
@@ -4320,6 +4326,7 @@ uvicorn==0.53.0 \
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-maps/requirements.in
     #   mcp
     #   uvicorn-worker
 uvicorn-worker==0.4.0 \
@@ -4328,6 +4335,7 @@ uvicorn-worker==0.4.0 \
     # via
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-maps/requirements.in
 vcrpy==8.3.0 \
     --hash=sha256:46d64e77e8d95e5c76c7d9a94ff05d8b38b2ae4e1d4869eb0235024b6fcb5212 \
     --hash=sha256:bd66e6143746778157f00e2a922527a8d96b2fdc350be8988a45a29c843815b9

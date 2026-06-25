@@ -67,7 +67,9 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  type ExternalReferenceItem,
   UclDetailPageComponent,
+  UclDetailPageExternalReference,
   UclDetailPageHeader,
   UclDetailPageLayout,
   UclPropertiesPanel
@@ -215,6 +217,24 @@ function htmlSnippet(icon: IconEntry): string {
   }
   return `<CmkIcon name="${icon.name}" />`
 }
+
+const externalReferences: ExternalReferenceItem[] = [
+  {
+    label: 'Icons8',
+    href: 'https://icons8.com',
+    description: 'UX designer can choose from there'
+  },
+  {
+    label: 'Icons8 Claude skill',
+    command: '/icons8-multitone-icon',
+    description: 'Devs can use the skill to migrate from Icons8'
+  },
+  {
+    label: 'iconSearchLabels.ts',
+    file: 'packages/cmk-frontend-vue/ui-component-library/foundations/Icons/iconSearchLabels.ts',
+    description: 'Search keywords/synonyms for the icon grid — add entries here'
+  }
+]
 </script>
 
 <template>
@@ -313,6 +333,8 @@ function htmlSnippet(icon: IconEntry): string {
         <UclPropertiesPanel v-model="propState" :config="panelConfig" title="Filters" />
       </template>
     </UclDetailPageComponent>
+
+    <UclDetailPageExternalReference :data="externalReferences" />
   </UclDetailPageLayout>
 </template>
 

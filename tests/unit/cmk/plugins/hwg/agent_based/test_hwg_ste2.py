@@ -32,7 +32,8 @@ def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_detect_hwg_ste2() -> None:
-    assert (detect_spec := snmp_section_hwg_ste2.detect)
+    detect_spec = snmp_section_hwg_ste2.detect
+    assert detect_spec
     assert evaluate_snmp_detection(
         detect_spec=detect_spec,
         oid_value_getter={".1.3.6.1.2.1.1.1.0": "contains STE2"}.get,

@@ -18,7 +18,8 @@ from cmk.plugins.hwg.agent_based.lib import parse_hwg
 
 
 def test_detect_hwg_humidity() -> None:
-    assert (detect_spec := snmp_section_hwg_humidity.detect)
+    detect_spec = snmp_section_hwg_humidity.detect
+    assert detect_spec
     assert evaluate_snmp_detection(
         detect_spec=detect_spec,
         oid_value_getter={".1.3.6.1.2.1.1.1.0": "contains lower HWG"}.get,

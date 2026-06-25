@@ -6,6 +6,7 @@ $DBUSER = @("c##checkmk", "********", "", "localhost", "1521")
 $DBUSER_XE1 = @("/", "", "", "", "")
 $DBUSER_XE2 = @("xe2user", "xe2pwd", "SYSDBA", "localhost1", "1521")
 $ASMUSER = @("asm-user", "asm-password", "SYSASM", "ignored", "ignored")
+$OLRLOC = "/etc/oracle/olr.loc"
 
 # Sections to run in foreground and wait for the result
 $SYNC_SECTIONS = @("instance", "performance", "processes", "sessions", "longactivesessions", "logswitches", "undostat", "recovery_area", "recovery_status", "dataguard_stats", "locks")

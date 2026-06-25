@@ -272,12 +272,14 @@ fn test_migrate_config_yaml_structure() {
         Some("asm-user:asm-password:SYSASM:ignored:ignored:")
     );
     assert_eq!(env_value_of("CACHE_MAXAGE"), Some("601"));
+    assert_eq!(env_value_of("OLRLOC"), Some("/etc/oracle/olr.loc"));
     // assert_eq!(env_value_of("ONLY_SIDS"), Some("..."));
     // assert_eq!(env_value_of("ORACLE_HOME"), Some("..."));
     // assert_eq!(env_value_of("TNS_ADMIN"), Some("..."));
 
     // Unified config section — values must come from DBUSER parsing
     assert!(stdout.contains("# --- Unified Config ---\n"));
+    assert!(stdout.contains("      oracle_local_registry: /etc/oracle/olr.loc\n"));
     // From DBUSER='c##checkmk:********::localhost:1521:'
     // assert!(stdout.contains("      hostname: localhost\n"));
     // assert!(stdout.contains("      port: 1521\n"));
@@ -354,6 +356,7 @@ fn test_execute_config_reference() {
         Some("asm-user:asm-password:SYSASM:ignored:ignored:")
     );
     assert_eq!(value_of("CACHE_MAXAGE"), Some("601"));
+    assert_eq!(value_of("OLRLOC"), Some("/etc/oracle/olr.loc"));
     assert!(
         value_of("SYNC_SECTIONS").unwrap().contains("instance"),
         "SYNC_SECTIONS must contain instance"
@@ -386,6 +389,11 @@ fn test_migrate_reference_config_connection_and_auth() {
     assert!(
         conn.tns_admin().is_none(),
         "tns_admin must be None for multiple config"
+    );
+
+    assert_eq!(
+        conn.oracle_local_registry(),
+        Some(&std::path::PathBuf::from("/etc/oracle/olr.loc"))
     );
 
     // connection must not have sid

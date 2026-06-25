@@ -157,6 +157,9 @@ pub fn convert(
     if let Some(tns_admin) = variables.get("TNS_ADMIN") {
         out.push_str(&format!("      tns_admin: {tns_admin}\n"));
     }
+    if let Some(olrloc) = variables.get("OLRLOC") {
+        out.push_str(&format!("      oracle_local_registry: {olrloc}\n"));
+    }
 
     // authentication
     out.push_str(&format!(
@@ -591,6 +594,22 @@ mod tests {
         let config = super::super::OracleConfig::load_str(&result);
         assert!(config.is_ok(), "generated YAML must be loadable: {result}");
         assert!(config.unwrap().ora_sql().is_some());
+    }
+
+    #[test]
+    fn test_convert_olrloc_sets_oracle_local_registry() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("OLRLOC".into(), "/etc/oracle/olr.loc".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        let ms = config.ora_sql().expect("ora_sql must be present");
+        assert_eq!(
+            ms.conn().oracle_local_registry(),
+            Some(&std::path::PathBuf::from("/etc/oracle/olr.loc"))
+        );
     }
 
     #[test]

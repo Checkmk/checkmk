@@ -323,6 +323,7 @@ def main() {
                 archiveArtifacts(
                     artifacts: "${bazel_log_prefix}*",
                     fingerprint: true,
+                    allowEmptyArchive: true,
                 );
             }
         }

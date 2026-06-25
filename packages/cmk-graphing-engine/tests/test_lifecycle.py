@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""End-to-end tests of the discover -> concretize -> update lifecycle, exercising the entry points
+"""End-to-end tests of the discover -> update lifecycle, exercising the entry points
 together.
 
-Discovery (build_service_graphs) builds the structural DiscoveredGraph; concretize resolves its
-display into a ConcreteGraph; update_graph_data fetches the performance data and time series afresh
+Discovery (build_service_graphs) builds the display-resolved ResolvedGraph; update_graph
+fetches the performance data and time series afresh
 and evaluates each into an EvaluatedGraph. Discovery stores no data, so a refresh always re-fetches.
 Each test fakes a different shape of performance / time series data to cover the pipeline from
 several angles.
@@ -21,19 +21,18 @@ from cmk.graphing.v1 import Title
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
     build_service_graphs,
-    concretize,
     ConsolidationFunction,
-    DiscoveredGraph,
     EvaluatedGraph,
     fetch_performance_data,
     MetricName,
     PerformanceData,
     PerformanceValue,
+    ResolvedGraph,
     RRDMetric,
     ServiceRef,
     TimeRange,
     TimeSeries,
-    update_graph_data,
+    update_graph,
 )
 
 _SERVICE = ServiceRef(host_name="h", service_name="svc")
@@ -105,7 +104,7 @@ def _discover(
     registered_graphs: Sequence[graphs_v1.Graph],
     *,
     translations: Sequence[translations_v1.Translation] = (),
-) -> Sequence[DiscoveredGraph]:
+) -> Sequence[ResolvedGraph]:
     # Discovery the way the GUI does it: fetch performance data only, then build the structural
     # graphs from the metric names that are present.
     performance_data = fetch_performance_data(
@@ -119,18 +118,19 @@ def _discover(
         metrics=_METRICS,
         localizer=_id,
         available=performance_data.get(_SERVICE, {}),
+        kind="test",
     )
 
 
 def _refresh(
     rrd: _FakeRRD,
-    discovered: Sequence[DiscoveredGraph],
+    discovered: Sequence[ResolvedGraph],
     *,
     translations: Sequence[translations_v1.Translation] = (),
 ) -> Sequence[EvaluatedGraph]:
-    # concretize each discovered graph, then evaluate them all through the sole update entry point.
-    return update_graph_data(
-        graphs=[concretize(graph, _METRICS, _id) for graph in discovered],
+    # Evaluate every discovered graph through the sole update entry point (display already resolved).
+    return update_graph(
+        graphs=list(discovered),
         translations=translations,
         consolidation_function=ConsolidationFunction.AVERAGE,
         time_range=_TIME_RANGE,
@@ -139,7 +139,7 @@ def _refresh(
 
 
 def _evaluate(
-    discovered: DiscoveredGraph,
+    discovered: ResolvedGraph,
     rrd: _FakeRRD,
     *,
     translations: Sequence[translations_v1.Translation] = (),

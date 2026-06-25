@@ -13,18 +13,19 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from ._from_api import (
     drawn_metric_names_of_graph,
     parse_graph_from_api,
+    resolve_curve,
 )
 from ._objects import (
-    DiscoveredGraph,
-    DiscoveredLine,
-    DiscoveredRule,
-    DiscoveredStack,
+    Line,
     MetricName,
+    ResolvedGraph,
     RRDMetric,
     RRDMetricData,
+    Rule,
     ScalarKind,
     ScalarOf,
     ServiceRef,
+    Stack,
 )
 
 _PREDICT_PREFIX = "predict_"
@@ -75,20 +76,22 @@ def _walk(
 
 
 def _add_predictive_lines(
-    graph: DiscoveredGraph,
+    graph: ResolvedGraph,
     service: ServiceRef,
     available: Container[MetricName],
-) -> tuple[DiscoveredGraph, set[MetricName]]:
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
+) -> tuple[ResolvedGraph, set[MetricName]]:
     inverse_by_metric: dict[MetricName, bool] = {}
     for group in graph.stacks:
         for member in group.members:
-            for metric in member.rrd_metrics():
+            for metric in member.quantity.rrd_metrics():
                 inverse_by_metric.setdefault(metric.metric_name, group.inverse)
     for line in graph.lines:
-        for metric in line.quantity.rrd_metrics():
+        for metric in line.curve.quantity.rrd_metrics():
             inverse_by_metric.setdefault(metric.metric_name, line.inverse)
 
-    added: list[DiscoveredLine] = []
+    added: list[Line] = []
     names: set[MetricName] = set()
     for base, inverse in inverse_by_metric.items():
         for predictive in (
@@ -97,11 +100,15 @@ def _add_predictive_lines(
         ):
             if predictive in available and predictive not in names:
                 added.append(
-                    DiscoveredLine(
-                        quantity=RRDMetric(
-                            host_name=service.host_name,
-                            service_name=service.service_name,
-                            metric_name=predictive,
+                    Line(
+                        curve=resolve_curve(
+                            RRDMetric(
+                                host_name=service.host_name,
+                                service_name=service.service_name,
+                                metric_name=predictive,
+                            ),
+                            metrics,
+                            localizer,
                         ),
                         inverse=inverse,
                     )
@@ -110,9 +117,10 @@ def _add_predictive_lines(
     if not added:
         return graph, names
     return (
-        DiscoveredGraph(
+        ResolvedGraph(
             name=graph.name,
             title=graph.title,
+            kind=graph.kind,
             vertical_range=graph.vertical_range,
             stacks=graph.stacks,
             lines=[*graph.lines, *added],
@@ -136,8 +144,9 @@ def match_graph_for_services(
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
     available: Mapping[ServiceRef, Container[MetricName]],
-) -> Sequence[DiscoveredGraph]:
-    discovered: list[DiscoveredGraph] = []
+    kind: str,
+) -> Sequence[ResolvedGraph]:
+    discovered: list[ResolvedGraph] = []
     for service in services:
         service_available = available.get(service, frozenset())
         if not _walk(graph, service_available).matched:
@@ -146,9 +155,11 @@ def match_graph_for_services(
         # graphs, so a combined graph includes them wherever predict_* exists (legacy combined
         # parity).
         with_predictive, _names = _add_predictive_lines(
-            parse_graph_from_api(graph, service, metrics, localizer),
+            parse_graph_from_api(graph, service, metrics, localizer, kind=kind),
             service,
             service_available,
+            metrics,
+            localizer,
         )
         discovered.append(with_predictive)
     return discovered
@@ -161,16 +172,20 @@ def build_service_graphs(
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
     available: Mapping[MetricName, RRDMetricData],
-) -> Sequence[DiscoveredGraph]:
+    kind: str,
+) -> Sequence[ResolvedGraph]:
     """Build a service's matching template graphs plus a fallback single-metric graph per unclaimed
-    metric. The fallback metric gets the four warn / crit (and lower) threshold rules as ScalarOf
-    quantities; ``concretize`` resolves their labels / colours from the kind, and evaluation drops a
-    rule whose level is unset. Matched plugin graphs already carry their own scalar rules."""
-    graphs: list[DiscoveredGraph] = []
+    metric, with each curve's display resolved inline. The fallback metric gets the four warn / crit
+    (and lower) threshold rules as ScalarOf quantities (their labels / colours resolved from the kind);
+    evaluation drops a rule whose level is unset. Matched plugin graphs already carry their own scalar
+    rules."""
+    graphs: list[ResolvedGraph] = []
     claimed: set[MetricName] = set()
 
-    def _collect(base: DiscoveredGraph) -> None:
-        graph, predictive_names = _add_predictive_lines(base, service, available)
+    def _collect(base: ResolvedGraph) -> None:
+        graph, predictive_names = _add_predictive_lines(
+            base, service, available, metrics, localizer
+        )
         claimed.update(predictive_names)
         graphs.append(graph)
 
@@ -179,7 +194,7 @@ def build_service_graphs(
         if not walk.matched:
             continue
         claimed.update(walk.metric_names)
-        _collect(parse_graph_from_api(plugin, service, metrics, localizer))
+        _collect(parse_graph_from_api(plugin, service, metrics, localizer, kind=kind))
 
     for name in available:
         if name in claimed or name.startswith(_PREDICT_PREFIX):
@@ -190,13 +205,21 @@ def build_service_graphs(
             metric_name=name,
         )
         _collect(
-            DiscoveredGraph(
+            ResolvedGraph(
                 name=name,
                 title=name,
-                stacks=[DiscoveredStack(members=[rrd_metric], inverse=False)],
+                kind=kind,
+                stacks=[
+                    Stack(members=[resolve_curve(rrd_metric, metrics, localizer)], inverse=False)
+                ],
                 rules=[
-                    DiscoveredRule(quantity=ScalarOf(metric=rrd_metric, kind=kind), inverse=False)
-                    for kind in (
+                    Rule(
+                        curve=resolve_curve(
+                            ScalarOf(metric=rrd_metric, kind=scalar_kind), metrics, localizer
+                        ),
+                        inverse=False,
+                    )
+                    for scalar_kind in (
                         ScalarKind.WARNING,
                         ScalarKind.CRITICAL,
                         ScalarKind.LOWER_WARNING,

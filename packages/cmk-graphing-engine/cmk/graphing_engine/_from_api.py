@@ -16,16 +16,11 @@ from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from ._objects import (
     AutoPrecision,
     Bound,
-    ConcreteGraph,
     Constant,
     Curve,
     CurveAttributes,
     DecimalNotation,
     Difference,
-    DiscoveredGraph,
-    DiscoveredLine,
-    DiscoveredRule,
-    DiscoveredStack,
     EngineeringScientificNotation,
     Fraction,
     IECNotation,
@@ -37,6 +32,7 @@ from ._objects import (
     Precision,
     Product,
     Quantity,
+    ResolvedGraph,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -140,10 +136,10 @@ _FALLBACK_COLOR = _COLORS[metrics_v1.Color.GRAY]
 _FALLBACK_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
 # The warn / crit colours threshold rules render in (cf. cmk.gui.color.Color.WARN / .CRIT). They live
-# here so concretize can give a scalar rule its label + colour from the ScalarKind, with no GUI input.
+# here so resolve_curve can give a scalar rule its label + colour from the ScalarKind, with no GUI input.
 _WARN_COLOR = "#ffd000"
 _CRIT_COLOR = "#ff3232"
-# The English rule label per scalar kind; concretize localizes it. A None colour means "use the
+# The English rule label per scalar kind; resolve_curve localizes it. A None colour means "use the
 # metric's own colour" (the min / max bound has no warn / crit colour of its own).
 _RULE_DISPLAY: Mapping[ScalarKind, tuple[str, str | None]] = {
     ScalarKind.WARNING: ("Warning", _WARN_COLOR),
@@ -189,9 +185,9 @@ class _ParseContext:
 
 
 def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
-    # Plain metrics and scalars carry no display — concretize resolves those from the registry / kind.
+    # Plain metrics and scalars carry no display — resolve_curve resolves those from the registry / kind.
     # Constants and operations carry their intrinsic plugin display (title / unit / colour), which the
-    # registry cannot reproduce, so it is computed here and read back by concretize.
+    # registry cannot reproduce, so it is computed here and read back by resolve_curve.
     match quantity:
         case str():
             return context.rrd_metric(quantity)
@@ -441,18 +437,20 @@ def _parse_lines(
     context: _ParseContext,
     *,
     inverse: bool,
-) -> tuple[list[DiscoveredStack], list[DiscoveredLine], list[DiscoveredRule]]:
+) -> tuple[list[Stack], list[Line], list[Rule]]:
     # Scalar quantities (thresholds/constants) become horizontal rules rather than drawn curves;
-    # everything else stacks (compound_lines) or draws as a line (simple_lines).
-    stack_members = [_parse_quantity(q, context) for q in graph.compound_lines if not _is_scalar(q)]
-    stacks = [DiscoveredStack(members=stack_members, inverse=inverse)] if stack_members else []
+    # everything else stacks (compound_lines) or draws as a line (simple_lines). Each drawn quantity is
+    # wrapped in a Curve with its display resolved right here (registry / scalar kind / intrinsic).
+    def _curve(q: _ApiQuantity) -> Curve:
+        return resolve_curve(_parse_quantity(q, context), context.metrics, context.localizer)
+
+    stack_members = [_curve(q) for q in graph.compound_lines if not _is_scalar(q)]
+    stacks = [Stack(members=stack_members, inverse=inverse)] if stack_members else []
     lines = [
-        DiscoveredLine(quantity=_parse_quantity(q, context), inverse=inverse)
-        for q in graph.simple_lines
-        if not _is_scalar(q)
+        Line(curve=_curve(q), inverse=inverse) for q in graph.simple_lines if not _is_scalar(q)
     ]
     rules = [
-        DiscoveredRule(quantity=_parse_quantity(q, context), inverse=inverse)
+        Rule(curve=_curve(q), inverse=inverse)
         for q in (*graph.compound_lines, *graph.simple_lines)
         if _is_scalar(q)
     ]
@@ -469,7 +467,11 @@ def parse_graph_from_api(
     service: ServiceRef,
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
-) -> DiscoveredGraph:
+    *,
+    kind: str,
+) -> ResolvedGraph:
+    """Build a service's graph from an API plugin, resolving each curve's display inline — discovery
+    returns the display-resolved ResolvedGraph directly (no separate structure / resolution step)."""
     context = _ParseContext(
         service=service,
         metrics=metrics,
@@ -478,9 +480,10 @@ def parse_graph_from_api(
     match graph:
         case graphs_v1.Graph() | graphs_v2_unstable.Graph():
             stacks, lines, rules = _parse_lines(graph, context, inverse=False)
-            return DiscoveredGraph(
+            return ResolvedGraph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
+                kind=kind,
                 vertical_range=_parse_range(graph, context),
                 stacks=stacks,
                 lines=lines,
@@ -493,9 +496,10 @@ def parse_graph_from_api(
             lower_stacks, lower_lines, lower_rules = _parse_lines(
                 graph.lower, context, inverse=True
             )
-            return DiscoveredGraph(
+            return ResolvedGraph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
+                kind=kind,
                 vertical_range=_bidirectional_range(graph, context),
                 stacks=[*upper_stacks, *lower_stacks],
                 lines=[*upper_lines, *lower_lines],
@@ -526,9 +530,13 @@ def _attributes_for(
                 color=quantity.color or kind_color or metric.color,
             )
         case _:
-            # Any other quantity carries its own intrinsic display: an engine operation / constant, or
-            # a consumer aggregation inserted into the discovered graph (e.g. combined graphs). Read it
-            # generically so consumer quantities resolve without the engine knowing their type.
+            # A consumer quantity, resolved generically without the engine knowing its type. Either it
+            # delegates its display to a *representative* quantity it exposes via ``display_of`` (e.g. a
+            # combined aggregation → its first operand, so the display is resolved fresh from the
+            # registry and never cached at discovery — the graph stays purely structural), or it carries
+            # its own intrinsic display (an engine operation / constant the registry cannot reproduce).
+            if (display_of := getattr(quantity, "display_of", None)) is not None:
+                return _attributes_for(display_of(), metrics, localizer)
             display = getattr(quantity, "display", None)
             return (
                 display
@@ -537,47 +545,12 @@ def _attributes_for(
             )
 
 
-def _concrete_curve(
+def resolve_curve(
     quantity: Quantity,
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
 ) -> Curve:
     return Curve(quantity=quantity, attributes=_attributes_for(quantity, metrics, localizer))
-
-
-def concretize(
-    discovered: DiscoveredGraph,
-    metrics: Mapping[str, metrics_v1.Metric],
-    localizer: Callable[[str], str],
-) -> ConcreteGraph:
-    """Resolve a DiscoveredGraph's display into a ConcreteGraph: wrap every quantity in a Curve whose
-    attributes come from the registry (plain metrics), the scalar kind (rules) or the quantity's own
-    intrinsic display (operations / constants). Pure structure in, drawable graph out."""
-    return ConcreteGraph(
-        name=discovered.name,
-        title=discovered.title,
-        vertical_range=discovered.vertical_range,
-        stacks=[
-            Stack(
-                members=[_concrete_curve(m, metrics, localizer) for m in stack.members],
-                inverse=stack.inverse,
-                reference=(
-                    None
-                    if stack.reference is None
-                    else _concrete_curve(stack.reference, metrics, localizer)
-                ),
-            )
-            for stack in discovered.stacks
-        ],
-        lines=[
-            Line(curve=_concrete_curve(line.quantity, metrics, localizer), inverse=line.inverse)
-            for line in discovered.lines
-        ],
-        rules=[
-            Rule(curve=_concrete_curve(rule.quantity, metrics, localizer), inverse=rule.inverse)
-            for rule in discovered.rules
-        ],
-    )
 
 
 def _parse_check_command(

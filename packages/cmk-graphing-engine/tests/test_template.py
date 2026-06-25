@@ -12,32 +12,35 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     build_service_graphs,
-    concretize,
     ConsolidationFunction,
-    DiscoveredGraph,
-    DiscoveredLine,
-    DiscoveredRule,
-    DiscoveredStack,
     EvaluatedGraph,
     fetch_performance_data,
+    Line,
     match_graph_for_services,
     MetricName,
     PerformanceData,
     PerformanceValue,
     Quantity,
+    resolve_curve,
+    ResolvedGraph,
     RRDMetric,
+    Rule,
     ScalarKind,
     ScalarOf,
     ServiceRef,
+    Stack,
     TimeRange,
     TimeSeries,
-    update_graph_data,
+    update_graph,
 )
 from cmk.graphing_engine._from_api import parse_graph_from_api
 
 
 def _id(s: str) -> str:
     return s
+
+
+_KIND = "test"
 
 
 # Uniform definitions for every metric referenced below: the title "Metric", plain decimal unit,
@@ -70,12 +73,12 @@ def _rrd(name: MetricName) -> RRDMetric:
     )
 
 
-def _dstack(*quantities: Quantity) -> DiscoveredStack:
-    return DiscoveredStack(members=list(quantities), inverse=False)
+def _dstack(*quantities: Quantity) -> Stack:
+    return Stack(members=[resolve_curve(q, _METRICS, _id) for q in quantities], inverse=False)
 
 
-def _dline(quantity: Quantity) -> DiscoveredLine:
-    return DiscoveredLine(quantity=quantity, inverse=False)
+def _dline(quantity: Quantity) -> Line:
+    return Line(curve=resolve_curve(quantity, _METRICS, _id), inverse=False)
 
 
 _FALLBACK_RULE_KINDS = (
@@ -86,15 +89,20 @@ _FALLBACK_RULE_KINDS = (
 )
 
 
-def _fallback(name: MetricName) -> DiscoveredGraph:
+def _fallback(name: MetricName) -> ResolvedGraph:
     # The fallback single-metric graph the engine builds for an unclaimed metric: the metric as a
-    # stacked curve plus the four warn / crit (and lower) threshold rules as ScalarOf quantities.
-    return DiscoveredGraph(
+    # stacked curve plus the four warn / crit (and lower) threshold rules as ScalarOf quantities, each
+    # with its display resolved.
+    return ResolvedGraph(
         name=name,
         title=name,
+        kind=_KIND,
         stacks=[_dstack(_rrd(name))],
         rules=[
-            DiscoveredRule(quantity=ScalarOf(metric=_rrd(name), kind=kind), inverse=False)
+            Rule(
+                curve=resolve_curve(ScalarOf(metric=_rrd(name), kind=kind), _METRICS, _id),
+                inverse=False,
+            )
             for kind in _FALLBACK_RULE_KINDS
         ],
     )
@@ -165,7 +173,7 @@ def _discover(
     ],
     *,
     rrd: _FakeFetchRRD,
-) -> Sequence[DiscoveredGraph]:
+) -> Sequence[ResolvedGraph]:
     # Discovery fetches the performance data only to match / build the structure; it stores none.
     performance_data = fetch_performance_data(services=[service], translations=[], rrd=rrd)
     return build_service_graphs(
@@ -173,14 +181,15 @@ def _discover(
         registered_graphs=registered_graphs,
         metrics=_METRICS,
         localizer=_id,
+        kind=_KIND,
         available=performance_data.get(service, {}),
     )
 
 
-def _evaluate(discovered: DiscoveredGraph, rrd: _FakeFetchRRD) -> EvaluatedGraph:
+def _evaluate(discovered: ResolvedGraph, rrd: _FakeFetchRRD) -> EvaluatedGraph:
     # Resolve the structure's display, then run the sole update entry point over a fresh fetch.
-    [evaluated] = update_graph_data(
-        graphs=[concretize(discovered, _METRICS, _id)],
+    [evaluated] = update_graph(
+        graphs=[discovered],
         translations=[],
         consolidation_function=ConsolidationFunction.AVERAGE,
         time_range=_time_range(),
@@ -230,7 +239,7 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
     discovered = _discover(service, registered_graphs, rrd=rrd)
 
     assert len(discovered) == 1
-    assert discovered[0] == parse_graph_from_api(plugin, service, _METRICS, _id)
+    assert discovered[0] == parse_graph_from_api(plugin, service, _METRICS, _id, kind=_KIND)
     # A plain title without expressions is carried through unchanged.
     assert _evaluate(discovered[0], rrd).title == "CPU"
     assert [line.curve.value for line in _evaluate(discovered[0], rrd).lines] == [1.0, 1.0]
@@ -246,7 +255,7 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
 
     [matched, fallback] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert matched == parse_graph_from_api(plugin, service, _METRICS, _id)
+    assert matched == parse_graph_from_api(plugin, service, _METRICS, _id, kind=_KIND)
     assert fallback == _fallback(extra)
 
 
@@ -278,7 +287,7 @@ def test_discover_template_graphs_optional_missing_metric_still_matches() -> Non
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert discovered == parse_graph_from_api(plugin, service, _METRICS, _id)
+    assert discovered == parse_graph_from_api(plugin, service, _METRICS, _id, kind=_KIND)
 
 
 def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() -> None:
@@ -313,7 +322,7 @@ def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert discovered == parse_graph_from_api(plugin, service, _METRICS, _id)
+    assert discovered == parse_graph_from_api(plugin, service, _METRICS, _id, kind=_KIND)
 
 
 def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
@@ -331,7 +340,7 @@ def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert discovered == parse_graph_from_api(plugin, service, _METRICS, _id)
+    assert discovered == parse_graph_from_api(plugin, service, _METRICS, _id, kind=_KIND)
 
 
 def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantity() -> None:
@@ -518,19 +527,25 @@ def test_match_graph_for_services_adds_predictive_lines_per_service() -> None:
         graph=plugin,
         metrics=_METRICS,
         localizer=_id,
+        kind=_KIND,
         available={with_predict: {cpu_user, predict}, without_predict: {cpu_user}},
     )
 
     assert len(graphs) == 2
     assert (
-        DiscoveredLine(
-            quantity=RRDMetric(host_name="h1", service_name="svc", metric_name=predict),
+        Line(
+            curve=resolve_curve(
+                RRDMetric(host_name="h1", service_name="svc", metric_name=predict), _METRICS, _id
+            ),
             inverse=False,
         )
         in graphs[0].lines
     )
     assert all(
-        not (isinstance(line.quantity, RRDMetric) and line.quantity.metric_name == predict)
+        not (
+            isinstance(line.curve.quantity, RRDMetric)
+            and line.curve.quantity.metric_name == predict
+        )
         for line in graphs[1].lines
     )
 
@@ -548,11 +563,12 @@ def test_build_service_graphs_builds_threshold_rules_for_fallback_graphs() -> No
         registered_graphs=[],
         metrics=_METRICS,
         localizer=_id,
+        kind=_KIND,
         available=available,
     )
     # The fallback single-metric graph carries the four warn / crit (and lower) threshold rules as
-    # ScalarOf quantities; concretize resolves their labels / colours from the kind.
+    # ScalarOf quantities, their labels / colours resolved from the kind.
     [graph] = [g for g in graphs if g.name == cpu_user]
-    assert [rule.quantity for rule in graph.rules] == [
+    assert [rule.curve.quantity for rule in graph.rules] == [
         ScalarOf(metric=_rrd(cpu_user), kind=kind) for kind in _FALLBACK_RULE_KINDS
     ]

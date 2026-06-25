@@ -10,17 +10,11 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     AutoPrecision,
-    ConcreteGraph,
-    concretize,
     Constant,
     Curve,
     CurveAttributes,
     DecimalNotation,
     Difference,
-    DiscoveredGraph,
-    DiscoveredLine,
-    DiscoveredRule,
-    DiscoveredStack,
     Fraction,
     IECNotation,
     Line,
@@ -28,6 +22,7 @@ from cmk.graphing_engine import (
     MinimalRange,
     Product,
     Quantity,
+    ResolvedGraph,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -49,6 +44,8 @@ def _id(s: str) -> str:
 
 _SERVICE = ServiceRef(host_name="host", service_name="svc")
 
+_KIND = "test"
+
 # Every test metric is registered with title "Metric", a plain decimal unit and blue (#28a2f3).
 _TITLE = Title("Metric")
 _METRICS = {
@@ -66,6 +63,8 @@ _DECIMAL = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _METRIC_ATTRS = CurveAttributes(title="Metric", unit=_DECIMAL, color="#28a2f3")
 _WARN_COLOR = "#ffd000"
 _CRIT_COLOR = "#ff3232"
+_WARN_ATTRS = CurveAttributes(title="Warning", unit=_DECIMAL, color=_WARN_COLOR)
+_CRIT_ATTRS = CurveAttributes(title="Critical", unit=_DECIMAL, color=_CRIT_COLOR)
 
 
 def _rrd(name: str) -> RRDMetric:
@@ -76,22 +75,7 @@ def _rrd(name: str) -> RRDMetric:
     )
 
 
-# --- DiscoveredGraph helpers (bare quantities, no display) --------------------------------------
-
-
-def _dstack(*quantities: Quantity) -> DiscoveredStack:
-    return DiscoveredStack(members=list(quantities), inverse=False)
-
-
-def _dline(quantity: Quantity) -> DiscoveredLine:
-    return DiscoveredLine(quantity=quantity, inverse=False)
-
-
-def _drule(quantity: Quantity) -> DiscoveredRule:
-    return DiscoveredRule(quantity=quantity, inverse=False)
-
-
-# --- ConcreteGraph helpers (curves carry resolved attributes) -----------------------------------
+# --- ResolvedGraph helpers (curves carry resolved attributes) -----------------------------------
 
 
 def _curve(quantity: Quantity, attributes: CurveAttributes = _METRIC_ATTRS) -> Curve:
@@ -110,7 +94,22 @@ def _rule(quantity: Quantity, attributes: CurveAttributes = _METRIC_ATTRS) -> Ru
     return Rule(curve=_curve(quantity, attributes), inverse=False)
 
 
-# --- parse_graph_from_api -> DiscoveredGraph (structure, no display) -----------------------------
+def _attrs_of(quantity: Quantity) -> CurveAttributes:
+    # The display a quantity resolves to here: its own intrinsic display (constants / operations) or the
+    # uniform registered-metric attributes.
+    display = getattr(quantity, "display", None)
+    return display if isinstance(display, CurveAttributes) else _METRIC_ATTRS
+
+
+def _dline(quantity: Quantity) -> Line:
+    return Line(curve=Curve(quantity=quantity, attributes=_attrs_of(quantity)), inverse=False)
+
+
+def _drule(quantity: Quantity) -> Rule:
+    return Rule(curve=Curve(quantity=quantity, attributes=_attrs_of(quantity)), inverse=False)
+
+
+# --- parse_graph_from_api -> ResolvedGraph (display resolved inline) ------------------------------
 
 
 def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group() -> None:
@@ -123,28 +122,29 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
         optional=["a"],
         conflicting=["d"],
     )
-    assert parse_graph_from_api(graph, _SERVICE, _METRICS, _id) == DiscoveredGraph(
+    assert parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND) == ResolvedGraph(
         name="g",
         title="Title",
+        kind=_KIND,
         vertical_range=MinimalRange(lower=0, upper=100),
-        stacks=[_dstack(_rrd("a"), _rrd("b"))],
-        lines=[_dline(_rrd("c"))],
+        stacks=[_stack(_curve(_rrd("a")), _curve(_rrd("b")))],
+        lines=[_line(_rrd("c"))],
         # The scalar threshold becomes a horizontal rule, not a drawn line.
-        rules=[_drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING))],
+        rules=[_rule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING), _WARN_ATTRS)],
     )
 
 
 def test_parse_graph_from_api_without_compound_lines_yields_no_stacks() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id)
-    assert isinstance(parsed, DiscoveredGraph)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
+    assert isinstance(parsed, ResolvedGraph)
     assert parsed.stacks == []
     assert parsed.vertical_range is None
 
 
 def test_parse_graph_from_api_uses_localizer() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, lambda s: f"<{s}>")
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, lambda s: f"<{s}>", kind=_KIND)
     assert parsed.title == "<t>"
 
 
@@ -156,33 +156,32 @@ def test_parse_graph_from_api_parses_a_metric_valued_minimal_range_bound() -> No
         minimal_range=graphs_v1.MinimalRange("a", 100),
         simple_lines=["a"],
     )
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
     assert parsed.vertical_range == MinimalRange(lower=_rrd("a"), upper=100)
 
 
 def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
     # A line parses to a bare RRDMetric carrying the service's host/service, with no display (that is
-    # resolved later by concretize); the consolidation function is supplied later, not by parsing.
+    # resolved later by resolve_curve); the consolidation function is supplied later, not by parsing.
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
     parsed = parse_graph_from_api(
         graph,
         ServiceRef(host_name="my-host", service_name="my-service"),
         _METRICS,
         _id,
+        kind=_KIND,
     )
-    assert parsed.lines == [
-        _dline(
-            RRDMetric(
-                host_name="my-host",
-                service_name="my-service",
-                metric_name=MetricName("a"),
-            )
+    assert [line.curve.quantity for line in parsed.lines] == [
+        RRDMetric(
+            host_name="my-host",
+            service_name="my-service",
+            metric_name=MetricName("a"),
         )
     ]
 
 
 def test_parse_graph_from_api_routes_scalars_to_rules_without_display() -> None:
-    # Warn / crit scalars carry no display in the DiscoveredGraph (concretize resolves it from the
+    # Warn / crit scalars carry no drawn display; their resolved curve takes the label from the
     # kind); MinimumOf / MaximumOf carry only their author-chosen colour, which is not kind-derivable.
     graph = graphs_v1.Graph(
         name="g",
@@ -194,13 +193,13 @@ def test_parse_graph_from_api_routes_scalars_to_rules_without_display() -> None:
             metrics_v1.MaximumOf("a", metrics_v1.Color.RED),
         ],
     )
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
     assert parsed.lines == []
-    assert parsed.rules == [
-        _drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING)),
-        _drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.CRITICAL)),
-        _drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.MINIMUM, color="#15d1a0")),
-        _drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.MAXIMUM, color="#ed3b3b")),
+    assert [rule.curve.quantity for rule in parsed.rules] == [
+        ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING),
+        ScalarOf(metric=_rrd("a"), kind=ScalarKind.CRITICAL),
+        ScalarOf(metric=_rrd("a"), kind=ScalarKind.MINIMUM, color="#15d1a0"),
+        ScalarOf(metric=_rrd("a"), kind=ScalarKind.MAXIMUM, color="#ed3b3b"),
     ]
 
 
@@ -213,10 +212,10 @@ def test_parse_graph_from_api_maps_lower_warning_and_critical() -> None:
             metrics_v2_unstable.LowerCriticalOf("a"),
         ],
     )
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id)
-    assert parsed.rules == [
-        _drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.LOWER_WARNING)),
-        _drule(ScalarOf(metric=_rrd("a"), kind=ScalarKind.LOWER_CRITICAL)),
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
+    assert [rule.curve.quantity for rule in parsed.rules] == [
+        ScalarOf(metric=_rrd("a"), kind=ScalarKind.LOWER_WARNING),
+        ScalarOf(metric=_rrd("a"), kind=ScalarKind.LOWER_CRITICAL),
     ]
 
 
@@ -245,7 +244,7 @@ def test_parse_graph_from_api_constants_carry_their_intrinsic_display() -> None:
             ),
         ],
     )
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
     # Constants are scalars, so they become horizontal rules; each carries its own intrinsic display.
     assert parsed.lines == []
     assert parsed.rules == [
@@ -304,7 +303,7 @@ def test_parse_graph_from_api_operations_carry_their_intrinsic_display() -> None
             ),
         ],
     )
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
     assert parsed.lines == [
         _dline(
             Sum(
@@ -350,7 +349,7 @@ def test_parse_graph_from_api_recurses_into_nested_quantities() -> None:
         ],
     )
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=[nested])
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
     assert parsed.lines == [
         _dline(
             Sum(
@@ -385,7 +384,7 @@ def test_parse_graph_from_api_bidirectional_range_is_the_envelope_of_both_halves
             minimal_range=graphs_v1.MinimalRange(10, 100),
         ),
     )
-    parsed = parse_graph_from_api(bidir, _SERVICE, _METRICS, _id)
+    parsed = parse_graph_from_api(bidir, _SERVICE, _METRICS, _id, kind=_KIND)
     assert parsed.vertical_range == MinimalRange(lower=0, upper=100)
 
 
@@ -397,22 +396,23 @@ def test_parse_graph_from_api_collapses_bidirectional_into_one_graph() -> None:
         lower=graphs_v1.Graph(name="lo", title=Title("lo"), compound_lines=["a"]),
         upper=graphs_v1.Graph(name="up", title=Title("up"), compound_lines=["b"]),
     )
-    assert parse_graph_from_api(bidir, _SERVICE, _METRICS, _id) == DiscoveredGraph(
+    assert parse_graph_from_api(bidir, _SERVICE, _METRICS, _id, kind=_KIND) == ResolvedGraph(
         name="b",
         title="title",
+        kind=_KIND,
         stacks=[
-            DiscoveredStack(members=[_rrd("b")], inverse=False),
-            DiscoveredStack(members=[_rrd("a")], inverse=True),
+            Stack(members=[_curve(_rrd("b"))], inverse=False),
+            Stack(members=[_curve(_rrd("a"))], inverse=True),
         ],
         lines=[],
         rules=[],
     )
 
 
-# --- concretize: DiscoveredGraph -> ConcreteGraph (resolve display) ------------------------------
+# --- parse_graph_from_api resolves display ------------------------------------------------------
 
 
-def test_concretize_resolves_metric_curves_from_the_registry() -> None:
+def test_parse_resolves_resolves_metric_curves_from_the_registry() -> None:
     discovered = parse_graph_from_api(
         graphs_v1.Graph(
             name="g",
@@ -423,17 +423,19 @@ def test_concretize_resolves_metric_curves_from_the_registry() -> None:
         _SERVICE,
         _METRICS,
         _id,
+        kind=_KIND,
     )
-    assert concretize(discovered, _METRICS, _id) == ConcreteGraph(
+    assert discovered == ResolvedGraph(
         name="g",
         title="Title",
+        kind=_KIND,
         stacks=[_stack(_curve(_rrd("a")), _curve(_rrd("b")))],
         lines=[_line(_rrd("c"))],
         rules=[],
     )
 
 
-def test_concretize_resolves_threshold_rules_from_the_scalar_kind() -> None:
+def test_parse_resolves_resolves_threshold_rules_from_the_scalar_kind() -> None:
     discovered = parse_graph_from_api(
         graphs_v1.Graph(
             name="g",
@@ -448,10 +450,11 @@ def test_concretize_resolves_threshold_rules_from_the_scalar_kind() -> None:
         _SERVICE,
         _METRICS,
         _id,
+        kind=_KIND,
     )
-    concrete = concretize(discovered, _METRICS, _id)
+    concrete = discovered
     # warn / crit get their semantic label and the WARN / CRIT colour; min / max keep their
-    # author-chosen colour (GREEN / RED), carried on the ScalarOf through the DiscoveredGraph.
+    # author-chosen colour (GREEN / RED), carried on the ScalarOf.
     assert concrete.rules == [
         _rule(
             ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING),
@@ -472,25 +475,26 @@ def test_concretize_resolves_threshold_rules_from_the_scalar_kind() -> None:
     ]
 
 
-def test_concretize_localizes_rule_labels() -> None:
-    discovered = parse_graph_from_api(
+def test_parse_resolves_localizes_rule_labels() -> None:
+    resolved = parse_graph_from_api(
         graphs_v1.Graph(name="g", title=Title("t"), simple_lines=[metrics_v1.WarningOf("a")]),
         _SERVICE,
         _METRICS,
-        _id,
+        lambda s: f"<{s}>",
+        kind=_KIND,
     )
-    concrete = concretize(discovered, _METRICS, lambda s: f"<{s}>")
-    assert [rule.curve.attributes.title for rule in concrete.rules] == ["<Warning>"]
+    assert [rule.curve.attributes.title for rule in resolved.rules] == ["<Warning>"]
 
 
-def test_concretize_uses_the_fallback_colour_for_an_undefined_metric() -> None:
+def test_parse_resolves_uses_the_fallback_colour_for_an_undefined_metric() -> None:
     discovered = parse_graph_from_api(
         graphs_v1.Graph(name="g", title=Title("t"), simple_lines=[metrics_v1.WarningOf("u")]),
         _SERVICE,
         {},
         _id,
+        kind=_KIND,
     )
-    concrete = concretize(discovered, {}, _id)
+    concrete = discovered
     # The WARN colour still applies; only the unit falls back to the dimensionless default.
     assert concrete.rules == [
         _rule(
@@ -500,7 +504,7 @@ def test_concretize_uses_the_fallback_colour_for_an_undefined_metric() -> None:
     ]
 
 
-def test_concretize_reads_operation_display_from_the_quantity() -> None:
+def test_parse_resolves_reads_operation_display_from_the_quantity() -> None:
     discovered = parse_graph_from_api(
         graphs_v1.Graph(
             name="g",
@@ -510,8 +514,9 @@ def test_concretize_reads_operation_display_from_the_quantity() -> None:
         _SERVICE,
         _METRICS,
         _id,
+        kind=_KIND,
     )
-    concrete = concretize(discovered, _METRICS, _id)
+    concrete = discovered
     assert concrete.lines == [
         _line(
             Sum(

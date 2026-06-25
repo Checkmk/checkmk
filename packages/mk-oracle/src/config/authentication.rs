@@ -147,6 +147,9 @@ pub struct Authentication {
     password: Option<String>,
     auth_type: AuthType,
     role: Option<Role>,
+    asm_username: Option<String>,
+    asm_password: Option<String>,
+    asm_role: Option<Role>,
 }
 
 impl std::fmt::Debug for Authentication {
@@ -167,6 +170,9 @@ impl Default for Authentication {
             password: None,
             auth_type: AuthType::default(),
             role: None,
+            asm_username: None,
+            asm_password: None,
+            asm_role: None,
         }
     }
 }
@@ -183,12 +189,21 @@ impl Authentication {
                 .unwrap_or(defaults::AUTH_TYPE),
         )?;
         let role = Role::from_yaml(auth);
+        let asm_username = auth.get_string(keys::ASM_USERNAME);
+        let asm_password = auth.get_string(keys::ASM_PASSWORD);
+        let asm_role = auth
+            .get_string(keys::ASM_ROLE)
+            .and_then(|r| Role::new(r.as_str()));
+
         if auth_type == AuthType::Os {
             Ok(Some(Self {
                 username: String::new(),
                 password: None,
                 auth_type,
                 role,
+                asm_username,
+                asm_password,
+                asm_role,
             }))
         } else {
             Ok(Some(Self {
@@ -201,6 +216,9 @@ impl Authentication {
                     .map(_extract_password_if_env_var),
                 auth_type,
                 role,
+                asm_username,
+                asm_password,
+                asm_role,
             }))
         }
     }
@@ -216,6 +234,22 @@ impl Authentication {
 
     pub fn role(&self) -> Option<&Role> {
         self.role.as_ref()
+    }
+
+    pub fn asm_username(&self) -> &str {
+        self.asm_username.as_deref().unwrap_or(&self.username)
+    }
+
+    pub fn asm_password(&self) -> Option<&str> {
+        if self.asm_username.is_some() {
+            self.asm_password.as_deref()
+        } else {
+            self.password.as_deref()
+        }
+    }
+
+    pub fn asm_role(&self) -> Option<&Role> {
+        self.asm_role.as_ref().or(self.role.as_ref())
     }
 }
 
@@ -296,7 +330,7 @@ mod tests {
         )
     }
     mod data {
-        pub const AUTHENTICATION_FULL: &str = r#"
+        pub const AUTHENTICATION_NO_ASM: &str = r#"
 authentication:
   username: "foo"
   password: "bar"
@@ -319,7 +353,7 @@ authentication:
 
     #[test]
     fn test_authentication_from_yaml() {
-        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_FULL))
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_NO_ASM))
             .unwrap()
             .unwrap();
         assert_eq!(a.username(), "foo");
@@ -378,6 +412,36 @@ authentication:
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), None);
         assert_eq!(a.auth_type(), &AuthType::Standard);
+    }
+
+    #[test]
+    fn test_authentication_from_yaml_asm_fields() {
+        let yaml_str = r#"
+authentication:
+  username: "foo"
+  password: "bar"
+  type: "standard"
+  role: sysdba
+  asm_username: "asm_user"
+  asm_password: "asm_pass"
+  asm_role: sysasm
+"#;
+        let a = Authentication::from_yaml(&create_yaml(yaml_str))
+            .unwrap()
+            .unwrap();
+        assert_eq!(a.asm_username(), "asm_user");
+        assert_eq!(a.asm_password(), Some("asm_pass"));
+        assert_eq!(a.asm_role(), Some(&Role::SysASM));
+    }
+
+    #[test]
+    fn test_authentication_asm_fallback_to_regular() {
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_NO_ASM))
+            .unwrap()
+            .unwrap();
+        assert_eq!(a.asm_username(), "foo");
+        assert_eq!(a.asm_password(), Some("bar"));
+        assert_eq!(a.asm_role(), Some(&Role::SysDba));
     }
 
     #[test]

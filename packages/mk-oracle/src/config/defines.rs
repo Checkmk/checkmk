@@ -30,6 +30,9 @@ pub mod keys {
     pub const TYPE: &str = "type";
     pub const ROLE: &str = "role";
     pub const ACCESS_TOKEN: &str = "access_token";
+    pub const ASM_USERNAME: &str = "asm_username";
+    pub const ASM_PASSWORD: &str = "asm_password";
+    pub const ASM_ROLE: &str = "asm_role";
 
     pub const CONNECTION: &str = "connection";
     pub const HOSTNAME: &str = "hostname";

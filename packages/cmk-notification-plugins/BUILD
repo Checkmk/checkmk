@@ -93,6 +93,7 @@ pkg_files(
     renames = {
         "notifications/asciimail.py": "asciimail",
         "notifications/cisco_webex_teams.py": "cisco_webex_teams",
+        "notifications/flowtriq.py": "flowtriq",
         "notifications/ilert.py": "ilert",
         "notifications/mail.py": "mail",
         "notifications/msteams.py": "msteams",

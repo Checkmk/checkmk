@@ -714,8 +714,19 @@ class SplunkPluginModel(TypedDict, total=False):
     url_prefix: URLPrefix
 
 
+class FlowtriqPluginModel(TypedDict, total=False):
+    webhook_url: Required[WebhookURL]
+    api_key: CheckmkPassword
+    ignore_ssl: Literal[True]
+    proxy_url: ProxyUrl
+    url_prefix: URLPrefix
+
+
 CiscoPluginName = Literal["cisco_webex_teams"]
 CiscoNotify = tuple[CiscoPluginName, CiscoPluginModel | None]
+
+FlowtriqPluginName = Literal["flowtriq"]
+FlowtriqNotify = tuple[FlowtriqPluginName, FlowtriqPluginModel | None]
 
 MkeventdPluginName = Literal["mkeventd"]
 MkeventdNotify = tuple[MkeventdPluginName, MKEventdPluginModel | None]
@@ -775,6 +786,7 @@ KnownPluginParameters = (
     MailNotify
     | AsciiMailNotify
     | CiscoNotify
+    | FlowtriqNotify
     | MkeventdNotify
     | IlertNotify
     | JiraNotify
@@ -794,6 +806,7 @@ KnownPluginParameters = (
 
 BuiltInPluginNames = (
     CiscoPluginName
+    | FlowtriqPluginName
     | MkeventdPluginName
     | AsciiMailPluginName
     | MailPluginName
@@ -817,6 +830,7 @@ NotifyPluginParamsDict = (
     MailPluginModel
     | AsciiMailPluginModel
     | CiscoPluginModel
+    | FlowtriqPluginModel
     | MKEventdPluginModel
     | IlertPluginModel
     | JiraIssuePluginModel

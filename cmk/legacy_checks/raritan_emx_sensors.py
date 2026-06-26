@@ -35,7 +35,7 @@ check_info = {}
 def discover_raritan_emx_sensors(
     parsed: Mapping[str, Mapping[str, Any]],
 ) -> Iterable[tuple[str, None]]:
-    return inventory_raritan_sensors(parsed, "binary" or "")
+    return inventory_raritan_sensors(parsed, "binary")
 
 
 check_info["raritan_emx_sensors"] = LegacyCheckDefinition(

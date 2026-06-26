@@ -39,6 +39,7 @@ select = [
   "PIE",    # flake8: misc lints
   "PL",     # pylint
   "RUF100", # ruff: unused noqa
+  "SIM222", # flake8-simplify: expr-or-true
   "SLF",    # flake8: self
   "UP",     # pyugrade
   "W",      # pycodestyle (warning)

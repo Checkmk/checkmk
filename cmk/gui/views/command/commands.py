@@ -1076,17 +1076,6 @@ def command_acknowledge_action(
     row_index: int,
     action_rows: Rows,
 ) -> CommandActionResult:
-    if "aggr_tree" in row:  # BI mode
-        specs = []
-        for site, host, service in _find_all_leaves(row["aggr_tree"]):
-            if service:
-                spec = f"{host};{service}"
-                cmdtag = "SVC"
-            else:
-                spec = host
-                cmdtag = "HOST"
-            specs.append((site, spec, cmdtag))
-
     if request.var("_acknowledge"):
         comment = request.get_str_input("_ack_comment")
         if not comment:
@@ -1143,14 +1132,28 @@ def command_acknowledge_action(
                 expire_on,
             )
 
+        dialog_options = command.confirm_dialog_options(cmdtag, row, action_rows)
+
         if "aggr_tree" in row:  # BI mode
-            commands: Sequence[CommandSpec] = [
-                (site, make_command_ack(spec_, cmdtag_)) for site, spec_, cmdtag_ in specs
-            ]
+            commands: list[CommandSpec] = []
+            for site, host, service in _find_all_leaves(row["aggr_tree"]):
+                cmd = (
+                    make_command_ack(f"{host};{service}", "SVC")
+                    if service
+                    else make_command_ack(host, "HOST")
+                )
+                commands.append((site, cmd))
+
+            dialog_options.affected = HTML.with_escaping(
+                _("Affected aggregations: %d") % len(action_rows)
+            )
+            dialog_options.additions = dialog_options.additions + HTMLWriter.render_p(
+                _("Command applies to all nested hosts and services in aggregation.")
+            )
         else:
             commands = [make_command_ack(spec, cmdtag)]
 
-        return commands, command.confirm_dialog_options(cmdtag, row, action_rows)
+        return commands, dialog_options
 
     return None
 
@@ -1219,23 +1222,28 @@ def command_remove_acknowledgements_action(
         host, service = spec.split(";", 1)
         return RemoveServiceAcknowledgement(HostName(host), service)
 
+    dialog_options = command.confirm_dialog_options(cmdtag, row, action_rows)
+
     if "aggr_tree" in row:  # BI mode
-        specs = []
+        commands: list[CommandSpec] = []
         for site, host, service in _find_all_leaves(row["aggr_tree"]):
-            if service:
-                spec = f"{host};{service}"
-                cmdtag = "SVC"
-            else:
-                spec = host
-                cmdtag = "HOST"
-            specs.append((site, spec, cmdtag))
-        commands: Sequence[CommandSpec] = [
-            (site, make_command_rem(spec, cmdtag)) for site, spec_, cmdtag_ in specs
-        ]
+            cmd = (
+                make_command_rem(f"{host};{service}", "SVC")
+                if service
+                else make_command_rem(host, "HOST")
+            )
+            commands.append((site, cmd))
+
+        dialog_options.affected = HTML.with_escaping(
+            _("Affected aggregations: %d") % len(action_rows)
+        )
+        dialog_options.additions = dialog_options.additions + HTMLWriter.render_p(
+            _("Command applies to all nested hosts and services in aggregation.")
+        )
     else:
         commands = [make_command_rem(spec, cmdtag)]
 
-    return commands, command.confirm_dialog_options(cmdtag, row, action_rows)
+    return commands, dialog_options
 
 
 def _number_of_acknowledgements(
@@ -1757,16 +1765,17 @@ class CommandScheduleDowntimesForm:
             mode = _determine_downtime_mode(recurring_number, delayed_duration)
             downtime = DowntimeSchedule(start_time, end_time, mode, delayed_duration, comment)
             cmdtag, specs, action_rows = self._downtime_specs(cmdtag, row, action_rows, spec)
+            dialog_options = command.confirm_dialog_options(cmdtag, row, action_rows)
             if "aggr_tree" in row:  # BI mode
                 node: CompiledAggrTree = row["aggr_tree"]
-                return (
-                    _bi_commands(downtime, node),
-                    command.confirm_dialog_options(cmdtag, row, action_rows),
+                dialog_options.affected = HTML.with_escaping(
+                    _("Affected aggregations: %d") % len(action_rows)
                 )
-            return (
-                [downtime.livestatus_command(spec_, cmdtag) for spec_ in specs],
-                command.confirm_dialog_options(cmdtag, row, action_rows),
-            )
+                dialog_options.additions = dialog_options.additions + HTMLWriter.render_p(
+                    _("Command applies to all nested hosts and services in aggregation.")
+                )
+                return _bi_commands(downtime, node), dialog_options
+            return [downtime.livestatus_command(spec_, cmdtag) for spec_ in specs], dialog_options
 
         return None
 

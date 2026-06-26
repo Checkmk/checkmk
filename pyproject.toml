@@ -91,6 +91,7 @@ ignore = [
 "tests/*" = ["ARG001", "ARG002", "ARG003", "ARG004", "ARG005", "SLF001", "T20"]
 "buildscripts/*" = ["T20"]
 "scripts/*" = ["T20"]
+"omd/packages/nagvis/update_nagvis.py" = ["T20"]
 "bazel/tools/*" = ["T20"]
 "packages/cmk-livestatus-client/example*.py" = ["T20"]
 "packages/*/tests/*" = ["T20"]

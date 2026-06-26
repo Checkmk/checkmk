@@ -1,7 +1,15 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mkdirs", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_python//python:defs.bzl", "py_binary")
 
 exports_files(["skel.permissions"])
+
+py_binary(
+    name = "update_nagvis",
+    srcs = ["update_nagvis.py"],
+    main = "update_nagvis.py",
+    visibility = ["//visibility:public"],
+)
 
 pkg_files(
     name = "skel",

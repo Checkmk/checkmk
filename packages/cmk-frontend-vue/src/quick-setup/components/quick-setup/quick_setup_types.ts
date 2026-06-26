@@ -44,6 +44,9 @@ export interface QuickSetupProps {
 
   /** @property {boolean} hideWaitIcon - When set to true will hide the spinner and "please wait" legend  */
   hideWaitIcon?: boolean
+
+  /** @property {(stageIndex: number) => void} goToStage - Method to navigate to a specific stage */
+  goToStage?: (stageIndex: number) => void
 }
 
 /**

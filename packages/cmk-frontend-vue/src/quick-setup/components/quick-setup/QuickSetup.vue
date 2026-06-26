@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, onMounted, provide } from 'vue'
 
+import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
+
 import QuickSetupSaveStage from './QuickSetupSaveStage.vue'
 import QuickSetupStage from './QuickSetupStage.vue'
 import type { QuickSetupProps } from './quick_setup_types'
@@ -29,10 +31,15 @@ onMounted(() => {
     link.setAttribute('onclick', 'document.location.reload();')
   })
 })
+
+const stageModel = computed({
+  get: () => props.currentStage,
+  set: (value) => props.goToStage && props.goToStage(value)
+})
 </script>
 
 <template>
-  <ol class="qs__quick-setup">
+  <CmkWizard v-model="stageModel" :mode="mode.value">
     <QuickSetupStage
       v-for="(stg, index) in regularStages"
       :key="index"
@@ -50,7 +57,7 @@ onMounted(() => {
       :go-to-this-stage="stg.goToThisStage || null"
       :hide-wait-icon="!!props.hideWaitIcon"
     />
-  </ol>
+  </CmkWizard>
   <QuickSetupSaveStage
     v-if="saveStage && showSaveStage"
     :index="numberOfStages"
@@ -64,11 +71,3 @@ onMounted(() => {
     :hide-wait-icon="!!props.hideWaitIcon"
   />
 </template>
-
-<style scoped>
-.qs__quick-setup {
-  margin: 8px 0 0;
-  padding-left: 0;
-  counter-reset: stage-index;
-}
-</style>

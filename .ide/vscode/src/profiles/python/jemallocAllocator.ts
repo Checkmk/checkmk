@@ -184,7 +184,7 @@ async function updateDmypyExecutable(
 ): Promise<void> {
   await vscode.workspace
     .getConfiguration('mypy', wsFolder)
-    .update(DMYPY_SETTING, value, vscode.ConfigurationTarget.WorkspaceFolder)
+    .update(DMYPY_SETTING, value, vscode.ConfigurationTarget.Workspace)
 }
 
 async function updateRunUsingInterpreter(
@@ -193,7 +193,7 @@ async function updateRunUsingInterpreter(
 ): Promise<void> {
   await vscode.workspace
     .getConfiguration('mypy', wsFolder)
-    .update(RUN_USING_INTERPRETER_SETTING, value, vscode.ConfigurationTarget.WorkspaceFolder)
+    .update(RUN_USING_INTERPRETER_SETTING, value, vscode.ConfigurationTarget.Workspace)
 }
 
 function openInstallTerminal(install: InstallCommand): void {

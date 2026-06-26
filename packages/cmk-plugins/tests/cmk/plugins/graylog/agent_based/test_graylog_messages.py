@@ -8,25 +8,35 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from typing import Any
-
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service
 from cmk.plugins.graylog import lib as graylog
 from cmk.plugins.graylog.agent_based import graylog_messages
 
+_PARAMS: graylog.GraylogMessagesParams = {
+    "msgs_upper": ("no_levels", None),
+    "msgs_lower": ("no_levels", None),
+    "msgs_avg": 30,
+    "msgs_avg_upper": ("no_levels", None),
+    "msgs_avg_lower": ("no_levels", None),
+    "msgs_diff": 1800.0,
+    "msgs_diff_upper": ("no_levels", None),
+    "msgs_diff_lower": ("no_levels", None),
+}
+
 
 def test_discovery_graylog_messages() -> None:
     info = [['{"events": 1000}']]
-    parsed = graylog.deserialize_and_merge_json(info)
+    parsed = graylog_messages.parse_graylog_messages(info)
+    assert parsed is not None
     assert list(graylog_messages.discover_graylog_messages(parsed)) == [Service()]
 
 
 def test_check_graylog_messages(monkeypatch: pytest.MonkeyPatch) -> None:
     info = [['{"events": 1000}']]
-    parsed = graylog.deserialize_and_merge_json(info)
-    params: dict[str, Any] = {}
+    parsed = graylog_messages.parse_graylog_messages(info)
+    assert parsed is not None
 
     # Pre-populate value store to avoid GetRateError on first run
     monkeypatch.setattr(
@@ -35,7 +45,7 @@ def test_check_graylog_messages(monkeypatch: pytest.MonkeyPatch) -> None:
         lambda: {"graylog_msgs_avg.rate": (1670328674.09963, 900)},
     )
 
-    results = list(graylog_messages.check_graylog_messages(params, parsed))
+    results = list(graylog_messages.check_graylog_messages(_PARAMS, parsed))
 
     summaries = [r.summary for r in results if isinstance(r, Result)]
     assert any("Total number of messages: 1000" in s for s in summaries)

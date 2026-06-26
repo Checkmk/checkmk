@@ -14,6 +14,17 @@ from cmk.plugins.graylog.agent_based.graylog_sources import (
     parse_graylog_sources,
 )
 
+_PARAMS: graylog.GraylogMessagesParams = {
+    "msgs_upper": ("no_levels", None),
+    "msgs_lower": ("no_levels", None),
+    "msgs_avg": 30,
+    "msgs_avg_upper": ("no_levels", None),
+    "msgs_avg_lower": ("no_levels", None),
+    "msgs_diff": 1800.0,
+    "msgs_diff_upper": ("no_levels", None),
+    "msgs_diff_lower": ("no_levels", None),
+}
+
 
 @pytest.mark.parametrize(
     "section, item, expected_check_result",
@@ -84,7 +95,7 @@ def test_check_graylog_sources(
         list(
             check_graylog_sources(
                 item=item,
-                params={},
+                params=_PARAMS,
                 section=parse_graylog_sources(section),
             )
         )

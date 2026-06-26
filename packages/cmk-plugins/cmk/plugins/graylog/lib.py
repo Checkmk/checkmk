@@ -7,8 +7,7 @@
 import calendar
 import json
 import time
-from collections.abc import Mapping
-from typing import Any
+from typing import Any, TypedDict
 
 from cmk.agent_based.v2 import (
     check_levels,
@@ -21,15 +20,26 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-GraylogSection = dict[str, Any]
+GraylogRawSection = dict[str, Any]
 
 
-def deserialize_and_merge_json(string_table: StringTable) -> GraylogSection:
+class GraylogMessagesParams(TypedDict):
+    msgs_upper: LevelsT[int]
+    msgs_lower: LevelsT[int]
+    msgs_avg: int
+    msgs_avg_upper: LevelsT[int]
+    msgs_avg_lower: LevelsT[int]
+    msgs_diff: float
+    msgs_diff_upper: LevelsT[int]
+    msgs_diff_lower: LevelsT[int]
+
+
+def deserialize_and_merge_json(string_table: StringTable) -> GraylogRawSection:
     """
     >>> deserialize_and_merge_json([['{"a": 1, "b": 2}'], ['{"b": 3, "c": 4}']])
     {'a': 1, 'b': 3, 'c': 4}
     """
-    parsed: GraylogSection = {}
+    parsed: GraylogRawSection = {}
 
     for line in string_table:
         parsed.update(json.loads(line[0]))
@@ -48,62 +58,48 @@ def handle_iso_utc_to_localtimestamp(iso_8601_time: str) -> int:
     return local_timestamp
 
 
-def v2_levels(levels: tuple[int, int] | float | None) -> LevelsT[int]:
-    match levels:
-        case tuple((int(w), int(c))):
-            return ("fixed", (w, c))
-        case None:
-            return ("no_levels", None)
-        case other:
-            raise TypeError(other)
-
-
 def handle_graylog_messages(
-    messages: int | float, params: Mapping[str, tuple[int, int] | float], *, include_diff: bool
+    messages: int | float, params: GraylogMessagesParams, *, include_diff: bool
 ) -> CheckResult:
     yield from check_levels(
         messages,
         metric_name="messages",
-        levels_upper=v2_levels(params.get("msgs_upper")),
-        levels_lower=v2_levels(params.get("msgs_lower")),
+        levels_upper=params["msgs_upper"],
+        levels_lower=params["msgs_lower"],
         render_func=str,
         label="Total number of messages",
     )
 
-    avg_key = "msgs_avg"
-    avg = params.get(avg_key, 30)
-    assert isinstance(avg, (int, float))
+    avg = params["msgs_avg"]
     this_time = time.time()
 
     value_store = get_value_store()
 
     rate = get_rate(
-        get_value_store(), "graylog_%s.rate" % avg_key, this_time, messages, raise_overflow=True
+        get_value_store(), "graylog_msgs_avg.rate", this_time, messages, raise_overflow=True
     )
-    avg_rate = get_average(value_store, f"graylog_{avg_key}.avg", this_time, rate, avg)
+    avg_rate = get_average(value_store, "graylog_msgs_avg.avg", this_time, rate, avg)
 
     yield from check_levels(
         avg_rate,
-        metric_name=avg_key,
-        levels_upper=v2_levels(params.get("msgs_avg_upper")),
-        levels_lower=v2_levels(params.get("msgs_avg_lower")),
+        metric_name="msgs_avg",
+        levels_upper=params["msgs_avg_upper"],
+        levels_lower=params["msgs_avg_lower"],
         label="Average number of messages (%s)" % render.timespan(avg * 60),
     )
 
     if not include_diff:
         return
 
-    diff_key = "msgs_diff"
-    timespan = params.get(diff_key, 1800)
-    assert isinstance(timespan, (int, float))
+    timespan = params["msgs_diff"]
 
-    diff = _get_value_diff("graylog_%s" % diff_key, messages, timespan)
+    diff = _get_value_diff("graylog_msgs_diff", messages, timespan)
 
     yield from check_levels(
         diff,
         metric_name="graylog_diff",
-        levels_upper=v2_levels(params.get("%s_upper" % diff_key)),
-        levels_lower=v2_levels(params.get("%s_lower" % diff_key)),
+        levels_upper=params["msgs_diff_upper"],
+        levels_lower=params["msgs_diff_lower"],
         render_func=str,
         label="Total number of messages since last check (within %s)" % render.timespan(timespan),
     )
@@ -115,7 +111,7 @@ def _get_value_diff(diff_name: str, svc_value: float, timespan: float) -> float:
 
     # first call: take current value as diff or assume 0.0
     if (old_state := value_store.get(diff_name)) is None:
-        diff_val = 0
+        diff_val: float = 0
         value_store[diff_name] = this_time, svc_value
         return diff_val
 

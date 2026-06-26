@@ -7,7 +7,6 @@
 import json
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -19,7 +18,7 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
-from cmk.plugins.graylog.lib import handle_graylog_messages, v2_levels
+from cmk.plugins.graylog.lib import GraylogMessagesParams, handle_graylog_messages
 
 # <<<graylog_sources>>>
 # {"sources": {"172.18.0.1": {"messages": 457, "has_since": false}}}
@@ -43,22 +42,46 @@ def parse_graylog_sources(string_table: StringTable) -> SourceInfoSection:
     parsed: MutableMapping[str, SourceInfo] = {}
 
     for line in string_table:
-        sources_data = json.loads(line[0])
-
-        source_name = sources_data.get("sources")
-        if source_name is None:
-            continue
+        match json.loads(line[0]):
+            case {"sources": dict() as source_name}:
+                pass
+            case _:
+                continue
 
         for name, data in source_name.items():
-            parsed.setdefault(
-                name,
-                SourceInfo(
-                    num_messages=data.get("messages"),
-                    has_since_argument=data["has_since_argument"],
-                    timespan=data.get("source_since"),
-                    num_messages_in_timespan=data.get("messages_since", 0),
-                ),
-            )
+            # Graylog only reports "messages_since"/"source_since" when a "since"
+            # argument was used (has_since_argument); otherwise they are absent.
+            match data:
+                case {
+                    "has_since_argument": True,
+                    "messages": int(num_messages),
+                    "messages_since": int(messages_since),
+                    "source_since": int(timespan),
+                }:
+                    parsed.setdefault(
+                        name,
+                        SourceInfo(
+                            num_messages=num_messages,
+                            has_since_argument=True,
+                            timespan=timespan,
+                            num_messages_in_timespan=messages_since,
+                        ),
+                    )
+                case {
+                    "has_since_argument": bool(has_since_argument),
+                    "messages": int(num_messages),
+                }:
+                    parsed.setdefault(
+                        name,
+                        SourceInfo(
+                            num_messages=num_messages,
+                            has_since_argument=has_since_argument,
+                            timespan=None,
+                            num_messages_in_timespan=0,
+                        ),
+                    )
+                case _:
+                    continue
 
     return parsed
 
@@ -68,7 +91,7 @@ def discover_graylog_sources(section: SourceInfoSection) -> DiscoveryResult:
 
 
 def _handle_graylog_sources_messages(
-    num_messages: int, item_data: SourceInfo, params: Mapping[str, Any]
+    num_messages: int, item_data: SourceInfo, params: GraylogMessagesParams
 ) -> CheckResult:
     yield from handle_graylog_messages(
         num_messages, params, include_diff=not item_data.has_since_argument
@@ -78,15 +101,15 @@ def _handle_graylog_sources_messages(
         yield from check_levels(
             item_data.num_messages_in_timespan,
             metric_name="graylog_diff",
-            levels_upper=v2_levels(params.get("msgs_diff_upper")),
-            levels_lower=v2_levels(params.get("msgs_diff_lower")),
+            levels_upper=params["msgs_diff_upper"],
+            levels_lower=params["msgs_diff_lower"],
             label=f"Total number of messages in the last {render.timespan(item_data.timespan)}",
             render_func=str,
         )
 
 
 def check_graylog_sources(
-    item: str, params: Mapping[str, Any], section: SourceInfoSection
+    item: str, params: GraylogMessagesParams, section: SourceInfoSection
 ) -> CheckResult:
     if (item_data := section.get(item)) is None:
         return
@@ -109,5 +132,14 @@ check_plugin_graylog_sources = CheckPlugin(
     discovery_function=discover_graylog_sources,
     check_function=check_graylog_sources,
     check_ruleset_name="graylog_sources",
-    check_default_parameters={},
+    check_default_parameters={
+        "msgs_upper": ("no_levels", None),
+        "msgs_lower": ("no_levels", None),
+        "msgs_avg": 30,
+        "msgs_avg_upper": ("no_levels", None),
+        "msgs_avg_lower": ("no_levels", None),
+        "msgs_diff": 1800.0,
+        "msgs_diff_upper": ("no_levels", None),
+        "msgs_diff_lower": ("no_levels", None),
+    },
 )

@@ -222,7 +222,8 @@ const externalReferences: ExternalReferenceItem[] = [
   {
     label: 'Icons8',
     href: 'https://icons8.com',
-    description: 'UX designer can choose from there'
+    description:
+      'Icons8 is the single source of truth for all icons used in the product. If a new icon is needed, it should be selected from the Icons8 library and aligned with the UX team.'
   },
   {
     label: 'Icons8 Claude skill',

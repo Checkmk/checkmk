@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 from uuid import UUID
 
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import SiteId
 
 
@@ -18,10 +19,8 @@ def get_licensing_logger() -> logging.Logger:
 def init_logging(log_dir: Path) -> logging.Logger:
     log_dir.mkdir(parents=True, exist_ok=True)
 
-    formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
-
     handler = logging.FileHandler(filename=log_dir / "licensing.log", encoding="utf-8")
-    handler.setFormatter(formatter)
+    handler.setFormatter(CMKFormatter(with_process=True))
 
     logger = get_licensing_logger()
     del logger.handlers[:]  # Remove all previously existing handlers

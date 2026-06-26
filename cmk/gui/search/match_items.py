@@ -11,6 +11,7 @@ from typing import Final, override
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
+from cmk.shared_typing.unified_search import ProviderName
 
 
 @dataclass
@@ -50,9 +51,29 @@ class ABCMatchItemGenerator(ABC):
 
 
 class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
+    def __init__(self) -> None:
+        super().__init__()
+        self._provider_map: dict[str, ProviderName] = {}
+
     @override
     def plugin_name(self, instance: ABCMatchItemGenerator) -> str:
         return instance.name
+
+    @override
+    def register(
+        self, instance: ABCMatchItemGenerator, *, provider: ProviderName | None = None
+    ) -> ABCMatchItemGenerator:
+        if provider is not None:
+            self._provider_map[self.plugin_name(instance)] = provider
+        return super().register(instance)
+
+    def provider_for(self, category: str) -> ProviderName | None:
+        if category not in self:
+            return None
+
+        # NOTE: to keep the change radius small for this introduction, we default to setup. We may
+        # want to be explicit in the future and add the provider to all existing setup generators.
+        return self._provider_map.get(category, ProviderName.setup)
 
 
 match_item_generator_registry = MatchItemGeneratorRegistry()

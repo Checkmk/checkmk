@@ -31,6 +31,7 @@ py_library(
     name = "crash_reporting",
     srcs = [
         "cmk/crash_reporting/__init__.py",
+        "cmk/crash_reporting/_packaging.py",
     ],
     data = [":crash_reporting_py_typed"],
     imports = ["."],

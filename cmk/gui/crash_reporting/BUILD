@@ -35,6 +35,7 @@ py_library(
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-crash:crash_reporting",
         "//packages/cmk-livestatus-client",
     ],
 )

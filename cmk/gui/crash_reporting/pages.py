@@ -11,10 +11,8 @@ from __future__ import annotations
 import abc
 import base64
 import dataclasses
-import io
 import json
 import pprint
-import tarfile
 import time
 import traceback
 from collections.abc import Iterator, Mapping, Sequence
@@ -26,6 +24,7 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc.crash_reporting import CrashInfo, normalize_crash_time, SENSITIVE_KEYWORDS
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
+from cmk.crash_reporting import crash_report_submit_payload, pack_crash_report
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import (
     Breadcrumb,
@@ -296,16 +295,11 @@ class PageCrash(Page):
 
             # Make the resulting page execute the crash report post request
             url_encoded_params = urlencode_vars(
-                [
-                    ("name", details["name"]),
-                    ("mail", details["mail"]),
-                    (
-                        "crashdump",
-                        base64.b64encode(
-                            _pack_crash_report(_get_serialized_crash_report(row))
-                        ).decode("ascii"),
-                    ),
-                ]
+                crash_report_submit_payload(
+                    name=details["name"],
+                    mail=details["mail"],
+                    serialized_crash_report=_get_serialized_crash_report(row),
+                )
             )
             html.open_div(id_="pending_msg", style="display:none")
             html.show_message(_("Submitting crash report..."))
@@ -803,20 +797,4 @@ class PageDownloadCrashReport(Page):
         )
         response.set_content_type("application/x-tgz")
         response.set_content_disposition(ContentDispositionType.ATTACHMENT, filename)
-        response.set_data(_pack_crash_report(_get_serialized_crash_report(report.row)))
-
-
-def _pack_crash_report(serialized_crash_report: Mapping[str, bytes | None]) -> bytes:
-    """Returns a byte string representing the current crash report in tar archive format"""
-    buf = io.BytesIO()
-    with tarfile.open(mode="w:gz", fileobj=buf) as tar:
-        for key, content in serialized_crash_report.items():
-            if content is None:
-                continue
-
-            tar_info = tarfile.TarInfo(name="crash.info" if key == "crash_info" else key)
-            tar_info.size = len(content)
-
-            tar.addfile(tar_info, io.BytesIO(content))
-
-    return buf.getvalue()
+        response.set_data(pack_crash_report(_get_serialized_crash_report(report.row)))

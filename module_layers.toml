@@ -936,6 +936,7 @@ allows = [
   "cmk.automations",
   "cmk.bi",
   "cmk.checkengine",
+  "cmk.crash_reporting",
   "cmk.diagnostics",
   "cmk.discover_plugins",
   "cmk.diskspace",

@@ -4,9 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Full crash-reporting library: packaging, payload construction, and (Epic 2) upload.
 
-Skeleton in this epic. Depends on ``cmk.crash`` for the dataclasses
-and store. The tar packaging helper and inline payload-construction block
-currently inlined in ``cmk/gui/crash_reporting/pages.py`` land here later.
-The batch upload loop and CLI entrypoint (``cmk-upload-crashes``) land in
-Epic 2.
+Houses the tar packaging helper and submit-payload construction extracted from
+``cmk/gui/crash_reporting/pages.py`` so future consumers (Epic 2's CLI, any
+other flow) can reuse it. The batch upload loop and CLI entrypoint
+(``cmk-upload-crashes``) land in Epic 2.
 """
+
+from ._packaging import crash_report_submit_payload, pack_crash_report
+
+__all__ = [
+    "crash_report_submit_payload",
+    "pack_crash_report",
+]

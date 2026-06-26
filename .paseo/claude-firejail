@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Opt-in firejail launcher for Claude under paseo.
+#
+# Selected via a "claude-firejail" provider in ~/.paseo/config.json (see
+# .paseo/README.md); prepends firejail to the native claude paseo would run.
+#
+# Relies on the firejail profile installed by `.paseo/setup-claude-firejail.sh`
+# (~/.config/firejail/claude.profile + user-editable claude.local).
+set -euo pipefail
+
+claude_bin="$(command -v claude || echo "${HOME}/.local/bin/claude")"
+
+# No sandbox for paseo's availability probe (`<wrapper> --version`)
+if [[ "${1:-}" == "--version" || "${1:-}" == "-v" ]]; then
+    exec "${claude_bin}" "$@"
+fi
+
+# Fail with actionable guidance instead of a bare "exec: firejail: not found".
+command -v firejail >/dev/null || {
+    echo "error: firejail not found. Run .paseo/setup-claude-firejail.sh first." >&2
+    exit 1
+}
+
+# Always allow the agent's working directory (the paseo worktree).
+whitelist_args=(--whitelist="${PWD}")
+
+# Linked worktrees keep their object store in the main repo .git; without it git fails in the jail.
+if common_dir="$(git rev-parse --git-common-dir 2>/dev/null)"; then
+    common_dir="$(cd "${common_dir}" && pwd)"
+    whitelist_args+=(--whitelist="${common_dir}")
+fi
+
+exec firejail \
+    --profile=claude \
+    --env=DISABLE_AUTOUPDATER=1 \
+    "${whitelist_args[@]}" \
+    "${claude_bin}" "$@"

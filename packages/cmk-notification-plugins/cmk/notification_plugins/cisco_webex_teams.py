@@ -28,7 +28,7 @@ def _cisco_webex_teams_msg(context: dict) -> dict:
     notification_type = "%s notification" % context["NOTIFICATIONTYPE"]
 
     # notification about a service
-    if context.get("WHAT", None) == "SERVICE":
+    if context.get("WHAT") == "SERVICE":
         monitored_type = "Service"
         host_service_info = "Host: {} (IP: {})  \nService: {}".format(
             format_link("[%s](%s)", context["HOSTNAME"], host_url_from_context(context)),

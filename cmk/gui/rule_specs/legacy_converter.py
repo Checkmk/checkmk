@@ -125,7 +125,7 @@ RULESET_DOC_REFERENCES_MAP = {
 def _get_doc_references(
     ruleset_name: str, localizer: Callable[[str], str]
 ) -> dict[DocReference, str] | None:
-    if (doc_ref_mapping := RULESET_DOC_REFERENCES_MAP.get(ruleset_name, None)) is None:
+    if (doc_ref_mapping := RULESET_DOC_REFERENCES_MAP.get(ruleset_name)) is None:
         return None
     return {
         doc_reference: title.localize(localizer) for doc_reference, title in doc_ref_mapping.items()

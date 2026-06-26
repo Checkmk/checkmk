@@ -221,7 +221,7 @@ def check_oracle_tablespaces(
     if isinstance(params, tuple):
         params = {"autoextend": params[0], "levels": params[1:]}
 
-    autoext = params.get("autoextend", None)
+    autoext = params.get("autoextend")
     uses_default_increment = False
 
     # check for missing filenames in Tablespaces. This is possible after recreation

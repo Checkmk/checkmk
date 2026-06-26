@@ -128,7 +128,7 @@ def check_zpool_status(params: Mapping[str, Any], section: Section) -> CheckResu
         messages.append(section.message)
 
     for msg in section.state_messages:
-        state_details = state_mappings.get(msg, None)
+        state_details = state_mappings.get(msg)
         if state_details:
             state = state_details.state
             if state_details.message:

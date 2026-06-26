@@ -73,7 +73,7 @@ def parse_tplink_poe(string_table: Sequence[StringTable]) -> Section:
                     poe_status = PoeStatus.ON
                 else:
                     # Some faulty status. Try to map status detail string
-                    poe_status_detail = poe_faulty_status_to_string.get(poe_power_status, None)
+                    poe_status_detail = poe_faulty_status_to_string.get(poe_power_status)
             else:
                 # poe feature disabled for port
                 continue

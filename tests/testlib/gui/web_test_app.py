@@ -119,11 +119,11 @@ class WebTestAppForCMK(FlaskClient):
         if method.lower() == "get":
             _reset_cache_for_folders_and_hosts_setup()
 
-        if params and kw.get("data", None):
+        if params and kw.get("data"):
             raise ValueError(
                 "Pass either `params` or `data` as an input argument to `call_method`!"
             )
-        if query_string and kw.get("json_data", None):
+        if query_string and kw.get("json_data"):
             raise ValueError(
                 "Pass either `query_string` or `json_data` as an input argument to `call_method`!"
             )

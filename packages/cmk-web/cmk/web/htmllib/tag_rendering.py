@@ -74,7 +74,7 @@ def _extract_attrs(
     raw_attrs: dict[str, HTMLTagAttributeValue],
 ) -> Iterator[tuple[str, str]]:
     # Links require href to be first attribute
-    attrs = {"href": href, **raw_attrs} if (href := raw_attrs.get("href", None)) else raw_attrs
+    attrs = {"href": href, **raw_attrs} if (href := raw_attrs.get("href")) else raw_attrs
     return (
         (_format_key(key), _format_value(key, val))
         for key, val in attrs.items()

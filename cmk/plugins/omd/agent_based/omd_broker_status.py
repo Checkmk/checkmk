@@ -32,7 +32,7 @@ from .libbroker import (
 
 
 def parse_omd_broker_status(node: dict[str, Any]) -> tuple[str, BrokerStatus]:
-    if (mem_used := node.get("mem_used", None)) is not None:
+    if (mem_used := node.get("mem_used")) is not None:
         return node_to_site(str(node["name"])), BrokerStatus(memory=int(mem_used))
     return node_to_site(str(node["name"])), BrokerStatus(memory=None)
 

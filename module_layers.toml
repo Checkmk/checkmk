@@ -1228,6 +1228,7 @@ allows = ["@ccc", "cmk.base", "cmk.product_usage", "cmk.utils.paths"]
 # so it must not depend on either of them.
 allows = [
   "@livestatus_client",
+  "cmk.ccc.log",
   "cmk.ccc.store",
   "cmk.ccc.version_info",
   "cmk.utils.http_proxy_config",

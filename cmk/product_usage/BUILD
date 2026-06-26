@@ -19,6 +19,7 @@ py_library(
     ],
     deps = [
         "//cmk/utils",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-livestatus-client",
         requirement("requests"),

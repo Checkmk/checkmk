@@ -97,8 +97,9 @@ def _synchronize_profiles_to_sites(
         return
 
     logger.info(
-        "Credentials changed for %s. Trying to sync to %d sites"
-        % (", ".join(profiles_to_synchronize.keys()), len(remote_sites))
+        "Credentials changed for %s. Trying to sync to %d sites",
+        ", ".join(profiles_to_synchronize.keys()),
+        len(remote_sites),
     )
 
     states = sites.states()
@@ -159,7 +160,7 @@ def _synchronize_profiles_to_sites(
     num_disabled = sum(1 for result in results if result.disabled)
     num_succeeded = sum(1 for result in results if result.succeeded)
     logger.info(
-        "  Disabled: %d, Succeeded: %d, Failed: %d" % (num_disabled, num_succeeded, num_failed)
+        "  Disabled: %d, Succeeded: %d, Failed: %d", num_disabled, num_succeeded, num_failed
     )
 
 

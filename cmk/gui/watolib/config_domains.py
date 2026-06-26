@@ -651,7 +651,7 @@ class ConfigDomainOMD(ABCConfigDomain):
             validate_port_not_in_use(int(omd_settings["LIVESTATUS_TCP_PORT"]))
 
         config_change_commands: list[str] = []
-        self._logger.debug("Set omd config: %r" % omd_settings)
+        self._logger.debug("Set omd config: %r", omd_settings)
 
         for key, val in omd_settings.items():
             if key not in current_settings:
@@ -667,7 +667,7 @@ class ConfigDomainOMD(ABCConfigDomain):
             return []
 
         self._logger.debug('Executing "omd config change"')
-        self._logger.debug("  Commands: %r" % config_change_commands)
+        self._logger.debug("  Commands: %r", config_change_commands)
 
         # We need a background job on remote sites to wait for the restart, so
         # that the central site can gather the result of the activation.
@@ -927,8 +927,8 @@ def _do_config_change(config_change_commands: Sequence[str], omd_logger: logging
         check=False,
     )
 
-    omd_logger.debug("  Exit code: %d" % completed_process.returncode)
-    omd_logger.debug("  Output: %r" % completed_process.stdout)
+    omd_logger.debug("  Exit code: %d", completed_process.returncode)
+    omd_logger.debug("  Output: %r", completed_process.stdout)
     if completed_process.returncode:
         raise MKGeneralException(
             _(

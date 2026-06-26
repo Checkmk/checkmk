@@ -158,13 +158,4 @@ def _output_snmp_check_plugins(
     title: str, collection: Collection[SNMPSectionName], logger: Logger
 ) -> None:
     collection_out = " ".join(str(n) for n in sorted(collection)) if collection else "-"
-    logger.debug(
-        "   %-35s%s%s%s%s"
-        % (
-            title,
-            tty.bold,
-            tty.yellow,
-            collection_out,
-            tty.normal,
-        )
-    )
+    logger.debug("   %-35s%s%s%s%s", title, tty.bold, tty.yellow, collection_out, tty.normal)

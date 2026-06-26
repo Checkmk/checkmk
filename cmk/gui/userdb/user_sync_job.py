@@ -225,7 +225,7 @@ class UserSyncBackgroundJob(BackgroundJob):
                 if not enforce_sync and not connection.sync_is_needed():
                     continue
 
-                logger.info(_("[%s] Starting sync for connection") % connection_id)
+                logger.info(_("[%s] Starting sync for connection"), connection_id)
                 connection.do_sync(
                     add_to_changelog=add_to_changelog,
                     only_username=None,
@@ -234,9 +234,9 @@ class UserSyncBackgroundJob(BackgroundJob):
                     save_users_func=save_users_func,
                     default_user_profile=default_user_profile,
                 )
-                logger.info(_("[%s] Finished sync for connection") % connection_id)
+                logger.info(_("[%s] Finished sync for connection"), connection_id)
             except Exception:
-                logger.exception(_("[%s] Exception") % connection_id)
+                logger.exception(_("[%s] Exception"), connection_id)
                 gui_logger.error(
                     "Exception (%s, userdb_job): %s", connection_id, traceback.format_exc()
                 )

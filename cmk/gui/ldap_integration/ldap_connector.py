@@ -859,7 +859,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def _discover_nearest_dc(self, domain: str) -> str:
         cached_server = self._get_nearest_dc_from_cache()
         if cached_server:
-            self._logger.info("Using cached DC %s" % cached_server)
+            self._logger.info("Using cached DC %s", cached_server)
             return cached_server
 
         locator = _get_ad_locator()
@@ -867,12 +867,12 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         try:
             server = locator.locate(domain)
             self._cache_nearest_dc(server)
-            self._logger.info(f"  DISCOVERY: Discovered server {server!r} from {domain!r}")
+            self._logger.info("  DISCOVERY: Discovered server %r from %r", server, domain)
             return server
         except Exception:
-            self._logger.info("  DISCOVERY: Failed to discover a server from domain %r" % domain)
+            self._logger.info("  DISCOVERY: Failed to discover a server from domain %r", domain)
             self._logger.exception("error discovering LDAP server")
-            self._logger.info("  DISCOVERY: Try to use domain DNS name %r as server" % domain)
+            self._logger.info("  DISCOVERY: Try to use domain DNS name %r as server", domain)
             return domain
 
     def _get_nearest_dc_from_cache(self) -> str | None:
@@ -883,7 +883,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         return None
 
     def _cache_nearest_dc(self, server: str) -> None:
-        self._logger.debug("Caching nearest DC %s" % server)
+        self._logger.debug("Caching nearest DC %s", server)
         store.save_text_to_file(self._nearest_dc_cache_filepath(), server)
 
     def _clear_nearest_dc_cache(self) -> None:
@@ -946,14 +946,14 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         if conn is None:
             assert self._ldap_obj is not None
             conn = self._ldap_obj
-        self._logger.info("LDAP_BIND %s" % user_dn)
+        self._logger.info("LDAP_BIND %s", user_dn)
         try:
             conn.simple_bind_s(user_dn, password_store.extract(password_id))
             self._logger.info("  SUCCESS")
         except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH):
             raise
         except LDAPError as e:
-            self._logger.info(f"  FAILED ({e.__class__.__name__}: {e})")
+            self._logger.info("  FAILED (%s: %s)", e.__class__.__name__, e)
             if catch:
                 raise MKLDAPException(_("Unable to authenticate with LDAP (%s)") % e)
             raise
@@ -1180,7 +1180,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
                 last_exc = e
                 if implicit_connect and tries_left:
-                    self._logger.info("  Received %r. Retrying with clean connection..." % e)
+                    self._logger.info("  Received %r. Retrying with clean connection...", e)
                     self.disconnect()
                     time.sleep(0.5)
                 else:
@@ -1208,7 +1208,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 _("Unable to successfully perform the LDAP search (%s)") % last_exc
             )
 
-        self._logger.info("  RESULT length: %d, duration: %0.3f" % (len(result), duration))
+        self._logger.info("  RESULT length: %d, duration: %0.3f", len(result), duration)
         return result
 
     def _ldap_get_scope(self, scope: str) -> int:
@@ -1867,7 +1867,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             self._logger.info('  SKIP SYNC connector "%s" is disabled', self.id)
             return
 
-        self._logger.info("  SYNC PLUGINS: %s" % ", ".join(self.active_plugins().keys()))
+        self._logger.info("  SYNC PLUGINS: %s", ", ".join(self.active_plugins().keys()))
 
         # Flush ldap related before each sync to have a caching only for the
         # current sync process
@@ -1946,7 +1946,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         duration = time.time() - sync_users_result.sync_start_time
         self._logger.info(
-            "SYNC FINISHED - Duration: %0.3f sec, Queries: %d" % (duration, self._num_queries)
+            "SYNC FINISHED - Duration: %0.3f sec, Queries: %d", duration, self._num_queries
         )
 
         # TODO: Maybe move this to the ldap-sync-finished hook?

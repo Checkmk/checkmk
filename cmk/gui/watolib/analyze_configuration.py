@@ -284,7 +284,7 @@ def _perform_tests_for_site(
 ) -> _TestResult:
     # Executes the tests on the site. This method is executed in a dedicated
     # thread (One per site)
-    logger.debug("[%s] Starting" % site_id)
+    logger.debug("[%s] Starting", site_id)
     try:
         if isinstance(automation_config, LocalAutomationConfig):
             automation = AutomationCheckAnalyzeConfig()
@@ -314,7 +314,7 @@ def _perform_tests_for_site(
         )
 
     except Exception:
-        logger.exception("[%s] Failed" % site_id)
+        logger.exception("[%s] Failed", site_id)
         return _TestResult(
             state=1,
             ac_test_results=[],
@@ -350,7 +350,7 @@ def perform_tests(
     categories: Sequence[str] | None,  # 'None' means 'No filtering'
     debug: bool,
 ) -> Mapping[SiteId, Sequence[ACTestResult]]:
-    logger.debug("Executing tests for %d sites" % len(test_sites))
+    logger.debug("Executing tests for %d sites", len(test_sites))
     if not test_sites:
         return {}
 

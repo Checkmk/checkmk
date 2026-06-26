@@ -180,12 +180,12 @@ def check_mk_local_automation_serialized(
             raise MKAutomationException(msg)
 
         span.set_attribute("cmk.automation.exit_code", result.exit_code)
-        auto_logger.info("FINISHED: %d" % result.exit_code)
-        auto_logger.debug("OUTPUT: %r" % result.output)
+        auto_logger.info("FINISHED: %d", result.exit_code)
+        auto_logger.debug("OUTPUT: %r", result.output)
 
         if result.exit_code:
             auto_logger.error(
-                "Error running %r (exit code %d)" % (result.command_description, result.exit_code)
+                "Error running %r (exit code %d)", result.command_description, result.exit_code
             )
             msg = get_local_automation_failure_message(
                 command=command,

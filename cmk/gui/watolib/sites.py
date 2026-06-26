@@ -1213,7 +1213,7 @@ class ReplicationStatusFetcher:
         *,
         debug: bool,
     ) -> Mapping[SiteId, ReplicationStatus]:
-        self._logger.debug("Fetching replication status for %d sites" % len(sites))
+        self._logger.debug("Fetching replication status for %d sites", len(sites))
         results_by_site: dict[SiteId, ReplicationStatus] = {}
 
         # Results are fetched simultaneously from the remote sites
@@ -1255,7 +1255,7 @@ class ReplicationStatusFetcher:
     ) -> None:
         """Executes the tests on the site. This method is executed in a dedicated
         subprocess (One per site)"""
-        self._logger.debug("[%s] Starting" % site_id)
+        self._logger.debug("[%s] Starting", site_id)
         result = None
         try:
             # TODO: Would be better to clean all open fds that are not needed, but we don't
@@ -1287,9 +1287,9 @@ class ReplicationStatusFetcher:
                     omd_status=raw_result["omd_status"],
                 ),
             )
-            self._logger.debug("[%s] Finished" % site_id)
+            self._logger.debug("[%s] Finished", site_id)
         except Exception as e:
-            self._logger.debug("[%s] Failed" % site_id, exc_info=True)
+            self._logger.debug("[%s] Failed", site_id, exc_info=True)
             result = ReplicationStatus(
                 site_id=site_id,
                 success=False,

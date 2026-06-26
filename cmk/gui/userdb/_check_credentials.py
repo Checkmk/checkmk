@@ -106,13 +106,13 @@ def check_credentials(
         user_spec = load_user(user_id)
         if not is_customer_user_allowed_to_login(user_id, user_spec):
             # A user not assigned with the current sites customer is not allowed to login
-            auth_logger.debug("User '%s' is not allowed to login: Invalid customer" % user_id)
+            auth_logger.debug("User '%s' is not allowed to login: Invalid customer", user_id)
             return False
 
         # Now, after successfull login (and optional user account creation), check whether or
         # not the user is locked.
         if user_locked(user_id, user_spec):
-            auth_logger.debug("User '%s' is not allowed to login: Account locked" % user_id)
+            auth_logger.debug("User '%s' is not allowed to login: Account locked", user_id)
             return False  # The account is locked
 
         return user_id

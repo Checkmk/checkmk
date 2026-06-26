@@ -32,10 +32,10 @@ class SubprocessExecutor(AutomationExecutor):
         cmd = _automation_command(command, args, logger, timeout)
         cmd_descr = self.command_description(command, args, logger, timeout)
 
-        logger.info("RUN: %s" % cmd_descr)
+        logger.info("RUN: %s", cmd_descr)
         span = trace.get_current_span()
         span.set_attribute("cmk.automation.command", cmd_descr)
-        logger.info("STDIN: %r" % stdin)
+        logger.info("STDIN: %r", stdin)
 
         completed_process = subprocess.run(
             cmd,

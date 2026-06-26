@@ -139,7 +139,7 @@ class ParentScanBackgroundJob(BackgroundJob):
                 ("Gateway hosts created", self._num_gateway_hosts_created),
                 ("Errors", self._num_errors),
             ]:
-                self._logger.info("  %s: %d" % (title, value))
+                self._logger.info("  %s: %d", title, value)
 
             job_interface.send_result_message(_("Parent scan finished"))
 

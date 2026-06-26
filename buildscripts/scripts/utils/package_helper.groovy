@@ -80,6 +80,14 @@ def provide_agent_binaries(Map args) {
                 "agents",
                 "packages/host/cmk-agent-ctl",
                 "packages/host/mk-sql",
+                // Shared inputs that feed the cmk-agent-ctl / mk-sql build but live
+                // outside their package dirs. Without these the cache key misses
+                // changes to the vendored-OpenSSL patch / workspace lockfiles and a
+                // stale agent binary is shipped (CMK-36136, found via CMK-35950).
+                "packages/host/patches",
+                "packages/host/patch-vendored-openssl-src.sh",
+                "packages/host/Cargo.toml",
+                "packages/host/Cargo.lock",
             ],
             install_cmd: """\
                 cp \

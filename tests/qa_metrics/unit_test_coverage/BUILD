@@ -8,6 +8,7 @@ py_library(
     srcs = [
         "__init__.py",
         "rows.py",
+        "summary.py",
     ],
     data = ["schema.sql"],
     imports = ["../../.."],

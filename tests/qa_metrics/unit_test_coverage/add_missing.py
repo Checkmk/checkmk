@@ -89,10 +89,12 @@ def append_zero_entries(coverage_file: Path, source_dirs: list[str], repo_root: 
             if not executable_lines:
                 continue
             out.write(f"SF:{rel}\n")
-            for lineno, name in functions:
-                out.write(f"FN:{lineno},{name}\n")
-            for _, name in functions:
-                out.write(f"FNDA:0,{name}\n")
+            # lcov 2.x function records: FNL declares the function, FNA carries
+            # its hit count (always 0 here). Matches the format the toolchain
+            # emits for the rest of the tracefile.
+            for index, (lineno, name) in enumerate(functions):
+                out.write(f"FNL:{index},{lineno}\n")
+                out.write(f"FNA:{index},0,{name}\n")
             out.write(f"FNF:{len(functions)}\nFNH:0\n")
             for lineno in sorted(executable_lines):
                 out.write(f"DA:{lineno},0\n")

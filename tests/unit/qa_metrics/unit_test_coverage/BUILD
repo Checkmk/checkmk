@@ -7,6 +7,7 @@ py_test(
     srcs = [
         "__init__.py",
         "test_rows.py",
+        "test_summary.py",
     ],
     pytest_main = True,
     deps = [

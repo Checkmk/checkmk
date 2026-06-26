@@ -8,6 +8,7 @@
 import argparse
 import csv
 from collections import defaultdict
+from collections.abc import Iterable
 from pathlib import Path
 from typing import TypedDict
 
@@ -32,44 +33,42 @@ class RawStats(TypedDict):
     functions_covered: int
 
 
-def parse_lcov(lcov_file: Path) -> dict[str, RawStats]:
+def _record_line(stats: RawStats, *, hits: int) -> None:
+    stats["lines"] += 1
+    if hits > 0:
+        stats["lines_covered"] += 1
+
+
+def _record_function(stats: RawStats, *, hits: int) -> None:
+    stats["functions"] += 1
+    if hits > 0:
+        stats["functions_covered"] += 1
+
+
+def parse_lcov(lines: Iterable[str]) -> dict[str, RawStats]:
+    """Aggregate per-file line and function coverage from LCOV tracefile lines.
+
+    The tracefile is lcov 2.x, as emitted by the ``lcov`` filtering step that
+    feeds this parser. Function coverage comes from the
+    ``FNA:<index>,<hits>,<name>`` data records (the ``FNL:`` declarations carry
+    no hit count and are ignored); line coverage from ``DA:<line>,<hits>``
+    records.
+    """
     file_data: dict[str, RawStats] = defaultdict(
         lambda: RawStats(lines=0, lines_covered=0, functions=0, functions_covered=0)
     )
 
-    with open(lcov_file, encoding="utf-8") as f:
-        current_file = None
-        functions: set[str] = set()
-        functions_covered: set[str] = set()
-
-        for line in f:
-            line = line.strip()
-            if line.startswith("SF:"):
-                # New file detected
-                current_file = line[3:]
-                functions = set()
-                functions_covered = set()
-            elif line.startswith("FN:"):
-                # Function name (start position, functionname)
-                parts = line[3:].split(",")
-                if len(parts) == 2:
-                    functions.add(parts[1])
-            elif line.startswith("FNDA:"):
-                # Function coverage data (hitcount, functionname)
-                parts = line[5:].split(",")
-                if len(parts) == 2 and int(parts[0]) > 0:
-                    functions_covered.add(parts[1])
-            elif line.startswith("DA:") and current_file:
-                # Line coverage data (lineno, hitcount)
-                parts = line[3:].split(",")
-                if len(parts) == 2:
-                    file_data[current_file]["lines"] += 1
-                    if int(parts[1]) > 0:
-                        file_data[current_file]["lines_covered"] += 1
-            elif line == "end_of_record" and current_file:
-                # Finalize function data for this file
-                file_data[current_file]["functions"] += len(functions)
-                file_data[current_file]["functions_covered"] += len(functions_covered)
+    current_file: str | None = None
+    for raw_line in lines:
+        line = raw_line.strip()
+        if line.startswith("SF:"):
+            current_file = line[3:]
+        elif current_file is None:
+            continue
+        elif line.startswith("FNA:"):
+            _record_function(file_data[current_file], hits=int(line[4:].split(",", 2)[1]))
+        elif line.startswith("DA:"):
+            _record_line(file_data[current_file], hits=int(line[3:].split(",")[1]))
     return file_data
 
 
@@ -162,8 +161,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    input_lcov = Path(args.lcov_file)
-    file_data = parse_lcov(input_lcov)
+    with Path(args.lcov_file).open(encoding="utf-8") as lcov_file:
+        file_data = parse_lcov(lcov_file)
     output_csv = Path(args.csv_output)
 
     write_csv(file_data, output_csv, total_only=args.total_only)

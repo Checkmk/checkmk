@@ -6,8 +6,13 @@ from typing import Literal
 
 import pytest
 
-from cmk.gui.views.command.commands import _acknowledgement_needs_removal
+from cmk.ccc.hostaddress import HostName
+from cmk.gui.views.command.commands import (
+    _acknowledgement_needs_removal,
+    _query_downtime_ids_for_leaf,
+)
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.utils.servicename import ServiceName
 
 COMMENT_TABLE = [
     # Host comments
@@ -53,3 +58,62 @@ def test_acknowledgement_needs_removal(
     )
     with live():
         assert _acknowledgement_needs_removal(cmdtag, comments_to_remove) == removal_expected
+
+
+@pytest.mark.usefixtures("request_context")
+class TestRemoveDowntimesBI:
+    def test_host(self, mock_livestatus: MockLiveStatusConnection) -> None:
+        mock_livestatus.add_table(
+            "downtimes",
+            [
+                {"id": 1, "host_name": "heute", "is_service": 0},
+                {"id": 2, "host_name": "gestern", "is_service": 0},
+                {"id": 3, "host_name": "zukunft", "is_service": 0},
+            ],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET downtimes",
+                "Columns: id",
+                "Filter: host_name = heute",
+                "Filter: is_service = 0",
+                "And: 2",
+            ],
+        )
+        with mock_livestatus():
+            assert _query_downtime_ids_for_leaf(None, HostName("heute"), service=None) == [1]
+
+    def test_host_and_service(self, mock_livestatus: MockLiveStatusConnection) -> None:
+        mock_livestatus.add_table(
+            "downtimes",
+            [
+                {"id": 1, "host_name": "heute", "service_description": "CPU", "is_service": 1},
+                {"id": 2, "host_name": "gestern", "service_description": "CPU", "is_service": 1},
+                {"id": 3, "host_name": "zukunft", "service_description": "CPU", "is_service": 1},
+            ],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET downtimes",
+                "Columns: id",
+                "Filter: host_name = heute",
+                "Filter: service_description = CPU",
+                "Filter: is_service = 1",
+                "And: 3",
+            ],
+        )
+        with mock_livestatus():
+            assert _query_downtime_ids_for_leaf(None, HostName("heute"), ServiceName("CPU")) == [1]
+
+    def test_not_found(self, mock_livestatus: MockLiveStatusConnection) -> None:
+        mock_livestatus.expect_query(
+            [
+                "GET downtimes",
+                "Columns: id",
+                "Filter: host_name = heute",
+                "Filter: is_service = 0",
+                "And: 2",
+            ],
+        )
+        with mock_livestatus():
+            assert not _query_downtime_ids_for_leaf(None, HostName("heute"), service=None)

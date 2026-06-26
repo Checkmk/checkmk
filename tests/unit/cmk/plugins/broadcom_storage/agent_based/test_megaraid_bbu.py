@@ -20,37 +20,39 @@ def _get_section() -> dict[str, dict[str, str]]:
     return megaraid_bbu_parse(
         [
             line.split()
-            for line in """
-BBU status for Adapter: 0
-
-BatteryType: CVPM02
-Voltage: 9437 mV
-Current: 0 mA
-Temperature: 27 C
-BBU Firmware Status:
-
-Charging Status : None
-Voltage : OK
-Temperature : OK
-Learn Cycle Requested : No
-Learn Cycle Active : No
-Learn Cycle Status : OK
-Learn Cycle Timeout : No
-I2c Errors Detected : No
-Battery Pack Missing : No
-Battery Replacement required : No
-Remaining Capacity Low : No
-Periodic Learn Required : No
-Transparent Learn : No
-No space to cache offload : No
-Pack is about to fail & should be replaced : No
-Cache Offload premium feature required : No
-Module microcode update required : No
-BBU GasGauge Status: 0x6ef7
-Pack energy : 247 J
-Capacitance : 110
-Remaining reserve space : 0
-""".split("\n")
+            for line in [
+                "",
+                "BBU status for Adapter: 0",
+                "",
+                "BatteryType: CVPM02",
+                "Voltage: 9437 mV",
+                "Current: 0 mA",
+                "Temperature: 27 C",
+                "BBU Firmware Status:",
+                "",
+                "Charging Status : None",
+                "Voltage : OK",
+                "Temperature : OK",
+                "Learn Cycle Requested : No",
+                "Learn Cycle Active : No",
+                "Learn Cycle Status : OK",
+                "Learn Cycle Timeout : No",
+                "I2c Errors Detected : No",
+                "Battery Pack Missing : No",
+                "Battery Replacement required : No",
+                "Remaining Capacity Low : No",
+                "Periodic Learn Required : No",
+                "Transparent Learn : No",
+                "No space to cache offload : No",
+                "Pack is about to fail & should be replaced : No",
+                "Cache Offload premium feature required : No",
+                "Module microcode update required : No",
+                "BBU GasGauge Status: 0x6ef7",
+                "Pack energy : 247 J",
+                "Capacitance : 110",
+                "Remaining reserve space : 0",
+                "",
+            ]
             if line
         ]
     )

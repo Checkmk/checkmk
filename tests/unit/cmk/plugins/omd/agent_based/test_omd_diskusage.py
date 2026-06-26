@@ -12,41 +12,45 @@ from cmk.plugins.omd.agent_based.omd_diskusage import check, discovery, parse, S
 
 TABLE = [
     [l]
-    for l in """[site heute]
-110891421231        /omd/sites/heute
-11089142        /omd/sites/heute/var/log
-110460211219    /omd/sites/heute/var/check_mk/rrd
-[site test]
-4096    /omd/sites/test/var/check_mk/rrd
-16668   /omd/sites/test/var/log
-26668   /omd/sites/test
-""".split("\n")
+    for l in [
+        "[site heute]",
+        "110891421231        /omd/sites/heute",
+        "11089142        /omd/sites/heute/var/log",
+        "110460211219    /omd/sites/heute/var/check_mk/rrd",
+        "[site test]",
+        "4096    /omd/sites/test/var/check_mk/rrd",
+        "16668   /omd/sites/test/var/log",
+        "26668   /omd/sites/test",
+        "",
+    ]
 ]
 
 TABLE_2 = [
     [l]
-    for l in """[site log]
-229473382	/omd/sites/log
-96979	/omd/sites/log/var/log
-123481264	/omd/sites/log/var/check_mk/rrd
-4096	/omd/sites/log/tmp/
-323595	/omd/sites/log/local/
-43255425	/omd/sites/log/var/check_mk/agents/
-1648718	/omd/sites/log/var/check_mk/core/
-[site local]
-258890373	/omd/sites/local
-827498	/omd/sites/local/var/log
-152635621	/omd/sites/local/var/check_mk/rrd
-12288	/omd/sites/local/tmp/
-323595	/omd/sites/local/local/
-43169326	/omd/sites/local/var/check_mk/agents/
-4096    /omd/sites/local/var/mkeventd/history/
-743561	/omd/sites/local/var/check_mk/core/
-13208	/omd/sites/local/var/check_mk/inventory_archive/
-666	/omd/sites/local/var/check_mk/crashes/
-1099	/omd/sites/local/var/check_mk/otel_collector/
-49475	/omd/sites/local/var/clickhouse-server/
-""".split("\n")
+    for l in [
+        "[site log]",
+        "229473382\t/omd/sites/log",
+        "96979\t/omd/sites/log/var/log",
+        "123481264\t/omd/sites/log/var/check_mk/rrd",
+        "4096\t/omd/sites/log/tmp/",
+        "323595\t/omd/sites/log/local/",
+        "43255425\t/omd/sites/log/var/check_mk/agents/",
+        "1648718\t/omd/sites/log/var/check_mk/core/",
+        "[site local]",
+        "258890373\t/omd/sites/local",
+        "827498\t/omd/sites/local/var/log",
+        "152635621\t/omd/sites/local/var/check_mk/rrd",
+        "12288\t/omd/sites/local/tmp/",
+        "323595\t/omd/sites/local/local/",
+        "43169326\t/omd/sites/local/var/check_mk/agents/",
+        "4096    /omd/sites/local/var/mkeventd/history/",
+        "743561\t/omd/sites/local/var/check_mk/core/",
+        "13208\t/omd/sites/local/var/check_mk/inventory_archive/",
+        "666\t/omd/sites/local/var/check_mk/crashes/",
+        "1099\t/omd/sites/local/var/check_mk/otel_collector/",
+        "49475\t/omd/sites/local/var/clickhouse-server/",
+        "",
+    ]
 ]
 
 

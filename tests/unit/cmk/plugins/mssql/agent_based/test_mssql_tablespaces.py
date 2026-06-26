@@ -47,7 +47,9 @@ WORKING_STRING_TABLE = [
 ]
 
 ERROR_STRING_TABLE = [
-    ["MSSQL_Katze", "Kitty"] + ["-"] * 12 + "ERROR: Kitty ist auf die Nase gefallen!".split(" "),
+    ["MSSQL_Katze", "Kitty"]
+    + ["-"] * 12
+    + ["ERROR:", "Kitty", "ist", "auf", "die", "Nase", "gefallen!"],
 ]
 
 

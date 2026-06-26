@@ -67,11 +67,38 @@ def test_current_history_period(config: Config) -> None:
 
 def test_convert_history_line() -> None:
     """History convert values."""
-    values: list[Any] = (
-        "1	1666942292.5	DELETE	cmkadmin		5	1	some text	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin					rule	heute	0	".split(
-            "\t"
-        )
-    )
+    values: list[Any] = [
+        "1",
+        "1666942292.5",
+        "DELETE",
+        "cmkadmin",
+        "",
+        "5",
+        "1",
+        "some text",
+        "1666942205.0",
+        "1666942205.0",
+        "",
+        "0",
+        "heute",
+        "",
+        "OMD",
+        "0",
+        "6",
+        "9",
+        "asdf",
+        "0",
+        "closed",
+        "cmkadmin",
+        "\x01",
+        "\x02",
+        "",
+        "",
+        "rule",
+        "heute",
+        "0",
+        "\x01",
+    ]
     assert len(values) == 30
 
     convert_history_line(StatusTableHistory.columns, values)
@@ -90,11 +117,31 @@ def test_convert_history_line() -> None:
 
 def test_convert_history_line_legacy() -> None:
     """History convert values."""
-    values: list[Any] = (
-        "1	1666942299	DELETE	cmkadmin		5	1	some text	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin	".split(
-            "\t"
-        )
-    )
+    values: list[Any] = [
+        "1",
+        "1666942299",
+        "DELETE",
+        "cmkadmin",
+        "",
+        "5",
+        "1",
+        "some text",
+        "1666942205.0",
+        "1666942205.0",
+        "",
+        "0",
+        "heute",
+        "",
+        "OMD",
+        "0",
+        "6",
+        "9",
+        "asdf",
+        "0",
+        "closed",
+        "cmkadmin",
+        "\x01",
+    ]
     assert len(values) == 23
 
     convert_history_line(StatusTableHistory.columns, values)

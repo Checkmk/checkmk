@@ -40,6 +40,7 @@ select = [
   "SIM210", # flake8-simplify: if-expr-with-true-false
   "SIM212", # flake8-simplify: if-expr-with-twisted-arms
   "SIM222", # flake8-simplify: expr-or-true
+  "SIM905", # flake8-simplify: split-static-string
   "SLF",    # flake8: self
   "UP",     # pyugrade
   "W",      # pycodestyle (warning)

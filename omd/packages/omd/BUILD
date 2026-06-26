@@ -242,12 +242,12 @@ py_library(
     deps = [
         "//cmk/utils",
         "//packages/cmk-ccc:archive",
-        "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-crash:crash",
         "//packages/cmk-crypto",
         requirement("psutil"),
         requirement("marshmallow"),

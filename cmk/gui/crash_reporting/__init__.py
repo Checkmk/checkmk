@@ -6,7 +6,7 @@
 from datetime import timedelta
 
 import cmk.utils.paths
-from cmk.ccc.crash_reporting import cleanup_crash_reports, make_crash_report_base_path
+from cmk.crash import cleanup_crash_reports, make_crash_report_base_path
 from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.data_source import DataSourceRegistry

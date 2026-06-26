@@ -7,7 +7,8 @@ import os
 import sys
 from pathlib import Path
 
-from cmk.ccc.crash_reporting import (
+from cmk.ccc.version import get_general_version_infos
+from cmk.crash import (
     ABCCrashReport,
     BaseDetails,
     CrashInfo,
@@ -15,7 +16,6 @@ from cmk.ccc.crash_reporting import (
     make_crash_report_base_path,
     VersionInfo,
 )
-from cmk.ccc.version import get_general_version_infos
 
 
 def create_crash_report(omd_root: Path) -> None:

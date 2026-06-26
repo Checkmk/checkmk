@@ -473,6 +473,7 @@ allows = [
   "cmk.automations",
   "cmk.checkengine",
   "cmk.core_client",
+  "cmk.crash",
   "cmk.diagnostics",
   "cmk.discover_plugins",
   "cmk.ec",
@@ -553,6 +554,7 @@ allows = [
   "@ccc",
   "@plugin_apis",
   "@trace",
+  "cmk.crash",
   "cmk.discover_plugins",
   "cmk.checkengine.helper_interface",
   "cmk.inventory",
@@ -618,6 +620,7 @@ allows = [
   "cmk.check_helper",
   "cmk.checkengine.agent_protocol",
   "cmk.check_helper_protocol",
+  "cmk.crash",
   "cmk.checkengine.fetcher",
   "cmk.checkengine.fetcher_utils",
   "cmk.checkengine.fetchers",
@@ -670,7 +673,14 @@ allows = []
 allows = ["@ccc", "@crypto", "cmk.gui", "cmk.utils"]
 
 [components."cmk.ec"]
-allows = ["@ccc", "@livestatus_client", "@mkp_tool", "cmk.events", "cmk.utils"]
+allows = [
+  "@ccc",
+  "@livestatus_client",
+  "@mkp_tool",
+  "cmk.crash",
+  "cmk.events",
+  "cmk.utils",
+]
 
 [components."cmk.checkengine.agent_protocol"]
 allows = ["@crypto", "cmk.checkengine.fetcher"]
@@ -936,6 +946,7 @@ allows = [
   "cmk.automations",
   "cmk.bi",
   "cmk.checkengine",
+  "cmk.crash",
   "cmk.crash_reporting",
   "cmk.diagnostics",
   "cmk.discover_plugins",
@@ -1017,7 +1028,7 @@ excludes = [
 
 # should become a package
 [components."cmk.checkengine.helper_interface"]
-allows = ["@ccc"]
+allows = ["@ccc", "cmk.crash"]
 
 [components."cmk.checkengine.snmp_backends.inline"]
 allows = [
@@ -1080,7 +1091,13 @@ allows = ["@ccc", "@plugin_apis", "cmk.discover_plugins", "cmk.utils"]
 allows = []
 
 [components."cmk.special_agents"]
-allows = ["@ccc", "@plugin_apis", "cmk.utils.password_store", "cmk.utils.paths"]
+allows = [
+  "@ccc",
+  "@plugin_apis",
+  "cmk.crash",
+  "cmk.utils.password_store",
+  "cmk.utils.paths",
+]
 
 [components."cmk.checkengine.snmp_backends"]
 allows = ["@ccc", "cmk.checkengine.snmplib"]
@@ -1125,6 +1142,7 @@ allows = [
   "cmk.backup",
   "cmk.base",
   "cmk.checkengine",
+  "cmk.crash",
   "cmk.dcd.gui",
   "cmk.dcd.protocols",
   "cmk.discover_plugins",
@@ -1156,7 +1174,7 @@ allows = [
 allows = ["@ccc", "@trace"]
 
 [components."cmk.mknotifyd"]
-allows = ["@ccc", "cmk.events"]
+allows = ["@ccc", "cmk.crash", "cmk.events"]
 
 [components."cmk.metric_backend.gui"]
 allows = [
@@ -1175,6 +1193,7 @@ allows = [
 allows = [
   "@ccc",
   "@plugin_apis",
+  "cmk.crash",
   "cmk.dcd.protocols",
   "cmk.discover_plugins",
   "cmk.otel_collector",
@@ -1192,6 +1211,7 @@ allows = []
 allows = [
   "@ccc",
   "@trace",
+  "cmk.crash",
   "cmk.inventory",
   "cmk.liveproxyd.shared",
   "cmk.utils",
@@ -1290,7 +1310,7 @@ allows = [
 ]
 
 [components."cmk.rrd"]
-allows = ["@ccc", "cmk.utils"]
+allows = ["@ccc", "cmk.crash", "cmk.utils"]
 
 [components."cmk.post_rename_site"]
 allows = [
@@ -1641,7 +1661,7 @@ allows = []
 allows = ["@ccc"]
 
 [components."omdlib"]
-allows = ["@ccc", "@crypto", "cmk.utils"]
+allows = ["@ccc", "@crypto", "cmk.crash", "cmk.utils"]
 
 [components."cmk.relay_trigger_protocol"]
 allows = [
@@ -1700,7 +1720,7 @@ allows = [
 allows = ["@ccc", "@messaging", "cmk.utils.paths"]
 
 [file_dependencies."bin/cmk-piggyback-hub.py"]
-allows = ["@ccc", "cmk.piggyback", "cmk.utils"]
+allows = ["@ccc", "cmk.crash", "cmk.piggyback", "cmk.utils"]
 
 [file_dependencies."bin/cmk-piggyback.py"]
 allows = ["@livestatus_client", "cmk.piggyback", "cmk.utils"]

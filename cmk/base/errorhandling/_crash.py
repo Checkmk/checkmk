@@ -15,16 +15,16 @@ from typing import Any, Literal, TypedDict
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
-from cmk.ccc.crash_reporting import (
+from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.helper_interface import AgentRawData
+from cmk.checkengine.plugins import CheckPluginName, SectionName
+from cmk.checkengine.snmplib import SNMPBackendEnum
+from cmk.crash import (
     ABCCrashReport,
     CrashInfo,
     CrashReportStore,
     make_crash_report_base_path,
 )
-from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.helper_interface import AgentRawData
-from cmk.checkengine.plugins import CheckPluginName, SectionName
-from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.piggyback.backend import get_messages_for
 from cmk.utils.servicename import ServiceName
 

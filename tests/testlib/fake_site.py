@@ -27,8 +27,8 @@ import cmk.ccc.version as cmk_version
 import cmk.crypto.password_hashing
 import cmk.utils.caching
 import cmk.utils.paths
-from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.site import omd_site, SiteId
+from cmk.crash import make_crash_report_base_path
 from cmk.utils import redis
 from tests.testlib.common.repo import is_non_free_repo, repo_path
 

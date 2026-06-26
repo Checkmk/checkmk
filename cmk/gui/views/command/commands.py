@@ -78,7 +78,9 @@ from cmk.livestatus_client import (
     SendCustomServiceNotification,
 )
 from cmk.livestatus_client import Command as LivestatusCommand
+from cmk.livestatus_client.expressions import And, NothingExpression
 from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables.downtimes import Downtimes
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
@@ -2175,6 +2177,8 @@ def command_remove_downtime_action(
     if request.has_var("_remove_downtimes"):
         if "downtime_id" in row:
             return _rm_downtime_from_downtime_datasource(command, cmdtag, spec, row, action_rows)
+        if "aggr_tree" in row:  # BI mode
+            return _rm_downtime_from_bi_aggregation(command, row, action_rows)
         return _rm_downtime_from_hst_or_svc_datasource(command, cmdtag, row, action_rows)
     return None
 
@@ -2215,6 +2219,53 @@ def _rm_downtime_from_hst_or_svc_datasource(
     return commands, command.confirm_dialog_options(cmdtag, row, action_rows)
 
 
+def _rm_downtime_from_bi_aggregation(
+    command: Command,
+    row: Row,
+    action_rows: Rows,
+) -> tuple[Sequence[CommandSpec], CommandConfirmDialogOptions] | None:
+    if not user.may("action.remove_all_downtimes"):
+        return None
+
+    # TODO: look into a better way of doing this in bulk. This code is following an established
+    # pattern of traversing the tree and collecting commands, but we could probably do this in one
+    # query to livestatus instead of N+1.
+    commands: list[CommandSpec] = [
+        (site, DeleteServiceDowntime(id_) if service else DeleteHostDowntime(id_))
+        for site, host, service in _find_all_leaves(row["aggr_tree"])
+        for id_ in _query_downtime_ids_for_leaf(site, host, service)
+    ]
+
+    # HACK: the confirm dialog only accepts HOST or SVC as the cmdtag. We don't want to add support
+    # for BI aggregations in the core command logic. Already too much BI logic has bled into this
+    # module. So instead, we will generate the options and then patch the values after the fact.
+    dialog_options = command.confirm_dialog_options("HOST", row, action_rows)
+    dialog_options.affected = HTML.with_escaping(_("Affected aggregations: %d") % len(action_rows))
+    dialog_options.additions = dialog_options.additions + HTMLWriter.render_p(
+        _("Command applies to all nested hosts and services in aggregation.")
+    )
+
+    return commands, dialog_options
+
+
+def _query_downtime_ids_for_leaf(
+    site: SiteId | None,
+    host: HostName,
+    service: ServiceName | None,
+) -> list[int]:
+    q = Query(
+        columns=[Downtimes.id],
+        filter_expr=And(
+            Downtimes.host_name.equals(host),
+            Downtimes.service_description.equals(str(service)) if service else NothingExpression(),
+            Downtimes.is_service.equals(1 if service else 0),
+        ),
+    )
+    only_sites = [site] if site else None
+
+    return [int(row["id"]) for row in q.fetchall(sites.live(), only_sites=only_sites)]
+
+
 CommandRemoveDowntimesHostServicesTable = Command(
     ident="remove_downtimes_hosts_services",
     title=_l("Remove downtimes"),
@@ -2222,7 +2273,7 @@ CommandRemoveDowntimesHostServicesTable = Command(
     confirm_button=_l("Remove"),
     permission=PermissionActionDowntimes,
     group=CommandGroupDowntimes,
-    tables=["host", "service"],
+    tables=["host", "service", "aggr"],
     is_shortcut=False,
     is_suggested=False,
     render=command_remove_downtime_render,

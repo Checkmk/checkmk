@@ -53,22 +53,41 @@ import enum
 import logging
 import os
 import time
-from collections.abc import Sized
+from collections.abc import Sequence, Sized
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, NamedTuple, NoReturn
+from typing import Any, Final, NamedTuple, NoReturn, Self, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.checkengine.fetcher import FetcherError, Mode
+from cmk.checkengine.fetcher import DeserializationContext, FetcherError, Mode
+from cmk.checkengine.helper_interface import JsonSerializable
 
 __all__ = [
     "FileCache",
     "FileCacheMode",
     "FileCacheOptions",
+    "FileCacheParams",
     "MaxAge",
     "NoCache",
 ]
+
+
+class FileCacheParams(TypedDict, total=False):
+    """Serialized parameters of a `FileCache`.
+
+    Describes the on-disk JSON shape: `max_age` is a JSON array (the `MaxAge`
+    named tuple) and `file_cache_mode` is the int value of the `FileCacheMode`
+    flag. `total=False` because `NoCache` serializes to an empty mapping while
+    the other caches populate all keys. `base_path` is deliberately absent --
+    it comes from the `DeserializationContext`, not the payload.
+    """
+
+    relative_path_template: str
+    max_age: Sequence[float]
+    simulation: bool
+    use_only_cache: bool
+    file_cache_mode: int
 
 
 class MaxAge(NamedTuple):
@@ -98,7 +117,9 @@ class FileCacheMode(enum.IntFlag):
     READ_WRITE = READ | WRITE
 
 
-class FileCache[TRawData: Sized](abc.ABC):
+class FileCache[TRawData: Sized](
+    JsonSerializable[FileCacheParams, DeserializationContext], abc.ABC
+):
     def __init__(
         self,
         *,
@@ -133,6 +154,28 @@ class FileCache[TRawData: Sized](abc.ABC):
                 self.use_only_cache == other.use_only_cache,
                 self.file_cache_mode == other.file_cache_mode,
             )
+        )
+
+    def serialized_params(self) -> FileCacheParams:
+        # `base_path` is intentionally omitted: it is supplied by the
+        # `DeserializationContext` of the reading process.
+        return {
+            "relative_path_template": self.relative_path_template,
+            "max_age": self.max_age,
+            "simulation": self.simulation,
+            "use_only_cache": self.use_only_cache,
+            "file_cache_mode": self.file_cache_mode,
+        }
+
+    @classmethod
+    def from_params(cls, params: FileCacheParams, ctx: DeserializationContext) -> Self:
+        return cls(
+            base_path=ctx.base_path,
+            relative_path_template=params["relative_path_template"],
+            max_age=MaxAge(*params["max_age"]),
+            simulation=params["simulation"],
+            use_only_cache=params["use_only_cache"],
+            file_cache_mode=params["file_cache_mode"],
         )
 
     @staticmethod
@@ -234,6 +277,13 @@ class NoCache[TRawData: Sized](FileCache[TRawData]):
             use_only_cache=False,
             file_cache_mode=FileCacheMode.DISABLED,
         )
+
+    def serialized_params(self) -> FileCacheParams:
+        return {}
+
+    @classmethod
+    def from_params(cls, _params: FileCacheParams, _ctx: DeserializationContext) -> Self:
+        return cls()
 
     @staticmethod
     def _from_cache_file(_raw_data: object) -> NoReturn:

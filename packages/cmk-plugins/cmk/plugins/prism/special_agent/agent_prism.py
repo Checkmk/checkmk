@@ -59,7 +59,7 @@ class SessionManager:
         self._session = requests.Session()
         auth_encoded = base64.b64encode(f"{username}:{password}".encode()).decode()
         self._session.headers.update({"Authorization": f"Basic {auth_encoded}"})
-        self._verify = False if cert_check is False else True
+        self._verify = cert_check is not False
         self._timeout = timeout
         if isinstance(cert_check, str):
             self._session.mount(base_url, HostnameValidationAdapter(cert_check))

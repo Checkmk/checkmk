@@ -96,7 +96,7 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
                 return UserSyncDisabledModel(sync_with_ldap_connections="disabled")
 
             return ConnectionModel(
-                enable_replication=False if site_configuration.get("replication") is None else True,
+                enable_replication=site_configuration.get("replication") is not None,
                 url_of_remote_site=site_configuration["multisiteurl"],
                 disable_remote_configuration=site_configuration["disable_wato"],
                 ignore_tls_errors=site_configuration["insecure"],

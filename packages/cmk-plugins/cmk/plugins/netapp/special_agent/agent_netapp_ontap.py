@@ -1295,7 +1295,7 @@ def agent_netapp_main(args: argparse.Namespace) -> int:
         args.hostname,
         args.username,
         resolve_secret_option(args, PASSWORD_OPTION).reveal(),
-        verify=False if args.no_cert_check else True,
+        verify=not args.no_cert_check,
         headers={"User-Agent": USER_AGENT},
     ) as connection:
         if isinstance(args.cert_server_name, str):

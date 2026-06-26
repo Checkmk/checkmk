@@ -128,7 +128,7 @@ class HostsStorageFieldsGenerator:
             )
             if use_for_services:
                 # Currently service_contactgroups requires single values. Lists are not supported
-                contact_group_fields["folder_services"] = list(
+                contact_group_fields["folder_services"] = [
                     {
                         "value": cg,
                         "condition": {
@@ -136,7 +136,7 @@ class HostsStorageFieldsGenerator:
                         },
                     }
                     for cg in folder_contact_groups
-                )
+                ]
 
         return contact_group_fields
 

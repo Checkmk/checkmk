@@ -1150,7 +1150,7 @@ def postprocess_configuration(
         case tuple():
             return tuple(postprocess_configuration(v, config) for v in params)
         case list():
-            return list(postprocess_configuration(v, config) for v in params)
+            return [postprocess_configuration(v, config) for v in params]
         case dict():  # check for legacy predictive levels :-(
             return {
                 k: (

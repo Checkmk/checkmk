@@ -197,7 +197,7 @@ def test_cluster_check_worst_others_are_notice_only(vsm: value_store.ValueStoreM
 def test_cluster_check_worst_yield_worst_nodes_metrics(vsm: value_store.ValueStoreManager) -> None:
     check_worst = _get_cluster_check_function(_simple_check, mode="worst", vsm=vsm)
 
-    assert list(
+    assert [
         m
         for m in check_worst(
             section={
@@ -206,7 +206,7 @@ def test_cluster_check_worst_yield_worst_nodes_metrics(vsm: value_store.ValueSto
             },
         )
         if isinstance(m, Metric)
-    )[0] == Metric("n", 42)  # Nodeberts value
+    ][0] == Metric("n", 42)  # Nodeberts value
 
 
 def test_cluster_check_worst_yield_selected_nodes_metrics(
@@ -216,7 +216,7 @@ def test_cluster_check_worst_yield_selected_nodes_metrics(
         _simple_check, mode="worst", vsm=vsm, clusterization_parameters={"metrics_node": "Nodett"}
     )
 
-    assert list(
+    assert [
         m
         for m in check_worst(
             section={
@@ -225,7 +225,7 @@ def test_cluster_check_worst_yield_selected_nodes_metrics(
             },
         )
         if isinstance(m, Metric)
-    )[0] == Metric("n", 23)  # Nodetts value
+    ][0] == Metric("n", 23)  # Nodetts value
 
 
 def test_cluster_check_worst_unprefered_node_is_ok(vsm: value_store.ValueStoreManager) -> None:
@@ -303,7 +303,7 @@ def test_cluster_check_best_others_are_notice_only(vsm: value_store.ValueStoreMa
 def test_cluster_check_best_yield_best_nodes_metrics(vsm: value_store.ValueStoreManager) -> None:
     check_best = _get_cluster_check_function(_simple_check, mode="best", vsm=vsm)
 
-    assert list(
+    assert [
         m
         for m in check_best(
             section={
@@ -312,7 +312,7 @@ def test_cluster_check_best_yield_best_nodes_metrics(vsm: value_store.ValueStore
             },
         )
         if isinstance(m, Metric)
-    )[0] == Metric("n", 23)  # Nodetts value
+    ][0] == Metric("n", 23)  # Nodetts value
 
 
 def test_cluster_check_best_unprefered_node_is_ok(vsm: value_store.ValueStoreManager) -> None:
@@ -368,7 +368,7 @@ def test_cluster_check_failover_yield_worst_nodes_metrics(
 ) -> None:
     check_failover = _get_cluster_check_function(_simple_check, mode="failover", vsm=vsm)
 
-    assert list(
+    assert [
         m
         for m in check_failover(
             section={
@@ -377,7 +377,7 @@ def test_cluster_check_failover_yield_worst_nodes_metrics(
             },
         )
         if isinstance(m, Metric)
-    )[0] == Metric("n", 42)  # Nodeberts value.
+    ][0] == Metric("n", 42)  # Nodeberts value.
 
 
 def test_cluster_check_failover_two_are_not_ok(vsm: value_store.ValueStoreManager) -> None:

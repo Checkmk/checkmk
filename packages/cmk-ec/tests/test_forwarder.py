@@ -188,7 +188,7 @@ def test_forward_tcp_message_forwarded_spool_twice(tmp_path: Path) -> None:
     assert len(messages_forwarded) == 0
 
     # we expect one spool file to be created:
-    assert list(f.name for f in spool_dir.iterdir()) == ["spool.1698768120.00"]
+    assert [f.name for f in spool_dir.iterdir()] == ["spool.1698768120.00"]
 
     # create another spooled message:
     result, messages_forwarded = _forward_message(

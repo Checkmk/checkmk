@@ -77,7 +77,7 @@ def _read_plugin_info(omd_root: Path, plugin: _PluginData) -> _Info:
 
 def load_plugins(omd_root: Path, plugin_dir: Path, plugin_dir_local: Path) -> Sequence[_Info]:
     try:
-        local_plugins: list[str] = list(p.name for p in plugin_dir_local.iterdir())
+        local_plugins: list[str] = [p.name for p in plugin_dir_local.iterdir()]
     except OSError:
         local_plugins = []  # this is optional
 

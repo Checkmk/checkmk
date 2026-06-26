@@ -242,7 +242,7 @@ def parse_color_into_hexrgb(color_string: str) -> str:
 def _pointwise_multiplication(
     c1: tuple[float, float, float], c2: tuple[float, float, float]
 ) -> tuple[float, float, float]:
-    components = list(x * y for x, y in zip(c1, c2))
+    components = [x * y for x, y in zip(c1, c2)]
     return components[0], components[1], components[2]
 
 

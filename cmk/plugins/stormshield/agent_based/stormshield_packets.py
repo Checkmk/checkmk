@@ -91,7 +91,7 @@ def check_stormshield_packets(item: str, section: Section) -> CheckResult:
 
 
 def parse_stormshield_packets(string_table: StringTable) -> Section:
-    return list(
+    return [
         SectionItem(
             description=descrip,
             name=_name,
@@ -103,7 +103,7 @@ def parse_stormshield_packets(string_table: StringTable) -> Section:
             udp=int(_udp),
         )
         for descrip, _name, iftype, _pktaccepted, _pktblocked, _pkticmp, _tcp, _udp in string_table
-    )
+    ]
 
 
 snmp_section_stormshield_packets = SimpleSNMPSection(

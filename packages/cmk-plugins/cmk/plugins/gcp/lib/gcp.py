@@ -246,7 +246,7 @@ def get_value(timeseries: Sequence[GCPResult], spec: MetricExtractionSpec) -> fl
         def filter_func(r: GCPResult) -> bool:
             return r.metric_type == spec.metric_type
 
-    results = list(r for r in timeseries if filter_func(r))
+    results = [r for r in timeseries if filter_func(r)]
     # normally, only one result should be retrieved. The aggregation over several results is
     # currently only needed for getting the total request count over the response classes for
     # Google Cloud Run applications

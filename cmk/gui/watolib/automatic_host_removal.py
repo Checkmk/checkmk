@@ -99,7 +99,7 @@ def execute_host_removal_job(config: Config) -> None:
         for folder, hosts_in_folder in itertools.groupby(
             itertools.chain.from_iterable(hosts_to_be_removed.values()), _folder_of_host
         ):
-            hostnames = list(host.name() for host in hosts_in_folder)
+            hostnames = [host.name() for host in hosts_in_folder]
             _LOGGER_BACKGROUND_JOB.debug(
                 "Removing %d host(s) from folder %s",
                 len(hostnames),

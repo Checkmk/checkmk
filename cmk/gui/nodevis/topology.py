@@ -960,7 +960,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
 
         start_node_ids = sorted((x for x, y in self._topology_nodes.items() if y.mesh_depth == 0))
         _resolve_circular_mesh_depths(
-            list(self._topology_nodes[x] for x in start_node_ids), self._topology_nodes
+            [self._topology_nodes[x] for x in start_node_ids], self._topology_nodes
         )
 
         if self._add_data_root_node:
@@ -1106,7 +1106,7 @@ def _resolve_circular_mesh_depths(
     nodes_by_num_connections.sort(key=lambda x: x[0], reverse=True)
 
     traversed_nodes = set()
-    for start_node in explicit_start_nodes + list(x[1] for x in nodes_by_num_connections):
+    for start_node in explicit_start_nodes + [x[1] for x in nodes_by_num_connections]:
         mesh_depth = 1
         if start_node.id in traversed_nodes:
             continue

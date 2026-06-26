@@ -101,9 +101,9 @@ def test_parse_cisco_mem_asa(
     ],
 )
 def test_discovery_cisco_mem(string_table: Section, expected_items: Iterable[str]) -> None:
-    assert list(discovery_cisco_mem(string_table)) == list(
+    assert list(discovery_cisco_mem(string_table)) == [
         Service(item=item) for item in expected_items
-    )
+    ]
 
 
 @pytest.mark.parametrize(

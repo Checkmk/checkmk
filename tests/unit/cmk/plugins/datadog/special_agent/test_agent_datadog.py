@@ -404,7 +404,7 @@ class TestLogsQuerier:
     ],
 )
 def test_log_to_syslog_message(raw_translator: Sequence[str], message_text: str) -> None:
-    translator = list(LogMessageElement.from_arg(el) for el in raw_translator)
+    translator = [LogMessageElement.from_arg(el) for el in raw_translator]
     message = repr(
         _log_to_syslog_message(
             Log(

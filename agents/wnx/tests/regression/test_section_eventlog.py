@@ -55,7 +55,7 @@ def generate_logs():
 # Windows SSH agent and COM spoil tests by omitting occasional events to
 # Security and System logs. Ignore those logs as they are too unstable during a
 # test run.
-logs = list(l for l in generate_logs() if l not in ["Security", "System"])
+logs = [l for l in generate_logs() if l not in ["Security", "System"]]
 
 
 @contextlib.contextmanager

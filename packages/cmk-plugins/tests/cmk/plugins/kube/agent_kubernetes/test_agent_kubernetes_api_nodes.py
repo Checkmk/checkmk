@@ -151,9 +151,7 @@ class TestAPINode:
         assert conditions is not None
         assert len(conditions) == 5
         assert any(c.type_ == "DiskPressure" for c in conditions)
-        assert list(c.status for c in conditions if c.type_ == "Ready") == [
-            api.ConditionStatus.TRUE
-        ]
+        assert [c.status for c in conditions if c.type_ == "Ready"] == [api.ConditionStatus.TRUE]
 
     def test_parse_conditions_no_status(
         self, core_client: client.CoreV1Api, dummy_host: str

@@ -141,7 +141,7 @@ def copy_dumps(
         site.makedirs(target_dir)
     source_path = f"{source_dir}/{(source_filename if source_filename else prefix + '*')}"
     if source_filename and target_filenames:
-        target_paths = list((target_dir / filename) for filename in target_filenames)
+        target_paths = [(target_dir / filename) for filename in target_filenames]
     else:
         target_paths = [target_dir]
     for target_path in target_paths:

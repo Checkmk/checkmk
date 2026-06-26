@@ -224,7 +224,7 @@ def fixture_agent_output() -> Sequence[agent_gcp.Section]:
 
 
 def test_host_labels(agent_output: Sequence[agent_gcp.Section]) -> None:
-    label_section = list(s for s in agent_output if isinstance(s, agent_gcp.HostLabelSection))
+    label_section = [s for s in agent_output if isinstance(s, agent_gcp.HostLabelSection)]
     assert label_section[0] == agent_gcp.HostLabelSection(labels={"cmk/gcp/projectId": "test"})
 
 
@@ -235,7 +235,7 @@ def test_output_contains_defined_metric_sections(agent_output: Sequence[agent_gc
 
 def test_output_contains_one_asset_section(agent_output: Sequence[agent_gcp.Section]) -> None:
     assert "asset" in {s.name for s in agent_output}
-    asset_sections = list(s for s in agent_output if isinstance(s, agent_gcp.AssetSection))
+    asset_sections = [s for s in agent_output if isinstance(s, agent_gcp.AssetSection)]
     assert len(asset_sections) == 1
 
 
@@ -326,17 +326,15 @@ def asset_and_piggy_back_sections_fixture() -> Sequence[
         serializer=collector,
         piggy_back_prefix="custom-prefix",
     )
-    return list(
+    return [
         s for s in sections if isinstance(s, agent_gcp.PiggyBackSection | agent_gcp.AssetSection)
-    )
+    ]
 
 
 def test_piggy_back_config_in_assets(
     asset_and_piggy_back_sections: Sequence[agent_gcp.PiggyBackSection | agent_gcp.AssetSection],
 ) -> None:
-    section = list(
-        s for s in asset_and_piggy_back_sections if isinstance(s, agent_gcp.AssetSection)
-    )
+    section = [s for s in asset_and_piggy_back_sections if isinstance(s, agent_gcp.AssetSection)]
     assert len(section) == 1
     assert section[0].config == ["testing"]
 
@@ -345,9 +343,7 @@ def test_piggy_back_config_in_assets(
 def piggy_back_sections_fixture(
     asset_and_piggy_back_sections: Sequence[agent_gcp.PiggyBackSection | agent_gcp.AssetSection],
 ) -> Sequence[agent_gcp.PiggyBackSection]:
-    return list(
-        s for s in asset_and_piggy_back_sections if isinstance(s, agent_gcp.PiggyBackSection)
-    )
+    return [s for s in asset_and_piggy_back_sections if isinstance(s, agent_gcp.PiggyBackSection)]
 
 
 def test_can_hash_client() -> None:
@@ -429,7 +425,7 @@ def fixture_gce_sections() -> Sequence[agent_gcp.PiggyBackSection]:
         serializer=collector,
         piggy_back_prefix="custom-prefix",
     )
-    return list(s for s in sections if isinstance(s, agent_gcp.PiggyBackSection))
+    return [s for s in sections if isinstance(s, agent_gcp.PiggyBackSection)]
 
 
 def test_gce_host_labels(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
@@ -538,7 +534,7 @@ def fixture_cost_output() -> Sequence[agent_gcp.Section]:
 
 def test_output_contains_cost_section(cost_output: Sequence[agent_gcp.Section]) -> None:
     assert "cost" in {s.name for s in cost_output}
-    asset_sections = list(s for s in cost_output if isinstance(s, agent_gcp.AssetSection))
+    asset_sections = [s for s in cost_output if isinstance(s, agent_gcp.AssetSection)]
     assert len(asset_sections) == 1
 
 
@@ -546,7 +542,7 @@ def test_output_cost_section(
     cost_output: Sequence[agent_gcp.Section], capsys: pytest.CaptureFixture[str]
 ) -> None:
     assert "cost" in {s.name for s in cost_output}
-    sections = list(s for s in cost_output if isinstance(s, agent_gcp.CostSection))
+    sections = [s for s in cost_output if isinstance(s, agent_gcp.CostSection)]
     agent_gcp.gcp_serializer(sections)
     captured = capsys.readouterr()
     lines = captured.out.rstrip().split("\n")

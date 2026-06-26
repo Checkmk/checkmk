@@ -1076,10 +1076,8 @@ def _reserve_werk_ids(
             raise RuntimeError("Configuration error: first_free no in range!")
         new_first_free = first_free + count
         if new_first_free < end:
-            return new_first_free, buffer + list(
-                WerkId(i) for i in range(first_free, new_first_free)
-            )
-        buffer += list(WerkId(i) for i in range(first_free, end))
+            return new_first_free, buffer + [WerkId(i) for i in range(first_free, new_first_free)]
+        buffer += [WerkId(i) for i in range(first_free, end)]
         count -= end - first_free
         if not ranges:
             raise RuntimeError(

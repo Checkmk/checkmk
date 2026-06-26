@@ -22,7 +22,7 @@ def test_config_variable_add_domain() -> None:
     )
     test_var.add_config_domain_affected_by_change(ConfigDomainCore)
     test_var.add_config_domain_affected_by_change(ConfigDomainOMD)
-    assert list(config_domain.ident() for config_domain in test_var.all_domains()) == [
+    assert [config_domain.ident() for config_domain in test_var.all_domains()] == [
         ConfigDomainGUI.ident(),
         ConfigDomainCore.ident(),
         ConfigDomainOMD.ident(),

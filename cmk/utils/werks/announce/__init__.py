@@ -67,7 +67,7 @@ def get_werks_by_edition(werks: list[WerkV3], edition: EditionV3) -> WerksByEdit
     for component, component_group in itertools.groupby(werklist, key=translator.component_of):
         result.append(
             WerksByComponent(
-                component=component, werks=list(SimpleWerk.from_werk(w) for w in component_group)
+                component=component, werks=[SimpleWerk.from_werk(w) for w in component_group]
             )
         )
     return WerksByEdition(werks=result, len=len(werks_by_edition))

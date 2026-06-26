@@ -1051,7 +1051,7 @@ def _call_activate_changes_automation(
     if isinstance(automation_config, LocalAutomationConfig):
         return execute_activate_changes(domain_requests, is_remote_site=is_remote_site)
 
-    serialized_requests = list(asdict(x) for x in domain_requests)
+    serialized_requests = [asdict(x) for x in domain_requests]
     try:
         response = cmk.gui.watolib.automations.do_remote_automation(
             automation_config,

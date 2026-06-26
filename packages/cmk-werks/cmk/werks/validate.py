@@ -23,13 +23,13 @@ def main(
     if werks_to_check:
         pass
     elif changed_werk_files := os.environ.get("CHANGED_WERK_FILES"):
-        werks_to_check = list(Path(line) for line in changed_werk_files.split(" ") if line)
+        werks_to_check = [Path(line) for line in changed_werk_files.split(" ") if line]
     else:
-        werks_to_check = list(
+        werks_to_check = [
             path
             for path in Path(".werks").iterdir()
             if path.name.isdigit() or path.name.endswith(".md")
-        )
+        ]
 
     current_version = try_load_current_version_from_defines_make(defines_make)
     config = load_config(werks_config, current_version=current_version)

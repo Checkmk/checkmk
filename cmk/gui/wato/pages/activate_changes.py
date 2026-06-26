@@ -767,11 +767,11 @@ class ModeActivateChanges(WatoMode):
                 need_sync = self._changes.is_sync_needed(site_id, site)
                 need_action = need_restart or need_sync
                 nr_changes = len(
-                    list(
+                    [
                         change
                         for change in self._changes.changes_of_site(site_id)
                         if not has_been_activated(change)
-                    )
+                    ]
                 )
 
                 # Activation checkbox

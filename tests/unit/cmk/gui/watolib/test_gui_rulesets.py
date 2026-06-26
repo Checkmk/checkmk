@@ -524,7 +524,6 @@ def test_rules_grouped_by_folder() -> None:
         rules, key=lambda x: (x[0].path().split("/"), len(rules) - x[1]), reverse=True
     )
     with disable_redis():
-        assert (
-            list(rule[0].path() for rule in rulesets.rules_grouped_by_folder(sorted_rules, root))
-            == expected_folder_order
-        )
+        assert [
+            rule[0].path() for rule in rulesets.rules_grouped_by_folder(sorted_rules, root)
+        ] == expected_folder_order

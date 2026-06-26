@@ -65,7 +65,7 @@ class Parser[Section: Mapping[str, Any]]:
         return cast(
             Section,
             {
-                key: list(i[1] for i in items)
+                key: [i[1] for i in items]
                 for key, items in groupby(sorted(sections, key=key_func), key=key_func)
             },
         )

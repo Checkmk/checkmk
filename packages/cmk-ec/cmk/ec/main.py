@@ -42,6 +42,7 @@ import cmk.ccc.daemon
 import cmk.ccc.profile
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.translations import translate
 from cmk.ccc.version_info import get_general_version_infos
@@ -105,7 +106,7 @@ def setup_logging_handler(stream: IO[str]) -> None:
     logging format.
     """
     handler = logging.StreamHandler(stream=stream)
-    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s"))
+    handler.setFormatter(CMKFormatter())
     logger = logging.getLogger("cmk")
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)

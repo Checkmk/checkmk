@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Ref, computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { useDebounceFn } from '@/lib/useDebounce'
+import { useResizeObserver } from '@/lib/useResizeObserver'
 import useTimer from '@/lib/useTimer.ts'
 
 import CmkIcon from '@/components/CmkIcon'
@@ -89,51 +90,37 @@ watch([httpVars, sizeVars], () => {
   debouncedUpdateGraph()
 })
 
-const resizeObserver = new ResizeObserver((entries) => {
-  // only one element needs to be observed
-  const entry = entries[0]!
-
-  const size = entry.contentBoxSize![0]!
-  sizeVars.value = {
-    width: String(size.inlineSize),
-    height: String(size.blockSize)
-  }
-})
-
 const showLegend = computed(
   () => (props.content as GraphWidgetContent).graph_render_options?.show_legend ?? false
 )
 const timer = useTimer(updateGraph, 60_000)
 
-let currentObservedElement: HTMLElement | null = null
-const reconnectResizeObserver = () => {
-  const newElement = resolveObservedElement()
-  if (newElement !== currentObservedElement) {
-    if (currentObservedElement) {
-      resizeObserver.unobserve(currentObservedElement)
-    }
-    if (newElement) {
-      resizeObserver.observe(newElement)
-    }
-    currentObservedElement = newElement
+// The element to track depends on the layout (scroll container vs parent); resolve it imperatively
+// and hand the result to `observe`, which re-observes whenever this ref points at a different element.
+const observedElement = ref<HTMLElement | null>(null)
+const { observe } = useResizeObserver((entries) => {
+  const size = entries[0]!.contentBoxSize![0]!
+  sizeVars.value = {
+    width: String(size.inlineSize),
+    height: String(size.blockSize)
   }
-}
+})
+observe(observedElement)
 
-// Reconnect the ResizeObserver after DOM updates when the scroll container appears/disappears
+// Re-resolve after DOM updates when the scroll container appears/disappears
 watch([showLegend, () => props.isPreview], () => {
   void nextTick(() => {
-    reconnectResizeObserver()
+    observedElement.value = resolveObservedElement()
   })
 })
 
 onMounted(() => {
   timer.start()
-  reconnectResizeObserver()
+  observedElement.value = resolveObservedElement()
 })
 
 onBeforeUnmount(() => {
   timer.stop()
-  resizeObserver.disconnect()
   isLoading.value = false
 })
 </script>

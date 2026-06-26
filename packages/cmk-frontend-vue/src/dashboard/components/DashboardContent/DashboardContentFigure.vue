@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Ref, computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 
+import { useResizeObserver } from '@/lib/useResizeObserver'
+
 import CmkIcon from '@/components/CmkIcon'
 
 import DashboardContentContainer from '@/dashboard/components/DashboardContent/DashboardContentContainer.vue'
@@ -33,35 +35,33 @@ const isLoading = ref(true)
 let figure: FigureBase | null = null
 let mutationObserver: MutationObserver | null = null
 
+let resizeTimeout: number | null = null
+const { observe } = useResizeObserver((entries) => {
+  for (const entry of entries) {
+    const { width, height } = entry.contentRect
+
+    if (resizeTimeout) {
+      clearTimeout(resizeTimeout)
+    }
+
+    resizeTimeout = window.setTimeout(() => {
+      handleResize(width, height)
+    }, 10)
+  }
+})
+observe(wrapperDiv)
+
+// Seed the baseline dimensions when the wrapper first mounts, so the observer's initial delivery
+// (same size) doesn't count as a change.
 watch(
   () => wrapperDiv.value,
-  (newValue, _oldValue, onCleanup) => {
-    if (!newValue) {
-      return
-    }
-    currentDimensions.value = {
-      width: newValue?.clientWidth || 0,
-      height: newValue?.clientHeight || 0
-    }
-    let resizeTimeout: number | null = null
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect
-
-        if (resizeTimeout) {
-          clearTimeout(resizeTimeout)
-        }
-
-        resizeTimeout = window.setTimeout(() => {
-          handleResize(width, height)
-        }, 10)
+  (newValue) => {
+    if (newValue) {
+      currentDimensions.value = {
+        width: newValue.clientWidth || 0,
+        height: newValue.clientHeight || 0
       }
-    })
-    observer.observe(wrapperDiv.value!)
-
-    onCleanup(() => {
-      observer.disconnect()
-    })
+    }
   },
   { immediate: true }
 )

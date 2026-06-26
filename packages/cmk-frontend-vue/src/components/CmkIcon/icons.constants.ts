@@ -743,6 +743,7 @@ export const emblems = [
 ] as const
 
 export const oneColorIcons = [
+  'burger-menu',
   'changes',
   'check-circle',
   'checkmark',

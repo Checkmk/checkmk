@@ -111,6 +111,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   'broken-chain': ['unlink', 'disconnect', 'link', 'severed'],
   bulk: ['batch', 'multiple', 'mass', 'group'],
   'bulk-import': ['batch upload', 'mass import', 'multiple'],
+  'burger-menu': ['hamburger', 'menu', 'navigation', 'three lines', 'sidebar'],
   cached: ['stored', 'memory', 'saved', 'clock'],
   cancel: ['x', 'close', 'stop', 'cross', 'red', 'no', 'abort'],
   'cancel-notifications': ['stop alerts', 'mute notifications', 'bell off'],

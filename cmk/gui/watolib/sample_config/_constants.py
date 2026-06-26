@@ -153,6 +153,11 @@ PS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = [
             "~liveproxyd",
         ),
         (
+            "9c90e72e-443e-4400-8374-cd4f9d9fdbf5",
+            "mcp-server",
+            "~uvicorn.*cmk\\.mcp\\.main",
+        ),
+        (
             "f64f23d9-55c5-490c-a7dd-b38a108155e2",
             "notification spooler",
             "~python3 /omd/sites/[^/]+/bin/mknotifyd$",

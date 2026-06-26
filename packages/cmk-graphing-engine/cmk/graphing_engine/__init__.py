@@ -10,7 +10,7 @@ from ._evaluate import (
     EvaluatedRule,
     EvaluatedStack,
     EvaluatedVerticalRange,
-    VerticalRangeKind,
+    VerticalRangeType,
 )
 from ._fetch import (
     fetch_performance_data,
@@ -107,7 +107,7 @@ __all__ = [
     "TimeSeries",
     "Unit",
     "VerticalRange",
-    "VerticalRangeKind",
+    "VerticalRangeType",
     "build_service_graphs",
     "fetch_performance_data",
     "match_graph_for_services",

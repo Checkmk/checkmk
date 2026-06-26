@@ -57,7 +57,7 @@ class EvaluatedRule:
     inverse: bool
 
 
-class VerticalRangeKind(enum.StrEnum):
+class VerticalRangeType(enum.StrEnum):
     # MINIMAL: a lower bound on the axis range (it may grow past it); FIXED: a hard clamp.
     MINIMAL = "minimal"
     FIXED = "fixed"
@@ -65,7 +65,7 @@ class VerticalRangeKind(enum.StrEnum):
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluatedVerticalRange:
-    kind: VerticalRangeKind
+    range_type: VerticalRangeType
     lower: float | None
     upper: float | None
 
@@ -95,13 +95,13 @@ def _evaluate_vertical_range(
             return None
         case MinimalRange():
             return EvaluatedVerticalRange(
-                kind=VerticalRangeKind.MINIMAL,
+                range_type=VerticalRangeType.MINIMAL,
                 lower=_evaluate_bound(vertical_range.lower, context),
                 upper=_evaluate_bound(vertical_range.upper, context),
             )
         case FixedRange():
             return EvaluatedVerticalRange(
-                kind=VerticalRangeKind.FIXED,
+                range_type=VerticalRangeType.FIXED,
                 lower=_evaluate_bound(vertical_range.lower, context),
                 upper=_evaluate_bound(vertical_range.upper, context),
             )

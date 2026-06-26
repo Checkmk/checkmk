@@ -53,7 +53,7 @@ class CatalogVisitor(FormSpecVisitor[Catalog, _ParsedValueModel, _FallbackModel]
         # Because of this, the default value are resolved one level deeper
         tmp_value: dict[str, Any]
         if isinstance(raw_value, DefaultValue):
-            tmp_value = {topic_name: DEFAULT_VALUE for topic_name in self.form_spec.elements.keys()}
+            tmp_value = dict.fromkeys(self.form_spec.elements.keys(), DEFAULT_VALUE)
         else:
             tmp_value = raw_value
 

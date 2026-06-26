@@ -1942,8 +1942,8 @@ def _compute_link_config_for_comparison(
     reference_mesh_links: list[TopologyLink],
     compare_to_mesh_links: list[TopologyLink],
 ) -> dict[TopologyLink, dict[str, Any]]:
-    ref_by_id = {x: "" for x in reference_mesh_links}
-    compare_to_by_id = {x: "" for x in compare_to_mesh_links}
+    ref_by_id = dict.fromkeys(reference_mesh_links, "")
+    compare_to_by_id = dict.fromkeys(compare_to_mesh_links, "")
 
     extra_in_ref = set(ref_by_id) - set(compare_to_by_id)
     extra_in_com = set(compare_to_by_id) - set(ref_by_id)

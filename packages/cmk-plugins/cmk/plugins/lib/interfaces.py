@@ -1124,7 +1124,7 @@ def _get_packet_levels(
     PACKET_TYPES = ("errors", "multicast", "broadcast", "nucasts", "unicast", "discards")
 
     def none_levels() -> dict[str, dict[str, Any | None]]:
-        return {name: {direction: None for direction in DIRECTIONS} for name in PACKET_TYPES}
+        return {name: dict.fromkeys(DIRECTIONS) for name in PACKET_TYPES}
 
     levels_per_type = {
         "perc": none_levels(),

@@ -649,7 +649,7 @@ def test_filters_display_with_empty_request(
         for filt in filter_registry.values():
             with output_funnel.plugged():
                 _set_expected_queries(filt.ident, live)
-                filt.display({k: "" for k in filt.htmlvars})
+                filt.display(dict.fromkeys(filt.htmlvars, ""))
 
 
 def _set_expected_queries(filt_ident, live):

@@ -1326,7 +1326,7 @@ def test_compute_rates_single_disk_diff_time_same_values() -> None:
         store,
     )
     assert disk_w_rates == {
-        **{metric: 0 for metric in EXP_METRICS},
+        **dict.fromkeys(EXP_METRICS, 0),
         "queue_length": DISK["queue_length"],
     }
 

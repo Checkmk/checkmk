@@ -36,4 +36,4 @@ def test_mysql_parse_per_item(info: StringTable, expected_items: tuple[str, str]
 
     parsed = dummy_parse(info)
 
-    assert parsed == {key: "Whoop" for key in expected_items}
+    assert parsed == dict.fromkeys(expected_items, "Whoop")

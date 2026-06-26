@@ -169,7 +169,7 @@ def test_compute_rates_multiple_disks() -> None:
         iter(disks_w_rates.items()),
     ):
         assert name_in == name_out
-        assert disk_out == {k: 0 for k in disk_in}
+        assert disk_out == dict.fromkeys(disk_in, 0)
 
 
 @pytest.mark.parametrize(

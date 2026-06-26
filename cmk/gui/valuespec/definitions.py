@@ -7438,7 +7438,7 @@ class Labels(ValueSpec[LabelsModel]):
 
     def value_to_html(self, value: LabelsModel) -> ValueSpecText:
         label_sources: LabelSources = (
-            {k: self._label_source.value for k in value} if self._label_source else {}
+            dict.fromkeys(value, self._label_source.value) if self._label_source else {}
         )
         return render_labels(
             value,

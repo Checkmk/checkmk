@@ -167,7 +167,7 @@ class Plugin:
         return set(self.metrics) | set(self.pure_metrics) | expanded_perc_metrics
 
     def default_params(self) -> Mapping[str, Any]:
-        params: dict[str, Any] = {metric: None for metric in self.metrics}
+        params: dict[str, Any] = dict.fromkeys(self.metrics)
         for metric, percentiles in self.percentile_metrics:
             params[metric] = (percentiles[-1], None)
         return params

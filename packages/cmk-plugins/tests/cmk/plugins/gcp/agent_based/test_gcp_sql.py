@@ -215,7 +215,7 @@ def test_gcp_sql_status_no_agent_data_is_no_result() -> None:
 
 
 def test_gcp_sql_status_no_results_if_item_not_found(section: gcp.Section) -> None:
-    params = {k: None for k in ["requests"]}
+    params = dict.fromkeys(["requests"])
     results = check_gcp_sql_status(
         item="I do not exist",
         params=params,
@@ -297,7 +297,7 @@ def generate_results(plugin: Plugin) -> CheckResult:
     section = parse(generate_stringtable(item, 0.42, CLOUDSQL))
     yield from plugin.function(
         item=item,
-        params={k: None for k in plugin.metrics},
+        params=dict.fromkeys(plugin.metrics),
         section_gcp_service_cloud_sql=section,
         section_gcp_assets=parse_assets(asset_table),
     )

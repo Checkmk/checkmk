@@ -206,7 +206,7 @@ class _RequestStub:
     """Stub meant for mocking out the Flask request singleton."""
 
     def __init__(self, *, args: list[str], vars_: dict[str, str]) -> None:
-        self.args = {k: "" for k in args}
+        self.args = dict.fromkeys(args, "")
         self._vars = vars_
 
     def var(self, key: str) -> str | None:

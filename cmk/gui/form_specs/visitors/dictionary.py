@@ -42,7 +42,7 @@ class DictionaryVisitor(FormSpecVisitor[DictionaryExtended, _ParsedValueModel, _
             k: DEFAULT_VALUE for k, el in self.form_spec.elements.items() if el.required
         }
         if self.form_spec.default_checked is not None:
-            default_values.update({k: DEFAULT_VALUE for k in self.form_spec.default_checked})
+            default_values.update(dict.fromkeys(self.form_spec.default_checked, DEFAULT_VALUE))
         return default_values
 
     def _get_static_elements(self) -> set[str]:

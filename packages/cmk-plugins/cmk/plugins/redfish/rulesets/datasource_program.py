@@ -198,8 +198,8 @@ def migrate_redfish(data: object) -> Mapping[str, object]:
     ]
 
     fetching = {
-        **{n: ("always", 0.0) for n in enabled_sections},
-        **{n: ("never", -1.0) for n in disabled_sections},
+        **dict.fromkeys(enabled_sections, ("always", 0.0)),
+        **dict.fromkeys(disabled_sections, ("never", -1.0)),
         **{n: ("cached", float(i)) for n, i in cached_sections},
     }
     return {

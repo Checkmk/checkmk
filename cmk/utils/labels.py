@@ -299,10 +299,12 @@ class LabelManager:
         identifier instead of the value Order and merging logic is equal to
         _get_host_labels()"""
         labels: LabelSources = {}
-        labels.update({k: "discovered" for k in self._discovered_labels_of_host(hostname).keys()})
-        labels.update({k: "ruleset" for k in self._label_config.host_labels(hostname)})
-        labels.update({k: "explicit" for k in self.explicit_host_labels.get(hostname, {}).keys()})
-        labels.update({k: "discovered" for k in self._builtin_host_labels.get(hostname, {}).keys()})
+        labels.update(dict.fromkeys(self._discovered_labels_of_host(hostname).keys(), "discovered"))
+        labels.update(dict.fromkeys(self._label_config.host_labels(hostname), "ruleset"))
+        labels.update(dict.fromkeys(self.explicit_host_labels.get(hostname, {}).keys(), "explicit"))
+        labels.update(
+            dict.fromkeys(self._builtin_host_labels.get(hostname, {}).keys(), "discovered")
+        )
         return labels
 
     def _discovered_labels_of_host(self, hostname: HostName) -> Labels:
@@ -349,14 +351,12 @@ class LabelManager:
         identifier instead of the value Order and merging logic is equal to
         _get_host_labels()"""
         labels: LabelSources = {}
-        labels.update({k: "discovered" for k in discovered_labels})
+        labels.update(dict.fromkeys(discovered_labels, "discovered"))
         labels.update(
-            {
-                k: "ruleset"
-                for k in self._label_config.service_labels(
-                    hostname, service_desc, self.labels_of_host
-                )
-            }
+            dict.fromkeys(
+                self._label_config.service_labels(hostname, service_desc, self.labels_of_host),
+                "ruleset",
+            )
         )
 
         return labels

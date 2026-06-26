@@ -42,7 +42,7 @@ class Perfcounters:
         self._lock = ECLock(logger)
 
         # Initialize counters
-        self._counters = {n: 0 for n in self._counter_names}
+        self._counters = dict.fromkeys(self._counter_names, 0)
         self._old_counters: dict[str, int] = {}
         self._rates: dict[str, float] = {}
         self._average_rates: dict[str, float] = {}

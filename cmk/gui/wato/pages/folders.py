@@ -1287,7 +1287,7 @@ class ModeFolder(WatoMode):
                     labels,
                     "host",
                     with_links=False,
-                    label_sources={k: "explicit" for k in labels.keys()},
+                    label_sources=dict.fromkeys(labels.keys(), "explicit"),
                     request=request,
                 )
             )

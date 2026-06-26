@@ -214,7 +214,7 @@ def test_lookup_components_batches_to_avoid_arg_max(
     def fake_run(args: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
         calls.append(list(args))
         positional = list(args[4:])  # drop ["cmk-components", "component", "--mode", "json"]
-        stdout = json.dumps({p: "stub" for p in positional})
+        stdout = json.dumps(dict.fromkeys(positional, "stub"))
         return subprocess.CompletedProcess(args=list(args), returncode=0, stdout=stdout, stderr="")
 
     monkeypatch.setattr(subprocess, "run", fake_run)
@@ -251,7 +251,7 @@ def test_lookup_components_follows_renames(monkeypatch: pytest.MonkeyPatch, tmp_
         return subprocess.CompletedProcess(
             args=list(args),
             returncode=0,
-            stdout=json.dumps({p: "ui_framework" for p in positional}),
+            stdout=json.dumps(dict.fromkeys(positional, "ui_framework")),
             stderr="",
         )
 
@@ -283,7 +283,7 @@ def test_lookup_components_collapses_rename_chains(
         return subprocess.CompletedProcess(
             args=list(args),
             returncode=0,
-            stdout=json.dumps({p: "ui_framework" for p in positional}),
+            stdout=json.dumps(dict.fromkeys(positional, "ui_framework")),
             stderr="",
         )
 
@@ -327,7 +327,7 @@ def test_lookup_components_skips_rename_lookup_when_all_paths_on_head(
         return subprocess.CompletedProcess(
             args=list(args),
             returncode=0,
-            stdout=json.dumps({p: "ui_framework" for p in positional}),
+            stdout=json.dumps(dict.fromkeys(positional, "ui_framework")),
             stderr="",
         )
 
@@ -365,7 +365,7 @@ def test_lookup_components_classifies_utf8_once_per_path(
 
     def fake_run(args: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
         positional = list(args[4:])
-        stdout = json.dumps({p: "stub" for p in positional})
+        stdout = json.dumps(dict.fromkeys(positional, "stub"))
         return subprocess.CompletedProcess(args=list(args), returncode=0, stdout=stdout, stderr="")
 
     monkeypatch.setattr(subprocess, "run", fake_run)

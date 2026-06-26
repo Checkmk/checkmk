@@ -904,7 +904,7 @@ class ModeEditTimeperiod(WatoMode):
 
         # produce a data structure equal to the "day_specific" structure
         if period_type == "whole_week":
-            time_exceptions = {day: exceptions_details for day in dateutils.weekday_ids()}
+            time_exceptions = dict.fromkeys(dateutils.weekday_ids(), exceptions_details)
         else:  # specific days
             time_exceptions = exceptions_details
 

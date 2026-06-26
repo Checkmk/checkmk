@@ -48,9 +48,9 @@ class FilterRegistry(Registry[Filter]):
                 "Conflicting filter htmlvars: one of %r is already regitered" % instance.htmlvars
             )
 
-        htmlvars_to_filter: Mapping[str, FilterName] = {
-            htmlvar: instance.ident for htmlvar in instance.htmlvars
-        }
+        htmlvars_to_filter: Mapping[str, FilterName] = dict.fromkeys(
+            instance.htmlvars, instance.ident
+        )
         self.htmlvars_to_filter.update(htmlvars_to_filter)
         return None
 

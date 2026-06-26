@@ -1027,7 +1027,7 @@ class DiscoveryPageRenderer:
                 {label_id: label["value"] for label_id, label in host_labels.items()},
                 "host",
                 with_links=False,
-                label_sources={label_id: "discovered" for label_id in host_labels.keys()},
+                label_sources=dict.fromkeys(host_labels.keys(), "discovered"),
                 request=request,
             )
             table.cell(_("Host labels"), labels_html, css=["expanding"])
@@ -1638,7 +1638,7 @@ class DiscoveryPageRenderer:
             service_labels,
             "service",
             with_links=False,
-            label_sources={k: "discovered" for k in service_labels.keys()},
+            label_sources=dict.fromkeys(service_labels.keys(), "discovered"),
             override_label_render_type=override_label_render_type,
             request=request,
         )

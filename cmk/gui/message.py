@@ -527,7 +527,7 @@ def send_message(
     Mapping[MessageMethod, Collection[tuple[UserId, Exception]]],
 ]:
     recipients = _recipients_for(msg["dest"], multisite_user_ids)
-    num_success = {method: 0 for method in msg["methods"]}
+    num_success = dict.fromkeys(msg["methods"], 0)
     errors = dict[MessageMethod, list[tuple[UserId, Exception]]]()
     for user_id in recipients:
         for method in msg["methods"]:

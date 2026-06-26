@@ -36,9 +36,9 @@ def _setup_global_settings(global_settings_setup: GlobalSettings) -> Generator[N
 @pytest.mark.usefixtures("request_context")
 def test_update_action_raises_on_removed_plugin() -> None:
     initial_global_settings: GlobalSettings = {
-        "use_new_descriptions_for": {
-            plugin: True for plugin in USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"]
-        }
+        "use_new_descriptions_for": dict.fromkeys(
+            USE_NEW_DESCRIPTIONS_FOR_SETTING["use_new_descriptions_for"], True
+        )
         | {"removed_plugin": True}
     }
     with _setup_global_settings(initial_global_settings):

@@ -239,7 +239,7 @@ def _get_notification_method(event_rule: EventRule) -> NotificationMethod:
                 combine=float(always_bulk_params["interval"]),
                 bulking_parameters=cast(
                     BulkingParameters,
-                    {k: None for k in always_bulk_params["groupby"]},
+                    dict.fromkeys(always_bulk_params["groupby"]),
                 ),
                 max_notifications=always_bulk_params["count"],
             )
@@ -256,7 +256,7 @@ def _get_notification_method(event_rule: EventRule) -> NotificationMethod:
             timeperiod_bulk = TimeperiodBulk(
                 bulking_parameters=cast(
                     BulkingParameters,
-                    {k: None for k in timeperiod_bulk_params["groupby"]},
+                    dict.fromkeys(timeperiod_bulk_params["groupby"]),
                 ),
                 max_notifications=timeperiod_bulk_params["count"],
             )

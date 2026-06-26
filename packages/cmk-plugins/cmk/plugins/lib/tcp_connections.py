@@ -23,4 +23,4 @@ MAP_COUNTER_KEYS = {
 def empty_stats() -> TCPConnections:
     # we require all states from map_counter_keys due to the omit_zero_metrics option
     # concerning the perfdata
-    return {value: 0 for value in MAP_COUNTER_KEYS.values()}
+    return dict.fromkeys(MAP_COUNTER_KEYS.values(), 0)

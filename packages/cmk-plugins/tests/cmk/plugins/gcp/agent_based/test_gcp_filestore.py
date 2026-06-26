@@ -111,7 +111,7 @@ def generate_results(plugin: Plugin) -> CheckResult:
     section = parse(generate_stringtable(item, 42.0, FILESTORE))
     yield from plugin.function(
         item=item,
-        params={k: None for k in plugin.metrics},
+        params=dict.fromkeys(plugin.metrics),
         section_gcp_service_filestore=section,
         section_gcp_assets=parse_assets(asset_table),
     )

@@ -30,6 +30,7 @@ select = [
   "C416",   # flake8-comprehensions: unnecessary-comprehension
   "C417",   # flake8-comprehensions: unnecessary-map
   "C419",   # flake8-comprehensions: unnecessary-comprehension-in-call
+  "C420",   # flake8-comprehensions: unnecessary-dict-comprehension-for-iterable
   "C90",    # mccabe
   "E",      # pycodestyle (error)
   "F",      # pyflakes

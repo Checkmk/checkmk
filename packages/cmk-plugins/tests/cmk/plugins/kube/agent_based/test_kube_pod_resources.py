@@ -654,7 +654,7 @@ def test_pending_count_and_duration_interaction(
     """
     pods = [f"pod-{i}" for i in range(pod_count)]
     now = 1000.0
-    value_store: ValueStore = {"pending": {pod: now - pending_seconds for pod in pods}}
+    value_store: ValueStore = {"pending": dict.fromkeys(pods, now - pending_seconds)}
     result = tuple(
         _check_kube_pod_resources(
             now,

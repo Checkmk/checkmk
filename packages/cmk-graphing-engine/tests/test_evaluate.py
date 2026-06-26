@@ -27,8 +27,8 @@ from cmk.graphing_engine import (
     ResolvedGraph,
     RRDMetric,
     Rule,
-    ScalarKind,
     ScalarOf,
+    ScalarType,
     ServiceRef,
     Stack,
     Sum,
@@ -117,7 +117,7 @@ def test_evaluate_value_of_a_scalar_reference() -> None:
     a = _metric("a")
     assert (
         _evaluate_value(
-            ScalarOf(metric=a, kind=ScalarKind.WARNING),
+            ScalarOf(metric=a, scalar_type=ScalarType.WARNING),
             {a: _data(value=1.0, warning=80.0)},
         )
         == 80.0
@@ -127,7 +127,8 @@ def test_evaluate_value_of_a_scalar_reference() -> None:
 def test_evaluate_value_of_a_scalar_reference_without_the_bound_is_none() -> None:
     a = _metric("a")
     assert (
-        _evaluate_value(ScalarOf(metric=a, kind=ScalarKind.WARNING), {a: _data(value=1.0)}) is None
+        _evaluate_value(ScalarOf(metric=a, scalar_type=ScalarType.WARNING), {a: _data(value=1.0)})
+        is None
     )
 
 
@@ -188,7 +189,7 @@ def test_evaluate_time_series_of_a_scalar_reference_is_a_constant_line() -> None
     a = _metric("a")
     metric_data = {a: _data(value=1.0, warning=80.0)}
     assert _evaluate_time_series(
-        ScalarOf(metric=a, kind=ScalarKind.WARNING), metric_data, {}, _TR
+        ScalarOf(metric=a, scalar_type=ScalarType.WARNING), metric_data, {}, _TR
     ) == _time_series(80.0, 80.0, 80.0)
 
 
@@ -315,7 +316,7 @@ def test_evaluate_graph_builds_rules_from_thresholds_and_constants() -> None:
             # A threshold rule: the title and colour are carried by the rule's curve attributes.
             Rule(
                 curve=Curve(
-                    quantity=ScalarOf(metric=a, kind=ScalarKind.WARNING),
+                    quantity=ScalarOf(metric=a, scalar_type=ScalarType.WARNING),
                     attributes=CurveAttributes(title="Warning", unit=_UNIT, color="#ff0000"),
                 ),
                 inverse=False,
@@ -355,7 +356,7 @@ def test_evaluate_graph_drops_rules_without_a_value() -> None:
             # The metric has no warn level (value None) ...
             Rule(
                 curve=Curve(
-                    quantity=ScalarOf(metric=a, kind=ScalarKind.WARNING),
+                    quantity=ScalarOf(metric=a, scalar_type=ScalarType.WARNING),
                     attributes=CurveAttributes(title="w", unit=_UNIT, color="#ff0000"),
                 ),
                 inverse=False,
@@ -363,7 +364,7 @@ def test_evaluate_graph_drops_rules_without_a_value() -> None:
             # ... and "gone" has no data at all (not present).
             Rule(
                 curve=Curve(
-                    quantity=ScalarOf(metric=_metric("gone"), kind=ScalarKind.WARNING),
+                    quantity=ScalarOf(metric=_metric("gone"), scalar_type=ScalarType.WARNING),
                     attributes=CurveAttributes(title="w", unit=_UNIT, color="#ff0000"),
                 ),
                 inverse=False,

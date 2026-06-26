@@ -22,8 +22,8 @@ from ._objects import (
     RRDMetric,
     RRDMetricData,
     Rule,
-    ScalarKind,
     ScalarOf,
+    ScalarType,
     ServiceRef,
     Stack,
 )
@@ -215,15 +215,15 @@ def build_service_graphs(
                 rules=[
                     Rule(
                         curve=resolve_curve(
-                            ScalarOf(metric=rrd_metric, kind=scalar_kind), metrics, localizer
+                            ScalarOf(metric=rrd_metric, scalar_type=scalar_type), metrics, localizer
                         ),
                         inverse=False,
                     )
-                    for scalar_kind in (
-                        ScalarKind.WARNING,
-                        ScalarKind.CRITICAL,
-                        ScalarKind.LOWER_WARNING,
-                        ScalarKind.LOWER_CRITICAL,
+                    for scalar_type in (
+                        ScalarType.WARNING,
+                        ScalarType.CRITICAL,
+                        ScalarType.LOWER_WARNING,
+                        ScalarType.LOWER_CRITICAL,
                     )
                 ],
             )

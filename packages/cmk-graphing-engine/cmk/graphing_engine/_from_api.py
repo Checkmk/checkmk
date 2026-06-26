@@ -35,8 +35,8 @@ from ._objects import (
     ResolvedGraph,
     RRDMetric,
     Rule,
-    ScalarKind,
     ScalarOf,
+    ScalarType,
     ServiceRef,
     SINotation,
     Stack,
@@ -136,18 +136,18 @@ _FALLBACK_COLOR = _COLORS[metrics_v1.Color.GRAY]
 _FALLBACK_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
 # The warn / crit colours threshold rules render in (cf. cmk.gui.color.Color.WARN / .CRIT). They live
-# here so resolve_curve can give a scalar rule its label + colour from the ScalarKind, with no GUI input.
+# here so resolve_curve gives a scalar rule its label + colour from the ScalarType, with no GUI input.
 _WARN_COLOR = "#ffd000"
 _CRIT_COLOR = "#ff3232"
 # The English rule label per scalar kind; resolve_curve localizes it. A None colour means "use the
 # metric's own colour" (the min / max bound has no warn / crit colour of its own).
-_RULE_DISPLAY: Mapping[ScalarKind, tuple[str, str | None]] = {
-    ScalarKind.WARNING: ("Warning", _WARN_COLOR),
-    ScalarKind.CRITICAL: ("Critical", _CRIT_COLOR),
-    ScalarKind.LOWER_WARNING: ("Warning (lower)", _WARN_COLOR),
-    ScalarKind.LOWER_CRITICAL: ("Critical (lower)", _CRIT_COLOR),
-    ScalarKind.MINIMUM: ("Minimum", None),
-    ScalarKind.MAXIMUM: ("Maximum", None),
+_RULE_DISPLAY: Mapping[ScalarType, tuple[str, str | None]] = {
+    ScalarType.WARNING: ("Warning", _WARN_COLOR),
+    ScalarType.CRITICAL: ("Critical", _CRIT_COLOR),
+    ScalarType.LOWER_WARNING: ("Warning (lower)", _WARN_COLOR),
+    ScalarType.LOWER_CRITICAL: ("Critical (lower)", _CRIT_COLOR),
+    ScalarType.MINIMUM: ("Minimum", None),
+    ScalarType.MAXIMUM: ("Maximum", None),
 }
 
 
@@ -195,30 +195,32 @@ def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
             return Constant(quantity.value, display=_curve_display(quantity, context))
         case metrics_v2_unstable.LowerWarningOf():
             return ScalarOf(
-                metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.LOWER_WARNING
+                metric=context.rrd_metric(quantity.metric_name),
+                scalar_type=ScalarType.LOWER_WARNING,
             )
         case metrics_v2_unstable.LowerCriticalOf():
             return ScalarOf(
-                metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.LOWER_CRITICAL
+                metric=context.rrd_metric(quantity.metric_name),
+                scalar_type=ScalarType.LOWER_CRITICAL,
             )
         case metrics_v1.WarningOf():
             return ScalarOf(
-                metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.WARNING
+                metric=context.rrd_metric(quantity.metric_name), scalar_type=ScalarType.WARNING
             )
         case metrics_v1.CriticalOf():
             return ScalarOf(
-                metric=context.rrd_metric(quantity.metric_name), kind=ScalarKind.CRITICAL
+                metric=context.rrd_metric(quantity.metric_name), scalar_type=ScalarType.CRITICAL
             )
         case metrics_v1.MinimumOf():
             return ScalarOf(
                 metric=context.rrd_metric(quantity.metric_name),
-                kind=ScalarKind.MINIMUM,
+                scalar_type=ScalarType.MINIMUM,
                 color=_parse_color(quantity.color),
             )
         case metrics_v1.MaximumOf():
             return ScalarOf(
                 metric=context.rrd_metric(quantity.metric_name),
-                kind=ScalarKind.MAXIMUM,
+                scalar_type=ScalarType.MAXIMUM,
                 color=_parse_color(quantity.color),
             )
         case metrics_v1.Sum():
@@ -521,13 +523,13 @@ def _attributes_for(
             return metric_display_attributes(quantity.metric_name, metrics, localizer)
         case ScalarOf():
             metric = metric_display_attributes(quantity.metric.metric_name, metrics, localizer)
-            label, kind_color = _RULE_DISPLAY[quantity.kind]
-            # The author colour (MinimumOf / MaximumOf) wins; otherwise the kind's warn / crit colour;
+            label, type_color = _RULE_DISPLAY[quantity.scalar_type]
+            # The author colour (MinimumOf / MaximumOf) wins; otherwise the scalar type's warn / crit colour;
             # otherwise the metric's own colour.
             return CurveAttributes(
                 title=localizer(label),
                 unit=metric.unit,
-                color=quantity.color or kind_color or metric.color,
+                color=quantity.color or type_color or metric.color,
             )
         case _:
             # A consumer quantity, resolved generically without the engine knowing its type. Either it

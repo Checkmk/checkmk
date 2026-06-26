@@ -233,7 +233,7 @@ class RRDMetric:
         return existing if existing is not None else _constant_time_series(None, context.time_range)
 
 
-class ScalarKind(enum.StrEnum):
+class ScalarType(enum.StrEnum):
     WARNING = "warning"
     CRITICAL = "critical"
     LOWER_WARNING = "lower_warning"
@@ -242,13 +242,13 @@ class ScalarKind(enum.StrEnum):
     MAXIMUM = "maximum"
 
 
-_SCALAR_VALUE: Mapping[ScalarKind, Callable[[RRDMetricData], float | None]] = {
-    ScalarKind.WARNING: lambda data: data.warning,
-    ScalarKind.CRITICAL: lambda data: data.critical,
-    ScalarKind.LOWER_WARNING: lambda data: data.lower_warning,
-    ScalarKind.LOWER_CRITICAL: lambda data: data.lower_critical,
-    ScalarKind.MINIMUM: lambda data: data.minimum,
-    ScalarKind.MAXIMUM: lambda data: data.maximum,
+_SCALAR_VALUE: Mapping[ScalarType, Callable[[RRDMetricData], float | None]] = {
+    ScalarType.WARNING: lambda data: data.warning,
+    ScalarType.CRITICAL: lambda data: data.critical,
+    ScalarType.LOWER_WARNING: lambda data: data.lower_warning,
+    ScalarType.LOWER_CRITICAL: lambda data: data.lower_critical,
+    ScalarType.MINIMUM: lambda data: data.minimum,
+    ScalarType.MAXIMUM: lambda data: data.maximum,
 }
 
 
@@ -258,9 +258,9 @@ class ScalarOf:
     # drawn as a flat horizontal line. Unifies the former WarningOf / CriticalOf / LowerWarningOf /
     # LowerCriticalOf / MinimumOf / MaximumOf, which differed only in the data field they read.
     metric: RRDMetric
-    kind: ScalarKind
+    scalar_type: ScalarType
     # The author-chosen colour the cmk.graphing.v1 MinimumOf / MaximumOf carry (warn / crit references
-    # carry none — their colour comes from the kind). Read by resolve_curve; None for the others.
+    # carry none — their colour comes from the scalar type). Read by resolve_curve; None for the others.
     color: str | None = None
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
@@ -271,7 +271,7 @@ class ScalarOf:
 
     def evaluate_value(self, context: EvaluationContext) -> float | None:
         data = context.data_of(self.metric)
-        return None if data is None else _SCALAR_VALUE[self.kind](data)
+        return None if data is None else _SCALAR_VALUE[self.scalar_type](data)
 
     def evaluate_time_series(self, context: EvaluationContext) -> TimeSeries:
         return _constant_time_series(self.evaluate_value(context), context.time_range)

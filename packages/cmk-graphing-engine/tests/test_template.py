@@ -25,8 +25,8 @@ from cmk.graphing_engine import (
     ResolvedGraph,
     RRDMetric,
     Rule,
-    ScalarKind,
     ScalarOf,
+    ScalarType,
     ServiceRef,
     Stack,
     TimeRange,
@@ -81,11 +81,11 @@ def _dline(quantity: Quantity) -> Line:
     return Line(curve=resolve_curve(quantity, _METRICS, _id), inverse=False)
 
 
-_FALLBACK_RULE_KINDS = (
-    ScalarKind.WARNING,
-    ScalarKind.CRITICAL,
-    ScalarKind.LOWER_WARNING,
-    ScalarKind.LOWER_CRITICAL,
+_FALLBACK_RULE_TYPES = (
+    ScalarType.WARNING,
+    ScalarType.CRITICAL,
+    ScalarType.LOWER_WARNING,
+    ScalarType.LOWER_CRITICAL,
 )
 
 
@@ -100,10 +100,12 @@ def _fallback(name: MetricName) -> ResolvedGraph:
         stacks=[_dstack(_rrd(name))],
         rules=[
             Rule(
-                curve=resolve_curve(ScalarOf(metric=_rrd(name), kind=kind), _METRICS, _id),
+                curve=resolve_curve(
+                    ScalarOf(metric=_rrd(name), scalar_type=scalar_type), _METRICS, _id
+                ),
                 inverse=False,
             )
-            for kind in _FALLBACK_RULE_KINDS
+            for scalar_type in _FALLBACK_RULE_TYPES
         ],
     )
 
@@ -567,8 +569,9 @@ def test_build_service_graphs_builds_threshold_rules_for_fallback_graphs() -> No
         available=available,
     )
     # The fallback single-metric graph carries the four warn / crit (and lower) threshold rules as
-    # ScalarOf quantities, their labels / colours resolved from the kind.
+    # ScalarOf quantities, their labels / colours resolved from the scalar type.
     [graph] = [g for g in graphs if g.name == cpu_user]
     assert [rule.curve.quantity for rule in graph.rules] == [
-        ScalarOf(metric=_rrd(cpu_user), kind=kind) for kind in _FALLBACK_RULE_KINDS
+        ScalarOf(metric=_rrd(cpu_user), scalar_type=scalar_type)
+        for scalar_type in _FALLBACK_RULE_TYPES
     ]

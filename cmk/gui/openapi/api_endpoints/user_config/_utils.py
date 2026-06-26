@@ -714,7 +714,7 @@ def _internal_temperature_format_to_api_format(internal_temperature: str | None)
     >>> _internal_temperature_format_to_api_format(None)
     'default'
     """
-    return "default" if not internal_temperature else internal_temperature
+    return internal_temperature if internal_temperature else "default"
 
 
 # ---------------------------------------------------------------------------------------------

@@ -43,7 +43,7 @@ from .agent_aws_fake_clients import (
 
 class FakeEC2Client:
     def __init__(self, skip_entities: Mapping[str, object] | None = None) -> None:
-        self._skip_entities = {} if not skip_entities else skip_entities
+        self._skip_entities = skip_entities if skip_entities else {}
 
     def describe_instances(self, InstanceIds=None, Filters=None):
         instances = EC2DescribeInstancesIB.create_instances(

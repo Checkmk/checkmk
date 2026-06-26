@@ -58,7 +58,7 @@ class TypeCMKEdition:
 
     def __init__(self, edition: Edition | None = None) -> None:
         self._edition_data: type[Edition] | Edition
-        self._edition_data = Edition if not edition else edition
+        self._edition_data = edition if edition else Edition
 
     def __call__(self, edition: Edition) -> "TypeCMKEdition":
         """Return a new instance, which is initialized with an 'Edition' value."""

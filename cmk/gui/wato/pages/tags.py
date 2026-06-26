@@ -999,7 +999,7 @@ class ModeEditTagGroup(ABCEditTagMode):
                                 allow_empty=True,
                             ),
                             to_valuespec=lambda x: "" if x is None else x,
-                            from_valuespec=lambda x: None if not x else x,
+                            from_valuespec=lambda x: x if x else None,
                         ),
                         TextInput(
                             title=_("Title") + "*",

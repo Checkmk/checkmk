@@ -180,7 +180,7 @@ def get_snmpwalk(
     log: Callable[[str], None],
 ) -> SNMPRowInfo:
     context_config = backend.config.snmpv3_contexts_of(section_name)
-    context_string = "-".join(["no_context" if not c else c for c in context_config.contexts])
+    context_string = "-".join([c if c else "no_context" for c in context_config.contexts])
 
     # contexts are hashed in order not to exceed max pathname length
     context_hash = hashlib.shake_256(context_string.encode("utf-8")).hexdigest(15)

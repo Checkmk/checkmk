@@ -38,6 +38,7 @@ select = [
   "RUF100", # ruff: unused noqa
   "SIM202", # flake8-simplify: negate-not-equal-op
   "SIM210", # flake8-simplify: if-expr-with-true-false
+  "SIM212", # flake8-simplify: if-expr-with-twisted-arms
   "SIM222", # flake8-simplify: expr-or-true
   "SLF",    # flake8: self
   "UP",     # pyugrade

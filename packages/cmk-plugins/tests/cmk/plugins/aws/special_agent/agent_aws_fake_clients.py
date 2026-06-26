@@ -149,7 +149,7 @@ class InstanceBuilder(abc.ABC):
     def __init__(self, idx: int, amount: int, skip_entities: Collection[str] = ()) -> None:
         self._idx = idx
         self._amount = amount
-        self._skip_entities = [] if not skip_entities else skip_entities
+        self._skip_entities = skip_entities if skip_entities else []
 
     def _fill_instance(self) -> Iterable[Entity]:
         return []

@@ -25,12 +25,7 @@ def generic_parse(string_table: StringTable) -> GenericSection:
     result: GenericSection = {}
     for line in string_table:
         module = line[0]
-        # Pylint complains about the unnecessary use of a comprehension here. However, changing this
-        # for example to
-        # elements = dict(tuple(x.split(" ", 1)) for x in line[1:])
-        # will make Mypy unhappy (Tuple[str, ...] vs Tuple[<nothing>, <nothing>])
-
-        elements = {k: v for k, v in (x.split(" ", 1) for x in line[1:])}
+        elements = dict(x.split(" ", 1) for x in line[1:])
         if elements.get("Dn"):
             result.setdefault(module, {}).update({elements["Dn"]: elements})
 

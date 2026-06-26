@@ -319,10 +319,7 @@ class PushUserProfilesToSite(AutomationCommand[PushUserProfilesRequest]):
                             save_user_file(file_name, visuals, user_id)
                             continue
 
-                        dashboards = {
-                            dashboard_name: dashboard
-                            for dashboard_name, dashboard in visuals.items()
-                        }
+                        dashboards = dict(visuals.items())
                         save_user_file(file_name, dashboards, user_id)
 
         return True

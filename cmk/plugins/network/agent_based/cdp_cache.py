@@ -267,7 +267,7 @@ def parse_cdp_cache(string_table: Sequence[StringByteTable]) -> Cdp | None:
     cdp_info, cdp_global, if_info = string_table
 
     try:
-        interface_by_index = {if_index: if_name for if_index, if_name in if_info}
+        interface_by_index = {if_index: if_name for if_index, if_name in if_info}  # noqa: C416
     except ValueError:
         return None
 

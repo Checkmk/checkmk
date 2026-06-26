@@ -27,7 +27,7 @@ class VersionSection:
 
 
 def parse_bazel_cache_version(string_table: StringTable) -> VersionSection | None:
-    section = {key: value for key, value in json.loads(string_table[0][0]).items()}
+    section = dict(json.loads(string_table[0][0]).items())
     if "current" not in section:
         return None
     return VersionSection(section["current"], section.get("latest"))

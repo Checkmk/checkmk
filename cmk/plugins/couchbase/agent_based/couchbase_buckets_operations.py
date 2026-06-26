@@ -25,7 +25,7 @@ type Section = dict[str | None, Mapping[str, Any]]
 
 
 def parse_couchbase_buckets_operations(string_table: StringTable) -> Section:
-    parsed: Section = {k: v for k, v in parse_couchbase_lines(string_table).items()}
+    parsed: Section = dict(parse_couchbase_lines(string_table).items())
     counters = (collections.Counter(data) for data in parsed.values())
     try:
         parsed[None] = sum(counters, collections.Counter())

@@ -145,7 +145,7 @@ class ChangesAPI:
         """Return list of files corresponding to the latest patchset in a change."""
         url = f"{self._url}/{change.id}/revisions/current/files/"
         resp = self._client.get(url)
-        return [file_path for file_path in from_json(GerritClient.parse_gerrit_response(resp))]
+        return list(from_json(GerritClient.parse_gerrit_response(resp)))
 
     def get_content_from_file(self, change: ChangeDetails, file_path: str) -> str:
         """Return the contents of a file corresponding to a change.

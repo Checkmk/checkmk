@@ -70,12 +70,7 @@ def populate_spec(
             or marshmallow_endpoint.tag_group in undocumented_tag_groups
         ):
             continue
-        doc_endpoints.extend(
-            [
-                doc_endpoint
-                for doc_endpoint in marshmallow_doc_endpoints(spec, marshmallow_endpoint, site_name)
-            ]
-        )
+        doc_endpoints.extend(list(marshmallow_doc_endpoints(spec, marshmallow_endpoint, site_name)))
 
     for versioned_endpoint in versioned_endpoints:
         if (

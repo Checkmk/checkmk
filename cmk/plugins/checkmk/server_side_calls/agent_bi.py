@@ -112,9 +112,7 @@ def _transform_filter(filter_dict: _Filter | None) -> AgentBiFilter:
 
     return AgentBiFilter(
         names=filter_dict.get("aggr_name", filter_dict.get("aggr_name_regex", [])),
-        groups=[
-            x for x in filter_dict.get("aggr_group_prefix", filter_dict.get("aggr_groups", []))
-        ],
+        groups=list(filter_dict.get("aggr_group_prefix", filter_dict.get("aggr_groups", []))),
     )
 
 

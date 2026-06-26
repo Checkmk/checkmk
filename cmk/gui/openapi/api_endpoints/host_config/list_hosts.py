@@ -119,7 +119,7 @@ def list_hosts_v1(
     )
     with tracer.span("list-hosts-build-response"):
         return serialize_host_collection(
-            [host for host in filter(hosts_filter, hosts)],
+            list(filter(hosts_filter, hosts)),
             compute_effective_attributes=compute.effective_attributes,
             compute_links=compute.links,
         )

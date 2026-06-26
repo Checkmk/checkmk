@@ -263,9 +263,7 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
     snapshot_data = {}
     config_lock_data = {}
 
-    replications = {
-        node["node"]: [rep for rep in node.get("replication", [])] for node in data["nodes"]
-    }
+    replications = {node["node"]: list(node.get("replication", [])) for node in data["nodes"]}
     all_storages = {
         entry["id"]: entry for entry in data["cluster"]["resources"] if entry["type"] == "storage"
     }

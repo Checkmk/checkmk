@@ -85,6 +85,6 @@ class Parser[Section: Mapping[str, Any]]:
             if self._aggregate:
                 return self._aggregate_data_structure(iterator)
 
-            return cast(Section, {key: value for key, value in iterator})
+            return cast(Section, dict(iterator))
         except MKRabbitMQError:
             return None

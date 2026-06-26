@@ -34,7 +34,7 @@ class PermissionSectionRegistry(cmk.ccc.plugin_registry.Registry[PermissionSecti
         return instance.name
 
     def get_sorted_sections(self) -> list[PermissionSection]:
-        return sorted([s for s in self.values()], key=lambda s: (s.sort_index, s.title))
+        return sorted(self.values(), key=lambda s: (s.sort_index, s.title))
 
 
 permission_section_registry = PermissionSectionRegistry()

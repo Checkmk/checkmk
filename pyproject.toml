@@ -32,11 +32,7 @@ select = [
   "N805",   # pep8-naming: invalid-first-argument-name-for-method (self)
   "I",      # isort
   "ISC",    # flake8: implicit string concat
-  "LOG001", # flake8-logging: direct-logger-instantiation
-  "LOG002", # flake8-logging: invalid-get-logger-argument
-  "LOG009", # flake8-logging: undocumented-warn
-  "LOG014", # flake8-logging: no exc_info= outside exception handlers
-  "LOG015", # flake8-logging: root-logger-call
+  "LOG",    # flake8: logging
   "PIE",    # flake8: misc lints
   "PL",     # pylint
   "RUF100", # ruff: unused noqa

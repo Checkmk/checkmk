@@ -1327,7 +1327,11 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 def _test_connection(args: argparse.Namespace) -> int:
     try:
-        client = Client(json.loads(args.credentials), args.project, args.date)
+        client = Client(
+            json.loads(resolve_secret_option(args, CREDENTIALS_OPTION).reveal()),
+            args.project,
+            args.date,
+        )
         request = asset_v1.ListAssetsRequest(
             parent=f"projects/{client.project}",
             content_type=asset_v1.ContentType.RESOURCE,

@@ -12,6 +12,7 @@ from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 
+from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.gcp.special_agents import agent_gcp
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
@@ -554,3 +555,40 @@ def test_output_cost_section(
         '{"project": "test", "id": "testid", "month": "202206", "amount": 1337.0, "currency": "EUR"}',
         '{"project": "checkmk", "id": "checkmkid", "month": "202206", "amount": 2.71, "currency": "EUR"}',
     ]
+
+
+def test_connection_test_resolves_credentials_from_password_store(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The server-side call always passes the credentials as a password-store
+    # reference (``--credentials-id``), so ``args.credentials`` is ``None`` and
+    # the secret must be resolved via the password store. See CMK crash report.
+    account_info = {"type": "service_account", "project_id": "my-project"}
+    args = agent_gcp.parse_arguments(
+        [
+            "--project",
+            "my-project",
+            "--credentials-id",
+            "my-id:/path/to/store",
+            "--piggy-back-prefix",
+            "my-project",
+            "--connection-test",
+        ]
+    )
+    assert args.credentials is None
+
+    monkeypatch.setattr(
+        agent_gcp,
+        "resolve_secret_option",
+        lambda _args, _name: Secret(json.dumps(account_info)),
+    )
+    captured: dict[str, Any] = {}
+
+    def fake_list_assets(self: agent_gcp.Client, request: Any) -> Iterable[Any]:
+        captured["account_info"] = self.account_info
+        return []
+
+    monkeypatch.setattr(agent_gcp.Client, "list_assets", fake_list_assets)
+
+    assert agent_gcp.agent_gcp_main(args) == 0
+    assert captured["account_info"] == account_info

@@ -1084,17 +1084,6 @@ def command_acknowledge_action(
     row_index: int,
     action_rows: Rows,
 ) -> CommandActionResult:
-    if "aggr_tree" in row:  # BI mode
-        specs = []
-        for site, host, service in _find_all_leaves(row["aggr_tree"]):
-            if service:
-                spec = f"{host};{service}"
-                cmdtag = "SVC"
-            else:
-                spec = host
-                cmdtag = "HOST"
-            specs.append((site, spec, cmdtag))
-
     if request.var("_acknowledge"):
         comment = request.get_str_input("_ack_comment")
         if not comment:
@@ -1152,6 +1141,16 @@ def command_acknowledge_action(
             )
 
         if "aggr_tree" in row:  # BI mode
+            specs = []
+            for site, host, service in _find_all_leaves(row["aggr_tree"]):
+                if service:
+                    spec = f"{host};{service}"
+                    cmdtag = "SVC"
+                else:
+                    spec = host
+                    cmdtag = "HOST"
+                specs.append((site, spec, cmdtag))
+
             commands: Sequence[CommandSpec] = [
                 (site, make_command_ack(spec_, cmdtag_)) for site, spec_, cmdtag_ in specs
             ]

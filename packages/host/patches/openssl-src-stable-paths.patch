@@ -17,6 +17,15 @@
 # libcrypto.so loaded at runtime inside a site; the agent binaries ship to
 # monitored hosts that have no /omd tree, so FHS is the correct choice.
 #
+# CMK-35950: with OPENSSLDIR pointed at /etc/ssl, the vendored OpenSSL would
+# otherwise auto-load the *distro-supplied* /etc/ssl/openssl.cnf at init. On
+# SLES 16 that config enables provider auto-loading, which deadlocks OpenSSL
+# 3.x's recursive rwlock under musl (benign on glibc) during DRBG seeding in
+# SSL_CTX_new -- so `cmk-agent-ctl register` hangs forever. We neither ship nor
+# need an openssl.cnf, so the configure hunk below adds `no-autoload-config` to
+# keep the "never read openssl config files" invariant true in fact, not just
+# by intent.
+#
 # Applied to a build-time copy of the locked openssl-src crate by
 # patch-vendored-openssl-src.sh. The hunks are anchored on src/lib.rs context; a
 # crate upgrade that moves them makes `patch` fail loudly rather than silently
@@ -32,6 +41,16 @@
          }
 
          // Specify that openssl directory where things are loaded at runtime is
+@@ -202,6 +202,9 @@
+             .arg("no-ssl3")
+             // No need to build tests, we won't run them anyway
+             .arg("no-tests")
++            // CMK-35950: do not auto-load the (distro-supplied) openssl.cnf at init.
++            // SLES16's provider config deadlocks OpenSSL 3.x's recursive rwlock under musl.
++            .arg("no-autoload-config")
+             // Nothing related to zlib please
+             .arg("no-comp")
+             .arg("no-zlib")
 @@ -610,7 +610,7 @@
 
              let mut install =

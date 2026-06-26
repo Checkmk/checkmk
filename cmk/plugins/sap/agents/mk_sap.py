@@ -194,7 +194,7 @@ states = load_state_file()
 
 # index of all logfiles which have been found in a run. This is used to
 # remove logfiles which are not available anymore from the states dict.
-logfiles = []
+logfiles = []  # type: list[tuple[str, str]]
 
 # #############################################################################
 

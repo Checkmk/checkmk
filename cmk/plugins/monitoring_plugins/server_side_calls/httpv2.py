@@ -332,9 +332,9 @@ def _auth_args(
     ),
 ) -> tuple[str | Secret, ...]:
     match auth:
-        case (AuthMode.BASIC_AUTH, UserAuth(user=user, password=password)):
+        case (AuthMode.BASIC_AUTH, UserAuth(user=user, password=password)):  # type: ignore[unreachable]
             return ("--auth-user", user, "--auth-pw-pwstore", password)
-        case (AuthMode.TOKEN_AUTH, TokenAuth(header=header, token=token)):
+        case (AuthMode.TOKEN_AUTH, TokenAuth(header=header, token=token)):  # type: ignore[unreachable]
             return ("--token-header", header, "--token-key-pwstore", token)
     raise ValueError(auth)
 
@@ -555,13 +555,13 @@ def _header_match_args(
     ),
 ) -> Iterator[str]:
     match header:
-        case (MatchType.STRING, HeaderSpec(header_name=name, header_value=value)):
+        case (MatchType.STRING, HeaderSpec(header_name=name, header_value=value)):  # type: ignore[unreachable]
             yield "--header-strings"
             yield f"{name}:{value}"
 
         case (
             MatchType.REGEX,
-            HeaderRegex(
+            HeaderRegex(  # type: ignore[unreachable]
                 regex=HeaderRegexSpec(header_name_pattern=name, header_value_pattern=value),
                 case_insensitive=case_insensitive,
                 invert=invert,
@@ -580,13 +580,13 @@ def _body_match_args(
     macros: Mapping[str, str],
 ) -> Iterator[str]:
     match body:
-        case (MatchType.STRING, str(string)):
+        case (MatchType.STRING, str(string)):  # type: ignore[unreachable]
             yield "--body-string"
             yield replace_macros(string, macros)
 
         case (
             MatchType.REGEX,
-            BodyRegex(
+            BodyRegex(  # type: ignore[unreachable]
                 regex=regex,
                 case_insensitive=case_insensitive,
                 multiline=multiline,

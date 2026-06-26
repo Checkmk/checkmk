@@ -3087,8 +3087,7 @@ class EventStatus:
             found = event
 
         # Did we just count the event that was just one too much?
-        # NOTE: Suppression not needed anymore when https://github.com/python/mypy/pull/19696 has been merged.
-        if found["phase"] == "counting" and found["count"] >= count["count"]:  # type: ignore[possibly-undefined]
+        if found["phase"] == "counting" and found["count"] >= count["count"]:
             found["phase"] = "open"
             return found  # do event action, return found copy of event
         return None  # do not do event action

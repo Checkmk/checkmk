@@ -159,7 +159,7 @@ def declare_permission(
     )
 
 
-_permission_declaration_functions = []
+_permission_declaration_functions: list[Callable[[], None]] = []
 
 
 # Some module have a non-fixed list of permissions. For example for

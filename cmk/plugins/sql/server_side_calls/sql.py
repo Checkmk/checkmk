@@ -56,9 +56,9 @@ def generate_sql_command(
     ]
 
     match params.port:
-        case "explicit", int(value):
+        case "explicit", int(value):  # type: ignore[unreachable]
             args.append(f"--port={value}")
-        case "macro", str(value):
+        case "macro", str(value):  # type: ignore[unreachable]
             # trigger the potential value error here, rather than in every call
             args.append(f"--port={int(replace_macros(value, host_config.macros))}")
 

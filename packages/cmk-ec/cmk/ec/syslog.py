@@ -147,7 +147,7 @@ class StructuredDataName:
     def __ne__(self, other: object) -> bool:
         result = self.__eq__(other)
         if result is NotImplemented:
-            return result
+            return result  # type: ignore[no-any-return]
         return not result
 
 

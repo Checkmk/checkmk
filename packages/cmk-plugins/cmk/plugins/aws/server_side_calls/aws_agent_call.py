@@ -172,7 +172,7 @@ def aws_arguments(
             if aksts.external_id:
                 args.extend(("--external-id", aksts.external_id))
         case ("none", _):
-            ...
+            ...  # type: ignore[unreachable]
 
     if params.proxy_details:
         args.extend(_proxy_args(params.proxy_details))

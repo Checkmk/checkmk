@@ -127,11 +127,11 @@ def test_connect(mock_ldap: MagicMock) -> None:
     mock_ldap.assert_called_with("ldap://internet")  # most recent
 
     # assumes "ldap_golden_unknown_password" is not in the password store, hence the 'None'.
-    connector._ldap_obj.simple_bind_s.assert_called_with(  # type: ignore[attr-defined,unused-ignore]
+    connector._ldap_obj.simple_bind_s.assert_called_with(  # type: ignore[union-attr]
         cfg["bind"][0], None
     )
-    assert connector._ldap_obj.protocol_version == cfg["version"]
-    assert connector._ldap_obj.network_timeout == cfg["connect_timeout"]
+    assert connector._ldap_obj.protocol_version == cfg["version"]  # type: ignore[union-attr]
+    assert connector._ldap_obj.network_timeout == cfg["connect_timeout"]  # type: ignore[union-attr]
 
 
 def _mock_result3(
@@ -147,7 +147,7 @@ def _mock_result3(
             0,
             ldap_result,
             0,
-            [ldap.controls.SimplePagedResultsControl()],  # type: ignore[no-untyped-call,unused-ignore]
+            [ldap.controls.SimplePagedResultsControl()],  # type: ignore[no-untyped-call]
         ),
     )
 

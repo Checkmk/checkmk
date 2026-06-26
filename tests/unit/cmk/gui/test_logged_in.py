@@ -47,7 +47,7 @@ def test_user_context(with_user: tuple[UserId, str]) -> None:
     assert global_user.id is None
     with UserContext(user_id, UserPermissions({}, {}, {}, [])):
         assert global_user.id == user_id
-    assert global_user.id is None
+    assert global_user.id is None  # type: ignore[unreachable]
 
 
 @pytest.mark.usefixtures("request_context")
@@ -77,12 +77,12 @@ def test_user_context_nested(with_user: tuple[UserId, str], with_admin: tuple[Us
     with UserContext(first_user_id, UserPermissions({}, {}, {}, [])):
         assert global_user.id == first_user_id
 
-        with UserContext(second_user_id, UserPermissions({}, {}, {}, [])):
+        with UserContext(second_user_id, UserPermissions({}, {}, {}, [])):  # type: ignore[unreachable]
             assert global_user.id == second_user_id
 
         assert global_user.id == first_user_id
 
-    assert global_user.id is None
+    assert global_user.id is None  # type: ignore[unreachable]
 
 
 def test_user_context_explicit_permissions(with_user: tuple[UserId, str]) -> None:

@@ -55,14 +55,14 @@ def _parse_to_predictive_levels[NumberT: (int, float)](
         # already migrated
         # NOTE: Using a variable of type "type[...]" in a class pattern should be OK, but
         # mypy complains about that, see e.g. https://github.com/python/mypy/issues/17133.
-        # As a consequence, we need those three suppressions below. :-/
+        # As a consequence, we need the suppression below. :-/
         case {
             "period": "wday" | "day" | "hour" | "minute",
             "horizon": int(),
-            "levels": ("absolute", (ntype(), ntype()))  # type: ignore[misc]
+            "levels": ("absolute", (ntype(), ntype()))
             | ("relative", (float(), float()))
             | ("stdev", (float(), float())),
-            "bound": (ntype(), ntype()) | None,  # type: ignore[misc]
+            "bound": (ntype(), ntype()) | None,
         }:
             return model  # type: ignore[return-value]
         # migrate upper predictive levels

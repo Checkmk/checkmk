@@ -291,7 +291,7 @@ def _tags_containing_werk(werk_id: int) -> list[str]:
     return _werk_to_git_tag[werk_id]
 
 
-_werk_to_git_tag = defaultdict(list)
+_werk_to_git_tag: dict[int, list[str]] = defaultdict(list)
 
 
 @lru_cache

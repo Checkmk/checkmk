@@ -87,7 +87,7 @@ def single_auth_request(wsgi_app: WebTestAppForCMK, auth_request: http.Request) 
         userdb.session.save_session_infos(user_id, session_infos={session_id: session.session_info})
         assert session.user.id == user_id
         assert session.session_info.session_state == "logged_in"
-        return session.user.id, infos[session_id]
+        return session.user.id, infos[session_id]  # type: ignore[return-value]
 
     return caller
 

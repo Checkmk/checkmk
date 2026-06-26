@@ -94,12 +94,12 @@ def _transform_from_disk(
             return "global_", stored_proxy_id
 
         case "cmk_postprocessed", "explicit_proxy", str(url):
-            return "manual", _convert_url_to_explicit_proxy_dict(url)
+            return "manual", _convert_url_to_explicit_proxy_dict(url)  # type: ignore[unreachable]
 
         case "cmk_postprocessed", "explicit_proxy", {
             "scheme": str(scheme),
             "proxy_server_name": str(proxy_server_name),
-            "port": int(port),
+            "port": int(port),  # type: ignore[unreachable]
             "auth": {
                 "user": str(user),
                 "password": (
@@ -121,7 +121,7 @@ def _transform_from_disk(
         case "cmk_postprocessed", "explicit_proxy", {
             "scheme": str() as scheme,
             "proxy_server_name": str() as proxy_server_name,
-            "port": int() as port,
+            "port": int() as port,  # type: ignore[unreachable]
         }:
             return "manual", ProxyConfigSpec(
                 scheme=scheme,
@@ -138,7 +138,7 @@ def _transform_to_disk(value: FrontendRepresentation) -> DiskRepresentation:
         case "environment", "environment":
             return "cmk_postprocessed", "environment_proxy", ""
 
-        case "no_proxy", None:
+        case "no_proxy", None:  # type: ignore[unreachable]
             return "cmk_postprocessed", "no_proxy", ""
 
         case "global_", str(stored_proxy_id):
@@ -147,7 +147,7 @@ def _transform_to_disk(value: FrontendRepresentation) -> DiskRepresentation:
         case "manual", {
             "scheme": str() as scheme,
             "proxy_server_name": str() as proxy_server_name,
-            "port": int() as port,
+            "port": int() as port,  # type: ignore[unreachable]
             "auth": {
                 "user": str(user),
                 "password": (
@@ -173,7 +173,7 @@ def _transform_to_disk(value: FrontendRepresentation) -> DiskRepresentation:
         case "manual", {
             "scheme": str() as scheme,
             "proxy_server_name": str() as proxy_server_name,
-            "port": int() as port,
+            "port": int() as port,  # type: ignore[unreachable]
         }:
             return (
                 "cmk_postprocessed",

@@ -249,7 +249,7 @@ def save_password_from_slidein_schema(
 
     owned_by = None
     match parsed_data.password_props.owned_by:
-        case ("admins", None):
+        case ("admins", None):  # type: ignore[unreachable]
             owned_by = None
         case ("contact_group", str(contact_group_name)):
             owned_by = contact_group_name

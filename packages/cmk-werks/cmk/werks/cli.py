@@ -601,7 +601,7 @@ def werk_class(werk: Werk) -> str:
     for entry in get_config().classes:
         # typing: why would this be? LH: Tuple[str, str, str], RH: str
         if entry == cl:
-            return cl
+            return cl  # type: ignore[unreachable]
 
         if entry[0] == cl:
             return entry[1]

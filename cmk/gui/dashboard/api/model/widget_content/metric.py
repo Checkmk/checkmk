@@ -8,7 +8,7 @@
 # mypy: disable-error-code="redundant-expr"
 
 from abc import ABC
-from typing import Annotated, assert_never, cast, Literal, override, Self
+from typing import Annotated, assert_never, Literal, override, Self
 
 from pydantic import Discriminator
 
@@ -216,13 +216,9 @@ def _metric_status_display_from_internal(
         case None:
             return ApiOmitted()
         case ("text", for_states):
-            # mypy can't handle type narrowing here
-            return MetricStatusDisplayText(type="text", for_states=cast(ForStates, for_states))
+            return MetricStatusDisplayText(type="text", for_states=for_states)
         case ("background", for_states):
-            # mypy can't handle type narrowing here
-            return MetricStatusDisplayBackground(
-                type="background", for_states=cast(ForStates, for_states)
-            )
+            return MetricStatusDisplayBackground(type="background", for_states=for_states)
     # TODO: change to `assert_never` once mypy can handle it correctly
     raise ValueError(f"Invalid metric status display: {value!r}")
 

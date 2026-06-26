@@ -72,7 +72,7 @@ def get_proxy_config(
     global_proxies: typing.Mapping[str, http_proxy_config.HTTPProxySpec],
 ) -> http_proxy_config.HTTPProxyConfig:
     match proxy_setting:
-        case ("no_proxy", None):
+        case ("no_proxy", None):  # type: ignore[unreachable]
             return http_proxy_config.NoProxyConfig()
         case ("environment", "environment"):
             return http_proxy_config.EnvironmentProxyConfig()
@@ -89,4 +89,4 @@ def get_proxy_config(
 
             return http_proxy_config.build_explicit_proxy_config(proxy_spec)
         case _:
-            return http_proxy_config.EnvironmentProxyConfig()
+            return http_proxy_config.EnvironmentProxyConfig()  # type: ignore[unreachable]

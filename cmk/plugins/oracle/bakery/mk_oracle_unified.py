@@ -401,7 +401,7 @@ def _get_oracle_additional_options(
     use_host_client: str | None = None
     if options.oracle_client_library is not None:
         match options.oracle_client_library.use_host_client:
-            case (("auto" | "never" | "always") as predefined, None):
+            case (("auto" | "never" | "always") as predefined, None):  # type: ignore[unreachable]
                 use_host_client = predefined
             case ("custom", custom_path):
                 use_host_client = str(custom_path)

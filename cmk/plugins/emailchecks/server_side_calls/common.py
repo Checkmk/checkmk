@@ -51,14 +51,14 @@ def fetching_options_to_args(
                 "--fetch-tenant-id",
                 oauth2.tenant_id,
             ]
-        case tuple(("basic", BasicAuthParameters() as auth)):
+        case tuple(("basic", BasicAuthParameters() as auth)):  # type: ignore[unreachable]
             args += [
                 "--fetch-username",
                 auth.username,
                 "--fetch-password-reference",
                 auth.password,
             ]
-        case tuple(("oauth2", Oauth2Parameters() as auth)):
+        case tuple(("oauth2", Oauth2Parameters() as auth)):  # type: ignore[unreachable]
             args += [
                 f"--fetch-client-id={auth.client_id}",
                 "--fetch-client-secret-reference",
@@ -66,7 +66,7 @@ def fetching_options_to_args(
                 f"--fetch-tenant-id={auth.tenant_id}",
             ]
         case _:
-            pass
+            pass  # type: ignore[unreachable]
 
     if fetch_params.email_address:
         args.append(f"--fetch-email-address={fetch_params.email_address}")

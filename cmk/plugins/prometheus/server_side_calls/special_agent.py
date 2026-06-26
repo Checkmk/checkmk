@@ -136,7 +136,7 @@ def _commands_function(
     # the authentication parameters must come last because they are parsed by subparsers that
     # consume all remaining arguments (and throw errors if they don't recognize them)
     match params.auth_basic:
-        case ("auth_login", AuthLogin(username=username, password=password)):
+        case ("auth_login", AuthLogin(username=username, password=password)):  # type: ignore[unreachable]
             args += [
                 "auth_login",
                 "--username",
@@ -144,7 +144,7 @@ def _commands_function(
                 "--password-id",
                 password,
             ]
-        case ("auth_token", AuthToken(token=token)):
+        case ("auth_token", AuthToken(token=token)):  # type: ignore[unreachable]
             args += [
                 "auth_token",
                 "--token-id",

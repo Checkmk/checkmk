@@ -88,7 +88,7 @@ def _check_agent_issues(issues: dict[str, list[dict[str, Any]]], params: Params)
             case "exception":
                 levels = params["exception_levels"]
             case _:
-                levels = None
+                levels = None  # type: ignore[unreachable]
         count = len(issues.get(type_, ()))
         yield from check_levels_v1(
             count,

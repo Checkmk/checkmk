@@ -613,10 +613,10 @@ def _set_notification_effect_parameters(
 def _set_recipients(event_rule: EventRule, notification: NotificationQuickSetupSpec) -> None:
     for recipient in notification["recipient"]["receive"]:
         match recipient:
-            case ("all_contacts_affected", None):
+            case ("all_contacts_affected", None):  # type: ignore[unreachable]
                 event_rule["contact_object"] = True
 
-            case ("all_email_users", None):
+            case ("all_email_users", None):  # type: ignore[unreachable]
                 event_rule["contact_all_with_email"] = True
 
             case ("contact_group", list() as contact_groups):
@@ -628,7 +628,7 @@ def _set_recipients(event_rule: EventRule, notification: NotificationQuickSetupS
             case ("specific_users", list() as users):
                 event_rule["contact_users"] = users
 
-            case ("all_users", None):
+            case ("all_users", None):  # type: ignore[unreachable]
                 event_rule["contact_all"] = True
 
             case _:

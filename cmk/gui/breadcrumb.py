@@ -36,7 +36,7 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
     def __len__(self) -> int:
         return len(self._items)
 
-    @overload
+    @overload  # type: ignore[override]
     def __getitem__(self, index: int) -> BreadcrumbItem: ...
 
     @overload
@@ -45,7 +45,7 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
     def __getitem__(self, index: int | slice) -> BreadcrumbItem | MutableSequence[BreadcrumbItem]:
         return self._items[index]
 
-    @overload
+    @overload  # type: ignore[override]
     def __setitem__(self, index: int, value: BreadcrumbItem) -> None: ...
 
     @overload
@@ -56,7 +56,7 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
     ) -> None:
         self._items[index] = value  # type: ignore[index,assignment]
 
-    @overload
+    @overload  # type: ignore[override]
     def __delitem__(self, index: int) -> None: ...
 
     @overload

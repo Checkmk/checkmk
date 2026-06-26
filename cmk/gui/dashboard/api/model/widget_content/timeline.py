@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from abc import ABC
-from typing import Annotated, cast, Literal, override, Self
+from typing import Annotated, Literal, override, Self
 
 from pydantic import Discriminator
 
@@ -79,11 +79,8 @@ def _render_mode_from_internal(
 ) -> RenderMode:
     match value:
         case ("bar_chart", config):
-            # mypy can't handle the type narrowing here
-            return BarChartRenderMode.from_internal(cast(EventBarChartRenderBarChart, config))
+            return BarChartRenderMode.from_internal(config)
         case ("simple_number", config):
-            # mypy can't handle the type narrowing here
-            config = cast(EventBarChartRenderSimpleNumber, config)
             return SimpleNumberRenderMode(
                 type="simple_number",
                 time_range=timerange_from_internal(config["time_range"]),

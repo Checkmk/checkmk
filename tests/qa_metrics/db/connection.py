@@ -132,4 +132,4 @@ def _ssl_mode_from_env() -> SslMode:
     )
     if raw not in valid:
         raise ValueError(f"Invalid QA_POSTGRES_SSLMODE={raw!r}; valid: {valid}")
-    return raw  # type: ignore[return-value]
+    return raw

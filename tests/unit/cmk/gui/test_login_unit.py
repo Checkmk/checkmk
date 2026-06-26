@@ -214,7 +214,7 @@ def test_authenticate_success(flask_app: flask.Flask, user_id: UserId) -> None:
             assert authenticated is True
             assert user.id == user_id
 
-    assert user.id is None
+    assert user.id is None  # type: ignore[unreachable]
 
 
 def test_authenticate_fails(flask_app: flask.Flask, with_user: UserId) -> None:
@@ -310,9 +310,9 @@ def test_web_server_auth_session(flask_app: flask.Flask, user_id: UserId) -> Non
             with login.authenticate(UserPermissions({}, {}, {}, [])) as authenticated:
                 assert authenticated is True
                 assert user.id == user_id
-                assert session.user.id == user.id
+                assert session.user.id == user.id  # type: ignore[unreachable]
 
-        with flask_app.request_context(create_environ()):
+        with flask_app.request_context(create_environ()):  # type: ignore[unreachable]
             flask_app.preprocess_request()
             assert user.id is None
 

@@ -229,7 +229,7 @@ def update_reference(
 
     affected_sites: list[SiteId] | None = None
     match sites:
-        case ("all", None):
+        case ("all", None):  # type: ignore[unreachable] # mypy regression?
             pass
         case ("restricted", list() as site_ids):
             affected_sites = [SiteId(site_id) for site_id in site_ids]
@@ -271,7 +271,7 @@ def save_new_reference_to_config_file(
 
     affected_sites: list[SiteId] | None = None
     match sites:
-        case ("all", None):
+        case ("all", None):  # type: ignore[unreachable] # mypy regression?
             pass
         case ("restricted", list() as site_ids):
             affected_sites = [SiteId(site_id) for site_id in site_ids]

@@ -7,7 +7,7 @@ This should die..."""
 
 from collections.abc import Callable
 
-cleanup_functions = set()
+cleanup_functions = set[Callable[[], None]]()
 
 
 def register_cleanup(func: Callable[[], None]) -> None:

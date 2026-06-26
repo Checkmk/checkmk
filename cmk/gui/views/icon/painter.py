@@ -342,9 +342,9 @@ def _process_icon(
                     yield IconEntry(sort_index=icon.sort_index, icon_name=n)
             return
     elif len(result) == 2:
-        icon_name, title = result  # type: ignore[misc]
+        icon_name, title = result  # type: ignore[assignment]
     elif len(result) == 3:
-        icon_name, title, url = result  # type: ignore[misc]
+        icon_name, title, url = result  # type: ignore[assignment]
     else:
         raise NotImplementedError()
 

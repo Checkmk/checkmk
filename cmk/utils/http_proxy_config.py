@@ -156,7 +156,7 @@ def http_proxy_config_from_user_setting(
     match rulespec_value:
         case ("cmk_postprocessed", p_type, p_value):
             # FormSpec format
-            assert p_type is not None
+            assert p_type is not None  # type: ignore[comparison-overlap]
             proxy_type = {
                 "stored_proxy": "global",
                 "explicit_proxy": "url",
@@ -166,7 +166,7 @@ def http_proxy_config_from_user_setting(
         # Valuespec format
         case (p_type, p_value):
             assert len(rulespec_value) == 2
-            proxy_type, value = rulespec_value
+            proxy_type, value = rulespec_value  # type: ignore[assignment]
 
     if proxy_type == "environment":
         return EnvironmentProxyConfig()

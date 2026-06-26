@@ -72,13 +72,13 @@ def ttl_memoize[**P, R](ttl: int, connection_factory: RedisFactory) -> CacheDeco
                     # Not sure why in the tests, sometimes we get a <str> and sometimes we get <bytes>
                     ck = conn.get(cache_key)
                     assert not isinstance(ck, Awaitable)
-                    cached_result = ensure_bytes(ck)  # type: ignore[unreachable]
+                    cached_result = ensure_bytes(ck)
                     if cached_result is not None:
                         # marshal.loads returns Any, but we know it matches R from the original function
-                        return decode(cached_result)
+                        return decode(cached_result)  # type: ignore[no-any-return]
                     result = func(*args, **kwargs)
                     # marshal.dumps accepts broader types than its type hints suggest
-                    conn.set(cache_key, encode(result), ex=ttl)
+                    conn.set(cache_key, encode(result), ex=ttl)  # type: ignore[arg-type]
                     return result
                 except (RuntimeError, RedisError):
                     pass

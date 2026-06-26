@@ -71,7 +71,7 @@ def _make_levels(
                 total * (1 - c / 100.0),
             )
         case _:
-            return ("no_levels", None)
+            return ("no_levels", None)  # type: ignore[unreachable]
 
 
 def check_esx_vsphere_licenses(

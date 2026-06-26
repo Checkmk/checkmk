@@ -222,9 +222,9 @@ def _host_from_params(params: HttpHostParams, host_config: HostConfig) -> Direct
     settings = HostSettings.from_params(params, host_config)
     if (address_settings := params.address) is not None:
         match address_settings:
-            case ("direct", str(address)):
+            case ("direct", str(address)):  # type: ignore[unreachable]
                 return DirectHost(address=address, settings=settings)
-            case ("proxy", HttpHostAddressProxyParams() as address):
+            case ("proxy", HttpHostAddressProxyParams() as address):  # type: ignore[unreachable]
                 return ProxyHost(proxy=ProxySettings.from_params(address), settings=settings)
     return DirectHost(
         address=settings.fallback_address,

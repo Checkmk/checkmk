@@ -20,8 +20,8 @@ from .local import local_test, run_subprocess, test_dir, user_dir
 
 # ugly hacks to get to know the make_ini_config param and utf encoding in use:
 class Globals:
-    config_param_in_use = None
-    utf_encoding = None
+    config_param_in_use: str | None = None
+    utf_encoding: str | None = None
     section = "logfiles"
     alone = True
     testlog1 = os.path.join(test_dir, "test1.log")

@@ -23,10 +23,10 @@ from .local import local_test, user_dir
 
 
 class Globals:
-    executionmode = None
+    executionmode: str | None = None
     pluginname = ""
-    plugintype = None
-    suffixes = None
+    plugintype: str | None = None
+    suffixes: str | None = None
     binaryplugin = "monty.exe"
     alone = False
 

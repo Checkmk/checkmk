@@ -123,7 +123,7 @@ def _match_service(service: WinService, settings: WindowsServiceDiscoveryParams)
             return has_state_match and has_mode_match and has_pattern_match
         # Note: unable to use `assert_never` when matching on a tuple.
         case _:
-            return False
+            return False  # type: ignore[unreachable]
 
 
 def discovery_windows_services(

@@ -113,14 +113,14 @@ def command_function(params: Params, host_config: HostConfig) -> Iterable[Specia
     match params.cluster_resource_aggregation:
         case None:
             args.extend(["--cluster-aggregation-exclude-node-roles", "control-plane", "infra"])
-        case ("cluster_aggregation_include_all_nodes", None):
+        case ("cluster_aggregation_include_all_nodes", None):  # type: ignore[unreachable]
             args.append("--cluster-aggregation-include-all-nodes")
         case ("cluster_aggregation_exclude_node_roles", list(excluded_roles)):
             args.append("--cluster-aggregation-exclude-node-roles")
             args.extend(excluded_roles)
 
     match params.import_annotations:
-        case ("include_annotations_as_host_labels", None):
+        case ("include_annotations_as_host_labels", None):  # type: ignore[unreachable]
             args.append("--include-annotations-as-host-labels")
         case ("include_matching_annotations_as_host_labels", str(labels_param)):
             args.append("--include-matching-annotations-as-host-labels")

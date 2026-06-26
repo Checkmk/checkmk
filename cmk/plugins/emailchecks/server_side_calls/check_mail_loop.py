@@ -66,7 +66,7 @@ def check_mail_loop_arguments(
         args.append(f"--send-port={port}")
 
     match params.send:
-        case ("SMTP", SMTPParameters() as smtp_params):
+        case ("SMTP", SMTPParameters() as smtp_params):  # type: ignore[unreachable]
             if smtp_params.connection.tls:
                 args.append("--send-tls")
 
@@ -79,7 +79,7 @@ def check_mail_loop_arguments(
                         auth.password,
                     ]
                 )
-        case ("EWS", CommonParameters() as common_params):
+        case ("EWS", CommonParameters() as common_params):  # type: ignore[unreachable]
             if not common_params.connection.disable_tls:
                 args.append("--send-tls")
 
@@ -87,14 +87,14 @@ def check_mail_loop_arguments(
                 args.append("--send-disable-cert-validation")
 
             match common_params.auth:
-                case ("basic", BasicAuthParameters() as ews_auth):
+                case ("basic", BasicAuthParameters() as ews_auth):  # type: ignore[unreachable]
                     args += [
                         "--send-username",
                         ews_auth.username,
                         "--send-password-reference",
                         ews_auth.password,
                     ]
-                case ("oauth2", Oauth2Parameters() as ews_auth):
+                case ("oauth2", Oauth2Parameters() as ews_auth):  # type: ignore[unreachable]
                     args += [
                         "--send-client-id",
                         ews_auth.client_id,
@@ -104,10 +104,10 @@ def check_mail_loop_arguments(
                         ews_auth.tenant_id,
                     ]
                 case _:
-                    pass
+                    pass  # type: ignore[unreachable]
 
             args.append(f"--send-email-address={common_params.email_address}")
-        case ("GRAPHAPI", GraphApiConnectionParameters() as graph_params):
+        case ("GRAPHAPI", GraphApiConnectionParameters() as graph_params):  # type: ignore[unreachable]
             oauth2 = graph_params.auth
             args += [
                 "--send-initial-access-token-reference",
@@ -126,7 +126,7 @@ def check_mail_loop_arguments(
         case (protocol, _):
             raise NotImplementedError(f"Sending mails is not implemented for {protocol}")
         case _:
-            pass
+            pass  # type: ignore[unreachable]
 
     args.append(f"--mail-from={params.mail_from}")
     args.append(f"--mail-to={params.mail_to}")

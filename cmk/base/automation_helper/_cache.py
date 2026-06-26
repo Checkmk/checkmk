@@ -35,7 +35,7 @@ class Cache:
         try:
             last = self._client.get(LAST_DETECTED_CHANGE_TOPIC)
             assert not isinstance(last, Awaitable)
-            return float(last or 0.0)  # type: ignore[unreachable]
+            return float(last or 0.0)
         except ConnectionError as err:
             raise CacheError(
                 "Redis unavailable: Failed to retrieve timestamp of last detected change."

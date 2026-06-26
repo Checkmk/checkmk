@@ -127,7 +127,7 @@ def _check_levels[NumberT: (int, float)](
             return CheckLevelsResult(Type.NO_LEVELS, State.OK)
 
         case "fixed", (warn, crit):
-            assert isinstance(warn, float | int) and isinstance(crit, float | int)
+            assert isinstance(warn, float | int) and isinstance(crit, float | int)  # type: ignore[redundant-expr]
             return _check_fixed_levels(value, (warn, crit), levels_direction, render_func)
 
         case "predictive", (metric, prediction, p_levels):

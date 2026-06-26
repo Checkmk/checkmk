@@ -57,7 +57,7 @@ from cmk.gui.search.match_items import (
     MatchItemsByTopic as MatchItemsByTopic,
 )
 from cmk.gui.session_context import SuperUserContext
-from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
+from cmk.gui.type_defs import SearchQuery, SearchResult
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
@@ -364,7 +364,7 @@ class IndexSearcher:
         if not redis_server_reachable(self._redis_client):
             raise RuntimeError("Redis server is not reachable")
 
-    def search(self, query: SearchQuery) -> SearchResultsByTopic:
+    def search(self, query: SearchQuery) -> Iterable[tuple[str, str, SearchResult]]:
         """
         Sorted search results restricted according to the permissions of the current user.
 
@@ -479,6 +479,7 @@ class IndexSearcher:
                             loading_transition=loading_transition,
                         ),
                         visibility_check,
+                        category,
                     )
                 )
         return results
@@ -524,20 +525,18 @@ class IndexSearcher:
 
     def _filter_results_by_user_permissions(
         self, results_by_topic: Iterable[tuple[str, Iterable[_SearchResultWithVisibilityCheck]]]
-    ) -> SearchResultsByTopic:
-        yield from (
-            (
-                topic,
-                (result.result for result in results if result.visibility_check(result.result.url)),
-            )
-            for topic, results in results_by_topic
-        )
+    ) -> Iterable[tuple[str, str, SearchResult]]:
+        for topic, results in results_by_topic:
+            for result in results:
+                if result.visibility_check(result.result.url):
+                    yield result.category, topic, result.result
 
 
 @dataclass(frozen=True)
 class _SearchResultWithVisibilityCheck:
     result: SearchResult
     visibility_check: VisibilityCheck
+    category: str = ""
 
 
 def _index_building_in_background_job(
@@ -677,6 +676,6 @@ class SetupSearchEngine:
 
     def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
         return itertools.chain.from_iterable(
-            transform_legacy_results_to_unified(results, topic, provider=ProviderName.setup)
-            for topic, results in self._legacy_engine.search(query)
+            transform_legacy_results_to_unified([result], topic, provider=ProviderName.setup)
+            for _category, topic, result in self._legacy_engine.search(query)
         )

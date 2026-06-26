@@ -7,7 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 
 import pytest
@@ -39,7 +39,7 @@ from cmk.gui.search import (
 )
 from cmk.gui.search.engines import setup as search
 from cmk.gui.session_context import _UserContext
-from cmk.gui.type_defs import SearchResult, SearchResultsByTopic
+from cmk.gui.type_defs import SearchResult
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wato._omd_configuration import (
     ConfigDomainApache,
@@ -348,9 +348,12 @@ class TestIndexBuilderAndSearcher:
 
     @staticmethod
     def _evaluate_search_results_by_topic(
-        results_by_topic: SearchResultsByTopic,
+        results: Iterable[tuple[str, str, SearchResult]],
     ) -> list[tuple[str, list[SearchResult]]]:
-        return [(topic, list(results)) for topic, results in results_by_topic]
+        grouped: dict[str, list[SearchResult]] = {}
+        for _category, topic, result in results:
+            grouped.setdefault(topic, []).append(result)
+        return list(grouped.items())
 
 
 class TestPermissionHandler:

@@ -111,3 +111,29 @@ alias(
     actual = ":format.check",
     visibility = ["//visibility:public"],
 )
+
+_PER_LANGUAGE_FORMATTERS = {
+    "c": "format_C_with_clang-format",
+    "cc": "format_C++_with_clang-format",
+    "css": "format_CSS_with_prettier",
+    "groovy": "format_Groovy_with_groovy-format",
+    "html": "format_HTML_with_prettier",
+    "html_jinja": "format_HTML_Jinja_with_djlint",
+    "javascript": "format_JavaScript_with_prettier",
+    "markdown": "format_Markdown_with_prettier",
+    "powershell": "format_PowerShell_with_ps-format",
+    "python": "format_Python_with_ruff",
+    "rust": "format_Rust_with_rustfmt",
+    "shell": "format_Shell_with_shfmt",
+    "starlark": "format_Starlark_with_buildifier",
+    "toml": "format_TOML_with_taplo",
+}
+
+[
+    alias(
+        name = name,
+        actual = ":" + target,
+        visibility = ["//visibility:public"],
+    )
+    for name, target in _PER_LANGUAGE_FORMATTERS.items()
+]

@@ -15,15 +15,9 @@ import {
   useVueTable
 } from '@tanstack/vue-table'
 import { useVirtualizer } from '@tanstack/vue-virtual'
-import {
-  type ComponentPublicInstance,
-  computed,
-  inject,
-  onBeforeUnmount,
-  provide,
-  ref,
-  watch
-} from 'vue'
+import { type ComponentPublicInstance, computed, inject, provide, ref, watch } from 'vue'
+
+import { useResizeObserver } from '@/lib/useResizeObserver'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
 import type { FetchState } from '@/monitoring/shared/services/MonitoringService'
@@ -130,34 +124,33 @@ const pinningEnabled = computed(
 const wrapperRef = ref<HTMLElement | null>(null)
 const containerWidth = ref<number | null>(null)
 const headerHeight = ref(0)
-let observer: ResizeObserver | null = null
 
-watch(wrapperRef, (el) => {
-  observer?.disconnect()
-  observer = null
-  if (el && typeof ResizeObserver !== 'undefined') {
-    const thead = el.querySelector('thead')
-    const measure = (width: number): void => {
-      containerWidth.value = width
-      if (thead) {
-        headerHeight.value = thead.getBoundingClientRect().height
-      }
-    }
-    observer = new ResizeObserver((entries) => {
-      const entry = entries[0]
-      if (entry) {
-        measure(entry.contentRect.width)
-      }
-    })
-    measure(el.getBoundingClientRect().width)
-    observer.observe(el)
+function measure(width: number): void {
+  containerWidth.value = width
+  const thead = wrapperRef.value?.querySelector('thead')
+  if (thead) {
+    headerHeight.value = thead.getBoundingClientRect().height
+  }
+}
+
+const { observe } = useResizeObserver((entries) => {
+  const entry = entries[0]
+  if (entry) {
+    measure(entry.contentRect.width)
   }
 })
+observe(wrapperRef)
 
-onBeforeUnmount(() => {
-  observer?.disconnect()
-  observer = null
-})
+// measure as soon as the wrapper mounts, before the observer's first async delivery.
+watch(
+  wrapperRef,
+  (el) => {
+    if (el) {
+      measure(el.getBoundingClientRect().width)
+    }
+  },
+  { immediate: true }
+)
 
 interface ColumnMetric {
   id: string

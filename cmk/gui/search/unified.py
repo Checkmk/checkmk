@@ -19,13 +19,11 @@ class UnifiedSearch:
     def __init__(
         self,
         *,
-        setup_engine: SearchEngine,
+        indexed_engine: SearchEngine,
         monitoring_engine: SearchEngine,
-        customize_engine: SearchEngine,
     ) -> None:
-        self._setup_engine = setup_engine
+        self._indexed_engine = indexed_engine
         self._monitoring_engine = monitoring_engine
-        self._customize_engine = customize_engine
 
     def search(
         self,
@@ -39,16 +37,27 @@ class UnifiedSearch:
         customize_results: list[UnifiedSearchResultItem] = []
 
         match provider:
-            case "setup":
-                setup_results.extend(self._setup_engine.search(query))
-            case "monitoring":
+            case ProviderName.setup:
+                setup_results = [
+                    item
+                    for item in self._indexed_engine.search(query)
+                    if item.provider == ProviderName.setup
+                ]
+            case ProviderName.customize:
+                customize_results = [
+                    item
+                    for item in self._indexed_engine.search(query)
+                    if item.provider == ProviderName.customize
+                ]
+            case ProviderName.monitoring:
                 monitoring_results.extend(self._monitoring_engine.search(query))
-            case "customize":
-                customize_results.extend(self._customize_engine.search(query))
             case _:
-                setup_results.extend(self._setup_engine.search(query))
+                for item in self._indexed_engine.search(query):
+                    if item.provider == ProviderName.customize:
+                        customize_results.append(item)
+                    elif item.provider == ProviderName.setup:
+                        setup_results.append(item)
                 monitoring_results.extend(self._monitoring_engine.search(query))
-                customize_results.extend(self._customize_engine.search(query))
 
         search_results = [*setup_results, *monitoring_results, *customize_results]
         get_sorter(sort_type, query)(search_results)

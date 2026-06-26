@@ -34,6 +34,7 @@ py_library(
         "//cmk/gui:page_toolkit",
         "//cmk/gui:session_context",
         "//cmk/gui/background_job/job",
+        "//cmk/gui/pagetypes",
         "//cmk/gui/utils:loading_transition",
         "//cmk/gui/utils:output_funnel",
         "//cmk/gui/utils:roles",

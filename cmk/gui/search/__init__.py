@@ -12,10 +12,10 @@ from .engines.monitoring import (
 )
 from .engines.setup import (
     IndexBuilder,
+    IndexedSearchEngine,
     IndexNotFoundException,
     IndexSearcher,
     PermissionsHandler,
-    SetupSearchEngine,
 )
 from .match_items import ABCMatchItemGenerator as ABCMatchItemGenerator
 from .match_items import match_item_generator_registry as match_item_generator_registry
@@ -32,6 +32,7 @@ __all__ = [
     "IndexBuilder",
     "IndexNotFoundException",
     "IndexSearcher",
+    "IndexedSearchEngine",
     "MatchItem",
     "MatchItemGeneratorRegistry",
     "MatchItems",
@@ -39,7 +40,6 @@ __all__ = [
     "PermissionsHandler",
     "QuicksearchManager",
     "SearchPermissionsHandler",
-    "SetupSearchEngine",
     "TooManyRowsError",
     "UnifiedSearch",
     "match_item_generator_registry",

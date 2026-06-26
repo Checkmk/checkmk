@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import itertools
 from collections import defaultdict
 from collections.abc import Awaitable, Collection, Iterable, Iterator, Mapping
 from dataclasses import dataclass
@@ -654,30 +653,6 @@ class SearchIndexBackgroundJob(BackgroundJob):
 
     def __init__(self) -> None:
         super().__init__(self.job_prefix)
-
-
-# TODO: rework setup search façade to return correct payload for unified search.
-class SetupSearchEngine:
-    def __init__(
-        self,
-        edition: Edition,
-        config: Config,
-        request: Request,
-        *,
-        redis_client: redis.Redis | None = None,
-        permissions_handler: PermissionsHandler | None = None,
-    ) -> None:
-        self._legacy_engine = IndexSearcher(
-            config=config,
-            redis_client=redis_client or get_redis_client(),
-            permissions_handler=permissions_handler or PermissionsHandler(edition, config, request),
-        )
-
-    def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
-        return itertools.chain.from_iterable(
-            transform_legacy_results_to_unified([result], topic, provider=ProviderName.setup)
-            for _category, topic, result in self._legacy_engine.search(query)
-        )
 
 
 class IndexedSearchEngine:

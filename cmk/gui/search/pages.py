@@ -11,6 +11,9 @@ from cmk.ccc.version import Edition
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
+from cmk.gui.pagetypes import CustomizePermissionsHandler
+from cmk.gui.permissions import permission_registry
+from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.unified_search import (
     MessageVariant,
     ProviderName,
@@ -21,9 +24,8 @@ from cmk.shared_typing.unified_search import (
 )
 
 from .collapsing import get_collapser
-from .engines.customize import CustomizeSearchEngine
 from .engines.monitoring import MonitoringSearchEngine
-from .engines.setup import SetupSearchEngine
+from .engines.setup import IndexedSearchEngine, PermissionsHandler
 from .unified import UnifiedSearch
 
 # Before making this something configurable, we want to first hardcode this setting to a reasonable
@@ -43,13 +45,20 @@ class PageUnifiedSearch(AjaxPage):
         collapser_disabled = self._parse_disabled_collapser(ctx.request)
 
         unified_search_engine = UnifiedSearch(
-            setup_engine=SetupSearchEngine(self._edition, ctx.config, ctx.request),
+            indexed_engine=IndexedSearchEngine(
+                ctx.config,
+                {
+                    ProviderName.setup: PermissionsHandler(self._edition, ctx.config, ctx.request),
+                    ProviderName.customize: CustomizePermissionsHandler(
+                        UserPermissions.from_config(ctx.config, permission_registry)
+                    ),
+                },
+            ),
             monitoring_engine=MonitoringSearchEngine(
                 ctx.config,
                 ctx.request,
                 row_limit=_MONITORING_ENGINE_ROW_LIMIT,
             ),
-            customize_engine=CustomizeSearchEngine(),
         )
 
         result = unified_search_engine.search(

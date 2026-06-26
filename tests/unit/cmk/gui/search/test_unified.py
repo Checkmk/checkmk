@@ -19,9 +19,8 @@ class TestUnifiedSearch:
     @pytest.fixture(scope="class")
     def engine(self) -> UnifiedSearch:
         return UnifiedSearch(
-            setup_engine=_FakeEngine(ProviderName.setup),
+            indexed_engine=_FakeIndexedEngine(),
             monitoring_engine=_FakeEngine(ProviderName.monitoring),
-            customize_engine=_FakeEngine(ProviderName.customize),
         )
 
     def test_match_with_all_providers(self, engine: UnifiedSearch) -> None:
@@ -54,6 +53,17 @@ class _FakeEngine:
     def __init__(self, provider: ProviderName) -> None:
         self._provider: ProviderName = provider
         self._results = _generate_fake_result_items(self._provider)
+
+    def search(self, query: str) -> list[UnifiedSearchResultItem]:
+        return [item for item in self._results if query in item.title]
+
+
+class _FakeIndexedEngine:
+    def __init__(self) -> None:
+        self._results = [
+            *_generate_fake_result_items(ProviderName.setup),
+            *_generate_fake_result_items(ProviderName.customize),
+        ]
 
     def search(self, query: str) -> list[UnifiedSearchResultItem]:
         return [item for item in self._results if query in item.title]

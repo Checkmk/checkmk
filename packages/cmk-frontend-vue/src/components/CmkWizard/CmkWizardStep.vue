@@ -73,7 +73,7 @@ function onClickGoTo() {
           </div>
         </CmkCollapsible>
         <CmkCollapsible
-          :open="isCompleted() && context.mode() !== 'overview'"
+          :open="isCompleted()"
           class="cmk-wizard-step__slots-inner cmk-wizard-step__slot-recap"
           @click.stop
         >

@@ -2,6 +2,15 @@
 
 /// file: trigger-pre-submit-test-cascade-medium.groovy
 
+void withGerritSshKey(Closure body) {
+    withCredentials([sshUserPrivateKey(
+        credentialsId: "jenkins-gerrit-fips-compliant-ssh-key",
+        keyFileVariable: "GERRIT_SSH_KEY",
+    )]) {
+        body()
+    }
+}
+
 void main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -40,6 +49,20 @@ void main() {
     // This avoids the pods for the tests waiting for the package to be built.
     // The test pods are expensive and would only idle in that time.
     inside_container_minimal(safe_branch_name: safe_branch_name) {
+        // silent-start is enabled on this trigger to prevent Verified=0 being cast
+        // at build start. Post the build URL manually instead.
+        if (env.GERRIT_PATCHSET_REVISION) {
+            withGerritSshKey {
+                sh("""
+                    ssh -i "\${GERRIT_SSH_KEY}" -o StrictHostKeyChecking=no \
+                        -p 29418 jenkins@review.lan.tribe29.com \
+                        gerrit review \
+                        --message "'Build started: ${env.BUILD_URL}'" \
+                        ${env.GERRIT_PATCHSET_REVISION}
+                """);
+            }
+        }
+
         smart_stage(
             name: "Compute rebase anchors",
             condition: do_rebase,
@@ -125,10 +148,7 @@ void main() {
         raiseOnError: false,
     ) {
         def vote = "${currentBuild.result}" == "SUCCESS" ? "+1" : "-1";
-        withCredentials([sshUserPrivateKey(
-            credentialsId: "jenkins-gerrit-fips-compliant-ssh-key",
-            keyFileVariable: "GERRIT_SSH_KEY",
-        )]) {
+        withGerritSshKey {
             sh("""
                 ssh -i "${GERRIT_SSH_KEY}" -o StrictHostKeyChecking=no \
                     -p 29418 jenkins@review.lan.tribe29.com \

@@ -234,6 +234,7 @@ def register(
         endpoint_family_registry,
         versioned_endpoint_registry,
         page_registry,
+        command_registry,
     )
     crash_reporting.register(
         page_registry,

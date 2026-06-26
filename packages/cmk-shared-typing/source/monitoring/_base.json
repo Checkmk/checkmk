@@ -6,6 +6,21 @@
     "poll_interval_ms": {
       "type": "number",
       "default": 30000
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/monitoring_action" },
+      "default": []
+    }
+  },
+  "$defs": {
+    "monitoring_action": {
+      "type": "object",
+      "properties": {
+        "ident": { "type": "string" },
+        "title": { "type": "string" }
+      },
+      "required": ["ident", "title"]
     }
   }
 }

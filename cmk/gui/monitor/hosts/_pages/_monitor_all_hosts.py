@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
+from typing import override
 
 from cmk.ccc.user import UserId
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
@@ -19,15 +20,24 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import PageContext
+from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon, Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.views.command.registry import CommandRegistry
 from cmk.shared_typing.monitoring.all_hosts import MonitoringAllHostsApp
 
+from ._actions import PermittedHostActions
+
 _PAGE_TITLE = _("All hosts (experimental)")
+
+_SUPPORTED_ACTIONS: tuple[str, ...] = (
+    "acknowledge",
+    "schedule_downtimes",
+    "reschedule",
+)
 
 
 def monitor_all_hosts_visual_spec() -> Visual:
@@ -52,36 +62,44 @@ def monitor_all_hosts_visual_spec() -> Visual:
     }
 
 
-def page_monitor_all_hosts(ctx: PageContext) -> None:
-    breadcrumb = _make_breadcrumb(ctx)
+class MonitorAllHostsPage(Page):
+    def __init__(self, commands: CommandRegistry) -> None:
+        self._commands = commands
 
-    make_header(
-        html,
-        str(_PAGE_TITLE),
-        breadcrumb,
-        page_menu=_build_page_menu(breadcrumb),
-        enable_main_page_scrollbar=False,
-        debug=ctx.config.debug,
-        lang=user.language,
-        inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-        load_frontend_vue=ctx.config.load_frontend_vue,
-        custom_style_sheet=ctx.config.custom_style_sheet,
-        screenshotmode=ctx.config.screenshotmode,
-        inline_help_as_text=user.inline_help_as_text,
-        hide_suggestions=not user.get_tree_state("suggestions", "all", True),
-        user_role_ids=user.role_ids,
-    )
+    @override
+    def page(self, ctx: PageContext) -> None:
+        breadcrumb = _make_breadcrumb(ctx)
 
-    html.vue_component(
-        "cmk-monitoring-all-hosts",
-        data=asdict(
-            MonitoringAllHostsApp(
-                poll_interval_ms=ctx.config.view_option_refreshes[0] * 1000,
-            )
-        ),
-    )
+        make_header(
+            html,
+            str(_PAGE_TITLE),
+            breadcrumb,
+            page_menu=_build_page_menu(breadcrumb),
+            enable_main_page_scrollbar=False,
+            debug=ctx.config.debug,
+            lang=user.language,
+            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+            load_frontend_vue=ctx.config.load_frontend_vue,
+            custom_style_sheet=ctx.config.custom_style_sheet,
+            screenshotmode=ctx.config.screenshotmode,
+            inline_help_as_text=user.inline_help_as_text,
+            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+            user_role_ids=user.role_ids,
+        )
 
-    html.footer()
+        html.vue_component(
+            "cmk-monitoring-all-hosts",
+            data=asdict(
+                MonitoringAllHostsApp(
+                    poll_interval_ms=ctx.config.view_option_refreshes[0] * 1000,
+                    actions=PermittedHostActions(
+                        self._commands, user, _SUPPORTED_ACTIONS
+                    ).as_models(),
+                )
+            ),
+        )
+
+        html.footer()
 
 
 def _make_breadcrumb(ctx: PageContext) -> Breadcrumb:

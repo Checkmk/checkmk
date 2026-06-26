@@ -7,11 +7,15 @@ from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.permissions import declare_dynamic_permissions
+from cmk.gui.search.match_items import MatchItemGeneratorRegistry
+from cmk.shared_typing.unified_search import ProviderName
 
 from ._core import (
+    _customize_menu_topics,
     _load_pagetype_permissions,
     BuiltinPagetypeTopicRegistry,
     declare,
+    MatchItemGeneratorCustomizeMenu,
     PagetypeTopics,
 )
 from ._core import register as _register_core
@@ -23,8 +27,13 @@ def register(
     builtin_pagetype_topic_registry: BuiltinPagetypeTopicRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
 ) -> None:
     _register_core(main_menu_registry, builtin_pagetype_topic_registry)
+    match_item_generator_registry.register(
+        MatchItemGeneratorCustomizeMenu("customize", _customize_menu_topics),
+        provider=ProviderName.customize,
+    )
     declare(PagetypeTopics)
     declare_dynamic_permissions(_load_pagetype_permissions)
     register_openapi_endpoints(

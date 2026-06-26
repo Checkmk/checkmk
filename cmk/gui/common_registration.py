@@ -177,6 +177,7 @@ def register(
         builtin_pagetype_topic_registry,
         versioned_endpoint_registry,
         endpoint_family_registry,
+        match_item_generator_registry,
     )
     search_menu.register(main_menu_registry)
     help_menu.register(

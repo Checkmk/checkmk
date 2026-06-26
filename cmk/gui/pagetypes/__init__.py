@@ -22,6 +22,7 @@ from ._core import InstanceId as InstanceId
 from ._core import ListPage as ListPage
 from ._core import make_breadcrumb as make_breadcrumb
 from ._core import make_edit_form_page_menu as make_edit_form_page_menu
+from ._core import MatchItemGeneratorCustomizeMenu as MatchItemGeneratorCustomizeMenu
 from ._core import Overridable as Overridable
 from ._core import OverridableConfig as OverridableConfig
 from ._core import OverridableContainer as OverridableContainer

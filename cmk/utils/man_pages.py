@@ -397,7 +397,7 @@ def _make_catalog_entries(
     # See SUP-20129, e.g. custom mkps can have definitions in wrong format
     # use 'generic' in this case
     if len(pages_catalog) == 1 and "generic" not in pages_catalog:
-        return [tuple(["generic"])]
+        return [("generic",)]
 
     return [tuple(pages_catalog)]
 

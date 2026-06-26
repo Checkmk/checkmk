@@ -104,7 +104,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
         html.open_div(id_=url_id, class_="bi_tree_container")
         self._show_subtree(
             tree,
-            path=tuple([("frozen_" if self._show_frozen_difference else "") + tree[2]["title"]]),
+            path=(("frozen_" if self._show_frozen_difference else "") + tree[2]["title"],),
             show_host=len(affected_hosts) > 1,
         )
         html.close_div()
@@ -318,7 +318,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         frozen_marker_set: bool,
     ) -> None:
         if not node[2].get("hidden"):
-            new_path = tuple([*path, node[2]["title"]])
+            new_path = (*path, node[2]["title"])
             frozen_marker = node[2].get("frozen_marker")
             frozen_aggregation_css = ""
             frozen_symbol = ""

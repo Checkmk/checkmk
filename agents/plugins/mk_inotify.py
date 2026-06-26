@@ -161,7 +161,7 @@ output = []  # type: list[str]
 
 
 def get_watched_files():
-    files = set([])
+    files = set()
     for folder, attributes in folder_configs.items():
         for filenames in attributes["monitor_files"].values():
             for filename in filenames:
@@ -299,15 +299,15 @@ def main():
         folder = section_tokens[0]
         folder_configs.setdefault(
             folder,
-            {"add_modes": {}, "del_modes": {}, "all_add_modes": set([]), "all_del_modes": set([])},
+            {"add_modes": {}, "del_modes": {}, "all_add_modes": set(), "all_del_modes": set()},
         )
 
         files = None
         if len(section_tokens) > 1:
             files = set(section_tokens[1:])
 
-        add_modes = set([])
-        del_modes = set([])
+        add_modes = set()
+        del_modes = set()
         for key, value in config.items(section):
             if key in map_events:
                 if value == "1":
@@ -317,10 +317,10 @@ def main():
 
         if files:
             for mode in add_modes:
-                folder_configs[folder]["add_modes"].setdefault(mode, set([]))
+                folder_configs[folder]["add_modes"].setdefault(mode, set())
                 folder_configs[folder]["add_modes"][mode].update(files)
             for mode in del_modes:
-                folder_configs[folder]["del_modes"].setdefault(mode, set([]))
+                folder_configs[folder]["del_modes"].setdefault(mode, set())
                 folder_configs[folder]["del_modes"][mode].update(files)
         else:
             folder_configs[folder]["all_add_modes"].update(add_modes)
@@ -328,17 +328,17 @@ def main():
 
     # Evaluate config
     for folder, attributes in folder_configs.items():
-        required_modes = set([])
+        required_modes = set()
         for mode in attributes["add_modes"].keys():
             if mode not in attributes["all_del_modes"]:
                 required_modes.add(mode)
 
         files_to_monitor = {}  # type: dict[str, set]
-        skip_modes = set([])
+        skip_modes = set()
         for mode in required_modes:
-            files_to_monitor.setdefault(mode, set([]))
+            files_to_monitor.setdefault(mode, set())
             files_to_monitor[mode].update(attributes["add_modes"][mode])
-            files_to_monitor[mode] -= attributes["del_modes"].get(mode, set([]))
+            files_to_monitor[mode] -= attributes["del_modes"].get(mode, set())
             if not files_to_monitor[mode]:
                 skip_modes.add(mode)
 

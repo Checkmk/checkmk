@@ -474,9 +474,7 @@ def _get_collections_information(client):
     :return: dictionary with collections information
     """
     collections_dict = _recursive_defaultdict()
-    for collection in client.config.collections.find(
-        {}, set(["_id", "unique", "dropped", "noBalance"])
-    ):
+    for collection in client.config.collections.find({}, {"_id", "unique", "dropped", "noBalance"}):
         database_name, collection_name = _split_namespace(collection.get("_id"))
         collection.pop("_id", None)
         collections_dict[database_name][collection_name] = collection
@@ -536,7 +534,7 @@ def _count_chunks_per_shard(client, databases):  # pylint: disable=too-many-bran
 
     if int(mongodb_version.split(".", 1)[0]) <= 4:
         chunks = client.config.chunks
-        chunks_list = chunks.find({}, set(["ns", "shard", "jumbo"]))
+        chunks_list = chunks.find({}, {"ns", "shard", "jumbo"})
         database_set = set()
         for chunk in chunks_list:
             # get database, collection and shard names

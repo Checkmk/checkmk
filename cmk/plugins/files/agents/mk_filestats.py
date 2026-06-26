@@ -541,7 +541,7 @@ def output_aggregator_extremes_only(group_name, files_iter):
         if max_size.size is None or filestat.size > max_size.size:
             max_size = filestat
 
-    for extreme_file in set((min_age, max_age, min_size, max_size)):
+    for extreme_file in {min_age, max_age, min_size, max_size}:
         yield extreme_file.dumps()
     yield repr({"type": "summary", "count": count})
 

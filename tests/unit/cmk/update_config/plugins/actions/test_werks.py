@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from logging import Logger
+import logging
 from pathlib import Path
 
 import pytest
@@ -86,7 +86,7 @@ def test_version_of_werk_keeps_first_incompatible_version(
         UnacknowledgedWerks(
             name="name", title="title", sort_index=2, expiry_version=ExpiryVersion.NEVER
         )(
-            Logger(__name__),
+            logging.getLogger(__name__),
             acknowledged_werks_mk=acknowledge_werks_file,
             unacknowledged_werks_json=unacknowledged_werks_file,
             compiled_werks_folder=compiled_werks_dir,

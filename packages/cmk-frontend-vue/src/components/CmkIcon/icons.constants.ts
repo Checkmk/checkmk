@@ -756,6 +756,8 @@ export const oneColorIcons = [
   'db-widget-delete',
   'db-widget-edit',
   'error',
+  'eye',
+  'eye-crossed-out',
   'help',
   'info',
   'menu',

@@ -247,6 +247,8 @@ export const iconSearchLabels: Record<string, string[]> = {
   'export-link': ['save link', 'download url', 'arrow out'],
   'export-rule': ['save rule', 'download rule'],
   external: ['outbound', 'open new tab', 'arrow out', 'link'],
+  eye: ['show', 'visible', 'view', 'watch', 'visibility'],
+  'eye-crossed-out': ['hide', 'hidden', 'invisible', 'visibility off', 'not visible'],
   factoryreset: ['restore defaults', 'wipe', 'reset all'],
   'fake-check-result': ['simulate', 'force result', 'test'],
   favicon: ['site icon', 'tab icon', 'brand'],

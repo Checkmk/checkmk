@@ -73,7 +73,6 @@ def test_hooks(site: Site) -> None:
     ):
         hooks += [
             "MCP_SERVER",
-            "MCP_SERVER_PORT",
         ]
 
     installed_hooks = os.listdir(site.root / "lib" / "omd" / "hooks")

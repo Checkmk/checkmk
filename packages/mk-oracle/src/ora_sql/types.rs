@@ -72,6 +72,17 @@ impl Target {
     pub fn target_id(&self) -> Option<&TargetId> {
         self.target_id.as_ref()
     }
+
+    pub fn is_asm(&self) -> bool {
+        self.instance_name()
+            .map(InstanceName::is_asm)
+            .unwrap_or(false)
+            || self
+                .target_id()
+                .and_then(TargetId::raw_sid)
+                .map(|sid| InstanceName::from(sid).is_asm())
+                .unwrap_or(false)
+    }
 }
 
 impl Target {
@@ -206,6 +217,29 @@ authentication:
     username: 'user'
     password: 'pass'
     type: 'standard'";
+
+    fn target_with_target_id(target_id: Option<TargetId>) -> Target {
+        Target {
+            host: HostName::from("localhost".to_owned()),
+            target_id,
+            port: Port(1521),
+            auth: Authentication::default(),
+        }
+    }
+
+    #[test]
+    fn test_is_asm() {
+        assert!(target_with_target_id(TargetIdBuilder::new().sid(Some("+ASM1")).build()).is_asm());
+        assert!(!target_with_target_id(TargetIdBuilder::new().sid(Some("ORCL")).build()).is_asm());
+        assert!(target_with_target_id(
+            TargetIdBuilder::new()
+                .service_name(Some(&ServiceName::from("svc")))
+                .instance_name(Some(&InstanceName::from("+ASM2")))
+                .build()
+        )
+        .is_asm());
+        assert!(!target_with_target_id(TargetIdBuilder::new().build()).is_asm());
+    }
 
     #[test]
     fn test_make_connection_string_service_type_instance() {

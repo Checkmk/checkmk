@@ -76,21 +76,24 @@ impl WorkInstances {
 }
 
 fn _get_instances(spot: &OpenedSpot, custom_query: Option<&str>) -> Result<_InstanceEntries> {
+    let (new_sql, old_sql) = if spot.target().is_asm() {
+        (
+            sqls::query::internal::ASM_INSTANCE_INFO_SQL_TEXT_NEW,
+            sqls::query::internal::ASM_INSTANCE_INFO_SQL_TEXT_OLD,
+        )
+    } else {
+        (
+            sqls::query::internal::INSTANCE_INFO_SQL_TEXT_NEW,
+            sqls::query::internal::INSTANCE_INFO_SQL_TEXT_OLD,
+        )
+    };
     if let Ok(result) = spot
-        .query_table(&SqlQuery::new(
-            custom_query.unwrap_or(sqls::query::internal::INSTANCE_INFO_SQL_TEXT_NEW),
-            &Vec::new(),
-        ))
+        .query_table(&SqlQuery::new(custom_query.unwrap_or(new_sql), &Vec::new()))
         .0
     {
         Ok(_to_instance_entries(result))
     } else {
-        let mut result = spot
-            .query_table(&SqlQuery::new(
-                sqls::query::internal::INSTANCE_INFO_SQL_TEXT_OLD,
-                &Vec::new(),
-            ))
-            .0?;
+        let mut result = spot.query_table(&SqlQuery::new(old_sql, &Vec::new())).0?;
         let result_with_version = spot
             .query_table(&SqlQuery::new(
                 sqls::query::internal::INSTANCE_APPROXIMATE_VERSION,

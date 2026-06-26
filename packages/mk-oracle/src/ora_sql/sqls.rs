@@ -275,6 +275,23 @@ SELECT
     FROM v$instance i
     join v$database d
         on i.con_id = d.con_id";
+        /// ASM instances have no mounted `v$database`.
+        pub const ASM_INSTANCE_INFO_SQL_TEXT_NEW: &str = r"
+SELECT
+    INSTANCE_NAME,
+    '0',
+    VERSION_FULL,
+    INSTANCE_NAME,
+    'NO'
+    FROM v$instance";
+        pub const ASM_INSTANCE_INFO_SQL_TEXT_OLD: &str = r"
+SELECT
+    INSTANCE_NAME,
+    '0',
+    VERSION,
+    INSTANCE_NAME,
+    'NO'
+    FROM v$instance";
         pub const INSTANCE_APPROXIMATE_VERSION: &str =
             r"SELECT BANNER_FULL FROM v$version WHERE banner LIKE 'Oracle%'";
         /// Lists PDBs of the connected CDB. The root container (CDB$ROOT) is

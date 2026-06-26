@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -41,7 +42,15 @@ from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PA
 # 24:stp6_600G_01:online:3:2:6.54TB:256:512.00MB:6.54TB:6.54TB:6.54TB:99:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
 
 
-Section = Mapping[str, Mapping[str, str]]
+@dataclass(frozen=True)
+class MdiskGrp:
+    status: str
+    capacity: str
+    real_capacity: str
+    virtual_capacity: str
+
+
+Section = Mapping[str, MdiskGrp]
 
 
 def ibm_svc_mdiskgrp_to_mb(size: str) -> float:
@@ -89,13 +98,21 @@ def parse_ibm_svc_mdiskgrp(string_table: StringTable) -> Section:
         "site_id",
         "site_name",
     ]
-    parsed: dict[str, Mapping[str, str]] = {}
+    parsed: dict[str, MdiskGrp] = {}
     for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         try:
             data = rows[0]
         except IndexError:
             continue
-        parsed.setdefault(data["name"], data)
+        parsed.setdefault(
+            data["name"],
+            MdiskGrp(
+                status=data["status"],
+                capacity=data["capacity"],
+                real_capacity=data["real_capacity"],
+                virtual_capacity=data["virtual_capacity"],
+            ),
+        )
     return parsed
 
 
@@ -104,25 +121,26 @@ def discover_ibm_svc_mdiskgrp(section: Section) -> DiscoveryResult:
 
 
 def check_ibm_svc_mdiskgrp(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    if not (data := section.get(item)):
+    # ``params`` carries the shared filesystem parameters which df_check_filesystem_single
+    # consumes as an untyped mapping, hence Mapping[str, Any] rather than a TypedDict.
+    if (mdiskgrp := section.get(item)) is None:
         return
-    mgrp_status = data["status"]
 
-    if mgrp_status != "online":
-        yield Result(state=State.CRIT, summary=f"Status: {mgrp_status}")
+    if mdiskgrp.status != "online":
+        yield Result(state=State.CRIT, summary=f"Status: {mdiskgrp.status}")
         return
 
     # Names of the fields are a bit confusing and not what you would
     # expect.
 
     # 1. Physical size of the pool
-    capacity = ibm_svc_mdiskgrp_to_mb(data["capacity"])
+    capacity = ibm_svc_mdiskgrp_to_mb(mdiskgrp.capacity)
 
     # 2. Part of that that is physically in use
-    real_capacity = ibm_svc_mdiskgrp_to_mb(data["real_capacity"])
+    real_capacity = ibm_svc_mdiskgrp_to_mb(mdiskgrp.real_capacity)
 
     # 3. Provisioned space - can be more than physical size
-    virtual_capacity = ibm_svc_mdiskgrp_to_mb(data["virtual_capacity"])
+    virtual_capacity = ibm_svc_mdiskgrp_to_mb(mdiskgrp.virtual_capacity)
 
     # Compute available (do not use free_capacity, it's something different)
     avail_mb = capacity - real_capacity
@@ -149,8 +167,9 @@ def check_ibm_svc_mdiskgrp(item: str, params: Mapping[str, Any], section: Sectio
     state = State.OK
     warn_mb: float | None = None
     crit_mb: float | None = None
-    if "provisioning_levels" in params:
-        warn, crit = params["provisioning_levels"]
+    provisioning_levels = params["provisioning_levels"]
+    if provisioning_levels[0] == "fixed":
+        warn, crit = provisioning_levels[1]
         if provisioning >= crit:
             state = State.CRIT
         elif provisioning >= warn:
@@ -183,5 +202,8 @@ check_plugin_ibm_svc_mdiskgrp = CheckPlugin(
     discovery_function=discover_ibm_svc_mdiskgrp,
     check_function=check_ibm_svc_mdiskgrp,
     check_ruleset_name="ibm_svc_mdiskgrp",
-    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
+    check_default_parameters={
+        **FILESYSTEM_DEFAULT_PARAMS,
+        "provisioning_levels": ("no_levels", None),
+    },
 )

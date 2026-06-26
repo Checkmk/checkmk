@@ -339,6 +339,7 @@ def test_discovery_ibm_svc_mdiskgrp(
                 "inodes_levels": (10.0, 5.0),
                 "show_inodes": "onlow",
                 "show_reserved": False,
+                "provisioning_levels": ("no_levels", None),
             },
             [
                 [

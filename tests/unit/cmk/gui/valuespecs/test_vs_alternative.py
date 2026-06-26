@@ -37,7 +37,7 @@ class TestValuespecAlternative:
         expect_validate_success(get_alternative(**arguments), (2, 3))
         expect_validate_success(get_alternative(**arguments), (2, 3, 4))
         expect_validate_failure(get_alternative(**arguments), ("eins", "zwei"), match=FAILURE_MATCH)
-        expect_validate_failure(get_alternative(**arguments), tuple(), match=FAILURE_MATCH)
+        expect_validate_failure(get_alternative(**arguments), (), match=FAILURE_MATCH)
         expect_validate_failure(get_alternative(**arguments), {}, match=FAILURE_MATCH)
 
         with pytest.raises(MKUserError, match=FAILURE_MATCH):

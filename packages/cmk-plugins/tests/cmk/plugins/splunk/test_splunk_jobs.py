@@ -65,9 +65,7 @@ def test_parse_splunk_jobs() -> None:
 )
 def test_parse_splunk_jobs_ignores_bad_agent_output(string_table: StringTable) -> None:
     actual = plugin.parse_splunk_jobs(string_table)
-    expected = plugin.JobsInfo(
-        jobs=tuple(), meta=plugin.JobsMetaInfo(count=0, failures=0, zombies=0)
-    )
+    expected = plugin.JobsInfo(jobs=(), meta=plugin.JobsMetaInfo(count=0, failures=0, zombies=0))
     assert actual == expected
 
 

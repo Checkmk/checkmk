@@ -67,7 +67,7 @@ class CheckmkTuple:
                     assert converter is None or isinstance(converter, tuple), (
                         "Converter for nested field must be a tuple of converters"
                     )
-                    _result.append(_convert_to_tuple(field, converter or tuple(), []))
+                    _result.append(_convert_to_tuple(field, converter or (), []))
                 else:
                     try:
                         entry = data[field]
@@ -103,7 +103,7 @@ class CheckmkTuple:
                         "Converter for nested field must be a tuple of converters"
                     )
                     # Recursive call
-                    _convert_tuple(field, value, converter or tuple(), _result)
+                    _convert_tuple(field, value, converter or (), _result)
                 else:
                     if field not in self.declared_fields:
                         raise ValidationError(

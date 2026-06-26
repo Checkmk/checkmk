@@ -42,7 +42,7 @@ _INV_VIEW_HOST = ViewSpec(
         "link_from": {
             "single_infos": ["host"],
             # Check root of inventory tree
-            "has_inventory_tree": tuple(),
+            "has_inventory_tree": (),
         },
         # Layout options
         "layout": "dataset",
@@ -211,7 +211,7 @@ _INV_VIEW_HOST_HISTORY = ViewSpec(
         "is_show_more": False,
         "link_from": {
             "single_infos": ["host"],
-            "has_inventory_tree_history": tuple(),
+            "has_inventory_tree_history": (),
         },
         # Layout options
         "layout": "table",

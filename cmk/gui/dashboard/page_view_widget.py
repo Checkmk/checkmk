@@ -274,10 +274,10 @@ class _ViewWidgetIFrameAuthTokenRequestParameters(BaseModel):
     def from_request(cls, request: Request) -> Self:
         try:
             return cls.model_validate(
-                dict(
-                    widget_id=request.get_str_input("widget_id"),
-                    underscore_display_options=request.get_str_input("_display_options"),
-                )
+                {
+                    "widget_id": request.get_str_input("widget_id"),
+                    "underscore_display_options": request.get_str_input("_display_options"),
+                }
             )
         except ValidationError as e:
             raise MKUserError("request", _("Invalid request parameters.")) from e
@@ -301,18 +301,18 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
     def from_request(cls, request: Request) -> Self:
         try:
             return cls.model_validate(
-                dict(
-                    dashboard_name=request.get_str_input("dashboard_name"),
-                    dashboard_owner=request.get_str_input("dashboard_owner"),
-                    widget_id=request.get_str_input("widget_id"),
-                    view_name=request.get_str_input("view_name"),
-                    embedded_id=request.get_str_input("embedded_id"),
-                    raw_context=request.get_str_input("context", "{}"),
-                    limit=request.get_str_input("limit", "soft"),
-                    underscore_display_options=request.get_str_input("_display_options"),
-                    raw_debug=request.get_str_input("debug"),
-                    is_preview=request.get_str_input("is_preview", "false"),
-                )
+                {
+                    "dashboard_name": request.get_str_input("dashboard_name"),
+                    "dashboard_owner": request.get_str_input("dashboard_owner"),
+                    "widget_id": request.get_str_input("widget_id"),
+                    "view_name": request.get_str_input("view_name"),
+                    "embedded_id": request.get_str_input("embedded_id"),
+                    "raw_context": request.get_str_input("context", "{}"),
+                    "limit": request.get_str_input("limit", "soft"),
+                    "underscore_display_options": request.get_str_input("_display_options"),
+                    "raw_debug": request.get_str_input("debug"),
+                    "is_preview": request.get_str_input("is_preview", "false"),
+                }
             )
         except ValidationError as e:
             raise MKUserError("request", _("Invalid request parameters.")) from e

@@ -345,7 +345,7 @@ class MarshmallowResponses:
         error_schemas: Mapping[ErrorStatusCodeInt, type[ApiError]],
     ) -> ResponseType:
         """Generate the error responses dictionary for an operation"""
-        responses: ResponseType = dict()
+        responses: ResponseType = {}
 
         # Always include 406
         responses["406"] = MarshmallowResponses._error_response_path_item(

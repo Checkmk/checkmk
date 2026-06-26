@@ -41,7 +41,7 @@ class CreateClusterHost(BaseSchema):
         description="Attributes to set on the newly created host. You can specify custom attributes and tag groups in addition to the built-in ones listed below.",
         required=False,
         example={"ipaddress": "192.168.0.123"},
-        load_default=dict(),
+        load_default={},
     )
 
     nodes = fields.List(
@@ -75,7 +75,7 @@ class CreateHost(BaseSchema):
         description="Attributes to set on the newly created host. You can specify custom attributes and tag groups in addition to the built-in ones listed below.",
         required=False,
         example={"ipaddress": "192.168.0.123"},
-        load_default=dict(),
+        load_default={},
     )
 
 

@@ -249,7 +249,7 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
 def _migrate_widgets(
     dashboard: DashboardConfig,
 ) -> tuple[dict[str, DashletConfig], dict[str, DashboardEmbeddedViewSpec]]:
-    embedded_views = dashboard.get("embedded_views", dict())
+    embedded_views = dashboard.get("embedded_views", {})
     widgets: dict[str, DashletConfig] = {}
     for widget_id, widget in dashboard["widgets"].items():
         if "size" not in widget:

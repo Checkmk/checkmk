@@ -1582,7 +1582,7 @@ def test_filter_networking_tree_empty() -> None:
 @pytest.mark.parametrize(
     "raw_path, expected_path",
     [
-        ("", tuple()),
+        ("", ()),
         ("path-to.node_1", ("path-to", "node_1")),
     ],
 )

@@ -41,7 +41,7 @@ from cmk.inventory.structured_data import (
         (
             "",
             InventoryPath(
-                path=tuple(),
+                path=(),
                 source=TreeSource.node,
             ),
             "",
@@ -49,7 +49,7 @@ from cmk.inventory.structured_data import (
         (
             ".",
             InventoryPath(
-                path=tuple(),
+                path=(),
                 source=TreeSource.node,
             ),
             "",

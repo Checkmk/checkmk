@@ -61,7 +61,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
     def show(self, config: Config) -> None:
         tree: dict[str, dict[str, Any]] = {}
         for group in get_aggregation_group_trees():
-            self._build_tree(tuple(group.split("/")), tree, tuple())
+            self._build_tree(tuple(group.split("/")), tree, ())
         self._render_tree(tree)
 
     def _build_tree(

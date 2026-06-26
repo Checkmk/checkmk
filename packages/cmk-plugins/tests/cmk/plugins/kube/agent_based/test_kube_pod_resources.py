@@ -470,7 +470,7 @@ def test_check_kube_pod_resources_overall_look(
     expected_result: Sequence[Result | Metric],
 ) -> None:
     value_store: ValueStore = {}
-    result: CheckResult = tuple()
+    result: CheckResult = ()
     for time, pod_names, params in zip(
         itertools.count(0.1, 60.1), pending_pods_in_each_check_call, params_in_each_check_call
     ):
@@ -496,7 +496,7 @@ def test_check_kube_pod_resources_with_capacity_overall_look(
     expected_result: Sequence[Result | Metric],
 ) -> None:
     value_store: ValueStore = {}
-    result: CheckResult = tuple()
+    result: CheckResult = ()
     for time, pod_names, params in zip(
         itertools.count(0.1, 60.1), pending_pods_in_each_check_call, params_in_each_check_call
     ):

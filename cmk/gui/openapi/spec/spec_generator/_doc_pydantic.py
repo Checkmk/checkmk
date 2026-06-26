@@ -340,7 +340,7 @@ class PydanticResponses:
         error_schemas: Mapping[ErrorStatusCodeInt, type[ApiErrorDataclass]],
     ) -> ResponseType:
         """Generate the error responses dictionary for an operation"""
-        responses: ResponseType = dict()
+        responses: ResponseType = {}
 
         # Always include 406
         responses["406"] = PydanticResponses._error_response_path_item(

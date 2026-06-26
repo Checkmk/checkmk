@@ -72,7 +72,7 @@ class CreateFolder(BaseSchema):
             "Specific attributes to apply for all hosts in this folder (among other things). Built-in and custom attributes and tag groups can be set here."
         ),
         example={"tag_criticality": "prod"},
-        load_default=dict(),
+        load_default={},
     )
 
 

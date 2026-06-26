@@ -67,7 +67,7 @@ DomainSettings = Mapping[ConfigDomainName, SerializedSettings]
 @dataclass
 class DomainRequest:
     name: str
-    settings: SerializedSettings = field(default_factory=lambda: SerializedSettings(dict()))
+    settings: SerializedSettings = field(default_factory=lambda: SerializedSettings({}))
 
 
 DomainRequests = Sequence[DomainRequest]

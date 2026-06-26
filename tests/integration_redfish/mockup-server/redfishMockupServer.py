@@ -95,7 +95,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
     returns index.json file for Serverthe specified URL
     """
 
-    patchedLinks = dict()
+    patchedLinks = {}
 
     def construct_path(self, path, filename):
         """construct_path

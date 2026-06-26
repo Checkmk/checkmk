@@ -29,14 +29,14 @@ def collect(cmk_config_dir: Path, var_dir: Path, omd_root: Path) -> SiteInfo:
 
     wato_path = Path(cmk_config_dir / "wato")
 
-    response_dict = dict(
-        id=str(site_id),
-        count_hosts=site_status.count_hosts,
-        count_services=site_status.count_services,
-        count_folders=get_number_of_folders(str(wato_path)),
-        edition=checkmk_info.edition,
-        cmk_version=checkmk_info.version,
-    )
+    response_dict = {
+        "id": str(site_id),
+        "count_hosts": site_status.count_hosts,
+        "count_services": site_status.count_services,
+        "count_folders": get_number_of_folders(str(wato_path)),
+        "edition": checkmk_info.edition,
+        "cmk_version": checkmk_info.version,
+    }
 
     return SiteInfo.model_validate(response_dict)
 

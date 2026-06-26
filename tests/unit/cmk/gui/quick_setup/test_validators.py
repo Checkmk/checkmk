@@ -31,7 +31,7 @@ def test_validate_throttling_values_valid(payload: tuple[int, ...]) -> None:
 @pytest.mark.parametrize(
     "payload",
     [
-        pytest.param(tuple(), id="no arguments provided"),
+        pytest.param((), id="no arguments provided"),
         pytest.param((0, 2), id="first value shouldn't be less than 1"),
         pytest.param((1, 0), id="second value shouldn't be less than 1"),
         pytest.param(("foo", 2), id="first value is the wrong type"),
@@ -58,7 +58,7 @@ def test_validate_notification_count_values_valid(payload: tuple[int, ...]) -> N
 @pytest.mark.parametrize(
     "payload",
     [
-        pytest.param(tuple(), id="no arguments provided"),
+        pytest.param((), id="no arguments provided"),
         pytest.param((0, 1), id="zero is invalid lower bound"),
         pytest.param((0, 0), id="zero is invalid upper bound"),
         pytest.param((2, 1), id="second value less than first"),

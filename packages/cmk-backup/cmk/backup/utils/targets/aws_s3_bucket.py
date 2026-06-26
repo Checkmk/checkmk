@@ -77,10 +77,10 @@ class S3Bucket:
 
 def _client_args(params: S3Params, secret: str) -> dict[str, str]:
     endpoint_url = params.get("endpoint_url")
-    client_args = dict(
-        aws_access_key_id=params["access_key"],
-        aws_secret_access_key=secret,
-    )
+    client_args = {
+        "aws_access_key_id": params["access_key"],
+        "aws_secret_access_key": secret,
+    }
     if endpoint_url:
         client_args["endpoint_url"] = endpoint_url
     return client_args

@@ -1769,7 +1769,7 @@ class TestRunFrontend:
 
 def _make_changeset(**kwargs: object) -> ChangeSet:
     """Create a ChangeSet with sensible defaults for testing."""
-    defaults: dict[str, object] = dict(build_commit="abc123def456", files=(), categories={})
+    defaults: dict[str, object] = {"build_commit": "abc123def456", "files": (), "categories": {}}
     defaults.update(kwargs)
     return ChangeSet(**defaults)  # type: ignore[arg-type]
 

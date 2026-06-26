@@ -74,7 +74,7 @@ def _sanitize_path(path: Sequence[str]) -> SDPath:
 def parse_internal_raw_path(raw: str) -> InventoryPath:
     if not raw:
         return InventoryPath(
-            path=tuple(),
+            path=(),
             source=TreeSource.node,
         )
     if raw.endswith("."):

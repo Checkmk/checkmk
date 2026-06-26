@@ -142,7 +142,7 @@ class VersionedEndpointRegistry:
     """Registry for versioned REST API endpoints"""
 
     def __init__(self) -> None:
-        self._versions: dict[APIVersion, dict[EndpointKey, EndpointDefinition]] = dict()
+        self._versions: dict[APIVersion, dict[EndpointKey, EndpointDefinition]] = {}
 
     @staticmethod
     def create_endpoint_definition(
@@ -175,7 +175,7 @@ class VersionedEndpointRegistry:
         endpoint_key_ = self.endpoint_key(endpoint_family.name, endpoint.metadata.link_relation)
 
         for version, handler in endpoint.versions.items():
-            version_endpoints = self._versions.setdefault(version, dict())
+            version_endpoints = self._versions.setdefault(version, {})
 
             if endpoint_key_ in version_endpoints:
                 raise RuntimeError(
@@ -198,7 +198,7 @@ class VersionedEndpointRegistry:
 
     def specified_endpoints(self, version: APIVersion) -> Iterator[EndpointDefinition]:
         """Iterate over all endpoints specified for a given API version"""
-        for _endpoint_key, endpoint in self._versions.get(version, dict()).items():
+        for _endpoint_key, endpoint in self._versions.get(version, {}).items():
             yield endpoint
 
     def __iter__(self) -> Iterator[EndpointDefinition]:

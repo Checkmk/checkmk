@@ -69,7 +69,7 @@ def list_views_v1() -> ViewCollectionModel:
             extensions=ViewExtensions(
                 data_source=view_spec["datasource"],
                 restricted_to_single=list(view_spec["single_infos"]),
-                filters=view_spec.get("context", dict()),
+                filters=view_spec.get("context", {}),
                 is_mobile=view_spec.get("mobile", False),
             ),
             links=[],

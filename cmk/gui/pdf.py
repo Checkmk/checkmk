@@ -163,7 +163,7 @@ class Document:
         self._margins = from_mm(margins)
         self._mirror_margins = mirror_margins
         self._pagebreak_function = pagebreak_function
-        self._pagebreak_arguments = pagebreak_arguments or tuple()
+        self._pagebreak_arguments = pagebreak_arguments or ()
 
         # set derived helper variables (all in pt)
         self._width, self._height = self._pagesize

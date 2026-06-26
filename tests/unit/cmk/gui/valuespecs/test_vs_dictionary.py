@@ -170,7 +170,7 @@ class TestValueSpecDictionary:
             ([], {}, {}),
             ([], {"a": 1}, {}),
             ([("a", vs.Integer())], {"a": 1}, {"a": 1}),
-            ([("a", vs.Tuple(elements=[]))], {"a": tuple()}, {"a": []}),
+            ([("a", vs.Tuple(elements=[]))], {"a": ()}, {"a": []}),
         ],
     )
     def test_value_to_json(

@@ -98941,6 +98941,93 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Existence"
+msgstr "Ascultător"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Atributul de setat"
+
+#, fuzzy
+msgid "Remove condition"
+msgstr "Eliminarea condiției de etichetare"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "Editați conexiunea"
+
+#, fuzzy
+msgid "Add condition after %{key}"
+msgstr "Adăugați o condiție"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "Opțiuni adiționale"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "Atribute"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Conexiuni eșuate"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "Numărul de conexiuni curente"
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Adăugați un grup de contacte"
+
+#, fuzzy
+msgid "[Resource]"
+msgstr "Numele resursei"
+
+#, fuzzy
+msgid "[Scope]"
+msgstr "ID-ul nodului"
+
+#, fuzzy
+msgid "[Data point]"
+msgstr "Date trimise"
+
+#, fuzzy
+msgid "contains"
+msgstr "Containere"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "Denumirea containerului"
+
+#, fuzzy
+msgid "starts with"
+msgstr "Avertismentul începe cu"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "nu începe cu "
+
+#, fuzzy
+msgid "ends with"
+msgstr "începe cu "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "Nu se termină cu \"%s\"."
+
+#, fuzzy
+msgid "does not exist"
+msgstr "Nu există"
+
+#, fuzzy
+msgid "Unknown error"
+msgstr "Utilizator necunoscut: %s."
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "Setați timeout-ul conexiunii"
 
@@ -104629,9 +104716,6 @@ msgstr ""
 
 #~ msgid "Warning of "
 #~ msgstr "Avertisment de "
-
-#~ msgid "Warning starts with"
-#~ msgstr "Avertismentul începe cu"
 
 #~ msgid "Webhook-URL"
 #~ msgstr "Webhook-URL"

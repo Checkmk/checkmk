@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-23 10:29+0000\n"
+"PO-Revision-Date: 2026-06-25 17:57+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -32884,6 +32884,9 @@ msgid ""
 "If enabled, the plug-in will not attempt to connect to locally detected "
 "instances that are currently stopped.Only applicable for Windows."
 msgstr ""
+"Wenn diese Option aktiviert ist, versucht das Plugin nicht, eine Verbindung "
+"zu lokal erkannten Instanzen herzustellen, die derzeit angehalten sind. Gilt "
+"nur für Windows."
 
 msgid ""
 "If enabled, the service details will contain the username of a process owner."
@@ -34458,7 +34461,7 @@ msgid "Ignore if older than"
 msgstr "Ignorieren, wenn älter als"
 
 msgid "Ignore inactive local instances(Windows)"
-msgstr ""
+msgstr "Inaktive lokale Instanzen ignorieren (Windows)"
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Kürzere oder gleiche Intervalle ignorieren"
@@ -40802,6 +40805,9 @@ msgid ""
 "permission additionally controls whether a dashboard may be shared via a "
 "public link."
 msgstr ""
+"Dashboards für alle Benutzer sichtbar und nutzbar machen. Bei Dashboards "
+"legt diese Berechtigung zusätzlich fest, ob ein Dashboard über einen "
+"öffentlichen Link freigegeben werden darf."
 
 #, python-format
 msgid "Make own published %s override built-in %s for all users."
@@ -56994,9 +57000,8 @@ msgstr "Rx-Leistungspegel"
 msgid "S."
 msgstr "s."
 
-#, fuzzy
 msgid "S3 Buckets"
-msgstr "AWS/S3 Buckets"
+msgstr "S3 Buckets"
 
 msgid "S3 backend cache hits"
 msgstr "S3 Backend Cache-Treffer"
@@ -61437,7 +61442,7 @@ msgid "Skip hosts with non-empty parents (also if inherited)"
 msgstr "Hosts mit nicht leeren Parents überspringen (auch wenn vererbt)"
 
 msgid "Skip local instances that are not running"
-msgstr ""
+msgstr "Lokale Instanzen überspringen, die nicht laufen"
 
 msgid "Skip pack"
 msgstr "Paket überspringen"
@@ -94378,6 +94383,93 @@ msgstr "Wichtige Hinweise"
 msgid "Ctrl + Alt"
 msgstr "Strg + Alt"
 
+#, fuzzy
+msgid "Existence"
+msgstr "Listener"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Zu setzendes Attribut"
+
+#, fuzzy
+msgid "Remove condition"
+msgstr "Merkmal-Bedingung entfernen"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "Verbindung bearbeiten"
+
+#, fuzzy
+msgid "Add condition after %{key}"
+msgstr "Bedingung hinzufügen"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "Zusätzliche Optionen des Streudiagramms"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "Attribut-Filter"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Fehlgeschlagene gleichzeitige Verbindungen"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "Anzahl aktueller Verbindungen"
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Kontaktgruppe hinzufügen"
+
+#, fuzzy
+msgid "[Resource]"
+msgstr "Ressource"
+
+#, fuzzy
+msgid "[Scope]"
+msgstr "Umfang"
+
+#, fuzzy
+msgid "[Data point]"
+msgstr "Datenpunkt"
+
+#, fuzzy
+msgid "contains"
+msgstr "Container"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "Name des Containers"
+
+#, fuzzy
+msgid "starts with"
+msgstr "Warnung beginnt mit"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "beginnt nicht mit "
+
+#, fuzzy
+msgid "ends with"
+msgstr "beginnt mit "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "Endet nicht mit %s"
+
+#, fuzzy
+msgid "does not exist"
+msgstr "Existiert nicht"
+
+#, fuzzy
+msgid "Unknown error"
+msgstr "Unbekannter Fehler: %s"
+
 msgid "Agent connection test running"
 msgstr "Test der Agentenverbindung läuft"
 
@@ -100396,9 +100488,6 @@ msgstr ""
 
 #~ msgid "Warning of "
 #~ msgstr "Warnung bei "
-
-#~ msgid "Warning starts with"
-#~ msgstr "Warnung beginnt mit"
 
 #~ msgid "Webhook-URL"
 #~ msgstr "Webhook-URL"

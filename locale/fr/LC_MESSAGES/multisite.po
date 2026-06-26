@@ -99524,6 +99524,93 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Existence"
+msgstr "Auditeur"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Attribut à définir"
+
+#, fuzzy
+msgid "Remove condition"
+msgstr "Suppression de la condition d'étiquetage"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "Modifier la connexion"
+
+#, fuzzy
+msgid "Add condition after %{key}"
+msgstr "Ajouter une condition"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "Options supplémentaires"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "Attributs"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Échec des connexions"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "Nombre de connexions actuelles"
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Ajouter un groupe de contacts"
+
+#, fuzzy
+msgid "[Resource]"
+msgstr "Nom de la ressource"
+
+#, fuzzy
+msgid "[Scope]"
+msgstr "ID du nœud"
+
+#, fuzzy
+msgid "[Data point]"
+msgstr "Données envoyées"
+
+#, fuzzy
+msgid "contains"
+msgstr "Conteneurs"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "Nom du conteneur"
+
+#, fuzzy
+msgid "starts with"
+msgstr "L'avertissement commence par"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "ne commence pas par "
+
+#, fuzzy
+msgid "ends with"
+msgstr "commence par "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "Ne se termine pas par \"%s\"."
+
+#, fuzzy
+msgid "does not exist"
+msgstr "N'existe pas"
+
+#, fuzzy
+msgid "Unknown error"
+msgstr "Utilisateur inconnu : %s"
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "Définir le délai de connexion"
 
@@ -105135,9 +105222,6 @@ msgstr ""
 
 #~ msgid "Warning of "
 #~ msgstr "Avertissement à "
-
-#~ msgid "Warning starts with"
-#~ msgstr "L'avertissement commence par"
 
 #~ msgid "Webhook-URL"
 #~ msgstr "Webhook-URL"

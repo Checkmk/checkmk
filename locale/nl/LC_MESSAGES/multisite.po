@@ -98623,6 +98623,93 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Existence"
+msgstr "Luisteraar"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "In te stellen attribuut"
+
+#, fuzzy
+msgid "Remove condition"
+msgstr "Verwijder tag voorwaarde"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "Verbinding bewerken"
+
+#, fuzzy
+msgid "Add condition after %{key}"
+msgstr "Voorwaarde toevoegen"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "Extra opties"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "Attributen"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Mislukte verbindingen"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "Aantal huidige verbindingen"
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Contactgroep toevoegen"
+
+#, fuzzy
+msgid "[Resource]"
+msgstr "Bronnaam"
+
+#, fuzzy
+msgid "[Scope]"
+msgstr "Knooppunt-ID"
+
+#, fuzzy
+msgid "[Data point]"
+msgstr "Verzonden gegevens"
+
+#, fuzzy
+msgid "contains"
+msgstr "Containers"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "Naam van de container"
+
+#, fuzzy
+msgid "starts with"
+msgstr "Waarschuwing begint met"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "begint niet met "
+
+#, fuzzy
+msgid "ends with"
+msgstr "begint met "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "Eindigt niet op \"%s\"."
+
+#, fuzzy
+msgid "does not exist"
+msgstr "Bestaat niet"
+
+#, fuzzy
+msgid "Unknown error"
+msgstr "Onbekende gebruiker: %s"
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "Time-out verbinding instellen"
 
@@ -104221,9 +104308,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Warning of "
 #~ msgstr "Waarschuwing als %s"
-
-#~ msgid "Warning starts with"
-#~ msgstr "Waarschuwing begint met"
 
 #~ msgid "Webhook-URL"
 #~ msgstr "Webhook-URL"

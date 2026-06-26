@@ -99338,6 +99338,93 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Existence"
+msgstr "Oyente"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Atributo a fijar"
+
+#, fuzzy
+msgid "Remove condition"
+msgstr "Eliminar la condición de la etiqueta"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "Editar la conexión"
+
+#, fuzzy
+msgid "Add condition after %{key}"
+msgstr "Añadir condición"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "Opciones adicionales"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "Atributos"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Conexiones fallidas"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "Número de conexiones actuales"
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Añadir grupo de contactos"
+
+#, fuzzy
+msgid "[Resource]"
+msgstr "Nombre del recurso"
+
+#, fuzzy
+msgid "[Scope]"
+msgstr "ID de nodo"
+
+#, fuzzy
+msgid "[Data point]"
+msgstr "Datos enviados"
+
+#, fuzzy
+msgid "contains"
+msgstr "Contenedores"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "Nombre del contenedor"
+
+#, fuzzy
+msgid "starts with"
+msgstr "La advertencia comienza con"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "no comienza con "
+
+#, fuzzy
+msgid "ends with"
+msgstr "comienza con "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "No termina con \"%s\"."
+
+#, fuzzy
+msgid "does not exist"
+msgstr "No existe"
+
+#, fuzzy
+msgid "Unknown error"
+msgstr "Usuario desconocido: %s"
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "Establecer el tiempo de espera de la conexión"
 
@@ -104981,9 +105068,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Warning of "
 #~ msgstr "Advertencia si %s"
-
-#~ msgid "Warning starts with"
-#~ msgstr "La advertencia comienza con"
 
 #~ msgid "Webhook-URL"
 #~ msgstr "Página web-URL"

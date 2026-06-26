@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-24 17:57+0000\n"
+"PO-Revision-Date: 2026-06-25 17:57+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -98516,6 +98516,93 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Existence"
+msgstr "Ouvinte"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Atributo a definir"
+
+#, fuzzy
+msgid "Remove condition"
+msgstr "Remover a condição da etiqueta"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "Editar conexão"
+
+#, fuzzy
+msgid "Add condition after %{key}"
+msgstr "Adicionar condição"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "Opções adicionais"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "Atributos"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "Conexões falhadas"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "Número de ligações actuais"
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "Adicionar grupo de contato"
+
+#, fuzzy
+msgid "[Resource]"
+msgstr "Nome do recurso"
+
+#, fuzzy
+msgid "[Scope]"
+msgstr "Identificação do nó"
+
+#, fuzzy
+msgid "[Data point]"
+msgstr "Dados enviados"
+
+#, fuzzy
+msgid "contains"
+msgstr "Contêineres"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "Nome do recipiente"
+
+#, fuzzy
+msgid "starts with"
+msgstr "O aviso começa com"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "não começa com "
+
+#, fuzzy
+msgid "ends with"
+msgstr "começa com "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "Não termina com \"%s\"."
+
+#, fuzzy
+msgid "does not exist"
+msgstr "Não existe"
+
+#, fuzzy
+msgid "Unknown error"
+msgstr "Usuário desconhecido: %s"
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "Definir o tempo limite de conexão"
 
@@ -104160,9 +104247,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Warning of "
 #~ msgstr "Aviso se %s"
-
-#~ msgid "Warning starts with"
-#~ msgstr "O aviso começa com"
 
 #~ msgid "Webhook-URL"
 #~ msgstr "Webhook-URL"

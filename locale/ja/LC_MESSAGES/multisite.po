@@ -93484,6 +93484,93 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Existence"
+msgstr "リスナー"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "設定する属性"
+
+#, fuzzy
+msgid "Remove condition"
+msgstr "タグ条件を削除します"
+
+#, fuzzy
+msgid "Edit condition"
+msgstr "接続を編集する"
+
+#, fuzzy
+msgid "Add condition after %{key}"
+msgstr "条件を追加"
+
+#, fuzzy
+msgid "Add condition after previous condition"
+msgstr "追加オプション"
+
+#, fuzzy
+msgid "Attribute filter"
+msgstr "属性"
+
+#, fuzzy
+msgid "Toggle connector, currently %{connector}"
+msgstr "失敗した接続"
+
+msgid "Toggle AND / OR"
+msgstr ""
+
+#, fuzzy
+msgid "AND group of %{count} conditions"
+msgstr "現在の接続数"
+
+#, fuzzy
+msgid "Add condition after this group"
+msgstr "連絡先グループを追加"
+
+#, fuzzy
+msgid "[Resource]"
+msgstr "リソース名"
+
+#, fuzzy
+msgid "[Scope]"
+msgstr "スコープ"
+
+#, fuzzy
+msgid "[Data point]"
+msgstr "送信データ"
+
+#, fuzzy
+msgid "contains"
+msgstr "コンテナ"
+
+#, fuzzy
+msgid "does not contain"
+msgstr "コンテナの名前"
+
+#, fuzzy
+msgid "starts with"
+msgstr "警告の開始"
+
+#, fuzzy
+msgid "does not start with"
+msgstr "で始まらない "
+
+#, fuzzy
+msgid "ends with"
+msgstr "で始まる "
+
+#, fuzzy
+msgid "does not end with"
+msgstr "\"%s\"で終わることはできません"
+
+#, fuzzy
+msgid "does not exist"
+msgstr "存在しない"
+
+#, fuzzy
+msgid "Unknown error"
+msgstr "不明なエラー: %s"
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "接続タイムアウトを設定する"
 
@@ -99285,9 +99372,6 @@ msgstr ""
 
 #~ msgid "Warning of "
 #~ msgstr "警告 "
-
-#~ msgid "Warning starts with"
-#~ msgstr "警告の開始"
 
 #~ msgid "Webhook-URL"
 #~ msgstr "Webhook-URL"

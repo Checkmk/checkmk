@@ -80,7 +80,7 @@ def test_engine_evaluates_a_custom_quantity_without_engine_changes() -> None:
     graph = ResolvedGraph(
         name="g",
         title="g",
-        kind="test",
+        graph_type="test",
         lines=[
             Line(curve=Curve(quantity=Negated(operand=a), attributes=attributes), inverse=False)
         ],

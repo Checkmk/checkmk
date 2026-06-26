@@ -450,7 +450,7 @@ class ResolvedGraph:
 
     name: str
     title: str
-    kind: str
+    graph_type: str
     vertical_range: VerticalRange | None = None
     stacks: Sequence[Stack] = ()
     lines: Sequence[Line] = ()

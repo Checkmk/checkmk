@@ -96,7 +96,7 @@ def _fallback(name: MetricName) -> ResolvedGraph:
     return ResolvedGraph(
         name=name,
         title=name,
-        kind=_KIND,
+        graph_type=_KIND,
         stacks=[_dstack(_rrd(name))],
         rules=[
             Rule(
@@ -181,7 +181,7 @@ def _discover(
         registered_graphs=registered_graphs,
         metrics=_METRICS,
         localizer=_id,
-        kind=_KIND,
+        graph_type=_KIND,
         available=performance_data.get(service, {}),
     )
 
@@ -239,7 +239,7 @@ def test_discover_template_graphs_matching_plugin_claims_its_metrics() -> None:
     discovered = _discover(service, registered_graphs, rrd=rrd)
 
     assert len(discovered) == 1
-    assert discovered[0] == parse_graph_from_api(plugin, service, _METRICS, _id, kind=_KIND)
+    assert discovered[0] == parse_graph_from_api(plugin, service, _METRICS, _id, graph_type=_KIND)
     # A plain title without expressions is carried through unchanged.
     assert _evaluate(discovered[0], rrd).title == "CPU"
     assert [line.curve.value for line in _evaluate(discovered[0], rrd).lines] == [1.0, 1.0]
@@ -255,7 +255,7 @@ def test_discover_template_graphs_emits_default_graph_for_unclaimed_metrics() ->
 
     [matched, fallback] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert matched == parse_graph_from_api(plugin, service, _METRICS, _id, kind=_KIND)
+    assert matched == parse_graph_from_api(plugin, service, _METRICS, _id, graph_type=_KIND)
     assert fallback == _fallback(extra)
 
 
@@ -287,7 +287,7 @@ def test_discover_template_graphs_optional_missing_metric_still_matches() -> Non
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert discovered == parse_graph_from_api(plugin, service, _METRICS, _id, kind=_KIND)
+    assert discovered == parse_graph_from_api(plugin, service, _METRICS, _id, graph_type=_KIND)
 
 
 def test_discover_template_graphs_conflicting_metric_present_rejects_plugin() -> None:
@@ -322,7 +322,7 @@ def test_discover_template_graphs_matches_v2_unstable_graph() -> None:
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert discovered == parse_graph_from_api(plugin, service, _METRICS, _id, kind=_KIND)
+    assert discovered == parse_graph_from_api(plugin, service, _METRICS, _id, graph_type=_KIND)
 
 
 def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
@@ -340,7 +340,7 @@ def test_discover_template_graphs_matches_v2_unstable_bidirectional() -> None:
 
     [discovered] = _discover(service, registered_graphs, rrd=rrd)
 
-    assert discovered == parse_graph_from_api(plugin, service, _METRICS, _id, kind=_KIND)
+    assert discovered == parse_graph_from_api(plugin, service, _METRICS, _id, graph_type=_KIND)
 
 
 def test_discover_template_graphs_carries_scalars_for_v2_unstable_scalar_quantity() -> None:
@@ -527,7 +527,7 @@ def test_match_graph_for_services_adds_predictive_lines_per_service() -> None:
         graph=plugin,
         metrics=_METRICS,
         localizer=_id,
-        kind=_KIND,
+        graph_type=_KIND,
         available={with_predict: {cpu_user, predict}, without_predict: {cpu_user}},
     )
 
@@ -563,7 +563,7 @@ def test_build_service_graphs_builds_threshold_rules_for_fallback_graphs() -> No
         registered_graphs=[],
         metrics=_METRICS,
         localizer=_id,
-        kind=_KIND,
+        graph_type=_KIND,
         available=available,
     )
     # The fallback single-metric graph carries the four warn / crit (and lower) threshold rules as

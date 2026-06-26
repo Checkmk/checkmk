@@ -122,10 +122,10 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
         optional=["a"],
         conflicting=["d"],
     )
-    assert parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND) == ResolvedGraph(
+    assert parse_graph_from_api(graph, _SERVICE, _METRICS, _id, graph_type=_KIND) == ResolvedGraph(
         name="g",
         title="Title",
-        kind=_KIND,
+        graph_type=_KIND,
         vertical_range=MinimalRange(lower=0, upper=100),
         stacks=[_stack(_curve(_rrd("a")), _curve(_rrd("b")))],
         lines=[_line(_rrd("c"))],
@@ -136,7 +136,7 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
 
 def test_parse_graph_from_api_without_compound_lines_yields_no_stacks() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, graph_type=_KIND)
     assert isinstance(parsed, ResolvedGraph)
     assert parsed.stacks == []
     assert parsed.vertical_range is None
@@ -144,7 +144,7 @@ def test_parse_graph_from_api_without_compound_lines_yields_no_stacks() -> None:
 
 def test_parse_graph_from_api_uses_localizer() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, lambda s: f"<{s}>", kind=_KIND)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, lambda s: f"<{s}>", graph_type=_KIND)
     assert parsed.title == "<t>"
 
 
@@ -156,7 +156,7 @@ def test_parse_graph_from_api_parses_a_metric_valued_minimal_range_bound() -> No
         minimal_range=graphs_v1.MinimalRange("a", 100),
         simple_lines=["a"],
     )
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, graph_type=_KIND)
     assert parsed.vertical_range == MinimalRange(lower=_rrd("a"), upper=100)
 
 
@@ -169,7 +169,7 @@ def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
         ServiceRef(host_name="my-host", service_name="my-service"),
         _METRICS,
         _id,
-        kind=_KIND,
+        graph_type=_KIND,
     )
     assert [line.curve.quantity for line in parsed.lines] == [
         RRDMetric(
@@ -193,7 +193,7 @@ def test_parse_graph_from_api_routes_scalars_to_rules_without_display() -> None:
             metrics_v1.MaximumOf("a", metrics_v1.Color.RED),
         ],
     )
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, graph_type=_KIND)
     assert parsed.lines == []
     assert [rule.curve.quantity for rule in parsed.rules] == [
         ScalarOf(metric=_rrd("a"), kind=ScalarKind.WARNING),
@@ -212,7 +212,7 @@ def test_parse_graph_from_api_maps_lower_warning_and_critical() -> None:
             metrics_v2_unstable.LowerCriticalOf("a"),
         ],
     )
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, graph_type=_KIND)
     assert [rule.curve.quantity for rule in parsed.rules] == [
         ScalarOf(metric=_rrd("a"), kind=ScalarKind.LOWER_WARNING),
         ScalarOf(metric=_rrd("a"), kind=ScalarKind.LOWER_CRITICAL),
@@ -244,7 +244,7 @@ def test_parse_graph_from_api_constants_carry_their_intrinsic_display() -> None:
             ),
         ],
     )
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, graph_type=_KIND)
     # Constants are scalars, so they become horizontal rules; each carries its own intrinsic display.
     assert parsed.lines == []
     assert parsed.rules == [
@@ -303,7 +303,7 @@ def test_parse_graph_from_api_operations_carry_their_intrinsic_display() -> None
             ),
         ],
     )
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, graph_type=_KIND)
     assert parsed.lines == [
         _dline(
             Sum(
@@ -349,7 +349,7 @@ def test_parse_graph_from_api_recurses_into_nested_quantities() -> None:
         ],
     )
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=[nested])
-    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, kind=_KIND)
+    parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, graph_type=_KIND)
     assert parsed.lines == [
         _dline(
             Sum(
@@ -384,7 +384,7 @@ def test_parse_graph_from_api_bidirectional_range_is_the_envelope_of_both_halves
             minimal_range=graphs_v1.MinimalRange(10, 100),
         ),
     )
-    parsed = parse_graph_from_api(bidir, _SERVICE, _METRICS, _id, kind=_KIND)
+    parsed = parse_graph_from_api(bidir, _SERVICE, _METRICS, _id, graph_type=_KIND)
     assert parsed.vertical_range == MinimalRange(lower=0, upper=100)
 
 
@@ -396,10 +396,10 @@ def test_parse_graph_from_api_collapses_bidirectional_into_one_graph() -> None:
         lower=graphs_v1.Graph(name="lo", title=Title("lo"), compound_lines=["a"]),
         upper=graphs_v1.Graph(name="up", title=Title("up"), compound_lines=["b"]),
     )
-    assert parse_graph_from_api(bidir, _SERVICE, _METRICS, _id, kind=_KIND) == ResolvedGraph(
+    assert parse_graph_from_api(bidir, _SERVICE, _METRICS, _id, graph_type=_KIND) == ResolvedGraph(
         name="b",
         title="title",
-        kind=_KIND,
+        graph_type=_KIND,
         stacks=[
             Stack(members=[_curve(_rrd("b"))], inverse=False),
             Stack(members=[_curve(_rrd("a"))], inverse=True),
@@ -423,12 +423,12 @@ def test_parse_resolves_resolves_metric_curves_from_the_registry() -> None:
         _SERVICE,
         _METRICS,
         _id,
-        kind=_KIND,
+        graph_type=_KIND,
     )
     assert discovered == ResolvedGraph(
         name="g",
         title="Title",
-        kind=_KIND,
+        graph_type=_KIND,
         stacks=[_stack(_curve(_rrd("a")), _curve(_rrd("b")))],
         lines=[_line(_rrd("c"))],
         rules=[],
@@ -450,7 +450,7 @@ def test_parse_resolves_resolves_threshold_rules_from_the_scalar_kind() -> None:
         _SERVICE,
         _METRICS,
         _id,
-        kind=_KIND,
+        graph_type=_KIND,
     )
     concrete = discovered
     # warn / crit get their semantic label and the WARN / CRIT colour; min / max keep their
@@ -481,7 +481,7 @@ def test_parse_resolves_localizes_rule_labels() -> None:
         _SERVICE,
         _METRICS,
         lambda s: f"<{s}>",
-        kind=_KIND,
+        graph_type=_KIND,
     )
     assert [rule.curve.attributes.title for rule in resolved.rules] == ["<Warning>"]
 
@@ -492,7 +492,7 @@ def test_parse_resolves_uses_the_fallback_colour_for_an_undefined_metric() -> No
         _SERVICE,
         {},
         _id,
-        kind=_KIND,
+        graph_type=_KIND,
     )
     concrete = discovered
     # The WARN colour still applies; only the unit falls back to the dimensionless default.
@@ -514,7 +514,7 @@ def test_parse_resolves_reads_operation_display_from_the_quantity() -> None:
         _SERVICE,
         _METRICS,
         _id,
-        kind=_KIND,
+        graph_type=_KIND,
     )
     concrete = discovered
     assert concrete.lines == [

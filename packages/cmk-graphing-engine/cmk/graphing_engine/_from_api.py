@@ -468,7 +468,7 @@ def parse_graph_from_api(
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
     *,
-    kind: str,
+    graph_type: str,
 ) -> ResolvedGraph:
     """Build a service's graph from an API plugin, resolving each curve's display inline — discovery
     returns the display-resolved ResolvedGraph directly (no separate structure / resolution step)."""
@@ -483,7 +483,7 @@ def parse_graph_from_api(
             return ResolvedGraph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
-                kind=kind,
+                graph_type=graph_type,
                 vertical_range=_parse_range(graph, context),
                 stacks=stacks,
                 lines=lines,
@@ -499,7 +499,7 @@ def parse_graph_from_api(
             return ResolvedGraph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
-                kind=kind,
+                graph_type=graph_type,
                 vertical_range=_bidirectional_range(graph, context),
                 stacks=[*upper_stacks, *lower_stacks],
                 lines=[*upper_lines, *lower_lines],

@@ -136,7 +136,7 @@ def test_empty_graphs_returns_empty_list() -> None:
 
 def test_fetches_performance_data_and_time_series() -> None:
     cpu_user = _rrd_with_cf("cpu_user")
-    graph = ResolvedGraph(name="cpu", title="CPU", kind="test", lines=[_line(cpu_user)])
+    graph = ResolvedGraph(name="cpu", title="CPU", graph_type="test", lines=[_line(cpu_user)])
     series = _ts(1.0, 2.0, 3.0)
     rrd = _FakeRRDSource(
         performance_response={_service(): _perf_data(_perf("cpu_user", value=42.0))},
@@ -154,8 +154,8 @@ def test_fetches_performance_data_and_time_series() -> None:
 def test_returns_one_evaluated_graph_per_graph_in_order() -> None:
     x = _rrd_with_cf("x")
     y = _rrd_with_cf("y")
-    graph_x = ResolvedGraph(name="x", title="x", kind="test", lines=[_line(x)])
-    graph_y = ResolvedGraph(name="y", title="y", kind="test", lines=[_line(y)])
+    graph_x = ResolvedGraph(name="x", title="x", graph_type="test", lines=[_line(x)])
+    graph_y = ResolvedGraph(name="y", title="y", graph_type="test", lines=[_line(y)])
     rrd = _FakeRRDSource(
         performance_response={_service(): _perf_data(_perf("x", value=1.0), _perf("y", value=2.0))},
         time_series_response={_source("x"): _ts(1.0), _source("y"): _ts(2.0)},
@@ -172,7 +172,7 @@ def test_evaluates_lines_in_both_directions() -> None:
     graph = ResolvedGraph(
         name="if",
         title="Interface",
-        kind="test",
+        graph_type="test",
         lines=[_line(out), _line(in_, inverse=True)],
     )
     rrd = _FakeRRDSource(
@@ -190,7 +190,7 @@ def test_evaluates_lines_in_both_directions() -> None:
 
 def test_scales_the_series_by_the_translation_scale() -> None:
     temp = _rrd_with_cf("temp")
-    graph = ResolvedGraph(name="g", title="g", kind="test", lines=[_line(temp)])
+    graph = ResolvedGraph(name="g", title="g", graph_type="test", lines=[_line(temp)])
     rrd = _FakeRRDSource(
         performance_response={_service(): _perf_data(_perf("temp", value=10.0))},
         time_series_response={_source("temp"): _ts(10.0, 20.0)},
@@ -214,7 +214,7 @@ def test_scales_the_series_by_the_translation_scale() -> None:
 def test_fetches_a_renamed_metric_by_its_raw_column() -> None:
     # The metric is named "temp" but its data comes from the raw column "temperature".
     temp = _rrd_with_cf("temp")
-    graph = ResolvedGraph(name="g", title="g", kind="test", lines=[_line(temp)])
+    graph = ResolvedGraph(name="g", title="g", graph_type="test", lines=[_line(temp)])
     rrd = _FakeRRDSource(
         performance_response={_service(): _perf_data(_perf("temperature", value=5.0))},
         time_series_response={_source("temperature"): _ts(5.0)},
@@ -238,7 +238,7 @@ def test_fetches_a_renamed_metric_by_its_raw_column() -> None:
 
 def test_merges_a_metrics_originals_taking_the_first_present_value() -> None:
     metric = _rrd_with_cf("m")
-    graph = ResolvedGraph(name="g", title="g", kind="test", lines=[_line(metric)])
+    graph = ResolvedGraph(name="g", title="g", graph_type="test", lines=[_line(metric)])
     rrd = _FakeRRDSource(
         performance_response={_service(): _perf_data(_perf("a"), _perf("b"))},
         time_series_response={_source("a"): _ts(1.0, None, 3.0), _source("b"): _ts(None, 2.0, 4.0)},
@@ -264,7 +264,7 @@ def test_merges_a_metrics_originals_taking_the_first_present_value() -> None:
 
 def test_aligns_a_natively_gridded_series_to_the_requested_range() -> None:
     metric = _rrd_with_cf("m")
-    graph = ResolvedGraph(name="g", title="g", kind="test", lines=[_line(metric)])
+    graph = ResolvedGraph(name="g", title="g", graph_type="test", lines=[_line(metric)])
     # The backend returns the series on its own finer grid (12 five-second points); the engine
     # downsamples it onto the requested 10-second grid (six points) before evaluating.
     native = TimeSeries(
@@ -287,7 +287,7 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
     avg_metric = _rrd_with_cf("a", ConsolidationFunction.AVERAGE)
     max_metric = _rrd_with_cf("b", ConsolidationFunction.MAX)
     graph = ResolvedGraph(
-        name="g", title="g", kind="test", lines=[_line(avg_metric), _line(max_metric)]
+        name="g", title="g", graph_type="test", lines=[_line(avg_metric), _line(max_metric)]
     )
     rrd = _FakeRRDSource(
         performance_response={_service(): _perf_data(_perf("a"), _perf("b"))},
@@ -307,7 +307,9 @@ def test_bare_metric_uses_the_fallback_consolidation_function() -> None:
     # A bare RRDMetric uses the fallback function; one pinning its own keeps it.
     bare = RRDMetric(host_name="h", service_name="svc", metric_name=MetricName("load"))
     pinned = _rrd_with_cf("peak", ConsolidationFunction.MAX)
-    graph = ResolvedGraph(name="g", title="g", kind="test", lines=[_line(bare), _line(pinned)])
+    graph = ResolvedGraph(
+        name="g", title="g", graph_type="test", lines=[_line(bare), _line(pinned)]
+    )
     rrd = _FakeRRDSource(
         performance_response={_service(): _perf_data(_perf("load"), _perf("peak"))},
         time_series_response={_source("load"): _ts(1.0), _source("peak"): _ts(2.0)},
@@ -329,7 +331,7 @@ def test_resolves_a_title_expression_against_a_non_drawn_metric() -> None:
     graph = ResolvedGraph(
         name="g",
         title='Load - _EXPRESSION:{"metric": "cores", "scalar": "max"} cores',
-        kind="test",
+        graph_type="test",
         lines=[_line(load)],
     )
     rrd = _FakeRRDSource(

@@ -118,7 +118,7 @@ def _discover(
         metrics=_METRICS,
         localizer=_id,
         available=performance_data.get(_SERVICE, {}),
-        kind="test",
+        graph_type="test",
     )
 
 

@@ -120,7 +120,7 @@ def _add_predictive_lines(
         ResolvedGraph(
             name=graph.name,
             title=graph.title,
-            kind=graph.kind,
+            graph_type=graph.graph_type,
             vertical_range=graph.vertical_range,
             stacks=graph.stacks,
             lines=[*graph.lines, *added],
@@ -144,7 +144,7 @@ def match_graph_for_services(
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
     available: Mapping[ServiceRef, Container[MetricName]],
-    kind: str,
+    graph_type: str,
 ) -> Sequence[ResolvedGraph]:
     discovered: list[ResolvedGraph] = []
     for service in services:
@@ -155,7 +155,7 @@ def match_graph_for_services(
         # graphs, so a combined graph includes them wherever predict_* exists (legacy combined
         # parity).
         with_predictive, _names = _add_predictive_lines(
-            parse_graph_from_api(graph, service, metrics, localizer, kind=kind),
+            parse_graph_from_api(graph, service, metrics, localizer, graph_type=graph_type),
             service,
             service_available,
             metrics,
@@ -172,7 +172,7 @@ def build_service_graphs(
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
     available: Mapping[MetricName, RRDMetricData],
-    kind: str,
+    graph_type: str,
 ) -> Sequence[ResolvedGraph]:
     """Build a service's matching template graphs plus a fallback single-metric graph per unclaimed
     metric, with each curve's display resolved inline. The fallback metric gets the four warn / crit
@@ -194,7 +194,7 @@ def build_service_graphs(
         if not walk.matched:
             continue
         claimed.update(walk.metric_names)
-        _collect(parse_graph_from_api(plugin, service, metrics, localizer, kind=kind))
+        _collect(parse_graph_from_api(plugin, service, metrics, localizer, graph_type=graph_type))
 
     for name in available:
         if name in claimed or name.startswith(_PREDICT_PREFIX):
@@ -208,7 +208,7 @@ def build_service_graphs(
             ResolvedGraph(
                 name=name,
                 title=name,
-                kind=kind,
+                graph_type=graph_type,
                 stacks=[
                     Stack(members=[resolve_curve(rrd_metric, metrics, localizer)], inverse=False)
                 ],

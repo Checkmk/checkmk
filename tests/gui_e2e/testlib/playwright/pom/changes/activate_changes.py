@@ -228,7 +228,7 @@ class ActivateChangesSlideout(LocatorHelper):
             expect(
                 self.activation_succcess_banner, "The activation success banner is not visible!"
             ).to_be_visible()
-        logging.info("Activation completed!")
+        logger.info("Activation completed!")
 
     def activate_pending_changes(self) -> None:
         """Trigger activation and close the slideout without waiting for the success banner.

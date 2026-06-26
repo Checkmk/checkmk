@@ -19,6 +19,8 @@ from typing import Any
 
 from cmk.server_side_programs.v1_unstable import Storage
 
+LOGGER = logging.getLogger(__name__)
+
 
 def _datetime_serializer(obj):
     """Custom serializer to pass to json dump functions"""
@@ -48,7 +50,7 @@ class DataCache(abc.ABC):
             raw_timestamp, raw_content = raw.split("\n", 1)
             return float(raw_timestamp), raw_content
         except ValueError:
-            logging.warning("Corrupted stograge content. Removing it.")
+            LOGGER.warning("Corrupted stograge content. Removing it.")
             self._storage.unset(self._key)
         return None
 
@@ -88,7 +90,7 @@ class DataCache(abc.ABC):
             return True
 
         if age < 0:
-            logging.info("Cache file from future considered invalid.")
+            LOGGER.info("Cache file from future considered invalid.")
         return False
 
     def get_cached_data(self):
@@ -101,7 +103,7 @@ class DataCache(abc.ABC):
         try:
             content = json.loads(raw_content)
         except ValueError as exc:
-            logging.info("Cannot load raw content: %s", exc)
+            LOGGER.info("Cannot load raw content: %s", exc)
             raise
         return content
 
@@ -111,7 +113,7 @@ class DataCache(abc.ABC):
             try:
                 return self.get_cached_data()
             except (OSError, ValueError) as exc:
-                logging.info("Getting live data (failed to read from cache: %s).", exc)
+                LOGGER.info("Getting live data (failed to read from cache: %s).", exc)
                 if self.debug:
                     raise
 
@@ -119,7 +121,7 @@ class DataCache(abc.ABC):
         try:
             self._write_to_cache(live_data)
         except (OSError, TypeError) as exc:
-            logging.info("Failed to write data to cache file: %s", exc)
+            LOGGER.info("Failed to write data to cache file: %s", exc)
             if self.debug:
                 raise
         return live_data

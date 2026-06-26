@@ -28,6 +28,8 @@ from requests.auth import HTTPBasicAuth
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
 
+LOGGER = logging.getLogger(__name__)
+
 PASSWORD_OPTION = "password"
 TOKEN_OPTION = "token"
 
@@ -303,7 +305,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except Exception as e:
         if args.debug:
             raise
-        logging.debug(traceback.format_exc())
+        LOGGER.debug(traceback.format_exc())
         sys.stderr.write("%s\n" % e)
         return 1
     return 0

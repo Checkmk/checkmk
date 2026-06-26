@@ -13,6 +13,8 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, IO, NamedTuple, TypedDict
 
+LOGGER = logging.getLogger(__name__)
+
 
 class Bom(TypedDict):
     components: list[dict[str, Any]]
@@ -166,7 +168,7 @@ def _get_csv_sections(bom_info: Bom) -> dict[str, list[CsvRow]]:
     for component in bom_info["components"]:
         license_ = _license_from_bom(component)
         if license_ is None:
-            logging.warning("No license for %s %s", component["name"], component.get("purl", ""))
+            LOGGER.warning("No license for %s %s", component["name"], component.get("purl", ""))
             continue
 
         if component.get("purl", "").startswith("pkg:pypi/"):
@@ -250,12 +252,12 @@ def _check_links(bom_info: Bom) -> None:
     }
     if missing_links := (licenses - set(LINKS)):
         for missing_link in missing_links:
-            logging.error("No link for %s in LINKS", missing_link)
+            LOGGER.error("No link for %s in LINKS", missing_link)
         sys.exit("There are links to licenses missing")
 
     if unnecessary_links := set(LINKS) - licenses:
         for l in unnecessary_links:
-            logging.info("There is a link for %s in LINKS, but it is not used in the BOM", l)
+            LOGGER.info("There is a link for %s in LINKS, but it is not used in the BOM", l)
 
 
 def _write_csv(csv_sections: dict[str, list[CsvRow]], csv_file: IO[str]) -> None:

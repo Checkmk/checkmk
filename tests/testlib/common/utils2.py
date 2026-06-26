@@ -331,7 +331,7 @@ def _extend_command(
         else cmd
     )
     cmd_ = sudo_cmd + user_cmd
-    logging.debug("Executing command: %s", shlex.join(cmd_))
+    logger.debug("Executing command: %s", shlex.join(cmd_))
     return cmd_
 
 

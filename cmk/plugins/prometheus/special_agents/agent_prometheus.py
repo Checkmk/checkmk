@@ -35,7 +35,7 @@ from cmk.plugins.prometheus.lib import (
     get_api_url,
 )
 
-LOGGER = logging.getLogger()  # root logger for now
+LOGGER = logging.getLogger(__name__)
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -102,7 +102,7 @@ class CAdvisorExporter:
         self.container_ids.update(container_ids)
 
     def diskstat_summary(self, group_element: str) -> list[dict[str, dict[str, Any]]]:
-        logging.debug("Parsing cAdvisor diskstat")
+        LOGGER.debug("Parsing cAdvisor diskstat")
         disk_info = {
             "disk_utilisation": "sum by ({{group_element}})(container_fs_usage_bytes{exclusion}) / "
             "sum by({{group_element}})(container_fs_limit_bytes{exclusion}) * 100",
@@ -115,7 +115,7 @@ class CAdvisorExporter:
 
     def cpu_summary(self, group_element: str) -> list[dict[str, dict[str, Any]]]:
         # Reference ID: 34923788
-        logging.debug("Parsing cAdvisor CPU")
+        LOGGER.debug("Parsing cAdvisor CPU")
         cpu_info = {
             "cpu_user": "sum by ({{group_element}})(rate(container_cpu_user_seconds_total{exclusion}[5m])*100)",
             "cpu_system": "sum by ({{group_element}})(rate(container_cpu_system_seconds_total{exclusion}[5m])*100)",
@@ -123,7 +123,7 @@ class CAdvisorExporter:
         return self._retrieve_formatted_cadvisor_info(cpu_info, group_element)
 
     def df_summary(self, group_element: str) -> list[dict[str, dict[str, Any]]]:
-        logging.debug("Parsing cAdvisor df")
+        LOGGER.debug("Parsing cAdvisor df")
         df_info = {
             "df_size": "sum by ({{group_element}})(container_fs_limit_bytes{exclusion})",
             "df_used": "sum by ({{group_element}})(container_fs_usage_bytes{exclusion})",
@@ -133,7 +133,7 @@ class CAdvisorExporter:
         return self._retrieve_formatted_cadvisor_info(df_info, group_element)
 
     def if_summary(self, group_element: str) -> list[dict[str, dict[str, Any]]]:
-        logging.debug("Parsing cAdvisor if")
+        LOGGER.debug("Parsing cAdvisor if")
         if_info = {
             "if_in_total": "sum by ({{group_element}})(rate(container_network_receive_bytes_total{exclusion}[5m]))",
             "if_in_discards": "sum by ({{group_element}})(rate(container_network_receive_packets_dropped_total{exclusion}[5m]))",
@@ -145,7 +145,7 @@ class CAdvisorExporter:
         return self._retrieve_formatted_cadvisor_info(if_info, group_element)
 
     def memory_pod_summary(self, _group_element: str) -> list[dict[str, dict[str, Any]]]:
-        logging.debug("Parsing cAdvisor pod memory")
+        LOGGER.debug("Parsing cAdvisor pod memory")
 
         memory_info = [
             (
@@ -261,7 +261,7 @@ class CAdvisorExporter:
         return machine
 
     def memory_container_summary(self, _group_element: str) -> list[dict[str, dict[str, Any]]]:
-        logging.debug("Parsing cAdvisor container memory")
+        LOGGER.debug("Parsing cAdvisor container memory")
         memory_info = {
             "memory_usage_container": 'sum by (pod, namespace, container, name)(container_memory_usage_bytes{container!=""{namespace_filter}})',
             "memory_rss": 'container_memory_rss{container!=""{namespace_filter}}',
@@ -629,7 +629,7 @@ class PrometheusAPI:
         try:
             promql_response = PromQLMultiResponse(self._perform_promql_query(promql_expression))
         except (KeyError, ValueError, requests.exceptions.Timeout) as exc:
-            logging.exception(exc)
+            LOGGER.exception(exc)
             return None
 
         return promql_response
@@ -638,7 +638,7 @@ class PrometheusAPI:
         try:
             return [PromQLResult(info) for info in self._perform_promql_query(promql)]
         except (KeyError, ValueError, requests.exceptions.Timeout) as exc:
-            logging.exception(exc)
+            LOGGER.exception(exc)
             return []
 
     def _perform_promql_query(self, promql: str) -> list[dict[str, Any]]:
@@ -756,7 +756,7 @@ class ApiData:
         return "\n".join(e.output())
 
     def promql_section(self, custom_services: list[dict[str, Any]]) -> str:
-        logging.info("Prometheus PromQl queries")
+        LOGGER.info("Prometheus PromQl queries")
         e = PiggybackGroup()
         e.join(
             "prometheus_custom", self.api_client.perform_specified_promql_queries(custom_services)
@@ -764,7 +764,7 @@ class ApiData:
         return "\n".join(e.output())
 
     def server_info_section(self) -> str:
-        logging.info("Prometheus Server Info")
+        LOGGER.info("Prometheus Server Info")
         g = PiggybackHost()
         g.get("prometheus_api_server").insert(self.prometheus_server.health())
         return "\n".join(g.output())
@@ -957,7 +957,7 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as e:
         if args.debug:
             raise
-        logging.debug(traceback.format_exc())
+        LOGGER.debug(traceback.format_exc())
         sys.stderr.write("%s\n" % e)
         return 1
     return 0

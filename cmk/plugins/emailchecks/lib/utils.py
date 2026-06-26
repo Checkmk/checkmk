@@ -29,6 +29,8 @@ import urllib3
 from cmk.plugins.emailchecks.lib import connections
 from cmk.plugins.emailchecks.lib.ac_args import add_trx_arguments, Scope
 
+LOGGER = logging.getLogger(__name__)
+
 Args = argparse.Namespace
 Status = int
 PerfData = Any
@@ -52,11 +54,11 @@ def fetch_mails(
 
     def matches(subject: None | str) -> bool:
         if pattern and not pattern.match(subject or ""):
-            logging.debug("filter mail with non-matching subject %r", subject)
+            LOGGER.debug("filter mail with non-matching subject %r", subject)
             return False
         return True
 
-    logging.debug("pattern used to receive mails: %s", pattern)
+    LOGGER.debug("pattern used to receive mails: %s", pattern)
     try:
         return connection.fetch_mails(matches)
     except Exception as exc:
@@ -124,7 +126,7 @@ def _active_check_main_core(
 
     logging.getLogger("exchangelib").setLevel(logging.WARNING)
 
-    logging.debug("use protocol for fetching: %r", args.fetch_protocol)
+    LOGGER.debug("use protocol for fetching: %r", args.fetch_protocol)
     try:
         return check_fn(args)
     except (

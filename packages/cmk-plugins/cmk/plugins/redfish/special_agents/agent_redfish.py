@@ -36,6 +36,8 @@ from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_sec
 from cmk.plugins.redfish.lib import detect_vendor, REDFISH_SECTIONS, Vendor
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, vcrtrace
 
+LOGGER = logging.getLogger(__name__)
+
 __version__ = "3.0.0b1"
 
 AGENT = "redfish"
@@ -325,7 +327,7 @@ def fetch_list_of_elements(
         except Exception:
             if redfishobj.debug:
                 raise
-            logging.exception("redfish: failed fetching list section %s", section)
+            LOGGER.exception("redfish: failed fetching list section %s", section)
     return redfishobj
 
 
@@ -369,7 +371,7 @@ def fetch_sections(
         except Exception:
             if redfishobj.debug:
                 raise
-            logging.exception("redfish: failed fetching section %s", section)
+            LOGGER.exception("redfish: failed fetching section %s", section)
     return redfishobj
 
 
@@ -455,7 +457,7 @@ def _phase(redfishobj: RedfishData, name: str) -> Iterator[None]:
     except Exception:
         if redfishobj.debug:
             raise
-        logging.exception("redfish: failure during phase %s", name)
+        LOGGER.exception("redfish: failure during phase %s", name)
     finally:
         _emit_pending(redfishobj)
 

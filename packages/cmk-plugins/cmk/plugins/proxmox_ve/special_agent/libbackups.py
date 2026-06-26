@@ -387,7 +387,7 @@ class BackupTask:
             except BackupTask.LogParseWarning as exc:
                 if strict:
                     raise
-                logging.exception("Error in log at line %d", linenr)
+                LOGGER.exception("Error in log at line %d", linenr)
                 current_vmid, current_dataset = "", {}
                 errors.append((linenr, str(exc)))
 

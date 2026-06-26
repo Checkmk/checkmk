@@ -22,6 +22,8 @@ import urllib3
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
 
+LOGGER = logging.getLogger(__name__)
+
 ElementAttributes = dict[str, str]
 
 PASSWORD_OPTION = "password"
@@ -384,7 +386,7 @@ class Server:
             self._session.mount(self._url, HostnameValidationAdapter(cert_check))
 
     def login(self) -> None:
-        logging.debug("Server.login: Login")
+        LOGGER.debug("Server.login: Login")
         attributes: ElementAttributes = {
             "inName": self._username,
             "inPassword": self._password,
@@ -393,7 +395,7 @@ class Server:
         root = self._communicate(ET.Element("aaaLogin", attrib=attributes))
         cookie = root.attrib.get("outCookie")
         if cookie:
-            logging.debug("Server.login: Found cookie")
+            LOGGER.debug("Server.login: Found cookie")
             self._cookie = cookie
 
     @staticmethod
@@ -401,7 +403,7 @@ class Server:
         return b"login request filtered out" if b"inPassword=" in body else body
 
     def logout(self) -> None:
-        logging.debug("Server.logout: Logout")
+        LOGGER.debug("Server.logout: Logout")
         attributes: ElementAttributes = {}
         if self._cookie:
             attributes.update({"inCookie": self._cookie})
@@ -413,7 +415,7 @@ class Server:
         return "/".join(dn.split("/")[0:2])
 
     def get_model_info(self) -> Mapping[str, str]:
-        logging.debug("Server.get_model_info: Get model info")
+        LOGGER.debug("Server.get_model_info: Get model info")
         return {
             self._get_bios_unit_name_from_dn(bios_unit): value.split("-")[0]
             for bios_unit in self._get_class_data("biosUnit")
@@ -427,11 +429,11 @@ class Server:
         Returns dict[k: header, v: list[tuple[class_id, list[tuple[attribute, attribute data]]]]]
         from entities (B_SERIES_ENTITIES, C_SERIES_ENTITIES).
         """
-        logging.debug("Server.get_data_from_entities: Try to get entities")
+        LOGGER.debug("Server.get_data_from_entities: Try to get entities")
         data: dict[str, list[tuple[Any, Any]]] = {}
         for header, model_pattern, entries in entities:
             for class_id, attributes in entries:
-                logging.debug(
+                LOGGER.debug(
                     "Server.get_data_from_entities: header: '%s', class_id: '%s' - attributes: '%s'",
                     header,
                     class_id,
@@ -441,7 +443,7 @@ class Server:
                 try:
                     xml_objects = self._get_class_data(class_id)
                 except CommunicationException as e:
-                    logging.debug("Server.get_data_from_entities: Failed to get data")
+                    LOGGER.debug("Server.get_data_from_entities: Failed to get data")
                     if self.debug and "no class named" not in str(e):
                         raise CommunicationException(e)
                     continue  # skip entity
@@ -462,7 +464,7 @@ class Server:
                         if attribute_data is None and attribute == "affectedDN":
                             attribute_data = self._get_attribute_data(xml_object, "dn")
                         if attribute_data is None:
-                            logging.debug("No such attribute '%s'", attribute)
+                            LOGGER.debug("No such attribute '%s'", attribute)
                             # ensure order of entries in related check plug-ins is consistent
                             attribute_data = ""
                         xml_data.append((attribute, attribute_data))
@@ -470,7 +472,7 @@ class Server:
         return data
 
     def _get_attribute_data(self, xml_object: ET.Element, attribute: str) -> str | None:
-        logging.debug("Server._get_attribute_data: Try getting attribute '%s'", attribute)
+        LOGGER.debug("Server._get_attribute_data: Try getting attribute '%s'", attribute)
         attribute_data = xml_object.attrib.get(attribute)
         if attribute_data:
             return attribute_data
@@ -479,14 +481,14 @@ class Server:
         # 'OperState'   -> 'operState'
         # 'AmbientTemp' -> 'ambientTemp'
         attribute_lower = attribute[0].lower() + attribute[1:]
-        logging.debug(
+        LOGGER.debug(
             "Server._get_attribute_data: Try getting attribute '%s' (lower)", attribute_lower
         )
-        logging.debug("Server._get_attribute_data: Try getting attribute '%s'", attribute)
+        LOGGER.debug("Server._get_attribute_data: Try getting attribute '%s'", attribute)
         attribute_data = xml_object.attrib.get(attribute_lower)
         if attribute_data:
             return attribute_data
-        logging.debug("Server._get_attribute_data: nothing found")
+        LOGGER.debug("Server._get_attribute_data: nothing found")
         return None
 
     def _get_class_data(self, class_id: str) -> list[ET.Element]:
@@ -503,7 +505,7 @@ class Server:
 
         # find all entries recursivelly
         xml_objects = root.findall(".//%s" % class_id)
-        logging.debug("Server._get_class_data: Entries found: '%s'", xml_objects)
+        LOGGER.debug("Server._get_class_data: Entries found: '%s'", xml_objects)
         return xml_objects
 
     def _communicate(self, xml_obj: ET.Element) -> ET.Element:
@@ -521,7 +523,7 @@ class Server:
             "Content-Length": str(len(xml_string)),
             "Content-Type": 'text/xml; charset="utf-8"',
         }
-        logging.debug("Server._communicate: Sending XML string: '%s'", xml_string)
+        LOGGER.debug("Server._communicate: Sending XML string: '%s'", xml_string)
 
         try:
             if self._verify_ssl is False:
@@ -530,11 +532,11 @@ class Server:
                 self._url, headers=headers, data=xml_string, verify=self._verify_ssl
             )
         except Exception as e:
-            logging.debug("Server._communicate: PostError: '%r'", e)
+            LOGGER.debug("Server._communicate: PostError: '%r'", e)
             raise
 
         content = response.content
-        logging.debug(
+        LOGGER.debug(
             "Server._communicate: Got response content: '%s' (%s)", content, response.status_code
         )
 
@@ -543,7 +545,7 @@ class Server:
 
         errors = root.attrib.get("errorDescr")
         if errors:
-            logging.debug("Server._communicate: Errors found: '%s'", errors)
+            LOGGER.debug("Server._communicate: Errors found: '%s'", errors)
             if self.debug:
                 raise CommunicationException(errors)
         return root

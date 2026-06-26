@@ -26,6 +26,8 @@ from cmk.special_agents.v0_unstable.crash_reporting import create_agent_crash_du
 from cmk.utils.password_store import lookup as lookup_stored_passwords
 from cmk.utils.password_store.hack import resolve_password_hack
 
+LOGGER = logging.getLogger(__name__)
+
 
 class SectionManager:
     def __init__(self) -> None:
@@ -127,15 +129,15 @@ def _special_agent_main_core(
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
     logging.getLogger("vcr").setLevel(logging.WARNING)
-    logging.info("running file %s", __file__)
-    logging.info(
+    LOGGER.info("running file %s", __file__)
+    LOGGER.info(
         "using Python interpreter v%s at %s",
         ".".join(map(str, sys.version_info)),
         sys.executable,
     )
 
     # Don't log args here, it may contain secrets.
-    # logging.debug("args: %r", args.__dict__)
+    # LOGGER.debug("args: %r", args.__dict__)
 
     try:
         return main_fn(args)

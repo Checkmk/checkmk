@@ -19,6 +19,8 @@ import urllib3
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 from cmk.server_side_programs.v1_unstable import vcrtrace
 
+LOGGER = logging.getLogger(__name__)
+
 API_PATH = "webacs/api/v1/data/"
 REQUESTS = {
     "wifi_access_points": "AccessPoints.json?.full=true&.nocount=true&.maxResults=10000",
@@ -81,7 +83,7 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
             * https://developer.cisco.com/site/prime-infrastructure/documents/api-reference/rest-api-v3-9/v4/@id=rate-limiting-doc/#rate-limiting-config-doc
             * https://developer.cisco.com/site/prime-infrastructure/documents/api-reference/rest-api-v3-9/v4/@id=tutorials/ (see Paging section)
         """
-        logging.info("fetch data from url=%r", url)
+        LOGGER.info("fetch data from url=%r", url)
 
         auth = (
             (args.user, resolve_secret_option(args, PASSWORD_OPTION).reveal())
@@ -111,7 +113,7 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
 
     args = parse_arguments(argv)
     setup_logging(args.verbose)
-    logging.debug("cmd: argv=%r, turned into: %r", argv, args.__dict__)
+    LOGGER.debug("cmd: argv=%r, turned into: %r", argv, args.__dict__)
     try:
         url_prefix = "{}://{}{}/{}".format(
             "http" if args.no_tls else "https",

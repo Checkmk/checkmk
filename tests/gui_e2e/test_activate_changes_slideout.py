@@ -149,12 +149,12 @@ def test_activate_changes_slideout_distributed_setup(
         f"The site entry for remote site '{remote_site_wato_disabled.id}' is not selected!"
     )
 
-    logging.info("Check that total changes label is visible with correct text")
+    logger.info("Check that total changes label is visible with correct text")
     expect(slideout.total_changes_lbl, "The 'Total changes' label is not visible!").to_be_visible()
     count = slideout.total_changes_count()
     assert count == 30, f"The number of total changes is not correct! Shown: {count}, Expected: 30"
 
-    logging.info("Check that foreign changes label is visible with correct text")
+    logger.info("Check that foreign changes label is visible with correct text")
     expect(
         slideout.foreign_changes_lbl, "The 'Foreign changes' label is not visible!"
     ).to_be_visible()
@@ -164,15 +164,15 @@ def test_activate_changes_slideout_distributed_setup(
         f"The number of foreign changes is not correct! Shown: {count}, Expected: 30"
     )
 
-    logging.info("Deselect remote site")
+    logger.info("Deselect remote site")
     slideout.site_entry_checkbox(remote_site_entry).click()
     assert not slideout.is_site_entry_selected(remote_site_entry), (
         f"The site entry for remote site '{remote_site_wato_disabled.id}' is still selected!"
     )
-    logging.info("Activate changes only for central site")
+    logger.info("Activate changes only for central site")
     slideout.activate_changes_strict(expected_changes=10)
 
-    logging.info("Now activate changes for remote site")
+    logger.info("Now activate changes for remote site")
     expect(slideout.activate_changes_btn).to_be_enabled()
     expect(slideout.total_changes_lbl).to_contain_text("Changes: (20)")
     assert slideout.is_site_entry_selected(remote_site_entry), (

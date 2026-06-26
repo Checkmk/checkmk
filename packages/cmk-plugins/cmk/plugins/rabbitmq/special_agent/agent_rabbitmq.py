@@ -21,6 +21,8 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 
+LOGGER = logging.getLogger(__name__)
+
 PASSWORD_OPTION = "password"
 
 
@@ -139,7 +141,7 @@ def _handle_rabbitmq_connection(args, sections):
 
     for section in sections:
         if section.name not in args.sections:
-            logging.warning('Ignoring unknown section "%s"', section.name)
+            LOGGER.warning('Ignoring unknown section "%s"', section.name)
             continue
 
         section_data = _handle_request(f"{url_base}/{section.uri}", args.user, password)

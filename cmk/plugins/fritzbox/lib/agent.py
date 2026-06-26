@@ -44,6 +44,8 @@ import requests
 
 from cmk.server_side_programs.v1_unstable import vcrtrace
 
+LOGGER = logging.getLogger(__name__)
+
 __version__ = "3.0.0b1"
 
 USER_AGENT = f"checkmk-special-fritzbox-{__version__}"
@@ -185,7 +187,7 @@ def get_upnp_info(
 
     attrs = dict(re.findall("<([^>]+)>([^<]+)<[^>]+>", match.group(1), re.M | re.S))
 
-    logging.debug("Parsed:\n%s", pprint.pformat(attrs))
+    LOGGER.debug("Parsed:\n%s", pprint.pformat(attrs))
 
     return attrs, device, version
 

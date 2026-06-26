@@ -22,6 +22,8 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 
+LOGGER = logging.getLogger(__name__)
+
 PASSWORD_OPTION = "password"
 
 
@@ -33,7 +35,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     setup_logging(args.verbose)
 
     try:
-        logging.info("Start constructing connection settings")
+        LOGGER.info("Start constructing connection settings")
         jira = _handle_jira_connection(args)
     except RequestsConnectionError as connection_error:
         sys.stderr.write("Error connecting Jira server: %s\n" % connection_error)
@@ -72,13 +74,13 @@ def _handle_jira_connection(args: argparse.Namespace) -> JIRA:
 
 def _handle_request(args: argparse.Namespace, jira: JIRA) -> None:
     if args.project_workflows_project:
-        logging.info("Retrieving workflow data")
+        LOGGER.info("Retrieving workflow data")
         workflow_output = _handle_project(jira, args)
         if workflow_output is not None:
             sys.stdout.write("%s\n" % workflow_output)
 
     if args.jql_result:
-        logging.info("Retrieving custom service data")
+        LOGGER.info("Retrieving custom service data")
         custom_query_output = _handle_custom_query(jira, args)
         if custom_query_output is not None:
             sys.stdout.write("%s\n" % custom_query_output)

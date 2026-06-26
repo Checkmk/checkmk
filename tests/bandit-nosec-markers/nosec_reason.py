@@ -23,6 +23,8 @@ import tomllib
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
+LOGGER = logging.getLogger(__name__)
+
 DEFAULT_DOC = Path("bandit-exclusions.md")
 ID_LEN = 6
 BNS_PATTERN = rf"BNS:[0-9a-f]{{{ID_LEN}}}"
@@ -257,7 +259,7 @@ def find_nosecs(src_root: Path, excluded: Sequence[str]) -> Sequence[Nosec]:
         files.extend([str(src_root / f) for f in _format_output(packages_search.stdout)])
 
     exclusion = " excluding paths containing '%s'." % ", ".join(excluded) if excluded else ""
-    logging.info("Checking %d python files in '%s'%s", len(files), src_root, exclusion)
+    LOGGER.info("Checking %d python files in '%s'%s", len(files), src_root, exclusion)
 
     result = []
     for f in files:

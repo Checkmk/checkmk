@@ -62,6 +62,8 @@ from exchangelib import Message as EWSMessage
 from exchangelib import OAUTH2, OAuth2Credentials
 from exchangelib import protocol as ews_protocol
 
+LOGGER = logging.getLogger(__name__)
+
 
 # isort: on
 
@@ -154,8 +156,8 @@ class EWS(_Connection):
         self._account.protocol.close()
 
     def folders(self) -> Mapping[str, str]:
-        logging.debug("Account::msg_folder_root.tree():\n%s", self._account.msg_folder_root.tree())
-        logging.debug(
+        LOGGER.debug("Account::msg_folder_root.tree():\n%s", self._account.msg_folder_root.tree())
+        LOGGER.debug(
             "folder, [folder.children]:\n%s",
             "\n".join(
                 f"{folder} {[str(x.name) for x in folder.children]}"
@@ -227,8 +229,8 @@ class EWS(_Connection):
             datetime.fromtimestamp(before) if before else datetime.now()
         ).astimezone(tz)
 
-        logging.debug("fetch mails from %s (from %s)", dt_start, after)
-        logging.debug("fetch mails to   %s (from %s)", dt_end, before)
+        LOGGER.debug("fetch mails from %s (from %s)", dt_start, after)
+        LOGGER.debug("fetch mails to   %s (from %s)", dt_end, before)
 
         return [
             item.datetime_sent.timestamp()
@@ -525,7 +527,7 @@ class SMTP(_Connection):
         mail["Subject"] = subject
         mail["Date"] = email.utils.formatdate(localtime=True)
 
-        logging.debug(
+        LOGGER.debug(
             "send roundtrip mail with subject %r to %r from %r using %r",
             mail["Subject"],
             mail_to,
@@ -850,7 +852,7 @@ def make_fetch_connection(config: TRXConfig, timeout: int) -> EWS | POP3 | IMAP 
 
 
 def _make_connection(config: TRXConfig, timeout: int) -> POP3 | IMAP | EWS | GraphApi | SMTP:
-    logging.debug(
+    LOGGER.debug(
         "connecting to: %r %r %r %r",
         config.protocol,
         config.server,

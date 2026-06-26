@@ -55,6 +55,8 @@ from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, 
 
 from ._data_cache import DataCache
 
+LOGGER = logging.getLogger(__name__)
+
 if TYPE_CHECKING:
     from mypy_boto3_logs.client import CloudWatchLogsClient
 
@@ -358,14 +360,12 @@ class AWSConfig:
     def is_up_to_date(self) -> bool:
         old_config_hash = self._load_config_hash()
         if old_config_hash is None:
-            logging.info(
-                "AWSConfig: %s: New config: '%s'", self.hostname, self._current_config_hash
-            )
+            LOGGER.info("AWSConfig: %s: New config: '%s'", self.hostname, self._current_config_hash)
             self._write_config_hash()
             return False
 
         if old_config_hash != self._current_config_hash:
-            logging.info(
+            LOGGER.info(
                 "AWSConfig: %s: Config has changed: '%s' -> '%s'",
                 self.hostname,
                 old_config_hash,
@@ -374,7 +374,7 @@ class AWSConfig:
             self._write_config_hash()
             return False
 
-        logging.info(
+        LOGGER.info(
             "AWSConfig: %s: Config is up-to-date: '%s'", self.hostname, self._current_config_hash
         )
         return True
@@ -862,7 +862,7 @@ class AWSSection(DataCache):
         final_results = []
         for result in created_results:
             if not result.content:
-                logging.info("%s: Result is empty or None", self.name)
+                LOGGER.info("%s: Result is empty or None", self.name)
                 continue
 
             # In the related check plug-in aws.include we parse these results and
@@ -878,7 +878,7 @@ class AWSSection(DataCache):
         if my_cache_timestamp is None:
             return False
         if colleague_contents.cache_timestamp > my_cache_timestamp:
-            logging.info("Colleague data is newer than cache file %s", self._key)
+            LOGGER.info("Colleague data is newer than cache file %s", self._key)
             return False
         return True
 
@@ -925,7 +925,7 @@ class AWSSection(DataCache):
         try:
             return response[key]
         except KeyError:
-            logging.info("%s: KeyError; Available keys are %s", self.name, response)
+            LOGGER.info("%s: KeyError; Available keys are %s", self.name, response)
             return dflt
 
     def _validate_result_content(self, content: list | dict) -> None:
@@ -1127,7 +1127,7 @@ class CostsAndUsage(AWSSection):
         Data is updated at midnight, so the cache should not be older than the day.
         """
         cache_interval = int(get_seconds_since_midnight(NOW))
-        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
     @property
@@ -1175,7 +1175,7 @@ class ReservationUtilization(AWSSection):
         Data is updated at midnight, so the cache should not be older than the day.
         """
         cache_interval = int(get_seconds_since_midnight(NOW))
-        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
     @property
@@ -1207,7 +1207,7 @@ class ReservationUtilization(AWSSection):
             response = self._client.get_reservation_utilization(**params)
         # NOTE: The suppression below is needed because of BaseClientExceptions.__getattr__ magic.
         except self._client.exceptions.DataUnavailableException:  # type: ignore[misc]
-            logging.warning("ReservationUtilization: No data available")
+            LOGGER.warning("ReservationUtilization: No data available")
             return []
         return self._get_response_content(response, "UtilizationsByTime")
 
@@ -1426,12 +1426,12 @@ class EC2Limits(AWSSectionLimits):
                 continue
             inst_type = res_inst["InstanceType"]
             if inst_type not in AWS_EC2_INST_TYPES:
-                logging.info("%s: Unknown instance type '%s'", self.name, inst_type)
+                LOGGER.info("%s: Unknown instance type '%s'", self.name, inst_type)
                 continue
 
             inst_az = res_inst.get("AvailabilityZone")
             if not inst_az:
-                logging.info("AvailabilityZone not available")
+                LOGGER.info("AvailabilityZone not available")
                 continue
             res_limits.setdefault(inst_az, {})[inst_type] = (
                 res_limits.get(inst_az, {}).get(inst_type, 0) + res_inst["InstanceCount"]
@@ -1940,7 +1940,7 @@ class EBSLimits(AWSSectionLimits):
             elif vol_type == "st1":
                 vol_storage_st1 += vol_size
             else:
-                logging.info("%s: Unhandled volume type: '%s'", self.name, vol_type)
+                LOGGER.info("%s: Unhandled volume type: '%s'", self.name, vol_type)
 
         # These are total limits and not instance specific
         # Space values are in TiB.
@@ -2271,7 +2271,7 @@ class S3BucketHelper:
             except client.exceptions.ClientError as e:
                 # An error occurred (AccessDenied) when calling the GetBucketLocation operation:
                 # Access Denied
-                logging.info("S3BucketHelper/%s: Access denied, %s", bucket_name, e)
+                LOGGER.info("S3BucketHelper/%s: Access denied, %s", bucket_name, e)
                 continue
 
             if response:
@@ -2295,7 +2295,7 @@ class S3Limits(AWSSectionLimits):
         Data is updated at midnight, so the cache should not be older than the day.
         """
         cache_interval = int(get_seconds_since_midnight(NOW))
-        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
 
         return cache_interval
 
@@ -2346,7 +2346,7 @@ class S3Summary(AWSSection):
         Data is updated at midnight, so the cache should not be older than the day.
         """
         cache_interval = int(get_seconds_since_midnight(NOW))
-        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
     @property
@@ -2369,7 +2369,7 @@ class S3Summary(AWSSection):
                 response = self._client.get_bucket_tagging(Bucket=bucket_name)
             except self._client.exceptions.ClientError as e:
                 # If there are no tags attached to a bucket we receive a 'ClientError'
-                logging.info("%s/%s: No tags set, %s", self.name, bucket_name, e)
+                LOGGER.info("%s/%s: No tags set, %s", self.name, bucket_name, e)
                 response = {}
 
             tagging = self._get_response_content(response, "TagSet")
@@ -2437,7 +2437,7 @@ class S3(AWSSectionCloudwatch):
         Data is updated at midnight, so the cache should not be older than the day.
         """
         cache_interval = int(get_seconds_since_midnight(NOW))
-        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
     @property
@@ -2607,7 +2607,7 @@ class GlacierLimits(AWSSectionLimits):
         Data is updated at midnight, so the cache should not be older than the day.
         """
         cache_interval = int(get_seconds_since_midnight(NOW))
-        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
     @property
@@ -2663,7 +2663,7 @@ class Glacier(AWSSection):
         Data is updated at midnight, so the cache should not be older than the day.
         """
         cache_interval = int(get_seconds_since_midnight(NOW))
-        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
     @property
@@ -2693,7 +2693,7 @@ class Glacier(AWSSection):
                 response = self._client.list_tags_for_vault(vaultName=vault_name)
             except botocore.exceptions.ClientError as e:
                 # If there are no tags attached to a bucket we receive a 'ClientError'
-                logging.warning("%s/%s: Exception, %s", self.name, vault_name, e)
+                LOGGER.warning("%s/%s: Exception, %s", self.name, vault_name, e)
                 response = {}
 
             tags = self._get_response_content(response, "Tags")
@@ -3739,7 +3739,7 @@ class RDSLimits(AWSSectionLimits):
             quota_name = limit["AccountQuotaName"]
             key, title = AWSRDSLimitNameMap.get(quota_name, (None, None))
             if key is None or title is None:
-                logging.info("%s: Unhandled account quota name: '%s'", self.name, quota_name)
+                LOGGER.info("%s: Unhandled account quota name: '%s'", self.name, quota_name)
                 continue
             self._add_limit(
                 "",
@@ -5268,7 +5268,7 @@ class LambdaCloudwatchInsights(AWSSection):
             response_results = client.get_query_results(queryId=query_id)  # type: ignore[assignment]
             if datetime.now().timestamp() - query_start >= timeout_seconds:
                 client.stop_query(queryId=query_id)
-                logging.error(
+                LOGGER.error(
                     "LambdaCloudwatchInsights: query_results failed"
                     " or timed out with the following results: %s ",
                     response_results["results"],
@@ -6598,7 +6598,7 @@ class AWSSections(abc.ABC):
             # In the second case we get an exception raised by botocore
             # during we execute an operation, eg. cloudwatch.get_metrics(**kwargs)-> None:
             # - botocore.exceptions.EndpointConnectionError
-            logging.info("Invalid region name or client key %s: %s", client_key, e)
+            LOGGER.info("Invalid region name or client key %s: %s", client_key, e)
             raise
 
     def run(self, use_cache: bool = True) -> None:
@@ -6609,11 +6609,11 @@ class AWSSections(abc.ABC):
             try:
                 section_result = section.run(use_cache=use_cache)
             except AssertionError as e:
-                logging.info(e)
+                LOGGER.info(e)
                 if self._debug:
                     raise
             except Exception as e:
-                logging.info("%s: %s", section.__class__.__name__, e)
+                LOGGER.info("%s: %s", section.__class__.__name__, e)
                 if self._debug:
                     raise
                 exceptions.append(e)
@@ -6678,16 +6678,16 @@ class AWSSections(abc.ABC):
 
     def _write_section_results(self, results: Results) -> None:
         if not results:
-            logging.info("%s: No results or cached data", self.__class__.__name__)
+            LOGGER.info("%s: No results or cached data", self.__class__.__name__)
             return
 
         for (section_name, cache_timestamp, section_interval), result in results.items():
             if not result:
-                logging.info("%s: No results", section_name)
+                LOGGER.info("%s: No results", section_name)
                 continue
 
             if not isinstance(result, list):
-                logging.info(
+                LOGGER.info(
                     "%s: Section result must be of type 'list' containing 'AWSSectionResults'",
                     section_name,
                 )
@@ -7781,7 +7781,7 @@ def agent_aws_main(args: argparse.Namespace) -> int:
     s3_limits_distributor = ResultDistributorS3Limits()
 
     if regional_services and not args.regions:
-        logging.error(
+        LOGGER.error(
             (
                 "You have to specify a region for the services: %s."
                 " Otherwise data for these services cannot be fetched."
@@ -7814,7 +7814,7 @@ def agent_aws_main(args: argparse.Namespace) -> int:
                 if args.debug:
                     raise
             except Exception as e:
-                logging.info(e)
+                LOGGER.info(e)
                 has_exceptions = True
                 if args.debug:
                     raise

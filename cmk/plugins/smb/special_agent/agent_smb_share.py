@@ -28,6 +28,8 @@ from smb.SMBConnection import SMBConnection
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
+LOGGER = logging.getLogger(__name__)
+
 __version__ = "3.0.0b1"
 
 AGENT = "smb_share"
@@ -238,13 +240,13 @@ def write_section(all_files: Generator[tuple[str, set[File]]]) -> None:
 def connect(
     username: str, password: Secret[str], remote_name: str, ip_address: str
 ) -> Generator[SMBConnection]:
-    logging.debug("Creating SMB connection")
+    LOGGER.debug("Creating SMB connection")
     conn = SMBConnection(
         username, password.reveal(), socket.gethostname(), remote_name, is_direct_tcp=True
     )
 
     try:
-        logging.debug("Connecting to %s on port 445", ip_address)
+        LOGGER.debug("Connecting to %s on port 445", ip_address)
         success = conn.connect(ip_address, 445)
     except (OSError, NotConnectedError):
         raise SMBShareAgentError(
@@ -261,7 +263,7 @@ def connect(
             "Connection to the remote host was declined. Check your credentials."
         )
 
-    logging.debug("Connection successfully established")
+    LOGGER.debug("Connection successfully established")
 
     try:
         yield conn
@@ -278,7 +280,7 @@ def smb_share_agent(args: argparse.Namespace) -> int:
             args.ip_address,
         ) as conn:
             all_files = get_all_shared_files(conn, args.hostname, args.patterns, args.recursive)
-            logging.debug("Querying share files and writing fileinfo section")
+            LOGGER.debug("Querying share files and writing fileinfo section")
             write_section(all_files)
     except SMBShareAgentError as err:
         sys.stderr.write(str(err))
@@ -286,7 +288,7 @@ def smb_share_agent(args: argparse.Namespace) -> int:
     except OperationFailure as err:
         sys.stderr.write(str(err.args[0]))
         return 1
-    logging.debug("Agent finished successfully")
+    LOGGER.debug("Agent finished successfully")
     return 0
 
 

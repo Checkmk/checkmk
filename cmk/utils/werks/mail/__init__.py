@@ -441,14 +441,14 @@ def main(argparse_args: argparse.Namespace) -> None:
             try:
                 werk = load_werk(file_content=change.file.content, file_name=change.file.name)
             except Exception:
-                logging.exception(
+                logger.exception(
                     "Werk parsing failed for werk %s on branch %s on commit %s, will try to load fixup",
                     change.file.path,
                     args.branch,
                     werk_commit.commit,
                 )
                 werk = load_werk_fixup(werk_commit, change, repo, args)
-                logging.info("Successfully loaded fixup")
+                logger.info("Successfully loaded fixup")
 
             change_with_werk.append((change, werk))
 

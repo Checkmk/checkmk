@@ -41,7 +41,7 @@ def test_user_errors_iter() -> None:
     errors = UserErrors()
     errors.add(MKUserError(None, "abc"))
     errors.add(MKUserError("ding", "aaa"))
-    assert sorted(list(errors.values())) == sorted(["aaa", "abc"])
+    assert sorted(errors.values()) == sorted(["aaa", "abc"])
 
 
 def test_user_errors_convert_exception_to_str() -> None:

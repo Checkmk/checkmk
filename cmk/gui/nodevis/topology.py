@@ -1394,7 +1394,7 @@ def _build_children_hierarchy(
         for i in range(0, max(nodes_by_depth.keys()) + 1):
             # logger.warning(f"CHECKING LEVEL {i}")
             nodes_of_depth = nodes_by_depth[i]
-            for node_id, node_result in sorted(list(nodes_of_depth.items())):
+            for node_id, node_result in sorted(nodes_of_depth.items()):
                 all_other_ids = {
                     x
                     for x in node_result.incoming.union(node_result.outgoing)

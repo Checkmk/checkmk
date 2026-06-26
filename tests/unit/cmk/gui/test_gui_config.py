@@ -154,7 +154,7 @@ def test_default_config_from_plugins() -> None:
     ]
 
     default_config = cmk.gui.config.get_default_config()
-    assert sorted(list(default_config.keys())) == sorted(expected)
+    assert sorted(default_config.keys()) == sorted(expected)
 
     default_config2 = asdict(cmk.gui.config.make_config_object(default_config))
     assert sorted(default_config2.keys()) == sorted(expected)

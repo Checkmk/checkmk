@@ -27,4 +27,4 @@ def test_registered_pagetype_topics() -> None:
     ]
 
     with application_and_request_context():
-        assert sorted(list(PagetypeTopics.builtin_pages().keys())) == sorted(expected)
+        assert sorted(PagetypeTopics.builtin_pages().keys()) == sorted(expected)

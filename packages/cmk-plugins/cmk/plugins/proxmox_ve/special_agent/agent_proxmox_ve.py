@@ -245,17 +245,15 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
 
     backup_data = {
         # generate list of all VMs IDs - both lxc and qemu
-        "vmids": sorted(list(all_vms.keys())),
+        "vmids": sorted(all_vms.keys()),
         # look up scheduled backups and extract assigned VMIDs
         "scheduled_vmids": sorted(
-            list(
-                {
-                    vmid
-                    for backup in data["cluster"]["backup"]
-                    if "vmid" in backup and backup["enabled"] == "1"
-                    for vmid in backup["vmid"].split(",")
-                }
-            )
+            {
+                vmid
+                for backup in data["cluster"]["backup"]
+                if "vmid" in backup and backup["enabled"] == "1"
+                for vmid in backup["vmid"].split(",")
+            }
         ),  #
         # add data of actually logged VMs
         "logged_vmids": logged_backup_data,
@@ -326,7 +324,7 @@ def agent_proxmox_ve_main(args: argparse.Namespace) -> int:
 
     LOGGER.info("all VMs:          %r", backup_data["vmids"])
     LOGGER.info("expected backups: %r", backup_data["scheduled_vmids"])
-    LOGGER.info("actual backups:   %r", sorted(list(logged_backup_data.keys())))
+    LOGGER.info("actual backups:   %r", sorted(logged_backup_data.keys()))
     LOGGER.info("snaptimes:        %r", snapshot_data)
 
     LOGGER.info("Write agent output..")

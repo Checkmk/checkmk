@@ -48,7 +48,7 @@ def test_discover_jira_workflow(
 ) -> None:
     """Test discovery function for jira_workflow check."""
     parsed = parse_jira_workflow(string_table)
-    result = sorted(list(discover_jira_workflow(parsed)), key=lambda s: s.item or "")
+    result = sorted(discover_jira_workflow(parsed), key=lambda s: s.item or "")
     expected = sorted(expected_discoveries, key=lambda s: s.item or "")
     assert result == expected
 

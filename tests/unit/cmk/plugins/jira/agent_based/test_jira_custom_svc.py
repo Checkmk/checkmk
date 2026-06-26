@@ -136,7 +136,7 @@ def test_discover_jira_custom_svc(
 ) -> None:
     """Test discovery function for jira_custom_svc check."""
     parsed = parse_jira_custom_svc(string_table)
-    result = sorted(list(discover_jira_custom_svc(parsed)), key=lambda s: s.item or "")
+    result = sorted(discover_jira_custom_svc(parsed), key=lambda s: s.item or "")
     expected = sorted(expected_discoveries, key=lambda s: s.item or "")
     assert result == expected
 

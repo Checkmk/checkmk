@@ -116,7 +116,7 @@ def test_parse_arguments() -> None:
     ],
 )
 def test_get_affected_regions(entry: FeedParserDict, expected_result: set[str]) -> None:
-    all_regions = sorted(list(AZURE_REGIONS.values()), key=len, reverse=True)
+    all_regions = sorted(AZURE_REGIONS.values(), key=len, reverse=True)
     assert get_affected_regions(all_regions, entry) == expected_result
 
 

@@ -442,7 +442,7 @@ class TagConfig:
             if topic := aux_tag.topic or _("Tags"):
                 names.add((topic, topic))
 
-        return sorted(list(names), key=lambda x: x[1])
+        return sorted(names, key=lambda x: x[1])
 
     def get_tag_groups_by_topic(self) -> Sequence[tuple[str, Sequence[TagGroup]]]:
         by_topic: dict[str, list[TagGroup]] = {}

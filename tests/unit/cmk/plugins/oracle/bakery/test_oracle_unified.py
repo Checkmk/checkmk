@@ -746,10 +746,8 @@ expected_yaml_lines_wallet_auth = [
 
 def _process(config: GuiConfig) -> Sequence[Plugin | PluginConfig | SystemBinary | SystemConfig]:
     return sorted(
-        list(
-            bakery_plugin_oracle.files_function(
-                bakery_plugin_oracle.parameter_parser(config.model_dump())
-            )
+        bakery_plugin_oracle.files_function(
+            bakery_plugin_oracle.parameter_parser(config.model_dump())
         ),
         key=lambda x: str(x.base_os),
     )

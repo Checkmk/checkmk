@@ -907,7 +907,7 @@ def main_grep(args: argparse.Namespace) -> None:
         if not one_kw_didnt_match:
             list_werk(werk)
             if args.verbose:
-                for x in sorted(list(bodylines)):
+                for x in sorted(bodylines):
                     sys.stdout.write(f"  {lines[x]}\n")
 
 

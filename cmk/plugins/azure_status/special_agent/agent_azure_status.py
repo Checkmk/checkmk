@@ -104,7 +104,7 @@ def get_affected_regions(all_regions: Iterable[str], entry: FeedParserDict) -> s
 def get_azure_issues(
     entries: Iterable[FeedParserDict], selected_regions: list[str]
 ) -> Iterator[AzureIssue]:
-    all_regions = sorted(list(AZURE_REGIONS.values()), key=len, reverse=True)
+    all_regions = sorted(AZURE_REGIONS.values(), key=len, reverse=True)
 
     for entry in entries:
         affected_regions = get_affected_regions(all_regions, entry)

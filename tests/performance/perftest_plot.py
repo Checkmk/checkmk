@@ -1283,7 +1283,7 @@ class PerftestPlot:
             ]
 
         job_names = (
-            sorted(list(set(self.args.job_names)))
+            sorted(set(self.args.job_names))
             if self.args.job_names
             else baseline_jobs(self.args.baseline_offset)
         )

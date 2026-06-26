@@ -350,7 +350,7 @@ def test_registered_painters() -> None:
 
 @pytest.fixture(name="service_painter_idents")
 def fixture_service_painter_names() -> list[str]:
-    return sorted(list(painters_of_datasource("services", UserPermissions({}, {}, {}, [])).keys()))
+    return sorted(painters_of_datasource("services", UserPermissions({}, {}, {}, [])).keys())
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")

@@ -229,7 +229,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
                     if topic is None:
                         topic = instance.default_bookmark_topic()
                     topics.add(topic)
-        return [(t, t) for t in sorted(list(topics))]
+        return [(t, t) for t in sorted(topics)]
 
     @classmethod
     def validate_url(cls, value: str, varprefix: str) -> None:

@@ -260,7 +260,7 @@ def get_linked_visual_request_vars(
             visual["name"],
             info_keys=tuple(visual_info_registry.keys()),
             single_info_keys=tuple(visual["single_infos"]),
-            filter_names=tuple(list(dict(vars_values).keys())),
+            filter_names=tuple(dict(vars_values).keys()),
         )
 
         if add_site_hint and request.var("site"):

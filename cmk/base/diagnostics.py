@@ -592,7 +592,8 @@ class DiagnosticsDump:
             except DiagnosticsElementInfo as e:
                 self._logger.info(str(e))
             except DiagnosticsElementWarning as e:
-                self._logger.warn(str(e))
+                # ConsoleLogger.warn() is a custom method, not logging.Logger.warn().
+                self._logger.warn(str(e))  # noqa: G010
             except DiagnosticsElementError as e:
                 # ConsoleLogger has no .exception(); keep .error() (mirrors the Info/Warning
                 # handlers above and logs the element message at its level).

@@ -27,6 +27,7 @@ select = [
   "G002",   # flake8-logging-format: %-format in logging call
   "G003",   # flake8-logging-format: string concatenation in logging call
   "G004",   # flake8-logging-format: f-string in logging call
+  "G010",   # flake8-logging-format: warn() instead of warning()
   "G201",   # flake8-logging-format: use logger.exception() instead of logger.error(..., exc_info=True)
   "G202",   # flake8-logging-format: redundant exc_info on logger.exception()
   "N804",   # pep8-naming: invalid-first-argument-name-for-class-method (cls)

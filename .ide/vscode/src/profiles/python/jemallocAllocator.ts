@@ -7,7 +7,6 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { resolveVariables } from '../../core/config'
 import { error, log, notifyError, notifyInfo, notifyWarn } from '../../core/log'
 import { safeExecAsync } from '../../core/shell'
 import { killAllDmypyDaemons } from './mypyConfig'
@@ -170,24 +169,6 @@ function defaultDmypyPath(wsFolder: vscode.WorkspaceFolder): string {
   return path.join(wsFolder.uri.fsPath, '.venv', 'bin', 'dmypy')
 }
 
-/** Decide whether a `mypy.dmypyExecutable` value is one of the Checkmk
- *  default forms (and therefore safe to take over when switching to jemalloc
- *  mode), versus a user-managed custom path we should leave alone.
- *
- *  Accepted forms:
- *    - `${cmk-ext:workspaceFolder}/.venv/bin/dmypy` — current Checkmk bundled default.
- *    - `${workspaceFolder}/.venv/bin/dmypy` — legacy form still present in
- *      existing `.code-workspace` files from before the switch to `cmk-ext:`.
- *    - `<workspace>/.venv/bin/dmypy` — the resolved absolute path written
- *      after `resolveVariables` expands the bundled default.
- *  We compare strings only; we do not re-expand VS Code's native variables. */
-export function isDefaultDmypyValue(value: string, wsFolder: vscode.WorkspaceFolder): boolean {
-  const resolvedByExt = resolveVariables(value) as string
-  return (
-    resolvedByExt === defaultDmypyPath(wsFolder) || value === '${workspaceFolder}/.venv/bin/dmypy'
-  )
-}
-
 function readAllocatorMode(): AllocatorMode {
   const v = vscode.workspace.getConfiguration().get<string>(SETTING_ALLOCATOR, 'default')
   return v === 'jemalloc' ? 'jemalloc' : 'default'
@@ -277,10 +258,10 @@ function deleteWrapperIfPresent(wrapperPath: string): void {
 /** Reconcile `mypy.dmypyExecutable` to match `cmk.mypy.allocator`. Idempotent.
  *  - `"jemalloc"` + probe hit → write wrapper, point dmypyExecutable at it.
  *  - `"jemalloc"` + probe miss → notify once, leave setting armed.
- *  - `"default"` → release ownership (unset dmypyExecutable if it's ours),
- *    delete wrapper.
- *  Never overwrites a manual `mypy.dmypyExecutable` override — if the current
- *  value is neither unset nor our own wrapper path, we log and skip. */
+ *  - `"default"` → restore the bundled venv default, delete wrapper.
+ *  The extension owns `mypy.dmypyExecutable`: it unconditionally overrides any
+ *  pre-existing value (including a custom path or one carried over from before
+ *  the extension was installed) so the venv-pinned dmypy is always used. */
 export async function applyAllocatorSetting(
   context: vscode.ExtensionContext,
   wsFolder: vscode.WorkspaceFolder
@@ -288,37 +269,24 @@ export async function applyAllocatorSetting(
   const wrapperPath = wrapperPathFor(context)
   const mode = readAllocatorMode()
   const current = readCurrentDmypyExecutable(wsFolder)
-  const weOwn =
-    current === undefined || current === wrapperPath || isDefaultDmypyValue(current, wsFolder)
 
   if (mode === 'default') {
     // Restore the bundled defaults instead of leaving the keys unset — matangover
     // falls back to `python -m mypy.dmypy` when `mypy.dmypyExecutable` is empty,
-    // which breaks the venv-pinned setup. Only overwrite when we owned the prior
-    // value (our wrapper, the bundled default literal, or unset) — never clobber
-    // a custom user-managed dmypy path.
-    if (weOwn) {
-      const previousDmypy = current
-      const previousRun = vscode.workspace
-        .getConfiguration('mypy', wsFolder)
-        .get<boolean>(RUN_USING_INTERPRETER_SETTING)
-      await updateDmypyExecutable(wsFolder, defaultDmypyPath(wsFolder))
-      await updateRunUsingInterpreter(wsFolder, true)
-      log(
-        `cmk.mypy.allocator=default — restored mypy.dmypyExecutable=${defaultDmypyPath(wsFolder)}, runUsingActiveInterpreter=true`
-      )
-      if (previousDmypy === wrapperPath || previousRun === false) {
-        await killAllDmypyDaemons()
-      }
+    // which breaks the venv-pinned setup.
+    const target = defaultDmypyPath(wsFolder)
+    const previousRun = vscode.workspace
+      .getConfiguration('mypy', wsFolder)
+      .get<boolean>(RUN_USING_INTERPRETER_SETTING)
+    if (current !== target) await updateDmypyExecutable(wsFolder, target)
+    if (previousRun !== true) await updateRunUsingInterpreter(wsFolder, true)
+    log(
+      `cmk.mypy.allocator=default — set mypy.dmypyExecutable=${target}, runUsingActiveInterpreter=true`
+    )
+    if (current === wrapperPath || previousRun === false) {
+      await killAllDmypyDaemons()
     }
     deleteWrapperIfPresent(wrapperPath)
-    return
-  }
-
-  if (!weOwn) {
-    log(
-      `cmk.mypy.allocator=jemalloc but mypy.dmypyExecutable is set to a custom path (${current}) — leaving user override in place`
-    )
     return
   }
 

@@ -129,43 +129,6 @@ describe('detectJemallocPathAsync', () => {
   })
 })
 
-describe('isDefaultDmypyValue', () => {
-  const wsFolder = { uri: { fsPath: '/ws' } } as never
-
-  beforeEach(() => {
-    vi.resetModules()
-  })
-  afterEach(() => {
-    vi.doUnmock('../../../src/core/config')
-  })
-
-  it('returns true for the cmk-ext placeholder form', async () => {
-    vi.doMock('../../../src/core/config', () => ({
-      resolveVariables: (v: string) => v.replace('${cmk-ext:workspaceFolder}', '/ws')
-    }))
-    const { isDefaultDmypyValue } = await import('../../../src/profiles/python/jemallocAllocator')
-    expect(isDefaultDmypyValue('${cmk-ext:workspaceFolder}/.venv/bin/dmypy', wsFolder)).toBe(true)
-  })
-
-  it('returns true for the resolved absolute default', async () => {
-    vi.doMock('../../../src/core/config', () => ({ resolveVariables: (v: string) => v }))
-    const { isDefaultDmypyValue } = await import('../../../src/profiles/python/jemallocAllocator')
-    expect(isDefaultDmypyValue('/ws/.venv/bin/dmypy', wsFolder)).toBe(true)
-  })
-
-  it('returns true for the legacy ${workspaceFolder} form (still present in older .code-workspace files)', async () => {
-    vi.doMock('../../../src/core/config', () => ({ resolveVariables: (v: string) => v }))
-    const { isDefaultDmypyValue } = await import('../../../src/profiles/python/jemallocAllocator')
-    expect(isDefaultDmypyValue('${workspaceFolder}/.venv/bin/dmypy', wsFolder)).toBe(true)
-  })
-
-  it('returns false for an unrelated custom path', async () => {
-    vi.doMock('../../../src/core/config', () => ({ resolveVariables: (v: string) => v }))
-    const { isDefaultDmypyValue } = await import('../../../src/profiles/python/jemallocAllocator')
-    expect(isDefaultDmypyValue('/opt/custom/dmypy', wsFolder)).toBe(false)
-  })
-})
-
 describe('installCommandForPlatformAsync', () => {
   beforeEach(() => {
     vi.resetModules()

@@ -8,8 +8,8 @@ from __future__ import annotations
 import abc
 import enum
 from abc import ABC, abstractmethod
-from collections.abc import Buffer, Iterator, Sequence
-from typing import final, Literal, Protocol, Self, SupportsBytes
+from collections.abc import Sequence
+from typing import final, Literal, Self
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.cpu_tracking import Snapshot
@@ -84,77 +84,6 @@ class Fetcher[TRawData](abc.ABC):
     def _fetch_from_io(self, mode: Mode) -> TRawData:
         """Override this method to contact the source and return the raw data."""
         raise NotImplementedError()
-
-
-class Serializer(Protocol):
-    """Base class for serializable data.
-
-    Implementations have the following requirements:
-
-    * They must be immutable.
-    * If both `Serializer` and `Deserializer` are defined, then
-    `bytes(Serializer(Deserializer.from_bytes(x))) == x` must hold
-    for any valid `x`.
-
-
-    Note:
-        This should be usable as a type. Do not add any
-        concrete implementation here.
-    """
-
-    def __eq__(self, other: object) -> bool:
-        # Test both `Buffer` and `SupportsBytes`.
-        #
-        # `memoryview` doesn't have a `__bytes__()` method and therefore
-        # tests false to `isinstance(..., SupportsBytes)` eventhough
-        # `bytes(memoryview(b"hello"))` works as expected.
-        if isinstance(other, Buffer | SupportsBytes):
-            return bytes(self) == bytes(other)
-        return NotImplemented
-
-    def __hash__(self) -> int:
-        return hash(bytes(self))
-
-    def __add__(self, other: Buffer | SupportsBytes) -> bytes:
-        return bytes(self) + bytes(other)
-
-    def __radd__(self, other: Buffer | SupportsBytes) -> bytes:
-        return bytes(other) + bytes(self)
-
-    def __len__(self) -> int:
-        return sum(len(memoryview(b)) for b in self)
-
-    def __bytes__(self) -> bytes:
-        return b"".join(self)
-
-    @abc.abstractmethod
-    def __iter__(self) -> Iterator[Buffer]:
-        raise NotImplementedError
-
-
-class Deserializer(Protocol):
-    """Base class for deserializable data.
-
-    Implementations have the same requirements as Serializer.
-
-    Note:
-        This should be usable as a type. Do not add any
-        concrete implementation here.
-
-    """
-
-    @classmethod
-    @abc.abstractmethod
-    def from_bytes(cls, data: Buffer) -> Self:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def __eq__(self, other: object) -> bool:
-        return NotImplemented
-
-    @abc.abstractmethod
-    def __hash__(self) -> int:
-        raise NotImplementedError
 
 
 class FetcherError(Exception):

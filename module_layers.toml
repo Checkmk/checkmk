@@ -673,7 +673,11 @@ allows = ["@ccc", "@crypto", "cmk.gui", "cmk.utils"]
 allows = ["@ccc", "@livestatus_client", "@mkp_tool", "cmk.events", "cmk.utils"]
 
 [components."cmk.checkengine.agent_protocol"]
-allows = ["@crypto", "cmk.checkengine.fetcher"]
+allows = [
+  "@crypto",
+  "cmk.checkengine.fetcher",
+  "cmk.checkengine.helper_interface",
+]
 
 [components."cmk.checkengine.fetchers"]
 allows = [

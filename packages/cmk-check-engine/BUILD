@@ -63,6 +63,7 @@ py_library(
         "cmk/checkengine/helper_interface/__init__.py",
         "cmk/checkengine/helper_interface/_agentdatatype.py",
         "cmk/checkengine/helper_interface/_crashreporting.py",
+        "cmk/checkengine/helper_interface/_serialization.py",
         "cmk/checkengine/helper_interface/_source_info.py",
     ],
     data = ["cmk/checkengine/helper_interface/py.typed"],

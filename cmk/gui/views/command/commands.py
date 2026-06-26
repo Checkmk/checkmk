@@ -1143,13 +1143,12 @@ def command_acknowledge_action(
         if "aggr_tree" in row:  # BI mode
             commands: list[CommandSpec] = []
             for site, host, service in _find_all_leaves(row["aggr_tree"]):
-                if service:
-                    spec = f"{host};{service}"
-                    cmdtag = "SVC"
-                else:
-                    spec = host
-                    cmdtag = "HOST"
-                commands.append((site, make_command_ack(spec, cmdtag)))
+                cmd = (
+                    make_command_ack(f"{host};{service}", "SVC")
+                    if service
+                    else make_command_ack(host, "HOST")
+                )
+                commands.append((site, cmd))
         else:
             commands = [make_command_ack(spec, cmdtag)]
 
@@ -1225,13 +1224,12 @@ def command_remove_acknowledgements_action(
     if "aggr_tree" in row:  # BI mode
         commands: list[CommandSpec] = []
         for site, host, service in _find_all_leaves(row["aggr_tree"]):
-            if service:
-                spec = f"{host};{service}"
-                cmdtag = "SVC"
-            else:
-                spec = host
-                cmdtag = "HOST"
-            commands.append((site, make_command_rem(spec, cmdtag)))
+            cmd = (
+                make_command_rem(f"{host};{service}", "SVC")
+                if service
+                else make_command_rem(host, "HOST")
+            )
+            commands.append((site, cmd))
     else:
         commands = [make_command_rem(spec, cmdtag)]
 

@@ -18,6 +18,7 @@ py_library(
     srcs = [
         "__init__.py",
         "client.py",
+        "logging.py",
         "types.py",
     ] + glob([
         "backends/*.py",

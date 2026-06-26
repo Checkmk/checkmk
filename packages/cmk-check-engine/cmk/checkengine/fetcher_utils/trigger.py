@@ -14,9 +14,9 @@ from cmk.ccc import debug
 from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.version import general_version_infos_from_env
-from cmk.checkengine.fetcher import Fetcher, FetcherError, Mode
+from cmk.checkengine.fetcher import DeserializationContext, Fetcher, FetcherError, Mode
 from cmk.checkengine.filecache import FileCache
-from cmk.checkengine.helper_interface import create_fetcher_crash_dump
+from cmk.checkengine.helper_interface import create_fetcher_crash_dump, JsonSerializable
 
 from .secrets import FetcherSecrets
 
@@ -28,7 +28,7 @@ __all__ = [
 _TRawData = TypeVar("_TRawData", bound=Sized)
 
 
-class FetcherTrigger(abc.ABC):
+class FetcherTrigger(JsonSerializable[Mapping[str, str], DeserializationContext]):
     def __init__(self, omd_root: Path) -> None:
         self.omd_root: Final = omd_root
 
@@ -81,20 +81,6 @@ class FetcherTrigger(abc.ABC):
     ) -> result.Result[_TRawData, Exception]:
         raise NotImplementedError()
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, FetcherTrigger):
-            return NotImplemented
-        return type(self) is type(other) and self.serialized_params() == other.serialized_params()
-
-    @abc.abstractmethod
-    def serialized_params(self) -> Mapping[str, str]:
-        raise NotImplementedError()
-
-    @classmethod
-    @abc.abstractmethod
-    def from_params(cls, params: Mapping[str, str]) -> Self:
-        raise NotImplementedError()
-
 
 class FetcherTriggerFactory(Protocol):
     def __call__(self, relay_id: str | None, trusted_ca_file: Path) -> FetcherTrigger: ...
@@ -110,10 +96,9 @@ class PlainFetcherTrigger(FetcherTrigger):
             return fetcher.fetch(mode)
 
     def serialized_params(self) -> Mapping[str, str]:
-        """Return an empty mapping as there are no parameters to serialize."""
         return {"omd_root": str(self.omd_root)}
 
     @classmethod
-    def from_params(cls, params: Mapping[str, str]) -> Self:
+    def from_params(cls, params: Mapping[str, str], _ctx: DeserializationContext) -> Self:
         """Create a PlainFetcherTrigger from serialized parameters."""
         return cls(omd_root=Path(params["omd_root"]))

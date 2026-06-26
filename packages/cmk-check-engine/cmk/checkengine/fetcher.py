@@ -9,6 +9,8 @@ import abc
 import enum
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from dataclasses import dataclass
+from pathlib import Path
 from typing import final, Literal, Self
 
 import cmk.ccc.resulttype as result
@@ -16,9 +18,24 @@ from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.helper_interface import AgentRawData, SourceInfo
-from cmk.checkengine.snmplib import SNMPRawData
+from cmk.checkengine.snmplib import SNMPPluginStore, SNMPRawData
 
-__all__ = ["FetcherFunction"]
+__all__ = ["FetcherFunction", "DeserializationContext"]
+
+
+@dataclass(frozen=True)
+class DeserializationContext:
+    """Runtime dependencies needed to rebuild fetcher objects from JSON.
+
+    These are *not* part of the serialized payload because they are host-independent
+    (e.g. the SNMP plugin store) or not serializable / known only to the reading
+    process (the base path).
+
+    Use this context for reconstructing fetchers and wrapped objects in fetchers.
+    """
+
+    base_path: Path
+    snmp_plugin_store: SNMPPluginStore
 
 
 class FetcherFunction(ABC):

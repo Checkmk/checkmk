@@ -48,6 +48,7 @@ py_library(
         "//packages/cmk-ccc:cpu-tracking",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:i18n",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:site",

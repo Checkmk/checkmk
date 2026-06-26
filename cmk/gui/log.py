@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from logging import FileHandler, Formatter, getLogger
+from logging import FileHandler, getLogger
 
-import cmk.utils.log
+import cmk.ccc.log
 import cmk.utils.paths
 from cmk.trace.logs import add_span_log_handler
 
@@ -14,7 +14,7 @@ logger = getLogger("cmk.web")
 
 def init_logging() -> None:
     handler = FileHandler(cmk.utils.paths.log_dir / "web.log", encoding="UTF-8")
-    handler.setFormatter(Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"))
+    handler.setFormatter(cmk.ccc.log.CMKFormatter(with_process=True))
     root = getLogger()
     del root.handlers[:]  # Remove all previously existing handlers
     root.addHandler(handler)

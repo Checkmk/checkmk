@@ -21,6 +21,7 @@ select = [
   "ARG",    # flake8: unused args
   "C400",   # flake8-comprehensions: unnecessary-generator-list
   "C405",   # flake8-comprehensions: unnecessary-literal-set
+  "C406",   # flake8-comprehensions: unnecessary-literal-dict
   "C90",    # mccabe
   "E",      # pycodestyle (error)
   "F",      # pyflakes

@@ -104,7 +104,7 @@ def _active_check_main_core(
     args = parse_arguments(argument_parser, argv)
     logging.basicConfig(
         level=(
-            {0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG)
+            {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG)
             if args.debug or args.verbose > 0
             else logging.CRITICAL
         )
@@ -122,7 +122,7 @@ def _active_check_main_core(
         # Bug in mypy's typeshed.
         imaplib.Debug = args.verbose  # type: ignore[attr-defined]
 
-    logging.getLogger("exchangelib").setLevel(logging.WARN)
+    logging.getLogger("exchangelib").setLevel(logging.WARNING)
 
     logging.debug("use protocol for fetching: %r", args.fetch_protocol)
     try:

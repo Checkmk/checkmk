@@ -1276,7 +1276,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 def _setup_logging(verbose: int) -> logging.Logger:
     logging.basicConfig(
-        level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(verbose, logging.DEBUG),
+        level={0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}.get(verbose, logging.DEBUG),
     )
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)

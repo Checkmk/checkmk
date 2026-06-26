@@ -297,7 +297,7 @@ def test_decompose_git_version(
     logs: Sequence[str],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    with caplog.at_level(logging.WARN):
+    with caplog.at_level(logging.WARNING):
         assert result == decompose_git_version(git_version)
     assert [formatter.format(record) for record in caplog.records] == logs
 
@@ -357,7 +357,7 @@ def test__verify_version_support_continue_processing(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     assert SUPPORTED_VERSIONS  # sanity check since we are dynamically parametrizing based on it.
-    with caplog.at_level(logging.WARN):
+    with caplog.at_level(logging.WARNING):
         _verify_version_support(kubernetes_version)
     assert [formatter.format(record) for record in caplog.records] == logs
 

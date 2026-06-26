@@ -1317,7 +1317,9 @@ def main(argv=None):
     logging.basicConfig(
         format="%(levelname)s %(asctime)s %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(opt.verbose, logging.DEBUG),
+        level={0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}.get(
+            opt.verbose, logging.DEBUG
+        ),
     )
 
     instances = []  # type: list[dict[str, str | None]]

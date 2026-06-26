@@ -120,11 +120,13 @@ def _special_agent_main_core(
     logging.basicConfig(
         format="%(levelname)s %(asctime)s %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG),
+        level={0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}.get(
+            args.verbose, logging.DEBUG
+        ),
     )
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
-    logging.getLogger("vcr").setLevel(logging.WARN)
+    logging.getLogger("vcr").setLevel(logging.WARNING)
     logging.info("running file %s", __file__)
     logging.info(
         "using Python interpreter v%s at %s",

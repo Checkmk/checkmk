@@ -321,7 +321,7 @@ def setup_logging(verbosity: int) -> None:
     elif verbosity == 2:
         lvl = logging.INFO
     elif verbosity == 1:
-        lvl = logging.WARN
+        lvl = logging.WARNING
     else:
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL

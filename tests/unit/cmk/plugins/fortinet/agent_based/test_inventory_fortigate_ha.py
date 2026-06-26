@@ -36,17 +36,15 @@ def test_parse_fortigate_ha() -> None:
 
 
 def test_inventorize_fortigate_ha() -> None:
-    assert list(inventorize_fortigate_ha(SECTION)) == list(
-        [
-            Attributes(
-                path=["software", "applications", "fortinet", "fortigate_high_availability"],
-                inventory_attributes={
-                    "Mode": "activePassive",
-                    "Priority": "128",
-                    "Schedule": "roundRobin",
-                    "Group ID": "11",
-                    "Group Name": "SZAG-DE-SAR-FF",
-                },
-            ),
-        ]
-    )
+    assert list(inventorize_fortigate_ha(SECTION)) == [
+        Attributes(
+            path=["software", "applications", "fortinet", "fortigate_high_availability"],
+            inventory_attributes={
+                "Mode": "activePassive",
+                "Priority": "128",
+                "Schedule": "roundRobin",
+                "Group ID": "11",
+                "Group Name": "SZAG-DE-SAR-FF",
+            },
+        ),
+    ]

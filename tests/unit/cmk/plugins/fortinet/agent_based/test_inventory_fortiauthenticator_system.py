@@ -17,14 +17,12 @@ def test_inventorize_fortiauthenticator_system() -> None:
                 "serial": "FAC-VMTM18000123",
             }
         )
-    ) == list(
-        [
-            Attributes(
-                path=["hardware", "system"],
-                inventory_attributes={
-                    "Model": "FACVM",
-                    "Serial number": "FAC-VMTM18000123",
-                },
-            ),
-        ]
-    )
+    ) == [
+        Attributes(
+            path=["hardware", "system"],
+            inventory_attributes={
+                "Model": "FACVM",
+                "Serial number": "FAC-VMTM18000123",
+            },
+        ),
+    ]

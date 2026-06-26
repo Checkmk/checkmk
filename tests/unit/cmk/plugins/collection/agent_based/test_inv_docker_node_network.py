@@ -19,33 +19,31 @@ AGENT_OUTPUT = (
 
 def test_inv_docker_node_network() -> None:
     pre_parsed = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    assert list(inventorize_docker_node_network(parse_docker_node_network(pre_parsed))) == list(
-        [
-            TableRow(
-                path=["software", "applications", "docker", "networks", "containers"],
-                key_columns={
-                    "id": "123456",
-                },
-                status_columns={
-                    "network_id": "f42d7f03e6d710662f70ebab8d5ff83538a729022ae97ad65f92c479e98126af",
-                    "name": "foobar",
-                    "ipv4_address": "1.2.3.4",
-                    "ipv6_address": "",
-                    "mac_address": "00:00:00:00:00:00",
-                },
-            ),
-            TableRow(
-                path=["software", "applications", "docker", "networks"],
-                key_columns={
-                    "network_id": "f42d7f03e6d710662f70ebab8d5ff83538a729022ae97ad65f92c479e98126af",
-                },
-                inventory_columns={
-                    "short_id": "f42d7f03e6d7",
-                    "name": "asd",
-                    "scope": "local",
-                    "labels": "label_asd: 1, label_asd_2: 2",
-                },
-                status_columns={},
-            ),
-        ]
-    )
+    assert list(inventorize_docker_node_network(parse_docker_node_network(pre_parsed))) == [
+        TableRow(
+            path=["software", "applications", "docker", "networks", "containers"],
+            key_columns={
+                "id": "123456",
+            },
+            status_columns={
+                "network_id": "f42d7f03e6d710662f70ebab8d5ff83538a729022ae97ad65f92c479e98126af",
+                "name": "foobar",
+                "ipv4_address": "1.2.3.4",
+                "ipv6_address": "",
+                "mac_address": "00:00:00:00:00:00",
+            },
+        ),
+        TableRow(
+            path=["software", "applications", "docker", "networks"],
+            key_columns={
+                "network_id": "f42d7f03e6d710662f70ebab8d5ff83538a729022ae97ad65f92c479e98126af",
+            },
+            inventory_columns={
+                "short_id": "f42d7f03e6d7",
+                "name": "asd",
+                "scope": "local",
+                "labels": "label_asd: 1, label_asd_2: 2",
+            },
+            status_columns={},
+        ),
+    ]

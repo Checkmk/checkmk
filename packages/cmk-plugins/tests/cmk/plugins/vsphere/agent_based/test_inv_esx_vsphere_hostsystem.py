@@ -52,52 +52,50 @@ def test_inventory() -> None:
     # runs
     with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         actual = list(inv_esx_vsphere_hostsystem(section))
-    assert actual == list(
-        [
-            Attributes(
-                path=["hardware", "cpu"],
-                inventory_attributes={
-                    "max_speed": 2933437096.0,
-                    "cpus": "2",
-                    "cores": "12",
-                    "threads": "24",
-                    "model": "Intel(R) Xeon(R) CPU X5670 @ 2.93GHz",
-                    "vendor": "intel",
-                    "bus_speed": 133338039.0,
-                    "cores_per_cpu": 6.0,
-                    "threads_per_cpu": 12.0,
-                },
-                status_attributes={},
-            ),
-            Attributes(
-                path=["software", "bios"],
-                inventory_attributes={"version": "-[ABIOSVERSION-1.0]-", "date": "2000-01-26"},
-                status_attributes={},
-            ),
-            Attributes(
-                path=["software", "os"],
-                inventory_attributes={
-                    "name": "VMware ESX Server",
-                    "version": "6.7.0",
-                    "build": "123456",
-                    "vendor": "VMware",
-                    "type": "vmnix-x86",
-                },
-                status_attributes={},
-            ),
-            Attributes(
-                path=["hardware", "system"],
-                inventory_attributes={
-                    "product": "System x1 M3 -[123456]-",
-                    "vendor": "IBM",
-                    "uuid": "bar-foo",
-                },
-                status_attributes={},
-            ),
-            Attributes(
-                path=["hardware", "memory"],
-                inventory_attributes={"total_ram_usable": 146016378880.0},
-                status_attributes={},
-            ),
-        ]
-    )
+    assert actual == [
+        Attributes(
+            path=["hardware", "cpu"],
+            inventory_attributes={
+                "max_speed": 2933437096.0,
+                "cpus": "2",
+                "cores": "12",
+                "threads": "24",
+                "model": "Intel(R) Xeon(R) CPU X5670 @ 2.93GHz",
+                "vendor": "intel",
+                "bus_speed": 133338039.0,
+                "cores_per_cpu": 6.0,
+                "threads_per_cpu": 12.0,
+            },
+            status_attributes={},
+        ),
+        Attributes(
+            path=["software", "bios"],
+            inventory_attributes={"version": "-[ABIOSVERSION-1.0]-", "date": "2000-01-26"},
+            status_attributes={},
+        ),
+        Attributes(
+            path=["software", "os"],
+            inventory_attributes={
+                "name": "VMware ESX Server",
+                "version": "6.7.0",
+                "build": "123456",
+                "vendor": "VMware",
+                "type": "vmnix-x86",
+            },
+            status_attributes={},
+        ),
+        Attributes(
+            path=["hardware", "system"],
+            inventory_attributes={
+                "product": "System x1 M3 -[123456]-",
+                "vendor": "IBM",
+                "uuid": "bar-foo",
+            },
+            status_attributes={},
+        ),
+        Attributes(
+            path=["hardware", "memory"],
+            inventory_attributes={"total_ram_usable": 146016378880.0},
+            status_attributes={},
+        ),
+    ]

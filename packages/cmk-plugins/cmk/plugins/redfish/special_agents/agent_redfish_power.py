@@ -312,7 +312,7 @@ def get_information(redfishobj):
         raise CannotRecover(
             "ERROR: probably not a Redfish power equipment - missing PowerEquipment information"
         )
-    systems_data = list([fetch_data(redfishobj, systems_url, "PowerEquipment")])
+    systems_data = [fetch_data(redfishobj, systems_url, "PowerEquipment")]
 
     if manager_data:
         sys.stdout.write("<<<redfish_manager:sep(0)>>>\n")

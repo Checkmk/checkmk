@@ -31,42 +31,40 @@ def test_parse_fortisandbox_software_inv() -> None:
 
 
 def test_inventorize_fortisandbox_software() -> None:
-    assert list(inventorize_fortisandbox_software(SECTION)) == list(
-        [
-            TableRow(
-                path=["software", "applications", "fortinet", "fortisandbox"],
-                key_columns={"name": "Tracer engine"},
-                inventory_columns={
-                    "version": "5.2.50534",
-                },
-            ),
-            TableRow(
-                path=["software", "applications", "fortinet", "fortisandbox"],
-                key_columns={"name": "Rating engine"},
-                inventory_columns={
-                    "version": "2.4.20034",
-                },
-            ),
-            TableRow(
-                path=["software", "applications", "fortinet", "fortisandbox"],
-                key_columns={"name": "System tools"},
-                inventory_columns={
-                    "version": "3.2.279",
-                },
-            ),
-            TableRow(
-                path=["software", "applications", "fortinet", "fortisandbox"],
-                key_columns={"name": "Sniffer"},
-                inventory_columns={
-                    "version": "4.478",
-                },
-            ),
-            TableRow(
-                path=["software", "applications", "fortinet", "fortisandbox"],
-                key_columns={"name": "Network alerts signature database"},
-                inventory_columns={
-                    "version": "14.613",
-                },
-            ),
-        ]
-    )
+    assert list(inventorize_fortisandbox_software(SECTION)) == [
+        TableRow(
+            path=["software", "applications", "fortinet", "fortisandbox"],
+            key_columns={"name": "Tracer engine"},
+            inventory_columns={
+                "version": "5.2.50534",
+            },
+        ),
+        TableRow(
+            path=["software", "applications", "fortinet", "fortisandbox"],
+            key_columns={"name": "Rating engine"},
+            inventory_columns={
+                "version": "2.4.20034",
+            },
+        ),
+        TableRow(
+            path=["software", "applications", "fortinet", "fortisandbox"],
+            key_columns={"name": "System tools"},
+            inventory_columns={
+                "version": "3.2.279",
+            },
+        ),
+        TableRow(
+            path=["software", "applications", "fortinet", "fortisandbox"],
+            key_columns={"name": "Sniffer"},
+            inventory_columns={
+                "version": "4.478",
+            },
+        ),
+        TableRow(
+            path=["software", "applications", "fortinet", "fortisandbox"],
+            key_columns={"name": "Network alerts signature database"},
+            inventory_columns={
+                "version": "14.613",
+            },
+        ),
+    ]

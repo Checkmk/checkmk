@@ -17,30 +17,31 @@ def test_inventorize_enviromux_micro_information() -> None:
         inventorize_enviromux_micro_information(
             parse_enviromux_micro_information(STRING_TABLE),
         )
-    ) == list(
-        [
-            Attributes(
-                path=["hardware", "system"],
-                inventory_attributes={
-                    "Description": "test-name",
-                    "Model": "E-MICRO-T",
-                    "Serial Number": "799",
-                },
-            ),
-            Attributes(
-                path=["software", "firmware"],
-                inventory_attributes={
-                    "Vendor": "NTI",
-                    "Version": "3.20",
-                },
-            ),
-        ]
-    )
+    ) == [
+        Attributes(
+            path=["hardware", "system"],
+            inventory_attributes={
+                "Description": "test-name",
+                "Model": "E-MICRO-T",
+                "Serial Number": "799",
+            },
+        ),
+        Attributes(
+            path=["software", "firmware"],
+            inventory_attributes={
+                "Vendor": "NTI",
+                "Version": "3.20",
+            },
+        ),
+    ]
 
 
 def test_inventorize_enviromux_micro_information_no_input() -> None:
-    assert list(
-        inventorize_enviromux_micro_information(
-            parse_enviromux_micro_information([]),
+    assert (
+        list(
+            inventorize_enviromux_micro_information(
+                parse_enviromux_micro_information([]),
+            )
         )
-    ) == list([])
+        == []
+    )

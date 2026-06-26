@@ -99,138 +99,130 @@ AGENT_OUTPUT_NO_SIZE_AT_ALL = (
 
 def test_inventorize_docker_node_images() -> None:
     parsed = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    assert list(inventorize_docker_node_images(parse_docker_node_images(parsed))) == list(
-        [
-            TableRow(
-                path=["software", "applications", "docker", "images"],
-                key_columns={
-                    "id": "b2bf42ca5d8f",
-                },
-                inventory_columns={
-                    "repotags": "hello:world",
-                    "repodigests": "",
-                    "creation": "2021-02-12T11:29:33.063968737Z",
-                    "size": 1231733,
-                    "labels": "image_label_command_line: 1, image_label_dockerfile: 2",
-                },
-                status_columns={
-                    "amount_containers": 1,
-                },
-            ),
-            TableRow(
-                path=["software", "applications", "docker", "containers"],
-                key_columns={
-                    "id": "891a6f6a1c28",
-                },
-                inventory_columns={},
-                status_columns={
-                    "image": "b2bf42ca5d8f",
-                    "name": "/relaxed_shaw",
-                    "creation": "2021-02-12T12:15:28.230110819Z",
-                    "labels": "another_container_label: 2, container: label, image_label_command_line: 1, image_label_dockerfile: 2",
-                    "status": "running",
-                },
-            ),
-        ]
-    )
+    assert list(inventorize_docker_node_images(parse_docker_node_images(parsed))) == [
+        TableRow(
+            path=["software", "applications", "docker", "images"],
+            key_columns={
+                "id": "b2bf42ca5d8f",
+            },
+            inventory_columns={
+                "repotags": "hello:world",
+                "repodigests": "",
+                "creation": "2021-02-12T11:29:33.063968737Z",
+                "size": 1231733,
+                "labels": "image_label_command_line: 1, image_label_dockerfile: 2",
+            },
+            status_columns={
+                "amount_containers": 1,
+            },
+        ),
+        TableRow(
+            path=["software", "applications", "docker", "containers"],
+            key_columns={
+                "id": "891a6f6a1c28",
+            },
+            inventory_columns={},
+            status_columns={
+                "image": "b2bf42ca5d8f",
+                "name": "/relaxed_shaw",
+                "creation": "2021-02-12T12:15:28.230110819Z",
+                "labels": "another_container_label: 2, container: label, image_label_command_line: 1, image_label_dockerfile: 2",
+                "status": "running",
+            },
+        ),
+    ]
 
 
 def test_inventorize_docker_node_images_labels_null() -> None:
     assert list(
         inventorize_docker_node_images(parse_docker_node_images(AGENT_OUTPUT_NULL_LABELS_ST))
-    ) == list(
-        [
-            TableRow(
-                path=["software", "applications", "docker", "images"],
-                key_columns={
-                    "id": "666620a54926",
-                },
-                inventory_columns={
-                    "repotags": "plantuml:latest",
-                    "repodigests": "",
-                    "creation": "2021-02-25T08:42:22.47977742Z",
-                    "size": 389770065,
-                    "labels": "",
-                },
-                status_columns={
-                    "amount_containers": 0,
-                },
-            ),
-        ]
-    )
+    ) == [
+        TableRow(
+            path=["software", "applications", "docker", "images"],
+            key_columns={
+                "id": "666620a54926",
+            },
+            inventory_columns={
+                "repotags": "plantuml:latest",
+                "repodigests": "",
+                "creation": "2021-02-25T08:42:22.47977742Z",
+                "size": 389770065,
+                "labels": "",
+            },
+            status_columns={
+                "amount_containers": 0,
+            },
+        ),
+    ]
 
 
 def test_inventorize_docker_node_images_no_virtual_size() -> None:
     parsed = [line.split("\0") for line in AGENT_OUTPUT_NO_VIRTUAL_SIZE.split("\n")]
-    assert list(inventorize_docker_node_images(parse_docker_node_images(parsed))) == list(
-        [
-            TableRow(
-                path=["software", "applications", "docker", "images"],
-                key_columns={
-                    "id": "b2bf42ca5d8f",
-                },
-                inventory_columns={
-                    "repotags": "hello:world",
-                    "repodigests": "",
-                    "creation": "2021-02-12T11:29:33.063968737Z",
-                    "size": 1231733,
-                    "labels": "image_label_command_line: 1, image_label_dockerfile: 2",
-                },
-                status_columns={
-                    "amount_containers": 1,
-                },
-            ),
-            TableRow(
-                path=["software", "applications", "docker", "containers"],
-                key_columns={
-                    "id": "891a6f6a1c28",
-                },
-                inventory_columns={},
-                status_columns={
-                    "image": "b2bf42ca5d8f",
-                    "name": "/relaxed_shaw",
-                    "creation": "2021-02-12T12:15:28.230110819Z",
-                    "labels": "another_container_label: 2, container: label, image_label_command_line: 1, image_label_dockerfile: 2",
-                    "status": "running",
-                },
-            ),
-        ]
-    )
+    assert list(inventorize_docker_node_images(parse_docker_node_images(parsed))) == [
+        TableRow(
+            path=["software", "applications", "docker", "images"],
+            key_columns={
+                "id": "b2bf42ca5d8f",
+            },
+            inventory_columns={
+                "repotags": "hello:world",
+                "repodigests": "",
+                "creation": "2021-02-12T11:29:33.063968737Z",
+                "size": 1231733,
+                "labels": "image_label_command_line: 1, image_label_dockerfile: 2",
+            },
+            status_columns={
+                "amount_containers": 1,
+            },
+        ),
+        TableRow(
+            path=["software", "applications", "docker", "containers"],
+            key_columns={
+                "id": "891a6f6a1c28",
+            },
+            inventory_columns={},
+            status_columns={
+                "image": "b2bf42ca5d8f",
+                "name": "/relaxed_shaw",
+                "creation": "2021-02-12T12:15:28.230110819Z",
+                "labels": "another_container_label: 2, container: label, image_label_command_line: 1, image_label_dockerfile: 2",
+                "status": "running",
+            },
+        ),
+    ]
 
 
 def test_inventorize_docker_node_images_no_size_at_all() -> None:
     parsed = [line.split("\0") for line in AGENT_OUTPUT_NO_SIZE_AT_ALL.split("\n")]
-    assert list(inventorize_docker_node_images(parse_docker_node_images(parsed))) == list(
-        [
-            TableRow(
-                path=["software", "applications", "docker", "images"],
-                key_columns={
-                    "id": "b2bf42ca5d8f",
-                },
-                inventory_columns={
-                    "repotags": "hello:world",
-                    "repodigests": "",
-                    "creation": "2021-02-12T11:29:33.063968737Z",
-                    "size": None,
-                    "labels": "image_label_command_line: 1, image_label_dockerfile: 2",
-                },
-                status_columns={
-                    "amount_containers": 1,
-                },
-            ),
-            TableRow(
-                path=["software", "applications", "docker", "containers"],
-                key_columns={
-                    "id": "891a6f6a1c28",
-                },
-                inventory_columns={},
-                status_columns={
-                    "image": "b2bf42ca5d8f",
-                    "name": "/relaxed_shaw",
-                    "creation": "2021-02-12T12:15:28.230110819Z",
-                    "labels": "another_container_label: 2, container: label, image_label_command_line: 1, image_label_dockerfile: 2",
-                    "status": "running",
-                },
-            ),
-        ]
-    )
+    assert list(inventorize_docker_node_images(parse_docker_node_images(parsed))) == [
+        TableRow(
+            path=["software", "applications", "docker", "images"],
+            key_columns={
+                "id": "b2bf42ca5d8f",
+            },
+            inventory_columns={
+                "repotags": "hello:world",
+                "repodigests": "",
+                "creation": "2021-02-12T11:29:33.063968737Z",
+                "size": None,
+                "labels": "image_label_command_line: 1, image_label_dockerfile: 2",
+            },
+            status_columns={
+                "amount_containers": 1,
+            },
+        ),
+        TableRow(
+            path=["software", "applications", "docker", "containers"],
+            key_columns={
+                "id": "891a6f6a1c28",
+            },
+            inventory_columns={},
+            status_columns={
+                "image": "b2bf42ca5d8f",
+                "name": "/relaxed_shaw",
+                "creation": "2021-02-12T12:15:28.230110819Z",
+                "labels": "another_container_label: 2, container: label, image_label_command_line: 1, image_label_dockerfile: 2",
+                "status": "running",
+            },
+        ),
+    ]

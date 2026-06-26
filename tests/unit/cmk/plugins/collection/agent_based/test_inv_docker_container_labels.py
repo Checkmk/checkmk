@@ -34,21 +34,19 @@ def test_inv_docker_container_labels_parse() -> None:
 
 def test_inv_docker_container_labels() -> None:
     info = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    assert list(inventorize_docker_container_labels(parse_docker_container_labels(info))) == list(
-        [
-            Attributes(
-                path=["software", "applications", "docker", "container"],
-                inventory_attributes={
-                    "labels": (
-                        "com.docker.swarm.node.id: x2my5tv8bqg0yh5jq98gzodr2, "
-                        "com.docker.swarm.service.id: nrgxet23d204ywz1rjl8fbtff, "
-                        "com.docker.swarm.service.name: redis, "
-                        "com.docker.swarm.task: , "
-                        "com.docker.swarm.task.id: jjp7380fb51n4figvv4zxl350, "
-                        "com.docker.swarm.task.name: redis.1.jjp7380fb51n4figvv4zxl350"
-                    )
-                },
-                status_attributes={},
-            )
-        ]
-    )
+    assert list(inventorize_docker_container_labels(parse_docker_container_labels(info))) == [
+        Attributes(
+            path=["software", "applications", "docker", "container"],
+            inventory_attributes={
+                "labels": (
+                    "com.docker.swarm.node.id: x2my5tv8bqg0yh5jq98gzodr2, "
+                    "com.docker.swarm.service.id: nrgxet23d204ywz1rjl8fbtff, "
+                    "com.docker.swarm.service.name: redis, "
+                    "com.docker.swarm.task: , "
+                    "com.docker.swarm.task.id: jjp7380fb51n4figvv4zxl350, "
+                    "com.docker.swarm.task.name: redis.1.jjp7380fb51n4figvv4zxl350"
+                )
+            },
+            status_attributes={},
+        )
+    ]

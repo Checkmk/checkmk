@@ -24,6 +24,7 @@ select = [
   "C406",   # flake8-comprehensions: unnecessary-literal-dict
   "C408",   # flake8-comprehensions: unnecessary-collection-call
   "C409",   # flake8-comprehensions: unnecessary-literal-within-tuple-call
+  "C410",   # flake8-comprehensions: unnecessary-literal-within-list-call
   "C90",    # mccabe
   "E",      # pycodestyle (error)
   "F",      # pyflakes

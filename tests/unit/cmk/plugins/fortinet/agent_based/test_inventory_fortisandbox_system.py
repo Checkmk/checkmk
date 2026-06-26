@@ -10,13 +10,11 @@ from cmk.plugins.fortinet.agent_based.inventory_fortisandbox_system import (
 
 
 def test_inventorize_fortisandbox_system() -> None:
-    assert list(inventorize_fortisandbox_system(["v2.52-build0340 (GA)"])) == list(
-        [
-            Attributes(
-                path=["software", "os"],
-                inventory_attributes={
-                    "Version": "v2.52-build0340 (GA)",
-                },
-            ),
-        ]
-    )
+    assert list(inventorize_fortisandbox_system(["v2.52-build0340 (GA)"])) == [
+        Attributes(
+            path=["software", "os"],
+            inventory_attributes={
+                "Version": "v2.52-build0340 (GA)",
+            },
+        ),
+    ]

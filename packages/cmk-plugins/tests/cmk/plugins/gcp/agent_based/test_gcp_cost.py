@@ -56,7 +56,7 @@ def _section() -> Section:
 
 
 def test_gcp_multi_month(section: Section) -> None:
-    assert list(sorted(discover(parse(TABLE_MULTI_MONTH)))) == [
+    assert sorted(discover(parse(TABLE_MULTI_MONTH))) == [
         Service(item="la"),
         Service(item="th"),
     ]

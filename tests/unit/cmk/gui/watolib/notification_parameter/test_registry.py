@@ -20,6 +20,7 @@ def test_registered_notification_parameters() -> None:
     expected_plugins = [
         "asciimail",
         "cisco_webex_teams",
+        "flowtriq",
         "ilert",
         "mail",
         "mkeventd",

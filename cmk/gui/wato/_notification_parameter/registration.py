@@ -11,6 +11,7 @@ from cmk.gui.watolib.notification_parameter import (
 )
 
 from . import _cisco_webex_teams as cisco_webex_teams
+from . import _flowtriq as flowtriq
 from . import _ilert as ilert
 from . import _mail as mail
 from . import _ms_teams as ms_teams
@@ -40,6 +41,13 @@ def register(
             ident="cisco_webex_teams",
             spec=lambda: convert_dictionary_formspec_to_valuespec(cisco_webex_teams.form_spec),
             form_spec=cisco_webex_teams.form_spec,
+        )
+    )
+    notification_parameter_registry.register(
+        NotificationParameter(
+            ident="flowtriq",
+            spec=lambda: convert_dictionary_formspec_to_valuespec(flowtriq.form_spec),
+            form_spec=flowtriq.form_spec,
         )
     )
     notification_parameter_registry.register(

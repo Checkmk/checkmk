@@ -14,6 +14,7 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
     [
         ("asciimail", "Legacy email (ASCII) parameter"),
         ("cisco_webex_teams", "Cisco Webex Teams parameter"),
+        ("flowtriq", "Flowtriq parameter"),
         ("ilert", "iLert parameter"),
         ("mail", "Email (HTML) parameter"),
         ("mkeventd", "Forward Notification to Event Console parameter"),

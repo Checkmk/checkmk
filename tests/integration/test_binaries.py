@@ -49,6 +49,7 @@ _NOTIF_PATH = "share/check_mk/notifications"
 NOTIFICATION_PLUGINS: Sequence[BinarySmoke] = [
     BinarySmoke("asciimail", expected_stderr=r"KeyError.*NOTIF", path=_NOTIF_PATH),
     BinarySmoke("cisco_webex_teams", expected_stderr=r"KeyError.*NOTIF", path=_NOTIF_PATH),
+    BinarySmoke("flowtriq", expected_stderr=r"KeyError.*NOTIF", path=_NOTIF_PATH),
     BinarySmoke("ilert", expected_stderr=r"IndexError.*list index out of range", path=_NOTIF_PATH),
     BinarySmoke("mail", expected_stderr=r"KeyError.*NOTIF", path=_NOTIF_PATH),
     BinarySmoke("msteams", expected_stderr=r"KeyError.*NOTIF", path=_NOTIF_PATH),

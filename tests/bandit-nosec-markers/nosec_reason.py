@@ -256,10 +256,8 @@ def find_nosecs(src_root: Path, excluded: Sequence[str]) -> Sequence[Nosec]:
         # convert to absolute paths
         files.extend([str(src_root / f) for f in _format_output(packages_search.stdout)])
 
-    logging.info(
-        f"Checking {len(files)} python files in '{src_root}'"
-        + (f" excluding paths containing '{', '.join(excluded)}'." if excluded else "")
-    )
+    exclusion = " excluding paths containing '%s'." % ", ".join(excluded) if excluded else ""
+    logging.info("Checking %d python files in '%s'%s", len(files), src_root, exclusion)
 
     result = []
     for f in files:

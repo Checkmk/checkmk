@@ -99,10 +99,10 @@ class RfSSDPServer:
                 countTimeout += 1
                 continue
             except Exception as e:
-                logger.info("error occurred " + str(e))
+                logger.info("error occurred %s", str(e))
 
     def check(self, data, addr):
-        logger.info(f"SSDP Packet received from {addr}")
+        logger.info("SSDP Packet received from %s", addr)
         decoded = data.decode().replace("\r", "").split("\n")
         msgtype, decoded = decoded[0], decoded[1:]
         decodeddict = {

@@ -174,7 +174,9 @@ class Dashlet[T: DashletConfig](abc.ABC):
 
         return visuals.get_merged_context(
             base_context or {},
-            self._dashlet_spec["context"] if "context" in self._dashlet_spec else {},
+            # _dashlet_spec is a generic TypeVar, so .get() falls back to
+            # Mapping.get() and loses the precise value type (mypy: arg-type).
+            self._dashlet_spec["context"] if "context" in self._dashlet_spec else {},  # noqa: SIM401
         )
 
     @property

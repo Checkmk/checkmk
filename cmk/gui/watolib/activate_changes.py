@@ -1479,9 +1479,7 @@ class ActivateChanges:
                 siteId=site["id"],
                 siteName=site["alias"],
                 version=_get_site_version(site_id),
-                changes=0
-                if site["id"] not in site_change_counter
-                else site_change_counter[site["id"]],
+                changes=site_change_counter.get(site["id"], 0),
                 onlineStatus=OnlineStatus(
                     get_status_for_site(site_id, site).get("state", "unknown")
                 ),

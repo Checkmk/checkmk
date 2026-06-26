@@ -143,7 +143,7 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
             if entry.user_id != options["user_id"]:
                 return False
 
-        filter_regex: str | None = options["filter_regex"] if "filter_regex" in options else None
+        filter_regex: str | None = options.get("filter_regex", None)
         if filter_regex:
             return any(
                 re.search(filter_regex, val)

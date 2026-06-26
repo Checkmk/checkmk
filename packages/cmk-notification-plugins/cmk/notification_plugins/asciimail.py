@@ -44,10 +44,7 @@ tmpl_alerthandler_service_body = "Service:  $SERVICEDESC$\n" + tmpl_alerthandler
 
 def construct_content(context: dict[str, str]) -> str:
     # Prepare the mail contents
-    if "PARAMETER_COMMON_BODY" in context:
-        tmpl_body = context["PARAMETER_COMMON_BODY"]
-    else:
-        tmpl_body = tmpl_common_body
+    tmpl_body = context.get("PARAMETER_COMMON_BODY", tmpl_common_body)
 
     if "ALERTHANDLERNAME" in context:
         my_tmpl_host_body = tmpl_alerthandler_host_body

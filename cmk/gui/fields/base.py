@@ -185,7 +185,7 @@ class ValueTypedDictSchema(BaseSchema):
     ) -> dict[str, object]:
         result = {}
         for key, value in data.items():
-            target_field = self.fields[key] if key in self.fields else field
+            target_field = self.fields.get(key, field)
 
             try:
                 target_field._validate(value)
@@ -202,7 +202,7 @@ class ValueTypedDictSchema(BaseSchema):
     ) -> dict[str, object]:
         result = {}
         for key, value in data.items():
-            target_field = self.fields[key] if key in self.fields else field
+            target_field = self.fields.get(key, field)
             try:
                 target_field._validate(value)
             except ValidationError as exc:

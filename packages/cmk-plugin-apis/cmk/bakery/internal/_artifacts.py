@@ -626,7 +626,7 @@ class YamlStore:
         if key_third is None:
             return sub_value
 
-        return sub_value[key_third] if key_third in sub_value else None
+        return sub_value.get(key_third, None)
 
     def make_sub_section(self, section_name: str, sub_section_name: str) -> dict:
         section = self.make_section(section_name)

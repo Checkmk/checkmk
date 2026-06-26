@@ -41,7 +41,7 @@ def check_mongodb_locks(params: Mapping[str, Any], section: StringTable) -> Chec
         yield from check_levels(
             int(count),
             metric_name=metric_name,
-            levels_upper=params[metric_name] if metric_name in params else None,
+            levels_upper=params.get(metric_name, None),
             label=f"{param_name.title()}-{name.title()}",
         )
 

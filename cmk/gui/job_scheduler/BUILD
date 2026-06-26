@@ -19,6 +19,7 @@ py_library(
         "//cmk/utils:paths",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",

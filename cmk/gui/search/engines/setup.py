@@ -74,6 +74,7 @@ from cmk.utils.setup_search_index import (
 )
 
 from ..legacy_helpers import transform_legacy_results_to_unified
+from ..routing import CompositePermissionsHandler
 from ..type_defs import SearchPermissionsHandler, VisibilityCheck
 
 
@@ -677,3 +678,26 @@ class SetupSearchEngine:
             transform_legacy_results_to_unified([result], topic, provider=ProviderName.setup)
             for _category, topic, result in self._legacy_engine.search(query)
         )
+
+
+class IndexedSearchEngine:
+    def __init__(
+        self,
+        config: Config,
+        permission_handlers: Mapping[ProviderName, SearchPermissionsHandler],
+        *,
+        redis_client: redis.Redis | None = None,
+    ) -> None:
+        self._index_searcher = IndexSearcher(
+            config=config,
+            redis_client=redis_client or get_redis_client(),
+            permissions_handler=CompositePermissionsHandler(
+                match_item_generator_registry, permission_handlers
+            ),
+        )
+
+    def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
+        for category, topic, result in self._index_searcher.search(query):
+            if (provider := match_item_generator_registry.provider_for(category)) is None:
+                continue
+            yield from transform_legacy_results_to_unified([result], topic, provider=provider)

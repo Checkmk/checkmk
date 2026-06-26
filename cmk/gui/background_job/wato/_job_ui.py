@@ -142,8 +142,8 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
                 job = BackgroundJob(job_id)
                 if job.is_available():
                     visible_jobs.append(job_id)
-            except Exception:
-                self._logger.exception(f"Exception parsing background job {job_id}")
+            except Exception as e:
+                self._logger.error(f"Exception parsing background job {job_id}: {e}")
                 continue
         return visible_jobs
 
@@ -180,8 +180,8 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
                 job = BackgroundJob(job_id)
                 job_status = job.get_status()
                 is_active = job.is_active()
-            except Exception:
-                self._logger.exception(f"Exception parsing background job {job_id}")
+            except Exception as e:
+                self._logger.error(f"Exception parsing background job {job_id}: {str(e)}")
                 continue
 
             all_jobs[job_id] = JobInfo(

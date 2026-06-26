@@ -893,9 +893,9 @@ class PerftestPlot:
             with open(json_path, encoding="utf-8") as statistics_file:
                 return json.load(statistics_file)
         except (FileNotFoundError, PermissionError):
-            logger.exception('File "%s" not found!', json_path)
+            logger.error('File "%s" not found!', json_path)
         except (json.JSONDecodeError, OSError):
-            logger.exception('Can not parse JSON file "%s"!', json_path)
+            logger.error('Can not parse JSON file "%s"!', json_path)
         return None
 
     def _job_file_path(self, job_name: str) -> Path:

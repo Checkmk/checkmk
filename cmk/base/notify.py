@@ -411,19 +411,19 @@ def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
             timeout=None,
         )
     except AutomationHelperUnavailable:
-        logger.exception(
+        logger.error(
             "The automation-helper service is required for the notification spooler. "
             "Please make sure all site services are started."
         )
         return 1
-    except Exception:
-        logger.exception("Error running automation call 'notify'")
+    except Exception as e:
+        logger.error("Error running automation call 'notify': %s", e)
         return 1
 
     try:
         data = ast.literal_eval(result.output)
-    except (SyntaxError, ValueError, TypeError):
-        logger.exception("Could not parse automation result %r", result.output)
+    except (SyntaxError, ValueError, TypeError) as e:
+        logger.error("Could not parse automation result %r: %s", result.output, e)
         return 2
 
     if isinstance(data, dict):
@@ -2335,7 +2335,8 @@ def _handle_spoolfile(
         return 0  # No error handling for async delivery
 
     except Exception:
-        logger.exception("ERROR while processing %s. Content: %r", spoolfile, data)
+        logger.exception("ERROR while processing %s:", spoolfile)
+        logger.error("Content: %r", data)
         return 2
 
 

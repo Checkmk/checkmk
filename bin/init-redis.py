@@ -14,8 +14,9 @@ def main() -> None:
     logger = getLogger("init-redis")
     try:
         request_index_rebuild()
-    except Exception:
-        logger.exception("Failed to request building of Setup search index")
+    except Exception as excpt:
+        logger.error("ERROR: Failed to request building of Setup search index")
+        logger.error(excpt)
 
 
 if __name__ == "__main__":

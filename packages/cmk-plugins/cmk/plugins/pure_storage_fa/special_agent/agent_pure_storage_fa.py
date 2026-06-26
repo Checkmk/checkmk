@@ -224,8 +224,8 @@ class PureStorageFlashArray:
                     "api-token": api_token.reveal(),
                 },
             )
-        except requests.exceptions.ConnectionError:
-            _LOGGER.exception("Login failed")
+        except requests.exceptions.ConnectionError as e:
+            _LOGGER.error("Login failed: %s", e)
             raise AuthError()
 
         if login_response.status_code != 200:
@@ -241,8 +241,8 @@ class PureStorageFlashArray:
     def read_latest_api_version(self) -> _RestVersion:
         try:
             api_version_response = self._session.get("api_version", {})
-        except requests.exceptions.ConnectionError:
-            _LOGGER.exception("Getting API version failed")
+        except requests.exceptions.ConnectionError as e:
+            _LOGGER.error("Getting API version failed: %s", e)
             raise APIVersionError()
 
         if api_version_response.status_code != 200:
@@ -272,8 +272,8 @@ class PureStorageFlashArray:
                 },
                 params=spec.params,
             )
-        except requests.exceptions.ConnectionError:
-            _LOGGER.exception("Collecting '%s' failed", spec.name)
+        except requests.exceptions.ConnectionError as e:
+            _LOGGER.error("Collecting '%s' failed: %s", spec.name, e)
             raise SectionError()
 
         if section_response.status_code != 200:

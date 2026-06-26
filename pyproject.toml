@@ -48,7 +48,6 @@ select = [
   "W",      # pycodestyle (warning)
   "T10",    # flake8: debugger
   "T20",    # flake8: print
-  "TRY400", # tryceratops: use logger.exception() instead of logger.error() in except blocks
 ]
 ignore = [
   # Black is our formatting tool, so ignore any formatting-related findings.

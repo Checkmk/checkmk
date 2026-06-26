@@ -252,15 +252,13 @@ class OracleDatabase:
                     interval=5,
                 )
             except TimeoutError:
-                logger.exception(
+                logger.error(
                     "TIMEOUT while starting Oracle. Log output: %s",
                     self.logs,
                 )
                 raise
             if failure_msg in self.logs:
-                # Still inside the (expected) NotFound handler; that traceback is unrelated
-                # to this Oracle startup failure, so do not attach it.
-                logger.error("ERROR while starting Oracle. Log output: %s", self.logs)  # noqa: TRY400
+                logger.error("ERROR while starting Oracle. Log output: %s", self.logs)
         # reload() to make sure all attributes are set (e.g. NetworkSettings)
         self.container.reload()
         self.ip = get_container_ip(self.container)

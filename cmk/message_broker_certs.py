@@ -57,8 +57,8 @@ def main(argv: list[str]) -> int:
     try:
         args = _parse_arguments(argv)
         initialize_message_broker_certs(args.omd_root, args.site_name)
-    except Exception:
-        logger.exception("Failed to initialize message broker certificates")
+    except Exception as e:
+        logger.error("Error: %s", e)
         return 1
 
     return 0

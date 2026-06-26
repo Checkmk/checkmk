@@ -279,10 +279,10 @@ def agent_storeonce4x_main(args: argparse.Namespace) -> int:
                     sys.stdout.write(f"{json.dumps(entry, sort_keys=True)}\n")
             else:
                 sys.stdout.write(f"{json.dumps(data, sort_keys=True)}\n")
-        except Exception:
+        except Exception as exc:
             if args.debug:
                 raise
-            LOGGER.exception("Caught exception")
+            LOGGER.error("Caught exception: %r", exc)
             return 1
 
     return 0

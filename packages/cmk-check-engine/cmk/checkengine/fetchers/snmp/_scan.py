@@ -45,11 +45,11 @@ def gather_available_raw_section_names(
         return _snmp_scan(sections, scan_config=scan_config, backend=backend)
     except MKTimeout:
         raise
-    except Exception:
+    except Exception as e:
         if scan_config.on_error is OnError.RAISE:
             raise
         if scan_config.on_error is OnError.WARN:
-            backend.logger.exception("SNMP scan failed")
+            backend.logger.error(f"SNMP scan failed: {e}")
 
     return frozenset()
 

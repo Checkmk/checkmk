@@ -194,6 +194,5 @@ def main(
             invalid_hostname_callback(exc)
         logger.exception("Exception: %s: %s", APP_NAME.value, exc)
         crash_report_msg = crash_report_callback()
-        # The traceback was already logged above; this only adds the crash report reference.
-        logger.error(crash_report_msg)  # noqa: TRY400
+        logger.error(crash_report_msg)
         return 1

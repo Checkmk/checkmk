@@ -86,8 +86,8 @@ def main() -> int:
         )
         logger.info("Successfully updated the license usage")
         return 0
-    except Exception:
-        logger.exception("Error during license usage update")
+    except Exception as e:
+        logger.error("Error during license usage update: %s", e)
         return 1
 
 

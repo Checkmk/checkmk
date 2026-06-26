@@ -300,7 +300,7 @@ def wait_until_host_has_services(
             interval=interval,
         )
     except TimeoutError:
-        logger.exception(
+        logger.error(
             "wait_until_host_has_services timed out for host %r on site %r. "
             "Dumping diagnostics:\n%s",
             hostname,

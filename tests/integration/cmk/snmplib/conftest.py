@@ -238,7 +238,7 @@ def _is_listening(process_def: ProcessDef) -> bool:
             if exitcode is None:
                 raise
             snmpsimd_died = True
-            logger.exception(
+            logger.error(
                 "====================================snmpsimd dead OSError try-except %s", oserr
             )
 

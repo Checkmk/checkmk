@@ -135,8 +135,7 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
                 stop_event.set()
                 scheduler_thread.join()
     except MKGeneralException as exc:
-        # Expected error, the traceback adds no value here.
-        logger.error("ERROR: %s", exc)  # noqa: TRY400
+        logger.error("ERROR: %s", exc)
         return 1
     except SystemExit:
         raise

@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import os
 import time
+import traceback
 from collections.abc import Sequence
 from typing import Final
 
@@ -86,7 +87,7 @@ class BackgroundJobManager:
                         del job_records_by_id[job_record.job.get_job_id()]
 
         except Exception:
-            self._logger.exception("Error during background job housekeeping")
+            self._logger.error(traceback.format_exc())
 
 
 def execute_housekeeping_job(config: Config) -> None:

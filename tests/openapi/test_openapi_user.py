@@ -1325,7 +1325,7 @@ def test_user_navbar_changes_action_param(
         username=_random_string(10),
         fullname="KPECYCq79E",
         interface_options={"navbar_changes_action": field_value},
-        expect_ok=True if expected_status_code == 200 else False,
+        expect_ok=expected_status_code == 200,
     )
     resp.assert_status_code(expected_status_code)
 

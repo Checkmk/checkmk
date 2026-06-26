@@ -428,7 +428,7 @@ class Certificate:
             # SHOULD mark the subjectAltName extension as non-critical
             builder = builder.add_extension(
                 subject_alternative_names.to_extension(),
-                critical=True if not subject_name.name else False,
+                critical=not subject_name.name,
             )
 
         hash_algo = (

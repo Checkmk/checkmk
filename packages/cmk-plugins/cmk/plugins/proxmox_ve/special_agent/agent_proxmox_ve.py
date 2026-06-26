@@ -424,7 +424,7 @@ def _create_node_sections(
                 )
                 for repl in replications.get(node["node"], [])
             ],
-            cluster_has_replications=True if data["cluster"]["replication"] else False,
+            cluster_has_replications=bool(data["cluster"]["replication"]),
         ).model_dump_json(),
     )
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import itertools
 from collections import defaultdict
-from collections.abc import Awaitable, Callable, Collection, Iterable, Iterator, Mapping
+from collections.abc import Awaitable, Collection, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from itertools import chain
 from typing import override
@@ -74,6 +74,7 @@ from cmk.utils.setup_search_index import (
 )
 
 from ..legacy_helpers import transform_legacy_results_to_unified
+from ..type_defs import SearchPermissionsHandler, VisibilityCheck
 
 
 class IndexNotFoundException(MKGeneralException):
@@ -261,9 +262,6 @@ class IndexBuilder:
         return client.exists(cls._KEY_INDEX_BUILT) == 1
 
 
-type VisibilityCheck = Callable[[str], bool]
-
-
 class PermissionsHandler:
     def __init__(self, edition: Edition, config: Config, request: Request) -> None:
         self._edition = edition
@@ -356,7 +354,7 @@ class IndexSearcher:
         self,
         config: Config,
         redis_client: redis.Redis,
-        permissions_handler: PermissionsHandler,
+        permissions_handler: SearchPermissionsHandler,
     ) -> None:
         self._config = config
         self._redis_client = redis_client

@@ -22,6 +22,7 @@ from .match_items import match_item_generator_registry as match_item_generator_r
 from .match_items import MatchItem as MatchItem
 from .match_items import MatchItemGeneratorRegistry as MatchItemGeneratorRegistry
 from .match_items import MatchItems as MatchItems
+from .type_defs import SearchPermissionsHandler
 from .unified import UnifiedSearch
 
 __all__ = [
@@ -37,6 +38,7 @@ __all__ = [
     "MonitoringSearchEngine",
     "PermissionsHandler",
     "QuicksearchManager",
+    "SearchPermissionsHandler",
     "SetupSearchEngine",
     "TooManyRowsError",
     "UnifiedSearch",

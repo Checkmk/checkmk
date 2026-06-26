@@ -638,3 +638,43 @@ fn test_migrate_optional_config_threads() {
         "MAX_TASKS=7 must set threads to 7"
     );
 }
+
+#[test]
+fn test_connection_olr_loc_parsing() {
+    use mk_oracle::config::connection::Connection;
+    use mk_oracle::config::yaml::test_tools::create_yaml;
+    use std::path::PathBuf;
+
+    let tmp = tempfile::tempdir().expect("create temp dir");
+    let crs_home = tmp.path().join("grid");
+    fs::create_dir(&crs_home).expect("create crs_home dir");
+
+    let olr_loc_path = tmp.path().join("olr.loc");
+    fs::write(
+        &olr_loc_path,
+        format!(
+            "olrconfig_loc={0}\ncrs_home={1}\n",
+            tmp.path().display(),
+            crs_home.display()
+        ),
+    )
+    .expect("write olr.loc");
+
+    let olr_loc_yaml = olr_loc_path.to_str().unwrap().replace('\\', "/");
+    let yaml_str = format!(
+        "connection:\n  hostname: \"localhost\"\n  oracle_local_registry: \"{olr_loc_yaml}\"\n"
+    );
+    let conn = Connection::from_yaml(&create_yaml(&yaml_str))
+        .expect("valid YAML")
+        .expect("connection present");
+
+    assert_eq!(conn.crs_home(), Some(&crs_home));
+    assert_eq!(
+        conn.crsctl_bin(),
+        Some(&crs_home.join("bin").join("crsctl"))
+    );
+    assert_eq!(
+        conn.oracle_local_registry(),
+        Some(&PathBuf::from(&olr_loc_yaml))
+    );
+}

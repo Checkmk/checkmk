@@ -54,7 +54,32 @@ pub struct Connection {
     timeout: Option<u64>,       // 5 if not defined
     tns_admin: Option<PathBuf>, // config dir if not defined
     oracle_local_registry: Option<PathBuf>,
+    crs_home: Option<PathBuf>,
+    crsctl_bin: Option<PathBuf>,
     engine: EngineTag, // Std if not defined
+}
+
+/// Parse olr.loc file content and extract `crs_home` path.
+///
+/// Skips empty lines, comments, and unparseable lines. First match wins.
+fn parse_crs_home(content: &str) -> Option<PathBuf> {
+    content
+        .lines()
+        .filter_map(|line| {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                return None;
+            }
+            let (key, value) = line.split_once('=')?;
+            if key.trim() == "crs_home" {
+                let value = value.trim();
+                if !value.is_empty() {
+                    return Some(PathBuf::from(value));
+                }
+            }
+            None
+        })
+        .next()
 }
 
 impl Connection {
@@ -63,6 +88,24 @@ impl Connection {
         if conn.is_badvalue() {
             return Ok(None);
         }
+        let oracle_local_registry = conn
+            .get_string(keys::ORACLE_LOCAL_REGISTRY)
+            .map(PathBuf::from);
+
+        let crs_home = oracle_local_registry
+            .as_ref()
+            .filter(|p| p.exists())
+            .and_then(|p| {
+                fs::read_to_string(p)
+                    .map_err(|e| log::warn!("Failed to read olr.loc '{}': {}", p.display(), e))
+                    .ok()
+            })
+            .and_then(|content| parse_crs_home(&content));
+
+        let crsctl_bin = crs_home
+            .as_ref()
+            .map(|home| home.join("bin").join("crsctl"));
+
         Ok(Some(Self {
             hostname: conn
                 .get_string(keys::HOSTNAME)
@@ -77,9 +120,9 @@ impl Connection {
                 .to_lowercase()
                 .into(),
             tns_admin: conn.get_string(keys::TNS_ADMIN).map(PathBuf::from),
-            oracle_local_registry: conn
-                .get_string(keys::ORACLE_LOCAL_REGISTRY)
-                .map(PathBuf::from),
+            oracle_local_registry,
+            crs_home,
+            crsctl_bin,
             port: conn.get_int::<u16>(keys::PORT).map(Port::from),
             timeout: conn.get_int::<u64>(keys::TIMEOUT),
             engine: {
@@ -111,6 +154,12 @@ impl Connection {
     }
     pub fn oracle_local_registry(&self) -> Option<&PathBuf> {
         self.oracle_local_registry.as_ref()
+    }
+    pub fn crs_home(&self) -> Option<&PathBuf> {
+        self.crs_home.as_ref()
+    }
+    pub fn crsctl_bin(&self) -> Option<&PathBuf> {
+        self.crsctl_bin.as_ref()
     }
     pub fn engine_tag(&self) -> &EngineTag {
         &self.engine
@@ -204,6 +253,8 @@ impl Default for Connection {
         Self {
             hostname: HostName::from(defaults::CONNECTION_HOST_NAME.to_string()),
             oracle_local_registry: None,
+            crs_home: None,
+            crsctl_bin: None,
             tns_admin: None,
             port: None,
             timeout: None,
@@ -254,6 +305,7 @@ connection:
                 tns_admin: Some(PathBuf::from("/path/to/oracle/config/files/")),
                 oracle_local_registry: Some(PathBuf::from("/etc/oracle/olr.loc")),
                 engine: EngineTag::Std,
+                ..Default::default()
             }
         );
     }
@@ -265,6 +317,8 @@ connection:
                 hostname: HostName::from("localhost".to_string()),
                 tns_admin: None,
                 oracle_local_registry: None,
+                crs_home: None,
+                crsctl_bin: None,
                 port: None,
                 timeout: None,
                 engine: EngineTag::default(),
@@ -417,5 +471,37 @@ connection:
         assert!(conn_local.is_local());
         assert!(conn_1.is_local());
         assert!(!conn_non_local.is_local());
+    }
+
+    #[test]
+    fn test_parse_crs_home() {
+        assert_eq!(
+            parse_crs_home("crs_home=/u01/app/19.0.0/grid"),
+            Some(PathBuf::from("/u01/app/19.0.0/grid"))
+        );
+        assert_eq!(parse_crs_home(""), None);
+        assert_eq!(parse_crs_home("# comment\n"), None);
+        assert_eq!(parse_crs_home("crs_home="), None);
+        assert_eq!(
+            parse_crs_home("olrconfig_loc=/etc/oracle/olr\ncrs_home=/grid"),
+            Some(PathBuf::from("/grid"))
+        );
+        assert_eq!(
+            parse_crs_home("crs_home=/first\ncrs_home=/second"),
+            Some(PathBuf::from("/first"))
+        );
+        assert_eq!(
+            parse_crs_home("badline\ncrs_home=/ok"),
+            Some(PathBuf::from("/ok"))
+        );
+    }
+
+    #[test]
+    fn test_connection_crs_home_none_when_no_olr_file() {
+        let conn = Connection::from_yaml(&create_yaml(data::CONNECTION_FULL))
+            .unwrap()
+            .unwrap();
+        assert!(conn.crs_home().is_none());
+        assert!(conn.crsctl_bin().is_none());
     }
 }

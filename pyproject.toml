@@ -43,6 +43,7 @@ select = [
   "I",      # isort
   "ISC",    # flake8: implicit string concat
   "LOG001", # flake8-logging: direct-logger-instantiation
+  "LOG002", # flake8-logging: invalid-get-logger-argument
   "LOG014", # flake8-logging: no exc_info= outside exception handlers
   "PIE",    # flake8: misc lints
   "PL",     # pylint

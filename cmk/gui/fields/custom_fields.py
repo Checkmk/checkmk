@@ -79,11 +79,11 @@ class RelativeUrl(fields.String):
         super()._validate(value)
 
         if self.must_endwith_one:
-            if not any({value.endswith(postfix) for postfix in self.must_endwith_one}):
+            if not any(value.endswith(postfix) for postfix in self.must_endwith_one):
                 raise self.make_error("endswith_error", value=value, endswith=self.must_endwith_one)
 
         if self.must_startwith_one:
-            if not any({value.startswith(prefix) for prefix in self.must_startwith_one}):
+            if not any(value.startswith(prefix) for prefix in self.must_startwith_one):
                 raise self.make_error(
                     "startwith_error", value=value, startwith=self.must_startwith_one
                 )

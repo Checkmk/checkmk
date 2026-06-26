@@ -438,13 +438,13 @@ class RelativeUrlConverter:
             return value
 
         if self.must_endwith_one is not None:
-            if not any({value.endswith(postfix) for postfix in self.must_endwith_one}):
+            if not any(value.endswith(postfix) for postfix in self.must_endwith_one):
                 raise ValueError(
                     "The URL {value!r} does not end with one of {self.must_endwith_one!r}"
                 )
 
         if self.must_startwith_one is not None:
-            if not any({value.startswith(prefix) for prefix in self.must_startwith_one}):
+            if not any(value.startswith(prefix) for prefix in self.must_startwith_one):
                 raise ValueError(
                     "The URL {value!r} does not start with one of {self.must_startwith_one!r}"
                 )

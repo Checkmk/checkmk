@@ -72,10 +72,8 @@ class SessionManager:
 
 def _is_ahv_exclusive(hosts_obj: Mapping[str, Iterable[Mapping[str, str]]]) -> bool:
     return all(
-        [
-            host.get("hypervisor_type", "") in ("kAcropolis", "kKvm")
-            for host in hosts_obj.get("entities", [])
-        ]
+        host.get("hypervisor_type", "") in ("kAcropolis", "kKvm")
+        for host in hosts_obj.get("entities", [])
     )
 
 

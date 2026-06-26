@@ -18,6 +18,7 @@ from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     AGENT_ENGINE_RULE_ID,
     AUTOMATION_HELPER_RULE_ID,
     EVENT_CONSOLE_RULE_ID,
+    MCP_SERVER_RULE_ID,
     OTEL_COLLECTOR_RULE_ID,
     overwrite_ps_discovery_rules,
     PROXMOX_RULE_IDS,
@@ -75,11 +76,12 @@ def test_update_with_preexisting_ui_job_scheduler() -> None:
 
     ruleset = rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME]
     assert (
-        ruleset.num_rules() == 1 + len(PROXMOX_RULE_IDS) + 2
-    )  # +2 for otel-collector, agent-engine
+        ruleset.num_rules() == 1 + len(PROXMOX_RULE_IDS) + 3
+    )  # +3 for otel-collector, agent-engine, mcp-server
     assert rule_present(ruleset, UI_JOB_SCHEDULER_RULE_ID)
     assert rule_present(ruleset, OTEL_COLLECTOR_RULE_ID)
     assert rule_present(ruleset, AGENT_ENGINE_RULE_ID)
+    assert rule_present(ruleset, MCP_SERVER_RULE_ID)
 
 
 @pytest.mark.usefixtures("request_context")
@@ -256,3 +258,7 @@ def test_agent_engine_rule_does_not_overlap_other_rules() -> None:
 
 def test_agent_engine_rule_is_backfilled_on_existing_sites() -> None:
     assert AGENT_ENGINE_RULE_ID in _NEW_DEFAULT_RULE_IDS
+
+
+def test_mcp_server_rule_is_backfilled_on_existing_sites() -> None:
+    assert MCP_SERVER_RULE_ID in _NEW_DEFAULT_RULE_IDS

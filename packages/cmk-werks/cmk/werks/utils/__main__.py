@@ -76,7 +76,7 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser_precompile.add_argument(
         "--filter-by-edition",
         default=None,
-        choices=[*map(lambda x: x.value, [*EditionV2, *EditionV3])],
+        choices=[*(x.value for x in [*EditionV2, *EditionV3])],
     )
     parser_precompile.set_defaults(func=main_precompile)
 

@@ -209,7 +209,7 @@ class Version:
     _PAT_BUILD = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
     _PAT_RC_CANDIDATE = r"-rc(\d+)"  # e.g. "-rc3"
     _PAT_META_DATA = r"\+(.*)"  # e.g. "+security"
-    _PAT_EDITION = r"(?:\.(%s))" % "|".join(map(lambda x: x.short, Edition))  # e.g. ".cre"
+    _PAT_EDITION = r"(?:\.(%s))" % "|".join(x.short for x in Edition)  # e.g. ".cre"
     _RGX_STABLE = re.compile(
         rf"{_PAT_BASE}(?:{_PAT_BUILD})?(?:{_PAT_RC_CANDIDATE})?(?:{_PAT_META_DATA})?"
     )  # e.g. "2.1.0p17-rc3+security"

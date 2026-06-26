@@ -80,7 +80,7 @@ def _remove_cab(path_to_msibuild: Path, *, msi: Path) -> None:
 
 def _create_new_cab(work_dir: Path) -> None:
     _verbose("Generating new product.cab")
-    files = " ".join(map(lambda f: f"{work_dir / f}", msi_file_table()))
+    files = " ".join(f"{work_dir / f}" for f in msi_file_table())
     cmd: Final = f"lcab -n {files} {work_dir}/product.cab > nul"
     if (result := os.system(cmd)) != 0:  # nosec B605 # BNS:f6c1b9
         bail_out(f"lcab is failed in create new cab, {result=}")

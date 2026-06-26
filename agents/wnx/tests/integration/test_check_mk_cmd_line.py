@@ -67,7 +67,7 @@ def test_check_mk_agent_cmd_line_show_config(
     assert {"  disabled_sections: wmi_webservices", "  port: 25998"}.issubset(r)
 
     envs_set = {l[2:] for l in result if l.startswith("# MK_")}
-    envs = {p[0]: p[1] for p in list(map(lambda x: x.split("="), envs_set))}
+    envs = {p[0]: p[1] for p in [x.split("=") for x in envs_set]}
     for k, v in _ENV_MAP.items():
         assert envs[k] == f'"{str(data_dir / v)}"'
 

@@ -298,9 +298,7 @@ class BICompiledLeaf(ABCBICompiledNode):
     def serialize(self) -> dict[str, Any]:
         return {
             "type": self.kind(),
-            "required_hosts": list(
-                map(lambda x: {"site_id": x[0], "host_name": x[1]}, self.required_hosts)
-            ),
+            "required_hosts": [{"site_id": x[0], "host_name": x[1]} for x in self.required_hosts],
             "site_id": self.site_id,
             "host_name": self.host_name,
             "service_description": self.service_description,
@@ -522,9 +520,7 @@ class BICompiledRule(ABCBICompiledNode):
             "id": self.id,
             "pack_id": self.pack_id,
             "type": self.kind(),
-            "required_hosts": list(
-                map(lambda x: {"site_id": x[0], "host_name": x[1]}, self.required_hosts)
-            ),
+            "required_hosts": [{"site_id": x[0], "host_name": x[1]} for x in self.required_hosts],
             "nodes": [node.serialize() for node in self.nodes],
             "aggregation_function": self.aggregation_function.serialize(),
             "node_visualization": self.node_visualization,

@@ -28,6 +28,7 @@ select = [
   "C413",   # flake8-comprehensions: unnecessary-call-around-sorted
   "C414",   # flake8-comprehensions: unnecessary-double-cast-or-process
   "C416",   # flake8-comprehensions: unnecessary-comprehension
+  "C417",   # flake8-comprehensions: unnecessary-map
   "C90",    # mccabe
   "E",      # pycodestyle (error)
   "F",      # pyflakes

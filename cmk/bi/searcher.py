@@ -93,7 +93,7 @@ class BISearcher(ABCBISearcher):
         if pattern == "(.*)":
             return hosts, self._get_host_match_groups_by_name(hosts)
 
-        is_regex_match = any(map(lambda char: char in pattern, ["(", ")", "*", "$", "|", "[", "]"]))
+        is_regex_match = any(char in pattern for char in ["(", ")", "*", "$", "|", "[", "]"])
         if not is_regex_match:
             host = self.hosts.get(pattern)
             if host:

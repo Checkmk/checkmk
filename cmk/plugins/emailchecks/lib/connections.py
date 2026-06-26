@@ -158,7 +158,7 @@ class EWS(_Connection):
         logging.debug(
             "folder, [folder.children]:\n%s",
             "\n".join(
-                f"{folder} {list(map(lambda x: str(x.name), folder.children))}"
+                f"{folder} {[str(x.name) for x in folder.children]}"
                 for folder in self._account.msg_folder_root.children
             ),
         )

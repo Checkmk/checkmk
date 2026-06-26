@@ -388,7 +388,7 @@ def compute_bi_timelines(
 
     logger.debug(
         "Computing timelines for range %r. %d phases and %d timeline containers",
-        tuple(map(lambda x: time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(x)), time_range)),
+        tuple(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(x)) for x in time_range),
         len(phases_list),
         len(timeline_containers),
     )

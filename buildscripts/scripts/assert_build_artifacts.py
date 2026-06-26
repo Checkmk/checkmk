@@ -180,7 +180,7 @@ class AssertResult(NamedTuple):
 def assert_presence_on_download_server(
     version: Version, internal_only: bool, artifact_name: str, credentials: Credentials
 ) -> AssertResult:
-    if not file_exists_on_download_server(artifact_name, version, credentials) != internal_only:
+    if file_exists_on_download_server(artifact_name, version, credentials) == internal_only:
         return AssertResult(
             assertion_ok=False,
             message=(

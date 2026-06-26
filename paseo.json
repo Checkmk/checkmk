@@ -1,7 +1,7 @@
 {
   "worktree": {
     "setup": [
-      "cp \"$PASEO_WORKTREE_PATH/bazel/tools/paseo.user.bazelrc\" \"$PASEO_WORKTREE_PATH/user.bazelrc\""
+      "cp \"$PASEO_WORKTREE_PATH/.paseo/paseo.user.bazelrc\" \"$PASEO_WORKTREE_PATH/user.bazelrc\""
     ],
     "teardown": [
       "output_base=\"$(cd \"$PASEO_WORKTREE_PATH\" && bazel info output_base 2>/dev/null)\"; (cd \"$PASEO_WORKTREE_PATH\" && bazel shutdown 2>/dev/null || true); [ -n \"$output_base\" ] && [ -d \"$output_base\" ] && rm -rf \"$output_base\" || true",

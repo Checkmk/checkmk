@@ -39,6 +39,11 @@ const {
 
 const selectedName = defineModel<string | null>({ default: null })
 
+defineSlots<{
+  /** Per-option content, forwarded to CmkSuggestions; defaults to the suggestion title. */
+  option?: (props: { suggestion: Suggestion }) => unknown
+}>()
+
 const vClickOutside = useClickOutside()
 
 const open = ref(false)
@@ -151,7 +156,11 @@ function handleSelect(selected: Suggestion | null): void {
       :no-results-hint="noResultsHint"
       @select-suggestion="handleSelect"
       @request-close-suggestions="close"
-    />
+    >
+      <template v-if="$slots.option" #option="slotProps">
+        <slot name="option" v-bind="slotProps" />
+      </template>
+    </CmkSuggestions>
   </div>
 </template>
 

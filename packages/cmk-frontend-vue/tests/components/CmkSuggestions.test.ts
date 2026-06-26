@@ -5,6 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { h } from 'vue'
 
 import CmkSuggestions, {
   NoSelection,
@@ -145,11 +146,10 @@ async function typeFilter(value: string): Promise<void> {
 }
 
 function assertSplit(option: HTMLElement, before: string, match: string, after: string): void {
-  const children = Array.from(option.children) as HTMLElement[]
-  expect(children.map((c) => c.tagName)).toEqual(['SPAN', 'MARK', 'SPAN'])
-  expect(children[0]!.textContent).toBe(before)
-  expect(children[1]!.textContent).toBe(match)
-  expect(children[2]!.textContent).toBe(after)
+  // The matched substring is wrapped in <mark> (the highlight has no ARIA representation, so the
+  // semantic element is what we assert); the full title text stays intact around it.
+  expect(option.querySelector('mark')?.textContent).toBe(match)
+  expect(option.textContent).toBe(`${before}${match}${after}`)
 }
 
 test('filtered mode + matching query wraps title in <mark>', async () => {
@@ -453,4 +453,21 @@ test('markSelected defaults to off so no checkmark is rendered', async () => {
   const selectedRow = await screen.findByRole('option', { name: 'Option Two' })
   expect(container.querySelectorAll('.cmk-suggestions__selected-mark')).toHaveLength(0)
   expect(selectedRow).not.toHaveAttribute('aria-selected')
+})
+
+test('option slot customizes the rendered option content', async () => {
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new NoSelection(),
+      suggestions: { type: 'fixed', suggestions: flatSuggestions },
+      role: 'option'
+    },
+    slots: {
+      option: (props: { suggestion: Suggestion }) =>
+        h('span', { class: 'custom-option' }, `[[${props.suggestion.title}]]`)
+    }
+  })
+
+  const row = await screen.findByRole('option', { name: 'Option One' })
+  expect(row.querySelector('.custom-option')?.textContent).toBe('[[Option One]]')
 })

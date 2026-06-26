@@ -13,6 +13,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 const empty = ref<string | null>(null)
 const preselected = ref<string | null>('3h')
+const customOption = ref<string | null>(null)
 
 const ranges: Suggestions = {
   type: 'fixed',
@@ -45,4 +46,14 @@ const ranges: Suggestions = {
     label="time range"
     disabled
   />
+
+  <h2>Custom option content (#option slot)</h2>
+  <CmkChipSelect
+    v-model="customOption"
+    :options="ranges"
+    input-hint="More ranges"
+    label="time range"
+  >
+    <template #option="{ suggestion }"> {{ suggestion.title }} ({{ suggestion.name }}) </template>
+  </CmkChipSelect>
 </template>

@@ -5,6 +5,7 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
+import { h } from 'vue'
 
 import CmkChipSelect from '@/components/CmkChipSelect.vue'
 
@@ -146,4 +147,19 @@ test('does not open when there are no options and no results hint', async () => 
 
   await user.click(screen.getByRole('combobox', { name: 'time range' }))
   expect(screen.queryByRole('listbox')).toBeNull()
+})
+
+test('forwards the option slot to the suggestion rows', async () => {
+  const user = userEvent.setup()
+  render(CmkChipSelect, {
+    props: { options: timeRanges, modelValue: null, inputHint: 'More ranges', label: 'time range' },
+    slots: {
+      option: (props: { suggestion: { title: string } }) =>
+        h('span', { class: 'custom-option' }, `range:${props.suggestion.title}`)
+    }
+  })
+
+  await user.click(screen.getByRole('combobox', { name: 'time range' }))
+  const row = await screen.findByRole('option', { name: 'Last hour' })
+  expect(row.querySelector('.custom-option')?.textContent).toBe('range:Last hour')
 })

@@ -51,6 +51,11 @@ const emit = defineEmits<{
   blur: []
 }>()
 
+defineSlots<{
+  /** Per-option content; defaults to the suggestion's (match-highlighted) title. */
+  option?: (props: { suggestion: Suggestion }) => unknown
+}>()
+
 const error = ref<string>('')
 const warning = ref<string>('')
 const suggestionRefs = useTemplateRef('suggestionRefs')
@@ -396,21 +401,25 @@ defineExpose({
           }"
           @click="selectSuggestion(suggestion)"
         >
-          <template v-for="render in [getRowRender(suggestion)]">
-            <template v-if="render.kind === 'title-match'">
-              <span>{{ render.parts.before }}</span
-              ><mark>{{ render.parts.match }}</mark
-              ><span>{{ render.parts.after }}</span>
-            </template>
-            <template v-else-if="render.kind === 'name-match'"
-              >{{ suggestion.title
-              }}<span class="cmk-suggestions__name-match">
-                ({{ render.nameParts.before }}<mark>{{ render.nameParts.match }}</mark
-                >{{ render.nameParts.after }})</span
-              >
-            </template>
-            <template v-else>{{ suggestion.title }}</template>
-          </template>
+          <span class="cmk-suggestions__option">
+            <slot name="option" :suggestion="suggestion">
+              <template v-for="render in [getRowRender(suggestion)]">
+                <template v-if="render.kind === 'title-match'">
+                  <span>{{ render.parts.before }}</span
+                  ><mark>{{ render.parts.match }}</mark
+                  ><span>{{ render.parts.after }}</span>
+                </template>
+                <template v-else-if="render.kind === 'name-match'"
+                  >{{ suggestion.title
+                  }}<span class="cmk-suggestions__name-match">
+                    ({{ render.nameParts.before }}<mark>{{ render.nameParts.match }}</mark
+                    >{{ render.nameParts.after }})</span
+                  >
+                </template>
+                <template v-else>{{ suggestion.title }}</template>
+              </template>
+            </slot>
+          </span>
           <CmkIcon
             v-if="
               markSelected &&
@@ -518,6 +527,13 @@ defineExpose({
     &.cmk-suggestions__item--markable {
       display: flex;
       align-items: center;
+    }
+
+    /* Fill the row so a custom option (e.g. a tooltip trigger) can span the whole option,
+       not just its text. Stays block-flow so the default title's match highlight is unaffected. */
+    .cmk-suggestions__option {
+      flex: 1;
+      min-width: 0;
     }
 
     &.cmk-suggestions__item--in-section {

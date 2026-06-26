@@ -1,3 +1,16 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "nagvis",
+    cpe_format_str = "cpe:2.3:a:nagvis:nagvis:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:GPL-2.0-only",
+    license_text = "COPYING",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = "1.10.5",
+)
+
 exports_files(["etc/nagvis.ini.php-sample"])
 
 exports_files(["etc/geomap/demo-locations.csv"])

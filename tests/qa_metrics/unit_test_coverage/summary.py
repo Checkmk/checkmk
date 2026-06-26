@@ -9,12 +9,13 @@ import argparse
 import csv
 from collections import defaultdict
 from collections.abc import Iterable
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import TypedDict
 
 
-class CoverageStats(TypedDict):
-    """Type definition for coverage statistics."""
+@dataclass(frozen=True, kw_only=True)
+class CoverageStats:
+    """Line and function coverage of a module or the whole repo, with percentages."""
 
     lines_coverage_percent: float
     functions_coverage_percent: float
@@ -24,25 +25,24 @@ class CoverageStats(TypedDict):
     total_functions: int
 
 
-class RawStats(TypedDict):
-    """Type definition for raw statistics from LCOV parsing."""
+@dataclass(kw_only=True)
+class RawStats:
+    """Covered and total line/function counts accumulated from an LCOV tracefile."""
 
-    lines: int
-    lines_covered: int
-    functions: int
-    functions_covered: int
+    lines: int = 0
+    lines_covered: int = 0
+    functions: int = 0
+    functions_covered: int = 0
 
+    def record_line(self, *, hits: int) -> None:
+        """Count one more line, covered when ``hits > 0``."""
+        self.lines += 1
+        self.lines_covered += int(hits > 0)
 
-def _record_line(stats: RawStats, *, hits: int) -> None:
-    stats["lines"] += 1
-    if hits > 0:
-        stats["lines_covered"] += 1
-
-
-def _record_function(stats: RawStats, *, hits: int) -> None:
-    stats["functions"] += 1
-    if hits > 0:
-        stats["functions_covered"] += 1
+    def record_function(self, *, hits: int) -> None:
+        """Count one more function, covered when ``hits > 0``."""
+        self.functions += 1
+        self.functions_covered += int(hits > 0)
 
 
 def parse_lcov(lines: Iterable[str]) -> dict[str, RawStats]:
@@ -54,9 +54,7 @@ def parse_lcov(lines: Iterable[str]) -> dict[str, RawStats]:
     no hit count and are ignored); line coverage from ``DA:<line>,<hits>``
     records.
     """
-    file_data: dict[str, RawStats] = defaultdict(
-        lambda: RawStats(lines=0, lines_covered=0, functions=0, functions_covered=0)
-    )
+    file_data: dict[str, RawStats] = defaultdict(RawStats)
 
     current_file: str | None = None
     for raw_line in lines:
@@ -66,52 +64,43 @@ def parse_lcov(lines: Iterable[str]) -> dict[str, RawStats]:
         elif current_file is None:
             continue
         elif line.startswith("FNA:"):
-            _record_function(file_data[current_file], hits=int(line[4:].split(",", 2)[1]))
+            file_data[current_file].record_function(hits=int(line[4:].split(",", 2)[1]))
         elif line.startswith("DA:"):
-            _record_line(file_data[current_file], hits=int(line[3:].split(",")[1]))
+            file_data[current_file].record_line(hits=int(line[3:].split(",")[1]))
     return file_data
 
 
 def calculate_coverage_stats(stats: RawStats) -> CoverageStats:
     """Calculate coverage percentages for given stats."""
-    total_lines = stats["lines"]
-    covered_lines = stats["lines_covered"]
-    line_cov_pct = 100.0 * covered_lines / total_lines if total_lines else 0
-
-    total_funcs = stats["functions"]
-    covered_funcs = stats["functions_covered"]
-    func_cov_pct = 100.0 * covered_funcs / total_funcs if total_funcs else 0
+    line_cov_pct = 100.0 * stats.lines_covered / stats.lines if stats.lines else 0
+    func_cov_pct = 100.0 * stats.functions_covered / stats.functions if stats.functions else 0
 
     return CoverageStats(
         lines_coverage_percent=round(line_cov_pct, 2),
         functions_coverage_percent=round(func_cov_pct, 2),
-        covered_lines=covered_lines,
-        total_lines=total_lines,
-        covered_functions=covered_funcs,
-        total_functions=total_funcs,
+        covered_lines=stats.lines_covered,
+        total_lines=stats.lines,
+        covered_functions=stats.functions_covered,
+        total_functions=stats.functions,
     )
 
 
 def calculate_total_coverage(file_data: dict[str, RawStats]) -> CoverageStats:
     """Calculate total project coverage statistics."""
-    totals = RawStats(lines=0, lines_covered=0, functions=0, functions_covered=0)
-    for stats in file_data.values():
-        totals["lines"] += stats["lines"]
-        totals["lines_covered"] += stats["lines_covered"]
-        totals["functions"] += stats["functions"]
-        totals["functions_covered"] += stats["functions_covered"]
-
-    return calculate_coverage_stats(totals)
+    stats = file_data.values()
+    return calculate_coverage_stats(
+        RawStats(
+            lines=sum(s.lines for s in stats),
+            lines_covered=sum(s.lines_covered for s in stats),
+            functions=sum(s.functions for s in stats),
+            functions_covered=sum(s.functions_covered for s in stats),
+        )
+    )
 
 
 def write_csv_row(writer: csv.DictWriter[str], file_path: str, stats: CoverageStats) -> None:
     """Write a single coverage row to CSV."""
-    writer.writerow(
-        {
-            "file_path": file_path,
-            **stats,
-        }
-    )
+    writer.writerow({"file_path": file_path, **asdict(stats)})
 
 
 def write_csv(

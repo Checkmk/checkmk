@@ -13,6 +13,39 @@ from tests.qa_metrics.unit_test_coverage.summary import (
 )
 
 
+def test_record_line_counts_covered_when_hit() -> None:
+    stats = RawStats()
+    stats.record_line(hits=3)
+    assert stats == RawStats(lines=1, lines_covered=1, functions=0, functions_covered=0)
+
+
+def test_record_line_counts_uncovered_when_not_hit() -> None:
+    stats = RawStats()
+    stats.record_line(hits=0)
+    assert stats == RawStats(lines=1, lines_covered=0, functions=0, functions_covered=0)
+
+
+def test_record_function_counts_covered_when_hit() -> None:
+    stats = RawStats()
+    stats.record_function(hits=2)
+    assert stats == RawStats(lines=0, lines_covered=0, functions=1, functions_covered=1)
+
+
+def test_record_function_counts_uncovered_when_not_hit() -> None:
+    stats = RawStats()
+    stats.record_function(hits=0)
+    assert stats == RawStats(lines=0, lines_covered=0, functions=1, functions_covered=0)
+
+
+def test_record_accumulates_lines_and_functions_independently() -> None:
+    stats = RawStats()
+    stats.record_line(hits=1)
+    stats.record_line(hits=0)
+    stats.record_function(hits=5)
+    stats.record_function(hits=0)
+    assert stats == RawStats(lines=2, lines_covered=1, functions=2, functions_covered=1)
+
+
 def test_parse_lcov_counts_lcov_2_x_function_records() -> None:
     """lcov 2.x emits FNL/FNA; function hits must be read from FNA records."""
     assert parse_lcov(

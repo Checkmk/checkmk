@@ -11,6 +11,6 @@ def python_workspace():
             "https://www.python.org/ftp/python/" + version_str + "/" + filename,
             # UPSTREAM_MIRROR_URL + filename,
         ],
-        sha256 = "c30bb24b7f1e9a19b11b55a546434f74e739bb4c271a3e3a80ff4380d49f7adb",
+        sha256 = "c08bc65a81971c1dd5783182826503369466c7e67374d1646519adf05207b684",
         strip_prefix = "Python-" + version_str,
     )

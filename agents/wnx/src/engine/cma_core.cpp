@@ -1079,6 +1079,9 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
         if (error == 0 && exitCode != STILL_ACTIVE) {
             // Process has exited, read any remaining data
             readWhatLeft();
+            if (process_->getData().empty()) {
+                setPhantomResult();
+            }
             return true;
         }
         remaining_timeout -= time_grane;
@@ -1087,6 +1090,9 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
     // Timeout expired or break condition met
     readWhatLeft();
     auto [exitCode, error] = wtools::GetProcessExitCode(pid);
+    if (error == 0 && exitCode != STILL_ACTIVE && process_->getData().empty()) {
+        setPhantomResult();
+    }
     failed_ = remaining_timeout <= std::chrono::milliseconds::zero();
     if (error != 0 || exitCode == STILL_ACTIVE) {
         // Process is running or status is unknown
@@ -1287,6 +1293,10 @@ std::vector<char> PluginEntry::getResultsAsync(bool start_process_now) {
             }
         }
     }
+    XLOG::t(
+        "### Data age = {}, cache age = {}, empty =  {}, ok = {}, to be old = {}",
+        duration_cast<std::chrono::seconds>(data_age).count(), cacheAge(),
+        data_.empty(), data_ok, going_to_be_old);
     if (!data_ok) {
         XLOG::d("Data '{}' is too old, age is '{}' seconds", path(),
                 duration_cast<std::chrono::seconds>(data_age).count());
@@ -1301,6 +1311,12 @@ std::vector<char> PluginEntry::getResultsAsync(bool start_process_now) {
             XLOG::d.i("plugin '{}' is marked for restart", path());
             markAsForRestart();
         }
+    }
+    // phantom data case
+    if (std::string_view(data_.data(), data_.size()) ==
+        std::string_view("\1", 1)) {
+        // Phantom data means NO data -> sends nothing
+        return {};
     }
 
     // we always return data even if data is OLD

@@ -71,8 +71,10 @@ def main():
 
     if pkg.is_installed() != args.uninstall:
         logger.info(
-            f"Can not {operation}; {pkg} is %s!. Terminating.",
-            ("not installed" if args.uninstall else "already installed"),
+            "Can not %s; %s is %s!. Terminating.",
+            operation,
+            pkg,
+            "not installed" if args.uninstall else "already installed",
         )
         return CMK_OK
     manager = ABCPackageManager.factory()

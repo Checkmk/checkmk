@@ -64,7 +64,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
             oid_prefix = oid
             dot_star = False
 
-        self._logger.debug(f"  Loading {oid}")
+        self._logger.debug("  Loading %s", oid)
         lines = self.read_walk_data()
 
         begin = 0
@@ -97,7 +97,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
 
     @staticmethod
     def read_walk_from_path(path: Path, logger: logging.Logger) -> Sequence[str]:
-        logger.debug(f"  Opening {path}")
+        logger.debug("  Opening %s", path)
         lines = []
         with path.open() as f:
             # Sometimes there are newlines in the data of snmpwalks.

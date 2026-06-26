@@ -99,7 +99,7 @@ def validate_rule_values(
                     exc_info=True,
                 )
                 identity = create_gui_crash_report().ident_to_text()
-                logger.warning(f"A crash report was generated with ID: {identity}")
+                logger.warning("A crash report was generated with ID: %s", identity)
 
     if n_invalid:
         logger.warning(

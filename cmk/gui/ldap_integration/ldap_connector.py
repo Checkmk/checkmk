@@ -626,16 +626,18 @@ def _sync_ldap_user(
 
     if ldap_user_connector.create_users_only_on_login() and not login_attempt:
         ldap_user_connector._logger.info(
-            f'  SKIP SYNC "{fetched_ldap_user.ldap_user_name}" '
-            f'(Only create user of "{ldap_user_connector.id}" connector on login)'
+            '  SKIP SYNC "%s" (Only create user of "%s" connector on login)',
+            fetched_ldap_user.ldap_user_name,
+            ldap_user_connector.id,
         )
         return None
 
     if not login_attempt and not ldap_user_connector.is_authentication_connection():
         ldap_user_connector._logger.info(
-            f'  SKIP SYNC "{fetched_ldap_user.ldap_user_name}" '
-            f'(connector "{ldap_user_connector.id}" only syncs attributes; '
-            f"user creation is reserved for authentication_connections)"
+            '  SKIP SYNC "%s" (connector "%s" only syncs attributes; '
+            "user creation is reserved for authentication_connections)",
+            fetched_ldap_user.ldap_user_name,
+            ldap_user_connector.id,
         )
         return None
 
@@ -1135,7 +1137,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         if columns is None:
             columns = []
 
-        self._logger.info(f'LDAP_SEARCH "{base}" "{scope}" "{filt}" "{columns!r}"')
+        self._logger.info('LDAP_SEARCH "%s" "%s" "%s" "%r"', base, scope, filt, columns)
         self._num_queries += 1
         start_time = time.time()
 
@@ -1399,7 +1401,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             try:
                 user_id = self._sanitize_user_id(ldap_user[user_id_attr][0])
             except ValueError as e:
-                self._logger.warning(f"  SKIP SYNC {e}")
+                self._logger.warning("  SKIP SYNC %s", e)
                 continue
 
             if user_id:

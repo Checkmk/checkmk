@@ -110,7 +110,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir, as_user: None | str) -
         env_override = {"SNMPSIM_ALLOW_ROOT": "true"}
         # Extend the environment with variables required by snmpsim
         env_override.update({key: os.environ[key] for key in ("HOME",)})
-        logger.debug(f"overriding snmpsim-command-responder process env with: {env_override!r}")
+        logger.debug("overriding snmpsim-command-responder process env with: %r", env_override)
 
     return ProcessDef(
         with_sudo=bool(as_user),

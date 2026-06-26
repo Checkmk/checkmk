@@ -105,7 +105,7 @@ def execute_host_removal_job(config: Config) -> None:
                 len(hostnames),
                 folder.title(),
             )
-            _LOGGER.info(f"Removing {len(hostnames)} hosts from folder {folder.title()}")
+            _LOGGER.info("Removing %s hosts from folder %s", len(hostnames), folder.title())
             with SuperUserContext():
                 folder.delete_hosts(
                     hostnames,
@@ -179,8 +179,7 @@ def _hosts_to_be_removed_for_site(
         # can happen if the Nagios core is currently restarting during the activation of changes
         except MKLivestatusSocketError:
             _LOGGER.info(
-                f"Skipping local site {site_id}, since livestatus is not available",
-                exc_info=True,
+                "Skipping local site %s, since livestatus is not available", site_id, exc_info=True
             )
             return []
     else:
@@ -194,7 +193,7 @@ def _hosts_to_be_removed_for_site(
                 )
             )
         except (MKUserError, MKAutomationException) as e:
-            _LOGGER.info(f"Skipping remote site {site_id}, might be down or not logged in ({e})")
+            _LOGGER.info("Skipping remote site %s, might be down or not logged in (%s)", site_id, e)
             return []
         hostnames = json.loads(hostnames_serialized)
 

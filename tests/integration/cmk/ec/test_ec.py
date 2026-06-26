@@ -184,7 +184,7 @@ def _wait_for_event_message_in_log(
     count = 0
     while (message not in site.read_file(log_path)) and count < max_count:
         logger.info(
-            f"Waiting for the following message in log file '{log_path}': %s", repr(message)
+            "Waiting for the following message in log file '%s': %s", log_path, repr(message)
         )
         time.sleep(sleep_time)
         count += 1

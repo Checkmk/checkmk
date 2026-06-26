@@ -694,7 +694,7 @@ def _make_rrd_data_getter(
                 livestatus.MKLivestatusNotFoundError,
             )
         ) as e:
-            logger.warning(f"Cannot get historic metrics via Livestatus: {e}")
+            logger.warning("Cannot get historic metrics via Livestatus: %s", e)
         return None
 
     return get_rrd_data

@@ -122,7 +122,7 @@ def ensure_utf8(logger_: Logger | None = None) -> None:
         if exit_code != 0:
             if not logger_:
                 raise MKGeneralException(f"{error_msg}: {exit_code!r}. {not_found_msg}")
-            logger_.info(f"{error_msg}: {exit_code!r}")
+            logger_.info("%s: %r", error_msg, exit_code)
             logger_.info(not_found_msg)
             return
 

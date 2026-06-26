@@ -25,13 +25,13 @@ class PrometheusQuickSetup(CmkPage):
 
     @override
     def navigate(self) -> None:
-        logger.info(f"Navigate to '{self.page_title}' page")
+        logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu(self.main_menu_name, exact=True).click()
         self.validate_page()
 
     @override
     def validate_page(self) -> None:
-        logger.info(f"Validate that current page is '{self.page_title}' page")
+        logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
 
     @override
@@ -87,7 +87,7 @@ class AddPrometheusQuickSetupConfiguration(CmkPage):
 
     @override
     def validate_page(self) -> None:
-        logger.info(f"Validate that current page is '{self.page_title}' page")
+        logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.wizard_root).to_be_visible()
 

@@ -195,7 +195,7 @@ class MockServer:
             addr = addr.decode()
         protocol = "https" if self.https else "http"
         self.url = f"{protocol}://{addr}:{port}"
-        logger.info(f"Mock server running at {self.url}")
+        logger.info("Mock server running at %s", self.url)
         return self
 
     def __exit__(

@@ -28,7 +28,7 @@ class AnalyzeConfiguration(CmkPage):
     @override
     def navigate(self) -> None:
         """Instructions to navigate to `Setup -> Maintenance -> Analyze configuration` page."""
-        logger.info(f"Navigate to '{self.page_title}' page")
+        logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu(self.page_title).click()
         _url_pattern: str = re.escape("wato.py?mode=analyze_config")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
@@ -36,7 +36,7 @@ class AnalyzeConfiguration(CmkPage):
 
     @override
     def validate_page(self) -> None:
-        logger.info(f"Validate that current page is '{self.page_title}' page")
+        logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.analyse_config_table).to_have_count(4)
 

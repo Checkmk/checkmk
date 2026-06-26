@@ -1818,7 +1818,7 @@ class Site:
         ]
 
     def report_crashes(self, ignore_bakery_crashes: bool = False) -> None:
-        logger.info(f"Checking crash reports for site {self.id}")
+        logger.info("Checking crash reports for site %s", self.id)
         for crash_dir in self.crash_reports_dirs():
             if crash_dir in self.known_crashes:
                 continue
@@ -2046,8 +2046,8 @@ class Site:
         included into counts on central site.
         """
         host_names, services = self._get_existing_hosts_and_services()
-        logger.debug(f"Found {len(host_names)} hosts on {self.id} site: {host_names}")
-        logger.debug(f"Found {len(services)} services on {self.id} site: {services}")
+        logger.debug("Found %s hosts on %s site: %s", len(host_names), self.id, host_names)
+        logger.debug("Found %s services on %s site: %s", len(services), self.id, services)
         return len(host_names), len(services)
 
     def _get_existing_hosts_and_services(self) -> tuple[list[str], list[dict[str, Any]]]:
@@ -2067,13 +2067,13 @@ class Site:
                 total_services += services
                 logger.info("Host '%s' has %d services configured", host_name, service_count)
         else:
-            logger.info(f"No existing hosts found on {self.id} site")
+            logger.info("No existing hosts found on %s site", self.id)
             host_names = []
         if not total_services:
-            logger.info(f"No existing services found on {self.id} site")
+            logger.info("No existing services found on %s site", self.id)
         else:
             logger.info(
-                f"Found a total of {len(total_services)} existing services on {self.id} site"
+                "Found a total of %s existing services on %s site", len(total_services), self.id
             )
         return host_names, total_services
 

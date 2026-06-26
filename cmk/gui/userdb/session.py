@@ -89,7 +89,7 @@ def ensure_user_can_init_session(username: UserId, now: datetime) -> None:
         idle_time = now.timestamp() - session_info.last_activity
         if idle_time <= session_timeout:
             auth_logger.debug(
-                f"{username} another session is active (inactive for: {idle_time} seconds)"
+                "%s another session is active (inactive for: %s seconds)", username, idle_time
             )
             raise MKUserError(None, _("Another session is active"))
 

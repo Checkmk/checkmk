@@ -107,11 +107,11 @@ class RulesetSplitMigration:
         try:
             old_ruleset = self.all_rulesets.get(self.old_ruleset_name)
         except KeyError:
-            self.logger.debug(f"No {self.ruleset_title} ruleset to migrate.")
+            self.logger.debug("No %s ruleset to migrate.", self.ruleset_title)
             return None
 
         if old_ruleset.is_empty():
-            self.logger.debug(f"{self.ruleset_title} ruleset has no rules.")
+            self.logger.debug("%s ruleset has no rules.", self.ruleset_title)
             return None
 
         sort_func = lambda item: item.new_ruleset_name

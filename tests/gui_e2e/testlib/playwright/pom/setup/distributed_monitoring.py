@@ -43,7 +43,7 @@ class DistributedMonitoring(CmkPage):
     @override
     def navigate(self) -> None:
         """Instructions to navigate to `Setup -> General -> Distributed monitoring` page."""
-        logger.info(f"Navigate to '{self.page_title}' page")
+        logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu(self.page_title).click()
         _url_pattern: str = re.escape("wato.py?mode=sites")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
@@ -51,7 +51,7 @@ class DistributedMonitoring(CmkPage):
 
     @override
     def validate_page(self) -> None:
-        logger.info(f"Validate that current page is '{self.page_title}' page")
+        logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(
             self.add_connection_button,
@@ -113,7 +113,7 @@ class DistributedMonitoring(CmkPage):
             site_id: The ID of the site to check.
             times_to_reload_page: Reload page, by default 5 times, to perform validation again.
         """
-        logger.info(f"Check via the UI that the remote site '{site_id}' is online")
+        logger.info("Check via the UI that the remote site '%s' is online", site_id)
         site_live = self.data_table.locator(f"div#livestatus_status_{site_id}")
         site_http = self.data_table.locator(f"div#replication_status_{site_id}")
         expected_text = "Online"
@@ -212,7 +212,7 @@ class AddSiteConnection(CmkPage):
         """Instructions to navigate to
         `Setup -> General -> Distributed monitoring -> Add site connection` page.
         """
-        logger.info(f"Navigate to '{self.page_title}' page")
+        logger.info("Navigate to '%s' page", self.page_title)
         _distributed_monitoring = DistributedMonitoring(self.page)
         _distributed_monitoring.add_connection_button.click()
         _url_pattern: str = re.escape("wato.py?mode=edit_site")
@@ -221,7 +221,7 @@ class AddSiteConnection(CmkPage):
 
     @override
     def validate_page(self) -> None:
-        logger.info(f"Validate that current page is '{self.page_title}' page")
+        logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(
             self.site_id_input, message=f"Site ID input not present in '{self.page_title}' page"

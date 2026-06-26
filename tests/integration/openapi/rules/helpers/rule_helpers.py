@@ -84,7 +84,7 @@ def create_and_verify_rule_with_levels(
         },
     )
     site.openapi.changes.activate_and_wait_for_completion()
-    logger.info(f"Created '{rule_type}' rule with ID: {rule_id}")
+    logger.info("Created '%s' rule with ID: %s", rule_type, rule_id)
     # Basic validation
     assert rule_id is not None, "Rule ID should not be None"
     assert isinstance(rule_id, str), "Rule ID should be string"
@@ -111,7 +111,7 @@ def create_and_verify_rule_with_levels(
     else:
         assert_fixed_levels_structure(stored_value, expected_checks or [])
 
-    logger.info(f"Successfully created and verified {rule_type} rule: {rule_id}")
+    logger.info("Successfully created and verified %s rule: %s", rule_type, rule_id)
     return rule_id
 
 
@@ -127,7 +127,7 @@ def verify_rule_conversion(
     for check in expected_checks:
         assert check in stored_value, f"Should contain {check} after {conversion_type}"
 
-    logger.info(f"{conversion_type} conversion verified for rule {rule_id}")
+    logger.info("%s conversion verified for rule %s", conversion_type, rule_id)
 
 
 @contextmanager
@@ -158,7 +158,7 @@ def setup_test_environment(
     allow_foreign_changes: bool = False,
 ) -> Generator[None]:
     """Creates and cleans up a test environment with a folder and a host."""
-    logger.info(f"Create test environment: folder='{folder}', host='{hostname}' via API")
+    logger.info("Create test environment: folder='%s', host='%s' via API", folder, hostname)
     try:
         site.openapi.folders.create(
             folder=folder,
@@ -182,7 +182,7 @@ def setup_test_environment(
 
     finally:
         if is_cleanup_enabled():
-            logger.info(f"Delete test environment: folder='{folder}', host='{hostname}' via API")
+            logger.info("Delete test environment: folder='%s', host='%s' via API", folder, hostname)
             site.openapi.hosts.delete(hostname)
             site.openapi.folders.delete(folder)
             site.openapi.changes.activate_and_wait_for_completion(

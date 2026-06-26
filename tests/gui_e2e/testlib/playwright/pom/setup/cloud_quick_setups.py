@@ -137,7 +137,7 @@ class BaseQuickSetupAddNewConfiguration(QuickSetupPage):
 
     @override
     def navigate(self) -> None:
-        logger.info(f"Navigate to 'Quick setup > {self.page_title}' page")
+        logger.info("Navigate to 'Quick setup > %s' page", self.page_title)
         list_page = self.list_configuration_page()
         list_page.add_configuration_button.click()
         _url_pattern: str = re.escape(

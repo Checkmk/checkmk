@@ -98,7 +98,7 @@ def get_product_usage_json_content(site: Site) -> str:
     json_files = get_product_usage_json_files(site)
     assert len(json_files) == 1, f"Expected 1 JSON file, found {len(json_files)}: {json_files}"
     json_content = site.read_file(f"{PRODUCT_USAGE_DATA_PATH}/{json_files[0]}")
-    logger.info(f"Product usage JSON content: {json_content}")
+    logger.info("Product usage JSON content: %s", json_content)
     return json_content
 
 
@@ -137,7 +137,7 @@ def test_product_usage_id_file_does_not_contain_site_id(site: Site) -> None:
     run_product_usage_collection(site)
 
     product_usage_site_id = site.read_file(PRODUCT_USAGE_SITE_ID_PATH).strip()
-    logger.info(f"Product usage site ID: {product_usage_site_id}")
+    logger.info("Product usage site ID: %s", product_usage_site_id)
     assert site.id not in product_usage_site_id, (
         f"site.id ({site.id}) should not be present in the product usage site ID file"
     )

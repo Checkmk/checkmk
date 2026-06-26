@@ -95,11 +95,9 @@ class CheckServiceDescriptionsPluginNames(PreUpdateAction):
 
         issue_list = "\n".join(f"  {issue}" for issue in issues)
         logger.warning(
-            f"Some {_VARNAME!r} entries in your configuration files use check "
-            "plug-in names from before Checkmk version 2.0. These names are no "
-            "longer translated automatically. If you do not fix the following "
-            "entries, the affected services will change their names:\n"
-            f"{issue_list}"
+            "Some %r entries in your configuration files use check plug-in names from before Checkmk version 2.0. These names are no longer translated automatically. If you do not fix the following entries, the affected services will change their names:\n%s",
+            _VARNAME,
+            issue_list,
         )
         if not self._continue_per_users_choice(conflict_mode):
             raise MKUserError(None, f"Outdated check plug-in names in {_VARNAME!r}")

@@ -280,7 +280,7 @@ def _add_trace_context(
 ) -> tuple[list[str] | None, dict[str, Any]]:
     current_distro = os.environ.get("DISTRO")
     if current_distro in DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU:
-        logger.info(f"Don't add trace context for {current_distro}")
+        logger.info("Don't add trace context for %s", current_distro)
         return preserve_env, kwargs
     if trace_env := trace.context_for_environment():
         orig_env = kwargs["env"] if kwargs.get("env") else dict(os.environ)

@@ -250,7 +250,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
             try:
                 threading.Thread(target=grequests.map, args=(events,)).start()
             except Exception as e:
-                logger.info(f"post error {str(e)}")
+                logger.info("post error %s", str(e))
             return 204
             self.event_id = self.event_id + 1
 
@@ -363,7 +363,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
             try:
                 threading.Thread(target=grequests.map, args=(events,)).start()
             except Exception as e:
-                logger.info(f"post error {str(e)}")
+                logger.info("post error %s", str(e))
             self.event_id = self.event_id + 1
             return 204
         else:
@@ -488,7 +488,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
         # for GETs always dump the request headers to the console
         # there is no request data, so no need to dump that
         logger.info(("GET", self.path))
-        logger.info(f"   GET: Headers: {self.headers}")
+        logger.info("   GET: Headers: %s", self.headers)
 
         # construct path "mockdir/path/to/resource/<filename>"
         fpath = self.construct_path(self.path, "index.json")
@@ -625,9 +625,9 @@ class RfMockupServer(BaseHTTPRequestHandler):
             self.end_headers()
 
     def do_PATCH(self):
-        logger.info(f"   PATCH: Headers: {self.headers}")
+        logger.info("   PATCH: Headers: %s", self.headers)
         ctype, pdict = multipart.parse_options_header(self.headers.get("content-type", None))
-        logger.info(f"   PATCH: Content: type={ctype} and params={pdict}")
+        logger.info("   PATCH: Content: type=%s and params=%s", ctype, pdict)
         self.try_to_sleep("PATCH", self.path)
 
         if "content-length" in self.headers:
@@ -639,7 +639,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 data_received = None
 
         if data_received:
-            logger.info(f"   PATCH: Data: {data_received}")
+            logger.info("   PATCH: Data: %s", data_received)
 
             # construct path "mockdir/path/to/resource/<filename>"
             fpath = self.construct_path(self.path, "index.json")
@@ -674,9 +674,9 @@ class RfMockupServer(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_PUT(self):
-        logger.info(f"   PUT: Headers: {self.headers}")
+        logger.info("   PUT: Headers: %s", self.headers)
         ctype, pdict = multipart.parse_options_header(self.headers.get("content-type", None))
-        logger.info(f"   PUT: Content: type={ctype} and params={pdict}")
+        logger.info("   PUT: Content: type=%s and params=%s", ctype, pdict)
         self.try_to_sleep("PUT", self.path)
 
         if "content-length" in self.headers:
@@ -686,7 +686,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
             except ValueError:
                 print("Decoding JSON has failed, sending 400")
                 data_received = None
-            logger.info(f"   PUT: Data: {data_received}")
+            logger.info("   PUT: Data: %s", data_received)
 
         # we don't support this service
         #   405
@@ -696,9 +696,9 @@ class RfMockupServer(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        logger.info(f"   POST: Headers: {self.headers}")
+        logger.info("   POST: Headers: %s", self.headers)
         ctype, pdict = multipart.parse_options_header(self.headers.get("content-type", None))
-        logger.info(f"   POST: Content: type={ctype} and params={pdict}")
+        logger.info("   POST: Content: type=%s and params=%s", ctype, pdict)
         if "content-length" in self.headers:
             lenn = int(self.headers["content-length"])
             if lenn == 0:
@@ -716,7 +716,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 #
                 # The third part is optional: OemXXX
                 for part in multipart.MultipartParser(self.rfile, boundary, lenn):
-                    logger.info(f"   POST: MULTIPART: name={part.name} and file={part.filename}")
+                    logger.info("   POST: MULTIPART: name=%s and file=%s", part.name, part.filename)
                     if part.filename:
                         with tempfile.TemporaryDirectory() as tmpdir:
                             part.save_as(os.path.join(tmpdir, part.filename))
@@ -737,7 +737,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
         self.try_to_sleep("POST", self.path)
 
         if data_received is not None:
-            logger.info(f"   POST: Data: {data_received}")
+            logger.info("   POST: Data: %s", data_received)
             # construct path "mockdir/path/to/resource/<filename>"
             fpath = self.construct_path(self.path, "index.json")
             success, payload = self.get_cached_link(fpath)
@@ -822,7 +822,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
         """
         Delete a resource
         """
-        logger.info(f"DELETE: Headers: {self.headers}")
+        logger.info("DELETE: Headers: %s", self.headers)
         self.try_to_sleep("DELETE", self.path)
 
         fpath = self.construct_path(self.path, "index.json")
@@ -879,7 +879,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
 
 def main():
-    logger.info(f"Redfish Mockup Server, version {tool_version}")
+    logger.info("Redfish Mockup Server, version %s", tool_version)
 
     parser = argparse.ArgumentParser(description="Serve a static Redfish mockup.")
     parser.add_argument(
@@ -944,16 +944,16 @@ def main():
         mockDirPath = "public-rackmount1"
         shortForm = True
 
-    logger.info(f"Hostname: {hostname}")
-    logger.info(f"Port: {port}")
-    logger.info(f"Mockup directory path specified: {mockDirPath}")
-    logger.info(f"Response time: {responseTime} seconds")
+    logger.info("Hostname: %s", hostname)
+    logger.info("Port: %s", port)
+    logger.info("Mockup directory path specified: %s", mockDirPath)
+    logger.info("Response time: %s seconds", responseTime)
 
     # create the full path to the top directory holding the Mockup
     mockDir = os.path.realpath(
         mockDirPath
     )  # creates real full path including path for CWD to the -D<mockDir> dir path
-    logger.info(f"Serving Mockup in absolute path: {mockDir}")
+    logger.info("Serving Mockup in absolute path: %s", mockDir)
 
     # check that we have a valid tall mockup--with /redfish in mockDir before proceeding
     if not shortForm:
@@ -982,7 +982,7 @@ def main():
     signal.signal(signal.SIGTERM, sigterm_handler)
 
     if sslMode:
-        logger.info(f"Using SSL with certfile: {sslCert}")
+        logger.info("Using SSL with certfile: %s", sslCert)
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         context.load_cert_chain(certfile=sslCert, keyfile=sslKey)
         myServer.socket = context.wrap_socket(myServer.socket, server_side=True)
@@ -1025,7 +1025,7 @@ def main():
             jsonData, "{}{}:{}{}".format(protocol, hostname, port, "/redfish/v1"), hostname
         )
 
-    logger.info(f"Serving Redfish mockup on port: {port}")
+    logger.info("Serving Redfish mockup on port: %s", port)
     try:
         if mySSDP is not None:
             t2 = threading.Thread(target=mySSDP.start)

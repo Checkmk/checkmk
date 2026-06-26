@@ -262,10 +262,12 @@ def check_config(edition: Edition, logger: logging.Logger, conflict_mode: Confli
     with disable_redis(), gui_context():
         _initialize_base_environment(edition)
         for count, pre_action in enumerate(pre_update_actions, start=1):
-            logger.info(f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...")
+            logger.info(
+                " %s%02d/%02d%s %s...", tty.yellow, count, total, tty.normal, pre_action.title
+            )
             pre_action(logger, conflict_mode)
 
-    logger.info(f"Done ({tty.green}success{tty.normal})\n")
+    logger.info("Done (%ssuccess%s)\n", tty.green, tty.normal)
 
 
 def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
@@ -286,7 +288,9 @@ def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
 
         with _forbid_pending_change_writes():
             for num, action in enumerate(actions, start=1):
-                logger.info(f" {tty.yellow}{num:02d}/{total:02d}{tty.normal} {action.title}...")
+                logger.info(
+                    " %s%02d/%02d%s %s...", tty.yellow, num, total, tty.normal, action.title
+                )
                 try:
                     action(logger)
                 except ForbiddenPendingChangeWriteError:
@@ -295,7 +299,7 @@ def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
                     raise
                 except Exception:
                     has_errors = True
-                    logger.exception(f' + "{action.title}" failed')
+                    logger.exception(' + "%s" failed', action.title)
                     if not action.continue_on_failure or debug.enabled():
                         raise
 
@@ -318,10 +322,10 @@ def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
             )
 
     if has_errors:
-        logger.error(f"Done ({tty.red}with errors{tty.normal})")
+        logger.error("Done (%swith errors%s)", tty.red, tty.normal)
         return 1
 
-    logger.info(f"Done ({tty.green}success{tty.normal})")
+    logger.info("Done (%ssuccess%s)", tty.green, tty.normal)
     return 0
 
 

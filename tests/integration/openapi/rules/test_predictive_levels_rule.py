@@ -54,7 +54,7 @@ def setup_test_environment_fixture(site: Site) -> Generator:
 @pytest.mark.parametrize("config", PERIOD_CONFIGS)
 def test_predictive_levels_periods(site: Site, config: TestRuleConfig) -> None:
     """Test different period types for predictive levels."""
-    logger.info(f"Testing: {config.description} (period={config.period})")
+    logger.info("Testing: %s (period=%s)", config.description, config.period)
 
     rule_value = build_predictive_rule_value(
         metric="read_ios",
@@ -69,14 +69,14 @@ def test_predictive_levels_periods(site: Site, config: TestRuleConfig) -> None:
         f"API Test: {config.description}",
         expected_checks=[f"period': '{config.period}'", "disk_read_ios"],
     ):
-        logger.info(f"Successfully tested period {config.period}")
+        logger.info("Successfully tested period %s", config.period)
 
 
 @pytest.mark.skip_if_edition("cloud")
 @pytest.mark.parametrize("config", LEVEL_CONFIGS)
 def test_predictive_levels_types(site: Site, config: LevelConfig) -> None:
     """Test different level types for predictive levels (absolute, relative, stdev)."""
-    logger.info(f"Testing: {config.description} for {config.metric}")
+    logger.info("Testing: %s for %s", config.description, config.metric)
 
     rule_value = build_predictive_rule_value(
         metric=config.metric,
@@ -90,14 +90,14 @@ def test_predictive_levels_types(site: Site, config: LevelConfig) -> None:
         f"API Test: {config.description}",
         expected_checks=[level_type, f"disk_{config.metric}"],
     ):
-        logger.info(f"Successfully tested {config.description}")
+        logger.info("Successfully tested %s", config.description)
 
 
 @pytest.mark.skip_if_edition("cloud")
 @pytest.mark.parametrize("config", BOUND_CONFIGS)
 def test_predictive_levels_bounds(site: Site, config: BoundConfig) -> None:
     """Test predictive levels with different bound configurations."""
-    logger.info(f"Testing: {config.description}")
+    logger.info("Testing: %s", config.description)
 
     rule_value = build_predictive_rule_value(
         metric="read_ios",
@@ -111,7 +111,7 @@ def test_predictive_levels_bounds(site: Site, config: BoundConfig) -> None:
         f"API Test: {config.description}",
         expected_checks=[expected_bound_check],
     ):
-        logger.info(f"Successfully tested {config.description}")
+        logger.info("Successfully tested %s", config.description)
 
 
 @pytest.mark.skip_if_edition("cloud")
@@ -140,10 +140,10 @@ def test_update_predictive_levels_rule(site: Site) -> None:
         },
     )
     site.openapi.changes.activate_and_wait_for_completion()
-    logger.info(f"Created rule with ID: {rule_id}")
+    logger.info("Created rule with ID: %s", rule_id)
 
     try:
-        logger.info(f"Update created rule {rule_id}")
+        logger.info("Update created rule %s", rule_id)
         updated_value = build_predictive_rule_value(
             metric="write_ios",
             period="day",
@@ -159,7 +159,7 @@ def test_update_predictive_levels_rule(site: Site) -> None:
         )
         site.openapi.changes.activate_and_wait_for_completion()
 
-        logger.info(f"Read updated rule {rule_id}")
+        logger.info("Read updated rule %s", rule_id)
         result = site.openapi.rules.get(rule_id)
         assert result is not None, f"Updated rule {rule_id} should be retrievable"
         updated_rule_data, _ = result
@@ -287,7 +287,7 @@ def test_fixed_to_predictive_conversion(site: Site) -> None:
         expected_checks=["50.0", "100.0"],
         rule_type="fixed_levels",
     ) as rule_id:
-        logger.info(f"Converting created rule {rule_id} from fixed to predictive levels")
+        logger.info("Converting created rule %s from fixed to predictive levels", rule_id)
         site.openapi.rules.update(
             rule_id=rule_id,
             value_raw=predictive_config,
@@ -295,7 +295,7 @@ def test_fixed_to_predictive_conversion(site: Site) -> None:
         )
         site.openapi.changes.activate_and_wait_for_completion()
 
-        logger.info(f"Verifying converted rule {rule_id} with predictive levels")
+        logger.info("Verifying converted rule %s with predictive levels", rule_id)
         verify_rule_conversion(
             site,
             rule_id,
@@ -310,7 +310,7 @@ def test_fixed_to_predictive_conversion(site: Site) -> None:
             "Predictive levels",
         )
 
-        logger.info(f"Converting rule {rule_id} back to fixed levels")
+        logger.info("Converting rule %s back to fixed levels", rule_id)
         site.openapi.rules.update(
             rule_id=rule_id,
             value_raw=final_fixed,
@@ -318,7 +318,7 @@ def test_fixed_to_predictive_conversion(site: Site) -> None:
         )
         site.openapi.changes.activate_and_wait_for_completion()
 
-        logger.info(f"Verifying converted rule {rule_id} with fixed levels")
+        logger.info("Verifying converted rule %s with fixed levels", rule_id)
         verify_rule_conversion(
             site,
             rule_id,
@@ -328,7 +328,7 @@ def test_fixed_to_predictive_conversion(site: Site) -> None:
 
         result = site.openapi.rules.get(rule_id)
         assert result is not None, f"Rule {rule_id} should exist after conversion to fixed"
-        logger.info(f"Verifying predictive elements are removed from rule {rule_id}")
+        logger.info("Verifying predictive elements are removed from rule %s", rule_id)
         stored_value = str(result[0]["value_raw"])
         assert "cmk_postprocessed" not in stored_value, "Predictive elements should be removed"
         assert "predictive_levels" not in stored_value, "Predictive elements should be removed"

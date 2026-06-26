@@ -134,14 +134,14 @@ def load_plugins(logger: logging.Logger, raise_errors: bool) -> list[AnonymizeSt
             for key, value in vars(module).items():
                 if key.startswith("anonymize_step") and isinstance(value, AnonymizeStep):
                     plugins[key] = value
-    logger.debug(f"Loaded step plugins: {plugins.keys()}")
+    logger.debug("Loaded step plugins: %s", plugins.keys())
     return list(plugins.values())
 
 
 def main(argv: Sequence[str]) -> None:
     args = parse_arguments(argv)
     init_logging()
-    logger.info(f"Anonymizing configuration to {args.target_dirname}...")
+    logger.info("Anonymizing configuration to %s...", args.target_dirname)
 
     try:
         main_modules.register(edition(paths.omd_root))

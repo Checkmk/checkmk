@@ -141,7 +141,7 @@ def _synchronize_profiles_to_sites(
 
     for result in results:
         if result.error_text:
-            logger.info(f"  FAILED [{result.site_id}]: {result.error_text}")
+            logger.info("  FAILED [%s]: %s", result.site_id, result.error_text)
             if wato_enabled:
                 pending_changes.add(
                     Change(

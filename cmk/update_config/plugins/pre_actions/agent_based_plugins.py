@@ -73,7 +73,9 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
 
             _log_error_message_obsolete_files(logger, paths)
             logger.error(
-                f"The above file(s) are part of the extension package {package_id.name} {package_id.version}."
+                "The above file(s) are part of the extension package %s %s.",
+                package_id.name,
+                package_id.version,
             )
             if disable_incomp_mkp(conflict_mode, package_id, installer, PACKAGE_STORE, path_config):
                 continue
@@ -95,7 +97,7 @@ def _continue_per_users_choice(conflict_mode: ConflictMode) -> Resume:
 
 def _log_error_message_obsolete_files(logger: Logger, paths: Sequence[Path]) -> None:
     for path in paths:
-        logger.error(f"Obsolete file: '{path}'")
+        logger.error("Obsolete file: '%s'", path)
     logger.error(
         "The file(s) residing in `local/lib/python3/cmk/plugins/agent_based` will no longer be loaded in Checkmk 2.4. "
     )

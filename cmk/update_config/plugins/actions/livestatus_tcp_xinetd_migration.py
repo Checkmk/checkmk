@@ -35,8 +35,8 @@ class CleanUpLivestatusXinetdConf(UpdateAction):
             deprecated_xinetd_config_file_backup = site_root / "etc/mk-livestatus/xinetd.conf.bak"
             copy2(deprecated_xinetd_config_file, deprecated_xinetd_config_file_backup)
             logger.info(
-                "Local modifications to xinetd config detected. "
-                f"Creating backup at {deprecated_xinetd_config_file_backup}"
+                "Local modifications to xinetd config detected. Creating backup at %s",
+                deprecated_xinetd_config_file_backup,
             )
 
         # Both deprecated files can now be safely removed.

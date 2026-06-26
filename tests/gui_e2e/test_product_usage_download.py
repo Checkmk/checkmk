@@ -59,5 +59,5 @@ def test_product_usage_download(dashboard_page: MainDashboard) -> None:
     assert "count_services" in data, "Product usage data should contain 'count_services' key"
     assert "checks" in data, "Product usage data should contain 'checks' key"
 
-    logger.info(f"Product usage data keys: {list(data.keys())}")
-    logger.info(f"Successfully downloaded and validated product usage file: {expected_filename}")
+    logger.info("Product usage data keys: %s", list(data.keys()))
+    logger.info("Successfully downloaded and validated product usage file: %s", expected_filename)

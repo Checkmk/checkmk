@@ -89,7 +89,7 @@ class RfSSDPServer:
         while True:
             try:
                 if countTimeout % 5 == 0:
-                    logger.info(f"Ssdp Poll... {pcount} pings")
+                    logger.info("Ssdp Poll... %s pings", pcount)
                     pcount = 0
                     countTimeout = 1
                 data, addr = self.sock.recvfrom(1024)
@@ -125,7 +125,7 @@ class RfSSDPServer:
                 response = "\r\n".join(response)
 
                 self.sock.sendto(response.encode(), addr)
-                logger.info(f"SSDP Packet sent to {addr}")
+                logger.info("SSDP Packet sent to %s", addr)
 
 
 """

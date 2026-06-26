@@ -160,7 +160,7 @@ def _update_renamed_global_config_vars(
     global_settings_updated = dict(global_settings)
     for old_config_name, new_config_name, replacement in _RENAMED_GLOBALS:
         if old_config_name in global_settings_updated:
-            logger.log(VERBOSE, f"Replacing {old_config_name} with {new_config_name}")
+            logger.log(VERBOSE, "Replacing %s with %s", old_config_name, new_config_name)
             old_value = global_settings_updated[old_config_name]
             if replacement:
                 global_settings_updated.setdefault(new_config_name, replacement[old_value])
@@ -184,7 +184,7 @@ def _remove_options(
     config = dict(global_config)
     for option_to_remove in options_to_remove:
         if option_to_remove in config:
-            logger.log(VERBOSE, f"Removing old unused option {option_to_remove!r}")
+            logger.log(VERBOSE, "Removing old unused option %r", option_to_remove)
         config.pop(option_to_remove, None)
     return config
 

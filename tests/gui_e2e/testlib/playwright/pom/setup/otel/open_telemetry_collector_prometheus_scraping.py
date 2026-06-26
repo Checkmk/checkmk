@@ -29,7 +29,7 @@ class OpenTelemetryCollectorPrometheusScraping(CmkPage):
     @override
     def navigate(self) -> None:
         """Instructions to navigate to `Prometheus scraper` page."""
-        logger.info(f"Navigate to '{self.page_title}' page")
+        logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu(self.main_menu_name).click()
         _url_pattern: str = re.escape("wato.py?mode=otel_collectors_prom_scrapes")
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
@@ -37,7 +37,7 @@ class OpenTelemetryCollectorPrometheusScraping(CmkPage):
 
     @override
     def validate_page(self) -> None:
-        logger.info(f"Validate that current page is '{self.page_title}' page")
+        logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(
             self.add_open_telemetry_collector_configuration_btn,

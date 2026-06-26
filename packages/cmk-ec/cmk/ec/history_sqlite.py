@@ -172,7 +172,7 @@ def _unix_temp_file_dir(logger: Logger) -> Path | None:
                 and stat.S_ISDIR(os.stat(path_candidate).st_mode)
                 and os.access(path_candidate, os.W_OK | os.X_OK)
             ):
-                logger.log(VERBOSE, f"assuming {path_candidate} for SQLite's temporary directory")
+                logger.log(VERBOSE, "assuming %s for SQLite's temporary directory", path_candidate)
                 return Path(path_candidate)
         except OSError:
             pass
@@ -349,9 +349,9 @@ class SQLiteHistory(History):
             f"configured limit is {_fmt_bytes(max_freelist_size)}"
         )
         if freelist_size <= max_freelist_size:
-            self._logger.log(VERBOSE, f"{freelist_msg}, no VACUUM needed")
+            self._logger.log(VERBOSE, "%s, no VACUUM needed", freelist_msg)
             return
-        self._logger.log(VERBOSE, f"{freelist_msg}, VACUUM needed")
+        self._logger.log(VERBOSE, "%s, VACUUM needed", freelist_msg)
 
         if self._sqlite_temp_file_dir is not None:
             db_size = self._settings.database.stat().st_size
@@ -361,13 +361,13 @@ class SQLiteHistory(History):
                 f"estimated size for VACUUM is {_fmt_bytes(db_size)}"
             )
             if db_size * 1.1 > disk_free:  # Overestimate by 10%, just to be sure
-                self._logger.warning(f"{disk_free_msg}, not running it due to insufficient space")
+                self._logger.warning("%s, not running it due to insufficient space", disk_free_msg)
                 return
-            self._logger.log(VERBOSE, f"{disk_free_msg}, which is sufficient")
+            self._logger.log(VERBOSE, "%s, which is sufficient", disk_free_msg)
 
-        self._logger.info(f"running VACUUM on {self._settings.database}")
+        self._logger.info("running VACUUM on %s", self._settings.database)
         self.conn.execute("VACUUM;")
-        self._logger.info(f"VACUUM on {self._settings.database} done")
+        self._logger.info("VACUUM on %s done", self._settings.database)
 
     def close(self) -> None:
         """Explicitly close the connection to the sqlite database.

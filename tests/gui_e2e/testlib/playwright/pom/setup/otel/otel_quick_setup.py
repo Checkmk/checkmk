@@ -28,7 +28,7 @@ class OTelQuickSetup(CmkPage):
 
     @override
     def navigate(self) -> None:
-        logger.info(f"Navigate to '{self.page_title}' page")
+        logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu(self.main_menu_name, exact=True).click()
         self.page.wait_for_url(
             url=re.compile(re.escape("wato.py?mode=otel_overview")), wait_until="load"
@@ -37,7 +37,7 @@ class OTelQuickSetup(CmkPage):
 
     @override
     def validate_page(self) -> None:
-        logger.info(f"Validate that current page is '{self.page_title}' page")
+        logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
 
     @override
@@ -98,7 +98,7 @@ class EditOTelConfiguration(CmkPage):
 
     @override
     def validate_page(self) -> None:
-        logger.info(f"Validate that current page is '{self.page_title}' page")
+        logger.info("Validate that current page is '%s' page", self.page_title)
         expect(self.otel_collector_tile).to_be_visible()
         expect(self.dynamic_host_management_tile).to_be_visible()
 
@@ -143,7 +143,7 @@ class AddOTelConfiguration(CmkPage):
 
     @override
     def validate_page(self) -> None:
-        logger.info(f"Validate that current page is '{self.page_title}' page")
+        logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.wizard_root).to_be_visible()
 

@@ -68,7 +68,7 @@ class ClassicSNMPBackend(SNMPBackend):
             oid_prefix,
         ]
 
-        self._logger.debug(f"Running '{subprocess.list2cmdline(command)}'")
+        self._logger.debug("Running '%s'", subprocess.list2cmdline(command))
 
         with subprocess.Popen(
             command,
@@ -83,7 +83,9 @@ class ClassicSNMPBackend(SNMPBackend):
             error = snmp_process.stderr.read()
 
         if snmp_process.returncode:
-            self._logger.debug(f"{tty.red}{tty.bold}ERROR: {tty.normal}SNMP error: {error.strip()}")
+            self._logger.debug(
+                "%s%sERROR: %sSNMP error: %s", tty.red, tty.bold, tty.normal, error.strip()
+            )
             return None
 
         if not line:
@@ -95,7 +97,7 @@ class ClassicSNMPBackend(SNMPBackend):
             return None
         item = parts[0]
         value = parts[1].strip()
-        self._logger.debug(f"SNMP answer: ==> [{value}]")
+        self._logger.debug("SNMP answer: ==> [%s]", value)
         if value.startswith(
             (
                 "No more variables",
@@ -130,7 +132,7 @@ class ClassicSNMPBackend(SNMPBackend):
         portspec = self._snmp_port_spec()
         command = self._snmp_base_command("snmpwalk", context) + ["-Cc"]
         command += ["-OQ", "-OU", "-On", "-Ot", f"{protospec}{ipaddress}{portspec}", oid]
-        self._logger.debug(f"Running '{subprocess.list2cmdline(command)}'")
+        self._logger.debug("Running '%s'", subprocess.list2cmdline(command))
 
         rowinfo: SNMPRowInfo = []
         with subprocess.Popen(
@@ -151,7 +153,9 @@ class ClassicSNMPBackend(SNMPBackend):
                 raise
 
         if snmp_process.returncode:
-            self._logger.debug(f"{tty.red}{tty.bold}ERROR: {tty.normal}SNMP error: {error.strip()}")
+            self._logger.debug(
+                "%s%sERROR: %sSNMP error: %s", tty.red, tty.bold, tty.normal, error.strip()
+            )
             raise BackendError(
                 f"SNMP Error on {ipaddress}: {error.strip()} (Exit-Code: {snmp_process.returncode})"
             )

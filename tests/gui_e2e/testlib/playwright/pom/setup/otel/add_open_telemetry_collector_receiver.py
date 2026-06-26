@@ -49,7 +49,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
 
     @override
     def validate_page(self) -> None:
-        logger.info(f"Validate that current page is '{self.page_title}' page")
+        logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
         expect(self.unique_id_textfield).to_be_visible()
         expect(self.receiver_protocol_endpoint_checkbox("GRPC-based OTLP receiver")).to_be_visible()

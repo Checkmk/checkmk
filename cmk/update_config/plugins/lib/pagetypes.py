@@ -108,14 +108,20 @@ class PreUpdatePagetypes[TOverridable_co: Overridable](PreUpdateAction):
             except Exception:
                 encountered_update_errors = True
                 logger.exception(
-                    f"Error while updating {self._element_name_for_logging}. ID: {element_id}. Owner: {user_id}."
+                    "Error while updating %s. ID: %s. Owner: %s.",
+                    self._element_name_for_logging,
+                    element_id,
+                    user_id,
                 )
             try:
                 self._updater.target_type.deserialize(updated_raw_page_dict)
             except Exception:
                 encountered_deserialization_errors = True
                 logger.exception(
-                    f"Error while deserializing updated {self._element_name_for_logging}. ID: {element_id}. Owner: {user_id}."
+                    "Error while deserializing updated %s. ID: %s. Owner: %s.",
+                    self._element_name_for_logging,
+                    element_id,
+                    user_id,
                 )
 
         if encountered_update_errors or encountered_deserialization_errors:

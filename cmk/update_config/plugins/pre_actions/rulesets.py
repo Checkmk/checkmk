@@ -177,7 +177,9 @@ def _validate_rule_values(
             continue
 
         for folder, index, rule in ruleset.get_rules():
-            logger.log(VERBOSE, f"Validating ruleset '{ruleset.name}' in folder '{folder.name()}'")
+            logger.log(
+                VERBOSE, "Validating ruleset '%s' in folder '%s'", ruleset.name, folder.name()
+            )
             with warnings.catch_warnings(action="error", category=RegexFutureWarning):
                 try:
                     try:

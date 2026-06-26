@@ -257,7 +257,9 @@ def decompose_git_version(
     identifier = _extract_sequence_based_identifier(git_version)
     if identifier is None:
         LOGGER.error(
-            f"Could not parse version string '{git_version}', using regex from kubectl '{VERSION_MATCH_RE.pattern}'."
+            "Could not parse version string '%s', using regex from kubectl '%s'.",
+            git_version,
+            VERSION_MATCH_RE.pattern,
         )
         return api.UnknownKubernetesVersion(git_version=git_version)
     # Unlike kubectl, we do not explicitly handle cases where a component is non-numeric, since
@@ -265,15 +267,16 @@ def decompose_git_version(
     components = identifier.split(".")
     if len(components) < 2:
         LOGGER.error(
-            msg=f"Could not parse version string '{git_version}', version '{identifier}' has no "
-            "minor."
+            "Could not parse version string '%s', version '%s' has no minor.",
+            git_version,
+            identifier,
         )
         return api.UnknownKubernetesVersion(git_version=git_version)
     for component in components:
         if component.startswith("0") and component != "0":
             LOGGER.error(
-                msg=f"Could not parse version string '{git_version}', a version component is "
-                "zero-prefixed."
+                "Could not parse version string '%s', a version component is zero-prefixed.",
+                git_version,
             )
             return api.UnknownKubernetesVersion(git_version=git_version)
 
@@ -324,8 +327,9 @@ def _verify_version_support(version: api.KubernetesVersion | api.UnknownKubernet
     ):
         return
     LOGGER.warning(
-        msg=f"Unsupported Kubernetes version '{version.git_version}'. "
-        f"Supported versions are {SUPPORTED_VERSIONS_DISPLAY}.",
+        "Unsupported Kubernetes version '%s'. Supported versions are %s.",
+        version.git_version,
+        SUPPORTED_VERSIONS_DISPLAY,
     )
     if (
         isinstance(version, api.KubernetesVersion)

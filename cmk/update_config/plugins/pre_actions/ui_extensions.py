@@ -101,7 +101,7 @@ class PreUpdateUIExtensions(PreUpdateAction):
             "These where the errors we encountered:",
         )
         for exc in discovered_plugins_errors:
-            logger.error(f"    {exc}")
+            logger.error("    %s", exc)
         if _continue_on_incomp_local_file(conflict_mode).is_not_abort():
             return
         raise MKUserError(None, "incompatible graphing plugins")

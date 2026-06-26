@@ -109,7 +109,7 @@ def _prefetch_description_object(*, backend: SNMPBackend) -> Mapping[str, SNMPDe
 def _fake_description_object(logger: Logger) -> Mapping[str, SNMPDecodedString]:
     """Fake OID values to prevent issues with a lot of scan functions"""
     logger.debug(
-        f'       Skipping system description OID (Set {OID_SYS_DESCR} and {OID_SYS_OBJ} to "")'
+        '       Skipping system description OID (Set %s and %s to "")', OID_SYS_DESCR, OID_SYS_OBJ
     )
     return {OID_SYS_DESCR: "", OID_SYS_OBJ: ""}
 

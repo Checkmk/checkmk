@@ -2053,7 +2053,7 @@ class StatusServer(ECServerThread):
                         None if networks is None else [ipaddress.ip_network(n) for n in networks]
                     )
                 except ValueError as e:
-                    self._logger.warning(f"{e}, disabling all TCP access")
+                    self._logger.warning("%s, disabling all TCP access", e)
                     self._tcp_access_list = []
                 try:
                     self._logger.info("Trying to use ipv6 for TCP socket port")

@@ -30,6 +30,17 @@ export interface PagedResponse<T> {
   }
 }
 
+/**
+ * The kind of fetch that produces visible rows:
+ * - `'foreground'`: initial load or a user action (search/filter/sort) that
+ *   replaces the visible rows and should show the loading skeleton.
+ * - `'background'`: a refresh-timer poll that silently refreshes the rows.
+ */
+export type FetchKind = 'foreground' | 'background'
+
+/** The current fetch state: a {@link FetchKind} in flight, or `'idle'`. */
+export type FetchState = 'idle' | FetchKind
+
 export interface MonitoringServiceOptions<T> {
   pollIntervalMs?: number | undefined
   /** Column definitions including optional column filters */
@@ -41,7 +52,8 @@ export interface MonitoringServiceOptions<T> {
 export abstract class MonitoringService<T> extends ServiceBase {
   readonly items: Ref<T[]> = shallowRef<T[]>([])
   readonly total: Ref<number> = ref(0)
-  readonly loading: Ref<boolean> = ref(false)
+  /** The kind of fetch currently in flight, or `'idle'`. */
+  readonly fetchState: Ref<FetchState> = ref('idle')
   readonly hasLoaded: Ref<boolean> = ref(false)
   readonly sortState: Ref<SortingState> = ref<SortingState>([])
   readonly searchQuery: Ref<string> = ref('')
@@ -99,7 +111,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
       return
     }
     if (this.secondsRemaining.value <= 1) {
-      void this.fetch()
+      void this.fetch('background')
     } else {
       this.secondsRemaining.value -= 1
     }
@@ -190,12 +202,12 @@ export abstract class MonitoringService<T> extends ServiceBase {
     this.removeCallbacks()
   }
 
-  private async fetch(): Promise<void> {
-    if (this.loading.value) {
+  private async fetch(kind: FetchKind = 'foreground'): Promise<void> {
+    if (this.fetchState.value !== 'idle') {
       return
     }
     this.secondsRemaining.value = this.pollIntervalSeconds
-    this.loading.value = true
+    this.fetchState.value = kind
     try {
       const response = await this.fetchBatch()
       this.items.value = response.items
@@ -203,7 +215,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
     } catch (error: unknown) {
       console.error('MonitoringService: fetchBatch failed', error)
     } finally {
-      this.loading.value = false
+      this.fetchState.value = 'idle'
       this.hasLoaded.value = true
     }
   }

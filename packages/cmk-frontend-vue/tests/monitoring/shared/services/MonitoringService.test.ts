@@ -52,7 +52,7 @@ describe('MonitoringService', () => {
 
     expect(service.items.value).toEqual([])
     expect(service.total.value).toBe(0)
-    expect(service.loading.value).toBe(false)
+    expect(service.fetchState.value).toBe('idle')
     expect(fetchBatch).not.toHaveBeenCalled()
 
     service.stopPolling()
@@ -67,7 +67,7 @@ describe('MonitoringService', () => {
     expect(fetchBatch).toHaveBeenCalledTimes(1)
     expect(service.items.value).toEqual([{ id: 'a', value: 1 }])
     expect(service.total.value).toBe(42)
-    expect(service.loading.value).toBe(false)
+    expect(service.fetchState.value).toBe('idle')
 
     service.stopPolling()
   })
@@ -96,14 +96,14 @@ describe('MonitoringService', () => {
     consoleErrorSpy.mockRestore()
   })
 
-  it('keeps loading=true while a fetch is in flight', async () => {
+  it('stays in a non-idle fetch state while a fetch is in flight', async () => {
     const pending = new Promise<PagedResponse<TestItem>>(() => {})
     const fetchBatch = vi.fn().mockReturnValue(pending)
     const service = new TestService(fetchBatch)
 
-    expect(service.loading.value).toBe(false)
+    expect(service.fetchState.value).toBe('idle')
     await vi.advanceTimersByTimeAsync(0)
-    expect(service.loading.value).toBe(true)
+    expect(service.fetchState.value).not.toBe('idle')
     expect(fetchBatch).toHaveBeenCalledTimes(1)
 
     service.stopPolling()
@@ -153,7 +153,7 @@ describe('MonitoringService', () => {
     await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS * 2)
 
     expect(fetchBatch).not.toHaveBeenCalled()
-    expect(service.loading.value).toBe(false)
+    expect(service.fetchState.value).toBe('idle')
   })
 
   it('stops polling after stopPolling()', async () => {
@@ -184,17 +184,17 @@ describe('MonitoringService', () => {
     // Kick off the first fetch and leave it pending.
     await vi.advanceTimersByTimeAsync(0)
     expect(fetchBatch).toHaveBeenCalledTimes(1)
-    expect(service.loading.value).toBe(true)
+    expect(service.fetchState.value).not.toBe('idle')
 
-    // Poll interval elapses — second call must be skipped because loading=true.
+    // Poll interval elapses — second call must be skipped because a fetch is in flight.
     await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS)
     expect(fetchBatch).toHaveBeenCalledTimes(1)
 
-    // Resolve the in-flight fetch; loading clears.
+    // Resolve the in-flight fetch; the fetch state returns to idle.
     resolveFirst(makeResponse([{ id: 'a', value: 1 }], 1))
     await vi.advanceTimersByTimeAsync(0)
     expect(service.items.value).toEqual([{ id: 'a', value: 1 }])
-    expect(service.loading.value).toBe(false)
+    expect(service.fetchState.value).toBe('idle')
 
     // Next poll tick fires normally.
     await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS)
@@ -204,14 +204,14 @@ describe('MonitoringService', () => {
     service.stopPolling()
   })
 
-  it('clears loading and logs when fetchBatch rejects', async () => {
+  it('returns to idle and logs when fetchBatch rejects', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const fetchBatch = vi.fn().mockRejectedValue(new Error('boom'))
     const service = new TestService(fetchBatch)
 
     await vi.advanceTimersByTimeAsync(0)
 
-    expect(service.loading.value).toBe(false)
+    expect(service.fetchState.value).toBe('idle')
     expect(service.items.value).toEqual([])
     expect(service.total.value).toBe(0)
     expect(consoleErrorSpy).toHaveBeenCalled()
@@ -248,6 +248,59 @@ describe('MonitoringService', () => {
 
     expect(service.searchQuery.value).toBe('db')
     expect(fetchBatch).toHaveBeenCalledTimes(2)
+
+    service.stopPolling()
+  })
+
+  it('enters the foreground fetch state for a search/sort/filter fetch and returns to idle after', async () => {
+    let resolveReload: (value: PagedResponse<TestItem>) => void = () => {}
+    const reloadFetch = new Promise<PagedResponse<TestItem>>((resolve) => {
+      resolveReload = resolve
+    })
+    const fetchBatch = vi
+      .fn()
+      .mockResolvedValueOnce(makeResponse([], 0))
+      .mockReturnValueOnce(reloadFetch)
+    const service = new TestService(fetchBatch)
+
+    // Initial fetch settles back to idle.
+    await vi.advanceTimersByTimeAsync(0)
+    expect(service.fetchState.value).toBe('idle')
+
+    // A user-initiated search shows the skeleton via the foreground state.
+    service.updateSearch('db')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(service.fetchState.value).toBe('foreground')
+
+    resolveReload(makeResponse([{ id: 'a', value: 1 }], 1))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(service.fetchState.value).toBe('idle')
+
+    service.stopPolling()
+  })
+
+  it('enters the background fetch state for a refresh-timer poll', async () => {
+    let resolvePoll: (value: PagedResponse<TestItem>) => void = () => {}
+    const pollFetch = new Promise<PagedResponse<TestItem>>((resolve) => {
+      resolvePoll = resolve
+    })
+    const fetchBatch = vi
+      .fn()
+      .mockResolvedValueOnce(makeResponse([], 0))
+      .mockReturnValueOnce(pollFetch)
+    const service = new TestService(fetchBatch)
+
+    await vi.advanceTimersByTimeAsync(0)
+    expect(fetchBatch).toHaveBeenCalledTimes(1)
+
+    // Drive the refresh timer to trigger a poll; it must stay in the background state.
+    await vi.advanceTimersByTimeAsync(POLL_INTERVAL_MS)
+    expect(fetchBatch).toHaveBeenCalledTimes(2)
+    expect(service.fetchState.value).toBe('background')
+
+    resolvePoll(makeResponse([{ id: 'b', value: 2 }], 1))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(service.fetchState.value).toBe('idle')
 
     service.stopPolling()
   })

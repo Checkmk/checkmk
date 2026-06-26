@@ -235,7 +235,7 @@ const rows: HostEntry[] = [
         <div class="ucl-table-column-filters__viewport">
           <MonitoringTable
             :rows="rows"
-            :loading="false"
+            :fetch-state="'idle'"
             :has-loaded="true"
             :columns="columns"
             :sort-state="[]"

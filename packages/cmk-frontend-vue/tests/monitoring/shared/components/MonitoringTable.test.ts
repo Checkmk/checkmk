@@ -10,7 +10,7 @@ import { defineComponent, h, nextTick, provide, ref } from 'vue'
 
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
+import type { FetchState, MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
 const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
 const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
@@ -75,7 +75,7 @@ function makeMockService(
 
 function mountTable(overrides: {
   rows?: Row[]
-  loading?: boolean
+  fetchState?: FetchState
   hasLoaded?: boolean
   sortState?: SortingState
   filterState?: ColumnFiltersState
@@ -84,8 +84,8 @@ function mountTable(overrides: {
   getRowKey?: (row: Row, index: number) => string | number
 }) {
   const rows = overrides.rows ?? makeRows(3)
-  const loading = overrides.loading ?? false
-  const hasLoaded = overrides.hasLoaded ?? !loading
+  const fetchState = overrides.fetchState ?? 'idle'
+  const hasLoaded = overrides.hasLoaded ?? true
   const filterState = overrides.filterState ?? []
   const onFilterUpdate = overrides.onFilterUpdate ?? (() => {})
   const getRowKey = overrides.getRowKey
@@ -96,14 +96,14 @@ function mountTable(overrides: {
       components: { MonitoringTable },
       setup() {
         provide(MONITORING_SERVICE, mockService as unknown as MonitoringService<unknown>)
-        return { rows, loading, hasLoaded, filterState, onFilterUpdate, getRowKey }
+        return { rows, fetchState, hasLoaded, filterState, onFilterUpdate, getRowKey }
       },
       render() {
         return h(
           MonitoringTable<Row>,
           {
             rows: this.rows,
-            loading: this.loading,
+            fetchState: this.fetchState,
             hasLoaded: this.hasLoaded,
             columns: COLUMNS,
             filterState: this.filterState,
@@ -172,27 +172,27 @@ test('aria-sort reflects the active sort direction', () => {
   expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveAttribute('aria-sort', 'none')
 })
 
-test('aria-busy is true when loading', () => {
-  const { container } = mountTable({ loading: true })
+test('aria-busy is true while a fetch is in flight', () => {
+  const { container } = mountTable({ fetchState: 'background' })
 
   expect(container.querySelector('.monitoring-table')).toHaveAttribute('aria-busy', 'true')
 })
 
-test('aria-busy is false when not loading', () => {
-  const { container } = mountTable({ loading: false })
+test('aria-busy is false when idle', () => {
+  const { container } = mountTable({ fetchState: 'idle' })
 
   expect(container.querySelector('.monitoring-table')).toHaveAttribute('aria-busy', 'false')
 })
 
-test('shows the skeleton on the initial load (loading before first fetch settled)', () => {
-  const { container } = mountTable({ rows: [], loading: true, hasLoaded: false })
+test('shows the skeleton on the initial load (foreground fetch before first settle)', () => {
+  const { container } = mountTable({ rows: [], fetchState: 'foreground', hasLoaded: false })
 
   // The real table carries the monitoring-table__table class; the skeleton does not.
   expect(container.querySelector('.monitoring-table__table')).not.toBeInTheDocument()
 })
 
-test('keeps the table mounted during a background refresh (loading after first load)', async () => {
-  const { container } = mountTable({ rows: makeRows(3), loading: true, hasLoaded: true })
+test('keeps the table mounted during a background refresh after the first load', async () => {
+  const { container } = mountTable({ rows: makeRows(3), fetchState: 'background', hasLoaded: true })
   await flushVirtualizer()
 
   // No skeleton swap: the existing table stays so the poll does not visibly rebuild it.
@@ -203,10 +203,32 @@ test('keeps the table mounted during a background refresh (loading after first l
 test('keeps the empty state during a background refresh of an empty result', () => {
   // A result set that is genuinely empty must not flash back to the skeleton on
   // every poll — once loaded, the empty state stays put while the poll runs.
-  const { container } = mountTable({ rows: [], loading: true, hasLoaded: true })
+  const { container } = mountTable({ rows: [], fetchState: 'background', hasLoaded: true })
 
   expect(container.querySelector('.monitoring-table__table')).toBeInTheDocument()
   expect(screen.getByTestId('empty-state')).toBeInTheDocument()
+})
+
+test('shows the skeleton during a foreground reload (search/filter/sort) after the first load', () => {
+  const { container } = mountTable({
+    rows: makeRows(3),
+    fetchState: 'foreground',
+    hasLoaded: true
+  })
+
+  // A foreground reload swaps back to the skeleton, just like the initial load.
+  expect(container.querySelector('.monitoring-table__table')).not.toBeInTheDocument()
+})
+
+test('does not flash the empty state during a foreground reload of a previously empty result', () => {
+  const { container } = mountTable({
+    rows: [],
+    fetchState: 'foreground',
+    hasLoaded: true
+  })
+
+  expect(container.querySelector('.monitoring-table__table')).not.toBeInTheDocument()
+  expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument()
 })
 
 test('uses getRowKey for row keying when provided', async () => {
@@ -226,8 +248,8 @@ test('renders the empty-state slot when there are no rows and not loading', () =
   expect(screen.getByTestId('empty-state')).toBeInTheDocument()
 })
 
-test('does not render the empty-state slot while loading', () => {
-  mountTable({ rows: [], loading: true })
+test('does not render the empty-state slot during the initial load', () => {
+  mountTable({ rows: [], fetchState: 'foreground', hasLoaded: false })
 
   expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument()
 })

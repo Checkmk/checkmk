@@ -193,7 +193,7 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
       <div class="ucl-base-cell__table-wrap">
         <MonitoringTable
           :rows="rows"
-          :loading="false"
+          :fetch-state="'idle'"
           :has-loaded="true"
           :columns="columns"
           :sort-state="sortState"

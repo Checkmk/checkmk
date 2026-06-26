@@ -288,7 +288,7 @@ function rowKey(row: HostEntry): string {
     />
     <MonitoringTable
       :rows="hostService.items.value"
-      :loading="hostService.loading.value"
+      :fetch-state="hostService.fetchState.value"
       :has-loaded="hostService.hasLoaded.value"
       :columns="columns"
       :filter-state="hostService.tableColumnFilters.value"

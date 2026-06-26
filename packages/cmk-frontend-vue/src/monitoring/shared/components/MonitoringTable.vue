@@ -26,6 +26,7 @@ import {
 } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
+import type { FetchState } from '@/monitoring/shared/services/MonitoringService'
 
 import {
   COLUMN_LAYOUT_KEY,
@@ -43,7 +44,12 @@ const borderSpacing = TABLE_BORDER_SPACING_PX
 
 const props = defineProps<{
   rows: T[]
-  loading: boolean
+  /**
+   * The kind of fetch in flight: `'foreground'` (initial load or
+   * search/filter/sort) shows the skeleton; `'background'` (refresh-timer poll)
+   * refreshes silently; `'idle'` when nothing is in flight.
+   */
+  fetchState: FetchState
   hasLoaded?: boolean
   columns: ColumnDef<T>[]
   filterState: ColumnFiltersState
@@ -56,7 +62,7 @@ const emit = defineEmits<{
 }>()
 
 const monitoringService = inject(MONITORING_SERVICE)
-const showSkeleton = computed(() => !props.hasLoaded)
+const showSkeleton = computed(() => !props.hasLoaded || props.fetchState === 'foreground')
 const showEmptyState = computed(() => props.hasLoaded && props.rows.length === 0)
 
 function resolveUpdater<S>(updater: Updater<S>, current: S): S {
@@ -331,7 +337,7 @@ function tableRowAt(index: number): Row<T> {
 </script>
 
 <template>
-  <div ref="wrapperRef" class="monitoring-table" :aria-busy="loading">
+  <div ref="wrapperRef" class="monitoring-table" :aria-busy="fetchState !== 'idle'">
     <TableSkeleton v-if="showSkeleton"></TableSkeleton>
     <table v-else class="monitoring-table__table">
       <colgroup v-if="pinningEnabled">

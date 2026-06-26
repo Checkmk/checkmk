@@ -54,7 +54,7 @@ describe('HostService', () => {
     expect(fetchHosts).toHaveBeenCalledTimes(1)
     expect(service.items.value).toEqual([host])
     expect(service.total.value).toBe(1)
-    expect(service.loading.value).toBe(false)
+    expect(service.fetchState.value).toBe('idle')
   })
 
   it('passes sort state to api.fetchHosts after updateSort is called', async () => {

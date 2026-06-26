@@ -214,7 +214,7 @@ const pinningActive = computed(
         <div class="ucl-column-pinning__viewport" :style="{ width: `${containerWidth}px` }">
           <MonitoringTable
             :rows="rows"
-            :loading="false"
+            :fetch-state="'idle'"
             :has-loaded="true"
             :columns="columns"
             :sort-state="[]"

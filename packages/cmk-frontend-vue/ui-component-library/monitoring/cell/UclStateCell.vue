@@ -147,7 +147,7 @@ const currentWidth = computed(() => `${effectiveWidth.value} px`)
         <div class="ucl-state-cell__container">
           <MonitoringTable
             :rows="rows"
-            :loading="false"
+            :fetch-state="'idle'"
             :has-loaded="true"
             :columns="columns"
             :sort-state="sortState"

@@ -382,18 +382,6 @@ http_file(
     ],
 )
 
-# cmk-flow payload: a prebuilt ntopng bundle (binary + private libs + share/
-# tree), snapshotted from ntop's rolling apt-stable build. Consumed by
-# omd/non-free/packages/cmk-flow/BUILD.
-http_file(
-    name = "cmk_flow_bundle",
-    downloaded_file_path = "cmk-flow-bundle.tar.gz",
-    sha256 = "28c31fbdf150227ca4be6bde78487daab6b6604734d8deae48ba29f8db2f1dee",
-    urls = [
-        UPSTREAM_MIRROR_URL + "flow-bundle-6.6.260622-slim.tar.gz",
-    ],
-)
-
 http_archive(
     name = "nrpe",
     build_file = "//omd/packages/nrpe:BUILD.nrpe.bazel",

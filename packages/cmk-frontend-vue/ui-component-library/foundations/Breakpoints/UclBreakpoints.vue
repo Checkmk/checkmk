@@ -11,7 +11,9 @@ import {
   UclDetailPageHeader,
   UclDetailPageLayout
 } from '@ucl/_ucl/components/detail-page'
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, onMounted, ref, useTemplateRef } from 'vue'
+
+import { useResizeObserver } from '@/lib/useResizeObserver'
 
 import codeExample from './UclBreakpointsCodeExample.vue?raw'
 
@@ -31,7 +33,13 @@ const breakpointsPx = ref<Record<BreakpointName, number>>({} as Record<Breakpoin
 const containerWidth = ref(800)
 const measuredWidth = ref(800)
 const containerEl = useTemplateRef<HTMLElement>('containerEl')
-let resizeObserver: ResizeObserver | null = null
+
+const { observe } = useResizeObserver((entries) => {
+  for (const entry of entries) {
+    measuredWidth.value = Math.round(entry.contentRect.width)
+  }
+})
+observe(containerEl)
 
 onMounted(() => {
   const rootStyle = getComputedStyle(document.documentElement)
@@ -41,19 +49,6 @@ onMounted(() => {
       parseInt(rootStyle.getPropertyValue(`--breakpoint-${name}`), 10)
     ])
   ) as Record<BreakpointName, number>
-
-  resizeObserver = new ResizeObserver((entries) => {
-    for (const entry of entries) {
-      measuredWidth.value = Math.round(entry.contentRect.width)
-    }
-  })
-  if (containerEl.value) {
-    resizeObserver.observe(containerEl.value)
-  }
-})
-
-onBeforeUnmount(() => {
-  resizeObserver?.disconnect()
 })
 
 const activeContainerBreakpoint = computed<BreakpointName | null>(() => {

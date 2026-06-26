@@ -21,7 +21,7 @@ from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_sec
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-__version__ = "2.5.0p8"
+__version__ = "2.5.0p9"
 
 USER_AGENT = f"checkmk-special-splunk-{__version__}"
 

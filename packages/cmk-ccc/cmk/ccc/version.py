@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-__version__ = "2.5.0p8"
+__version__ = "2.5.0p9"
 
 import enum
 import functools

@@ -13,6 +13,7 @@ from ._core import BuiltinPagetypeTopic as BuiltinPagetypeTopic
 from ._core import BuiltinPagetypeTopicRegistry as BuiltinPagetypeTopicRegistry
 from ._core import ContactGroupChoice as ContactGroupChoice
 from ._core import customize_page_menu as customize_page_menu
+from ._core import CustomizePermissionsHandler as CustomizePermissionsHandler
 from ._core import declare as declare
 from ._core import EditPage as EditPage
 from ._core import ElementSpec as ElementSpec

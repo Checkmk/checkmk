@@ -2610,6 +2610,23 @@ def hide_customize_menu() -> bool:
     return not any(user.may(perm) for perm in permissions)
 
 
+class CustomizePermissionsHandler:
+    def __init__(self, user_permissions: UserPermissions) -> None:
+        self._user_permissions = user_permissions
+
+    def may_see_category(self, category: str) -> bool:
+        return not hide_customize_menu()
+
+    def get_visibility_check(self, category: str) -> Callable[[str], bool]:
+        visible_urls = {
+            main_menu_item.url
+            for main_menu_topic in _customize_menu_topics(self._user_permissions)
+            for main_menu_item in get_main_menu_items_prefixed_by_segment(main_menu_topic)
+            if main_menu_item.url
+        }
+        return lambda url: url in visible_urls
+
+
 #   .--Permissions---------------------------------------------------------.
 #   |        ____                     _         _                          |
 #   |       |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___          |

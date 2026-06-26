@@ -50,27 +50,7 @@ select = [
   "RET",    # flake8: return
   "RSE",    # flake8: raise
   "RUF100", # ruff: unused noqa
-  "SIM101", # flake8-simplify: duplicate-isinstance-call
-  "SIM102", # flake8-simplify: collapsible-if
-  "SIM103", # flake8-simplify: needless-bool
-  "SIM105", # flake8-simplify: suppressible-exception
-  "SIM108", # flake8-simplify: if-else-block-instead-of-if-exp
-  "SIM110", # flake8-simplify: reimplemented-builtin
-  "SIM113", # flake8-simplify: enumerate-for-loop
-  "SIM114", # flake8-simplify: if-with-same-arms
-  "SIM115", # flake8-simplify: open-file-with-context-handler
-  "SIM117", # flake8-simplify: multiple-with-statements
-  "SIM118", # flake8-simplify: in-dict-keys
-  "SIM201", # flake8-simplify: negate-equal-op
-  "SIM202", # flake8-simplify: negate-not-equal-op
-  "SIM210", # flake8-simplify: if-expr-with-true-false
-  "SIM211", # flake8-simplify: if-expr-with-false-true
-  "SIM212", # flake8-simplify: if-expr-with-twisted-arms
-  "SIM222", # flake8-simplify: expr-or-true
-  "SIM300", # flake8-simplify: yoda-conditions
-  "SIM401", # flake8-simplify: if-else-block-instead-of-dict-get
-  "SIM905", # flake8-simplify: split-static-string
-  "SIM910", # flake8-simplify: dict-get-with-none-default
+  "SIM",    # flake8: simplify
   "SLF",    # flake8: self
   "UP",     # pyugrade
   "W",      # pycodestyle (warning)

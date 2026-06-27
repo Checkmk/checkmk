@@ -55,6 +55,18 @@ def provide_agent_binaries(Map args) {
             dependency_paths: [
                 "agents",
                 "non-free/cmk-update-agent",
+                // This job compiles and bundles the Linux cmk-agent-ctl and mk-sql
+                // (packages/host/.../run --setup-environment --build), so their
+                // sources and shared vendored-OpenSSL / Cargo inputs must be part of
+                // the cache key -- otherwise a change there does not invalidate the
+                // cache and a stale agent binary is shipped (CMK-36136, found via
+                // CMK-35950).
+                "packages/host/cmk-agent-ctl",
+                "packages/host/mk-sql",
+                "packages/host/patches",
+                "packages/host/patch-vendored-openssl-src.sh",
+                "packages/host/Cargo.toml",
+                "packages/host/Cargo.lock",
             ],
             install_cmd: """\
                 # check-mk-agent-*.{deb,rpm}

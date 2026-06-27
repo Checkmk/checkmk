@@ -12106,8 +12106,8 @@ msgid "CPU utilization (average)"
 msgstr "CPU-gebruik (gemiddeld)"
 
 #, fuzzy
-msgid "CPU utilization for appliances"
-msgstr "CPU-gebruik voor Toestellen"
+msgid "CPU utilization (single value)"
+msgstr "CPU gebruik laatste minuut"
 
 msgid "CPU utilization for simple devices"
 msgstr "CPU-gebruik voor eenvoudige apparaten"
@@ -53318,10 +53318,6 @@ msgstr "Hangende aanvragen"
 msgid "Pending changes"
 msgstr "Hangende wijzigingen (%s)"
 
-#, fuzzy
-msgid "Pending changes reverted."
-msgstr "Hangende wijzigingen (%s)"
-
 msgid "Pending create"
 msgstr "In afwachting van creatie"
 
@@ -59321,6 +59317,9 @@ msgstr "Buitenlandse wijzigingen activeren"
 msgid "Reverting pending changes."
 msgstr "Geen hangende wijzigingen"
 
+msgid "Reverting pending changes. Reload this page to see the current status."
+msgstr ""
+
 #, fuzzy
 msgid "Review and run preview service discovery"
 msgstr "Save & run service discovery"
@@ -64378,6 +64377,10 @@ msgstr "De site gebruikt de Livestatus Proxy Daemon"
 msgid "Site management"
 msgstr "Beheer van de site"
 
+#, fuzzy
+msgid "Site management configuration (OMD)"
+msgstr "SSH daemon configuratie (Linux)"
+
 msgid "Site name"
 msgstr "Naam site"
 
@@ -64846,7 +64849,15 @@ msgid ""
 "configuration. If that is not the case, then with this rule you can define a "
 "host name translation. Note: This rule must be configured for the \"pig\" - "
 "i.e. the host that the agent is running on. It is not applied to the "
-"translated piggybacked hosts."
+"translated piggybacked hosts.<br><br>The 'Multiple regular expressions' and "
+"'Explicit name mapping' options match against the raw host names as sent by "
+"the agent. Keep in mind that Checkmk only allows letters, digits, dashes, "
+"underscores and dots in host names, so any other characters are "
+"automatically converted to underscores when the piggybacked host is created "
+"in monitoring. This means that if, for example, an agent sends the host name "
+"'My Virtual Machine', Checkmk will store it as 'My_Virtual_Machine'. Your "
+"translation rules should therefore be written to match the original name as "
+"sent by the agent, not the converted underscore variant."
 msgstr ""
 "Sommige agents of agent plugins sturen niet alleen gegevens voor de "
 "opgevraagde host, maar ook voor andere hosts &quot;piggyback&quot; met hun "
@@ -100752,6 +100763,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "CPU utilization for appliances"
+#~ msgstr "CPU-gebruik voor Toestellen"
+
+#, fuzzy
+#~ msgid "Pending changes reverted."
+#~ msgstr "Hangende wijzigingen (%s)"
 
 #, fuzzy
 #~ msgid "prometheus_config_1"

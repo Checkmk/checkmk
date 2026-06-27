@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-25 17:57+0000\n"
+"PO-Revision-Date: 2026-06-26 17:57+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -12111,8 +12111,8 @@ msgid "CPU utilization (average)"
 msgstr "Utilização da CPU (média)"
 
 #, fuzzy
-msgid "CPU utilization for appliances"
-msgstr "Utilização de CPU para Aparelhos"
+msgid "CPU utilization (single value)"
+msgstr "Utilização da CPU de última hora"
 
 msgid "CPU utilization for simple devices"
 msgstr "Utilização da CPU para dispositivos simples"
@@ -53291,10 +53291,6 @@ msgstr "Pedidos pendentes"
 msgid "Pending changes"
 msgstr "Alterações pendentes"
 
-#, fuzzy
-msgid "Pending changes reverted."
-msgstr "Alterações pendentes"
-
 msgid "Pending create"
 msgstr "Pendente de criação"
 
@@ -59318,6 +59314,9 @@ msgstr "Ativar mudanças estrangeiras"
 msgid "Reverting pending changes."
 msgstr "Não há alterações pendentes."
 
+msgid "Reverting pending changes. Reload this page to see the current status."
+msgstr ""
+
 #, fuzzy
 msgid "Review and run preview service discovery"
 msgstr "Guardar & executar a descoberta de serviços"
@@ -64374,6 +64373,10 @@ msgstr "O site está usando o Livestatus Proxy Daemon"
 msgid "Site management"
 msgstr "Gestão do site"
 
+#, fuzzy
+msgid "Site management configuration (OMD)"
+msgstr "Configuração do daemon SSH (Linux)"
+
 msgid "Site name"
 msgstr "Nome do local"
 
@@ -64839,7 +64842,15 @@ msgid ""
 "configuration. If that is not the case, then with this rule you can define a "
 "host name translation. Note: This rule must be configured for the \"pig\" - "
 "i.e. the host that the agent is running on. It is not applied to the "
-"translated piggybacked hosts."
+"translated piggybacked hosts.<br><br>The 'Multiple regular expressions' and "
+"'Explicit name mapping' options match against the raw host names as sent by "
+"the agent. Keep in mind that Checkmk only allows letters, digits, dashes, "
+"underscores and dots in host names, so any other characters are "
+"automatically converted to underscores when the piggybacked host is created "
+"in monitoring. This means that if, for example, an agent sends the host name "
+"'My Virtual Machine', Checkmk will store it as 'My_Virtual_Machine'. Your "
+"translation rules should therefore be written to match the original name as "
+"sent by the agent, not the converted underscore variant."
 msgstr ""
 "Alguns agentes ou plugins de agentes enviam dados não só para o host "
 "consultado, mas também para outros hosts &quot;piggyback&quot; com seus "
@@ -100647,6 +100658,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "CPU utilization for appliances"
+#~ msgstr "Utilização de CPU para Aparelhos"
+
+#, fuzzy
+#~ msgid "Pending changes reverted."
+#~ msgstr "Alterações pendentes"
 
 #, fuzzy
 #~ msgid "prometheus_config_1"

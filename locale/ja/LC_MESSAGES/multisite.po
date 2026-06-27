@@ -11518,8 +11518,9 @@ msgstr "CPU使用率 (%(util_numcpu_as_max:max@count) CPUスレッド)"
 msgid "CPU utilization (average)"
 msgstr "CPU使用率(平均)"
 
-msgid "CPU utilization for appliances"
-msgstr "アプライアンスのCPU使用率"
+#, fuzzy
+msgid "CPU utilization (single value)"
+msgstr "直前のCPU使用率"
 
 msgid "CPU utilization for simple devices"
 msgstr "単純なデバイスのCPU使用率"
@@ -50556,10 +50557,6 @@ msgstr "保留中の要求"
 msgid "Pending changes"
 msgstr "保留中の変更"
 
-#, fuzzy
-msgid "Pending changes reverted."
-msgstr "保留中の変更"
-
 msgid "Pending create"
 msgstr "保留中の更新"
 
@@ -56263,6 +56260,9 @@ msgstr "他者の変更を戻す"
 msgid "Reverting pending changes."
 msgstr "保留中の変更はありません。"
 
+msgid "Reverting pending changes. Reload this page to see the current status."
+msgstr ""
+
 msgid "Review and run preview service discovery"
 msgstr "サービスディスカバリーのプレビュー実行とレビュー"
 
@@ -61084,6 +61084,10 @@ msgstr "サイトはLivestatusプロキシデーモンを使用しています"
 msgid "Site management"
 msgstr "サイト管理"
 
+#, fuzzy
+msgid "Site management configuration (OMD)"
+msgstr "SSHデーモン設定(Linux)"
+
 msgid "Site name"
 msgstr "サイト名"
 
@@ -61509,6 +61513,7 @@ msgstr ""
 "は、エージェントのアップデータは動作しません。Checkmk エージェントは、このカ"
 "スタムパス上で自動クリーニングを行わないことに注意してください。"
 
+#, fuzzy
 msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
 "also for other hosts \"piggyback\" with their own data. This is the case for "
@@ -61517,7 +61522,15 @@ msgid ""
 "configuration. If that is not the case, then with this rule you can define a "
 "host name translation. Note: This rule must be configured for the \"pig\" - "
 "i.e. the host that the agent is running on. It is not applied to the "
-"translated piggybacked hosts."
+"translated piggybacked hosts.<br><br>The 'Multiple regular expressions' and "
+"'Explicit name mapping' options match against the raw host names as sent by "
+"the agent. Keep in mind that Checkmk only allows letters, digits, dashes, "
+"underscores and dots in host names, so any other characters are "
+"automatically converted to underscores when the piggybacked host is created "
+"in monitoring. This means that if, for example, an agent sends the host name "
+"'My Virtual Machine', Checkmk will store it as 'My_Virtual_Machine'. Your "
+"translation rules should therefore be written to match the original name as "
+"sent by the agent, not the converted underscore variant."
 msgstr ""
 "エージェントやエージェントプラグインの中には、クエリされたホストだけでなく、"
 "他のホストのデータも\"piggyback\"して送信するものがあります。例えば、vSphere "
@@ -95637,6 +95650,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "CPU utilization for appliances"
+#~ msgstr "アプライアンスのCPU使用率"
+
+#, fuzzy
+#~ msgid "Pending changes reverted."
+#~ msgstr "保留中の変更"
 
 #, fuzzy
 #~ msgid "prometheus_config_1"

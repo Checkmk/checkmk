@@ -80,7 +80,9 @@ class EvaluatedGraph:
     rules: Sequence[EvaluatedRule] = ()
 
 
-def _evaluate_bound(bound: Bound, context: EvaluationContext) -> float | None:
+def _evaluate_bound(bound: Bound | None, context: EvaluationContext) -> float | None:
+    if bound is None:
+        return None
     if isinstance(bound, int | float):
         return float(bound)
     return bound.evaluate_value(context)

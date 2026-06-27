@@ -389,6 +389,16 @@ def test_evaluate_graph_evaluates_a_fixed_range_of_constants() -> None:
     )
 
 
+def test_evaluate_graph_evaluates_a_fixed_range_with_an_open_upper_bound() -> None:
+    # A half-open range (0, None): the floor is fixed at 0, the top is left to auto-scaling.
+    graph = ResolvedGraph(
+        name="g", title="g", graph_type="test", vertical_range=FixedRange(lower=0, upper=None)
+    )
+    assert evaluate_graph(graph, {}, {}, _TR).vertical_range == EvaluatedVerticalRange(
+        range_type=VerticalRangeType.FIXED, lower=0.0, upper=None
+    )
+
+
 def test_evaluate_graph_resolves_a_minimal_range_bound_expression() -> None:
     a = _metric("a")
     # The upper bound is a metric reference, resolved against the metric data; the lower is a number.

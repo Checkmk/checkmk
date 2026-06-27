@@ -364,16 +364,18 @@ class Fraction:
 type Bound = int | float | Quantity
 
 
+# A None bound leaves that edge to auto-scaling and fixes/constrains only the other one (e.g. the
+# half-open range (0, None) — fix the floor at 0, auto-scale the top).
 @dataclass(frozen=True)
 class MinimalRange:
-    lower: Bound
-    upper: Bound
+    lower: Bound | None
+    upper: Bound | None
 
 
 @dataclass(frozen=True)
 class FixedRange:
-    lower: Bound
-    upper: Bound
+    lower: Bound | None
+    upper: Bound | None
 
 
 type VerticalRange = MinimalRange | FixedRange

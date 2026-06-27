@@ -155,6 +155,17 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         action="store_true",
         help="do not commit at the end",
     )
+    parser_ids.add_argument(
+        "--skip-master-branch-check",
+        action="store_true",
+        help=(
+            "The werk tool checks if you are on the master branch, because "
+            "reserving werk ids has to happen in a central place, and this "
+            "place is the master branch. Normally this check is desired, but "
+            "it does not work with some workflows such as when using jj. This "
+            "flag allows you to bypass the check."
+        ),
+    )
     parser_ids.set_defaults(func=main_fetch_ids)
 
     # LIST
@@ -1099,7 +1110,9 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
         sys.stdout.write(f"You have {stash.count()} reserved IDs:\n{per_project}\n")
         sys.exit(0)
 
-    if current_branch() != get_config().branch or current_repo() != get_config().repo:
+    if not args.skip_master_branch_check and (
+        current_branch() != get_config().branch or current_repo() != get_config().repo
+    ):
         bail_out(
             f"Werk IDs can only be reserved on the '{get_config().branch}' branch on "
             f"'{get_config().repo}', not '{current_branch()}' on '{current_repo()}'."

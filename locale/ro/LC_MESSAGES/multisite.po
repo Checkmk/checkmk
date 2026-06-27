@@ -917,9 +917,6 @@ msgstr "(Modul fără titlu)"
 msgid "(Version: %s - no version change)"
 msgstr ""
 
-msgid "(auto-generated when the connection is saved)"
-msgstr ""
-
 msgid "(built-in)"
 msgstr "(încorporat)"
 
@@ -11430,6 +11427,10 @@ msgid "CPU utilization (percentiles)"
 msgstr "Utilizare CPU (percentila 50)"
 
 #, fuzzy
+msgid "CPU utilization (single value)"
+msgstr "Utilizare CPU în ultimul minut"
+
+#, fuzzy
 msgid "CPU utilization (user, system)"
 msgstr "Utilizare CPU (medie)"
 
@@ -11476,10 +11477,6 @@ msgstr "Utilizarea CPU pentru dispozitive simple"
 #, fuzzy
 msgid "CPU utilization (user, system, interrupt)"
 msgstr "Utilizare CPU în ultimul minut"
-
-#, fuzzy
-msgid "CPU utilization for appliances"
-msgstr "Utilizare CPU pentru aparate"
 
 msgid "CPU utilization for simple devices"
 msgstr "Utilizarea CPU pentru dispozitive simple"
@@ -32385,6 +32382,10 @@ msgstr "Identitate"
 msgid "Identity of an authorized key"
 msgstr "Identitatea unei chei autorizate"
 
+#, fuzzy
+msgid "Identity provider connection"
+msgstr "Timeout de conectare a furnizorului de identitate"
+
 msgid "Identity provider connection timeout"
 msgstr "Timeout de conectare a furnizorului de identitate"
 
@@ -49524,6 +49525,10 @@ msgstr "Prezentare generală"
 msgid "Overview mode"
 msgstr "Prezentare generală"
 
+#, fuzzy
+msgid "Overwrite automatically generated ID"
+msgstr "detectează automat"
+
 msgid "Owned by other users"
 msgstr "Deținută de alți utilizatori"
 
@@ -61525,7 +61530,15 @@ msgid ""
 "configuration. If that is not the case, then with this rule you can define a "
 "host name translation. Note: This rule must be configured for the \"pig\" - "
 "i.e. the host that the agent is running on. It is not applied to the "
-"translated piggybacked hosts."
+"translated piggybacked hosts.<br><br>The 'Multiple regular expressions' and "
+"'Explicit name mapping' options match against the raw host names as sent by "
+"the agent. Keep in mind that Checkmk only allows letters, digits, dashes, "
+"underscores and dots in host names, so any other characters are "
+"automatically converted to underscores when the piggybacked host is created "
+"in monitoring. This means that if, for example, an agent sends the host name "
+"'My Virtual Machine', Checkmk will store it as 'My_Virtual_Machine'. Your "
+"translation rules should therefore be written to match the original name as "
+"sent by the agent, not the converted underscore variant."
 msgstr ""
 "Unii agenți sau pluginuri de agenți trimit date nu numai pentru gazda "
 "interogată, ci și pentru alte gazde &quot;piggyback&quot; cu propriile lor "
@@ -66444,6 +66457,10 @@ msgid ""
 "buildup options, instead. "
 msgstr ""
 
+#, fuzzy
+msgid "The URL will be generated automatically after you save the form."
+msgstr "Perechea de chei va fi generată atunci când salvați."
+
 msgid "The User Base DN could be found."
 msgstr "A fost găsit DN-ul de bază al utilizatorului."
 
@@ -67564,6 +67581,10 @@ msgstr ""
 "referă numai la fișierele RRD la care actualizările s-au oprit, astfel încât "
 "setarea acestei valori la o valoare mare este acceptabilă în majoritatea "
 "cazurilor."
+
+#, fuzzy
+msgid "The entity ID must not be empty"
+msgstr "Conexiunea %r nu există"
 
 #, python-format
 msgid "The entry %s is missing"
@@ -80496,9 +80517,9 @@ msgstr "Șablon de nume de gazdă"
 
 msgid ""
 "Unique identifier for this Checkmk Service Provider, used by the identity "
-"provider to recognize requests originating from Checkmk. Leave empty to auto-"
-"generate the value from the Checkmk server URL (<tt>{Checkmk server URL}/"
-"saml_metadata.py</tt>) or specify an arbitrary value."
+"provider to recognize requests originating from Checkmk. By default it is "
+"generated from the Checkmk server URL (<tt>{Checkmk server URL}/"
+"saml_metadata.py</tt>) on save."
 msgstr ""
 
 msgid "Unit"
@@ -94154,20 +94175,20 @@ msgid "Existence"
 msgstr "Ascultător"
 
 #, fuzzy
-msgid "Attribute key"
-msgstr "Atributul"
-
-#, fuzzy
-msgid "Attribute operator"
-msgstr "Atributul de setat"
+msgid "Edit condition"
+msgstr "Editați conexiunea"
 
 #, fuzzy
 msgid "Remove condition"
 msgstr "Eliminarea condiției de etichetare"
 
 #, fuzzy
-msgid "Edit condition"
-msgstr "Editați conexiunea"
+msgid "Attribute key"
+msgstr "Atributul"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Atributul de setat"
 
 #, fuzzy
 msgid "Add condition after %{key}"
@@ -94235,6 +94256,116 @@ msgstr "Nu se termină cu \"%s\"."
 #, fuzzy
 msgid "does not exist"
 msgstr "Nu există"
+
+#, fuzzy
+msgid "Last recorded value"
+msgstr "Raport de accident"
+
+#, fuzzy
+msgid "Avg"
+msgstr "Vârsta"
+
+#, fuzzy
+msgid "Max"
+msgstr "Mai"
+
+#, fuzzy
+msgid "Min"
+msgstr "Principal"
+
+msgid "Rate"
+msgstr ""
+
+msgid "Delta"
+msgstr ""
+
+msgid "Last recorded value (raw counter)"
+msgstr ""
+
+#, fuzzy
+msgid "Preserve histograms"
+msgstr "Grupuri de agregare"
+
+#, fuzzy
+msgid "Count delta"
+msgstr "Doar numărătoarea"
+
+#, fuzzy
+msgid "Count rate"
+msgstr "Rata mesajelor livrate"
+
+#, fuzzy
+msgid "Sum delta"
+msgstr "Dimensiunea delta"
+
+#, fuzzy
+msgid "Sum rate"
+msgstr "%s rata"
+
+#, fuzzy
+msgid "Quantile"
+msgstr "Până la"
+
+#, fuzzy
+msgid "Fraction below"
+msgstr "Fracțiune"
+
+#, fuzzy
+msgid "Fraction between"
+msgstr "Fracțiune"
+
+msgid "Cumulative sum field (raw)"
+msgstr ""
+
+#, fuzzy
+msgid "last"
+msgstr "Ultimul "
+
+#, fuzzy
+msgid "raw"
+msgstr "rand"
+
+#, fuzzy
+msgid "avg"
+msgstr "Etichetă"
+
+#, fuzzy
+msgid "max"
+msgstr "maxim"
+
+#, fuzzy
+msgid "rate"
+msgstr "%s rata"
+
+#, fuzzy
+msgid "delta"
+msgstr "Dimensiunea delta"
+
+#, fuzzy
+msgid "preserve histograms"
+msgstr "Grupuri de agregare"
+
+#, fuzzy
+msgid "count delta"
+msgstr "Numărul de documente delta"
+
+#, fuzzy
+msgid "count rate"
+msgstr "Numărul de fișiere la"
+
+#, fuzzy
+msgid "sum delta"
+msgstr "Dimensiunea delta"
+
+#, fuzzy
+msgid "sum rate"
+msgstr "%s rata"
+
+msgid "fraction <%{value}"
+msgstr ""
+
+msgid "fraction %{lower}–%{upper}"
+msgstr ""
 
 #, fuzzy
 msgid "Unknown error"
@@ -95508,23 +95639,23 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Number of services OK state"
+msgid "Number of services in OK state"
 msgstr "Numărul de servicii în stat OK"
 
 #, fuzzy
-msgid "Number of services warning state"
+msgid "Number of services in warning state"
 msgstr "Numărul de servicii în stat OK"
 
 #, fuzzy
-msgid "Number of services critical state"
+msgid "Number of services in critical state"
 msgstr "Numărul de servicii în stat OK"
 
 #, fuzzy
-msgid "Number of services unknown state"
+msgid "Number of services in unknown state"
 msgstr "Numărul de servicii în stat OK"
 
 #, fuzzy
-msgid "Number of services pending state"
+msgid "Number of services in pending state"
 msgstr "Numărul de servicii în stat OK"
 
 #, fuzzy
@@ -95534,6 +95665,14 @@ msgstr "Probleme de gazde nerezolvate"
 #, fuzzy
 msgid "Search hosts…"
 msgstr "Căutare gazde"
+
+#, fuzzy
+msgid "Reset all filters"
+msgstr "Eroare generală"
+
+#, fuzzy
+msgid "Select host %{name}"
+msgstr "Ștergeți gazda"
 
 #, fuzzy
 msgid "Stale state"
@@ -95558,6 +95697,17 @@ msgstr "Eliminați toate"
 #, fuzzy
 msgid "No matching values"
 msgstr "Nu există nume de gazdă corespunzătoare"
+
+#, fuzzy
+msgid "Clear"
+msgstr "Starea \"Liber"
+
+msgid "Any (>0)"
+msgstr ""
+
+#, fuzzy
+msgid "None (=0)"
+msgstr "Nici unul (liniar)"
 
 #, fuzzy
 msgid "No results found for your search."
@@ -95588,6 +95738,10 @@ msgstr "Nu s-au găsit metrici corespunzătoare"
 
 msgid "Rows found: %{count}"
 msgstr ""
+
+#, fuzzy
+msgid "Select all rows"
+msgstr "Eliminați toate"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
@@ -96513,6 +96667,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "CPU utilization for appliances"
+#~ msgstr "Utilizare CPU pentru aparate"
 
 #, fuzzy
 #~ msgid "Pending changes reverted."
@@ -98715,10 +98873,6 @@ msgstr ""
 #~ msgstr "test"
 
 #, fuzzy
-#~ msgid "max"
-#~ msgstr "maxim"
-
-#, fuzzy
 #~ msgid "sum"
 #~ msgstr "Suma"
 
@@ -98744,10 +98898,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "+ Create"
 #~ msgstr "Creați"
-
-#, fuzzy
-#~ msgid "Compute a rate"
-#~ msgstr "Rata mesajelor livrate"
 
 #, fuzzy
 #~ msgid "Deploy the Plesk plug-ins"
@@ -104262,10 +104412,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "to be defined"
 #~ msgstr "Nu sunt definite conexiuni"
-
-#, fuzzy
-#~ msgid "Select host name"
-#~ msgstr "Ștergeți gazda"
 
 #, fuzzy
 #~ msgid "No host name filter applied."

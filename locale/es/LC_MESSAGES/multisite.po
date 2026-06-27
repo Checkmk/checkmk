@@ -907,9 +907,6 @@ msgstr "(Módulo sin título)"
 msgid "(Version: %s - no version change)"
 msgstr ""
 
-msgid "(auto-generated when the connection is saved)"
-msgstr ""
-
 msgid "(built-in)"
 msgstr "(incorporado)"
 
@@ -11494,6 +11491,10 @@ msgid "CPU utilization (percentiles)"
 msgstr "Utilización de la CPU (percentil 50)"
 
 #, fuzzy
+msgid "CPU utilization (single value)"
+msgstr "Utilización de la CPU en el último minuto"
+
+#, fuzzy
 msgid "CPU utilization (user, system)"
 msgstr "Utilización de la CPU (media)"
 
@@ -11540,10 +11541,6 @@ msgstr "Utilización de la CPU para dispositivos simples"
 #, fuzzy
 msgid "CPU utilization (user, system, interrupt)"
 msgstr "Utilización de la CPU en el último minuto"
-
-#, fuzzy
-msgid "CPU utilization for appliances"
-msgstr "Utilización de la CPU para los aparatos"
 
 msgid "CPU utilization for simple devices"
 msgstr "Utilización de la CPU para dispositivos simples"
@@ -32585,6 +32582,10 @@ msgstr "Identidad"
 msgid "Identity of an authorized key"
 msgstr "Identidad de una clave autorizada"
 
+#, fuzzy
+msgid "Identity provider connection"
+msgstr "Tiempo de espera de la conexión del proveedor de identidad"
+
 msgid "Identity provider connection timeout"
 msgstr "Tiempo de espera de la conexión del proveedor de identidad"
 
@@ -49836,6 +49837,10 @@ msgstr "Resumen"
 msgid "Overview mode"
 msgstr "Resumen"
 
+#, fuzzy
+msgid "Overwrite automatically generated ID"
+msgstr "detectar automáticamente"
+
 msgid "Owned by other users"
 msgstr "Propiedad de otros usuarios"
 
@@ -61946,7 +61951,15 @@ msgid ""
 "configuration. If that is not the case, then with this rule you can define a "
 "host name translation. Note: This rule must be configured for the \"pig\" - "
 "i.e. the host that the agent is running on. It is not applied to the "
-"translated piggybacked hosts."
+"translated piggybacked hosts.<br><br>The 'Multiple regular expressions' and "
+"'Explicit name mapping' options match against the raw host names as sent by "
+"the agent. Keep in mind that Checkmk only allows letters, digits, dashes, "
+"underscores and dots in host names, so any other characters are "
+"automatically converted to underscores when the piggybacked host is created "
+"in monitoring. This means that if, for example, an agent sends the host name "
+"'My Virtual Machine', Checkmk will store it as 'My_Virtual_Machine'. Your "
+"translation rules should therefore be written to match the original name as "
+"sent by the agent, not the converted underscore variant."
 msgstr ""
 "Algunos agentes o plugins de agentes envían datos no sólo para el host "
 "consultado sino también para otros hosts &quot;piggyback&quot; con sus "
@@ -66906,6 +66919,10 @@ msgid ""
 "buildup options, instead. "
 msgstr ""
 
+#, fuzzy
+msgid "The URL will be generated automatically after you save the form."
+msgstr "El par de claves se generará al guardar."
+
 msgid "The User Base DN could be found."
 msgstr "Se ha podido encontrar el DN de la base de usuarios."
 
@@ -68024,6 +68041,10 @@ msgstr ""
 "antiguos que deben escribirse en el disco. Esto sólo afecta a los archivos "
 "RRD en los que se han detenido las actualizaciones, por lo que es aceptable "
 "establecer un valor alto en la mayoría de los casos."
+
+#, fuzzy
+msgid "The entity ID must not be empty"
+msgstr "La conexión %r no existe"
 
 #, python-format
 msgid "The entry %s is missing"
@@ -81016,9 +81037,9 @@ msgstr "Plantilla de nombre de host"
 
 msgid ""
 "Unique identifier for this Checkmk Service Provider, used by the identity "
-"provider to recognize requests originating from Checkmk. Leave empty to auto-"
-"generate the value from the Checkmk server URL (<tt>{Checkmk server URL}/"
-"saml_metadata.py</tt>) or specify an arbitrary value."
+"provider to recognize requests originating from Checkmk. By default it is "
+"generated from the Checkmk server URL (<tt>{Checkmk server URL}/"
+"saml_metadata.py</tt>) on save."
 msgstr ""
 
 msgid "Unit"
@@ -94727,20 +94748,20 @@ msgid "Existence"
 msgstr "Oyente"
 
 #, fuzzy
-msgid "Attribute key"
-msgstr "Atributo"
-
-#, fuzzy
-msgid "Attribute operator"
-msgstr "Atributo a fijar"
+msgid "Edit condition"
+msgstr "Editar la conexión"
 
 #, fuzzy
 msgid "Remove condition"
 msgstr "Eliminar la condición de la etiqueta"
 
 #, fuzzy
-msgid "Edit condition"
-msgstr "Editar la conexión"
+msgid "Attribute key"
+msgstr "Atributo"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Atributo a fijar"
 
 #, fuzzy
 msgid "Add condition after %{key}"
@@ -94808,6 +94829,116 @@ msgstr "No termina con \"%s\"."
 #, fuzzy
 msgid "does not exist"
 msgstr "No existe"
+
+#, fuzzy
+msgid "Last recorded value"
+msgstr "Informe sobre el accidente"
+
+#, fuzzy
+msgid "Avg"
+msgstr "Fecha creación"
+
+#, fuzzy
+msgid "Max"
+msgstr "Mayo"
+
+#, fuzzy
+msgid "Min"
+msgstr "Principal"
+
+msgid "Rate"
+msgstr ""
+
+msgid "Delta"
+msgstr ""
+
+msgid "Last recorded value (raw counter)"
+msgstr ""
+
+#, fuzzy
+msgid "Preserve histograms"
+msgstr "Grupos de agregación"
+
+#, fuzzy
+msgid "Count delta"
+msgstr "Sólo cuenta"
+
+#, fuzzy
+msgid "Count rate"
+msgstr "Tasa de mensajes entregados"
+
+#, fuzzy
+msgid "Sum delta"
+msgstr "Tamaño delta"
+
+#, fuzzy
+msgid "Sum rate"
+msgstr "%s tasa"
+
+#, fuzzy
+msgid "Quantile"
+msgstr "Hasta"
+
+#, fuzzy
+msgid "Fraction below"
+msgstr "Fracción"
+
+#, fuzzy
+msgid "Fraction between"
+msgstr "Fracción"
+
+msgid "Cumulative sum field (raw)"
+msgstr ""
+
+#, fuzzy
+msgid "last"
+msgstr "El último "
+
+#, fuzzy
+msgid "raw"
+msgstr "fila"
+
+#, fuzzy
+msgid "avg"
+msgstr "Etiqueta"
+
+#, fuzzy
+msgid "max"
+msgstr "máximo"
+
+#, fuzzy
+msgid "rate"
+msgstr "%s tasa"
+
+#, fuzzy
+msgid "delta"
+msgstr "Tamaño delta"
+
+#, fuzzy
+msgid "preserve histograms"
+msgstr "Grupos de agregación"
+
+#, fuzzy
+msgid "count delta"
+msgstr "Delta del recuento de documentos"
+
+#, fuzzy
+msgid "count rate"
+msgstr "Recuento de archivos en"
+
+#, fuzzy
+msgid "sum delta"
+msgstr "Tamaño delta"
+
+#, fuzzy
+msgid "sum rate"
+msgstr "%s tasa"
+
+msgid "fraction <%{value}"
+msgstr ""
+
+msgid "fraction %{lower}–%{upper}"
+msgstr ""
 
 #, fuzzy
 msgid "Unknown error"
@@ -96077,23 +96208,23 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Number of services OK state"
+msgid "Number of services in OK state"
 msgstr "Número de servicios en el estado OK"
 
 #, fuzzy
-msgid "Number of services warning state"
+msgid "Number of services in warning state"
 msgstr "Número de servicios en el estado OK"
 
 #, fuzzy
-msgid "Number of services critical state"
+msgid "Number of services in critical state"
 msgstr "Número de servicios en el estado OK"
 
 #, fuzzy
-msgid "Number of services unknown state"
+msgid "Number of services in unknown state"
 msgstr "Número de servicios en el estado OK"
 
 #, fuzzy
-msgid "Number of services pending state"
+msgid "Number of services in pending state"
 msgstr "Número de servicios en el estado OK"
 
 #, fuzzy
@@ -96103,6 +96234,14 @@ msgstr "Problemas de host no gestionados"
 #, fuzzy
 msgid "Search hosts…"
 msgstr "Buscar hosts"
+
+#, fuzzy
+msgid "Reset all filters"
+msgstr "Error general"
+
+#, fuzzy
+msgid "Select host %{name}"
+msgstr "Borrar host"
 
 #, fuzzy
 msgid "Stale state"
@@ -96127,6 +96266,17 @@ msgstr "Eliminar todo"
 #, fuzzy
 msgid "No matching values"
 msgstr "No hay nombres de host que coincidan"
+
+#, fuzzy
+msgid "Clear"
+msgstr "estado 'Borrado'"
+
+msgid "Any (>0)"
+msgstr ""
+
+#, fuzzy
+msgid "None (=0)"
+msgstr "Ninguno (lineal)"
 
 #, fuzzy
 msgid "No results found for your search."
@@ -96155,6 +96305,10 @@ msgstr "No se han encontrado métricas coincidentes"
 
 msgid "Rows found: %{count}"
 msgstr ""
+
+#, fuzzy
+msgid "Select all rows"
+msgstr "Eliminar todo"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
@@ -97074,6 +97228,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "CPU utilization for appliances"
+#~ msgstr "Utilización de la CPU para los aparatos"
 
 #, fuzzy
 #~ msgid "Pending changes reverted."
@@ -99287,10 +99445,6 @@ msgstr ""
 #~ msgstr "pruebas"
 
 #, fuzzy
-#~ msgid "max"
-#~ msgstr "máximo"
-
-#, fuzzy
 #~ msgid "sum"
 #~ msgstr "Suma"
 
@@ -99316,10 +99470,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "+ Create"
 #~ msgstr "Crear"
-
-#, fuzzy
-#~ msgid "Compute a rate"
-#~ msgstr "Tasa de mensajes entregados"
 
 #, fuzzy
 #~ msgid "Deploy the Plesk plug-ins"
@@ -104441,10 +104591,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "to be defined"
 #~ msgstr "No hay conexiones definidas"
-
-#, fuzzy
-#~ msgid "Select host name"
-#~ msgstr "Borrar host"
 
 #, fuzzy
 #~ msgid "No host name filter applied."

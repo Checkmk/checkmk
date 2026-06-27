@@ -897,9 +897,6 @@ msgstr "(無題モジュール)"
 msgid "(Version: %s - no version change)"
 msgstr "(バージョン: %s - バージョン変更はありません)"
 
-msgid "(auto-generated when the connection is saved)"
-msgstr ""
-
 msgid "(built-in)"
 msgstr "(組み込み)"
 
@@ -10620,6 +10617,10 @@ msgstr "CPU使用率(直近数分間)"
 msgid "CPU utilization (percentiles)"
 msgstr "CPU使用率(パーセンタイル)"
 
+#, fuzzy
+msgid "CPU utilization (single value)"
+msgstr "CPU使用率(直近数分間)"
+
 msgid "CPU utilization (user, system)"
 msgstr "CPU使用率(ユーザー、システム)"
 
@@ -10655,9 +10656,6 @@ msgstr "CPU使用率(ユーザー、システム、アイドル、nice)"
 
 msgid "CPU utilization (user, system, interrupt)"
 msgstr "CPU使用率(ユーザー、システム、割り込み)"
-
-msgid "CPU utilization for appliances"
-msgstr "アプライアンスのCPU使用率"
 
 msgid "CPU utilization for simple devices"
 msgstr "単純なデバイスのCPU使用率"
@@ -30000,6 +29998,10 @@ msgstr "アイデンティティー"
 msgid "Identity of an authorized key"
 msgstr "許可されたキーのID"
 
+#, fuzzy
+msgid "Identity provider connection"
+msgstr "IDプロバイダ接続タイムアウト"
+
 msgid "Identity provider connection timeout"
 msgstr "IDプロバイダ接続タイムアウト"
 
@@ -45696,6 +45698,10 @@ msgstr "概要"
 msgid "Overview mode"
 msgstr "概要モード"
 
+#, fuzzy
+msgid "Overwrite automatically generated ID"
+msgstr "自動検出"
+
 msgid "Owned by other users"
 msgstr "他のユーザーが所有"
 
@@ -56798,6 +56804,7 @@ msgstr ""
 "は、エージェントのアップデータは動作しません。Checkmk エージェントは、このカ"
 "スタムパス上で自動クリーニングを行わないことに注意してください。"
 
+#, fuzzy
 msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
 "also for other hosts \"piggyback\" with their own data. This is the case for "
@@ -56806,7 +56813,15 @@ msgid ""
 "configuration. If that is not the case, then with this rule you can define a "
 "host name translation. Note: This rule must be configured for the \"pig\" - "
 "i.e. the host that the agent is running on. It is not applied to the "
-"translated piggybacked hosts."
+"translated piggybacked hosts.<br><br>The 'Multiple regular expressions' and "
+"'Explicit name mapping' options match against the raw host names as sent by "
+"the agent. Keep in mind that Checkmk only allows letters, digits, dashes, "
+"underscores and dots in host names, so any other characters are "
+"automatically converted to underscores when the piggybacked host is created "
+"in monitoring. This means that if, for example, an agent sends the host name "
+"'My Virtual Machine', Checkmk will store it as 'My_Virtual_Machine'. Your "
+"translation rules should therefore be written to match the original name as "
+"sent by the agent, not the converted underscore variant."
 msgstr ""
 "エージェントやエージェントプラグインの中には、クエリされたホストだけでなく、"
 "他のホストのデータも\"piggyback\"して送信するものがあります。例えば、vSphere "
@@ -61393,6 +61408,10 @@ msgstr ""
 "注意してください。代わりに、接続構築オプションの 'authentication' を使用して"
 "ください。 "
 
+#, fuzzy
+msgid "The URL will be generated automatically after you save the form."
+msgstr "保存するとキーペアが生成されます。"
+
 msgid "The User Base DN could be found."
 msgstr "ユーザーベースDNが見つかりました。"
 
@@ -62463,6 +62482,10 @@ msgstr ""
 "ここで設定された間隔でキャッシュ全体が古い値を検索しディスクに書き込まれま"
 "す。これは、更新が停止したRRDファイルにのみに関係するため、ほとんどの場合、こ"
 "れを高い値に設定しても問題ありません。"
+
+#, fuzzy
+msgid "The entity ID must not be empty"
+msgstr "接続 %r が存在しません"
 
 #, python-format
 msgid "The entry %s is missing"
@@ -74352,9 +74375,9 @@ msgstr "一意のホスト名のテンプレート"
 
 msgid ""
 "Unique identifier for this Checkmk Service Provider, used by the identity "
-"provider to recognize requests originating from Checkmk. Leave empty to auto-"
-"generate the value from the Checkmk server URL (<tt>{Checkmk server URL}/"
-"saml_metadata.py</tt>) or specify an arbitrary value."
+"provider to recognize requests originating from Checkmk. By default it is "
+"generated from the Checkmk server URL (<tt>{Checkmk server URL}/"
+"saml_metadata.py</tt>) on save."
 msgstr ""
 
 msgid "Unit"
@@ -86962,20 +86985,20 @@ msgstr ""
 msgid "Existence"
 msgstr "リスナー"
 
+#, fuzzy
+msgid "Edit condition"
+msgstr "接続を編集する"
+
+#, fuzzy
+msgid "Remove condition"
+msgstr "タグ条件を削除します"
+
 msgid "Attribute key"
 msgstr "属性キー"
 
 #, fuzzy
 msgid "Attribute operator"
 msgstr "設定する属性"
-
-#, fuzzy
-msgid "Remove condition"
-msgstr "タグ条件を削除します"
-
-#, fuzzy
-msgid "Edit condition"
-msgstr "接続を編集する"
 
 #, fuzzy
 msgid "Add condition after %{key}"
@@ -87043,6 +87066,115 @@ msgstr "\"%s\"で終わることはできません"
 #, fuzzy
 msgid "does not exist"
 msgstr "存在しない"
+
+#, fuzzy
+msgid "Last recorded value"
+msgstr "最終報告"
+
+#, fuzzy
+msgid "Avg"
+msgstr "年数"
+
+#, fuzzy
+msgid "Max"
+msgstr "May"
+
+#, fuzzy
+msgid "Min"
+msgstr "メイン"
+
+msgid "Rate"
+msgstr ""
+
+msgid "Delta"
+msgstr ""
+
+msgid "Last recorded value (raw counter)"
+msgstr ""
+
+#, fuzzy
+msgid "Preserve histograms"
+msgstr "集約グループ"
+
+#, fuzzy
+msgid "Count delta"
+msgstr "カウントのみ"
+
+#, fuzzy
+msgid "Count rate"
+msgstr "レートを計算する"
+
+#, fuzzy
+msgid "Sum delta"
+msgstr "サイズデルタ"
+
+#, fuzzy
+msgid "Sum rate"
+msgstr "%sレート"
+
+#, fuzzy
+msgid "Quantile"
+msgstr "まで"
+
+#, fuzzy
+msgid "Fraction below"
+msgstr "分数"
+
+#, fuzzy
+msgid "Fraction between"
+msgstr "分数"
+
+msgid "Cumulative sum field (raw)"
+msgstr ""
+
+#, fuzzy
+msgid "last"
+msgstr "最後 "
+
+#, fuzzy
+msgid "raw"
+msgstr "行"
+
+#, fuzzy
+msgid "avg"
+msgstr "タグ"
+
+msgid "max"
+msgstr "最大"
+
+#, fuzzy
+msgid "rate"
+msgstr "%sレート"
+
+#, fuzzy
+msgid "delta"
+msgstr "サイズデルタ"
+
+#, fuzzy
+msgid "preserve histograms"
+msgstr "集約グループ"
+
+#, fuzzy
+msgid "count delta"
+msgstr "ドキュメント数のデルタ"
+
+#, fuzzy
+msgid "count rate"
+msgstr "でのファイル数"
+
+#, fuzzy
+msgid "sum delta"
+msgstr "サイズデルタ"
+
+#, fuzzy
+msgid "sum rate"
+msgstr "%sレート"
+
+msgid "fraction <%{value}"
+msgstr ""
+
+msgid "fraction %{lower}–%{upper}"
+msgstr ""
 
 #, fuzzy
 msgid "Unknown error"
@@ -88439,23 +88571,23 @@ msgstr ""
 "Relayは、以下のオペレーティングシステムでの動作が公式にサポートされています："
 
 #, fuzzy
-msgid "Number of services OK state"
+msgid "Number of services in OK state"
 msgstr "OK状態のサービスの数"
 
 #, fuzzy
-msgid "Number of services warning state"
+msgid "Number of services in warning state"
 msgstr "OK状態のサービスの数"
 
 #, fuzzy
-msgid "Number of services critical state"
+msgid "Number of services in critical state"
 msgstr "OK状態のサービスの数"
 
 #, fuzzy
-msgid "Number of services unknown state"
+msgid "Number of services in unknown state"
 msgstr "OK状態のサービスの数"
 
 #, fuzzy
-msgid "Number of services pending state"
+msgid "Number of services in pending state"
 msgstr "OK状態のサービスの数"
 
 #, fuzzy
@@ -88465,6 +88597,14 @@ msgstr "未処理のホストの問題"
 #, fuzzy
 msgid "Search hosts…"
 msgstr "ホストを検索"
+
+#, fuzzy
+msgid "Reset all filters"
+msgstr "一般的なフィルター"
+
+#, fuzzy
+msgid "Select host %{name}"
+msgstr "(ホスト選択)"
 
 #, fuzzy
 msgid "Stale state"
@@ -88491,6 +88631,17 @@ msgid "No matching values"
 msgstr "一致するホスト名がありません"
 
 #, fuzzy
+msgid "Clear"
+msgstr "クリア"
+
+msgid "Any (>0)"
+msgstr ""
+
+#, fuzzy
+msgid "None (=0)"
+msgstr "なし（リニア）"
+
+#, fuzzy
 msgid "No results found for your search."
 msgstr "お探しの結果が見つかりませんでした"
 
@@ -88515,6 +88666,10 @@ msgstr "一致するメトリックが見つかりません"
 
 msgid "Rows found: %{count}"
 msgstr ""
+
+#, fuzzy
+msgid "Select all rows"
+msgstr "すべて見る"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr "製品利用状況の分析を通じて、Checkmkの改善にご協力ください"
@@ -89571,6 +89726,9 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "CPU utilization for appliances"
+#~ msgstr "アプライアンスのCPU使用率"
 
 #~ msgid "Pending changes reverted."
 #~ msgstr "保留中の変更が取り消されました。"
@@ -91899,9 +92057,6 @@ msgstr ""
 #~ msgid "latest"
 #~ msgstr "最新の"
 
-#~ msgid "max"
-#~ msgstr "最大"
-
 #~ msgid "sum"
 #~ msgstr "合計"
 
@@ -91931,9 +92086,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "+ Create"
 #~ msgstr "作成する"
-
-#~ msgid "Compute a rate"
-#~ msgstr "レートを計算する"
 
 #~ msgid "Deploy the Plesk plug-ins"
 #~ msgstr "Pleskプラグインをデプロイする"
@@ -97941,10 +98093,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "to be defined"
 #~ msgstr "名前が定義されていません"
-
-#, fuzzy
-#~ msgid "Select host name"
-#~ msgstr "(ホスト選択)"
 
 #~ msgid "No host name filter applied."
 #~ msgstr "ホスト名フィルターは適用されていません。"

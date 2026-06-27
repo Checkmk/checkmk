@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-23 10:27+0000\n"
+"PO-Revision-Date: 2026-06-25 17:57+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -916,9 +916,6 @@ msgstr "(Modul ohne Namen)"
 #, python-format
 msgid "(Version: %s - no version change)"
 msgstr "(Version: %s - keine Versionsänderung)"
-
-msgid "(auto-generated when the connection is saved)"
-msgstr "(wird automatisch generiert, wenn die Verbindung gespeichert wird)"
 
 msgid "(built-in)"
 msgstr "(mitgeliefert)"
@@ -10937,6 +10934,10 @@ msgstr "CPU-Auslastung (letzte Minuten)"
 msgid "CPU utilization (percentiles)"
 msgstr "CPU-Auslastung (Percentilen)"
 
+#, fuzzy
+msgid "CPU utilization (single value)"
+msgstr "CPU-Auslastung (letzte Minuten)"
+
 msgid "CPU utilization (user, system)"
 msgstr "CPU-Auslastung (Benutzer, System)"
 
@@ -10972,9 +10973,6 @@ msgstr "CPU-Auslastung (Benutzer, System, Leerlauf, Nice)"
 
 msgid "CPU utilization (user, system, interrupt)"
 msgstr "CPU-Auslastung (Benutzer, System, Unterbrechung)"
-
-msgid "CPU utilization for appliances"
-msgstr "CPU-Auslastung für Appliances"
 
 msgid "CPU utilization for simple devices"
 msgstr "CPU-Auslastung für einfache Geräte"
@@ -30798,6 +30796,10 @@ msgstr "Identität"
 msgid "Identity of an authorized key"
 msgstr "Identität eines autorisierten Schlüssels"
 
+#, fuzzy
+msgid "Identity provider connection"
+msgstr "Zeitüberschreitung bei der Verbindung zum Identitätsanbieter"
+
 msgid "Identity provider connection timeout"
 msgstr "Zeitüberschreitung bei der Verbindung zum Identitätsanbieter"
 
@@ -38591,6 +38593,9 @@ msgid ""
 "permission additionally controls whether a dashboard may be shared via a "
 "public link."
 msgstr ""
+"Dashboards für alle Benutzer sichtbar und nutzbar machen. Bei Dashboards "
+"legt diese Berechtigung zusätzlich fest, ob ein Dashboard über einen "
+"öffentlichen Link freigegeben werden darf."
 
 #, python-format
 msgid "Make own published %s override built-in %s for all users."
@@ -46859,6 +46864,10 @@ msgstr "Überblick"
 msgid "Overview mode"
 msgstr "Überblick-Modus"
 
+#, fuzzy
+msgid "Overwrite automatically generated ID"
+msgstr "automatisch erkennen"
+
 msgid "Owned by other users"
 msgstr "Von anderen Benutzern"
 
@@ -53248,6 +53257,8 @@ msgstr "Ausstehenden Änderungen werden rückgängig gemacht."
 
 msgid "Reverting pending changes. Reload this page to see the current status."
 msgstr ""
+"Ausstehende Änderungen rückgängig machen. Laden Sie diese Seite neu, um den "
+"aktuellen Status anzuzeigen."
 
 msgid "Review and run connection test"
 msgstr "Überprüfen und Verbindungstest durchführen"
@@ -53786,9 +53797,8 @@ msgstr "Rx-Leistungspegel"
 msgid "S."
 msgstr "s."
 
-#, fuzzy
 msgid "S3 Buckets"
-msgstr "AWS/S3 Buckets"
+msgstr "S3 Buckets"
 
 msgid "S3 back-end cache hits"
 msgstr "S3 Backend Cache-Treffer"
@@ -57788,9 +57798,8 @@ msgstr "Instanz nutzt den Livestatus Proxy Daemon"
 msgid "Site management"
 msgstr "Instanzverwaltung"
 
-#, fuzzy
 msgid "Site management configuration (OMD)"
-msgstr "SSH Daemon Konfiguration (Linux)"
+msgstr "Konfiguration der Instanzverwaltung (OMD)"
 
 msgid "Site name"
 msgstr "Instanzname"
@@ -58202,6 +58211,7 @@ msgstr ""
 "gemountet ist. Bitte beachten Sie, dass der Checkmk-Agent keine automatische "
 "Bereinigung in diesem benutzerdefinierten Pfad vornimmt."
 
+#, fuzzy
 msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
 "also for other hosts \"piggyback\" with their own data. This is the case for "
@@ -58210,7 +58220,15 @@ msgid ""
 "configuration. If that is not the case, then with this rule you can define a "
 "host name translation. Note: This rule must be configured for the \"pig\" - "
 "i.e. the host that the agent is running on. It is not applied to the "
-"translated piggybacked hosts."
+"translated piggybacked hosts.<br><br>The 'Multiple regular expressions' and "
+"'Explicit name mapping' options match against the raw host names as sent by "
+"the agent. Keep in mind that Checkmk only allows letters, digits, dashes, "
+"underscores and dots in host names, so any other characters are "
+"automatically converted to underscores when the piggybacked host is created "
+"in monitoring. This means that if, for example, an agent sends the host name "
+"'My Virtual Machine', Checkmk will store it as 'My_Virtual_Machine'. Your "
+"translation rules should therefore be written to match the original name as "
+"sent by the agent, not the converted underscore variant."
 msgstr ""
 "Manche Agenten oder Agenten-Plugins senden Daten nicht nur für den "
 "abgefragten Host, sondern für andere Hosts \"piggyback\" mit ihren eigenen "
@@ -62973,6 +62991,10 @@ msgstr ""
 "hinzugefügt werden darf, da sie sensible Informationen preisgibt. Verwenden "
 "Sie stattdessen 'authentication' in den Optionen für den Verbindungsaufbau. "
 
+#, fuzzy
+msgid "The URL will be generated automatically after you save the form."
+msgstr "Schlüsselpaar wird beim Speichern erstellt."
+
 msgid "The User Base DN could be found."
 msgstr "Der Basis-DN für die Benutzer wurde gefunden."
 
@@ -64127,6 +64149,10 @@ msgstr ""
 "durchsucht, die auf die Festplatte geschrieben werden sollen. Dies betrifft "
 "nur RRD-Dateien, bei denen die Aktualisierungen gestoppt wurden, so dass ein "
 "hoher Wert in den meisten Fällen akzeptabel ist."
+
+#, fuzzy
+msgid "The entity ID must not be empty"
+msgstr "Die Verbindungs-ID darf nicht leer sein"
 
 #, python-format
 msgid "The entry %s is missing"
@@ -76544,11 +76570,12 @@ msgstr ""
 msgid "Unique host name template"
 msgstr "Vorlage für eindeutige Host-Namen"
 
+#, fuzzy
 msgid ""
 "Unique identifier for this Checkmk Service Provider, used by the identity "
-"provider to recognize requests originating from Checkmk. Leave empty to auto-"
-"generate the value from the Checkmk server URL (<tt>{Checkmk server URL}/"
-"saml_metadata.py</tt>) or specify an arbitrary value."
+"provider to recognize requests originating from Checkmk. By default it is "
+"generated from the Checkmk server URL (<tt>{Checkmk server URL}/"
+"saml_metadata.py</tt>) on save."
 msgstr ""
 "Eindeutige Kennung für diesen Checkmk-Serviceanbieter, die vom "
 "Identitätsanbieter verwendet wird, um Anfragen zu erkennen, die von Checkmk "
@@ -87491,23 +87518,23 @@ msgstr "Ziehen, um neu anzuordnen"
 msgid "Remove element"
 msgstr "Element entfernen"
 
-#, fuzzy
 msgid "Paste from clipboard failed with error: %{error}"
-msgstr "Kopieren in die Zwischenablage fehlgeschlagen mit Fehler: "
+msgstr ""
+"Einfügen aus der Zwischenablage ist mit einem Fehler fehlgeschlagen: %{error}"
 
-#, fuzzy
 msgid "Pasted from clipboard"
-msgstr "In die Zwischenablage kopiert"
+msgstr "Aus der Zwischenablage kopiert"
 
 msgid "No input field found to paste into"
-msgstr ""
+msgstr "Kein Eingabefeld zum Einfügen gefunden"
 
 msgid "Clipboard access was blocked. Allow it or paste manually with Ctrl+V."
 msgstr ""
+"Der Zugriff auf die Zwischenablage wurde blockiert. Erlauben Sie ihn oder "
+"fügen Sie den Inhalt manuell mit Strg+V ein."
 
-#, fuzzy
 msgid "Failed to read from clipboard"
-msgstr "Kopie in die Zwischenablage fehlgeschlagen"
+msgstr "Lesen aus der Zwischenablage fehlgeschlagen"
 
 msgid "Clear search"
 msgstr "Suche leeren"
@@ -87527,115 +87554,89 @@ msgstr "Fertigstellen"
 msgid "Guided"
 msgstr "Geführt"
 
-#, fuzzy
 msgid "Save date"
-msgstr "Beispiel-Datum"
+msgstr "Datum speichern"
 
-#, fuzzy
 msgid "Choose a date"
-msgstr "Alle auswählen"
+msgstr "Ein Datum auswählen"
 
-#, fuzzy
 msgid "Save date & time"
-msgstr "Tag und Zeit des Ereignisses"
+msgstr "Datum & Uhrzeit speichern"
 
-#, fuzzy
 msgid "Choose date & time"
-msgstr "Tag und Zeit anzeigen"
+msgstr "Datum & Uhrzeit wählen"
 
-#, fuzzy
 msgid "Choose a time"
-msgstr "Alle auswählen"
+msgstr "Eine Uhrzeit auswählen"
 
 msgid "Range reordered: start %{start}, end %{end}"
+msgstr "Bereich neu geordnet: Start %{start}, Ende %{end}"
+
+msgid "Save range"
+msgstr "Bereich speichern"
+
+msgid "Enter a complete start and end"
+msgstr "Geben Sie eine vollständige Start- und Endzeit ein"
+
+msgid "Choose a date & time range"
+msgstr "Datum & Zeitraum auswählen"
+
+msgid "From date"
 msgstr ""
 
-#, fuzzy
-msgid "Save range"
-msgstr "Änderungen speichern"
-
-#, fuzzy
-msgid "Enter a complete start and end"
-msgstr "Reklassifizierung des kompletten Zustands"
-
-#, fuzzy
-msgid "Choose a date & time range"
-msgstr "Datums- & Zeitraum"
-
-#, fuzzy
-msgid "From date"
-msgstr "Erstelldatum"
-
-#, fuzzy
 msgid "From time"
-msgstr "keine Zeit"
+msgstr "Ab der Uhrzeit"
 
-#, fuzzy
 msgid "To date"
-msgstr "Keine Daten"
+msgstr ""
 
-#, fuzzy
 msgid "To time"
-msgstr "keine Zeit"
+msgstr "Bis zur Uhrzeit"
 
-#, fuzzy
 msgid "Quick range presets"
-msgstr "TCP-Ziel-Resets"
+msgstr "Schnellvoreinstellungen für den Bereich"
 
 msgid "Custom"
 msgstr "Benutzerdefiniert"
 
-#, fuzzy
 msgid "Start time"
-msgstr "Starttyp"
+msgstr "Startzeit"
 
-#, fuzzy
 msgid "End time"
-msgstr "keine Zeit"
+msgstr "Endzeit"
 
-#, fuzzy
 msgid "Timezone:"
-msgstr "Zeitzone"
+msgstr "Zeitzone:"
 
-#, fuzzy
 msgid "Current server time:"
-msgstr "Aktuelle Ereignisse"
+msgstr "Aktuelle Serverzeit:"
 
-#, fuzzy
 msgid "Unknown Timezone"
-msgstr "Unbekannte Entitäten"
+msgstr "Unbekannte Zeitzone"
 
-#, fuzzy
 msgid "not set"
-msgstr "nicht vorhanden"
+msgstr "nicht festgelegt"
 
-#, fuzzy
 msgid "Timezone"
 msgstr "Zeitzone"
 
-#, fuzzy
 msgid "Save & apply"
-msgstr "Speichern & bearbeiten"
+msgstr "Speichern & anwenden"
 
-#, fuzzy
 msgid "Saving…"
-msgstr "Wird gespeichert"
+msgstr "Wird gespeichert…"
 
-#, fuzzy
 msgid "Open time selector"
 msgstr "Zeitauswahl öffnen"
 
-#, fuzzy
 msgid "Empty"
-msgstr "leer"
+msgstr "Leer"
 
-#, fuzzy
 msgid "AM or PM"
-msgstr " oder "
+msgstr "Vormittag oder Nachmittag"
 
-#, fuzzy
 msgid "Time selection"
-msgstr "Dateiauswahl"
+msgstr "Zeitauswahl"
 
 msgid "required"
 msgstr "erforderlich"
@@ -89494,17 +89495,17 @@ msgstr "Alt + k"
 msgid "Existence"
 msgstr "Existenz"
 
+msgid "Edit condition"
+msgstr "Bedingung bearbeiten"
+
+msgid "Remove condition"
+msgstr "Bedingung entfernen"
+
 msgid "Attribute key"
 msgstr "Attribut-Schlüssel"
 
 msgid "Attribute operator"
 msgstr "Attribut-Operator"
-
-msgid "Remove condition"
-msgstr "Bedingung entfernen"
-
-msgid "Edit condition"
-msgstr "Bedingung bearbeiten"
 
 msgid "Add condition after %{key}"
 msgstr "Bedingung nach %{key} hinzufügen"
@@ -89558,8 +89559,116 @@ msgid "does not exist"
 msgstr "existiert nicht"
 
 #, fuzzy
+msgid "Last recorded value"
+msgstr "zuletzt gemeldet"
+
+#, fuzzy
+msgid "Avg"
+msgstr "Alter"
+
+#, fuzzy
+msgid "Max"
+msgstr "Mai"
+
+#, fuzzy
+msgid "Min"
+msgstr "Hauptordner"
+
+msgid "Rate"
+msgstr "Rate"
+
+msgid "Delta"
+msgstr ""
+
+msgid "Last recorded value (raw counter)"
+msgstr ""
+
+#, fuzzy
+msgid "Preserve histograms"
+msgstr "Perzentile (Histogramme)"
+
+#, fuzzy
+msgid "Count delta"
+msgstr "Nur Zählen"
+
+#, fuzzy
+msgid "Count rate"
+msgstr "Eine Rate berechnen"
+
+#, fuzzy
+msgid "Sum delta"
+msgstr "Größen-Delta"
+
+#, fuzzy
+msgid "Sum rate"
+msgstr "%s-Rate"
+
+#, fuzzy
+msgid "Quantile"
+msgstr "Bis"
+
+#, fuzzy
+msgid "Fraction below"
+msgstr "Quotient"
+
+#, fuzzy
+msgid "Fraction between"
+msgstr "Quotient"
+
+msgid "Cumulative sum field (raw)"
+msgstr ""
+
+#, fuzzy
+msgid "last"
+msgstr "Die letzten "
+
+#, fuzzy
+msgid "raw"
+msgstr "Zeile"
+
+#, fuzzy
+msgid "avg"
+msgstr "Merkmal"
+
+msgid "max"
+msgstr "Maximum"
+
+#, fuzzy
+msgid "rate"
+msgstr "%s-Rate"
+
+#, fuzzy
+msgid "delta"
+msgstr "Größen-Delta"
+
+#, fuzzy
+msgid "preserve histograms"
+msgstr "Perzentile (Histogramme)"
+
+#, fuzzy
+msgid "count delta"
+msgstr "Dokument Count-Delta"
+
+#, fuzzy
+msgid "count rate"
+msgstr "Dateianzahl ist"
+
+#, fuzzy
+msgid "sum delta"
+msgstr "Größen-Delta"
+
+#, fuzzy
+msgid "sum rate"
+msgstr "%s-Rate"
+
+msgid "fraction <%{value}"
+msgstr ""
+
+msgid "fraction %{lower}–%{upper}"
+msgstr ""
+
 msgid "Unknown error"
-msgstr "Unbekannter Fehler: %s"
+msgstr "Unbekannter Fehler"
 
 msgid "Agent connection test running"
 msgstr "Test der Agentenverbindung läuft"
@@ -90102,9 +90211,8 @@ msgstr ""
 msgid "Paste the code from the redirect page here"
 msgstr "Fügen Sie hier den Code von der Weiterleitungsseite ein"
 
-#, fuzzy
 msgid "Paste"
-msgstr "Master"
+msgstr "Einfügen"
 
 msgid "Start authorization"
 msgstr "Autorisierung starten"
@@ -90863,24 +90971,24 @@ msgstr ""
 "Das Relay wird offiziell für die folgenden Betriebssysteme unterstützt:"
 
 #, fuzzy
-msgid "Number of services OK state"
+msgid "Number of services in OK state"
 msgstr "Anzahl von Services im Zustand OK"
 
 #, fuzzy
-msgid "Number of services warning state"
-msgstr "Anzahl von Services im Zustand OK"
+msgid "Number of services in warning state"
+msgstr "Anzahl von Services im Zustand WARNING"
 
 #, fuzzy
-msgid "Number of services critical state"
-msgstr "Anzahl von Services im Zustand OK"
+msgid "Number of services in critical state"
+msgstr "Anzahl von Services im Zustand CRITICAL"
 
 #, fuzzy
-msgid "Number of services unknown state"
-msgstr "Anzahl von Services im Zustand OK"
+msgid "Number of services in unknown state"
+msgstr "Anzahl von Services im Zustand UNKNOWN"
 
 #, fuzzy
-msgid "Number of services pending state"
-msgstr "Anzahl von Services im Zustand OK"
+msgid "Number of services in pending state"
+msgstr "Anzahl von Services im Zustand PENDING"
 
 msgid "Unhandled Problems"
 msgstr "Unbehandelte Probleme"
@@ -90888,16 +90996,22 @@ msgstr "Unbehandelte Probleme"
 msgid "Search hosts…"
 msgstr "Hosts suchen…"
 
+#, fuzzy
+msgid "Reset all filters"
+msgstr "Generelle Filter"
+
+#, fuzzy
+msgid "Select host %{name}"
+msgstr "Host-Name auswählen"
+
 msgid "Stale state"
 msgstr "Veraltet-Zustand"
 
-#, fuzzy
 msgid "Only number values are allowed."
-msgstr "Es sind nur Großbuchstaben erlaubt"
+msgstr "Es sind nur Zahlen erlaubt."
 
-#, fuzzy
 msgid "The lower bound must not exceed the upper bound."
-msgstr "Die Untergrenze muss kleiner sein als die Obergrenze"
+msgstr "Die Untergrenze muss kleiner sein als die Obergrenze."
 
 msgid "Filter values"
 msgstr "Werte filtern"
@@ -90907,6 +91021,17 @@ msgstr "Alle auswählen"
 
 msgid "No matching values"
 msgstr "Keine passenden Werte"
+
+#, fuzzy
+msgid "Clear"
+msgstr "Bereinigt"
+
+msgid "Any (>0)"
+msgstr ""
+
+#, fuzzy
+msgid "None (=0)"
+msgstr "Keine (linear)"
 
 msgid "No results found for your search."
 msgstr "Für Ihre Suche wurden keine Ergebnisse gefunden."
@@ -90933,6 +91058,10 @@ msgstr "Zeilen, die Ihrer Suche entsprechen: %{count}"
 
 msgid "Rows found: %{count}"
 msgstr "Gefundene Zeilen: %{count}"
+
+#, fuzzy
+msgid "Select all rows"
+msgstr "Alle auswählen"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
@@ -91931,6 +92060,12 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "(auto-generated when the connection is saved)"
+#~ msgstr "(wird automatisch generiert, wenn die Verbindung gespeichert wird)"
+
+#~ msgid "CPU utilization for appliances"
+#~ msgstr "CPU-Auslastung für Appliances"
 
 #~ msgid "Pending changes reverted."
 #~ msgstr "Ausstehende Änderungen rückgängig gemacht."
@@ -94303,9 +94438,6 @@ msgstr ""
 #~ msgid "latest"
 #~ msgstr "letzter"
 
-#~ msgid "max"
-#~ msgstr "Maximum"
-
 #~ msgid "sum"
 #~ msgstr "Summe"
 
@@ -94333,9 +94465,6 @@ msgstr ""
 
 #~ msgid "+ Create"
 #~ msgstr "+ Erstellen"
-
-#~ msgid "Compute a rate"
-#~ msgstr "Eine Rate berechnen"
 
 #~ msgid "Deploy the Plesk plug-ins"
 #~ msgstr "Plesk-Plugins verteilen"
@@ -100076,9 +100205,6 @@ msgstr ""
 #~ msgid "No aggregation"
 #~ msgstr "Keine Aggregation"
 
-#~ msgid "Rate"
-#~ msgstr "Rate"
-
 #~ msgid "Resource attribute"
 #~ msgstr "Ressource-Attribut"
 
@@ -100652,9 +100778,6 @@ msgstr ""
 
 #~ msgid "to be defined"
 #~ msgstr "noch zu definieren"
-
-#~ msgid "Select host name"
-#~ msgstr "Host-Name auswählen"
 
 #~ msgid "No host name filter applied."
 #~ msgstr "Es wurde kein Host-Namen-Filter angewendet."

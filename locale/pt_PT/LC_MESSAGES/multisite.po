@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-24 17:57+0000\n"
+"PO-Revision-Date: 2026-06-26 17:57+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -908,9 +908,6 @@ msgstr "(Módulo sem título)"
 
 #, python-format
 msgid "(Version: %s - no version change)"
-msgstr ""
-
-msgid "(auto-generated when the connection is saved)"
 msgstr ""
 
 msgid "(built-in)"
@@ -11424,6 +11421,10 @@ msgid "CPU utilization (percentiles)"
 msgstr "Utilização da CPU (percentil 50)"
 
 #, fuzzy
+msgid "CPU utilization (single value)"
+msgstr "Utilização da CPU de última hora"
+
+#, fuzzy
 msgid "CPU utilization (user, system)"
 msgstr "Utilização da CPU (média)"
 
@@ -11470,10 +11471,6 @@ msgstr "Utilização da CPU para dispositivos simples"
 #, fuzzy
 msgid "CPU utilization (user, system, interrupt)"
 msgstr "Utilização da CPU de última hora"
-
-#, fuzzy
-msgid "CPU utilization for appliances"
-msgstr "Utilização de CPU para Aparelhos"
 
 msgid "CPU utilization for simple devices"
 msgstr "Utilização da CPU para dispositivos simples"
@@ -32351,6 +32348,10 @@ msgstr "Identidade"
 msgid "Identity of an authorized key"
 msgstr "Identidade de uma chave autorizada"
 
+#, fuzzy
+msgid "Identity provider connection"
+msgstr "Tempo limite de ligação do fornecedor de identidade"
+
 msgid "Identity provider connection timeout"
 msgstr "Tempo limite de ligação do fornecedor de identidade"
 
@@ -49432,6 +49433,10 @@ msgstr "Visão geral"
 msgid "Overview mode"
 msgstr "Visão geral"
 
+#, fuzzy
+msgid "Overwrite automatically generated ID"
+msgstr "detectar automaticamente"
+
 msgid "Owned by other users"
 msgstr "Propriedade de outros utilizadores"
 
@@ -61425,7 +61430,15 @@ msgid ""
 "configuration. If that is not the case, then with this rule you can define a "
 "host name translation. Note: This rule must be configured for the \"pig\" - "
 "i.e. the host that the agent is running on. It is not applied to the "
-"translated piggybacked hosts."
+"translated piggybacked hosts.<br><br>The 'Multiple regular expressions' and "
+"'Explicit name mapping' options match against the raw host names as sent by "
+"the agent. Keep in mind that Checkmk only allows letters, digits, dashes, "
+"underscores and dots in host names, so any other characters are "
+"automatically converted to underscores when the piggybacked host is created "
+"in monitoring. This means that if, for example, an agent sends the host name "
+"'My Virtual Machine', Checkmk will store it as 'My_Virtual_Machine'. Your "
+"translation rules should therefore be written to match the original name as "
+"sent by the agent, not the converted underscore variant."
 msgstr ""
 "Alguns agentes ou plugins de agentes enviam dados não só para o host "
 "consultado, mas também para outros hosts &quot;piggyback&quot; com seus "
@@ -66334,6 +66347,10 @@ msgid ""
 "buildup options, instead. "
 msgstr ""
 
+#, fuzzy
+msgid "The URL will be generated automatically after you save the form."
+msgstr "O par de chaves será gerado quando você salvar."
+
 msgid "The User Base DN could be found."
 msgstr "O DN base do usuário pode ser encontrado."
 
@@ -67443,6 +67460,10 @@ msgstr ""
 "antigos que devem ser gravados no disco. Isso só diz respeito a arquivos RRD "
 "para os quais as atualizações pararam, então definir isso para um valor alto "
 "é aceitável na maioria dos casos."
+
+#, fuzzy
+msgid "The entity ID must not be empty"
+msgstr "A ligação %r não existe"
 
 #, python-format
 msgid "The entry %s is missing"
@@ -80335,9 +80356,9 @@ msgstr "Modelo de nome de anfitrião"
 
 msgid ""
 "Unique identifier for this Checkmk Service Provider, used by the identity "
-"provider to recognize requests originating from Checkmk. Leave empty to auto-"
-"generate the value from the Checkmk server URL (<tt>{Checkmk server URL}/"
-"saml_metadata.py</tt>) or specify an arbitrary value."
+"provider to recognize requests originating from Checkmk. By default it is "
+"generated from the Checkmk server URL (<tt>{Checkmk server URL}/"
+"saml_metadata.py</tt>) on save."
 msgstr ""
 
 msgid "Unit"
@@ -93911,20 +93932,20 @@ msgid "Existence"
 msgstr "Ouvinte"
 
 #, fuzzy
-msgid "Attribute key"
-msgstr "Atributo"
-
-#, fuzzy
-msgid "Attribute operator"
-msgstr "Atributo a definir"
+msgid "Edit condition"
+msgstr "Editar conexão"
 
 #, fuzzy
 msgid "Remove condition"
 msgstr "Remover a condição da etiqueta"
 
 #, fuzzy
-msgid "Edit condition"
-msgstr "Editar conexão"
+msgid "Attribute key"
+msgstr "Atributo"
+
+#, fuzzy
+msgid "Attribute operator"
+msgstr "Atributo a definir"
 
 #, fuzzy
 msgid "Add condition after %{key}"
@@ -93992,6 +94013,116 @@ msgstr "Não termina com \"%s\"."
 #, fuzzy
 msgid "does not exist"
 msgstr "Não existe"
+
+#, fuzzy
+msgid "Last recorded value"
+msgstr "Relatório de acidente"
+
+#, fuzzy
+msgid "Avg"
+msgstr "Idade"
+
+#, fuzzy
+msgid "Max"
+msgstr "Maio"
+
+#, fuzzy
+msgid "Min"
+msgstr "Principal"
+
+msgid "Rate"
+msgstr ""
+
+msgid "Delta"
+msgstr ""
+
+msgid "Last recorded value (raw counter)"
+msgstr ""
+
+#, fuzzy
+msgid "Preserve histograms"
+msgstr "Grupos de agregação"
+
+#, fuzzy
+msgid "Count delta"
+msgstr "Conte apenas"
+
+#, fuzzy
+msgid "Count rate"
+msgstr "Taxa de mensagens entregues"
+
+#, fuzzy
+msgid "Sum delta"
+msgstr "Tamanho delta"
+
+#, fuzzy
+msgid "Sum rate"
+msgstr "%s rate"
+
+#, fuzzy
+msgid "Quantile"
+msgstr "Até"
+
+#, fuzzy
+msgid "Fraction below"
+msgstr "Fração"
+
+#, fuzzy
+msgid "Fraction between"
+msgstr "Fração"
+
+msgid "Cumulative sum field (raw)"
+msgstr ""
+
+#, fuzzy
+msgid "last"
+msgstr "O último "
+
+#, fuzzy
+msgid "raw"
+msgstr "linha"
+
+#, fuzzy
+msgid "avg"
+msgstr "Etiqueta"
+
+#, fuzzy
+msgid "max"
+msgstr "máximo"
+
+#, fuzzy
+msgid "rate"
+msgstr "%s rate"
+
+#, fuzzy
+msgid "delta"
+msgstr "Tamanho delta"
+
+#, fuzzy
+msgid "preserve histograms"
+msgstr "Grupos de agregação"
+
+#, fuzzy
+msgid "count delta"
+msgstr "Delta de contagem de documentos"
+
+#, fuzzy
+msgid "count rate"
+msgstr "Contagem de arquivos em"
+
+#, fuzzy
+msgid "sum delta"
+msgstr "Tamanho delta"
+
+#, fuzzy
+msgid "sum rate"
+msgstr "%s rate"
+
+msgid "fraction <%{value}"
+msgstr ""
+
+msgid "fraction %{lower}–%{upper}"
+msgstr ""
 
 #, fuzzy
 msgid "Unknown error"
@@ -95254,23 +95385,23 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Number of services OK state"
+msgid "Number of services in OK state"
 msgstr "Número de serviços no estado OK"
 
 #, fuzzy
-msgid "Number of services warning state"
+msgid "Number of services in warning state"
 msgstr "Número de serviços no estado OK"
 
 #, fuzzy
-msgid "Number of services critical state"
+msgid "Number of services in critical state"
 msgstr "Número de serviços no estado OK"
 
 #, fuzzy
-msgid "Number of services unknown state"
+msgid "Number of services in unknown state"
 msgstr "Número de serviços no estado OK"
 
 #, fuzzy
-msgid "Number of services pending state"
+msgid "Number of services in pending state"
 msgstr "Número de serviços no estado OK"
 
 #, fuzzy
@@ -95280,6 +95411,14 @@ msgstr "Problemas com o anfitrião"
 #, fuzzy
 msgid "Search hosts…"
 msgstr "Anfitriões de busca"
+
+#, fuzzy
+msgid "Reset all filters"
+msgstr "Erro geral"
+
+#, fuzzy
+msgid "Select host %{name}"
+msgstr "Eliminar o anfitrião"
 
 #, fuzzy
 msgid "Stale state"
@@ -95304,6 +95443,17 @@ msgstr "Remover tudo"
 #, fuzzy
 msgid "No matching values"
 msgstr "Nenhum nome de anfitrião correspondente"
+
+#, fuzzy
+msgid "Clear"
+msgstr "Estado 'limpo'"
+
+msgid "Any (>0)"
+msgstr ""
+
+#, fuzzy
+msgid "None (=0)"
+msgstr "Nenhum (linear)"
 
 #, fuzzy
 msgid "No results found for your search."
@@ -95332,6 +95482,10 @@ msgstr "Não foram encontradas métricas correspondentes"
 
 msgid "Rows found: %{count}"
 msgstr ""
+
+#, fuzzy
+msgid "Select all rows"
+msgstr "Remover tudo"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""
@@ -96252,6 +96406,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "CPU utilization for appliances"
+#~ msgstr "Utilização de CPU para Aparelhos"
 
 #, fuzzy
 #~ msgid "Pending changes reverted."
@@ -98449,10 +98607,6 @@ msgstr ""
 #~ msgstr "teste"
 
 #, fuzzy
-#~ msgid "max"
-#~ msgstr "máximo"
-
-#, fuzzy
 #~ msgid "sum"
 #~ msgstr "Soma"
 
@@ -98478,10 +98632,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "+ Create"
 #~ msgstr "Criar"
-
-#, fuzzy
-#~ msgid "Compute a rate"
-#~ msgstr "Taxa de mensagens entregues"
 
 #, fuzzy
 #~ msgid "Deploy the Plesk plug-ins"
@@ -103581,10 +103731,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "to be defined"
 #~ msgstr "Nenhuma ligação definida"
-
-#, fuzzy
-#~ msgid "Select host name"
-#~ msgstr "Eliminar o anfitrião"
 
 #, fuzzy
 #~ msgid "No host name filter applied."

@@ -123,6 +123,80 @@ def test_translate_scales_a_predictive_metric_like_its_base() -> None:
     assert data.originals == [RRDOriginal(metric_name=MetricName("predict_cpu_user"), scale=2.0)]
 
 
+def test_translate_adds_the_deprecated_column_for_a_renamed_metric() -> None:
+    # The service now emits the metric under its current name `temp`, but a translation renames the
+    # deprecated `temperature` onto `temp`. The deprecated column is appended as a further original so a
+    # graph spanning the rename keeps its historic segment.
+    perf = PerformanceData(
+        check_command="check_mk-sensor",
+        values=[PerformanceValue(metric_name=MetricName("temp"), value=20.0)],
+    )
+    translations = {
+        "check_mk-sensor": {MetricName("temperature"): MetricTranslation(name=MetricName("temp"))}
+    }
+
+    [(name, data)] = translate_performance_data(perf, translations).items()
+    assert name == MetricName("temp")
+    # Current column first (live data wins on overlap), the deprecated column appended.
+    assert data.originals == [
+        RRDOriginal(metric_name=MetricName("temp"), scale=1.0),
+        RRDOriginal(metric_name=MetricName("temperature"), scale=1.0),
+    ]
+
+
+def test_translate_scales_the_deprecated_column_with_its_own_scale() -> None:
+    perf = PerformanceData(
+        check_command="check_mk-cpu",
+        values=[PerformanceValue(metric_name=MetricName("cpu_user"), value=21.0)],
+    )
+    # `cpu_user_old` was renamed-and-scaled onto `cpu_user`; its historic column carries the old scale.
+    translations = {
+        "check_mk-cpu": {
+            MetricName("cpu_user_old"): MetricTranslation(name=MetricName("cpu_user"), scale=2.0)
+        }
+    }
+
+    [(name, data)] = translate_performance_data(perf, translations).items()
+    assert name == MetricName("cpu_user")
+    assert data.originals == [
+        RRDOriginal(metric_name=MetricName("cpu_user"), scale=1.0),
+        RRDOriginal(metric_name=MetricName("cpu_user_old"), scale=2.0),
+    ]
+
+
+def test_translate_does_not_reverse_translate_regex_entries() -> None:
+    # A regex translation maps many names onto one and cannot be inverted, so no deprecated column is
+    # added — only the current column remains.
+    perf = PerformanceData(
+        check_command="check_mk-if",
+        values=[PerformanceValue(metric_name=MetricName("if_octets"), value=10.0)],
+    )
+    translations = {
+        "check_mk-if": {MetricName("~if_.*"): MetricTranslation(name=MetricName("if_octets"))}
+    }
+
+    [(name, data)] = translate_performance_data(perf, translations).items()
+    assert name == MetricName("if_octets")
+    assert data.originals == [RRDOriginal(metric_name=MetricName("if_octets"), scale=1.0)]
+
+
+def test_translate_adds_the_deprecated_column_with_the_predict_prefix() -> None:
+    perf = PerformanceData(
+        check_command="check_mk-sensor",
+        values=[PerformanceValue(metric_name=MetricName("predict_temp"), value=19.0)],
+    )
+    translations = {
+        "check_mk-sensor": {MetricName("temperature"): MetricTranslation(name=MetricName("temp"))}
+    }
+
+    [(name, data)] = translate_performance_data(perf, translations).items()
+    assert name == MetricName("predict_temp")
+    assert data.originals == [
+        RRDOriginal(metric_name=MetricName("predict_temp"), scale=1.0),
+        RRDOriginal(metric_name=MetricName("predict_temperature"), scale=1.0),
+    ]
+
+
 def test_translate_merges_metrics_renaming_to_the_same_target() -> None:
     perf = PerformanceData(
         check_command="check_mk-cpu",

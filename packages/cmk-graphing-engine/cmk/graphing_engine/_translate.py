@@ -5,6 +5,7 @@
 
 import re
 from collections.abc import Mapping
+from dataclasses import replace
 
 from ._objects import (
     MetricName,
@@ -49,6 +50,21 @@ def _find_translation(
     return MetricTranslation(name=metric_name)
 
 
+def _reverse_translations(
+    canonical_name: MetricName,
+    translations: Mapping[MetricName, MetricTranslation],
+) -> Mapping[MetricName, float]:
+    # The old RRD column names that rename to `canonical_name`, each with its scale. After a metric is
+    # renamed (RenameTo), its historic data still lives under the former column name, so fetching these
+    # too lets a graph spanning the rename keep its pre-rename segment. Regex (`~`) patterns map many
+    # names onto one and cannot be inverted, so they are skipped (the same 1-to-1 restriction as legacy).
+    return {
+        old_name: translation.scale
+        for old_name, translation in translations.items()
+        if not old_name.startswith("~") and translation.name == canonical_name
+    }
+
+
 def translate_performance_data(
     performance_data: PerformanceData,
     translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
@@ -76,4 +92,19 @@ def translate_performance_data(
             minimum=_scaled(perf_value.minimum),
             maximum=_scaled(perf_value.maximum),
         )
+
+    # Append the deprecated (pre-rename) column names as further originals so the historic segment is
+    # fetched and merged in. The current name's originals stay first, so live data wins on overlap.
+    for name, data in list(result.items()):
+        prefix, bare_name = _split_predict_prefix(name)
+        present = {original.metric_name for original in data.originals}
+        deprecated = [
+            RRDOriginal(metric_name=old_column, scale=scale)
+            for old_name, scale in _reverse_translations(
+                MetricName(bare_name), command_translations
+            ).items()
+            if (old_column := MetricName(f"{prefix}{old_name}")) not in present
+        ]
+        if deprecated:
+            result[name] = replace(data, originals=[*data.originals, *deprecated])
     return result

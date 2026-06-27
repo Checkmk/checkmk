@@ -3123,6 +3123,59 @@ class ConfigCache:
 
         return _checktype_ignored_for_host(check_plugin_name_str)
 
+    # TODO: Remove old name one day
+    def service_discovery_name(self) -> ServiceName:
+        if self._loaded_config.use_new_descriptions_for.get("cmk_inventory", False):
+            return "Check_MK Discovery"
+        return "Check_MK inventory"
+
+    def agent_exclude_sections(self, host_name: HostName) -> dict[str, str]:
+        settings = self.ruleset_matcher.get_host_values_all(
+            host_name, self._loaded_config.agent_exclude_sections, self.label_manager.labels_of_host
+        )
+        return settings[0] if settings else {}
+
+    def only_from(self, host_name: HostName) -> None | list[str] | str:
+        """The agent of a host may be configured to be accessible only from specific IPs"""
+        ruleset = self._loaded_config.agent_config.get("only_from", [])
+        if not ruleset:
+            return None
+
+        entries = self.ruleset_matcher.get_host_values_all(
+            host_name, ruleset, self.label_manager.labels_of_host
+        )
+        return entries[0] if entries else None
+
+    def ping_levels(self, host_name: HostName) -> PingLevels:
+        levels: PingLevels = {}
+
+        values = self.ruleset_matcher.get_host_values_all(
+            host_name, self._loaded_config.ping_levels, self.label_manager.labels_of_host
+        )
+        # TODO: Use get_host_merged_dict?)
+        for value in values[::-1]:  # make first rules have precedence
+            levels.update(value)
+
+        return levels
+
+    def icons_and_actions(self, host_name: HostName) -> list[str]:
+        return list(
+            set(
+                self.ruleset_matcher.get_host_values_all(
+                    host_name,
+                    self._loaded_config.host_icons_and_actions,
+                    self.label_manager.labels_of_host,
+                )
+            )
+        )
+
+    def _site_of_host(self, host_name: HostName) -> SiteId:
+        return SiteId(
+            self._host_tags.tags(host_name).get(
+                TagGroupID("site"), self._loaded_config.distributed_wato_site or omd_site()
+            )
+        )
+
     def effective_host(
         self,
         host_name: HostName,
@@ -3226,59 +3279,6 @@ class ConfigCache:
             return "best", merged_cfg
 
         raise NotImplementedError(effective_mode)
-
-    # TODO: Remove old name one day
-    def service_discovery_name(self) -> ServiceName:
-        if self._loaded_config.use_new_descriptions_for.get("cmk_inventory", False):
-            return "Check_MK Discovery"
-        return "Check_MK inventory"
-
-    def agent_exclude_sections(self, host_name: HostName) -> dict[str, str]:
-        settings = self.ruleset_matcher.get_host_values_all(
-            host_name, self._loaded_config.agent_exclude_sections, self.label_manager.labels_of_host
-        )
-        return settings[0] if settings else {}
-
-    def only_from(self, host_name: HostName) -> None | list[str] | str:
-        """The agent of a host may be configured to be accessible only from specific IPs"""
-        ruleset = self._loaded_config.agent_config.get("only_from", [])
-        if not ruleset:
-            return None
-
-        entries = self.ruleset_matcher.get_host_values_all(
-            host_name, ruleset, self.label_manager.labels_of_host
-        )
-        return entries[0] if entries else None
-
-    def ping_levels(self, host_name: HostName) -> PingLevels:
-        levels: PingLevels = {}
-
-        values = self.ruleset_matcher.get_host_values_all(
-            host_name, self._loaded_config.ping_levels, self.label_manager.labels_of_host
-        )
-        # TODO: Use get_host_merged_dict?)
-        for value in values[::-1]:  # make first rules have precedence
-            levels.update(value)
-
-        return levels
-
-    def icons_and_actions(self, host_name: HostName) -> list[str]:
-        return list(
-            set(
-                self.ruleset_matcher.get_host_values_all(
-                    host_name,
-                    self._loaded_config.host_icons_and_actions,
-                    self.label_manager.labels_of_host,
-                )
-            )
-        )
-
-    def _site_of_host(self, host_name: HostName) -> SiteId:
-        return SiteId(
-            self._host_tags.tags(host_name).get(
-                TagGroupID("site"), self._loaded_config.distributed_wato_site or omd_site()
-            )
-        )
 
 
 class CoreObjectsConfig:

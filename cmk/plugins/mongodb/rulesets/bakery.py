@@ -26,13 +26,27 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
+# The authentication mechanism used to be stored using the verbatim pymongo mechanism
+# names (e.g. "MONGODB-X509"). These contain hyphens, which are not valid identifiers and
+# are therefore rejected by SingleChoiceElement.
+_AUTH_MECHANISM_MIGRATION: Mapping[str, str] = {
+    "MONGODB-X509": "MONGODB_X509",
+    "SCRAM-SHA-256": "SCRAM_SHA_256",
+    "SCRAM-SHA-1": "SCRAM_SHA_1",
+    "MONGODB-CR": "MONGODB_CR",
+}
+
 
 def migrate_auth(value: object) -> Mapping[str, object]:
     if not isinstance(value, dict):
         raise ValueError(f"Unexpected value: {value!r}")
-    if "password" not in value:
-        return value
-    return {**value, "password": migrate_to_password(value["password"])}
+    auth_mechanism = value["auth_mechanism"]
+    assert isinstance(auth_mechanism, str)
+    return {
+        **value,
+        **({"password": migrate_to_password(value["password"])} if "password" in value else {}),
+        "auth_mechanism": _AUTH_MECHANISM_MIGRATION.get(auth_mechanism, auth_mechanism),
+    }
 
 
 def migrate(value: object) -> Mapping[str, object]:
@@ -108,19 +122,19 @@ def _auth_form() -> Dictionary:
                     elements=(
                         SingleChoiceElement(name="DEFAULT", title=Title("Auto (DEFAULT)")),
                         SingleChoiceElement(
-                            name="MONGODB-X509",
+                            name="MONGODB_X509",
                             title=Title("MongoDB >= 5.0 (MONGODB-X509)"),
                         ),
                         SingleChoiceElement(
-                            name="SCRAM-SHA-256",
+                            name="SCRAM_SHA_256",
                             title=Title("MongoDB >= 4.0 (SCRAM-SHA-256)"),
                         ),
                         SingleChoiceElement(
-                            name="SCRAM-SHA-1",
+                            name="SCRAM_SHA_1",
                             title=Title("MongoDB >= 3.0 (SCRAM-SHA-1)"),
                         ),
                         SingleChoiceElement(
-                            name="MONGODB-CR",
+                            name="MONGODB_CR",
                             title=Title("MongoDB < 3.0 (MONGODB-CR)"),
                         ),
                     ),

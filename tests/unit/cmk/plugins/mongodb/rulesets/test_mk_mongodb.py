@@ -103,10 +103,15 @@ def test_migrate_auth_migrates_old_password() -> None:
             {"auth_mechanism": "DEFAULT", "auth_source": "admin", "username": "user"},
             {"auth_mechanism": "DEFAULT", "auth_source": "admin", "username": "user"},
         ),
+        (
+            {"auth_mechanism": "MONGODB-CR", "auth_source": "admin", "username": "user"},
+            {"auth_mechanism": "MONGODB_CR", "auth_source": "admin", "username": "user"},
+        ),
     ],
     ids=[
         "passes_through_already_migrated_password",
         "no_password_key_passes_through",
+        "migrates_legacy_auth_mechanism_name",
     ],
 )
 def test_migrate_auth(value: object, expected: object) -> None:

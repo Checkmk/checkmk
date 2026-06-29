@@ -82,9 +82,9 @@ pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<
     };
     debug!("TCP connection established");
     stream.set_read_timeout(config.timeout)?;
-    if config.proxy.is_some() {
+    if let Some(proxy_auth) = config.proxy {
         info!("Setting up proxy connection...");
-        build_proxy_stream(&mut stream, config.proxy.unwrap().auth, server, port)?;
+        build_proxy_stream(&mut stream, proxy_auth.auth, server, port)?;
     };
     stream.set_read_timeout(config.timeout)?;
 

@@ -6,6 +6,7 @@
 # mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
+from datetime import datetime, timedelta, UTC
 from types import EllipsisType
 from typing import Any
 from unittest import mock
@@ -45,6 +46,7 @@ from cmk.plugins.azure_deprecated.agent_based.lib import (
     create_discover_by_metrics_function_single,
     iter_resource_attributes,
     MetricData,
+    parse_azure_datetime_to_utc,
     parse_resources,
     Resource,
     Section,
@@ -1049,3 +1051,25 @@ def test_threshold_hit_for_time(
         label=label,
     )
     assert list(second_result) == expected2
+
+
+@pytest.mark.parametrize(
+    "datetime_string",
+    [
+        "2022-02-02T12:00:00.000Z",
+        "2022-02-02T12:00:00.000",
+        "2022-02-02T12:00:00.123",
+        "2022-02-02T12:00:00",
+    ],
+)
+def test_parse_azure_datetime_is_utc_aware(datetime_string: str) -> None:
+    result = parse_azure_datetime_to_utc(datetime_string)
+    assert result.tzinfo is not None
+    assert result.utcoffset() == timedelta(0)
+    assert result.timestamp() == datetime(2022, 2, 2, 12, 0, tzinfo=UTC).timestamp()
+
+
+def test_parse_azure_datetime_preserves_explicit_offset() -> None:
+    result = parse_azure_datetime_to_utc("2022-02-02T12:00:00+02:00")
+    assert result.tzinfo is not None
+    assert result.timestamp() == datetime(2022, 2, 2, 10, 0, tzinfo=UTC).timestamp()

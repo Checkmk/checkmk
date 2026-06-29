@@ -11,7 +11,7 @@ import json
 import time
 from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, UTC
 from enum import auto, Enum
 from typing import Any, NamedTuple
 
@@ -132,23 +132,17 @@ type CheckFunctionWithItem = Callable[[str, Mapping[str, Any], Section], CheckRe
 type CheckFunctionWithoutItem = Callable[[Mapping[str, Any], Resource], CheckResult]
 
 
-def parse_azure_datetime(datetime_string: str) -> datetime:
-    """Return the datetime object from the parsed string.
+def parse_azure_datetime_to_utc(datetime_string: str) -> datetime:
+    """Return a timezone-aware (UTC) datetime from the parsed string.
 
-    >>> parse_azure_datetime("2022-02-02T12:00:00.000Z")
-    datetime.datetime(2022, 2, 2, 12, 0)
-
-    >>> parse_azure_datetime("2022-02-02T12:00:00.000")
-    datetime.datetime(2022, 2, 2, 12, 0)
-
-    >>> parse_azure_datetime("2022-02-02T12:00:00.123")
-    datetime.datetime(2022, 2, 2, 12, 0)
-
-    >>> parse_azure_datetime("2022-02-02T12:00:00")
-    datetime.datetime(2022, 2, 2, 12, 0)
-
+    Azure emits UTC wall-clock timestamps; an offset-less string is therefore
+    interpreted as UTC (not local time), so callers using ``.timestamp()`` get
+    the correct instant regardless of the monitoring site's timezone.
     """
-    return datetime.fromisoformat(datetime_string).replace(microsecond=0, tzinfo=None)
+    parsed = datetime.fromisoformat(datetime_string).replace(microsecond=0)
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 #   .--Parse---------------------------------------------------------------.

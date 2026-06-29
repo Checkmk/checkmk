@@ -24,7 +24,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.azure_deprecated.agent_based.lib import parse_azure_datetime
+from cmk.plugins.azure_deprecated.agent_based.lib import parse_azure_datetime_to_utc
 
 THIRTY_DAYS = 30 * 24 * 60 * 60
 SEVEN_DAYS = 7 * 24 * 60 * 60
@@ -75,7 +75,7 @@ def check_app_registration(
     if (secret := section.get(item)) is None:
         return
 
-    expiration_date = parse_azure_datetime(secret.endDateTime)
+    expiration_date = parse_azure_datetime_to_utc(secret.endDateTime)
     age = expiration_date.timestamp() - datetime.now(tz=UTC).timestamp()
 
     if age < 0:

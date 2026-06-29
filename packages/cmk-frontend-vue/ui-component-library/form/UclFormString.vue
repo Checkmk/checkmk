@@ -9,6 +9,8 @@ import type { String } from 'cmk-shared-typing/typescript/vue_formspec_component
 import { HttpResponse, http, passthrough } from 'msw'
 import { ref } from 'vue'
 
+import { randomId } from '@/lib/randomId'
+
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import FormEdit from '@/form/FormEdit.vue'
@@ -17,7 +19,7 @@ const apiReturnsError = ref<boolean>(false)
 
 const ALL: Array<string> = []
 for (let i = 0; i < 200; i++) {
-  ALL.push(window.crypto.randomUUID())
+  ALL.push(randomId())
 }
 
 async function interceptor({ request }: { request: Request }) {

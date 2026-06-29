@@ -43,6 +43,14 @@ export default [
       eqeqeq: 'error',
       'vue/eqeqeq': 'error',
       'no-var': 'error',
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "MemberExpression[property.name='randomUUID']",
+          message:
+            "crypto.randomUUID() is not available in all environments. Use randomId from '@/lib/randomId' instead."
+        }
+      ],
       curly: 'error',
       'prefer-template': 'error',
       'vue/prefer-template': 'error',

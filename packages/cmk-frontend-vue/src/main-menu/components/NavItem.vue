@@ -32,7 +32,7 @@ const icon = computed<OneColorIcons>(() => {
 })
 
 const href = computed<string | undefined>(() => {
-  return props.item.type === 'link' ? props.item.url : 'javascript:void(0)'
+  return props.item.type === 'link' ? props.item.url : '#'
 })
 
 const target = computed<string | undefined>(() => {
@@ -47,7 +47,17 @@ const target = computed<string | undefined>(() => {
     :class="{ 'mm-nav-item__li--active': active, 'mm-nav-item__li--small': hideItemTitle }"
     :title="hideItemTitle ? item.title : item.hint"
   >
-    <a :href="href" :target="target">
+    <a
+      :href="href"
+      :target="target"
+      @click="
+        (event) => {
+          if (item.type !== 'link') {
+            event.preventDefault()
+          }
+        }
+      "
+    >
       <CmkMultitoneIcon
         :name="icon"
         :primary-color="color"

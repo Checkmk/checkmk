@@ -44,7 +44,7 @@ const color = computed<CmkMultitoneIconColor>(() => {
     }"
     :title="_t('Toggle sidebar')"
   >
-    <a href="javascript:void(0)" @click="SidebarService.toggle()">
+    <a href="#" @click.prevent="SidebarService.toggle()">
       <CmkMultitoneIcon
         name="sidebar"
         :primary-color="color"

@@ -76,7 +76,7 @@ function navigateUrl(url: string) {
       </div>
       <div v-if="props.header.show_more" class="mm-default-popup__header-show-more">
         <a
-          href="javascript:void(0)"
+          href="#"
           @mouseenter="
             () => {
               showMoreHover = true
@@ -87,7 +87,7 @@ function navigateUrl(url: string) {
               showMoreHover = false
             }
           "
-          @click="mainMenu.toggleShowMoreLess(props.navItemId)"
+          @click.prevent="mainMenu.toggleShowMoreLess(props.navItemId)"
         >
           {{ showMoreText }}
           <CmkMultitoneIcon :name="showMoreIcon" :primary-color="showMoreColor"

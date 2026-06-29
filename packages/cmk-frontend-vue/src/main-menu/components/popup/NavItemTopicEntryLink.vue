@@ -24,7 +24,17 @@ defineProps<{
 </script>
 
 <template>
-  <a :href="entry.url || 'javascript:void(0)'" :target="entry.target || '_self'">
+  <a
+    :href="entry.url || '#'"
+    :target="entry.target || '_self'"
+    @click="
+      (event) => {
+        if (!entry.url) {
+          event.preventDefault()
+        }
+      }
+    "
+  >
     <span v-if="entry.icon" class="mm-nav-item-topic-entry-link__icon">
       <CmkDynamicIcon :spec="entry.icon" />
     </span>

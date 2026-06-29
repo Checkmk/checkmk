@@ -84,9 +84,9 @@ function getEntries2Render() {
         </template>
         <li v-if="getActiveEntries().length > maxEntriesPerTopic && !props.isShowAll">
           <a
-            href="javascript:void(0)"
+            href="#"
             class="mm-nav-item-topic__show-all"
-            @click="mainMenu.showAllEntriesOfTopic(props.navItemId, props.topic)"
+            @click.prevent="mainMenu.showAllEntriesOfTopic(props.navItemId, props.topic)"
             >{{ _t('Show all') }}</a
           >
         </li>

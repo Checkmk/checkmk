@@ -53,12 +53,15 @@ const classes = computed(() => [
 
 <template>
   <a
-    :href="url || 'javascript:void(0)'"
+    :href="url || '#'"
     :target="openInNewTab ? '_blank' : ''"
     class="cmk-link-card"
     :class="classes"
     @click="
-      () => {
+      (event) => {
+        if (!url) {
+          event.preventDefault()
+        }
         if (props.callback) {
           props.callback()
         }

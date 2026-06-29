@@ -105,7 +105,7 @@ def test_temporary_log_level() -> None:
         logger.info("hello file")
 
         with manager.temporary_log_level(log_level=logging.CRITICAL):
-            logging.info("Danger, Will Robinson!")
+            logger.info("Danger, Will Robinson!")
 
         logger.info("bye file")
 

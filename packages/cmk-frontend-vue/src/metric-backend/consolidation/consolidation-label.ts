@@ -6,9 +6,13 @@
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
+import { type Magnitude, formatTimeSpan } from '@/components/user-input/CmkTimeSpan/timeSpan'
+
 import type { ConsolidationFunction, ConsolidationModel, MetricType } from './types'
 
 const DEFAULT_QUANTILE = 0.95
+
+const LOOKBACK_MAGNITUDES: Magnitude[] = ['hour', 'minute', 'second']
 
 // Built at call time, not module load, because i18n is not yet set up then.
 function functionLabels(): Record<
@@ -47,7 +51,7 @@ export function functionLabel(type: MetricType, fn: ConsolidationFunction): stri
   return functionLabels()[type][fn] ?? fn
 }
 
-/** Compact function token for the chip, e.g. 'rate', 'p95', 'fraction 0.1–0.9'. */
+/** Compact function token for the pill, e.g. 'rate', 'p95', 'fraction 0.1–0.9'. */
 export function compactFunction(model: ConsolidationModel): string {
   const { _t } = usei18n()
   switch (model.function) {
@@ -87,4 +91,21 @@ export function compactFunction(model: ConsolidationModel): string {
         upper: model.params.fracUpper ?? '?'
       })
   }
+}
+
+/**
+ * Compact lookback for the read-only pill, e.g. '5 m' or '1 h 30 m'. The units
+ * are abbreviated to keep the summary short; the edit controls (CmkTimeSpan)
+ * spell them out in full.
+ */
+export function lookbackLabel(seconds: number): string {
+  const { _tp } = usei18n()
+  const label = formatTimeSpan(seconds, LOOKBACK_MAGNITUDES, {
+    hour: _tp('Abbreviation for hours', 'h'),
+    minute: _tp('Abbreviation for minutes', 'm'),
+    second: _tp('Abbreviation for seconds', 's')
+  })
+  // formatTimeSpan omits magnitudes below the value, so a zero lookback yields
+  // an empty label; fall back to seconds so the pill never renders empty.
+  return label || `0 ${_tp('Abbreviation for seconds', 's')}`
 }

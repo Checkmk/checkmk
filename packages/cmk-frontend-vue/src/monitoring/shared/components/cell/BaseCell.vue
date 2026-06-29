@@ -47,9 +47,16 @@ const effectiveJustify = computed<ColumnJustify>(
 const justifyContent = computed(() => justifyToFlex(effectiveJustify.value))
 
 const pinnedLeft = computed(() => columnInfo.value?.pinnedLeft ?? null)
-const pinnedStyle = computed<CSSProperties>(() =>
-  pinnedLeft.value !== null ? { position: 'sticky', left: `${pinnedLeft.value}px`, zIndex: 1 } : {}
-)
+const pinnedRight = computed(() => columnInfo.value?.pinnedRight ?? null)
+const pinnedStyle = computed<CSSProperties>(() => {
+  if (pinnedLeft.value !== null) {
+    return { position: 'sticky', left: `${pinnedLeft.value}px`, zIndex: 1 }
+  }
+  if (pinnedRight.value !== null) {
+    return { position: 'sticky', right: `${pinnedRight.value}px`, zIndex: 1 }
+  }
+  return {}
+})
 const cellWidth = computed(() => columnInfo.value?.width ?? Number.POSITIVE_INFINITY)
 
 const activeSlot = computed<string>(() => {
@@ -92,8 +99,9 @@ const highlightStyle = computed<CSSProperties>(() =>
   <td
     class="monitoring-base-cell"
     :class="{
-      'monitoring-base-cell--pinned': pinnedLeft !== null,
-      'monitoring-base-cell--last-pinned': columnInfo?.isLastPinned
+      'monitoring-base-cell--pinned': pinnedLeft !== null || pinnedRight !== null,
+      'monitoring-base-cell--last-pinned': columnInfo?.isLastPinned,
+      'monitoring-base-cell--first-pinned-right': columnInfo?.isFirstPinnedRight
     }"
     :style="pinnedStyle"
   >
@@ -181,6 +189,17 @@ const highlightStyle = computed<CSSProperties>(() =>
   top: 0;
   bottom: 0;
   right: 0;
+  width: 2px;
+  pointer-events: none;
+  background: var(--default-border-color);
+}
+
+.monitoring-base-cell--first-pinned-right::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
   width: 2px;
   pointer-events: none;
   background: var(--default-border-color);

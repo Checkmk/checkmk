@@ -36,7 +36,9 @@ async function mountCell(
           {
             width: options.cellWidth ?? null,
             pinnedLeft: null,
+            pinnedRight: null,
             isLastPinned: false,
+            isFirstPinnedRight: false,
             justify: 'left' as const
           }
         ]

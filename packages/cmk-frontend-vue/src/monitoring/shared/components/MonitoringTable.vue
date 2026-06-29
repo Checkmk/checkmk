@@ -122,7 +122,10 @@ const table = useVueTable({
 })
 
 // --- Column pinning ------------------------------------------------------
-const pinningEnabled = computed(() => (props.columnPinning?.left?.length ?? 0) > 0)
+const pinningEnabled = computed(
+  () =>
+    (props.columnPinning?.left?.length ?? 0) > 0 || (props.columnPinning?.right?.length ?? 0) > 0
+)
 
 const wrapperRef = ref<HTMLElement | null>(null)
 const containerWidth = ref<number | null>(null)
@@ -161,6 +164,7 @@ interface ColumnMetric {
   min: number
   max: number
   isLeftPinned: boolean
+  isRightPinned: boolean
   justify: ColumnJustify
 }
 
@@ -170,6 +174,7 @@ const columnMetrics = computed<ColumnMetric[]>(() =>
     min: column.columnDef.minSize ?? DEFAULT_COLUMN_MIN_SIZE,
     max: column.columnDef.maxSize ?? DEFAULT_COLUMN_MAX_SIZE,
     isLeftPinned: column.getIsPinned() === 'left',
+    isRightPinned: column.getIsPinned() === 'right',
     justify: column.columnDef.meta?.justify ?? 'left'
   }))
 )
@@ -236,8 +241,8 @@ interface ColumnLayout {
   id: string
   index: number
   width: number
-  isPinned: boolean
-  left: number
+  pinnedSide: 'left' | 'right' | null
+  offset: number
   justify: ColumnJustify
 }
 
@@ -249,27 +254,47 @@ const columnLayout = computed<ColumnLayout[]>(() => {
       ? Number.POSITIVE_INFINITY
       : containerWidth.value - borderSpacingTotal.value
   const widths = distributeWidths(available, metrics)
-  let pinnedOffset = TABLE_BORDER_SPACING
-  return metrics.map((metric, index) => {
-    const width = widths[index] ?? metric.min
-    const isPinned = pinningActive.value && metric.isLeftPinned
-    const entry: ColumnLayout = {
-      id: metric.id,
-      index,
-      width,
-      isPinned,
-      left: pinnedOffset,
-      justify: metric.justify
+  const entries = metrics.map<ColumnLayout>((metric, index) => ({
+    id: metric.id,
+    index,
+    width: widths[index] ?? metric.min,
+    pinnedSide: pinningActive.value
+      ? metric.isLeftPinned
+        ? 'left'
+        : metric.isRightPinned
+          ? 'right'
+          : null
+      : null,
+    offset: 0,
+    justify: metric.justify
+  }))
+  let leftOffset = TABLE_BORDER_SPACING
+  for (const entry of entries) {
+    if (entry.pinnedSide === 'left') {
+      entry.offset = leftOffset
+      leftOffset += entry.width + TABLE_BORDER_SPACING
     }
-    if (isPinned) {
-      pinnedOffset += width + TABLE_BORDER_SPACING
+  }
+  let rightOffset = TABLE_BORDER_SPACING
+  for (let index = entries.length - 1; index >= 0; index--) {
+    const entry = entries[index]!
+    if (entry.pinnedSide === 'right') {
+      entry.offset = rightOffset
+      rightOffset += entry.width + TABLE_BORDER_SPACING
     }
-    return entry
-  })
+  }
+  return entries
 })
 
-const lastPinnedIndex = computed(() =>
-  columnLayout.value.reduce((last, entry) => (entry.isPinned ? entry.index : last), -1)
+const lastPinnedLeftIndex = computed(() =>
+  columnLayout.value.reduce((last, entry) => (entry.pinnedSide === 'left' ? entry.index : last), -1)
+)
+
+const firstPinnedRightIndex = computed(() =>
+  columnLayout.value.reduce(
+    (first, entry) => (entry.pinnedSide === 'right' && first === -1 ? entry.index : first),
+    -1
+  )
 )
 
 const totalWidth = computed(() => columnLayout.value.reduce((sum, entry) => sum + entry.width, 0))
@@ -281,8 +306,10 @@ const columnInfos = computed<Map<string, ColumnLayoutInfo>>(() => {
   for (const entry of columnLayout.value) {
     infos.set(entry.id, {
       width: containerWidth.value === null ? null : entry.width,
-      pinnedLeft: entry.isPinned ? entry.left : null,
-      isLastPinned: entry.index === lastPinnedIndex.value,
+      pinnedLeft: entry.pinnedSide === 'left' ? entry.offset : null,
+      pinnedRight: entry.pinnedSide === 'right' ? entry.offset : null,
+      isLastPinned: entry.index === lastPinnedLeftIndex.value,
+      isFirstPinnedRight: entry.index === firstPinnedRightIndex.value,
       justify: entry.justify
     })
   }

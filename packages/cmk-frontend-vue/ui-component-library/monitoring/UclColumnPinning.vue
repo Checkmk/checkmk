@@ -12,7 +12,7 @@ export const a11yData = [
   {
     keys: ['—'],
     description:
-      'Pinning is purely presentational: it adds sticky positioning to the leading columns. The table keeps its normal reading order and keyboard semantics; nothing is added to or removed from the tab order.'
+      'Pinning is purely presentational: it adds sticky positioning to the leading and trailing columns. The table keeps its normal reading order and keyboard semantics; nothing is added to or removed from the tab order.'
   }
 ]
 
@@ -22,6 +22,12 @@ export const panelConfig = {
     title: 'Pinned columns',
     initialState: 2,
     help: 'Number of leading columns pinned to the left edge while scrolling horizontally.'
+  },
+  rightPinnedColumns: {
+    type: 'number' as const,
+    title: 'Right-pinned columns',
+    initialState: 1,
+    help: 'Number of trailing columns pinned to the right edge while scrolling horizontally.'
   }
 } satisfies PanelConfig
 </script>
@@ -101,10 +107,15 @@ const pinnedColumns = computed(() =>
   Math.max(0, Math.min(propState.value.pinnedColumns, maxPinnable))
 )
 
+const rightPinnedColumns = computed(() =>
+  Math.max(0, Math.min(propState.value.rightPinnedColumns, maxPinnable - pinnedColumns.value))
+)
+
+const accessorKeys = columns.map((column) => (column as { accessorKey: string }).accessorKey)
+
 const columnPinning = computed<ColumnPinningState>(() => ({
-  left: columns
-    .slice(0, pinnedColumns.value)
-    .map((column) => (column as { accessorKey: string }).accessorKey)
+  left: accessorKeys.slice(0, pinnedColumns.value),
+  right: rightPinnedColumns.value > 0 ? accessorKeys.slice(-rightPinnedColumns.value) : []
 }))
 
 const rows: HostEntry[] = [
@@ -231,7 +242,8 @@ const pinningActive = computed(
         <p class="ucl-column-pinning__hint">
           Drag the slider to narrow the container. Columns first shrink towards their min size; once
           every column has reached its min size and the table can no longer fit, the leading
-          {{ pinnedColumns }} column(s) stay pinned to the left while the rest scroll.
+          {{ pinnedColumns }} column(s) stay pinned to the left and the trailing
+          {{ rightPinnedColumns }} column(s) stay pinned to the right while the rest scroll.
         </p>
       </div>
 

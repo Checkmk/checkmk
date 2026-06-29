@@ -61,12 +61,24 @@ function setSelectAll(table: Table<T>, value: boolean | 'indeterminate'): void {
 const columns = inject(COLUMN_LAYOUT_KEY, null)
 
 function stickyStyle(columnId: string): CSSProperties {
-  const left = columns?.value.get(columnId)?.pinnedLeft ?? null
-  return left !== null ? { position: 'sticky', left: `${left}px`, zIndex: 3 } : {}
+  const info = columns?.value.get(columnId)
+  const left = info?.pinnedLeft ?? null
+  if (left !== null) {
+    return { position: 'sticky', left: `${left}px`, zIndex: 3 }
+  }
+  const right = info?.pinnedRight ?? null
+  if (right !== null) {
+    return { position: 'sticky', right: `${right}px`, zIndex: 3 }
+  }
+  return {}
 }
 
 function isLastPinned(columnId: string): boolean {
   return columns?.value.get(columnId)?.isLastPinned ?? false
+}
+
+function isFirstPinnedRight(columnId: string): boolean {
+  return columns?.value.get(columnId)?.isFirstPinnedRight ?? false
 }
 
 type SortDirection = false | 'asc' | 'desc'
@@ -125,7 +137,10 @@ function labelStyle(columnDef: ColumnDef<T>): CSSProperties {
         :class="[
           'monitoring-table-header__header-cell',
           {
-            'monitoring-table-header__header-cell--last-pinned': isLastPinned(header.column.id)
+            'monitoring-table-header__header-cell--last-pinned': isLastPinned(header.column.id),
+            'monitoring-table-header__header-cell--first-pinned-right': isFirstPinnedRight(
+              header.column.id
+            )
           }
         ]"
         :style="[columnStyle(header.column.columnDef), stickyStyle(header.column.id)]"
@@ -258,6 +273,17 @@ function labelStyle(columnDef: ColumnDef<T>): CSSProperties {
   top: 0;
   bottom: 0;
   right: 0;
+  width: 2px;
+  pointer-events: none;
+  background: var(--default-border-color);
+}
+
+.monitoring-table-header__header-cell--first-pinned-right::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
   width: 2px;
   pointer-events: none;
   background: var(--default-border-color);

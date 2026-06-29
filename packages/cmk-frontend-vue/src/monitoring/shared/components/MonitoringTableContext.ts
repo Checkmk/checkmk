@@ -59,7 +59,9 @@ export const TABLE_BORDER_SPACING_PX = `${TABLE_BORDER_SPACING}px`
 export interface ColumnLayoutInfo {
   width: number | null
   pinnedLeft: number | null
+  pinnedRight: number | null
   isLastPinned: boolean
+  isFirstPinnedRight: boolean
   justify: ColumnJustify
 }
 

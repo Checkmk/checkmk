@@ -65,6 +65,7 @@ def test_register_workflow_pull(
         hostname=HostName("pull-host"),
         host_attributes={"ipaddress": "127.0.0.1"},
     )
+    assert False, "Dummy test failure"
 
 
 @pytest.mark.medium_test_chain

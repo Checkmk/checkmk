@@ -21,6 +21,7 @@ from cmk.graphing_engine import (
     FixedRange,
     Fraction,
     Graph,
+    HostName,
     Line,
     MetricName,
     MinimalRange,
@@ -56,7 +57,7 @@ _TR = TimeRange(start=0, end=30, step=10)  # three data points
 
 
 def _metric(name: str) -> RRDMetric:
-    return RRDMetric(host_name="h", service_name="svc", metric_name=MetricName(name))
+    return RRDMetric(host_name=HostName("h"), service_name="svc", metric_name=MetricName(name))
 
 
 def _data(*, value: float | None, warning: float | None = None) -> RRDMetricData:

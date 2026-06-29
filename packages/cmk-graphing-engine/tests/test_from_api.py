@@ -17,6 +17,7 @@ from cmk.graphing_engine import (
     Difference,
     Fraction,
     Graph,
+    HostName,
     IECNotation,
     Line,
     MetricName,
@@ -42,7 +43,7 @@ def _id(s: str) -> str:
     return s
 
 
-_SERVICE = ServiceRef(host_name="host", service_name="svc")
+_SERVICE = ServiceRef(host_name=HostName("host"), service_name="svc")
 
 _KIND = "test"
 
@@ -69,7 +70,7 @@ _CRIT_ATTRS = CurveAttributes(title="Critical", unit=_DECIMAL, color=_CRIT_COLOR
 
 def _rrd(name: str) -> RRDMetric:
     return RRDMetric(
-        host_name="host",
+        host_name=HostName("host"),
         service_name="svc",
         metric_name=MetricName(name),
     )
@@ -166,14 +167,14 @@ def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
     parsed = parse_graph_from_api(
         graph,
-        ServiceRef(host_name="my-host", service_name="my-service"),
+        ServiceRef(host_name=HostName("my-host"), service_name="my-service"),
         _METRICS,
         _id,
         graph_type=_KIND,
     )
     assert [line.curve.quantity for line in parsed.lines] == [
         RRDMetric(
-            host_name="my-host",
+            host_name=HostName("my-host"),
             service_name="my-service",
             metric_name=MetricName("a"),
         )

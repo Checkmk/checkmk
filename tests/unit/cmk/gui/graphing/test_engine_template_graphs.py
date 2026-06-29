@@ -17,6 +17,7 @@ from cmk.graphing_engine import (
     CurveAttributes,
     DecimalNotation,
     Graph,
+    HostName,
     Line,
     MetricName,
     PerformanceData,
@@ -35,7 +36,7 @@ from cmk.gui.graphing._engine_template_graphs import (
     evaluate_template_graphs,
 )
 
-_SERVICE = ServiceRef(host_name="h", service_name="svc")
+_SERVICE = ServiceRef(host_name=HostName("h"), service_name="svc")
 _METRIC = "x"
 _DISCOVERY_RANGE = TimeRange(start=0, end=60, step=10)
 

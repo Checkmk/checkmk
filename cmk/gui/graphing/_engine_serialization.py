@@ -21,6 +21,7 @@ from cmk.graphing_engine import (
     FixedRange,
     Fraction,
     Graph,
+    HostName,
     IECNotation,
     Line,
     MetricName,
@@ -209,7 +210,7 @@ def _rrd_metric_to(quantity: Quantity, codec: QuantityCodec) -> _Json:
 def _rrd_metric_from(data: Mapping[str, object], codec: QuantityCodec) -> RRDMetric:
     consolidation_function = data["consolidation_function"]
     return RRDMetric(
-        host_name=ensure_type(data["host_name"], str),
+        host_name=HostName(ensure_type(data["host_name"], str)),
         service_name=ensure_type(data["service_name"], str),
         metric_name=MetricName(ensure_type(data["metric_name"], str)),
         consolidation_function=(

@@ -81,6 +81,7 @@ class CurveAttributes:
     color: str
 
 
+HostName = NewType("HostName", str)
 MetricName = NewType("MetricName", str)
 
 
@@ -212,7 +213,7 @@ class Constant:
 
 @dataclass(frozen=True, kw_only=True)
 class RRDMetric:
-    host_name: str
+    host_name: HostName
     service_name: str
     metric_name: MetricName
     # An optional per-metric consolidation function; when None the graph-wide one is used at fetch.
@@ -410,7 +411,7 @@ class Rule:
 
 @dataclass(frozen=True, kw_only=True)
 class ServiceRef:
-    host_name: str
+    host_name: HostName
     service_name: str
 
 

@@ -12,13 +12,19 @@ import os
 import signal
 import subprocess
 from contextlib import suppress
-from typing import Final
+from typing import Final, Self, TypedDict
 
-from cmk.checkengine.fetcher import Fetcher, FetcherError, Mode
+from cmk.checkengine.fetcher import DeserializationContext, Fetcher, FetcherError, Mode
 from cmk.checkengine.helper_interface import AgentRawData
 
 
-class ProgramFetcher(Fetcher[AgentRawData]):
+class ProgramFetcherParams(TypedDict):
+    cmdline: str
+    stdin: str | None
+    is_cmc: bool
+
+
+class ProgramFetcher(Fetcher[AgentRawData, ProgramFetcherParams]):
     def __init__(
         self,
         *,
@@ -54,6 +60,13 @@ class ProgramFetcher(Fetcher[AgentRawData]):
             and self.stdin == other.stdin
             and self.is_cmc == other.is_cmc
         )
+
+    def serialized_params(self) -> ProgramFetcherParams:
+        return {"cmdline": self.cmdline, "stdin": self.stdin, "is_cmc": self.is_cmc}
+
+    @classmethod
+    def from_params(cls, params: ProgramFetcherParams, _ctx: DeserializationContext) -> Self:
+        return cls(**params)
 
     def open(self) -> None:
         self._logger.debug("Calling: %s", self.cmdline)

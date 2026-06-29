@@ -8,16 +8,16 @@ from __future__ import annotations
 import abc
 import enum
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import final, Literal, Self
+from typing import Any, final, Literal, Self
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.cpu_tracking import Snapshot
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.helper_interface import AgentRawData, SourceInfo
+from cmk.checkengine.helper_interface import AgentRawData, JsonSerializable, SourceInfo
 from cmk.checkengine.snmplib import SNMPPluginStore, SNMPRawData
 
 __all__ = ["FetcherFunction", "DeserializationContext"]
@@ -36,6 +36,10 @@ class DeserializationContext:
 
     base_path: Path
     snmp_plugin_store: SNMPPluginStore
+    # Used by MetricBackendFetcher. Injected by the reading process so that this
+    # (community) module does not depend on the (non-free) telemetry package;
+    # the callable itself resolves its telemetry import lazily, at fetch time.
+    make_output: Callable[[Path, Sequence[str]], str]
 
 
 class FetcherFunction(ABC):
@@ -63,8 +67,21 @@ class Mode(enum.Enum):
     FORCE_SECTIONS = enum.auto()
 
 
-class Fetcher[TRawData](abc.ABC):
-    """Interface to the data fetchers."""
+class Fetcher[TRawData, TParams: Mapping[str, object] = Any](
+    JsonSerializable[TParams, DeserializationContext], abc.ABC
+):
+    """Interface to the data fetchers.
+
+    `TParams` is the concrete (`TypedDict`) shape of this fetcher's serialized
+    params. Concrete fetchers bind it (e.g. `Fetcher[AgentRawData, TCPFetcherParams]`)
+    to get strong typing on `serialized_params`/`from_params`.
+
+    It is invariant (it appears in both the return of `serialized_params` and
+    the parameter of `from_params`), so it defaults to `Any` rather than
+    `Mapping[str, object]`: that keeps the many `Fetcher[SomeRawData]`
+    annotations -- which don't care about the params shape -- compatible with
+    every concrete fetcher, instead of only with an exact params match.
+    """
 
     @final
     def __enter__(self) -> Self:

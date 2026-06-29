@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import dataclasses
 import logging
 import time
@@ -14,11 +15,11 @@ from collections.abc import (
     Sequence,
 )
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, Self, TypedDict
 
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.fetcher import Fetcher, FetcherError, Mode
+from cmk.checkengine.fetcher import DeserializationContext, Fetcher, FetcherError, Mode
 from cmk.checkengine.snmp_backend import make_backend
 from cmk.checkengine.snmp_backends._utils import BackendError
 from cmk.checkengine.snmplib import (
@@ -78,7 +79,27 @@ class SNMPSectionMeta:
         return cls(**serialized)
 
 
-class SNMPFetcher(Fetcher[SNMPRawData]):
+class _SNMPScanConfigParams(TypedDict):
+    on_error: str
+    missing_sys_description: bool
+
+
+class SNMPFetcherParams(TypedDict):
+    sections: Mapping[str, Mapping[str, Any]]
+    scan_config: _SNMPScanConfigParams
+    do_status_data_inventory: bool
+    relative_section_cache_path: str
+    relative_stored_walk_path: str
+    relative_walk_cache_path: str
+    caching_config: Mapping[SNMPSectionName, int]
+    # `plugin_store` is deliberately omitted: it is large and identical for all
+    # hosts, so it is written once to a global config file and supplied via the
+    # `DeserializationContext`.
+    snmp_config: Mapping[str, Any]
+    force_stored_walks: bool
+
+
+class SNMPFetcher(Fetcher[SNMPRawData, SNMPFetcherParams]):
     CPU_SECTIONS_WITHOUT_CPU_IN_NAME = {
         SNMPSectionName("brocade_sys"),
         SNMPSectionName("bvip_util"),
@@ -128,6 +149,51 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             and self.caching_config == other.caching_config
             and self.snmp_config == other.snmp_config
             and self.force_stored_walks == other.force_stored_walks
+        )
+
+    def serialized_params(self) -> SNMPFetcherParams:
+        # NOTE: we deliberately skip the `plugin_store` here.
+        # It is quite large, and the same for all hosts.
+        # We write it to a global config file.
+        return {
+            "sections": {str(s): m.serialize() for s, m in self.sections.items()},
+            "scan_config": {
+                "on_error": self.scan_config.on_error.value,
+                "missing_sys_description": self.scan_config.missing_sys_description,
+            },
+            "do_status_data_inventory": self.do_status_data_inventory,
+            "relative_section_cache_path": str(self.relative_section_cache_path),
+            "relative_stored_walk_path": str(self.relative_stored_walk_path),
+            "relative_walk_cache_path": str(self.relative_walk_cache_path),
+            "caching_config": self.caching_config,
+            "snmp_config": self.snmp_config.serialize(),
+            "force_stored_walks": self.force_stored_walks,
+        }
+
+    @classmethod
+    def from_params(cls, params: SNMPFetcherParams, ctx: DeserializationContext) -> Self:
+        snmp_config = copy.deepcopy(dict(params["snmp_config"]))
+        if isinstance(snmp_config["credentials"], list):
+            snmp_config["credentials"] = tuple(snmp_config["credentials"])
+        scan_config = params["scan_config"]
+        return cls(
+            sections={
+                SNMPSectionName(s): SNMPSectionMeta.deserialize(m)
+                for s, m in params["sections"].items()
+            },
+            plugin_store=ctx.snmp_plugin_store,
+            scan_config=SNMPScanConfig(
+                on_error=OnError(scan_config["on_error"]),
+                missing_sys_description=scan_config["missing_sys_description"],
+            ),
+            do_status_data_inventory=params["do_status_data_inventory"],
+            base_path=ctx.base_path,
+            relative_section_cache_path=Path(params["relative_section_cache_path"]),
+            relative_stored_walk_path=Path(params["relative_stored_walk_path"]),
+            relative_walk_cache_path=Path(params["relative_walk_cache_path"]),
+            snmp_config=SNMPHostConfig.deserialize(snmp_config),
+            caching_config=params["caching_config"],
+            force_stored_walks=params["force_stored_walks"],
         )
 
     @property

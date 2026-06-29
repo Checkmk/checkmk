@@ -4,11 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.checkengine.fetcher import Fetcher, Mode
+from typing import Self, TypedDict
+
+from cmk.checkengine.fetcher import DeserializationContext, Fetcher, Mode
 from cmk.checkengine.helper_interface import AgentRawData
 
 
-class PiggybackFetcher(Fetcher[AgentRawData]):
+class PiggybackFetcherParams(TypedDict):
+    pass
+
+
+class PiggybackFetcher(Fetcher[AgentRawData, PiggybackFetcherParams]):
     def __init__(
         self,
     ) -> None:
@@ -19,6 +25,13 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, PiggybackFetcher)
+
+    def serialized_params(self) -> PiggybackFetcherParams:
+        return {}
+
+    @classmethod
+    def from_params(cls, _params: PiggybackFetcherParams, _ctx: DeserializationContext) -> Self:
+        return cls()
 
     def open(self) -> None:
         pass

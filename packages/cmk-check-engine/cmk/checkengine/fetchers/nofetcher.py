@@ -6,12 +6,16 @@
 from __future__ import annotations
 
 import enum
-from typing import Final, NoReturn
+from typing import Final, NoReturn, Self, TypedDict
 
-from cmk.checkengine.fetcher import Fetcher, FetcherError, Mode
+from cmk.checkengine.fetcher import DeserializationContext, Fetcher, FetcherError, Mode
 from cmk.checkengine.helper_interface import AgentRawData
 
 __all__ = ["NoFetcherError", "NoFetcher"]
+
+
+class NoFetcherParams(TypedDict):
+    canned: str
 
 
 @enum.unique
@@ -25,7 +29,7 @@ class NoFetcherError(enum.Enum):
     MISSING_IP = "Failed to lookup IP address and no explicit IP address configured"
 
 
-class NoFetcher(Fetcher[AgentRawData]):
+class NoFetcher(Fetcher[AgentRawData, NoFetcherParams]):
     def __init__(self, /, canned: NoFetcherError) -> None:
         super().__init__()
         self.canned: Final = canned
@@ -34,6 +38,13 @@ class NoFetcher(Fetcher[AgentRawData]):
         if not isinstance(other, NoFetcher):
             return False
         return self.canned == other.canned
+
+    def serialized_params(self) -> NoFetcherParams:
+        return {"canned": self.canned.name}
+
+    @classmethod
+    def from_params(cls, params: NoFetcherParams, _ctx: DeserializationContext) -> Self:
+        return cls(NoFetcherError[params["canned"]])
 
     def open(self) -> None:
         pass

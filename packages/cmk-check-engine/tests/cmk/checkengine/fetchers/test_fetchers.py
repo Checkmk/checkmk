@@ -10,7 +10,7 @@ import socket
 import time
 from collections.abc import Mapping, Sequence, Sized
 from pathlib import Path
-from typing import Any, cast, NamedTuple, NoReturn
+from typing import Any, cast, NamedTuple, NoReturn, Self
 
 import pytest
 from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped,unused-ignore]
@@ -935,6 +935,13 @@ class TestFetcherCaching:
             def _fetch_from_io(self, *_args: object, **_kw: object) -> AgentRawData:
                 return AgentRawData(b"fetched_section")
 
+            def serialized_params(self) -> Mapping[str, Any]:
+                raise NotImplementedError()
+
+            @classmethod
+            def from_params(cls, _params: Mapping[str, Any], _ctx: object) -> Self:
+                raise NotImplementedError()
+
         return _Fetcher()
 
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher: Fetcher[AgentRawData]) -> None:
@@ -982,6 +989,13 @@ class TestFetcherTimeout:
 
         def _fetch_from_io(self, *_args: object, **_kw: object) -> NoReturn:
             raise MKTimeout()
+
+        def serialized_params(self) -> Mapping[str, Any]:
+            raise NotImplementedError()
+
+        @classmethod
+        def from_params(cls, _params: Mapping[str, Any], _ctx: object) -> Self:
+            raise NotImplementedError()
 
     with pytest.raises(MKTimeout):
         PlainFetcherTrigger(Path("/")).get_raw_data(

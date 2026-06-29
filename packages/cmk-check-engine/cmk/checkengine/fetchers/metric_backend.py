@@ -10,10 +10,15 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final, Self
+from typing import Any, Final, Self, TypedDict
 
-from cmk.checkengine.fetcher import Fetcher, FetcherError
+from cmk.checkengine.fetcher import DeserializationContext, Fetcher, FetcherError
 from cmk.checkengine.helper_interface import AgentRawData
+
+
+class MetricBackendFetcherParams(TypedDict):
+    argv: Sequence[str]
+    omd_root: str
 
 
 class AttributeType(Enum):
@@ -121,7 +126,7 @@ def _has_cause(exc: Exception, cause_type: type[Exception]) -> bool:
     return False
 
 
-class MetricBackendFetcher(Fetcher[AgentRawData]):
+class MetricBackendFetcher(Fetcher[AgentRawData, MetricBackendFetcherParams]):
     def __init__(
         self,
         *,
@@ -142,6 +147,17 @@ class MetricBackendFetcher(Fetcher[AgentRawData]):
         if not isinstance(other, MetricBackendFetcher):
             return False
         return self.argv == other.argv
+
+    def serialized_params(self) -> MetricBackendFetcherParams:
+        return {"argv": self.argv, "omd_root": self.omd_root.as_posix()}
+
+    @classmethod
+    def from_params(cls, params: MetricBackendFetcherParams, ctx: DeserializationContext) -> Self:
+        return cls(
+            argv=params["argv"],
+            omd_root=Path(params["omd_root"]),
+            make_output=ctx.make_output,
+        )
 
     def open(self) -> None:
         pass

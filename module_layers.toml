@@ -606,12 +606,7 @@ allows = ["@ccc", "cmk.utils.paths"]
 allows = ["@ccc", "@livestatus_client"]
 
 [components."cmk.fetcher_encoder"]
-allows = [
-  "cmk.checkengine.fetcher",
-  "cmk.checkengine.fetcher_utils",
-  "cmk.checkengine.fetchers",
-  "cmk.checkengine.filecache",
-]
+allows = ["cmk.checkengine.helper_interface"]
 
 [components."cmk.fetcher_helper"]
 allows = [

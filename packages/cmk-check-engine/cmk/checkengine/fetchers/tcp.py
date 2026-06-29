@@ -8,10 +8,10 @@ import logging
 import os
 import socket
 import ssl
-from collections.abc import Buffer, Callable, Mapping
+from collections.abc import Buffer, Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, Self, TypedDict
 
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -22,7 +22,7 @@ from cmk.checkengine.agent_protocol import (
     TransportProtocol,
     validate_agent_protocol,
 )
-from cmk.checkengine.fetcher import Fetcher, FetcherError, Mode
+from cmk.checkengine.fetcher import DeserializationContext, Fetcher, FetcherError, Mode
 from cmk.checkengine.helper_interface import AgentRawData
 
 __all__ = [
@@ -37,6 +37,23 @@ class TLSConfig:
     cas_dir: Path
     ca_store: Path
     site_crt: Path
+
+
+class _TLSConfigParams(TypedDict):
+    cas_dir: str
+    ca_store: str
+    site_crt: str
+
+
+class TCPFetcherParams(TypedDict):
+    family: int
+    address: Sequence[object]  # JSON array [host: str, port: int]
+    timeout: float
+    host_name: str
+    encryption_handling: int
+    uuid_file: str
+    pre_shared_secret: str | None
+    tls_config: _TLSConfigParams
 
 
 def recvall(sock: socket.socket, flags: int = 0) -> bytes:
@@ -93,7 +110,7 @@ class TCPFetcherConfig:
                 raise ValueError("Unknown setting: %r" % setting)
 
 
-class TCPFetcher(Fetcher[AgentRawData]):
+class TCPFetcher(Fetcher[AgentRawData, TCPFetcherParams]):
     def __init__(
         self,
         *,
@@ -145,6 +162,43 @@ class TCPFetcher(Fetcher[AgentRawData]):
             and self.encryption_handling == other.encryption_handling
             and self.pre_shared_secret == other.pre_shared_secret
             and self.tls_config == other.tls_config
+        )
+
+    def serialized_params(self) -> TCPFetcherParams:
+        return {
+            "family": self.family.value,
+            "address": list(self.address),  # normalize tuple -> JSON array
+            "timeout": self.timeout,
+            "host_name": str(self.host_name),
+            "encryption_handling": self.encryption_handling.value,
+            "uuid_file": str(self.uuid_file),
+            "pre_shared_secret": self.pre_shared_secret,
+            "tls_config": {
+                "cas_dir": str(self.tls_config.cas_dir),
+                "ca_store": str(self.tls_config.ca_store),
+                "site_crt": str(self.tls_config.site_crt),
+            },
+        }
+
+    @classmethod
+    def from_params(cls, params: TCPFetcherParams, _ctx: DeserializationContext) -> Self:
+        address = params["address"]
+        tls_config = params["tls_config"]
+        assert isinstance(address[0], str)
+        assert isinstance(address[1], int)
+        return cls(
+            family=socket.AddressFamily(params["family"]),
+            address=(HostAddress(address[0]), address[1]),
+            timeout=params["timeout"],
+            host_name=HostName(params["host_name"]),
+            encryption_handling=TCPEncryptionHandling(params["encryption_handling"]),
+            uuid_file=Path(params["uuid_file"]),
+            pre_shared_secret=params["pre_shared_secret"],
+            tls_config=TLSConfig(
+                cas_dir=Path(tls_config["cas_dir"]),
+                ca_store=Path(tls_config["ca_store"]),
+                site_crt=Path(tls_config["site_crt"]),
+            ),
         )
 
     def open(self) -> None:

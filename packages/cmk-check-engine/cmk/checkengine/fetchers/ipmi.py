@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress
-from cmk.checkengine.fetcher import Fetcher, FetcherError, Mode
+from cmk.checkengine.fetcher import DeserializationContext, Fetcher, FetcherError, Mode
 from cmk.checkengine.helper_interface import AgentRawData
 
 __all__ = ["IPMICredentials", "IPMIFetcher"]
@@ -37,6 +37,12 @@ __all__ = ["IPMICredentials", "IPMIFetcher"]
 class IPMICredentials(TypedDict, total=False):
     username: str
     password: str
+
+
+class IPMIFetcherParams(TypedDict):
+    address: str
+    username: str | None
+    password: str | None
 
 
 @dataclass(frozen=True)
@@ -105,7 +111,7 @@ class IPMISensor:
         )
 
 
-class IPMIFetcher(Fetcher[AgentRawData]):
+class IPMIFetcher(Fetcher[AgentRawData, IPMIFetcherParams]):
     """Fetch IPMI data using `pyghmi`.
 
     Note:
@@ -150,6 +156,21 @@ class IPMIFetcher(Fetcher[AgentRawData]):
             self.address == other.address
             and self.username == other.username
             and self.password == other.password
+        )
+
+    def serialized_params(self) -> IPMIFetcherParams:
+        return {
+            "address": self.address,
+            "username": self.username,
+            "password": self.password,
+        }
+
+    @classmethod
+    def from_params(cls, params: IPMIFetcherParams, _ctx: DeserializationContext) -> Self:
+        return cls(
+            address=HostAddress(params["address"]),
+            username=params["username"],
+            password=params["password"],
         )
 
     def _fetch_from_io(self, _mode: Mode) -> AgentRawData:

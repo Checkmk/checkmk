@@ -9,11 +9,12 @@
 import {
   type ZonedDateTime,
   fromAbsolute,
-  getDayOfWeek,
   getLocalTimeZone,
   startOfMonth,
   startOfWeek
 } from '@internationalized/date'
+
+import { isoDate, pad2, shortWeekday } from '@/graphing/utils/timeFormat'
 
 import type { TimeRange } from '../types'
 
@@ -26,7 +27,6 @@ export function sampleCount(timeRange: TimeRange): number {
 }
 
 const SECONDS_PER_DAY = 86_400
-const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export interface TimeAxisTick {
   position: number
@@ -66,23 +66,19 @@ function pickLabelling(start: ZonedDateTime, end: ZonedDateTime, timeRangeDays: 
   return { format: '%Y-%m-%d', labelSize: 8, labelShift: 0, labelDistanceAtLeast: 0 }
 }
 
-function pad2(value: number): string {
-  return String(value).padStart(2, '0')
-}
-
 function formatLabel(format: string, zdt: ZonedDateTime): string {
   const hhmm = `${pad2(zdt.hour)}:${pad2(zdt.minute)}`
   switch (format) {
     case '%H:%M':
       return hhmm
     case '%a %H:%M':
-      return `${WEEKDAYS_SHORT[getDayOfWeek(zdt, 'en-US')]} ${hhmm}`
+      return `${shortWeekday(zdt.toDate().getTime() / 1000, zdt.timeZone)} ${hhmm}`
     case '%d':
       return pad2(zdt.day)
     case '%m-%d':
       return `${pad2(zdt.month)}-${pad2(zdt.day)}`
     default:
-      return `${zdt.year}-${pad2(zdt.month)}-${pad2(zdt.day)}`
+      return isoDate(zdt)
   }
 }
 

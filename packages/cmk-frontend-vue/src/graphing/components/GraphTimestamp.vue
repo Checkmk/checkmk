@@ -4,43 +4,22 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { fromAbsolute, getLocalTimeZone } from '@internationalized/date'
 import { computed } from 'vue'
 
+import { isoDate, shortWeekday, stepLabel } from '../utils/timeFormat'
 import type { TimeRange } from './TimeSeriesGraph'
 
 const props = defineProps<{ timeRange: TimeRange }>()
 
-function isoDate(unix: number): string {
-  const d = new Date(unix * 1000)
-  const y = d.getFullYear()
-  const mo = String(d.getMonth() + 1).padStart(2, '0')
-  const da = String(d.getDate()).padStart(2, '0')
-  return `${y}-${mo}-${da}`
-}
-
-function shortWeekday(unix: number): string {
-  return new Date(unix * 1000).toLocaleDateString(undefined, { weekday: 'short' })
-}
-
-// Mirrors the backend's get_step_label()
-function stepLabel(step: number): string {
-  const fmt = (n: number) => (n % 1 === 0 ? String(n) : n.toFixed(1))
-  if (step < 3600) {
-    return `${fmt(step / 60)} m`
-  }
-  if (step < 86400) {
-    return `${fmt(step / 3600)} h`
-  }
-  return `${fmt(step / 86400)} d`
-}
-
 const label = computed(() => {
   const { start, end, step } = props.timeRange
-  const startDate = isoDate(start)
-  const endDate = isoDate(end)
+  const tz = getLocalTimeZone()
+  const startDate = isoDate(fromAbsolute(start * 1000, tz))
+  const endDate = isoDate(fromAbsolute(end * 1000, tz))
   const stepStr = `@ ${stepLabel(step)}`
   if (startDate === endDate) {
-    return `${shortWeekday(start)}, ${startDate} ${stepStr}`
+    return `${shortWeekday(start, tz)}, ${startDate} ${stepStr}`
   }
   return `${startDate} — ${endDate} ${stepStr}`
 })

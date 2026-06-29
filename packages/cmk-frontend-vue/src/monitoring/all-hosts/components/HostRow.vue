@@ -11,17 +11,30 @@ import usei18n from '@/lib/i18n'
 
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
+import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 
-const props = defineProps<{
-  row: HostEntry
-  tableRow: Row<HostEntry>
+const props = withDefaults(
+  defineProps<{
+    row: HostEntry
+    tableRow: Row<HostEntry>
+    actions?: CellAction[]
+  }>(),
+  { actions: () => [] }
+)
+
+const emit = defineEmits<{
+  (event: 'action', payload: { action: CellAction; host: HostEntry }): void
 }>()
 
 const { _t } = usei18n()
+
+function onActionSelect(action: CellAction): void {
+  emit('action', { action, host: props.row })
+}
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
 
@@ -167,5 +180,11 @@ function toggleSelected(selected: boolean): void {
             target: '_top'
           }
     "
+  />
+  <ActionsCell
+    v-if="actions.length > 0 && hasColumn('actions')"
+    column-id="actions"
+    :actions="actions"
+    @select="onActionSelect"
   />
 </template>

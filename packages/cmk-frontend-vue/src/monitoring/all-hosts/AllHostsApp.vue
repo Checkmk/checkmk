@@ -9,13 +9,16 @@ import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitor
 import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 import { getKeyShortcutServiceInstance } from '@/lib/keyShortcuts'
 
+import type { SimpleIcons } from '@/components/CmkIcon/types'
 import CmkSearchInput from '@/components/CmkSearchInput.vue'
 import CmkSplitPane from '@/components/CmkSplitPane.vue'
 
 import type { HostEntry, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
+import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
 import type {
   CheckboxListFilter,
@@ -34,6 +37,14 @@ import { HostService } from './services/HostService'
 const { _t } = usei18n()
 
 const props = defineProps<MonitoringAllHostsApp>()
+
+const ACTION_ICONS: Record<string, SimpleIcons> = {}
+
+const hostActions: CellAction[] = (props.actions ?? []).map((action) => ({
+  id: action.ident,
+  label: action.title as TranslatedString,
+  icon: ACTION_ICONS[action.ident] ?? 'action'
+}))
 
 const stateFilter: CheckboxListFilter<'state'> = {
   type: 'checkbox-list',
@@ -199,10 +210,25 @@ const columns: ColumnDef<HostEntry>[] = [
     },
     minSize: 64,
     maxSize: 90
-  }
+  },
+  ...(hostActions.length > 0
+    ? [
+        {
+          id: 'actions',
+          header: '',
+          enableSorting: false,
+          minSize: 96,
+          maxSize: 120,
+          meta: { justify: 'right' }
+        } satisfies ColumnDef<HostEntry>
+      ]
+    : [])
 ]
 
-const columnPinning: ColumnPinningState = { left: ['select', 'state', 'name'] }
+const columnPinning: ColumnPinningState = {
+  left: ['select', 'state', 'name'],
+  ...(hostActions.length > 0 ? { right: ['actions'] } : {})
+}
 
 const hostService = new HostService(new HostApi(), getKeyShortcutServiceInstance(), {
   pollIntervalMs: props.poll_interval_ms,
@@ -243,6 +269,10 @@ provide(MONITORING_SERVICE, hostService)
 
 function rowKey(row: HostEntry): string {
   return `${row.site_id}/${row.name}`
+}
+
+function onHostAction(payload: { action: CellAction; host: HostEntry }): void {
+  void payload
 }
 </script>
 
@@ -309,7 +339,12 @@ function rowKey(row: HostEntry): string {
             @update:filter-state="hostService.onColumnFiltersUpdate($event)"
           >
             <template #row="{ row, tableRow }">
-              <HostRow :row="row" :table-row="tableRow" />
+              <HostRow
+                :row="row"
+                :table-row="tableRow"
+                :actions="hostActions"
+                @action="onHostAction"
+              />
             </template>
             <template #empty-state>
               <MonitoringEmptyState />

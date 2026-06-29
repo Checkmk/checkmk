@@ -26,6 +26,8 @@ export type ConsolidationFunction =
   | 'frac_below'
   | 'frac_between'
 
+export const DEFAULT_QUANTILE = 0.95
+
 export interface ConsolidationParams {
   /** For 'quantile': the quantile in the range 0–1 (default 0.95). */
   quantile?: number

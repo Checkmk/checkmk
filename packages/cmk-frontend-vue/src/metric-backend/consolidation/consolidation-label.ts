@@ -8,9 +8,8 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import { type Magnitude, formatTimeSpan } from '@/components/user-input/CmkTimeSpan/timeSpan'
 
+import { DEFAULT_QUANTILE } from './types'
 import type { ConsolidationFunction, ConsolidationModel, MetricType } from './types'
-
-const DEFAULT_QUANTILE = 0.95
 
 const LOOKBACK_MAGNITUDES: Magnitude[] = ['hour', 'minute', 'second']
 

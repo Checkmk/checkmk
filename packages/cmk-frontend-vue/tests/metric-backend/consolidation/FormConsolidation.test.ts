@@ -155,6 +155,77 @@ test('an unknown type (no available types) offers every type group', async () =>
   expect(screen.getByText('Treat as Histogram')).toBeVisible()
 })
 
+test('the quantile function shows a quantile input that drives the chip', async () => {
+  const { model } = renderWidget({
+    type: 'histogram',
+    function: 'quantile',
+    params: { quantile: 0.95 }
+  })
+  await userEvent.click(chip())
+
+  const input = screen.getByLabelText('Quantile (0 to 1)')
+  expect(input).toBeVisible()
+  await userEvent.clear(input)
+  await userEvent.type(input, '0.5')
+  await userEvent.keyboard('{Escape}')
+
+  await waitFor(() => expect(model.value.params.quantile).toBe(0.5))
+  expect(chip()).toHaveTextContent('[histogram]')
+  expect(chip()).toHaveTextContent('p50')
+})
+
+test('an out-of-range quantile is flagged only on a blocked leave', async () => {
+  renderWidget({
+    type: 'histogram',
+    function: 'quantile',
+    params: { quantile: 0.95 }
+  })
+  await userEvent.click(chip())
+
+  const input = screen.getByLabelText('Quantile (0 to 1)')
+  await userEvent.clear(input)
+  await userEvent.type(input, '5')
+
+  // Pristine: no error while the value is still being edited.
+  expect(screen.queryByText('Enter a quantile between 0 and 1')).toBeNull()
+
+  // Trying to leave reveals the error and keeps the pill open.
+  await userEvent.keyboard('{Escape}')
+  expect(await screen.findByText('Enter a quantile between 0 and 1')).toBeVisible()
+  expect(screen.getByLabelText('Quantile (0 to 1)')).toBeVisible()
+
+  await userEvent.clear(input)
+  await userEvent.type(input, '0.5')
+  await userEvent.keyboard('{Escape}')
+  await waitFor(() => expect(screen.queryByLabelText('Quantile (0 to 1)')).toBeNull())
+})
+
+test('an emptied quantile is flagged only on a blocked leave', async () => {
+  renderWidget({
+    type: 'histogram',
+    function: 'quantile',
+    params: { quantile: 0.5 }
+  })
+  await userEvent.click(chip())
+
+  const input = screen.getByLabelText('Quantile (0 to 1)')
+  await userEvent.clear(input)
+
+  // Pristine: a freshly emptied field is not flagged yet.
+  expect(screen.queryByText('Enter a quantile between 0 and 1')).toBeNull()
+
+  await userEvent.keyboard('{Escape}')
+  expect(await screen.findByText('Enter a quantile between 0 and 1')).toBeVisible()
+  expect(screen.getByLabelText('Quantile (0 to 1)')).toBeVisible()
+})
+
+test('non-quantile functions show no quantile input', async () => {
+  renderWidget({ type: 'sum', function: 'rate' })
+  await userEvent.click(chip())
+
+  expect(screen.queryByLabelText('Quantile (0 to 1)')).toBeNull()
+})
+
 test('editing the lookback updates the chip once collapsed', async () => {
   const { model } = renderWidget()
   await userEvent.click(chip())

@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary, Integer
+from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer
 
 
 def _parameter_valuespec_windows_updates() -> Dictionary:
@@ -31,11 +31,31 @@ def _parameter_valuespec_windows_updates() -> Dictionary:
                 ),
             ),
             (
+                # Configuration variable name below is intentionally kept stable.
+                # Renaming it would require a cumbersome migration, which is outside the scope of the task.
                 "levels_lower_forced_reboot",
                 SimpleLevels(
                     Age,
-                    title=_("Levels for time until forced reboot due to pending important updates"),
+                    title=_("Windows Update notification time"),
                     default_value=(604800, 172800),
+                ),
+            ),
+            (
+                "reboot_required_show_state",
+                DropdownChoice[int | None](
+                    choices=[
+                        (None, _("Do not display reboot required state")),
+                        (0, _("OK")),
+                        (1, _("WARN")),
+                        (2, _("CRIT")),
+                        (3, _("UNKNOWN")),
+                    ],
+                    sorted=False,
+                    title=_("Service state if reboot required"),
+                    help=_(
+                        "If a reboot is required, the selected status will be displayed. Default is warning."
+                    ),
+                    default_value=1,
                 ),
             ),
         ],

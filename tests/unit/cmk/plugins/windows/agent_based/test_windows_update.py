@@ -110,30 +110,80 @@ def test_check_windows_updates_failed() -> None:
     ]
 
 
+SECTION_REBOOT_REQUIRED: Final = windows_updates.Section(
+    reboot_required=True,
+    important_updates=[],
+    optional_updates=[],
+    forced_reboot=None,
+    failed=None,
+)
+
+BASE_RESULTS_EMPTY: Final = [
+    Result(state=State.OK, summary="Important: 0"),
+    Metric("important", 0.0),
+    Result(state=State.OK, summary="Optional: 0"),
+    Metric("optional", 0.0),
+]
+
+
 def test_reboot_required() -> None:
-    section = windows_updates.Section(
-        reboot_required=True,
-        important_updates=[],
-        optional_updates=[],
-        forced_reboot=None,
-        failed=None,
-    )
     assert list(
         windows_updates.check_windows_updates(
             params={
                 "levels_important": None,
                 "levels_optional": None,
                 "levels_lower_forced_reboot": (604800, 172800),
+                "reboot_required_show_state": 1,
             },
-            section=section,
+            section=SECTION_REBOOT_REQUIRED,
         )
     ) == [
-        Result(state=State.OK, summary="Important: 0"),
-        Metric("important", 0.0),
-        Result(state=State.OK, summary="Optional: 0"),
-        Metric("optional", 0.0),
+        *BASE_RESULTS_EMPTY,
         Result(state=State.WARN, summary="Reboot required to finish updates"),
     ]
+
+
+@pytest.mark.parametrize(
+    "show_state, expected_state",
+    [
+        pytest.param(0, State.OK, id="ok"),
+        pytest.param(1, State.WARN, id="warn"),
+        pytest.param(2, State.CRIT, id="crit"),
+        pytest.param(3, State.UNKNOWN, id="unknown"),
+    ],
+)
+def test_reboot_required_show_state(show_state: int, expected_state: State) -> None:
+    assert list(
+        windows_updates.check_windows_updates(
+            params={
+                "levels_important": None,
+                "levels_optional": None,
+                "levels_lower_forced_reboot": (604800, 172800),
+                "reboot_required_show_state": show_state,
+            },
+            section=SECTION_REBOOT_REQUIRED,
+        )
+    ) == [
+        *BASE_RESULTS_EMPTY,
+        Result(state=expected_state, summary="Reboot required to finish updates"),
+    ]
+
+
+def test_reboot_required_show_state_none_suppresses() -> None:
+    assert (
+        list(
+            windows_updates.check_windows_updates(
+                params={
+                    "levels_important": None,
+                    "levels_optional": None,
+                    "levels_lower_forced_reboot": (604800, 172800),
+                    "reboot_required_show_state": None,
+                },
+                section=SECTION_REBOOT_REQUIRED,
+            )
+        )
+        == BASE_RESULTS_EMPTY
+    )
 
 
 @pytest.mark.parametrize(
@@ -150,7 +200,7 @@ def test_reboot_required() -> None:
                 Result(state=State.WARN, summary="Reboot required to finish updates"),
                 Result(
                     state=State.CRIT,
-                    summary="Time to enforced reboot to finish updates: 1 hour 0 minutes (warn/crit below 7 days 0 hours/2 days 0 hours)",
+                    summary="Windows Update notification time: 1 hour 0 minutes (warn/crit below 7 days 0 hours/2 days 0 hours)",
                 ),
             ],
             id="report if reboot time is in the future",
@@ -190,6 +240,7 @@ def test_time_until_force_reboot(
                     "levels_important": None,
                     "levels_optional": None,
                     "levels_lower_forced_reboot": (604800, 172800),
+                    "reboot_required_show_state": 1,
                 },
                 section=section,
             )

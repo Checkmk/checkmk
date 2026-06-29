@@ -110,8 +110,23 @@ def check_windows_updates(params: Mapping[str, Any], section: Section) -> CheckR
         label="Optional",
     )
 
-    if section.reboot_required:
-        yield Result(state=State.WARN, summary="Reboot required to finish updates")
+    reboot_required_show_state: State | None = None
+    match params.get("reboot_required_show_state"):
+        case 0:
+            reboot_required_show_state = State.OK
+        case 1:
+            reboot_required_show_state = State.WARN
+        case 2:
+            reboot_required_show_state = State.CRIT
+        case 3:
+            reboot_required_show_state = State.UNKNOWN
+        case None:
+            reboot_required_show_state = None
+        case _:
+            reboot_required_show_state = State.UNKNOWN
+
+    if section.reboot_required and reboot_required_show_state is not None:
+        yield Result(state=reboot_required_show_state, summary="Reboot required to finish updates")
 
     if not section.forced_reboot or (delta := section.forced_reboot - time.time()) < 0:
         return
@@ -120,7 +135,7 @@ def check_windows_updates(params: Mapping[str, Any], section: Section) -> CheckR
         delta,
         levels_lower=params["levels_lower_forced_reboot"],
         render_func=render.timespan,
-        label="Time to enforced reboot to finish updates",
+        label="Windows Update notification time",
     )
 
 
@@ -134,5 +149,6 @@ check_plugin_windows_updates = CheckPlugin(
         "levels_important": (1, 1),
         "levels_optional": (1, 99),
         "levels_lower_forced_reboot": (604800, 172800),
+        "reboot_required_show_state": 1,
     },
 )

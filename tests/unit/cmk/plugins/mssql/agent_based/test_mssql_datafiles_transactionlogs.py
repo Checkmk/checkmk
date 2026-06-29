@@ -196,7 +196,8 @@ def test_discovery_mssql_transactionlogs(
             "MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log",
             parse_df(
                 [
-                    ["Z:\\", "NTFS", "1", "1", "1", "53%", "Z:\\"],
+                    # size ~30 GiB, used ~29.9 GiB, avail 100 MiB (values in KiB)
+                    ["Z:\\", "NTFS", "31463268", "31360868", "102400", "100%", "Z:\\"],
                 ]
             ),
             [
@@ -204,7 +205,7 @@ def test_discovery_mssql_transactionlogs(
                     state=State.OK,
                     summary="Used: 16.0 MiB",
                 ),
-                Metric("data_size", 16777216.0, boundaries=(0, 16778240.0)),
+                Metric("data_size", 16777216.0, boundaries=(0, 121634816.0)),  # 16 MiB, max 116 MiB
                 Result(
                     state=State.OK,
                     summary="Allocated used: 16.0 MiB",
@@ -213,10 +214,12 @@ def test_discovery_mssql_transactionlogs(
                     state=State.OK,
                     summary="Allocated: 256 MiB",
                 ),
-                Metric("allocated_size", 268435456.0, boundaries=(0, 16778240.0)),
+                Metric(
+                    "allocated_size", 268435456.0, boundaries=(0, 121634816.0)
+                ),  # 256 MiB, max 116 MiB
                 Result(
                     state=State.OK,
-                    summary="Maximum size: 16.0 MiB",  # filesystem smaller than log size limit
+                    summary="Maximum size: 116 MiB",  # filesystem smaller than log size limit
                 ),
             ],
         ),

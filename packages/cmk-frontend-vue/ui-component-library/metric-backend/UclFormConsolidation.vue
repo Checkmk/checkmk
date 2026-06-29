@@ -30,7 +30,10 @@ export const panelConfig = {
     title: 'Available types',
     options: TYPE_OPTIONS,
     initialState: ['sum'],
-    help: 'UCL demo: metric types the backend resolved. More than one shows the "Treat as <Type>" grouping.'
+    help:
+      'UCL demo: the metric types the backend resolved. One shows a plain ' +
+      'dropdown, more than one the "Treat as <Type>" grouping. Leave empty for ' +
+      'the unknown case: all types are offered.'
   }
 } satisfies PanelConfigFor<typeof FormConsolidation, 'modelValue'> & {
   preset: ListPropDef<PresetName>

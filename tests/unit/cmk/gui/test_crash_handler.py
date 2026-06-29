@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.crash import make_crash_report_base_path, VersionInfo
+from cmk.ccc.crash_reporting import make_crash_report_base_path, VersionInfo
 from cmk.gui.crash_handler import GUICrashReport, RequestDetails
 
 

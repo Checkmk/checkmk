@@ -8,7 +8,7 @@ from typing import Literal
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
-from cmk.crash import ABCCrashReport, CrashReportStore, make_crash_report_base_path
+from cmk.ccc.crash_reporting import ABCCrashReport, CrashReportStore, make_crash_report_base_path
 
 
 class AgentCrashReport(ABCCrashReport[None]):

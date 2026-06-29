@@ -11,8 +11,8 @@ py_library(
     ],
     deps = [
         "//cmk/utils",
+        "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-ccc:version",
-        "//packages/cmk-crash:crash",
         "//packages/cmk-plugin-apis:server_side_programs",
         requirement("urllib3"),
     ],

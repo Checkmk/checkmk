@@ -9,8 +9,8 @@
 from pathlib import Path
 
 from cmk.base.errorhandling import CheckCrashReport, CheckDetails
+from cmk.ccc.crash_reporting import make_crash_report_base_path, VersionInfo
 from cmk.ccc.hostaddress import HostName
-from cmk.crash import make_crash_report_base_path, VersionInfo
 
 
 def _check_generic_crash_info(crash):

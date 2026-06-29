@@ -12,7 +12,6 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-crash:crash",
         "@rrdtool_native//:rrdtool_python_lib",
     ],
 )

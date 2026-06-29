@@ -6,13 +6,13 @@
 import pytest
 
 from cmk.base.errorhandling import CheckResultErrorHandler
+from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher import FetcherError
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.specs.exitspec import ExitSpec
-from cmk.crash import make_crash_report_base_path
 from cmk.utils import paths
 
 

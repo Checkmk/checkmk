@@ -1,0 +1,650 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""This module contains functions that can be used in all Check_MK components
+to produce crash reports in a generic format which can then be sent to Check_MK
+developers for analyzing the crashes."""
+
+from __future__ import annotations
+
+import abc
+import base64
+import hashlib
+import inspect
+import itertools
+import json
+import pprint
+import sys
+import time
+import traceback
+import urllib.parse
+import uuid
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import suppress
+from datetime import timedelta
+from itertools import islice
+from pathlib import Path
+from typing import Any, Final, NotRequired, TypedDict, TypeVar
+
+from cmk.ccc import store
+
+SENSITIVE_KEYWORDS = ["token", "secret", "pass", "key"]
+
+REDACTED_STRING: Final = "redacted"
+
+CRASH_INFO_VERSION: Final = 1
+"""Current version of the crash.info on-disk format.
+
+Version history:
+  0 (implicit, no key present): ``time`` was a plain float timestamp.
+  1 (current): ``time`` is a ``CrashOccurrences`` dict; ``crash_info_version`` key added.
+"""
+
+
+TDetails = TypeVar("TDetails", bound=dict[str, object] | None)
+
+
+class BaseDetails(TypedDict):
+    argv: Sequence[str]
+    env: Mapping[str, str]
+
+
+class _CrashInfoBase(TypedDict):
+    """Fields shared between VersionInfo and CrashInfo.
+
+    ``time`` is intentionally absent from this base class. TypedDict inheritance
+    does not support redefining a key with a different type in a subclass, so
+    each subclass declares its own ``time`` independently:
+
+    - ``VersionInfo.time: float`` — raw timestamp used when *constructing* a
+      new crash report (see ``collect_crash_info``).
+    - ``CrashInfo.time: CrashOccurrences`` — structured occurrence data stored
+      on disk and used wherever the persisted format is read back.
+    """
+
+    core: str
+    python_version: str
+    edition: str
+    python_paths: Sequence[str]
+    version: str
+    os: str
+
+
+class VersionInfo(_CrashInfoBase):
+    """Carries the raw construction-time timestamp as a float."""
+
+    time: float
+
+
+class ContactDetails(TypedDict):
+    name: NotRequired[str]
+    email: NotRequired[str]
+
+
+class CrashOccurrences(TypedDict):
+    first_seen: float
+    last_seen: float
+    count: int
+
+
+class CrashInfo[TDetails](_CrashInfoBase):
+    crash_info_version: int
+    exc_type: str | None
+    crash_type: str
+    exc_traceback: NotRequired[Sequence[tuple[str, int, str, str]]]
+    local_vars: str
+    details: TDetails
+    exc_value: str
+    contact: NotRequired[ContactDetails]
+    id: str
+    time: CrashOccurrences
+
+
+# The default JSON encoder raises an exception when detecting unknown types. For the crash
+# reporting it is totally ok to have some string representations of the objects.
+class RobustJSONEncoder(json.JSONEncoder):
+    # Are there cases where no __str__ is available? if so, we should do something like %r
+    def default(self, o: object) -> str:
+        return str(o)
+
+
+def crash_fingerprint(
+    crash_type: str, exc_traceback: Sequence[tuple[str, int, str, str]], exc_type: str | None
+) -> tuple[str, str | None, tuple[tuple[str, int], ...]]:
+    """Return a deduplication key for a crash: crash type, exception type, and (file, lineno) per frame."""
+    frames = tuple((t[0], t[1]) for t in exc_traceback)
+    return crash_type, exc_type, frames
+
+
+def normalize_crash_time(raw_time: object) -> CrashOccurrences:
+    """Normalize the time field of a crash report to CrashOccurrences.
+
+    Handles the new dict format as well as the legacy float format from older
+    crash.info files, where a single timestamp was stored directly.
+    """
+    if isinstance(raw_time, dict):
+        return CrashOccurrences(
+            first_seen=float(raw_time["first_seen"]),
+            last_seen=float(raw_time["last_seen"]),
+            count=int(raw_time["count"]),
+        )
+    if isinstance(raw_time, int | float):
+        ts = float(raw_time)
+        return CrashOccurrences(first_seen=ts, last_seen=ts, count=1)
+    raise TypeError(f"time field in crash report is in an unexpected format: {raw_time!r}")
+
+
+_FINGERPRINT_INDEX_FILE: Final = ".fingerprint_index"
+
+
+def fingerprint_hash(
+    fingerprint: tuple[str, str | None, tuple[tuple[str, int], ...]],
+) -> str:
+    """Stable hex digest for a crash fingerprint, used as key in the on-disk index."""
+    raw = json.dumps(fingerprint, separators=(",", ":"), default=str)
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def _load_fingerprint_index(base_dir: Path) -> dict[str, str]:
+    """Read the fingerprint→dir_name index from disk. Returns an empty dict if absent."""
+    try:
+        result: dict[str, str] = json.loads(
+            store.load_text_from_file(base_dir / _FINGERPRINT_INDEX_FILE)
+        )
+        return result
+    except Exception:
+        return {}
+
+
+def _save_fingerprint_index(base_dir: Path, index: dict[str, str]) -> None:
+    store.save_text_to_file(
+        base_dir / _FINGERPRINT_INDEX_FILE,
+        json.dumps(index) + "\n",
+    )
+
+
+def _uuid_crash_dirs(type_dir: Path) -> Iterator[Path]:
+    """Yield the per-crash directories (named after a UUID) inside a crash-type directory."""
+    for p in type_dir.iterdir():
+        try:
+            uuid.UUID(str(p.name))
+        except (ValueError, TypeError):
+            continue
+        if p.is_dir():
+            yield p
+
+
+def _remove_crash_dir(crash_dir: Path) -> None:
+    """Remove a single crash report directory and its contents."""
+    for f in crash_dir.iterdir():
+        with suppress(OSError):
+            f.unlink()
+    with suppress(OSError):
+        crash_dir.rmdir()
+
+
+def _drop_from_index(index: dict[str, str], dir_name: str) -> None:
+    """Remove the index entry pointing at ``dir_name`` (if any) to keep it in sync with disk."""
+    for fp_hash, name in list(index.items()):
+        if name == dir_name:
+            del index[fp_hash]
+            break
+
+
+def _crash_dir_last_seen(crash_dir: Path) -> float:
+    """Best-effort last-seen timestamp (epoch seconds) for age and ordering decisions.
+
+    Falls back to the directory's modification time when the crash.info is missing or
+    unreadable, so a corrupted report is never considered "infinitely new"."""
+    try:
+        info = json.loads(store.load_text_from_file(crash_dir / "crash.info"))
+        return normalize_crash_time(info["time"])["last_seen"]
+    except Exception:
+        try:
+            return crash_dir.stat().st_mtime
+        except OSError:
+            return 0.0
+
+
+def _crash_dir_size(crash_dir: Path) -> int:
+    """Total size in bytes of the files contained in a crash report directory."""
+    total = 0
+    for f in crash_dir.iterdir():
+        try:
+            if f.is_file():
+                total += f.stat().st_size
+        except OSError:
+            continue
+    return total
+
+
+DEFAULT_MAX_CRASH_AGE: Final = timedelta(days=90)
+DEFAULT_MAX_CRASHES_TOTAL_SIZE: Final = 5 * 1024**3  # 5 GiB
+
+
+def cleanup_crash_reports(
+    base_path: Path,
+    *,
+    keep_num_crashes: int = 200,
+    max_age: timedelta = DEFAULT_MAX_CRASH_AGE,
+    max_total_size: int = DEFAULT_MAX_CRASHES_TOTAL_SIZE,
+    reference_time: float | None = None,
+) -> None:
+    """Bound the on-disk crashes directory by count (per type), age and total size.
+
+    Intended to be run regularly (independent of new crashes arriving). Within each crash-type
+    directory the newest ``keep_num_crashes`` reports are kept and reports older than ``max_age``
+    are removed. Afterwards, if the surviving reports still exceed ``max_total_size`` in sum across
+    all types, the oldest ones are evicted until the budget is met."""
+    if not base_path.exists():
+        return
+
+    ref = time.time() if reference_time is None else reference_time
+    age_cutoff = ref - max_age.total_seconds()
+
+    # (last_seen, size, crash_dir, type_dir) of every report that survived the per-type pruning.
+    survivors: list[tuple[float, int, Path, Path]] = []
+
+    for type_dir in base_path.iterdir():
+        if not type_dir.is_dir():
+            continue
+        with store.locked(type_dir / ".crash_report_lock"):
+            index = _load_fingerprint_index(type_dir)
+            crashes = sorted(
+                (
+                    (_crash_dir_last_seen(p), _crash_dir_size(p), p)
+                    for p in _uuid_crash_dirs(type_dir)
+                ),
+                key=lambda c: c[0],
+                reverse=True,  # newest first
+            )
+            for position, (last_seen, size, crash_dir) in enumerate(crashes):
+                if position >= keep_num_crashes or last_seen < age_cutoff:
+                    _remove_crash_dir(crash_dir)
+                    _drop_from_index(index, crash_dir.name)
+                else:
+                    survivors.append((last_seen, size, crash_dir, type_dir))
+            _save_fingerprint_index(type_dir, index)
+
+    total_size = sum(size for _, size, _, _ in survivors)
+    if total_size <= max_total_size:
+        return
+
+    for last_seen, size, crash_dir, type_dir in sorted(
+        survivors, key=lambda c: c[0]
+    ):  # oldest first
+        if total_size <= max_total_size:
+            break
+        with store.locked(type_dir / ".crash_report_lock"):
+            index = _load_fingerprint_index(type_dir)
+            _remove_crash_dir(crash_dir)
+            _drop_from_index(index, crash_dir.name)
+            _save_fingerprint_index(type_dir, index)
+        total_size -= size
+
+
+class CrashReportStore:
+    """Caring about the persistance of crash reports in the local site"""
+
+    def __init__(self, *, keep_num_crashes: int = 200) -> None:
+        self.keep_num_crashes: Final = keep_num_crashes
+
+    def save(self, crash: ABCCrashReport[Any]) -> None:
+        """Save the crash report instance to it's crash report directory"""
+        base_dir = crash.crash_dir().parent
+        base_dir.mkdir(parents=True, exist_ok=True)
+        with store.locked(base_dir / ".crash_report_lock"):
+            index = _load_fingerprint_index(base_dir)
+
+            if existing_path := self._get_existing_crash(crash, base_dir, index):
+                self._merge_into_existing(crash, existing_path)
+                _save_fingerprint_index(base_dir, index)
+                return
+
+            self._prepare_crash_dump_directory(crash.crash_dir())
+
+            for key, value in crash.serialize().items():
+                fname = "crash.info" if key == "crash_info" else key
+
+                if value is None:  # type: ignore[comparison-overlap]
+                    continue  # type: ignore[unreachable]
+
+                if fname == "crash.info":
+                    store.save_text_to_file(
+                        crash.crash_dir() / fname,
+                        self.dump_crash_info(value) + "\n",
+                    )
+                else:
+                    assert isinstance(value, bytes)
+                    store.save_bytes_to_file(crash.crash_dir() / fname, value)
+
+            exc_traceback = crash.crash_info.get("exc_traceback", [])
+            if exc_traceback:
+                fp = crash_fingerprint(
+                    crash_type=crash.crash_info["crash_type"],
+                    exc_traceback=exc_traceback,
+                    exc_type=crash.crash_info["exc_type"],
+                )
+                index[fingerprint_hash(fp)] = crash.crash_dir().name
+
+            self._cleanup_old_crashes(base_dir, index)
+            _save_fingerprint_index(base_dir, index)
+
+    def _get_existing_crash(
+        self, crash: ABCCrashReport[Any], base_dir: Path, index: dict[str, str]
+    ) -> Path | None:
+        if not base_dir.exists():
+            return None
+
+        exc_traceback = crash.crash_info.get("exc_traceback", [])
+        if not exc_traceback:
+            return None
+
+        new_fingerprint = crash_fingerprint(
+            crash_type=crash.crash_info["crash_type"],
+            exc_traceback=exc_traceback,
+            exc_type=crash.crash_info["exc_type"],
+        )
+        fp_hash = fingerprint_hash(new_fingerprint)
+
+        # Fast path: index hit — one directory check instead of N file reads.
+        if fp_hash in index:
+            candidate = base_dir / index[fp_hash] / "crash.info"
+            if candidate.exists():
+                return candidate
+            # Stale entry (dir was removed externally); fall through to full scan.
+            del index[fp_hash]
+
+        # Slow path: full scan. Also rebuilds the index so the next save is fast.
+        for existing_dir in base_dir.iterdir():
+            if not existing_dir.is_dir():
+                continue
+            crash_info_path = existing_dir / "crash.info"
+            try:
+                existing_info = json.loads(store.load_text_from_file(crash_info_path))
+            except Exception:
+                continue  # missing or corrupted — treat as no match, save new crash
+
+            existing_fp = crash_fingerprint(
+                crash_type=existing_info["crash_type"],
+                exc_traceback=existing_info.get("exc_traceback", []),
+                exc_type=existing_info["exc_type"],
+            )
+            # Opportunistically populate the index for every entry we read.
+            index[fingerprint_hash(existing_fp)] = existing_dir.name
+
+            if existing_fp == new_fingerprint:
+                return crash_info_path
+
+        return None
+
+    def _merge_into_existing(self, crash: ABCCrashReport[Any], crash_info_path: Path) -> None:
+        existing_info = json.loads(store.load_text_from_file(crash_info_path))
+        existing_time = normalize_crash_time(existing_info["time"])
+        new_time = crash.crash_info["time"]
+        existing_info["time"] = CrashOccurrences(
+            first_seen=min(existing_time["first_seen"], new_time["first_seen"]),
+            last_seen=max(existing_time["last_seen"], new_time["last_seen"]),
+            count=existing_time["count"] + new_time["count"],
+        )
+        store.save_text_to_file(
+            crash_info_path,
+            self.dump_crash_info(existing_info) + "\n",
+        )
+        # Update the in-memory crash ID to the directory that was actually stored
+        # (the first-occurrence UUID). All callers that use crash.ident_to_text() after
+        # save() will then get a UUID that resolves to an existing crash report.
+        crash.crash_info["id"] = crash_info_path.parent.name
+
+    @staticmethod
+    def dump_crash_info(crash_info: CrashInfo[TDetails] | bytes) -> str:
+        return json.dumps(
+            CrashReportStore._dump_crash_info(crash_info),
+            cls=RobustJSONEncoder,
+            sort_keys=True,
+            indent=4,
+        )
+
+    @classmethod
+    def _dump_crash_info(cls, d: Any) -> Any:
+        if not isinstance(d, dict):
+            return d
+        return {
+            k if isinstance(k, str) else json.dumps(k, cls=RobustJSONEncoder): (
+                cls._dump_crash_info(v) if isinstance(v, dict) else v
+            )
+            for k, v in d.items()
+        }
+
+    def _prepare_crash_dump_directory(self, crash_dir: Path) -> None:
+        crash_dir.mkdir(parents=True, exist_ok=True)
+
+        # Remove all files of former crash reports
+        for f in crash_dir.iterdir():
+            with suppress(OSError):
+                f.unlink()
+
+    def _cleanup_old_crashes(self, base_dir: Path, index: dict[str, str]) -> None:
+        """Simple cleanup mechanism: For each crash type we keep up to X crashes"""
+        for crash_dir in islice(
+            sorted(
+                _uuid_crash_dirs(base_dir),
+                key=lambda p: uuid.UUID(str(p.name)).time,
+                reverse=True,
+            ),
+            self.keep_num_crashes,
+            None,
+        ):
+            _remove_crash_dir(crash_dir)
+            _drop_from_index(index, crash_dir.name)
+
+
+class SerializedCrashReport[T](TypedDict):
+    crash_info: CrashInfo[T]
+
+
+def make_crash_report_base_path(omd_root: Path) -> Path:
+    return omd_root / "var/check_mk/crashes"
+
+
+class ABCCrashReport[TDetails](abc.ABC):
+    """Base class for the component specific crash report types"""
+
+    def __init__(self, *, crash_report_base_path: Path, crash_info: CrashInfo[TDetails]) -> None:
+        super().__init__()
+        self.crashdir: Final = crash_report_base_path
+        self.crash_info: Final = crash_info
+
+    @classmethod
+    @abc.abstractmethod
+    def type(cls) -> str:
+        raise NotImplementedError()
+
+    @classmethod
+    def make_crash_info(
+        cls,
+        version_info: VersionInfo,
+        details: TDetails,
+    ) -> CrashInfo[TDetails]:
+        """Create a crash info object from the current exception context
+
+        details - Is an optional dictionary of crash type specific attributes
+                  that are added to the "details" key of the crash_info.
+        """
+        return _get_generic_crash_info(cls.type(), version_info, details)
+
+    def _serialize_attributes(self) -> dict[str, CrashInfo[TDetails] | bytes]:
+        """Serialize object type specific attributes for transport"""
+        return {"crash_info": self.crash_info}
+
+    def serialize(self) -> dict[str, CrashInfo[TDetails] | bytes]:
+        """Serialize the object
+
+        Nested structures are allowed. Only objects that can be handled by
+        ast.literal_eval() are allowed.
+        """
+        if self.crash_info is None:  # type: ignore[comparison-overlap]
+            raise TypeError("No crash information available")
+
+        return self._serialize_attributes()
+
+    def ident(self) -> tuple[str, ...]:
+        """Return the identity in form of a tuple of a single crash report"""
+        return (self.crash_info["id"],)
+
+    def ident_to_text(self) -> str:
+        """Returns the textual representation of the identity
+
+        The parts are separated with "@" signs. The "@" signs found in the parts are
+        replaced with "~" which is not allowed to be in the single parts. E.g.
+        service names don't have such signs."""
+        return "@".join([p.replace("@", "~") for p in self.ident()])
+
+    def crash_dir(self, ident_text: str | None = None) -> Path:
+        """Returns the path to the crash directory of the current or given crash report"""
+        if ident_text is None:
+            ident_text = self.ident_to_text()
+        return self.crashdir / self.type() / ident_text
+
+    def local_crash_report_url(self) -> str:
+        """Returns the site local URL to the current crash report"""
+        return "crash.py?{}".format(
+            urllib.parse.urlencode([("component", self.type()), ("ident", self.ident_to_text())])
+        )
+
+
+def _follow_exception_chain(exc: BaseException | None) -> list[BaseException]:
+    if exc is None:
+        return []
+
+    return [exc] + _follow_exception_chain(
+        exc.__context__ if exc.__cause__ is None and not exc.__suppress_context__ else exc.__cause__
+    )
+
+
+def _get_generic_crash_info[TDetails](
+    type_name: str,
+    version_info: VersionInfo,
+    details: TDetails,
+) -> CrashInfo[TDetails]:
+    """Produces the crash info data structure.
+
+    The top level keys of the crash info dict are standardized and need
+    to be set for all crash reports."""
+    exc_type, exc_value, _ = sys.exc_info()
+
+    tb_list = list(
+        itertools.chain.from_iterable(
+            [traceback.extract_tb(exc.__traceback__) for exc in _follow_exception_chain(exc_value)]
+        )
+    )
+
+    # TODO: The typing gets *really* chaotic here, hence the Any a.k.a implicit cast. :-P
+    modified_details: Any = details
+    if isinstance(details, Mapping) and "vars" in details:
+        modified_details = {
+            k: format_var_for_export(v, maxdepth=5) if k == "vars" else v
+            for k, v in details.items()
+        }
+
+    return CrashInfo(
+        crash_info_version=CRASH_INFO_VERSION,
+        id=str(uuid.uuid1()),
+        crash_type=type_name,
+        exc_type=exc_type.__name__ if exc_type else None,
+        exc_value=str(exc_value),
+        exc_traceback=[tuple(e) for e in tb_list],
+        local_vars=_get_local_vars_of_last_exception(),
+        details=modified_details,
+        core=version_info["core"],
+        python_version=version_info["python_version"],
+        edition=version_info["edition"],
+        python_paths=version_info["python_paths"],
+        version=version_info["version"],
+        time=CrashOccurrences(
+            first_seen=version_info["time"],
+            last_seen=version_info["time"],
+            count=1,
+        ),
+        os=version_info["os"],
+    )
+
+
+def _get_local_vars_of_last_exception() -> str:
+    try:
+        local_vars = format_var_for_export(inspect.trace()[-1][0].f_locals, maxdepth=5)
+    except IndexError:
+        # inspect.trace() returns [] when called outside an active exception handler,
+        # making [-1] raise IndexError.
+        return ""
+
+    # This needs to be encoded as the local vars might contain binary data which can not be
+    # transported using JSON.
+    return base64.b64encode(
+        _truncate_str(pprint.pformat(local_vars), max_size=5 * 1024 * 1024).encode("utf-8")
+    ).decode()
+
+
+def _truncate_str(value: str, max_size: int) -> str:
+    """truncate a string if it is too long and add how much was truncated
+
+    >>> _truncate_str("foo", 3)
+    'foo'
+    >>> _truncate_str("foo", 2)
+    'fo... (1 bytes stripped)'
+    """
+    if (size := len(value)) > max_size:
+        return value[:max_size] + f"... ({(size - max_size)} bytes stripped)"
+    return value
+
+
+def format_var_for_export(val: object, maxdepth: int = 4, maxsize: int = 1024 * 1024) -> object:
+    if maxdepth == 0:
+        return "Max recursion depth reached"
+
+    match val:
+        case Mapping():
+            return {
+                k: REDACTED_STRING
+                if _key_indicates_sensitivity(k)
+                else format_var_for_export(v, maxdepth - 1, maxsize=maxsize)
+                for k, v in val.items()
+            }
+
+        case list():
+            return [format_var_for_export(item, maxdepth - 1, maxsize=maxsize) for item in val]
+
+        case tuple():
+            return tuple(format_var_for_export(item, maxdepth - 1, maxsize=maxsize) for item in val)
+
+        case set():
+            return {format_var_for_export(item, maxdepth - 1, maxsize=maxsize) for item in val}
+
+        case frozenset():
+            return frozenset(
+                format_var_for_export(item, maxdepth - 1, maxsize=maxsize) for item in val
+            )
+
+        # Check and limit size
+        case str():
+            return _truncate_str(val, maxsize)
+
+        # Preserve JSON-safe scalars as-is; pprint.pformat() handles them without calling
+        # any user-defined __repr__.
+        case None | bool() | int() | float() | bytes():
+            return val
+
+        case _:
+            # Convert unknown objects to a safe string representation so that a later
+            # pprint.pformat() call cannot crash on a broken __repr__ implementation.
+            try:
+                return repr(val)
+            except Exception:
+                return f"<{type(val).__name__} (repr raised an exception)>"
+
+
+def _key_indicates_sensitivity(key: object) -> bool:
+    return isinstance(key, str) and any(
+        indicator in key.lower() for indicator in SENSITIVE_KEYWORDS
+    )

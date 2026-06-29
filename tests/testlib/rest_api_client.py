@@ -30,7 +30,7 @@ from typing import (
 )
 
 from cmk.ccc import version
-from cmk.crash import make_crash_report_base_path
+from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.gui.graphing import GraphConsolidationFunction
 from cmk.gui.http import HTTPMethod
 from cmk.gui.openapi.endpoints.configuration_entity._common import to_domain_type

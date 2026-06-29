@@ -9,7 +9,7 @@ py_cmk_test(
     deps = [
         "//cmk/gui:core_toolkit",
         "//cmk/gui/crash_reporting",
-        "//packages/cmk-crash:crash",
+        "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-livestatus-client:py_livestatus",
         requirement("polyfactory"),
         requirement("werkzeug"),

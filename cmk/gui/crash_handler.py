@@ -8,13 +8,13 @@ from typing import Any, NotRequired, override, Self, TypedDict
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
-from cmk.ccc.site import omd_site
-from cmk.crash import (
+from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     CrashReportStore,
     make_crash_report_base_path,
     VersionInfo,
 )
+from cmk.ccc.site import omd_site
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html

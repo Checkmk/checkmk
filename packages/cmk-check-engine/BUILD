@@ -69,8 +69,8 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
+        "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-crash:crash",
     ],
 )
 

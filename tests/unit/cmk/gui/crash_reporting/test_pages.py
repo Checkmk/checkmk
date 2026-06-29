@@ -14,7 +14,7 @@ from werkzeug.test import create_environ
 
 from livestatus import OnlySites
 
-from cmk.crash import CrashInfo
+from cmk.ccc.crash_reporting import CrashInfo
 from cmk.gui.crash_reporting.pages import CrashReport, CrashReportRow
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request

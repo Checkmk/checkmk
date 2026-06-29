@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import override
 
 from cmk.ccc import version
-from cmk.crash import ABCCrashReport, CrashReportStore, make_crash_report_base_path
+from cmk.ccc.crash_reporting import ABCCrashReport, CrashReportStore, make_crash_report_base_path
 
 
 class _OMDCrashReport(ABCCrashReport[None]):

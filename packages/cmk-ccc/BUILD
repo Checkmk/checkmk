@@ -61,6 +61,18 @@ py_library(
 )
 
 py_library(
+    name = "crash-reporting",
+    srcs = ["cmk/ccc/crash_reporting.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "_init",
+        "plugin-registry",
+        "store",
+    ],
+)
+
+py_library(
     name = "daemon",
     srcs = ["cmk/ccc/daemon.py"],
     imports = ["."],
@@ -206,8 +218,8 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "_init",
+        "crash-reporting",
         "site",
-        "version-info",
     ],
 )
 
@@ -243,6 +255,7 @@ _ALL = [
     "cleanup",
     "config-path",
     "cpu-tracking",
+    "crash-reporting",
     "daemon",
     "debug",
     "exceptions",

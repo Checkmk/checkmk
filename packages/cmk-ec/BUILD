@@ -88,6 +88,7 @@ py_library(
     deps = [
         ":event",
         ":syslog",
+        "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
@@ -98,7 +99,6 @@ py_library(
         "//packages/cmk-ccc:translations",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
-        "//packages/cmk-crash:crash",
         "//packages/cmk-events",
         "//packages/cmk-mkp-tool",
         requirement("pyasn1"),

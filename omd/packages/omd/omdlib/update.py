@@ -21,7 +21,7 @@ from omdlib.skel_permissions import Permissions
 from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
 from omdlib.type_defs import Replacements, Skeleton
 
-from cmk.crash import make_crash_report_base_path
+from cmk.ccc.crash_reporting import make_crash_report_base_path
 
 
 def get_edition(

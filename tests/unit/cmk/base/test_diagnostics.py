@@ -24,9 +24,9 @@ import livestatus
 
 import cmk.utils.paths
 from cmk.base import diagnostics
+from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition
-from cmk.crash import make_crash_report_base_path
 from cmk.inventory.structured_data import (
     deserialize_tree,
     InventoryStore,

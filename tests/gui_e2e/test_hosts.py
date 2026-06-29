@@ -321,7 +321,7 @@ def test_ping_host(bypass_nslookup: None, dashboard_page: MainDashboard) -> None
     _expect_validation_status_to_be_visble(add_host.ipaddress_status_invalid, "Invalid IP address")
 
     add_host.ipv4_address_text_field.fill("127.0.0.1")
-    _expect_validation_status_to_be_visble(add_host.ipaddress_status_valid, "Valid IP adddress")
+    _expect_validation_status_to_be_visble(add_host.ipaddress_status_valid, "Valid IP address")
 
 
 def test_bulk_csv_upload_form(dashboard_page: MainDashboard) -> None:

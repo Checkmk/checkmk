@@ -47,7 +47,7 @@ export interface ConsolidationModel {
 
 export interface FunctionSpec {
   fn: ConsolidationFunction
-  /** Raw cumulative functions are de-emphasised and listed after a divider. */
+  /** Raw cumulative functions are marked "(raw)" and listed last. */
   raw: boolean
   output: ConsolidationOutputType
 }

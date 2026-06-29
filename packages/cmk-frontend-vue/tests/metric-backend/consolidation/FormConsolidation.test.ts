@@ -8,9 +8,9 @@ import { render, screen, waitFor } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
 import FormConsolidation from '@/metric-backend/consolidation/FormConsolidation.vue'
-import type { ConsolidationModel } from '@/metric-backend/consolidation/types'
+import type { ConsolidationModel, MetricType } from '@/metric-backend/consolidation/types'
 
-function renderWidget(initial: Partial<ConsolidationModel> = {}) {
+function renderWidget(initial: Partial<ConsolidationModel> = {}, availableTypes?: MetricType[]) {
   const model = ref<ConsolidationModel>({
     type: 'sum',
     function: 'rate',
@@ -18,15 +18,16 @@ function renderWidget(initial: Partial<ConsolidationModel> = {}) {
     lookbackSeconds: 300,
     ...initial
   })
+  const resolvedTypes = availableTypes ?? [model.value.type]
   const wrapper = defineComponent({
     components: { FormConsolidation },
     setup() {
-      return { model }
+      return { model, availableTypes: resolvedTypes }
     },
     template: `
       <div>
         <button type="button">outside</button>
-        <FormConsolidation v-model="model" />
+        <FormConsolidation v-model="model" :available-types="availableTypes" />
       </div>
     `
   })
@@ -36,6 +37,11 @@ function renderWidget(initial: Partial<ConsolidationModel> = {}) {
 
 function chip() {
   return screen.getByRole('button', { name: /Edit consolidation/ })
+}
+
+async function openFunctionDropdown() {
+  await userEvent.click(chip())
+  await userEvent.click(screen.getByRole('combobox', { name: 'Consolidation function' }))
 }
 
 test('the collapsed chip summarises the configuration', () => {
@@ -79,6 +85,65 @@ test('clicking outside collapses back to the chip', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'outside' }))
 
   await waitFor(() => expect(chip()).toBeVisible())
+})
+
+test('the function dropdown lists the metric type functions', async () => {
+  renderWidget({ type: 'sum', function: 'rate' })
+  await openFunctionDropdown()
+
+  expect(await screen.findByRole('option', { name: 'Rate' })).toBeVisible()
+  expect(screen.getByRole('option', { name: 'Delta' })).toBeVisible()
+  expect(screen.getByRole('option', { name: 'Last recorded value (raw)' })).toBeVisible()
+})
+
+test('raw cumulative functions are marked "(raw)" and listed last', async () => {
+  renderWidget({ type: 'sum', function: 'rate' })
+  await openFunctionDropdown()
+
+  await screen.findByRole('option', { name: 'Rate' })
+  const options = screen.getAllByRole('option')
+  expect(options[options.length - 1]).toHaveTextContent('Last recorded value (raw)')
+})
+
+test('a single known type with no raw functions marks nothing "(raw)"', async () => {
+  renderWidget({ type: 'gauge', function: 'avg' })
+  await openFunctionDropdown()
+
+  expect(await screen.findByRole('option', { name: 'Avg' })).toBeVisible()
+  expect(screen.queryByRole('option', { name: /\(raw\)/ })).toBeNull()
+})
+
+test('selecting a function updates the model and the chip', async () => {
+  const { model } = renderWidget({ type: 'sum', function: 'rate' })
+  await openFunctionDropdown()
+
+  await userEvent.click(await screen.findByRole('option', { name: 'Delta' }))
+  expect(model.value.function).toBe('delta')
+
+  await userEvent.keyboard('{Escape}')
+  await waitFor(() => expect(chip()).toHaveTextContent('delta'))
+  expect(chip()).toHaveTextContent('[sum]')
+})
+
+test('an ambiguous type groups functions under "Treat as <Type>"', async () => {
+  renderWidget({ type: 'sum', function: 'rate' }, ['sum', 'gauge'])
+  await openFunctionDropdown()
+
+  expect(await screen.findByText('Treat as Sum')).toBeVisible()
+  expect(screen.getByText('Treat as Gauge')).toBeVisible()
+})
+
+test('selecting a function from a group fixes the effective type', async () => {
+  const { model } = renderWidget({ type: 'sum', function: 'rate' }, ['sum', 'gauge'])
+  await openFunctionDropdown()
+
+  await userEvent.click(await screen.findByRole('option', { name: 'Avg' }))
+  expect(model.value.type).toBe('gauge')
+  expect(model.value.function).toBe('avg')
+
+  await userEvent.keyboard('{Escape}')
+  await waitFor(() => expect(chip()).toHaveTextContent('[gauge]'))
+  expect(chip()).toHaveTextContent('avg')
 })
 
 test('editing the lookback updates the chip once collapsed', async () => {

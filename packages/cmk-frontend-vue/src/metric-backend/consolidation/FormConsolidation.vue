@@ -9,13 +9,26 @@ import { computed, nextTick, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
+import type { Section, Suggestions } from '@/components/CmkSuggestions/types'
 import CmkTimeSpan from '@/components/user-input/CmkTimeSpan/CmkTimeSpan.vue'
 
 import InlineEditPill from '../InlineEditPill.vue'
-import { compactFunction, lookbackLabel } from './consolidation-label'
-import type { ConsolidationModel } from './types'
+import {
+  compactFunction,
+  functionOptionLabel,
+  lookbackLabel,
+  typeLabel
+} from './consolidation-label'
+import { CONSOLIDATION_CATALOG } from './types'
+import type { ConsolidationFunction, ConsolidationModel, MetricType } from './types'
 
 const { _t } = usei18n()
+
+const props = defineProps<{
+  // Metric types the backend resolved for the current metric.
+  availableTypes: MetricType[]
+}>()
 
 const model = defineModel<ConsolidationModel>({ required: true })
 
@@ -23,13 +36,43 @@ const typeToken = computed(() => `[${model.value.type}]`)
 const functionToken = computed(() => compactFunction(model.value))
 const lookbackToken = computed(() => lookbackLabel(model.value.lookbackSeconds))
 
+function suggestionsForType(type: MetricType) {
+  return CONSOLIDATION_CATALOG[type].map((spec) => ({
+    name: `${type}:${spec.fn}`,
+    title: functionOptionLabel(type, spec.fn, spec.raw)
+  }))
+}
+
+const functionOptions = computed<Suggestions>(() => {
+  // More than one type is ambiguous: group per type so the choice also fixes it.
+  if (props.availableTypes.length > 1) {
+    const sections: Section[] = props.availableTypes.map((type) => ({
+      title: _t('Treat as %{type}', { type: typeLabel(type) }),
+      suggestions: suggestionsForType(type)
+    }))
+    return { type: 'fixed', suggestions: sections }
+  }
+  return { type: 'fixed', suggestions: suggestionsForType(props.availableTypes[0]!) }
+})
+
+const dropdownValue = computed(() => `${model.value.type}:${model.value.function}`)
+
+function onFunctionUpdate(value: string | null): void {
+  if (value === null) {
+    return
+  }
+  const [type, fn] = value.split(':') as [MetricType, ConsolidationFunction]
+  // Reset params; they belonged to the previous function.
+  model.value = { ...model.value, type, function: fn, params: {} }
+}
+
 const editing = ref(false)
 
-const lookbackRef = useTemplateRef<HTMLElement>('lookbackRef')
+const functionDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('functionDropdownRef')
 
 function onEdit(): void {
   editing.value = true
-  void nextTick(() => lookbackRef.value?.querySelector<HTMLInputElement>('input')?.focus())
+  void nextTick(() => functionDropdownRef.value?.focus())
 }
 
 const lookbackInput = computed<number | null>({
@@ -77,8 +120,14 @@ const editAriaLabel = computed(
         class="metric-backend-form-consolidation__segment metric-backend-form-consolidation__segment--dimmed"
         >{{ typeToken }}</span
       >
-      <span class="metric-backend-form-consolidation__segment">{{ functionToken }}</span>
-      <span ref="lookbackRef" class="metric-backend-form-consolidation__lookback">
+      <CmkDropdown
+        ref="functionDropdownRef"
+        :model-value="dropdownValue"
+        :options="functionOptions"
+        :label="_t('Consolidation function')"
+        @update:model-value="onFunctionUpdate"
+      />
+      <span class="metric-backend-form-consolidation__lookback">
         <span class="metric-backend-form-consolidation__word">{{ _t('over last') }}</span>
         <CmkTimeSpan
           v-model="lookbackInput"

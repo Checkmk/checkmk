@@ -3,8 +3,15 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { compactFunction, functionLabel } from '@/metric-backend/consolidation/consolidation-label'
-import type { ConsolidationModel } from '@/metric-backend/consolidation/types'
+import {
+  compactFunction,
+  functionOptionLabel
+} from '@/metric-backend/consolidation/consolidation-label'
+import {
+  CONSOLIDATION_CATALOG,
+  type ConsolidationModel,
+  type MetricType
+} from '@/metric-backend/consolidation/types'
 
 function model(
   partial: Partial<ConsolidationModel> & Pick<ConsolidationModel, 'type' | 'function'>
@@ -43,8 +50,18 @@ test('fraction functions render their thresholds', () => {
   ).toBe('fraction 0.1–0.9')
 })
 
-test('function labels differ per type for last_value', () => {
-  expect(functionLabel('gauge', 'last_value')).toBe('Last recorded value')
-  expect(functionLabel('sum', 'last_value')).toBe('Last recorded value (raw counter)')
-  expect(functionLabel('histogram', 'last_value')).toBe('Cumulative sum field (raw)')
+test('functions marked as raw are rendered accordingly', () => {
+  for (const [type, specs] of Object.entries(CONSOLIDATION_CATALOG) as [
+    MetricType,
+    (typeof CONSOLIDATION_CATALOG)[MetricType]
+  ][]) {
+    for (const spec of specs) {
+      const label = functionOptionLabel(type, spec.fn, spec.raw)
+      if (spec.raw) {
+        expect(label).toMatch(/ \(raw\)$/)
+      } else {
+        expect(label).not.toMatch(/ \(raw\)$/)
+      }
+    }
+  }
 })

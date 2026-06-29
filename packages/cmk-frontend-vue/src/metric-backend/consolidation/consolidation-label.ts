@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import usei18n from '@/lib/i18n'
+import usei18n, { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import { type Magnitude, formatTimeSpan } from '@/components/user-input/CmkTimeSpan/timeSpan'
@@ -30,7 +30,7 @@ function functionLabels(): Record<
     sum: {
       rate: _t('Rate'),
       delta: _t('Delta'),
-      last_value: _t('Last recorded value (raw counter)')
+      last_value: _t('Last recorded value')
     },
     histogram: {
       preserve_histogram: _t('Preserve histograms'),
@@ -41,14 +41,36 @@ function functionLabels(): Record<
       quantile: _t('Quantile'),
       frac_below: _t('Fraction below'),
       frac_between: _t('Fraction between'),
-      last_value: _t('Cumulative sum field (raw)')
+      last_value: _t('Cumulative sum field')
     }
   }
 }
 
-/** Full label for a function as shown in the dropdown. */
-export function functionLabel(type: MetricType, fn: ConsolidationFunction): string {
-  return functionLabels()[type][fn] ?? fn
+/** Base label for a function, without the raw marker. */
+export function functionLabel(type: MetricType, fn: ConsolidationFunction): TranslatedString {
+  return functionLabels()[type][fn] ?? untranslated(fn)
+}
+
+/** Dropdown label for a function, appending a "(raw)" marker when raw. */
+export function functionOptionLabel(
+  type: MetricType,
+  fn: ConsolidationFunction,
+  raw: boolean
+): TranslatedString {
+  const { _t } = usei18n()
+  const label = functionLabel(type, fn)
+  return raw ? _t('%{label} (raw)', { label }) : label
+}
+
+/** Display name for a metric type. */
+export function typeLabel(type: MetricType): TranslatedString {
+  const { _t } = usei18n()
+  const labels: Record<MetricType, TranslatedString> = {
+    gauge: _t('Gauge'),
+    sum: _t('Sum'),
+    histogram: _t('Histogram')
+  }
+  return labels[type]
 }
 
 /** Compact function token for the pill, e.g. 'rate', 'p95', 'fraction 0.1–0.9'. */

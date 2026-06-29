@@ -5,9 +5,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
-import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
+import type { ListPropDef, MultiSelectPropDef } from '@ucl/_ucl/types/prop-def'
+
+import type { MetricType } from '@/metric-backend/consolidation/types'
 
 import { type PresetName, presetOptions } from './consolidationPresets'
+
+const TYPE_OPTIONS: Array<{ title: string; name: MetricType }> = [
+  { title: 'Gauge', name: 'gauge' },
+  { title: 'Sum', name: 'sum' },
+  { title: 'Histogram', name: 'histogram' }
+]
 
 export const panelConfig = {
   preset: {
@@ -16,9 +24,17 @@ export const panelConfig = {
     options: presetOptions,
     help: 'UCL demo only: pick an example consolidation configuration.',
     initialState: 'sumRate'
+  },
+  availableTypes: {
+    type: 'multiselect',
+    title: 'Available types',
+    options: TYPE_OPTIONS,
+    initialState: ['sum'],
+    help: 'UCL demo: metric types the backend resolved. More than one shows the "Treat as <Type>" grouping.'
   }
 } satisfies PanelConfigFor<typeof FormConsolidation, 'modelValue'> & {
   preset: ListPropDef<PresetName>
+  availableTypes: MultiSelectPropDef<MetricType>
 }
 </script>
 
@@ -62,7 +78,7 @@ watch(
     <UclDetailPageHeader>FormConsolidation</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <FormConsolidation v-model="model" />
+      <FormConsolidation v-model="model" :available-types="propState.availableTypes" />
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

@@ -20,13 +20,14 @@ import {
   lookbackLabel,
   typeLabel
 } from './consolidation-label'
-import { CONSOLIDATION_CATALOG } from './types'
+import { CONSOLIDATION_CATALOG, METRIC_TYPES } from './types'
 import type { ConsolidationFunction, ConsolidationModel, MetricType } from './types'
 
 const { _t } = usei18n()
 
 const props = defineProps<{
-  // Metric types the backend resolved for the current metric.
+  // The metric types the backend resolved for the current metric.
+  // An empty list results in every type's functions to be offered.
   availableTypes: MetricType[]
 }>()
 
@@ -36,6 +37,10 @@ const typeToken = computed(() => `[${model.value.type}]`)
 const functionToken = computed(() => compactFunction(model.value))
 const lookbackToken = computed(() => lookbackLabel(model.value.lookbackSeconds))
 
+const candidateTypes = computed<MetricType[]>(() =>
+  props.availableTypes.length > 0 ? props.availableTypes : [...METRIC_TYPES]
+)
+
 function suggestionsForType(type: MetricType) {
   return CONSOLIDATION_CATALOG[type].map((spec) => ({
     name: `${type}:${spec.fn}`,
@@ -44,15 +49,15 @@ function suggestionsForType(type: MetricType) {
 }
 
 const functionOptions = computed<Suggestions>(() => {
-  // More than one type is ambiguous: group per type so the choice also fixes it.
-  if (props.availableTypes.length > 1) {
-    const sections: Section[] = props.availableTypes.map((type) => ({
+  // More than one candidate type is ambiguous: group per type so the choice also fixes it.
+  if (candidateTypes.value.length > 1) {
+    const sections: Section[] = candidateTypes.value.map((type) => ({
       title: _t('Treat as %{type}', { type: typeLabel(type) }),
       suggestions: suggestionsForType(type)
     }))
     return { type: 'fixed', suggestions: sections }
   }
-  return { type: 'fixed', suggestions: suggestionsForType(props.availableTypes[0]!) }
+  return { type: 'fixed', suggestions: suggestionsForType(candidateTypes.value[0]!) }
 })
 
 const dropdownValue = computed(() => `${model.value.type}:${model.value.function}`)

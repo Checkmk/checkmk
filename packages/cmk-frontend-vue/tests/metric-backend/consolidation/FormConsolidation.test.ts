@@ -146,6 +146,15 @@ test('selecting a function from a group fixes the effective type', async () => {
   expect(chip()).toHaveTextContent('avg')
 })
 
+test('an unknown type (no available types) offers every type group', async () => {
+  renderWidget({ type: 'sum', function: 'rate' }, [])
+  await openFunctionDropdown()
+
+  expect(await screen.findByText('Treat as Gauge')).toBeVisible()
+  expect(screen.getByText('Treat as Sum')).toBeVisible()
+  expect(screen.getByText('Treat as Histogram')).toBeVisible()
+})
+
 test('editing the lookback updates the chip once collapsed', async () => {
   const { model } = renderWidget()
   await userEvent.click(chip())

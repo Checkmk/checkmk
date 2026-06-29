@@ -2378,4 +2378,172 @@ oracle:
             "missing path: must fall back to inline sql:"
         );
     }
+
+    // TC-ORA-150
+    #[test]
+    fn test_builtin_section_path_override() {
+        let fx = fixtures();
+
+        // External `path:` file replaces the built-in instance query.
+        let path_yaml = format!(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    sections:
+      - instance:
+          path: '{}'
+"#,
+            fx.abs_dir.join("abs.sql").display()
+        );
+        let section = section_from_yaml(&path_yaml, "instance");
+        assert_eq!(
+            first_query(&section, 0, &[]).as_deref(),
+            Some("select 'details:abs' from dual"),
+            "path: file must replace the built-in instance query"
+        );
+        assert_eq!(section.to_work_header(), "<<<oracle_instance:sep(124)>>>");
+        assert!(
+            section.pdb_patterns().is_empty(),
+            "override runs against CDB only (no PDB targeting)"
+        );
+    }
+
+    // TC-ORA-150
+    #[test]
+    fn test_builtin_section_missing_path_falls_back_to_builtin_query() {
+        let fx = fixtures();
+
+        // Baseline: the shipped built-in `instance` query.
+        let builtin_sql = first_query(
+            &section_from_yaml(
+                r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    sections:
+      - instance:
+"#,
+                "instance",
+            ),
+            0,
+            &[],
+        );
+        assert!(
+            builtin_sql.is_some(),
+            "sanity: the built-in instance section ships a query"
+        );
+
+        // `path:` points to a nonexistent file and there is no inline `sql:`
+        // either, so the section must keep running the built-in query.
+        let missing_yaml = format!(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    sections:
+      - instance:
+          path: '{}'
+"#,
+            fx.abs_dir.join("does_not_exist.sql").display()
+        );
+        let section = section_from_yaml(&missing_yaml, "instance");
+        assert_eq!(
+            first_query(&section, 0, &[]),
+            builtin_sql,
+            "a missing path: file must fall back to the built-in query"
+        );
+    }
+
+    // TC-ORA-150
+    #[test]
+    fn test_builtin_section_path_override_does_not_validate_sql() {
+        // The plugin must not alter or judge user-provided SQL: the file body
+        // is only split on `;` and handed to the server verbatim. Whether the
+        // SQL is valid is the DB's call. Its complaint is dealt with on the
+        // in the Check plugins, not on Agent side.
+        let fx = fixtures();
+        write(&fx.abs_dir, "not_sql.sql", "this is not valid sql");
+
+        let yaml = format!(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    sections:
+      - instance:
+          path: '{}'
+"#,
+            fx.abs_dir.join("not_sql.sql").display()
+        );
+        let section = section_from_yaml(&yaml, "instance");
+        assert_eq!(
+            first_query(&section, 0, &[]).as_deref(),
+            Some("this is not valid sql"),
+            "the file body must be passed through unvalidated"
+        );
+    }
+
+    // TC-ORA-150
+    #[test]
+    fn test_builtin_section_path_wins_over_inline_sql() {
+        // A built-in section override may carry both `path:` and an inline
+        // `sql:`. Precedence is the same as for custom metrics: a resolvable
+        // `path:` wins, a missing one falls back to the inline `sql:` (and
+        // only without either does the built-in query run).
+        let fx = fixtures();
+        // File resolves (orasql_abs/winner.sql -> 'details:file'), so `path:`
+        // takes precedence over the inline `sql:` ('details:inline').
+        let present_yaml = format!(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    sections:
+      - instance:
+          path: '{}'
+          sql: "select 'details:inline' from dual"
+"#,
+            fx.abs_dir.join("winner.sql").display()
+        );
+        let section = section_from_yaml(&present_yaml, "instance");
+        assert_eq!(
+            first_query(&section, 0, &[]).as_deref(),
+            Some("select 'details:file' from dual"),
+            "resolved path: must win over inline sql:"
+        );
+
+        // File is missing (does_not_exist.sql), so resolution falls back to
+        // the inline `sql:` -> 'details:inline', not to the built-in query.
+        let missing_yaml = format!(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    sections:
+      - instance:
+          path: '{}'
+          sql: "select 'details:inline' from dual"
+"#,
+            fx.abs_dir.join("does_not_exist.sql").display()
+        );
+        let section = section_from_yaml(&missing_yaml, "instance");
+        assert_eq!(
+            first_query(&section, 0, &[]).as_deref(),
+            Some("select 'details:inline' from dual"),
+            "missing path: must fall back to inline sql:, not the built-in query"
+        );
+    }
 }

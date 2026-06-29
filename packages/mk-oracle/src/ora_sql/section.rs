@@ -570,6 +570,52 @@ mod tests {
         assert_eq!(queries[0].as_str(), "select 'details:inline' from dual");
     }
 
+    // TC-ORA-150
+    #[test]
+    fn test_yaml_inline_sql_overrides_builtin_instance_query() {
+        // Start from the YAML a user would actually write, so the whole chain
+        // config parsing -> runtime section -> query resolution is covered.
+        let config = config::ora_sql::Config::from_string(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    sections:
+      - instance:
+          sql: "select 'details:overridden-instance' from dual"
+"#,
+        )
+        .expect("yaml parses")
+        .expect("oracle config present");
+        let section_config = config
+            .all_sections()
+            .iter()
+            .find(|s| s.name().as_str() == names::INSTANCE)
+            .expect("instance section parsed from yaml");
+        let overridden = Section::new(section_config, 0);
+        // Empty search dirs: nothing on disk may shadow the inline `sql:`.
+        let queries = overridden
+            .find_queries_with_search_dirs(InstanceNumVersion::from(0), Tenant::All, &[], &[])
+            .expect("sql: override should yield queries");
+        assert_eq!(queries.len(), 1);
+        assert_eq!(
+            queries[0].as_str(),
+            "select 'details:overridden-instance' from dual"
+        );
+        // Header stays the built-in's, not redirected to the custom-metric
+        // `oracle_sql:sep(58)` header used for `custom_metrics:`.
+        assert_eq!(
+            overridden.to_work_header(),
+            "<<<oracle_instance:sep(124)>>>"
+        );
+        assert!(
+            overridden.pdb_patterns().is_empty(),
+            "override runs against CDB only (no PDB targeting)"
+        );
+    }
+
     #[test]
     fn test_custom_metric_path_propagated_to_runtime_section() {
         let section_config = section::SectionBuilder::new("product_price")

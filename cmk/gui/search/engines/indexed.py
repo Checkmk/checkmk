@@ -340,7 +340,7 @@ class PermissionsHandler:
     # TODO: see if there is a better way to check for permission than this.
     def _check_if_handling_page_triggers_exception(self, file_name: str) -> None:
         if (handler := get_page_handler(file_name)) is None:
-            return None
+            return
 
         # This context manager is needed to prevent HTML from being outputed to the response.
         # TODO: see if this is still relevant now that we are rendering from Vue.

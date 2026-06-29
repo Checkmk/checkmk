@@ -165,7 +165,7 @@ def inline_background_jobs(mocker: MockerFixture) -> None:
 @pytest.fixture()
 def allow_background_jobs() -> None:
     """Prevents the fail_on_unannotated_background_job_start fixture from raising an error"""
-    return None
+    return
 
 
 @pytest.fixture(autouse=True)

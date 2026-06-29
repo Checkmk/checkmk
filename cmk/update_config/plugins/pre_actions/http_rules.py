@@ -29,7 +29,7 @@ class CheckHTTPRules(PreUpdateAction):
         with disable_redis(), gui_context(), SuperUserContext():
             set_global_vars()
             if is_distributed_setup_remote_site(active_config.sites):
-                return None
+                return
             http_ruleset = AllRulesets.load_all_rulesets().get("active_checks:http")
         if (count := len(http_ruleset.get_rules())) > 0:
             logger.info(

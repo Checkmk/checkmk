@@ -172,7 +172,7 @@ class VisualTypeDashboards(VisualType):
             add_widget(embedded_view_dashlet, dashboard)
             # Directly go to the dashboard. We send the URL as an answer to the AJAX request
             response.set_data("OK dashboard.py?name=" + target_visual_name)
-            return None
+            return
 
         # We don't know if what we get as parameters actually fits a DashletConfig.
         dashlet_spec.update(parameters)  # type: ignore[typeddict-item]

@@ -224,10 +224,10 @@ def _handle_api_error(exc: docker.errors.APIError) -> None:
             % (_DOCKER_REGISTRY, _DOCKER_REGISTRY_URL)
         ) from exc
     if "request canceled while waiting for connection" in "%s" % exc:
-        return None
+        return
     if "dial tcp: lookup " in "%s" % exc:
         # May happen when offline on ubuntu
-        return None
+        return
     raise exc
 
 

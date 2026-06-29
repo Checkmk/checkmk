@@ -527,7 +527,7 @@ class UserSyncDisabledModel:
 
     def to_internal(self) -> None:
         """Sentinel: the API caller wants the key absent on disk."""
-        return None
+        return
 
 
 @api_model

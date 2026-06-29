@@ -26,7 +26,7 @@ class FilterRegistry(Registry[Filter]):
         # Because we use test first with may_add_site_hint. We set siteopt
         # over the filter menu, and there we already set the active flag.
         if instance.ident == "siteopt":
-            return None
+            return
 
         # host_metrics_hist & svc_metrics_hist. These filters work at the
         # filter_table instant. We actually only need host_metric_hist, because
@@ -37,7 +37,7 @@ class FilterRegistry(Registry[Filter]):
         # those is a single context. It would be better to have post-processing
         # on a separte filter, as they aren't based on context.
         if instance.ident == "svc_metrics_hist":
-            return None
+            return
 
         if any(
             self.htmlvars_to_filter.get(htmlvar, instance.ident) != instance.ident
@@ -52,7 +52,7 @@ class FilterRegistry(Registry[Filter]):
             instance.htmlvars, instance.ident
         )
         self.htmlvars_to_filter.update(htmlvars_to_filter)
-        return None
+        return
 
     def plugin_name(self, instance: Filter) -> str:
         return instance.ident

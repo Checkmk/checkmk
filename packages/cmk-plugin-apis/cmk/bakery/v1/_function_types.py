@@ -156,7 +156,7 @@ def _validate_type(
     function_name: str, element: _PossibleReturnType, test_types: Sequence[type]
 ) -> None:
     if isinstance(element, tuple(test_types)):
-        return None
+        return
     article = " one of" if len(test_types) > 1 else ""
     raise TypeError(
         f"{function_name} yields item of unexpected type: Need{article} "

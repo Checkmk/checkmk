@@ -138,11 +138,11 @@ def disable_dashboard_token(
     """Disable the auth token of a dashboard.
 
     This should be done whenever a dashboard is edited."""
-    try:
-        with edit_dashboard_auth_token(dashboard_config, token_store) as (_token, details):
-            details.disabled = True
-    except (DashboardTokenNotFound, InvalidDashboardTokenReference):
-        return None
+    with (
+        contextlib.suppress(DashboardTokenNotFound, InvalidDashboardTokenReference),
+        edit_dashboard_auth_token(dashboard_config, token_store) as (_token, details),
+    ):
+        details.disabled = True
 
 
 def issue_dashboard_token(

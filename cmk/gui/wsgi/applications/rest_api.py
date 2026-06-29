@@ -480,10 +480,10 @@ def add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
 
     """
     if to_add in coll:
-        return None
+        return
 
     coll.append(to_add)
-    return None
+    return
 
 
 class ServeSpec(AbstractWSGIApp):

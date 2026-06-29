@@ -918,11 +918,11 @@ class AjaxOpenCloseSnapin(AjaxPage):
 def move_snapin(ctx: PageContext) -> None:
     response.set_content_type("application/json")
     if not user.may("general.configure_sidebar"):
-        return None
+        return
 
     snapin_id = request.var("name")
     if snapin_id is None:
-        return None
+        return
 
     user_config = UserSidebarConfig(
         user, ctx.config.sidebar, UserPermissions.from_config(ctx.config, permission_registry)
@@ -931,7 +931,7 @@ def move_snapin(ctx: PageContext) -> None:
     try:
         snapin = user_config.get_snapin(snapin_id)
     except KeyError:
-        return None
+        return
 
     before_id = request.var("before")
     before_snapin: UserSidebarSnapin | None = None
@@ -943,7 +943,7 @@ def move_snapin(ctx: PageContext) -> None:
 
     user_config.move_snapin_before(snapin, before_snapin)
     user_config.save()
-    return None
+    return
 
 
 # .

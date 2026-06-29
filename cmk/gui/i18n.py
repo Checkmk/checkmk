@@ -150,15 +150,15 @@ def localize(lang: str) -> None:
     translate_to_current_language.cache_clear()  # type: ignore[attr-defined]
     if lang == "en":
         _unlocalize()
-        return None
+        return
 
     gettext_translation = _init_language(lang)
     if not gettext_translation:
         _unlocalize()
-        return None
+        return
 
     set_global_var("translation", Translation(translation=gettext_translation, name=lang))
-    return None
+    return
 
 
 def _init_language(lang: str) -> gettext_module.NullTranslations | None:

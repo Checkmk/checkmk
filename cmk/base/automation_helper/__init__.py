@@ -74,12 +74,6 @@ def _main() -> int:
         configure_tracer(omd_root)
         configure_logger(log_directory)
 
-        config = config_from_disk_or_default_config(
-            omd_root=omd_root,
-            run_directory=run_directory,
-            log_directory=log_directory,
-        )
-
         with run_watcher(
             config.watcher_config,
             Cache.setup(client=get_redis_client()),

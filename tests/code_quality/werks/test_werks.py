@@ -60,12 +60,33 @@ def prepare_git_env() -> Iterator[None]:
 
 
 CVSS_REGEX_V31 = re.compile(
-    r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]"
+    r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/(?P<impact>C:[NLH]/I:[NLH]/A:[NLH])"
 )
 CVSS_REGEX_V40 = re.compile(
-    r"CVSS:4.0/AV:[NALP]/AC:[LH]/AT:[NP]/PR:[NLH]/UI:[NPA]/VC:[NLH]/VI:[NLH]/VA:[NLH]/SC:[NLH]/SI:[NLH]/SA:[NLH]"
+    r"CVSS:4.0/AV:[NALP]/AC:[LH]/AT:[NP]/PR:[NLH]/UI:[NPA]/"
+    r"(?P<impact>VC:[NLH]/VI:[NLH]/VA:[NLH]/SC:[NLH]/SI:[NLH]/SA:[NLH])"
 )
+CVE_REGEX = re.compile(r"CVE-\d{4}-\d{4,}")
 JIRA_ISSUE_REGEX = re.compile(r"(CMK|SUP|KNW|SAASDEV|BETA)-\d+")
+
+# If your new Sec Werk trips one of the asserts below, please get in touch with the security
+# team. These days we tend to use Sec Werks only for real vulnerabilities (which require a CVSS
+# score and a CVE) and feature Werks for security improvements.
+SECURITY_CONTACT_HINT = (
+    "If you are unsure whether this should be a Sec Werk, or how to obtain a CVSS score or a CVE, "
+    "please get in touch with the security team."
+)
+
+# Sec Werks that predate the requirement to always reference a CVE. Do not add new entries here:
+# every new Sec Werk must reference a CVE.
+SECWERKS_WITHOUT_CVE = {
+    14871,
+    14919,
+    16990,
+}
+
+# The CVSS and CVE requirements are only mandatory for new Werks, so we start with 14485
+OLDEST_WERK_REQUIRING_CVSS = 14485
 
 
 class WerksLoader(NamedTuple):
@@ -110,6 +131,18 @@ def fixture_werks_loader(tmp_path: Path) -> dict[int, WerkV3]:
         unacknowledged_werks_json=unacknowledged_werks_json,
         acknowledged_werks_mk=acknowledged_werks_mk,
     )
+
+
+@pytest.fixture(scope="function", name="secwerks_loaded")
+def fixture_secwerks_loaded(werks_loaded: dict[int, WerkV3]) -> dict[int, WerkV3]:
+    """
+    provide the Sec Werks the CVSS and CVE requirements apply to
+    """
+    return {
+        werk_id: werk
+        for werk_id, werk in werks_loaded.items()
+        if werk_id >= OLDEST_WERK_REQUIRING_CVSS and werk.class_.value == "security"
+    }
 
 
 def test_write_precompiled_werks(werks_loader_empty: WerksLoader) -> None:
@@ -185,18 +218,29 @@ def test_no_werk_has_version_2_6_0b1(werks_loaded: dict[int, WerkV3]) -> None:
         )
 
 
-def test_secwerk_has_cvss(werks_loaded: dict[int, WerkV3]) -> None:
-    # The CVSS in Sec Werks is only mandatory for new Werks, so we start with 14485
-    skip_lower = 14485
-    for werk_id, werk in werks_loaded.items():
-        if werk_id < skip_lower:
+def test_secwerk_has_cvss(secwerks_loaded: dict[int, WerkV3]) -> None:
+    for werk_id, werk in secwerks_loaded.items():
+        assert _cvss_vectors(werk.description), (
+            f"Werk {werk_id} is missing a CVSS.\n{SECURITY_CONTACT_HINT}\n{werk.description}"
+        )
+
+
+def test_secwerk_has_cve(secwerks_loaded: dict[int, WerkV3]) -> None:
+    # Every Sec Werk must reference a CVE: we use Sec Werks only for real vulnerabilities and
+    # feature Werks for security improvements. A handful of Werks predate this rule and are
+    # grandfathered in SECWERKS_WITHOUT_CVE.
+    for werk_id, werk in secwerks_loaded.items():
+        if werk_id in SECWERKS_WITHOUT_CVE:
             continue
-        if werk.class_.value != "security":
+        # Sec Werks with a CVSS base score of 0 (no impact) are motivated by security but do not
+        # describe an actual vulnerability, so they are not required to reference a CVE.
+        if _has_no_impact(werk.description):
             continue
-        assert (
-            CVSS_REGEX_V31.search(werk.description) is not None
-            or CVSS_REGEX_V40.search(werk.description) is not None
-        ), f"Werk {werk_id} is missing a CVSS:\n{werk.description}"
+        assert CVE_REGEX.search(werk.description) is not None, (
+            f"Werk {werk_id} is a Sec Werk but does not reference a CVE. "
+            "Sec Werks are reserved for real vulnerabilities (use a feature Werk for security "
+            f"improvements).\n{SECURITY_CONTACT_HINT}\n{werk.description}"
+        )
 
 
 @pytest.mark.usefixtures("prepare_git_env")
@@ -256,6 +300,18 @@ def test_werks_commit_message() -> None:
         "The latest commit message for a Werk does not contain a valid reference to "
         "a Jira issue ID (e.g., CMK-12345, SUP-12345, KNW-12345). Commit message is:\n%s"
         % commit_messsage
+    )
+
+
+def _cvss_vectors(description: str) -> list[re.Match[str]]:
+    return [*CVSS_REGEX_V31.finditer(description), *CVSS_REGEX_V40.finditer(description)]
+
+
+def _has_no_impact(description: str) -> bool:
+    """A CVSS base score of 0 is only possible with no impact, so we look at the impact metrics."""
+    vectors = _cvss_vectors(description)
+    return bool(vectors) and all(
+        metric.endswith(":N") for vector in vectors for metric in vector["impact"].split("/")
     )
 
 

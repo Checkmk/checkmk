@@ -14,18 +14,18 @@ from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
     build_service_graphs,
     ConsolidationFunction,
+    evaluate_graphs,
     EvaluatedGraph,
     fetch_performance_data,
     Graph,
     RRDSource,
     ServiceRef,
     TimeRange,
-    update_graphs,
 )
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _, translate_to_current_language
 
-from ._engine_dispatch import EngineGraphUpdater, GraphDataRequest
+from ._engine_dispatch import EngineGraphEvaluator, GraphDataRequest
 from ._engine_plugins import registered_translations
 from ._engine_rrd_source import EngineRRDSource
 from ._engine_serialization import deserialize_graphs, ensure_type
@@ -74,14 +74,14 @@ def build_template_graphs(
     return built_graphs
 
 
-def update_template_graphs(
+def evaluate_template_graphs(
     *,
     built_graphs: Sequence[Graph],
     rrd: RRDSource,
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
 ) -> Sequence[EvaluatedGraph]:
-    return update_graphs(
+    return evaluate_graphs(
         graphs=built_graphs,
         translations=registered_translations(),
         consolidation_function=consolidation_function,
@@ -90,8 +90,8 @@ def update_template_graphs(
     )
 
 
-def _dispatched_update_template_graphs(request: GraphDataRequest) -> Sequence[EvaluatedGraph]:
-    return update_template_graphs(
+def _dispatched_evaluate_template_graphs(request: GraphDataRequest) -> Sequence[EvaluatedGraph]:
+    return evaluate_template_graphs(
         built_graphs=deserialize_graphs(request.definition),
         rrd=EngineRRDSource(site_id=None, debug=active_config.debug),
         consolidation_function=ensure_type(
@@ -101,6 +101,6 @@ def _dispatched_update_template_graphs(request: GraphDataRequest) -> Sequence[Ev
     )
 
 
-TEMPLATE_GRAPH_UPDATER = EngineGraphUpdater(
-    graph_type="template", update=_dispatched_update_template_graphs
+TEMPLATE_GRAPH_EVALUATOR = EngineGraphEvaluator(
+    graph_type="template", evaluate=_dispatched_evaluate_template_graphs
 )

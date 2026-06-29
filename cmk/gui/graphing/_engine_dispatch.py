@@ -24,18 +24,18 @@ class GraphDataRequest:
 
 
 @dataclass(frozen=True)
-class EngineGraphUpdater:
+class EngineGraphEvaluator:
     graph_type: str
-    update: Callable[[GraphDataRequest], Sequence[EvaluatedGraph]]
+    evaluate: Callable[[GraphDataRequest], Sequence[EvaluatedGraph]]
 
 
-class EngineGraphUpdaterRegistry(Registry[EngineGraphUpdater]):
-    def plugin_name(self, instance: EngineGraphUpdater) -> str:
+class EngineGraphEvaluatorRegistry(Registry[EngineGraphEvaluator]):
+    def plugin_name(self, instance: EngineGraphEvaluator) -> str:
         return instance.graph_type
 
 
-engine_graph_updater_registry = EngineGraphUpdaterRegistry()
+engine_graph_evaluator_registry = EngineGraphEvaluatorRegistry()
 
 
 def update_graph_via_engine(request: GraphDataRequest) -> Sequence[EvaluatedGraph]:
-    return engine_graph_updater_registry[request.graph_type].update(request)
+    return engine_graph_evaluator_registry[request.graph_type].evaluate(request)

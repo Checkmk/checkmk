@@ -32,7 +32,7 @@ from cmk.graphing_engine import (
 from cmk.gui.graphing._engine_template_graphs import (
     _assert_uniform_unit,
     build_template_graphs,
-    update_template_graphs,
+    evaluate_template_graphs,
 )
 
 _SERVICE = ServiceRef(host_name="h", service_name="svc")
@@ -92,7 +92,7 @@ def test_template_lifecycle_discover_and_update() -> None:
     # Discovery fetches performance data only, never the time series.
     assert rrd.requested_ranges == []
 
-    evaluated = update_template_graphs(
+    evaluated = evaluate_template_graphs(
         built_graphs=built_graphs,
         rrd=rrd,
         consolidation_function=ConsolidationFunction.MAX,

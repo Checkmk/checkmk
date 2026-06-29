@@ -12,6 +12,7 @@ from cmk.graphing_engine import (
     Curve,
     CurveAttributes,
     DecimalNotation,
+    evaluate_graphs,
     EvaluatedGraph,
     Graph,
     Line,
@@ -24,7 +25,6 @@ from cmk.graphing_engine import (
     TimeRange,
     TimeSeries,
     Unit,
-    update_graphs,
 )
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
@@ -119,7 +119,7 @@ def _update(
     consolidation_function: ConsolidationFunction = ConsolidationFunction.AVERAGE,
     translations: Sequence[translations_v1.Translation] | None = None,
 ) -> Sequence[EvaluatedGraph]:
-    return update_graphs(
+    return evaluate_graphs(
         graphs=graphs,
         translations=translations or [],
         consolidation_function=consolidation_function,

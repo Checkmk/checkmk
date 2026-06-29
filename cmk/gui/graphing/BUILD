@@ -37,6 +37,7 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-graphing-engine",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-plugin-apis:graphing",
         requirement("python-dateutil"),

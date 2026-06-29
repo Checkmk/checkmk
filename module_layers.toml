@@ -115,6 +115,17 @@ allows = [
   "cmk.utils.paths",
 ]
 
+[plugin_families.violations.azure_v2_extended]
+allows = [
+  # FIXME
+  "cmk.agent_based.v1",
+  # reuse of the free azure_v2 plugin library (agent_based + rulesets helpers)
+  "cmk.plugins.azure_v2",
+  # the Azure OTel metrics plugin consumes the metric backend section + query models
+  "cmk.metric_backend",
+  "cmk.telemetry.metric_backend_section",
+]
+
 # These plugins are tightly coupled to Checkmk.
 # We cannot expect them to not depend on the core product.
 [plugin_families.violations.checkmk]

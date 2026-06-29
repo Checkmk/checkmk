@@ -42,7 +42,7 @@ from cmk.graphing_engine import (
     Unit,
 )
 
-_Json = dict[str, object]
+_Json = Mapping[str, object]
 
 
 def ensure_type[T](value: object, expected: type[T]) -> T:

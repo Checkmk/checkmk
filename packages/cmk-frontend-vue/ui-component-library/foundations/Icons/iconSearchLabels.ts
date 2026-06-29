@@ -357,6 +357,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   'menu-item-checked': ['selected', 'checkmark', 'ticked option'],
   'menu-item-unchecked': ['unselected', 'empty option'],
   message: ['chat', 'speech', 'comment', 'note'],
+  'more-actions': ['kebab', 'overflow', 'three dots', 'vertical dots', 'options', 'menu'],
   'migrate-users': ['transfer accounts', 'move people'],
   missing: ['absent', 'not found', 'gone', 'lost'],
   'mkeventd-rules': ['event console rules', 'ec rules'],

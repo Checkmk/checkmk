@@ -779,7 +779,8 @@ export const oneColorIcons = [
   'filter',
   'pause',
   'play',
-  'waiting'
+  'waiting',
+  'more-actions'
 ] as const
 export const twoColorIcons = ['aggr'] as const
 

@@ -14,6 +14,22 @@ REPO_PATH="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 cd "$REPO_PATH"
 
 SOURCE_DIRS=(cmk non-free omd packages agents)
+# Top-level dirs that contain Python but are intentionally excluded from
+# coverage (the tests themselves, tooling, docs).
+NON_SOURCE_DIRS=(tests doc scripts buildscripts bin bazel .ide)
+
+# Guard against silent drift: every top-level dir that ships tracked Python
+# must be classified as source or non-source. A new or renamed one surfaces
+# here as an error instead of quietly skewing the coverage number.
+known_dirs=$(printf '%s\n' "${SOURCE_DIRS[@]}" "${NON_SOURCE_DIRS[@]}" | sort -u)
+actual_dirs=$(git ls-files '*.py' | sed 's#/.*##' | sort -u)
+unclassified=$(comm -23 <(printf '%s\n' "$actual_dirs") <(printf '%s\n' "$known_dirs"))
+if [[ -n "$unclassified" ]]; then
+    echo "Error: top-level dir(s) with Python not classified as source/non-source:" >&2
+    echo "  ${unclassified//$'\n'/$'\n'  }" >&2
+    echo "Add each to SOURCE_DIRS or NON_SOURCE_DIRS in ${BASH_SOURCE[0]}." >&2
+    exit 1
+fi
 
 # Every tool is invoked through `bazel run` so Bazel provides it hermetically --
 # no venv activation, no PATH manipulation. The edition flag is passed to every

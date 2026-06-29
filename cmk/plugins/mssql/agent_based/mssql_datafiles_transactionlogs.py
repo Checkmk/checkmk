@@ -234,11 +234,9 @@ def _datafile_usage(
     max_size_sum = 0.0
     allocated_size_sum = 0.0
     used_size_sum = 0.0
-    unlimited = False
     used_mointpoints = []
 
     for instance in instances:
-        unlimited |= instance["unlimited"]
         allocated_size_sum += instance["allocated_size"] or 0
         used_size_sum += (used_size := instance["used_size"] or 0)
         mountpoint = _get_mountpoint(free_bytes_per_mountpoint, instance["mountpoint"])
@@ -251,7 +249,7 @@ def _datafile_usage(
             instance["max_size"],
             filesystem_free_size,
             used_size,
-            unlimited,
+            instance["unlimited"],
         )
         max_size_sum += max_size
 

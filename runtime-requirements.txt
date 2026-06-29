@@ -1728,12 +1728,19 @@ marshmallow-oneofschema==3.2.0 \
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-dcd/requirements.in
     #   apispec-oneofschema
-mcp==1.28.0 \
-    --hash=sha256:559d3f9943674cafbe5744c5d3794f3237e8b47f9bbc58e20c0fad680d8487c2 \
-    --hash=sha256:9c1e7cf3a9125557e418ecd4fed8e9adddce81b0dfdae4d6601d700f5beb71a4
+mcp==2.0.0a3 \
+    --hash=sha256:360e38f4aea326db67bfb3a6028e78319c86c21923e694d30cbc6d127287042f \
+    --hash=sha256:850716457d0813231feab512052e8e6397524be9b9e284c3c27ec281ad542962
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-mcp/requirements.in
+mcp-types==2.0.0a3 \
+    --hash=sha256:6c93bc23fa3e4bab47ddc9bde1ba50002b2b00d2cd7f54ff775844f0368d1731 \
+    --hash=sha256:fcce80d6b9a3092e871c310c5e2de3bdcb07ef5a943d82f74c9c56949a477699
+    # via
+    #   -c requirements.txt
+    #   -r non-free/packages/cmk-mcp/requirements.in
+    #   mcp
 mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
@@ -2040,6 +2047,7 @@ opentelemetry-api==1.39.1 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-trace/requirements.in
+    #   mcp
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
     #   opentelemetry-instrumentation
@@ -2666,6 +2674,7 @@ pydantic==2.12.5 \
     #   datamodel-code-generator
     #   fastapi
     #   mcp
+    #   mcp-types
     #   pydantic-settings
 pydantic-core==2.41.5 \
     --hash=sha256:0177272f88ab8312479336e1d777f6b124537d47f2123f89cb37e0accea97f90 \
@@ -3741,6 +3750,7 @@ typing-extensions==4.15.0 \
     #   grpcio
     #   jira
     #   mcp
+    #   mcp-types
     #   opentelemetry-api
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http

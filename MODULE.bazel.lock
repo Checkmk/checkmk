@@ -5889,8 +5889,12 @@
             "https://files.pythonhosted.org/packages/fd/14/baad3222f424b19ce6ad243c71de1ad9ec6b2e4eb1e458a48fdc6d120401/matplotlib-3.10.8-cp311-cp311-macosx_11_0_arm64.whl": "a2b336e2d91a3d7006864e0990c83b216fcdca64b5a6484912902cef87313d78"
           },
           "mcp": {
-            "https://files.pythonhosted.org/packages/2e/e1/4c1dc1fbb688641a712d34650c3d58bbbdcb314ddb75bc5817bbf33515a4/mcp-1.28.0-py3-none-any.whl": "9c1e7cf3a9125557e418ecd4fed8e9adddce81b0dfdae4d6601d700f5beb71a4",
-            "https://files.pythonhosted.org/packages/c1/ee/94c6c50ffc5b5cf4737052275d11b57367f32d1a8516e31dcd60591b3916/mcp-1.28.0.tar.gz": "559d3f9943674cafbe5744c5d3794f3237e8b47f9bbc58e20c0fad680d8487c2"
+            "https://files.pythonhosted.org/packages/12/ec/2006c54684cf65d5f6e7405e1e604444c7cb000b47de0df8891294a99f0f/mcp-2.0.0a3.tar.gz": "360e38f4aea326db67bfb3a6028e78319c86c21923e694d30cbc6d127287042f",
+            "https://files.pythonhosted.org/packages/76/d4/a86c7536ada67fdf7935df778e1879d7b654235fd2ebab90b11caef46a9f/mcp-2.0.0a3-py3-none-any.whl": "850716457d0813231feab512052e8e6397524be9b9e284c3c27ec281ad542962"
+          },
+          "mcp-types": {
+            "https://files.pythonhosted.org/packages/4f/f0/f0ff36eadd5280051f6f7c92c9136502ab82625d178b46e3bb3b24408f41/mcp_types-2.0.0a3-py3-none-any.whl": "6c93bc23fa3e4bab47ddc9bde1ba50002b2b00d2cd7f54ff775844f0368d1731",
+            "https://files.pythonhosted.org/packages/ad/cf/65e3f4fc763974f20d5bf68cba0977ed014115971a9c1f785f5c68d97708/mcp_types-2.0.0a3.tar.gz": "fcce80d6b9a3092e871c310c5e2de3bdcb07ef5a943d82f74c9c56949a477699"
           },
           "mdit-py-plugins": {
             "https://files.pythonhosted.org/packages/b2/fd/a756d36c0bfba5f6e39a1cdbdbfdd448dc02692467d83816dff4592a1ebc/mdit_py_plugins-0.5.0.tar.gz": "f4918cb50119f50446560513a8e311d574ff6aaed72606ddae6d35716fe809c6",
@@ -9170,6 +9174,7 @@
           "marshmallow_oneofschema": "/simple/marshmallow-oneofschema/",
           "matplotlib": "/simple/matplotlib/",
           "mcp": "/simple/mcp/",
+          "mcp_types": "/simple/mcp-types/",
           "mdit_py_plugins": "/simple/mdit-py-plugins/",
           "mdurl": "/simple/mdurl/",
           "meraki": "/simple/meraki/",

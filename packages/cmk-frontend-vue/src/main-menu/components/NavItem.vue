@@ -37,7 +37,7 @@ const icon = computed<OneColorIcons>(() => {
     class="mm-nav-item__li"
     :class="{ 'mm-nav-item__li--active': active }"
   >
-    <a href="javascript:void(0)">
+    <a href="#" @click.prevent>
       <CmkMultitoneIcon
         :name="icon"
         :primary-color="color"

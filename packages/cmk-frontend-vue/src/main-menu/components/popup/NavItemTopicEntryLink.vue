@@ -23,7 +23,17 @@ defineProps<{
 </script>
 
 <template>
-  <a :href="entry.url || 'javascript:void(0)'" :target="entry.target || 'main'">
+  <a
+    :href="entry.url || '#'"
+    :target="entry.target || 'main'"
+    @click="
+      (event) => {
+        if (!entry.url) {
+          event.preventDefault()
+        }
+      }
+    "
+  >
     <span v-if="entry.icon" class="mm-nav-item-topic-entry-link__icon">
       <img :src="entry.icon.src" width="18" height="14" />
       <img

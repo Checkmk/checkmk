@@ -20,6 +20,7 @@ from cmk.graphing_engine import (
     Line,
     MetricName,
     RRDMetric,
+    ServiceName,
     ServiceRef,
     TimeRange,
     TimeSeries,
@@ -37,7 +38,9 @@ _TR = TimeRange(start=0, end=30, step=10)  # three data points
 
 
 def _metric(name: str) -> RRDMetric:
-    return RRDMetric(host_name=HostName("h"), service_name="svc", metric_name=MetricName(name))
+    return RRDMetric(
+        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName(name)
+    )
 
 
 def _data(*, value: float | None) -> RRDMetricData:
@@ -89,7 +92,7 @@ def test_engine_evaluates_a_custom_quantity_without_engine_changes() -> None:
     result = evaluate_graph(
         graph,
         {
-            ServiceRef(host_name=HostName("h"), service_name="svc"): {
+            ServiceRef(host_name=HostName("h"), service_name=ServiceName("svc")): {
                 MetricName("a"): _data(value=3.0)
             }
         },

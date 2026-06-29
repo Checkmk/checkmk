@@ -22,6 +22,7 @@ from cmk.graphing_engine import (
     PerformanceValue,
     Quantity,
     RRDMetric,
+    ServiceName,
     ServiceRef,
     TimeRange,
     TimeSeries,
@@ -32,7 +33,7 @@ _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
 
 def _service() -> ServiceRef:
-    return ServiceRef(host_name=HostName("h"), service_name="svc")
+    return ServiceRef(host_name=HostName("h"), service_name=ServiceName("svc"))
 
 
 def _time_range() -> TimeRange:
@@ -45,7 +46,7 @@ def _rrd_with_cf(
 ) -> RRDMetric:
     return RRDMetric(
         host_name=HostName("h"),
-        service_name="svc",
+        service_name=ServiceName("svc"),
         metric_name=MetricName(name),
         consolidation_function=consolidation_function,
     )
@@ -53,7 +54,9 @@ def _rrd_with_cf(
 
 def _source(name: str) -> RRDMetric:
     # The raw RRD column the engine reads (built from a metric's originals).
-    return RRDMetric(host_name=HostName("h"), service_name="svc", metric_name=MetricName(name))
+    return RRDMetric(
+        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName(name)
+    )
 
 
 def _curve(quantity: Quantity) -> Curve:
@@ -306,7 +309,9 @@ def test_fetches_one_batch_per_consolidation_function() -> None:
 
 def test_bare_metric_uses_the_fallback_consolidation_function() -> None:
     # A bare RRDMetric uses the fallback function; one pinning its own keeps it.
-    bare = RRDMetric(host_name=HostName("h"), service_name="svc", metric_name=MetricName("load"))
+    bare = RRDMetric(
+        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("load")
+    )
     pinned = _rrd_with_cf("peak", ConsolidationFunction.MAX)
     graph = Graph(name="g", title="g", graph_type="test", lines=[_line(bare), _line(pinned)])
     rrd = _FakeRRDSource(

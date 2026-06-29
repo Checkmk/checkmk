@@ -32,6 +32,7 @@ from cmk.graphing_engine import (
     Rule,
     ScalarOf,
     ScalarType,
+    ServiceName,
     SINotation,
     Stack,
     StandardScientificNotation,
@@ -211,7 +212,7 @@ def _rrd_metric_from(data: Mapping[str, object], codec: QuantityCodec) -> RRDMet
     consolidation_function = data["consolidation_function"]
     return RRDMetric(
         host_name=HostName(ensure_type(data["host_name"], str)),
-        service_name=ensure_type(data["service_name"], str),
+        service_name=ServiceName(ensure_type(data["service_name"], str)),
         metric_name=MetricName(ensure_type(data["metric_name"], str)),
         consolidation_function=(
             None

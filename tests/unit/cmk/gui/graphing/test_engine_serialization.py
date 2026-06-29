@@ -28,6 +28,7 @@ from cmk.graphing_engine import (
     Rule,
     ScalarOf,
     ScalarType,
+    ServiceName,
     SINotation,
     Stack,
     StandardScientificNotation,
@@ -41,10 +42,12 @@ from cmk.gui.graphing._engine_serialization import (
     serialize_graphs,
 )
 
-_METRIC = RRDMetric(host_name=HostName("h"), service_name="svc", metric_name=MetricName("m"))
+_METRIC = RRDMetric(
+    host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("m")
+)
 _METRIC_CF = RRDMetric(
     host_name=HostName("h"),
-    service_name="svc",
+    service_name=ServiceName("svc"),
     metric_name=MetricName("m2"),
     consolidation_function=ConsolidationFunction.MAX,
 )

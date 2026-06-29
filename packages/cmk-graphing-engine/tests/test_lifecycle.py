@@ -31,12 +31,13 @@ from cmk.graphing_engine import (
     PerformanceData,
     PerformanceValue,
     RRDMetric,
+    ServiceName,
     ServiceRef,
     TimeRange,
     TimeSeries,
 )
 
-_SERVICE = ServiceRef(host_name=HostName("h"), service_name="svc")
+_SERVICE = ServiceRef(host_name=HostName("h"), service_name=ServiceName("svc"))
 _TIME_RANGE = TimeRange(start=0, end=60, step=10)
 _METRICS = {
     name: metrics_v1.Metric(
@@ -54,7 +55,9 @@ def _id(text: str) -> str:
 
 
 def _column(name: str) -> RRDMetric:
-    return RRDMetric(host_name=HostName("h"), service_name="svc", metric_name=MetricName(name))
+    return RRDMetric(
+        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName(name)
+    )
 
 
 def _ts(*values: float | None, time_range: TimeRange = _TIME_RANGE) -> TimeSeries:

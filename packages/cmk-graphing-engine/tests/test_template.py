@@ -29,6 +29,7 @@ from cmk.graphing_engine import (
     Rule,
     ScalarOf,
     ScalarType,
+    ServiceName,
     ServiceRef,
     Stack,
     TimeRange,
@@ -63,13 +64,13 @@ def _time_range() -> TimeRange:
 
 
 def _service() -> ServiceRef:
-    return ServiceRef(host_name=HostName("h"), service_name="svc")
+    return ServiceRef(host_name=HostName("h"), service_name=ServiceName("svc"))
 
 
 def _rrd(name: MetricName) -> RRDMetric:
     return RRDMetric(
         host_name=HostName("h"),
-        service_name="svc",
+        service_name=ServiceName("svc"),
         metric_name=name,
     )
 
@@ -521,8 +522,8 @@ def test_match_graph_for_services_adds_predictive_lines_per_service() -> None:
     # adds a predictive line wherever predict_* exists for that service, and only there.
     cpu_user = MetricName("cpu_user")
     predict = MetricName("predict_cpu_user")
-    with_predict = ServiceRef(host_name=HostName("h1"), service_name="svc")
-    without_predict = ServiceRef(host_name=HostName("h2"), service_name="svc")
+    with_predict = ServiceRef(host_name=HostName("h1"), service_name=ServiceName("svc"))
+    without_predict = ServiceRef(host_name=HostName("h2"), service_name=ServiceName("svc"))
     plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
 
     graphs = match_graph_for_services(
@@ -538,7 +539,9 @@ def test_match_graph_for_services_adds_predictive_lines_per_service() -> None:
     assert (
         Line(
             curve=build_curve(
-                RRDMetric(host_name=HostName("h1"), service_name="svc", metric_name=predict),
+                RRDMetric(
+                    host_name=HostName("h1"), service_name=ServiceName("svc"), metric_name=predict
+                ),
                 _METRICS,
                 _id,
             ),

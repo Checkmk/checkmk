@@ -44,7 +44,7 @@ def test_start_simple(checkmk: CheckmkApp) -> None:
     cmds = [p[-1] for p in checkmk.container.top()["Processes"]]
     assert "cron -f" in cmds
 
-    # Check postfix / syslog not runnig by default
+    # Check postfix / syslog not running by default
     assert "syslogd" not in cmds
     assert "/usr/lib/postfix/sbin/master" not in cmds
 

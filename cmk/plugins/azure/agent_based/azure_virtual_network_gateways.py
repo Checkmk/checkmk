@@ -24,7 +24,7 @@ from cmk.plugins.lib.azure import (
     get_service_labels_from_resource_tags,
     iter_resource_attributes,
     MetricData,
-    parse_azure_datetime,
+    parse_azure_datetime_to_utc,
     parse_resources,
     Resource,
 )
@@ -256,7 +256,7 @@ def check_virtual_network_gateway_health(item: str, section: Section) -> CheckRe
     yield Result(state=State.OK, summary=f"Summary: {health.summary}")
 
     if not health_available:
-        occurred_time = parse_azure_datetime(health.occuredTime).timestamp()
+        occurred_time = parse_azure_datetime_to_utc(health.occuredTime).timestamp()
         summary = (
             f"Reason type: {health.reasonType}, Occurred time: {render.datetime(occurred_time)}"
         )

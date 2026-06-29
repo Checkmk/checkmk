@@ -448,6 +448,53 @@ def test_datafile_usage_no_filesystem_info_keeps_configured_max_per_file() -> No
     assert usage.max == 100 + 200
 
 
+def test_datafile_on_different_mounts() -> None:
+    starved: msdt.MSSQLInstanceData = {
+        "unlimited": False,
+        "max_size": 100000,
+        "allocated_size": 50,
+        "used_size": 7,
+        "mountpoint": "s:\\starved.mdf",
+    }
+    roomy: msdt.MSSQLInstanceData = {
+        "unlimited": False,
+        "max_size": 1000,
+        "allocated_size": 60,
+        "used_size": 8,
+        "mountpoint": "r:\\roomy.mdf",
+    }
+
+    usage = msdt._datafile_usage([starved, roomy], {"s:/": 10, "r:/": 2000})
+
+    # starved is limited by its filesystem: free (10) + used (7); its max_size (100000) is larger.
+    # roomy is limited by its max_size (1000); its filesystem free (2000) + used (8) is larger.
+    assert usage.max == 10 + 7 + 1000
+
+
+def test_datafile_usage_shared_mountpoint_counts_free_space_once() -> None:
+    first: msdt.MSSQLInstanceData = {
+        "unlimited": True,
+        "max_size": 0,
+        "allocated_size": 3,
+        "used_size": 7,
+        "mountpoint": "s:\\first.mdf",
+    }
+    second: msdt.MSSQLInstanceData = {
+        "unlimited": True,
+        "max_size": 0,
+        "allocated_size": 4,
+        "used_size": 8,
+        "mountpoint": "s:\\second.mdf",
+    }
+
+    usage = msdt._datafile_usage([first, second], {"s:/": 1000})
+
+    # Both files live on s:/, so the 1000 bytes of free space must only be counted once.
+    # first sees free (1000) + used (7); second sees the already-counted mountpoint, so free is
+    # treated as 0 and it only contributes its own used (8).
+    assert usage.max == (1000 + 7) + 8
+
+
 class _Scenario(NamedTuple):
     unlimited: bool
     max_size: float | None

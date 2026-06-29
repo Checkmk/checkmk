@@ -50,7 +50,6 @@ const timeWidthVariants = computed(() =>
   <div class="cmk-time-range-display">
     <TimeZoneTag
       class="cmk-time-range-display__zone"
-      display="short"
       :time-zone="props.settings.timeZone"
       :accessible-label="_t('Timezone')"
     />

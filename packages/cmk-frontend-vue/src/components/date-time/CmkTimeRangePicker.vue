@@ -33,6 +33,7 @@ import {
   isRangeInverted,
   partsToInstant,
   swapRangeEndpoints,
+  timeZoneRegionLabel,
   zonedToParts
 } from './dateTimeUtils'
 import { focusLeftElement } from './focusLeftElement'
@@ -271,6 +272,10 @@ async function toggleTrigger(): Promise<void> {
 // the flyout is open (nothing else displays it); badge offsets are DST-dependent, hence date-based.
 const now = useNowTicker(open)
 
+// The browser zone's long region name (e.g. "Europe, Berlin"), shown as plain text under its short
+// badge. Unlike the offset it isn't DST-dependent, so it needs no `now`.
+const browserTimeZoneRegion = computed(() => timeZoneRegionLabel(settings.timeZone))
+
 const serverTimeText = computed(() => {
   if (!props.serverTimeZone) {
     return null
@@ -401,16 +406,12 @@ const serverTimeText = computed(() => {
         </div>
         <div class="cmk-time-range-picker__zone">
           <CmkLabel>{{ _t('Timezone:') }}</CmkLabel>
-          <TimeZoneTag display="region" :time-zone="settings.timeZone" :at="now" />
+          <TimeZoneTag :time-zone="settings.timeZone" :at="now" />
+          <CmkParagraph aria-hidden="true">{{ untranslated(browserTimeZoneRegion) }}</CmkParagraph>
         </div>
         <div class="cmk-time-range-picker__zone">
           <CmkLabel>{{ _t('Current server time:') }}</CmkLabel>
-          <TimeZoneTag
-            v-if="serverTimeZone"
-            display="region"
-            :time-zone="serverTimeZone"
-            :at="now"
-          />
+          <TimeZoneTag v-if="serverTimeZone" :time-zone="serverTimeZone" :at="now" />
           <CmkParagraph>{{
             serverTimeText !== null ? untranslated(serverTimeText) : untranslated('—')
           }}</CmkParagraph>

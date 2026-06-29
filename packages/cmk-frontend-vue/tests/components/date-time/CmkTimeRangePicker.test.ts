@@ -279,12 +279,10 @@ describe('CmkTimeRangePicker — ordering', () => {
     // The From/To rows are grouped so assistive tech is oriented on entry.
     expect(view.getByRole('group', { name: 'Time range' })).toBeInTheDocument()
 
-    // The footer shows the region name to sighted users, but the visible badge is aria-hidden because
-    // the TimeZoneTag's hidden text already voices it — so the zone is announced once, not twice.
-    const regionBadge = Array.from(view.container.querySelectorAll('.cmk-tag')).find((tag) =>
-      tag.textContent?.includes('Europe, Berlin')
-    )!
-    expect(regionBadge).toHaveAttribute('aria-hidden', 'true')
+    // The TimeZoneTag's hidden text voices the zone, the visible elements should be hidden
+    const zone = view.getByText('Timezone:').closest<HTMLElement>('.cmk-time-range-picker__zone')!
+    expect(zone.querySelector('.cmk-tag')).toHaveAttribute('aria-hidden', 'true')
+    expect(within(zone).getByText('Europe, Berlin')).toHaveAttribute('aria-hidden', 'true')
   })
 })
 

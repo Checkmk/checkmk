@@ -24,7 +24,7 @@ const visibleTag = (container: Element) => container.querySelector('.cmk-tag')
 describe('TimeZoneTag', () => {
   test('the visible badge shows the short label and is hidden from assistive tech', () => {
     const { container } = render(TimeZoneTag, {
-      props: { timeZone: TZ_BERLIN, at: AT, display: 'short' }
+      props: { timeZone: TZ_BERLIN, at: AT }
     })
     const tag = visibleTag(container)!
     expect(tag.textContent?.trim()).toBe(SHORT)
@@ -33,7 +33,7 @@ describe('TimeZoneTag', () => {
 
   test('the accessible text is region + short, with no prefix by default', () => {
     const { getByText } = render(TimeZoneTag, {
-      props: { timeZone: TZ_BERLIN, at: AT, display: 'short' }
+      props: { timeZone: TZ_BERLIN, at: AT }
     })
     expect(getByText(`${REGION}, ${SHORT}`)).toBeInTheDocument()
   })
@@ -43,17 +43,9 @@ describe('TimeZoneTag', () => {
       props: {
         timeZone: TZ_BERLIN,
         at: AT,
-        display: 'short',
         accessibleLabel: untranslated('Timezone')
       }
     })
     expect(getByText(`Timezone: ${REGION}, ${SHORT}`)).toBeInTheDocument()
-  })
-
-  test('display="region" shows the region in the visible badge', () => {
-    const { container } = render(TimeZoneTag, {
-      props: { timeZone: TZ_BERLIN, at: AT, display: 'region' }
-    })
-    expect(visibleTag(container)?.textContent?.trim()).toBe(REGION)
   })
 })

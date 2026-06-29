@@ -19,8 +19,6 @@ const props = defineProps<{
   timeZone: string
   /** Instant the offset is read at (offsets are DST-dependent); defaults to now. */
   at?: Date
-  /** Visible badge form: short abbreviation+offset (`"CEST (UTC+2)"`) or IANA region (`"Europe, Berlin"`). */
-  display: 'short' | 'region'
   /** Accessible prefix, e.g. "Timezone" → "Timezone: Europe, Berlin, CEST (UTC+2)". Omit when an
    *  adjacent visible label already names the badge. */
   accessibleLabel?: TranslatedString
@@ -28,10 +26,6 @@ const props = defineProps<{
 
 const shortLabel = computed(() => timeZoneShortLabel(props.timeZone, props.at ?? new Date()))
 const regionLabel = computed(() => timeZoneRegionLabel(props.timeZone))
-
-const visibleLabel = computed(() =>
-  props.display === 'region' ? regionLabel.value : shortLabel.value
-)
 
 // Region + offset, both already localized, so this is assembled (not a translatable template).
 const accessibleText = computed<TranslatedString>(() => {
@@ -46,7 +40,7 @@ const accessibleText = computed<TranslatedString>(() => {
       class="cmk-time-zone-tag"
       variant="fill"
       aria-hidden="true"
-      :content="untranslated(visibleLabel)"
+      :content="untranslated(shortLabel)"
     />
     <CmkVisuallyHidden :text="accessibleText" />
   </span>

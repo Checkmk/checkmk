@@ -29,7 +29,7 @@ from cmk.graphing_engine import (
     TimeSeries,
     Unit,
 )
-from cmk.gui.graphing._template_graphs_via_engine import (
+from cmk.gui.graphing._engine_template_graphs import (
     _assert_uniform_unit,
     build_template_graphs,
     update_template_graphs,

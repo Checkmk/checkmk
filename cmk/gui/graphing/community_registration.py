@@ -12,6 +12,7 @@ from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from ._autocompleter import metrics_autocompleter
 from ._engine_dispatch import engine_graph_updater_registry
+from ._engine_template_graphs import TEMPLATE_GRAPH_UPDATER
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._graph_images import AjaxGraphImagesForNotifications
 from ._graph_metric_expressions import (
@@ -30,7 +31,6 @@ from ._metric_backend_registry import (
 )
 from ._metric_visitor import MetricVisitor
 from ._settings import ConfigVariableGraphTimeranges
-from ._template_graphs_via_engine import TEMPLATE_GRAPH_UPDATER
 from ._valuespecs import LivestatusQueryFunc, PageVsAutocomplete
 
 

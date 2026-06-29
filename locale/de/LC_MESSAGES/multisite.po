@@ -4,11 +4,11 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-25 17:57+0000\n"
-"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
-">\n"
+"PO-Revision-Date: 2026-06-29 14:49+0000\n"
+"Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
+"de/>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -10934,9 +10934,8 @@ msgstr "CPU-Auslastung (letzte Minuten)"
 msgid "CPU utilization (percentiles)"
 msgstr "CPU-Auslastung (Percentilen)"
 
-#, fuzzy
 msgid "CPU utilization (single value)"
-msgstr "CPU-Auslastung (letzte Minuten)"
+msgstr "CPU-Auslastung (Einzelwert)"
 
 msgid "CPU utilization (user, system)"
 msgstr "CPU-Auslastung (Benutzer, System)"
@@ -30796,9 +30795,8 @@ msgstr "Identität"
 msgid "Identity of an authorized key"
 msgstr "Identität eines autorisierten Schlüssels"
 
-#, fuzzy
 msgid "Identity provider connection"
-msgstr "Zeitüberschreitung bei der Verbindung zum Identitätsanbieter"
+msgstr "Verbindung zum Identitätsanbieter"
 
 msgid "Identity provider connection timeout"
 msgstr "Zeitüberschreitung bei der Verbindung zum Identitätsanbieter"
@@ -46864,9 +46862,8 @@ msgstr "Überblick"
 msgid "Overview mode"
 msgstr "Überblick-Modus"
 
-#, fuzzy
 msgid "Overwrite automatically generated ID"
-msgstr "automatisch erkennen"
+msgstr "Automatisch generierte ID überschreiben"
 
 msgid "Owned by other users"
 msgstr "Von anderen Benutzern"
@@ -58211,7 +58208,6 @@ msgstr ""
 "gemountet ist. Bitte beachten Sie, dass der Checkmk-Agent keine automatische "
 "Bereinigung in diesem benutzerdefinierten Pfad vornimmt."
 
-#, fuzzy
 msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
 "also for other hosts \"piggyback\" with their own data. This is the case for "
@@ -58230,15 +58226,25 @@ msgid ""
 "translation rules should therefore be written to match the original name as "
 "sent by the agent, not the converted underscore variant."
 msgstr ""
-"Manche Agenten oder Agenten-Plugins senden Daten nicht nur für den "
-"abgefragten Host, sondern für andere Hosts \"piggyback\" mit ihren eigenen "
-"Daten. Das ist z.B. der Fall für den vSphere-Spezialagenten und das SAP R/3-"
-"Plugin. Die Host-Namen, die von solchen Agenten gesendet werden, müssen mit "
-"den Host-Namen, wie sie in Ihrer Monitoring-Applikation konfiguriert sind, "
-"übereinstimmen. Wenn das nicht der Fall ist, können Sie mit dieser Regel "
-"eine Host-Namen-Übersetzung konfigurieren. Hinweis: Diese Regel muss für den "
-"Host konfiguriert werden, auf dem der Agent läuft. Sie wird nicht auf die "
-"übersetzten Piggybacked-Hosts angewendet."
+"Einige Agenten oder Agenten-Plugins senden nicht nur Daten für den "
+"abgefragten Host, sondern auch \"piggyback\" für andere Hosts zusammen mit "
+"ihren eigenen Daten. Dies ist beispielsweise beim vSphere-Spezialagenten und "
+"beim SAP-R/3-Plugin der Fall. Die von diesen Agenten gesendeten Host-Namen "
+"müssen mit den Host-Namen in Ihrer Monitoring-Konfiguration übereinstimmen. "
+"Ist dies nicht der Fall, können Sie mit dieser Regel eine Host-"
+"Namenübersetzung definieren. Hinweis: Diese Regel muss für den „Pig“ "
+"konfiguriert werden – also für den Host, auf dem der Agent läuft. Sie wird "
+"nicht auf die übersetzten, mitgesendeten Hosts angewendet.<br><br>Die "
+"Optionen „Mehrere reguläre Ausdrücke“ und „Explizite Namenszuordnung“ suchen "
+"nach Übereinstimmungen mit den vom Agenten gesendeten Roh-Host-Namen. "
+"Beachten Sie, dass Checkmk in Host-Namen nur Buchstaben, Ziffern, "
+"Bindestriche, Unterstriche und Punkte zulässt; alle anderen Zeichen werden "
+"daher automatisch in Unterstriche umgewandelt, wenn der piggybacked Host im "
+"Monitoring angelegt wird. Das bedeutet, dass Checkmk beispielsweise den von "
+"einem Agenten gesendeten Host-Namen „My virtual machine“ als „"
+"My_virtual_machine“ speichert. Ihre Übersetzungsregeln sollten daher so "
+"formuliert sein, dass sie mit dem ursprünglichen, vom Agenten gesendeten "
+"Namen übereinstimmen, nicht mit der in Unterstriche umgewandelten Variante."
 
 msgid ""
 "Some built-in or own views may take longer time than expected. In order to "
@@ -62991,9 +62997,10 @@ msgstr ""
 "hinzugefügt werden darf, da sie sensible Informationen preisgibt. Verwenden "
 "Sie stattdessen 'authentication' in den Optionen für den Verbindungsaufbau. "
 
-#, fuzzy
 msgid "The URL will be generated automatically after you save the form."
-msgstr "Schlüsselpaar wird beim Speichern erstellt."
+msgstr ""
+"Die URL wird automatisch generiert, sobald Sie das Formular gespeichert "
+"haben."
 
 msgid "The User Base DN could be found."
 msgstr "Der Basis-DN für die Benutzer wurde gefunden."
@@ -64150,9 +64157,8 @@ msgstr ""
 "nur RRD-Dateien, bei denen die Aktualisierungen gestoppt wurden, so dass ein "
 "hoher Wert in den meisten Fällen akzeptabel ist."
 
-#, fuzzy
 msgid "The entity ID must not be empty"
-msgstr "Die Verbindungs-ID darf nicht leer sein"
+msgstr "Die Entitäts-ID darf nicht leer sein"
 
 #, python-format
 msgid "The entry %s is missing"
@@ -76570,7 +76576,6 @@ msgstr ""
 msgid "Unique host name template"
 msgstr "Vorlage für eindeutige Host-Namen"
 
-#, fuzzy
 msgid ""
 "Unique identifier for this Checkmk Service Provider, used by the identity "
 "provider to recognize requests originating from Checkmk. By default it is "
@@ -76579,9 +76584,8 @@ msgid ""
 msgstr ""
 "Eindeutige Kennung für diesen Checkmk-Serviceanbieter, die vom "
 "Identitätsanbieter verwendet wird, um Anfragen zu erkennen, die von Checkmk "
-"stammen. Lassen Sie das Feld leer, damit der Wert automatisch aus der "
-"Checkmk-Server-URL generiert wird (<tt>{Checkmk-Server-URL}/"
-"saml_metadata.py</tt>), oder geben Sie einen beliebigen Wert an."
+"stammen. Standardmäßig wird sie beim Speichern aus der Checkmk-Server-URL "
+"(<tt>{Checkmk-Server-URL}/saml_metadata.py</tt>) generiert."
 
 msgid "Unit"
 msgstr "Einheit"
@@ -89558,21 +89562,17 @@ msgstr "endet nicht mit"
 msgid "does not exist"
 msgstr "existiert nicht"
 
-#, fuzzy
 msgid "Last recorded value"
-msgstr "zuletzt gemeldet"
+msgstr "Zuletzt aufgezeichneter Wert"
 
-#, fuzzy
 msgid "Avg"
-msgstr "Alter"
+msgstr "Durchschn."
 
-#, fuzzy
 msgid "Max"
-msgstr "Mai"
+msgstr "Max"
 
-#, fuzzy
 msgid "Min"
-msgstr "Hauptordner"
+msgstr "Min"
 
 msgid "Rate"
 msgstr "Rate"
@@ -89583,29 +89583,23 @@ msgstr ""
 msgid "Last recorded value (raw counter)"
 msgstr ""
 
-#, fuzzy
 msgid "Preserve histograms"
-msgstr "Perzentile (Histogramme)"
+msgstr "Histogramme beibehalten"
 
-#, fuzzy
 msgid "Count delta"
-msgstr "Nur Zählen"
+msgstr "Delta zählen"
 
-#, fuzzy
 msgid "Count rate"
-msgstr "Eine Rate berechnen"
+msgstr "Rate zählen"
 
-#, fuzzy
 msgid "Sum delta"
-msgstr "Größen-Delta"
+msgstr "Delta summieren"
 
-#, fuzzy
 msgid "Sum rate"
-msgstr "%s-Rate"
+msgstr "Rate summieren"
 
-#, fuzzy
 msgid "Quantile"
-msgstr "Bis"
+msgstr "Quantil"
 
 #, fuzzy
 msgid "Fraction below"
@@ -89618,36 +89612,29 @@ msgstr "Quotient"
 msgid "Cumulative sum field (raw)"
 msgstr ""
 
-#, fuzzy
 msgid "last"
-msgstr "Die letzten "
+msgstr "letzter"
 
-#, fuzzy
 msgid "raw"
-msgstr "Zeile"
+msgstr "roh"
 
-#, fuzzy
 msgid "avg"
-msgstr "Merkmal"
+msgstr "Durchschn."
 
 msgid "max"
 msgstr "Maximum"
 
-#, fuzzy
 msgid "rate"
-msgstr "%s-Rate"
+msgstr "Rate"
 
-#, fuzzy
 msgid "delta"
-msgstr "Größen-Delta"
+msgstr "Delta"
 
-#, fuzzy
 msgid "preserve histograms"
-msgstr "Perzentile (Histogramme)"
+msgstr "Histogramme beibehalten"
 
-#, fuzzy
 msgid "count delta"
-msgstr "Dokument Count-Delta"
+msgstr "Delta zählen"
 
 #, fuzzy
 msgid "count rate"
@@ -90970,23 +90957,18 @@ msgid ""
 msgstr ""
 "Das Relay wird offiziell für die folgenden Betriebssysteme unterstützt:"
 
-#, fuzzy
 msgid "Number of services in OK state"
 msgstr "Anzahl von Services im Zustand OK"
 
-#, fuzzy
 msgid "Number of services in warning state"
 msgstr "Anzahl von Services im Zustand WARNING"
 
-#, fuzzy
 msgid "Number of services in critical state"
 msgstr "Anzahl von Services im Zustand CRITICAL"
 
-#, fuzzy
 msgid "Number of services in unknown state"
 msgstr "Anzahl von Services im Zustand UNKNOWN"
 
-#, fuzzy
 msgid "Number of services in pending state"
 msgstr "Anzahl von Services im Zustand PENDING"
 
@@ -90996,13 +90978,11 @@ msgstr "Unbehandelte Probleme"
 msgid "Search hosts…"
 msgstr "Hosts suchen…"
 
-#, fuzzy
 msgid "Reset all filters"
-msgstr "Generelle Filter"
+msgstr "Alle Filter zurücksetzen"
 
-#, fuzzy
 msgid "Select host %{name}"
-msgstr "Host-Name auswählen"
+msgstr "Host %{name} auswählen"
 
 msgid "Stale state"
 msgstr "Veraltet-Zustand"
@@ -91059,9 +91039,8 @@ msgstr "Zeilen, die Ihrer Suche entsprechen: %{count}"
 msgid "Rows found: %{count}"
 msgstr "Gefundene Zeilen: %{count}"
 
-#, fuzzy
 msgid "Select all rows"
-msgstr "Alle auswählen"
+msgstr "Alle Zeilen auswählen"
 
 msgid "Help us improve Checkmk with product usage analytics"
 msgstr ""

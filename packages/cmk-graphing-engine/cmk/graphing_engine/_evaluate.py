@@ -14,9 +14,9 @@ from ._objects import (
     CurveAttributes,
     EvaluationContext,
     FixedRange,
+    Graph,
     MetricName,
     MinimalRange,
-    ResolvedGraph,
     RRDMetric,
     RRDMetricData,
     Rule,
@@ -135,7 +135,7 @@ def _evaluate_rule(rule: Rule, context: EvaluationContext) -> EvaluatedRule | No
 
 
 def _title_metrics(
-    graph: ResolvedGraph,
+    graph: Graph,
     translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
 ) -> Mapping[MetricName, RRDMetricData]:
     services = {
@@ -151,7 +151,7 @@ def _title_metrics(
 
 
 def evaluate_graph(
-    graph: ResolvedGraph,
+    graph: Graph,
     performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     time_series: Mapping[RRDMetric, TimeSeries],
     time_range: TimeRange,

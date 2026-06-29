@@ -15,9 +15,9 @@ from cmk.graphing_engine import (
     CurveAttributes,
     DecimalNotation,
     EvaluatedCurve,
+    Graph,
     Line,
     MetricName,
-    ResolvedGraph,
     RRDMetric,
     ServiceRef,
     TimeRange,
@@ -77,7 +77,7 @@ def test_custom_quantity_is_accepted_as_a_quantity() -> None:
 def test_engine_evaluates_a_custom_quantity_without_engine_changes() -> None:
     a = _metric("a")
     attributes = CurveAttributes(title="neg a", unit=_UNIT, color="#000000")
-    graph = ResolvedGraph(
+    graph = Graph(
         name="g",
         title="g",
         graph_type="test",

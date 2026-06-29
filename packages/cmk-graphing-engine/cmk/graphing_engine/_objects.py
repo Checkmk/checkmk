@@ -193,7 +193,7 @@ def _operands_time_series(
 class Constant:
     value: int | float
     # Intrinsic display chosen by the plugin author (cmk.graphing.v1 Constant carries title / unit /
-    # colour). Set at parse for plugin graphs; read by ``resolve_curve``. None for consumer-built
+    # colour). Set at parse for plugin graphs; read by ``build_curve``. None for consumer-built
     # constants that wrap their own Curve attributes (the direct graph types).
     display: CurveAttributes | None = None
 
@@ -260,7 +260,7 @@ class ScalarOf:
     metric: RRDMetric
     scalar_type: ScalarType
     # The author-chosen colour the cmk.graphing.v1 MinimumOf / MaximumOf carry (warn / crit references
-    # carry none — their colour comes from the scalar type). Read by resolve_curve; None for the others.
+    # carry none — their colour comes from the scalar type). Read by build_curve; None for the others.
     color: str | None = None
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
@@ -280,7 +280,7 @@ class ScalarOf:
 @dataclass(frozen=True)
 class Sum:
     summands: Sequence[Quantity]
-    # Intrinsic display from the plugin author (read by ``resolve_curve``); None for consumer-built sums.
+    # Intrinsic display from the plugin author (read by ``build_curve``); None for consumer-built sums.
     display: CurveAttributes | None = None
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
@@ -300,7 +300,7 @@ class Sum:
 @dataclass(frozen=True)
 class Product:
     factors: Sequence[Quantity]
-    # Intrinsic display from the plugin author (read by ``resolve_curve``); None for consumer-built ones.
+    # Intrinsic display from the plugin author (read by ``build_curve``); None for consumer-built ones.
     display: CurveAttributes | None = None
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
@@ -322,7 +322,7 @@ class Difference:
     _: KW_ONLY
     minuend: Quantity
     subtrahend: Quantity
-    # Intrinsic display from the plugin author (read by ``resolve_curve``); None for consumer-built ones.
+    # Intrinsic display from the plugin author (read by ``build_curve``); None for consumer-built ones.
     display: CurveAttributes | None = None
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
@@ -344,7 +344,7 @@ class Fraction:
     _: KW_ONLY
     dividend: Quantity
     divisor: Quantity
-    # Intrinsic display from the plugin author (read by ``resolve_curve``); None for consumer-built ones.
+    # Intrinsic display from the plugin author (read by ``build_curve``); None for consumer-built ones.
     display: CurveAttributes | None = None
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
@@ -445,7 +445,7 @@ class RRDOriginal:
 
 
 @dataclass(frozen=True, kw_only=True)
-class ResolvedGraph:
+class Graph:
     """A graph with its display resolved: every drawn curve carries CurveAttributes (title / unit /
     colour). This is what discovery returns (the builders resolve display inline) and what
     ``update_graph`` evaluates."""

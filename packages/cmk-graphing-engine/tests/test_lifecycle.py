@@ -6,7 +6,7 @@
 """End-to-end tests of the discover -> update lifecycle, exercising the entry points
 together.
 
-Discovery (build_service_graphs) builds the display-resolved ResolvedGraph; update_graph
+Discovery (build_service_graphs) builds the display-resolved Graph; update_graph
 fetches the performance data and time series afresh
 and evaluates each into an EvaluatedGraph. Discovery stores no data, so a refresh always re-fetches.
 Each test fakes a different shape of performance / time series data to cover the pipeline from
@@ -24,10 +24,10 @@ from cmk.graphing_engine import (
     ConsolidationFunction,
     EvaluatedGraph,
     fetch_performance_data,
+    Graph,
     MetricName,
     PerformanceData,
     PerformanceValue,
-    ResolvedGraph,
     RRDMetric,
     ServiceRef,
     TimeRange,
@@ -104,7 +104,7 @@ def _discover(
     registered_graphs: Sequence[graphs_v1.Graph],
     *,
     translations: Sequence[translations_v1.Translation] = (),
-) -> Sequence[ResolvedGraph]:
+) -> Sequence[Graph]:
     # Discovery the way the GUI does it: fetch performance data only, then build the structural
     # graphs from the metric names that are present.
     performance_data = fetch_performance_data(
@@ -124,7 +124,7 @@ def _discover(
 
 def _refresh(
     rrd: _FakeRRD,
-    discovered: Sequence[ResolvedGraph],
+    discovered: Sequence[Graph],
     *,
     translations: Sequence[translations_v1.Translation] = (),
 ) -> Sequence[EvaluatedGraph]:
@@ -139,7 +139,7 @@ def _refresh(
 
 
 def _evaluate(
-    discovered: ResolvedGraph,
+    discovered: Graph,
     rrd: _FakeRRD,
     *,
     translations: Sequence[translations_v1.Translation] = (),

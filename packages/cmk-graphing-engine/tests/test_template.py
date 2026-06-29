@@ -11,18 +11,18 @@ from cmk.graphing.v1 import Title
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
+    build_curve,
     build_service_graphs,
     ConsolidationFunction,
     EvaluatedGraph,
     fetch_performance_data,
+    Graph,
     Line,
     match_graph_for_services,
     MetricName,
     PerformanceData,
     PerformanceValue,
     Quantity,
-    resolve_curve,
-    ResolvedGraph,
     RRDMetric,
     Rule,
     ScalarOf,
@@ -74,11 +74,11 @@ def _rrd(name: MetricName) -> RRDMetric:
 
 
 def _dstack(*quantities: Quantity) -> Stack:
-    return Stack(members=[resolve_curve(q, _METRICS, _id) for q in quantities], inverse=False)
+    return Stack(members=[build_curve(q, _METRICS, _id) for q in quantities], inverse=False)
 
 
 def _dline(quantity: Quantity) -> Line:
-    return Line(curve=resolve_curve(quantity, _METRICS, _id), inverse=False)
+    return Line(curve=build_curve(quantity, _METRICS, _id), inverse=False)
 
 
 _FALLBACK_RULE_TYPES = (
@@ -89,18 +89,18 @@ _FALLBACK_RULE_TYPES = (
 )
 
 
-def _fallback(name: MetricName) -> ResolvedGraph:
+def _fallback(name: MetricName) -> Graph:
     # The fallback single-metric graph the engine builds for an unclaimed metric: the metric as a
     # stacked curve plus the four warn / crit (and lower) threshold rules as ScalarOf quantities, each
     # with its display resolved.
-    return ResolvedGraph(
+    return Graph(
         name=name,
         title=name,
         graph_type=_KIND,
         stacks=[_dstack(_rrd(name))],
         rules=[
             Rule(
-                curve=resolve_curve(
+                curve=build_curve(
                     ScalarOf(metric=_rrd(name), scalar_type=scalar_type), _METRICS, _id
                 ),
                 inverse=False,
@@ -175,7 +175,7 @@ def _discover(
     ],
     *,
     rrd: _FakeFetchRRD,
-) -> Sequence[ResolvedGraph]:
+) -> Sequence[Graph]:
     # Discovery fetches the performance data only to match / build the structure; it stores none.
     performance_data = fetch_performance_data(services=[service], translations=[], rrd=rrd)
     return build_service_graphs(
@@ -188,7 +188,7 @@ def _discover(
     )
 
 
-def _evaluate(discovered: ResolvedGraph, rrd: _FakeFetchRRD) -> EvaluatedGraph:
+def _evaluate(discovered: Graph, rrd: _FakeFetchRRD) -> EvaluatedGraph:
     # Resolve the structure's display, then run the sole update entry point over a fresh fetch.
     [evaluated] = update_graph(
         graphs=[discovered],
@@ -536,7 +536,7 @@ def test_match_graph_for_services_adds_predictive_lines_per_service() -> None:
     assert len(graphs) == 2
     assert (
         Line(
-            curve=resolve_curve(
+            curve=build_curve(
                 RRDMetric(host_name="h1", service_name="svc", metric_name=predict), _METRICS, _id
             ),
             inverse=False,

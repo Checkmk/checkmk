@@ -11,14 +11,14 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._from_api import (
+    build_curve,
     drawn_metric_names_of_graph,
     parse_graph_from_api,
-    resolve_curve,
 )
 from ._objects import (
+    Graph,
     Line,
     MetricName,
-    ResolvedGraph,
     RRDMetric,
     RRDMetricData,
     Rule,
@@ -76,12 +76,12 @@ def _walk(
 
 
 def _add_predictive_lines(
-    graph: ResolvedGraph,
+    graph: Graph,
     service: ServiceRef,
     available: Container[MetricName],
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
-) -> tuple[ResolvedGraph, set[MetricName]]:
+) -> tuple[Graph, set[MetricName]]:
     inverse_by_metric: dict[MetricName, bool] = {}
     for group in graph.stacks:
         for member in group.members:
@@ -101,7 +101,7 @@ def _add_predictive_lines(
             if predictive in available and predictive not in names:
                 added.append(
                     Line(
-                        curve=resolve_curve(
+                        curve=build_curve(
                             RRDMetric(
                                 host_name=service.host_name,
                                 service_name=service.service_name,
@@ -117,7 +117,7 @@ def _add_predictive_lines(
     if not added:
         return graph, names
     return (
-        ResolvedGraph(
+        Graph(
             name=graph.name,
             title=graph.title,
             graph_type=graph.graph_type,
@@ -145,8 +145,8 @@ def match_graph_for_services(
     localizer: Callable[[str], str],
     available: Mapping[ServiceRef, Container[MetricName]],
     graph_type: str,
-) -> Sequence[ResolvedGraph]:
-    discovered: list[ResolvedGraph] = []
+) -> Sequence[Graph]:
+    discovered: list[Graph] = []
     for service in services:
         service_available = available.get(service, frozenset())
         if not _walk(graph, service_available).matched:
@@ -173,16 +173,16 @@ def build_service_graphs(
     localizer: Callable[[str], str],
     available: Mapping[MetricName, RRDMetricData],
     graph_type: str,
-) -> Sequence[ResolvedGraph]:
+) -> Sequence[Graph]:
     """Build a service's matching template graphs plus a fallback single-metric graph per unclaimed
     metric, with each curve's display resolved inline. The fallback metric gets the four warn / crit
     (and lower) threshold rules as ScalarOf quantities (their labels / colours resolved from the kind);
     evaluation drops a rule whose level is unset. Matched plugin graphs already carry their own scalar
     rules."""
-    graphs: list[ResolvedGraph] = []
+    graphs: list[Graph] = []
     claimed: set[MetricName] = set()
 
-    def _collect(base: ResolvedGraph) -> None:
+    def _collect(base: Graph) -> None:
         graph, predictive_names = _add_predictive_lines(
             base, service, available, metrics, localizer
         )
@@ -205,16 +205,16 @@ def build_service_graphs(
             metric_name=name,
         )
         _collect(
-            ResolvedGraph(
+            Graph(
                 name=name,
                 title=name,
                 graph_type=graph_type,
                 stacks=[
-                    Stack(members=[resolve_curve(rrd_metric, metrics, localizer)], inverse=False)
+                    Stack(members=[build_curve(rrd_metric, metrics, localizer)], inverse=False)
                 ],
                 rules=[
                     Rule(
-                        curve=resolve_curve(
+                        curve=build_curve(
                             ScalarOf(metric=rrd_metric, scalar_type=scalar_type), metrics, localizer
                         ),
                         inverse=False,

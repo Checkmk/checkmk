@@ -11,9 +11,9 @@ from cmk.graphing.v1 import translations as translations_v1
 from ._evaluate import evaluate_graph, EvaluatedGraph
 from ._from_api import parse_translations_from_api
 from ._objects import (
+    Graph,
     MetricName,
     PerformanceData,
-    ResolvedGraph,
     RRDMetric,
     RRDMetricData,
     ServiceRef,
@@ -70,7 +70,7 @@ def _merge(series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
 
 def _fetch_series(
     *,
-    graph: ResolvedGraph,
+    graph: Graph,
     performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
@@ -139,7 +139,7 @@ def fetch_performance_data(
 
 def update_graph(
     *,
-    graphs: Sequence[ResolvedGraph],
+    graphs: Sequence[Graph],
     translations: Iterable[translations_v1.Translation],
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,

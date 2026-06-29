@@ -16,13 +16,13 @@ from cmk.graphing_engine import (
     DecimalNotation,
     Difference,
     Fraction,
+    Graph,
     IECNotation,
     Line,
     MetricName,
     MinimalRange,
     Product,
     Quantity,
-    ResolvedGraph,
     RRDMetric,
     Rule,
     ScalarOf,
@@ -75,7 +75,7 @@ def _rrd(name: str) -> RRDMetric:
     )
 
 
-# --- ResolvedGraph helpers (curves carry resolved attributes) -----------------------------------
+# --- Graph helpers (curves carry resolved attributes) -----------------------------------
 
 
 def _curve(quantity: Quantity, attributes: CurveAttributes = _METRIC_ATTRS) -> Curve:
@@ -109,7 +109,7 @@ def _drule(quantity: Quantity) -> Rule:
     return Rule(curve=Curve(quantity=quantity, attributes=_attrs_of(quantity)), inverse=False)
 
 
-# --- parse_graph_from_api -> ResolvedGraph (display resolved inline) ------------------------------
+# --- parse_graph_from_api -> Graph (display resolved inline) ------------------------------
 
 
 def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group() -> None:
@@ -122,7 +122,7 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
         optional=["a"],
         conflicting=["d"],
     )
-    assert parse_graph_from_api(graph, _SERVICE, _METRICS, _id, graph_type=_KIND) == ResolvedGraph(
+    assert parse_graph_from_api(graph, _SERVICE, _METRICS, _id, graph_type=_KIND) == Graph(
         name="g",
         title="Title",
         graph_type=_KIND,
@@ -137,7 +137,7 @@ def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group()
 def test_parse_graph_from_api_without_compound_lines_yields_no_stacks() -> None:
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
     parsed = parse_graph_from_api(graph, _SERVICE, _METRICS, _id, graph_type=_KIND)
-    assert isinstance(parsed, ResolvedGraph)
+    assert isinstance(parsed, Graph)
     assert parsed.stacks == []
     assert parsed.vertical_range is None
 
@@ -162,7 +162,7 @@ def test_parse_graph_from_api_parses_a_metric_valued_minimal_range_bound() -> No
 
 def test_parse_graph_from_api_builds_the_rrd_metric_of_a_curve() -> None:
     # A line parses to a bare RRDMetric carrying the service's host/service, with no display (that is
-    # resolved later by resolve_curve); the consolidation function is supplied later, not by parsing.
+    # resolved later by build_curve); the consolidation function is supplied later, not by parsing.
     graph = graphs_v1.Graph(name="g", title=Title("t"), simple_lines=["a"])
     parsed = parse_graph_from_api(
         graph,
@@ -396,7 +396,7 @@ def test_parse_graph_from_api_collapses_bidirectional_into_one_graph() -> None:
         lower=graphs_v1.Graph(name="lo", title=Title("lo"), compound_lines=["a"]),
         upper=graphs_v1.Graph(name="up", title=Title("up"), compound_lines=["b"]),
     )
-    assert parse_graph_from_api(bidir, _SERVICE, _METRICS, _id, graph_type=_KIND) == ResolvedGraph(
+    assert parse_graph_from_api(bidir, _SERVICE, _METRICS, _id, graph_type=_KIND) == Graph(
         name="b",
         title="title",
         graph_type=_KIND,
@@ -425,7 +425,7 @@ def test_parse_resolves_resolves_metric_curves_from_the_registry() -> None:
         _id,
         graph_type=_KIND,
     )
-    assert discovered == ResolvedGraph(
+    assert discovered == Graph(
         name="g",
         title="Title",
         graph_type=_KIND,
@@ -476,14 +476,14 @@ def test_parse_resolves_resolves_threshold_rules_from_the_scalar_type() -> None:
 
 
 def test_parse_resolves_localizes_rule_labels() -> None:
-    resolved = parse_graph_from_api(
+    graphs = parse_graph_from_api(
         graphs_v1.Graph(name="g", title=Title("t"), simple_lines=[metrics_v1.WarningOf("a")]),
         _SERVICE,
         _METRICS,
         lambda s: f"<{s}>",
         graph_type=_KIND,
     )
-    assert [rule.curve.attributes.title for rule in resolved.rules] == ["<Warning>"]
+    assert [rule.curve.attributes.title for rule in graphs.rules] == ["<Warning>"]
 
 
 def test_parse_resolves_uses_the_fallback_colour_for_an_undefined_metric() -> None:

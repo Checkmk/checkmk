@@ -17,7 +17,7 @@ from ._fetch import (
     RRDSource,
     update_graph,
 )
-from ._from_api import metric_display_attributes, resolve_curve
+from ._from_api import build_curve, metric_display_attributes
 from ._objects import (
     AutoPrecision,
     Constant,
@@ -29,6 +29,7 @@ from ._objects import (
     EvaluationContext,
     FixedRange,
     Fraction,
+    Graph,
     IECNotation,
     Line,
     MetricName,
@@ -37,7 +38,6 @@ from ._objects import (
     PerformanceValue,
     Product,
     Quantity,
-    ResolvedGraph,
     RRDMetric,
     RRDMetricData,
     Rule,
@@ -65,7 +65,7 @@ from ._template import (
 
 __all__ = [
     "AutoPrecision",
-    "ResolvedGraph",
+    "Graph",
     "ConsolidationFunction",
     "Constant",
     "Curve",
@@ -112,6 +112,6 @@ __all__ = [
     "fetch_performance_data",
     "match_graph_for_services",
     "metric_display_attributes",
-    "resolve_curve",
+    "build_curve",
     "update_graph",
 ]

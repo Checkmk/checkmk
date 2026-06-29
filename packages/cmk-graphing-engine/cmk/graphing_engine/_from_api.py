@@ -23,6 +23,7 @@ from ._objects import (
     Difference,
     EngineeringScientificNotation,
     Fraction,
+    Graph,
     IECNotation,
     Line,
     MetricName,
@@ -32,7 +33,6 @@ from ._objects import (
     Precision,
     Product,
     Quantity,
-    ResolvedGraph,
     RRDMetric,
     Rule,
     ScalarOf,
@@ -136,10 +136,10 @@ _FALLBACK_COLOR = _COLORS[metrics_v1.Color.GRAY]
 _FALLBACK_UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 
 # The warn / crit colours threshold rules render in (cf. cmk.gui.color.Color.WARN / .CRIT). They live
-# here so resolve_curve gives a scalar rule its label + colour from the ScalarType, with no GUI input.
+# here so build_curve gives a scalar rule its label + colour from the ScalarType, with no GUI input.
 _WARN_COLOR = "#ffd000"
 _CRIT_COLOR = "#ff3232"
-# The English rule label per scalar kind; resolve_curve localizes it. A None colour means "use the
+# The English rule label per scalar kind; build_curve localizes it. A None colour means "use the
 # metric's own colour" (the min / max bound has no warn / crit colour of its own).
 _RULE_DISPLAY: Mapping[ScalarType, tuple[str, str | None]] = {
     ScalarType.WARNING: ("Warning", _WARN_COLOR),
@@ -185,9 +185,9 @@ class _ParseContext:
 
 
 def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
-    # Plain metrics and scalars carry no display — resolve_curve resolves those from the registry / kind.
+    # Plain metrics and scalars carry no display — build_curve resolves those from the registry / kind.
     # Constants and operations carry their intrinsic plugin display (title / unit / colour), which the
-    # registry cannot reproduce, so it is computed here and read back by resolve_curve.
+    # registry cannot reproduce, so it is computed here and read back by build_curve.
     match quantity:
         case str():
             return context.rrd_metric(quantity)
@@ -444,7 +444,7 @@ def _parse_lines(
     # everything else stacks (compound_lines) or draws as a line (simple_lines). Each drawn quantity is
     # wrapped in a Curve with its display resolved right here (registry / scalar kind / intrinsic).
     def _curve(q: _ApiQuantity) -> Curve:
-        return resolve_curve(_parse_quantity(q, context), context.metrics, context.localizer)
+        return build_curve(_parse_quantity(q, context), context.metrics, context.localizer)
 
     stack_members = [_curve(q) for q in graph.compound_lines if not _is_scalar(q)]
     stacks = [Stack(members=stack_members, inverse=inverse)] if stack_members else []
@@ -471,9 +471,9 @@ def parse_graph_from_api(
     localizer: Callable[[str], str],
     *,
     graph_type: str,
-) -> ResolvedGraph:
+) -> Graph:
     """Build a service's graph from an API plugin, resolving each curve's display inline — discovery
-    returns the display-resolved ResolvedGraph directly (no separate structure / resolution step)."""
+    returns the display-resolved Graph directly (no separate structure / resolution step)."""
     context = _ParseContext(
         service=service,
         metrics=metrics,
@@ -482,7 +482,7 @@ def parse_graph_from_api(
     match graph:
         case graphs_v1.Graph() | graphs_v2_unstable.Graph():
             stacks, lines, rules = _parse_lines(graph, context, inverse=False)
-            return ResolvedGraph(
+            return Graph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
                 graph_type=graph_type,
@@ -498,7 +498,7 @@ def parse_graph_from_api(
             lower_stacks, lower_lines, lower_rules = _parse_lines(
                 graph.lower, context, inverse=True
             )
-            return ResolvedGraph(
+            return Graph(
                 name=graph.name,
                 title=graph.title.localize(localizer),
                 graph_type=graph_type,
@@ -547,7 +547,7 @@ def _attributes_for(
             )
 
 
-def resolve_curve(
+def build_curve(
     quantity: Quantity,
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],

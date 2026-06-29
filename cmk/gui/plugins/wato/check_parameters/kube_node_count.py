@@ -52,7 +52,30 @@ def __control_plane_roles() -> list[DictionaryEntry]:
                 default_value=["master", "control-plane"],
                 help=_(
                     "If a node has any of these roles, then it is considered a control plane "
-                    "node by Checkmk. Otherwise, it is considered a worker node."
+                    "node by Checkmk. A control plane might in some cases also be a worker node."
+                ),
+            ),
+        ),
+    ]
+
+
+def __worker_node_roles() -> list[DictionaryEntry]:
+    return [
+        (
+            "worker_node_roles",
+            ListOfStrings(
+                title=_("Specify roles of a worker node"),
+                valuespec=TextInput(size=80),
+                default_value=["worker"],
+                help=_(
+                    "If a node has any of these roles, then it is considered a worker "
+                    "node by Checkmk. A worker node might in some cases also be a control "
+                    "plane node. Some Kubernetes distributions automatically assign a role "
+                    "such as 'worker' to worker nodes. If yours does not and you have nodes "
+                    "that are both control plane and worker nodes, you can assign them a "
+                    "role and ensure it is in this list to make Checkmk count the node as "
+                    "both roles. Nodes without a control plane role (specified above) are "
+                    "automatically counted as worker nodes."
                 ),
             ),
         ),
@@ -62,6 +85,7 @@ def __control_plane_roles() -> list[DictionaryEntry]:
 def _parameter_valuespec_kube_node_count() -> Dictionary:
     return Dictionary(
         elements=__control_plane_roles()
+        + __worker_node_roles()
         + __levels(
             "worker",
             _("Maximum number of ready worker nodes"),

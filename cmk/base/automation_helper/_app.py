@@ -207,6 +207,10 @@ async def _reloader_task(
             LOGGER.error("[reloader] Error getting last detected change: %s", error)
             return 0.0
 
+    # The watcher records a "last detected change" per filesystem event, so a single
+    # "activate changes" produces a burst of updates (one per touched file). Reloading
+    # on the first event would thrash the workers during bulk changes, so we debounce:
+    # poll for a change, then wait for the change stream to go quiet before reloading once.
     while True:
         if (cached_last_change := _get_last_change()) < state.last_reload_at:
             await delayer_factory(config.poll_interval)
@@ -236,8 +240,13 @@ async def _reloader_task(
                     break
 
             else:
+                # More changes arrived mid-cooldown (e.g. a bulk activation still in
+                # progress). Wait only for the gap between the two observed changes
+                # instead of resetting the full cooldown, so we still reload promptly
+                # once the burst settles rather than deferring indefinitely in busy
+                # environments (CMK-21331). abs() guards against the timestamp jumping
+                # backwards on a cache reset.
                 current_cooldown = min(
-                    # be rebust against cache resets, just in case
                     abs(cached_last_change - last_change),
                     config.cooldown_interval,
                 )

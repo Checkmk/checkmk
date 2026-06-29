@@ -34,7 +34,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.log import logger as cmk_logger
 
 from ._cache import Cache, CacheError
-from ._config import ReloaderConfig
+from ._config import Config, ReloaderConfig
 from ._log import LOGGER, temporary_log_level
 from ._tracer import TRACER
 
@@ -88,7 +88,7 @@ class _State:
 class _ApplicationDependencies:
     automation_engine: AutomationEngine
     changes_cache: Cache
-    reloader_config: ReloaderConfig
+    config: Config
     clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None]
     state: _State
 
@@ -102,7 +102,7 @@ def make_application(
     edition: cmk_version.Edition,
     engine: AutomationEngine,
     cache: Cache,
-    reloader_config: ReloaderConfig,
+    config: Config,
     reload_config: Callable[
         [
             AgentBasedPlugins,
@@ -132,7 +132,7 @@ def make_application(
     app.state.dependencies = _ApplicationDependencies(
         automation_engine=engine,
         changes_cache=cache,
-        reloader_config=reloader_config,
+        config=config,
         clear_caches_before_each_call=clear_caches_before_each_call,
         state=_State(
             automation_or_reload_lock=asyncio.Lock(),
@@ -177,11 +177,11 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     reloader_task = asyncio.create_task(
         _reloader_task(
-            config=dependencies.reloader_config,
+            config=dependencies.config.reloader_config,
             cache=dependencies.changes_cache,
             state=dependencies.state,
         )
-        if dependencies.reloader_config.active
+        if dependencies.config.reloader_config.active
         else asyncio.sleep(0),
     )
 

@@ -116,7 +116,7 @@ def _application() -> FastAPI:
         edition=cmk_version.edition(omd_root),
         engine=Automations(plugins=discover_automations()),
         cache=Cache.setup(client=get_redis_client()),
-        reloader_config=config.reloader_config,
+        config=config,
         reload_config=_reload_automation_config,
         clear_caches_before_each_call=_clear_caches_before_each_call,
     )

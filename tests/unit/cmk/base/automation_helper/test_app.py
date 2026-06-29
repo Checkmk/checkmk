@@ -12,6 +12,7 @@ import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import NoReturn, override
 
 import fakeredis
@@ -32,7 +33,7 @@ from cmk.base.automation_helper._app import (
     make_application,
 )
 from cmk.base.automation_helper._cache import Cache, CacheError
-from cmk.base.automation_helper._config import ReloaderConfig
+from cmk.base.automation_helper._config import Config, ReloaderConfig, ServerConfig, WatcherConfig
 from cmk.base.automations.automations import AutomationError
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache, LoadingResult, make_host_tags, make_hosts_config
@@ -120,12 +121,25 @@ def _make_test_client(
         cooldown_interval=5.0,
     ),
 ) -> TestClient:
+    dev_null = Path("/dev/null")
+    config = Config(
+        server_config=ServerConfig(
+            unix_socket_path=dev_null,
+            unix_socket_permissions=0,
+            pid_file=dev_null,
+            access_log=dev_null,
+            error_log=dev_null,
+            num_workers=0,
+        ),
+        watcher_config=WatcherConfig(schedules=[]),
+        reloader_config=reloader_config,
+    )
     return TestClient(
         make_application(
             edition=Edition.COMMUNITY,
             engine=engine,
             cache=cache,
-            reloader_config=reloader_config,
+            config=config,
             reload_config=reload_config,
             clear_caches_before_each_call=clear_caches_before_each_call,
         )

@@ -15,9 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::args::Args;
+use crate::config::merge;
 use crate::config::system::{Logging, SystemConfig};
 use crate::config::OracleConfig;
-use crate::constants::RUNTIME_DIR;
+use crate::constants::{get_user_config_file, RUNTIME_DIR};
 use crate::platform::get_local_instances;
 use crate::types::{EnvVarName, SectionFilter, UseHostClient};
 use crate::version::VERSION;
@@ -138,17 +139,45 @@ pub enum SendTo {
 
 pub fn init(args: ArgsOs) -> Result<(OracleConfig, Env)> {
     let args = Args::parse_from(args);
-    let config_file = get_config_file(&args);
+    let main_file = get_config_file(&args);
+    let user_file = get_user_config_file(&RUNTIME_DIR);
 
-    let logging_config = get_system_config(&config_file)
-        .map(|x| Some(x.logging().to_owned()))
-        .unwrap_or(None);
+    let merged_config = merge::merge_configs(&main_file, &user_file);
+
+    let logging_config = merged_config
+        .as_ref()
+        .ok()
+        .and_then(|e| e.config.as_ref())
+        .and_then(|doc| SystemConfig::from_yaml(doc).ok())
+        .map(|s| s.logging().to_owned());
     let environment = Env::new(&args);
     init_logging(&args, &environment, logging_config)?;
-    if !config_file.exists() {
-        anyhow::bail!("The config file {:?} doesn't exist", config_file);
+
+    // Logging is up now: surface a broken bakery file, then the merge notes
+    // and the list of values the user file overrode.
+    let merged_config = match merged_config {
+        Ok(merged_config) => merged_config,
+        Err(e) => {
+            log::error!("Failed to load config file {:?}: {e}", main_file);
+            return Err(e);
+        }
+    };
+    for note in &merged_config.notes {
+        log::warn!("{note}");
     }
-    Ok((get_check_config(&config_file)?, environment))
+    for path in &merged_config.overrides {
+        log::info!("User config {user_file:?} overrides bakery config at: {path}");
+    }
+
+    let Some(config) = merged_config.config else {
+        anyhow::bail!(
+            "No config file found (neither {:?} nor {:?})",
+            main_file,
+            user_file
+        );
+    };
+    log::info!("Using main config {main_file:?} merged with user config {user_file:?}");
+    Ok((OracleConfig::from_yaml(&config)?, environment))
 }
 
 fn init_logging(args: &Args, environment: &Env, logging: Option<Logging>) -> Result<()> {
@@ -189,16 +218,6 @@ fn create_info_text(level: &log::Level, environment: &Env) -> String {
             .display(),
         constants::get_env_value(constants::environment::CONFIG_DIR_ENV_VAR, "undefined"),
     )
-}
-
-fn get_check_config(file: &Path) -> Result<OracleConfig> {
-    log::info!("Using config file: {}", file.display());
-
-    OracleConfig::load_file(file)
-}
-
-fn get_system_config(file: &Path) -> Result<SystemConfig> {
-    SystemConfig::load_file(file)
 }
 
 fn get_config_file(args: &Args) -> PathBuf {

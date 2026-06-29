@@ -15,6 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use assert_cmd::Command;
+use mk_oracle::config::merge::{merge_configs, MergedConfig};
+use mk_oracle::config::OracleConfig;
 use mk_oracle::version::VERSION;
 use std::ffi::OsString;
 use std::fs;
@@ -693,4 +695,91 @@ fn test_connection_olr_loc_parsing() {
         conn.oracle_local_registry(),
         Some(&PathBuf::from(&olr_loc_yaml))
     );
+}
+
+const BAKERY_YML: &str = r#"
+oracle:
+  main:
+    connection:
+      hostname: bakery-host
+      port: 1521
+    authentication:
+      username: u
+"#;
+
+fn merged_hostname(merged: &MergedConfig) -> String {
+    let config = OracleConfig::from_yaml(merged.config.as_ref().unwrap()).unwrap();
+    config.ora_sql().unwrap().conn().hostname().to_string()
+}
+
+#[test]
+fn test_merge_configs_merges_user() {
+    let tmp = tempfile::tempdir().unwrap();
+    let bakery = tmp.path().join("mk-oracle.yml");
+    let user = tmp.path().join("user-mk-oracle.yml");
+    fs::write(&bakery, BAKERY_YML).unwrap();
+    fs::write(
+        &user,
+        "oracle:\n  main:\n    connection:\n      hostname: user-host\n",
+    )
+    .unwrap();
+
+    let merged = merge_configs(&bakery, &user).unwrap();
+    // user overrides hostname (port etc. inherited; see merge.rs unit tests)
+    assert_eq!(merged_hostname(&merged), "user-host");
+    assert!(merged
+        .overrides
+        .contains(&"oracle.main.connection.hostname".to_string()));
+    assert!(merged.notes.is_empty());
+}
+
+#[test]
+fn test_merge_configs_bakery_only() {
+    let tmp = tempfile::tempdir().unwrap();
+    let bakery = tmp.path().join("mk-oracle.yml");
+    fs::write(&bakery, BAKERY_YML).unwrap();
+
+    let merged = merge_configs(&bakery, &tmp.path().join("absent.yml")).unwrap();
+    assert_eq!(merged_hostname(&merged), "bakery-host");
+    assert!(merged.overrides.is_empty());
+    assert!(merged.notes.is_empty());
+}
+
+#[test]
+fn test_merge_configs_user_only() {
+    let tmp = tempfile::tempdir().unwrap();
+    let user = tmp.path().join("user-mk-oracle.yml");
+    fs::write(&user, BAKERY_YML).unwrap();
+
+    let merged = merge_configs(&tmp.path().join("absent.yml"), &user).unwrap();
+    assert_eq!(merged_hostname(&merged), "bakery-host");
+    assert!(merged.overrides.is_empty());
+}
+
+#[test]
+fn test_merge_configs_ignores_broken_user() {
+    let tmp = tempfile::tempdir().unwrap();
+    let bakery = tmp.path().join("mk-oracle.yml");
+    let user = tmp.path().join("user-mk-oracle.yml");
+    fs::write(&bakery, BAKERY_YML).unwrap();
+    // Unterminated quoted scalar -> YAML parse error.
+    fs::write(&user, "oracle:\n  main: \"unterminated\n").unwrap();
+
+    let merged = merge_configs(&bakery, &user).unwrap();
+    // bakery config is used as-is, the broken user file is just noted
+    assert_eq!(merged_hostname(&merged), "bakery-host");
+    assert!(merged.overrides.is_empty());
+    assert_eq!(merged.notes.len(), 1);
+    assert!(merged.notes[0].contains("user config"));
+}
+
+#[test]
+fn test_merge_configs_none_when_both_missing() {
+    let tmp = tempfile::tempdir().unwrap();
+    let merged = merge_configs(
+        &tmp.path().join("no-bakery.yml"),
+        &tmp.path().join("no-user.yml"),
+    )
+    .unwrap();
+    assert!(merged.config.is_none());
 }

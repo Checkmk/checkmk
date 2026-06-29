@@ -43,7 +43,9 @@
 //! recursed into).
 
 use super::defines::keys;
-use super::yaml::Yaml;
+use super::yaml::{self, Yaml};
+use anyhow::Result;
+use std::path::Path;
 use yaml_rust2::yaml::Hash;
 
 /// Merge the `over` (user) document on top of the `base` (bakery) document.
@@ -61,10 +63,69 @@ pub fn merge_documents(base: &Yaml, over: &Yaml) -> (Yaml, Vec<String>) {
     (merged, overrides)
 }
 
+/// The bakery config merged with the optional user config, plus what was
+/// overridden and any non-fatal notes to log once logging is initialised.
+pub struct MergedConfig {
+    pub config: Option<Yaml>,
+    pub overrides: Vec<String>,
+    pub notes: Vec<String>,
+}
+
+/// Load the bakery config and merge the optional user config on top.
+pub fn merge_configs(bakery: &Path, user: &Path) -> Result<MergedConfig> {
+    let bakery_doc = load_document_strict(bakery)?;
+    let (user_doc, notes) = load_document_lenient(user);
+
+    let (config, overrides) = match (bakery_doc, user_doc) {
+        (Some(bakery_doc), Some(user_doc)) => {
+            let (merged, overrides) = merge_documents(&bakery_doc, &user_doc);
+            (Some(merged), overrides)
+        }
+        // bakery-only, user-only, or neither present
+        (bakery_doc, user_doc) => (bakery_doc.or(user_doc), Vec::new()),
+    };
+    Ok(MergedConfig {
+        config,
+        overrides,
+        notes,
+    })
+}
+
+/// Load the first meaningful YAML document; missing file → None, parse error → Err.
+fn load_document_strict(path: &Path) -> Result<Option<Yaml>> {
+    if !path.exists() {
+        return Ok(None);
+    }
+    Ok(first_meaningful_doc(yaml::load_from_file(path)?))
+}
+
+/// Tolerant load: returns the first meaningful document (or None for a missing,
+/// empty or broken file) together with any explanatory notes (a broken file
+/// yields one note).
+fn load_document_lenient(path: &Path) -> (Option<Yaml>, Vec<String>) {
+    if !path.exists() {
+        return (None, Vec::new());
+    }
+    match yaml::load_from_file(path) {
+        Ok(docs) => (first_meaningful_doc(docs), Vec::new()),
+        Err(e) => (
+            None,
+            vec![format!("Ignoring unreadable user config {path:?}: {e}")],
+        ),
+    }
+}
+
+/// First document that carries an actual value (skips empty/null documents).
+fn first_meaningful_doc(docs: Vec<Yaml>) -> Option<Yaml> {
+    docs.into_iter().next().filter(|doc| !is_empty_doc(doc))
+}
+
 fn is_empty_doc(yaml: &Yaml) -> bool {
     matches!(yaml, Yaml::Null | Yaml::BadValue)
 }
 
+/// Recursively merge `over` onto `base`, returning the merged value together
+/// with the dotted paths it overrode.
 fn merge_value(base: &Yaml, over: &Yaml, path: &str, overrides: &mut Vec<String>) -> Yaml {
     match (base, over) {
         (Yaml::Hash(base_hash), Yaml::Hash(over_hash)) => {

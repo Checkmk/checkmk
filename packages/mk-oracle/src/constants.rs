@@ -48,8 +48,6 @@ pub static DEFAULT_CONFIG_FILE: LazyLock<PathBuf> = LazyLock::new(|| {
 pub static CONFIG_DIR: LazyLock<PathBuf> = LazyLock::new(|| Path::new(&get_conf_dir()).to_owned());
 pub static RUNTIME_DIR: LazyLock<PathBuf> =
     LazyLock::new(|| Path::new(&get_runtime_dir()).to_owned());
-pub static USER_CONFIG_FILE: LazyLock<PathBuf> =
-    LazyLock::new(|| RUNTIME_DIR.join(environment::USER_CONFIG_NAME));
 pub static ENV_LOG_DIR: LazyLock<Option<PathBuf>> = LazyLock::new(|| {
     std::env::var(environment::LOG_DIR_ENV_VAR)
         .ok()
@@ -83,4 +81,8 @@ fn get_runtime_dir() -> PathBuf {
 
 pub fn get_env_value(var: &str, on_lack: &str) -> String {
     std::env::var(var).unwrap_or(on_lack.to_string())
+}
+
+pub fn get_user_config_file(dir: &Path) -> PathBuf {
+    dir.join(environment::USER_CONFIG_NAME)
 }

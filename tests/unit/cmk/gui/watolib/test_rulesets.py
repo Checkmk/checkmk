@@ -22,6 +22,7 @@ from cmk.base.community_app import make_app
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
+from cmk.gui.logged_in import user
 from cmk.gui.watolib import rulesets
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, HostsAndFoldersConfig
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
@@ -108,6 +109,7 @@ def _test_hosts(folder: Folder) -> None:
         ],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=user,
     )
 
 

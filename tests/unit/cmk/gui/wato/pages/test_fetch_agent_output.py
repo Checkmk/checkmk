@@ -16,6 +16,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.checkengine.helper_interface import AgentRawData
+from cmk.gui.logged_in import user
 from cmk.gui.wato.pages.fetch_agent_output import (
     FetchAgentOutputRequest,
     get_fetch_agent_job_status,
@@ -57,6 +58,7 @@ def fixture_host(with_admin_login: UserId, load_config: None) -> Iterator[Host]:
         [(hostname, {"site": SiteId("NO_SITE")}, None)],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=user,
     )
     host = root.host(hostname)
     assert host, "Test setup failed, host not created"

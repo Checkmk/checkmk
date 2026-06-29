@@ -13,6 +13,7 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.logged_in import user
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, FolderSiteStats
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 
@@ -51,6 +52,7 @@ class TestFolderSiteStats:
             [(HostName("main_host"), {}, None)],
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
+            acting_user=user,
         )
         sub = folder.create_subfolder(
             name="sub",
@@ -63,6 +65,7 @@ class TestFolderSiteStats:
             [(HostName("sub_host"), {}, None)],
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
+            acting_user=user,
         )
         nest = sub.create_subfolder(
             name="sub/nested",
@@ -75,6 +78,7 @@ class TestFolderSiteStats:
             [(HostName("nested_host"), {}, None)],
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
+            acting_user=user,
         )
 
     def _cleanup_fs(self, root_folder: Folder) -> None:

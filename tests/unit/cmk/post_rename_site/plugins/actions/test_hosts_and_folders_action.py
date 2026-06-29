@@ -20,6 +20,7 @@ import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
+from cmk.gui.logged_in import user
 from cmk.gui.watolib.builtin_attributes import HostAttributeSite
 from cmk.gui.watolib.host_attributes import (
     HostAttributes,
@@ -271,7 +272,10 @@ def test_updating_site_name_for_dcd(monkeypatch: pytest.MonkeyPatch) -> None:
     ## Let's prepare the initial state of the hosts.
     root = folder_tree().root_folder()
     root.create_hosts(
-        [host_info_1, host_info_2], pprint_value=False, pending_changes=_noop_pending_changes()
+        [host_info_1, host_info_2],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=user,
     )
 
     ## Check the initial state of the hosts.
@@ -381,7 +385,10 @@ def test_updating_site_name_without_dcd(monkeypatch: pytest.MonkeyPatch) -> None
     with monkeypatch.context() as m:
         extend_site_context(m)
         root.create_hosts(
-            [host_info_1, host_info_2], pprint_value=False, pending_changes=_noop_pending_changes()
+            [host_info_1, host_info_2],
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
+            acting_user=user,
         )
 
     ## Check the initial state of the hosts.

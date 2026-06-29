@@ -26,7 +26,7 @@ from cmk.ccc.version import Edition
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.i18n import localize
-from cmk.gui.logged_in import LoggedInNobody
+from cmk.gui.logged_in import LoggedInNobody, user
 from cmk.gui.search import (
     ABCMatchItemGenerator,
     IndexBuilder,
@@ -361,6 +361,7 @@ class TestPermissionHandler:
             [(HostName("host"), {}, [])],
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
+            acting_user=user,
         )
         return "wato.py?folder=&host=host&mode=edit_host"
 

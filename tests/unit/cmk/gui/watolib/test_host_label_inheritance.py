@@ -26,6 +26,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.fields import String
 from cmk.gui.fields import Field
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.valuespec import TextInput, ValueSpec
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.host_attributes import (
@@ -62,6 +63,7 @@ def test_child_clears_inherited_label() -> None:
         [(HostName("host-1"), {}, [])],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=LoggedInSuperUser(),
     )
     host = sub.host(HostName("host-1"))
     assert host is not None
@@ -99,6 +101,7 @@ def test_grandchild_reenables_after_clear() -> None:
         [(HostName("host-2"), {}, [])],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=LoggedInSuperUser(),
     )
     host = grandsub.host(HostName("host-2"))
     assert host is not None
@@ -122,6 +125,7 @@ def test_inherited_relay_label_without_override() -> None:
         [(HostName("host-3"), {}, [])],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=LoggedInSuperUser(),
     )
     host = parent.host(HostName("host-3"))
     assert host is not None

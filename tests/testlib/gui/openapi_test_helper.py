@@ -16,6 +16,7 @@ import cmk.gui.mkeventd.wato as mkeventd
 from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.logged_in import user
 from cmk.gui.script_helpers import session_wsgi_app
 from cmk.gui.session_context import SuperUserContext
 from cmk.gui.watolib import groups
@@ -75,6 +76,7 @@ def create_sample_host_context() -> Iterator[str]:
             [(HostName(host_name), HostAttributes(contactgroups=contact_groups), None)],
             pprint_value=False,
             pending_changes=_pending_changes(),
+            acting_user=user,
         )
     try:
         yield host_name

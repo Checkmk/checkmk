@@ -22,6 +22,7 @@ from cmk.base.community_app import make_app
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import Config
+from cmk.gui.logged_in import user
 from cmk.gui.watolib import automatic_host_removal
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
@@ -99,6 +100,7 @@ def fixture_setup_hosts() -> None:
         [(hostname, {}, None) for hostname in TEST_HOSTS],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=user,
     )
 
 

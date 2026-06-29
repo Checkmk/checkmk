@@ -16,6 +16,7 @@ from cmk.automations.results import Gateway, GatewayResult, ScanParentsResult
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.gui.logged_in import user
 from cmk.gui.parentscan.background_job import (
     ParentScanBackgroundJob,
     ParentScanSettings,
@@ -48,6 +49,7 @@ def _host(with_admin_login: UserId, load_config: None) -> Iterator[Host]:
         [(hostname, {"site": SiteId("NO_SITE")}, None)],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=user,
     )
     host = root.host(hostname)
     assert host, "Test setup failed, host not created"

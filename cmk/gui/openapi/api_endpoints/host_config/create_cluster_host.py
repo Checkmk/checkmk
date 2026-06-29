@@ -88,6 +88,7 @@ def create_cluster_host_v1(
         [(host_name, body.attributes.to_internal(), body.nodes)],
         pprint_value=api_context.config.wato_pprint_config,
         pending_changes=make_pending_changes(api_context),
+        acting_user=api_context.logged_in_user(),
     )
     if not isinstance(bake_agent, ApiOmitted) and bake_agent:
         bakery.try_bake_agents_for_hosts([host_name], debug=api_context.config.debug)

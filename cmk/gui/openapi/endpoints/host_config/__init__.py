@@ -254,6 +254,7 @@ def create_host(params: Mapping[str, Any]) -> Response:
         pending_changes=_pending_changes(
             config=active_config, local_site=omd_site(), acting_user=user.id
         ),
+        acting_user=user,
     )
     if params[BAKE_AGENT_PARAM_NAME]:
         bakery.try_bake_agents_for_hosts([host_name], debug=active_config.debug)
@@ -292,6 +293,7 @@ def create_cluster_host(params: Mapping[str, Any]) -> Response:
         pending_changes=_pending_changes(
             config=active_config, local_site=omd_site(), acting_user=user.id
         ),
+        acting_user=user,
     )
     if params[BAKE_AGENT_PARAM_NAME]:
         bakery.try_bake_agents_for_hosts([host_name], debug=active_config.debug)

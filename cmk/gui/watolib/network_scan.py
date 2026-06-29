@@ -201,7 +201,12 @@ def _add_scanned_hosts_to_folder(
             entries.append((host_name, attrs, None))
 
     with store.lock_checkmk_configuration(configuration_lockfile):
-        folder.create_hosts(entries, pprint_value=pprint_value, pending_changes=pending_changes)
+        folder.create_hosts(
+            entries,
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
+            acting_user=user,
+        )
         folder.save_folder_attributes()
         tree.invalidate_caches()
 

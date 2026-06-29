@@ -621,7 +621,10 @@ class ModeBulkImport(WatoMode):
                 # Folder.create_hosts will either import all of them, or no host at all. The
                 # caught exceptions below will only trigger during the verification phase.
                 folder.create_hosts(
-                    batch, pprint_value=pprint_value, pending_changes=pending_changes
+                    batch,
+                    pprint_value=pprint_value,
+                    pending_changes=pending_changes,
+                    acting_user=user,
                 )
                 index += len(batch)
                 # First column is host_name. Add all of them.
@@ -631,7 +634,10 @@ class ModeBulkImport(WatoMode):
                 for entry in batch:
                     try:
                         folder.create_hosts(
-                            [entry], pprint_value=pprint_value, pending_changes=pending_changes
+                            [entry],
+                            pprint_value=pprint_value,
+                            pending_changes=pending_changes,
+                            acting_user=user,
                         )
                         index += 1
                         imported_hosts.append(entry[0])

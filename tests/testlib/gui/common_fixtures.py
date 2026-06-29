@@ -29,6 +29,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import hooks, http, main_modules
 from cmk.gui.config import active_config, Config
+from cmk.gui.logged_in import user
 from cmk.gui.script_helpers import session_wsgi_app
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
@@ -246,6 +247,7 @@ def create_test_hosts() -> Iterator[list[HostName]]:
         [(hostname, {}, None) for hostname in hostnames],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=user,
     )
     yield hostnames
     root_folder.delete_hosts(

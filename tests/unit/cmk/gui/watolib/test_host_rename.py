@@ -17,6 +17,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.background_job.job._interface import BackgroundProcessInterface
+from cmk.gui.logged_in import user
 from cmk.gui.script_helpers import gui_context
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -145,7 +146,10 @@ def test_rename_host(
     else:
         folder = folder_tree().root_folder()
     folder.create_hosts(
-        hosts_to_create, pprint_value=False, pending_changes=_noop_pending_changes()
+        hosts_to_create,
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=user,
     )
 
     # WHEN

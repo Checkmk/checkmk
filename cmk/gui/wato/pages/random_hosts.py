@@ -128,7 +128,10 @@ class ModeRandomHosts(WatoMode):
                     (HostName(host_name), {"ipaddress": HostAddress("127.0.0.1")}, None)
                 )
             folder.create_hosts(
-                hosts_to_create, pprint_value=pprint_value, pending_changes=pending_changes
+                hosts_to_create,
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
+                acting_user=user,
             )
             return count
 

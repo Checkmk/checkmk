@@ -341,6 +341,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             [(gw_host_name, gw_host_attributes, None)],
             pprint_value=pprint_value,
             pending_changes=pending_changes,
+            acting_user=user,
         )
         bakery.try_bake_agents_for_hosts([gw_host_name], debug=debug)
         self._num_gateway_hosts_created += 1

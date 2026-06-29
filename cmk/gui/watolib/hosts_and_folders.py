@@ -2562,6 +2562,7 @@ class Folder(FolderProtocol):
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
         """Create many hosts at once.
 
@@ -2576,7 +2577,7 @@ class Folder(FolderProtocol):
 
         """
         # 1. Check preconditions
-        self.prepare_create_hosts(acting_user=user)
+        self.prepare_create_hosts(acting_user=acting_user)
         self.validators.validate_create_hosts(entries, self.site_id())
 
         self.create_validated_hosts(
@@ -2586,7 +2587,7 @@ class Folder(FolderProtocol):
                     self.verify_and_update_host_details(
                         host_name,
                         attributes,
-                        acting_user=user,
+                        acting_user=acting_user,
                     ),
                     _cluster_nodes,
                 )
@@ -2594,7 +2595,7 @@ class Folder(FolderProtocol):
             ],
             pprint_value=pprint_value,
             pending_changes=pending_changes,
-            acting_user=user,
+            acting_user=acting_user,
         )
 
     def create_validated_hosts(

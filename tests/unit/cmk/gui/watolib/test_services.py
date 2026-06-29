@@ -28,6 +28,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, SectionName
+from cmk.gui.logged_in import user
 from cmk.gui.utils import transaction_manager
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
@@ -153,7 +154,10 @@ def fixture_sample_host(
     hostname = sample_host_name
     root_folder = folder_tree().root_folder()
     root_folder.create_hosts(
-        [(hostname, {}, None)], pprint_value=False, pending_changes=_TEST_PENDING_CHANGES
+        [(hostname, {}, None)],
+        pprint_value=False,
+        pending_changes=_TEST_PENDING_CHANGES,
+        acting_user=user,
     )
     host = root_folder.host(hostname)
     assert host is not None

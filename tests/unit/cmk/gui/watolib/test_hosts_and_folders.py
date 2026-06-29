@@ -218,6 +218,7 @@ def test_write_and_read_host_attributes(attributes: HostAttributes) -> None:
         [(HostName("testhost"), attributes, [])],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     write_folder_hosts = write_data_folder.hosts()
     assert len(write_folder_hosts) == 1
@@ -239,10 +240,16 @@ def test_create_multiple_hosts() -> None:
     )
 
     root.create_hosts(
-        [(HostName("host-1"), {}, [])], pprint_value=False, pending_changes=_noop_pending_changes()
+        [(HostName("host-1"), {}, [])],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
     subfolder.create_hosts(
-        [(HostName("host-2"), {}, [])], pprint_value=False, pending_changes=_noop_pending_changes()
+        [(HostName("host-2"), {}, [])],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     all_hosts = root.all_hosts_recursively()
@@ -323,6 +330,7 @@ def test_mgmt_inherit_credentials_explicit_host_snmp() -> None:
         ],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     data = folder._load_hosts_file()
@@ -359,6 +367,7 @@ def test_mgmt_inherit_credentials_explicit_host_ipmi() -> None:
         ],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     data = folder._load_hosts_file()
@@ -389,6 +398,7 @@ def test_mgmt_inherit_credentials_snmp() -> None:
         ],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     data = folder._load_hosts_file()
@@ -419,6 +429,7 @@ def test_mgmt_inherit_credentials_ipmi() -> None:
         ],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     data = folder._load_hosts_file()
@@ -451,6 +462,7 @@ def test_mgmt_inherit_protocol_explicit_host_snmp() -> None:
         ],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     data = folder._load_hosts_file()
@@ -486,6 +498,7 @@ def test_mgmt_inherit_protocol_explicit_host_ipmi() -> None:
         ],
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
+        acting_user=logged_in_user,
     )
 
     data = folder._load_hosts_file()

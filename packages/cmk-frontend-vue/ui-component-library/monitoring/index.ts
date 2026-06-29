@@ -9,6 +9,7 @@ import UclColumnPinning from './UclColumnPinning.vue'
 import UclRefreshCountdown from './UclRefreshCountdown.vue'
 import UclTableCellBreakpoints from './UclTableCellBreakpoints.vue'
 import UclTableColumnFilters from './UclTableColumnFilters.vue'
+import UclActionsCell from './cell/UclActionsCell.vue'
 import UclBaseCell from './cell/UclBaseCell.vue'
 import UclCheckboxCell from './cell/UclCheckboxCell.vue'
 import UclNumberCell from './cell/UclNumberCell.vue'
@@ -17,6 +18,7 @@ import UclStringCell from './cell/UclStringCell.vue'
 
 export const pages: Array<Folder | Page> = [
   new Folder('Cell types', [
+    new Page('ActionsCell', UclActionsCell),
     new Page('BaseCell', UclBaseCell),
     new Page('CheckboxCell', UclCheckboxCell),
     new Page('NumberCell', UclNumberCell),

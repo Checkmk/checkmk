@@ -83,7 +83,7 @@ def execute_dcd_cycle(
     site: Site,
     expected_pb_hosts: int = 0,
     max_count: int = 30,
-    interval: int = 5,
+    interval: float = 5,
     connection_name: str | None = None,
 ) -> None:
     """Execute a DCD cycle and wait for its completion.

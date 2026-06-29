@@ -25,7 +25,6 @@ from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationError
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache
-from cmk.ccc import tty
 from cmk.ccc import version as cmk_version
 from cmk.ccc.hostaddress import Hosts
 from cmk.ccc.site import SiteId
@@ -172,8 +171,6 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     # Continue on error. Either the reloader can fix it, or we will raise in the automation endpoint.
     dependencies.state.load_new(continue_on_error=True)
-
-    tty.reinit()
 
     reloader_task = asyncio.create_task(
         _reloader_task(

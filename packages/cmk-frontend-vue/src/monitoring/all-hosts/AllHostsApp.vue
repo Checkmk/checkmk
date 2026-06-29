@@ -6,12 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type ColumnDef, type ColumnPinningState } from '@tanstack/vue-table'
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
-import { onBeforeUnmount, onMounted, provide, useTemplateRef } from 'vue'
+import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { getKeyShortcutServiceInstance } from '@/lib/keyShortcuts'
 
 import CmkSearchInput from '@/components/CmkSearchInput.vue'
+import CmkSplitPane from '@/components/CmkSplitPane.vue'
 
 import type { HostEntry, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
@@ -228,6 +229,8 @@ const hostService = new HostService(new HostApi(), getKeyShortcutServiceInstance
 
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 
+const showRightPane = ref(false)
+
 onMounted(() => {
   hostService.onFocusSearch(() => searchInput.value?.focus())
 })
@@ -282,27 +285,39 @@ function rowKey(row: HostEntry): string {
         @toggle="hostService.togglePause()"
       />
     </div>
-    <MonitoringResultsCount
-      class="monitoring-all-hosts-app__results-count"
-      :active-filter-count="hostService.filters.activeFilterCount"
-    />
-    <MonitoringTable
-      :rows="hostService.items.value"
-      :fetch-state="hostService.fetchState.value"
-      :has-loaded="hostService.hasLoaded.value"
-      :columns="columns"
-      :filter-state="hostService.tableColumnFilters.value"
-      :column-pinning="columnPinning"
-      :get-row-key="rowKey"
-      @update:filter-state="hostService.onColumnFiltersUpdate($event)"
+    <CmkSplitPane
+      :collapsed="!showRightPane"
+      :right-min-size="30"
+      :right-max-size="50"
+      class="monitoring-all-hosts-app__split"
+      @update:collapsed="showRightPane = !$event"
     >
-      <template #row="{ row, tableRow }">
-        <HostRow :row="row" :table-row="tableRow" />
+      <template #left>
+        <div class="monitoring-all-hosts-app__left-pane">
+          <MonitoringResultsCount
+            class="monitoring-all-hosts-app__results-count"
+            :active-filter-count="hostService.filters.activeFilterCount"
+          />
+          <MonitoringTable
+            :rows="hostService.items.value"
+            :fetch-state="hostService.fetchState.value"
+            :has-loaded="hostService.hasLoaded.value"
+            :columns="columns"
+            :filter-state="hostService.tableColumnFilters.value"
+            :column-pinning="columnPinning"
+            :get-row-key="rowKey"
+            @update:filter-state="hostService.onColumnFiltersUpdate($event)"
+          >
+            <template #row="{ row, tableRow }">
+              <HostRow :row="row" :table-row="tableRow" />
+            </template>
+            <template #empty-state>
+              <MonitoringEmptyState />
+            </template>
+          </MonitoringTable>
+        </div>
       </template>
-      <template #empty-state>
-        <MonitoringEmptyState />
-      </template>
-    </MonitoringTable>
+    </CmkSplitPane>
   </div>
 </template>
 
@@ -356,6 +371,18 @@ function rowKey(row: HostEntry): string {
   &:hover {
     color: var(--color-corporate-green-50);
   }
+}
+
+.monitoring-all-hosts-app__split {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.monitoring-all-hosts-app__left-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 .monitoring-all-hosts-app__results-count {

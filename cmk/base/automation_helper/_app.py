@@ -56,7 +56,6 @@ class _State:
     automation_or_reload_lock: asyncio.Lock
     reload_config: Callable[
         [
-            AgentBasedPlugins,
             Callable[[SiteId], Labels],
         ],
         config.LoadingResult,
@@ -75,7 +74,7 @@ class _State:
 
             # Do not yet set `self.last_reload_at`. We don't know if we succeed.
             time_right_before_reload = time.time()
-            self.loading_result = self.reload_config(self.plugins, self.get_builtin_host_labels)
+            self.loading_result = self.reload_config(self.get_builtin_host_labels)
             self.last_reload_at = time_right_before_reload
         except (Exception, BaseException) as e:
             LOGGER.error("[reloader] Error reloading configuration: %s", e)
@@ -104,7 +103,6 @@ def make_application(
     config: Config,
     reload_config: Callable[
         [
-            AgentBasedPlugins,
             Callable[[SiteId], Labels],
         ],
         config.LoadingResult,

@@ -23,7 +23,6 @@ from cmk.base.config import ConfigCache
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.ccc.hostaddress import Hosts
 from cmk.ccc.site import SiteId
-from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils.caching import cache_manager
 from cmk.utils.labels import Labels
 from cmk.utils.paths import omd_root
@@ -128,7 +127,7 @@ def _reset_global_multiprocessing_start_method_to_platform_default() -> None:
 
 
 def _reload_automation_config(
-    plugins: AgentBasedPlugins, get_builtin_host_labels: Callable[[SiteId], Labels]
+    get_builtin_host_labels: Callable[[SiteId], Labels],
 ) -> config.LoadingResult:
     cache_manager.clear()
     return config.load(

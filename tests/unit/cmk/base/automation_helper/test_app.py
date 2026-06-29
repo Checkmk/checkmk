@@ -109,7 +109,6 @@ def _make_test_client(
     cache: Cache,
     reload_config: Callable[
         [
-            AgentBasedPlugins,
             Callable[[SiteId], Labels],
         ],
         LoadingResult,
@@ -274,7 +273,7 @@ def test_health_check(cache: Cache) -> None:
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         cache,
-        lambda plugins, get_builtin_host_labels: LoadingResult(
+        lambda get_builtin_host_labels: LoadingResult(
             loaded_config=loaded_config,
             hosts_config=make_hosts_config(loaded_config),
             host_tags=make_host_tags(loaded_config, make_hosts_config(loaded_config)),
@@ -485,7 +484,7 @@ def test_automation_cache_error_on_stale_config() -> None:
     with _make_test_client(
         _DummyAutomationEngineSuccess(),
         FailingCache(fakeredis.FakeRedis()),
-        lambda plugins, get_builtin_host_labels: LoadingResult(
+        lambda get_builtin_host_labels: LoadingResult(
             loaded_config=EMPTY_CONFIG,
             hosts_config=make_hosts_config(EMPTY_CONFIG),
             host_tags=make_host_tags(EMPTY_CONFIG, make_hosts_config(EMPTY_CONFIG)),

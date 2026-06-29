@@ -4,9 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type ColumnDef, type ColumnPinningState } from '@tanstack/vue-table'
+import {
+  type ColumnDef,
+  type ColumnPinningState,
+  type RowSelectionState
+} from '@tanstack/vue-table'
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
-import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
@@ -30,6 +34,7 @@ import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
 import MonitoringTable from '../shared/components/MonitoringTable.vue'
 import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
+import MonitoringActionBar from '../shared/components/action/MonitoringActionBar.vue'
 import { HostApi } from './api/hosts'
 import HostRow from './components/HostRow.vue'
 import { HostService } from './services/HostService'
@@ -255,6 +260,9 @@ const hostService = new HostService(new HostApi(), getKeyShortcutServiceInstance
 
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 
+const rowSelection = ref<RowSelectionState>({})
+const selectedCount = computed(() => Object.values(rowSelection.value).filter(Boolean).length)
+
 const showRightPane = ref(false)
 
 onMounted(() => {
@@ -273,6 +281,10 @@ function rowKey(row: HostEntry): string {
 
 function onHostAction(payload: { action: CellAction; host: HostEntry }): void {
   void payload
+}
+
+function onBulkAction(action: CellAction): void {
+  void action
 }
 </script>
 
@@ -328,7 +340,15 @@ function onHostAction(payload: { action: CellAction; host: HostEntry }): void {
             class="monitoring-all-hosts-app__results-count"
             :active-filter-count="hostService.filters.activeFilterCount"
           />
+          <MonitoringActionBar
+            v-if="hostActions.length > 0"
+            class="monitoring-all-hosts-app__action-bar"
+            :selected-count="selectedCount"
+            :actions="hostActions"
+            @action="onBulkAction"
+          />
           <MonitoringTable
+            v-model:row-selection="rowSelection"
             :rows="hostService.items.value"
             :fetch-state="hostService.fetchState.value"
             :has-loaded="hostService.hasLoaded.value"
@@ -423,5 +443,10 @@ function onHostAction(payload: { action: CellAction; host: HostEntry }): void {
 .monitoring-all-hosts-app__results-count {
   flex: 0 0 auto;
   margin: var(--spacing-half) 0 var(--spacing);
+}
+
+.monitoring-all-hosts-app__action-bar {
+  flex: 0 0 auto;
+  margin-bottom: var(--spacing);
 }
 </style>

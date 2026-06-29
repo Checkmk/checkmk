@@ -63,7 +63,7 @@ function resolveUpdater<S>(updater: Updater<S>, current: S): S {
   return typeof updater === 'function' ? (updater as (old: S) => S)(current) : updater
 }
 
-const rowSelection = ref<RowSelectionState>({})
+const rowSelection = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
 
 const table = useVueTable({
   // Server-side sort/filter — we bypass getRowModel() and slot rows directly.

@@ -365,6 +365,11 @@ fn test_execute_config_reference() {
         value_of("ASYNC_SECTIONS").unwrap().contains("tablespaces"),
         "ASYNC_SECTIONS must contain tablespaces"
     );
+    #[cfg(not(windows))]
+    assert_eq!(
+        value_of("REMOTE_INSTANCE_1"),
+        Some("check_mk:mypassword:sysdba:myRemoteHost:1521:myOracleHost:MYINST3:11.2")
+    );
 }
 
 #[test]
@@ -409,9 +414,16 @@ fn test_migrate_reference_config_connection_and_auth() {
     assert_eq!(auth.auth_type().to_string(), "standard");
     assert!(auth.role().is_none(), "empty role must be None");
 
-    // Instances: DBUSER_XE1 (tnsalias=oooo), DBUSER_XE2
+    // Instances: DBUSER_XE1 (tnsalias=oooo), DBUSER_XE2, REMOTE_INSTANCE_1 (Linux only)
     // DBUSER with $ORACLE_SID is skipped: env var absent at load time
     let instances = ora.instances();
+    #[cfg(not(windows))]
+    assert_eq!(
+        instances.len(),
+        3,
+        "must have 3 instances from DBUSER_XE1 + DBUSER_XE2 + REMOTE_INSTANCE_1"
+    );
+    #[cfg(windows)]
     assert_eq!(
         instances.len(),
         2,
@@ -456,6 +468,21 @@ fn test_migrate_reference_config_connection_and_auth() {
         xe2_inst.auth().role().map(|r| r.to_string()),
         Some("sysdba".to_string())
     );
+
+    // REMOTE_INSTANCE_1: sid=MYINST3, host=myRemoteHost, auth=check_mk, role=sysdba
+    // piggyback_host=myOracleHost (Linux only — ps1 has no REMOTE_INSTANCE support)
+    #[cfg(not(windows))]
+    {
+        let ri = instances
+            .iter()
+            .find(|i| i.auth().username() == "check_mk")
+            .expect("REMOTE_INSTANCE_1 instance with username check_mk");
+        assert_eq!(ri.conn().hostname().to_string(), "myremotehost");
+        assert_eq!(
+            ri.auth().role().map(|r| r.to_string()),
+            Some("sysdba".to_string())
+        );
+    }
 }
 
 #[test]

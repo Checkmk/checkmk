@@ -50,6 +50,7 @@ struct LegacyDbUser {
     hostname: String,
     port: Option<String>,
     alias_or_sid: String,
+    piggyback_host: Option<String>,
 }
 
 fn optional_value(s: &str) -> Option<String> {
@@ -105,6 +106,45 @@ fn parse_dbuser_raw(name: &str, value: &str) -> Result<LegacyDbUser> {
         hostname: field(3).to_string(),
         port: optional_value(field(4)),
         alias_or_sid: optional_value(field(5)).unwrap_or_else(|| "$ORACLE_SID".to_string()),
+        piggyback_host: None,
+    })
+}
+
+/// Parse REMOTE_INSTANCE_XXX='user:pass:role:host:port:piggyback_host:SID:version'
+/// Version (last field) is ignored — detected automatically.
+/// Returns None with log warning on any invalid entry.
+fn parse_remote_instance(name: &str, value: &str) -> Option<LegacyDbUser> {
+    if !name.starts_with("REMOTE_INSTANCE_") {
+        log::warn!("{name}: expected REMOTE_INSTANCE_* prefix");
+        return None;
+    }
+    let fields: Vec<&str> = value.splitn(8, ':').collect();
+    if fields.len() < 5 {
+        log::warn!("{name}: need at least user:pass:role:host:port, got: {value}");
+        return None;
+    }
+    let field = |i: usize| fields.get(i).copied().unwrap_or("");
+    let username = field(0);
+    if username.is_empty() || username == "/" {
+        log::warn!("{name}: empty or OS username not supported for remote instances");
+        return None;
+    }
+    let sid = match optional_value(field(6)) {
+        Some(s) => s,
+        None => {
+            log::warn!("{name}: SID (field 7) is empty");
+            return None;
+        }
+    };
+    Some(LegacyDbUser {
+        sid: Some(sid.clone()),
+        username: username.to_string(),
+        password: field(1).to_string(),
+        role: optional_value(field(2)),
+        hostname: field(3).to_string(),
+        port: optional_value(field(4)),
+        alias_or_sid: sid,
+        piggyback_host: optional_value(field(5)),
     })
 }
 
@@ -120,9 +160,16 @@ pub fn convert(
     let dbuser = parse_dbuser("DBUSER", dbuser_raw)?;
 
     let mut dbuser_extras: Vec<LegacyDbUser> = Vec::new();
+    let mut invalid_remotes: Vec<(&str, &str)> = Vec::new();
     for (name, value) in variables {
-        if let Some(_suffix) = name.strip_prefix("DBUSER_") {
+        if name.starts_with("DBUSER_") {
             dbuser_extras.push(parse_dbuser(name, value)?);
+        } else if !cfg!(windows) && name.starts_with("REMOTE_INSTANCE_") {
+            // Windows legacy plugin doesn't support REMOTE_INSTANCE
+            match parse_remote_instance(name, value) {
+                Some(ri) => dbuser_extras.push(ri),
+                None => invalid_remotes.push((name, value)),
+            }
         }
     }
 
@@ -140,6 +187,10 @@ pub fn convert(
     out.push_str("# --- Known environment variables defined in legacy config ---\n");
     for (name, value) in variables {
         out.push_str(&format!("# {name} {value}\n"));
+    }
+
+    for (name, value) in &invalid_remotes {
+        out.push_str(&format!("# INVALID {name}\n# {name} {value}\n"));
     }
 
     out.push_str("# --- Unified Config ---\n---\noracle:\n  main:\n");
@@ -260,6 +311,9 @@ fn format_instances(dbuser: &LegacyDbUser, dbuser_extras: &[LegacyDbUser]) -> Ve
             if let Some(port) = &entry.port {
                 lines.push(format!("          port: {port}\n"));
             }
+        }
+        if let Some(piggyback) = &entry.piggyback_host {
+            lines.push(format!("        piggyback_host: {piggyback}\n"));
         }
         let has_auth = !entry.username.is_empty() || !entry.password.is_empty();
         if has_auth {
@@ -613,6 +667,37 @@ mod tests {
     }
 
     #[test]
+    fn test_convert_remote_instance_platform_behavior() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            (
+                "REMOTE_INSTANCE_1".into(),
+                "user:pass:sysdba:remotehost:1521:piggyhost:ORCL:11.2".into(),
+            ),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        let ms = config.ora_sql().expect("ora_sql must be present");
+        if cfg!(windows) {
+            // Windows legacy plugin doesn't support REMOTE_INSTANCE
+            assert!(
+                ms.instances().is_empty(),
+                "REMOTE_INSTANCE must be ignored on Windows"
+            );
+        } else {
+            assert_eq!(
+                ms.instances().len(),
+                1,
+                "REMOTE_INSTANCE must produce one instance"
+            );
+            let inst = &ms.instances()[0];
+            assert_eq!(inst.auth().username(), "user");
+            assert_eq!(inst.conn().hostname().to_string(), "remotehost");
+        }
+    }
+
+    #[test]
     fn test_convert_asmuser_fields_in_yaml() {
         let vars = HashMap::from([
             ("DBUSER".into(), "checkmk:secret::::".into()),
@@ -860,6 +945,53 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_remote_instance_full() {
+        let ri = parse_remote_instance(
+            "REMOTE_INSTANCE_1",
+            "check_mk:mypassword:sysdba:myRemoteHost:1521:myOracleHost:MYINST3:11.2",
+        )
+        .expect("valid remote instance must return Some");
+        assert_eq!(ri.sid.as_deref(), Some("MYINST3"));
+        assert_eq!(ri.username, "check_mk");
+        assert_eq!(ri.password, "mypassword");
+        assert_eq!(ri.role.as_deref(), Some("sysdba"));
+        assert_eq!(ri.hostname, "myRemoteHost");
+        assert_eq!(ri.port.as_deref(), Some("1521"));
+        assert_eq!(ri.piggyback_host.as_deref(), Some("myOracleHost"));
+        assert_eq!(ri.alias_or_sid, "MYINST3");
+    }
+
+    #[test]
+    fn test_parse_remote_instance_no_sid_returns_none() {
+        assert!(parse_remote_instance("REMOTE_INSTANCE_XE", "user:pass::host:1521::").is_none());
+    }
+
+    #[test]
+    fn test_parse_remote_instance_no_sid_field_returns_none() {
+        assert!(parse_remote_instance("REMOTE_INSTANCE_DB1", "user:pass::host:1521").is_none());
+    }
+
+    #[test]
+    fn test_parse_remote_instance_empty_username_returns_none() {
+        assert!(parse_remote_instance("REMOTE_INSTANCE_1", ":pass::host:1521::MYINST3").is_none());
+    }
+
+    #[test]
+    fn test_parse_remote_instance_slash_username_returns_none() {
+        assert!(parse_remote_instance("REMOTE_INSTANCE_1", "/:pass::host:1521::MYINST3").is_none());
+    }
+
+    #[test]
+    fn test_parse_remote_instance_too_few_fields() {
+        assert!(parse_remote_instance("REMOTE_INSTANCE_1", "user:pass").is_none());
+    }
+
+    #[test]
+    fn test_parse_remote_instance_invalid_prefix() {
+        assert!(parse_remote_instance("DBUSER_XE", "user:pass::host:1521").is_none());
+    }
+
+    #[test]
     fn test_format_timestamp() {
         let ts = format_timestamp();
         assert!(ts.ends_with(" UTC"));
@@ -939,6 +1071,7 @@ mod tests {
             port: port.map(String::from),
             role: role.map(String::from),
             alias_or_sid: alias_or_sid.to_string(),
+            piggyback_host: None,
         }
     }
 

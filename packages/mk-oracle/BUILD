@@ -19,6 +19,7 @@ rust_library(
         "src/config/authentication.rs",
         "src/config/connection.rs",
         "src/config/defines.rs",
+        "src/config/merge.rs",
         "src/config/migration.rs",
         "src/config/options.rs",
         "src/config/ora_sql.rs",

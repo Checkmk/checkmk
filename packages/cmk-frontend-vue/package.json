@@ -11,7 +11,7 @@
     "@internationalized/date": "^3.12.0",
     "@tanstack/vue-table": "^8.21.3",
     "@tanstack/vue-virtual": "^3.13.24",
-    "axios": "^1.15.0",
+    "axios": "^1.18.1",
     "class-variance-authority": "^0.7.1",
     "d3-array": "^3.2.4",
     "d3-axis": "^3.0.0",

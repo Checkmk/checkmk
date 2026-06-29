@@ -753,7 +753,7 @@ def _prepare_git_overlay(
 ) -> None:
     """Prevent modification of git checkout volume contents
 
-    Create some tmpfs that is mounted as rw layer over the the git checkout
+    Create some tmpfs that is mounted as rw layer over the git checkout
     at /git. All modifications to the git will be lost after the container is
     removed.
     """

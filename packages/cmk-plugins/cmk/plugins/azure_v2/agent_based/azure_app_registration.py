@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.azure_v2.agent_based.lib import parse_azure_datetime
+from cmk.plugins.azure_v2.agent_based.lib import parse_azure_datetime_to_utc
 
 THIRTY_DAYS = 30 * 24 * 60 * 60.0
 SEVEN_DAYS = 7 * 24 * 60 * 60.0
@@ -130,12 +130,12 @@ def _check_credential_expiration(
     ignore_if_older_than: float | None = None,
 ) -> CheckResult:
     start_date = (
-        parse_azure_datetime(credential.startDateTime)
+        parse_azure_datetime_to_utc(credential.startDateTime)
         if credential.startDateTime is not None  # None with old agents output
         else None
     )
 
-    expiration_date = parse_azure_datetime(credential.endDateTime)
+    expiration_date = parse_azure_datetime_to_utc(credential.endDateTime)
     age = expiration_date.timestamp() - datetime.now(tz=UTC).timestamp()
     if age < 0:
         if ignore_if_older_than is not None:

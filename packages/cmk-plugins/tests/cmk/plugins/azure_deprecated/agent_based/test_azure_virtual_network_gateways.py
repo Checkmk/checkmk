@@ -6,6 +6,7 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
+import time
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -595,7 +596,9 @@ def test_check_virtual_network_gateway_settings(section, item, expected_result):
         pytest.param(SECTION, "unexpected-item", [], id="item_not_found"),
     ],
 )
-def test_check_virtual_network_gateway_health(section, item, expected_result):
+def test_check_virtual_network_gateway_health(section, item, expected_result, monkeypatch):
+    # make the rendered "Occurred time" deterministic regardless of the runner.
+    monkeypatch.setattr(time, "localtime", time.gmtime)
     assert list(check_virtual_network_gateway_health(item, section)) == expected_result
 
 

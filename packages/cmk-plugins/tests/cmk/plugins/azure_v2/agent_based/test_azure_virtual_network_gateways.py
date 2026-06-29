@@ -6,9 +6,11 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
+import time
 from collections.abc import Mapping, Sequence
 
 import pytest
+from pytest import MonkeyPatch
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
 from cmk.plugins.azure_v2.agent_based.azure_virtual_network_gateways import (
@@ -610,8 +612,10 @@ def test_check_virtual_network_gateway_settings(
     ],
 )
 def test_check_virtual_network_gateway_health(
-    section: VNetGateway, expected_result: CheckResult
+    section: VNetGateway, expected_result: CheckResult, monkeypatch: MonkeyPatch
 ) -> None:
+    # make the rendered "Occurred time" deterministic regardless of the runner.
+    monkeypatch.setattr(time, "localtime", time.gmtime)
     assert list(check_virtual_network_gateway_health(section)) == expected_result
 
 

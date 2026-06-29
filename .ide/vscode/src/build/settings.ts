@@ -22,7 +22,7 @@ import { devBrowser } from './devBrowser'
 // Poll a dev-server URL after launching its command and, once it answers, open
 // it in the built-in Simple Browser or the system default browser. Gated by
 // cmk.devServer.openBrowserOnStart; cmk.devServer.browser picks the target.
-function openBrowserWhenReady(name: string, url: string): void {
+function openBrowserWhenReady(name: string, url: string, execution?: vscode.TaskExecution): void {
   const cfg = vscode.workspace.getConfiguration('cmk')
   if (!cfg.get<boolean>('devServer.openBrowserOnStart', true)) {
     return
@@ -38,7 +38,7 @@ function openBrowserWhenReady(name: string, url: string): void {
       vscode.env.openExternal(vscode.Uri.parse(url))
     } else {
       log(`${name}: server ready, opening ${url} in Simple Browser`)
-      void devBrowser.show(url)
+      void devBrowser.show(url, execution)
     }
   })
 }
@@ -403,7 +403,7 @@ export function registerBuildCommands(
         if (!execution) return
 
         if (entry.openBrowser) {
-          openBrowserWhenReady(entry.name, entry.openBrowser)
+          openBrowserWhenReady(entry.name, entry.openBrowser, execution)
         }
 
         if (entry.postAction) {

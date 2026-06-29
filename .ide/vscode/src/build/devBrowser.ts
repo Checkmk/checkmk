@@ -7,29 +7,56 @@ import * as vscode from 'vscode'
 
 import { log } from '../core/log'
 
-class DevBrowser {
-  private readonly tabs = new Map<string, vscode.Tab>()
+interface OpenWindow {
+  tab: vscode.Tab
+  execution?: vscode.TaskExecution
+}
 
-  async show(url: string): Promise<void> {
-    if (this.alreadyOpen(url)) {
+class DevBrowser {
+  private readonly windows = new Map<string, OpenWindow>()
+  private closeWatcher?: vscode.Disposable
+
+  async show(url: string, execution?: vscode.TaskExecution): Promise<void> {
+    this.ensureCloseWatcher()
+
+    const existing = this.windows.get(url)
+    if (existing && this.isOpen(existing.tab)) {
+      existing.execution = execution
       log(`Browser already open for ${url}; reusing existing window`)
       return
     }
+    this.windows.delete(url)
+
+    if (this.browserTabs().length > 0) {
+      log(`Browser already open for ${url}; reusing existing window`)
+      return
+    }
+
     const before = this.currentTabs()
     await vscode.commands.executeCommand('simpleBrowser.show', url)
     const opened = await this.captureNewTab(before)
     if (opened) {
-      this.tabs.set(url, opened)
+      this.windows.set(url, { tab: opened, execution })
     }
   }
 
-  private alreadyOpen(url: string): boolean {
-    const tracked = this.tabs.get(url)
-    if (tracked && this.isOpen(tracked)) {
-      return true
+  private ensureCloseWatcher(): void {
+    if (this.closeWatcher) {
+      return
     }
-    this.tabs.delete(url)
-    return this.browserTabs().length > 0
+    this.closeWatcher = vscode.window.tabGroups.onDidChangeTabs((event) => {
+      for (const closed of event.closed) {
+        for (const [url, win] of this.windows) {
+          if (win.tab === closed) {
+            this.windows.delete(url)
+            if (win.execution) {
+              log(`Browser window for ${url} closed; stopping dev server`)
+              win.execution.terminate()
+            }
+          }
+        }
+      }
+    })
   }
 
   private browserTabs(): vscode.Tab[] {

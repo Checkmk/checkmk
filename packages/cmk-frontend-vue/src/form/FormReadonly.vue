@@ -38,22 +38,17 @@ import type {
   SingleChoiceElement,
   StaticText,
   TimeSpan,
-  TimeSpanTimeMagnitude,
   TimeSpecific,
   Tuple,
   TwoColumnDictionary
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { type PropType, type Ref, type VNode, defineComponent, h } from 'vue'
+import { type PropType, type VNode, defineComponent, h } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
 import type { DualListElement } from '@/components/CmkDualList'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
-import {
-  ALL_MAGNITUDES,
-  getSelectedMagnitudes,
-  splitToUnits
-} from '@/components/user-input/CmkTimeSpan/timeSpan'
+import { formatTimeSpan } from '@/components/user-input/CmkTimeSpan/timeSpan'
 
 import type { CheckboxListChoiceElement } from '@/form/private/forms/FormCheckboxListChoice.vue'
 import type { FileUploadData } from '@/form/private/forms/FormFileUpload.vue'
@@ -233,29 +228,13 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
     rows.push(dataPointRow)
   }
 
-  const timeSpan = []
-  const i18Magnitudes: Partial<Record<TimeSpanTimeMagnitude, string | Ref<string>>> = {
+  const lookbackText = formatTimeSpan(value.aggregation_lookback, ['hour', 'minute', 'second'], {
     hour: _t('Hours'),
     minute: _t('Minutes'),
     second: _t('Seconds')
-  }
-  const values = splitToUnits(
-    value.aggregation_lookback,
-    getSelectedMagnitudes(['hour', 'minute', 'second'])
-  )
-  for (const [magnitude] of ALL_MAGNITUDES) {
-    const v = values[magnitude]
-    if (v !== undefined) {
-      const i18Magnitude = i18Magnitudes[magnitude]
-      const text = (i18Magnitude as Ref<string>)?.value || (i18Magnitude as string)
-      timeSpan.push(`${v} ${text}`)
-    }
-  }
+  })
   rows.push(
-    h('tr', [
-      h('td', { class: 'dict_title' }, ['Aggregation lookback:']),
-      h('td', timeSpan.join(' '))
-    ])
+    h('tr', [h('td', { class: 'dict_title' }, ['Aggregation lookback:']), h('td', lookbackText)])
   )
 
   rows.push(
@@ -579,15 +558,7 @@ function renderPassword(formSpec: Password, value: (string | boolean)[]): VNode 
 }
 
 function renderTimeSpan(formSpec: TimeSpan, value: number): VNode {
-  const result = []
-  const values = splitToUnits(value, getSelectedMagnitudes(formSpec.displayed_magnitudes))
-  for (const [magnitude] of ALL_MAGNITUDES) {
-    const v = values[magnitude]
-    if (v !== undefined) {
-      result.push(`${v} ${formSpec.i18n[magnitude]}`)
-    }
-  }
-  return h('div', [result.join(' ')])
+  return h('div', [formatTimeSpan(value, formSpec.displayed_magnitudes, formSpec.i18n)])
 }
 
 function renderSingleChoice(

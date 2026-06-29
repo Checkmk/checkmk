@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { type MaybeRefOrGetter, toValue } from 'vue'
 
 export type Magnitude = 'day' | 'hour' | 'minute' | 'second' | 'millisecond'
 
@@ -38,6 +39,24 @@ export function joinToSeconds(values: Partial<Record<Magnitude, number>>): numbe
     (partial, [magnitude, value]) => partial + value * getFactor(magnitude as Magnitude),
     0
   )
+}
+
+/** Render a duration in seconds as e.g. '1 Hours 30 Minutes', or '' when it rounds to nothing. */
+export function formatTimeSpan(
+  value: number,
+  displayedMagnitudes: Array<Magnitude>,
+  labels: Partial<Record<Magnitude, MaybeRefOrGetter<string>>>
+): string {
+  const selectedMagnitudes = getSelectedMagnitudes(displayedMagnitudes)
+  const values = splitToUnits(value, selectedMagnitudes)
+  const parts: string[] = []
+  for (const magnitude of selectedMagnitudes) {
+    const count = values[magnitude]
+    if (count !== undefined) {
+      parts.push(`${count} ${toValue(labels[magnitude]) ?? magnitude}`)
+    }
+  }
+  return parts.join(' ')
 }
 
 export function splitToUnits(

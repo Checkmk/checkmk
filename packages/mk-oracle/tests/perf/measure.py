@@ -284,7 +284,7 @@ def print_winner_summary(results: list[Timing]) -> None:
     for (scenario, section, plugin), times in per_key.items():
         totals[(scenario, plugin)] += statistics.mean(times)
 
-    by_scenario: dict[str, dict[str, float]] = defaultdict(lambda: {})
+    by_scenario: dict[str, dict[str, float]] = defaultdict(dict)
     for (scenario, plugin), total in totals.items():
         by_scenario[scenario][plugin] = total
 

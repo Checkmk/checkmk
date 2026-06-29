@@ -50,7 +50,7 @@ class DataCache(abc.ABC):
             raw_timestamp, raw_content = raw.split("\n", 1)
             return float(raw_timestamp), raw_content
         except ValueError:
-            LOGGER.warning("Corrupted stograge content. Removing it.")
+            LOGGER.warning("Corrupted storage content. Removing it.")
             self._storage.unset(self._key)
         return None
 

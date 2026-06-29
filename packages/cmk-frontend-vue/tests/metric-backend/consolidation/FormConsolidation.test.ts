@@ -226,6 +226,119 @@ test('non-quantile functions show no quantile input', async () => {
   expect(screen.queryByLabelText('Quantile (0 to 1)')).toBeNull()
 })
 
+test('fraction below shows one threshold input that drives the chip', async () => {
+  renderWidget({
+    type: 'histogram',
+    function: 'fraction_below',
+    params: { fractionBelowThreshold: 0.2 }
+  })
+  await userEvent.click(chip())
+
+  expect(screen.getByLabelText('Threshold')).toBeVisible()
+  expect(screen.queryByLabelText('Lower threshold')).toBeNull()
+
+  await userEvent.keyboard('{Escape}')
+  await waitFor(() => expect(chip()).toHaveTextContent('fraction <0.2'))
+  expect(chip()).toHaveTextContent('[histogram]')
+})
+
+test('an emptied fraction below threshold is flagged only on a blocked leave', async () => {
+  renderWidget({
+    type: 'histogram',
+    function: 'fraction_below',
+    params: { fractionBelowThreshold: 0.2 }
+  })
+  await userEvent.click(chip())
+
+  const input = screen.getByLabelText('Threshold')
+  await userEvent.clear(input)
+
+  // Pristine: no error until leaving is attempted.
+  expect(screen.queryByText('Enter a threshold')).toBeNull()
+
+  await userEvent.keyboard('{Escape}')
+  expect(await screen.findByText('Enter a threshold')).toBeVisible()
+  expect(screen.getByLabelText('Threshold')).toBeVisible()
+})
+
+test('fraction between shows lower and upper inputs that drive the chip', async () => {
+  renderWidget({
+    type: 'histogram',
+    function: 'fraction_between',
+    params: { fractionLowerThreshold: 0.1, fractionUpperThreshold: 0.9 }
+  })
+  await userEvent.click(chip())
+
+  expect(screen.getByLabelText('Lower threshold')).toBeVisible()
+  expect(screen.getByLabelText('Upper threshold')).toBeVisible()
+
+  await userEvent.keyboard('{Escape}')
+  await waitFor(() => expect(chip()).toHaveTextContent('fraction 0.1–0.9'))
+  expect(chip()).toHaveTextContent('[histogram]')
+})
+
+test('an out-of-order fraction between is flagged only on a blocked leave', async () => {
+  renderWidget({
+    type: 'histogram',
+    function: 'fraction_between',
+    params: { fractionLowerThreshold: 0.1, fractionUpperThreshold: 0.9 }
+  })
+  await userEvent.click(chip())
+
+  const lower = screen.getByLabelText('Lower threshold')
+  await userEvent.clear(lower)
+  await userEvent.type(lower, '2')
+
+  // Pristine: no error while the pair is still being edited.
+  expect(screen.queryByText('Lower threshold must be below the upper threshold')).toBeNull()
+
+  await userEvent.keyboard('{Escape}')
+  expect(await screen.findByText('Lower threshold must be below the upper threshold')).toBeVisible()
+  expect(screen.getByLabelText('Lower threshold')).toBeVisible()
+
+  // Raising the upper bound clears the error, proving the check is cross-field.
+  const upper = screen.getByLabelText('Upper threshold')
+  await userEvent.clear(upper)
+  await userEvent.type(upper, '3')
+  await userEvent.keyboard('{Escape}')
+  await waitFor(() => expect(screen.queryByLabelText('Lower threshold')).toBeNull())
+})
+
+test('equal fraction between bounds are rejected on a blocked leave', async () => {
+  renderWidget({
+    type: 'histogram',
+    function: 'fraction_between',
+    params: { fractionLowerThreshold: 0.5, fractionUpperThreshold: 0.5 }
+  })
+  await userEvent.click(chip())
+
+  // Pristine: an equal (empty) range is not flagged until leaving is attempted.
+  expect(screen.queryByText('Lower threshold must be below the upper threshold')).toBeNull()
+
+  await userEvent.keyboard('{Escape}')
+  expect(await screen.findByText('Lower threshold must be below the upper threshold')).toBeVisible()
+  expect(screen.getByLabelText('Lower threshold')).toBeVisible()
+})
+
+test('an emptied fraction between bound is flagged only on a blocked leave', async () => {
+  renderWidget({
+    type: 'histogram',
+    function: 'fraction_between',
+    params: { fractionLowerThreshold: 0.1, fractionUpperThreshold: 0.9 }
+  })
+  await userEvent.click(chip())
+
+  const lower = screen.getByLabelText('Lower threshold')
+  await userEvent.clear(lower)
+
+  // Pristine: a blank bound is not flagged until leaving is attempted.
+  expect(screen.queryByText('Enter both thresholds')).toBeNull()
+
+  await userEvent.keyboard('{Escape}')
+  expect(await screen.findByText('Enter both thresholds')).toBeVisible()
+  expect(screen.getByLabelText('Lower threshold')).toBeVisible()
+})
+
 test('editing the lookback updates the chip once collapsed', async () => {
   const { model } = renderWidget()
   await userEvent.click(chip())

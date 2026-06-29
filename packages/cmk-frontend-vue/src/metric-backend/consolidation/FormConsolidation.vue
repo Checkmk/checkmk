@@ -131,10 +131,45 @@ const quantileErrors = computed<string[]>(() => {
     : [_t('Enter a quantile between 0 and 1')]
 })
 
+const fractionBelowThresholdInput = computed<number | undefined>({
+  get: () => model.value.params.fractionBelowThreshold,
+  set: (value) => setParam('fractionBelowThreshold', normalizeNumber(value))
+})
+
+// A threshold is required, so a blank field fails.
+const fractionBelowThresholdErrors = computed<string[]>(() =>
+  model.value.params.fractionBelowThreshold === undefined ? [_t('Enter a threshold')] : []
+)
+
+const fractionLowerThresholdInput = computed<number | undefined>({
+  get: () => model.value.params.fractionLowerThreshold,
+  set: (value) => setParam('fractionLowerThreshold', normalizeNumber(value))
+})
+
+const fractionUpperThresholdInput = computed<number | undefined>({
+  get: () => model.value.params.fractionUpperThreshold,
+  set: (value) => setParam('fractionUpperThreshold', normalizeNumber(value))
+})
+
+// Cross-field, so it's computed here; a per-input validator would miss the other bound's changes.
+const fractionBetweenErrors = computed<string[]>(() => {
+  const { fractionLowerThreshold, fractionUpperThreshold } = model.value.params
+  if (fractionLowerThreshold === undefined || fractionUpperThreshold === undefined) {
+    return [_t('Enter both thresholds')]
+  }
+  return fractionLowerThreshold < fractionUpperThreshold
+    ? []
+    : [_t('Lower threshold must be below the upper threshold')]
+})
+
 const activeErrors = computed<string[]>(() => {
   switch (model.value.function) {
     case 'quantile':
       return quantileErrors.value
+    case 'fraction_below':
+      return fractionBelowThresholdErrors.value
+    case 'fraction_between':
+      return fractionBetweenErrors.value
     default:
       return []
   }
@@ -200,6 +235,37 @@ const editAriaLabel = computed(
           inline
           :external-errors="showValidationErrors ? quantileErrors : []"
           :aria-label="_t('Quantile (0 to 1)')"
+        />
+      </span>
+      <span
+        v-if="model.function === 'fraction_below'"
+        class="metric-backend-form-consolidation__param"
+      >
+        <CmkInput
+          v-model="fractionBelowThresholdInput"
+          type="number"
+          inline
+          :external-errors="showValidationErrors ? fractionBelowThresholdErrors : []"
+          :aria-label="_t('Threshold')"
+        />
+      </span>
+      <span
+        v-if="model.function === 'fraction_between'"
+        class="metric-backend-form-consolidation__param"
+      >
+        <CmkInput
+          v-model="fractionLowerThresholdInput"
+          type="number"
+          inline
+          :external-errors="showValidationErrors ? fractionBetweenErrors : []"
+          :aria-label="_t('Lower threshold')"
+        />
+        <span class="metric-backend-form-consolidation__word">–</span>
+        <CmkInput
+          v-model="fractionUpperThresholdInput"
+          type="number"
+          inline
+          :aria-label="_t('Upper threshold')"
         />
       </span>
       <span class="metric-backend-form-consolidation__lookback">

@@ -25,7 +25,7 @@ def folder_page_menu_entries(folder: Folder | SearchFolder) -> Iterator[PageMenu
         and folder.permissions.may("write")
     ):
         folder_or_subfolder_has_hosts = (
-            isinstance(folder, Folder) and folder.num_hosts_recursively() > 0
+            isinstance(folder, Folder) and folder.num_hosts_recursively(user) > 0
         )
         yield PageMenuEntry(
             title=_("Detect network parent hosts"),

@@ -5,6 +5,7 @@
  */
 import { Folder, Page } from '@ucl/_ucl/types/page'
 
+import UclActionFormPane from './UclActionFormPane.vue'
 import UclColumnPinning from './UclColumnPinning.vue'
 import UclRefreshCountdown from './UclRefreshCountdown.vue'
 import UclTableCellBreakpoints from './UclTableCellBreakpoints.vue'
@@ -25,6 +26,7 @@ export const pages: Array<Folder | Page> = [
     new Page('StateCell', UclStateCell),
     new Page('StringCell', UclStringCell)
   ]),
+  new Page('ActionFormPane', UclActionFormPane),
   new Page('RefreshCountdown', UclRefreshCountdown),
   new Page('Table cell breakpoints', UclTableCellBreakpoints),
   new Page('Table column pinning', UclColumnPinning),

@@ -28,10 +28,19 @@ _ItemKey = tuple[str | None, str, str]
 
 
 class MSSQLInstanceData(TypedDict):
+    # sys.database_files:
+    # https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-database-files-transact-sql?view=sql-server-ver17
+    # FILEPROPERTY:
+    # https://learn.microsoft.com/en-us/sql/t-sql/functions/fileproperty-transact-sql?view=sql-server-ver17
+    # before relying on that documentation, make sure it's still the same sql query!
     unlimited: bool
+    # sys.database_files.max_size == -1 # -1 = File can grow until the disk is full.
     max_size: float | None
+    # sys.database_files.max_size # Maximum file size, in 8-KB pages
     allocated_size: float | None
+    # sys.database_files.size # Current size of the file, in 8-KB pages.
     used_size: float | None
+    # FILEPROPERTY(sys.database_files.size.name, 'spaceused') # Amount of space that is used by the specified file.
     mountpoint: str
 
 
@@ -233,8 +242,8 @@ def _datafile_usage(
     used_mointpoints = []
 
     for instance in instances:
-        allocated_size_sum += instance["allocated_size"] or 0
-        used_size_sum += (used_size := instance["used_size"] or 0)
+        allocated_size_sum += (allocated_size := instance["allocated_size"] or 0)
+        used_size_sum += instance["used_size"] or 0
         mountpoint = _get_mountpoint(free_bytes_per_mountpoint, instance["mountpoint"])
         if (filesystem_free_size := free_bytes_per_mountpoint.get(mountpoint)) is not None:
             if mountpoint in used_mointpoints:
@@ -244,7 +253,7 @@ def _datafile_usage(
         max_size = _effective_max_size(
             instance["max_size"],
             filesystem_free_size,
-            used_size,
+            allocated_size,
             instance["unlimited"],
         )
         max_size_sum += max_size
@@ -259,7 +268,7 @@ def _datafile_usage(
 def _effective_max_size(
     instance_max_size: float | None,
     filesystem_free_size: float | None,
-    instance_used_size: float,
+    instance_allocated_size: float,
     unlimited: bool,
 ) -> float:
     instance_max_size_float = instance_max_size or 0
@@ -267,7 +276,7 @@ def _effective_max_size(
     if filesystem_free_size is None:
         return instance_max_size_float
 
-    total_size = filesystem_free_size + instance_used_size
+    total_size = filesystem_free_size + instance_allocated_size
 
     if unlimited:
         return total_size

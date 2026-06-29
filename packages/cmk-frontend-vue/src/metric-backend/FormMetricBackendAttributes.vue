@@ -11,6 +11,7 @@ import { ref, watch } from 'vue'
 
 import usei18n, { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
+import { randomId } from '@/lib/randomId'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkIndent from '@/components/CmkIndent.vue'
@@ -91,7 +92,7 @@ const filterModel = ref<AttributeFilterModel>(
       scope: scopeAttributes.value,
       datapoint: dataPointAttributes.value
     },
-    () => crypto.randomUUID()
+    () => randomId()
   )
 )
 // A key may be offered under more than one attribute type, so record the set of
@@ -157,7 +158,7 @@ immediateWatch(
         lists[attributeType] = message.replacement_value as GraphLineQueryAttributes
       }
     })
-    filterModel.value = toModel(lists, () => crypto.randomUUID())
+    filterModel.value = toModel(lists, () => randomId())
   }
 )
 

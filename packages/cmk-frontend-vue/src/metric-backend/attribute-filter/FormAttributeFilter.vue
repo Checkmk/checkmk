@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, nextTick, ref, watch } from 'vue'
 
 import usei18n, { untranslated } from '@/lib/i18n'
+import { randomId } from '@/lib/randomId'
 import useClickOutside from '@/lib/useClickOutside'
 
 import CmkIconButton from '@/components/CmkIconButton.vue'
@@ -202,7 +203,7 @@ function addCondition(index: number, connector: Connector | null): void {
     return
   }
   const fresh: ConnectedCondition = {
-    id: crypto.randomUUID(),
+    id: randomId(),
     attributeType: null,
     key: '',
     operator: props.operators?.[0] ?? 'eq',

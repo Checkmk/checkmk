@@ -398,7 +398,7 @@ SUP29484_MSSQL_DATAFILES = [
 ]
 
 
-def test_datafile_usage_unlimited_poisons_other_filesystems() -> None:
+def test_datafile_usage_unlimited_is_evaluated_per_file() -> None:
     limited: msdt.MSSQLInstanceData = {
         "unlimited": False,
         "max_size": 10,
@@ -418,12 +418,7 @@ def test_datafile_usage_unlimited_poisons_other_filesystems() -> None:
     unlimited_second = msdt._datafile_usage([limited, unlimited], free_space_per_mountpoint)
     unlimited_first = msdt._datafile_usage([unlimited, limited], free_space_per_mountpoint)
 
-    # correct
-    assert unlimited_second.max == 10 + 1006
-    # THIS IS A BUG!
-    assert unlimited_first.max == 1006 + 1007
-    assert unlimited_second.max != unlimited_first.max
-
+    assert unlimited_second.max == unlimited_first.max == 10 + 1006
     assert unlimited_first.used == unlimited_second.used == 7 + 6
     assert unlimited_first.allocated == unlimited_second.allocated == 3 + 4
 

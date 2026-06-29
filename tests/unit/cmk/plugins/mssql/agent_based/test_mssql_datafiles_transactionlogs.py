@@ -423,7 +423,7 @@ def test_datafile_usage_unlimited_is_evaluated_per_file() -> None:
     assert unlimited_first.allocated == unlimited_second.allocated == 3 + 4
 
 
-def test_datafile_usage_no_filesystem_info_dedup_poisons_repeated_files() -> None:
+def test_datafile_usage_no_filesystem_info_keeps_configured_max_per_file() -> None:
     first: msdt.MSSQLInstanceData = {
         "unlimited": False,
         "max_size": 100,
@@ -441,7 +441,8 @@ def test_datafile_usage_no_filesystem_info_dedup_poisons_repeated_files() -> Non
 
     usage = msdt._datafile_usage([first, second], {})
 
-    assert usage.max == 100 + 8  # THIS IS A BUG! should be 100 + 200
+    # we don't have the df output, so we can not do any fancy calculations
+    assert usage.max == 100 + 200
 
 
 class _Scenario(NamedTuple):

@@ -176,7 +176,7 @@ def test_discovery_mssql_transactionlogs(
                     state=State.OK,
                     summary="Used: 0 B",
                 ),
-                Metric("data_size", 0.0, boundaries=(0, 1.5311314944e16)),
+                Metric("data_size", 0.0, boundaries=(0, 1.5311314945048576e16)),
                 Result(
                     state=State.OK,
                     summary="Allocated used: 0 B",
@@ -185,7 +185,7 @@ def test_discovery_mssql_transactionlogs(
                     state=State.OK,
                     summary="Allocated: 1.00 MiB",
                 ),
-                Metric("allocated_size", 1048576.0, boundaries=(0, 1.5311314944e16)),
+                Metric("allocated_size", 1048576.0, boundaries=(0, 1.5311314945048576e16)),
                 Result(
                     state=State.OK,
                     summary="Maximum size: 13.6 PiB",  # huge filesystem and unlimited
@@ -205,7 +205,7 @@ def test_discovery_mssql_transactionlogs(
                     state=State.OK,
                     summary="Used: 16.0 MiB",
                 ),
-                Metric("data_size", 16777216.0, boundaries=(0, 121634816.0)),  # 16 MiB, max 116 MiB
+                Metric("data_size", 16777216.0, boundaries=(0, 373293056.0)),  # 16 MiB, max 356 MiB
                 Result(
                     state=State.OK,
                     summary="Allocated used: 16.0 MiB",
@@ -215,11 +215,13 @@ def test_discovery_mssql_transactionlogs(
                     summary="Allocated: 256 MiB",
                 ),
                 Metric(
-                    "allocated_size", 268435456.0, boundaries=(0, 121634816.0)
-                ),  # 256 MiB, max 116 MiB
+                    "allocated_size", 268435456.0, boundaries=(0, 373293056.0)
+                ),  # 256 MiB, max 356 MiB (allocated 256 + free 100)
                 Result(
                     state=State.OK,
-                    summary="Maximum size: 116 MiB",  # filesystem smaller than log size limit
+                    # filesystem (free 100 MiB) smaller than the configured limit (2 TiB);
+                    # capped at allocated (256 MiB) + free (100 MiB)
+                    summary="Maximum size: 356 MiB",
                 ),
             ],
         ),
@@ -277,13 +279,13 @@ def test_check_mssql_common_unlimited() -> None:
         Metric(
             "data_size",
             40787509248.0,
-            levels=(51956098662.4, 58450610995.2),
-            boundaries=(0.0, 64945123328.0),
+            levels=(55201651097.6, 62101857484.8),
+            boundaries=(0.0, 69002063872.0),
         ),
         Result(state=State.OK, summary="Allocated used: 38.0 GiB"),
         Result(state=State.OK, summary="Allocated: 41.8 GiB"),
-        Metric("allocated_size", 44844449792.0, boundaries=(0.0, 64945123328.0)),
-        Result(state=State.OK, summary="Maximum size: 60.5 GiB"),
+        Metric("allocated_size", 44844449792.0, boundaries=(0.0, 69002063872.0)),
+        Result(state=State.OK, summary="Maximum size: 64.3 GiB"),
     ]
 
 
@@ -311,10 +313,10 @@ def test_check_mssql_transactionlogs_multiple_mp_single() -> None:
         )
     ) == [
         Result(state=State.OK, summary="Used: 121 GiB"),
-        Metric("data_size", 130203779072.0, boundaries=(0.0, 734020370432.0)),
+        Metric("data_size", 130203779072.0, boundaries=(0.0, 734773248000.0)),
         Result(state=State.OK, summary="Allocated used: 121 GiB"),
         Result(state=State.OK, summary="Allocated: 122 GiB"),
-        Metric("allocated_size", 130956656640.0, boundaries=(0.0, 734020370432.0)),
+        Metric("allocated_size", 130956656640.0, boundaries=(0.0, 734773248000.0)),
         Result(state=State.OK, summary="Maximum size: 684 GiB"),
     ]
 
@@ -329,11 +331,11 @@ def test_check_mssql_transactionlogs_multiple_mp_summary() -> None:
         )
     ) == [
         Result(state=State.OK, summary="Used: 246 GiB"),
-        Metric("data_size", 264601862144.0, boundaries=(0.0, 868418453504.0)),
+        Metric("data_size", 264601862144.0, boundaries=(0.0, 869924208640.0)),
         Result(state=State.OK, summary="Allocated used: 246 GiB"),
         Result(state=State.OK, summary="Allocated: 248 GiB"),
-        Metric("allocated_size", 266107617280.0, boundaries=(0.0, 868418453504.0)),
-        Result(state=State.OK, summary="Maximum size: 809 GiB"),
+        Metric("allocated_size", 266107617280.0, boundaries=(0.0, 869924208640.0)),
+        Result(state=State.OK, summary="Maximum size: 810 GiB"),
     ]
 
 
@@ -469,7 +471,8 @@ def test_datafile_usage_unlimited_is_evaluated_per_file() -> None:
     unlimited_second = _check_database([limited, unlimited], free_space_per_mountpoint)
     unlimited_first = _check_database([unlimited, limited], free_space_per_mountpoint)
 
-    assert unlimited_second.max == unlimited_first.max == 10 + 1006
+    # limited is capped by its max_size (10); unlimited grows into free (1000) + allocated (4).
+    assert unlimited_second.max == unlimited_first.max == 10 + 1004
     assert unlimited_first.used == unlimited_second.used == 7 + 6
     assert unlimited_first.allocated == unlimited_second.allocated == 3 + 4
 
@@ -514,9 +517,9 @@ def test_datafile_on_different_mounts() -> None:
 
     usage = _check_database([starved, roomy], {"s:/": 10, "r:/": 2000})
 
-    # starved is limited by its filesystem: free (10) + used (7); its max_size (100000) is larger.
-    # roomy is limited by its max_size (1000); its filesystem free (2000) + used (8) is larger.
-    assert usage.max == 10 + 7 + 1000
+    # starved is limited by its filesystem: free (10) + allocated (50); its max_size (100000) is larger.
+    # roomy is limited by its max_size (1000); its filesystem free (2000) + allocated (60) is larger.
+    assert usage.max == 10 + 50 + 1000
 
 
 def test_datafile_usage_shared_mountpoint_counts_free_space_once() -> None:
@@ -538,9 +541,9 @@ def test_datafile_usage_shared_mountpoint_counts_free_space_once() -> None:
     usage = _check_database([first, second], {"s:/": 1000})
 
     # Both files live on s:/, so the 1000 bytes of free space must only be counted once.
-    # first sees free (1000) + used (7); second sees the already-counted mountpoint, so free is
-    # treated as 0 and it only contributes its own used (8).
-    assert usage.max == (1000 + 7) + 8
+    # first sees free (1000) + allocated (3); second sees the already-counted mountpoint, so free is
+    # treated as 0 and it only contributes its own allocated (4).
+    assert usage.max == (1000 + 3) + 4
 
 
 class _Scenario(NamedTuple):
@@ -595,9 +598,9 @@ class _Scenario(NamedTuple):
                 used_size=7,
                 allocated_size=50,
                 filesystem_free=1000,
-                expected_max=1007,
+                expected_max=1050,
             ),
-            id="df-unlimited-uses-free-plus-used",
+            id="df-unlimited-uses-free-plus-allocated",
         ),
         pytest.param(
             _Scenario(
@@ -617,7 +620,7 @@ class _Scenario(NamedTuple):
                 used_size=7,
                 allocated_size=50,
                 filesystem_free=10,
-                expected_max=17,  # THIS IS A BUG! it should be 100000
+                expected_max=60,  # allocated (50) + free (10); never below what is already allocated
             ),
             id="df-limited-capped-by-filesystem",
         ),
@@ -646,11 +649,12 @@ def test_check_mssql_transactionlogs_multiple_mp_summary_SUP29484() -> None:
         )
     ) == [
         Result(state=State.OK, summary="Used: 103 GiB"),
-        Metric("data_size", 110937243648.0, boundaries=(0.0, 115478626304.0)),
+        Metric("data_size", 110937243648.0, boundaries=(0.0, 128849018880.0)),
         Result(state=State.OK, summary="Allocated used: 103 GiB"),
         Result(state=State.OK, summary="Allocated: 120 GiB"),
-        Metric("allocated_size", 128849018880.0, boundaries=(0.0, 115478626304.0)),
+        Metric("allocated_size", 128849018880.0, boundaries=(0.0, 128849018880.0)),
         Result(
-            state=State.OK, summary="Maximum size: 108 GiB"
-        ),  # THIS IS A BUG! should be 138 GiB, can not be smaller as allocated?!
+            state=State.OK, summary="Maximum size: 120 GiB"
+        ),  # THIS IS A BUG! should be 138 GiB; now == allocated (no longer impossible), but the
+        # later files sharing E:\ are still falsely starved of free space
     ]

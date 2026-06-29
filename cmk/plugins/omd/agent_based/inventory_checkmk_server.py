@@ -103,12 +103,14 @@ def merge_sections(
 
         helper_usage_generic = float(status["helper_usage_generic"]) * 100
         livestatus_usage = float(status["livestatus_usage"]) * 100
+        num_hosts = int(status["num_hosts"])
+        num_services = int(status["num_services"])
 
         merged_section["sites"].setdefault(site, {"status_columns": {}, "inventory_columns": {}})[
             "status_columns"
         ] = {
-            "num_hosts": status["num_hosts"],
-            "num_services": status["num_services"],
+            "num_hosts": num_hosts,
+            "num_services": num_services,
             "check_helper_usage": helper_usage_generic,
             "fetcher_helper_usage": helper_usage_fetcher,
             "checker_helper_usage": helper_usage_checker,

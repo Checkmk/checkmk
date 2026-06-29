@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import re
+import subprocess
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass
@@ -27,12 +28,23 @@ from requests.auth import HTTPBasicAuth
 
 from tests.performance.mock_remote_sites import mock_remote_site_cluster
 from tests.performance.sysmon import track_resources
-from tests.testlib.agent_hosts import piggyback_host_from_dummy_generator
+from tests.testlib.common.utils import wait_until
+from tests.testlib.dcd import execute_dcd_cycle
 from tests.testlib.site import ADMIN_USER as site_admin_user
 from tests.testlib.site import PythonHelper, Site
 from tests.testlib.utils import check_output
 
 logger = logging.getLogger(__name__)
+
+# DCD piggyback scenario
+DCD_PIGGYBACK_SOURCE_HOST = "test-performance-dcd"
+DCD_PIGGYBACK_CONNECTOR_ID = "dcd_performance_piggyback"
+DCD_PIGGYBACK_GENERATOR_NAME = "dump_generator.py"
+# The piggyback data is pre-staged and stable, so a single forced DCD run is enough to
+# create and discover all hosts. A fine-grained poll interval keeps the measurement tied
+# to the actual DCD work instead of a coarse sleep grid.
+DCD_PIGGYBACK_CYCLE_INTERVAL = 0.5
+DCD_PIGGYBACK_CYCLE_MAX_COUNT = 240
 
 
 @dataclass
@@ -79,6 +91,7 @@ class PerformanceTest:
         # When set, bulk change activation hosts are spread over these site IDs
         # (used with mocked remote sites) instead of self.sites.
         self.bulk_change_target_site_ids: list[str] | None = None
+        self._dcd_piggyback_rule_id = ""
 
     @property
     def sites(self) -> list[Site]:
@@ -322,34 +335,191 @@ class PerformanceTest:
             if len(hostnames) > 0:
                 self.delete_hosts(self.central_site, hostnames)
 
-    def scenario_performance_dcd_piggyback(
-        self,
-    ) -> None:
-        """Scenario: DCD piggyback host discovery
+    @property
+    def dcd_piggybacked_hosts(self) -> list[str]:
+        """The deterministic set of piggybacked host names emitted by the source host."""
+        return [f"{DCD_PIGGYBACK_SOURCE_HOST}-pb-{idx}" for idx in range(1, self.object_count + 1)]
 
-        Create a source host with 100 piggybacked hosts.
-        Wait for piggyback host discovery.
+    def setup_dcd_piggyback_env(self) -> None:
+        """Build the DCD piggyback environment, outside the benchmark measurement.
+
+        This scaffolding is created once per test (not per measured round):
+          * the piggyback DCD connector,
+          * the dummy datasource program rule that emits ``object_count`` piggybacked hosts,
+          * the source host whose check runs that program and fills the piggyback cache.
+
+        The connector's host discovery is non-deterministic in *when* it runs. To keep it out
+        of the measured window, the connector's poll interval is set very high (below) and the
+        conftest sets ``dcd_site_update_interval = 3600``; host creation is then driven solely
+        by the forced ``cmk-dcd --execute-cycle`` in the measured scenario, not by the daemon.
         """
-        source_host_name = "test-performance-dcd"
-        pb_host_count = self.object_count
-        dcd_max_count = 120
-        dcd_interval = 5
-        with piggyback_host_from_dummy_generator(
-            self.central_site,
-            source_host_name,
-            pb_host_count=pb_host_count,
-            dcd_max_count=dcd_max_count,
-            dcd_interval=dcd_interval,
-        ) as piggyback_info:
-            assert len(piggyback_info.piggybacked_hosts) == pb_host_count
-            assert (
-                len(
-                    self.central_site.openapi.hosts.get_all_names(
-                        allow=piggyback_info.piggybacked_hosts
-                    )
-                )
-                == pb_host_count
+        site = self.central_site
+
+        logger.info("Creating DCD piggyback connector...")
+        site.openapi.dcd.create_piggyback_connection(
+            dcd_id=DCD_PIGGYBACK_CONNECTOR_ID,
+            title="DCD connector for piggyback performance test",
+            host_attributes={
+                "tag_snmp_ds": "no-snmp",
+                "tag_agent": "no-agent",
+                "tag_piggyback": "piggyback",
+                "tag_address_family": "no-ip",
+            },
+            # Very high on purpose: autonomous cycles are effectively disabled so host
+            # creation happens only in the forced cycle of the measured scenario.
+            interval=3600,
+            delete_hosts=True,
+            discover_on_creation=True,
+            no_deletion_time_after_init=600,
+            max_cache_age=3600,
+            validity_period=600,
+        )
+
+        logger.info("Creating dummy datasource program rule for %s...", DCD_PIGGYBACK_SOURCE_HOST)
+        generator_source = Path(__file__).parent.parent / "scripts/dummy_agent_dump_generator.py"
+        site.write_file(DCD_PIGGYBACK_GENERATOR_NAME, generator_source.read_text())
+        program_call = " ".join(
+            [
+                "python3",
+                f"~/{DCD_PIGGYBACK_GENERATOR_NAME}",
+                "--host-name",
+                DCD_PIGGYBACK_SOURCE_HOST,
+                "--service-count",
+                "0",
+                "--payload",
+                "0",
+                "--piggyback-hosts",
+                str(self.object_count),
+                "--piggyback-services",
+                "10",
+            ]
+        )
+        # Scope the rule to the source host so it can't override the datasource of any other
+        # host sharing this (module-scoped) site.
+        self._dcd_piggyback_rule_id = site.openapi.rules.create(
+            ruleset_name="datasource_programs",
+            value=program_call,
+            conditions={
+                "host_name": {"match_on": [DCD_PIGGYBACK_SOURCE_HOST], "operator": "one_of"}
+            },
+        )
+
+        logger.info("Creating source host %s...", DCD_PIGGYBACK_SOURCE_HOST)
+        site.openapi.hosts.create(
+            hostname=DCD_PIGGYBACK_SOURCE_HOST,
+            folder="/",
+            attributes={"ipaddress": "127.0.0.1", "tag_agent": "cmk-agent"},
+        )
+        site.openapi.changes.activate_and_wait_for_completion(
+            force_foreign_changes=True, strict=False
+        )
+
+        logger.info("Discovering source host to stage the piggyback cache...")
+        site.openapi.service_discovery.run_discovery_and_wait_for_completion(
+            DCD_PIGGYBACK_SOURCE_HOST
+        )
+        site.openapi.changes.activate_and_wait_for_completion(
+            force_foreign_changes=True, strict=False
+        )
+
+    def teardown_dcd_piggyback_env(self) -> None:
+        """Remove the DCD piggyback environment."""
+        site = self.central_site
+        if site.openapi.hosts.get(DCD_PIGGYBACK_SOURCE_HOST):
+            site.openapi.hosts.delete(DCD_PIGGYBACK_SOURCE_HOST)
+        if self._dcd_piggyback_rule_id and site.openapi.rules.get(self._dcd_piggyback_rule_id):
+            site.openapi.rules.delete(self._dcd_piggyback_rule_id)
+            self._dcd_piggyback_rule_id = ""
+        if site.openapi.dcd.get(DCD_PIGGYBACK_CONNECTOR_ID):
+            site.openapi.dcd.delete(DCD_PIGGYBACK_CONNECTOR_ID)
+        site.openapi.changes.activate_and_wait_for_completion(
+            force_foreign_changes=True, strict=False
+        )
+        site.delete_file(DCD_PIGGYBACK_GENERATOR_NAME)
+
+    def setup_dcd_piggyback_round(self) -> None:
+        """Guarantee an identical, complete starting state before each measured round.
+
+        Every measured round must start from the same state: zero piggybacked hosts and a
+        freshly, fully populated piggyback cache. The previous round's hosts and cache are
+        dropped first, the source host's check is rescheduled to regenerate the cache, and we
+        wait until every piggybacked host is staged. DCD is then restarted as the *last*
+        action so it picks up the freshly staged cache and its cycle timers are reset against
+        it; with the connector's poll interval set very high, host creation happens only in
+        the forced, measured cycle.
+        """
+        site = self.central_site
+
+        self.teardown_dcd_piggyback_round()
+
+        logger.info("Rescheduling source host check to regenerate the piggyback cache...")
+        site.reschedule_services(DCD_PIGGYBACK_SOURCE_HOST, max_count=3, strict=False)
+
+        def _piggyback_cache_fully_staged() -> bool:
+            # The source host's datasource program writes one cache directory per piggybacked
+            # host under tmp/check_mk/piggyback/. listdir shells out to `ls`, which fails
+            # (CalledProcessError) while the directory does not exist yet.
+            try:
+                cached = set(site.listdir("tmp/check_mk/piggyback"))
+            except subprocess.CalledProcessError:
+                return False
+            return all(host in cached for host in self.dcd_piggybacked_hosts)
+
+        wait_until(
+            _piggyback_cache_fully_staged,
+            timeout=120,
+            interval=1,
+            condition_name="wait for piggyback cache to be fully staged",
+        )
+
+        logger.info("Restarting DCD so it picks up the freshly staged cache...")
+        site.omd("restart", "dcd", check=True)
+
+        # `omd restart` returns before the DCD controller socket is ready to serve commands.
+        # Wait until a cycle command actually succeeds, so the measured scenario's first
+        # forced cycle cannot race a not-yet-ready daemon (a flaky cmk-dcd exit 1).
+        wait_until(
+            lambda: site.run(["cmk-dcd", "--batches"], check=False).returncode == 0,
+            timeout=60,
+            interval=1,
+            condition_name="wait for DCD daemon to be ready after restart",
+        )
+
+    def teardown_dcd_piggyback_round(self) -> None:
+        """Drop the piggybacked hosts created by the cycle, and the piggyback cache.
+
+        Removing the cache too means the next round's setup regenerates it from scratch, so
+        the reschedule-and-wait there genuinely re-stages the data instead of finding the
+        previous round's directories already in place.
+        """
+        site = self.central_site
+        existing = site.openapi.hosts.get_all_names(allow=self.dcd_piggybacked_hosts)
+        if existing:
+            site.openapi.hosts.bulk_delete(existing)
+            site.openapi.changes.activate_and_wait_for_completion(
+                force_foreign_changes=True, strict=False
             )
+        site.delete_dir("tmp/check_mk/piggyback")
+
+    def scenario_performance_dcd_piggyback(self) -> None:
+        """Scenario (timed): one DCD run that turns the pre-staged piggyback data into hosts.
+
+        The piggyback cache holds exactly ``object_count`` hosts (guaranteed by the per-round
+        setup), so the work performed here is deterministic: force DCD cycles until all
+        piggybacked hosts have been created and discovered. With stable, pre-staged input and
+        a fine-grained poll interval, the measured runtime reflects the real DCD discovery
+        work and is reproducible on the same machine.
+        """
+        execute_dcd_cycle(
+            self.central_site,
+            expected_pb_hosts=self.object_count,
+            max_count=DCD_PIGGYBACK_CYCLE_MAX_COUNT,
+            interval=DCD_PIGGYBACK_CYCLE_INTERVAL,
+        )
+        assert (
+            len(self.central_site.openapi.hosts.get_all_names(allow=self.dcd_piggybacked_hosts))
+            == self.object_count
+        )
 
     def scenario_performance_ui_response(
         self, context: BrowserContext, page_url: CmkPageUrl

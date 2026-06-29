@@ -86,15 +86,39 @@ def test_performance_services(
     )
 
 
-@pytest.mark.skip("CMK-27171: Unstable scenario; fix in progress")
+@pytest.fixture(name="dcd_piggyback_env", scope="function")
+def _dcd_piggyback_env(perftest: PerformanceTest) -> Iterator[None]:
+    """Provide the (un-timed) DCD piggyback environment for the measured scenario."""
+    try:
+        perftest.setup_dcd_piggyback_env()
+        yield
+    finally:
+        # teardown is idempotent (every deletion is existence-guarded, delete_file uses
+        # `rm -f`), so it also cleans up after a setup that failed part-way through.
+        perftest.teardown_dcd_piggyback_env()
+
+
 def test_performance_piggyback(
-    perftest: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
+    perftest: PerformanceTest,
+    benchmark: BenchmarkFixture,
+    dcd_piggyback_env: None,
+    track_system_resources: None,
 ) -> None:
+    """DCD piggyback host discovery
+
+    Measure forced DCD cycle that creates and discovers pre-staged piggyback hosts.
+    """
     benchmark.pedantic(  # type: ignore[no-untyped-call]
         perftest.scenario_performance_dcd_piggyback,
-        args=[],
+        setup=perftest.setup_dcd_piggyback_round,
+        teardown=perftest.teardown_dcd_piggyback_round,
         rounds=perftest.rounds,
-        iterations=perftest.iterations,
+        # The first forced DCD cycle after site/daemon start is always cold; warm up at
+        # least once so that one-off cost is excluded from the measured rounds.
+        warmup_rounds=max(1, perftest.warmup_rounds),
+        # pytest-benchmark forbids iterations > 1 together with a `setup` function, so this
+        # must stay 1; per-round work is repeated via `rounds`, not `iterations`.
+        iterations=1,
     )
 
 

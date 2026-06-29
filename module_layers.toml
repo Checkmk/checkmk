@@ -117,8 +117,6 @@ allows = [
 
 [plugin_families.violations.azure_v2_extended]
 allows = [
-  # FIXME
-  "cmk.agent_based.v1",
   # reuse of the free azure_v2 plugin library (agent_based + rulesets helpers)
   "cmk.plugins.azure_v2",
   # the Azure OTel metrics plugin consumes the metric backend section + query models

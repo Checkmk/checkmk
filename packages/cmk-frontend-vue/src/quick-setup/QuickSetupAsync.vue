@@ -568,7 +568,6 @@ showQuickSetup.value = true
     :regular-stages="regularStages"
     :save-stage="saveStage"
     :current-stage="quickSetupHook.stage.value"
-    :go-to-stage="quickSetupHook.goto"
     :mode="quickSetupHook.mode"
     :prevent-leaving="preventLeaving"
     :hide-wait-icon="hideWaitIcon"

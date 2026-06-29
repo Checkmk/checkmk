@@ -41,11 +41,11 @@ from cmk.base.config import LoadingResult
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.modes.modes import Mode, Option
 from cmk.ccc import site, store, tty
-from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.crash import make_crash_report_base_path
 from cmk.diagnostics import (
     CheckmkFileEncryption,
     CheckmkFileInfoByRelFilePathMap,

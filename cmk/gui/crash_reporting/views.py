@@ -12,7 +12,7 @@ from typing import Any, Literal
 import livestatus
 from livestatus import MKLivestatusNotFoundError, OnlySites, Query, QuerySpecification
 
-from cmk.ccc.crash_reporting import normalize_crash_time
+from cmk.crash import normalize_crash_time
 from cmk.gui import query_filters
 from cmk.gui.config import Config
 from cmk.gui.data_source import (

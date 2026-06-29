@@ -33,14 +33,14 @@ from livestatus import LivestatusTestingError
 import cmk.ccc.version as cmk_version
 from cmk import trace
 from cmk.ccc import store
-from cmk.ccc.crash_reporting import (
+from cmk.ccc.exceptions import MKException, MKGeneralException
+from cmk.ccc.site import omd_site, SiteId
+from cmk.crash import (
     ABCCrashReport,
     CrashReportStore,
     make_crash_report_base_path,
     normalize_crash_time,
 )
-from cmk.ccc.exceptions import MKException, MKGeneralException
-from cmk.ccc.site import omd_site, SiteId
 from cmk.crypto import MKCryptoException
 from cmk.gui import session
 from cmk.gui.config import active_config

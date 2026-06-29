@@ -12,7 +12,7 @@ from typing import Any, override
 
 import cmk.utils.paths
 from cmk.ccc import store
-from cmk.ccc.crash_reporting import (
+from cmk.crash import (
     crash_fingerprint,
     CRASH_INFO_VERSION,
     CrashInfo,

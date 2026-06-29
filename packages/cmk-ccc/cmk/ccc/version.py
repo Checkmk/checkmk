@@ -22,8 +22,8 @@ from functools import cache
 from pathlib import Path
 from typing import Final, Literal, NamedTuple, Self
 
-from cmk.ccc.crash_reporting import VersionInfo
 from cmk.ccc.site import get_omd_config
+from cmk.ccc.version_info import VersionInfo
 
 
 class _EditionValue(NamedTuple):

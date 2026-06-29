@@ -38,19 +38,19 @@ from cmk.base.modes.modes import (
     discover_modes,
     Modes,
 )
-from cmk.ccc.crash_reporting import (
-    ABCCrashReport,
-    BaseDetails,
-    CrashReportStore,
-    make_crash_report_base_path,
-    VersionInfo,
-)
 from cmk.ccc.exceptions import (
     MKBailOut,
     MKGeneralException,
     MKTerminate,
 )
 from cmk.ccc.site import get_omd_config, omd_site
+from cmk.crash import (
+    ABCCrashReport,
+    BaseDetails,
+    CrashReportStore,
+    make_crash_report_base_path,
+    VersionInfo,
+)
 from cmk.trace.export import (
     exporter_from_config,
     init_span_processor,

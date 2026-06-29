@@ -11,7 +11,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Self
 
-from cmk.ccc.crash_reporting import ABCCrashReport, BaseDetails, CrashReportStore, VersionInfo
+from cmk.crash import ABCCrashReport, BaseDetails, CrashReportStore, VersionInfo
 
 
 def create_fetcher_crash_dump(

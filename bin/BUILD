@@ -214,9 +214,9 @@ py_library(
     deps = [
         "//cmk/piggyback:hub",
         "//cmk/utils",
-        "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-crash:crash",
     ],
 )
 

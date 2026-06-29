@@ -78,7 +78,7 @@ py_library(
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/gui/openapi/spec/editions",
         "//cmk/gui/rest_api_types:notifications",
-        "//packages/cmk-ccc:crash-reporting",
+        "//packages/cmk-crash:crash",
         requirement("requests"),
     ],
 )
@@ -94,10 +94,10 @@ py_library(
     deps = [
         "//cmk/utils",
         "//cmk/utils:redis",
-        "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-crash:crash",
         "//packages/cmk-crypto",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//tests:pkg_marker",

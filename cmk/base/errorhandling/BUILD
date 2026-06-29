@@ -11,7 +11,6 @@ py_library(
     deps = [
         "//cmk/piggyback:backend",
         "//cmk/utils",
-        "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
@@ -21,5 +20,6 @@ py_library(
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-crash:crash",
     ],
 )

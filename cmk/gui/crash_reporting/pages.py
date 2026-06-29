@@ -21,9 +21,9 @@ from typing import cast, override, Protocol, Self, TypedDict
 import livestatus
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc.crash_reporting import CrashInfo, normalize_crash_time, SENSITIVE_KEYWORDS
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
+from cmk.crash import CrashInfo, normalize_crash_time, SENSITIVE_KEYWORDS
 from cmk.crash_reporting import crash_report_submit_payload, pack_crash_report
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import (

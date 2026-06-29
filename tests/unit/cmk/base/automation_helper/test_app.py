@@ -305,6 +305,7 @@ async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> No
         plugins=AgentBasedPlugins.empty(),
         loading_result=None,
         get_builtin_host_labels=get_builtin_host_labels,
+        changes_cache=cache,
     )
     mock_delay_state = _MockDelayState(
         call_counter=0,
@@ -318,7 +319,6 @@ async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> No
                 poll_interval=0.0,
                 cooldown_interval=0.0,
             ),
-            cache=cache,
             state=state,
             delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
         )
@@ -349,6 +349,7 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
         reload_config=mock_reload_callback,
         loading_result=None,
         get_builtin_host_labels=get_builtin_host_labels,
+        changes_cache=cache,
     )
     mock_delay_state = _MockDelayState(
         call_counter=0,
@@ -362,7 +363,6 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
                 poll_interval=0.0,
                 cooldown_interval=5.0,
             ),
-            cache=cache,
             state=state,
             delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
         )
@@ -401,6 +401,7 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: C
         reload_config=mock_reload_callback,
         loading_result=None,
         get_builtin_host_labels=get_builtin_host_labels,
+        changes_cache=cache,
     )
     mock_delay_state = _MockDelayState(
         call_counter=0,
@@ -414,7 +415,6 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: C
                 poll_interval=0.0,
                 cooldown_interval=0.0,
             ),
-            cache=cache,
             state=state,
             delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
         )

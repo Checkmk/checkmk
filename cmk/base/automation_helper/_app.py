@@ -64,28 +64,35 @@ class _State:
     plugins: AgentBasedPlugins | None
     loading_result: config.LoadingResult | None
     get_builtin_host_labels: Callable[[SiteId], Labels]
+    changes_cache: Cache
 
-    def load_new(self, *, continue_on_error: bool) -> None:
-        try:
-            # We might be running under the debug flag. In that case
-            # we *must* be in the try/except block.
-            if self.plugins is None:
-                self.plugins = config.load_all_plugins()
+    def load(self) -> None:
+        """Load the plugins (once) and reload the configuration.
 
-            # Do not yet set `self.last_reload_at`. We don't know if we succeed.
-            time_right_before_reload = time.time()
-            self.loading_result = self.reload_config(self.get_builtin_host_labels)
-            self.last_reload_at = time_right_before_reload
-        except (Exception, BaseException) as e:
-            LOGGER.error("[reloader] Error reloading configuration: %s", e)
-            if not continue_on_error:
-                raise
+        Raises on failure; callers decide whether to continue or report the error.
+        """
+        if self.plugins is None:
+            self.plugins = config.load_all_plugins()
+
+        # Do not yet set `self.last_reload_at`. We don't know if we succeed.
+        time_right_before_reload = time.time()
+        self.loading_result = self.reload_config(self.get_builtin_host_labels)
+        self.last_reload_at = time_right_before_reload
+
+    def reload_if_required(self) -> bool:
+        """Reload the configuration if the cache reports a newer change than our last reload.
+
+        Returns whether a reload happened. Raises on failure.
+        """
+        if self.changes_cache.reload_required(self.last_reload_at):
+            self.load()
+            return True
+        return False
 
 
 @dataclass(frozen=True)
 class _ApplicationDependencies:
     automation_engine: AutomationEngine
-    changes_cache: Cache
     config: Config
     clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None]
     state: _State
@@ -128,7 +135,6 @@ def make_application(
 
     app.state.dependencies = _ApplicationDependencies(
         automation_engine=engine,
-        changes_cache=cache,
         config=config,
         clear_caches_before_each_call=clear_caches_before_each_call,
         state=_State(
@@ -138,6 +144,7 @@ def make_application(
             plugins=None,
             loading_result=None,
             get_builtin_host_labels=make_app(edition).get_builtin_host_labels,
+            changes_cache=cache,
         ),
     )
 
@@ -150,7 +157,6 @@ def make_application(
                 edition,
                 payload,
                 dependencies.automation_engine,
-                dependencies.changes_cache,
                 dependencies.clear_caches_before_each_call,
                 dependencies.state,
             )
@@ -168,12 +174,14 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None]:
     dependencies: _ApplicationDependencies = app.state.dependencies
 
     # Continue on error. Either the reloader can fix it, or we will raise in the automation endpoint.
-    dependencies.state.load_new(continue_on_error=True)
+    try:
+        dependencies.state.load()
+    except (Exception, SystemExit) as e:
+        LOGGER.error("[reloader] Error reloading configuration: %s", e)
 
     reloader_task = asyncio.create_task(
         _reloader_task(
             config=dependencies.config.reloader_config,
-            cache=dependencies.changes_cache,
             state=dependencies.state,
         )
         if dependencies.config.reloader_config.active
@@ -187,13 +195,20 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
 async def _reloader_task(
     config: ReloaderConfig,
-    cache: Cache,
     state: _State,
     delayer_factory: Callable[[float], Awaitable[None]] = asyncio.sleep,
 ) -> None:
     LOGGER.info("[reloader] Operational")
+
+    def _get_last_change() -> float:
+        try:
+            return state.changes_cache.get_last_detected_change()
+        except CacheError as error:
+            LOGGER.error("[reloader] Error getting last detected change: %s", error)
+            return 0.0
+
     while True:
-        if (cached_last_change := _retrieve_last_change(cache)) < state.last_reload_at:
+        if (cached_last_change := _get_last_change()) < state.last_reload_at:
             await delayer_factory(config.poll_interval)
             continue
 
@@ -207,17 +222,17 @@ async def _reloader_task(
         while True:
             await delayer_factory(current_cooldown)
 
-            cached_last_change = _retrieve_last_change(cache)
+            cached_last_change = _get_last_change()
 
             if cached_last_change == last_change:
                 async with state.automation_or_reload_lock:
-                    if cached_last_change < state.last_reload_at:
-                        break
-
-                    LOGGER.info("[reloader] Triggering reload")
                     # Do not let the reloader fail (and stop).
                     # We will try again on the next change, and report failure in the automation endpoint.
-                    state.load_new(continue_on_error=True)
+                    try:
+                        if state.reload_if_required():
+                            LOGGER.info("[reloader] Triggering reload")
+                    except (Exception, SystemExit) as e:
+                        LOGGER.error("[reloader] Error reloading configuration: %s", e)
                     break
 
             else:
@@ -233,19 +248,10 @@ async def _reloader_task(
                 )
 
 
-def _retrieve_last_change(cache: Cache) -> float:
-    try:
-        return cache.get_last_detected_change()
-    except CacheError as err:
-        LOGGER.error("[reloader] Cache failure", exc_info=err)
-        return 0
-
-
 def _execute_automation_endpoint(
     edition: cmk_version.Edition,
     payload: AutomationPayload,
     engine: AutomationEngine,
-    cache: Cache,
     clear_caches_before_each_call: Callable[[ConfigCache, Hosts], None],
     state: _State,
 ) -> AutomationResponse:
@@ -254,16 +260,15 @@ def _execute_automation_endpoint(
         payload.name,
         payload.args,
     )
-    if cache.reload_required(state.last_reload_at):
-        try:
-            state.load_new(continue_on_error=False)
+    try:
+        if state.reload_if_required():
             LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
-        except (Exception, SystemExit) as e:
-            return AutomationResponse(
-                serialized_result_or_error_code=AutomationError.UNKNOWN_ERROR,
-                stdout="",
-                stderr=f"Error reloading configuration: {e}",
-            )
+    except (Exception, SystemExit) as e:
+        return AutomationResponse(
+            serialized_result_or_error_code=AutomationError.UNKNOWN_ERROR,
+            stdout="",
+            stderr=f"Error reloading configuration: {e}",
+        )
 
     buffer_stdout = io.StringIO()
     buffer_stderr = io.StringIO()

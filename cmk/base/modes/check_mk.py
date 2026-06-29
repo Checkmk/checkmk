@@ -83,6 +83,7 @@ from cmk.checkengine.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.helper_interface import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.parser import (
+    make_parser,
     NO_SELECTION,
     parse_raw_data,
     ParserFunction,
@@ -113,7 +114,6 @@ from cmk.checkengine.snmplib import (
     SNMPSectionName,
     walk_for_export,
 )
-from cmk.checkengine.sources import make_parser
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.checkengine.submitters import get_submitter
 from cmk.checkengine.summarize import summarize, SummarizerFunction

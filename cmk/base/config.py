@@ -90,7 +90,7 @@ from cmk.checkengine.fetchers import (
 from cmk.checkengine.filecache import MaxAge
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters
-from cmk.checkengine.parser import SectionStore
+from cmk.checkengine.parser import ParserConfig, SectionStore
 from cmk.checkengine.plugin_backend.check_plugins_legacy import convert_legacy_check_plugins
 from cmk.checkengine.plugin_backend.section_plugins_legacy import (
     convert_legacy_sections,
@@ -116,7 +116,6 @@ from cmk.checkengine.snmplib import (  # some of these are required in the modul
     SNMPTiming,
     SNMPVersion,
 )
-from cmk.checkengine.sources import ParserConfig
 from cmk.checkengine.specs.exitspec import ExitSpec
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig

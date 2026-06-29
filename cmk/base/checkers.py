@@ -66,7 +66,14 @@ from cmk.checkengine.helper_interface import (
     SourceInfo,
     SourceType,
 )
-from cmk.checkengine.parser import HostSections, parse_raw_data, SectionNameCollection, SectionStore
+from cmk.checkengine.parser import (
+    HostSections,
+    make_parser,
+    parse_raw_data,
+    ParserConfig,
+    SectionNameCollection,
+    SectionStore,
+)
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
     AutocheckEntry,
@@ -92,9 +99,7 @@ from cmk.checkengine.sectionparserutils import (
 from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPRawData
 from cmk.checkengine.sources import (
     FetcherFactory,
-    make_parser,
     make_sources,
-    ParserConfig,
     Source,
 )
 from cmk.checkengine.specs.checkresults import (

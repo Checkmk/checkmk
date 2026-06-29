@@ -13,14 +13,12 @@ from pathlib import Path
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.translations import parse_translation_options, TranslationOptions
 from cmk.checkengine.helper_interface import FetcherType
-from cmk.checkengine.parser import (
-    AgentParser,
-    AgentRawDataSectionElem,
-    Parser,
-    PiggybackParser,
-    SectionStore,
-    SNMPParser,
-)
+
+from ._agent import AgentParser
+from ._parser import AgentRawDataSectionElem, Parser
+from ._piggyback import PiggybackParser
+from ._sectionstore import SectionStore
+from ._snmp import SNMPParser
 
 __all__ = ["make_parser", "ParserConfig"]
 

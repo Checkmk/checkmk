@@ -32,9 +32,8 @@ from cmk.checkengine.discovery._autochecks import AutochecksStore
 from cmk.checkengine.fetcher import Mode
 from cmk.checkengine.filecache import AgentFileCache, FileCacheMode, MaxAge
 from cmk.checkengine.helper_interface import SourceInfo
-from cmk.checkengine.parser import NO_SELECTION
+from cmk.checkengine.parser import NO_SELECTION, ParserConfig
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
-from cmk.checkengine.sources import ParserConfig
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.submitters import FormattedSubmittee, Submitter
 from cmk.checkengine.summarize import SummaryConfig

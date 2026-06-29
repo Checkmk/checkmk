@@ -5,34 +5,18 @@
 
 from __future__ import annotations
 
-from ._agent import AgentParser
-from ._parser import (
-    AgentRawDataSection,
-    AgentRawDataSectionElem,
-    HostSections,
-    NO_SELECTION,
-    parse_raw_data,
-    Parser,
-    ParserFunction,
-    SectionNameCollection,
-)
-from ._piggyback import PiggybackParser
-from ._sectionstore import SectionStore
-from ._snmp import SNMPParser
-from ._utils import group_by_host
-
-__all__ = [
-    "AgentParser",
-    "AgentRawDataSection",
-    "AgentRawDataSectionElem",
-    "group_by_host",
-    "HostSections",
-    "NO_SELECTION",
-    "Parser",
-    "parse_raw_data",
-    "ParserFunction",
-    "PiggybackParser",
-    "SectionNameCollection",
-    "SectionStore",
-    "SNMPParser",
-]
+from ._agent import AgentParser as AgentParser
+from ._factory import make_parser as make_parser
+from ._factory import ParserConfig as ParserConfig
+from ._parser import AgentRawDataSection as AgentRawDataSection
+from ._parser import AgentRawDataSectionElem as AgentRawDataSectionElem
+from ._parser import HostSections as HostSections
+from ._parser import NO_SELECTION as NO_SELECTION
+from ._parser import parse_raw_data as parse_raw_data
+from ._parser import Parser as Parser
+from ._parser import ParserFunction as ParserFunction
+from ._parser import SectionNameCollection as SectionNameCollection
+from ._piggyback import PiggybackParser as PiggybackParser
+from ._sectionstore import SectionStore as SectionStore
+from ._snmp import SNMPParser as SNMPParser
+from ._utils import group_by_host as group_by_host

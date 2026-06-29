@@ -5,8 +5,6 @@
 
 from ._api import Source as Source
 from ._builder import make_sources as make_sources
-from ._parser import make_parser as make_parser
-from ._parser import ParserConfig as ParserConfig
 from ._sources import FetcherFactory as FetcherFactory
 from ._sources import IPMISource as IPMISource
 from ._sources import MgmtSNMPSource as MgmtSNMPSource

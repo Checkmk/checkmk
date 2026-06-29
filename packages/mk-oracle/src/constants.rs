@@ -29,6 +29,7 @@ pub const SQL_QUERY_EXTENSION: &str = "sql";
 
 pub mod environment {
     pub const CONFIG_NAME: &str = "mk-oracle.yml";
+    pub const USER_CONFIG_NAME: &str = "mk-oracle.user.yml";
     pub const CONFIG_DIR_ENV_VAR: &str = "MK_CONFDIR";
     pub const LOG_DIR_ENV_VAR: &str = "MK_LOGDIR";
     pub const TEMP_DIR_ENV_VAR: &str = "MK_TEMPDIR";
@@ -47,6 +48,8 @@ pub static DEFAULT_CONFIG_FILE: LazyLock<PathBuf> = LazyLock::new(|| {
 pub static CONFIG_DIR: LazyLock<PathBuf> = LazyLock::new(|| Path::new(&get_conf_dir()).to_owned());
 pub static RUNTIME_DIR: LazyLock<PathBuf> =
     LazyLock::new(|| Path::new(&get_runtime_dir()).to_owned());
+pub static USER_CONFIG_FILE: LazyLock<PathBuf> =
+    LazyLock::new(|| RUNTIME_DIR.join(environment::USER_CONFIG_NAME));
 pub static ENV_LOG_DIR: LazyLock<Option<PathBuf>> = LazyLock::new(|| {
     std::env::var(environment::LOG_DIR_ENV_VAR)
         .ok()

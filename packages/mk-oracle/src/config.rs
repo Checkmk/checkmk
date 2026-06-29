@@ -47,8 +47,12 @@ impl OracleConfig {
         if data.is_empty() {
             bail!("Not yaml document");
         }
+        OracleConfig::from_yaml(&data[0])
+    }
+
+    pub fn from_yaml(doc: &yaml::Yaml) -> Result<Self> {
         Ok(OracleConfig {
-            ora_sql: ora_sql::Config::from_yaml(&data[0])?,
+            ora_sql: ora_sql::Config::from_yaml(doc)?,
         })
     }
 

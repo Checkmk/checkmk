@@ -18,6 +18,7 @@ from cmk.gui.utils.urls import (
     doc_reference_url,
     DocReference,
     DocReferenceUtm,
+    is_allowed_url,
     makeuri,
     makeuri_contextless,
 )
@@ -25,7 +26,6 @@ from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.welcome.registry import welcome_card_registry, WelcomeCardCallback
 from cmk.gui.welcome.utils import WELCOME_PERMISSIONS
 from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomeCards, WelcomePage
-from cmk.utils.urls import is_allowed_url
 
 
 def register(page_registry: PageRegistry) -> None:

@@ -22,6 +22,7 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.transaction_manager import TransactionManager
+from cmk.web.utils.urls import is_allowed_url as is_allowed_url
 
 QueryVars = Mapping[str, Sequence[str]]
 

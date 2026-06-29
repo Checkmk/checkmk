@@ -11,7 +11,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _u
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
-from cmk.utils.urls import is_allowed_url
+from cmk.gui.utils.urls import is_allowed_url
 
 
 def text_with_links_to_user_translated_html(

@@ -437,6 +437,7 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-web",
         requirement("flask"),
     ],
 )

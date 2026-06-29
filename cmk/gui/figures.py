@@ -10,7 +10,7 @@
 
 from typing import Any
 
-from cmk.utils.urls import is_allowed_url
+from cmk.web.utils.urls import is_allowed_url
 
 FigureResponse = dict[str, Any]
 

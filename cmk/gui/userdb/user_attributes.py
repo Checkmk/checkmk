@@ -11,7 +11,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import is_allowed_url, makeuri_contextless
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Alternative,
@@ -25,7 +25,6 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.urls import is_allowed_url
 
 from ._user_attribute import UserAttribute, UserAttributeRegistry
 

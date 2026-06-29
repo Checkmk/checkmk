@@ -49,12 +49,11 @@ from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent, AuthenticationSuccessEvent
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
+from cmk.gui.utils.urls import is_allowed_url, makeuri, requested_file_name, urlencode
 from cmk.gui.utils.user_errors import user_errors
 from cmk.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.licensing.registry import get_remaining_trial_time_rounded
 from cmk.utils.security_event import log_security_event
-from cmk.utils.urls import is_allowed_url
 
 
 def register(page_registry: PageRegistry) -> None:

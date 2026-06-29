@@ -27,6 +27,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.urls import is_allowed_url
 from cmk.gui.valuespec import (
     Alternative,
     FixedValue,
@@ -38,7 +39,6 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.utils.urls import is_allowed_url
 
 from ._base import SidebarSnapin
 from ._helpers import begin_footnote_links, end_footnote_links, iconlink, link

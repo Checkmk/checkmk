@@ -13,6 +13,7 @@ from cmk.gui.form_specs import DefaultValue as FrontendDefaultValue
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
+from cmk.gui.utils.urls import is_allowed_url
 from cmk.gui.watolib import config_domains
 from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.rulesets.v1 import Help, Label, Message, Title
@@ -27,7 +28,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, ValidationError
-from cmk.utils.urls import is_allowed_url
 
 
 def _validate_proxy_scheme(allowed_schemes: frozenset[ProxySchema], value: str) -> None:

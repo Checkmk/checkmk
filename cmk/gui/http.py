@@ -29,7 +29,7 @@ from cmk.ccc.site import url_prefix
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.utils.urls import is_allowed_url
+from cmk.web.utils.urls import is_allowed_url
 
 UploadedFile = tuple[str, str, bytes]
 HTTPMethod = Literal["get", "put", "post", "delete", "patch"]

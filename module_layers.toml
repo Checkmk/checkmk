@@ -826,7 +826,6 @@ allows = [
   "cmk.utils.tags",
   "cmk.utils.timeperiod",
   "cmk.utils.typing_helpers",
-  "cmk.utils.urls",
   "cmk.utils.visuals",
 ]
 excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
@@ -922,7 +921,6 @@ allows = [
   "cmk.utils.paths",
   "cmk.utils.redis",
   "cmk.utils.security_event",
-  "cmk.utils.urls",
 ]
 excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 
@@ -1005,12 +1003,12 @@ allows = [
   "cmk.utils.timeperiod",
   "cmk.utils.translations",
   "cmk.utils.unixsocket_http",
-  "cmk.utils.urls",
+  "cmk.utils.visuals",
   "cmk.web.htmllib",
   "cmk.web.utils.html",
   "cmk.web.utils.escaping",
   "cmk.web.utils.speaklater",
-  "cmk.utils.visuals",
+  "cmk.web.utils.urls",
   "cmk.utils.werks",
 ]
 excludes = [
@@ -1620,9 +1618,6 @@ allows = []
 
 [components."cmk.utils.unixsocket_http"]
 allows = []
-
-[components."cmk.utils.urls"]
-allows = ["cmk.web.utils.urls"]
 
 [components."cmk.utils.visuals"]
 allows = ["cmk.utils.paths"]

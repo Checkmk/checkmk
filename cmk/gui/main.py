@@ -9,8 +9,7 @@ from cmk.gui.http import Request, response
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.utils.urls import add_kiosk_to_url, is_kiosk_request, makeuri
-from cmk.utils.urls import is_allowed_url
+from cmk.gui.utils.urls import add_kiosk_to_url, is_allowed_url, is_kiosk_request, makeuri
 
 
 def register(page_registry: PageRegistry) -> None:

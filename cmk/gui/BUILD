@@ -56,6 +56,7 @@ py_library(
         "//packages/cmk-crypto",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-trace",
+        "//packages/cmk-web",
         requirement("flask"),
         requirement("pydantic"),
         requirement("requests"),

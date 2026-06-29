@@ -15,7 +15,7 @@ from cmk.gui.dashboard.type_defs import DashletConfig, DashletPosition, DashletS
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec, VisualContext
-from cmk.utils.urls import is_allowed_url
+from cmk.gui.utils.urls import is_allowed_url
 
 from .type_defs import AnnotatedInfoName
 from .widget_content import content_from_internal, WidgetContent

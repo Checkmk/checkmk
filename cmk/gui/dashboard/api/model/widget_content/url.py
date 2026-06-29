@@ -8,7 +8,7 @@ from pydantic import field_validator
 
 from cmk.gui.dashboard.dashlet.dashlets.custom_url import URLDashletConfig
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.utils.urls import is_allowed_url
+from cmk.gui.utils.urls import is_allowed_url
 
 from ._base import BaseWidgetContent
 

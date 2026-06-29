@@ -17,6 +17,7 @@ import { waitForHttp } from '../core/http'
 import { log, warn } from '../core/log'
 import { runCommand, waitForTask } from '../core/tasks'
 import * as profileManager from '../profiles/profileManager'
+import { devBrowser } from './devBrowser'
 
 // Poll a dev-server URL after launching its command and, once it answers, open
 // it in the built-in Simple Browser or the system default browser. Gated by
@@ -37,7 +38,7 @@ function openBrowserWhenReady(name: string, url: string): void {
       vscode.env.openExternal(vscode.Uri.parse(url))
     } else {
       log(`${name}: server ready, opening ${url} in Simple Browser`)
-      vscode.commands.executeCommand('simpleBrowser.show', url)
+      void devBrowser.show(url)
     }
   })
 }

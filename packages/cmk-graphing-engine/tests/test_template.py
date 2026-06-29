@@ -31,7 +31,7 @@ from cmk.graphing_engine import (
     Stack,
     TimeRange,
     TimeSeries,
-    update_graph,
+    update_graphs,
 )
 from cmk.graphing_engine._from_api import parse_graph_from_api
 
@@ -190,7 +190,7 @@ def _discover(
 
 def _evaluate(discovered: Graph, rrd: _FakeFetchRRD) -> EvaluatedGraph:
     # Resolve the structure's display, then run the sole update entry point over a fresh fetch.
-    [evaluated] = update_graph(
+    [evaluated] = update_graphs(
         graphs=[discovered],
         translations=[],
         consolidation_function=ConsolidationFunction.AVERAGE,

@@ -15,7 +15,7 @@ from ._evaluate import (
 from ._fetch import (
     fetch_performance_data,
     RRDSource,
-    update_graph,
+    update_graphs,
 )
 from ._from_api import build_curve, metric_display_attributes
 from ._objects import (
@@ -113,5 +113,5 @@ __all__ = [
     "match_graph_for_services",
     "metric_display_attributes",
     "build_curve",
-    "update_graph",
+    "update_graphs",
 ]

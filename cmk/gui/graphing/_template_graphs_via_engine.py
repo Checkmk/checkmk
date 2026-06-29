@@ -20,7 +20,7 @@ from cmk.graphing_engine import (
     RRDSource,
     ServiceRef,
     TimeRange,
-    update_graph,
+    update_graphs,
 )
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _, translate_to_current_language
@@ -74,14 +74,14 @@ def build_template_graphs(
     return built_graphs
 
 
-def update_template_graph_via_engine(
+def update_template_graphs(
     *,
     built_graphs: Sequence[Graph],
     rrd: RRDSource,
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
 ) -> Sequence[EvaluatedGraph]:
-    return update_graph(
+    return update_graphs(
         graphs=built_graphs,
         translations=registered_translations(),
         consolidation_function=consolidation_function,
@@ -90,8 +90,8 @@ def update_template_graph_via_engine(
     )
 
 
-def _update_template_graph_via_dispatch(request: GraphDataRequest) -> Sequence[EvaluatedGraph]:
-    return update_template_graph_via_engine(
+def _dispatched_update_template_graphs(request: GraphDataRequest) -> Sequence[EvaluatedGraph]:
+    return update_template_graphs(
         built_graphs=deserialize_graphs(request.definition),
         rrd=EngineRRDSource(site_id=None, debug=active_config.debug),
         consolidation_function=ensure_type(
@@ -102,5 +102,5 @@ def _update_template_graph_via_dispatch(request: GraphDataRequest) -> Sequence[E
 
 
 TEMPLATE_GRAPH_UPDATER = EngineGraphUpdater(
-    graph_type="template", update=_update_template_graph_via_dispatch
+    graph_type="template", update=_dispatched_update_template_graphs
 )

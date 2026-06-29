@@ -448,7 +448,7 @@ class RRDOriginal:
 class Graph:
     """A graph with its display resolved: every drawn curve carries CurveAttributes (title / unit /
     colour). This is what discovery returns (the builders resolve display inline) and what
-    ``update_graph`` evaluates."""
+    ``update_graphs`` evaluates."""
 
     name: str
     title: str

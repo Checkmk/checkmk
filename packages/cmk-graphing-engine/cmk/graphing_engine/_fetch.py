@@ -137,7 +137,7 @@ def fetch_performance_data(
     }
 
 
-def update_graph(
+def update_graphs(
     *,
     graphs: Sequence[Graph],
     translations: Iterable[translations_v1.Translation],

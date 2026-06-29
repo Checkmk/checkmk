@@ -163,9 +163,9 @@ def test_template_round_trip_is_lossless() -> None:
     # The payload is plain JSON.
     assert json.loads(json.dumps(payload)) == payload
     # Each graph carries its own graph_type; there is no separate envelope field.
-    graphs = payload["graphs"]
-    assert isinstance(graphs, list)
-    assert all(graph["graph_type"] == "template" for graph in graphs)
+    serialized_graphs = payload["graphs"]
+    assert isinstance(serialized_graphs, list)
+    assert all(graph["graph_type"] == "template" for graph in serialized_graphs)
     # The round-trip is stable: deserializing and re-serializing reproduces the same payload (compared
     # as JSON, so the empty-sequence list/tuple distinction the dataclass defaults carry is irrelevant).
     assert serialize_graphs(deserialize_graphs(payload)) == payload

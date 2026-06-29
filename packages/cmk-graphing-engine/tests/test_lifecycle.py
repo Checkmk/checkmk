@@ -6,7 +6,7 @@
 """End-to-end tests of the discover -> update lifecycle, exercising the entry points
 together.
 
-Discovery (build_service_graphs) builds the display-resolved Graph; update_graph
+Discovery (build_service_graphs) builds the display-resolved Graph; update_graphs
 fetches the performance data and time series afresh
 and evaluates each into an EvaluatedGraph. Discovery stores no data, so a refresh always re-fetches.
 Each test fakes a different shape of performance / time series data to cover the pipeline from
@@ -32,7 +32,7 @@ from cmk.graphing_engine import (
     ServiceRef,
     TimeRange,
     TimeSeries,
-    update_graph,
+    update_graphs,
 )
 
 _SERVICE = ServiceRef(host_name="h", service_name="svc")
@@ -129,7 +129,7 @@ def _refresh(
     translations: Sequence[translations_v1.Translation] = (),
 ) -> Sequence[EvaluatedGraph]:
     # Evaluate every discovered graph through the sole update entry point (display already resolved).
-    return update_graph(
+    return update_graphs(
         graphs=list(discovered),
         translations=translations,
         consolidation_function=ConsolidationFunction.AVERAGE,

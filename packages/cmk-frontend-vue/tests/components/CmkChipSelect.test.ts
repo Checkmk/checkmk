@@ -61,6 +61,28 @@ test('marks the selected option with a checkmark, others without', async () => {
   expect(otherRow.querySelector('.cmk-suggestions__selected-mark')).toBeNull()
 })
 
+test('staticLabel keeps the input hint on the trigger while still marking the selected option', async () => {
+  const user = userEvent.setup()
+  render(CmkChipSelect, {
+    props: {
+      options: timeRanges,
+      modelValue: '1d',
+      inputHint: 'More ranges',
+      label: 'time range',
+      staticLabel: true
+    }
+  })
+
+  const trigger = screen.getByRole('combobox', { name: 'time range' })
+  expect(trigger).toHaveTextContent('More ranges')
+  expect(trigger).not.toHaveTextContent('Last day')
+
+  await user.click(trigger)
+
+  const selectedRow = await screen.findByRole('option', { name: 'Last day' })
+  expect(selectedRow.querySelector('.cmk-suggestions__selected-mark')).not.toBeNull()
+})
+
 test('selecting an option updates the model and closes the popup', async () => {
   const user = userEvent.setup()
   const { emitted } = render(CmkChipSelect, {

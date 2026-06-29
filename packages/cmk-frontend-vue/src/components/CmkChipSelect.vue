@@ -27,7 +27,8 @@ const {
   label,
   inputHint = untranslated(''),
   disabled = false,
-  noResultsHint = ''
+  noResultsHint = '',
+  staticLabel = false
 } = defineProps<{
   /** Only `fixed` and `filtered` sources are supported. */
   options: Suggestions
@@ -35,6 +36,8 @@ const {
   inputHint?: TranslatedString
   disabled?: boolean
   noResultsHint?: string
+  /** Always shows `inputHint`. */
+  staticLabel?: boolean
 }>()
 
 const selectedName = defineModel<string | null>({ default: null })
@@ -74,7 +77,7 @@ immediateWatch(
     const found = flattenSuggestions(opts.suggestions).find((s) => s.name === name)
     if (found && found.name !== null) {
       selectedOption.value = new SelectionWithTitle(found.name, found.title)
-      buttonLabel.value = found.title
+      buttonLabel.value = staticLabel ? inputHint : found.title
     } else {
       selectedOption.value = new NoSelection()
       buttonLabel.value = inputHint

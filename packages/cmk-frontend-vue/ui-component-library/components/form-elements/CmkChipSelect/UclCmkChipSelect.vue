@@ -35,6 +35,7 @@ export const panelConfig = {
     initialState: 'fixed'
   },
   disabled: { type: 'boolean' as const, title: 'Disabled', initialState: false },
+  staticLabel: { type: 'boolean' as const, title: 'Static Label', initialState: false },
   inputHint: {
     type: 'string' as const,
     title: 'Input Hint',
@@ -101,6 +102,7 @@ const options = computed<Suggestions>(() => ({
         :input-hint="propState.inputHint"
         :no-results-hint="propState.noResultsHint"
         :disabled="propState.disabled"
+        :static-label="propState.staticLabel"
         label="demo chip select"
       />
 

@@ -13,6 +13,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 const empty = ref<string | null>(null)
 const preselected = ref<string | null>('3h')
+const staticLabelled = ref<string | null>('3h')
 const customOption = ref<string | null>(null)
 
 const ranges: Suggestions = {
@@ -36,6 +37,15 @@ const ranges: Suggestions = {
     :options="ranges"
     input-hint="More ranges"
     label="time range"
+  />
+
+  <h2>Static label (menu-style trigger)</h2>
+  <CmkChipSelect
+    v-model="staticLabelled"
+    :options="ranges"
+    input-hint="More ranges"
+    label="time range"
+    static-label
   />
 
   <h2>Disabled</h2>

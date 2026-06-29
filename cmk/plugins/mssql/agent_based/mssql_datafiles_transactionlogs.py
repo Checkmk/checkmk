@@ -240,11 +240,11 @@ def _datafile_usage(
         allocated_size_sum += instance["allocated_size"] or 0
         used_size_sum += (used_size := instance["used_size"] or 0)
         mountpoint = _get_mountpoint(free_bytes_per_mountpoint, instance["mountpoint"])
-        filesystem_free_size = free_bytes_per_mountpoint.get(mountpoint)
-        if mountpoint in used_mointpoints:
-            filesystem_free_size = 0
-        else:
-            used_mointpoints.append(mountpoint)
+        if (filesystem_free_size := free_bytes_per_mountpoint.get(mountpoint)) is not None:
+            if mountpoint in used_mointpoints:
+                filesystem_free_size = 0
+            else:
+                used_mointpoints.append(mountpoint)
         max_size = _effective_max_size(
             instance["max_size"],
             filesystem_free_size,

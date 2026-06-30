@@ -130,12 +130,15 @@ Monolith decomposition: dissolve global ``BaseConfig`` and ``ConfigCache``
 The ``ConfigCache`` is a monolithic god class that ties together various different concerns.
 It also introduces dependencies in the wrong direction: Feature business logic should expose the configuration objects required to run it.
 
-Monolith decomposition: ``cmk.*`` to standalone packages
+Monolith decomposition: ``cmk.*`` to packages
 ========================================================
 
 :Phase: in progress (long-running)
 :Old: one large intertwined ``cmk.*`` Python codebase
-:New: standalone packages under ``packages/`` and ``non-free/packages/`` with their own build, tests and dependency declarations
+:New: packages under ``packages/`` and ``non-free/packages/`` with their own build, tests and dependency declarations
 
 Extracting components into packages makes their dependencies explicit and enforceable, so they can be built, tested and reused independently of the monolith.
-Several dozen packages exist already (``cmk-ccc``, ``cmk-crypto``, ``cmk-werks``, ``cmk-livestatus-client``, ...), and more code moves out as it is disentangled.
+Several dozen packages exist already (``cmk-ccc``, ``cmk-crypto``, ``cmk-werks``, ``cmk-livestatus-client``, ...), and more code moves there.
+Some code is moved to packages while still depending on the monolith.
+This is an accepted intermediate step to clarify affiliation.
+The declared goal is to disentangle these dependencies to get clear packages with a well-defined surface.

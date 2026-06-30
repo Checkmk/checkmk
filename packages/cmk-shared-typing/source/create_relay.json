@@ -50,10 +50,6 @@
     },
     "server_port": {
       "type": ["integer", "null"]
-    },
-    "exp_add_windows_relay_enabled": {
-      "type": "boolean",
-      "description": "When true, show the OS selector to allow registering a Windows relay."
     }
   },
   "required": [

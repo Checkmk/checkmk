@@ -122,7 +122,7 @@ def _parameter_form_special_agents_mobileiron() -> Dictionary:
                         "You can specify a list of regex patterns for android host names. "
                         "Several patterns can be provided. "
                         "Only those that match any of the patterns will be monitored. "
-                        "By default all host names are accepted"
+                        "By default, all host names are accepted."
                     ),
                     add_element_label=Label("Add new pattern"),
                     custom_validate=(LengthInRange(min_value=1),),
@@ -142,7 +142,7 @@ def _parameter_form_special_agents_mobileiron() -> Dictionary:
                         "You can specify a list of regex patterns for iOS host names. "
                         "Several patterns can be provided. "
                         "Only those that match any of the patterns will be monitored. "
-                        "By default all host names are accepted"
+                        "By default, all host names are accepted."
                     ),
                     add_element_label=Label("Add new pattern"),
                     custom_validate=(LengthInRange(min_value=1),),
@@ -163,7 +163,7 @@ def _parameter_form_special_agents_mobileiron() -> Dictionary:
                         "which are not android and not iOS. "
                         "Several patterns can be provided. "
                         "Only those that match any of the patterns will be monitored. "
-                        "By default all host names are accepted"
+                        "By default, all host names are accepted."
                     ),
                     add_element_label=Label("Add new pattern"),
                     custom_validate=(LengthInRange(min_value=1),),

@@ -267,7 +267,7 @@ def _valuespec_server_data() -> Dictionary:
             "and/or updates. If not entered here, you can provide it on registration.<br>"
             "<br>"
             "<i>New with Checkmk 2.5</i>: The agent updater registration will be triggered by the "
-            "agent controller registration by default. This means that these settings won't apply "
+            "Agent Controller registration by default. This means that these settings won't apply "
             "to the agent updater registration.<br>"
             "You can change the behavior below under <i>Registration</i>."
         ),
@@ -328,8 +328,8 @@ def _valuespec_server_data() -> Dictionary:
                 parameter_form=SingleChoice(
                     title=Title("Protocol to use for fetching updates"),
                     help_text=Help(
-                        "Optional. The agent updater will try to auto detect the protocol, "
-                        "first tryping HTTPS and then HTTP. You can use this setting to force one "
+                        "Optional. The agent updater will try to auto-detect the protocol, "
+                        "first trying HTTPS and then HTTP. You can use this setting to force one "
                         "of the two protocols.<br>"
                         "HTTPS is highly recommended. It requires a valid SSL "
                         "setup of your Apache web server on your monitoring server, however. "
@@ -432,7 +432,7 @@ def _valuespec_updater_registration() -> SingleChoice:
             "<br>"
             "<i>New with Checkmk 2.5</i>: By default, the agent updater will be registered by the agent "
             "controller, after its own successful registration, at the same site and with the "
-            "same hostname.<br>"
+            "same host name.<br>"
             "<br>"
             "Here you can configure the overwriting behavior of subsequent agent controller "
             "registrations, or opt to skip the agent controller triggered agent updater "
@@ -542,7 +542,7 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
     return Dictionary(
         title=Title("Agent updater (Linux, Windows, Solaris)"),
         help_text=Help(
-            "This ruleset allows to deploy an agent plug-in that updates "
+            "This rule set allows to deploy an agent plug-in that updates "
             "the Checkmk agent for Linux, Solaris and Windows on a regular base. "
             "The agent will look for new updates on a regular base and update "
             "itself, when a newly baked agent is available, released and signed. "
@@ -551,7 +551,7 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
             "update of the agent, of course."
             "<br><b>Note<sup>2</sup>:</b> After deploying this new plug-in "
             "it must be registered at your Checkmk server. This can be done either by registering "
-            "the agent controller, or by manual agent updater registration call. "
+            "the Agent Controller, or by manual agent updater registration call. "
             "Customizable in _Registration_ option below. See there for details."
             "<br><b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
             'Python 3.7 installation (or newer) with installed python packages "pyOpenSSL", '

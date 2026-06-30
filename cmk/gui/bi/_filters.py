@@ -76,7 +76,7 @@ def register(filter_registry: FilterRegistry) -> None:
     filter_registry.register(
         BIStatusFilter(
             ident="aggr_effective_state",
-            title=_l("Effective  State"),
+            title=_l("Effective state"),
             sort_index=151,
             what="effective_",
         )
@@ -85,7 +85,7 @@ def register(filter_registry: FilterRegistry) -> None:
     filter_registry.register(
         BIStatusFilter(
             ident="aggr_assumed_state",
-            title=_l("Assumed  State"),
+            title=_l("Assumed state"),
             sort_index=152,
             what="assumed_",
         )

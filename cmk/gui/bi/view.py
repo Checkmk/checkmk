@@ -128,7 +128,7 @@ class DataSourceBIHostAggregations(ABCDataSource):
 
     @property
     def title(self) -> str:
-        return _("BI Aggregations affected by one host")
+        return _("BI aggregations affected by one host")
 
     @property
     def table(self) -> RowTable:
@@ -446,7 +446,7 @@ class PainterAggrInDowntime(Painter):
         return "aggr_in_downtime"
 
     def title(self, cell: Cell) -> str:
-        return _("In Downtime")
+        return _("In downtime")
 
     @property
     def columns(self) -> Sequence[ColumnName]:

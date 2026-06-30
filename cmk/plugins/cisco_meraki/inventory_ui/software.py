@@ -65,9 +65,9 @@ node_software_applications_cisco_meraki_networks = Node(
 node_software_applications_cisco_meraki_organisations = Node(
     name="software_applications_cisco_meraki_organisations",
     path=["software", "applications", "cisco_meraki", "organisations"],
-    title=Title("Organisations"),
+    title=Title("Organizations"),
     table=Table(
-        view=View(name="invmerakiorganisations", title=Title("Organisations")),
+        view=View(name="invmerakiorganisations", title=Title("Organizations")),
         columns={
             "org_id": TextField(Title("Organization ID")),
             "org_name": TextField(Title("Organization name")),

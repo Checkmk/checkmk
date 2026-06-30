@@ -570,7 +570,7 @@ bi_config_action_registry = BIConfigActionRegistry()
 class BIConfigCallARuleAction(BICallARuleAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
-        return (cls.kind(), _("Call a Rule"), cls.valuespec())
+        return (cls.kind(), _("Call a rule"), cls.valuespec())
 
     @classmethod
     def valuespec(cls) -> ValueSpec:
@@ -777,7 +777,7 @@ def get_aggregation_function_choices() -> Transform:
 
     return Transform(
         valuespec=CascadingDropdown(
-            title=_("Aggregation Function"),
+            title=_("Aggregation function"),
             help=_(
                 "The aggregation function decides how the status of a node "
                 "is constructed from the states of the child nodes."

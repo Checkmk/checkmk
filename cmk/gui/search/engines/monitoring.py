@@ -1085,7 +1085,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
             return _("Host name")
         if self._livestatus_field == "address":
             return _("Hostaddress")
-        return _("Hostalias")
+        return _("Host alias")
 
     def _get_real_fieldname(self, livestatus_table: LivestatusTable) -> LivestatusColumn:
         if livestatus_table != "hosts":

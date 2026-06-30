@@ -428,7 +428,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                 DropdownChoice(
                     title=_("Folder"),
                     help=_("The rule is only applied to hosts directly in or below this folder."),
-                    choices=folder_tree().folder_choices(),
+                    choices=folder_tree().folder_choices(user),
                     encode_value=False,
                 ),
             ),

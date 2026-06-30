@@ -691,7 +691,9 @@ def test_recursive_subfolder_choices(
 ) -> None:
     folder = actual_builder()
     with hide_folders_without_permission(True):
-        assert folder.recursive_subfolder_choices(pretty=True) == expected
+        assert (
+            folder.recursive_subfolder_choices(pretty=True, acting_user=logged_in_user) == expected
+        )
 
 
 @pytest.mark.usefixtures("patch_may")
@@ -700,7 +702,7 @@ def test_recursive_subfolder_choices_function_calls(mocker: MagicMock) -> None:
     spy = mocker.spy(hosts_and_folders.Folder, "_walk_tree")
     tree = three_levels_leaf_permissions()
     with hide_folders_without_permission(True):
-        tree.recursive_subfolder_choices(pretty=True)
+        tree.recursive_subfolder_choices(pretty=True, acting_user=logged_in_user)
     assert spy.call_count == 7
 
 

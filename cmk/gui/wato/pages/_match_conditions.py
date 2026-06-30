@@ -8,6 +8,7 @@
 from livestatus import SiteConfigurations
 
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.user_sites import get_activation_site_choices, get_configured_site_choices
 from cmk.gui.valuespec import (
     DictionaryEntry,
@@ -72,7 +73,9 @@ def _multi_folder_rule_match_condition() -> DictionaryEntry:
 
 class FullPathFolderChoice(DropdownChoice):
     def __init__(self, title: str, help: str) -> None:
-        super().__init__(title=title, help=help, choices=folder_tree().folder_choices_fulltitle)
+        super().__init__(
+            title=title, help=help, choices=lambda: folder_tree().folder_choices_fulltitle(user)
+        )
 
 
 def common_host_rule_match_conditions() -> list[DictionaryEntry]:

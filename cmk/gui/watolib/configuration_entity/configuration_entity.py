@@ -317,7 +317,7 @@ def get_list_of_configuration_entities(
                     ident=EntityId(ident),
                     description=description,
                 )
-                for ident, description in folder_tree().folder_choices_fulltitle()
+                for ident, description in folder_tree().folder_choices_fulltitle(user)
             ]
         case ConfigEntityType.oauth2_connection:
             user.need_permission("general.oauth2_connections")

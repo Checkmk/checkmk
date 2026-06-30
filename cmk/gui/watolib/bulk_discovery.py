@@ -272,7 +272,10 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
     @override
     def _back_url(self) -> str:
         return disk_or_search_folder_from_request(
-            folder_tree(), request.var("folder"), request.get_ascii_input("host")
+            folder_tree(),
+            request.var("folder"),
+            request.get_ascii_input("host"),
+            acting_user=user,
         ).url()
 
     def do_execute(

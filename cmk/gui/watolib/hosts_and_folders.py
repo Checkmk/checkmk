@@ -1058,15 +1058,17 @@ class FolderTree:
             self._folders = _wato_folders_factory(self)
         return self._folders
 
-    def folder_choices(self) -> Sequence[tuple[str, str]]:
+    def folder_choices(self, acting_user: LoggedInUser) -> Sequence[tuple[str, str]]:
         if self._folder_choices is None:
-            self._folder_choices = self.root_folder().recursive_subfolder_choices(pretty=True)
+            self._folder_choices = self.root_folder().recursive_subfolder_choices(
+                pretty=True, acting_user=acting_user
+            )
         return self._folder_choices
 
-    def folder_choices_fulltitle(self) -> Sequence[tuple[str, str]]:
+    def folder_choices_fulltitle(self, acting_user: LoggedInUser) -> Sequence[tuple[str, str]]:
         if self._folder_choices_fulltitle is None:
             self._folder_choices_fulltitle = self.root_folder().recursive_subfolder_choices(
-                pretty=False
+                pretty=False, acting_user=acting_user
             )
         return self._folder_choices_fulltitle
 
@@ -1227,7 +1229,11 @@ def folder_from_request(
 
 
 def disk_or_search_folder_from_request(
-    tree: FolderTree, var_folder: str | None = None, host_name: str | None = None
+    tree: FolderTree,
+    var_folder: str | None = None,
+    host_name: str | None = None,
+    *,
+    acting_user: LoggedInUser,
 ) -> Folder | SearchFolder:
     """Return `Folder` that is specified by the current URL
 
@@ -1238,14 +1244,14 @@ def disk_or_search_folder_from_request(
     the later case we call search_folder_from_request() to let it decide whether
     this is a host search. This method has to return a folder in all cases.
     """
-    search_folder = _search_folder_from_request(tree)
+    search_folder = _search_folder_from_request(tree, acting_user)
     if search_folder:
         return search_folder
 
     return folder_from_request(tree, var_folder, host_name)
 
 
-def _search_folder_from_request(tree: FolderTree) -> SearchFolder | None:
+def _search_folder_from_request(tree: FolderTree, acting_user: LoggedInUser) -> SearchFolder | None:
     if request.has_var("host_search"):
         base_folder = tree.folder(request.get_str_input_mandatory("folder", ""))
         search_criteria = {
@@ -1258,14 +1264,16 @@ def _search_folder_from_request(tree: FolderTree) -> SearchFolder | None:
                 varprefix="host_search_",
             ),
         }
-        return SearchFolder(tree, base_folder, search_criteria)
+        return SearchFolder(tree, base_folder, search_criteria, acting_user)
     return None
 
 
 def disk_or_search_base_folder_from_request(
-    var_folder: str | None = None, host_name: str | None = None
+    var_folder: str | None = None, host_name: str | None = None, *, acting_user: LoggedInUser
 ) -> Folder:
-    disk_or_search_folder = disk_or_search_folder_from_request(folder_tree(), var_folder, host_name)
+    disk_or_search_folder = disk_or_search_folder_from_request(
+        folder_tree(), var_folder, host_name, acting_user=acting_user
+    )
     if isinstance(disk_or_search_folder, Folder):
         return disk_or_search_folder
 
@@ -1840,7 +1848,7 @@ class Folder(FolderProtocol):
             return 0
 
         num = self.num_hosts()
-        for subfolder in self.subfolders(only_visible=True):
+        for subfolder in self.subfolders(only_visible=True, acting_user=acting_user):
             num += subfolder.num_hosts_recursively(acting_user)
         return num
 
@@ -1851,22 +1859,29 @@ class Folder(FolderProtocol):
             hosts.update(subfolder.all_hosts_recursively())
         return hosts
 
-    def subfolders_recursively(self, only_visible: bool = False) -> list[Folder]:
+    def subfolders_recursively(
+        self, only_visible: bool = False, *, acting_user: LoggedInUser | None = None
+    ) -> list[Folder]:
         def _add_folders(folder: Folder, collection: list[Folder]) -> None:
             collection.append(folder)
-            for sub_folder in folder.subfolders(only_visible=only_visible):
+            for sub_folder in folder.subfolders(only_visible=only_visible, acting_user=acting_user):
                 _add_folders(sub_folder, collection)
 
         folders: list[Folder] = []
         _add_folders(self, folders)
         return folders
 
-    def subfolders(self, only_visible: bool = False) -> list[Folder]:
+    def subfolders(
+        self, only_visible: bool = False, *, acting_user: LoggedInUser | None = None
+    ) -> list[Folder]:
         """Filter subfolder collection by various means.
 
         Args:
             only_visible:
                 Only show visible folders. Default is to show all folders.
+            acting_user:
+                The user the visibility is evaluated for. Required when
+                only_visible is set, ignored otherwise.
 
         Returns:
             A dict with the keys being the relative subfolder-name, and the value
@@ -1875,7 +1890,12 @@ class Folder(FolderProtocol):
         subfolders = list(self._subfolders.values())
 
         if only_visible:
-            return [folder for folder in subfolders if folder.folder_should_be_shown("read", user)]
+            assert acting_user is not None
+            return [
+                folder
+                for folder in subfolders
+                if folder.folder_should_be_shown("read", acting_user)
+            ]
 
         return subfolders
 
@@ -1910,14 +1930,6 @@ class Folder(FolderProtocol):
     def has_subfolders(self) -> bool:
         return len(self._subfolders) > 0
 
-    def subfolder_choices(self) -> list[tuple[str, str]]:
-        choices = []
-        for subfolder in sorted(
-            self.subfolders(only_visible=True), key=operator.methodcaller("title")
-        ):
-            choices.append((subfolder.path(), subfolder.title()))
-        return choices
-
     def _prefixed_title(self, current_depth: int, pretty: bool) -> str:
         if not pretty:
             return "/".join(str(p) for p in self.title_path_without_root())
@@ -1926,20 +1938,27 @@ class Folder(FolderProtocol):
         return title_prefix + self.title()
 
     def _walk_tree(
-        self, results: list[tuple[str, str]], *, current_depth: int, pretty: bool
+        self,
+        results: list[tuple[str, str]],
+        *,
+        current_depth: int,
+        pretty: bool,
+        acting_user: LoggedInUser,
     ) -> bool:
         visible_subfolders = False
         for subfolder in sorted(
             self._subfolders.values(), key=operator.methodcaller("title"), reverse=True
         ):
             visible_subfolders = (
-                subfolder._walk_tree(results, current_depth=current_depth + 1, pretty=pretty)
+                subfolder._walk_tree(
+                    results, current_depth=current_depth + 1, pretty=pretty, acting_user=acting_user
+                )
                 or visible_subfolders
             )
 
         if (
             visible_subfolders
-            or self.permissions.may("read", user)
+            or self.permissions.may("read", acting_user)
             or self.is_root()
             or not self.tree.config.wato_hide_folders_without_read_permissions
         ):
@@ -1948,9 +1967,11 @@ class Folder(FolderProtocol):
 
         return False
 
-    def recursive_subfolder_choices(self, *, pretty: bool) -> Sequence[tuple[str, str]]:
+    def recursive_subfolder_choices(
+        self, *, pretty: bool, acting_user: LoggedInUser
+    ) -> Sequence[tuple[str, str]]:
         result: list[tuple[str, str]] = []
-        self._walk_tree(result, current_depth=0, pretty=pretty)
+        self._walk_tree(result, current_depth=0, pretty=pretty, acting_user=acting_user)
         result.reverse()
         return result
 
@@ -3189,7 +3210,13 @@ def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupS
 class SearchFolder(FolderProtocol):
     """A virtual folder representing the result of a search."""
 
-    def __init__(self, tree: FolderTree, base_folder: Folder, criteria: SearchCriteria) -> None:
+    def __init__(
+        self,
+        tree: FolderTree,
+        base_folder: Folder,
+        criteria: SearchCriteria,
+        acting_user: LoggedInUser,
+    ) -> None:
         super().__init__()
         self.attributes: dict[str, Any] = {"meta_data": {}}
         self.effective_attributes = EffectiveAttributes(lambda: {})  # noqa: PIE807
@@ -3197,6 +3224,7 @@ class SearchFolder(FolderProtocol):
         self.tree = tree
         self._criteria = criteria
         self._base_folder = base_folder
+        self._acting_user = acting_user
         self._found_hosts: dict[HostName, Host] | None = None
         self._name = None
 
@@ -3254,7 +3282,7 @@ class SearchFolder(FolderProtocol):
         return False
 
     def choices_for_moving_host(self) -> Sequence[tuple[str, str]]:
-        return self.tree.folder_choices()
+        return self.tree.folder_choices(self._acting_user)
 
     def path(self) -> str:
         if self._name:
@@ -3355,7 +3383,7 @@ class SearchFolder(FolderProtocol):
         return hosts
 
     def _search_hosts(self, in_folder: Folder) -> dict[HostName, Host]:
-        if not in_folder.permissions.may("read", user):
+        if not in_folder.permissions.may("read", self._acting_user):
             return {}
 
         found = {}

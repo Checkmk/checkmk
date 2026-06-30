@@ -97,7 +97,10 @@ class ParentScanBackgroundJob(BackgroundJob):
 
     def _back_url(self) -> str:
         return disk_or_search_folder_from_request(
-            folder_tree(), request.var("folder"), request.get_ascii_input("host")
+            folder_tree(),
+            request.var("folder"),
+            request.get_ascii_input("host"),
+            acting_user=user,
         ).url()
 
     def do_execute(
@@ -365,12 +368,12 @@ class ParentScanBackgroundJob(BackgroundJob):
     ) -> Folder:
         if where == "here":  # directly in current folder
             return disk_or_search_base_folder_from_request(
-                request.var("folder"), request.get_ascii_input("host")
+                request.var("folder"), request.get_ascii_input("host"), acting_user=user
             )
 
         if where == "subfolder":
             current = disk_or_search_base_folder_from_request(
-                request.var("folder"), request.get_ascii_input("host")
+                request.var("folder"), request.get_ascii_input("host"), acting_user=user
             )
 
             # Put new gateways in subfolder "Parents" of current

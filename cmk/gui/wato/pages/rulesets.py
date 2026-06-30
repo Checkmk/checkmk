@@ -1632,7 +1632,7 @@ class ModeEditRuleset(WatoMode):
 
         # Conditions
         table.cell(_("Conditions"), css=["condition"])
-        self._rule_conditions(rule, folder_choices=tree.folder_choices)
+        self._rule_conditions(rule, folder_choices=lambda: tree.folder_choices(user))
 
         # Value
         table.cell(_("Value"), css=["value"])
@@ -1990,7 +1990,7 @@ class ModeRuleSearchForm(WatoMode):
                         elements=[
                             DropdownChoice(
                                 title=_("Selection"),
-                                choices=tree.folder_choices,
+                                choices=lambda: tree.folder_choices(user),
                             ),
                             DropdownChoice(
                                 title=_("Recursion"),

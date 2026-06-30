@@ -1094,7 +1094,9 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                                 name=name,
                                                 title=Title("%s") % _(" %s") % folder,
                                             )
-                                            for name, folder in folder_tree().folder_choices()
+                                            for name, folder in folder_tree().folder_choices(
+                                                logged_in_user
+                                            )
                                         ],
                                     ),
                                 ),

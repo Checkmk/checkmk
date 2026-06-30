@@ -142,7 +142,10 @@ class ModeParentScan(WatoMode):
         )
         self._job = ParentScanBackgroundJob()
         self._folder = disk_or_search_folder_from_request(
-            folder_tree(), request.var("folder"), request.get_ascii_input("host")
+            folder_tree(),
+            request.var("folder"),
+            request.get_ascii_input("host"),
+            acting_user=user,
         )
 
     @override
@@ -363,7 +366,7 @@ class ModeParentScan(WatoMode):
         html.open_ul()
 
         disk_folder = disk_or_search_base_folder_from_request(
-            request.var("folder"), request.get_ascii_input("host")
+            request.var("folder"), request.get_ascii_input("host"), acting_user=user
         )
         html.radiobutton(
             "where",

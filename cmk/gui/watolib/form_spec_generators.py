@@ -15,6 +15,7 @@ from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
     CascadingSingleChoiceElementExtended,
 )
 from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.logged_in import user
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeValueSpec,
     all_host_attributes,
@@ -44,7 +45,7 @@ def create_full_path_folder_choice(
     custom_validate: Sequence[Callable[[str], object]] | None = None,
     allow_new_folder_creation: bool = False,
 ) -> SingleChoiceExtended[str] | SingleChoiceEditable:
-    choices = folder_tree().folder_choices_fulltitle()
+    choices = folder_tree().folder_choices_fulltitle(user)
 
     if allow_new_folder_creation:
         return SingleChoiceEditable(

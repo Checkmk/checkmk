@@ -202,7 +202,7 @@ def wato_folder_choices_autocompleter(config: Config, value: str, params: dict) 
     validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_folders: Choices = []
-    for path, name in folder_tree().folder_choices_fulltitle():
+    for path, name in folder_tree().folder_choices_fulltitle(user):
         if match_pattern.search(name) is not None:
             # select2 omits empty strings ("") as option therefore the path of the Main folder is
             # replaced by a placeholder
@@ -248,7 +248,7 @@ class ModeFolder(WatoMode):
             host_name = None
         self._tree = folder_tree()
         self._folder = disk_or_search_folder_from_request(
-            self._tree, request.var("folder"), host_name
+            self._tree, request.var("folder"), host_name, acting_user=user
         )
 
         if request.has_var("_show_host_tags"):
@@ -921,7 +921,7 @@ class ModeFolder(WatoMode):
 
             subfolders_dict = {
                 subfolder.name(): subfolder
-                for subfolder in self._folder.subfolders(only_visible=True)
+                for subfolder in self._folder.subfolders(only_visible=True, acting_user=user)
             }
             sorted_subfolder_names = natural_sort(
                 {

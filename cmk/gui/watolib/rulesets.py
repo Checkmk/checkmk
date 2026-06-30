@@ -1628,7 +1628,10 @@ class Rule:
         search_in_folders = [current_folder.path()]
         if do_recursion:
             search_in_folders = [
-                x for x, _y in current_folder.recursive_subfolder_choices(pretty=True)
+                x
+                for x, _y in current_folder.recursive_subfolder_choices(
+                    pretty=True, acting_user=user
+                )
             ]
         return search_in_folders
 
@@ -2299,7 +2302,7 @@ def _create_explicit_rule_conditions_dict(
                 help_text=Help("Rule only applies to hosts directly in or below this folder."),
                 elements=[
                     SingleChoiceElementExtendedAPI(name=n, title=Title("%s") % t)
-                    for n, t in tree.folder_choices()
+                    for n, t in tree.folder_choices(user)
                 ],
                 prefill=DefaultValueAPI(""),
             ),

@@ -189,7 +189,7 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
         html.close_li()
         html.close_ul()
         html.write_text_permissive(
-            vs_conditions(tree.folder_choices).value_to_html(entry["conditions"])
+            vs_conditions(lambda: tree.folder_choices(user)).value_to_html(entry["conditions"])
         )
 
         table.cell(_("Editable by"))
@@ -251,7 +251,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
             admin_element = []
 
         return [
-            ("conditions", vs_conditions(folder_tree().folder_choices)),
+            ("conditions", vs_conditions(lambda: folder_tree().folder_choices(user))),
             (
                 "owned_by",
                 Alternative(

@@ -14,6 +14,7 @@ from livestatus import SiteConfigurations
 from cmk.ccc.version import Edition
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.userdb import UserSelection
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -396,7 +397,7 @@ def _single_folder_rule_match_condition() -> DictionaryEntry:
                 "via Setup and that are contained in this folder - either directly "
                 "or in one of its subfolders."
             ),
-            choices=folder_tree().folder_choices,
+            choices=lambda: folder_tree().folder_choices(user),
         ),
     )
 

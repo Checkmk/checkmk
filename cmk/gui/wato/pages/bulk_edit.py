@@ -78,7 +78,10 @@ class ModeBulkEdit(WatoMode):
     @override
     def _from_vars(self) -> None:
         self._folder = disk_or_search_folder_from_request(
-            folder_tree(), request.var("folder"), request.get_ascii_input("host")
+            folder_tree(),
+            request.var("folder"),
+            request.get_ascii_input("host"),
+            acting_user=user,
         )
 
     @override
@@ -196,7 +199,10 @@ class ModeBulkCleanup(WatoMode):
     @override
     def _from_vars(self) -> None:
         self._folder = disk_or_search_folder_from_request(
-            folder_tree(), request.var("folder"), request.get_ascii_input("host")
+            folder_tree(),
+            request.var("folder"),
+            request.get_ascii_input("host"),
+            acting_user=user,
         )
 
     @override

@@ -56,9 +56,10 @@ class _Builder:
         *,
         simulation_mode: bool,
         fetcher_factory: FetcherFactory,
-        max_age_agent: MaxAge,
-        max_age_snmp: MaxAge,
+        force_snmp_cache_refresh: bool = False,
         snmp_backend: SNMPBackendEnum,
+        file_cache_options: FileCacheOptions,
+        file_cache_max_age: MaxAge,
         file_cache_path_base: Path,
         file_cache_path_relative: Path,
         tcp_cache_path_relative: Path,
@@ -82,8 +83,15 @@ class _Builder:
         self.ipaddress: Final = ipaddress
         self.ip_stack_config: Final = ip_stack_config
         self.simulation_mode: Final = simulation_mode
-        self.max_age_agent: Final = max_age_agent
-        self.max_age_snmp: Final = max_age_snmp
+        self.max_age_agent: Final = self._max_age_agent(
+            simulation_mode, file_cache_options.use_outdated, file_cache_max_age
+        )
+        self.max_age_snmp: Final = self._max_age_snmp(
+            simulation_mode,
+            force_snmp_cache_refresh,
+            file_cache_options.use_outdated,
+            file_cache_max_age,
+        )
         self.snmp_backend: Final = snmp_backend
         self.cds: Final = computed_datasources
         self.tag_list: Final = tag_list
@@ -112,6 +120,29 @@ class _Builder:
 
         self._initialize_snmp_based()
         self._initialize_mgmt_boards()
+
+    @staticmethod
+    def _max_age_snmp(
+        simulation_mode: bool,
+        force_snmp_cache_refresh: bool,
+        use_outdated: bool,
+        max_age: MaxAge,
+    ) -> MaxAge:
+        if simulation_mode:
+            return MaxAge.unlimited()
+        if force_snmp_cache_refresh:
+            return MaxAge.zero()
+        if use_outdated:
+            return MaxAge.unlimited()
+        return max_age
+
+    @staticmethod
+    def _max_age_agent(simulation_mode: bool, use_outdated: bool, max_age: MaxAge) -> MaxAge:
+        if simulation_mode:
+            return MaxAge.unlimited()
+        if use_outdated:
+            return MaxAge.unlimited()
+        return max_age
 
     @property
     def sources(self) -> Sequence[Source]:
@@ -340,23 +371,6 @@ def make_sources(
     metric_backend_fetcher: Fetcher[AgentRawData] | None,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
-
-    def max_age_snmp() -> MaxAge:
-        if simulation_mode:
-            return MaxAge.unlimited()
-        if force_snmp_cache_refresh:
-            return MaxAge.zero()
-        if file_cache_options.use_outdated:
-            return MaxAge.unlimited()
-        return file_cache_max_age
-
-    def max_age_agent() -> MaxAge:
-        if simulation_mode:
-            return MaxAge.unlimited()
-        if file_cache_options.use_outdated:
-            return MaxAge.unlimited()
-        return file_cache_max_age
-
     return _Builder(
         plugins,
         host_name,
@@ -365,9 +379,10 @@ def make_sources(
         ip_stack_config,
         simulation_mode=simulation_mode,
         fetcher_factory=fetcher_factory,
+        force_snmp_cache_refresh=force_snmp_cache_refresh,
         snmp_backend=snmp_backend,
-        max_age_agent=max_age_agent(),
-        max_age_snmp=max_age_snmp(),
+        file_cache_options=file_cache_options,
+        file_cache_max_age=file_cache_max_age,
         file_cache_path_base=file_cache_path_base,
         file_cache_path_relative=file_cache_path_relative,
         tcp_cache_path_relative=tcp_cache_path_relative,

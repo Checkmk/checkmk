@@ -34,7 +34,7 @@ def test_init_scripts(site: Site) -> None:
             "mknotifyd",
         }
     if site.edition.is_ultimate_edition() or site.edition.is_ultimatemt_edition():
-        scripts |= {"otel-collector"}
+        scripts |= {"otel-collector", "flow"}
     if (
         site.edition.is_cloud_edition()
         or site.edition.is_ultimate_edition()

@@ -10,7 +10,7 @@ import itertools
 import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
-from typing import NewType, Protocol
+from typing import NewType, Protocol, Self
 
 from ._options import ConsolidationFunction, TimeRange
 
@@ -82,8 +82,19 @@ class CurveAttributes:
 
 
 HostName = NewType("HostName", str)
-MetricName = NewType("MetricName", str)
 ServiceName = NewType("ServiceName", str)
+
+
+class MetricName(str):
+    # A metric name normalised to PNP4Nagios format: a str subclass whose construction is a projection
+    # (non-injective). The raw name is pnp-cleaned, so a name carrying spaces / ":" / "/" / "\" is mapped
+    # to its canonical RRD identifier.
+    def __new__(cls, text: str) -> Self:
+        # A metric name is used as a PNP4Nagios / RRD path element, so the path-hostile characters are
+        # mapped to "_".
+        return super().__new__(
+            cls, text.replace(" ", "_").replace(":", "_").replace("/", "_").replace("\\", "_")
+        )
 
 
 @dataclass(frozen=True, kw_only=True)

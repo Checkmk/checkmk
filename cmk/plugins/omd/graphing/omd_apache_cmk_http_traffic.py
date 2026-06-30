@@ -9,79 +9,79 @@ UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.IECNotation("B/s"))
 
 metric_bytes_cmk_views = metrics.Metric(
     name="bytes_cmk_views",
-    title=Title("Checkmk: Views: Bytes"),
+    title=Title("Checkmk: views: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.LIGHT_RED,
 )
 metric_bytes_cmk_wato = metrics.Metric(
     name="bytes_cmk_wato",
-    title=Title("Checkmk: Setup: Bytes"),
+    title=Title("Checkmk: Setup: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_CYAN,
 )
 metric_bytes_cmk_bi = metrics.Metric(
     name="bytes_cmk_bi",
-    title=Title("Checkmk: BI: Bytes"),
+    title=Title("Checkmk: BI: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.BLUE,
 )
 metric_bytes_cmk_snapins = metrics.Metric(
     name="bytes_cmk_snapins",
-    title=Title("Checkmk: Sidebar elements: Bytes"),
+    title=Title("Checkmk: sidebar elements: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.RED,
 )
 metric_bytes_cmk_dashboards = metrics.Metric(
     name="bytes_cmk_dashboards",
-    title=Title("Checkmk: Dashboards: Bytes"),
+    title=Title("Checkmk: dashboards: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_BLUE,
 )
 metric_bytes_cmk_api = metrics.Metric(
     name="bytes_cmk_api",
-    title=Title("Checkmk: API: Bytes"),
+    title=Title("Checkmk: API: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.ORANGE,
 )
 metric_bytes_cmk_ajax = metrics.Metric(
     name="bytes_cmk_ajax",
-    title=Title("Checkmk: Ajax: Bytes"),
+    title=Title("Checkmk: Ajax: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.LIGHT_YELLOW,
 )
 metric_bytes_cmk_index = metrics.Metric(
     name="bytes_cmk_index",
-    title=Title("Checkmk: Index: Bytes"),
+    title=Title("Checkmk: index: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_YELLOW,
 )
 metric_bytes_cmk_login = metrics.Metric(
     name="bytes_cmk_login",
-    title=Title("Checkmk: Login: Bytes"),
+    title=Title("Checkmk: login: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_RED,
 )
 metric_bytes_cmk_search = metrics.Metric(
     name="bytes_cmk_search",
-    title=Title("Checkmk: Search: Bytes"),
+    title=Title("Checkmk: search: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.LIGHT_BROWN,
 )
 metric_bytes_cmk_sidebar = metrics.Metric(
     name="bytes_cmk_sidebar",
-    title=Title("Checkmk: Sidebar: Bytes"),
+    title=Title("Checkmk: sidebar: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.BROWN,
 )
 metric_bytes_cmk_graphs = metrics.Metric(
     name="bytes_cmk_graphs",
-    title=Title("Checkmk: Graphs: Bytes"),
+    title=Title("Checkmk: graphs: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_BROWN,
 )
 metric_bytes_cmk_other = metrics.Metric(
     name="bytes_cmk_other",
-    title=Title("Checkmk: Other: Bytes"),
+    title=Title("Checkmk: other: bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.LIGHT_BLUE,
 )

@@ -69,7 +69,7 @@ node_software_applications_check_mk_sites = Node(
             ),
             "livestatus_usage": NumberField(Title("Livestatus usage"), render=UNIT_PERCENTAGE),
             "check_helper_usage": NumberField(Title("Actual helper usage"), render=UNIT_PERCENTAGE),
-            "autostart": BoolField(Title("Autostart")),
+            "autostart": BoolField(Title("Auto-start")),
             "apache": TextField(Title("Apache status"), style=_style_service_status),
             "cmc": TextField(Title("CMC status"), style=_style_service_status),
             "crontab": TextField(Title("Crontab status"), style=_style_service_status),

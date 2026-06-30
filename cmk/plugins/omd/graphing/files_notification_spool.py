@@ -16,14 +16,14 @@ metric_new_files = metrics.Metric(
 
 metric_deferred_files = metrics.Metric(
     name="deferred_files",
-    title=Title("Deferred files in Spool"),
+    title=Title("Deferred files in spool"),
     unit=UNIT_NUMBER,
     color=metrics.Color.ORANGE,
 )
 
 metric_corrupted_files = metrics.Metric(
     name="corrupted_files",
-    title=Title("Corrupted files in Spool"),
+    title=Title("Corrupted files in spool"),
     unit=UNIT_NUMBER,
     color=metrics.Color.CYAN,
 )

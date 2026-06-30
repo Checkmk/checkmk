@@ -9,79 +9,79 @@ UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 
 metric_requests_cmk_views = metrics.Metric(
     name="requests_cmk_views",
-    title=Title("Checkmk: Views: Requests"),
+    title=Title("Checkmk: views: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.LIGHT_RED,
 )
 metric_requests_cmk_wato = metrics.Metric(
     name="requests_cmk_wato",
-    title=Title("Checkmk: Setup: Requests"),
+    title=Title("Checkmk: Setup: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_CYAN,
 )
 metric_requests_cmk_bi = metrics.Metric(
     name="requests_cmk_bi",
-    title=Title("Checkmk: BI: Requests"),
+    title=Title("Checkmk: BI: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.BLUE,
 )
 metric_requests_cmk_snapins = metrics.Metric(
     name="requests_cmk_snapins",
-    title=Title("Checkmk: Sidebar elements: Requests"),
+    title=Title("Checkmk: sidebar elements: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.RED,
 )
 metric_requests_cmk_dashboards = metrics.Metric(
     name="requests_cmk_dashboards",
-    title=Title("Checkmk: Dashboards: Requests"),
+    title=Title("Checkmk: dashboards: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_BLUE,
 )
 metric_requests_cmk_api = metrics.Metric(
     name="requests_cmk_api",
-    title=Title("Checkmk: API: Requests"),
+    title=Title("Checkmk: API: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.ORANGE,
 )
 metric_requests_cmk_ajax = metrics.Metric(
     name="requests_cmk_ajax",
-    title=Title("Checkmk: Ajax: Requests"),
+    title=Title("Checkmk: Ajax: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.LIGHT_YELLOW,
 )
 metric_requests_cmk_index = metrics.Metric(
     name="requests_cmk_index",
-    title=Title("Checkmk: Index: Requests"),
+    title=Title("Checkmk: index: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_YELLOW,
 )
 metric_requests_cmk_login = metrics.Metric(
     name="requests_cmk_login",
-    title=Title("Checkmk: Login: Requests"),
+    title=Title("Checkmk: login: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_RED,
 )
 metric_requests_cmk_search = metrics.Metric(
     name="requests_cmk_search",
-    title=Title("Checkmk: Search: Requests"),
+    title=Title("Checkmk: search: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.LIGHT_BROWN,
 )
 metric_requests_cmk_sidebar = metrics.Metric(
     name="requests_cmk_sidebar",
-    title=Title("Checkmk: Sidebar: Requests"),
+    title=Title("Checkmk: sidebar: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.BROWN,
 )
 metric_requests_cmk_graphs = metrics.Metric(
     name="requests_cmk_graphs",
-    title=Title("Checkmk: Graphs: Requests"),
+    title=Title("Checkmk: graphs: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_BROWN,
 )
 metric_requests_cmk_other = metrics.Metric(
     name="requests_cmk_other",
-    title=Title("Checkmk: Other: Requests"),
+    title=Title("Checkmk: other: requests"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.LIGHT_BLUE,
 )
@@ -130,7 +130,7 @@ metric_requests_other = metrics.Metric(
 
 graph_handled_requests = graphs.Graph(
     name="handled_requests",
-    title=Title("Handled Requests"),
+    title=Title("Handled requests"),
     compound_lines=[
         "requests_cmk_views",
         "requests_cmk_wato",

@@ -93,7 +93,7 @@ metric_omd_otel_collector_size = metrics.Metric(
 
 metric_omd_metric_backend_size = metrics.Metric(
     name="omd_metric_backend_size",
-    title=Title("Size of metric backend"),
+    title=Title("Size of metrics backend"),
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_RED,
 )

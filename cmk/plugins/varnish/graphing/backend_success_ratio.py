@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_varnish_backend_success_ratio = metrics.Metric(
     name="varnish_backend_success_ratio",
-    title=Title("Varnish back-end success ratio"),
+    title=Title("Varnish backend success ratio"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.LIGHT_BLUE,
 )

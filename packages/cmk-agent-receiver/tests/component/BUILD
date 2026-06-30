@@ -10,11 +10,11 @@ py_cmk_test(
         "--durations=5",
     ],
     data = [
-        "@remotejdk11_linux//:bin/java",
+        "@remotejdk25_linux//:bin/java",
         "@wiremock_standalone//file",
     ],
     env = {
-        "JAVA_BIN": "$(rootpath @remotejdk11_linux//:bin/java)",
+        "JAVA_BIN": "$(rootpath @remotejdk25_linux//:bin/java)",
         "WIREMOCK_JAR": "$(rootpath @wiremock_standalone//file)",
     },
     deps = [

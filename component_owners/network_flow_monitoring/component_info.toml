@@ -1,7 +1,9 @@
 type = "Component"
+display_name = "Network Flow Monitoring"
+previous_name = "Flow Monitoring"
 has_support_component = true
 members_required = 2
 product_managers = ["david.lechevalier@checkmk.com"]
 description = """
-Integration of flow monitoring into Checkmk.
+Integration of network flow monitoring into Checkmk.
 """

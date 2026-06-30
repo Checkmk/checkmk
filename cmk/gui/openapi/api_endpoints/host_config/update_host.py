@@ -48,7 +48,7 @@ def update_host_v1(
     """Update a host"""
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_hosts")
-    acting_user = api_context.logged_in_user()
+    acting_user = api_context.user
     if api_context.etag.enabled:
         api_context.etag.verify(host_etag(host))
 

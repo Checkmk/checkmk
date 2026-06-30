@@ -77,7 +77,7 @@ def bulk_create_host_v1(
 ) -> HostConfigCollectionModel:
     """Bulk create hosts"""
     user.need_permission("wato.edit")
-    acting_user = api_context.logged_in_user()
+    acting_user = api_context.user
     failed_hosts: dict[HostName, str] = {}
     succeeded_hosts: list[HostName] = []
 

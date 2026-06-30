@@ -19,7 +19,7 @@ from werkzeug.datastructures import ETags, Headers
 
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInNobody, user
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -233,7 +233,7 @@ def _api_context() -> ApiContext:
         version=APIVersion.UNSTABLE,
         etag_if_match=ETags(),
         host_url="http://localhost/",
-        user_id=None,
+        user=LoggedInNobody(),
         token=None,
     )
 

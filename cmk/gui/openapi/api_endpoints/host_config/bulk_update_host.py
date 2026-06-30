@@ -63,7 +63,7 @@ def bulk_update_hosts_v1(
     """
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_hosts")
-    acting_user = api_context.logged_in_user()
+    acting_user = api_context.user
 
     succeeded_hosts: list[Host] = []
     failed_hosts: dict[HostName, str] = {}

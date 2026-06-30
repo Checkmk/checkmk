@@ -92,7 +92,7 @@ v1 painters are wrapped by ``PainterAdapter`` in ``cmk/gui/painter/v0/base.py`` 
 
 See ``cmk/gui/painter/v1/painter_lib.py`` and the ``PainterAdapter`` bridge in ``cmk/gui/painter/v0/base.py``.
 
-Build system: Make to Bazel
+Tooling: Make to Bazel
 ===========================
 
 :Phase: mostly done
@@ -104,8 +104,8 @@ Integration, composition and GUI end-to-end tests as well as parts of the OMD pa
 
 See ``BAZEL.md`` in the repository root.
 
-Packaging: centralized ``bin/BUILD`` to self-contained CLI entry points
-=======================================================================
+Centralized ``bin/BUILD`` to self-contained CLI entry points
+============================================================
 
 :Phase: starting
 :Old: shipped ``bin/`` entry points aggregated centrally in ``bin/BUILD`` via ``//bin:pkg_tar``, even when the source lives under ``cmk/``

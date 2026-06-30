@@ -19,15 +19,15 @@ def _valuespec_super_server() -> DropdownChoice[str]:
         title=_("Checkmk agent network service (Linux)"),
         help=_(
             "The Checkmk agent does not listen on its own for incoming network connections"
-            " on Linux systems. By default it makes use of so called super servers, which are"
-            " listening on the network and dispatch incoming requests to applications like"
+            " on Linux systems. By default, it makes use of so called super servers, which"
+            " listen on the network and dispatch incoming requests to applications like"
             " the Checkmk agent. Baked agent packages come with service configurations for"
             " systemd and xinetd, preferring systemd. If you want to choose a specific super"
             " server, you can configure this rule. Optionally disable service installation"
             " completely, e.g. if you connect to the agent via SSH.\n"
             "Please note: The configured/determined service configuration will only get"
             " activated if the super server is compatible to a possibly configured IP restriction"
-            ' ruleset. See ruleset "%s".'
+            ' rule set. See rule set "%s".'
         )
         % _("Allowed agent access via IP address"),
         default_value="auto",

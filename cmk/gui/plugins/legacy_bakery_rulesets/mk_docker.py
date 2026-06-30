@@ -81,15 +81,15 @@ def _valuespec_agent_config_mk_docker() -> Alternative:
         help=_(
             "This will deploy the agent plug-in <tt>mk_docker.py</tt>."
             " You can choose to monitor the node and/or the individual containers."
-            " This plug-in requires the python library 'docker' (at least version 2.0.0) to be"
+            " This plug-in requires the Python library 'docker' (at least version 2.0.0) to be"
             " installed on the monitored system, which can be achieved using the command"
-            " '<tt>pip install docker</tt>'. WARNING: <tt>pip install docker-py</tt>"
+            " '<tt>pip install docker</tt>'. Warning: <tt>pip install docker-py</tt>"
             " may install an outdated, incompatible version of the same library."
-            " If you want to monitor the containers of multiple docker nodes"
+            " If you want to monitor the containers of multiple Docker nodes"
             " we strongly recommend to set up"
             ' <a href="wato.py?mode=edit_ruleset&varname=piggyback_translation">Piggyback translation rules</a>'
             " to avoid name collisions if containers with the same name exist on"
-            " multiple docker nodes."
+            " multiple Docker nodes."
         ),
         elements=[
             Dictionary(

@@ -363,14 +363,14 @@ def _valuespec_agent_config_mk_logwatch() -> Alternative:
         title=_("Text log files (Windows, Linux, Solaris, AIX)"),
         help=_(
             "The agent plug-in <tt>mk_logwatch.py</tt> monitors a configured set "
-            "of text logfiles for new messages, classifies these according "
+            "of text log files for new messages, classifies these according "
             "to a set of rules and sends (only) relevant messages to the "
             "Checkmk server for further processing. Here the messages can "
             "further be (re-)classified using the "
             "<a href='wato.py?varname=logwatch_rules&folder=&mode=edit_ruleset'>"
-            "Logwatch Ruleset</a>. <b>Note:</b> If you want to configure "
+            "Logwatch rule set</a>. <b>Note:</b> If you want to configure "
             "several log files with different sets of patterns, then simply "
-            "create several rules. In this ruleset <b>all</b> matching rules "
+            "create several rules. In this rule set <b>all</b> matching rules "
             "are being executed, not only the first one. "
             "<b>Note (2):</b> This duplicate possibility for "
             "classification is due to performance issues. It is always a good "
@@ -403,7 +403,7 @@ def _valuespec_agent_config_mk_logwatch() -> Alternative:
                                 " (which is 60 seconds by default). Note that if you set this"
                                 " to <i>N</i> times the check interval, the amount of data"
                                 " sent will be about <i>N</i> times as much (not taking into"
-                                " account the compression by the agent controller)."
+                                " account the compression by the Agent Controller)."
                             ),
                         ),
                     ),

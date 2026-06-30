@@ -45,7 +45,7 @@ def _valuespec_agent_config_runas() -> ListOf[tuple[str, str, str]]:
         title=_("Additional plug-ins, local checks and MRPE configurations"),
         help=_(
             "This rule set allows you to let users keep their own agent plug-ins, local scripts"
-            " and MK Remote Plugin Executor (MRPE) configuration, which will be run by the agent"
+            " and MK Remote Plug-in Executor (MRPE) configuration, which will be run by the agent"
             " with the permissions of the specified user."
         ),
     )

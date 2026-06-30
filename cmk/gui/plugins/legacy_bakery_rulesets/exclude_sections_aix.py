@@ -47,7 +47,7 @@ def _valuespec_agent_config_agent_sections_aix() -> Dictionary:
                     title=_("Disabled sections"),
                     help=_(
                         "This option allows to skip specific sections of the Checkmk agent. "
-                        "By default all of the sections will be executed. "
+                        "By default, all of the sections will be executed. "
                         "Selected sections will not be executed by the agent. "
                         "Skipping sections reduces CPU load on the monitored host and the amount "
                         "of transferred data. However, it may result in the absence of the "

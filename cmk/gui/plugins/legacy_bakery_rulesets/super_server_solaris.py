@@ -19,8 +19,8 @@ def _valuespec_super_server_solaris() -> DropdownChoice[str]:
         title=_("Checkmk agent network service (Solaris)"),
         help=_(
             "The Checkmk agent does not listen on its own for incoming network connections."
-            " By default it makes use of so called super servers, which are"
-            " listening on the network and dispatch incoming requests to applications like"
+            " By default, it makes use of so called super servers, which"
+            " listen on the network and dispatch incoming requests to applications like"
             " the Checkmk agent. Baked agent packages for Solaris come with an"
             " installation script for an inetd service."
             " With this rule, you can optionally disable the service installation"

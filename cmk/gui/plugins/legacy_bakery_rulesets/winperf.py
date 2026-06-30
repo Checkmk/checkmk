@@ -36,7 +36,7 @@ def _valuespec_agent_config_winperf() -> ListOf[tuple[str, str]]:
         add_label=_("Add counter object"),
         title=_("Windows Performance-Counter objects"),
         help=_(
-            "Here you can configure which performance counter objects the Windows agent "
+            "Here, you can configure which performance counter objects the Windows agent "
             "should extract and provide to the Checkmk server. You can either specify "
             "counter numbers or names. Note: numbers might be host-specific. Names are "
             "language-specific. Also note that you need to specify names of counter <i>objects</i>, "

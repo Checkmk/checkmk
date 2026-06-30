@@ -250,7 +250,7 @@ def _mssql_connection() -> Dictionary:
                 DropdownChoice(
                     title=_("Monitoring backend"),
                     help=_(
-                        "MK SQL plug-in may use different monitoring backends. "
+                        "MK-SQL plug-in may use different monitoring backends. "
                         "In some cases you may want to use ODBC backend: typical use cases are firewall problems, "
                         "misconfigured network and for testing purposes"
                     ),

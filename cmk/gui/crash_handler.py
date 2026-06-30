@@ -231,7 +231,7 @@ def crash_dump_message(crash: GUICrashReport, show_crash_link: bool) -> str:
         )
     else:
         message += _(
-            "An internal error occurred while processing your request (Crash ID: %s). "
+            "An internal error occurred while processing your request (crash ID: %s). "
             "You can report this issue to the Checkmk team to help "
             'fixing this issue. Please open the <a href="%s">crash report page</a> '
             "and use the form for reporting the problem."

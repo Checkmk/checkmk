@@ -77,10 +77,10 @@ def test_template_lifecycle_discover_and_update() -> None:
     # given. The unclaimed metric becomes a fallback single-metric graph that carries the four threshold
     # rules the engine builds itself.
     rrd = _FakeRRD()
-    built_graphs = build_template_graphs(
-        service=_SERVICE, rrd=rrd, graphs=[], metric_registry={}, translations=[]
+    graphs = build_template_graphs(
+        service=_SERVICE, rrd=rrd, registered_graphs=[], metric_registry={}, translations=[]
     )
-    [fallback] = [graph for graph in built_graphs if graph.name == _METRIC]
+    [fallback] = [graph for graph in graphs if graph.name == _METRIC]
     assert [
         rule.curve.quantity.scalar_type
         for rule in fallback.rules
@@ -95,13 +95,13 @@ def test_template_lifecycle_discover_and_update() -> None:
     assert rrd.requested_ranges == []
 
     evaluated = evaluate_template_graphs(
-        built_graphs=built_graphs,
+        graphs=graphs,
         rrd=rrd,
         consolidation_function=ConsolidationFunction.MAX,
         time_range=_DISCOVERY_RANGE,
     )
 
-    assert len(evaluated) == len(built_graphs)
+    assert len(evaluated) == len(graphs)
     # The update fetches the series for the range it is given.
     assert rrd.requested_ranges
     assert all(time_range == _DISCOVERY_RANGE for time_range in rrd.requested_ranges)

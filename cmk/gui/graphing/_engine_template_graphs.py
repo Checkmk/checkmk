@@ -52,7 +52,7 @@ def build_template_graphs(
     *,
     service: ServiceRef,
     rrd: RRDSource,
-    graphs: Sequence[GraphFromAPI],
+    registered_graphs: Sequence[GraphFromAPI],
     metric_registry: Mapping[str, metrics_v1.Metric],
     translations: Sequence[translations_v1.Translation],
 ) -> Sequence[Graph]:
@@ -61,28 +61,28 @@ def build_template_graphs(
         translations=translations,
         rrd=rrd,
     ).get(service, {})
-    built_graphs = build_service_graphs(
+    graphs = build_service_graphs(
         service=service,
-        registered_graphs=graphs,
+        registered_graphs=registered_graphs,
         metrics=metric_registry,
         localizer=translate_to_current_language,
         available=available,
         graph_type="template",
     )
-    for graph in built_graphs:
+    for graph in graphs:
         _assert_uniform_unit(graph)
-    return built_graphs
+    return graphs
 
 
 def evaluate_template_graphs(
     *,
-    built_graphs: Sequence[Graph],
+    graphs: Sequence[Graph],
     rrd: RRDSource,
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
 ) -> Sequence[EvaluatedGraph]:
     return evaluate_graphs(
-        graphs=built_graphs,
+        graphs=graphs,
         translations=registered_translations(),
         consolidation_function=consolidation_function,
         time_range=time_range,
@@ -92,7 +92,7 @@ def evaluate_template_graphs(
 
 def _dispatched_evaluate_template_graphs(request: GraphDataRequest) -> Sequence[EvaluatedGraph]:
     return evaluate_template_graphs(
-        built_graphs=deserialize_graphs(request.definition),
+        graphs=deserialize_graphs(request.definition),
         rrd=EngineRRDSource(site_id=None, debug=active_config.debug),
         consolidation_function=ensure_type(
             request.options["consolidation_function"], ConsolidationFunction

@@ -105,7 +105,7 @@ def _valuespec_active_checks_mailboxes() -> Dictionary:
 
 
 rule_spec_check_mailboxes = ActiveCheck(
-    title=Title("Check IMAP/EWS/GraphApi Mailboxes"),
+    title=Title("Check IMAP/EWS/GraphApi mailboxes"),
     topic=Topic.APPLICATIONS,
     name="mailboxes",
     parameter_form=_valuespec_active_checks_mailboxes,

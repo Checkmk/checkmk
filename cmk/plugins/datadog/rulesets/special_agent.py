@@ -84,7 +84,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                         "app_key": DictElement(
                             required=True,
                             parameter_form=Password(
-                                title=Title("Application Key"),
+                                title=Title("Application key"),
                                 custom_validate=(validators.LengthInRange(min_value=1),),
                                 migrate=migrate_to_password,
                             ),

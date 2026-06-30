@@ -166,7 +166,7 @@ def _forward_to_ec_form() -> Dictionary:
             ),
             "facility": DictElement(
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Events: Syslog facility"),
+                    title=Title("Events: syslog facility"),
                     help_text=Help("Use this syslog facility for all created events"),
                     elements=[
                         CascadingSingleChoiceElement(
@@ -184,7 +184,7 @@ def _forward_to_ec_form() -> Dictionary:
             ),
             "application": DictElement(
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Events: Syslog application"),
+                    title=Title("Events: syslog application"),
                     help_text=Help("Use this syslog application for all created events"),
                     prefill=DefaultValue("subject"),
                     elements=(
@@ -210,7 +210,7 @@ def _forward_to_ec_form() -> Dictionary:
             ),
             "host": DictElement(
                 parameter_form=String(
-                    title=Title("Events: Host name"),
+                    title=Title("Events: host name"),
                     help_text=Help(
                         "Use this host name for all created events instead of the name of the mailserver"
                     ),

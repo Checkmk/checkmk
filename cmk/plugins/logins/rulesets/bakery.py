@@ -67,7 +67,7 @@ def _valuespec_agent_config_mk_logins() -> Dictionary:
 
 
 rule_spec_mk_logins = AgentConfig(
-    title=Title("Number of logged in users (Linux)"),
+    title=Title("Number of logged-in users (Linux)"),
     name="mk_logins",
     topic=Topic.OPERATING_SYSTEM,
     parameter_form=_valuespec_agent_config_mk_logins,

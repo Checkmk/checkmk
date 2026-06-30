@@ -51,8 +51,8 @@ def _special_agents_ipmi_sensors_vs_freeipmi() -> Dictionary:
                     title=Title("Privilege Level"),
                     elements=[
                         SingleChoiceElement(name="user", title=Title("USER")),
-                        SingleChoiceElement(name="operator", title=Title("OPERATOR")),
-                        SingleChoiceElement(name="admin", title=Title("ADMIN")),
+                        SingleChoiceElement(name="operator", title=Title("Operator")),
+                        SingleChoiceElement(name="admin", title=Title("Admin")),
                     ],
                     prefill=DefaultValue("operator"),
                 ),
@@ -64,7 +64,7 @@ def _special_agents_ipmi_sensors_vs_freeipmi() -> Dictionary:
                 required=False,
                 parameter_form=String(
                     title=Title("IPMI driver type"),
-                    help_text=Help("Driver type to use instead of doing an auto selection"),
+                    help_text=Help("Driver type to use instead of doing an auto-selection"),
                 ),
             ),
             "BMC_key": DictElement(
@@ -171,10 +171,10 @@ def _special_agents_ipmi_sensors_vs_ipmitool() -> Dictionary:
                 parameter_form=SingleChoice(
                     title=Title("Privilege Level"),
                     elements=[
-                        SingleChoiceElement(name="callback", title=Title("CALLBACK")),
+                        SingleChoiceElement(name="callback", title=Title("Callback")),
                         SingleChoiceElement(name="user", title=Title("USER")),
-                        SingleChoiceElement(name="operator", title=Title("OPERATOR")),
-                        SingleChoiceElement(name="administrator", title=Title("ADMINISTRATOR")),
+                        SingleChoiceElement(name="operator", title=Title("Operator")),
+                        SingleChoiceElement(name="administrator", title=Title("Administrator")),
                     ],
                     prefill=DefaultValue("administrator"),
                 ),
@@ -182,7 +182,7 @@ def _special_agents_ipmi_sensors_vs_ipmitool() -> Dictionary:
             "intf": DictElement(
                 required=False,
                 parameter_form=SingleChoice(
-                    title=Title("IPMI Interface"),
+                    title=Title("IPMI interface"),
                     help_text=Help(
                         "IPMI Interface to be used. If not specified, the default interface as set "
                         "at compile time will be used."
@@ -207,7 +207,7 @@ def _special_agents_ipmi_sensors_vs_ipmitool() -> Dictionary:
 
 def _parameter_form() -> Dictionary:
     return Dictionary(
-        title=Title("IPMI Sensors via Freeipmi or IPMItool"),
+        title=Title("IPMI sensors via Freeipmi or IPMItool"),
         help_text=Help(
             "This rule selects the Agent IPMI Sensors instead of the normal Checkmk Agent "
             "which collects the data through the FreeIPMI resp. IPMItool command"
@@ -256,7 +256,7 @@ def _migrate(value: object) -> Mapping[str, object]:
 
 rule_spec_special_agent_ipmi_sensors = SpecialAgent(
     name="ipmi_sensors",
-    title=Title("IPMI Sensors via Freeipmi or IPMItool"),
+    title=Title("IPMI sensors via Freeipmi or IPMItool"),
     topic=Topic.OPERATING_SYSTEM,
     parameter_form=_parameter_form,
 )

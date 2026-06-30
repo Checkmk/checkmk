@@ -77,7 +77,7 @@ def _parameter_netscaler_ha() -> Dictionary:
 
 rule_spec_netscaler_ha = CheckParameters(
     name="netscaler_ha",
-    title=Title("Citrix Netscaler load balancer HA"),
+    title=Title("Citrix NetScaler load balancer HA"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_netscaler_ha,
     condition=HostCondition(),

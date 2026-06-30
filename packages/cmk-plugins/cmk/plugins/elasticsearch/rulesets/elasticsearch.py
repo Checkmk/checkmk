@@ -143,7 +143,7 @@ def _parameter_form() -> Dictionary:
                         "used to limit the request. "
                         "Supports wildcards (*). "
                         "To target all data streams and indices use `*` or `_all`. "
-                        "The patterns will be combined to form the final url endpoint, e.g.: "
+                        "The patterns will be combined to form the final URL endpoint, e.g.: "
                         "`pattern_1,pattern_2/_stats/store,docs?ignore_unavailable=true`"
                     ),
                     add_element_label=Label("Add new pattern"),

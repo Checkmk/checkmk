@@ -250,11 +250,11 @@ class StatusHostFormSpecAdapter(FormSpecAdapter[tuple[SiteId, str] | None, Casca
             ],
             help_text=Help(  # astrein: disable=localization-checker
                 _(
-                    "By specifying a status host for each non-local connection "
-                    "you prevent graphical user interface (GUI) from running into timeouts when remote sites do not respond. "
-                    "You need to add the remote monitoring servers as hosts into your local monitoring "
-                    "site and use their host state as a reachability state of the remote site. Please "
-                    'refer to the <a href="%s" target="_blank">online documentation</a> for details.'
+                    "By specifying a status host for each non-local connection, "
+                    "you prevent the graphical user interface (GUI) from running into timeouts when remote sites do not respond. "
+                    "You need to add the remote monitoring servers as hosts to your local monitoring "
+                    "site and use their host state as the reachability state of the remote site. Please "
+                    'refer to the <a href="%s" target="_blank">User Guide</a> for details.'
                 )
                 % status_host_docu_url
             ),
@@ -797,7 +797,7 @@ class ModeEditSite(WatoMode):
                 title=Title("Replicate extensions"),
                 label=Label("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"),
                 help_text=Help(
-                    "If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
+                    "If you enable the replication of MKPs then during each <i>Activate changes</i> MKPs "
                     "that are installed on your central site and all other files below the <tt>~/local/</tt> "
                     "directory will be also transferred to the remote site. Note: <b>all other MKPs and files "
                     "below <tt>~/local/</tt> on the remote site will be removed</b>."
@@ -1969,7 +1969,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def page(self, config: Config) -> None:
         html.help(
             _(
-                "Here you can configure global settings, that should just be applied "
+                "Here, you can configure global settings, that should just be applied "
                 "on that site. <b>Note</b>: this only makes sense if the site "
                 "is part of a distributed setup."
             )

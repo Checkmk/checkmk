@@ -44,7 +44,7 @@ def _parameter_form() -> Dictionary:
                 parameter_form=String(
                     title=Title("Item suffix"),
                     help_text=Help(
-                        "Here you can define what service name (item) is "
+                        "Here, you can define which service name (item) is "
                         "used for the created service. The resulting item "
                         "is always prefixed with 'Elasticsearch Query'."
                     ),
@@ -115,7 +115,7 @@ def _parameter_form() -> Dictionary:
                 parameter_form=String(
                     title=Title("Search pattern"),
                     help_text=Help(
-                        "Here you can define what search pattern should be used. "
+                        "Here, you can define which search pattern should be used. "
                         "You can use Kibana query language as described "
                         '<a href="https://www.elastic.co/guide/en/kibana/current/kuery-query.html"'
                         'target="_blank">here</a>. To optimize search speed, use defined indices and fields '
@@ -128,11 +128,11 @@ def _parameter_form() -> Dictionary:
                 parameter_form=List(
                     title=Title("Indices to query"),
                     help_text=Help(
-                        "Here you can define what index should be queried "
+                        "Here, you can define what index should be queried "
                         "for the defined search. You can query one or "
                         "multiple indices. Without this option all indices "
                         "are queried. If you want to speed up your search, "
-                        "use definded indices."
+                        "use defined indices."
                     ),
                     element_template=String(),
                 ),
@@ -142,7 +142,7 @@ def _parameter_form() -> Dictionary:
                 parameter_form=List(
                     title=Title("Fieldnames to query"),
                     help_text=Help(
-                        "Here you can define fieldnames that should be used "
+                        "Here, you can define field names that should be used "
                         "in the search. Regexp query is allowed as described "
                         '<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-regexp-query.html"'
                         'target="_blank">here</a>. If you want to speed up your search, '

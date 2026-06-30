@@ -298,8 +298,8 @@ def _vs_annotation() -> Dictionary:
                 label=_("Reclassify service state of this period"),
             ),
         ),
-        ("from", AbsoluteDate(title=_("Start-Time"), include_time=True)),
-        ("until", AbsoluteDate(title=_("End-Time"), include_time=True)),
+        ("from", AbsoluteDate(title=_("Start time"), include_time=True)),
+        ("until", AbsoluteDate(title=_("End time"), include_time=True)),
         (
             "downtime",
             Optional(

@@ -16,7 +16,7 @@ ConfigVariableCrashReportURL = ConfigVariable(
     ident="crash_report_url",
     valuespec=lambda context: HTTPUrl(
         title=_("Crash report HTTP URL"),
-        help=_("By default crash reports will be sent to our crash reporting server."),
+        help=_("By default, crash reports will be sent to our crash reporting server."),
         show_as_link=False,
     ),
 )

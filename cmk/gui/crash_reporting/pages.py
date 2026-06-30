@@ -355,7 +355,7 @@ class PageCrash(Page):
 
     def _vs_crash_report(self) -> Dictionary:
         return Dictionary(
-            title=_("Crash Report"),
+            title=_("Crash report"),
             elements=[
                 (
                     "name",
@@ -436,7 +436,7 @@ class PageCrash(Page):
         details.setdefault("mail", user_spec.get("mail", ""))
 
     def _show_crash_report(self, info: CrashInfo) -> None:
-        html.h3(_("Crash Report"), class_="table")
+        html.h3(_("Crash report"), class_="table")
         html.open_table(class_=["data", "crash_report"])
 
         _crash_row(
@@ -465,14 +465,14 @@ class PageCrash(Page):
             pre=True,
         )
 
-        _crash_row(_("Crash Type"), info["crash_type"], odd=False, legend=True)
+        _crash_row(_("Crash type"), info["crash_type"], odd=False, legend=True)
         crash_time = normalize_crash_time(info["time"])
         first_seen = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(crash_time["first_seen"]))
         if crash_time["count"] == 1:
             time_text: str = first_seen
         else:
             last_seen = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(crash_time["last_seen"]))
-            time_text = _("First: %s, Last: %s (%d occurrences)") % (
+            time_text = _("First: %s, last: %s (%d occurrences)") % (
                 first_seen,
                 last_seen,
                 crash_time["count"],
@@ -483,7 +483,7 @@ class PageCrash(Page):
             odd=True,
         )
         _crash_row(_("Operating System"), info["os"], False)
-        _crash_row(_("Checkmk Version"), info["version"], True)
+        _crash_row(_("Checkmk version"), info["version"], True)
         _crash_row(_("Edition"), info.get("edition", ""), False)
         _crash_row(_("Core"), info.get("core", ""), True)
         _crash_row(_("Python Version"), info.get("python_version", _("Unknown")), False)
@@ -591,7 +591,7 @@ class ReportRendererSection(ABCReportRenderer):
 
         if section_content := details.get("section_content"):
             _crash_row(
-                _("String Table"),
+                _("String table"),
                 _format_log_output(pprint.pformat(section_content).encode()),
             )
 
@@ -715,7 +715,7 @@ class ReportRendererGUI(ABCReportRenderer):
         _crash_row(_("Page"), details["page"], odd=False, legend=True)
         _crash_row(_("Request method"), details.get("request_method", _("Unknown")))
         html.open_tr(class_="data even0")
-        html.td(_("HTTP Parameters"), class_="left")
+        html.td(_("HTTP parameters"), class_="left")
         html.open_td()
         debug_vars(html, request, vars_=details["vars"], hide_with_mouse=False)
         html.close_td()

@@ -275,7 +275,7 @@ def make_object_urls(
     urls.append(("timeline", _("Timeline"), timeline_url))
     if what != "bi":
         urls.append(
-            ("history", _("Event History"), history_url_of((site, host, service), time_range))
+            ("history", _("Event history"), history_url_of((site, host, service), time_range))
         )
     return urls
 

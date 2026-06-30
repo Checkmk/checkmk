@@ -227,7 +227,7 @@ def show_availability_page(
     )
 
     if av_mode == "timeline":
-        title = _("Availability Timeline")
+        title = _("Availability timeline")
     else:
         title = _("Availability")
 

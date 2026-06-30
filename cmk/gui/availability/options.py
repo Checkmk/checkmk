@@ -373,7 +373,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
                                 ("warn", _("WARN")),
                                 ("crit", _("CRIT")),
                                 ("unknown", _("UNKNOWN")),
-                                ("host_down", _("Host Down")),
+                                ("host_down", _("Host down")),
                             ],
                             default_value="host_down",
                         ),

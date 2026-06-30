@@ -312,6 +312,7 @@ def test_bundles() -> None:
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {
     "Active": {"docker_active", "mem_lnx_active"},
+    "CPU time": {"cpu_time", "cpu_time_percent"},
     "Age": {"age", "kube_info_age"},
     "Active connections": {
         "active",

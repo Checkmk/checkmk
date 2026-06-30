@@ -8,7 +8,7 @@ from cmk.graphing.v1.metrics import Color, Metric, TimeNotation, Unit
 
 metric_cpu_time = Metric(
     name="cpu_time",
-    title=Title("CPU Time"),
+    title=Title("CPU time"),
     unit=Unit(TimeNotation()),
     color=Color.BLUE,
 )

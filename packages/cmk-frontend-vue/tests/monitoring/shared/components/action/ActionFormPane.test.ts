@@ -5,32 +5,21 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
+import { markRaw } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
 import ActionFormPane from '@/monitoring/shared/components/action/ActionFormPane.vue'
-import type { ActionFormDefinition } from '@/monitoring/shared/components/action/types'
+import CommentForm from '@/monitoring/shared/components/action/actions/CommentForm.vue'
 
-function mountPane(definition: ActionFormDefinition) {
-  return render(ActionFormPane, {
-    props: { definition, title: 'Test action' as TranslatedString }
+test('renders the given form and gates submit on its validity', async () => {
+  const { emitted } = render(ActionFormPane, {
+    props: {
+      title: 'Add comment' as TranslatedString,
+      form: markRaw(CommentForm),
+      initialValues: { comment: '' }
+    }
   })
-}
-
-test('renders the comment form for a comment definition', () => {
-  mountPane({ type: 'comment', ident: 'comment' })
-
-  expect(screen.getByRole('textbox')).toBeInTheDocument()
-})
-
-test('renders no input for a confirm definition', () => {
-  mountPane({ type: 'confirm', ident: 'reschedule' })
-
-  expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-})
-
-test('keeps apply disabled until the comment is non-empty, then submits the values', async () => {
-  const { emitted } = mountPane({ type: 'comment', ident: 'comment' })
 
   const apply = screen.getByRole('button', { name: 'Apply' })
   expect(apply).toBeDisabled()
@@ -42,8 +31,29 @@ test('keeps apply disabled until the comment is non-empty, then submits the valu
   expect(emitted('submit')).toEqual([[{ comment: 'on it' }]])
 })
 
-test('emits cancel from the cancel button', async () => {
-  const { emitted } = mountPane({ type: 'confirm', ident: 'reschedule' })
+test('renders no inputs and is immediately submittable without a form', async () => {
+  const { emitted } = render(ActionFormPane, {
+    props: { title: 'Reschedule' as TranslatedString, initialValues: {} }
+  })
+
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  const apply = screen.getByRole('button', { name: 'Apply' })
+  expect(apply).toBeEnabled()
+
+  await userEvent.click(apply)
+  expect(emitted('submit')).toEqual([[{}]])
+})
+
+test('honors a custom submit label and emits cancel', async () => {
+  const { emitted } = render(ActionFormPane, {
+    props: {
+      title: 'Acknowledge problems' as TranslatedString,
+      submitLabel: 'Acknowledge' as TranslatedString,
+      initialValues: {}
+    }
+  })
+
+  expect(screen.getByRole('button', { name: 'Acknowledge' })).toBeInTheDocument()
 
   await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
   expect(emitted('cancel')).toHaveLength(1)

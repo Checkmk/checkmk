@@ -5,20 +5,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
-import type { TranslatedString } from '@/lib/i18nString'
 
 import ActionFormPane from '@/monitoring/shared/components/action/ActionFormPane.vue'
+import CommentForm from '@/monitoring/shared/components/action/actions/CommentForm.vue'
 
 const { _t } = usei18n()
-
-const hostName = 'web-server-01' as TranslatedString
 </script>
 
 <template>
   <ActionFormPane
-    :definition="{ type: 'comment', ident: 'comment' }"
     :title="_t('Add comment')"
-    :subtitle="hostName"
+    :form="CommentForm"
+    :initial-values="{ comment: '' }"
     @submit="() => {}"
     @cancel="() => {}"
   />

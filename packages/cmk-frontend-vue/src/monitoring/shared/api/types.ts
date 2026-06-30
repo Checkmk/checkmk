@@ -11,6 +11,11 @@ export type HostsResponse = components['schemas']['HostsResponse']
 
 export type HostEntry = components['schemas']['HostEntry']
 
+export interface HostRef {
+  site_id: string
+  name: string
+}
+
 export type HostState = components['schemas']['HostState']
 
 export type HostsPageMeta = components['schemas']['HostsPageMeta']

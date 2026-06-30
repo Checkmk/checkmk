@@ -4,6 +4,12 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 
+<script lang="ts">
+export interface CommentValues {
+  comment: string
+}
+</script>
+
 <script setup lang="ts">
 import { watch } from 'vue'
 
@@ -11,9 +17,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
-import type { CommentActionValues } from './types'
-
-const model = defineModel<CommentActionValues>({ required: true })
+const model = defineModel<CommentValues>({ required: true })
 
 const emit = defineEmits<{
   (event: 'update:valid', valid: boolean): void
@@ -29,20 +33,20 @@ watch(
 </script>
 
 <template>
-  <label class="monitoring-action-comment-form">
-    <span class="monitoring-action-comment-form__label">{{ _t('Comment') }}</span>
+  <label class="monitoring-comment-form">
+    <span class="monitoring-comment-form__label">{{ _t('Comment') }}</span>
     <CmkInput v-model="model.comment" field-size="large" :placeholder="_t('Enter a comment…')" />
   </label>
 </template>
 
 <style scoped>
-.monitoring-action-comment-form {
+.monitoring-comment-form {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-3);
 }
 
-.monitoring-action-comment-form__label {
+.monitoring-comment-form__label {
   font-weight: var(--font-weight-bold);
 }
 </style>

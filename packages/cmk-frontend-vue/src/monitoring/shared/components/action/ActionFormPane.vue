@@ -5,48 +5,30 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { type Component, computed, ref, watch } from 'vue'
+import { type Component, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkButton from '@/components/CmkButton/CmkButton.vue'
 
-import ActionCommentForm from './ActionCommentForm.vue'
-import { type ActionFormDefinition, type ActionFormValues, defaultActionValues } from './types'
-
-const ACTION_FORM_COMPONENTS: Partial<Record<ActionFormDefinition['type'], Component>> = {
-  comment: ActionCommentForm
-}
-
 const props = defineProps<{
-  definition: ActionFormDefinition
   title: TranslatedString
   subtitle?: TranslatedString | undefined
   submitLabel?: TranslatedString | undefined
+  form?: Component | undefined
+  initialValues?: unknown
 }>()
 
 const emit = defineEmits<{
-  (event: 'submit', values: ActionFormValues): void
+  (event: 'submit', values: unknown): void
   (event: 'cancel'): void
 }>()
 
 const { _t } = usei18n()
 
-const draft = ref<ActionFormValues>(defaultActionValues(props.definition))
-const isValid = ref(props.definition.type === 'confirm')
-
-const formComponent = computed<Component | undefined>(
-  () => ACTION_FORM_COMPONENTS[props.definition.type]
-)
-
-watch(
-  () => props.definition,
-  (definition) => {
-    draft.value = defaultActionValues(definition)
-    isValid.value = definition.type === 'confirm'
-  }
-)
+const draft = ref(props.initialValues)
+const isValid = ref(props.form === undefined)
 
 function submit(): void {
   if (!isValid.value) {
@@ -68,13 +50,7 @@ function cancel(): void {
     </header>
 
     <div class="monitoring-action-form-pane__body">
-      <component
-        :is="formComponent"
-        v-if="formComponent"
-        v-model="draft"
-        :definition="definition"
-        @update:valid="isValid = $event"
-      />
+      <component :is="form" v-if="form" v-model="draft" @update:valid="isValid = $event" />
       <p v-else class="monitoring-action-form-pane__confirm">
         {{ _t('This action runs immediately and has no further options.') }}
       </p>

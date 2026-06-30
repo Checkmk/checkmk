@@ -6,24 +6,22 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import type { ActionFormDefinition } from '@/monitoring/shared/components/action/types'
-
 import codeExample from './UclActionFormPaneCodeExample.vue?raw'
 
-type ActionType = ActionFormDefinition['type']
+type FormKind = 'none' | 'comment'
 
-const TYPE_OPTIONS: Options<ActionType>[] = [
-  { title: 'Confirm (no inputs)', name: 'confirm' },
+const FORM_OPTIONS: Options<FormKind>[] = [
+  { title: 'No inputs (confirm)', name: 'none' },
   { title: 'Comment', name: 'comment' }
 ]
 
 export const panelConfig = {
-  type: {
+  form: {
     type: 'list' as const,
-    title: 'definition.type',
-    options: TYPE_OPTIONS,
-    initialState: 'comment' as ActionType,
-    help: 'The action form type. The pane renders the matching form from its registry; "confirm" has no inputs.'
+    title: 'form',
+    options: FORM_OPTIONS,
+    initialState: 'comment' as FormKind,
+    help: 'The form fragment rendered in the pane body. "No inputs" makes the action immediately submittable.'
   }
 } satisfies PanelConfig
 </script>
@@ -37,12 +35,12 @@ import {
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
-import { computed, ref } from 'vue'
+import { type Component, computed, ref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
 import ActionFormPane from '@/monitoring/shared/components/action/ActionFormPane.vue'
-import type { ActionFormValues } from '@/monitoring/shared/components/action/types'
+import { useCommentAction } from '@/monitoring/shared/components/action/actions/comment'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -52,26 +50,22 @@ const propState = ref(
   ) as InferPanelState<typeof panelConfig>
 )
 
-const TITLES: Record<ActionType, TranslatedString> = {
-  confirm: 'Reschedule check' as TranslatedString,
-  comment: 'Add comment' as TranslatedString
-}
+const comment = useCommentAction()
+const form = computed<Component | undefined>(() =>
+  propState.value.form === 'comment' ? comment.form : undefined
+)
+const initialValues = computed(() =>
+  propState.value.form === 'comment' ? comment.defaultValues() : {}
+)
 
-const subtitle = 'web-server-01' as TranslatedString
+const lastResult = ref<string | null>(null)
 
-const definition = computed<ActionFormDefinition>(() => ({
-  type: propState.value.type,
-  ident: propState.value.type
-}))
-
-const lastSubmitted = ref<string | null>(null)
-
-function onSubmit(values: ActionFormValues): void {
-  lastSubmitted.value = JSON.stringify(values)
+function onSubmit(values: unknown): void {
+  lastResult.value = JSON.stringify(values)
 }
 
 function onCancel(): void {
-  lastSubmitted.value = 'cancelled'
+  lastResult.value = 'cancelled'
 }
 </script>
 
@@ -83,18 +77,20 @@ function onCancel(): void {
       <div class="ucl-action-form-pane__stack">
         <div class="ucl-action-form-pane__container">
           <ActionFormPane
-            :definition="definition"
-            :title="TITLES[propState.type]"
-            :subtitle="subtitle"
+            :key="propState.form"
+            :title="'Add comment' as TranslatedString"
+            :subtitle="'web-server-01' as TranslatedString"
+            :form="form"
+            :initial-values="initialValues"
             @submit="onSubmit"
             @cancel="onCancel"
           />
         </div>
 
         <p class="ucl-action-form-pane__hint">
-          The pane renders the form for <code>definition.type</code> from its registry, mirroring
-          how the filter dropdown switches on a filter's type. Last result:
-          <strong>{{ lastSubmitted ?? '—' }}</strong>
+          The pane is a generic shell: it renders the supplied <code>form</code> fragment over a
+          draft and emits <code>submit</code> with its values. Last result:
+          <strong>{{ lastResult ?? '—' }}</strong>
         </p>
       </div>
 

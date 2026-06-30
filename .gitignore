@@ -15,6 +15,7 @@
 .mypy_cache/
 .python-*-stamp
 .ropeproject
+.ruff_cache/
 .hypothesis
 .syntastic
 .testmondata

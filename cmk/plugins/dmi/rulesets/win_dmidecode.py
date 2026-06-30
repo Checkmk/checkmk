@@ -28,9 +28,9 @@ def migrate(value: object) -> Mapping[str, object]:
 def _form_spec() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            r"This plug-in requires the executable <tt>C:\Programme\GnuWin32\sbin\dmidecode.exe</tt>. "
+            r"This plug-in requires the executable <tt>C:\\Programme\\GnuWin32\\sbin\\dmidecode.exe</tt>. "
             "This is the default location when installing this tool. You can download it for free "
-            "from <a href='http://gnuwin32.sourceforge.net/packages/dmidecode.htm'>here</a>."
+            "from <a href='http://gnuwin32.sourceforge.net/packages/dmidecode.htm'>DmiDecode for Windows</a>."
         ),
         elements={
             "deployment": DictElement(

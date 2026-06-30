@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
@@ -18,6 +20,12 @@ from cmk.plugins.redfish.lib import (
 )
 
 
+def _psu_service_item(count: int, entry: Mapping[str, object]) -> str | None:
+    """Service item, falling back to MemberId/Id; None if the supply has no identity."""
+    name = entry.get("Name") or entry.get("MemberId") or entry.get("Id")
+    return f"{count}-{name}" if name else None
+
+
 def discovery_redfish_psu(section: RedfishAPIData) -> DiscoveryResult:
     for key in section.keys():
         data = section[key].get("PowerSupplies", None)
@@ -25,7 +33,8 @@ def discovery_redfish_psu(section: RedfishAPIData) -> DiscoveryResult:
             for count, entry in enumerate(data):
                 if entry.get("Status", {}).get("State") in ["Absent", "Disabled"]:
                     continue
-                yield Service(item=f"{count}-{entry['Name']}")
+                if (item := _psu_service_item(count, entry)) is not None:
+                    yield Service(item=item)
 
 
 # TODO: for manpage: which agents support this?
@@ -37,7 +46,7 @@ def check_redfish_psu(item: str, section: RedfishAPIData) -> CheckResult:
             return
 
         for count, psu_data in enumerate(psus):
-            if f"{count}-{psu_data.get('Name')}" == item:
+            if _psu_service_item(count, psu_data) == item:
                 psu = psu_data
                 break
         if psu:

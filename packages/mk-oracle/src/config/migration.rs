@@ -256,6 +256,10 @@ pub fn convert(
         .get("CACHE_MAXAGE")
         .and_then(|v| v.parse::<u32>().ok());
 
+    let sqls_max_cache_age = variables
+        .get("SQLS_MAX_CACHE_AGE")
+        .and_then(|v| v.parse::<u32>().ok());
+
     let max_tasks = variables
         .get("MAX_TASKS")
         .and_then(|v| v.parse::<u32>().ok());
@@ -268,6 +272,7 @@ pub fn convert(
     out.extend(format_instances(&dbuser, &dbuser_extras));
     out.extend(format_sections(&all, &asyncs, &normals, &asms));
     out.extend(format_cache_age(cache_maxage));
+    out.extend(format_custom_metrics_cache_age(sqls_max_cache_age));
     out.extend(format_discovery(&only_sids, &skip_sids));
 
     Ok(out)
@@ -364,6 +369,13 @@ fn format_cache_age(cache_maxage: Option<u32>) -> Vec<String> {
         return Vec::new();
     };
     vec![format!("    cache_age: {age}\n")]
+}
+
+fn format_custom_metrics_cache_age(sqls_max_cache_age: Option<u32>) -> Vec<String> {
+    let Some(age) = sqls_max_cache_age else {
+        return Vec::new();
+    };
+    vec![format!("    custom_metrics_cache_age: {age}\n")]
 }
 
 fn find_excluded_instances(variables: &HashMap<String, String>) -> Vec<String> {

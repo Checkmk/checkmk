@@ -502,6 +502,22 @@ fn test_migrate_reference_config_cache_age() {
 }
 
 #[test]
+fn test_migrate_reference_config_custom_metrics_cache_age() {
+    let cfg = legacy_cfg_path();
+    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+    assert_eq!(
+        ora.custom_metrics_cache_age(),
+        301,
+        "custom_metrics_cache_age must match SQLS_MAX_CACHE_AGE from reference config"
+    );
+}
+
+#[test]
 fn test_migrate_reference_config_discovery() {
     let cfg = legacy_cfg_path();
     let output = run_bin().args(["-M", &cfg]).ok().unwrap();

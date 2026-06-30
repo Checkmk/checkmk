@@ -23,6 +23,9 @@ $ASYNC_ASM_SECTIONS = @("asm_diskgroup")
 # Cache time (i.e. check interval) for async sections
 $CACHE_MAXAGE = 601
 
+# Cache time for custom SQL sections
+$SQLS_MAX_CACHE_AGE = 301
+
 # Only monitor the following SIDs (if found)
 $ONLY_SIDS = @("XE1", "XEXE")
 

@@ -100,9 +100,9 @@ def test_template_lifecycle_discover_and_update() -> None:
 
     evaluated = evaluate_template_graphs(
         graphs=graphs,
-        rrd=rrd,
         consolidation_function=ConsolidationFunction.MAX,
         time_range=_DISCOVERY_RANGE,
+        rrd=rrd,
         registered_translations=[],
     )
 

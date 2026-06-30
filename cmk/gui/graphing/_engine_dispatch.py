@@ -50,11 +50,11 @@ def evaluate_graphs(request: GraphDataRequest) -> Sequence[EvaluatedGraph]:
 def _dispatched_evaluate_template_graphs(request: GraphDataRequest) -> Sequence[EvaluatedGraph]:
     return evaluate_template_graphs(
         graphs=deserialize_graphs(request.definition),
-        rrd=EngineRRDSource(site_id=None, debug=active_config.debug),
         consolidation_function=ensure_type(
             request.options["consolidation_function"], ConsolidationFunction
         ),
         time_range=ensure_type(request.options["time_range"], TimeRange),
+        rrd=EngineRRDSource(site_id=None, debug=active_config.debug),
         registered_translations=registered_translations(),
     )
 

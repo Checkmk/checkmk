@@ -54,7 +54,7 @@ class HostAddress(str):
     """A Checkmk HostAddress or HostName"""
 
     _ALLOWED_CHARS_CLASS: Final = r"-0-9a-zA-Z_."
-    REGEX_HOST_NAME: Final = re.compile(rf"^\w[{_ALLOWED_CHARS_CLASS}]*$", re.ASCII)
+    REGEX_HOST_NAME: Final = re.compile(rf"\A\w[{_ALLOWED_CHARS_CLASS}]*\Z", re.ASCII)
     REGEX_INVALID_CHAR: Final = re.compile(rf"[^{_ALLOWED_CHARS_CLASS}]")
 
     def __new__(cls, text: str) -> Self:

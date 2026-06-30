@@ -57,6 +57,9 @@ def test_valid_hostaddress(hostaddress: str) -> None:
         "-subdomain.domain.com",
         "email@domain.com",
         "@subdomain.domain.com",
+        "domain.com\n",
+        "\ndomain.com",
+        "domain\ncom",
     ],
 )
 def test_invalid_hostaddress(hostaddress: str) -> None:

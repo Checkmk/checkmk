@@ -32,7 +32,7 @@ rule_spec_check_parameters = CheckParameters(
                     title=Title("Time until license expiration"),
                     help_text=Help(
                         "Remaining time (seconds) until the license expires. The defaults equate"
-                        "to 14 days (warning) and 7 days (critical)."
+                        " to 14 days (WARNING) and 7 days (CRITICAL)."
                     ),
                     level_direction=LevelDirection.LOWER,
                     form_spec_template=Integer(),

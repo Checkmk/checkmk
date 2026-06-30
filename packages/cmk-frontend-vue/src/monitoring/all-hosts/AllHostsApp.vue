@@ -20,7 +20,7 @@ import type { SimpleIcons } from '@/components/CmkIcon/types'
 import CmkSearchInput from '@/components/CmkSearchInput.vue'
 import CmkSplitPane from '@/components/CmkSplitPane.vue'
 
-import type { HostEntry, HostState } from '@/monitoring/shared/api/types'
+import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
@@ -34,7 +34,12 @@ import MonitoringEmptyState from '../shared/components/MonitoringEmptyState.vue'
 import MonitoringResultsCount from '../shared/components/MonitoringResultsCount.vue'
 import MonitoringTable from '../shared/components/MonitoringTable.vue'
 import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
+import ActionFeedback from '../shared/components/action/ActionFeedback.vue'
 import MonitoringActionBar from '../shared/components/action/MonitoringActionBar.vue'
+import MonitoringActionPane from '../shared/components/action/MonitoringActionPane.vue'
+import { useAcknowledgeAction } from '../shared/components/action/actions/acknowledge'
+import { createActionRegistry } from '../shared/components/action/registry'
+import { useMonitoringActions } from '../shared/services/useMonitoringActions'
 import { HostApi } from './api/hosts'
 import HostRow from './components/HostRow.vue'
 import { HostService } from './services/HostService'
@@ -261,9 +266,23 @@ const hostService = new HostService(new HostApi(), getKeyShortcutServiceInstance
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 
 const rowSelection = ref<RowSelectionState>({})
-const selectedCount = computed(() => Object.values(rowSelection.value).filter(Boolean).length)
 
-const showRightPane = ref(false)
+const actionRegistry = createActionRegistry([useAcknowledgeAction()])
+const {
+  activeAction,
+  selectedCount,
+  feedback,
+  feedbackOpen,
+  openAction,
+  closeAction,
+  applyFeedback
+} = useMonitoringActions(rowSelection)
+
+const selectedHosts = computed<HostRef[]>(() =>
+  hostService.items.value
+    .filter((host) => rowSelection.value[rowKey(host)])
+    .map((host) => ({ site_id: host.site_id, name: host.name }))
+)
 
 onMounted(() => {
   hostService.onFocusSearch(() => searchInput.value?.focus())
@@ -284,7 +303,9 @@ function onHostAction(payload: { action: CellAction; host: HostEntry }): void {
 }
 
 function onBulkAction(action: CellAction): void {
-  void action
+  if (action.id in actionRegistry) {
+    openAction(action.id)
+  }
 }
 </script>
 
@@ -328,17 +349,23 @@ function onBulkAction(action: CellAction): void {
       />
     </div>
     <CmkSplitPane
-      :collapsed="!showRightPane"
+      :collapsed="!activeAction"
       :right-min-size="30"
       :right-max-size="50"
       class="monitoring-all-hosts-app__split"
-      @update:collapsed="showRightPane = !$event"
+      @update:collapsed="($event as boolean) && closeAction()"
     >
       <template #left>
         <div class="monitoring-all-hosts-app__left-pane">
           <MonitoringResultsCount
             class="monitoring-all-hosts-app__results-count"
             :active-filter-count="hostService.filters.activeFilterCount"
+          />
+          <ActionFeedback
+            v-if="feedback"
+            v-model:open="feedbackOpen"
+            class="monitoring-all-hosts-app__feedback"
+            :feedback="feedback"
           />
           <MonitoringActionBar
             v-if="hostActions.length > 0"
@@ -371,6 +398,16 @@ function onBulkAction(action: CellAction): void {
             </template>
           </MonitoringTable>
         </div>
+      </template>
+      <template #right>
+        <MonitoringActionPane
+          v-if="activeAction"
+          :action-id="activeAction"
+          :actions="actionRegistry"
+          :targets="selectedHosts"
+          @feedback="applyFeedback"
+          @cancel="closeAction"
+        />
       </template>
     </CmkSplitPane>
   </div>
@@ -443,6 +480,11 @@ function onBulkAction(action: CellAction): void {
 .monitoring-all-hosts-app__results-count {
   flex: 0 0 auto;
   margin: var(--spacing-half) 0 var(--spacing);
+}
+
+.monitoring-all-hosts-app__feedback {
+  flex: 0 0 auto;
+  margin: 0 0 var(--spacing);
 }
 
 .monitoring-all-hosts-app__action-bar {

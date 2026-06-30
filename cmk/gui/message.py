@@ -361,7 +361,7 @@ def _message_spec(users: Sequence[_MessageRecipient]) -> Dictionary:
                 required=True,
                 parameter_form=MultilineText(
                     title=Title("Message"),
-                    help_text=Help("Insert the text to be sent to all reciepents."),
+                    help_text=Help("Insert the text to be sent to all recipients."),
                     custom_validate=[
                         validators.LengthInRange(
                             min_value=1, error_msg=FSMessage("You need to provide a text.")

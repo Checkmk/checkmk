@@ -36,7 +36,7 @@ def windows_sections() -> list[tuple[str, str, bool, bool]]:
         ("local", _("Execute local scripts"), True, False),
         ("mrpe", _("Execute legacy monitoring plug-ins"), True, False),
         ("spool", _("Asynchronously spooled check results"), True, False),
-        ("wmi_cpuload", _("CPU Load via WMI"), True, False),
+        ("wmi_cpuload", _("CPU load via WMI"), True, False),
         ("msexch", _("MS Exchange counters (various)"), True, False),
         ("wmi_webservices", _("Web Services"), True, False),
         ("dotnet_clrmemory", _(".Net/CLR Memory"), True, False),

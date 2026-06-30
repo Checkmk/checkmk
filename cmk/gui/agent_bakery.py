@@ -61,4 +61,4 @@ class RulespecGroupMonitoringAgentsAutomaticUpdates(RulespecSubGroup):
 
     @property
     def title(self) -> str:
-        return _("Automatic Updates")
+        return _("Automatic updates")

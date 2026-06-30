@@ -1363,7 +1363,7 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
 
     @classmethod
     def title(cls) -> str:
-        return _("AWS S3 Bucket")
+        return _("AWS S3 bucket")
 
     @staticmethod
     def _instantiate_target(params: RemoteTargetParams[S3Params]) -> S3Target:
@@ -1485,7 +1485,7 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                         ),
                         CascadingSingleChoiceElement(
                             name="active_directory",
-                            title=Title("Active Directory credentials"),
+                            title=Title("Active directory credentials"),
                             parameter_form=Dictionary(
                                 elements={
                                     "client_id": DictElement(
@@ -1905,7 +1905,7 @@ class ModeEditBackupTarget(WatoMode[object]):
                         title=Title("Title"),
                         custom_validate=[
                             validators.LengthInRange(
-                                min_value=1, error_msg=Message("Text field can not be empty")
+                                min_value=1, error_msg=Message("Text field cannot be empty")
                             )
                         ],
                     ),

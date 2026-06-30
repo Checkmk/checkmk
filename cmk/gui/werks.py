@@ -82,7 +82,7 @@ def get_werk_by_id(werk_id: int) -> WerkV3:
     for werk in load_werk_entries():
         if werk.id == werk_id:
             return werk
-    raise MKUserError("werk", _("This werk does not exist."))
+    raise MKUserError("werk", _("This Werk does not exist."))
 
 
 def sort_by_date(werks: Iterable[WerkV3]) -> list[WerkV3]:
@@ -177,7 +177,7 @@ class ChangeLogPage(Page):
                     title=_("Werks"),
                     topics=[
                         PageMenuTopic(
-                            title=_("Incompatible werks"),
+                            title=_("Incompatible Werks"),
                             entries=list(_page_menu_entries_ack_all_werks(request)),
                         ),
                     ],
@@ -224,7 +224,7 @@ def _page_menu_entries_ack_all_werks(request: Request) -> Iterator[PageMenuEntry
         item=make_simple_link(
             make_confirm_delete_link(
                 url=makeactionuri(request, transactions, [("_ack_all", "1")]),
-                title=_("Acknowledge all incompatible werks"),
+                title=_("Acknowledge all incompatible Werks"),
                 confirm_button=_("Acknowledge all"),
             )
         ),
@@ -335,7 +335,7 @@ def page_werk(ctx: PageContext) -> None:
     werk_table_row(_("Title"), HTMLWriter.render_b(render_werk_title(ctx.request, werk)))
     werk_table_row(_("Component"), translator.component_of(werk))
     werk_table_row(_("Date"), get_date_formatted(werk))
-    werk_table_row(_("Checkmk Version"), werk.version)
+    werk_table_row(_("Checkmk version"), werk.version)
     werk_table_row(
         _("Level"),
         translator.level_of(werk),
@@ -368,7 +368,7 @@ def _page_menu_werk(request: Request, breadcrumb: Breadcrumb, werk: WerkV3) -> P
                 title="Werk",
                 topics=[
                     PageMenuTopic(
-                        title=_("Incompatible werk"),
+                        title=_("Incompatible Werk"),
                         entries=list(_page_menu_entries_ack_werk(request, werk)),
                     ),
                 ],
@@ -543,7 +543,7 @@ def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, Val
             "version",
             "single",
             Tuple(
-                title=_("Checkmk Version"),
+                title=_("Checkmk version"),
                 orientation="float",
                 elements=[
                     TextInput(label=_("from:"), size=12),
@@ -558,7 +558,7 @@ def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, Val
             DropdownChoice(
                 title=_("Group Werks by"),
                 choices=[
-                    ("version", _("Checkmk Version")),
+                    ("version", _("Checkmk version")),
                     ("day", _("Day of creation")),
                     ("week", _("Week of creation")),
                     (None, _("Do not group")),
@@ -584,12 +584,12 @@ def render_unacknowleged_werks(request: Request) -> None:
     if werks and not request.has_var("show_unack"):
         html.open_div(class_=["warning"])
         html.write_text_permissive(
-            _("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks)
+            _("<b>Warning:</b> There are %d unacknowledged incompatible Werks:") % len(werks)
         )
         html.br()
         html.br()
         html.a(
-            _("Show unacknowledged incompatible werks"),
+            _("Show unacknowledged incompatible Werks"),
             href=makeuri_contextless(request, [("show_unack", "1"), ("wo_compatibility", "3")]),
         )
         html.close_div()

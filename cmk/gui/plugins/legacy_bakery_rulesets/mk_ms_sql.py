@@ -255,7 +255,7 @@ def _mssql_connection() -> Dictionary:
                         "misconfigured network and for testing purposes"
                     ),
                     choices=[
-                        ("auto", _("Automatically select best type of back-end")),
+                        ("auto", _("Automatically select best type of backend")),
                         ("odbc", _("Use ODBC backend if the plug-in is deployed on Windows")),
                     ],
                 ),
@@ -275,7 +275,7 @@ def _get_discovery() -> Tuple:
             Checkbox(
                 title=_("Detect instances"),
                 label=_("Try to detect MSSQL instances present on server"),
-                help=_("MK-SQL plug-in uses different methods to detect MSSQL instances"),
+                help=_("MK SQL plug-in uses different methods to detect MSSQL instances"),
                 default_value=True,
             ),
             CascadingDropdown(
@@ -435,7 +435,7 @@ def _get_options() -> list[tuple[str, ValueSpec]]:
         (
             "ignore_inactive_local_instances",
             Checkbox(
-                title=_("Ignore inactive local instances(Windows)"),
+                title=_("Ignore inactive local instances (Windows)"),
                 label=_("Skip local instances that are not running"),
                 help=_(
                     "If enabled, the plug-in will not attempt to connect to "

@@ -254,7 +254,7 @@ def query_limit_exceeded_warn(limit: int | None, user_config: LoggedInUser) -> N
         text += with_loading_transition(ignore_limit_link, template=None)
 
     text += escaping.escape_to_html_permissive(
-        " " + _("<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
+        " " + _("<b>Note:</b> The shown results are incomplete and do not reflect the sort order.")
     )
     html.show_warning(text)
 

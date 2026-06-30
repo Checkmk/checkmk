@@ -38,7 +38,7 @@ def _agent_config_mk_docker_choices_cont() -> list[tuple[str, str]]:
         ),
         (
             "docker_container_agent",
-            _("Checkmk agent: Execute the Checkmk agent within running containers"),
+            _("Checkmk agent: execute the Checkmk agent within running containers"),
         ),
         ("docker_container_mem", _("Check containers memory usage")),
         ("docker_container_cpu", _("Check containers CPU utilization")),

@@ -33,7 +33,7 @@ def _valuespec_agent_config_winperf() -> ListOf[tuple[str, str]]:
                 ),
             ]
         ),
-        add_label=_("Add Counter Object"),
+        add_label=_("Add counter object"),
         title=_("Windows Performance-Counter objects"),
         help=_(
             "Here you can configure which performance counter objects the Windows agent "

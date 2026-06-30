@@ -219,8 +219,8 @@ def test_registered_configvars() -> None:
 def test_registered_configvar_groups() -> None:
     expected_groups = [
         "Setup",
-        "Event Console: Generic",
-        "Event Console: Logging & diagnose",
+        "Event Console: generic",
+        "Event Console: logging & diagnose",
         "Event Console: SNMP traps",
         "Execution of checks",
         "Notifications",

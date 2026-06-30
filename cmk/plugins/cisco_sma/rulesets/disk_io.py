@@ -81,7 +81,7 @@ def _parameter_form() -> Dictionary:
             ),
             "latency": DictElement(
                 parameter_form=Levels(
-                    title=Title("IO latency"),
+                    title=Title("I/O latency"),
                     form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.MILLISECOND]),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.08, 0.16)),
@@ -150,7 +150,7 @@ def _parameter_form() -> Dictionary:
 
 rule_spec_disk_io = CheckParameters(
     name="disk_io",
-    title=Title("Disk IO levels (old style checks)"),
+    title=Title("Disk I/O levels (old style checks)"),
     topic=Topic.STORAGE,
     parameter_form=_parameter_form,
     condition=HostAndItemCondition(

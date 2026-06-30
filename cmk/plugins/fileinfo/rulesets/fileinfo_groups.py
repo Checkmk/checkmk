@@ -169,7 +169,7 @@ def _valuespec_fileinfo_groups() -> Dictionary:
                                         "exclude_pattern": DictElement(
                                             required=True,
                                             parameter_form=String(
-                                                title=Title("Exclude Pattern"),
+                                                title=Title("Exclude pattern"),
                                                 field_size=FieldSize.LARGE,
                                             ),
                                         ),
@@ -198,7 +198,7 @@ rule_spec_fileinfo_groups = DiscoveryParameters(
 def _item_spec_fileinfo_groups() -> String:
     href = "wato.py?mode=edit_ruleset&varname=discovery_parameters%3Afileinfo_groups"
     return String(
-        title=Title("File Group Name"),
+        title=Title("File group name"),
         help_text=Help(
             "This name must match the name of the group defined "
             'in the <a href="%s">%s</a> rule set.'
@@ -234,7 +234,7 @@ def get_fileinfo_groups_parameter_form(is_enforced: bool = False) -> Dictionary:
                             "group_pattern_exclude": DictElement(
                                 required=True,
                                 parameter_form=String(
-                                    title=Title("Exclude Pattern"),
+                                    title=Title("Exclude pattern"),
                                     field_size=FieldSize.MEDIUM,
                                 ),
                             ),
@@ -523,7 +523,7 @@ rule_spec_fileinfo_groups_checking = CheckParameters(
     parameter_form=get_fileinfo_groups_parameter_form,
     condition=HostAndItemCondition(
         item_form=_item_spec_fileinfo_groups(),
-        item_title=Title("File Group Name"),
+        item_title=Title("File group name"),
     ),
     create_enforced_service=False,
 )
@@ -536,6 +536,6 @@ rule_spec_fileinfo_groups_enforced = EnforcedService(
     parameter_form=lambda: get_fileinfo_groups_parameter_form(is_enforced=True),
     condition=HostAndItemCondition(
         item_form=_item_spec_fileinfo_groups(),
-        item_title=Title("File Group Name"),
+        item_title=Title("File group name"),
     ),
 )

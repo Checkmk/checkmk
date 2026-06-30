@@ -352,7 +352,7 @@ class DataSourceECEvents(ABCDataSource):
 
     @property
     def title(self) -> str:
-        return _("Event Console: Current events")
+        return _("Event Console: current events")
 
     @property
     def table(self) -> RowTableEC:
@@ -386,7 +386,7 @@ class DataSourceECEventHistory(ABCDataSource):
 
     @property
     def title(self) -> str:
-        return _("Event Console: Event history")
+        return _("Event Console: event history")
 
     @property
     def table(self) -> RowTableEC:
@@ -1014,7 +1014,7 @@ def render_delete_event_icons(row: Row, *, request: Request) -> str | HTML:
         ("actions", "yes"),
         ("_do_actions", "yes"),
         ("_row_id", row_id(datasource, row)),
-        ("_delete_event", _("Archive Event")),
+        ("_delete_event", _("Archive event")),
         ("_show_result", "0"),
     ]
     url = makeactionuri(
@@ -1539,7 +1539,7 @@ PermissionECArchiveEvent = Permission(
 
 def command_archive_event_render(what: str) -> None:
     html.open_div(class_="group")
-    html.button("_delete_event", _("Archive Event"), cssclass="hot")
+    html.button("_delete_event", _("Archive event"), cssclass="hot")
     html.button("_cancel", _("Cancel"))
     html.close_div()
 
@@ -1954,7 +1954,7 @@ EC_HISTORY_RECENT = ViewSpec(
         "sort_index": 20,
         "title": _l("Recent event history"),
         "description": _l(
-            "Information about events and actions on events during the recent 24 hours."
+            "Information about events and actions on events during the past 24 hours."
         ),
         "datasource": "mkeventd_history",
         "layout": "table",

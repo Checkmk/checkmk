@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_disk_io_utilization = metrics.Metric(
     name="disk_io_utilization",
-    title=Title("Disk IO Utilization"),
+    title=Title("Disk I/O utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.ORANGE,
 )
@@ -25,7 +25,7 @@ perfometer_disk_io_utilization = perfometers.Perfometer(
 
 graph_disk_io_utilization = graphs.Graph(
     name="disk_io_utilization",
-    title=Title("Disk IO Utilization"),
+    title=Title("Disk I/O utilization"),
     minimal_range=graphs.MinimalRange(
         0,
         100,

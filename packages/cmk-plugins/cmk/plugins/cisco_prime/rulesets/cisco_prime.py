@@ -77,7 +77,7 @@ def _parameter_form_special_agents_cisco_prime() -> Dictionary:
             "basicauth": DictElement(
                 parameter_form=Dictionary(
                     title=Title("BasicAuth settings (optional)"),
-                    help_text=Help("The credentials for api calls with authentication."),
+                    help_text=Help("The credentials for API calls with authentication."),
                     elements={
                         "username": DictElement(
                             parameter_form=String(

@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_pci_io_util = metrics.Metric(
     name="pci_io_util",
-    title=Title("PCI Express IO utilization"),
+    title=Title("PCI Express I/O utilization"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.BLUE,
 )

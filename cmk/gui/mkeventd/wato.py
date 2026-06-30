@@ -475,7 +475,7 @@ class RuleState(CascadingDropdown):
                         (
                             "2",
                             RegExp(
-                                title=_("CRIT Pattern"),
+                                title=_("CRIT pattern"),
                                 help=_(
                                     "When the given regular expression (infix search) matches "
                                     "the events state is set to CRITICAL."
@@ -800,7 +800,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
         (
             "autodelete",
             Checkbox(
-                title=_("Automatic Deletion"),
+                title=_("Automatic deletion"),
                 label=_("Delete event immediately after the actions"),
                 help=_(
                     "Incoming messages might trigger actions (when configured above), "
@@ -1320,7 +1320,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                     "Negate match: Execute this rule if the upper conditions are <b>not</b> fulfilled."
                 ),
                 help=_(
-                    "By activating this checkbox the complete combined rule conditions will be inverted. That means that this rule will be executed, if at least one of the conditions does <b>not</b> match. This can e.g. be used for skipping a rule pack if the message text does not contain <tt>ORA-</tt>. Please note: When an inverted rule matches there can never be match groups."
+                    "By activating this checkbox, the complete combined rule conditions will be inverted. That means that this rule will be executed, if at least one of the conditions does <b>not</b> match. This can e.g. be used for skipping a rule pack if the message text does not contain <tt>ORA-</tt>. Please note: When an inverted rule matches there can never be match groups."
                 ),
             ),
         ),
@@ -1493,7 +1493,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                     "event_limit",
                 ],
             ),
-            (_("Counting & Timing"), ["count", "expect", "delay", "livetime"]),
+            (_("Counting & timing"), ["count", "expect", "delay", "livetime"]),
             (
                 _("Rewriting"),
                 ["set_text", "set_host", "set_application", "set_comment", "set_contact"],
@@ -1654,7 +1654,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
     def _vs_mkeventd_event(self) -> Dictionary:
         """Valuespec for simulating an event"""
         return Dictionary(
-            title=_("Event Simulator"),
+            title=_("Event simulator"),
             help=_("You can simulate an event here and check out which rules are matching."),
             render="form",
             form_narrow=True,
@@ -3301,13 +3301,13 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 
 
 ConfigVariableGroupEventConsoleGeneric = ConfigVariableGroup(
-    title=_l("Event Console: Generic"),
+    title=_l("Event Console: generic"),
     sort_index=18,
 )
 
 
 ConfigVariableGroupEventConsoleLogging = ConfigVariableGroup(
-    title=_l("Event Console: Logging & diagnose"),
+    title=_l("Event Console: logging & diagnose"),
     sort_index=19,
 )
 
@@ -4259,7 +4259,7 @@ ConfigVariableEventConsoleLogMessages = ConfigVariable(
         title=_("Syslog-like message logging"),
         label=_("Log all messages into Syslog-like log files"),
         help=_(
-            "When this option is enabled, then <b>every</b> incoming message is being logged into the directory <tt>messages</tt> in the Event Consoles state directory. The logfile rotation is analog to that of the history logfiles. Please note that if you have lots of incoming messages then these files can get very large."
+            "When this option is enabled, then <b>every</b> incoming message is being logged into the directory <tt>messages</tt> in the Event Consoles state directory. The log file rotation is analog to that of the history log files. Please note that if you have lots of incoming messages then these files can get very large."
         ),
     ),
 )
@@ -4367,7 +4367,7 @@ ConfigVariableEventConsoleActions = ConfigVariable(
                                 ),
                                 (
                                     "script",
-                                    _("Execute Shell Script"),
+                                    _("Execute shell script"),
                                     Dictionary(
                                         optional_keys=False,
                                         elements=[
@@ -4849,7 +4849,7 @@ ConfigVariableEventConsoleNotifyContactgroup = ConfigVariable(
     valuespec=lambda context: ContactGroupSelection(
         title=TITLE_MKEVENTD_NOTIFY_CONTACTGROUP,
         no_selection=_("(don't send notifications to Event Console)"),
-        label=_("send notifications of contactgroup:"),
+        label=_("send notifications to contact group:"),
         help=_(
             "If you select a contact group here, all notifications of "
             "hosts and services in that contact group will be sent to the "

@@ -44,7 +44,7 @@ describe('ModeCreateRelayApp', () => {
   })
 
   test('Windows path renders all 5 step headings in order', async () => {
-    render(ModeCreateRelayApp, { props: { ...mockProps, exp_add_windows_relay_enabled: true } })
+    render(ModeCreateRelayApp, { props: mockProps })
 
     await userEvent.click(screen.getByText('Windows'))
 
@@ -60,7 +60,7 @@ describe('ModeCreateRelayApp', () => {
   })
 
   test('switching OS resets wizard to step 1', async () => {
-    render(ModeCreateRelayApp, { props: { ...mockProps, exp_add_windows_relay_enabled: true } })
+    render(ModeCreateRelayApp, { props: mockProps })
 
     // Switch to Windows — WSL2 is step 1, its content should be visible
     await userEvent.click(screen.getByText('Windows'))
@@ -69,21 +69,5 @@ describe('ModeCreateRelayApp', () => {
     // Switch back to Linux — InstallRelay is step 1, its content should be visible
     await userEvent.click(screen.getByText('Linux'))
     expect(screen.getByLabelText('Download relay install script command')).toBeVisible()
-  })
-
-  test('OS toggle is hidden when exp_add_windows_relay_enabled is false', () => {
-    render(ModeCreateRelayApp, {
-      props: { ...mockProps, exp_add_windows_relay_enabled: false }
-    })
-
-    expect(screen.queryByText('Linux')).not.toBeInTheDocument()
-    expect(screen.queryByText('Windows')).not.toBeInTheDocument()
-  })
-
-  test('OS toggle is hidden when exp_add_windows_relay_enabled is not set', () => {
-    render(ModeCreateRelayApp, { props: mockProps })
-
-    expect(screen.queryByText('Linux')).not.toBeInTheDocument()
-    expect(screen.queryByText('Windows')).not.toBeInTheDocument()
   })
 })

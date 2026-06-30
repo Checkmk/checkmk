@@ -99,7 +99,7 @@ def _parameter_valuespec_apc_ats_output() -> Dictionary:
 
 rule_spec_ovs_bonding = CheckParameters(
     name="apc_ats_output",
-    title=Title("APC Automatic Transfer Switch Output"),
+    title=Title("APC automatic transfer switch output"),
     topic=Topic.ENVIRONMENTAL,
     parameter_form=_parameter_valuespec_apc_ats_output,
     condition=HostAndItemCondition(item_title=Title("ID of phase")),

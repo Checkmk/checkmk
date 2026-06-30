@@ -162,11 +162,8 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "hivemanager": ["IP", "USER", "PASSWORD"],
     "hivemanager_ng": [
         "URL",
-        "VHM_ID",
-        "API_TOKEN",
-        "CLIENT_ID",
-        "CLIENT_SECRET",
-        "REDIRECT_URL",
+        "USERNAME",
+        "PASSWORD",
     ],
     "ibmsvc": ["HOSTNAME"],
     "jenkins": ["HOSTNAME"],

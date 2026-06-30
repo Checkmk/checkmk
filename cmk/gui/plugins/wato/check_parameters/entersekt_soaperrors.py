@@ -35,6 +35,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_entersekt_soaprrors,
-        title=lambda: _("Entersekt Soap Service Errors"),
+        title=lambda: _("Entersekt SOAP service errors"),
     )
 )

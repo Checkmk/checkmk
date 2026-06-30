@@ -774,7 +774,7 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         if what.startswith("dnsfail-"):
             text = (
                 _(
-                    "<b>Warning: </b> the IP address lookup of <b>%s</b> has failed. The core has been started by using the address <tt>0.0.0.0</tt> for the while. Please update your DNS or configure an IP address for the affected host."
+                    "<b>Warning: </b> The IP address lookup of <b>%s</b> has failed. The core has been started by using the address <tt>0.0.0.0</tt> for the while. Please update your DNS or configure an IP address for the affected host."
                 )
                 % what.split("-", 1)[1]
             )

@@ -65,7 +65,7 @@ def _item_spec_ewon() -> TextInput:
 
 def _parameter_valuespec_ewon() -> Dictionary:
     return Dictionary(
-        title=_("Device Type"),
+        title=_("Device type"),
         help=_(
             "The eWON router can act as a proxy to metrics from a secondary non-SNMP device. Here you can make settings to the monitoring of the proxied device."
         ),

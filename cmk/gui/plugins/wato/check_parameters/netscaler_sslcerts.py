@@ -46,6 +46,6 @@ rulespec_registry.register(
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netscaler_sslcerts,
-        title=lambda: _("Citrix Netscaler SSL certificates"),
+        title=lambda: _("Citrix NetScaler SSL certificates"),
     )
 )

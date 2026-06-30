@@ -31,7 +31,7 @@ def _parameter_form_spec_apache_status() -> Dictionary:
                 required=False,
                 parameter_form=TupleLevels(
                     title=Title("Remaining Open Slots"),
-                    help_text=Help("Here you can set the number of remaining open slots"),
+                    help_text=Help("Here, you can set the number of remaining open slots"),
                     elements=[
                         Integer(title=Title("Warning below"), label=Label("slots")),
                         Integer(title=Title("Critical below"), label=Label("slots")),
@@ -42,7 +42,7 @@ def _parameter_form_spec_apache_status() -> Dictionary:
                 required=False,
                 parameter_form=TupleLevels(
                     title=Title("Busy workers"),
-                    help_text=Help("Here you can set upper levels of busy workers"),
+                    help_text=Help("Here, you can set upper levels of busy workers"),
                     elements=[
                         Integer(title=Title("Warning at"), label=Label("busy workers")),
                         Integer(title=Title("Critical at"), label=Label("busy workers")),
@@ -55,7 +55,7 @@ def _parameter_form_spec_apache_status() -> Dictionary:
 
 rule_spec_apache_status = CheckParameters(
     name="apache_status",
-    title=Title("Apache Status"),
+    title=Title("Apache status"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_apache_status,
     condition=HostAndItemCondition(

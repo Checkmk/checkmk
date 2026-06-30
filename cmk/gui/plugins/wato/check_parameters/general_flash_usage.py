@@ -61,6 +61,6 @@ rulespec_registry.register(
         check_group_name="general_flash_usage",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_general_flash_usage,
-        title=lambda: _("Flash Space Usage"),
+        title=lambda: _("Flash space usage"),
     )
 )

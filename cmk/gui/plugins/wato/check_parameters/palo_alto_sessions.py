@@ -35,6 +35,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_palo_alto_sessions,
-        title=lambda: _("Palo Alto Active Sessions"),
+        title=lambda: _("Palo Alto active sessions"),
     )
 )

@@ -94,7 +94,7 @@ def _valuespec_active_checks_dns():
                 (
                     "server",
                     Alternative(
-                        title=_("DNS Server"),
+                        title=_("DNS server"),
                         help=_("The DNS server you want to use for the lookup"),
                         elements=[
                             FixedValue(
@@ -142,8 +142,8 @@ def _valuespec_active_checks_dns():
                     "expected_authority",
                     FixedValue(
                         value=True,
-                        title=_("Expect Authoritative DNS Server"),
-                        totext=_("Expect Authoritative"),
+                        title=_("Expect authoritative DNS server"),
+                        totext=_("Expect authoritative"),
                     ),
                 ),
                 (

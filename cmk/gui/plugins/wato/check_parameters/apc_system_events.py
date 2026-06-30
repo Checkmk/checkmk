@@ -29,7 +29,7 @@ def _parameter_form_spec_apc_system_events() -> Dictionary:
 
 rule_spec_apc_system_events = CheckParameters(
     name="apc_system_events",
-    title=Title("APC Inrow System Events"),
+    title=Title("APC InRow system events"),
     topic=Topic.ENVIRONMENTAL,
     parameter_form=_parameter_form_spec_apc_system_events,
     condition=HostCondition(),

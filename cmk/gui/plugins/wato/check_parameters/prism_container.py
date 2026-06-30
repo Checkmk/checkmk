@@ -13,7 +13,7 @@ from cmk.gui.valuespec import Alternative, Dictionary, Filesize, Percentage, Tex
 
 def _item_spec_prism_container() -> TextInput:
     return TextInput(
-        title=_("Container Name"),
+        title=_("Container name"),
         help=_("Name of the container"),
     )
 

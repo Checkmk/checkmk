@@ -116,6 +116,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=_item_spec_win_dhcp_pools,
         parameter_valuespec=_parameter_valuespec_win_dhcp_pools,
-        title=lambda: _("DHCP Pools for Windows and Linux"),
+        title=lambda: _("DHCP pools for Windows and Linux"),
     )
 )

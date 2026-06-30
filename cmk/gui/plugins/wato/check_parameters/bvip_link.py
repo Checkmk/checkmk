@@ -62,6 +62,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bvip_link,
-        title=lambda: _("Allowed Network states on Bosch IP Cameras"),
+        title=lambda: _("Allowed Network states on Bosch IP cameras"),
     )
 )

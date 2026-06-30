@@ -152,7 +152,7 @@ class ModeIcons(WatoMode):
                     suffix=icon_name,
                     message=_("Category: %s") % category,
                 )
-                html.icon_button(delete_url, _("Delete this Icon"), StaticIcon(IconNames.delete))
+                html.icon_button(delete_url, _("Delete this icon"), StaticIcon(IconNames.delete))
 
                 table.cell(_("Icon"), html.render_icon(DynamicIconName(icon_name)), css=["buttons"])
                 table.cell(_("Name"), icon_name)

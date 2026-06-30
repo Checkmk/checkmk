@@ -69,6 +69,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bluecat_ntp,
-        title=lambda: _("Bluecat NTP Settings"),
+        title=lambda: _("BlueCat NTP settings"),
     )
 )

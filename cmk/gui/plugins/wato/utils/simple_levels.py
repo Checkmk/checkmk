@@ -40,7 +40,7 @@ def _FixedLevels(
         raise ValueError(f"illegal ValueSpec type {spec}, expected Integer or Float or Age")
 
     return Tuple(
-        title=_("Fixed Levels"),
+        title=_("Fixed levels"),
         elements=[
             element(0, _("Warning at"), _("Warning below")),
             element(1, _("Critical at"), _("Critical below")),

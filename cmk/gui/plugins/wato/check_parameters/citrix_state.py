@@ -18,7 +18,7 @@ def _parameter_valuespec_citrix_state() -> Dictionary:
             (
                 "registrationstate",
                 Dictionary(
-                    title=_("Interpretation of Registration States"),
+                    title=_("Interpretation of registration states"),
                     elements=[
                         ("Unregistered", MonitoringState(title=_("Unregistered"), default_value=2)),
                         ("Initializing", MonitoringState(title=_("Initializing"), default_value=1)),

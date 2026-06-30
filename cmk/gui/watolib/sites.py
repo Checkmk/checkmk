@@ -288,7 +288,7 @@ class SiteManagement:
                                 custom_validate=[
                                     validators.LengthInRange(
                                         min_value=1,
-                                        error_msg=Message("Text field can not be empty"),
+                                        error_msg=Message("Text field cannot be empty"),
                                     )
                                 ],
                             ),

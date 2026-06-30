@@ -123,6 +123,6 @@ rulespec_registry.register(
         item_spec=_item_spec_nimble_latency,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_nimble_latency,
-        title=lambda: _("Nimble IO levels"),
+        title=lambda: _("Nimble I/O levels"),
     )
 )

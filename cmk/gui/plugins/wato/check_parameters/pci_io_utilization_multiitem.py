@@ -24,7 +24,7 @@ def _parameter_valuespec_pci_io_utilization_multiitem() -> Dictionary:
             (
                 "upper_levels",
                 Tuple(
-                    title=_("Alert on too high PCI IO utilization"),
+                    title=_("Alert on too high PCI I/O utilization"),
                     elements=[
                         Percentage(title=_("Warning at"), default_value=90.0),
                         Percentage(title=_("Critical at"), default_value=95.0),
@@ -42,6 +42,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Component"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_pci_io_utilization_multiitem,
-        title=lambda: _("Device component PCI IO utilization"),
+        title=lambda: _("Device component PCI I/O utilization"),
     )
 )

@@ -44,7 +44,9 @@ def _parameter_valuespec_cooling_pos() -> Dictionary:
                 ),
             ),
         ],
-        help=_("Here you can set different warn/crit levels regarding the free cooling positions."),
+        help=_(
+            "Here, you can set different WARN/CRIT levels regarding the free cooling positions."
+        ),
     )
 
 

@@ -56,6 +56,6 @@ rulespec_registry.register(
         item_spec=_item_spec_db2_counters,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db2_counters,
-        title=lambda: _("DB2 Counters"),
+        title=lambda: _("DB2 counters"),
     )
 )

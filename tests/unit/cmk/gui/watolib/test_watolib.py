@@ -229,7 +229,7 @@ def test_registered_configvar_groups() -> None:
         "User interface",
         "User management",
         "Support",
-        "Developer Tools",
+        "Developer tools",
         "Product usage analytics",
     ]
 

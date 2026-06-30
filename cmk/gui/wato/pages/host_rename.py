@@ -346,7 +346,7 @@ class ModeBulkRenameHost(WatoMode):
                 (
                     "recurse",
                     Checkbox(
-                        title=_("Folder Selection"),
+                        title=_("Folder selection"),
                         label=_("Include all subfolders"),
                         default_value=True,
                     ),
@@ -388,8 +388,8 @@ class ModeBulkRenameHost(WatoMode):
                         ]
                     ),
                 ),
-                ("add_suffix", _("Add Suffix"), TextInput(allow_empty=False, size=38)),
-                ("add_prefix", _("Add Prefix"), TextInput(allow_empty=False, size=38)),
+                ("add_suffix", _("Add suffix"), TextInput(allow_empty=False, size=38)),
+                ("add_prefix", _("Add prefix"), TextInput(allow_empty=False, size=38)),
                 ("drop_domain", _("Drop Domain Suffix")),
                 ("reverse_dns", _("Convert IP addresses of hosts into host their DNS names")),
                 (

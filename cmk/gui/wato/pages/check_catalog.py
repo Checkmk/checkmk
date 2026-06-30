@@ -443,7 +443,7 @@ def _man_page_catalog_topics() -> list[tuple[str, bool, str, str]]:
         (
             "cloud",
             False,
-            _("Cloud Based Environments"),
+            _("Cloud-based environments"),
             _("Monitoring of cloud environments like Microsoft Azure"),
         ),
         (

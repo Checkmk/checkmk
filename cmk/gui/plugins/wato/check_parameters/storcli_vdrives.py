@@ -22,7 +22,7 @@ def _item_spec_storcli_vdrives() -> TextInput:
 
 def _parameter_valuespec_storcli_vdrives() -> Dictionary:
     return Dictionary(
-        title=_("Evaluation of VDrive States"),
+        title=_("Evaluation of VDrive states"),
         elements=[
             (
                 "Optimal",

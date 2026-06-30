@@ -147,6 +147,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Name of indice")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_elasticsearch_indices,
-        title=lambda: _("Elasticsearch Indices"),
+        title=lambda: _("Elasticsearch indices"),
     )
 )

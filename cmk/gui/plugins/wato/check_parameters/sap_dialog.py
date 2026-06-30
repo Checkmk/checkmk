@@ -25,7 +25,7 @@ def _parameter_valuespec_sap_dialog() -> Dictionary:
             (
                 "UsersLoggedIn",
                 Tuple(
-                    title=_("Number of Loggedin Users"),
+                    title=_("Number of logged-in users"),
                     elements=[
                         Integer(title=_("Warning at"), label=_("Users")),
                         Integer(title=_("Critical at"), label=_("Users")),

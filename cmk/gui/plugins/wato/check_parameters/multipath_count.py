@@ -80,6 +80,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         item_spec=lambda: TextInput(title=_("Path ID")),
         parameter_valuespec=_parameter_valuespec_multipath_count,
-        title=lambda: _("ESX Multipath Count"),
+        title=lambda: _("ESX multipath count"),
     )
 )

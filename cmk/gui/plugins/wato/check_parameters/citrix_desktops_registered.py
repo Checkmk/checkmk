@@ -45,6 +45,6 @@ rulespec_registry.register(
         check_group_name="citrix_desktops_registered",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_plug_count,
-        title=lambda: _("Citrix Desktops Registered"),
+        title=lambda: _("Citrix desktops registered"),
     )
 )

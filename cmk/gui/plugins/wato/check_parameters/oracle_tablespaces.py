@@ -18,7 +18,7 @@ def _item_spec_oracle_tablespaces() -> TextInput:
     return TextInput(
         title=_("Explicit tablespaces"),
         help=_(
-            "Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"
+            "Here, you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"
         ),
         regex=r".+\..+",
         allow_empty=False,
@@ -39,18 +39,18 @@ def _parameter_valuespec_oracle_tablespaces() -> Dictionary:
             (
                 "autoextend",
                 DropdownChoice(
-                    title=_("Expected autoextend setting"),
+                    title=_("Expected auto-extend setting"),
                     choices=[
-                        (True, _("Autoextend is expected to be ON")),
-                        (False, _("Autoextend is expected to be OFF")),
-                        (None, _("Autoextend will be ignored")),
+                        (True, _("Auto-extend is expected to be ON")),
+                        (False, _("Auto-extend is expected to be OFF")),
+                        (None, _("Auto-extend will be ignored")),
                     ],
                 ),
             ),
             (
                 "autoextend_severity",
                 MonitoringState(
-                    title=_("Severity of invalid autoextend setting"),
+                    title=_("Severity of invalid auto-extend setting"),
                     default_value=2,
                 ),
             ),

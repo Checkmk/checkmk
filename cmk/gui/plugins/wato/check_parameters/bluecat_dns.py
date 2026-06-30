@@ -53,6 +53,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bluecat_dns,
-        title=lambda: _("Bluecat DNS Settings"),
+        title=lambda: _("BlueCat DNS settings"),
     )
 )

@@ -43,6 +43,6 @@ rulespec_registry.register(
         item_spec=_item_spec_db2_connections,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db2_connections,
-        title=lambda: _("DB2 Connections"),
+        title=lambda: _("DB2 connections"),
     )
 )

@@ -72,6 +72,6 @@ rulespec_registry.register(
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_pll_lock_voltage,
-        title=lambda: _("Lock Voltage for PLLs"),
+        title=lambda: _("Lock voltage for PLLs"),
     )
 )

@@ -38,10 +38,10 @@ def _parameter_valuespec_mssql_databases() -> Dictionary:
                 "map_auto_close_state",
                 Dictionary(
                     elements=[
-                        ("on", MonitoringState(title=_("Auto close on"), default_value=1)),
-                        ("off", MonitoringState(title=_("Auto close off"))),
+                        ("on", MonitoringState(title=_("Auto-close on"), default_value=1)),
+                        ("off", MonitoringState(title=_("Auto-close off"))),
                     ],
-                    title=_("Map auto close status"),
+                    title=_("Map auto-close status"),
                     optional_keys=[],
                 ),
             ),
@@ -49,10 +49,10 @@ def _parameter_valuespec_mssql_databases() -> Dictionary:
                 "map_auto_shrink_state",
                 Dictionary(
                     elements=[
-                        ("on", MonitoringState(title=_("Auto shrink on"), default_value=1)),
-                        ("off", MonitoringState(title=_("Auto shrink off"))),
+                        ("on", MonitoringState(title=_("Auto-shrink on"), default_value=1)),
+                        ("off", MonitoringState(title=_("Auto-shrink off"))),
                     ],
-                    title=_("Map auto shrink status"),
+                    title=_("Map auto-shrink status"),
                     optional_keys=[],
                 ),
             ),

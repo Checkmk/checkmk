@@ -52,7 +52,7 @@ def _parameter_valuespec_oracle_dataguard_stats() -> Migrate[dict[str, Any]]:
                 (
                     "apply_lag",
                     Tuple(
-                        title=_("Apply lag: Maximum time"),
+                        title=_("Apply lag: maximum time"),
                         help=_(
                             "The maximum limit for the apply lag in <tt>v$dataguard_stats</tt>."
                         ),
@@ -69,12 +69,12 @@ def _parameter_valuespec_oracle_dataguard_stats() -> Migrate[dict[str, Any]]:
                 (
                     "apply_lag_min",
                     Tuple(
-                        title=_("Apply lag: Minimum time"),
+                        title=_("Apply lag: minimum time"),
                         help=_(
                             "The minimum limit for the apply lag in <tt>v$dataguard_stats</tt>. "
                             "This is only useful if also <i>%s</i> has been configured."
                         )
-                        % _("Apply lag: Maximum time"),
+                        % _("Apply lag: maximum time"),
                         elements=[
                             Age(
                                 title=_("Warning at"),
@@ -88,7 +88,7 @@ def _parameter_valuespec_oracle_dataguard_stats() -> Migrate[dict[str, Any]]:
                 (
                     "missing_apply_lag_state",
                     MonitoringState(
-                        title=_("Apply lag: State in case the apply lag is not known"),
+                        title=_("Apply lag: state in case the apply lag is not known"),
                         default_value=1,
                     ),
                 ),

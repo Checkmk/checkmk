@@ -61,6 +61,6 @@ rulespec_registry.register(
         item_spec=_item_spec_ibm_svc_enclosure,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_svc_enclosure,
-        title=lambda: _("IBM SVC Enclosure"),
+        title=lambda: _("IBM SVC enclosure"),
     )
 )

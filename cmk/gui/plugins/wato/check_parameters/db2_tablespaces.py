@@ -227,6 +227,6 @@ rulespec_registry.register(
         item_spec=_item_spec_db2_tablespaces,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db2_tablespaces,
-        title=lambda: _("DB2 Tablespaces"),
+        title=lambda: _("DB2 tablespaces"),
     )
 )

@@ -70,6 +70,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Name of Channel")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_mq_channels,
-        title=lambda: _("IBM MQ Channels"),
+        title=lambda: _("IBM MQ channels"),
     )
 )

@@ -47,7 +47,7 @@ def _phase_elements() -> list[DictionaryEntry]:
         (
             "appower",
             Tuple(
-                title=_("Apparent Power"),
+                title=_("Apparent power"),
                 elements=[
                     Integer(title=_("warning at"), unit="VA", default_value=1100),
                     Integer(title=_("critical at"), unit="VA", default_value=1300),
@@ -100,7 +100,7 @@ def _phase_elements() -> list[DictionaryEntry]:
 
 
 def _item_spec_el_inphase() -> TextInput:
-    return TextInput(title=_("Input Name"), help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
+    return TextInput(title=_("Input name"), help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
 
 
 def _parameter_valuespec_el_inphase() -> Dictionary:

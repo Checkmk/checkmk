@@ -943,7 +943,7 @@ def _parameter_valuespec_if() -> Dictionary:
                 "unit",
                 DropdownChoice(
                     title=_("Measurement unit"),
-                    help=_("Here you can specifiy the measurement unit of the network interface"),
+                    help=_("Here, you can specify the measurement unit of the network interface"),
                     default_value="byte",
                     choices=[
                         ("bit", _("Bits")),
@@ -977,7 +977,7 @@ def _parameter_valuespec_if() -> Dictionary:
                         title=_("Direction"),
                         orientation="horizontal",
                         choices=[
-                            ("both", _("In / Out"), vs_interface_traffic()),
+                            ("both", _("In / out"), vs_interface_traffic()),
                             ("in", _("In"), vs_interface_traffic()),
                             ("out", _("Out"), vs_interface_traffic()),
                         ],

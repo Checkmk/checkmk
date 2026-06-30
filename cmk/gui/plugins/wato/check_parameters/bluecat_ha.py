@@ -62,6 +62,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bluecat_ha,
-        title=lambda: _("Bluecat HA Settings"),
+        title=lambda: _("BlueCat HA settings"),
     )
 )

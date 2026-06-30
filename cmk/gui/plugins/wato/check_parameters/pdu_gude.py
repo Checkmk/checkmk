@@ -28,7 +28,7 @@ def _parameter_valuespec_pdu_gude() -> Dictionary:
             (
                 "W",
                 Tuple(
-                    title=_("Active Power"),
+                    title=_("Active power"),
                     elements=[
                         Integer(title=_("warning at"), unit=_("W")),
                         Integer(title=_("critical at"), unit=_("W")),
@@ -38,7 +38,7 @@ def _parameter_valuespec_pdu_gude() -> Dictionary:
             (
                 "A",
                 Tuple(
-                    title=_("Current on Power Channel"),
+                    title=_("Current on power channel"),
                     elements=[
                         Integer(title=_("warning at"), unit=_("A")),
                         Integer(title=_("critical at"), unit=_("A")),
@@ -48,7 +48,7 @@ def _parameter_valuespec_pdu_gude() -> Dictionary:
             (
                 "V",
                 Tuple(
-                    title=_("Voltage on Power Channel"),
+                    title=_("Voltage on power channel"),
                     elements=[
                         Integer(title=_("warning if below"), unit=_("V")),
                         Integer(title=_("critical if below"), unit=_("V")),

@@ -297,7 +297,7 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
             "tenant_id": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("Directory (Tenant) ID"),
+                    title=Title("Directory (tenant) ID"),
                     help_text=Help(
                         "The Directory (Tenant) ID of your Microsoft Entra ID instance."
                     ),
@@ -313,7 +313,7 @@ def get_oauth2_connection_form_spec(ident: str | None = None) -> Dictionary:
             "client_id": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("Application (Client) ID"),
+                    title=Title("Application (client) ID"),
                     help_text=Help("The Application (Client) ID of your registered application."),
                     custom_validate=[
                         validators.LengthInRange(

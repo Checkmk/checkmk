@@ -44,6 +44,6 @@ rulespec_registry.register(
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fortigate_node_memory,
-        title=lambda: _("Fortigate node memory"),
+        title=lambda: _("FortiGate node memory"),
     )
 )

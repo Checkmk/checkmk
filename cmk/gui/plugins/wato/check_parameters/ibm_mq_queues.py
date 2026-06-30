@@ -32,7 +32,7 @@ def _parameter_valuespec_ibm_mq_queues() -> Dictionary:
                 "curdepth",
                 OptionalDropdownChoice(
                     title=_("Current queue depth"),
-                    help=_("CURDEPTH: The number of messages currently on the queue."),
+                    help=_("CURDEPTH: the number of messages currently on the queue."),
                     choices=[((None, None), _("Ignore these levels"))],
                     otherlabel=_("Set absolute levels"),
                     explicit=Tuple(
@@ -178,6 +178,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Name of Queue")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_mq_queues,
-        title=lambda: _("IBM MQ Queues"),
+        title=lambda: _("IBM MQ queues"),
     )
 )

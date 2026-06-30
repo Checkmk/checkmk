@@ -49,7 +49,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
 
     @classmethod
     def gui_title(cls) -> str:
-        return _("Autodiscovery")
+        return _("Auto-discovery")
 
     def __init__(self) -> None:
         super().__init__(self.job_prefix)

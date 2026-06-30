@@ -87,7 +87,7 @@ def process_level_elements() -> list[tuple[str, ValueSpec]]:
                     "Starting from version 1.6.0 this value must be configured. "
                     "Read Werk #6646 for further information."
                 ),
-                invalid_choice_error=_("CPU rescale maximum load is Unspecified.")
+                invalid_choice_error=_("CPU rescale maximum load is unspecified.")
                 + " "
                 + _(
                     "Starting from version 1.6.0 this value must be configured. "
@@ -713,7 +713,7 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
                     world=Labels.World.CONFIG,
                     title=_("Host label"),
                     help=_(
-                        "Here you can set host labels that automatically get created when discovering the services."
+                        "Here, you can set host labels that automatically get created when discovering the services."
                     ),
                 ),
             ),

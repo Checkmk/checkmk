@@ -67,6 +67,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         item_spec=_item_spec_epower,
         parameter_valuespec=_parameter_valuespec_epower,
-        title=lambda: _("Electrical Power"),
+        title=lambda: _("Electrical power"),
     )
 )

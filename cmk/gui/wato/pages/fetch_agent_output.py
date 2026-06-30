@@ -224,7 +224,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         html.footer()
 
     def _title(self) -> str:
-        return _("%s: Download agent output") % self._request.host.name()
+        return _("%s: download agent output") % self._request.host.name()
 
     def _breadcrumb(self, title: str, user_permissions: UserPermissions) -> Breadcrumb:
         breadcrumb = make_host_breadcrumb(self._request.host.name(), user_permissions)

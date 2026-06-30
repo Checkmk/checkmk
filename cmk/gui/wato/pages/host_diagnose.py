@@ -114,7 +114,7 @@ class ModeDiagHost(WatoMode):
             raise MKGeneralException(_("This page does not support cluster hosts."))
 
         if "cmk/relay_monitored" in self._host.labels():
-            raise MKGeneralException(_("This page does not support Relay monitored hosts."))
+            raise MKGeneralException(_("This page is not available for hosts monitored via Relay."))
 
     def title(self) -> str:
         return _("Test connection to host") + " " + self._hostname
@@ -286,7 +286,7 @@ class ModeDiagHost(WatoMode):
         with html.form_context("diag_host", method="POST"):
             html.prevent_password_auto_completion()
 
-            forms.header(_("Host Properties"))
+            forms.header(_("Host properties"))
 
             forms.section(legend=False)
 
@@ -480,7 +480,7 @@ def _vs_rules(
             (
                 "snmp_timeout",
                 Integer(
-                    title=_('SNMP-timeout (<a href="%s">Rules</a>)')
+                    title=_('SNMP timeout (<a href="%s">Rules</a>)')
                     % folder_preserving_link(
                         [
                             ("mode", "edit_ruleset"),
@@ -500,7 +500,7 @@ def _vs_rules(
             (
                 "snmp_retries",
                 Integer(
-                    title=_('SNMP-retries (<a href="%s">Rules</a>)')
+                    title=_('SNMP retries (<a href="%s">Rules</a>)')
                     % folder_preserving_link(
                         [
                             ("mode", "edit_ruleset"),

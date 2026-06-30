@@ -176,6 +176,6 @@ rulespec_registry.register(
         check_group_name="memory_available",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_memory_available,
-        title=lambda: _("Available Memory"),
+        title=lambda: _("Available memory"),
     )
 )

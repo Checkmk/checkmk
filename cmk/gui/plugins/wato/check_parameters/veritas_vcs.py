@@ -61,7 +61,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="veritas_vcs",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Cluster Name")),
+        item_spec=lambda: TextInput(title=_("Cluster name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_veritas_vcs,
         title=lambda: _("Veritas Cluster Server"),

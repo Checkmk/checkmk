@@ -38,18 +38,18 @@ def _float_tuple(title: str) -> Tuple[tuple[float, float]]:
 
 def _parameter_valuespec_couchbase_operations() -> Dictionary:
     return Dictionary(
-        title=_("Couchbase Nodes: Items"),
+        title=_("Couchbase nodes: items"),
         elements=[
             ("curr_items", _int_tuple(_("Levels for active items"))),
             ("non_residents", _int_tuple(_("Levels for non-resident items"))),
             ("curr_items_tot", _int_tuple(_("Levels for total number of items"))),
             (
                 "fetched_items",
-                _int_tuple(_("Buckets only: Levels for number of items fetched from disk")),
+                _int_tuple(_("Buckets only: levels for number of items fetched from disk")),
             ),
-            ("disk_write_ql", _int_tuple(_("Buckets only: Levels for length of disk write queue"))),
-            ("disk_fill_rate", _float_tuple(_("Buckets only: Levels for disk queue fill rate"))),
-            ("disk_drain_rate", _float_tuple(_("Buckets only: Levels for disk queue drain rate"))),
+            ("disk_write_ql", _int_tuple(_("Buckets only: levels for length of disk write queue"))),
+            ("disk_fill_rate", _float_tuple(_("Buckets only: levels for disk queue fill rate"))),
+            ("disk_drain_rate", _float_tuple(_("Buckets only: levels for disk queue drain rate"))),
         ],
     )
 
@@ -61,6 +61,6 @@ rulespec_registry.register(
         match_type="dict",
         item_spec=lambda: TextInput(title=_("Node or Bucket name")),
         parameter_valuespec=_parameter_valuespec_couchbase_operations,
-        title=lambda: _("Couchbase Items"),
+        title=lambda: _("Couchbase items"),
     )
 )

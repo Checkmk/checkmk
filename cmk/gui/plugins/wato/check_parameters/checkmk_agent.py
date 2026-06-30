@@ -266,7 +266,7 @@ def _parameter_valuespec_checkmk_agent() -> Dictionary:
             (
                 "exclude_pattern_plugins",
                 RegExp(
-                    title=_("Agent plug-ins: Regular expression to exclude plug-ins"),
+                    title=_("Agent plug-ins: regular expression to exclude plug-ins"),
                     mode=RegExp.infix,
                     help=_(
                         "Plug-ins matching this pattern will be excluded from the comparison with "

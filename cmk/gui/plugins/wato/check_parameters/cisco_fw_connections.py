@@ -39,6 +39,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cisco_fw_connections,
-        title=lambda: _("Cisco ASA Firewall Connections"),
+        title=lambda: _("Cisco ASA firewall connections"),
     )
 )

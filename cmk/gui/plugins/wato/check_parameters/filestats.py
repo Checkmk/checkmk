@@ -110,7 +110,7 @@ file_size_age_elements: list[tuple[str, ValueSpec]] = [
 
 def _item_spec_filestats() -> TextInput:
     return TextInput(
-        title=_("File Group Name"),
+        title=_("File group name"),
         help=_(
             "This name must match the name of the section defined "
             "in the mk_filestats configuration."

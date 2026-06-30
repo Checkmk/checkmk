@@ -36,6 +36,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("License Feature")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fireeye_lic,
-        title=lambda: _("Fireeye Licenses"),
+        title=lambda: _("FireEye licenses"),
     )
 )

@@ -49,8 +49,8 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         item_spec=lambda: TextInput(title=_("Node name")),
-        parameter_valuespec=_valuespec_couchbase_size(_("Couchbase Node: Size of documents")),
-        title=lambda: _("Couchbase Node: Size of documents"),
+        parameter_valuespec=_valuespec_couchbase_size(_("Couchbase node: size of documents")),
+        title=lambda: _("Couchbase node: size of documents"),
     )
 )
 
@@ -60,8 +60,8 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         item_spec=lambda: TextInput(title=_("Node name")),
-        parameter_valuespec=_valuespec_couchbase_size(_("Couchbase Node: Size of spacial views")),
-        title=lambda: _("Couchbase Node: Size of spacial views"),
+        parameter_valuespec=_valuespec_couchbase_size(_("Couchbase node: size of spatial views")),
+        title=lambda: _("Couchbase node: size of spatial views"),
     )
 )
 
@@ -71,7 +71,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         item_spec=lambda: TextInput(title=_("Node name")),
-        parameter_valuespec=_valuespec_couchbase_size(_("Couchbase Node: Size of couch views")),
-        title=lambda: _("Couchbase Node: Size of couch views"),
+        parameter_valuespec=_valuespec_couchbase_size(_("Couchbase node: size of couch views")),
+        title=lambda: _("Couchbase node: size of couch views"),
     )
 )

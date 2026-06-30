@@ -36,6 +36,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cisco_prime_wifi_access_points,
-        title=lambda: _("Cisco Prime WiFi Access Points"),
+        title=lambda: _("Cisco Prime WiFi access points"),
     )
 )

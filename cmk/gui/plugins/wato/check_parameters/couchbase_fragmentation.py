@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 def _parameter_valuespec_couchbase_fragmentation() -> Dictionary:
     return Dictionary(
-        title=_("Couchbase Fragmentation"),
+        title=_("Couchbase fragmentation"),
         elements=[
             (
                 "docs",
@@ -47,6 +47,6 @@ rulespec_registry.register(
         match_type="dict",
         item_spec=lambda: TextInput(title=_("Bucket name")),
         parameter_valuespec=_parameter_valuespec_couchbase_fragmentation,
-        title=lambda: _("Couchbase Fragmentation"),
+        title=lambda: _("Couchbase fragmentation"),
     )
 )

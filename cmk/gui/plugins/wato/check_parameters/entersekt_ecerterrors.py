@@ -36,6 +36,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_entersekt_ecerterrors,
-        title=lambda: _("Entersekt HTTP Ecert Errors"),
+        title=lambda: _("Entersekt HTTP ecert errors"),
     )
 )

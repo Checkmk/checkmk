@@ -378,7 +378,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
         self._attr["user_editable"] = html.get_checkbox("user_editable")
 
     def _add_extra_form_sections(self) -> None:
-        forms.section(_("Editable by Users"))
+        forms.section(_("Editable by users"))
         html.help(_("It is possible to let users edit their custom attributes."))
         html.checkbox(
             "user_editable",

@@ -106,7 +106,7 @@ rulespec_registry.register(
         check_group_name="cisco_cpu_memory",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_memory,
-        title=lambda: _("Cisco CPU Memory"),
+        title=lambda: _("Cisco CPU memory"),
         item_spec=lambda: TextInput(title=_("CPUs physical name")),
     )
 )

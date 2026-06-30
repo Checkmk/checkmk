@@ -42,7 +42,7 @@ def _form_spec_ad_replication() -> Dictionary:
 
 rule_spec_ad_replication = CheckParameters(
     name="ad_replication",
-    title=Title("Active Directory Replication"),
+    title=Title("Active directory replication"),
     topic=Topic.APPLICATIONS,
     parameter_form=_form_spec_ad_replication,
     condition=HostAndItemCondition(

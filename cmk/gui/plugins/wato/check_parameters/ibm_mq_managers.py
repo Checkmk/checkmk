@@ -88,6 +88,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Name of Queue Manager")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_mq_managers,
-        title=lambda: _("IBM MQ Managers"),
+        title=lambda: _("IBM MQ managers"),
     )
 )

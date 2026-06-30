@@ -43,7 +43,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hw_fans_perc",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextInput(title=_("Fan Name"), help=_("The identifier of the fan.")),
+        item_spec=lambda: TextInput(title=_("Fan name"), help=_("The identifier of the fan.")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hw_fans_perc,
         title=lambda: _("Fan speed of hardware devices (in percent)"),

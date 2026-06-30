@@ -54,6 +54,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         item_spec=_item_spec_cisco_vpn_sessions,
         parameter_valuespec=_parameter_valuespec_asa_svc_sessions,
-        title=lambda: _("Cisco VPN Sessions"),
+        title=lambda: _("Cisco VPN sessions"),
     )
 )

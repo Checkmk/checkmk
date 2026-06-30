@@ -68,7 +68,7 @@ def _parameter_valuespec_job() -> Dictionary:
                 DropdownChoice(
                     title="%s - %s"
                     % (
-                        _("Clusters: Preferred check result of local checks"),
+                        _("Clusters: preferred check result of local checks"),
                         _deprecation_message(),
                     ),
                     choices=[],

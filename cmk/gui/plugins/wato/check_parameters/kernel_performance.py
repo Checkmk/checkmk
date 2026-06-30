@@ -20,7 +20,7 @@ def _parameter_valuespec_kernel_performance() -> Dictionary:
                 "ctxt",
                 Levels(
                     unit=_("events per second"),
-                    title=_("Context Switches"),
+                    title=_("Context switches"),
                     default_levels=(1000, 5000),
                     default_difference=(500.0, 1000.0),
                     default_value=None,

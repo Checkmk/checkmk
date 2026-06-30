@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Dictionary, Float, Percentage, TextInput, Tuple
 
 def _parameter_valuespec_couchbase_cache() -> Dictionary:
     return Dictionary(
-        title=_("Couchbase: Cache"),
+        title=_("Couchbase: cache"),
         elements=[
             (
                 "cache_misses",
@@ -55,6 +55,6 @@ rulespec_registry.register(
         match_type="dict",
         item_spec=lambda: TextInput(title=_("Node or bucket name")),
         parameter_valuespec=_parameter_valuespec_couchbase_cache,
-        title=lambda: _("Couchbase Cache"),
+        title=lambda: _("Couchbase cache"),
     )
 )

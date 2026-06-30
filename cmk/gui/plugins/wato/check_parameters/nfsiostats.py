@@ -43,7 +43,7 @@ def _parameter_valuespec_nfsiostats() -> Migrate[dict[str, Any]]:
     return Migrate(
         migrate=_migrate_milliseconds,
         valuespec=Dictionary(
-            title=_("NFS IO statistics"),
+            title=_("NFS I/O statistics"),
             optional_keys=True,
             elements=[
                 (
@@ -228,10 +228,10 @@ rulespec_registry.register(
         check_group_name="nfsiostats",
         group=RulespecGroupCheckParametersStorage,
         item_spec=lambda: TextInput(
-            title=_("NFS IO statistics"),
+            title=_("NFS I/O statistics"),
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_nfsiostats,
-        title=lambda: _("NFS IO statistics"),
+        title=lambda: _("NFS I/O statistics"),
     )
 )

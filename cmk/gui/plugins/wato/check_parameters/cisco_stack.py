@@ -91,6 +91,6 @@ rulespec_registry.register(
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cisco_stack,
-        title=lambda: _("Cisco Stack Switch Status"),
+        title=lambda: _("Cisco stack switch status"),
     )
 )

@@ -1485,7 +1485,7 @@ class ACTestDeprecatedCheckManpages(ACTest):
                     version=__version__,
                     deprecated_version="2.3.0",
                     removed_version="2.4.0",
-                    title_entity=_("Check man page"),
+                    title_entity=_("Check manual page"),
                     title_api=_("legacy"),
                     site_id=site_id,
                     path=plugin_filepath,
@@ -1494,7 +1494,7 @@ class ACTestDeprecatedCheckManpages(ACTest):
 
         yield ACSingleResult(
             state=ACResultState.OK,
-            text=_("No check man pages using the deprecated API"),
+            text=_("No check manual pages using the deprecated API"),
             site_id=site_id,
         )
 

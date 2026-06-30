@@ -33,8 +33,8 @@ def _parameter_form_spec_asm_diskgroup() -> Dictionary:
 
 rule_spec_asm_diskgroup = CheckParameters(
     name="asm_diskgroup",
-    title=Title("ASM Disk Group (used space and growth)"),
+    title=Title("ASM disk group (used space and growth)"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_asm_diskgroup,
-    condition=HostAndItemCondition(item_title=Title("ASM Disk Group")),
+    condition=HostAndItemCondition(item_title=Title("ASM disk group")),
 )

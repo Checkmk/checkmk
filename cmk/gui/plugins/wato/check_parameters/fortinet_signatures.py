@@ -37,16 +37,16 @@ def _vs_fortinet_signatures(title: str) -> Alternative:
 def _parameter_valuespec_fortinet_signatures() -> Dictionary:
     return Dictionary(
         elements=[
-            ("av_age", _vs_fortinet_signatures(_("Age of Anti-Virus signature"))),
+            ("av_age", _vs_fortinet_signatures(_("Age of anti-virus signature"))),
             (
                 "av_ext_age",
-                _vs_fortinet_signatures(_("Age of Anti-Virus signature extended database")),
+                _vs_fortinet_signatures(_("Age of anti-virus signature extended database")),
             ),
-            ("ips_age", _vs_fortinet_signatures(_("Age of Intrusion Prevention signature"))),
+            ("ips_age", _vs_fortinet_signatures(_("Age of intrusion prevention signature"))),
             (
                 "ips_ext_age",
                 _vs_fortinet_signatures(
-                    _("Age of Intrusion Prevention signature extended database")
+                    _("Age of intrusion prevention signature extended database")
                 ),
             ),
         ],
@@ -59,6 +59,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fortinet_signatures,
-        title=lambda: _("Fortigate Signatures"),
+        title=lambda: _("FortiGate signatures"),
     )
 )

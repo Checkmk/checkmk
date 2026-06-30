@@ -43,6 +43,6 @@ rulespec_registry.register(
         item_spec=_item_spec_db2_sortoverflow,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db2_sortoverflow,
-        title=lambda: _("DB2 Sort Overflow"),
+        title=lambda: _("DB2 sort overflow"),
     )
 )

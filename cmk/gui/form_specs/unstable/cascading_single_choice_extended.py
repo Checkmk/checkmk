@@ -29,5 +29,5 @@ class CascadingSingleChoiceElementExtended[ModelT](CascadingSingleChoiceElement[
 
 @dataclass(frozen=True, kw_only=True)
 class CascadingSingleChoiceExtended(CascadingSingleChoice):
-    no_elements_text: Message = Message("(No choices available)")
+    no_elements_text: Message = Message("(no choices available)")
     layout: CascadingSingleChoiceLayout = CascadingSingleChoiceLayout.vertical

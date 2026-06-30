@@ -54,7 +54,7 @@ def _parameter_valuespec_fcp() -> Dictionary:
                         title=_("Direction"),
                         orientation="horizontal",
                         choices=[
-                            ("both", _("In / Out"), vs_interface_traffic()),
+                            ("both", _("In / out"), vs_interface_traffic()),
                             ("in", _("In"), vs_interface_traffic()),
                             ("out", _("Out"), vs_interface_traffic()),
                         ],
@@ -104,6 +104,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Port"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fcp,
-        title=lambda: _("Fibrechannel Interfaces"),
+        title=lambda: _("Fibre Channel interfaces"),
     )
 )

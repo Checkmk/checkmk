@@ -4964,7 +4964,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
                 varprefix, _("The time must not be greater than %02d:%02d.") % max_value
             )
         if value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
-            raise MKUserError(varprefix, _("Hours/Minutes out of range"))
+            raise MKUserError(varprefix, _("Hours/minutes out of range"))
 
     def value_to_json(self, value: TimeofdayValue) -> JSONValue:
         return None if value is None else [value[0], value[1]]
@@ -8424,7 +8424,7 @@ class _CAorCAChain(UploadOrPasteTextFile):
         validate: ValueSpecValidateFunc[Any] | None = None,
     ):
         super().__init__(
-            file_title=_("CRT/PEM File") if file_title is None else file_title,
+            file_title=_("CRT/PEM file") if file_title is None else file_title,
             allow_empty=allow_empty,
             elements=[_CAInput()],
             mime_types=[

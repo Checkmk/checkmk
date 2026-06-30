@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 def _parameter_valuespec_couchbase_status() -> Dictionary:
     return Dictionary(
-        title=_("Couchbase Node: Cluster status"),
+        title=_("Couchbase node: cluster status"),
         elements=[
             (
                 "warmup_state",
@@ -55,6 +55,6 @@ rulespec_registry.register(
         match_type="dict",
         item_spec=lambda: TextInput(title=_("Node name")),
         parameter_valuespec=_parameter_valuespec_couchbase_status,
-        title=lambda: _("Couchbase Status"),
+        title=lambda: _("Couchbase status"),
     )
 )

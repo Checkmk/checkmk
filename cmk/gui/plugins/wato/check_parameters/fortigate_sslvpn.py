@@ -36,6 +36,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Virtual domain")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fortigate_sslvpn,
-        title=lambda: _("Fortigate SSL VPN"),
+        title=lambda: _("FortiGate SSL VPN"),
     )
 )

@@ -33,7 +33,7 @@ def _parameter_valuespec_postgres_locks() -> Dictionary:
             (
                 "levels_exclusive",
                 Tuple(
-                    title=_("Exclusive Locks"),
+                    title=_("Exclusive locks"),
                     elements=[
                         Integer(title=_("Warning at"), minvalue=0),
                         Integer(title=_("Critical at"), minvalue=0),

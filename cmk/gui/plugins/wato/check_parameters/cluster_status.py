@@ -32,7 +32,7 @@ def _parameter_valuespec_cluster_status() -> Dictionary:
                 Dictionary(
                     title=_("Interpretation of failover cluster state"),
                     help=_(
-                        "Here you can set the failover state for BIG-IP system of version 11.2.0"
+                        "Here, you can set the failover state for BIG-IP system of version 11.2.0"
                     ),
                     elements=[
                         ("0", MonitoringState(title="Unknown", default_value=3)),

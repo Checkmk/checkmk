@@ -38,7 +38,7 @@ def _parameter_form_spec_adva_ifs() -> Dictionary:
 
 rule_spec_adva_ifs = CheckParameters(
     name="adva_ifs",
-    title=Title("Adva Optical Transport Laser Power"),
+    title=Title("Adva Optical Transport laser power"),
     topic=Topic.NETWORKING,
     parameter_form=_parameter_form_spec_adva_ifs,
     condition=HostAndItemCondition(item_title=Title("Interface")),

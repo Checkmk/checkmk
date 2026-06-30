@@ -44,8 +44,8 @@ rulespec_registry.register(
         check_group_name="iis_app_pool_state",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextInput(title=_("Application Pool name")),
+        item_spec=lambda: TextInput(title=_("Application pool name")),
         parameter_valuespec=_parameter_valuespec_iis_app_pool_state,
-        title=lambda: _("IIS Application Pool State Settings"),
+        title=lambda: _("IIS application pool state settings"),
     )
 )

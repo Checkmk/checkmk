@@ -31,6 +31,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fireeye_mail,
-        title=lambda: _("Fireeye Mail Rate Average"),
+        title=lambda: _("FireEye mail rate average"),
     )
 )

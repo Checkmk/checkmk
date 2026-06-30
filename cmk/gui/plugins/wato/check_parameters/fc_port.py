@@ -177,6 +177,6 @@ rulespec_registry.register(
         item_spec=_item_spec_fc_port,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fc_port,
-        title=lambda: _("FibreChannel Ports (FCMGMT MIB)"),
+        title=lambda: _("Fibre Channel ports (FCMGMT MIB)"),
     )
 )

@@ -57,6 +57,6 @@ rulespec_registry.register(
         item_spec=_item_spec_ibm_svc_total_latency,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_svc_total_latency,
-        title=lambda: _("IBM SVC Total Disk Latency"),
+        title=lambda: _("IBM SVC total disk latency"),
     )
 )

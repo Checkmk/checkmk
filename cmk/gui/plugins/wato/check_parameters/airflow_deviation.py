@@ -16,7 +16,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 
 def _parameter_form_spec_airflow_deviation() -> Dictionary:
     return Dictionary(
-        title=Title("Airflow Deviation measured at airflow sensors"),
+        title=Title("Airflow deviation measured at airflow sensors"),
         elements={
             "levels_upper": DictElement(
                 required=False,
@@ -53,7 +53,7 @@ def _parameter_form_spec_airflow_deviation() -> Dictionary:
 
 rule_spec_airflow_deviation = CheckParameters(
     name="airflow_deviation",
-    title=Title("Airflow Deviation in Percent"),
+    title=Title("Airflow deviation in percent"),
     topic=Topic.ENVIRONMENTAL,
     parameter_form=_parameter_form_spec_airflow_deviation,
     condition=HostAndItemCondition(item_title=Title("Detector ID")),

@@ -14,7 +14,7 @@ from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 def _item_spec_siemens_plc_duration() -> TextInput:
     return TextInput(
-        title=_("Device Name and Value Ident"),
+        title=_("Device name and value ident"),
         help=_(
             "You need to concatenate the device name which is configured in the special agent "
             "for the PLC device separated by a space with the ident of the value which is also "

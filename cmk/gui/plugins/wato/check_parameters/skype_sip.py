@@ -40,7 +40,7 @@ def _parameter_valuespec_skype_sip() -> Dictionary:
             (
                 "incoming_responses_dropped",
                 Dictionary(
-                    title=_("Incoming Responses Dropped"),
+                    title=_("Incoming responses dropped"),
                     elements=[
                         (
                             "upper",
@@ -66,7 +66,7 @@ def _parameter_valuespec_skype_sip() -> Dictionary:
             (
                 "incoming_requests_dropped",
                 Dictionary(
-                    title=_("Incoming Requests Dropped"),
+                    title=_("Incoming requests dropped"),
                     elements=[
                         (
                             "upper",
@@ -228,7 +228,7 @@ def _parameter_valuespec_skype_sip() -> Dictionary:
             (
                 "flow_controlled_connections",
                 Dictionary(
-                    title=_("Flow-controlled Connections"),
+                    title=_("Flow-controlled connections"),
                     elements=[
                         (
                             "upper",

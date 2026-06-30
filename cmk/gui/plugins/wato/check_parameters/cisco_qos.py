@@ -72,7 +72,7 @@ def _parameter_valuespec_cisco_qos() -> Dictionary:
                 "unit",
                 DropdownChoice(
                     title=_("Measurement unit"),
-                    help=_("Here you can specifiy the measurement unit of the network interface"),
+                    help=_("Here, you can specify the measurement unit of the network interface"),
                     default_value="bit",
                     choices=[
                         ("bit", _("Bits")),

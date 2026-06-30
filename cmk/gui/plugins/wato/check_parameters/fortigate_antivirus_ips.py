@@ -49,7 +49,7 @@ rulespec_registry.register(
             title=_("Virtual domain index"),
         ),
         parameter_valuespec=lambda: _parameter_valuespec_fortigate_antivirus_ips(_("virus")),
-        title=lambda: _("Fortinet FortiGate AntiVirus Detections"),
+        title=lambda: _("Fortinet FortiGate AntiVirus detections"),
     )
 )
 
@@ -61,6 +61,6 @@ rulespec_registry.register(
             title=_("Virtual domain index"),
         ),
         parameter_valuespec=lambda: _parameter_valuespec_fortigate_antivirus_ips(_("intrusion")),
-        title=lambda: _("Fortinet FortiGate IPS Detections"),
+        title=lambda: _("Fortinet FortiGate IPS detections"),
     )
 )

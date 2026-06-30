@@ -18,7 +18,7 @@ def _item_spec_hp_msa_psu_voltage() -> TextInput:
 
 def _parameter_valuespec_hp_msa_psu_voltage() -> Dictionary:
     return Dictionary(
-        help=_("Here you can configure the 3.3V and 12V voltage levels for each power supply."),
+        help=_("Here, you can configure the 3.3V and 12V voltage levels for each power supply."),
         elements=[
             (
                 "levels_33v_lower",

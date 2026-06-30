@@ -204,7 +204,7 @@ class ModePatternEditor(WatoMode):
             forms.section(_("Host name"))
             self._vs_host().render_input("host", self._hostname)
             forms.section(_("Log file"))
-            html.help(_("Here you need to insert the original file or pathname"))
+            html.help(_("Here, you need to insert the original file or path name"))
             html.text_input("file", size=80)
             forms.section(_("Text to match"))
             html.help(

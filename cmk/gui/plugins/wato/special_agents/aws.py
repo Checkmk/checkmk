@@ -155,7 +155,7 @@ def _vs_element_aws_service_selection() -> DictionaryEntry:
                 (
                     "tags",
                     _("Use explicit AWS service tags and overrule overall AWS tags"),
-                    _vs_aws_tags(_("AWS Tags")),
+                    _vs_aws_tags(_("AWS tags")),
                 ),
                 (
                     "names",
@@ -365,7 +365,7 @@ class AWSSpecialAgentValuespecBuilder:
             (
                 "elb",
                 Dictionary(
-                    title=_("Classic Load Balancing (ELB)"),
+                    title=_("Classic load balancing (ELB)"),
                     elements=[
                         _vs_element_aws_service_selection(),
                         _vs_element_aws_limits(),
@@ -377,7 +377,7 @@ class AWSSpecialAgentValuespecBuilder:
             (
                 "elbv2",
                 Dictionary(
-                    title=_("Application and Network Load Balancing (ELBv2)"),
+                    title=_("Application and network load balancing (ELBv2)"),
                     elements=[
                         _vs_element_aws_service_selection(),
                         _vs_element_aws_limits(),
@@ -401,7 +401,7 @@ class AWSSpecialAgentValuespecBuilder:
             (
                 "cloudwatch_alarms",
                 Dictionary(
-                    title=_("CloudWatch Alarms"),
+                    title=_("CloudWatch alarms"),
                     elements=[
                         (
                             "alarms",

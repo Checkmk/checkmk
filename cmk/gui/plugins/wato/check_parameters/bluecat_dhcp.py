@@ -52,6 +52,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bluecat_dhcp,
-        title=lambda: _("Bluecat DHCP Settings"),
+        title=lambda: _("BlueCat DHCP settings"),
     )
 )

@@ -30,7 +30,7 @@ def _parameter_valuespec_mem_cluster() -> ListOf[list[Any]]:
                 ),
             ]
         ),
-        help=_("Here you can specify the total memory usage levels for clustered hosts."),
+        help=_("Here, you can specify the total memory usage levels for clustered hosts."),
         title=_("Memory usage"),
         add_label=_("Add limits"),
     )

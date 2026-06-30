@@ -15,12 +15,12 @@ from cmk.gui.valuespec import Dictionary, ListOfStrings, MonitoringState
 
 def _parameter_valuespec_services_summary() -> Dictionary:
     return Dictionary(
-        title=_("Autostart Services"),
+        title=_("Auto-start services"),
         elements=[
             (
                 "ignored",
                 ListOfStrings(
-                    title=_("Ignored autostart services"),
+                    title=_("Ignored auto-start services"),
                     help=_(
                         "Regular expressions matching the beginning of the internal name "
                         "or the description of the service. "
@@ -37,7 +37,7 @@ def _parameter_valuespec_services_summary() -> Dictionary:
             (
                 "state_if_stopped",
                 MonitoringState(
-                    title=_("Default state if stopped autostart services are found"),
+                    title=_("Default state if stopped auto-start services are found"),
                     default_value=0,
                 ),
             ),

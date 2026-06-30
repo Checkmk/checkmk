@@ -346,7 +346,7 @@ builtin_views.update(
             "browser_reload": 0,
             "column_headers": "pergroup",
             "datasource": "comments",
-            "description": _l("All host- and service comments"),
+            "description": _l("All host and service comments"),
             "group_painters": [ColumnSpec(name="comment_what")],
             "hidden": False,
             "hidebutton": False,
@@ -464,7 +464,7 @@ builtin_views.update(
             "browser_reload": 0,
             "column_headers": "pergroup",
             "datasource": "downtimes",
-            "description": _l("All host- and service-downtimes"),
+            "description": _l("All host and service downtimes"),
             "group_painters": [ColumnSpec(name="downtime_what")],
             "hidden": False,
             "hidebutton": False,
@@ -572,7 +572,7 @@ builtin_views.update(
             "browser_reload": 0,
             "column_headers": "pergroup",
             "datasource": "downtimes",
-            "description": _l("All host- and service-downtimes (including IDs)"),
+            "description": _l("All host and service downtimes (including IDs)"),
             "group_painters": [ColumnSpec(name="downtime_what")],
             "hidden": True,
             "hidebutton": False,
@@ -1285,7 +1285,7 @@ builtin_views.update(
                 SorterSpec(sorter="site", negate=False),
                 SorterSpec(sorter="site_host", negate=False),
             ],
-            "title": _l("Host group of PENDING"),
+            "title": _l("Host group of PENDING hosts"),
             "single_infos": ["hostgroup"],
             "link_from": {},
             "topic": "",
@@ -1504,7 +1504,7 @@ builtin_views.update(
             "browser_reload": 60,
             "column_headers": "off",
             "datasource": "services",
-            "description": _l("All crit services of a certain host group"),
+            "description": _l("All CRIT services of a certain host group"),
             "group_painters": [
                 ColumnSpec(
                     name="sitealias",
@@ -1897,7 +1897,7 @@ builtin_views.update(
             ],
             "public": True,
             "sorters": [],
-            "title": _l("Status of host"),
+            "title": _l("State of host"),
             "topic": "monitoring",
             "user_sortable": True,
             "single_infos": ["host"],
@@ -5485,7 +5485,7 @@ builtin_views["cmk_sites_of_host"] = {
 builtin_views["it_efficiency_servers_cpumem_linux"] = {
     "name": "it_efficiency_servers_cpumem_linux",
     "title": "Linux [CPU & Memory]",
-    "description": _l("Measure the CPU and Memory efficiency of your Linux servers\n"),
+    "description": _l("Measure the CPU and memory efficiency of your Linux servers\n"),
     "datasource": "hosts",
     "context": {
         "host_labels": filter_http_vars_for_simple_label_group(
@@ -5572,7 +5572,7 @@ builtin_views["it_efficiency_servers_cpumem_esxi"] = {
     "name": "it_efficiency_servers_cpumem_esxi",
     "title": "VMware ESXi [CPU & Memory]",
     "topic": "it_efficiency",
-    "description": _l("Measure the CPU and Memory efficiency of your VMware ESXi servers\n"),
+    "description": _l("Measure the CPU and memory efficiency of your VMware ESXi servers\n"),
     "datasource": "hosts",
     "context": {
         "host_labels": filter_http_vars_for_simple_label_group(
@@ -5658,7 +5658,7 @@ builtin_views["it_efficiency_servers_cpumem_nutanix"] = {
     "name": "it_efficiency_servers_cpumem_nutanix",
     "title": "Nutanix [CPU & Memory]",
     "topic": "it_efficiency",
-    "description": _l("Measure the CPU and Memory efficiency of your Nutanix servers\n"),
+    "description": _l("Measure the CPU and memory efficiency of your Nutanix servers\n"),
     "datasource": "hosts",
     "context": {
         "host_labels": filter_http_vars_for_simple_label_group(
@@ -5727,7 +5727,7 @@ builtin_views["it_efficiency_servers_cpumem_windows"] = {
     "name": "it_efficiency_servers_cpumem_windows",
     "title": "Windows [CPU & Memory]",
     "topic": "it_efficiency",
-    "description": _l("Measure the CPU and Memory efficiency of your Windows servers\n"),
+    "description": _l("Measure the CPU and memory efficiency of your Windows servers\n"),
     "datasource": "hosts",
     "context": {
         "host_labels": filter_http_vars_for_simple_label_group(
@@ -5813,7 +5813,7 @@ builtin_views["it_efficiency_servers_fs_linux"] = {
     "name": "it_efficiency_servers_fs_linux",
     "title": "Linux [Filesystems]",
     "topic": "it_efficiency",
-    "description": _l("Measure the Filesystem efficiency of your Linux servers.\n"),
+    "description": _l("Measure the file system efficiency of your Linux servers.\n"),
     "datasource": "services",
     "context": {
         "host_labels": filter_http_vars_for_simple_label_group(
@@ -5883,7 +5883,7 @@ builtin_views["it_efficiency_servers_fs_windows"] = {
     "name": "it_efficiency_servers_fs_windows",
     "title": "Windows [Filesystems]",
     "topic": "it_efficiency",
-    "description": _l("Measure the Filesystem efficiency of your Windows servers\n"),
+    "description": _l("Measure the file system efficiency of your Windows servers\n"),
     "datasource": "services",
     "context": {
         "host_labels": filter_http_vars_for_simple_label_group(
@@ -5953,7 +5953,7 @@ builtin_views["it_efficiency_servers_fs_esxi"] = {
     "name": "it_efficiency_servers_fs_esxi",
     "title": "VMware ESXi [Filesystems]",
     "topic": "it_efficiency",
-    "description": _l("Measure the Filesystem efficiency of your VMware ESXi servers\n"),
+    "description": _l("Measure the file system efficiency of your VMware ESXi servers\n"),
     "datasource": "services",
     "context": {
         "host_labels": filter_http_vars_for_simple_label_group(

@@ -53,7 +53,7 @@ ConfigVariableNotificationFallbackEmail = ConfigVariable(
             "This can happen when you forward notifications from the Event Console. "
             "<br><br>Notification fallback can also be configured in single user profiles."
         ),
-        empty_text=_("(No fallback email address configured!)"),
+        empty_text=_("(no fallback email address configured!)"),
         make_clickable=False,
     ),
 )

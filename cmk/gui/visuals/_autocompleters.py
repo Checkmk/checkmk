@@ -45,7 +45,7 @@ def live_query_to_choices(
         choices = [(re.escape(val), display) for (val, display) in choices]
 
     if len(choices) > limit:
-        choices.insert(0, (None, _("(Max suggestions reached, be more specific)")))
+        choices.insert(0, (None, _("(max suggestions reached, be more specific)")))
 
     if (value, value) not in choices and params["strict"] is False:
         choices.insert(0, (value, value))

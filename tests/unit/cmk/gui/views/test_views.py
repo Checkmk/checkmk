@@ -250,12 +250,12 @@ def test_registered_commands() -> None:
         "toggle_passive_checks": {
             "permission": "action.enablechecks",
             "tables": ["host", "service"],
-            "title": "Enable/Disable passive checks",
+            "title": "Enable/disable passive checks",
         },
         "toggle_active_checks": {
             "permission": "action.enablechecks",
             "tables": ["host", "service"],
-            "title": "Enable/Disable active checks",
+            "title": "Enable/disable active checks",
         },
         "fake_check_result": {
             "group": "fake_check",

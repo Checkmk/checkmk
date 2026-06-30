@@ -51,7 +51,7 @@ for state, state_type, short_title, title in [
     ("0", "ok", _l("Ok"), _l("Number of service in state OK")),
     ("1", "warn", _l("Warn"), _l("Number of service in state WARN")),
     ("2", "crit", _l("Crit"), _l("Number of service in state CRIT")),
-    ("3", "unknown", _l("Un"), _l("Number of service in state UNKNOWN")),
+    ("3", "unknown", _l("Un"), _l("Number of services in state UNKNOWN")),
     ("p", "pending", _l("Pe"), _l("Number of services in state PENDING")),
 ]:
     experimental_painter_registry.register(

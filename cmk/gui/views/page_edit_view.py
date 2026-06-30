@@ -110,7 +110,7 @@ def view_editor_options() -> list[
     tuple[Literal["mobile", "mustsearch", "force_checkboxes", "user_sortable", "play_sounds"], str]
 ]:
     return [
-        ("mobile", _("Show this view in the Mobile GUI")),
+        ("mobile", _("Show this view in the mobile GUI")),
         ("mustsearch", _("Show data only on search")),
         ("force_checkboxes", _("Always show the checkboxes")),
         ("user_sortable", _("Make view sortable by user")),
@@ -178,7 +178,7 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
             (
                 "num_columns",
                 Integer(
-                    title=_("Number of Columns"),
+                    title=_("Number of columns"),
                     default_value=1,
                     minvalue=1,
                     maxvalue=50,
@@ -188,7 +188,7 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
                 "column_headers",
                 Migrate(
                     DropdownChoice(
-                        title=_("Column Headers"),
+                        title=_("Column headers"),
                         choices=[
                             ("off", _("off")),
                             ("pergroup", _("once per group")),

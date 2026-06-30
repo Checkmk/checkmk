@@ -469,7 +469,7 @@ class SidebarRenderer:
         and the document.
         """
         html.html_head(
-            title or _("Checkmk Sidebar"),
+            title or _("Checkmk sidebar"),
             lang=user.language,
             inject_js_profiling_code=nav.config.inject_js_profiling_code,
             load_frontend_vue=nav.config.load_frontend_vue,

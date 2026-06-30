@@ -19,7 +19,7 @@ def page_edit_views(ctx: PageContext) -> None:
     cols = [(_("Data source"), lambda v: data_source_registry[v["datasource"]]().title)]
     visuals.page_list(
         "views",
-        _("Edit Views"),
+        _("Edit views"),
         get_all_views(),
         UserPermissions.from_config(ctx.config, permission_registry),
         ctx.config,

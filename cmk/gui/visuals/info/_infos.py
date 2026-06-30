@@ -222,11 +222,11 @@ class VisualInfoLog(VisualInfo):
 
     @property
     def title(self) -> str:
-        return _("Log Entry")
+        return _("Log entry")
 
     @property
     def title_plural(self) -> str:
-        return _("Log Entries")
+        return _("Log entries")
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
@@ -311,13 +311,13 @@ class VisualInfoContact(VisualInfo):
             (
                 "log_contact_name",
                 TextInput(
-                    title=_("Contact Name"),
+                    title=_("Contact name"),
                 ),
             ),
         ]
 
     def single_spec_components(self) -> list[FilterComponent]:
-        return [components.TextInput(id="log_contact_name", label=_("Contact Name"))]
+        return [components.TextInput(id="log_contact_name", label=_("Contact name"))]
 
 
 class VisualInfoCommand(VisualInfo):
@@ -355,7 +355,7 @@ class VisualInfoBIAggregation(VisualInfo):
 
     @property
     def title(self) -> str:
-        return _("BI Aggregation")
+        return _("BI aggregation")
 
     @property
     def title_plural(self) -> str:
@@ -367,13 +367,13 @@ class VisualInfoBIAggregation(VisualInfo):
             (
                 "aggr_name",
                 TextInput(
-                    title=_("Aggregation Name"),
+                    title=_("Aggregation name"),
                 ),
             ),
         ]
 
     def single_spec_components(self) -> list[FilterComponent]:
-        return [components.TextInput(id="aggr_name", label=_("Aggregation Name"))]
+        return [components.TextInput(id="aggr_name", label=_("Aggregation name"))]
 
     @property
     def sort_index(self) -> int:
@@ -387,11 +387,11 @@ class VisualInfoBIAggregationGroup(VisualInfo):
 
     @property
     def title(self) -> str:
-        return _("BI Aggregation Group")
+        return _("BI aggregation group")
 
     @property
     def title_plural(self) -> str:
-        return _("BI Aggregation Groups")
+        return _("BI aggregation groups")
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
@@ -419,11 +419,11 @@ class VisualInfoDiscovery(VisualInfo):
 
     @property
     def title(self) -> str:
-        return _("Discovery Output")
+        return _("Discovery output")
 
     @property
     def title_plural(self) -> str:
-        return _("Discovery Outputs")
+        return _("Discovery outputs")
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
@@ -486,7 +486,7 @@ class VisualInfoEventHistory(VisualInfo):
             (
                 "history_line",
                 Integer(
-                    title=_("History Line Number"),
+                    title=_("History line number"),
                 ),
             ),
         ]
@@ -494,7 +494,7 @@ class VisualInfoEventHistory(VisualInfo):
     def single_spec_components(self) -> list[FilterComponent]:
         return [
             components.TextInput(id="event_id", label=_("Event ID")),
-            components.TextInput(id="history_line", label=_("History Line Number")),
+            components.TextInput(id="history_line", label=_("History line number")),
         ]
 
 

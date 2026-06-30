@@ -99,7 +99,7 @@ def form_spec() -> Dictionary:
                 required=True,
                 parameter_form=String(
                     title=Title("Set optional timeout for connections to the modem."),
-                    help_text=Help("Here you can configure timeout settings."),
+                    help_text=Help("Here, you can configure timeout settings."),
                     prefill=DefaultValue("10"),
                 ),
             ),

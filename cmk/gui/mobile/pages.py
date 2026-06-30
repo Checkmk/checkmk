@@ -185,7 +185,7 @@ def jqm_page_index_topic_renderer(topic: str, items: Items) -> None:
 
 
 def _page_login(config: Config) -> None:
-    title = _("Checkmk Mobile")
+    title = _("Checkmk mobile")
     mobile_html_head(title)
     jqm_page_header(title, id_="login")
     html.div(_("Welcome to Checkmk Mobile."), id_="loginhead")
@@ -254,7 +254,7 @@ class PageMobileIndex(Page):
 
 def _page_index(request: Request, config: Config) -> None:
     user_permissions = UserPermissions.from_config(config, permission_registry)
-    title = _("Checkmk Mobile")
+    title = _("Checkmk mobile")
     mobile_html_head(title)
     jqm_page_header(
         title,
@@ -293,7 +293,7 @@ def _page_index(request: Request, config: Config) -> None:
                 (topic.title(), url, "{} {}".format(escape_text(view_spec["title"]), count))
             )
 
-    jqm_page_index(_("Checkmk Mobile"), items)
+    jqm_page_index(_("Checkmk mobile"), items)
     # Link to non-mobile GUI
 
     html.hr()
@@ -425,7 +425,7 @@ class MobileViewRenderer(ABCViewRenderer):
         page_id = "view_" + view_spec["name"]
 
         if page == "filter":
-            jqm_page_header(_("Filter / Search"), left_button=home, id_="filter")
+            jqm_page_header(_("Filter / search"), left_button=home, id_="filter")
             _show_filter_form(show_filters, self.view.context)
             jqm_page_navfooter(navbar, "filter", page_id)
 

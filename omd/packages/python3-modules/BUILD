@@ -20,7 +20,7 @@ config_setting(
     name = module,
     srcs = [
         "%s_requirements.txt" % module,
-        ":git_wrapper",
+        "//omd/packages/omd:use_system_openssl",
         "@freetds",
         "@openssl",
         "@python",
@@ -40,7 +40,7 @@ config_setting(
 build_python_module(
     name = "netapp-ontap",
     srcs = [
-        ":git_wrapper",
+        "//omd/packages/omd:use_system_openssl",
         "@freetds",
         "@openssl",
         "@python",

@@ -19,8 +19,15 @@ def inventory_infoblox_statistics(info):
     return [(None, None)]
 
 
+def _saveint(value: str) -> int:
+    try:
+        return int(value)
+    except ValueError:
+        return 0
+
+
 def check_infoblox_dns_stats(_no_item, _no_params, info):
-    successes, referrals, nxrrset, nxdomain, recursion, failures = map(int, info[0])
+    successes, referrals, nxrrset, nxdomain, recursion, failures = map(_saveint, info[0])
 
     return check_infoblox_statistics(
         "dns",

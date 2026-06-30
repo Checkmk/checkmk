@@ -13,7 +13,7 @@ node_networking_sip_interfaces = Node(
         columns={
             "index": TextField(Title("Index")),
             "name": TextField(Title("Name")),
-            "application_type": TextField(Title("Application Type")),
+            "application_type": TextField(Title("Application type")),
             "sys_interface": TextField(Title("System interface")),
             "device": TextField(Title("Device")),
             "tcp_port": TextField(Title("TCP Port")),

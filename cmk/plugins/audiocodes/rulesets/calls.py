@@ -43,6 +43,6 @@ rule_spec_audiocodes_calls = CheckParameters(
     name="audiocodes_calls",
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_audiocores_calls,
-    title=Title("AudioCodes SBC Calls"),
+    title=Title("AudioCodes SBC calls"),
     condition=HostCondition(),
 )

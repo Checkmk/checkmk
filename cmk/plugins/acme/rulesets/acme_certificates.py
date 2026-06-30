@@ -45,7 +45,7 @@ def _parameter_rulespec_acme_certificates() -> Dictionary:
 rule_spec_acme_sbc_snmp = CheckParameters(
     parameter_form=_parameter_rulespec_acme_certificates,
     name="acme_certificates",
-    title=Title("ACME Certificates"),
+    title=Title("ACME certificates"),
     topic=Topic.APPLICATIONS,
     condition=HostAndItemCondition(item_title=Title("Name of certificate")),
 )

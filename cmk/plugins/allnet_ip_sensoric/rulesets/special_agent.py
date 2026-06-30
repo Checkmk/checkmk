@@ -27,9 +27,9 @@ def _migrate_to_float(value: object) -> float:
 
 def parameter_form() -> Dictionary:
     return Dictionary(
-        title=Title("ALLNET IP Sensoric Devices"),
+        title=Title("ALLNET IP sensoric devices"),
         help_text=Help(
-            "This rule selects the ALLNET IP Sensoric agent, which fetches "
+            "This rule selects the ALLNET IP sensoric agent, which fetches "
             "/xml/sensordata.xml from the device by HTTP and extracts the "
             "needed monitoring information from this file."
         ),
@@ -58,7 +58,7 @@ def parameter_form() -> Dictionary:
 
 rule_spec_special_agent_allnet_ip_sensoric = SpecialAgent(
     name="allnet_ip_sensoric",
-    title=Title("ALLNET IP Sensoric Devices"),
+    title=Title("ALLNET IP sensoric devices"),
     topic=Topic.GENERAL,
     parameter_form=parameter_form,
 )

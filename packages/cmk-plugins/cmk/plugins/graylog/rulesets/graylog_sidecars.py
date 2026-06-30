@@ -32,7 +32,7 @@ def _parameter_valuespec_graylog_sidecars() -> Dictionary:
             ),
             "last_seen": DictElement(
                 parameter_form=SimpleLevels[float](
-                    title=Title("Time since the sidecar was last seen by graylog"),
+                    title=Title("Time since the sidecar was last seen by Graylog"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=[

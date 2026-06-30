@@ -60,7 +60,7 @@ def _parameter_form() -> Dictionary:
                     elements=[
                         MultipleChoiceElement(
                             name="lshost",
-                            title=Title("Hosts Connected"),
+                            title=Title("Hosts connected"),
                         ),
                         MultipleChoiceElement(
                             name="lslicense",
@@ -76,7 +76,7 @@ def _parameter_form() -> Dictionary:
                         ),
                         MultipleChoiceElement(
                             name="lsnode",
-                            title=Title("IO Groups"),
+                            title=Title("I/O groups"),
                         ),
                         MultipleChoiceElement(
                             name="lsnodestats",
@@ -92,11 +92,11 @@ def _parameter_form() -> Dictionary:
                         ),
                         MultipleChoiceElement(
                             name="lseventlog",
-                            title=Title("Event Log"),
+                            title=Title("Event log"),
                         ),
                         MultipleChoiceElement(
                             name="lsportfc",
-                            title=Title("FC Ports"),
+                            title=Title("FC ports"),
                         ),
                         MultipleChoiceElement(
                             name="lsportsas",
@@ -108,7 +108,7 @@ def _parameter_form() -> Dictionary:
                         ),
                         MultipleChoiceElement(
                             name="lsenclosurestats",
-                            title=Title("Enclosure Stats"),
+                            title=Title("Enclosure stats"),
                         ),
                         MultipleChoiceElement(
                             name="lsarray",

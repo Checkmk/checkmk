@@ -263,7 +263,7 @@ def recap_found_services(
     if len(filtered_groups_of_services[azure_service_interest]):
         return [
             Text(text=_("Azure services found!")),
-            Text(text=_("Save your progress and go to the Activate Changes page to enable it.")),
+            Text(text=_("Save your progress and go to the 'Activate changes' page to enable it.")),
         ]
     return [
         Text(text=_("No Azure services found.")),
@@ -298,7 +298,7 @@ def review_and_run_preview_service_discovery() -> QuickSetupStage:
                         Text(text=_("Skipped the configuration test.")),
                         Text(
                             text=_(
-                                "Save your progress and go to the Activate Changes page to enable it."
+                                "Save your progress and go to the 'Activate changes' page to enable it."
                             )
                         ),
                     ]
@@ -367,7 +367,7 @@ quick_setup_azure = QuickSetup(
     actions=[
         QuickSetupBackgroundAction(
             id=ActionId("activate_changes"),
-            label=_("Save & go to Activate changes"),
+            label=_("Save & go to 'Activate changes'"),
             icon=QuickSetupActionButtonIcon(name="save-to-services"),
             action=action,
         ),

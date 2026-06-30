@@ -142,7 +142,7 @@ class ModeQuickSetupSpecialAgent(WatoMode):
         if not self._name.startswith(RuleGroupType.SPECIAL_AGENTS.value):
             raise MKUserError(
                 None,
-                _("Add configuration is only available for special agent based rules."),
+                _("Add configuration is only available for special agent-based rules."),
             )
 
         quick_setup = quick_setup_registry.get(self._name)

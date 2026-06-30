@@ -37,12 +37,12 @@ class _ServiceChoices:
             MultipleChoiceElement(name="ebs", title=Title("Elastic Block Storage (EBS)")),
             MultipleChoiceElement(name="s3", title=Title("Simple Storage Service (S3)")),
             MultipleChoiceElement(name="glacier", title=Title("Amazon S3 Glacier (Glacier)")),
-            MultipleChoiceElement(name="elb", title=Title("Classic Load Balancing (ELB)")),
+            MultipleChoiceElement(name="elb", title=Title("Classic load balancing (ELB)")),
             MultipleChoiceElement(
-                name="elbv2", title=Title("Application and Network Load Balancing (ELBv2)")
+                name="elbv2", title=Title("Application and network load balancing (ELBv2)")
             ),
             MultipleChoiceElement(name="rds", title=Title("Relational Database Service (RDS)")),
-            MultipleChoiceElement(name="cloudwatch_alarms", title=Title("CloudWatch Alarms")),
+            MultipleChoiceElement(name="cloudwatch_alarms", title=Title("CloudWatch alarms")),
             MultipleChoiceElement(name="dynamodb", title=Title("DynamoDB")),
             MultipleChoiceElement(name="wafv2", title=Title("Web Application Firewall (WAFV2)")),
         ]
@@ -146,7 +146,7 @@ def _formspec_aws_piggyback_naming_convention() -> dict[str, DictElement]:
                 title=Title("Piggyback names"),
                 elements=[
                     SingleChoiceElement(
-                        title=Title("IP - Region - Instance ID"),
+                        title=Title("IP - region - instance ID"),
                         name="ip_region_instance",
                     ),
                     SingleChoiceElement(

@@ -227,7 +227,7 @@ ec2_creation = _CreateEC2()
 def _save_and_activate_recap(title: str, parsed_data: ParsedFormData) -> Sequence[Widget]:
     messages: list[Text | NoteText] = [
         Text(text=title),
-        Text(text=_("Save your progress and go to the Activate Changes page to enable it.")),
+        Text(text=_("Save your progress and go to the 'Activate changes' page to enable it.")),
     ]
     if "ec2" in parsed_data.get(FormSpecId("configure_services_to_monitor"), {}).get(
         "services", []
@@ -453,7 +453,7 @@ quick_setup_aws = QuickSetup(
     actions=[
         QuickSetupBackgroundAction(
             id=ActionId("activate_changes"),
-            label=_("Save & go to Activate changes"),
+            label=_("Save & go to 'Activate changes'"),
             action=action,
             icon=QuickSetupActionButtonIcon(name="save-to-services"),
             custom_validators=[qs_validators.validate_host_name_doesnt_exists],

@@ -181,7 +181,7 @@ def configure_authentication() -> QuickSetupStage:
 def _save_and_activate_recap(title: str) -> Sequence[Widget]:
     return [
         Text(text=title),
-        Text(text=_("Save your progress and go to the Activate Changes page to enable it.")),
+        Text(text=_("Save your progress and go to the 'Activate changes' page to enable it.")),
         NoteText(
             text=_(
                 "We also recommend that you install Checkmk Linux agents on the Proxmox VE "
@@ -296,7 +296,7 @@ quick_setup_proxmox_ve = QuickSetup(
     actions=[
         QuickSetupBackgroundAction(
             id=ActionId("activate_changes"),
-            label=_("Save & go to Activate changes"),
+            label=_("Save & go to 'Activate changes'"),
             icon=QuickSetupActionButtonIcon(name="save-to-services"),
             action=action,
             permissions=["wato.passwords", "wato.rulesets", "wato.hosts"],

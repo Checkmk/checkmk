@@ -45,7 +45,7 @@ from ._sources import (
 __all__ = ["make_sources"]
 
 
-class _Builder:
+class SourceBuilder:
     def __init__(
         self,
         plugins: AgentBasedPlugins,
@@ -369,7 +369,7 @@ def make_sources(
     metric_backend_fetcher: Fetcher[AgentRawData] | None,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
-    return _Builder(
+    return SourceBuilder(
         plugins,
         host_name,
         host_ip_family,

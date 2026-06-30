@@ -10,13 +10,18 @@ Please try to find a better place for the things you want to put here."""
 from pathlib import Path
 
 
-# TODO: Change to better name like: quote_pnp_string()
 def pnp_cleanup(s: str) -> str:
     """Quote a string (host name or service name) in PNP4Nagios format
 
     Because it is used as path element, this needs to be handled as "str" in Python 2 and 3
     """
-    return s.replace(" ", "_").replace(":", "_").replace("/", "_").replace("\\", "_")
+    return (
+        s.replace(" ", "_")
+        .replace(":", "_")
+        .replace("/", "_")
+        .replace("\\", "_")
+        .replace("\x00", "_")
+    )
 
 
 def key_config_paths(a: Path) -> tuple[tuple[str, ...], int, tuple[str, ...]]:

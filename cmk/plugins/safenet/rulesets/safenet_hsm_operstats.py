@@ -26,7 +26,7 @@ def _parameter_rulespec_safenet_hsm_operstats() -> Dictionary:
         elements={
             "error_rate": DictElement(
                 parameter_form=SimpleLevels(
-                    title=Title("Error Rate"),
+                    title=Title("Error rate"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Float(unit_symbol="1/s"),
                     prefill_levels_type=DefaultValue(LevelsType.FIXED),
@@ -50,7 +50,7 @@ def _parameter_rulespec_safenet_hsm_operstats() -> Dictionary:
             ),
             "operation_errors": DictElement(
                 parameter_form=SimpleLevels(
-                    title=Title("Operation Errors"),
+                    title=Title("Operation errors"),
                     help_text=Help(
                         "Sets levels on total operation errors since last counter reset."
                     ),

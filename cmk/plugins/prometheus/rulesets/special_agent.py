@@ -93,7 +93,7 @@ def _parameter_form() -> Dictionary:
                         "defined services with the custom PromQL query option below "
                         "if one of the scrape target types are not listed here."
                     ),
-                    add_element_label=Label("Add new Scrape Target"),
+                    add_element_label=Label("Add new scrape target"),
                     element_template=CascadingSingleChoice(
                         prefill=DefaultValue("node_exporter"),
                         elements=[
@@ -256,7 +256,7 @@ def _parameter_form() -> Dictionary:
                                                     CascadingSingleChoiceElement(
                                                         name="both",
                                                         title=Title(
-                                                            "Both - Display the information for both pod and container levels"
+                                                            "Both - display the information for both pod and container levels"
                                                         ),
                                                         parameter_form=Dictionary(
                                                             elements={

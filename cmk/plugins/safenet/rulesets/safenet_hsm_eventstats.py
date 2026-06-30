@@ -23,7 +23,7 @@ def _parameter_rulespec_safenet_hsm_eventstats() -> Dictionary:
         elements={
             "critical_events": DictElement(
                 parameter_form=SimpleLevels(
-                    title=Title("Critical Events"),
+                    title=Title("Critical events"),
                     help_text=Help(
                         "Sets levels on total critical events since last counter reset."
                     ),
@@ -49,7 +49,7 @@ def _parameter_rulespec_safenet_hsm_eventstats() -> Dictionary:
             ),
             "critical_event_rate": DictElement(
                 parameter_form=SimpleLevels(
-                    title=Title("Critical Event Rate"),
+                    title=Title("Critical event rate"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Float(unit_symbol="1/s"),
                     prefill_levels_type=DefaultValue(LevelsType.FIXED),

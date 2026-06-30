@@ -67,7 +67,7 @@ def _valuespec_agent_config_mk_nfsiostat() -> Dictionary:
 
 
 rule_spec_mk_nfsiostat = AgentConfig(
-    title=Title("NFS IO Stats (Linux)"),
+    title=Title("NFS I/O stats (Linux)"),
     name="mk_nfsiostat",
     topic=Topic.NETWORKING,
     parameter_form=_valuespec_agent_config_mk_nfsiostat,

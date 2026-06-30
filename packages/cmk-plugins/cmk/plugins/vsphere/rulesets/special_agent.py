@@ -42,7 +42,7 @@ def parameter_form() -> Dictionary:
             "user": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("vSphere User name"),
+                    title=Title("vSphere username"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                 ),
             ),
@@ -72,7 +72,7 @@ def parameter_form() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name=QueryType.STANDALONE,
                             title=Title(
-                                "Queried host is a ESXi host (Standalone / not vCenter integrated)"
+                                "Queried host is a ESXi host (standalone / not vCenter integrated)"
                             ),
                             parameter_form=_info_form_for_host(QueryType.STANDALONE),
                         ),
@@ -240,9 +240,9 @@ def _info_form_for_host(query_type: QueryType) -> MultipleChoice:
     return MultipleChoice(
         title=Title("Retrieve information about..."),
         elements=[
-            MultipleChoiceElement(name="hostsystem", title=Title("Host Systems")),
-            MultipleChoiceElement(name="virtualmachine", title=Title("Virtual Machines")),
-            MultipleChoiceElement(name="datastore", title=Title("Datastores")),
+            MultipleChoiceElement(name="hostsystem", title=Title("Host systems")),
+            MultipleChoiceElement(name="virtualmachine", title=Title("Virtual machines")),
+            MultipleChoiceElement(name="datastore", title=Title("Data stores")),
             MultipleChoiceElement(name="counters", title=Title("Performance counters")),
             MultipleChoiceElement(name="licenses", title=Title("License Usage")),
         ],

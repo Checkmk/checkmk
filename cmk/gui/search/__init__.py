@@ -3,19 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from .engines.indexed import (
+    IndexBuilder,
+    IndexedSearchEngine,
+    IndexNotFoundException,
+    IndexSearcher,
+    PermissionsHandler,
+)
 from .engines.monitoring import (
     ABCQuicksearchConductor,
     IncorrectLabelInputError,
     MonitoringSearchEngine,
     QuicksearchManager,
     TooManyRowsError,
-)
-from .engines.setup import (
-    IndexBuilder,
-    IndexedSearchEngine,
-    IndexNotFoundException,
-    IndexSearcher,
-    PermissionsHandler,
 )
 from .match_items import ABCMatchItemGenerator as ABCMatchItemGenerator
 from .match_items import match_item_generator_registry as match_item_generator_registry

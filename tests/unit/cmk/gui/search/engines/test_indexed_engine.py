@@ -37,7 +37,7 @@ from cmk.gui.search import (
     MatchItems,
     PermissionsHandler,
 )
-from cmk.gui.search.engines import setup as search
+from cmk.gui.search.engines import indexed as search
 from cmk.gui.session_context import _UserContext
 from cmk.gui.type_defs import SearchResult
 from cmk.gui.utils.roles import UserPermissions

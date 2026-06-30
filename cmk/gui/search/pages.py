@@ -24,8 +24,8 @@ from cmk.shared_typing.unified_search import (
 )
 
 from .collapsing import get_collapser
+from .engines.indexed import IndexedSearchEngine, PermissionsHandler
 from .engines.monitoring import MonitoringSearchEngine
-from .engines.setup import IndexedSearchEngine, PermissionsHandler
 from .unified import UnifiedSearch
 
 # Before making this something configurable, we want to first hardcode this setting to a reasonable

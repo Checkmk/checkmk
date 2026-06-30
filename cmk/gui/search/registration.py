@@ -12,7 +12,7 @@ from cmk.gui.watolib.hosts_and_folders import collect_all_hosts
 from cmk.gui.watolib.rule_match_item_generator import MatchItemGeneratorRules
 from cmk.gui.watolib.rulespecs import rulespec_registry, RulespecGroupRegistry
 
-from .engines.setup import launch_requests_processing_background, SearchIndexBackgroundJob
+from .engines.indexed import launch_requests_processing_background, SearchIndexBackgroundJob
 from .match_items import MatchItemGeneratorRegistry
 from .pages import PageUnifiedSearch
 

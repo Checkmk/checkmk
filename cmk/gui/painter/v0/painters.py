@@ -2685,7 +2685,7 @@ class PainterHost(Painter):
                     ],
                     title=_("Coloring"),
                     help=_(
-                        "Here you can configure the background color for specific states. "
+                        "Here, you can configure the background color for specific states. "
                         "The coloring for host in downtime overrules all other coloring."
                     ),
                 ),
@@ -3161,7 +3161,7 @@ class PainterHostServices(Painter):
                     default_value=[0, 1, 2, 3, "p"],
                     title=_("Only show services in this states"),
                     help=_(
-                        "Here you can configure which services are displayed depending on "
+                        "Here, you can configure which services are displayed depending on "
                         "their state. This is a filter at display level not query level."
                     ),
                 ),

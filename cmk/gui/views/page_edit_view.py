@@ -349,7 +349,7 @@ def _get_join_vs_column_choice(
             help=_(
                 "A joined column can display information about specific services for "
                 "host objects in a view showing host objects. You need to specify the "
-                "service name of the service you like to show the data for."
+                "service name of the service you want to show the data for."
             ),
             elements=[
                 _get_vs_column_dropdown(ds_name, "join_painter", join_painters, user_permissions),
@@ -419,7 +419,7 @@ def _get_join_inv_vs_column_choice(
                                             ],
                                             orientation="horizontal",
                                             help=_(
-                                                "Here you have to use macros which are defined"
+                                                "Here, you have to use macros which are defined"
                                                 " above below <tt>Macros for joining service data"
                                                 " or inventory tables</tt>. The joining of"
                                                 " different inventory tables is based on these"

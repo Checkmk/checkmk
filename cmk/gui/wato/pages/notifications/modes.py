@@ -3218,7 +3218,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                         ),
                         title=_("Restrict by custom macros"),
                         help=_(
-                            "Here you can <i>restrict</i> the list of contacts that has been "
+                            "Here, you can <i>restrict</i> the list of contacts that has been "
                             "built up by the previous options to those who have certain values "
                             "in certain custom macros. If you add more than one macro here then "
                             "<i>all</i> macros must match. The matches are regular expressions "
@@ -3233,7 +3233,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                         valuespec=ContactGroupSelection(),
                         title=_("Restrict by contact groups"),
                         help=_(
-                            "Here you can <i>restrict</i> the list of contacts that has been "
+                            "Here, you can <i>restrict</i> the list of contacts that has been "
                             "built up by the previous options to those that are members of "
                             "selected contact groups. If you select more than one contact group here then "
                             "the user must be member of <i>all</i> these groups."

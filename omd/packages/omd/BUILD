@@ -49,8 +49,6 @@ WRAPPED_EXECUTABLES = [
     "pdftoppm",
     "php",
     "php-cgi",
-    "php5",
-    "php5-cgi",
     "resolvectl",
     "rpmbuild",
     "scp",

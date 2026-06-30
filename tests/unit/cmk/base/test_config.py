@@ -14,7 +14,7 @@ import shutil
 import socket
 import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Literal, NoReturn
 
@@ -1869,23 +1869,30 @@ def cluster_config_fixture(monkeypatch: MonkeyPatch) -> ConfigCache:
     return ts.apply(monkeypatch).config_cache
 
 
-# TODO(igor): Rewrite the next three tests to be streight forward tests of `make_hosts_config`
-def test_config_cache_is_cluster(cluster_config: ConfigCache) -> None:
-    hosts_config = config.make_hosts_config(cluster_config.base_config)
+def _base_config() -> BaseConfig:
+    return replace(
+        EMPTY_CONFIG,
+        all_hosts=[HostName("node1"), HostName("host1")],
+        clusters={HostName("cluster1"): [HostName("node1")]},
+    )
+
+
+def test_make_hosts_config_clusters_contains_only_clusters() -> None:
+    hosts_config = config.make_hosts_config(_base_config())
     assert HostName("node1") not in hosts_config.clusters
     assert HostName("host1") not in hosts_config.clusters
     assert HostName("cluster1") in hosts_config.clusters
 
 
-def test_config_cache_clusters_of(cluster_config: ConfigCache) -> None:
-    hosts_config = config.make_hosts_config(cluster_config.base_config)
+def test_make_hosts_config_clusters_of_nodes() -> None:
+    hosts_config = config.make_hosts_config(_base_config())
     assert hosts_config.clusters_of_nodes[HostName("node1")] == ["cluster1"]
     assert HostName("host1") not in hosts_config.clusters_of_nodes
     assert HostName("cluster1") not in hosts_config.clusters_of_nodes
 
 
-def test_config_cache_nodes(cluster_config: ConfigCache) -> None:
-    hosts_config = config.make_hosts_config(cluster_config.base_config)
+def test_make_hosts_config_cluster_nodes() -> None:
+    hosts_config = config.make_hosts_config(_base_config())
     assert HostName("node1") not in hosts_config.clusters
     assert HostName("host1") not in hosts_config.clusters
     assert hosts_config.clusters[HostName("cluster1")] == ["node1"]

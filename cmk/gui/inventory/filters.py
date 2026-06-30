@@ -993,7 +993,7 @@ class FilterInvHasSoftwarePackage(Filter):
                     _(
                         "Your search statement is not valid. You need to provide a regular "
                         "expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> "
-                        "if you like to search for a single backslash."
+                        "if you want to search for a single backslash."
                     ),
                 )
 

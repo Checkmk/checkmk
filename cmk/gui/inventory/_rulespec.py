@@ -67,7 +67,7 @@ def _valuespec_active_checks_cmk_inv() -> Dictionary:
             "normal interval for that check to something between a couple of "
             "hours and one day. "
             "<b>Note:</b> in order to get any useful "
-            "result for agent based hosts make sure that you have installed "
+            "result for agent-based hosts make sure that you have installed "
             "the agent plug-in <tt>mk_inventory</tt> on these hosts."
         ),
         elements=[
@@ -121,7 +121,7 @@ def _valuespec_active_checks_cmk_inv() -> Dictionary:
                         "software inventory after every check cycle if there's at least "
                         "one inventory plug-in which processes status data. "
                         "<b>Note:</b> in order to get any useful "
-                        "result for agent based hosts make sure that you have installed "
+                        "result for agent-based hosts make sure that you have installed "
                         "the agent plug-in <tt>mk_inventory</tt> on these hosts."
                     ),
                     choices=[
@@ -156,8 +156,8 @@ def _valuespec_inv_exports_software_csv() -> Dictionary:
                     help=_(
                         "Please specify the path to the export file. The text <tt>[HOST]</tt> "
                         "will be replaced with the host name the inventory has been done for. "
-                        "If you use a relative path then that will be relative to Checkmk's directory "
-                        "for variable data, which is <tt>%s</tt>."
+                        "If you use a relative path then that will be relative to the directory "
+                        "for variable data of Checkmk, which is <tt>%s</tt>."
                     )
                     % cmk.utils.paths.var_dir,
                     allow_empty=False,

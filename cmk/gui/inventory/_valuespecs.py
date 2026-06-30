@@ -26,9 +26,9 @@ def vs_element_inventory_visible_raw_path() -> tuple[str, ValueSpec]:
 def vs_inventory_path_or_keys_help() -> str:
     return _(
         "Via <tt>Display options > Show internal tree paths</tt>"
-        " on the HW/SW Inventory page of a host the internal tree paths leading"
-        " to subcategories, the keys of singles values or table column names"
+        " on the HW/SW inventory page of a host, the internal tree paths leading"
+        " to subcategories as well as the keys of singles values or table column names"
         " become visible. Key columns of tables are marked with '*'. See"
-        ' <a href="https://docs.checkmk.com/latest/de/inventory.html">HW/SW Inventory</a>.'
-        " for more details about the HW/SW Inventory system."
+        ' <a href="https://docs.checkmk.com/latest/de/inventory.html">HW/SW inventory</a>'
+        " for more details about the HW/SW inventory system."
     )

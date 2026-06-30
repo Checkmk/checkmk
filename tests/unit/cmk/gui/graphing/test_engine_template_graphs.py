@@ -103,6 +103,7 @@ def test_template_lifecycle_discover_and_update() -> None:
         rrd=rrd,
         consolidation_function=ConsolidationFunction.MAX,
         time_range=_DISCOVERY_RANGE,
+        registered_translations=[],
     )
 
     assert len(evaluated) == len(graphs)

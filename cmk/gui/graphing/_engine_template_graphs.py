@@ -24,7 +24,6 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.i18n import _, translate_to_current_language
 
-from ._engine_plugins import registered_translations
 from ._from_api import GraphFromAPI
 
 
@@ -73,13 +72,14 @@ def build_template_graphs(
 def evaluate_template_graphs(
     *,
     graphs: Sequence[Graph],
-    rrd: RRDSource,
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
+    rrd: RRDSource,
+    registered_translations: Sequence[translations_v1.Translation],
 ) -> Sequence[EvaluatedGraph]:
     return evaluate_graphs(
         graphs=graphs,
-        translations=registered_translations(),
+        translations=registered_translations,
         consolidation_function=consolidation_function,
         time_range=time_range,
         rrd=rrd,

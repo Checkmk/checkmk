@@ -13,6 +13,7 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.graphing_engine import ConsolidationFunction, EvaluatedGraph, TimeRange
 from cmk.gui.config import active_config
 
+from ._engine_plugins import registered_translations
 from ._engine_rrd_source import EngineRRDSource
 from ._engine_serialization import deserialize_graphs, ensure_type
 from ._engine_template_graphs import evaluate_template_graphs
@@ -54,6 +55,7 @@ def _dispatched_evaluate_template_graphs(request: GraphDataRequest) -> Sequence[
             request.options["consolidation_function"], ConsolidationFunction
         ),
         time_range=ensure_type(request.options["time_range"], TimeRange),
+        registered_translations=registered_translations(),
     )
 
 

@@ -142,7 +142,6 @@ class ApiContext:
     # site-internal secret used by the DCD daemon), not a user rebuilt from the
     # user id - a None user id maps to several identities with opposite permissions.
     user: LoggedInUser
-    user_id: UserId | None
     token: AuthToken | None
 
     @classmethod
@@ -164,6 +163,5 @@ class ApiContext:
             ),
             host_url=host_url,
             user=user,
-            user_id=user.id,
             token=token,
         )

@@ -70,7 +70,7 @@ def make_pending_changes(api_context: ApiContext) -> PendingChanges:
     return PendingChanges(
         activation_sites=activation_sites(api_context.config.sites),
         local_site=omd_site(),
-        acting_user=api_context.user_id,
+        acting_user=api_context.user.id,
         store=PendingChangesStore(),
         hooks=(
             make_audit_log_change_hook(use_git=api_context.config.wato_use_git),

@@ -55,7 +55,7 @@ def list_icons_v1(api_context: ApiContext) -> IconCollectionModel:
     """Show all icons."""
     theme = make_theme(validate_choices=False)
     theme.from_config(api_context.config.ui_theme)
-    if user_id := api_context.user_id:
+    if user_id := api_context.user.id:
         theme.set(load_custom_attr(user_id=user_id, key="ui_theme", parser=str))
     return IconCollectionModel(
         domainType="icon",

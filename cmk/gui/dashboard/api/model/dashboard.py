@@ -182,7 +182,7 @@ class DashboardVisibility:
         self, location: tuple[str | int, ...], context: ApiContext
     ) -> Iterable[ErrorDetails]:
         user_permissions = context.config.user_permissions()
-        user_id = context.user_id
+        user_id = context.user.id
         share_location = location + ("share",)
 
         def _may(permission: str) -> bool:

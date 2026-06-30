@@ -263,7 +263,16 @@ def parse_filenames(line):
         _processed_line = line.replace("\\", "/")
         _processed_line = os.path.normpath(_processed_line)
         _processed_line = _processed_line.replace("\\", "\\\\")
-        return shlex.split(_processed_line)
+        _processed_line = shlex.split(_processed_line)
+
+        _new_processed_line = []
+        for element in _processed_line:
+            if element.startswith("\\"):
+                _new_processed_line.append(f"\\{element}")
+            else:
+                _new_processed_line.append(element)
+
+        return _new_processed_line
 
     return shlex.split(line)
 

@@ -193,7 +193,7 @@ $(RPM_PACKAGE_AARCH64): $(BUILDROOT_AARCH64_STAMP)
 	    --define "_topdir $(RPM_TOPDIR)" \
 	    --define "_version $(VERSION)" \
 	    --define "_rpm_version $(RPM_VERSION)" \
-	    --define "_arch aarch64" \
+	    --target aarch64 \
 	    $(NAME)-aarch64.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/* $(RPM_PACKAGE_AARCH64)
 	rm -rf $(RPM_TOPDIR) $(RPM_BUILDDIR)

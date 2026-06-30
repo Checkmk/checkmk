@@ -581,7 +581,7 @@ class ModeEditSite(WatoMode):
                     field_size=FieldSize.LARGE,
                     custom_validate=[
                         validators.LengthInRange(
-                            min_value=1, error_msg=Message("Text field can not be empty")
+                            min_value=1, error_msg=Message("Text field cannot be empty")
                         )
                     ],
                 ),
@@ -640,7 +640,7 @@ class ModeEditSite(WatoMode):
                     ),
                     custom_validate=[
                         validators.NumberInRange(
-                            min_value=0, error_msg=Message("Integer field can not be empty")
+                            min_value=0, error_msg=Message("Integer field cannot be empty")
                         )
                     ],
                 ),

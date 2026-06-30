@@ -77,7 +77,7 @@ def _parameter_form() -> Dictionary:
             "protocol": DictElement(
                 parameter_form=SingleChoice(
                     title=Title("Protocol"),
-                    help_text=Help("Here you can define which protocol to use, default is https."),
+                    help_text=Help("Here, you can define which protocol to use, default is HTTPS."),
                     elements=[
                         SingleChoiceElement(
                             name="http",

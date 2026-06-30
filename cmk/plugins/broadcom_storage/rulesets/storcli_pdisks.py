@@ -15,7 +15,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 
 def _make_form() -> Dictionary:
     return Dictionary(
-        title=Title("Evaluation of PDisk States"),
+        title=Title("Evaluation of PDisk states"),
         elements={
             "dhs": DictElement(
                 required=False,

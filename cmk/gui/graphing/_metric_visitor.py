@@ -43,9 +43,9 @@ class MetricVisitor(StringVisitor):
                     ),
                 ),
                 i18n=shared_type_defs.MetricI18n(
-                    host_input_hint=_("(Select host)"),
+                    host_input_hint=_("(select host)"),
                     host_filter=_("Filter selection by host name:"),
-                    service_input_hint=_("(Select service)"),
+                    service_input_hint=_("(select service)"),
                     service_filter=_("Filter selection by service:"),
                 ),
             ),

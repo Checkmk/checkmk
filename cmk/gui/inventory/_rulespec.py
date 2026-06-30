@@ -145,7 +145,7 @@ ActiveCheckCmkInv = HostRulespec(
 
 def _valuespec_inv_exports_software_csv() -> Dictionary:
     return Dictionary(
-        title=_("Export List of Software packages as CSV file"),
+        title=_("Export list of software packages as CSV file"),
         elements=[
             (
                 "filename",

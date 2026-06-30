@@ -104,7 +104,7 @@ def _valuespec_agent_config_apache_status() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="autodetect",
                             title=Title(
-                                "Autodetect instances, expect HTTPS on the following ports:"
+                                "Auto-detect instances, expect HTTPS on the following ports:"
                             ),
                             parameter_form=List(
                                 element_template=Integer(

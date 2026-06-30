@@ -73,7 +73,7 @@ def _formspec_netapp_ontap() -> Dictionary:
     return Dictionary(
         title=Title("NetApp via Ontap REST API"),
         help_text=Help(
-            "This rule set selects the NetApp special agent instead of the normal Checkmk Agent "
+            "This rule set selects the NetApp special agent instead of the normal Checkmk agent "
             "and allows monitoring via the NetApp Ontap REST API."
         ),
         migrate=_migrate_netapp_config,
@@ -142,7 +142,7 @@ def _formspec_netapp_ontap() -> Dictionary:
                     title=Title("Fetch information about..."),
                     help_text=Help(
                         "Select the NetApp resources you would like to fetch from the API. "
-                        "Note that some sections depend on others: 'Volume Performance Counters' "
+                        "Note that some sections depend on others: 'Volume performance counters' "
                         "requires 'Volumes' data. Performance counter sections may "
                         "consume more resources and take longer to collect on large systems."
                     ),

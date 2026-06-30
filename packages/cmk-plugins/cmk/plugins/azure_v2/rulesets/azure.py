@@ -164,7 +164,7 @@ def _special_agents_azure_tag_based_config_resources() -> DictElement:
             add_element_label=Label("Add resource tag"),
             help_text=Help(
                 "Add the tags you want to use to filter the resources. "
-                "Only resources with every tags matching, will be monitored."
+                "Only resources with all tags matching will be monitored."
             ),
         ),
     )
@@ -212,7 +212,7 @@ def _special_agents_azure_tag_based_config_subscriptions() -> List:
         add_element_label=Label("Add subscription tag"),
         help_text=Help(
             "Add the tags you want to use to filter the subscriptions. "
-            "Only subscriptions with every tags matching, will be monitored."
+            "Only subscriptions with all tags matching will be monitored."
         ),
     )
 
@@ -375,7 +375,7 @@ def configuration_advanced() -> Mapping[str, DictElement]:
                                             "This avoids conflicts caused by entities having the same name in Azure, which could lead to monitoring data "
                                             "being overwritten or lost. Enable this if you have subscriptions, resources, or resource groups "
                                             "with the same name across multiple Azure tenants or subscriptions. "
-                                            "<b>Changing this option later after saving it will cause all piggyback hosts to be renamed.</b>"
+                                            "<b>Changing this option later after saving will cause all piggyback hosts to be renamed.</b>"
                                             "<hr>"
                                             "When enabling unique host name computation, you can select "
                                             "between two templates: <b>Short</b> or <b>Long</b>. This controls the "
@@ -490,11 +490,11 @@ rule_spec_azure = SpecialAgent(
     name="azure_v2",
     title=Title("Azure"),
     help_text=Help(
-        "To monitor Azure resources add this datasource to <b>one</b> host. "
+        "To monitor Azure resources add this data source to <b>one</b> host. "
         "The data will be transported using the piggyback mechanism, so make "
         "sure to create one host for every monitored resource group. You can "
-        "learn about the discovered groups in the <i>Azure Agent Info</i> "
-        "service of the host owning the datasource program."
+        "learn about the discovered groups in the <i>Azure agent info</i> "
+        "service of the host owning the data source program."
     ),
     topic=Topic.CLOUD,
     parameter_form=formspec,

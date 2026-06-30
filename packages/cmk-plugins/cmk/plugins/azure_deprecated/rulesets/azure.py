@@ -344,11 +344,11 @@ def configuration_advanced() -> Mapping[str, DictElement]:
                     "VMs monitored as hosts and as service labels for resources monitored "
                     "as services. The label syntax is 'cmk/azure/tag/{key}:{value}'.<br>"
                     "Additionally, each host representing a resource group is given the "
-                    "host label 'cmk/azure/resource_group:{rg_name}', and VMs monitored as "
-                    "hosts are given the host label 'cmk/azure/vm:instance', which is done "
-                    "independent of this option.<br>"
+                    "host label 'cmk/azure/resource_group:{rg_name}'. VMs monitored as "
+                    "hosts are given the host label 'cmk/azure/vm:instance', "
+                    "independently of this option.<br>"
                     "You can further restrict the imported tags by specifying a pattern "
-                    "which Checkmk searches for in the key of the Azure tag, or you can "
+                    "which Checkmk searches for in the key of the Azure tag. You can also "
                     "disable the import of Azure tags altogether."
                 ),
                 elements=[
@@ -387,11 +387,11 @@ rule_spec_azure = SpecialAgent(
     name="azure",
     title=Title("Azure (deprecated)"),
     help_text=Help(
-        "To monitor Azure resources add this datasource to <b>one</b> host. "
+        "To monitor Azure resources add this data source to <b>one</b> host. "
         "The data will be transported using the piggyback mechanism, so make "
         "sure to create one host for every monitored resource group. You can "
-        "learn about the discovered groups in the <i>Azure Agent Info</i> "
-        "service of the host owning the datasource program."
+        "learn about the discovered groups in the <i>Azure agent info</i> "
+        "service of the host owning the data source program."
     ),
     topic=Topic.CLOUD,
     parameter_form=formspec,

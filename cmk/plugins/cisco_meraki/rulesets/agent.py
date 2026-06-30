@@ -174,11 +174,11 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                     title=Title("Use Network-ID as host prefix"),
                     label=Label("The Network-ID will be used as host name prefix"),
                     help_text=Help(
-                        "The Network-ID will be used as prefix for the host name (separated by a -). Use "
+                        "The network ID will be used as prefix for the host name (separated by a -). Use "
                         'this option together with a "Host name translation for piggybacked hosts" to add a '
                         "network prefix to the hosts from the Cisco Meraki cloud to avoid conflicting "
                         'host names. You can also use this option along with the "Dynamic host management" to '
-                        "sort the host in location specific folders."
+                        "sort the hosts in location specific folders."
                     ),
                 )
             ),

@@ -1433,17 +1433,17 @@ class ModeBIEditRule(ABCBIMode):
                         title=_("Parameters"),
                         help=_(
                             "Parameters are used in order to make rules more flexible. They must "
-                            "be named like variables in programming languages. For example you can "
+                            "be named like variables in programming languages. For example, you can "
                             "make your rule have the two parameters <tt>HOST</tt> and <tt>INST</tt>. "
-                            "When calling the rule - from an aggergation or a higher level rule - "
+                            "When calling the rule - from an aggregation or a higher-level rule - "
                             "you can then specify two arbitrary values for these parameters. In the "
-                            "title of the rule as well as the host and service names, you can insert the "
+                            "title of the rule, as well as in the host and service names, you can insert the "
                             "actual value of the parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> "
                             "(enclosed in dollar signs)."
                             "<p>"
-                            "<b>Note</b>: a parameter with a colon (:) inside its value is a valid "
+                            "<b>Note</b>: A parameter with a colon (:) inside its value is a valid "
                             "parameter, e.g. <tt>LABEL_KEY:LABEL_VALUE</tt>. This is quite handy "
-                            "when you want to pass a parameter to a label filter since labels "
+                            "when you want to pass a parameter to a label filter, since labels "
                             "require a colon to be present to be considered valid."
                             "</p>"
                         ),

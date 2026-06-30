@@ -44,9 +44,41 @@ def test_convert_request_body_custom() -> None:
     assert result == 'application/json:{"test": 123}', "Expected to use custom converter function"
 
 
+def test_convert_request_body_json_charset() -> None:
+    body = b'{"test": 123}'
+    content_type = 'application/json; charset="utf-8"'
+
+    result = convert_request_body(body_model=int, content_type=content_type, body=body)
+    assert result == {"test": 123}, "Expected to honor the declared charset"
+
+
 def test_convert_request_body_unknown_content_type() -> None:
     body = b"123"
     content_type = "image/gif"
 
-    with pytest.raises(Exception, match="Unsupported content type: image/gif"):
+    with pytest.raises(ValueError, match="Unsupported content type: image/gif"):
+        convert_request_body(body_model=int, content_type=content_type, body=body)
+
+
+def test_convert_request_body_invalid_json() -> None:
+    body = b"{not valid json"
+    content_type = "application/json"
+
+    with pytest.raises(ValueError):
+        convert_request_body(body_model=int, content_type=content_type, body=body)
+
+
+def test_convert_request_body_unknown_charset() -> None:
+    body = b'{"test": 123}'
+    content_type = "application/json; charset=not-a-charset"
+
+    with pytest.raises(ValueError, match="Cannot decode request body using charset"):
+        convert_request_body(body_model=int, content_type=content_type, body=body)
+
+
+def test_convert_request_body_invalid_charset_bytes() -> None:
+    body = b"\xff\xfe"
+    content_type = "application/json; charset=utf-8"
+
+    with pytest.raises(ValueError, match="Cannot decode request body using charset"):
         convert_request_body(body_model=int, content_type=content_type, body=body)

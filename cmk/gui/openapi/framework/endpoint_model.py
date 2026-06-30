@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError, with_config
 
 from cmk import trace
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
+from cmk.gui.openapi.utils import RestAPIRequestDataValidationException
 from cmk.gui.utils.dataclasses import DataclassInstance
 
 from .._type_adapter import get_cached_type_adapter
@@ -388,7 +389,14 @@ class EndpointModel[**P, T]:
         a pydantic ValidationError exception will be raised.
         """
         if self.request_body_type is not None and content_type and request_data["body"]:
-            body = convert_request_body(self.request_body_type, content_type, request_data["body"])
+            try:
+                body = convert_request_body(
+                    self.request_body_type, content_type, request_data["body"]
+                )
+            except ValueError as exc:
+                raise RestAPIRequestDataValidationException(
+                    title="Failed to decode request body", detail=str(exc)
+                ) from exc
         else:
             # we don't set it to None, so that we get the pydantic validation error
             body = request_data["body"] or None

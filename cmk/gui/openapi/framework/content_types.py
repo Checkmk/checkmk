@@ -7,6 +7,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Annotated, get_args, get_origin
 
+from werkzeug.http import parse_options_header
+
 
 @dataclass(slots=True, frozen=True)
 class ContentTypeConverter:
@@ -41,11 +43,22 @@ def convert_request_body(body_model: type, content_type: str, body: bytes) -> ob
         # a custom converter function is defined
         return converter.function(body, content_type)
 
-    if content_type == "application/json":
-        # default to JSON decoding
+    # Split off any media type parameters (e.g. ``application/json; charset="utf-8"``) so the type
+    # matches, and honor the declared charset when decoding.
+    media_type, options = parse_options_header(content_type)
+    if media_type.lower() == "application/json":
+        if charset := options.get("charset"):
+            try:
+                return json.loads(body.decode(charset))
+            except (LookupError, UnicodeDecodeError) as exc:
+                # LookupError: unknown charset; UnicodeDecodeError: body invalid for that charset.
+                raise ValueError(
+                    f"Cannot decode request body using charset {charset!r}: {exc}"
+                ) from exc
+        # No charset given: let json detect it
         return json.loads(body)
 
-    raise Exception("Unsupported content type: %s" % content_type)
+    raise ValueError("Unsupported content type: %s" % content_type)
 
 
 __all__ = [

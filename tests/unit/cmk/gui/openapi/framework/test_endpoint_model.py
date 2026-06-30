@@ -36,6 +36,7 @@ from cmk.gui.openapi.framework.endpoint_model import (
 )
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.response import TypedResponse
+from cmk.gui.openapi.utils import RestAPIRequestDataValidationException
 
 
 @dataclasses.dataclass
@@ -330,6 +331,25 @@ def test_input_model_extra_body() -> None:
             content_type=None,
             api_context=_api_context(),
         )
+
+
+def test_input_model_undecodable_body() -> None:
+    """A body that cannot be decoded is translated into a standardized 400, not a raw ValueError."""
+    model = EndpointModel.build(_body_endpoint_handler)
+    request_data: RawRequestData = {
+        "body": b"{not valid json",
+        "path": {},
+        "query": {},
+        "headers": Headers(),
+    }
+    with pytest.raises(RestAPIRequestDataValidationException) as exc_info:
+        model._validate_request_parameters(
+            request_data=request_data,
+            content_type="application/json",
+            api_context=_api_context(),
+        )
+
+    assert exc_info.value.status == 400
 
 
 @pytest.mark.parametrize(

@@ -681,6 +681,12 @@ pub fn abort(message: impl Into<String>) -> ! {
     std::process::exit(exit_code(&out))
 }
 
+pub fn abort_with_details(summary: impl Into<String>, details: impl Into<String>) -> ! {
+    let out = Check::from(SimpleCheckResult::crit_with_details(summary, details));
+    println!("{}", out);
+    std::process::exit(exit_code(&out))
+}
+
 #[cfg(test)]
 mod test_metrics_map {
     use super::{Bounds, Levels, LevelsStrategy, Metric, Uom};

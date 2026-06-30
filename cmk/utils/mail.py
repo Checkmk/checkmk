@@ -111,10 +111,10 @@ def send_mail_sendmail(m: Message, target: MailString, from_address: MailString 
         target = MailString(",".join(list(filter(None, target.split(",")))))
     cmd += ["-i", target]
 
-    completed_process = subprocess.run(cmd, encoding="utf-8", check=False, input=m.as_string())
+    completed_process = subprocess.run(cmd, encoding="utf-8", check=False, input=m.as_string(), capture_output=True)
 
     if completed_process.returncode:
-        raise RuntimeError("sendmail returned with exit code: %d" % completed_process.returncode)
+        raise RuntimeError("sendmail returned with exit code: %d; %s; %s" % (completed_process.returncode, completed_process.stderr, completed_process.stdout))
 
 
 # duplicate from omdlib

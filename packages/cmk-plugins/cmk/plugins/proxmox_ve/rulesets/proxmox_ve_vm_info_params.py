@@ -37,7 +37,7 @@ def _parameter_valuespec_proxmox_ve_vm_info():
                     title=Title("Lock duration levels"),
                     help_text=Help(
                         "If the VM is locked longer than the defined levels, "
-                        "a warning/critical state is triggered."
+                        "a WARN/CRIT state is triggered. "
                         "If this is set to 'No Levels', the lock duration is not checked."
                     ),
                     level_direction=LevelDirection.UPPER,

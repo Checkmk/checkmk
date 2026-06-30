@@ -105,7 +105,7 @@ def _connection_method_form() -> CascadingSingleChoice:
                 parameter_form=FixedValue(
                     value=None,
                     help_text=Help(
-                        "Use the <tt>podman</tt> CLI for all queries. "
+                        "Use the <tt>Podman</tt> CLI for all queries. "
                         "This works out of the box without any socket configuration and is "
                         "recommended when the Podman socket service is not available."
                     ),

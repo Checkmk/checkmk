@@ -699,13 +699,21 @@ class MetaDataModel:
     @classmethod
     def from_internal(cls, value: MetaData) -> Self:
         return cls(
-            created_at=dt.datetime.fromtimestamp(value["created_at"])
-            if "created_at" in value
-            else ApiOmitted(),
-            updated_at=dt.datetime.fromtimestamp(value["updated_at"])
-            if "updated_at" in value
-            else ApiOmitted(),
-            created_by=value["created_by"] if "created_by" in value else ApiOmitted(),
+            created_at=(
+                dt.datetime.fromtimestamp(value["created_at"])
+                if value.get("created_at") is not None
+                else ApiOmitted()
+            ),
+            updated_at=(
+                dt.datetime.fromtimestamp(value["updated_at"])
+                if value.get("updated_at") is not None
+                else ApiOmitted()
+            ),
+            created_by=(
+                value["created_by"]
+                if value.get("created_by") is not None
+                else ApiOmitted()
+            ),
         )
 
 

@@ -68,6 +68,7 @@ def _parameter_valuespec_checkpoint_vsx_traffic() -> Dictionary:
 
 rule_spec_checkpoint_vsx_traffic = CheckParameters(
     name="checkpoint_vsx_traffic",
+    # weblate-flags: read-only, vendor-name
     title=Title("Check Point VSID traffic rate"),
     topic=Topic.NETWORKING,
     parameter_form=_parameter_valuespec_checkpoint_vsx_traffic,

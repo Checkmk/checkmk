@@ -92,6 +92,7 @@ def _parameter_valuespec_checkpoint_vsx_packets() -> Dictionary:
 
 rule_spec_checkpoint_vsx_packets = CheckParameters(
     name="checkpoint_vsx_packets",
+    # weblate-flags: read-only, vendor-name
     title=Title("Check Point VSID packet rate"),
     topic=Topic.NETWORKING,
     parameter_form=_parameter_valuespec_checkpoint_vsx_packets,

@@ -53,6 +53,7 @@ def _parameter_valuespec_checkpoint_vsx_connections() -> Dictionary:
 
 rule_spec_checkpoint_vsx_connections = CheckParameters(
     name="checkpoint_vsx_connections",
+    # weblate-flags: read-only, vendor-name
     title=Title("Check Point VSID connections"),
     topic=Topic.NETWORKING,
     parameter_form=_parameter_valuespec_checkpoint_vsx_connections,

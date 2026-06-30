@@ -17,6 +17,7 @@ from livestatus import lqencode, MKLivestatusNotFoundError
 from cmk.ccc.site import SiteId
 from cmk.graphing_engine import (
     ConsolidationFunction,
+    MetricName,
     PerformanceData,
     PerformanceValue,
     RRDMetric,
@@ -24,14 +25,10 @@ from cmk.graphing_engine import (
     TimeRange,
 )
 from cmk.graphing_engine import (
-    MetricName as EngineMetricName,
-)
-from cmk.graphing_engine import (
     TimeSeries as EngineTimeSeries,
 )
 from cmk.gui import sites
 from cmk.gui.log import logger
-from cmk.utils.misc import pnp_cleanup
 
 # Perf-data parsing duplicated from the legacy cmk.gui.graphing._translated_metrics, so this engine
 # RRD source stays independent of the legacy graphing stack (the duplication is intentional). Only the
@@ -41,7 +38,7 @@ _VALUE_AND_UNIT = re.compile(r"([0-9.,-]*)(.*)")
 
 @dataclass(frozen=True)
 class _PerfEntry:
-    metric_name: str
+    metric_name: MetricName
     value: float
     warn: float | None
     crit: float | None
@@ -88,7 +85,7 @@ def _parse_perf_values(
     data_str: str,
 ) -> tuple[str, str, tuple[str | None, str | None, str | None, str | None]]:
     varname, values = data_str.split("=", 1)
-    varname = pnp_cleanup(varname.replace('"', "").replace("'", ""))
+    varname = varname.replace('"', "").replace("'", "")
     value_parts = values.split(";")
     value = value_parts.pop(0)
     num_fields = len(value_parts)
@@ -136,7 +133,7 @@ def _parse_perf_data(
             crit_lower, crit = _parse_range(value_parts[1])
             perf_data.append(
                 _PerfEntry(
-                    metric_name=varname,
+                    metric_name=MetricName(varname),
                     value=value,
                     warn=warn,
                     crit=crit,
@@ -183,7 +180,7 @@ class EngineRRDSource:
             check_command=normalized_check_command,
             values=[
                 PerformanceValue(
-                    metric_name=EngineMetricName(entry.metric_name),
+                    metric_name=entry.metric_name,
                     value=entry.value,
                     warning=entry.warn,
                     critical=entry.crit,

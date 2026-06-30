@@ -21,7 +21,7 @@ def get_fileinfo_negative_age_tolerance_element() -> DictElement[float]:
             migrate=float,  # type: ignore[arg-type] # wrong type, right behaviour
             title=Title("Negative age tolerance"),
             help_text=Help(
-                "The file age of files with creation time from the future will be set to 0 if "
+                "The file age of files with a creation time in the future will be set to 0 if "
                 "the creation time is within the tolerance period."
             ),
         ),

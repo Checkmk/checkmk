@@ -24,7 +24,7 @@ def _parameter_form() -> Dictionary:
     return Dictionary(
         title=Title("UCS Bladecenter"),
         help_text=Help(
-            "This rule selects the UCS Bladecenter agent instead of the normal Checkmk Agent "
+            "This rule selects the UCS Bladecenter agent instead of the normal Checkmk agent "
             "which collects the data through the UCS Bladecenter Web API"
         ),
         elements={

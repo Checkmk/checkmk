@@ -289,7 +289,7 @@ def _parameter_form_mode() -> CascadingSingleChoice:
                                 elements=[
                                     SingleChoiceElement(
                                         "auto",
-                                        Title("Use SSL with auto negotiation"),
+                                        Title("Use SSL with auto-negotiation"),
                                     ),
                                     SingleChoiceElement(
                                         "ssl_1_2", Title("Use SSL, enforce TLSv1.2")
@@ -460,7 +460,7 @@ def _parameter_form_mode() -> CascadingSingleChoice:
                                     ),
                                     "content_type": DictElement(
                                         parameter_form=String(
-                                            title=Title("Content-Type"),
+                                            title=Title("Content type"),
                                             prefill=DefaultValue("text/html"),
                                         ),
                                         required=True,
@@ -562,9 +562,9 @@ def _parameter_form_mode() -> CascadingSingleChoice:
             ),
             CascadingSingleChoiceElement(
                 name="cert",
-                title=Title("Check SSL Certificate Age"),
+                title=Title("Check SSL certificate age"),
                 parameter_form=Dictionary(
-                    title=Title("Certificate Checking"),
+                    title=Title("Certificate checking"),
                     help_text=Help("Port defaults to 443. In this mode the URL is not checked."),
                     elements={
                         "cert_days": DictElement(
@@ -625,7 +625,7 @@ def _parameter_form_active_checks_http() -> Dictionary:
             "disable_sni": DictElement(
                 parameter_form=FixedValue(
                     value=True,
-                    title=Title("Advanced: Disable SSL/TLS host name extension support (SNI)"),
+                    title=Title("Advanced: disable SSL/TLS host name extension support (SNI)"),
                     help_text=Help(
                         "In earlier versions of Checkmk users had to enable SNI explicitly."
                         " We now assume users allways want SNI support. If you don't, you"

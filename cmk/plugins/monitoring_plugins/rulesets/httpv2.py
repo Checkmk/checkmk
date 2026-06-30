@@ -249,7 +249,7 @@ def _send_data() -> Dictionary:
                         ),
                         "content_type": DictElement(
                             parameter_form=CascadingSingleChoice(
-                                title=Title("Content-Type"),
+                                title=Title("Content type"),
                                 prefill=DefaultValue("common"),
                                 elements=[
                                     CascadingSingleChoiceElement(
@@ -547,7 +547,7 @@ def _valuespec_connection() -> Dictionary:
                             title=Title("User based authentication"),
                             parameter_form=Dictionary(
                                 title=Title("User based authentication"),
-                                help_text=Help("Credentials for HTTP Basic Authentication"),
+                                help_text=Help("Credentials for HTTP basic authentication"),
                                 elements={
                                     "user": DictElement(
                                         parameter_form=String(

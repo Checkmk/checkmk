@@ -115,7 +115,7 @@ def _valuespec_agent_config_mk_sap_hana() -> Alternative:
                     (
                         "credentials_sap_connect",
                         Tuple(
-                            title=_("Credentials for Connect (ODBC interface)"),
+                            title=_("Credentials for connect (ODBC interface)"),
                             elements=[
                                 TextInput(title=_("User"), allow_empty=False),
                                 MigrateToIndividualOrStoredPassword(

@@ -83,7 +83,7 @@ def _tls_form() -> Dictionary:
             ),
             "cert_key_file": DictElement(
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Certificate Key File"),
+                    title=Title("Certificate key file"),
                     help_text=Help(
                         "This is required only if the authentication method is MONGODB-X509"
                     ),
@@ -92,7 +92,7 @@ def _tls_form() -> Dictionary:
                             name="uploaded_cert_file",
                             title=Title("Upload Certificate key file"),
                             parameter_form=String(
-                                title=Title("PEM File content"),
+                                title=Title("PEM file content"),
                             ),
                         ),
                         CascadingSingleChoiceElement(
@@ -100,7 +100,7 @@ def _tls_form() -> Dictionary:
                             title=Title("Path to Certificate key file"),
                             parameter_form=String(
                                 title=Title("Path to Cert Key file"),
-                                help_text=Help("Has to contain the path to the Cert Key File."),
+                                help_text=Help("Has to contain the path to the cert key file."),
                             ),
                         ),
                     ),
@@ -120,7 +120,7 @@ def _auth_form() -> Dictionary:
                 parameter_form=SingleChoice(
                     title=Title("Authentication mechanism"),
                     elements=(
-                        SingleChoiceElement(name="DEFAULT", title=Title("Auto (DEFAULT)")),
+                        SingleChoiceElement(name="DEFAULT", title=Title("Auto (default)")),
                         SingleChoiceElement(
                             name="MONGODB_X509",
                             title=Title("MongoDB >= 5.0 (MONGODB-X509)"),

@@ -46,7 +46,7 @@ def _valuespec_agent_config_mk_redis() -> CascadingDropdown:
             "You can configure multiple instances or auto detect running instances."
         ),
         choices=[
-            ("autodetect", _("Autodetect instances")),
+            ("autodetect", _("Auto-detect instances")),
             (
                 "static",
                 _("Specific list of instances"),

@@ -53,7 +53,7 @@ metric_mongodb_jumbo_chunk_count = metrics.Metric(
 )
 metric_mongodb_collection_size = metrics.Metric(
     name="mongodb_collection_size",
-    title=Title("Collection Size"),
+    title=Title("Collection size"),
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_PURPLE,
 )

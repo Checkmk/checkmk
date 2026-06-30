@@ -74,7 +74,7 @@ def _valuespec_agent_config_mk_db2() -> Dictionary:
 
 
 rule_spec_mk_db2 = AgentConfig(
-    title=Title("DB2 Databases (Linux, AIX)"),
+    title=Title("DB2 databases (Linux, AIX)"),
     name="mk_db2",
     topic=Topic.DATABASES,
     parameter_form=_valuespec_agent_config_mk_db2,

@@ -147,7 +147,7 @@ def _value_configuration_fields() -> dict[str, DictElement]:
                         name="db",
                         title=Title("Data block (DB)"),
                         parameter_form=Integer(
-                            title=Title("DB Number"),
+                            title=Title("DB number"),
                             custom_validate=(validators.NumberInRange(min_value=1),),
                             prefill=DefaultValue(1),
                         ),

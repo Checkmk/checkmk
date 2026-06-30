@@ -34,7 +34,7 @@ metric_ucwa_active_sessions_mac = metrics.Metric(
 
 graph_active_sessions = graphs.Graph(
     name="active_sessions",
-    title=Title("Active Sessions"),
+    title=Title("Active sessions"),
     compound_lines=[
         "ucwa_active_sessions_mac",
         "ucwa_active_sessions_ipad",

@@ -457,6 +457,7 @@ def test_duplicate_metric_titles_fixed() -> None:
 
 _ALLOWED_DUPLICATE_GRAPH_TITLES = {
     "Access point statistics": {"access_point_statistics2", "access_point_statistics"},
+    "Active sessions": {"active_sessions", "active_sessions_with_peak_value"},
     "Bandwidth": {"bandwidth_translated", "bandwidth"},
     "Capacity usage": {"capacity_usage_2", "capacity_usage"},
     "Disk latency": {"disk_latency", "disk_rw_latency"},

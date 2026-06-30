@@ -37,7 +37,7 @@ def update_host_custom_attrs(
 
     tree = folder_tree()
     tree.invalidate_caches()
-    tree.root_folder().recursively_save_hosts(pprint_value=pprint_value, acting_user=user)
+    tree.root_folder().recursively_save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
 
 
 def load_custom_attrs_from_mk_file(lock: bool) -> CustomAttrSpecs:

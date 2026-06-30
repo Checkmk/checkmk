@@ -46,10 +46,10 @@ def verify_permissions(host: Host) -> None:
     )
 
     try:
-        host.permissions.need_permission("read", user)
+        host.permissions.need_permission("read")
     except MKAuthException:
         raise unathorized_excpt
     try:
-        host.permissions.need_permission("write", user)
+        host.permissions.need_permission("write")
     except MKAuthException:
         raise unathorized_excpt

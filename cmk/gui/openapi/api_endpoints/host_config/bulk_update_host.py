@@ -114,7 +114,7 @@ def bulk_update_hosts_v1(
         if pending_changes:
             folder.save_hosts(
                 pprint_value=api_context.config.wato_pprint_config,
-                acting_user=acting_user,
+                acting_user_id=api_context.user_id,
             )
             for host, diff, affected_sites in pending_changes:
                 host.add_edit_host_change(

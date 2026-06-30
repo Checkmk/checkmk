@@ -70,7 +70,7 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
         # site_id explicitly set. Just to be sure everything is fine we also rewrite the folder
         # config
         logger.debug("Folder %s: Saving config", folder.alias_path())
-        folder.save(pprint_value=active_config.wato_pprint_config, acting_user=user)
+        folder.save(pprint_value=active_config.wato_pprint_config, acting_user_id=user.id)
 
 
 def _update_locked_by(

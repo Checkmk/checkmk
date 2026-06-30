@@ -40,7 +40,7 @@ def create_rule_v1(api_context: ApiContext, body: CreateRuleModel) -> ApiRespons
     user.need_permission("wato.rulesets")
 
     folder = body.folder
-    folder.permissions.need_permission("write", user)
+    folder.permissions.need_permission("write")
 
     rulesets = FolderRulesets.load_folder_rulesets(folder)
     ruleset = retrieve_from_rulesets(rulesets, body.ruleset)

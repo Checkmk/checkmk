@@ -118,7 +118,7 @@ def save_rule_form_spec_from_slidein_schema(
 
     rule_conditions = get_rule_conditions_from_catalog_value(disk_data)
     folder = tree.folder(rule_conditions.host_folder)
-    folder.permissions.need_permission("write", user)
+    folder.permissions.need_permission("write")
 
     rulesets = FolderRulesets.load_folder_rulesets(folder)
     ruleset = rulesets.get(name)

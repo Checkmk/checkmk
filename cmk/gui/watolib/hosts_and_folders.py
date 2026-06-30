@@ -234,29 +234,25 @@ class FolderMetaData:
 
 
 class PermissionChecker:
-    def __init__(
-        self, check_permission: Callable[[Literal["read", "write"], LoggedInUser], None]
-    ) -> None:
+    def __init__(self, check_permission: Callable[[Literal["read", "write"]], None]) -> None:
         self._check_permission = check_permission
 
-    def may(self, how: Literal["read", "write"], acting_user: LoggedInUser) -> bool:
+    def may(self, how: Literal["read", "write"]) -> bool:
         try:
-            self._check_permission(how, acting_user)
+            self._check_permission(how)
             return True
         except MKAuthException:
             return False
 
-    def reason_why_may_not(
-        self, how: Literal["read", "write"], acting_user: LoggedInUser
-    ) -> str | None:
+    def reason_why_may_not(self, how: Literal["read", "write"]) -> str | None:
         try:
-            self._check_permission(how, acting_user)
+            self._check_permission(how)
             return None
         except MKAuthException as e:
             return str(e)
 
-    def need_permission(self, how: Literal["read", "write"], acting_user: LoggedInUser) -> None:
-        self._check_permission(how, acting_user)
+    def need_permission(self, how: Literal["read", "write"]) -> None:
+        self._check_permission(how)
 
 
 class _ContactGroupsInfo(NamedTuple):
@@ -1453,9 +1449,9 @@ class Folder(FolderProtocol):
             clusters=variables["clusters"],
         )
 
-    def save_hosts(self, *, pprint_value: bool, acting_user: LoggedInUser) -> None:
+    def save_hosts(self, *, pprint_value: bool, acting_user_id: UserId | None) -> None:
         self.need_unlocked_hosts()
-        self.permissions.need_permission("write", acting_user)
+        self.permissions.need_permission("write")
         if self._hosts is not None:
             # Clean up caches of all hosts in this folder, just to be sure. We could also
             # check out all call sites of save_hosts() and partially drop the caches of
@@ -1466,7 +1462,7 @@ class Folder(FolderProtocol):
             self._save_hosts_file(
                 storage_list=self.get_storage_formatters(),
                 pprint_value=pprint_value,
-                acting_user_id=acting_user.id,
+                acting_user_id=acting_user_id,
             )
             if may_use_redis():
                 # Inform redis that the modified-timestamp of the folder has been updated.
@@ -1626,10 +1622,10 @@ class Folder(FolderProtocol):
             }
         return {}
 
-    def save(self, *, pprint_value: bool, acting_user: LoggedInUser) -> None:
+    def save(self, *, pprint_value: bool, acting_user_id: UserId | None) -> None:
         self.save_folder_attributes()
         self.tree.invalidate_caches()
-        self.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=acting_user_id)
 
     def serialize(self) -> WATOFolderInfo:
         return {
@@ -1875,7 +1871,7 @@ class Folder(FolderProtocol):
         subfolders = list(self._subfolders.values())
 
         if only_visible:
-            return [folder for folder in subfolders if folder.folder_should_be_shown("read", user)]
+            return [folder for folder in subfolders if folder.folder_should_be_shown("read")]
 
         return subfolders
 
@@ -1939,7 +1935,7 @@ class Folder(FolderProtocol):
 
         if (
             visible_subfolders
-            or self.permissions.may("read", user)
+            or self.permissions.may("read")
             or self.is_root()
             or not self.tree.config.wato_hide_folders_without_read_permissions
         ):
@@ -1964,17 +1960,15 @@ class Folder(FolderProtocol):
         self._choices_for_moving_host = self._choices_for_moving("host", acting_user)
         return self._choices_for_moving_host
 
-    def folder_should_be_shown(
-        self, how: Literal["read", "write"], acting_user: LoggedInUser
-    ) -> bool:
+    def folder_should_be_shown(self, how: Literal["read", "write"]) -> bool:
         if not self.tree.config.wato_hide_folders_without_read_permissions:
             return True
 
-        has_permission = self.permissions.may(how, acting_user)
+        has_permission = self.permissions.may(how)
         for subfolder in self.subfolders():
             if has_permission:
                 break
-            has_permission = subfolder.folder_should_be_shown(how, acting_user)
+            has_permission = subfolder.folder_should_be_shown(how)
 
         return has_permission
 
@@ -1996,7 +1990,7 @@ class Folder(FolderProtocol):
             )
 
         for folder in self.tree.all_folders().values():
-            if not folder.permissions.may("write", acting_user):
+            if not folder.permissions.may("write"):
                 continue
             if folder.is_same_as(self):
                 continue  # do not move into itself
@@ -2144,16 +2138,14 @@ class Folder(FolderProtocol):
                 return host
         return None
 
-    def _user_needs_permission(
-        self, how: Literal["read", "write"], acting_user: LoggedInUser
-    ) -> None:
-        if how == "write" and acting_user.may("wato.all_folders"):
+    def _user_needs_permission(self, how: Literal["read", "write"]) -> None:
+        if how == "write" and user.may("wato.all_folders"):
             return
 
-        if how == "read" and acting_user.may("wato.see_all_folders"):
+        if how == "read" and user.may("wato.see_all_folders"):
             return
 
-        if self.is_contact(acting_user):
+        if self.is_contact(user):
             return
 
         permitted_groups, _folder_contactgroups, _use_for_services = self.groups()
@@ -2165,7 +2157,7 @@ class Folder(FolderProtocol):
             reason += " " + _("The folder's permitted contact groups are <b>%s</b>.") % ", ".join(
                 permitted_groups
             )
-            if user_contactgroups := acting_user.contact_groups:
+            if user_contactgroups := user.contact_groups:
                 reason += " " + _("Your contact groups are <b>%s</b>.") % ", ".join(
                     user_contactgroups
                 )
@@ -2180,17 +2172,15 @@ class Folder(FolderProtocol):
         permitted_groups, _host_contact_groups, _use_for_services = self.groups()
         return any(group in permitted_groups for group in user_.contact_groups)
 
-    def need_recursive_permission(
-        self, how: Literal["read", "write"], acting_user: LoggedInUser
-    ) -> None:
-        self.permissions.need_permission(how, acting_user)
+    def need_recursive_permission(self, how: Literal["read", "write"]) -> None:
+        self.permissions.need_permission(how)
         if how == "write":
             self.need_unlocked()
             self.need_unlocked_subfolders()
             self.need_unlocked_hosts()
 
         for subfolder in self.subfolders():
-            subfolder.need_recursive_permission(how, acting_user)
+            subfolder.need_recursive_permission(how)
 
     def need_unlocked(self) -> None:
         if self.locked():
@@ -2361,7 +2351,7 @@ class Folder(FolderProtocol):
         """Create a subfolder of the current folder"""
         # 1. Check preconditions
         acting_user.need_permission("wato.manage_folders")
-        self.permissions.need_permission("write", acting_user)
+        self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
         self.validators.validate_create_subfolder(self, attributes)
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"], acting_user)
@@ -2377,7 +2367,7 @@ class Folder(FolderProtocol):
             attributes=attributes,
         )
         self._subfolders[name] = new_subfolder
-        new_subfolder.save(pprint_value=pprint_value, acting_user=acting_user)
+        new_subfolder.save(pprint_value=pprint_value, acting_user_id=acting_user.id)
         pending_changes.add(
             Change(
                 action_name="new-folder",
@@ -2397,7 +2387,7 @@ class Folder(FolderProtocol):
     ) -> None:
         # 1. Check preconditions
         acting_user.need_permission("wato.manage_folders")
-        self.permissions.need_permission("write", acting_user)
+        self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
 
         subfolder = self.subfolder(name)
@@ -2435,11 +2425,11 @@ class Folder(FolderProtocol):
     ) -> None:
         # 1. Check preconditions
         acting_user.need_permission("wato.manage_folders")
-        self.permissions.need_permission("write", acting_user)
+        self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
-        target_folder.permissions.need_permission("write", acting_user)
+        target_folder.permissions.need_permission("write")
         target_folder.need_unlocked_subfolders()
-        subfolder.need_recursive_permission("write", acting_user)  # Inheritance is changed
+        subfolder.need_recursive_permission("write")  # Inheritance is changed
         self.validators.validate_move_subfolder_to(subfolder, target_folder)
         if os.path.exists(target_folder.filesystem_path() + "/" + subfolder.name()):
             raise MKUserError(
@@ -2490,7 +2480,7 @@ class Folder(FolderProtocol):
             # Do not update redis while rewriting a plethora of host files
             # Redis automatically updates on the next request
             moved_subfolder.recursively_save_hosts(
-                pprint_value=pprint_value, acting_user=acting_user
+                pprint_value=pprint_value, acting_user_id=acting_user.id
             )  # fixes changed inheritance
 
         affected_sites = list(set(affected_sites + moved_subfolder.all_site_ids()))
@@ -2518,7 +2508,7 @@ class Folder(FolderProtocol):
     ) -> None:
         # 1. Check preconditions
         acting_user.need_permission("wato.edit_folders")
-        self.permissions.need_permission("write", acting_user)
+        self.permissions.need_permission("write")
         self.need_unlocked()
         self.validators.validate_edit_folder(self, new_attributes)
 
@@ -2533,7 +2523,7 @@ class Folder(FolderProtocol):
             if self.has_parent():
                 parent = self.parent()
                 assert parent is not None
-                if not parent.permissions.may("write", acting_user):
+                if not parent.permissions.may("write"):
                     raise MKAuthException(
                         _(
                             "Sorry. In order to change the permissions of a folder you need write "
@@ -2560,7 +2550,7 @@ class Folder(FolderProtocol):
         # in Nagios-relevant attributes.
         self.save_folder_attributes()
         self.tree.invalidate_caches()
-        self.recursively_save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+        self.recursively_save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
 
         affected_sites = list(set(affected_sites + self.all_site_ids()))
         pending_changes.add(
@@ -2577,7 +2567,7 @@ class Folder(FolderProtocol):
     def prepare_create_hosts(self, *, acting_user: LoggedInUser) -> None:
         acting_user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
-        self.permissions.need_permission("write", acting_user)
+        self.permissions.need_permission("write")
 
     def create_hosts(
         self,
@@ -2636,7 +2626,7 @@ class Folder(FolderProtocol):
                 host_name, attributes, cluster_nodes, pending_changes=pending_changes
             )
 
-        self.save(pprint_value=pprint_value, acting_user=acting_user)  # num_hosts has changed
+        self.save(pprint_value=pprint_value, acting_user_id=acting_user.id)  # num_hosts has changed
 
         folder_path = self.path()
         self.tree.folder_lookup_cache.add_hosts([(x[0], folder_path) for x in entries])
@@ -2683,7 +2673,7 @@ class Folder(FolderProtocol):
         # Check preconditions
         acting_user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
-        self.permissions.need_permission("write", acting_user)
+        self.permissions.need_permission("write")
 
         # Check if hosts can be deleted
         self._validate_delete_hosts(host_names, allow_locked_deletion)
@@ -2732,7 +2722,7 @@ class Folder(FolderProtocol):
             )
 
         self.save_folder_attributes()  # num_hosts has changed
-        self.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
         self.tree.folder_lookup_cache.delete_hosts(host_names)
 
     def _validate_delete_hosts(
@@ -2828,9 +2818,9 @@ class Folder(FolderProtocol):
         acting_user.need_permission("wato.manage_hosts")
         acting_user.need_permission("wato.edit_hosts")
         acting_user.need_permission("wato.move_hosts")
-        self.permissions.need_permission("write", acting_user)
+        self.permissions.need_permission("write")
         self.need_unlocked_hosts()
-        target_folder.permissions.need_permission("write", acting_user)
+        target_folder.permissions.need_permission("write")
         target_folder.need_unlocked_hosts()
         self.validators.validate_move_hosts(self, host_names, target_folder)
 
@@ -2863,10 +2853,10 @@ class Folder(FolderProtocol):
             )
 
         self.save_folder_attributes()  # num_hosts has changed
-        self.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
 
         target_folder.save_folder_attributes()
-        target_folder.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+        target_folder.save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
 
         folder_path = target_folder.path()
         self.tree.folder_lookup_cache.add_hosts([(x, folder_path) for x in host_names])
@@ -2885,7 +2875,7 @@ class Folder(FolderProtocol):
         acting_user.need_permission("wato.edit_hosts")
         self.need_unlocked_hosts()
         host = self.hosts()[oldname]
-        host.permissions.need_permission("write", acting_user)
+        host.permissions.need_permission("write")
 
         if is_locked_by_quick_setup(host.locked_by()):
             raise MKUserError(
@@ -2902,7 +2892,7 @@ class Folder(FolderProtocol):
         self.tree.folder_lookup_cache.delete_hosts([oldname])
         self.tree.folder_lookup_cache.add_hosts([(newname, self.path())])
 
-        self.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
 
     def rename_parent(
         self,
@@ -2930,14 +2920,16 @@ class Folder(FolderProtocol):
             ),
             ChangeScope.sites(self.all_site_ids()),
         )
-        self.save(pprint_value=pprint_value, acting_user=user)
+        self.save(pprint_value=pprint_value, acting_user_id=user.id)
         return True
 
-    def recursively_save_hosts(self, pprint_value: bool, *, acting_user: LoggedInUser) -> None:
+    def recursively_save_hosts(self, pprint_value: bool, *, acting_user_id: UserId | None) -> None:
         self._load_hosts_on_demand()
-        self.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+        self.save_hosts(pprint_value=pprint_value, acting_user_id=acting_user_id)
         for subfolder in self.subfolders():
-            subfolder.recursively_save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+            subfolder.recursively_save_hosts(
+                pprint_value=pprint_value, acting_user_id=acting_user_id
+            )
 
     def _add_host(self, host: Host) -> None:
         self._load_hosts_on_demand()
@@ -3193,7 +3185,7 @@ class SearchFolder(FolderProtocol):
         super().__init__()
         self.attributes: dict[str, Any] = {"meta_data": {}}
         self.effective_attributes = EffectiveAttributes(lambda: {})  # noqa: PIE807
-        self.permissions = PermissionChecker(lambda _how, _acting_user: None)
+        self.permissions = PermissionChecker(lambda _unused: None)
         self.tree = tree
         self._criteria = criteria
         self._base_folder = base_folder
@@ -3355,7 +3347,7 @@ class SearchFolder(FolderProtocol):
         return hosts
 
     def _search_hosts(self, in_folder: Folder) -> dict[HostName, Host]:
-        if not in_folder.permissions.may("read", user):
+        if not in_folder.permissions.may("read"):
             return {}
 
         found = {}
@@ -3581,19 +3573,17 @@ class Host:
     def groups(self) -> tuple[set[_ContactgroupName], set[_ContactgroupName], bool]:
         return self.folder().groups(self)
 
-    def _user_needs_permission(
-        self, how: Literal["read", "write"], acting_user: LoggedInUser
-    ) -> None:
-        if how == "write" and acting_user.may("wato.all_folders"):
+    def _user_needs_permission(self, how: Literal["read", "write"]) -> None:
+        if how == "write" and user.may("wato.all_folders"):
             return
 
-        if how == "read" and acting_user.may("wato.see_all_folders"):
+        if how == "read" and user.may("wato.see_all_folders"):
             return
 
         if how == "write":
-            acting_user.need_permission("wato.edit_hosts")
+            user.need_permission("wato.edit_hosts")
 
-        if self.is_contact(acting_user):
+        if self.is_contact(user):
             return
 
         if len(self.groups()[0]) > 0:
@@ -3676,8 +3666,8 @@ class Host:
         """Apply the changes to the host. This method does not save the changes to file!"""
         # 1. Check preconditions
         if attributes.get("contactgroups") != self.attributes.get("contactgroups"):
-            self._need_folder_write_permissions(acting_user)
-        self.permissions.need_permission("write", acting_user)
+            self._need_folder_write_permissions()
+        self.permissions.need_permission("write")
         self.need_unlocked()
 
         folder = self.folder()
@@ -3723,7 +3713,7 @@ class Host:
         acting_user: LoggedInUser,
     ) -> None:
         diff, affected_sites = self.apply_edit(attributes, cluster_nodes, acting_user=acting_user)
-        self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
         self.add_edit_host_change(diff, affected_sites, pending_changes=pending_changes)
 
     def update_attributes(
@@ -3754,7 +3744,7 @@ class Host:
     ) -> None:
         # 1. Check preconditions
         if "contactgroups" in attrnames_to_clean:
-            self._need_folder_write_permissions(acting_user)
+            self._need_folder_write_permissions()
         self.need_unlocked()
 
         old_attrs = self.attributes.copy()
@@ -3767,7 +3757,7 @@ class Host:
                 # Mypy can not help here with the dynamic key access
                 del self.attributes[attrname]  # type: ignore[misc]
         affected_sites = list(set(affected_sites + [self.site_id()]))
-        self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=acting_user.id)
 
         pending_changes.add(
             Change(
@@ -3783,8 +3773,8 @@ class Host:
             ChangeScope.sites(affected_sites),
         )
 
-    def _need_folder_write_permissions(self, acting_user: LoggedInUser) -> None:
-        if not self.folder().permissions.may("write", acting_user):
+    def _need_folder_write_permissions(self) -> None:
+        if not self.folder().permissions.may("write"):
             raise MKAuthException(
                 _(
                     "Sorry. In order to change the permissions of a host you need write "
@@ -3809,10 +3799,10 @@ class Host:
         if how:
             if not self.attributes.get("inventory_failed"):
                 self.attributes["inventory_failed"] = True
-                self.folder().save_hosts(pprint_value=pprint_value, acting_user=user)
+                self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
         elif self.attributes.get("inventory_failed"):
             del self.attributes["inventory_failed"]
-            self.folder().save_hosts(pprint_value=pprint_value, acting_user=user)
+            self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
 
     def rename_cluster_node(
         self,
@@ -3843,7 +3833,7 @@ class Host:
             ),
             ChangeScope.sites([self.site_id()]),
         )
-        self.folder().save_hosts(pprint_value=pprint_value, acting_user=user)
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
         return True
 
     def rename_parent(
@@ -3870,7 +3860,7 @@ class Host:
             ),
             ChangeScope.sites([self.site_id()]),
         )
-        self.folder().save_hosts(pprint_value=pprint_value, acting_user=user)
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user_id=user.id)
         return True
 
     def rename(self, new_name: HostName, *, pending_changes: PendingChanges) -> None:

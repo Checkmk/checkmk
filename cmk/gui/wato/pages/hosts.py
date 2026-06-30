@@ -570,7 +570,7 @@ class ModeEditHost(ABCHostMode):
 
     def ensure_permissions(self) -> None:
         super().ensure_permissions()
-        self._host.permissions.need_permission("read", user)
+        self._host.permissions.need_permission("read")
 
     @overload
     @classmethod

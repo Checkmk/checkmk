@@ -524,7 +524,7 @@ def fixture_patch_may(mocker: MagicMock) -> None:
 
     mocker.patch.object(hosts_and_folders.Folder, "_prefixed_title", prefixed_title)
 
-    def may(self_, _permission, _acting_user):
+    def may(self_, _permission):
         return getattr(self_, "_may_see", True)
 
     mocker.patch.object(hosts_and_folders.PermissionChecker, "may", may)

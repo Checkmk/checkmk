@@ -108,7 +108,7 @@ class ModeDiagHost(WatoMode):
         self._host = folder_from_request(
             self._tree, request.var("folder"), self._hostname
         ).load_host(self._hostname)
-        self._host.permissions.need_permission("read", user)
+        self._host.permissions.need_permission("read")
 
         if self._host.is_cluster():
             raise MKGeneralException(_("This page does not support cluster hosts."))
@@ -539,7 +539,7 @@ class PageAjaxDiagHost(AjaxPage):
         if host.is_cluster():
             raise MKGeneralException(_("This view does not support cluster hosts."))
 
-        host.permissions.need_permission("read", user)
+        host.permissions.need_permission("read")
 
         _test = api_request.get("_test")
         if not _test:

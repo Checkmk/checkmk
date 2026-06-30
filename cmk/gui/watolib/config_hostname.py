@@ -9,7 +9,6 @@ import re
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import Config
-from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.valuespec import AjaxDropdownChoice
@@ -35,9 +34,7 @@ def config_hostname_autocompleter(config: Config, value: str, params: dict) -> C
     match_pattern = re.compile(value, re.IGNORECASE)
     match_list: Choices = []
     for host_name, host_object in all_hosts.items():
-        if match_pattern.search(host_name) is not None and host_object.permissions.may(
-            "read", user
-        ):
+        if match_pattern.search(host_name) is not None and host_object.permissions.may("read"):
             match_list.append((host_name, host_name))
 
     if not any(x[0] == value for x in match_list):

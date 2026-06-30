@@ -22,7 +22,7 @@ def folder_page_menu_entries(folder: Folder | SearchFolder) -> Iterator[PageMenu
     if (
         not folder.locked_hosts()
         and user.may("wato.parentscan")
-        and folder.permissions.may("write", user)
+        and folder.permissions.may("write")
     ):
         folder_or_subfolder_has_hosts = (
             isinstance(folder, Folder) and folder.num_hosts_recursively(user) > 0

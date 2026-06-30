@@ -11,7 +11,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
     QSHostPath,
@@ -200,7 +199,7 @@ def validate_host_path_permissions(
 
     sanitized_folder_path = normalize_folder_path_str(host_path)
     if folder := existing_folder_from_path(sanitized_folder_path):
-        has_permissions = folder.permissions.may("write", user)
+        has_permissions = folder.permissions.may("write")
     else:
         # If the folder does not exist, we need to check if the user has permissions to create it
         # in the potential parent folder
@@ -211,7 +210,7 @@ def validate_host_path_permissions(
             if potential_sub_folder is None:
                 break
             folder = potential_sub_folder
-        has_permissions = folder.permissions.may("write", user)
+        has_permissions = folder.permissions.may("write")
 
     if not has_permissions:
         return [

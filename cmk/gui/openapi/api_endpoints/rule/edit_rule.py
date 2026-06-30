@@ -53,7 +53,7 @@ def edit_rule_v1(
     rule_entry = get_rule_by_id(rule_id)
 
     folder = rule_entry.folder
-    folder.permissions.need_permission("write", user)
+    folder.permissions.need_permission("write")
 
     ruleset = rule_entry.ruleset
     rulesets = rule_entry.all_rulesets

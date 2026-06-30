@@ -414,7 +414,7 @@ class ModeFolder(WatoMode):
         if (
             not self._folder.locked_hosts()
             and user.may("wato.manage_hosts")
-            and self._folder.permissions.may("write", user)
+            and self._folder.permissions.may("write")
         ):
             yield PageMenuEntry(
                 title=_("Add host"),
@@ -573,7 +573,7 @@ class ModeFolder(WatoMode):
         if isinstance(self._folder, SearchFolder):
             return
 
-        if self._folder.permissions.may("read", user):
+        if self._folder.permissions.may("read"):
             yield PageMenuEntry(
                 title=_("Properties"),
                 icon_name=StaticIcon(IconNames.edit),
@@ -581,7 +581,7 @@ class ModeFolder(WatoMode):
             )
 
         if not self._folder.locked_subfolders() and not self._folder.locked():
-            if self._folder.permissions.may("write", user) and user.may("wato.manage_folders"):
+            if self._folder.permissions.may("write") and user.may("wato.manage_folders"):
                 yield PageMenuEntry(
                     title=_("Add folder"),
                     icon_name=StaticIcon(IconNames.newfolder),
@@ -838,8 +838,8 @@ class ModeFolder(WatoMode):
 
     @override
     def page(self, config: Config) -> None:
-        if not self._folder.permissions.may("read", user):
-            reason = self._folder.permissions.reason_why_may_not("read", user)
+        if not self._folder.permissions.may("read"):
+            reason = self._folder.permissions.reason_why_may_not("read")
             if reason:
                 html.show_message(
                     html.render_static_icon(StaticIcon(IconNames.autherr), css_classes=["authicon"])
@@ -848,13 +848,13 @@ class ModeFolder(WatoMode):
 
         self._folder.show_locking_information()
         self._show_subfolders_of(show_file_names=not config.wato_hide_filenames)
-        if self._folder.permissions.may("read", user):
+        if self._folder.permissions.may("read"):
             self._show_hosts(config)
 
         if not self._folder.has_hosts():
             if self._folder.is_search_folder():
                 html.show_message(_("No matching hosts found."))
-            elif not self._folder.has_subfolders() and self._folder.permissions.may("write", user):
+            elif not self._folder.has_subfolders() and self._folder.permissions.may("write"):
                 self._show_empty_folder_menu()
 
     def _show_empty_folder_menu(self) -> None:
@@ -953,10 +953,7 @@ class ModeFolder(WatoMode):
 
     def _show_subfolder(self, subfolder: Folder, *, show_file_names: bool) -> None:
         html.open_div(
-            class_=[
-                "floatfolder",
-                "unlocked" if subfolder.permissions.may("read", user) else "locked",
-            ],
+            class_=["floatfolder", "unlocked" if subfolder.permissions.may("read") else "locked"],
             id_="folder_%s" % subfolder.name(),
             onclick="cmk.wato.open_folder(event, '%s');" % subfolder.url(),
         )
@@ -967,7 +964,7 @@ class ModeFolder(WatoMode):
 
     def _show_subfolder_hoverarea(self, subfolder: Folder, *, show_file_names: bool) -> None:
         # Only make folder openable when permitted to edit
-        if subfolder.permissions.may("read", user):
+        if subfolder.permissions.may("read"):
             html.open_div(
                 class_="hoverarea",
                 onmouseover="cmk.wato.toggle_folder(event, this, true);",
@@ -978,7 +975,7 @@ class ModeFolder(WatoMode):
         else:
             html.static_icon(
                 StaticIcon(IconNames.autherr),
-                title=subfolder.permissions.reason_why_may_not("read", user),
+                title=subfolder.permissions.reason_why_may_not("read"),
                 css_classes=["autherr"],
             )
             html.div("", class_="hoverarea")
@@ -989,7 +986,7 @@ class ModeFolder(WatoMode):
             title += " (%s)" % subfolder.name()
 
         html.open_div(class_="title", title=title)
-        if subfolder.permissions.may("read", user):
+        if subfolder.permissions.may("read"):
             html.a(subfolder.title(), href=subfolder.url())
         else:
             html.write_text_permissive(subfolder.title())
@@ -999,7 +996,7 @@ class ModeFolder(WatoMode):
         self._show_subfolder_edit_button(subfolder)
 
         if not subfolder.locked_subfolders() and not subfolder.locked():
-            if subfolder.permissions.may("write", user) and user.may("wato.manage_folders"):
+            if subfolder.permissions.may("write") and user.may("wato.manage_folders"):
                 self._show_move_to_folder_action(subfolder)
                 self._show_subfolder_delete_button(subfolder, show_file_names=show_file_names)
 
@@ -1250,7 +1247,7 @@ class ModeFolder(WatoMode):
                 table.cell(attr.title(), tdcontent, css=[tdclass])
 
         # Am I authorized?
-        reason = host.permissions.reason_why_may_not("read", user)
+        reason = host.permissions.reason_why_may_not("read")
         if not reason:
             icon = StaticIcon(IconNames.authok)
             title = _("You have permission to this host.")
@@ -1322,11 +1319,11 @@ class ModeFolder(WatoMode):
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
     def _show_host_actions(self, host: Host) -> None:
-        if user.may("wato.edit_hosts") and host.permissions.may("write", user):
+        if user.may("wato.edit_hosts") and host.permissions.may("write"):
             html.icon_button(
                 host.edit_url(), _("Edit the properties of this host"), StaticIcon(IconNames.edit)
             )
-        if host.permissions.may("read", user):
+        if host.permissions.may("read"):
             if user.may("wato.services"):
                 msg = _("Run service discovery")
             else:
@@ -1350,7 +1347,7 @@ class ModeFolder(WatoMode):
             if user.may("wato.edit_hosts") and user.may("wato.move_hosts"):
                 self._show_move_to_folder_action(host)
 
-            if host.permissions.may("write", user):
+            if host.permissions.may("write"):
                 delete_host_options: dict[str, str | dict[str, str]] = (
                     confirmed_form_submit_options(
                         title=_("Delete host"),
@@ -1602,7 +1599,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         folder = folder_from_request(
             self._tree, request.var("folder"), request.get_ascii_input("host")
         )
-        folder.permissions.need_permission("read", user)
+        folder.permissions.need_permission("read")
 
         if new and folder.locked():
             folder.show_locking_information()

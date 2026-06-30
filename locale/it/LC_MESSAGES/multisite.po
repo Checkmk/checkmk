@@ -7883,11 +7883,6 @@ msgid ""
 "Automation user %s has stored secret with %d dangerous permission(s): %s"
 msgstr ""
 
-msgid "Automation user authentication via HTTP parameters"
-msgstr ""
-"Abilitare l'autenticazione dell'utente di automazione tramite i parametri "
-"HTTP"
-
 #, fuzzy
 msgid "Automation user for connection to central site"
 msgstr "Automazione Utente per la connessione al sito centrale"
@@ -11595,6 +11590,10 @@ msgstr "Impossibile creare un grafico"
 
 #, python-format
 msgid "Cannot create graph with metrics of different units '%s'"
+msgstr "Impossibile creare un grafico con metriche di unità diverse '%s'"
+
+#, fuzzy, python-format
+msgid "Cannot create graph with metrics of different units: %s"
 msgstr "Impossibile creare un grafico con metriche di unità diverse '%s'"
 
 msgid ""
@@ -34396,21 +34395,6 @@ msgstr ""
 "configurato qui. Un numero maggiore richiede più RAM. Nota: anche se lo "
 "imposti a 0 potrebbero esserci alcuni casi in cui i messaggi devono essere "
 "comunque memorizzati nella cache."
-
-msgid ""
-"In previous Checkmk versions, it was possible to use an automation user to "
-"display specific pages within Checkmk. To authenticate these requests, it "
-"was possible to add the _username and _secret parameters to the parameters "
-"(e.g. append them to the URL). GET parameters are usually logged by proxies "
-"and web servers and are not deemed secure for secrets. See Werk #16223 for "
-"more information."
-msgstr ""
-"Nelle versioni precedenti di Checkmk, era possibile utilizzare un utente di "
-"automazione per mostrare pagine specifiche di Checkmk. Per autenticare "
-"queste richieste, era possibile aggiungere i parametri _nomeutente e la "
-"_password (per esempio appendendoli allo URL). I parametri della richiesta "
-"GET sono solitamente loggati dal proxy e dai server web e non sono ritenuti "
-"sicuri per le credenziali. Vedi il Werk #16223 per ulteriori informazioni."
 
 msgid "In relation to normal check interval"
 msgstr "In relazione al normale intervallo di controllo"
@@ -88958,8 +88942,8 @@ msgstr "Aggiungere la connessione"
 msgid "[%s] - Quick Setup"
 msgstr "Impostazione rapida"
 
-#, python-format
-msgid "[%s] Exception: %s"
+#, fuzzy, python-format
+msgid "[%s] Exception"
 msgstr "[%s] Eccezione: %s"
 
 #, python-format
@@ -95144,6 +95128,17 @@ msgid "Select host %{name}"
 msgstr "Cancellare gli host"
 
 #, fuzzy
+msgid "Enter a comment…"
+msgstr "Commento dell'evento"
+
+msgid "This action runs immediately and has no further options."
+msgstr ""
+
+#, fuzzy
+msgid "More actions"
+msgstr "Altre opzioni"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "tutti gli stati"
 
@@ -96132,6 +96127,27 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Automation user authentication via HTTP parameters"
+#~ msgstr ""
+#~ "Abilitare l'autenticazione dell'utente di automazione tramite i parametri "
+#~ "HTTP"
+
+#~ msgid ""
+#~ "In previous Checkmk versions, it was possible to use an automation user "
+#~ "to display specific pages within Checkmk. To authenticate these requests, "
+#~ "it was possible to add the _username and _secret parameters to the "
+#~ "parameters (e.g. append them to the URL). GET parameters are usually "
+#~ "logged by proxies and web servers and are not deemed secure for secrets. "
+#~ "See Werk #16223 for more information."
+#~ msgstr ""
+#~ "Nelle versioni precedenti di Checkmk, era possibile utilizzare un utente "
+#~ "di automazione per mostrare pagine specifiche di Checkmk. Per autenticare "
+#~ "queste richieste, era possibile aggiungere i parametri _nomeutente e la "
+#~ "_password (per esempio appendendoli allo URL). I parametri della "
+#~ "richiesta GET sono solitamente loggati dal proxy e dai server web e non "
+#~ "sono ritenuti sicuri per le credenziali. Vedi il Werk #16223 per "
+#~ "ulteriori informazioni."
 
 #, fuzzy
 #~ msgid "CPU utilization for appliances"

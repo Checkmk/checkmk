@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-27 17:57+0000\n"
+"PO-Revision-Date: 2026-06-30 08:47+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -8072,10 +8072,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Automation user authentication via HTTP parameters"
-msgstr "Não é possível criar um pedido de autenticação"
-
-#, fuzzy
 msgid "Automation user for connection to central site"
 msgstr "Automação Utilizador para ligação ao local central"
 
@@ -11796,6 +11792,11 @@ msgstr "Não é possível criar gráfico"
 
 #, python-format
 msgid "Cannot create graph with metrics of different units '%s'"
+msgstr ""
+"Não é possível criar gráficos com métricas de diferentes unidades \"%s\""
+
+#, fuzzy, python-format
+msgid "Cannot create graph with metrics of different units: %s"
 msgstr ""
 "Não é possível criar gráficos com métricas de diferentes unidades \"%s\""
 
@@ -34624,15 +34625,6 @@ msgstr ""
 "aqui. Um número maior precisa de mais memória RAM. Nota: mesmo que você "
 "configure este número para 0, pode haver alguns casos em que as mensagens "
 "precisam ser armazenadas em cache de qualquer forma."
-
-msgid ""
-"In previous Checkmk versions, it was possible to use an automation user to "
-"display specific pages within Checkmk. To authenticate these requests, it "
-"was possible to add the _username and _secret parameters to the parameters "
-"(e.g. append them to the URL). GET parameters are usually logged by proxies "
-"and web servers and are not deemed secure for secrets. See Werk #16223 for "
-"more information."
-msgstr ""
 
 msgid "In relation to normal check interval"
 msgstr "Em relação ao intervalo normal de verificação"
@@ -89214,8 +89206,8 @@ msgstr "Adicionar conexão"
 msgid "[%s] - Quick Setup"
 msgstr "Configuração rápida"
 
-#, python-format
-msgid "[%s] Exception: %s"
+#, fuzzy, python-format
+msgid "[%s] Exception"
 msgstr "[%s] Exceção: %s"
 
 #, python-format
@@ -95423,6 +95415,17 @@ msgid "Select host %{name}"
 msgstr "Eliminar o anfitrião"
 
 #, fuzzy
+msgid "Enter a comment…"
+msgstr "Comentário do evento"
+
+msgid "This action runs immediately and has no further options."
+msgstr ""
+
+#, fuzzy
+msgid "More actions"
+msgstr "Opções de montagem"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "todos os Estados"
 
@@ -96408,6 +96411,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Automation user authentication via HTTP parameters"
+#~ msgstr "Não é possível criar um pedido de autenticação"
 
 #, fuzzy
 #~ msgid "CPU utilization for appliances"

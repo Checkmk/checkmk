@@ -7621,9 +7621,6 @@ msgid ""
 msgstr ""
 "自動化ユーザー %s は %d 個の危険な権限を持つシークレットを保存しました: %s"
 
-msgid "Automation user authentication via HTTP parameters"
-msgstr "HTTPパラメータによるユーザー認証の自動化"
-
 msgid "Automation user for connection to central site"
 msgstr "中央サイトに接続するためのオートメーションユーザー"
 
@@ -10964,6 +10961,10 @@ msgstr "グラフを作成できません"
 
 #, python-format
 msgid "Cannot create graph with metrics of different units '%s'"
+msgstr "異なる単位のメトリックでグラフを作成できません '%s'"
+
+#, fuzzy, python-format
+msgid "Cannot create graph with metrics of different units: %s"
 msgstr "異なる単位のメトリックでグラフを作成できません '%s'"
 
 msgid ""
@@ -32153,21 +32154,6 @@ msgstr ""
 "キャッシュを保持します。この番号はここで設定できます。数値が大きいほど、より"
 "多くのRAMが必要になります。注意:これを0に設定しても、メッセージをキャッシュす"
 "る必要がある場合があります。"
-
-msgid ""
-"In previous Checkmk versions, it was possible to use an automation user to "
-"display specific pages within Checkmk. To authenticate these requests, it "
-"was possible to add the _username and _secret parameters to the parameters "
-"(e.g. append them to the URL). GET parameters are usually logged by proxies "
-"and web servers and are not deemed secure for secrets. See Werk #16223 for "
-"more information."
-msgstr ""
-"以前のバージョンのCheckmkでは、オートメーションユーザーを使用して、Checkmk内"
-"の特定のページを表示することができました。これらのリクエストを認証するため"
-"に、_usernameと_secretパラメータを追加することが可能でした（URLに追加するな"
-"ど）。GETパラメータは通常、プロキシやウェブサーバによってログに記録され、 秘"
-"密のために安全であるとはみなされません。詳しくはWerk #16223を参照してくださ"
-"い。"
 
 msgid "In relation to normal check interval"
 msgstr "通常のチェック間隔に関連して"
@@ -82616,8 +82602,8 @@ msgstr "（[%s] ）- OAuth2接続"
 msgid "[%s] - Quick Setup"
 msgstr "[%s] - クイックセットアップ"
 
-#, python-format
-msgid "[%s] Exception: %s"
+#, fuzzy, python-format
+msgid "[%s] Exception"
 msgstr "[%s] 例外 : %s"
 
 #, python-format
@@ -88607,6 +88593,17 @@ msgid "Select host %{name}"
 msgstr "(ホスト選択)"
 
 #, fuzzy
+msgid "Enter a comment…"
+msgstr "イベントコメント"
+
+msgid "This action runs immediately and has no further options."
+msgstr ""
+
+#, fuzzy
+msgid "More actions"
+msgstr "その他のオプション"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "すべての状態"
 
@@ -89726,6 +89723,24 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Automation user authentication via HTTP parameters"
+#~ msgstr "HTTPパラメータによるユーザー認証の自動化"
+
+#~ msgid ""
+#~ "In previous Checkmk versions, it was possible to use an automation user "
+#~ "to display specific pages within Checkmk. To authenticate these requests, "
+#~ "it was possible to add the _username and _secret parameters to the "
+#~ "parameters (e.g. append them to the URL). GET parameters are usually "
+#~ "logged by proxies and web servers and are not deemed secure for secrets. "
+#~ "See Werk #16223 for more information."
+#~ msgstr ""
+#~ "以前のバージョンのCheckmkでは、オートメーションユーザーを使用して、Checkmk"
+#~ "内の特定のページを表示することができました。これらのリクエストを認証するた"
+#~ "めに、_usernameと_secretパラメータを追加することが可能でした（URLに追加す"
+#~ "るなど）。GETパラメータは通常、プロキシやウェブサーバによってログに記録さ"
+#~ "れ、 秘密のために安全であるとはみなされません。詳しくはWerk #16223を参照し"
+#~ "てください。"
 
 #~ msgid "CPU utilization for appliances"
 #~ msgstr "アプライアンスのCPU使用率"

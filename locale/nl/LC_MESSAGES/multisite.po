@@ -8059,10 +8059,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Automation user authentication via HTTP parameters"
-msgstr "Kan geen authenticatieverzoek aanmaken"
-
-#, fuzzy
 msgid "Automation user for connection to central site"
 msgstr "Automatiseringsgebruiker voor verbinding met centrale site"
 
@@ -11786,6 +11782,10 @@ msgstr "Kan geen grafiek maken"
 
 #, python-format
 msgid "Cannot create graph with metrics of different units '%s'"
+msgstr "Kan geen grafiek maken met metriek van verschillende eenheden '%s'"
+
+#, fuzzy, python-format
+msgid "Cannot create graph with metrics of different units: %s"
 msgstr "Kan geen grafiek maken met metriek van verschillende eenheden '%s'"
 
 msgid ""
@@ -34614,15 +34614,6 @@ msgstr ""
 "geconfigureerd. Een groter aantal heeft meer RAM nodig. Opmerking: zelfs als "
 "je dit op 0 zet, kunnen er gevallen zijn waarin berichten toch in de cache "
 "moeten worden geplaatst."
-
-msgid ""
-"In previous Checkmk versions, it was possible to use an automation user to "
-"display specific pages within Checkmk. To authenticate these requests, it "
-"was possible to add the _username and _secret parameters to the parameters "
-"(e.g. append them to the URL). GET parameters are usually logged by proxies "
-"and web servers and are not deemed secure for secrets. See Werk #16223 for "
-"more information."
-msgstr ""
 
 msgid "In relation to normal check interval"
 msgstr "In verhouding tot het normale controle-interval"
@@ -89308,8 +89299,8 @@ msgstr "Aansluiting toevoegen"
 msgid "[%s] - Quick Setup"
 msgstr "Snelle installatie"
 
-#, python-format
-msgid "[%s] Exception: %s"
+#, fuzzy, python-format
+msgid "[%s] Exception"
 msgstr "[%s] Uitzondering: %s"
 
 #, python-format
@@ -95527,6 +95518,17 @@ msgid "Select host %{name}"
 msgstr "Hosts verwijderen"
 
 #, fuzzy
+msgid "Enter a comment…"
+msgstr "Evenement commentaar"
+
+msgid "This action runs immediately and has no further options."
+msgstr ""
+
+#, fuzzy
+msgid "More actions"
+msgstr "Montagemogelijkheden"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "alle staten"
 
@@ -96510,6 +96512,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Automation user authentication via HTTP parameters"
+#~ msgstr "Kan geen authenticatieverzoek aanmaken"
 
 #, fuzzy
 #~ msgid "CPU utilization for appliances"

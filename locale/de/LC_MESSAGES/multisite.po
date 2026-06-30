@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-29 14:49+0000\n"
+"PO-Revision-Date: 2026-06-30 12:30+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
 "de/>\n"
 "Language: de\n"
@@ -7869,9 +7869,6 @@ msgstr ""
 "Der Automationsbenutzer %s hat ein Geheimnis mit %d gefährlichen "
 "Berechtigung(en) gespeichert: %s"
 
-msgid "Automation user authentication via HTTP parameters"
-msgstr "Authentifizierung des Automationsbenutzers über HTTP-Parameter"
-
 msgid "Automation user for connection to central site"
 msgstr "Automationsbenutzer für die Verbindung zur Zentralinstanz"
 
@@ -11294,6 +11291,12 @@ msgid "Cannot create graph with metrics of different units '%s'"
 msgstr ""
 "Graphen mit Metriken unterschiedlicher Einheiten '%s' können nicht erstellt "
 "werden"
+
+#, python-format
+msgid "Cannot create graph with metrics of different units: %s"
+msgstr ""
+"Es kann kein Graph mit Metriken unterschiedlicher Einheiten erstellt werden: "
+"%s"
 
 msgid ""
 "Cannot define macros that overwrite default \"CUSTOMER_ID\" or "
@@ -33077,22 +33080,6 @@ msgstr ""
 "werden. Eine größere Zahl verbraucht mehr Speicher. Hinweis: Selbst wenn Sie "
 "diesen Wert auf 0 setzen, kann es Fälle geben, in denen die Meldungen "
 "trotzdem zwischengespeichert werden müssen."
-
-msgid ""
-"In previous Checkmk versions, it was possible to use an automation user to "
-"display specific pages within Checkmk. To authenticate these requests, it "
-"was possible to add the _username and _secret parameters to the parameters "
-"(e.g. append them to the URL). GET parameters are usually logged by proxies "
-"and web servers and are not deemed secure for secrets. See Werk #16223 for "
-"more information."
-msgstr ""
-"In früheren Checkmk-Versionen war es möglich, einen Automationsbenutzer zu "
-"verwenden, um spezifische Seiten innerhalb von Checkmk anzuzeigen. Um diese "
-"Anfragen zu authentifizieren, war es möglich, die Parameter _username und "
-"_secret zu den Parametern hinzuzufügen (z.B. an die URL anzuhängen). GET-"
-"Parameter werden normalerweise von Proxies und Webservern protokolliert und "
-"gelten als nicht sicher für Geheimnisse. Siehe Werk #16223 für weitere "
-"Informationen."
 
 msgid "In relation to normal check interval"
 msgstr "Im Verhältnis zum normalen Checkintervall"
@@ -58241,8 +58228,8 @@ msgstr ""
 "Bindestriche, Unterstriche und Punkte zulässt; alle anderen Zeichen werden "
 "daher automatisch in Unterstriche umgewandelt, wenn der piggybacked Host im "
 "Monitoring angelegt wird. Das bedeutet, dass Checkmk beispielsweise den von "
-"einem Agenten gesendeten Host-Namen „My virtual machine“ als „"
-"My_virtual_machine“ speichert. Ihre Übersetzungsregeln sollten daher so "
+"einem Agenten gesendeten Host-Namen „My virtual machine“ als "
+"„My_virtual_machine“ speichert. Ihre Übersetzungsregeln sollten daher so "
 "formuliert sein, dass sie mit dem ursprünglichen, vom Agenten gesendeten "
 "Namen übereinstimmen, nicht mit der in Unterstriche umgewandelten Variante."
 
@@ -85188,8 +85175,8 @@ msgid "[%s] - Quick Setup"
 msgstr "[%s] - Quick Setup"
 
 #, python-format
-msgid "[%s] Exception: %s"
-msgstr "[%s] Exception: %s"
+msgid "[%s] Exception"
+msgstr "[%s] Exception"
 
 #, python-format
 msgid "[%s] Finished sync for connection"
@@ -89578,39 +89565,37 @@ msgid "Rate"
 msgstr "Rate"
 
 msgid "Delta"
-msgstr ""
+msgstr "Delta"
 
 msgid "Last recorded value (raw counter)"
-msgstr ""
+msgstr "Letzter gespeicherter Wert (Roh-Zähler)"
 
 msgid "Preserve histograms"
 msgstr "Histogramme beibehalten"
 
 msgid "Count delta"
-msgstr "Delta zählen"
+msgstr ""
 
 msgid "Count rate"
 msgstr "Rate zählen"
 
 msgid "Sum delta"
-msgstr "Delta summieren"
+msgstr ""
 
 msgid "Sum rate"
-msgstr "Rate summieren"
+msgstr ""
 
 msgid "Quantile"
 msgstr "Quantil"
 
-#, fuzzy
 msgid "Fraction below"
-msgstr "Quotient"
+msgstr ""
 
-#, fuzzy
 msgid "Fraction between"
-msgstr "Quotient"
+msgstr ""
 
 msgid "Cumulative sum field (raw)"
-msgstr ""
+msgstr "Kumulatives Summenfeld (roh)"
 
 msgid "last"
 msgstr "letzter"
@@ -89634,19 +89619,16 @@ msgid "preserve histograms"
 msgstr "Histogramme beibehalten"
 
 msgid "count delta"
-msgstr "Delta zählen"
+msgstr ""
 
-#, fuzzy
 msgid "count rate"
-msgstr "Dateianzahl ist"
+msgstr "Rate zählen"
 
-#, fuzzy
 msgid "sum delta"
-msgstr "Größen-Delta"
+msgstr ""
 
-#, fuzzy
 msgid "sum rate"
-msgstr "%s-Rate"
+msgstr "Rate summieren"
 
 msgid "fraction <%{value}"
 msgstr ""
@@ -90984,6 +90966,15 @@ msgstr "Alle Filter zurücksetzen"
 msgid "Select host %{name}"
 msgstr "Host %{name} auswählen"
 
+msgid "Enter a comment…"
+msgstr "Einen Kommentar eingeben…"
+
+msgid "This action runs immediately and has no further options."
+msgstr "Diese Aktion wird sofort ausgeführt und hat keine weiteren Optionen."
+
+msgid "More actions"
+msgstr "Mehr Aktionen"
+
 msgid "Stale state"
 msgstr "Veraltet-Zustand"
 
@@ -91002,16 +90993,14 @@ msgstr "Alle auswählen"
 msgid "No matching values"
 msgstr "Keine passenden Werte"
 
-#, fuzzy
 msgid "Clear"
-msgstr "Bereinigt"
+msgstr "Bereinigen"
 
 msgid "Any (>0)"
 msgstr ""
 
-#, fuzzy
 msgid "None (=0)"
-msgstr "Keine (linear)"
+msgstr "Keine (=0)"
 
 msgid "No results found for your search."
 msgstr "Für Ihre Suche wurden keine Ergebnisse gefunden."
@@ -92039,6 +92028,25 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Automation user authentication via HTTP parameters"
+#~ msgstr "Authentifizierung des Automationsbenutzers über HTTP-Parameter"
+
+#~ msgid ""
+#~ "In previous Checkmk versions, it was possible to use an automation user "
+#~ "to display specific pages within Checkmk. To authenticate these requests, "
+#~ "it was possible to add the _username and _secret parameters to the "
+#~ "parameters (e.g. append them to the URL). GET parameters are usually "
+#~ "logged by proxies and web servers and are not deemed secure for secrets. "
+#~ "See Werk #16223 for more information."
+#~ msgstr ""
+#~ "In früheren Checkmk-Versionen war es möglich, einen Automationsbenutzer "
+#~ "zu verwenden, um spezifische Seiten innerhalb von Checkmk anzuzeigen. Um "
+#~ "diese Anfragen zu authentifizieren, war es möglich, die Parameter "
+#~ "_username und _secret zu den Parametern hinzuzufügen (z.B. an die URL "
+#~ "anzuhängen). GET-Parameter werden normalerweise von Proxies und "
+#~ "Webservern protokolliert und gelten als nicht sicher für Geheimnisse. "
+#~ "Siehe Werk #16223 für weitere Informationen."
 
 #~ msgid "(auto-generated when the connection is saved)"
 #~ msgstr "(wird automatisch generiert, wenn die Verbindung gespeichert wird)"

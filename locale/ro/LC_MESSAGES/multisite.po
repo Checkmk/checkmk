@@ -8063,12 +8063,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Automation user authentication via HTTP parameters"
-msgstr ""
-"Activați autentificarea automată a utilizatorului prin intermediul "
-"parametrilor HTTP"
-
-#, fuzzy
 msgid "Automation user for connection to central site"
 msgstr "Automatizare Utilizator pentru conectarea la site-ul central"
 
@@ -11803,6 +11797,10 @@ msgstr "Nu se poate crea un grafic"
 
 #, python-format
 msgid "Cannot create graph with metrics of different units '%s'"
+msgstr "Nu se poate crea un grafic cu metrici de unități diferite '%s'"
+
+#, fuzzy, python-format
+msgid "Cannot create graph with metrics of different units: %s"
 msgstr "Nu se poate crea un grafic cu metrici de unități diferite '%s'"
 
 msgid ""
@@ -34696,23 +34694,6 @@ msgstr ""
 "fi configurat aici. Un număr mai mare necesită mai multă memorie RAM. Notă: "
 "chiar dacă setați acest lucru la 0, ar putea exista cazuri în care mesajele "
 "trebuie să fie oricum stocate în memoria cache."
-
-#, fuzzy
-msgid ""
-"In previous Checkmk versions, it was possible to use an automation user to "
-"display specific pages within Checkmk. To authenticate these requests, it "
-"was possible to add the _username and _secret parameters to the parameters "
-"(e.g. append them to the URL). GET parameters are usually logged by proxies "
-"and web servers and are not deemed secure for secrets. See Werk #16223 for "
-"more information."
-msgstr ""
-"În versiunile anterioare ale Checkmk, era posibil să se utilizeze un "
-"utilizator de automatizare pentru a afișa anumite pagini în Checkmk. Pentru "
-"a autentifica aceste solicitări era posibil să se adauge parametrii "
-"_username și _secret la parametri (de exemplu, adăugându-i la URL). "
-"Parametrii GET sunt de obicei înregistrați de către proxies și servere web "
-"și nu sunt considerați siguri pentru secrete. Consultați Werk #16223 pentru "
-"mai multe informații."
 
 msgid "In relation to normal check interval"
 msgstr "În raport cu intervalul normal de verificare"
@@ -89431,8 +89412,8 @@ msgstr "Adăugați o conexiune"
 msgid "[%s] - Quick Setup"
 msgstr "Configurare rapidă"
 
-#, python-format
-msgid "[%s] Exception: %s"
+#, fuzzy, python-format
+msgid "[%s] Exception"
 msgstr "[%s] Excepție: %s"
 
 #, python-format
@@ -95675,6 +95656,17 @@ msgid "Select host %{name}"
 msgstr "Ștergeți gazda"
 
 #, fuzzy
+msgid "Enter a comment…"
+msgstr "Comentariu la eveniment"
+
+msgid "This action runs immediately and has no further options."
+msgstr ""
+
+#, fuzzy
+msgid "More actions"
+msgstr "Mai multe opțiuni"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "toate statele"
 
@@ -96667,6 +96659,29 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Automation user authentication via HTTP parameters"
+#~ msgstr ""
+#~ "Activați autentificarea automată a utilizatorului prin intermediul "
+#~ "parametrilor HTTP"
+
+#, fuzzy
+#~ msgid ""
+#~ "In previous Checkmk versions, it was possible to use an automation user "
+#~ "to display specific pages within Checkmk. To authenticate these requests, "
+#~ "it was possible to add the _username and _secret parameters to the "
+#~ "parameters (e.g. append them to the URL). GET parameters are usually "
+#~ "logged by proxies and web servers and are not deemed secure for secrets. "
+#~ "See Werk #16223 for more information."
+#~ msgstr ""
+#~ "În versiunile anterioare ale Checkmk, era posibil să se utilizeze un "
+#~ "utilizator de automatizare pentru a afișa anumite pagini în Checkmk. "
+#~ "Pentru a autentifica aceste solicitări era posibil să se adauge "
+#~ "parametrii _username și _secret la parametri (de exemplu, adăugându-i la "
+#~ "URL). Parametrii GET sunt de obicei înregistrați de către proxies și "
+#~ "servere web și nu sunt considerați siguri pentru secrete. Consultați Werk "
+#~ "#16223 pentru mai multe informații."
 
 #, fuzzy
 #~ msgid "CPU utilization for appliances"

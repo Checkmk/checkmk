@@ -8115,10 +8115,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Automation user authentication via HTTP parameters"
-msgstr "Impossible de créer une demande d'authentification"
-
-#, fuzzy
 msgid "Automation user for connection to central site"
 msgstr "Automation Utilisateur pour la connexion au site central"
 
@@ -11854,6 +11850,11 @@ msgstr "Impossible de créer un graphique"
 
 #, python-format
 msgid "Cannot create graph with metrics of different units '%s'"
+msgstr ""
+"Impossible de créer un graphique avec des métriques d'unités différentes '%s'"
+
+#, fuzzy, python-format
+msgid "Cannot create graph with metrics of different units: %s"
 msgstr ""
 "Impossible de créer un graphique avec des métriques d'unités différentes '%s'"
 
@@ -34908,15 +34909,6 @@ msgstr ""
 "peut être configuré ici. Un nombre plus élevé nécessite plus de RAM. Note : "
 "même si vous définissez cette valeur à 0, il peut y avoir des cas où les "
 "messages doivent être mis en cache de toute façon."
-
-msgid ""
-"In previous Checkmk versions, it was possible to use an automation user to "
-"display specific pages within Checkmk. To authenticate these requests, it "
-"was possible to add the _username and _secret parameters to the parameters "
-"(e.g. append them to the URL). GET parameters are usually logged by proxies "
-"and web servers and are not deemed secure for secrets. See Werk #16223 for "
-"more information."
-msgstr ""
 
 msgid "In relation to normal check interval"
 msgstr "Par rapport à l'intervalle normal de contrôle"
@@ -90136,8 +90128,8 @@ msgstr "Ajouter une connexion"
 msgid "[%s] - Quick Setup"
 msgstr "Installation rapide"
 
-#, python-format
-msgid "[%s] Exception: %s"
+#, fuzzy, python-format
+msgid "[%s] Exception"
 msgstr "[%s] Exception : %s"
 
 #, python-format
@@ -96368,6 +96360,17 @@ msgid "Select host %{name}"
 msgstr "Supprimer l'hôte"
 
 #, fuzzy
+msgid "Enter a comment…"
+msgstr "Commentaire sur l'événement"
+
+msgid "This action runs immediately and has no further options."
+msgstr ""
+
+#, fuzzy
+msgid "More actions"
+msgstr "Options de montage"
+
+#, fuzzy
 msgid "Stale state"
 msgstr "tous les États"
 
@@ -97353,6 +97356,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Automation user authentication via HTTP parameters"
+#~ msgstr "Impossible de créer une demande d'authentification"
 
 #, fuzzy
 #~ msgid "CPU utilization for appliances"

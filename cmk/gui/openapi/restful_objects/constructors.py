@@ -43,6 +43,15 @@ def absolute_url(href: str) -> str:
     return f"{request.host_url}{omd_site()}/check_mk/api/1.0/{href}"
 
 
+def versioned_absolute_url(href: str, *, host_url: str, version: str) -> str:
+    """Absolute URL for ``href`` at the given API ``version``.
+
+    Used to build followable HATEOAS link hrefs that point at the same API version the client is
+    using (e.g. ``https://host/site/check_mk/api/v1/objects/...``).
+    """
+    return f"{host_url}{omd_site()}/check_mk/api/{version}/{href.lstrip('/')}"
+
+
 def link_rel(
     rel: LinkRelation,
     href: str,

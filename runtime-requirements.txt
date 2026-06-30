@@ -775,7 +775,6 @@ fastapi==0.129.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
 feedparser==6.0.12 \
     --hash=sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228 \
@@ -1145,6 +1144,7 @@ httpx==0.28.1 \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
     #   -c requirements.txt
+    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   mcp
@@ -3713,6 +3713,7 @@ starlette==0.52.1 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   fastapi
     #   mcp

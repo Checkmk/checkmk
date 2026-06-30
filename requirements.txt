@@ -1126,7 +1126,6 @@ fastapi==0.129.0 \
     --hash=sha256:b4946880e48f462692b31c083be0432275cbfb6e2274566b1be91479cc1a84ec
     # via
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
 feedparser==6.0.12 \
     --hash=sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228 \
@@ -1639,6 +1638,7 @@ httpx==0.28.1 \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
+    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   mcp
@@ -4196,6 +4196,7 @@ pytest-asyncio==1.3.0 \
     --hash=sha256:611e26147c7f77640e6d0a92a38ed17c3e9848063698d5c93d5aa7aa11cebff5 \
     --hash=sha256:d7f52f36d231b80ee124cd216ffb19369aa168fc10095013c6b014a34d3ee9e5
     # via
+    #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
     #   -r packages/cmk-plugins/dev-requirements.in
@@ -5304,6 +5305,7 @@ starlette==0.52.1 \
     --hash=sha256:834edd1b0a23167694292e94f597773bc3f89f362be6effee198165a35d62933
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   fastapi
     #   mcp

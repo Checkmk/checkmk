@@ -84,7 +84,7 @@ def _credential_vs() -> CascadingSingleChoice:
                 ),
             ),
         ],
-        help_text=Help("Here you can configure the credentials to be used."),
+        help_text=Help("Here, you can configure the credentials to be used."),
         title=Title("Login credentials"),
         prefill=DefaultValue("automation"),
     )

@@ -468,7 +468,7 @@ def _valuespec_updater_registration() -> SingleChoice:
             ),
             SingleChoiceElement(
                 name="overwrite",
-                title=Title("On every Agent controller registration"),
+                title=Title("On every Agent Controller registration"),
             ),
             SingleChoiceElement(
                 name="manual",
@@ -598,6 +598,6 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
 rule_spec_cmk_update_agent = AgentConfig(
     name="cmk_update_agent",
     title=Title("Agent updater (Linux, Windows, Solaris)"),
-    topic=CustomTopic(Title("Automatic Updates")),
+    topic=CustomTopic(Title("Automatic updates")),
     parameter_form=_valuespec_agent_config_cmk_update_agent,
 )

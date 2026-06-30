@@ -15,7 +15,7 @@ metric_dhcp_declines = metrics.Metric(
 )
 metric_dhcp_discovery = metrics.Metric(
     name="dhcp_discovery",
-    title=Title("DHCP Discovery messages"),
+    title=Title("DHCP discovery messages"),
     unit=UNIT_COUNTER,
     color=metrics.Color.GREEN,
 )

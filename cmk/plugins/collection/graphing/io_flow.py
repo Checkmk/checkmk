@@ -42,15 +42,15 @@ perfometer_ingress_egress = perfometers.Bidirectional(
 
 graph_io_flow = graphs.Bidirectional(
     name="io_flow",
-    title=Title("IO flow"),
+    title=Title("I/O flow"),
     lower=graphs.Graph(
         name="io_flow_lower",
-        title=Title("IO flow"),
+        title=Title("I/O flow"),
         compound_lines=["egress"],
     ),
     upper=graphs.Graph(
         name="io_flow_upper",
-        title=Title("IO flow"),
+        title=Title("I/O flow"),
         compound_lines=["ingress"],
     ),
 )

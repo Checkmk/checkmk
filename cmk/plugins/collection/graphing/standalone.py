@@ -777,7 +777,7 @@ metric_mediation_media_connectivity_failure = metrics.Metric(
 )
 metric_avauth_failed_requests = metrics.Metric(
     name="avauth_failed_requests",
-    title=Title("A/V Auth - Bad requests received"),
+    title=Title("A/V Auth - bad requests received"),
     unit=UNIT_COUNTER,
     color=metrics.Color.DARK_BLUE,
 )

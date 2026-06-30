@@ -28,7 +28,7 @@ perfometer_active_connections = perfometers.Perfometer(
 
 graph_db_connections = graphs.Graph(
     name="db_connections",
-    title=Title("DB Connections"),
+    title=Title("DB connections"),
     simple_lines=[
         "active_connections",
         "idle_connections",

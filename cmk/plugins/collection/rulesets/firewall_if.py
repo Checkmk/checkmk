@@ -50,7 +50,7 @@ def _parameter_valuespec_firewall_if() -> Dictionary:
 
 rule_spec_firewall_if = CheckParameters(
     name="firewall_if",
-    title=Title("Firewall Interfaces"),
+    title=Title("Firewall interfaces"),
     topic=Topic.NETWORKING,
     parameter_form=_parameter_valuespec_firewall_if,
     condition=HostAndItemCondition(

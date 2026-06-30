@@ -4,16 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import base64
 import json
+from collections.abc import Iterator
 from typing import Annotated
 
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from livestatus import SiteConfigurations
+
+from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
+from cmk.gui.config import Config
+from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.openapi.framework.model.common_fields import (
+    _FolderValidation,
     BinaryBase64,
     columns_validator,
     query_expression_validator,
 )
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.livestatus_client.expressions import BinaryExpression, NothingExpression, QueryExpression
 from cmk.livestatus_client.tables import Hosts
 from cmk.livestatus_client.types import Column
@@ -200,3 +211,66 @@ class TestColumnsValidator:
         )
         result = adapter.validate_python(["alias"])
         assert repr(result[0]) == repr(Hosts.name)
+
+
+class TestFolderValidation:
+    @pytest.fixture
+    def subfolder(self, with_admin_login: UserId) -> Iterator[Folder]:
+        # The name "abc" is a valid hex string, which makes it ambiguous with a folder id.
+        pending_changes = PendingChanges(
+            activation_sites=SiteConfigurations({}),
+            local_site=SiteId("NO_SITE"),
+            acting_user=None,
+            store=NoopPendingChangesStore(),
+            hooks=(make_audit_log_change_hook(use_git=False),),
+        )
+        root = folder_tree().root_folder()
+        folder = root.create_subfolder(
+            "abc",
+            "abc",
+            {},
+            pprint_value=False,
+            pending_changes=pending_changes,
+            acting_user=logged_in_user,
+        )
+        yield folder
+        root.delete_subfolder("abc", pending_changes=pending_changes, acting_user=logged_in_user)
+
+    def test_root_via_slash(self, load_config: Config) -> None:
+        assert _FolderValidation.validate("/") == folder_tree().root_folder()
+
+    def test_root_via_empty_string(self, load_config: Config) -> None:
+        assert _FolderValidation.validate("") == folder_tree().root_folder()
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("~abc", id="leading-tilde"),
+            pytest.param("/abc", id="leading-slash"),
+            pytest.param("\\abc", id="leading-backslash"),
+            pytest.param("/abc/", id="surrounding-slashes"),
+        ],
+    )
+    def test_separator_forces_path_lookup_for_hex_name(self, value: str, subfolder: Folder) -> None:
+        assert _FolderValidation.validate(value) == subfolder
+
+    @pytest.mark.parametrize("value", ["abc/", "abc~"])
+    def test_trailing_separator_hex_name_resolves_as_path(
+        self, value: str, subfolder: Folder
+    ) -> None:
+        assert _FolderValidation.validate(value) == subfolder
+
+    def test_bare_hex_name_is_treated_as_id_not_path(self, subfolder: Folder) -> None:
+        with pytest.raises(ValueError):
+            _FolderValidation.validate("abc")
+
+    def test_hex_id_resolved_by_id(self, subfolder: Folder) -> None:
+        assert _FolderValidation.validate(subfolder.id()) == subfolder
+
+    def test_invalid_hex_id_raises_value_error(self, load_config: Config) -> None:
+        with pytest.raises(ValueError):
+            _FolderValidation.validate("deadbeef")
+
+    def test_unknown_path_raises_value_error(self, load_config: Config) -> None:
+        with pytest.raises(ValueError):
+            _FolderValidation.validate("~does~not~exist")

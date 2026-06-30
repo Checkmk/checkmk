@@ -26,6 +26,7 @@ from pydantic_core import core_schema, CoreSchema
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.fields_filter import FieldsFilter, parse_fields_filter
 from cmk.gui.fields.utils import tree_to_expr
 from cmk.gui.openapi.framework import QueryParam
@@ -237,16 +238,16 @@ class _FolderValidation:
     @classmethod
     def validate(cls, value: str) -> Folder:
         tree = folder_tree()
-        value = cls._normalize_folder(value)
-        if value == "":
-            return tree.root_folder()
-
-        if cls._is_hex(value):
-            return tree._by_id(value)
-
         try:
+            if cls._is_hex(value):
+                return tree._by_id(value)
+
+            value = cls._normalize_folder(value)
+            if value == "":
+                return tree.root_folder()
+
             return tree.folder(value)
-        except MKGeneralException as e:
+        except (MKGeneralException, MKUserError) as e:
             raise ValueError(str(e)) from e
 
     @staticmethod

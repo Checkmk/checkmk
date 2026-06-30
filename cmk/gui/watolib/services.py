@@ -627,7 +627,7 @@ def _service_discovery_context(host: Host, *, pprint_value: bool) -> Iterator[No
     yield
 
     if not host.locked():
-        host.clear_discovery_failed(pprint_value=pprint_value)
+        host.clear_discovery_failed(pprint_value=pprint_value, acting_user=user)
 
 
 def perform_fix_all(

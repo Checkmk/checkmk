@@ -562,7 +562,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         if result.error_text is not None:
             self._num_hosts_failed += 1
             if not host.locked():
-                host.set_discovery_failed(pprint_value=pprint_value)
+                host.set_discovery_failed(pprint_value=pprint_value, acting_user=user)
             return _("discovery failed: %s") % result.error_text
 
         self._num_hosts_succeeded += 1
@@ -596,7 +596,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         )
 
         if not host.locked():
-            host.clear_discovery_failed(pprint_value=pprint_value)
+            host.clear_discovery_failed(pprint_value=pprint_value, acting_user=user)
 
         return _("discovery successful")
 

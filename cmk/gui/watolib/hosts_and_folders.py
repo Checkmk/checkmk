@@ -55,7 +55,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
-from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.pages import PageContext
 from cmk.gui.session_context import get_session_csrf_token
@@ -2932,6 +2932,7 @@ class Folder(FolderProtocol):
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> bool:
         # Must not fail because of auth problems. Auth is check at the
         # actually renamed host.
@@ -2951,7 +2952,7 @@ class Folder(FolderProtocol):
             ),
             ChangeScope.sites(self.all_site_ids()),
         )
-        self.save(pprint_value=pprint_value, acting_user=user)
+        self.save(pprint_value=pprint_value, acting_user=acting_user)
         return True
 
     def recursively_save_hosts(self, pprint_value: bool, *, acting_user: LoggedInUser) -> None:
@@ -3820,15 +3821,17 @@ class Host:
                 )
             )
 
-    def clear_discovery_failed(self, *, pprint_value: bool) -> None:
+    def clear_discovery_failed(self, *, pprint_value: bool, acting_user: LoggedInUser) -> None:
         # 1. Check preconditions
         # We do not check permissions. They are checked during the discovery.
         self.need_unlocked()
 
         # 2. Actual modification
-        self.set_discovery_failed(False, pprint_value=pprint_value)
+        self.set_discovery_failed(False, pprint_value=pprint_value, acting_user=acting_user)
 
-    def set_discovery_failed(self, how: bool = True, *, pprint_value: bool) -> None:
+    def set_discovery_failed(
+        self, how: bool = True, *, pprint_value: bool, acting_user: LoggedInUser
+    ) -> None:
         # 1. Check preconditions
         # We do not check permissions. They are checked during the discovery.
         self.need_unlocked()
@@ -3837,10 +3840,10 @@ class Host:
         if how:
             if not self.attributes.get("inventory_failed"):
                 self.attributes["inventory_failed"] = True
-                self.folder().save_hosts(pprint_value=pprint_value, acting_user=user)
+                self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
         elif self.attributes.get("inventory_failed"):
             del self.attributes["inventory_failed"]
-            self.folder().save_hosts(pprint_value=pprint_value, acting_user=user)
+            self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
 
     def rename_cluster_node(
         self,
@@ -3849,6 +3852,7 @@ class Host:
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> bool:
         # We must not check permissions here. Permissions
         # on the renamed host must be sufficient. If we would
@@ -3871,7 +3875,7 @@ class Host:
             ),
             ChangeScope.sites([self.site_id()]),
         )
-        self.folder().save_hosts(pprint_value=pprint_value, acting_user=user)
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
         return True
 
     def rename_parent(
@@ -3881,6 +3885,7 @@ class Host:
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> bool:
         # Same is with rename_cluster_node()
         new_parents = [str(e) for e in self.attributes["parents"]]
@@ -3898,7 +3903,7 @@ class Host:
             ),
             ChangeScope.sites([self.site_id()]),
         )
-        self.folder().save_hosts(pprint_value=pprint_value, acting_user=user)
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
         return True
 
     def rename(self, new_name: HostName, *, pending_changes: PendingChanges) -> None:

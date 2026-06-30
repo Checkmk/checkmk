@@ -259,7 +259,11 @@ def _rename_host_as_cluster_node(
     renamed_cluster_nodes = 0
     for cluster_host in cluster_hosts:
         if cluster_host.rename_cluster_node(
-            oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes
+            oldname,
+            newname,
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
+            acting_user=user,
         ):
             renamed_cluster_nodes += 1
     return ["cluster_nodes"] * renamed_cluster_nodes
@@ -504,13 +508,21 @@ def _rename_host_as_parent(
     for somehost in in_folder.hosts().values():
         if "parents" in somehost.attributes:
             if somehost.rename_parent(
-                oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes
+                oldname,
+                newname,
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
+                acting_user=user,
             ):
                 parents.append(somehost.name())
 
     if "parents" in in_folder.attributes:
         if in_folder.rename_parent(
-            oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes
+            oldname,
+            newname,
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
+            acting_user=user,
         ):
             if in_folder not in folder_parent_renamed:
                 folder_parent_renamed.append(in_folder)

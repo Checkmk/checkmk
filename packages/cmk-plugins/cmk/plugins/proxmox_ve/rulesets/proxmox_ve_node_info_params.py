@@ -86,7 +86,7 @@ def _parameter_rulespec_proxmox_ve_node_info():
                 required=False,
                 parameter_form=Dictionary(
                     migrate=lambda v: _migrate_required_status(v, NODE_STATUS_DEFAULT),
-                    title=Title("Node Status"),
+                    title=Title("Node state"),
                     elements={
                         "online": DictElement(
                             group=DictGroup(),
@@ -119,7 +119,7 @@ def _parameter_rulespec_proxmox_ve_node_info():
                 required=False,
                 parameter_form=Dictionary(
                     migrate=lambda v: _migrate_required_status(v, SUBSCRIPTION_STATUS_DEFAULT),
-                    title=Title("Subscription Status"),
+                    title=Title("Subscription status"),
                     elements={
                         "new": DictElement(
                             group=DictGroup(),
@@ -141,7 +141,7 @@ def _parameter_rulespec_proxmox_ve_node_info():
                             group=DictGroup(),
                             required=True,
                             parameter_form=ServiceState(
-                                title=Title("Not Found"),
+                                title=Title("Not found"),
                                 prefill=DefaultValue(ServiceState.WARN),
                             ),
                         ),
@@ -175,7 +175,7 @@ def _parameter_rulespec_proxmox_ve_node_info():
             "subscription_expiration_days_levels": DictElement(
                 required=True,
                 parameter_form=SimpleLevels(
-                    title=Title("Days until Subscription Expiration"),
+                    title=Title("Days until subscription expiration"),
                     form_spec_template=Integer(),
                     level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=DefaultValue((30, 7)),

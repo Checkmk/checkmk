@@ -20,7 +20,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 def _parameter_valuespec_proxmox_ve_vm_info():
     return Dictionary(
-        title=Title("Check Parameter"),
+        title=Title("Check parameter"),
         elements={
             "required_vm_status": DictElement(
                 required=False,
@@ -34,7 +34,7 @@ def _parameter_valuespec_proxmox_ve_vm_info():
             "lock_duration": DictElement(
                 required=True,
                 parameter_form=SimpleLevels[float](
-                    title=Title("Lock Duration levels"),
+                    title=Title("Lock duration levels"),
                     help_text=Help(
                         "If the VM is locked longer than the defined levels, "
                         "a warning/critical state is triggered."

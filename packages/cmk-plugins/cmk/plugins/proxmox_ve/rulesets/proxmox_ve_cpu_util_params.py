@@ -24,7 +24,7 @@ def _parameter_rulespec_proxmox_ve_cpu_util():
             "util": DictElement(
                 required=True,
                 parameter_form=SimpleLevels(
-                    title=Title("CPU Utilization levels"),
+                    title=Title("CPU utilization levels"),
                     prefill_fixed_levels=DefaultValue(value=(90.0, 95.0)),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Percentage(),
@@ -33,7 +33,7 @@ def _parameter_rulespec_proxmox_ve_cpu_util():
             "average": DictElement(
                 required=False,
                 parameter_form=Integer(
-                    title=Title("Average CPU Value over"),
+                    title=Title("Average CPU value over"),
                     unit_symbol="minutes",
                     prefill=DefaultValue(1),
                     custom_validate=(validators.NumberInRange(min_value=1),),
@@ -47,6 +47,6 @@ rule_spec_proxmox_ve_cpu_util = CheckParameters(
     name="proxmox_ve_cpu_util",
     topic=Topic.CLOUD,
     parameter_form=_parameter_rulespec_proxmox_ve_cpu_util,
-    title=Title("Proxmox VE CPU Utilization"),
+    title=Title("Proxmox VE CPU utilization"),
     condition=HostCondition(),
 )

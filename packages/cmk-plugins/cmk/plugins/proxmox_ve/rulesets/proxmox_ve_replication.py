@@ -54,6 +54,6 @@ rule_spec_proxmox_ve_replication = CheckParameters(
     name="proxmox_ve_replication",
     topic=Topic.CLOUD,
     parameter_form=_parameter_valuespec_proxmox_ve_replication,
-    title=Title("Proxmox VE Replication"),
+    title=Title("Proxmox VE replication"),
     condition=HostCondition(),
 )

@@ -101,7 +101,7 @@ def _connection_method_form() -> CascadingSingleChoice:
             ),
             CascadingSingleChoiceElement(
                 name="cli",
-                title=Title("CLI (podman command)"),
+                title=Title("CLI (Podman command)"),
                 parameter_form=FixedValue(
                     value=None,
                     help_text=Help(

@@ -312,7 +312,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build(),
     ) {
         Ok(chain) => chain,
-        Err(err) => check::abort(format!("{:?}", err)),
+        Err(err) => check::abort_with_details(format!("{err}"), format!("{err:?}")),
     };
     let elapsed = start.elapsed();
     info!("received chain of {} certificates from host", chain.len());

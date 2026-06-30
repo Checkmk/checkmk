@@ -23,7 +23,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.permissions import load_dynamic_permissions, permission_registry
 from cmk.gui.site_config import distributed_setup_remote_sites
-from cmk.gui.userdb import connection_choices
+from cmk.gui.userdb import connection_choices, get_saml_connections
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host, strip_hostname_whitespace_chars
@@ -464,6 +464,20 @@ class LDAPConnectionIDConverter:
         ldap_connection_ids = [cnx_id for cnx_id, _ in connection_choices()]
         if value in ldap_connection_ids:
             raise ValueError(f"The LDAP connection {value!r} should not exist but it does.")
+        return value
+
+
+class SAMLConnectionIDConverter:
+    @staticmethod
+    def should_exist(value: str) -> str:
+        if value not in get_saml_connections():
+            raise ValueError(f"The SAML connection {value!r} should exist but it doesn't.")
+        return value
+
+    @staticmethod
+    def should_not_exist(value: str) -> str:
+        if value in get_saml_connections():
+            raise ValueError(f"The SAML connection {value!r} should not exist but it does.")
         return value
 
 

@@ -28,7 +28,7 @@ def migrate(value: object) -> Mapping[str, object]:
 def _valuespec_agent_config_symantec_av() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "Here you can deploy a plug-in for monitoring the quarantine queue, tasks and updates "
+            "Here, you can deploy a plug-in for monitoring the quarantine queue, tasks and updates "
             "of Symantec Anti Virus."
         ),
         elements={

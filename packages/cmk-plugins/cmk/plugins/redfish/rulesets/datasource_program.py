@@ -141,7 +141,7 @@ def _fetching_settings() -> DictElement:
         parameter_form=Dictionary(
             title=Title("Fetching setting for individual sections"),
             help_text=Help(
-                "If sections can not be fetched or take a long time, you can configure them to be fetched"
+                "If sections cannot be fetched or take a long time, you can configure them to be fetched"
                 " not as often or not at all."
             ),
             elements={

@@ -800,6 +800,7 @@ allows = [
   "cmk.dcd.gui",
   "cmk.discover_plugins",
   "cmk.fields",
+  "cmk.graphing_engine",
   "cmk.gui",
   "cmk.gui_plugins.internal",
   "cmk.licensing",

@@ -65,8 +65,8 @@ class _FakeIndexedEngine:
             *_generate_fake_result_items(ProviderName.customize),
         ]
 
-    def search(self, query: str) -> list[UnifiedSearchResultItem]:
-        return [item for item in self._results if query in item.title]
+    def search(self, query: str, *, provider: ProviderName) -> list[UnifiedSearchResultItem]:
+        return [item for item in self._results if query in item.title and item.provider == provider]
 
 
 def _generate_fake_result_items(

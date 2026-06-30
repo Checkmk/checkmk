@@ -12,14 +12,14 @@ from cmk.shared_typing.unified_search import (
 )
 
 from .sorting import get_sorter
-from .type_defs import SearchEngine
+from .type_defs import IndexedEngine, SearchEngine
 
 
 class UnifiedSearch:
     def __init__(
         self,
         *,
-        indexed_engine: SearchEngine,
+        indexed_engine: IndexedEngine,
         monitoring_engine: SearchEngine,
     ) -> None:
         self._indexed_engine = indexed_engine
@@ -38,25 +38,22 @@ class UnifiedSearch:
 
         match provider:
             case ProviderName.setup:
-                setup_results = [
-                    item
-                    for item in self._indexed_engine.search(query)
-                    if item.provider == ProviderName.setup
-                ]
+                setup_results = list(
+                    self._indexed_engine.search(query, provider=ProviderName.setup)
+                )
             case ProviderName.customize:
-                customize_results = [
-                    item
-                    for item in self._indexed_engine.search(query)
-                    if item.provider == ProviderName.customize
-                ]
+                customize_results = list(
+                    self._indexed_engine.search(query, provider=ProviderName.customize)
+                )
             case ProviderName.monitoring:
                 monitoring_results.extend(self._monitoring_engine.search(query))
             case _:
-                for item in self._indexed_engine.search(query):
-                    if item.provider == ProviderName.customize:
-                        customize_results.append(item)
-                    elif item.provider == ProviderName.setup:
-                        setup_results.append(item)
+                setup_results = list(
+                    self._indexed_engine.search(query, provider=ProviderName.setup)
+                )
+                customize_results = list(
+                    self._indexed_engine.search(query, provider=ProviderName.customize)
+                )
                 monitoring_results.extend(self._monitoring_engine.search(query))
 
         search_results = [*setup_results, *monitoring_results, *customize_results]

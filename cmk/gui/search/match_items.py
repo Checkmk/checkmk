@@ -54,6 +54,7 @@ class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
     def __init__(self) -> None:
         super().__init__()
         self._provider_map: dict[str, ProviderName] = {}
+        self._categories_cache: dict[ProviderName, frozenset[str]] = {}
 
     @override
     def plugin_name(self, instance: ABCMatchItemGenerator) -> str:
@@ -74,6 +75,13 @@ class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
         # NOTE: to keep the change radius small for this introduction, we default to setup. We may
         # want to be explicit in the future and add the provider to all existing setup generators.
         return self._provider_map.get(category, ProviderName.setup)
+
+    def categories_for(self, provider: ProviderName) -> frozenset[str]:
+        if provider not in self._categories_cache:
+            self._categories_cache[provider] = frozenset(
+                name for name in self if self.provider_for(name) is provider
+            )
+        return self._categories_cache[provider]
 
 
 match_item_generator_registry = MatchItemGeneratorRegistry()

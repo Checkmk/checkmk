@@ -362,7 +362,12 @@ class IndexSearcher:
         if not redis_server_reachable(self._redis_client):
             raise RuntimeError("Redis server is not reachable")
 
-    def search(self, query: SearchQuery) -> Iterable[tuple[str, str, SearchResult]]:
+    def search(
+        self,
+        query: SearchQuery,
+        *,
+        allowed_categories: frozenset[str] | None = None,
+    ) -> Iterable[tuple[str, str, SearchResult]]:
         """
         Sorted search results restricted according to the permissions of the current user.
 
@@ -372,11 +377,15 @@ class IndexSearcher:
         This way, the code which displays the results can request as many results as it wants to
         render only, thus avoiding checking the permissions for all found results.
         """
-        sorted_results = self._sort_search_results(self._search_redis(query))
+        results = self._search_redis(query, allowed_categories=allowed_categories)
+        sorted_results = self._sort_search_results(results)
         yield from self._filter_results_by_user_permissions(sorted_results)
 
     def _search_redis(
-        self, query: SearchQuery
+        self,
+        query: SearchQuery,
+        *,
+        allowed_categories: frozenset[str] | None = None,
     ) -> dict[str, list[_SearchResultWithVisibilityCheck]]:
         if not IndexBuilder.index_is_built(self._redis_client):
             self._launch_index_building_in_background_job()
@@ -390,6 +399,7 @@ class IndexSearcher:
                 IndexBuilder.PREFIX_LOCALIZATION_INDEPENDENT
             ),
             key_prefix_match_items=IndexBuilder.PREFIX_LOCALIZATION_INDEPENDENT,
+            allowed_categories=allowed_categories,
         )
         results_localization_dependent = self._search_redis_categories(
             query=query_preprocessed,
@@ -398,6 +408,7 @@ class IndexSearcher:
                 IndexBuilder.PREFIX_LOCALIZATION_DEPENDENT,
                 get_current_language(),
             ),
+            allowed_categories=allowed_categories,
         )
 
         return {
@@ -435,11 +446,14 @@ class IndexSearcher:
         query: str,
         key_categories: str,
         key_prefix_match_items: str,
+        allowed_categories: frozenset[str] | None = None,
     ) -> defaultdict[str, list[_SearchResultWithVisibilityCheck]]:
         results = defaultdict(list)
         categories = self._redis_client.smembers(key_categories)
         assert not isinstance(categories, Awaitable)
         for category in categories:
+            if allowed_categories is not None and category not in allowed_categories:
+                continue
             if not self._permissions_handler.may_see_category(category):
                 continue
 
@@ -671,8 +685,16 @@ class IndexedSearchEngine:
             ),
         )
 
-    def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:
-        for category, topic, result in self._index_searcher.search(query):
-            if (provider := match_item_generator_registry.provider_for(category)) is None:
+    def search(self, query: str, *, provider: ProviderName) -> Iterable[UnifiedSearchResultItem]:
+        allowed_categories = match_item_generator_registry.categories_for(provider)
+        for category, topic, result in self._index_searcher.search(
+            query, allowed_categories=allowed_categories
+        ):
+            if (category_provider := match_item_generator_registry.provider_for(category)) is None:
                 continue
-            yield from transform_legacy_results_to_unified([result], topic, provider=provider)
+
+            yield from transform_legacy_results_to_unified(
+                [result],
+                topic,
+                provider=category_provider,
+            )

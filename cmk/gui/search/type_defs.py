@@ -6,13 +6,22 @@
 from collections.abc import Callable, Iterable
 from typing import Protocol
 
-from cmk.shared_typing.unified_search import UnifiedSearchResultItem
+from cmk.shared_typing.unified_search import ProviderName, UnifiedSearchResultItem
 
 type VisibilityCheck = Callable[[str], bool]
 
 
 class SearchEngine(Protocol):
     def search(self, query: str) -> Iterable[UnifiedSearchResultItem]: ...
+
+
+class IndexedEngine(Protocol):
+    def search(
+        self,
+        query: str,
+        *,
+        provider: ProviderName,
+    ) -> Iterable[UnifiedSearchResultItem]: ...
 
 
 class SearchPermissionsHandler(Protocol):

@@ -739,6 +739,26 @@ def test_openapi_host_rename(
     automation.assert_called_once()
 
 
+def test_openapi_host_rename_ignores_if_match_etag(clients: ClientRegistry) -> None:
+    """Host rename does not enforce the ETag precondition: an arbitrary/stale ``If-Match`` is
+    ignored rather than rejected with 412/428. Pinned to v1 to assert this against the versioned
+    endpoint explicitly.
+
+    Creating the host leaves pending changes, so the rename is refused with 409 - which still
+    proves the ETag was not the reason for rejection (a verified precondition would yield 412)."""
+    clients.HostConfig.create(host_name="foobar", folder="/")
+    resp = clients.HostConfig.request(
+        "put",
+        url="/objects/host_config/foobar/actions/rename/invoke",
+        body={"new_name": "foobaz"},
+        api_version=APIVersion.V1,
+        headers={"If-Match": '"stale-bogus-etag"'},
+        expect_ok=False,
+        follow_redirects=False,
+    )
+    resp.assert_status_code(409)
+
+
 def test_openapi_host_rename_wait_for_completion_without_job(
     clients: ClientRegistry,
 ) -> None:

@@ -37,5 +37,5 @@ class EngineGraphEvaluatorRegistry(Registry[EngineGraphEvaluator]):
 engine_graph_evaluator_registry = EngineGraphEvaluatorRegistry()
 
 
-def update_graph_via_engine(request: GraphDataRequest) -> Sequence[EvaluatedGraph]:
+def evaluate_graphs(request: GraphDataRequest) -> Sequence[EvaluatedGraph]:
     return engine_graph_evaluator_registry[request.graph_type].evaluate(request)

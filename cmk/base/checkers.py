@@ -99,8 +99,8 @@ from cmk.checkengine.sectionparserutils import (
 from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPRawData
 from cmk.checkengine.sources import (
     FetcherFactory,
-    make_sources,
     Source,
+    SourceBuilder,
 )
 from cmk.checkengine.specs.checkresults import (
     ActiveCheckResult,
@@ -472,7 +472,7 @@ class CMKFetcher(FetcherFunction):
             for current_host_name, current_ip_family, current_ip_stack_config, current_ip_address in hosts
             for fetched in _fetch_all(
                 self.make_trigger(relay_id),
-                make_sources(
+                SourceBuilder(
                     self.plugins,
                     current_host_name,
                     current_ip_family,
@@ -522,7 +522,7 @@ class CMKFetcher(FetcherFunction):
                         current_host_name
                     ),
                     metric_backend_fetcher=self.metric_backend_fetcher_factory(current_host_name),
-                ),
+                ).sources,
                 file_cache_options=self.file_cache_options,
                 mode=self.mode,
                 secrets=secrets_config,

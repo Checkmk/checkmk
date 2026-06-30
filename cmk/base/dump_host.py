@@ -24,7 +24,6 @@ from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-from cmk.checkengine import sources
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.fetcher import Fetcher
 from cmk.checkengine.fetcher_utils.secrets import StoredSecrets
@@ -42,7 +41,7 @@ from cmk.checkengine.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.helper_interface import AgentRawData, SourceType
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPVersion
-from cmk.checkengine.sources import Source
+from cmk.checkengine.sources import Source, SourceBuilder
 from cmk.checkengine.specs.parameters import IsTimeperiodActiveCallback, TimespecificParameters
 from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import ExecutableFinder
@@ -245,7 +244,7 @@ def dump_host(
         relay_id = get_relay_id(label_manager.labels_of_host(hostname))
         agenttypes = [
             dump_source(source)
-            for source in sources.make_sources(
+            for source in SourceBuilder(
                 plugins,
                 hostname,
                 primary_family,
@@ -310,7 +309,7 @@ def dump_host(
                     config_cache.explicit_host_attributes,
                     config_cache.check_mk_check_interval,
                 ),
-            )
+            ).sources
         ]
 
     if config_cache.is_ping_host(hostname):

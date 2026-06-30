@@ -42,8 +42,6 @@ from ._sources import (
     TCPSource,
 )
 
-__all__ = ["make_sources"]
-
 
 class SourceBuilder:
     def __init__(
@@ -339,59 +337,3 @@ class SourceBuilder:
                 )
             case _:
                 assert_never(connection_mode)
-
-
-def make_sources(
-    plugins: AgentBasedPlugins,
-    host_name: HostName,
-    host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
-    ipaddress: HostAddress | None,
-    ip_stack_config: IPStackConfig,
-    *,
-    fetcher_factory: FetcherFactory,
-    force_snmp_cache_refresh: bool = False,
-    snmp_backend: SNMPBackendEnum,
-    simulation_mode: bool,
-    file_cache_options: FileCacheOptions,
-    file_cache_max_age: MaxAge,
-    file_cache_path_base: Path,
-    file_cache_path_relative: Path,
-    tcp_cache_path_relative: Path,
-    tls_config: TLSConfig,
-    computed_datasources: ComputedDataSources,
-    datasource_programs: Sequence[str],
-    tag_list: Sequence[TagID],
-    management_ip: HostAddress | None,
-    management_protocol: Literal["snmp", "ipmi"] | None,
-    special_agent_command_lines: Iterable[tuple[str, SpecialAgentCommandLine]],
-    agent_connection_mode: HostAgentConnectionMode,
-    check_mk_check_interval: float,
-    metric_backend_fetcher: Fetcher[AgentRawData] | None,
-) -> Sequence[Source]:
-    """Sequence of sources available for `host_config`."""
-    return SourceBuilder(
-        plugins,
-        host_name,
-        host_ip_family,
-        ipaddress,
-        ip_stack_config,
-        simulation_mode=simulation_mode,
-        fetcher_factory=fetcher_factory,
-        force_snmp_cache_refresh=force_snmp_cache_refresh,
-        snmp_backend=snmp_backend,
-        file_cache_options=file_cache_options,
-        file_cache_max_age=file_cache_max_age,
-        file_cache_path_base=file_cache_path_base,
-        file_cache_path_relative=file_cache_path_relative,
-        tcp_cache_path_relative=tcp_cache_path_relative,
-        tls_config=tls_config,
-        computed_datasources=computed_datasources,
-        datasource_programs=datasource_programs,
-        tag_list=tag_list,
-        management_ip=management_ip,
-        management_protocol=management_protocol,
-        special_agent_command_lines=special_agent_command_lines,
-        agent_connection_mode=agent_connection_mode,
-        check_mk_check_interval=check_mk_check_interval,
-        metric_backend_fetcher=metric_backend_fetcher,
-    ).sources

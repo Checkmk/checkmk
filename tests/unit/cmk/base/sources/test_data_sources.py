@@ -30,7 +30,7 @@ from cmk.checkengine.fetchers import (
 )
 from cmk.checkengine.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.checkengine.sources import make_sources, Source
+from cmk.checkengine.sources import Source, SourceBuilder
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
@@ -64,7 +64,7 @@ def _make_sources(
     ipaddress = HostAddress("127.0.0.1")
     ip_family: Literal[socket.AddressFamily.AF_INET] = socket.AddressFamily.AF_INET
     app = make_app()
-    return make_sources(
+    return SourceBuilder(
         AgentBasedPlugins.empty(),
         hostname,
         ip_family,
@@ -122,7 +122,7 @@ def _make_sources(
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
         ),
-    )
+    ).sources
 
 
 def test_ping_host(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

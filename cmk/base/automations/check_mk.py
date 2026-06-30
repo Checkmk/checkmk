@@ -134,7 +134,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName, HostNameValidationError, 
 from cmk.ccc.i18n import _
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import edition_supports_nagvis
-from cmk.checkengine import agent_protocol, sources
+from cmk.checkengine import agent_protocol
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
 from cmk.checkengine.discovery import (
@@ -187,6 +187,7 @@ from cmk.checkengine.snmplib import (
     SNMPVersion,
     walk_for_export,
 )
+from cmk.checkengine.sources import SourceBuilder
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.specs.parameters import TimespecificParameters
 from cmk.checkengine.submitters import ServiceDetails
@@ -3369,7 +3370,7 @@ class AutomationDiagHost:
         )
 
         trigger = app.make_fetcher_trigger(host_relay_id, cmk.utils.paths.trusted_ca_file)
-        for source in sources.make_sources(
+        for source in SourceBuilder(
             plugins,
             host_name,
             ip_family,
@@ -3446,7 +3447,7 @@ class AutomationDiagHost:
                 config_cache.explicit_host_attributes,
                 config_cache.check_mk_check_interval,
             ),
-        ):
+        ).sources:
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
                 continue
@@ -3965,7 +3966,7 @@ def _automation_get_agent_output(
                 )
             )
 
-            for source in sources.make_sources(
+            for source in SourceBuilder(
                 env.plugins,
                 hostname,
                 ip_family,
@@ -4036,7 +4037,7 @@ def _automation_get_agent_output(
                     env.config_cache.explicit_host_attributes,
                     env.config_cache.check_mk_check_interval,
                 ),
-            ):
+            ).sources:
                 source_info = source.source_info()
                 if source_info.fetcher_type is FetcherType.SNMP:
                     continue

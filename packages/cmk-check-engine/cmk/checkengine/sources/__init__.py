@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._api import Source as Source
-from ._builder import make_sources as make_sources
+from ._builder import SourceBuilder as SourceBuilder
 from ._sources import FetcherFactory as FetcherFactory
 from ._sources import IPMISource as IPMISource
 from ._sources import MgmtSNMPSource as MgmtSNMPSource

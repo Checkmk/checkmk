@@ -61,7 +61,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.site import SiteId
 from cmk.ccc.store import activation_lock
 from cmk.ccc.timeout import Timeout
-from cmk.checkengine import inventory, sources
+from cmk.checkengine import inventory
 from cmk.checkengine.checking import (
     execute_checkmk_checks,
     make_timing_results,
@@ -114,6 +114,7 @@ from cmk.checkengine.snmplib import (
     SNMPSectionName,
     walk_for_export,
 )
+from cmk.checkengine.sources import SourceBuilder
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.checkengine.submitters import get_submitter
 from cmk.checkengine.summarize import summarize, SummarizerFunction
@@ -727,7 +728,7 @@ def _mode_dump_agent(
             )
         )
 
-        for source in sources.make_sources(
+        for source in SourceBuilder(
             plugins,
             hostname,
             ip_family,
@@ -798,7 +799,7 @@ def _mode_dump_agent(
                 config_cache.explicit_host_attributes,
                 config_cache.check_mk_check_interval,
             ),
-        ):
+        ).sources:
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
                 continue

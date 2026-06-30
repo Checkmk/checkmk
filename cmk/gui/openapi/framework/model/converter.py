@@ -162,12 +162,12 @@ class HostConverter:
             return
 
         try:
-            host.permissions.need_permission("read")
+            host.permissions.need_permission("read", user)
         except MKAuthException:
             raise ValueError(f"Host {host.name()!r} not found or access denied")
 
         if self.permission_type == "setup_write":
-            host.permissions.need_permission("write")
+            host.permissions.need_permission("write", user)
 
     def _verify_cluster(self, host: Host) -> None:
         if self.should_be_cluster is None:

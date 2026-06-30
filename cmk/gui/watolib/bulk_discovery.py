@@ -41,6 +41,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import StartupError
+from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import AnnotatedUserId
 from cmk.gui.utils.misc import gen_id
@@ -605,7 +606,7 @@ def prepare_hosts_for_discovery(
         host = tree.host(HostName(host_name))
         if host is None:
             raise MKUserError(None, _("The host '%s' does not exist") % host_name)
-        host.permissions.need_permission("write")
+        host.permissions.need_permission("write", user)
         hosts_to_discover.append(
             DiscoveryHost(
                 site_id := host.site_id(),

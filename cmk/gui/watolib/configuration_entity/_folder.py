@@ -27,7 +27,7 @@ INTERNAL_TRANSFORM_ERROR = _("FormSpec and internal data structure mismatch")
 
 def _make_folder_is_writable_validator(tree: FolderTree) -> Callable[[str], None]:
     def folder_is_writable(name: str) -> None:
-        if not tree.all_folders()[name].permissions.may("write"):
+        if not tree.all_folders()[name].permissions.may("write", user):
             raise ValidationError(Message("You do not have write permission for this folder."))
 
     return folder_is_writable

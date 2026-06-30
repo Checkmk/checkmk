@@ -166,11 +166,11 @@ def _verify_permissions(host: Host) -> None:
     )
 
     try:
-        host.permissions.need_permission("read")
+        host.permissions.need_permission("read", user)
     except MKAuthException:
         raise unathorized_excpt
     try:
-        host.permissions.need_permission("write")
+        host.permissions.need_permission("write", user)
     except MKAuthException:
         raise unathorized_excpt
 
@@ -198,7 +198,7 @@ def _check_host_access_permissions(
 ) -> Host:
     host = tree.load_host(host_name)
     try:
-        host.permissions.need_permission(access_type)
+        host.permissions.need_permission(access_type, user)
     except MKAuthException:
         raise ProblemException(
             status=401,

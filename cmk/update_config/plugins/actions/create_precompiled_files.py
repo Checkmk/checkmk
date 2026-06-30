@@ -26,7 +26,7 @@ class CreatePrecompiledFiles(UpdateAction):
         folder_tree().invalidate_caches()
         for folder in folder_tree().root_folder().subfolders_recursively():
             folder.save_folder_attributes()
-            folder.save_hosts(pprint_value=active_config.wato_pprint_config, acting_user_id=user.id)
+            folder.save_hosts(pprint_value=active_config.wato_pprint_config, acting_user=user)
 
 
 update_action_registry.register(

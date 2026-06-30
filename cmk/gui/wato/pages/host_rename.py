@@ -277,7 +277,7 @@ class ModeBulkRenameHost(WatoMode):
         entries = []
         for host_name, host in folder.hosts().items():
             target_name = self._host_renamed_into(host_name, renaming_config)
-            if target_name and host.permissions.may("write"):
+            if target_name and host.permissions.may("write", user):
                 entries.append((folder, host_name, target_name))
         if renaming_config["recurse"]:
             for subfolder in folder.subfolders():
@@ -471,7 +471,7 @@ class ModeRenameHost(WatoMode):
             raise MKAuthException(_("You don't have the right to rename hosts"))
 
         self._host = folder.load_host(host_name)
-        self._host.permissions.need_permission("write")
+        self._host.permissions.need_permission("write", user)
 
     def title(self) -> str:
         return _("Rename %s %s") % (

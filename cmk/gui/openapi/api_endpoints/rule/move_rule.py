@@ -92,7 +92,7 @@ def move_rule_v1(
         case _:
             assert_never(body)
 
-    dest_folder.permissions.need_permission("write")
+    dest_folder.permissions.need_permission("write", user)
     source_entry.ruleset.move_to_folder(
         source_entry.rule, dest_folder, index, pending_changes=make_pending_changes(api_context)
     )

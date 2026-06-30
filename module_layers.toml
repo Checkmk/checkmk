@@ -115,12 +115,6 @@ allows = [
   "cmk.utils.paths",
 ]
 
-[plugin_families.violations.azure_v2]
-allows = [
-  # FIXME
-  "cmk.agent_based.v1",
-]
-
 # These plugins are tightly coupled to Checkmk.
 # We cannot expect them to not depend on the core product.
 [plugin_families.violations.checkmk]

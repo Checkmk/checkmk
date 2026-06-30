@@ -63,7 +63,7 @@ _AZURE_SERVICES: Final = [
 ]
 
 try:
-    from .nonfree.ultimate.azure_services import (  # type: ignore[import-not-found, unused-ignore]
+    from cmk.plugins.azure_v2_extended.rulesets.azure_services import (  # type: ignore[import-not-found, unused-ignore]
         NONFREEED_AZURE_SERVICES,
     )
 

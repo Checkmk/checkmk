@@ -74,8 +74,6 @@ class _Builder:
         check_mk_check_interval: float,
         metric_backend_fetcher: Fetcher[AgentRawData] | None,
     ) -> None:
-        super().__init__()
-
         self.plugins: Final = plugins
         self.host_name: Final = host_name
         self.host_ip_family: Final = host_ip_family

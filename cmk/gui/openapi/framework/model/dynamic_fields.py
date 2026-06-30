@@ -49,7 +49,7 @@ class WithDynamicFields:
             extra_fields = values.keys() - known_fields
             values["dynamic_fields"] = {f: values.pop(f) for f in extra_fields}
         else:
-            raise TypeError(f"Unsupported type {type(values)}")
+            raise ValueError(f"Unsupported type {type(values)}")
         return values
 
     @classmethod

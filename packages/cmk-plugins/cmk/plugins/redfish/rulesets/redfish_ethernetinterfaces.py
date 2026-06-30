@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""rules for discovery and check of ethernet interfaces"""
+"""rules for discovery and check of Ethernet interfaces"""
 
 from cmk.rulesets.v1 import form_specs, Help, rule_specs, Title
 from cmk.rulesets.v1.form_specs import validators
@@ -15,11 +15,11 @@ def _form_discovery_redfish_ethernetinterfaces() -> form_specs.Dictionary:
             "state": form_specs.DictElement(
                 parameter_form=form_specs.SingleChoice(
                     title=Title("Discovery settings for physical ports"),
-                    help_text=Help("Specify if port state UP, DOWN or booth should be discovered"),
+                    help_text=Help("Specify if port state UP, DOWN or both should be discovered"),
                     elements=[
-                        form_specs.SingleChoiceElement(name="up", title=Title("Up only")),
-                        form_specs.SingleChoiceElement(name="down", title=Title("Down only")),
-                        form_specs.SingleChoiceElement(name="updown", title=Title("Up & Down")),
+                        form_specs.SingleChoiceElement(name="up", title=Title("UP only")),
+                        form_specs.SingleChoiceElement(name="down", title=Title("DOWN only")),
+                        form_specs.SingleChoiceElement(name="updown", title=Title("UP & DOWN")),
                     ],
                 ),
             ),
@@ -28,7 +28,7 @@ def _form_discovery_redfish_ethernetinterfaces() -> form_specs.Dictionary:
 
 
 rule_spec_discovery_redfish_ethernetinterfaces = rule_specs.DiscoveryParameters(
-    title=Title("Redfish Ethernet Interface discovery"),
+    title=Title("Redfish Ethernet interface discovery"),
     topic=rule_specs.Topic.SERVER_HARDWARE,
     name="discovery_redfish_ethernetinterfaces",
     parameter_form=_form_discovery_redfish_ethernetinterfaces,
@@ -37,7 +37,7 @@ rule_spec_discovery_redfish_ethernetinterfaces = rule_specs.DiscoveryParameters(
 
 def _form_redfish_ethernetinterfaces() -> form_specs.Dictionary:
     return form_specs.Dictionary(
-        title=Title("Redfish Ethernet Interface"),
+        title=Title("Redfish Ethernet interface"),
         elements={
             "state_if_link_status_changed": form_specs.DictElement(
                 parameter_form=form_specs.ServiceState(
@@ -58,7 +58,7 @@ def _form_redfish_ethernetinterfaces() -> form_specs.Dictionary:
 
 rule_spec_redfish_ethernetinterfaces = rule_specs.CheckParameters(
     name="check_redfish_ethernetinterfaces",
-    title=Title("Redfish Ethernet Interface"),
+    title=Title("Redfish Ethernet interface"),
     topic=rule_specs.Topic.SERVER_HARDWARE,
     condition=rule_specs.HostAndItemCondition(
         item_title=Title("Physical port"),

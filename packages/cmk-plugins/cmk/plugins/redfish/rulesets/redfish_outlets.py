@@ -22,7 +22,7 @@ def _form_discovery_redfish_outlets() -> form_specs.Dictionary:
                     ),
                     elements=[
                         form_specs.SingleChoiceElement(name="index", title=Title("Port ID")),
-                        form_specs.SingleChoiceElement(name="label", title=Title("User Label")),
+                        form_specs.SingleChoiceElement(name="label", title=Title("User label")),
                         form_specs.SingleChoiceElement(
                             name="fill", title=Title("Zero padded port ID")
                         ),

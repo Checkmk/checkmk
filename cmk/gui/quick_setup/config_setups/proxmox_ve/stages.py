@@ -107,13 +107,13 @@ def configure_authentication() -> QuickSetupStage:
                     Text(
                         text=_(
                             "Create a user in the 'Proxmox VE authentication server' realm in "
-                            "Proxmox, which you use exclusively for monitoring with Checkmk"
+                            "Proxmox, which you use exclusively for monitoring with Checkmk."
                         )
                     ),
                     Text(
                         text=_(
                             'Grant the user the permissions "Role: PVEAuditor" and "Path: /" '
-                            "(via User permissions or Group permissions)"
+                            "(via user permissions or group permissions)"
                         ),
                     ),
                     Text(text=_("Enter the user credentials below")),

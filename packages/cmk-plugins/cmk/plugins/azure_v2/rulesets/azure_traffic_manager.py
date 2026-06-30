@@ -57,6 +57,6 @@ rule_spec_azure_v2_traffic_manager_probe_state = CheckParameters(
     name="azure_v2_traffic_manager_probe_state",
     topic=Topic.APPLICATIONS,
     parameter_form=_make_probe_state_form,
-    title=Title("Azure Traffic Manager Probe State"),
+    title=Title("Azure Traffic Manager probe state"),
     condition=HostCondition(),
 )

@@ -19,7 +19,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 def _make_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "This ruleset allows you to configure levels for Azure Firewall throughput monitoring"
+            "This rule set allows you to configure levels for Azure firewall throughput monitoring"
         ),
         elements={
             "throughput": DictElement(
@@ -43,7 +43,7 @@ def _make_form() -> Dictionary:
 
 rule_spec_azure_firewall_throughput = CheckParameters(
     name="azure_v2_firewall_throughput",
-    title=Title("Azure Firewall Throughput"),
+    title=Title("Azure Firewall throughput"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostCondition(),

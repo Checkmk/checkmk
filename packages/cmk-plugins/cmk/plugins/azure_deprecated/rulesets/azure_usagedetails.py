@@ -28,7 +28,7 @@ def _migrate_params(params: object) -> Mapping[str, object]:
 
 def _make_form() -> Dictionary:
     return Dictionary(
-        help_text=Help("This ruleset allows you to configure levels for the daily usage costs."),
+        help_text=Help("This rule set allows you to configure levels for the daily usage costs."),
         migrate=_migrate_params,
         elements={
             "costs": DictElement(
@@ -50,7 +50,7 @@ def _make_form() -> Dictionary:
 
 rule_spec_azure_usagedetails = CheckParameters(
     name="azure_usagedetails",
-    title=Title("Azure Usage Details (Costs) (deprecated)"),
+    title=Title("Azure usage details (costs) (deprecated)"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostAndItemCondition(item_title=Title("Service Type")),

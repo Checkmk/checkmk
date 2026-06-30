@@ -19,7 +19,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 def _make_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "This ruleset allows you to configure levels for Azure Firewall latency monitoring"
+            "This rule set allows you to configure levels for Azure firewall latency monitoring"
         ),
         elements={
             "latency": DictElement(
@@ -37,7 +37,7 @@ def _make_form() -> Dictionary:
 
 rule_spec_azure_firewall_latency = CheckParameters(
     name="azure_v2_firewall_latency",
-    title=Title("Azure Firewall Latency"),
+    title=Title("Azure Firewall latency"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostCondition(),

@@ -17,7 +17,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 
 def _make_form() -> Dictionary:
     return Dictionary(
-        help_text=Help("This ruleset allows you to configure levels for the database throughput"),
+        help_text=Help("This rule set allows you to configure levels for the database throughput"),
         elements={
             "dtu_percent": DictElement(
                 required=True,

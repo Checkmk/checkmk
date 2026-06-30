@@ -18,7 +18,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 def _make_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "This ruleset allows you to configure levels for Azure Firewall SNAT port utilization monitoring"
+            "This rule set allows you to configure levels for Azure firewall SNAT port utilization monitoring"
         ),
         elements={
             "snat_utilization": DictElement(
@@ -36,7 +36,7 @@ def _make_form() -> Dictionary:
 
 rule_spec_azure_firewall_snat = CheckParameters(
     name="azure_v2_firewall_snat",
-    title=Title("Azure Firewall SNAT Utilization"),
+    title=Title("Azure Firewall SNAT utilization"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostCondition(),

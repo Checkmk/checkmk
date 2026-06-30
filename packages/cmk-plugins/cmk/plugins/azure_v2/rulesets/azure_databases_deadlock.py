@@ -18,7 +18,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 def _make_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "This ruleset allows you to configure levels for the deadlocks in the database"
+            "This rule set allows you to configure levels for the deadlocks in the database"
         ),
         elements={
             "deadlocks": DictElement(

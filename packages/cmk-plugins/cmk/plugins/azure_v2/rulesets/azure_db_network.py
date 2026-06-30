@@ -40,7 +40,7 @@ def _make_form() -> Dictionary:
 
 rule_spec_azure_db_network = CheckParameters(
     name="azure_v2_db_network",
-    title=Title("Azure Network IO"),
+    title=Title("Azure network IO"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostCondition(),

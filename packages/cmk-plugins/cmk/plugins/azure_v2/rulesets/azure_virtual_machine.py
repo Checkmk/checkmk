@@ -60,6 +60,6 @@ rule_spec_azure_v2_vm_disk = CheckParameters(
     name="azure_v2_vm_disk",
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
-    title=Title("Azure VM Disk"),
+    title=Title("Azure VM disk"),
     condition=HostCondition(),
 )

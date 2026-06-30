@@ -112,6 +112,6 @@ rule_spec_azure_app_registration = CheckParameters(
     name="azure_v2_app_registration",
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
-    title=Title("Azure App Registration"),
+    title=Title("Azure app registration"),
     condition=HostAndItemCondition(item_title=Title("Credentials")),
 )

@@ -20,7 +20,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 def _make_form() -> Dictionary:
     return Dictionary(
-        help_text=Help("This ruleset allows you to configure levels for Azure subscription info."),
+        help_text=Help("This rule set allows you to configure levels for Azure subscription info."),
         elements={
             "remaining_reads": DictElement(
                 required=False,

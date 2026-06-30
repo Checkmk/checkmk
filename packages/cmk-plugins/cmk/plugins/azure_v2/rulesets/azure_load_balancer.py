@@ -44,7 +44,7 @@ rule_spec_azure_v2_load_balancer_byte_count = CheckParameters(
     name="azure_v2_load_balancer_byte_count",
     topic=Topic.APPLICATIONS,
     parameter_form=_make_byte_count_form,
-    title=Title("Azure Load Balancer Byte Count"),
+    title=Title("Azure Load Balancer byte count"),
     condition=HostCondition(),
 )
 
@@ -76,7 +76,7 @@ rule_spec_azure_v2_load_balancer_snat = CheckParameters(
     name="azure_v2_load_balancer_snat",
     topic=Topic.APPLICATIONS,
     parameter_form=_make_snat_form,
-    title=Title("Azure Load Balancer SNAT Consumption"),
+    title=Title("Azure Load Balancer SNAT consumption"),
     condition=HostCondition(),
 )
 
@@ -108,6 +108,6 @@ rule_spec_azure_v2_load_balancer_health = CheckParameters(
     name="azure_v2_load_balancer_health",
     topic=Topic.APPLICATIONS,
     parameter_form=_make_health_form,
-    title=Title("Azure Load Balancer Health"),
+    title=Title("Azure Load Balancer health"),
     condition=HostCondition(),
 )

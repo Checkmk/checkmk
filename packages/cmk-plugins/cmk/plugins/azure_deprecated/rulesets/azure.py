@@ -38,14 +38,14 @@ from cmk.utils import paths
 # in the azure special agent
 RAW_AZURE_SERVICES: Final = [
     ("users_count", Title("Users in Entra ID")),
-    ("ad_connect", Title("Entra Connect Sync")),
-    ("app_registrations", Title("App Registrations")),
-    ("usage_details", Title("Usage Details")),
-    ("Microsoft.Compute/virtualMachines", Title("Virtual Machines")),
+    ("ad_connect", Title("Entra Connect sync")),
+    ("app_registrations", Title("App registrations")),
+    ("usage_details", Title("Usage details")),
+    ("Microsoft.Compute/virtualMachines", Title("Virtual machines")),
     ("Microsoft.Network/virtualNetworkGateways", Title("vNet Gateway")),
     ("Microsoft.Sql/servers/databases", Title("SQL Databases")),
     ("Microsoft.Storage/storageAccounts", Title("Storage")),
-    ("Microsoft.Web/sites", Title("Web Servers (IIS)")),
+    ("Microsoft.Web/sites", Title("Web servers (IIS)")),
     ("Microsoft.DBforMySQL/servers", Title("Database for MySQL single server")),
     (
         "Microsoft.DBforMySQL/flexibleServers",
@@ -65,7 +65,7 @@ RAW_AZURE_SERVICES: Final = [
 
 CCE_AZURE_SERVICES: Final = [
     ("Microsoft.RecoveryServices/vaults", Title("Recovery Services Vault")),
-    ("Microsoft.Network/applicationGateways", Title("Application Gateway")),
+    ("Microsoft.Network/applicationGateways", Title("Application gateway")),
 ]
 
 
@@ -229,7 +229,7 @@ def configuration_authentication() -> Mapping[str, DictElement]:
         ),
         "client": DictElement(
             parameter_form=String(
-                title=Title("Client ID / Application ID"),
+                title=Title("Client ID / application ID"),
                 custom_validate=(validators.LengthInRange(min_value=1),),
             ),
             required=True,
@@ -237,7 +237,7 @@ def configuration_authentication() -> Mapping[str, DictElement]:
         "secret": DictElement(
             parameter_form=Password(
                 migrate=migrate_to_password,
-                title=Title("Client Secret"),
+                title=Title("Client secret"),
                 custom_validate=(validators.LengthInRange(min_value=1),),
             ),
             required=True,

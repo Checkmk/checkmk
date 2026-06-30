@@ -26,7 +26,7 @@ node_software_applications_azure_load_balancers_inbound_nat_rules = Node(
             "load_balancer": TextField(Title("Load balancer")),
             "inbound_nat_rule": TextField(Title("Inbound NAT rule")),
             "frontend_port": TextField(Title("Front-end port")),
-            "backend_port": TextField(Title("Back-end port")),
+            "backend_port": TextField(Title("Backend port")),
         },
     ),
 )
@@ -46,7 +46,7 @@ node_software_applications_azure_load_balancers_inbound_nat_rules_backend_ip_con
         columns={
             "load_balancer": TextField(Title("Load balancer")),
             "inbound_nat_rule": TextField(Title("Inbound NAT rule")),
-            "backend_ip_config": TextField(Title("Back-end IP config")),
+            "backend_ip_config": TextField(Title("Backend IP config")),
             "ip_address": TextField(Title("IP address")),
             "ip_allocation_method": TextField(Title("Allocation method")),
         },
@@ -108,12 +108,12 @@ node_software_applications_azure_load_balancers_outbound_rules = Node(
 node_software_applications_azure_load_balancers_outbound_rules_backend_pools = Node(
     name="software_applications_azure_load_balancers_outbound_rules_backend_pools",
     path=["software", "applications", "azure", "load_balancers", "outbound_rules", "backend_pools"],
-    title=Title("Back-end pools"),
+    title=Title("Backend pools"),
     table=Table(
         columns={
             "load_balancer": TextField(Title("Load balancer")),
             "outbound_rule": TextField(Title("Outbound rule")),
-            "backend_pool": TextField(Title("Back-end pool")),
+            "backend_pool": TextField(Title("Backend pool")),
         },
     ),
 )
@@ -134,7 +134,7 @@ node_software_applications_azure_load_balancers_outbound_rules_backend_pools_add
         columns={
             "load_balancer": TextField(Title("Load balancer")),
             "outbound_rule": TextField(Title("Outbound rule")),
-            "backend_pool": TextField(Title("Back-end pool")),
+            "backend_pool": TextField(Title("Backend pool")),
             "address_name": TextField(Title("Address name")),
             "ip_address": TextField(Title("IP address")),
             "ip_allocation_method": TextField(Title("Allocation method")),

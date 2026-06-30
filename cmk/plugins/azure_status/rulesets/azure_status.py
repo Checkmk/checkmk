@@ -52,7 +52,7 @@ def _formspec() -> Dictionary:
 
 rule_spec_azure_status = SpecialAgent(
     name="azure_status",
-    title=Title("Azure Status"),
+    title=Title("Azure state"),
     topic=Topic.CLOUD,
     parameter_form=_formspec,
 )

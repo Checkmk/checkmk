@@ -48,7 +48,7 @@ def _make_form() -> Dictionary:
 
 rule_spec_azure_db_storage = CheckParameters(
     name="azure_v2_db_storage",
-    title=Title("Azure DB Storage"),
+    title=Title("Azure DB storage"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostCondition(),

@@ -18,7 +18,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 def _make_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "This ruleset allows you to configure levels for the the time since last AD Connect sync."
+            "This rule set allows you to configure levels for the time since last AD Connect sync."
         ),
         elements={
             "age": DictElement(

@@ -22,6 +22,6 @@ node_software_applications_azure_metadata = Node(
         "subscription_name": TextField(Title("Subscription name")),
         "region": TextField(Title("Region")),
         "tenant_id": TextField(Title("Tenant ID")),
-        "tenant_name": TextField(Title("Tenant Name")),
+        "tenant_name": TextField(Title("Tenant name")),
     },
 )

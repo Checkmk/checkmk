@@ -50,7 +50,7 @@ def _make_condition() -> HostAndItemCondition:
 
 def _make_usage_form() -> Dictionary:
     return Dictionary(
-        help_text=Help("This ruleset allows you to configure levels for the Storage usage"),
+        help_text=Help("This rule set allows you to configure levels for the storage usage"),
         elements={
             "used_capacity_levels": DictElement(
                 required=True,
@@ -72,7 +72,7 @@ def _make_usage_form() -> Dictionary:
 
 def _make_flow_form() -> Dictionary:
     return Dictionary(
-        help_text=Help("This ruleset allows you to configure levels for the Storage data flows"),
+        help_text=Help("This rule set allows you to configure levels for the storage data flows"),
         elements={
             "transactions_levels": DictElement(
                 required=True,
@@ -121,7 +121,7 @@ def _make_flow_form() -> Dictionary:
 def _make_performance_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "This ruleset allows you to configure levels for the Storage latency and availability"
+            "This rule set allows you to configure levels for the storage latency and availability"
         ),
         elements={
             "server_latency_levels": DictElement(
@@ -129,7 +129,7 @@ def _make_performance_form() -> Dictionary:
                 parameter_form=SimpleLevels(
                     title=Title("Levels on server latency"),
                     help_text=Help(
-                        "Average latency used by Azure Storage to process a successful request in milliseconds"
+                        "Average latency used by Azure storage to process a successful request in milliseconds"
                     ),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Integer(unit_symbol="ms"),
@@ -172,7 +172,7 @@ def _make_performance_form() -> Dictionary:
 
 rule_spec_azure_storageaccounts_usage = CheckParameters(
     name="azure_storageaccounts_usage",
-    title=Title("Azure Storage Usage (deprecated)"),
+    title=Title("Azure storage usage (deprecated)"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_usage_form,
     condition=_make_condition(),
@@ -181,7 +181,7 @@ rule_spec_azure_storageaccounts_usage = CheckParameters(
 
 rule_spec_azure_storageaccounts_flow = CheckParameters(
     name="azure_storageaccounts_flow",
-    title=Title("Azure Storage Data Flow (deprecated)"),
+    title=Title("Azure storage data flow (deprecated)"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_flow_form,
     condition=_make_condition(),
@@ -190,7 +190,7 @@ rule_spec_azure_storageaccounts_flow = CheckParameters(
 
 rule_spec_azure_storageaccounts_performance = CheckParameters(
     name="azure_storageaccounts_performance",
-    title=Title("Azure Storage Performance (deprecated)"),
+    title=Title("Azure storage performance (deprecated)"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_performance_form,
     condition=_make_condition(),

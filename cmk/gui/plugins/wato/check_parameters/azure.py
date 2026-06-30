@@ -494,7 +494,7 @@ def _parameter_valuespec_azure_virtualnetworkgateways() -> Dictionary:
             (
                 "p2s_bandwidth_levels_upper",
                 Tuple(
-                    title=_("Upper levels on Point-to-site bandwidth in bytes per second"),
+                    title=_("Upper levels on point-to-site bandwidth in bytes per second"),
                     elements=[
                         Float(title=_("Warning at"), unit="B/s"),
                         Float(title=_("Critical at"), unit="B/s"),
@@ -504,7 +504,7 @@ def _parameter_valuespec_azure_virtualnetworkgateways() -> Dictionary:
             (
                 "p2s_bandwidth_levels_lower",
                 Tuple(
-                    title=_("Lower levels on Point-to-site bandwidth in bytes per second"),
+                    title=_("Lower levels on point-to-site bandwidth in bytes per second"),
                     elements=[
                         Float(title=_("Warning below"), unit="B/s"),
                         Float(title=_("Critical below"), unit="B/s"),
@@ -514,7 +514,7 @@ def _parameter_valuespec_azure_virtualnetworkgateways() -> Dictionary:
             (
                 "s2s_bandwidth_levels_upper",
                 Tuple(
-                    title=_("Upper levels on Site-to-site bandwidth in bytes per second"),
+                    title=_("Upper levels on site-to-site bandwidth in bytes per second"),
                     elements=[
                         Float(title=_("Warning at"), unit="B/s"),
                         Float(title=_("Critical at"), unit="B/s"),
@@ -524,7 +524,7 @@ def _parameter_valuespec_azure_virtualnetworkgateways() -> Dictionary:
             (
                 "s2s_bandwidth_levels_lower",
                 Tuple(
-                    title=_("Lower levels on Site-to-site bandwidth in bytes per second"),
+                    title=_("Lower levels on site-to-site bandwidth in bytes per second"),
                     elements=[
                         Float(title=_("Warning below"), unit="B/s"),
                         Float(title=_("Critical below"), unit="B/s"),

@@ -16,7 +16,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 
 def _make_form() -> Dictionary:
     return Dictionary(
-        help_text=Help("This ruleset allows you to configure levels for the daily usage costs."),
+        help_text=Help("This rule set allows you to configure levels for the daily usage costs."),
         elements={
             "costs": DictElement(
                 required=False,
@@ -37,7 +37,7 @@ def _make_form() -> Dictionary:
 
 rule_spec_azure_usagedetails = CheckParameters(
     name="azure_v2_usagedetails",
-    title=Title("Azure Usage Details (Costs)"),
+    title=Title("Azure usage details (costs)"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostAndItemCondition(item_title=Title("Service Type")),

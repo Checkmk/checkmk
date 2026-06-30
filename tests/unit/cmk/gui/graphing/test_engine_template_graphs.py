@@ -78,7 +78,11 @@ def test_template_lifecycle_discover_and_update() -> None:
     # rules the engine builds itself.
     rrd = _FakeRRD()
     graphs = build_template_graphs(
-        service=_SERVICE, rrd=rrd, registered_graphs=[], metric_registry={}, translations=[]
+        service=_SERVICE,
+        rrd=rrd,
+        registered_graphs=[],
+        registered_metrics={},
+        registered_translations=[],
     )
     [fallback] = [graph for graph in graphs if graph.name == _METRIC]
     assert [

@@ -49,18 +49,18 @@ def build_template_graphs(
     service: ServiceRef,
     rrd: RRDSource,
     registered_graphs: Sequence[GraphFromAPI],
-    metric_registry: Mapping[str, metrics_v1.Metric],
-    translations: Sequence[translations_v1.Translation],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
 ) -> Sequence[Graph]:
     available = fetch_performance_data(
         services=[service],
-        translations=translations,
+        translations=registered_translations,
         rrd=rrd,
     ).get(service, {})
     graphs = build_service_graphs(
         service=service,
         registered_graphs=registered_graphs,
-        metrics=metric_registry,
+        metrics=registered_metrics,
         localizer=translate_to_current_language,
         available=available,
         graph_type="template",

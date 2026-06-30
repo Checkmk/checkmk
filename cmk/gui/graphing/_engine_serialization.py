@@ -42,7 +42,7 @@ from cmk.graphing_engine import (
     Unit,
 )
 
-_Json = Mapping[str, object]
+Json = Mapping[str, object]
 
 
 def ensure_type[T](value: object, expected: type[T]) -> T:
@@ -78,7 +78,7 @@ def _as_number(value: object) -> int | float:
 class QuantitySpec:
     tag: str
     cls: type
-    to_dict: Callable[[Quantity, QuantityCodec], _Json]
+    to_dict: Callable[[Quantity, QuantityCodec], Json]
     from_dict: Callable[[Mapping[str, object], QuantityCodec], Quantity]
 
 
@@ -88,7 +88,7 @@ class QuantityCodec:
         self._by_type = {spec.cls: spec for spec in self._specs}
         self._by_tag = {spec.tag: spec for spec in self._specs}
 
-    def serialize(self, quantity: Quantity) -> _Json:
+    def serialize(self, quantity: Quantity) -> Json:
         spec = self._by_type[type(quantity)]
         return {"type": spec.tag, **spec.to_dict(quantity, self)}
 
@@ -112,7 +112,7 @@ _NOTATIONS: Mapping[str, type] = {
 _PRECISIONS: Mapping[str, type] = {cls.__name__: cls for cls in (AutoPrecision, StrictPrecision)}
 
 
-def _unit_to_json(unit: Unit) -> _Json:
+def _unit_to_json(unit: Unit) -> Json:
     return {
         "notation": {"kind": type(unit.notation).__name__, "symbol": unit.notation.symbol},
         "precision": {"kind": type(unit.precision).__name__, "digits": unit.precision.digits},
@@ -133,7 +133,7 @@ def _unit_from_json(data: object) -> Unit:
     )
 
 
-def _attributes_to_json(attributes: CurveAttributes) -> _Json:
+def _attributes_to_json(attributes: CurveAttributes) -> Json:
     return {
         "title": attributes.title,
         "unit": _unit_to_json(attributes.unit),
@@ -150,7 +150,7 @@ def _attributes_from_json(data: object) -> CurveAttributes:
     )
 
 
-def display_to_json(display: CurveAttributes | None) -> _Json | None:
+def display_to_json(display: CurveAttributes | None) -> Json | None:
     return None if display is None else _attributes_to_json(display)
 
 
@@ -158,7 +158,7 @@ def display_from_json(data: object) -> CurveAttributes | None:
     return None if data is None else _attributes_from_json(data)
 
 
-def _bound_to_json(bound: int | float | Quantity, codec: QuantityCodec) -> _Json:
+def _bound_to_json(bound: int | float | Quantity, codec: QuantityCodec) -> Json:
     if isinstance(bound, int | float):
         return {"kind": "number", "value": bound}
     return {"kind": "quantity", "quantity": codec.serialize(bound)}
@@ -171,7 +171,7 @@ def _bound_from_json(data: object, codec: QuantityCodec) -> int | float | Quanti
     return codec.deserialize(data["quantity"])
 
 
-def _range_to_json(vertical_range: MinimalRange | FixedRange, codec: QuantityCodec) -> _Json:
+def _range_to_json(vertical_range: MinimalRange | FixedRange, codec: QuantityCodec) -> Json:
     return {
         "kind": "minimal" if isinstance(vertical_range, MinimalRange) else "fixed",
         "lower": None
@@ -194,7 +194,7 @@ def _range_from_json(data: object, codec: QuantityCodec) -> MinimalRange | Fixed
     )
 
 
-def _rrd_metric_to(quantity: Quantity, codec: QuantityCodec) -> _Json:
+def _rrd_metric_to(quantity: Quantity, codec: QuantityCodec) -> Json:
     quantity = ensure_type(quantity, RRDMetric)
     return {
         "host_name": quantity.host_name,
@@ -222,7 +222,7 @@ def _rrd_metric_from(data: Mapping[str, object], codec: QuantityCodec) -> RRDMet
     )
 
 
-def _constant_to(quantity: Quantity, codec: QuantityCodec) -> _Json:
+def _constant_to(quantity: Quantity, codec: QuantityCodec) -> Json:
     quantity = ensure_type(quantity, Constant)
     return {"value": quantity.value, "display": display_to_json(quantity.display)}
 
@@ -231,7 +231,7 @@ def _constant_from(data: Mapping[str, object], codec: QuantityCodec) -> Constant
     return Constant(_as_number(data["value"]), display_from_json(data["display"]))
 
 
-def _scalar_of_to(quantity: Quantity, codec: QuantityCodec) -> _Json:
+def _scalar_of_to(quantity: Quantity, codec: QuantityCodec) -> Json:
     quantity = ensure_type(quantity, ScalarOf)
     return {
         "metric": codec.serialize(quantity.metric),
@@ -251,7 +251,7 @@ def _scalar_of_from(data: Mapping[str, object], codec: QuantityCodec) -> ScalarO
     )
 
 
-def _operands_to(operands: Sequence[Quantity], codec: QuantityCodec) -> list[_Json]:
+def _operands_to(operands: Sequence[Quantity], codec: QuantityCodec) -> list[Json]:
     return [codec.serialize(operand) for operand in operands]
 
 
@@ -259,7 +259,7 @@ def operands_from(data: object, codec: QuantityCodec) -> list[Quantity]:
     return [codec.deserialize(operand) for operand in _as_list(data)]
 
 
-def _sum_to(quantity: Quantity, codec: QuantityCodec) -> _Json:
+def _sum_to(quantity: Quantity, codec: QuantityCodec) -> Json:
     quantity = ensure_type(quantity, Sum)
     return {
         "summands": _operands_to(quantity.summands, codec),
@@ -271,7 +271,7 @@ def _sum_from(data: Mapping[str, object], codec: QuantityCodec) -> Sum:
     return Sum(operands_from(data["summands"], codec), display_from_json(data["display"]))
 
 
-def _product_to(quantity: Quantity, codec: QuantityCodec) -> _Json:
+def _product_to(quantity: Quantity, codec: QuantityCodec) -> Json:
     quantity = ensure_type(quantity, Product)
     return {
         "factors": _operands_to(quantity.factors, codec),
@@ -283,7 +283,7 @@ def _product_from(data: Mapping[str, object], codec: QuantityCodec) -> Product:
     return Product(operands_from(data["factors"], codec), display_from_json(data["display"]))
 
 
-def _difference_to(quantity: Quantity, codec: QuantityCodec) -> _Json:
+def _difference_to(quantity: Quantity, codec: QuantityCodec) -> Json:
     quantity = ensure_type(quantity, Difference)
     return {
         "minuend": codec.serialize(quantity.minuend),
@@ -300,7 +300,7 @@ def _difference_from(data: Mapping[str, object], codec: QuantityCodec) -> Differ
     )
 
 
-def _fraction_to(quantity: Quantity, codec: QuantityCodec) -> _Json:
+def _fraction_to(quantity: Quantity, codec: QuantityCodec) -> Json:
     quantity = ensure_type(quantity, Fraction)
     return {
         "dividend": codec.serialize(quantity.dividend),
@@ -334,7 +334,7 @@ def engine_quantity_codec(additional: QuantityCodec | None = None) -> QuantityCo
     )
 
 
-def _curve_to_json(curve: Curve, codec: QuantityCodec) -> _Json:
+def _curve_to_json(curve: Curve, codec: QuantityCodec) -> Json:
     return {
         "quantity": codec.serialize(curve.quantity),
         "attributes": _attributes_to_json(curve.attributes),
@@ -373,7 +373,7 @@ def _rule_from_json(data: object, codec: QuantityCodec) -> Rule:
     )
 
 
-def serialize_graph(graph: Graph, codec: QuantityCodec | None = None) -> _Json:
+def serialize_graph(graph: Graph, codec: QuantityCodec | None = None) -> Json:
     codec = engine_quantity_codec(codec)
     return {
         "name": graph.name,
@@ -420,7 +420,7 @@ def deserialize_graph(data: object, codec: QuantityCodec | None = None) -> Graph
     )
 
 
-def serialize_graphs(graphs: Sequence[Graph], codec: QuantityCodec | None = None) -> _Json:
+def serialize_graphs(graphs: Sequence[Graph], codec: QuantityCodec | None = None) -> Json:
     # Each resolved graph carries its own graph_type, so the envelope only holds the graph list.
     return {"graphs": [serialize_graph(graph, codec) for graph in graphs]}
 

@@ -15,8 +15,15 @@ def _write_mcp_apache_conf(site_name: str, site_home: Path, config: Config) -> N
         conf_path.write_text(
             f"""\
 # Written by MCP_SERVER hook
+# Guard the LoadModule directives: other hooks (e.g. TRACE_RECEIVE/jaeger) may
+# already have loaded these proxy modules. Without the guards Apache logs
+# "AH01574: module ... is already loaded, skipping" on startup.
+<IfModule !proxy_module>
 LoadModule proxy_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy.so
+</IfModule>
+<IfModule !proxy_http_module>
 LoadModule proxy_http_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy_http.so
+</IfModule>
 
 ProxyPass "/{site_name}/check_mk/mcp" "unix://{sock}|http://localhost/" retry=0 timeout=120
 ProxyPassReverse "/{site_name}/check_mk/mcp" "unix://{sock}|http://localhost/"

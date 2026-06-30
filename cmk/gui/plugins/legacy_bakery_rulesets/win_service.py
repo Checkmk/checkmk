@@ -18,7 +18,7 @@ def _valuespec_agent_config_win_service() -> Dictionary:
             (
                 "restart_on_crash",
                 DropdownChoice(
-                    title=_("Auto Restart on Crash"),
+                    title=_("Auto-restart on crash"),
                     help=_(
                         "Use this rule set to enable or disable automatic service restarts on crash "
                         "or other internal errors."
@@ -33,7 +33,7 @@ def _valuespec_agent_config_win_service() -> Dictionary:
             (
                 "error_mode",
                 DropdownChoice(
-                    title=_("Action on Error"),
+                    title=_("Action on error"),
                     help=_(
                         "Use this rule set to control some actions which can be performed "
                         "upon crash or other problems."

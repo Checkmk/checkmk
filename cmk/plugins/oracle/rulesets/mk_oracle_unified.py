@@ -230,7 +230,7 @@ def _auth_options(is_default_options: bool = True) -> Dictionary:
                         ),
                         CascadingSingleChoiceElement(
                             name="wallet",
-                            title=Title("Oracle Wallet"),
+                            title=Title("Oracle wallet"),
                             parameter_form=FixedValue(
                                 value=None,
                                 help_text=Help(
@@ -297,7 +297,7 @@ def _sid_entry() -> Dictionary:
 
 def _descriptor_entry() -> Dictionary:
     return Dictionary(
-        title=Title("Oracle Service Name"),
+        title=Title("Oracle service name"),
         elements={
             "service_name": DictElement(
                 required=True,
@@ -344,7 +344,7 @@ def _descriptor_entry() -> Dictionary:
 
 def _oracle_id() -> CascadingSingleChoice:
     return CascadingSingleChoice(
-        title=Title("Oracle Database Identification"),
+        title=Title("Oracle database identification"),
         elements=[
             CascadingSingleChoiceElement(
                 name="alias",
@@ -407,7 +407,7 @@ def _connection_options() -> Dictionary:
         ),
         "oracle_local_registry": DictElement(
             parameter_form=String(
-                title=Title("Oracle Local Registry path"),
+                title=Title("Oracle local registry path"),
                 custom_validate=(
                     validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
                 ),
@@ -446,7 +446,9 @@ def _section_options(title: Title, help_text: Help | None, mode: str) -> SingleC
 def _sections() -> Dictionary:
     return Dictionary(
         title=Title("Sections - data to collect"),
-        help_text=Help("Select which data(sections) should be collected from the Oracle database."),
+        help_text=Help(
+            "Select which data (sections) should be collected from the Oracle database."
+        ),
         elements={
             section.section: DictElement(
                 parameter_form=_section_options(
@@ -645,7 +647,7 @@ def _main() -> Dictionary:
                 parameter_form=Integer(
                     title=Title("Cache age"),
                     help_text=Help(
-                        "How old (in seconds) the cache file for builtin sections is allowed to be."
+                        "How old (in seconds) the cache file for built-in sections is allowed to be."
                     ),
                     prefill=DefaultValue(600),
                 ),
@@ -653,7 +655,7 @@ def _main() -> Dictionary:
             ),
             "custom_metrics_cache_age": DictElement(
                 parameter_form=Integer(
-                    title=Title("Custom Metrics cache age"),
+                    title=Title("Custom metrics cache age"),
                     help_text=Help(
                         "How old (in seconds) the cache file for custom metrics is allowed to be."
                     ),
@@ -740,7 +742,7 @@ def _agent_config_mk_oracle() -> Dictionary:
 
 rule_spec_oracle_bakelet = AgentConfig(
     name="mk_oracle_unified",
-    title=Title("Unified Oracle Plugin (Beta)"),
+    title=Title("Unified Oracle plug-in (beta)"),
     topic=Topic.DATABASES,
     parameter_form=_agent_config_mk_oracle,
     help_text=Help(

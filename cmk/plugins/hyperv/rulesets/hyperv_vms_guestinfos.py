@@ -39,7 +39,7 @@ def _form_spec() -> Dictionary:
                     elements=(
                         CascadingSingleChoiceElement(
                             name="sync",
-                            title=Title("Deploy Hyper-V VM Guest Information plug-in"),
+                            title=Title("Deploy Hyper-V VM guest information plug-in"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(
@@ -54,7 +54,7 @@ def _form_spec() -> Dictionary:
                         ),
                         CascadingSingleChoiceElement(
                             name="do_not_deploy",
-                            title=Title("Do not deploy Hyper-V VM Guest Information plug-in"),
+                            title=Title("Do not deploy Hyper-V VM guest information plug-in"),
                             parameter_form=FixedValue(value=None),
                         ),
                     ),
@@ -67,7 +67,7 @@ def _form_spec() -> Dictionary:
 
 
 rule_spec_hyperv_vms_guestinfos = AgentConfig(
-    title=Title("Hyper-V VM Guest Information (Windows)"),
+    title=Title("Hyper-V VM guest information (Windows)"),
     name="hyperv_vms_guestinfos",
     topic=Topic.VIRTUALIZATION,
     parameter_form=_form_spec,

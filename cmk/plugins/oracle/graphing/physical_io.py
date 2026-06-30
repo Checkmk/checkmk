@@ -30,7 +30,7 @@ graph_oracle_physical_io_oracle_physical_io = graphs.Bidirectional(
     ),
     upper=graphs.Graph(
         name="oracle_physical_reads",
-        title=Title("Oracle physical IO reads"),
+        title=Title("Oracle physical I/O reads"),
         compound_lines=["oracle_physical_reads"],
     ),
 )

@@ -72,6 +72,7 @@ def _form_spec() -> Dictionary:
 
 
 rule_spec_ad_replication = AgentConfig(
+    # weblate-flags: read-only, vendor-name
     title=Title("Active Directory Replication (Windows)"),
     name="ad_replication",
     topic=Topic.WINDOWS,

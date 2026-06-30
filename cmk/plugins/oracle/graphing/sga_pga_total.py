@@ -57,7 +57,7 @@ metric_oracle_sga_redo_buffer = metrics.Metric(
 )
 metric_oracle_sga_shared_io_pool = metrics.Metric(
     name="oracle_sga_shared_io_pool",
-    title=Title("Oracle shared IO pool size"),
+    title=Title("Oracle shared I/O pool size"),
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_GREEN,
 )

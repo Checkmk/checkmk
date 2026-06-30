@@ -38,6 +38,7 @@ def _form_spec() -> Dictionary:
                     elements=[
                         SingleChoiceElement(
                             name="none",
+                            # weblate-flags: read-only, vendor-name
                             title=Title("Do not configure Windows Firewall"),
                         ),
                         SingleChoiceElement(

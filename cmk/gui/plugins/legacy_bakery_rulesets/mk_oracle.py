@@ -100,7 +100,7 @@ def _agent_config_mk_oracle_oracle_sections() -> Sequence[Section | SectionWithH
         SectionWithHelp(
             "iostats",
             None,
-            _("Performance: IO stats"),
+            _("Performance: I/O stats"),
             _(
                 "Warning: This section will increase the load of your Checkmk server and "
                 "may increase the load of your database. "

@@ -67,7 +67,7 @@ node_software_applications_oracle_pga = Node(
         columns={
             "sid": TextField(Title("SID")),
             "aggregate_pga_auto_target": NumberField(
-                Title("Aggregate PGA auto target"), render=UNIT_BYTES
+                Title("Aggregate PGA auto-target"), render=UNIT_BYTES
             ),
             "aggregate_pga_target_parameter": NumberField(
                 Title("Aggregate PGA target parameter"), render=UNIT_BYTES
@@ -79,7 +79,7 @@ node_software_applications_oracle_pga = Node(
             "global_memory_bound": NumberField(Title("Global memory bound"), render=UNIT_BYTES),
             "maximum_pga_allocated": NumberField(Title("Maximum PGA allocated"), render=UNIT_BYTES),
             "maximum_pga_used_for_auto_workareas": NumberField(
-                Title("Maximum PGA used for auto workareas"), render=UNIT_BYTES
+                Title("Maximum PGA used for auto-workareas"), render=UNIT_BYTES
             ),
             "maximum_pga_used_for_manual_workareas": NumberField(
                 Title("Maximum PGA used for manual workareas"), render=UNIT_BYTES
@@ -87,7 +87,7 @@ node_software_applications_oracle_pga = Node(
             "total_pga_allocated": NumberField(Title("Total PGA allocated"), render=UNIT_BYTES),
             "total_pga_inuse": NumberField(Title("Total PGA inuse"), render=UNIT_BYTES),
             "total_pga_used_for_auto_workareas": NumberField(
-                Title("Total PGA used for auto workareas"), render=UNIT_BYTES
+                Title("Total PGA used for auto-workareas"), render=UNIT_BYTES
             ),
             "total_pga_used_for_manual_workareas": NumberField(
                 Title("Total PGA used for manual workareas"), render=UNIT_BYTES
@@ -168,7 +168,7 @@ node_software_applications_oracle_tablespaces = Node(
             "name": TextField(Title("Name")),
             "version": TextField(Title("Version")),
             "type": TextField(Title("Type")),
-            "autoextensible": TextField(Title("Autoextensible")),
+            "autoextensible": TextField(Title("Auto-extensible")),
             "current_size": NumberField(Title("Current size"), render=UNIT_BYTES),
             "max_size": NumberField(Title("Max. size"), render=UNIT_BYTES),
             "used_size": NumberField(Title("Used size"), render=UNIT_BYTES),

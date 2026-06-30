@@ -104,7 +104,7 @@ rule_spec_w32time_peers = CheckParameters(
 
 rule_spec_w32time_peers_summary = CheckParameters(
     name="w32time_peers_summary",
-    title=Title("Windows time service peers summary"),
+    title=Title("Windows Time service peers summary"),
     topic=Topic.WINDOWS,
     parameter_form=_make_form(True),
     condition=HostCondition(),

@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_citrix_load = metrics.Metric(
     name="citrix_load",
-    title=Title("Citrix Load"),
+    title=Title("Citrix load"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.CYAN,
 )
@@ -25,7 +25,7 @@ perfometer_citrix_load = perfometers.Perfometer(
 
 graph_citrix_serverload = graphs.Graph(
     name="citrix_serverload",
-    title=Title("Citrix Serverload"),
+    title=Title("Citrix serverload"),
     minimal_range=graphs.MinimalRange(0, 100),
     compound_lines=["citrix_load"],
 )

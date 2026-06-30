@@ -64,7 +64,7 @@ def _valuespec_agent_config_citrix_licenses() -> Dictionary:
 
 
 rule_spec_citrix_licenses = AgentConfig(
-    title=Title("Citrix Licenses (Windows)"),
+    title=Title("Citrix licenses (Windows)"),
     name="citrix_licenses",
     topic=Topic.APPLICATIONS,
     parameter_form=_valuespec_agent_config_citrix_licenses,

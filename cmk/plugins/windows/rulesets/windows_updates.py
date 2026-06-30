@@ -36,7 +36,7 @@ def _form_spec() -> Dictionary:
                     elements=(
                         CascadingSingleChoiceElement(
                             name="sync",
-                            title=Title("Deploy Windows Updates plug-in"),
+                            title=Title("Deploy Windows updates plug-in"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(

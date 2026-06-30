@@ -31,7 +31,7 @@ def _valuespec_agent_config_win_runas() -> Alternative:
         ),
         elements=[
             Dictionary(
-                title=_("Enable 'Run As <b>Local Group</b>' for scripts"),
+                title=_("Enable 'Run as <b>local group</b>' for scripts"),
                 elements=[
                     (
                         "type",
@@ -68,7 +68,7 @@ def _valuespec_agent_config_win_runas() -> Alternative:
                 optional_keys=[],
             ),
             Dictionary(
-                title=_("Enable 'Run As <b>User</b>' for scripts"),
+                title=_("Enable 'Run as <b>user</b>' for scripts"),
                 elements=[
                     (
                         "type",

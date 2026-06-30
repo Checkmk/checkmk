@@ -63,7 +63,7 @@ graph_oracle_iostat_total_ios = graphs.Bidirectional(
     title=Title("Oracle IOSTAT total IOs"),
     lower=graphs.Graph(
         name="oracle_iostat_total_ios_w",
-        title=Title("Oracle IOSTAT total IO writes"),
+        title=Title("Oracle IOSTAT total I/O writes"),
         simple_lines=[
             "oracle_ios_f_total_s_w",
             "oracle_ios_f_total_l_w",
@@ -71,7 +71,7 @@ graph_oracle_iostat_total_ios = graphs.Bidirectional(
     ),
     upper=graphs.Graph(
         name="oracle_iostat_total_ios_r",
-        title=Title("Oracle IOSTAT total IO reads"),
+        title=Title("Oracle IOSTAT total I/O reads"),
         simple_lines=[
             "oracle_ios_f_total_s_r",
             "oracle_ios_f_total_l_r",

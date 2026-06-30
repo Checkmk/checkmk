@@ -155,7 +155,7 @@ def _filter_ids_element() -> tuple[str, ListOf[tuple[str, list[str], list[str]]]
             ),
             title=_("Filtering by event ID"),
             movable=True,
-            help=_("Here you can configure messages filtering parameters"),
+            help=_("Here, you can configure messages filtering parameters"),
             add_label=_("Add event ID filter rule"),
         ),
     )
@@ -183,7 +183,7 @@ def _filter_sources_element() -> tuple[str, ListOf[tuple[str, list[str], list[st
             ),
             movable=True,
             title=_("Filtering by event source"),
-            help=_("Here you can configure messages filtering parameters"),
+            help=_("Here, you can configure messages filtering parameters"),
             add_label=_("Add event source filter rule"),
         ),
     )
@@ -211,7 +211,7 @@ def _filter_users_element() -> tuple[str, ListOf[tuple[str, list[str], list[str]
             ),
             movable=True,
             title=_("Filtering by event user"),
-            help=_("Here you can configure messages filtering parameters using event user"),
+            help=_("Here, you can configure messages filtering parameters using event user"),
             add_label=_("Add event user filter rule"),
         ),
     )
@@ -246,7 +246,7 @@ def _text_pattern_element() -> tuple[str, ListOf[tuple[str, str]]]:
             movable=True,
             title=_("Filtering by message pattern"),
             help=_(
-                "Here you can configure messages filtering parameters using regular expressions. The rule is case insensitive."
+                "Here, you can configure messages filtering parameters using regular expressions. The rule is case insensitive."
             ),
             add_label=_("Add message pattern filter rule"),
         ),

@@ -68,7 +68,7 @@ def create_vm_generation_element() -> DictElement:
             elements={
                 "expected_generation": DictElement(
                     parameter_form=SingleChoice(
-                        title=Title("Expected VM Generation"),
+                        title=Title("Expected VM generation"),
                         elements=[
                             SingleChoiceElement(
                                 name="generation_1",

@@ -45,7 +45,7 @@ def _valuespec_agent_config_win_script_execution() -> Dictionary:
             (
                 "execution",
                 DropdownChoice(
-                    title=_("Execution Mode"),
+                    title=_("Execution mode"),
                     help=_("Selects how parallelizable scripts are executed"),
                     choices=[
                         ("sync", _("Synchronous")),

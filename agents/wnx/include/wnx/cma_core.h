@@ -210,6 +210,12 @@ public:
         return false;
     }
 
+    void setPhantomResult() {
+        std::lock_guard lk(lock_);
+        process_->getData().clear();
+        process_->getData().push_back('\1');
+    }
+
     bool storeExitCode(uint32_t Pid, uint32_t Code) {
         std::lock_guard lk(lock_);
         return process_->trySetExitCode(Pid, Code);
@@ -276,7 +282,7 @@ public:
     }
 
 private:
-    void readAndAppend(HANDLE read_handle, std::chrono::milliseconds timeout);
+    void readAndAppend(HANDLE read_handle);
     [[nodiscard]] bool waitForBreakLoop(std::chrono::milliseconds timeout);
     HANDLE stop_event_;
     bool waitForStop(std::chrono::milliseconds interval);

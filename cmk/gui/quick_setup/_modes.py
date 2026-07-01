@@ -166,7 +166,7 @@ class ModeQuickSetupSpecialAgent(WatoMode):
     def title(self) -> str:
         title = rulespec_registry[self._name].title
         assert title is not None
-        return _("Add %s configuration") % title
+        return _("Add %(title)s configuration") % {"title": title}
 
     @override
     def breadcrumb(self) -> Breadcrumb:
@@ -474,7 +474,7 @@ class ModeEditConfigurationBundles(WatoMode):
         html.icon_button(
             url=make_confirm_delete_link(
                 url=self._action_url("delete", bundle_id),
-                title=_("Delete configuration %s") % bundle_id,
+                title=_("Delete configuration %(bundle_id)s") % {"bundle_id": bundle_id},
             ),
             title=_("Delete this configuration"),
             icon=StaticIcon(IconNames.delete),

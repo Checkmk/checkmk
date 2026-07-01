@@ -95,13 +95,15 @@ def quick_setup_locked_warning(ident: GlobalIdent, type_name: str) -> None:
     html.div(
         html.render_div(
             html.render_h2(
-                _("Part of Quick Setup: %s") % config_name,
+                _("Part of Quick Setup: %(config_name)s") % {"config_name": config_name},
                 class_=["heading"],
             )
             + html.render_div(body)
             + html.render_div(
                 html.render_a(
-                    html.render_b(_("Go to %s overview") % config_name),
+                    html.render_b(
+                        _("Go to %(config_name)s overview") % {"config_name": config_name}
+                    ),
                     href=_quick_setup_link(ident),
                 ),
                 class_=["button-container"],
@@ -121,9 +123,9 @@ def quick_setup_duplication_warning(ident: GlobalIdent, type_name: str) -> None:
             + html.render_div(
                 html.render_div(
                     _(
-                        "You are duplicating a %s that has been created by the Quick Setup and associated with the source"
+                        "You are duplicating a %(type_name)s that has been created by the Quick Setup and associated with the source"
                     )
-                    % type_name
+                    % {"type_name": type_name}
                     + html.render_a(
                         _("[%s] - Quick Setup") % ident["instance_id"],
                         _quick_setup_link(ident),
@@ -134,9 +136,9 @@ def quick_setup_duplication_warning(ident: GlobalIdent, type_name: str) -> None:
                     style="display: flex; align-items: center;",
                 )
                 + _(
-                    "However, the duplicated %s will no longer be associated with the Quick Setup and this source."
+                    "However, the duplicated %(type_name)s will no longer be associated with the Quick Setup and this source."
                 )
-                % type_name
+                % {"type_name": type_name}
             ),
             class_=["content"],
         ),

@@ -447,8 +447,14 @@ def start_quick_setup_stage_job(
             ),
         ),
         InitialStatusArgs(
-            title=_("Running Quick Setup %s stage %s action %s")
-            % (quick_setup_id, stage_index, action_id),
+            title=_(
+                "Running Quick Setup %(quick_setup_id)s stage %(stage_index)s action %(action_id)s"
+            )
+            % {
+                "quick_setup_id": quick_setup_id,
+                "stage_index": stage_index,
+                "action_id": action_id,
+            },
             user=str(user.id) if user.id else None,
         ),
     )
@@ -552,7 +558,8 @@ def start_quick_setup_stage_action_job_on_remote(
     except (MKAutomationException, MKUserError) as e:
         raise MKUserError(
             None,
-            _("Failed to start the stage action on remote site %s: %s") % (site_id, e),
+            _("Failed to start the stage action on remote site %(site_id)s: %(e)s")
+            % {"site_id": site_id, "e": e},
         ) from e
     return job_id
 

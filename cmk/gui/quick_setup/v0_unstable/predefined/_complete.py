@@ -476,8 +476,10 @@ def _get_service_discovery_result(
     )
     if not snapshot.exists:
         raise Exception(
-            _("Could not find a running service discovery for host %s on remote site %s")
-            % (host_name, site_id)
+            _(
+                "Could not find a running service discovery for host %(host_name)s on remote site %(site_id)s"
+            )
+            % {"host_name": host_name, "site_id": site_id}
         )
     while snapshot.is_active:
         time.sleep(0.5)

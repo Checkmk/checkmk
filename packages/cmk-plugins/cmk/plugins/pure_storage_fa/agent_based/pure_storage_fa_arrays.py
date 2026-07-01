@@ -38,6 +38,8 @@ class Array(BaseModel, frozen=True):
     shared: float
     system: float | None
     replication: float
+    version: str
+    id: str
 
 
 def parse_array(string_table: StringTable) -> Array | None:
@@ -57,6 +59,8 @@ def parse_array(string_table: StringTable) -> Array | None:
         shared=array["space"]["shared"],
         system=array["space"]["system"],
         replication=array["space"]["replication"],
+        version=array["version"],
+        id=array["id"],
     )
 
 
@@ -124,4 +128,43 @@ check_plugin_pure_storage_fa_arrays = CheckPlugin(
         **FILESYSTEM_DEFAULT_LEVELS,
         **MAGIC_FACTOR_DEFAULT_PARAMS,
     },
+)
+
+
+def discovery_pure_storage_fa_version(section: Array) -> DiscoveryResult:
+    if section.version:
+        yield Service()
+
+
+def check_pure_storage_fa_version(section: Array) -> CheckResult:
+    yield Result(
+        state=State.OK,
+        summary=f"Version: {section.version}",
+    )
+
+
+check_plugin_pure_storage_fa_version = CheckPlugin(
+    sections=["pure_storage_fa_arrays"],
+    name="pure_storage_fa_version",
+    discovery_function=discovery_pure_storage_fa_version,
+    check_function=check_pure_storage_fa_version,
+    service_name="FlashArray Version",
+)
+
+
+def discovery_pure_storage_fa_id(section: Array) -> DiscoveryResult:
+    if section.id:
+        yield Service()
+
+
+def check_pure_storage_fa_id(section: Array) -> CheckResult:
+    yield Result(state=State.OK, summary=f"ID: {section.id}")
+
+
+check_plugin_pure_storage_fa_id = CheckPlugin(
+    sections=["pure_storage_fa_arrays"],
+    name="pure_storage_fa_id",
+    discovery_function=discovery_pure_storage_fa_id,
+    check_function=check_pure_storage_fa_id,
+    service_name="FlashArray ID",
 )

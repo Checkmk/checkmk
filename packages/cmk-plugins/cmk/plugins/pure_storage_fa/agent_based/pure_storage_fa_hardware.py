@@ -17,6 +17,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
     StringTable,
+    Metric,
 )
 
 
@@ -25,6 +26,10 @@ class Device(BaseModel, frozen=True):
     status: str
     type: str
     details: str | None = None
+    model: str | None = None
+    voltage: int | None = None
+    model: str | None = None
+    serial: str | None = None
 
 
 class Hardware(BaseModel, frozen=True):
@@ -33,6 +38,8 @@ class Hardware(BaseModel, frozen=True):
     fibre_channel_ports: Mapping[str, Device]
     infiniband_ports: Mapping[str, Device]
     fans: Mapping[str, Device]
+    power_supply: Mapping[str, Device]
+    chassis: Mapping[str, Device]
 
 
 MAP_DEVICE_STATUS = {
@@ -60,6 +67,8 @@ def parse_hardware(string_table: StringTable) -> Hardware | None:
         fibre_channel_ports={d.name: d for d in devices if d.type == "fc_port"},
         infiniband_ports={d.name: d for d in devices if d.type == "ib_port"},
         fans={d.name: d for d in devices if d.type == "cooling"},
+        power_supply={d.name: d for d in devices if d.type == "power_supply"},
+        chassis={d.name: d for d in devices if d.type == "chassis"},
     )
 
 
@@ -242,4 +251,63 @@ check_plugin_pure_storage_fan = CheckPlugin(
     service_name="Fan %s",
     discovery_function=discover_fan,
     check_function=check_fan,
+)
+
+
+def discover_power_supply(section: Hardware) -> DiscoveryResult:
+    for item in section.power_supply:
+        yield Service(item=item)
+
+
+def check_power_supply(item: str, section: Hardware) -> CheckResult:
+    if (power_supply := section.power_supply.get(item)) is None:
+        return
+    state = State.UNKNOWN
+    summary = "Check failed"
+    if power_supply.status == "ok":
+        state = State.OK
+        summary = f"{power_supply.name} (Model {power_supply.model}) is running with {power_supply.voltage} Volt"
+    elif int(power_supply.voltage) < 50:
+        state = State.WARN
+        summary = (
+            f"{power_supply.name} is running with only {power_supply.voltage} Volt"
+        )
+        if int(power_supply.voltage) < 10:
+            state = State.CRIT
+    else:
+        state = State.CRIT
+        summary = f"{power_supply.name} (Model {power_supply.model}) has state {power_supply.status} with {power_supply.voltage} Volt (could not set state)"
+    yield Metric("pure_storage_fa_power_supply", int(power_supply.voltage))
+    yield Result(state=state, summary=summary)
+
+
+check_plugin_pure_storage_fa_power_supply = CheckPlugin(
+    name="pure_storage_fa_power_supply",
+    sections=["pure_storage_fa_hardware"],
+    service_name="Power Supply %s",
+    discovery_function=discover_power_supply,
+    check_function=check_power_supply,
+)
+
+
+def discover_serial_chassis(section: Hardware) -> DiscoveryResult:
+    if section.chassis:
+        yield Service()
+
+
+def check_serial_chassis(section: Hardware) -> CheckResult:
+    if (chassis := section.chassis.get("CH0")) is None:
+        return
+    yield Result(
+        state=State.OK,
+        summary=f"{chassis.name}, Model: {chassis.model}, Serial: {chassis.serial}",
+    )
+
+
+check_plugin_pure_storage_fa_serial_chassis = CheckPlugin(
+    name="pure_storage_fa_serial_chassis",
+    sections=["pure_storage_fa_hardware"],
+    service_name="Chassis Serial Number",
+    discovery_function=discover_serial_chassis,
+    check_function=check_serial_chassis,
 )

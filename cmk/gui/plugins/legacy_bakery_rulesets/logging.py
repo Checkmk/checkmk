@@ -89,7 +89,7 @@ def _valuespec_agent_config_logging() -> Migrate[dict[str, int | str | bool]]:
                         label=_("write log messages to the Windows debugging interface"),
                         default_value=False,
                         help=_(
-                            "Enable/disable logging to Windows debugging interface. Off by default. View with <i>WinDbg</i>"
+                            "Enable/Disable logging to Windows debugging interface. Off by default. View with <i>WinDbg</i>"
                         ),
                     ),
                 ),

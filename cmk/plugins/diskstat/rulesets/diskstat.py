@@ -131,7 +131,7 @@ def _form_spec_diskstat_inventory() -> Dictionary:
 rule_spec_diskstat_inventory = DiscoveryParameters(
     topic=Topic.GENERAL,
     name="diskstat_inventory",
-    title=Title("Disk I/O discovery"),
+    title=Title("Disk IO discovery"),
     parameter_form=_form_spec_diskstat_inventory,
 )
 
@@ -140,7 +140,7 @@ def _item_spec_diskstat() -> String:
     return String(
         help_text=Help(
             "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>. "
-            "A per-disk I/O is specified by the drive letter, a colon and a slash on Windows "
+            "A per-disk IO is specified by the drive letter, a colon and a slash on Windows "
             "(e.g. <tt>C:/</tt>) or by the device name on Linux/Unix (e.g. <tt>/dev/sda</tt>)."
         ),
     )
@@ -210,7 +210,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
             "utilization": DictElement(
                 required=False,
                 parameter_form=Levels(
-                    title=Title("Disk utilization"),
+                    title=Title("Disk Utilization"),
                     form_spec_template=Float(
                         custom_validate=(NumberInRange(min_value=0.0, max_value=1.0),),
                     ),
@@ -226,7 +226,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
             "latency": DictElement(
                 required=False,
                 parameter_form=Levels(
-                    title=Title("Disk latency"),
+                    title=Title("Disk Latency"),
                     form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.MILLISECOND]),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.08, 0.16)),
@@ -240,7 +240,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
             "read_latency": DictElement(
                 required=False,
                 parameter_form=Levels(
-                    title=Title("Disk read latency"),
+                    title=Title("Disk Read Latency"),
                     form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.MILLISECOND]),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.08, 0.16)),
@@ -254,7 +254,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
             "write_latency": DictElement(
                 required=False,
                 parameter_form=Levels(
-                    title=Title("Disk write latency"),
+                    title=Title("Disk Write Latency"),
                     form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.MILLISECOND]),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.08, 0.16)),
@@ -348,7 +348,7 @@ def _parameter_valuespec_diskstat() -> Dictionary:
 
 rule_spec_diskstat = CheckParameters(
     name="diskstat",
-    title=Title("Disk I/O levels"),
+    title=Title("Disk IO levels"),
     topic=Topic.STORAGE,
     parameter_form=_parameter_valuespec_diskstat,
     condition=HostAndItemCondition(item_title=Title("Device"), item_form=_item_spec_diskstat()),

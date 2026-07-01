@@ -125,7 +125,7 @@ graph_cmk_cpu_time_by_phase = graphs.Graph(
 )
 graph_cpu_time = graphs.Graph(
     name="cpu_time",
-    title=Title("CPU time"),
+    title=Title("CPU Time"),
     compound_lines=[
         "user_time",
         "system_time",

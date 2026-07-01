@@ -118,13 +118,13 @@ def _valuespec_logwatch_rules() -> Dictionary:
                         (
                             "c_to",
                             DropdownChoice(
-                                title=_("Change CRITICAL state to"),
+                                title=_("Change CRITICAL State to"),
                                 choices=[
                                     ("C", _("CRITICAL")),
                                     ("W", _("WARNING")),
                                     ("O", _("OK")),
                                     ("I", _("IGNORE")),
-                                    (".", _("Context info")),
+                                    (".", _("Context Info")),
                                 ],
                                 default_value="C",
                             ),
@@ -138,7 +138,7 @@ def _valuespec_logwatch_rules() -> Dictionary:
                                     ("W", _("WARNING")),
                                     ("O", _("OK")),
                                     ("I", _("IGNORE")),
-                                    (".", _("Context info")),
+                                    (".", _("Context Info")),
                                 ],
                                 default_value="W",
                             ),
@@ -146,13 +146,13 @@ def _valuespec_logwatch_rules() -> Dictionary:
                         (
                             "o_to",
                             DropdownChoice(
-                                title=_("Change OK state to"),
+                                title=_("Change OK State to"),
                                 choices=[
                                     ("C", _("CRITICAL")),
                                     ("W", _("WARNING")),
                                     ("O", _("OK")),
                                     ("I", _("IGNORE")),
-                                    (".", _("Context info")),
+                                    (".", _("Context Info")),
                                 ],
                                 default_value="O",
                             ),
@@ -160,13 +160,13 @@ def _valuespec_logwatch_rules() -> Dictionary:
                         (
                             "._to",
                             DropdownChoice(
-                                title=_("Change context info to"),
+                                title=_("Change Context Info to"),
                                 choices=[
                                     ("C", _("CRITICAL")),
                                     ("W", _("WARNING")),
                                     ("O", _("OK")),
                                     ("I", _("IGNORE")),
-                                    (".", _("Context info")),
+                                    (".", _("Context Info")),
                                 ],
                                 default_value=".",
                             ),
@@ -201,7 +201,7 @@ def _valuespec_logwatch_groups() -> Dictionary:
                                 orientation="vertical",
                                 elements=[
                                     TextInput(title=_("Include pattern")),
-                                    TextInput(title=_("Exclude pattern")),
+                                    TextInput(title=_("Exclude Pattern")),
                                 ],
                             ),
                         ],

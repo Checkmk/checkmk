@@ -31,7 +31,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
             "levels_5": DictElement(
                 required=False,
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Reallocated sectors (id 5)"),
+                    title=Title("Reallocated sectors (ID 5)"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="levels_upper",
@@ -54,7 +54,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
             "levels_10": DictElement(
                 required=False,
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Spin retries (id 10)"),
+                    title=Title("Spin retries (ID 10)"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="levels_upper",
@@ -77,7 +77,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
             "levels_184": DictElement(
                 required=False,
                 parameter_form=CascadingSingleChoice(
-                    title=Title("End-to-end errors (id 184)"),
+                    title=Title("End-to-end errors (ID 184)"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="levels_upper",
@@ -100,7 +100,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
             "levels_187": DictElement(
                 required=False,
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Uncorrectable errors (id 187)"),
+                    title=Title("Uncorrectable errors (ID 187)"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="levels_upper",
@@ -123,7 +123,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
             "levels_196": DictElement(
                 required=False,
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Reallocated events (id 196)"),
+                    title=Title("Reallocated events (ID 196)"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="levels_upper",
@@ -146,7 +146,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
             "levels_197": DictElement(
                 required=False,
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Pending sectors (id 197)"),
+                    title=Title("Pending sectors (ID 197)"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="levels_upper",
@@ -169,7 +169,7 @@ def _parameter_valuespec_smart_ata() -> Dictionary:
             "levels_199": DictElement(
                 required=False,
                 parameter_form=CascadingSingleChoice(
-                    title=Title("CRC errors (id 199)"),
+                    title=Title("CRC errors (ID 199)"),
                     elements=[
                         CascadingSingleChoiceElement(
                             name="levels_upper",

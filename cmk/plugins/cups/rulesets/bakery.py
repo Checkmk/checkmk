@@ -74,7 +74,7 @@ def _valuespec_agent_config_mk_cups_queues() -> Dictionary:
 
 
 rule_spec_mk_cups_queues = AgentConfig(
-    title=Title("CUPS Printer Queues (Linux)"),
+    title=Title("CUPS printer queues (Linux)"),
     name="mk_cups_queues",
     topic=Topic.APPLICATIONS,
     parameter_form=_valuespec_agent_config_mk_cups_queues,

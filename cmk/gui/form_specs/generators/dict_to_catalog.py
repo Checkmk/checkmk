@@ -79,9 +79,7 @@ class Dict2CatalogConverter:
             topics[topic_name] = Topic(
                 title=topic_title[topic_name],
                 elements={
-                    element_name: TopicElement(
-                        parameter_form=element.parameter_form, required=element.required
-                    )
+                    element_name: TopicElement(parameter_form=element.parameter_form, required=True)
                     for element_name, element in elements.items()
                 },
             )

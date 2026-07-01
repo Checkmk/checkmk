@@ -18,6 +18,7 @@ void main() {
             cmd: "make -C tests test-unit-all",
             container_name: "ubuntu-2404-${container_safe_branch_name}-latest",
             disable_hot_cache: true,
+            archive_pattern: "results/**/test.xml",
         ]);
     }
 }

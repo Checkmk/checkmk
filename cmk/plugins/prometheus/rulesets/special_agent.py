@@ -106,18 +106,21 @@ def _parameter_form() -> Dictionary:
                                         "host_mapping": DictElement(
                                             parameter_form=String(
                                                 title=Title("Explicitly map Node Exporter host"),
+                                                # fmt: off
                                                 help_text=Help(
+                                                    # weblate-flags: read-only, domain-specific
                                                     "Per default, Checkmk tries to map the underlying Checkmk host "
                                                     "to the Node Exporter host which contains either the Checkmk "
                                                     'host name, host address or "localhost" in its endpoint address. '
                                                     "The created services of the mapped Node Exporter will "
                                                     "be assigned to the Checkmk host. A piggyback host for each "
-                                                    "Node Exporter host will be created if none of the options are "
+                                                    "Node Exporter host will be created if none of the options is "
                                                     "valid. "
                                                     "This option allows you to explicitly map one of your Node "
                                                     "Exporter hosts to the underlying Checkmk host. This can be "
                                                     "used if the default options do not apply to your setup."
                                                 ),
+                                                # fmt: on
                                                 custom_validate=(_validate_hostname,),
                                             ),
                                         ),

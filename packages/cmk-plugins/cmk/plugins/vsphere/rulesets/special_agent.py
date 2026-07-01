@@ -125,8 +125,8 @@ def parameter_form() -> Dictionary:
                     title=Title("Connect timeout"),
                     help_text=Help(
                         "The network timeout in seconds when communicating with vSphere or "
-                        "to the Checkmk Agent. The default is 60 seconds. Please note that this "
-                        "is not a total timeout but is applied to each individual network transation."
+                        "to the Checkmk agent. The default is 60 seconds. Please note that this "
+                        "is not a total timeout but is applied to each individual network transaction."
                     ),
                     prefill=DefaultValue(60),
                     custom_validate=(validators.NumberInRange(min_value=1),),
@@ -190,7 +190,7 @@ def parameter_form() -> Dictionary:
                     label=Label("Display snapshot summary on ESX hosts"),
                     prefill=DefaultValue(False),
                     help_text=Help(
-                        "By default the snapshot summary service is displayed on the vCenter. "
+                        "By default, the snapshot summary service is displayed on the vCenter. "
                         "Users who run an ESX host on its own or do not include their vCenter in the "
                         "monitoring can choose to display the snapshot summary on the ESX host itself."
                     ),

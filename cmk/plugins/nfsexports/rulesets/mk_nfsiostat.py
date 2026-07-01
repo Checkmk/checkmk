@@ -29,7 +29,7 @@ def _valuespec_agent_config_mk_nfsiostat() -> Dictionary:
     return Dictionary(
         help_text=Help(
             "This will deploy the agent plug-in <tt>mk_nfsiostat</tt>"
-            " to check various client side NFS IO stats."
+            " to check various client side NFS I/O stats."
         ),
         elements={
             "deployment": DictElement(

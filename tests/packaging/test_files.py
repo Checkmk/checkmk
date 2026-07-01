@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import atexit
 import logging
 import os
 import re
@@ -418,9 +419,38 @@ def _should_be_signed(path: str) -> bool:
     return True
 
 
+_TRUSTED_ROOTS_DIR = Path(__file__).parent / "certs"
+
+
+@cache
+def _signing_ca_bundle() -> str:
+    """Return a CA bundle trusting every Windows signing path we produce.
+
+    Built purely from the roots committed under certs/, so signature verification does not
+    depend on the CI image's CA store (osslsigncode's -CAfile replaces the default trust
+    store anyway):
+      - Comodo AAA Certificate Services              -> YubiKey/Sectigo code signing
+      - USERTrust RSA Certification Authority        -> Sectigo timestamp chain
+    The same bundle serves -TSA-CAfile too, since it covers the timestamp chains.
+    """
+    roots = sorted(_TRUSTED_ROOTS_DIR.glob("*.pem"))
+    if not roots:
+        raise RuntimeError(f"No trusted roots committed under {_TRUSTED_ROOTS_DIR}")
+    parts = [root.read_text() for root in roots]
+
+    with NamedTemporaryFile(
+        mode="w", prefix="cmk-signing-ca-", suffix=".pem", delete=False
+    ) as bundle:
+        bundle.write("\n".join(parts))
+        bundle_path = bundle.name
+    atexit.register(lambda: Path(bundle_path).unlink(missing_ok=True))
+    return bundle_path
+
+
 def _verify_signature(file_path: Path, file_name: str) -> None | str:
     try:
         assert file_path.exists(), f"File to verify does not exist: {file_path}"
+        bundle = _signing_ca_bundle()
         # requires to build osslsigncode via bazel (or install locally) beforehand:
         #   export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path)
         # (see tests/Makefile -> tests-packaging)
@@ -430,6 +460,10 @@ def _verify_signature(file_path: Path, file_name: str) -> None | str:
                 "verify",
                 "-ignore-cdp",
                 "-ignore-crl",
+                "-CAfile",
+                bundle,
+                "-TSA-CAfile",
+                bundle,
                 file_path,
             ],
             check=False,

@@ -5,6 +5,7 @@
  */
 import usei18n from '@/lib/i18n'
 
+import { AcknowledgeApi } from '@/monitoring/shared/api/actions/acknowledge'
 import type { HostRef } from '@/monitoring/shared/api/types'
 
 import type { MonitoringAction } from '../types'
@@ -14,6 +15,7 @@ export const ACK_ACTION_ID = 'acknowledge'
 
 export function useAcknowledgeAction(): MonitoringAction<AcknowledgeValues> {
   const { _t, _tn } = usei18n()
+  const api = new AcknowledgeApi()
 
   return {
     id: ACK_ACTION_ID,
@@ -28,14 +30,35 @@ export function useAcknowledgeAction(): MonitoringAction<AcknowledgeValues> {
       persistent: false,
       notify: true
     }),
-    perform: async (targets: HostRef[]) => ({
-      variant: 'success',
-      message: _tn(
-        'Acknowledged the problem for %{count} host',
-        'Acknowledged the problems for %{count} hosts',
-        targets.length,
-        { count: targets.length }
-      )
-    })
+    perform: async (targets: HostRef[], values: AcknowledgeValues) => {
+      try {
+        await api.acknowledgeHosts(
+          targets.map((target) => target.name),
+          {
+            comment: values.comment,
+            sticky: values.sticky,
+            persistent: values.persistent,
+            notify: values.notify,
+            expireOn: values.expireOn?.toDate().toISOString()
+          }
+        )
+        return {
+          variant: 'success',
+          message: _tn(
+            'Acknowledged the problem for %{count} host',
+            'Acknowledged the problems for %{count} hosts',
+            targets.length,
+            { count: targets.length }
+          )
+        }
+      } catch (error) {
+        return {
+          variant: 'error',
+          message: _t('Could not acknowledge the problems: %{detail}', {
+            detail: error instanceof Error ? error.message : String(error)
+          })
+        }
+      }
+    }
   }
 }

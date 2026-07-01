@@ -65,7 +65,7 @@
   "pkg:pypi/protobuf@6.33.4": "BSD-3-Clause",
   "pkg:pypi/psycopg2-binary@2.9.12": "LGPL-3.0-or-later",
   "pkg:pypi/pyasn1-modules@0.4.2": "BSD-2-Clause",
-  "pkg:pypi/pyghmi@1.6.16": "Apache-2.0",
+  "pkg:pypi/pyghmi@1.6.18": "Apache-2.0",
   "pkg:pypi/pymssql@2.3.13": "LGPL-2.1",
   "pkg:pypi/pyopenssl@26.0.0": "Apache-2.0",
   "pkg:pypi/pyproject-hooks@1.2.0": "MIT",

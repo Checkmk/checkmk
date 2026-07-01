@@ -104,8 +104,10 @@ class PageUnifiedSearch(AjaxPage):
         if result_counts.monitoring == _MONITORING_ENGINE_ROW_LIMIT:
             messages.append(
                 UnifiedSearchApiResponseMessage(
-                    header=_("Display limit of %d monitoring results reached.")
-                    % _MONITORING_ENGINE_ROW_LIMIT,
+                    header=_(
+                        "Display limit of %(_MONITORING_ENGINE_ROW_LIMIT)d monitoring results reached."
+                    )
+                    % {"_MONITORING_ENGINE_ROW_LIMIT": _MONITORING_ENGINE_ROW_LIMIT},
                     detail=_("Refine your search or press Enter for host/service search."),
                     message_variant=MessageVariant.info,
                 )

@@ -240,10 +240,10 @@ def delete_bi_rule(params: Mapping[str, Any]) -> Response:
                 return
         raise _make_error(
             _(
-                "Could not delete BI rule '%s'. It has to exist and you need either wato.bi_admin"
+                "Could not delete BI rule '%(rule_id)s'. It has to exist and you need either wato.bi_admin"
                 " permissions or permissions to modify the parent BI pack to delete a BI rule."
             )
-            % rule_id
+            % {"rule_id": rule_id}
         )
 
     ensure_rule_accessible(params["rule_id"])

@@ -223,7 +223,9 @@ class ABCBIMode(WatoMode):
             try:
                 return self._bi_packs.get_pack_mandatory(pack_id)
             except KeyError:
-                raise MKUserError("pack", _("This BI pack does not exist: %s") % pack_id)
+                raise MKUserError(
+                    "pack", _("This BI pack does not exist: %(pack_id)s") % {"pack_id": pack_id}
+                )
         return None
 
     @property
@@ -582,7 +584,7 @@ class ModeBIPacks(ABCBIMode):
         ).add(
             Change(
                 action_name="delete-bi-pack",
-                text=_("Deleted BI pack %s") % pack_id,
+                text=_("Deleted BI pack %(pack_id)s") % {"pack_id": pack_id},
                 domains=[GUI],
             ),
             ChangeScope.all_activation_sites(),
@@ -614,7 +616,7 @@ class ModeBIPacks(ABCBIMode):
                     )
                     delete_url = make_confirm_delete_link(
                         url=makeactionuri(request, transactions, [("_delete", pack.id)]),
-                        title=_("Delete BI pack #%d") % nr,
+                        title=_("Delete BI pack #%(nr)d") % {"nr": nr},
                         suffix=pack.title,
                         message=_get_pack_confirm_message(pack),
                     )
@@ -849,7 +851,7 @@ class ModeBIRules(ABCBIMode):
         pending_changes.add(
             Change(
                 action_name="bi-delete-rule",
-                text=_("Deleted BI rule with ID %s") % rule_id,
+                text=_("Deleted BI rule with ID %(rule_id)s") % {"rule_id": rule_id},
                 domains=[GUI],
             ),
             ChangeScope.all_activation_sites(),
@@ -869,7 +871,7 @@ class ModeBIRules(ABCBIMode):
             pending_changes.add(
                 Change(
                     action_name="bi-delete-rule",
-                    text=_("Deleted BI rule with ID %s") % rule_id,
+                    text=_("Deleted BI rule with ID %(rule_id)s") % {"rule_id": rule_id},
                     domains=[GUI],
                 ),
                 ChangeScope.all_activation_sites(),
@@ -913,7 +915,8 @@ class ModeBIRules(ABCBIMode):
             pending_changes.add(
                 Change(
                     action_name="bi-move-rule",
-                    text=_("Moved BI rule with ID %s to BI pack %s") % (rule_id, target_pack_id),
+                    text=_("Moved BI rule with ID %(rule_id)s to BI pack %(target_pack_id)s")
+                    % {"rule_id": rule_id, "target_pack_id": target_pack_id},
                     domains=[GUI],
                 ),
                 ChangeScope.all_activation_sites(),
@@ -1063,9 +1066,9 @@ class ModeBIRules(ABCBIMode):
                                     ("pack", self.bi_pack.id),
                                 ],
                             ),
-                            title=_("Delete BI rule #%s") % nr,
+                            title=_("Delete BI rule #%(nr)s") % {"nr": nr},
                             suffix=bi_rule.properties.title,
-                            message=_("ID: %s") % rule_id,
+                            message=_("ID: %(rule_id)s") % {"rule_id": rule_id},
                         )
                         html.icon_button(
                             delete_url, _("Delete this rule"), StaticIcon(IconNames.delete)
@@ -1364,7 +1367,8 @@ class ModeBIEditRule(ABCBIMode):
                 ]
             )
             raise MKAuthException(
-                _("You have no permission for changes in this rule using %s.") % message
+                _("You have no permission for changes in this rule using %(message)s.")
+                % {"message": message}
             )
 
     def _transform_forth_vs_call_rule(self, rule_id: str) -> tuple[str, str] | None:
@@ -1489,7 +1493,8 @@ class ModeBIEditRule(ABCBIMode):
                             (
                                 state,
                                 TextInput(
-                                    title=_("Message when rule result is %s") % name,
+                                    title=_("Message when rule result is %(name)s")
+                                    % {"name": name},
                                     size=80,
                                 ),
                             )
@@ -2177,7 +2182,8 @@ class BIModeAggregations(ABCBIMode):
         pending_changes.add(
             Change(
                 action_name="bi-delete-aggregation",
-                text=_("Deleted BI aggregation %s") % (aggregation_id),
+                text=_("Deleted BI aggregation %(aggregation_id)s")
+                % {"aggregation_id": aggregation_id},
                 domains=[GUI],
             ),
             ChangeScope.all_activation_sites(),
@@ -2194,7 +2200,8 @@ class BIModeAggregations(ABCBIMode):
             pending_changes.add(
                 Change(
                     action_name="bi-delete-aggregation",
-                    text=_("Deleted BI aggregation with ID %s") % (aggregation_id),
+                    text=_("Deleted BI aggregation with ID %(aggregation_id)s")
+                    % {"aggregation_id": aggregation_id},
                     domains=[GUI],
                 ),
                 ChangeScope.all_activation_sites(),
@@ -2224,8 +2231,8 @@ class BIModeAggregations(ABCBIMode):
             pending_changes.add(
                 Change(
                     action_name="bi-move-aggregation",
-                    text=_("Moved BI aggregation with ID %s to BI pack %s")
-                    % (aggregation_id, target),
+                    text=_("Moved BI aggregation with ID %(aggregation_id)s to BI pack %(target)s")
+                    % {"aggregation_id": aggregation_id, "target": target},
                     domains=[GUI],
                 ),
                 ChangeScope.all_activation_sites(),
@@ -2401,7 +2408,7 @@ class BIModeAggregations(ABCBIMode):
                 if is_contact_for_pack(self.bi_pack):
                     delete_url = make_confirm_delete_link(
                         url=makeactionuri(request, transactions, [("_del_aggr", aggregation_id)]),
-                        title=_("Delete BI aggregation #%s") % nr,
+                        title=_("Delete BI aggregation #%(nr)s") % {"nr": nr},
                         suffix=aggregation_id,
                     )
                     html.icon_button(

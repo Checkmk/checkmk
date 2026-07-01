@@ -290,7 +290,7 @@ class BITextFilter(Filter):
 
             except re.error as e:
                 user_errors.add(
-                    MKUserError(self.htmlvars[0], _("Invalid regular expression: %s") % e)
+                    MKUserError(self.htmlvars[0], _("Invalid regular expression: %(e)s") % {"e": e})
                 )
                 return rows
 

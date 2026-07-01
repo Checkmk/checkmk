@@ -1322,7 +1322,7 @@ def _item_spec_aws_rds() -> String:
     return String(
         title=Title("Instance identifier & region"),
         help_text=Help(
-            "Identfier of the DB instance and the name of the region in square brackets, e.g. "
+            "Identifier of the DB instance and the name of the region in square brackets, e.g. "
             "'db-instance-1 \\[eu-central-1\\]'."
         ),
     )

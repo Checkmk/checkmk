@@ -322,10 +322,10 @@ def _valuespec_special_agents_kube() -> Dictionary:
                         "quite short lived. Those pods will be monitored in the same "
                         "manner as regular pods. Persistent Volume Claims will only appear "
                         "in the respective object piggyback host instead of having their own "
-                        "host. Your Dynamic host management rule should "
+                        "host. Your dynamic host management rule should "
                         "be configured accordingly to avoid that the piggyback hosts for "
                         "terminated CronJob pods are kept for too long. This 'Pods of CronJobs' "
-                        "option has no effect if Pods are not monitored"
+                        "option has no effect if Pods are not monitored."
                     ),
                 ),
             ),

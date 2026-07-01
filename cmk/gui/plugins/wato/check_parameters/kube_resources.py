@@ -99,7 +99,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=lambda: _parameter_valuespec_memory(
             valuespec_help=_(
-                "Here you can configure levels for usage, requests "
+                "Here, you can configure levels for usage, requests "
                 "utilization, limits utilization and node utilization, respectively."
             )
         ),
@@ -115,7 +115,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=lambda: _parameter_valuespec_memory(
             valuespec_help=_(
-                "Here you can configure levels for usage, requests "
+                "Here, you can configure levels for usage, requests "
                 "utilization and limits utilization, respectively."
             ),
             options=["usage", "request", "request_lower", "limit"],
@@ -190,7 +190,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=lambda: _parameter_valuespec_cpu(
             valuespec_help=_(
-                "Here you can configure levels for usage, requests "
+                "Here, you can configure levels for usage, requests "
                 "utilization, limits utilization and node utilization, respectively."
             )
         ),
@@ -206,7 +206,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=lambda: _parameter_valuespec_cpu(
             valuespec_help=_(
-                "Here you can configure levels for usage, requests "
+                "Here, you can configure levels for usage, requests "
                 "utilization and limits utilization, respectively."
             ),
             options=["usage", "request", "request_lower", "limit"],

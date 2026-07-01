@@ -39,8 +39,8 @@ def test_is_ntop_available() -> None:
             "",
             False,
             (
-                "The ntopng username should be derived from 'ntopng Username' "
-                "under the current's user settings (identity) but this is not "
+                "The ntopng username should be derived from 'ntopng username' "
+                "under the current user settings (identity) but this is not "
                 "set for the current user."
             ),
         ),

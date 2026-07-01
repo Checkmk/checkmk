@@ -71,6 +71,7 @@ def _modify_notification_rule(test_site: Site, linux_hosts: list[str]) -> Iterat
         test_site.delete_file(notification_rule_backup_path)
 
 
+@pytest.mark.skip(reason="CMK-36115")
 def test_filesystem_email_notifications(
     dashboard_page: MainDashboard,
     linux_hosts: list[str],

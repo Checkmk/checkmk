@@ -316,16 +316,16 @@ class ModeDiagnostics(WatoMode[object]):
             title=_("Collect diagnostic dump"),
             render="form",
             help=_(
-                "Files collected by the Support Diagnostics tool are automatically categorized to"
+                "Files collected by the support diagnostics tool are automatically categorized to"
                 " help you identify sensitive data. We recommend reviewing all files prior to"
-                " sharing, particularly those in the Unclassified category.<ul>"
+                " sharing, particularly those in the 'Unclassified' category.<ul>"
                 "<li>H (High): Critical security data (e.g., passwords, API keys, secrets).</li>"
-                "<li>M (Medium): PII and infrastructure details (e.g., IP addresses, hostnames,"
+                "<li>M (Medium): PII and infrastructure details (e.g., IP addresses, host names,"
                 " usernames, emails).</li>"
                 "<li>L (Low): Operational data; no sensitive information is expected.</li>"
-                "<li>U (Unclassified): Files from custom components. These might be 3rd-party"
+                "<li>U (Unclassified): Files from custom components. These might be 3rd party"
                 " extensions or modifications made by you.</li></ul>"
-                "<b>Note</b>: These Classifications may differ from your organization's specific"
+                "<b>Note</b>: These classifications may differ from your organization's specific"
                 " data security classifications.<br><br>"
                 "The following files are created by built-in components:<ul><li>%s</li></ul>"
             )
@@ -406,7 +406,7 @@ class ModeDiagnostics(WatoMode[object]):
                         totext=_("Collect information about OS and Checkmk version"),
                         help=_(
                             "Collect information about OS, Checkmk version and edition, "
-                            "Time, Core, Python version and paths, Architecture"
+                            "time, core, Python version and paths, architecture"
                         ),
                     ),
                 ),
@@ -671,7 +671,7 @@ class ModeDiagnostics(WatoMode[object]):
                     title=_("BI runtime data"),
                     help=_(
                         "Cached data from Business Intelligence. "
-                        "Contains states, downtimes, acknowledgements and service periods "
+                        "Contains states, downtimes, acknowledgments and service periods "
                         "for all hosts/services included in a BI aggregation."
                     ),
                 ),

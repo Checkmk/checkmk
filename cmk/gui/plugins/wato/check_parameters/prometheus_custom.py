@@ -69,15 +69,15 @@ def _parameter_valuespec_prometheus_custom() -> Dictionary:
                     add_label=_("Add metric level"),
                     help=_(
                         "Specify upper and/or lower levels for a queried PromQL value. The matching happens "
-                        "on a 2-level basis: First on the service name level where the regular "
+                        "on a 2-level basis: First on the service name level, where the regular "
                         "expression allows to target multiple services at once. Specify the regular "
-                        "expression in the Conditions section below. A service can consist of multiple "
+                        "expression in the conditions section below. A service can consist of multiple "
                         "metrics and you can add levels to each queried metric value. For the relevant "
                         "service, levels to the metric value will only apply if the metric label matches "
                         "the label specified in the custom Prometheus service definition. Levels for the "
-                        "Prometheus custom check can be defined at two places: in the Prometheus Datasource "
-                        "rule and here. The ruleset here always has priority over the levels defined in the "
-                        "Datasource rule."
+                        "Prometheus custom check can be defined at two places: in the Prometheus data source "
+                        "rule and here. The rule set here always has priority over the levels defined in the "
+                        "data source rule."
                     ),
                 ),
             ),

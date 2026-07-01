@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput, Tu
 def _parameter_valuespec_cisco_wlc() -> Dictionary:
     return Dictionary(
         help=_(
-            "Here you can set which alert type is set when the given "
+            "Here, you can set which alert type is set, when the given "
             "access point is missing (might be powered off). The access point "
             "can be specified by the AP name or the AP model"
         ),

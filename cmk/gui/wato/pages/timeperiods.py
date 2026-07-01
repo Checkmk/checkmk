@@ -680,7 +680,7 @@ class ModeEditTimeperiod(WatoMode):
             ),
             title=_("Exceptions (from weekdays)"),
             help=_(
-                "Here you can specify exceptional time ranges for certain "
+                "Here, you can specify exceptional time ranges for certain "
                 "dates in the form YYYY-MM-DD which are used to define more "
                 "specific definitions to override the times configured for the matching "
                 "weekday."

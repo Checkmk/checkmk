@@ -2355,7 +2355,7 @@ def _create_explicit_rule_conditions_dict(
                                 HostAddressList(),
                             ],
                             help_text=Help(
-                                "Here you can enter a list of explicit host names that the rule should or should "
+                                "Here, you can enter a list of explicit host names that the rule should or should "
                                 "not apply to. Leave this option disabled if you want the rule to "
                                 "apply for all hosts specified by the given tags. The names that you "
                                 "enter here are compared with case sensitive exact matching. Alternatively "

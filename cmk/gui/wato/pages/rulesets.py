@@ -475,7 +475,7 @@ class ModeRuleSearch(ABCRulesetMode):
         if self._page_type is PageType.DeprecatedRulesets:
             self._title = _("Rule search: Deprecated rule sets")
             self._help = _(
-                "Here you can see a list of all deprecated rule sets (which are not used by Checkmk anymore). If "
+                "Here, you can see a list of all deprecated rule sets (which are not used by Checkmk anymore). If "
                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
                 "refer to the release notes or context help of the rule sets for details."
             )
@@ -2553,7 +2553,7 @@ class ABCEditRuleMode(WatoMode):
                 _(
                     "Unable to read current options of this rule. Falling back to "
                     "default values. When saving this rule now, your previous settings "
-                    "will be overwritten. The problem was: %s."
+                    "will be overwritten. The problem is: %s"
                 )
                 % e
             )
@@ -2598,7 +2598,7 @@ class ABCEditRuleMode(WatoMode):
                 _(
                     "Unable to read current options of this rule. Falling back to "
                     "default values. When saving this rule now, your previous settings "
-                    "will be overwritten. The problem was: %s."
+                    "will be overwritten. The problem is: %s"
                 )
                 % e
             )
@@ -2850,7 +2850,7 @@ class VSExplicitConditions(Transform):
         return DictHostTagCondition(
             title=_("Host tags"),
             help_txt=_(
-                "Rule only applies to hosts that meet all of the host tag conditions listed here",
+                "Rule only applies to hosts that meet all of the host tag conditions listed here.",
             ),
         )
 
@@ -2862,7 +2862,7 @@ class VSExplicitConditions(Transform):
                     orientation="horizontal",
                     valuespec=ConfigHostname(validate=self._validate_explicit_host),  # type: ignore[arg-type]  # should be Valuespec[str]
                     help=_(
-                        "Here you can enter a list of explicit host names that the rule should or should "
+                        "Here, you can enter a list of explicit host names that the rule should or should "
                         "not apply to. Leave this option disabled if you want the rule to "
                         "apply for all hosts specified by the given tags. The names that you "
                         "enter here are compared with case sensitive exact matching. Alternatively "

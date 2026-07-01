@@ -83,7 +83,7 @@ def common_host_rule_match_conditions() -> list[DictionaryEntry]:
                 title=_("Match host tags"),
                 help_txt=_(
                     "Rule only applies to hosts that meet all of the host tag "
-                    "conditions listed here",
+                    "conditions listed here.",
                 ),
             ),
         ),

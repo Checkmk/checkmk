@@ -142,7 +142,7 @@ def get_password_slidein_schema(user: LoggedInUser) -> Catalog:
                         parameter_form=MultipleChoice(
                             title=Title("Share with"),
                             help_text=Help(
-                                "By default only the members of the owner contact group are permitted "
+                                "By default, only the members of the owner contact group are permitted "
                                 "to use a a configured password. It is possible to share a password with "
                                 "other groups of users to make them able to use a password in checks."
                             ),

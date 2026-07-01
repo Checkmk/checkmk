@@ -28,7 +28,7 @@ def _valuespec_discovery_rules_vnx_quotas() -> Dictionary:
                     ),
                     title=_("Map RWVDMS names"),
                     help=_(
-                        "Here you are able to substitute the RWVDMS name. Either you "
+                        "Here, you are able to substitute the RWVDMS name. Either you "
                         "determine an exact name and the related subsitution or you "
                         "enter a regex beginning with '~'. The regexes must include "
                         "groups marked by '(...)' which will be substituted."

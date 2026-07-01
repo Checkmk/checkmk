@@ -342,7 +342,7 @@ class ModeDiagHost(WatoMode):
                     "You can diagnose the connection to a specific host using this dialog. "
                     "You can either test whether your current configuration is still working "
                     "or investigate in which ways a host can be reached. Simply configure the "
-                    "connection options you like to try on the right side of the screen and "
+                    "connection options you want to try on the right side of the screen and "
                     'press the "Test" button. The results will be displayed here.'
                 )
             )

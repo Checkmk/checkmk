@@ -120,8 +120,8 @@ def _parameter_valuespec_services() -> Migrate[dict[str, object]]:
                     ListOfStrings(
                         title=_("Alternative names for the service"),
                         help=_(
-                            "Here you can specify alternative names that the service might have. "
-                            "This helps when the exact spelling of the services can changed from "
+                            "Here, you can specify alternative names that the service might have. "
+                            "This helps, when the exact spelling of the services can change from "
                             "one version to another."
                         ),
                     ),

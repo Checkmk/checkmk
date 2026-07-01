@@ -48,7 +48,7 @@ def _parameter_valuespec_ibm_mq_queues() -> Dictionary:
                 "curdepth_perc",
                 OptionalDropdownChoice(
                     help=_(
-                        "CURDEPTH_PERC: Percentage (CURDEPTH/MAXDEPTH) of the number of"
+                        "CURDEPTH_PERC: percentage (CURDEPTH/MAXDEPTH) of the number of"
                         " messages currently on the queue."
                     ),
                     title=_("Current queue depth in %"),

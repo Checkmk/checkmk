@@ -389,7 +389,7 @@ class ModeTags(ABCTagMode):
             _("Tag groups"),
             help=(
                 _(
-                    "Tags are the basis of Checkmk's rule based configuration. "
+                    "Tags are the basis of the rule based configuration of Checkmk. "
                     "If the first step you define arbitrary tag groups. A host "
                     "has assigned exactly one tag out of each group. These tags can "
                     "later be used for defining parameters for hosts and services, "

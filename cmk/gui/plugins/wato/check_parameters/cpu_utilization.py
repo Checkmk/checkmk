@@ -148,7 +148,7 @@ def cpu_util_elements() -> list[tuple[str, ValueSpec]]:
                 help=_(
                     "The CPU utilization sums up the percentages of CPU time that is used "
                     "for user processes, kernel routines (system), disk wait (sometimes also "
-                    "called IO wait) or nothing (idle). The levels are always applied "
+                    "called I/O wait) or nothing (idle). The levels are always applied "
                     "on the average utilization since the last check - which is usually one minute."
                 ),
             ),

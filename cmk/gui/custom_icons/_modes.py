@@ -123,7 +123,7 @@ class ModeIcons(WatoMode):
     def page(self, config: Config) -> None:
         html.p(
             _(
-                "Here you can add icons, for example to use them in bookmarks or "
+                "Here, you can add icons, for example to use them in bookmarks or "
                 "in custom actions of views. Allowed are single PNG image files "
                 "with a maximum size of 80x80 px. Custom actions have to be defined "
                 "in the global settings and can be used in the custom icons rules "

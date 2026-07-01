@@ -368,7 +368,7 @@ class SiteManagement:
                 "transport. Starting with Checkmk 1.6 it is possible to use encrypted Livestatus "
                 "communication. Sites created with 1.6 will automatically use encrypted communication "
                 "by default. Sites created with previous versions need to be configured manually to "
-                'enable the encryption. Have a look at <a href="werk.py?werk=7017">werk #7017</a> '
+                'enable the encryption. Have a look at <a href="werk.py?werk=7017">Werk #7017</a> '
                 "for further information."
             ),
         )
@@ -455,7 +455,7 @@ class SiteManagement:
         return StaticText(
             title=Title("Metadata endpoint URL"),
             help_text=Help(
-                "URL where this site serves the SAML Service Provider metadata "
+                "URL where this site serves the SAML service provider metadata "
                 "for this connection. Derived from the site's <i>Server URL for "
                 "SAML ACS callback</i> and the connection ID. The URL is only "
                 "shown after saving the site configuration and reopening this "

@@ -285,7 +285,7 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
                 DualListChoice(
                     title=_("Share with"),
                     help=_(
-                        "By default only the members of the owner contact group are permitted "
+                        "By default, only the members of the owner contact group are permitted "
                         "to use a a predefined condition. It is possible to share it with "
                         "other groups of users to make them able to use a predefined condition in rules."
                     ),

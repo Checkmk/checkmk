@@ -66,7 +66,7 @@ def _parameter_valuespec_filestats() -> Dictionary:
             ),
         ],
         help=_(
-            "Here you can impose various levels on the results reported by the"
+            "Here, you can impose various levels on the results reported by the"
             " mk_filstats plug-in. Note that those levels only concern about a single file."
         ),
     )

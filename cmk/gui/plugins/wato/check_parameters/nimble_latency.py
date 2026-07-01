@@ -22,18 +22,18 @@ def _parameter_valuespec_nimble_latency() -> Dictionary:
         help=_(
             # xgettext: no-python-format
             "You can set limits for the latency of read or write I/O operations of Nimble "
-            "storage volumes. Note that the operations are shown in terms of number of "
+            "storage volumes. Note that the operations are shown in terms of the number of "
             "operations as a percentage of total read or write I/O operations within various "
             "latency ranges (e.g. 0-0.1 ms, 0.1-0.2 ms, etc.). In order to effectively "
             "set limits for these volumes, please select WARN/CRIT levels in terms of "
-            "percentage of overall number of operations. To accommodate the large range of "
+            "percentage of the overall number of operations. To accommodate the large range of "
             "Nimble storage devices and their various functionalities (all-flash, hybrid, "
             "tape, etc.), it is possible to select the starting point at which values should "
             "be considered. "
             "For example, for some devices, you may only want to be notified with a WARN if "
-            "10% of operations have a latency of 10-20 ms or above, and a CRIT if 20% of "
-            'operations reach this threshold. You can achieve this by setting the "Range '
-            'Reference" parameter to 10-20 ms, and warning and critical levels to 10% and 20% '
+            "10% of the operations have a latency of 10-20 ms or above, and a CRIT if 20% of "
+            'the operations reach this threshold. You can achieve this by setting the "Range '
+            'reference" parameter to 10-20 ms, and WARNING and CRITICAL levels to 10% and 20% '
             "respectively."
         ),
         elements=[

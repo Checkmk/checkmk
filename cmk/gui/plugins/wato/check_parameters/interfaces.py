@@ -409,14 +409,14 @@ def _valuespec_inventory_if_rules() -> Dictionary:
         title=_("Network interface and switch port discovery"),
         help=_(
             "Configure the discovery of services monitoring network interfaces and switch "
-            "ports. Note that this rule is a somewhat special case compared to most other "
-            "rules in checkmk. Usually, the conditions for applying a rule are configured "
+            "ports. Note that this rule is a somehow special case compared to most other "
+            "rules in Checkmk. Usually, the conditions for applying a rule are configured "
             "exclusively below in the section 'Conditions'. However, here, you can define "
             "additional conditions using the options offered by 'Conditions for this rule to "
             "apply'. These conditions are evaluated on a per-interface basis and allow for "
             "configuring the discovery of the corresponding services very finely. For example, "
-            "you can make checkmk discover only interfaces whose alias matches the regex 'eth' "
-            "or exclude certain port types or states from being discoverd. Note that saving a "
+            "you can make Checkmk discover only interfaces whose alias matches the regex 'eth' "
+            "or exclude certain port types or states from being discovered. Note that saving a "
             "rule which has only conditions specified is not allowed and will result in an "
             "error. The reason is that such a rule would have no effect."
         ),
@@ -563,9 +563,9 @@ rulespec_registry.register(
 
 def _help_if_disable_if64_hosts() -> str:
     return _(
-        "A couple of switches with broken firmware report that they support 64 bit "
-        "counters but do not output any actual data in those counters. Listing those "
-        "hosts in this rule forces them to use the interface check with 32 bit counters "
+        "A couple of switches with broken firmware report that they support 64-bit "
+        "counters, but do not output any actual data in those counters. Listing those "
+        "hosts in this rule forces them to use the interface check with 32-bit counters "
         "instead."
     )
 
@@ -1151,7 +1151,7 @@ def _parameter_valuespec_if() -> Dictionary:
                     help=_(
                         "Choose the behavior when the current port is not the "
                         "home port of the respective interface. The default is "
-                        '"Check and Display". This feature is currently only '
+                        '"Check and display". This feature is currently only '
                         "supported by the check netapp_api_if."
                     ),
                     choices=[

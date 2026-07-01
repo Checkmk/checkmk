@@ -113,7 +113,7 @@ def _valuespec_discovery_systemd_units_host_labels() -> list[tuple[str, ValueSpe
                 Labels.World.CONFIG,
                 title=_("Explicit host labels"),
                 help=_(
-                    "Here you can specify host labels that are automatically created when one of"
+                    "Her,e you can specify host labels that are automatically created, when one of"
                     " the systemd services is discovered."
                 ),
             ),

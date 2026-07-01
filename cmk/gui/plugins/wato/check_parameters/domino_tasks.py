@@ -71,16 +71,16 @@ def _valuespec_inv_domino_tasks_rules() -> Dictionary:
                     title=_("Service name"),
                     allow_empty=False,
                     help=_(
-                        "<p>The service name may contain one or more occurances of <tt>%s</tt>. In this "
+                        "<p>The service name may contain one or more occurrences of <tt>%s</tt>. In this "
                         "case, the pattern must be a regular expression prefixed with ~. For each "
                         '<tt>%s</tt> in the description, the expression has to contain one "group". A group '
-                        "is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or "
+                        "is a sub-expression enclosed in brackets, for example <tt>(.*)</tt> or "
                         "<tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a task "
                         "matching the pattern, it will substitute all such groups with the actual values when "
                         "creating the check. In this way one rule can create several checks on a host.</p>"
                         "<p>If the pattern contains more groups than occurrences of <tt>%s</tt> in the service "
-                        "description, only the first matching subexpressions are used for the service "
-                        "descriptions. The matched substrings corresponding to the remaining groups "
+                        "name, only the first matching sub-expressions are used for the service "
+                        "name. The matched sub-strings corresponding to the remaining groups "
                         "are nevertheless copied into the regular expression.</p>"
                         "<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, <tt>%2</tt>, etc. "
                         "These expressions will be replaced by the first, second, ... matching group, allowing "

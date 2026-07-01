@@ -13,7 +13,7 @@ def _valuespec_datasource_programs() -> TextInput:
     return TextInput(
         title=_("Individual program call instead of agent access"),
         help=_(
-            "For agent based checks Checkmk allows you to specify an alternative "
+            "For agent-based checks Checkmk allows you to specify an alternative "
             "program that should be called by Checkmk instead of connecting the agent "
             "via TCP. That program must output the agent's data on standard output in "
             "the same format the agent would do. This is for example useful for monitoring "
@@ -22,7 +22,7 @@ def _valuespec_datasource_programs() -> TextInput:
         + monitoring_macro_help()
         + _('This option can only be used with the permission "Can add or modify executables".')
         + _(
-            "<br> HINT: The individual program is called from the current working directory. "
+            "<br> Hint: The individual program is called from the current working directory. "
             "You should therefore specify absolute path names in scripts (by using environment variables like OMD_SITE) "
             "to make the individual program call run correctly in all execution contexts (UI and console)."
         ),

@@ -307,7 +307,7 @@ def _filesystem_reserved_elements() -> Mapping[str, DictElement]:
                     "Exclude space reserved for the <tt>root</tt> user from calculation of used space"
                 ),
                 help_text=Help(
-                    "By default Checkmk treats space that is reserved for "
+                    "By default, Checkmk treats space that is reserved for "
                     "the <tt>root</tt> user on Linux and Unix as used space. "
                     "Usually, 5% are being reserved for root when a new "
                     "file system is being created. With this option you can "

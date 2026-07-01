@@ -20,7 +20,7 @@ def validate_regex(value: str, varname: str | None) -> None:
             varname,
             _(
                 "Your search statement is not valid. You need to provide a %s (regex). For example "
-                "you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if you like to search for a "
+                "you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if you want to search for a "
                 "single backslash."
             )
             % html.render_a(

@@ -219,7 +219,7 @@ def _filesystem_reserved_elements() -> list[DictionaryEntry]:
                 help=_(
                     # xgettext: no-python-format
                     "Checkmk treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
-                    "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
+                    "used space. Usually, 5% are being reserved for root when a new file system is being created. "
                     "With this option you can have Checkmk display the current amount of reserved but yet unused "
                     "space."
                 ),
@@ -237,8 +237,8 @@ def _filesystem_reserved_elements() -> list[DictionaryEntry]:
                 ),
                 help=_(
                     # xgettext: no-python-format
-                    "By default Checkmk treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
-                    "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
+                    "By default, Checkmk treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
+                    "used space. Usually, 5% are being reserved for root when a new file system is being created. "
                     "With this option you can have Checkmk exclude the current amount of reserved but yet unused "
                     "space from the calculations regarding the used space percentage."
                 ),

@@ -55,7 +55,7 @@ def _parameter_valuespec_job() -> Dictionary:
                     ),
                     title=_("Explicit mapping of job exit codes to states"),
                     help=_(
-                        "Here you can define a mapping between possible exit codes and service states. "
+                        "Here, you can define a mapping between possible exit codes and service states. "
                         "If no mapping is defined, the check becomes CRITICAL when the exit code is not 0. "
                         "If an exit code occurs that is not defined in this mapping, the check becomes CRITICAL. "
                         "If you happen to define the same exit code multiple times the first entry will be used."

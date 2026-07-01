@@ -347,7 +347,7 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
                 DualListChoice(
                     title=_("Share with"),
                     help=_(
-                        "By default only the members of the owner contact group are permitted "
+                        "By default, only the members of the owner contact group are permitted "
                         "to use a a configured password. It is possible to share a password with "
                         "other groups of users to make them able to use a password in checks."
                     ),

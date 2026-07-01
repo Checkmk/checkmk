@@ -6,7 +6,6 @@ exports_files([
 ])
 
 debian_files = [
-    "links",
     "postinst",
     "postrm",
     "preinst",

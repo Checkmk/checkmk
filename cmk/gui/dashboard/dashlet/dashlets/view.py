@@ -67,10 +67,10 @@ def copy_view_into_dashlet(
             raise MKGeneralException(
                 _(
                     "Failed to convert a built-in dashboard which is referencing "
-                    'the view "%s". You will have to migrate it to the new '
+                    'the view "%(view_name)s". You will have to migrate it to the new '
                     "dashboard format on your own to work properly."
                 )
-                % view_name
+                % {"view_name": view_name}
             )
     else:
         view = permitted_views[view_name]
@@ -242,7 +242,10 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
         view_name = self._dashlet_spec["name"]
         view_spec = get_permitted_views().get(view_name)
         if not view_spec:
-            raise MKUserError("name", _("No view defined with the name '%s'.") % view_name)
+            raise MKUserError(
+                "name",
+                _("No view defined with the name '%(view_name)s'.") % {"view_name": view_name},
+            )
 
         # Override some view dashlet specific options
         view_spec = view_spec.copy()

@@ -258,10 +258,10 @@ class ViewWidgetIFramePageHelper:
         """Compare query reply against limits, warn in the GUI about incompleteness"""
         text = escape_to_html_permissive(
             _(
-                "<b>Display limit reached:</b> This table shows only %s entries. "
+                "<b>Display limit reached:</b> This table shows only %(limit)s entries. "
                 "Additional records are not included in this view. Sort order may not be correct."
             )
-            % limit
+            % {"limit": limit}
         )
         html.show_warning(text)
 
@@ -714,7 +714,7 @@ class ViewWidgetEditPage(Page):
     def _get_mode(request: Request) -> Mode:
         mode = request.get_ascii_input_mandatory("mode")
         if mode not in get_args(ViewWidgetEditPage.Mode.__value__):
-            raise MKUserError("mode", _("Invalid mode '%s'.") % mode)
+            raise MKUserError("mode", _("Invalid mode '%(mode)s'.") % {"mode": mode})
         return cast(ViewWidgetEditPage.Mode, mode)
 
     @staticmethod
@@ -731,7 +731,10 @@ class ViewWidgetEditPage(Page):
     def _get_datasource_from_request(request: Request) -> str:
         datasource = request.get_ascii_input_mandatory("datasource")
         if datasource not in data_source_registry:
-            raise MKUserError("datasource", _("The data source '%s' does not exist.") % datasource)
+            raise MKUserError(
+                "datasource",
+                _("The data source '%(datasource)s' does not exist.") % {"datasource": datasource},
+            )
 
         return datasource
 
@@ -744,7 +747,9 @@ class ViewWidgetEditPage(Page):
         single_infos: SingleInfos = single_infos_str.split(",")
         for key in single_infos:
             if key not in visual_info_registry:
-                raise MKUserError("single_infos", _("The info %s does not exist.") % key)
+                raise MKUserError(
+                    "single_infos", _("The info %(key)s does not exist.") % {"key": key}
+                )
 
         return single_infos
 
@@ -761,8 +766,10 @@ class ViewWidgetEditPage(Page):
         if key not in dashboards:
             raise MKUserError(
                 "dashboard",
-                _("The dashboard '%s' does not exist or you do not have permission to view it.")
-                % dashboard_name,
+                _(
+                    "The dashboard '%(dashboard_name)s' does not exist or you do not have permission to view it."
+                )
+                % {"dashboard_name": dashboard_name},
             )
 
         return dashboards[key]

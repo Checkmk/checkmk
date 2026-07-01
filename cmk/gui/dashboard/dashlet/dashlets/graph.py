@@ -160,7 +160,8 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
                 return sites.live().query_value(query)
             except livestatus.MKLivestatusNotFoundError:
                 raise WidgetRenderError(
-                    _("The host '%s' could not be found on any active site.") % host,
+                    _("The host '%(host)s' could not be found on any active site.")
+                    % {"host": host},
                 )
 
     @abc.abstractmethod

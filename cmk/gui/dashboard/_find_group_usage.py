@@ -22,7 +22,10 @@ def find_usages_of_contact_group_in_dashboards(
     for (dashboard_owner, dashboard_name), board in get_all_dashboards().items():
         public_value: bool | tuple[str, Sequence[str]] = board["public"]
         if isinstance(public_value, tuple) and name in public_value[1]:
-            title = "{}: {}".format(_("Dashboard of user %s") % dashboard_owner, dashboard_name)
+            title = "{}: {}".format(
+                _("Dashboard of user %(dashboard_owner)s") % {"dashboard_owner": dashboard_owner},
+                dashboard_name,
+            )
             used_in.append(
                 (
                     title,

@@ -52,7 +52,8 @@ class FigureWidgetPage(AjaxPage):
     def get_data_generator(cls, figure_type_name: str) -> Callable[..., FigureResponseData]:
         if not (generator := GENERATOR_BY_FIGURE_TYPE.get(figure_type_name)):
             raise KeyError(
-                _("No data generator found for figure type name '%s'") % figure_type_name
+                _("No data generator found for figure type name '%(figure_type_name)s'")
+                % {"figure_type_name": figure_type_name}
             )
         return generator
 

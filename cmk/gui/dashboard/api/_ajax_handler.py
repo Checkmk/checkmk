@@ -164,7 +164,7 @@ def get_validated_internal_figure_request(
     for key in ["content", "context", "single_infos", "general_settings"]:
         val = ctx.request.get_str_input(key)
         if val is None:
-            raise MKUserError(key, _("Missing request variable '%s'") % key)
+            raise MKUserError(key, _("Missing request variable '%(key)s'") % {"key": key})
         request_dict[key] = val
 
     try:
@@ -221,7 +221,7 @@ def get_validated_internal_graph_request(
     for key in ["widget_id", "content", "context", "single_infos"]:
         val = ctx.request.get_str_input(key)
         if val is None:
-            raise MKUserError(key, _("Missing request variable '%s'") % key)
+            raise MKUserError(key, _("Missing request variable '%(key)s'") % {"key": key})
         request_dict[key] = val
 
     try:

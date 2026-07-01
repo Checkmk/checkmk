@@ -73,8 +73,8 @@ def translate_performance_data(
         raw_performance_data.check_command, translations
     )
     result: dict[MetricName, PerformanceData] = {}
-    for perf_value in raw_performance_data.values:
-        prefix, bare_name = _split_predict_prefix(perf_value.metric_name)
+    for raw_perf_value in raw_performance_data.values:
+        prefix, bare_name = _split_predict_prefix(raw_perf_value.metric_name)
         translation = _find_translation(MetricName(bare_name), command_translations)
         name = MetricName(f"{prefix}{translation.name}")
         scale = translation.scale
@@ -82,17 +82,17 @@ def translate_performance_data(
         def _scaled(value: float | None, scale: float = scale) -> float | None:
             return None if value is None else value * scale
 
-        original = RRDOriginal(metric_name=perf_value.metric_name, scale=scale)
+        original = RRDOriginal(metric_name=raw_perf_value.metric_name, scale=scale)
         originals = [*result[name].originals, original] if name in result else [original]
         result[name] = PerformanceData(
-            value=_scaled(perf_value.value),
+            value=_scaled(raw_perf_value.value),
             originals=originals,
-            lower_warning=_scaled(perf_value.lower_warning),
-            lower_critical=_scaled(perf_value.lower_critical),
-            warning=_scaled(perf_value.warning),
-            critical=_scaled(perf_value.critical),
-            minimum=_scaled(perf_value.minimum),
-            maximum=_scaled(perf_value.maximum),
+            lower_warning=_scaled(raw_perf_value.lower_warning),
+            lower_critical=_scaled(raw_perf_value.lower_critical),
+            warning=_scaled(raw_perf_value.warning),
+            critical=_scaled(raw_perf_value.critical),
+            minimum=_scaled(raw_perf_value.minimum),
+            maximum=_scaled(raw_perf_value.maximum),
         )
 
     # Append the deprecated (pre-rename) column names as further originals so the historic segment is

@@ -22,9 +22,9 @@ from cmk.graphing_engine import (
     Line,
     match_graph_for_services,
     MetricName,
-    PerformanceValue,
     Quantity,
     RawPerformanceData,
+    RawPerformanceValue,
     RRDMetric,
     Rule,
     ScalarOf,
@@ -121,8 +121,8 @@ def _perf(
     critical: float | None = None,
     minimum: float | None = None,
     maximum: float | None = None,
-) -> PerformanceValue:
-    return PerformanceValue(
+) -> RawPerformanceValue:
+    return RawPerformanceValue(
         metric_name=name,
         value=1.0,
         lower_warning=lower_warning,
@@ -134,7 +134,7 @@ def _perf(
     )
 
 
-def _perf_data(*values: PerformanceValue) -> RawPerformanceData:
+def _perf_data(*values: RawPerformanceValue) -> RawPerformanceData:
     return RawPerformanceData(check_command="", values=list(values))
 
 

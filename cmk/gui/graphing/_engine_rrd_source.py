@@ -18,8 +18,8 @@ from cmk.ccc.site import SiteId
 from cmk.graphing_engine import (
     ConsolidationFunction,
     MetricName,
-    PerformanceValue,
     RawPerformanceData,
+    RawPerformanceValue,
     RRDMetric,
     ServiceRef,
     TimeRange,
@@ -179,7 +179,7 @@ class EngineRRDSource:
         return RawPerformanceData(
             check_command=normalized_check_command,
             values=[
-                PerformanceValue(
+                RawPerformanceValue(
                     metric_name=entry.metric_name,
                     value=entry.value,
                     warning=entry.warn,

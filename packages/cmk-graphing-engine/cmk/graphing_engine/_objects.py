@@ -470,7 +470,7 @@ class Rule:
 
 
 @dataclass(frozen=True, kw_only=True)
-class PerformanceValue:
+class RawPerformanceValue:
     metric_name: MetricName
     value: float
     warning: float | None = None
@@ -484,7 +484,7 @@ class PerformanceValue:
 @dataclass(frozen=True, kw_only=True)
 class RawPerformanceData:
     check_command: str
-    values: Sequence[PerformanceValue]
+    values: Sequence[RawPerformanceValue]
 
 
 @dataclass(frozen=True, kw_only=True)

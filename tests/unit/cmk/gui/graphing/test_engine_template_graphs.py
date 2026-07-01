@@ -20,8 +20,8 @@ from cmk.graphing_engine import (
     HostName,
     Line,
     MetricName,
-    PerformanceValue,
     RawPerformanceData,
+    RawPerformanceValue,
     RRDMetric,
     ScalarOf,
     ScalarType,
@@ -52,7 +52,7 @@ class _FakeRRD:
         return {
             service: RawPerformanceData(
                 check_command="check_mk-foo",
-                values=[PerformanceValue(metric_name=MetricName(_METRIC), value=1.0)],
+                values=[RawPerformanceValue(metric_name=MetricName(_METRIC), value=1.0)],
             )
             for service in services
         }

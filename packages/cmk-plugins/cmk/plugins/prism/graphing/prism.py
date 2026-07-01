@@ -37,7 +37,7 @@ metric_prism_cluster_mem_used = metrics.Metric(
 )
 metric_prism_cluster_iobw = metrics.Metric(
     name="prism_cluster_iobw",
-    title=Title("IO Bandwith"),
+    title=Title("I/O bandwidth"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.LIGHT_GREEN,
 )

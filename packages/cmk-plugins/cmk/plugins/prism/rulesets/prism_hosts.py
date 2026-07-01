@@ -18,13 +18,13 @@ def _parameters_valuespec_prism_hosts() -> form_specs.Dictionary:
             ),
             "acropolis_connection_state": form_specs.DictElement(
                 parameter_form=form_specs.BooleanChoice(
-                    title=Title("Monitor Acropolis State"),
+                    title=Title("Monitor Acropolis state"),
                     label=Label("Alert if Acropolis disconnects from hypervisor"),
                     prefill=form_specs.DefaultValue(True),
                 ),
             ),
         },
-        title=Title("States of Nutanix Host"),
+        title=Title("States of Nutanix host"),
     )
 
 

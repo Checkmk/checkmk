@@ -151,7 +151,7 @@ def _fs_aws_limits(
 
 def _formspec_aws_dynamodb_limits() -> Dictionary:
     return Dictionary(
-        title=Title("AWS/DynamoDB Limits"),
+        title=Title("AWS/DynamoDB limits"),
         migrate=_pre_25_to_formspec_migration,
         elements={
             "number_of_tables": DictElement(
@@ -184,6 +184,6 @@ rule_spec_aws_dynamodb_limits = CheckParameters(
     name="aws_dynamodb_limits",
     topic=Topic.APPLICATIONS,
     parameter_form=_formspec_aws_dynamodb_limits,
-    title=Title("AWS/DynamoDB Limits"),
+    title=Title("AWS/DynamoDB limits"),
     condition=HostAndItemCondition(item_title=Title("Instance name")),
 )

@@ -292,10 +292,14 @@ def _valuespec_special_agents_kube() -> Dictionary:
                         MultipleChoiceElement(name="namespaces", title=Title("Namespaces")),
                         MultipleChoiceElement(name="nodes", title=Title("Nodes")),
                         MultipleChoiceElement(name="pods", title=Title("Pods")),
+                        # weblate-flags: read-only, domain-specific
                         MultipleChoiceElement(name="pvcs", title=Title("Persistent Volume Claims")),
+                        # weblate-flags: read-only, domain-specific
                         MultipleChoiceElement(name="cronjobs", title=Title("CronJobs")),
                         MultipleChoiceElement(
-                            name="cronjobs_pods", title=Title("Pods of CronJobs")
+                            # weblate-flags: read-only, domain-specific
+                            name="cronjobs_pods",
+                            title=Title("Pods of CronJobs"),
                         ),
                     ],
                     prefill=DefaultValue(
@@ -384,7 +388,7 @@ def _valuespec_special_agents_kube() -> Dictionary:
                     elements=[
                         CascadingSingleChoiceElement(
                             name="cluster_aggregation_exclude_node_roles",
-                            title=Title("Exclude Nodes based on their role"),
+                            title=Title("Exclude nodes based on their role"),
                             parameter_form=ListExtended(
                                 element_template=RegularExpression(
                                     predefined_help_text=MatchingScope.INFIX,
@@ -397,7 +401,7 @@ def _valuespec_special_agents_kube() -> Dictionary:
                         ),
                         CascadingSingleChoiceElement(
                             name="cluster_aggregation_include_all_nodes",
-                            title=Title("Include all Nodes"),
+                            title=Title("Include all nodes"),
                             parameter_form=FixedValue(value=None),
                         ),
                     ],

@@ -37,7 +37,7 @@ metric_aws_http_504_rate = metrics.Metric(
 
 graph_aws_http_50x_errors_rate = graphs.Graph(
     name="aws_http_50x_errors_rate",
-    title=Title("HTTP 500/2/3/4 Errors"),
+    title=Title("HTTP 500/2/3/4 errors"),
     compound_lines=[
         "aws_http_500_rate",
         "aws_http_502_rate",

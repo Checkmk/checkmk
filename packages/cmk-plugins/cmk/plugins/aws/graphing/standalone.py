@@ -108,7 +108,7 @@ metric_aws_lambda_users_errors_perc = metrics.Metric(
 
 metric_aws_backend_connection_errors_rate = metrics.Metric(
     name="aws_backend_connection_errors_rate",
-    title=Title("Back-end connection errors"),
+    title=Title("Backend connection errors"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.ORANGE,
 )
@@ -627,7 +627,7 @@ metric_aws_ebs_block_store_space_io1 = metrics.Metric(
 
 metric_aws_ebs_block_store_iops_io1 = metrics.Metric(
     name="aws_ebs_block_store_iops_io1",
-    title=Title("Provisioned IOPS SSD (io1) IO operations per second"),
+    title=Title("Provisioned IOPS SSD (io1) I/O operations per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.ORANGE,
 )
@@ -641,7 +641,7 @@ metric_aws_ebs_block_store_space_io2 = metrics.Metric(
 
 metric_aws_ebs_block_store_iops_io2 = metrics.Metric(
     name="aws_ebs_block_store_iops_io2",
-    title=Title("Provisioned IOPS SSD (io2) IO operations per second"),
+    title=Title("Provisioned IOPS SSD (io2) I/O operations per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.YELLOW,
 )

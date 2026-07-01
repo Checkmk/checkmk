@@ -78,7 +78,7 @@ class WerkTranslator:
             "security": "Security fix",
         }
         self._components = {
-            # CRE
+            # Community
             "core": "Core & setup",
             "checks": "Checks & agents",
             "multisite": "User interface",
@@ -91,7 +91,7 @@ class WerkTranslator:
             "liveproxy": "Livestatus proxy",
             "inv": "HW/SW Inventory",
             "rest-api": "REST API",
-            # CEE
+            # Pro
             "cmc": "The Checkmk Micro Core",
             "setup": "Setup, site management",
             "config": "Configuration generation",
@@ -101,6 +101,8 @@ class WerkTranslator:
             "alerts": "Alert handlers",
             "dcd": "Dynamic host configuration",
             "ntopng_integration": "Ntopng integration",
+            # Ultimate
+            "relay": "Relay",
             # CMK-OMD
             "omd": "Site management",
             "rpm": "RPM packaging",

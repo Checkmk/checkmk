@@ -130,10 +130,10 @@ class RowTableInventory(ABCRowTable):
                 MKUserError(
                     "load_inventory_tree",
                     _(
-                        "Cannot load HW/SW inventory tree of host %s."
+                        "Cannot load HW/SW inventory tree of host %(host_name)s."
                         " Please remove the corrupted file."
                     )
-                    % host_name,
+                    % {"host_name": host_name},
                 )
             )
             return

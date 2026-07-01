@@ -249,7 +249,7 @@ def graph_recipes_from_request(
         raise MKNotFound()
 
     except livestatus.MKLivestatusNotFoundError as e:
-        raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
+        raise MKUserError(None, _("Cannot calculate graph recipes: %(e)s") % {"e": e})
 
     return GraphRanges(time_range=(start, end), step=60), recipes
 

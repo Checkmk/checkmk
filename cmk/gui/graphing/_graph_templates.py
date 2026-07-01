@@ -110,7 +110,9 @@ def get_graph_plugin_from_id(
     for name, graph_plugin in sort_registered_graph_plugins(registered_graphs):
         if graph_id == name:
             return graph_plugin
-    raise MKGraphNotFound(_("There is no graph plug-in with the id '%s'") % graph_id)
+    raise MKGraphNotFound(
+        _("There is no graph plug-in with the id '%(graph_id)s'") % {"graph_id": graph_id}
+    )
 
 
 def get_graph_plugin_and_single_metric_choices(

@@ -462,9 +462,9 @@ def ajax_inv_render_tree(ctx: PageContext) -> None:
                 MKUserError(
                     "load_inventory_tree",
                     _(
-                        "Cannot load HW/SW inventory of %s. Please remove the corrupted inventory or status data tree files."
+                        "Cannot load HW/SW inventory of %(host_name)s. Please remove the corrupted inventory or status data tree files."
                     )
-                    % host_name,
+                    % {"host_name": host_name},
                 )
             )
             return

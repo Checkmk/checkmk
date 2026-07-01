@@ -900,7 +900,8 @@ def _compute_legend_titles(
                 (step / 60),
             )
             + "\n\n"
-            + _('Click here to change the graphs consolidation function to "%s".') % scalar_type
+            + _('Click here to change the graphs consolidation function to "%(scalar_type)s".')
+            % {"scalar_type": scalar_type}
         )
 
     yield _LegendTitle(

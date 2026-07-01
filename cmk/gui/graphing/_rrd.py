@@ -259,7 +259,9 @@ def _align_and_resample_rrds(
     for key, time_series in rrd_data.items():
         if not time_series:
             spec_title = f"{key.host_name}/{key.service_name}/{key.metric_name}"
-            raise MKGeneralException(_("Cannot get RRD data for %s") % spec_title)
+            raise MKGeneralException(
+                _("Cannot get RRD data for %(spec_title)s") % {"spec_title": spec_title}
+            )
 
         time_series.values = (
             time_series.downsample(

@@ -231,15 +231,19 @@ def verify_permission(site_id: SiteId | None, host_name: HostName) -> None:
         result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
     except livestatus.MKLivestatusNotFoundError:
         raise MKAuthException(
-            _("No such inventory tree of host %s. You may also have no access to this host.")
-            % host_name
+            _(
+                "No such inventory tree of host %(host_name)s. You may also have no access to this host."
+            )
+            % {"host_name": host_name}
         )
     finally:
         if site_id:
             sites.live().set_only_sites()
 
     if result[0] == 0:
-        raise MKAuthException(_("You are not allowed to access the host %s.") % host_name)
+        raise MKAuthException(
+            _("You are not allowed to access the host %(host_name)s.") % {"host_name": host_name}
+        )
 
 
 def load_tree(*, host_name: HostName | None, raw_status_data_tree: bytes) -> ImmutableTree:
@@ -327,8 +331,8 @@ def load_delta_tree(
             if path.current_timestamp == timestamp:
                 return [path]
         raise MKGeneralException(
-            _("Found no history entry at the time of '%s' for the host '%s'")
-            % (timestamp, hostname)
+            _("Found no history entry at the time of '%(timestamp)s' for the host '%(hostname)s'")
+            % {"timestamp": timestamp, "hostname": hostname}
         )
 
     history = load_history(

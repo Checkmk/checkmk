@@ -80,7 +80,7 @@ def _render_mkeventd_icon(
 
     if len(args) >= 2:
         app = args[1].strip("'").replace("\\\\", "\\").replace("\\!", "!")
-        title = _('Events of application "%s" on host %s') % (app, host)
+        title = _('Events of application "%(app)s" on host %(host)s') % {"app": app, "host": host}
         url_vars.append(("event_application", app))
 
     return (

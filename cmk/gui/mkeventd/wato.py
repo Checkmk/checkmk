@@ -445,10 +445,10 @@ def ActionList(vs: ValueSpec, **kwargs: Any) -> ListOf:
                         raise MKUserError(
                             varprefix,
                             _(
-                                "You are missing the action with the ID <b>%s</b>, "
+                                "You are missing the action with the ID <b>%(action_id)s</b>, "
                                 "which is still used in some rules."
                             )
-                            % action_id,
+                            % {"action_id": action_id},
                         )
 
     return ListOf(valuespec=vs, validate=validate_action_list, **kwargs)
@@ -2066,9 +2066,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 if type_ == ec.RulePackType.internal:
                     delete_url = make_confirm_delete_link(
                         url=make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)]),
-                        title=_("Delete rule pack #%d") % nr,
+                        title=_("Delete rule pack #%(nr)d") % {"nr": nr},
                         suffix=rule_pack["title"],
-                        message=_("ID: %s") % id_
+                        message=_("ID: %(id_)s") % {"id_": id_}
                         + "<br>"
                         + _("Used rules: %d") % len(rule_pack["rules"]),
                     )
@@ -2198,7 +2198,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                         msg = _("None of the rules in this pack matches")
                         icon = StaticIcon(IconNames.hyphen)
                     else:
-                        msg = _("Number of matching rules in this pack: %d") % matches
+                        msg = _("Number of matching rules in this pack: %(matches)d") % {
+                            "matches": matches
+                        }
                         if skips:
                             msg += _(", the first match skips this rule pack")
                             icon = StaticIcon(IconNames.hyphen)
@@ -2512,7 +2514,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                             ("_delete", nr),
                         ]
                     ),
-                    title=_("Delete rule #%d") % nr,
+                    title=_("Delete rule #%(nr)d") % {"nr": nr},
                     message=_("ID: %s") % rule["id"],
                     suffix=rule.get("description", ""),
                 )
@@ -3004,10 +3006,10 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                         raise MKUserError(
                             "rule_p_" + name,
                             _(
-                                "You are using the replacement reference <tt>\\%d</tt>, "
-                                "but your match text has only %d subgroups."
+                                "You are using the replacement reference <tt>\\%(num_repl)d</tt>, "
+                                "but your match text has only %(num_groups)d subgroups."
                             )
-                            % (num_repl, num_groups),
+                            % {"num_repl": num_repl, "num_groups": num_groups},
                         )
             num_repl -= 1
 
@@ -3123,7 +3125,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             user_id=user.id,
             use_git=config.wato_use_git,
         )
-        flash(_("Switched to %s mode") % new_mode)
+        flash(_("Switched to %(new_mode)s mode") % {"new_mode": new_mode})
         return None
 
     def page(self, config: Config) -> None:
@@ -3477,7 +3479,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def _delete_mib(self, filename: str, mib_name: str, *, pending_changes: PendingChanges) -> None:
         self._add_change(
             action_name="delete-mib",
-            text=_("Deleted MIB %s") % filename,
+            text=_("Deleted MIB %(filename)s") % {"filename": filename},
             pending_changes=pending_changes,
         )
         pyc_suffix = f".cpython-{sys.version_info.major}{sys.version_info.minor}.pyc"
@@ -3707,7 +3709,10 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                         )
                     success += 1
                 except Exception as e:
-                    messages.append(_("Skipped %s: %s") % (mib_file_name, e))
+                    messages.append(
+                        _("Skipped %(mib_file_name)s: %(e)s")
+                        % {"mib_file_name": mib_file_name, "e": e}
+                    )
                     fail += 1
 
         return "<br>\n".join(
@@ -3737,7 +3742,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             f.write(content_bytes)
         self._add_change(
             action_name="uploaded-mib",
-            text=_("MIB %s: %s") % (filename, msg),
+            text=_("MIB %(filename)s: %(msg)s") % {"filename": filename, "msg": msg},
             pending_changes=pending_changes,
         )
         return msg
@@ -3763,12 +3768,12 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                     _("Failed to compile your module: %s") % getattr(mib_status, "error")
                 )
             if mib_status == "missing":
-                errors.append(_("%s - Dependency missing") % name)
+                errors.append(_("%(name)s - Dependency missing") % {"name": name})
             elif mib_status == "failed":
                 errors.append(
                     _("%s - Failed to compile (%s)") % (name, getattr(mib_status, "error"))
                 )
-        msg = _("MIB file %s uploaded.") % mibname
+        msg = _("MIB file %(mibname)s uploaded.") % {"mibname": mibname}
         if errors:
             msg += "<br>" + _("But there were errors:") + "<br>"
             msg += "<br>\n".join(errors)
@@ -5489,7 +5494,8 @@ def query_ec_directly(query: bytes, connect_timeout: int) -> dict[str, Any]:
         return ast.literal_eval(response_text.decode())
     except SyntaxError:
         raise MKGeneralException(
-            _("Invalid response from event daemon: <pre>%s</pre>") % response_text
+            _("Invalid response from event daemon: <pre>%(response_text)s</pre>")
+            % {"response_text": response_text}
         )
 
     except Exception as e:

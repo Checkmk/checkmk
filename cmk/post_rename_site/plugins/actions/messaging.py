@@ -56,7 +56,7 @@ def update_broker_config(old_site_id: SiteId, new_site_id: SiteId, logger: Logge
     ).add(
         Change(
             action_name="edit-sites",
-            text=_("Renamed site %s") % old_site_id,
+            text=_("Renamed site %(old_site_id)s") % {"old_site_id": old_site_id},
             force_restart=True,
             domains=[GUI],
         ),

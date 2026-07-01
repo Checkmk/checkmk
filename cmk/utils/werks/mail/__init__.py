@@ -212,7 +212,19 @@ def _is_werks_path(path: str | None) -> bool:
 
 def get_change(commit: Commit) -> WerkCommit | None:
     def _collect() -> Iterator[WerkChange]:
-        for diff in commit.parents[0].diff(commit):
+        parent = commit.parents[0]
+        try:
+            diffs = list(parent.diff(commit))
+        except GitCommandError:
+            # GitPython streams the raw diff-tree output and drops git's stderr, so this
+            # arrives with an empty message. Log what was being diffed (see CMK-36274).
+            logger.exception(
+                "diff failed for commit %(commit)s against parent %(parent)s",
+                {"commit": commit.hexsha, "parent": parent.hexsha},
+            )
+            raise
+
+        for diff in diffs:
             a_is_werk = _is_werks_path(diff.a_path)
             b_is_werk = _is_werks_path(diff.b_path)
             if not a_is_werk and not b_is_werk:

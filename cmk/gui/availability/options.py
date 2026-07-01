@@ -68,8 +68,10 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
         long_output_labelling = [
             (
                 "timeline_long_output",
-                _('Display long output in timeline (<a href="%s">Enable in Setup</a>)')
-                % ruleset_search_url,
+                _(
+                    'Display long output in timeline (<a href="%(ruleset_search_url)s">Enable in Setup</a>)'
+                )
+                % {"ruleset_search_url": ruleset_search_url},
             )
         ]
     else:

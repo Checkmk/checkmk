@@ -118,11 +118,11 @@ class CrashReport:
             raise MKUserError(
                 None,
                 _(
-                    "Could not find the requested crash %s on site %s. "
+                    "Could not find the requested crash %(crash_id)s on site %(site_id)s. "
                     "Maybe the automatic cleanup found more than 200 crash reports "
                     "below ~/var/check_mk/crashes and already deleted the requested crash report."
                 )
-                % (crash_id, site_id),
+                % {"crash_id": crash_id, "site_id": site_id},
             )
 
 
@@ -337,9 +337,9 @@ class PageCrash(Page):
             html.show_error(
                 _(
                     "Failed to send the crash report. Please download it manually and send it "
-                    'to <a href="%s">%s</a> or try again later.'
+                    'to <a href="%(report_url)s">%(crash_report_target)s</a> or try again later.'
                 )
-                % (report_url, crash_report_target)
+                % {"report_url": report_url, "crash_report_target": crash_report_target}
             )
             html.close_div()
             html.javascript(

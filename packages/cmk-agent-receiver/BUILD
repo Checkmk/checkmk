@@ -128,6 +128,9 @@ py_test(
         "--durations=5",
         "-W",
         "error",
+        # CMK-36295
+        "-W",
+        "ignore::starlette.exceptions.StarletteDeprecationWarning",
     ],
     main = "__test__.py",
     deps = [

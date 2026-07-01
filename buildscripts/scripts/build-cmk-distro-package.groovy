@@ -233,7 +233,7 @@ void main() {
                 archiveArtifacts(
                     artifacts: [
                         "*.deb, *.rpm, *.cma, ${bazel_log_prefix}*",
-                        "omd/bill-of-materials.json, trace_profile.json",
+                        "bill-of-materials.json, bill-of-materials.csv, trace_profile.json",
                         "package_validator.log",
                         "package_validator.report.json",
                     ].join(", "),

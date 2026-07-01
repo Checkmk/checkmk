@@ -744,13 +744,23 @@ def test_relay_msi_embedded(package_path: str) -> None:
     assert properties.get("Manufacturer") == "Checkmk GmbH"
     assert properties.get("ProductName", "").startswith("Checkmk Relay Installer")
 
+    # ProductVersion is the strict numeric base (major.minor.build); Windows
+    # Installer only interprets these three fields, so a Checkmk patch suffix or
+    # daily date cannot appear here. It must equal the package's numeric base.
     product_version = properties.get("ProductVersion", "")
-    assert re.fullmatch(r"\d+\.\d+\.\d+\.\d+", product_version), (
+    assert re.fullmatch(r"\d+\.\d+\.\d+", product_version), (
         f"Unexpected relay MSI ProductVersion {product_version!r}"
     )
     base_version = re.match(r"\d+\.\d+\.\d+", _version_from_pkg_path(package_path))
-    assert base_version and product_version.startswith(f"{base_version.group(0)}."), (
+    assert base_version and product_version == base_version.group(0), (
         f"Relay MSI ProductVersion {product_version!r} does not match package version "
+        f"{_version_from_pkg_path(package_path)!r}"
+    )
+    # ARPDISPLAYVERSION carries the real Checkmk version verbatim (incl. patch
+    # suffix / daily date) - the free-form string ProductVersion cannot represent.
+    display_version = properties.get("ARPDISPLAYVERSION", "")
+    assert display_version == _version_from_pkg_path(package_path), (
+        f"Relay MSI ARPDISPLAYVERSION {display_version!r} does not match package version "
         f"{_version_from_pkg_path(package_path)!r}"
     )
 

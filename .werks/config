@@ -43,6 +43,7 @@ edition_components = {
     "ultimate":
     [
         ( "relay",         "Relay"),
+        ( "telemetry",     "Telemetry"),
     ]
 }
 

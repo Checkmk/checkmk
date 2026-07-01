@@ -87,13 +87,19 @@ ServiceName = NewType("ServiceName", str)
 
 class MetricName(str):
     # A metric name normalised to PNP4Nagios format: a str subclass whose construction is a projection
-    # (non-injective). The raw name is pnp-cleaned, so a name carrying spaces / ":" / "/" / "\" is mapped
-    # to its canonical RRD identifier.
+    # (non-injective). The raw name is pnp-cleaned, so a name carrying spaces / ":" / "/" / "\" / NUL is
+    # mapped to its canonical RRD identifier.
     def __new__(cls, text: str) -> Self:
         # A metric name is used as a PNP4Nagios / RRD path element, so the path-hostile characters are
-        # mapped to "_".
+        # mapped to "_" — including an embedded null byte (some SNMP devices emit a stray NUL), which
+        # would otherwise make open() raise "ValueError: embedded null byte" when the RRD is created.
         return super().__new__(
-            cls, text.replace(" ", "_").replace(":", "_").replace("/", "_").replace("\\", "_")
+            cls,
+            text.replace(" ", "_")
+            .replace(":", "_")
+            .replace("/", "_")
+            .replace("\\", "_")
+            .replace("\x00", "_"),
         )
 
 

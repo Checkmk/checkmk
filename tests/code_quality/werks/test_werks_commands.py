@@ -5,7 +5,6 @@
 
 """Tests requiring git access — run with ``tags=["local"]`` (no Bazel sandbox)."""
 
-import datetime
 import os
 import subprocess
 from pathlib import Path
@@ -13,6 +12,10 @@ from pathlib import Path
 from cmk.utils.werks.__main__ import main as cmk_utils_werks_main
 from cmk.werks.tool.cli import main as cmk_werks_cli_main
 from cmk.werks.tool.utils.__main__ import main as cmk_werks_main
+
+# How far back `test_mail` walks, counted in commits that touch a werk rather than
+# in time: a time window can contain no werk at all (CMK-33663).
+_MAILED_WERK_COMMITS = 20
 
 
 def _git_repo_root() -> Path:
@@ -40,17 +43,24 @@ def test_list() -> None:
 
 
 def test_mail() -> None:
-    """Smoke test for `//cmk/utils:werks_bin -- mail`."""
-    four_weeks_ago = (datetime.datetime.now() - datetime.timedelta(weeks=4)).isoformat()
+    """Smoke test for `//cmk/utils:werks_bin -- mail`: mails the last werk changes."""
+    repo_root = _git_repo_root()
+    werk_commits = subprocess.check_output(
+        ["git", "log", f"-{_MAILED_WERK_COMMITS}", "--format=%H", "--", ".werks/[0-9]*"],
+        cwd=repo_root,
+        text=True,
+    ).split()
+    assert werk_commits, "found no commit touching a werk — incomplete checkout?"
     assume_no_notes_but = subprocess.check_output(
-        ["git", "log", f"--before={four_weeks_ago}", "--format=%H", "--max-count=1"],
+        ["git", "rev-parse", "--verify", f"{werk_commits[-1]}^"],
+        cwd=repo_root,
         text=True,
     ).strip()
 
     cmk_utils_werks_main(
         [
             "mail",
-            str(_git_repo_root()),
+            str(repo_root),
             "HEAD",
             "werk_mail",
             f"--assume-no-notes-but={assume_no_notes_but}",

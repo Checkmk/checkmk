@@ -18,6 +18,7 @@ void main() {
                 name: "test-unit-all",
                 cmd: """\
 make_rc=0
+export BAZEL_TEST_LOGS_DEST=results
 BAZEL_EXTRA_TAG_FILTERS="-cpp,-requires-git" buildscripts/scripts/bazel_test_ci.sh \
     --test_verbose_timeout_warnings \
     --test_env=TZ='America/Chicago' \
@@ -29,13 +30,12 @@ exit \$make_rc""",
                 disable_hot_cache: true,
             ]);
         }
-
         archiveArtifacts(
             allowEmptyArchive: true,
-            artifacts: "results/unit/**/test.xml",
+            artifacts: "results/**/test.xml",
             fingerprint: true,
         );
-        test_jenkins_helper.analyse_issues("JUNIT", "results/unit/**/test.xml");
+        test_jenkins_helper.analyse_issues("JUNIT", "results/**/test.xml");
     }
 }
 

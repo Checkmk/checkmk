@@ -22,6 +22,7 @@ void main() {
         "test-integration-agent-plugin",
         "test-integration-pro",
         "test-integration-community",
+        "test-integration-cloud",
         "test-integration-redfish",
         "test-integration-ultimatemt",
         "test-integration-single-node",

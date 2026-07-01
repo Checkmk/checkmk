@@ -103,6 +103,7 @@ class WerkTranslator:
             "ntopng_integration": "Ntopng integration",
             # Ultimate
             "relay": "Relay",
+            "telemetry": "Telemetry",
             # CMK-OMD
             "omd": "Site management",
             "rpm": "RPM packaging",

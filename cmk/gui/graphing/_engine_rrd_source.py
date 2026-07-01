@@ -18,8 +18,8 @@ from cmk.ccc.site import SiteId
 from cmk.graphing_engine import (
     ConsolidationFunction,
     MetricName,
-    PerformanceData,
     PerformanceValue,
+    RawPerformanceData,
     RRDMetric,
     ServiceRef,
     TimeRange,
@@ -162,7 +162,7 @@ class EngineRRDSource:
         rrd_metrics: Sequence[str] = (),
         *,
         debug: bool,
-    ) -> PerformanceData:
+    ) -> RawPerformanceData:
         perf_data, normalized_check_command = _parse_perf_data(
             perf_data_string, check_command, debug=debug
         )
@@ -176,7 +176,7 @@ class EngineRRDSource:
             )
             present = {entry.metric_name for entry in perf_data}
             perf_data = [*perf_data, *(e for e in rrd_only if e.metric_name not in present)]
-        return PerformanceData(
+        return RawPerformanceData(
             check_command=normalized_check_command,
             values=[
                 PerformanceValue(
@@ -195,7 +195,7 @@ class EngineRRDSource:
 
     def fetch_performance_data(
         self, services: Sequence[ServiceRef]
-    ) -> Mapping[ServiceRef, PerformanceData]:
+    ) -> Mapping[ServiceRef, RawPerformanceData]:
         unique = list(dict.fromkeys(services))
         if not unique:
             return {}
@@ -208,7 +208,7 @@ class EngineRRDSource:
             query += "And: 2\n"
         if len(unique) > 1:
             query += f"Or: {len(unique)}\n"
-        result: dict[ServiceRef, PerformanceData] = {}
+        result: dict[ServiceRef, RawPerformanceData] = {}
         with sites.only_sites(self.site_id):
             for (
                 host_name,

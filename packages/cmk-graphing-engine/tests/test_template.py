@@ -22,9 +22,9 @@ from cmk.graphing_engine import (
     Line,
     match_graph_for_services,
     MetricName,
-    PerformanceData,
     PerformanceValue,
     Quantity,
+    RawPerformanceData,
     RRDMetric,
     Rule,
     ScalarOf,
@@ -134,14 +134,14 @@ def _perf(
     )
 
 
-def _perf_data(*values: PerformanceValue) -> PerformanceData:
-    return PerformanceData(check_command="", values=list(values))
+def _perf_data(*values: PerformanceValue) -> RawPerformanceData:
+    return RawPerformanceData(check_command="", values=list(values))
 
 
 class _FakeFetchRRD:
     def __init__(
         self,
-        performance_response: Mapping[ServiceRef, PerformanceData] | None = None,
+        performance_response: Mapping[ServiceRef, RawPerformanceData] | None = None,
         time_series_response: Mapping[RRDMetric, TimeSeries] | None = None,
     ) -> None:
         self._performance_response = performance_response or {}
@@ -150,7 +150,7 @@ class _FakeFetchRRD:
     def fetch_performance_data(
         self,
         services: Sequence[ServiceRef],  # noqa: ARG002
-    ) -> Mapping[ServiceRef, PerformanceData]:
+    ) -> Mapping[ServiceRef, RawPerformanceData]:
         return self._performance_response
 
     def fetch_time_series(

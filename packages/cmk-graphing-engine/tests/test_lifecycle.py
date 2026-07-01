@@ -28,8 +28,8 @@ from cmk.graphing_engine import (
     Graph,
     HostName,
     MetricName,
-    PerformanceData,
     PerformanceValue,
+    RawPerformanceData,
     RRDMetric,
     ServiceName,
     ServiceRef,
@@ -70,7 +70,7 @@ class _FakeRRD:
     def __init__(
         self,
         *,
-        performance_data: Mapping[ServiceRef, PerformanceData],
+        performance_data: Mapping[ServiceRef, RawPerformanceData],
         time_series: Mapping[RRDMetric, TimeSeries],
     ) -> None:
         self._performance_data = performance_data
@@ -81,7 +81,7 @@ class _FakeRRD:
 
     def fetch_performance_data(
         self, services: Sequence[ServiceRef]
-    ) -> Mapping[ServiceRef, PerformanceData]:
+    ) -> Mapping[ServiceRef, RawPerformanceData]:
         return {
             service: self._performance_data[service]
             for service in services
@@ -161,7 +161,7 @@ def test_update_reproduces_a_title_expression_for_a_non_drawn_metric() -> None:
     )
     rrd = _FakeRRD(
         performance_data={
-            _SERVICE: PerformanceData(
+            _SERVICE: RawPerformanceData(
                 check_command="check_mk-cpu",
                 values=[
                     PerformanceValue(metric_name=MetricName("cpu_user"), value=3.0),
@@ -189,7 +189,7 @@ def test_update_reproduces_a_compound_and_simple_line_graph() -> None:
     )
     rrd = _FakeRRD(
         performance_data={
-            _SERVICE: PerformanceData(
+            _SERVICE: RawPerformanceData(
                 check_command="check_mk-cpu",
                 values=[
                     PerformanceValue(metric_name=MetricName("cpu_user"), value=10.0),
@@ -216,7 +216,7 @@ def test_update_reproduces_a_fallback_single_metric_graph() -> None:
     # No registered plugin: every metric becomes its own single-metric fallback graph.
     rrd = _FakeRRD(
         performance_data={
-            _SERVICE: PerformanceData(
+            _SERVICE: RawPerformanceData(
                 check_command="check_mk-cpu",
                 values=[PerformanceValue(metric_name=MetricName("temp"), value=42.0)],
             )
@@ -242,7 +242,7 @@ def test_update_reproduces_a_renamed_and_scaled_metric() -> None:
     ]
     rrd = _FakeRRD(
         performance_data={
-            _SERVICE: PerformanceData(
+            _SERVICE: RawPerformanceData(
                 check_command="check_mk-cpu",
                 values=[PerformanceValue(metric_name=MetricName("temperature"), value=21.0)],
             )
@@ -263,7 +263,7 @@ def test_update_reproduces_several_graphs_in_order() -> None:
     plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
     rrd = _FakeRRD(
         performance_data={
-            _SERVICE: PerformanceData(
+            _SERVICE: RawPerformanceData(
                 check_command="check_mk-cpu",
                 values=[
                     PerformanceValue(metric_name=MetricName("cpu_user"), value=5.0),
@@ -291,7 +291,7 @@ def test_update_reproduces_a_natively_gridded_series() -> None:
     plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
     rrd = _FakeRRD(
         performance_data={
-            _SERVICE: PerformanceData(
+            _SERVICE: RawPerformanceData(
                 check_command="check_mk-cpu",
                 values=[PerformanceValue(metric_name=MetricName("cpu_user"), value=1.0)],
             )
@@ -317,7 +317,7 @@ def _cpu_rrd(*, value: float, series: TimeSeries) -> _FakeRRD:
     plugin_metric = PerformanceValue(metric_name=MetricName("cpu_user"), value=value)
     return _FakeRRD(
         performance_data={
-            _SERVICE: PerformanceData(check_command="check_mk-cpu", values=[plugin_metric])
+            _SERVICE: RawPerformanceData(check_command="check_mk-cpu", values=[plugin_metric])
         },
         time_series={_column("cpu_user"): series},
     )
@@ -349,7 +349,7 @@ def test_refresh_picks_up_a_changed_title_scalar() -> None:
     def _rrd(cores_max: float) -> _FakeRRD:
         return _FakeRRD(
             performance_data={
-                _SERVICE: PerformanceData(
+                _SERVICE: RawPerformanceData(
                     check_command="check_mk-cpu",
                     values=[
                         PerformanceValue(metric_name=MetricName("cpu_user"), value=3.0),
@@ -380,7 +380,7 @@ def test_refresh_drops_a_curve_whose_metric_disappeared() -> None:
     )
     at_discovery = _FakeRRD(
         performance_data={
-            _SERVICE: PerformanceData(
+            _SERVICE: RawPerformanceData(
                 check_command="check_mk-cpu",
                 values=[
                     PerformanceValue(metric_name=MetricName("cpu_user"), value=3.0),
@@ -396,7 +396,7 @@ def test_refresh_drops_a_curve_whose_metric_disappeared() -> None:
     # On refresh cpu_system no longer reports any data.
     later = _FakeRRD(
         performance_data={
-            _SERVICE: PerformanceData(
+            _SERVICE: RawPerformanceData(
                 check_command="check_mk-cpu",
                 values=[PerformanceValue(metric_name=MetricName("cpu_user"), value=3.0)],
             )

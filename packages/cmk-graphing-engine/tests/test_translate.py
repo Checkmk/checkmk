@@ -5,15 +5,15 @@
 
 from cmk.graphing_engine import (
     MetricName,
-    PerformanceData,
     PerformanceValue,
+    RawPerformanceData,
 )
 from cmk.graphing_engine._objects import MetricTranslation, RRDMetricData, RRDOriginal
 from cmk.graphing_engine._translate import translate_performance_data
 
 
 def test_translate_scales_value_and_scalars() -> None:
-    perf = PerformanceData(
+    perf = RawPerformanceData(
         check_command="check_mk-cpu",
         values=[
             PerformanceValue(
@@ -46,7 +46,7 @@ def test_translate_scales_value_and_scalars() -> None:
 
 
 def test_translate_renames_metric_to_the_target() -> None:
-    perf = PerformanceData(
+    perf = RawPerformanceData(
         check_command="check_mk-sensor",
         values=[PerformanceValue(metric_name=MetricName("temperature"), value=20.0)],
     )
@@ -64,7 +64,7 @@ def test_translate_renames_metric_to_the_target() -> None:
 
 
 def test_translate_matches_regex_translation_entries() -> None:
-    perf = PerformanceData(
+    perf = RawPerformanceData(
         check_command="check_mk-if",
         values=[PerformanceValue(metric_name=MetricName("if_in_octets"), value=10.0)],
     )
@@ -78,7 +78,7 @@ def test_translate_matches_regex_translation_entries() -> None:
 
 
 def test_translate_falls_back_for_unregistered_metric() -> None:
-    perf = PerformanceData(
+    perf = RawPerformanceData(
         check_command="",
         values=[PerformanceValue(metric_name=MetricName("unknown"), value=1.0)],
     )
@@ -92,7 +92,7 @@ def test_translate_falls_back_for_unregistered_metric() -> None:
 
 
 def test_translate_keeps_the_predict_prefix_on_the_renamed_metric() -> None:
-    perf = PerformanceData(
+    perf = RawPerformanceData(
         check_command="check_mk-sensor",
         values=[PerformanceValue(metric_name=MetricName("predict_temperature"), value=19.0)],
     )
@@ -106,7 +106,7 @@ def test_translate_keeps_the_predict_prefix_on_the_renamed_metric() -> None:
 
 
 def test_translate_scales_a_predictive_metric_like_its_base() -> None:
-    perf = PerformanceData(
+    perf = RawPerformanceData(
         check_command="check_mk-cpu",
         values=[PerformanceValue(metric_name=MetricName("predict_cpu_user"), value=21.0)],
     )
@@ -127,7 +127,7 @@ def test_translate_adds_the_deprecated_column_for_a_renamed_metric() -> None:
     # The service now emits the metric under its current name `temp`, but a translation renames the
     # deprecated `temperature` onto `temp`. The deprecated column is appended as a further original so a
     # graph spanning the rename keeps its historic segment.
-    perf = PerformanceData(
+    perf = RawPerformanceData(
         check_command="check_mk-sensor",
         values=[PerformanceValue(metric_name=MetricName("temp"), value=20.0)],
     )
@@ -145,7 +145,7 @@ def test_translate_adds_the_deprecated_column_for_a_renamed_metric() -> None:
 
 
 def test_translate_scales_the_deprecated_column_with_its_own_scale() -> None:
-    perf = PerformanceData(
+    perf = RawPerformanceData(
         check_command="check_mk-cpu",
         values=[PerformanceValue(metric_name=MetricName("cpu_user"), value=21.0)],
     )
@@ -167,7 +167,7 @@ def test_translate_scales_the_deprecated_column_with_its_own_scale() -> None:
 def test_translate_does_not_reverse_translate_regex_entries() -> None:
     # A regex translation maps many names onto one and cannot be inverted, so no deprecated column is
     # added — only the current column remains.
-    perf = PerformanceData(
+    perf = RawPerformanceData(
         check_command="check_mk-if",
         values=[PerformanceValue(metric_name=MetricName("if_octets"), value=10.0)],
     )
@@ -181,7 +181,7 @@ def test_translate_does_not_reverse_translate_regex_entries() -> None:
 
 
 def test_translate_adds_the_deprecated_column_with_the_predict_prefix() -> None:
-    perf = PerformanceData(
+    perf = RawPerformanceData(
         check_command="check_mk-sensor",
         values=[PerformanceValue(metric_name=MetricName("predict_temp"), value=19.0)],
     )
@@ -198,7 +198,7 @@ def test_translate_adds_the_deprecated_column_with_the_predict_prefix() -> None:
 
 
 def test_translate_merges_metrics_renaming_to_the_same_target() -> None:
-    perf = PerformanceData(
+    perf = RawPerformanceData(
         check_command="check_mk-cpu",
         values=[
             PerformanceValue(metric_name=MetricName("user"), value=1.0),

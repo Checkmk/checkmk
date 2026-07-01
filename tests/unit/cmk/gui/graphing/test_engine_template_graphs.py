@@ -20,8 +20,8 @@ from cmk.graphing_engine import (
     HostName,
     Line,
     MetricName,
-    PerformanceData,
     PerformanceValue,
+    RawPerformanceData,
     RRDMetric,
     ScalarOf,
     ScalarType,
@@ -48,9 +48,9 @@ class _FakeRRD:
 
     def fetch_performance_data(
         self, services: Sequence[ServiceRef]
-    ) -> Mapping[ServiceRef, PerformanceData]:
+    ) -> Mapping[ServiceRef, RawPerformanceData]:
         return {
-            service: PerformanceData(
+            service: RawPerformanceData(
                 check_command="check_mk-foo",
                 values=[PerformanceValue(metric_name=MetricName(_METRIC), value=1.0)],
             )

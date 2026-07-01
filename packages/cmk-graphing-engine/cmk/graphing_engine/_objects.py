@@ -482,7 +482,7 @@ class PerformanceValue:
 
 
 @dataclass(frozen=True, kw_only=True)
-class PerformanceData:
+class RawPerformanceData:
     check_command: str
     values: Sequence[PerformanceValue]
 

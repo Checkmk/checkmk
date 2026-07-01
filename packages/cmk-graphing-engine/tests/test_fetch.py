@@ -18,9 +18,9 @@ from cmk.graphing_engine import (
     HostName,
     Line,
     MetricName,
-    PerformanceData,
     PerformanceValue,
     Quantity,
+    RawPerformanceData,
     RRDMetric,
     ServiceName,
     ServiceRef,
@@ -74,8 +74,8 @@ def _perf(name: str, *, value: float = 1.0) -> PerformanceValue:
     return PerformanceValue(metric_name=MetricName(name), value=value)
 
 
-def _perf_data(*values: PerformanceValue) -> PerformanceData:
-    return PerformanceData(check_command="check_mk-test", values=list(values))
+def _perf_data(*values: PerformanceValue) -> RawPerformanceData:
+    return RawPerformanceData(check_command="check_mk-test", values=list(values))
 
 
 def _ts(*values: float | None) -> TimeSeries:
@@ -86,7 +86,7 @@ class _FakeRRDSource:
     def __init__(
         self,
         *,
-        performance_response: Mapping[ServiceRef, PerformanceData] | None = None,
+        performance_response: Mapping[ServiceRef, RawPerformanceData] | None = None,
         time_series_response: Mapping[RRDMetric, TimeSeries] | None = None,
     ) -> None:
         self._performance_response = performance_response or {}
@@ -98,7 +98,7 @@ class _FakeRRDSource:
 
     def fetch_performance_data(
         self, services: Sequence[ServiceRef]
-    ) -> Mapping[ServiceRef, PerformanceData]:
+    ) -> Mapping[ServiceRef, RawPerformanceData]:
         self.performance_data_calls.append(tuple(services))
         return self._performance_response
 

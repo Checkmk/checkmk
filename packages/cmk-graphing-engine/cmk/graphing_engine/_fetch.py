@@ -13,7 +13,7 @@ from ._from_api import parse_translations_from_api
 from ._objects import (
     Graph,
     MetricName,
-    PerformanceData,
+    RawPerformanceData,
     RRDMetric,
     RRDMetricData,
     ServiceRef,
@@ -27,7 +27,7 @@ from ._translate import translate_performance_data
 class RRDSource(Protocol):
     def fetch_performance_data(
         self, services: Sequence[ServiceRef]
-    ) -> Mapping[ServiceRef, PerformanceData]: ...
+    ) -> Mapping[ServiceRef, RawPerformanceData]: ...
 
     def fetch_time_series(
         self,

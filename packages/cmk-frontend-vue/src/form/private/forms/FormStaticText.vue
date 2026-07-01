@@ -36,7 +36,21 @@ const alertVariant = computed(
 </script>
 
 <template>
-  <CmkAlertBox v-if="alertVariant" size="small" :variant="alertVariant">{{ display }}</CmkAlertBox>
+  <CmkAlertBox
+    v-if="alertVariant"
+    size="small"
+    :variant="alertVariant"
+    class="form-static-text__alert"
+    >{{ display }}</CmkAlertBox
+  >
   <pre v-else-if="spec.style === 'preformatted'" class="vs_fixed_value">{{ display }}</pre>
   <FormLabel v-else>{{ display }}</FormLabel>
 </template>
+
+<style scoped>
+.form-static-text__alert.form-static-text__alert {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+}
+</style>

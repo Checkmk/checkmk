@@ -453,7 +453,7 @@ def _call_register_new_ongoing_ultimate(
         "cmk.agent_receiver.agent_receiver.endpoints.cmk_edition",
         return_value=CMKEdition.ultimate,
     )
-    return client.post(
+    return client.post(  # type: ignore[no-any-return]
         f"/register_new_ongoing/{uuid}",
         auth=("user", "password"),
     )

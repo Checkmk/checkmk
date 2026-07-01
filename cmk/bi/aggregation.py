@@ -101,6 +101,7 @@ class BIAggregation:
             self.computation_options,
             self.aggregation_visualization,
             self.groups,
+            self.customer,
         )
 
     def _verify_all_branches_start_with_rule(
@@ -118,7 +119,12 @@ class BIAggregation:
         aggregation_visualization = schema_config["aggregation_visualization"]
         groups = BIAggregationGroups(schema_config["groups"])
         return BICompiledAggregation(
-            aggregation_id, branches, computation_options, aggregation_visualization, groups
+            aggregation_id,
+            branches,
+            computation_options,
+            aggregation_visualization,
+            groups,
+            schema_config.get("customer"),
         )
 
 

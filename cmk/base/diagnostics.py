@@ -430,8 +430,8 @@ class ConsoleLogger:
     def info(self, info: str) -> None:
         self._info(f"{2 * self._GAP}{tty.blue}{tty.bold}INFO{tty.normal} - {info}")
 
-    def warn(self, warn: str) -> None:
-        self._info(f"{2 * self._GAP}{tty.warn} - {warn}")
+    def warning(self, warning: str) -> None:
+        self._info(f"{2 * self._GAP}{tty.warn} - {warning}")
 
     def error(self, error: str) -> None:
         self._info(f"{2 * self._GAP}{tty.error} - {error}")
@@ -592,8 +592,7 @@ class DiagnosticsDump:
             except DiagnosticsElementInfo as e:
                 self._logger.info(str(e))
             except DiagnosticsElementWarning as e:
-                # ConsoleLogger.warn() is a custom method, not logging.Logger.warn().
-                self._logger.warn(str(e))  # noqa: G010
+                self._logger.warning(str(e))
             except DiagnosticsElementError as e:
                 # ConsoleLogger has no .exception(); keep .error() (mirrors the Info/Warning
                 # handlers above and logs the element message at its level).

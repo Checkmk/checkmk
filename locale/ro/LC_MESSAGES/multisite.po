@@ -5247,6 +5247,10 @@ msgstr "Aerohive HiveManager NG"
 msgid "Affected %s: %s"
 msgstr "Afectat %s: %s"
 
+#, fuzzy, python-format
+msgid "Affected aggregations: %d"
+msgstr "La agregările selectate"
+
 msgid "Affected by service"
 msgstr "Afectat de serviciu"
 
@@ -15398,6 +15402,10 @@ msgstr ""
 msgid "Command Name"
 msgstr "Numele comenzii"
 
+#, fuzzy
+msgid "Command applies to all nested hosts and services in aggregation."
+msgstr "Comenzi privind gazda și serviciile"
+
 msgid "Command line"
 msgstr "Linia de comandă"
 
@@ -20197,6 +20205,10 @@ msgstr "Grad Celsius"
 
 msgid "Degree Fahrenheit"
 msgstr "Grad Fahrenheit"
+
+#, fuzzy
+msgid "Delay between retries"
+msgstr "Întârzierea creării evenimentului"
 
 msgid "Delay event creation"
 msgstr "Întârzierea creării evenimentului"
@@ -59380,6 +59392,10 @@ msgstr "Intervalul de reverificare a verificărilor gazdă"
 msgid "Retry check interval for service checks"
 msgstr "Intervalul de reverificare a verificărilor de serviciu"
 
+#, fuzzy
+msgid "Retry fetching system data"
+msgstr "Reîncercați acest test"
+
 msgid "Retry this test"
 msgstr "Reîncercați acest test"
 
@@ -65150,6 +65166,16 @@ msgstr ""
 "Unele sarcini de lungă durată sunt executate în așa-numitele sarcini de "
 "fundal. Puteți utiliza acest nivel de jurnal pentru a activa în mod "
 "individual o jurnalizare mai detaliată pentru sarcinile din fundal."
+
+msgid ""
+"Some management controllers intermittently fail the central '/redfish/v1/"
+"Systems' request (e.g. HTTP 503 or 404). Without a retry the system-related "
+"services (CPUs, memory, storage, drives, volumes, network interfaces) would "
+"briefly disappear. The special agent retries this request and, if it still "
+"fails, aborts the run so the previously monitored data is kept instead of "
+"dropping those services. Setting the number of retries to 0 disables "
+"retrying (abort immediately)."
+msgstr ""
 
 msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
@@ -77023,8 +77049,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Această opțiune face ca checkmk să utilizeze fie descrierea interfeței, fie "
 "aliasul sau numărul portului ca element."
@@ -86862,6 +86888,10 @@ msgstr ""
 msgid "Use mount point"
 msgstr "Utilizați punctul de montare"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Numele utilizatorului"
+
 msgid "Use narrow rendering for this number"
 msgstr "Utilizați o redare îngustă pentru acest număr"
 
@@ -90322,8 +90352,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Atunci când enumeră membrii grupului în rezultatul serviciului care "
 "monitorizează grupul, această opțiune face ca checkmk să utilizeze fie "
@@ -96830,6 +96860,20 @@ msgid "Regenerate answer"
 msgstr "Regenerarea codurilor"
 
 #, fuzzy
+msgid "Data quality"
+msgstr "Tipul de date"
+
+#, fuzzy
+msgid "Data quality information"
+msgstr "Obțineți informații despre..."
+
+msgid ""
+"Indicates completeness and reliability of the data used to generate this "
+"answer. High means all key fields are present; Medium that some data might "
+"be missing; Low that the data is insufficient or unavailable."
+msgstr ""
+
+#, fuzzy
 msgid "Feature temporarily unavailable"
 msgstr "Memorie SGA liberă disponibilă"
 
@@ -101133,10 +101177,6 @@ msgstr ""
 
 #~ msgid "Limit the number of rows in View tables"
 #~ msgstr "Limitarea numărului de rânduri în tabelele Vizualizare"
-
-#, fuzzy
-#~ msgid "Use name"
-#~ msgstr "Numele utilizatorului"
 
 #~ msgid "Use settings and page layout from"
 #~ msgstr "Utilizați setările și aspectul paginii din"

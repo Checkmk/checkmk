@@ -5262,6 +5262,10 @@ msgstr "Aerohive HiveManager NG"
 msgid "Affected %s: %s"
 msgstr "Afectado %s: %s"
 
+#, fuzzy, python-format
+msgid "Affected aggregations: %d"
+msgstr "En las agregaciones seleccionadas"
+
 msgid "Affected by service"
 msgstr "Afectados por el servicio"
 
@@ -15439,6 +15443,10 @@ msgstr ""
 msgid "Command Name"
 msgstr "Nombre del comando"
 
+#, fuzzy
+msgid "Command applies to all nested hosts and services in aggregation."
+msgstr "Comandos en el host y los servicios"
+
 msgid "Command line"
 msgstr "Línea de comandos"
 
@@ -20264,6 +20272,10 @@ msgstr "Grado Celsius"
 
 msgid "Degree Fahrenheit"
 msgstr "Grados Fahrenheit"
+
+#, fuzzy
+msgid "Delay between retries"
+msgstr "Retrasar la creación de eventos"
 
 msgid "Delay event creation"
 msgstr "Retrasar la creación de eventos"
@@ -59696,6 +59708,10 @@ msgid "Retry check interval for service checks"
 msgstr ""
 "Intervalo de comprobación de reintentos para las comprobaciones de servicio"
 
+#, fuzzy
+msgid "Retry fetching system data"
+msgstr "Reintentar esta prueba"
+
 msgid "Retry this test"
 msgstr "Reintentar esta prueba"
 
@@ -65456,6 +65472,16 @@ msgstr ""
 "Algunas tareas de larga duración se ejecutan en los llamados trabajos en "
 "segundo plano. Puede utilizar este nivel de registro para habilitar "
 "individualmente un registro más detallado para los trabajos en segundo plano."
+
+msgid ""
+"Some management controllers intermittently fail the central '/redfish/v1/"
+"Systems' request (e.g. HTTP 503 or 404). Without a retry the system-related "
+"services (CPUs, memory, storage, drives, volumes, network interfaces) would "
+"briefly disappear. The special agent retries this request and, if it still "
+"fails, aborts the run so the previously monitored data is kept instead of "
+"dropping those services. Setting the number of retries to 0 disables "
+"retrying (abort immediately)."
+msgstr ""
 
 msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
@@ -77324,8 +77350,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Esta opción hace que checkmk utilice la descripción de la interfaz, el alias "
 "o el número de puerto como elemento."
@@ -87237,6 +87263,10 @@ msgstr "Utiliza los niveles más críticos de tu y del dispositivo"
 msgid "Use mount point"
 msgstr "Utilizar el punto de montaje"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Nombre de usuario"
+
 msgid "Use narrow rendering for this number"
 msgstr "Utilice una representación estrecha para este número"
 
@@ -90709,8 +90739,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Cuando se enumeran los miembros del grupo en la salida del servicio que "
 "supervisa el grupo, esta opción hace que checkmk utilice la descripción de "
@@ -97232,6 +97262,20 @@ msgid "Regenerate answer"
 msgstr "Regenerar los códigos de seguridad"
 
 #, fuzzy
+msgid "Data quality"
+msgstr "Tipo de datos"
+
+#, fuzzy
+msgid "Data quality information"
+msgstr "Recuperar información sobre..."
+
+msgid ""
+"Indicates completeness and reliability of the data used to generate this "
+"answer. High means all key fields are present; Medium that some data might "
+"be missing; Low that the data is insufficient or unavailable."
+msgstr ""
+
+#, fuzzy
 msgid "Feature temporarily unavailable"
 msgstr "Memoria SGA libre disponible"
 
@@ -101519,10 +101563,6 @@ msgstr ""
 
 #~ msgid "Limit the number of rows in View tables"
 #~ msgstr "Limitar el número de filas en las tablas de visualización"
-
-#, fuzzy
-#~ msgid "Use name"
-#~ msgstr "Nombre de usuario"
 
 #~ msgid "Use settings and page layout from"
 #~ msgstr "Utilice los ajustes y el diseño de la página desde"

@@ -5118,6 +5118,10 @@ msgstr "Aerohive HiveManager NG"
 msgid "Affected %s: %s"
 msgstr "%s influenzati: %s"
 
+#, fuzzy, python-format
+msgid "Affected aggregations: %d"
+msgstr "Su aggregazioni selezionate"
+
 msgid "Affected by service"
 msgstr "Interessato dal servizio"
 
@@ -15141,6 +15145,10 @@ msgstr ""
 msgid "Command Name"
 msgstr "Nome del comando"
 
+#, fuzzy
+msgid "Command applies to all nested hosts and services in aggregation."
+msgstr "Comandi su host e servizi"
+
 msgid "Command line"
 msgstr "Linea di comando"
 
@@ -19908,6 +19916,10 @@ msgstr "Grado Celsius"
 
 msgid "Degree Fahrenheit"
 msgstr "Grado Fahrenheit"
+
+#, fuzzy
+msgid "Delay between retries"
+msgstr "Ritardare la creazione dell'evento"
 
 msgid "Delay event creation"
 msgstr "Ritardare la creazione dell'evento"
@@ -58978,6 +58990,10 @@ msgstr "Intervallo di ripetizione dei controlli dell'host"
 msgid "Retry check interval for service checks"
 msgstr "Intervallo di ripetizione dei controlli di servizio"
 
+#, fuzzy
+msgid "Retry fetching system data"
+msgstr "Riprova questo test"
+
 msgid "Retry this test"
 msgstr "Riprova questo test"
 
@@ -64679,6 +64695,16 @@ msgstr ""
 "Alcuni compiti di lunga durata vengono eseguiti come eseguiti nei cosiddetti "
 "lavori in background. Puoi usare questo livello di log per abilitare "
 "individualmente un log più dettagliato per i lavori in background."
+
+msgid ""
+"Some management controllers intermittently fail the central '/redfish/v1/"
+"Systems' request (e.g. HTTP 503 or 404). Without a retry the system-related "
+"services (CPUs, memory, storage, drives, volumes, network interfaces) would "
+"briefly disappear. The special agent retries this request and, if it still "
+"fails, aborts the run so the previously monitored data is kept instead of "
+"dropping those services. Setting the number of retries to 0 disables "
+"retrying (abort immediately)."
+msgstr ""
 
 msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
@@ -76523,8 +76549,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Questa opzione fa sì che checkmk usi la descrizione dell'interfaccia, "
 "l'alias o il numero di porta come elemento."
@@ -86325,6 +86351,10 @@ msgstr "Utilizzare i livelli più critici del tuo e del dispositivo"
 msgid "Use mount point"
 msgstr "Utilizzare il punto di montaggio"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Nome utente"
+
 msgid "Use narrow rendering for this number"
 msgstr "Utilizzare un rendering stretto per questo numero"
 
@@ -89772,8 +89802,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Quando si elencano i membri del gruppo nell'output del servizio che "
 "controlla il gruppo, questa opzione fa sì che checkmk usi la descrizione "
@@ -96282,6 +96312,20 @@ msgid "Regenerate answer"
 msgstr "Rigenerare i codici"
 
 #, fuzzy
+msgid "Data quality"
+msgstr "Tipo di dati"
+
+#, fuzzy
+msgid "Data quality information"
+msgstr "Informazioni file"
+
+msgid ""
+"Indicates completeness and reliability of the data used to generate this "
+"answer. High means all key fields are present; Medium that some data might "
+"be missing; Low that the data is insufficient or unavailable."
+msgstr ""
+
+#, fuzzy
 msgid "Feature temporarily unavailable"
 msgstr "Memoria SGA libera disponibile"
 
@@ -100565,10 +100609,6 @@ msgstr ""
 
 #~ msgid "Limit the number of rows in View tables"
 #~ msgstr "Limitare il numero di righe nelle tabelle View"
-
-#, fuzzy
-#~ msgid "Use name"
-#~ msgstr "Nome utente"
 
 #~ msgid "Use settings and page layout from"
 #~ msgstr "Utilizzare le impostazioni e il layout di pagina da"

@@ -5285,6 +5285,10 @@ msgstr "Aerohive HiveManager NG"
 msgid "Affected %s: %s"
 msgstr "Affecte %s : %s"
 
+#, fuzzy, python-format
+msgid "Affected aggregations: %d"
+msgstr "Sur les agrégations sélectionnées"
+
 msgid "Affected by service"
 msgstr "Affecté par le service"
 
@@ -15468,6 +15472,10 @@ msgstr ""
 msgid "Command Name"
 msgstr "Nom de la commande"
 
+#, fuzzy
+msgid "Command applies to all nested hosts and services in aggregation."
+msgstr "Commandes sur l'hôte et les services"
+
 msgid "Command line"
 msgstr "Ligne de commande"
 
@@ -20308,6 +20316,10 @@ msgstr "Degré Celsius"
 
 msgid "Degree Fahrenheit"
 msgstr "Degré Fahrenheit"
+
+#, fuzzy
+msgid "Delay between retries"
+msgstr "Retarder la création d'un événement"
 
 msgid "Delay event creation"
 msgstr "Retarder la création d'un événement"
@@ -59744,6 +59756,10 @@ msgstr "Intervalle de répétition des contrôles d'hôtes"
 msgid "Retry check interval for service checks"
 msgstr "Intervalle de répétition des contrôles de service"
 
+#, fuzzy
+msgid "Retry fetching system data"
+msgstr "Recommencer ce test"
+
 msgid "Retry this test"
 msgstr "Recommencer ce test"
 
@@ -65497,6 +65513,16 @@ msgstr ""
 "d'arrière-plan. Vous pouvez utiliser ce niveau de journalisation pour "
 "activer individuellement une journalisation plus détaillée pour les tâches "
 "d'arrière-plan."
+
+msgid ""
+"Some management controllers intermittently fail the central '/redfish/v1/"
+"Systems' request (e.g. HTTP 503 or 404). Without a retry the system-related "
+"services (CPUs, memory, storage, drives, volumes, network interfaces) would "
+"briefly disappear. The special agent retries this request and, if it still "
+"fails, aborts the run so the previously monitored data is kept instead of "
+"dropping those services. Setting the number of retries to 0 disables "
+"retrying (abort immediately)."
+msgstr ""
 
 msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
@@ -77400,8 +77426,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Cette option fait que checkmk utilise soit la description de l'interface, "
 "l'alias ou le numéro de port comme élément."
@@ -87354,6 +87380,10 @@ msgstr "Utiliser les niveaux les plus critiques de votre appareil et du vôtre"
 msgid "Use mount point"
 msgstr "Utiliser le point de montage"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Nom de l'utilisateur"
+
 msgid "Use narrow rendering for this number"
 msgstr "Utilisez un rendu étroit pour ce numéro"
 
@@ -90847,8 +90877,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Lors de l'énumération des membres du groupe dans la sortie du service "
 "surveillant le groupe, cette option fait que checkmk utilise soit la "
@@ -97413,6 +97443,20 @@ msgid "Regenerate answer"
 msgstr "Régénérer les codes de sauvegarde"
 
 #, fuzzy
+msgid "Data quality"
+msgstr "Type de données"
+
+#, fuzzy
+msgid "Data quality information"
+msgstr "Récupérer des informations sur..."
+
+msgid ""
+"Indicates completeness and reliability of the data used to generate this "
+"answer. High means all key fields are present; Medium that some data might "
+"be missing; Low that the data is insufficient or unavailable."
+msgstr ""
+
+#, fuzzy
 msgid "Feature temporarily unavailable"
 msgstr "Mémoire SGA libre disponible"
 
@@ -101710,10 +101754,6 @@ msgstr ""
 
 #~ msgid "Limit the number of rows in View tables"
 #~ msgstr "Limiter le nombre de lignes dans les tableaux de visualisation"
-
-#, fuzzy
-#~ msgid "Use name"
-#~ msgstr "Nom de l'utilisateur"
 
 #~ msgid "Use settings and page layout from"
 #~ msgstr "Utilisez les paramètres et la mise en page de"

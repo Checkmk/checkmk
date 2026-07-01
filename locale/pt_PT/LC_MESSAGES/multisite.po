@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-06-30 08:47+0000\n"
+"PO-Revision-Date: 2026-07-01 08:32+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -5237,6 +5237,10 @@ msgstr "Aerohive HiveManager NG"
 #, fuzzy, python-format
 msgid "Affected %s: %s"
 msgstr "Afetado %s: %s"
+
+#, fuzzy, python-format
+msgid "Affected aggregations: %d"
+msgstr "Em agregações selecionadas"
 
 msgid "Affected by service"
 msgstr "Afetado pelo serviço"
@@ -15357,6 +15361,10 @@ msgstr ""
 msgid "Command Name"
 msgstr "Nome do Comando"
 
+#, fuzzy
+msgid "Command applies to all nested hosts and services in aggregation."
+msgstr "Comandos sobre o anfitrião e serviços"
+
 msgid "Command line"
 msgstr "Linha de comando"
 
@@ -20143,6 +20151,10 @@ msgstr "Grau Celsius"
 
 msgid "Degree Fahrenheit"
 msgstr "Grau Fahrenheit"
+
+#, fuzzy
+msgid "Delay between retries"
+msgstr "Atraso na criação do evento"
 
 msgid "Delay event creation"
 msgstr "Atraso na criação do evento"
@@ -59243,6 +59255,10 @@ msgstr "Intervalo de nova verificação para verificações no host"
 msgid "Retry check interval for service checks"
 msgstr "Intervalo de verificação de novo para verificações de serviço"
 
+#, fuzzy
+msgid "Retry fetching system data"
+msgstr "Tente novamente este teste"
+
 msgid "Retry this test"
 msgstr "Tente novamente este teste"
 
@@ -64938,6 +64954,16 @@ msgstr ""
 "Algumas tarefas de longa duração são executadas como executadas nos chamados "
 "trabalhos de fundo. É possível usar este nível de log para permitir "
 "individualmente um log mais detalhado para os jobs em background."
+
+msgid ""
+"Some management controllers intermittently fail the central '/redfish/v1/"
+"Systems' request (e.g. HTTP 503 or 404). Without a retry the system-related "
+"services (CPUs, memory, storage, drives, volumes, network interfaces) would "
+"briefly disappear. The special agent retries this request and, if it still "
+"fails, aborts the run so the previously monitored data is kept instead of "
+"dropping those services. Setting the number of retries to 0 disables "
+"retrying (abort immediately)."
+msgstr ""
 
 msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
@@ -76680,8 +76706,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Esta opção faz com que a checkmk use a descrição da interface, alias ou "
 "número da porta como item."
@@ -86521,6 +86547,10 @@ msgstr "Use o mais crítico dos seus níveis e do dispositivo"
 msgid "Use mount point"
 msgstr "Use o ponto de montagem"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Nome do usuário"
+
 msgid "Use narrow rendering for this number"
 msgstr "Utilizar uma renderização estreita para este número"
 
@@ -89958,8 +89988,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Ao listar os membros do grupo na saída do serviço de monitoramento do grupo, "
 "esta opção faz com que a checkmk use ou a descrição da interface, alias ou "
@@ -96417,6 +96447,20 @@ msgid "Regenerate answer"
 msgstr "Regenerar códigos de backup"
 
 #, fuzzy
+msgid "Data quality"
+msgstr "Tipo de dados"
+
+#, fuzzy
+msgid "Data quality information"
+msgstr "Recuperar informação sobre..."
+
+msgid ""
+"Indicates completeness and reliability of the data used to generate this "
+"answer. High means all key fields are present; Medium that some data might "
+"be missing; Low that the data is insufficient or unavailable."
+msgstr ""
+
+#, fuzzy
 msgid "Feature temporarily unavailable"
 msgstr "Memória SGA gratuita disponível"
 
@@ -100699,10 +100743,6 @@ msgstr ""
 
 #~ msgid "Limit the number of rows in View tables"
 #~ msgstr "Limitar o número de filas nas tabelas Ver"
-
-#, fuzzy
-#~ msgid "Use name"
-#~ msgstr "Nome do usuário"
 
 #~ msgid "Use settings and page layout from"
 #~ msgstr "Use as configurações e o layout da página de"

@@ -5240,6 +5240,10 @@ msgstr "Aerohive HiveManager NG"
 msgid "Affected %s: %s"
 msgstr "Betrokken sites"
 
+#, fuzzy, python-format
+msgid "Affected aggregations: %d"
+msgstr "Op geselecteerde aggregaties"
+
 msgid "Affected by service"
 msgstr "Beïnvloed door dienst"
 
@@ -15347,6 +15351,10 @@ msgstr ""
 msgid "Command Name"
 msgstr "Opdracht Naam"
 
+#, fuzzy
+msgid "Command applies to all nested hosts and services in aggregation."
+msgstr "Commando's op host en diensten"
+
 msgid "Command line"
 msgstr "Opdrachtregel"
 
@@ -20144,6 +20152,10 @@ msgstr "Graad Celsius"
 
 msgid "Degree Fahrenheit"
 msgstr "Graad Fahrenheit"
+
+#, fuzzy
+msgid "Delay between retries"
+msgstr "Vertraging gebeurtenis creatie"
 
 msgid "Delay event creation"
 msgstr "Vertraging gebeurtenis creatie"
@@ -59244,6 +59256,10 @@ msgstr "Herhalingsinterval voor hostcontroles"
 msgid "Retry check interval for service checks"
 msgstr "Herhalingsinterval voor servicechecks"
 
+#, fuzzy
+msgid "Retry fetching system data"
+msgstr "Probeer deze test opnieuw"
+
 msgid "Retry this test"
 msgstr "Probeer deze test opnieuw"
 
@@ -64940,6 +64956,16 @@ msgstr ""
 "Sommige langlopende taken worden uitgevoerd als uitgevoerd in zogenaamde "
 "achtergrond taken. Je kunt dit log-niveau gebruiken om meer gedetailleerde "
 "logging voor de achtergrondtaken in te schakelen."
+
+msgid ""
+"Some management controllers intermittently fail the central '/redfish/v1/"
+"Systems' request (e.g. HTTP 503 or 404). Without a retry the system-related "
+"services (CPUs, memory, storage, drives, volumes, network interfaces) would "
+"briefly disappear. The special agent retries this request and, if it still "
+"fails, aborts the run so the previously monitored data is kept instead of "
+"dropping those services. Setting the number of retries to 0 disables "
+"retrying (abort immediately)."
+msgstr ""
 
 msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
@@ -76739,8 +76765,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This option makes Checkmk use either the interface description, alias or "
-"port number as item."
+"This option makes Checkmk use either the interface description, alias, name "
+"or port number as item."
 msgstr ""
 "Deze optie zorgt ervoor dat checkmk ofwel de interface beschrijving, alias "
 "of poortnummer gebruikt als item."
@@ -86583,6 +86609,10 @@ msgstr "Gebruik de meest kritische van uw en apparaat niveaus"
 msgid "Use mount point"
 msgstr "Gebruik mountpoint"
 
+#, fuzzy
+msgid "Use name"
+msgstr "Naam gebruiker"
+
 msgid "Use narrow rendering for this number"
 msgstr "Gebruik smalle weergave voor dit nummer"
 
@@ -90027,8 +90057,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "When listing the group members in the output of the service monitoring the "
-"group, this option makes Checkmk use either the interface description, alias "
-"or port number."
+"group, this option makes Checkmk use either the interface description, "
+"alias, name or port number."
 msgstr ""
 "Bij het opsommen van de groepsleden in de uitvoer van de dienst die de groep "
 "bewaakt, zorgt deze optie ervoor dat checkmk ofwel de interfacebeschrijving, "
@@ -96520,6 +96550,20 @@ msgid "Regenerate answer"
 msgstr "Back-upcodes opnieuw genereren"
 
 #, fuzzy
+msgid "Data quality"
+msgstr "Gegevenstype"
+
+#, fuzzy
+msgid "Data quality information"
+msgstr "Informatie ophalen over..."
+
+msgid ""
+"Indicates completeness and reliability of the data used to generate this "
+"answer. High means all key fields are present; Medium that some data might "
+"be missing; Low that the data is insufficient or unavailable."
+msgstr ""
+
+#, fuzzy
 msgid "Feature temporarily unavailable"
 msgstr "Vrij SGA-geheugen beschikbaar"
 
@@ -100802,10 +100846,6 @@ msgstr ""
 
 #~ msgid "Limit the number of rows in View tables"
 #~ msgstr "Het aantal rijen in View-tabellen beperken"
-
-#, fuzzy
-#~ msgid "Use name"
-#~ msgstr "Naam gebruiker"
 
 #~ msgid "Use settings and page layout from"
 #~ msgstr "Gebruik de instellingen en paginaopmaak van"

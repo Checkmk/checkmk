@@ -145,6 +145,12 @@ class EvaluationContext:
 
 
 class Quantity(Protocol):
+    def ident(self) -> str:
+        # A stable, structural identifier of the quantity — derived from its shape and operands, never
+        # from fetched data or the time range / consolidation function. It is the basis of the unique id
+        # each evaluated drawable carries, so it must stay identical across re-evaluations.
+        ...
+
     def rrd_metrics(self) -> Iterable[RRDMetric]: ...
 
     def is_present(self, context: EvaluationContext) -> bool: ...
@@ -228,6 +234,9 @@ class Constant:
     # constants that wrap their own Curve attributes (the direct graph types).
     display: CurveAttributes | None = None
 
+    def ident(self) -> str:
+        return f"constant:{self.value}"
+
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         return ()
 
@@ -248,6 +257,12 @@ class RRDMetric:
     metric_name: MetricName
     # An optional per-metric consolidation function; when None the graph-wide one is used at fetch.
     consolidation_function: ConsolidationFunction | None = None
+
+    def ident(self) -> str:
+        # host / service qualify the metric so the same name from two services stays distinct. The
+        # consolidation function is deliberately left out: it is a fetch-time choice that changes on
+        # re-calc, and the id must be preserved across re-calculations.
+        return f"metric:{self.host_name}/{self.service_name}/{self.metric_name}"
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield self
@@ -294,6 +309,9 @@ class ScalarOf:
     # carry none — their colour comes from the scalar type). Read by build_curve; None for the others.
     color: str | None = None
 
+    def ident(self) -> str:
+        return f"{self.scalar_type}:{self.metric.ident()}"
+
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield self.metric
 
@@ -314,6 +332,9 @@ class Sum:
     # Intrinsic display from the plugin author (read by ``build_curve``); None for consumer-built sums.
     display: CurveAttributes | None = None
 
+    def ident(self) -> str:
+        return f"sum({','.join(summand.ident() for summand in self.summands)})"
+
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         for summand in self.summands:
             yield from summand.rrd_metrics()
@@ -333,6 +354,9 @@ class Product:
     factors: Sequence[Quantity]
     # Intrinsic display from the plugin author (read by ``build_curve``); None for consumer-built ones.
     display: CurveAttributes | None = None
+
+    def ident(self) -> str:
+        return f"product({','.join(factor.ident() for factor in self.factors)})"
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         for factor in self.factors:
@@ -356,6 +380,9 @@ class Difference:
     # Intrinsic display from the plugin author (read by ``build_curve``); None for consumer-built ones.
     display: CurveAttributes | None = None
 
+    def ident(self) -> str:
+        return f"difference({self.minuend.ident()},{self.subtrahend.ident()})"
+
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield from self.minuend.rrd_metrics()
         yield from self.subtrahend.rrd_metrics()
@@ -377,6 +404,9 @@ class Fraction:
     divisor: Quantity
     # Intrinsic display from the plugin author (read by ``build_curve``); None for consumer-built ones.
     display: CurveAttributes | None = None
+
+    def ident(self) -> str:
+        return f"fraction({self.dividend.ident()},{self.divisor.ident()})"
 
     def rrd_metrics(self) -> Iterable[RRDMetric]:
         yield from self.dividend.rrd_metrics()

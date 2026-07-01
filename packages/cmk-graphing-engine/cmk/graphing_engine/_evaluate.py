@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never
@@ -17,6 +18,7 @@ from ._objects import (
     Graph,
     MetricName,
     MinimalRange,
+    Quantity,
     RRDMetric,
     RRDMetricData,
     Rule,
@@ -30,6 +32,7 @@ from ._title import evaluate_title
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluatedCurve:
+    id: str
     attributes: CurveAttributes
     value: float | None
     time_series: TimeSeries
@@ -52,6 +55,7 @@ class EvaluatedLine:
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluatedRule:
+    id: str
     attributes: CurveAttributes
     value: float
     inverse: bool
@@ -111,23 +115,38 @@ def _evaluate_vertical_range(
             assert_never(vertical_range)
 
 
-def _evaluate_curve(curve: Curve, context: EvaluationContext) -> EvaluatedCurve | None:
+def _drawable_id(quantity: Quantity, *, inverse: bool, seen: Counter[str]) -> str:
+    # A drawable's id is its quantity's structural ident, with the direction folded in ("-" for the
+    # inverted half of a bidirectional graph, mirroring the legacy stack / -stack split) and a "#n"
+    # suffix appended to the n-th occurrence of an already-seen base. Callers must invoke this once per
+    # drawable slot in definition order, before dropping absent ones, so a surviving drawable's id never
+    # shifts when a sibling is dropped for missing data — the id is a pure function of the graph.
+    base = ("-" if inverse else "") + quantity.ident()
+    seen[base] += 1
+    return base if seen[base] == 1 else f"{base}#{seen[base]}"
+
+
+def _evaluate_curve(
+    curve: Curve, curve_id: str, context: EvaluationContext
+) -> EvaluatedCurve | None:
     if not curve.quantity.is_present(context):
         return None
     return EvaluatedCurve(
+        id=curve_id,
         attributes=curve.attributes,
         value=curve.quantity.evaluate_value(context),
         time_series=curve.quantity.evaluate_time_series(context),
     )
 
 
-def _evaluate_rule(rule: Rule, context: EvaluationContext) -> EvaluatedRule | None:
+def _evaluate_rule(rule: Rule, rule_id: str, context: EvaluationContext) -> EvaluatedRule | None:
     if not rule.curve.quantity.is_present(context):
         return None
     value = rule.curve.quantity.evaluate_value(context)
     if value is None:
         return None
     return EvaluatedRule(
+        id=rule_id,
         attributes=rule.curve.attributes,
         value=value,
         inverse=rule.inverse,
@@ -161,14 +180,32 @@ def evaluate_graph(
         time_series=time_series,
         time_range=time_range,
     )
+    # Assign every drawable slot its unique id in definition order (stacks, then lines, then rules),
+    # bumping the shared disambiguation counter even for slots that get dropped for missing data.
+    seen: Counter[str] = Counter()
     stacks = []
     for group in graph.stacks:
         members = [
             curve
             for member in group.members
-            if (curve := _evaluate_curve(member, context)) is not None
+            if (
+                curve := _evaluate_curve(
+                    member,
+                    _drawable_id(member.quantity, inverse=group.inverse, seen=seen),
+                    context,
+                )
+            )
+            is not None
         ]
-        reference = None if group.reference is None else _evaluate_curve(group.reference, context)
+        reference = (
+            None
+            if group.reference is None
+            else _evaluate_curve(
+                group.reference,
+                _drawable_id(group.reference.quantity, inverse=group.inverse, seen=seen),
+                context,
+            )
+        )
         if members:
             stacks.append(
                 EvaluatedStack(members=members, inverse=group.inverse, reference=reference)
@@ -176,12 +213,26 @@ def evaluate_graph(
     lines = [
         EvaluatedLine(curve=curve, inverse=line.inverse)
         for line in graph.lines
-        if (curve := _evaluate_curve(line.curve, context)) is not None
+        if (
+            curve := _evaluate_curve(
+                line.curve,
+                _drawable_id(line.curve.quantity, inverse=line.inverse, seen=seen),
+                context,
+            )
+        )
+        is not None
     ]
     rules = [
         evaluated
         for rule in graph.rules
-        if (evaluated := _evaluate_rule(rule, context)) is not None
+        if (
+            evaluated := _evaluate_rule(
+                rule,
+                _drawable_id(rule.curve.quantity, inverse=rule.inverse, seen=seen),
+                context,
+            )
+        )
+        is not None
     ]
     return EvaluatedGraph(
         name=graph.name,

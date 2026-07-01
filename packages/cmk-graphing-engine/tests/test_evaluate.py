@@ -250,6 +250,7 @@ def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
             EvaluatedStack(
                 members=[
                     EvaluatedCurve(
+                        id="-metric:h/svc/a",
                         attributes=_attrs("a"),
                         value=3.0,
                         time_series=_time_series(1.0, 2.0, 3.0),
@@ -261,6 +262,7 @@ def test_evaluate_graph_keeps_stacks_and_lines_with_their_direction() -> None:
         lines=[
             EvaluatedLine(
                 curve=EvaluatedCurve(
+                    id="metric:h/svc/b",
                     attributes=_attrs("b"),
                     value=6.0,
                     time_series=_time_series(4.0, 5.0, 6.0),
@@ -338,11 +340,13 @@ def test_evaluate_graph_builds_rules_from_thresholds_and_constants() -> None:
     result = evaluate_graph(graph, _perf({a: _data(value=3.0, warning=80.0)}), {}, _TR)
     assert result.rules == [
         EvaluatedRule(
+            id="warning:metric:h/svc/a",
             value=80.0,
             attributes=CurveAttributes(title="Warning", unit=_UNIT, color="#ff0000"),
             inverse=False,
         ),
         EvaluatedRule(
+            id="constant:42.0",
             value=42.0,
             attributes=CurveAttributes(title="c", unit=_UNIT, color="#000000"),
             inverse=False,
@@ -426,3 +430,92 @@ def test_evaluate_graph_range_bound_of_a_missing_metric_is_none() -> None:
     assert result.vertical_range == EvaluatedVerticalRange(
         range_type=VerticalRangeType.MINIMAL, lower=0.0, upper=None
     )
+
+
+# --- evaluated ids ------------------------------------------------------------------------------
+
+
+def test_evaluate_graph_disambiguates_repeated_curves() -> None:
+    a = _metric("a")
+    graph = Graph(
+        name="g",
+        title="g",
+        graph_type="test",
+        lines=[
+            Line(curve=_curve(a, "a"), inverse=False),
+            Line(curve=_curve(a, "a"), inverse=False),
+        ],
+    )
+    result = evaluate_graph(
+        graph, _perf({a: _data(value=1.0)}), {a: _time_series(1.0, 2.0, 3.0)}, _TR
+    )
+    # The same metric drawn twice gets distinct ids: the base, then the base with a "#n" suffix.
+    assert [line.curve.id for line in result.lines] == ["metric:h/svc/a", "metric:h/svc/a#2"]
+
+
+def test_evaluate_graph_folds_direction_into_the_id() -> None:
+    a = _metric("a")
+    graph = Graph(
+        name="g",
+        title="g",
+        graph_type="test",
+        stacks=[Stack(members=[_curve(a, "a")], inverse=True)],
+        lines=[Line(curve=_curve(a, "a"), inverse=False)],
+    )
+    result = evaluate_graph(
+        graph, _perf({a: _data(value=1.0)}), {a: _time_series(1.0, 2.0, 3.0)}, _TR
+    )
+    # The inverted (lower) half of a bidirectional graph and the upright half share a metric but not
+    # an id: direction is folded into the base, so no "#n" disambiguation is needed.
+    assert result.stacks[0].members[0].id == "-metric:h/svc/a"
+    assert result.lines[0].curve.id == "metric:h/svc/a"
+
+
+def test_evaluate_graph_rule_id_reflects_the_scalar_and_metric() -> None:
+    a = _metric("a")
+    graph = Graph(
+        name="g",
+        title="g",
+        graph_type="test",
+        rules=[
+            Rule(
+                curve=Curve(
+                    quantity=ScalarOf(metric=a, scalar_type=ScalarType.WARNING),
+                    attributes=_attrs("Warning"),
+                ),
+                inverse=False,
+            )
+        ],
+    )
+    result = evaluate_graph(graph, _perf({a: _data(value=1.0, warning=80.0)}), {}, _TR)
+    assert result.rules[0].id == "warning:metric:h/svc/a"
+
+
+def test_evaluate_graph_preserves_ids_across_recalculation() -> None:
+    a, b = _metric("a"), _metric("b")
+    graph = Graph(
+        name="g",
+        title="g",
+        graph_type="test",
+        lines=[
+            Line(curve=_curve(a, "a"), inverse=False),
+            Line(curve=_curve(b, "b"), inverse=False),
+        ],
+    )
+    first = evaluate_graph(
+        graph,
+        _perf({a: _data(value=1.0), b: _data(value=2.0)}),
+        {a: _time_series(1.0, 2.0, 3.0), b: _time_series(4.0, 5.0, 6.0)},
+        _TR,
+    )
+    # Re-calculate over a different range with "a" now missing (so its line is dropped): "b" keeps
+    # exactly the id it had before — the id is a pure function of the graph, not of the data or range.
+    other_tr = TimeRange(start=0, end=60, step=10)
+    second = evaluate_graph(
+        graph,
+        _perf({b: _data(value=9.0)}),
+        {b: TimeSeries(time_range=other_tr, values=[9.0] * 6)},
+        other_tr,
+    )
+    assert [line.curve.id for line in first.lines] == ["metric:h/svc/a", "metric:h/svc/b"]
+    assert [line.curve.id for line in second.lines] == ["metric:h/svc/b"]

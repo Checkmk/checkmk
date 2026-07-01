@@ -16,6 +16,7 @@ FROM ${IMAGE_BASE}
 
 # bash is required to be used in Jenkins with image.inside(), requires +3MB
 # git is required to use checkmk-dev-tools, requires +13MB
+# jq is required to parse JSON data, requires +1MB
 # make is required by scripts/fake-artifacts, see CMK-21338, requires +9MB
 # coreutils, grep is required by validate_changes.py/find-[python,shell]-files
 # to get "sort --zero-terminated" and "grep --binary-files=", requires +2MB
@@ -23,7 +24,7 @@ FROM ${IMAGE_BASE}
 # openssh is required to login with rsync to remote servers, requires +5MB
 # cache removal saves 3MB
 RUN apk update && \
-    apk add bash git make coreutils grep rsync openssh && \
+    apk add bash git make coreutils grep rsync openssh jq && \
     rm -rf /var/cache/apk/*
 
 # install checkmk-dev-tools to run ci-artifacts

@@ -10,8 +10,8 @@ from dataclasses import replace
 from ._objects import (
     MetricName,
     MetricTranslation,
+    PerformanceData,
     RawPerformanceData,
-    RRDMetricData,
     RRDOriginal,
 )
 
@@ -68,11 +68,11 @@ def _reverse_translations(
 def translate_performance_data(
     raw_performance_data: RawPerformanceData,
     translations: Mapping[str, Mapping[MetricName, MetricTranslation]],
-) -> Mapping[MetricName, RRDMetricData]:
+) -> Mapping[MetricName, PerformanceData]:
     command_translations = _translations_for_command(
         raw_performance_data.check_command, translations
     )
-    result: dict[MetricName, RRDMetricData] = {}
+    result: dict[MetricName, PerformanceData] = {}
     for perf_value in raw_performance_data.values:
         prefix, bare_name = _split_predict_prefix(perf_value.metric_name)
         translation = _find_translation(MetricName(bare_name), command_translations)
@@ -84,7 +84,7 @@ def translate_performance_data(
 
         original = RRDOriginal(metric_name=perf_value.metric_name, scale=scale)
         originals = [*result[name].originals, original] if name in result else [original]
-        result[name] = RRDMetricData(
+        result[name] = PerformanceData(
             value=_scaled(perf_value.value),
             originals=originals,
             lower_warning=_scaled(perf_value.lower_warning),

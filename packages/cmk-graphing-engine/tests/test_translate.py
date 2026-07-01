@@ -8,7 +8,7 @@ from cmk.graphing_engine import (
     PerformanceValue,
     RawPerformanceData,
 )
-from cmk.graphing_engine._objects import MetricTranslation, RRDMetricData, RRDOriginal
+from cmk.graphing_engine._objects import MetricTranslation, PerformanceData, RRDOriginal
 from cmk.graphing_engine._translate import translate_performance_data
 
 
@@ -34,7 +34,7 @@ def test_translate_scales_value_and_scalars() -> None:
     }
 
     assert translate_performance_data(perf, translations) == {
-        MetricName("cpu_user"): RRDMetricData(
+        MetricName("cpu_user"): PerformanceData(
             value=42.0,
             originals=[RRDOriginal(metric_name=MetricName("cpu_user"), scale=2.0)],
             warning=80.0,
@@ -55,7 +55,7 @@ def test_translate_renames_metric_to_the_target() -> None:
     }
 
     assert translate_performance_data(perf, translations) == {
-        MetricName("temp"): RRDMetricData(
+        MetricName("temp"): PerformanceData(
             value=20.0,
             # The original keeps the raw (pre-rename) metric name.
             originals=[RRDOriginal(metric_name=MetricName("temperature"), scale=1.0)],
@@ -84,7 +84,7 @@ def test_translate_falls_back_for_unregistered_metric() -> None:
     )
 
     assert translate_performance_data(perf, {}) == {
-        MetricName("unknown"): RRDMetricData(
+        MetricName("unknown"): PerformanceData(
             value=1.0,
             originals=[RRDOriginal(metric_name=MetricName("unknown"), scale=1.0)],
         )

@@ -40,13 +40,13 @@ from cmk.graphing_engine import (
     VerticalRangeType,
 )
 from cmk.graphing_engine._evaluate import evaluate_graph
-from cmk.graphing_engine._objects import EvaluationContext, Quantity, RRDMetricData
+from cmk.graphing_engine._objects import EvaluationContext, PerformanceData, Quantity
 
 
 def _perf(
-    metric_data: Mapping[RRDMetric, RRDMetricData],
-) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
-    result: dict[ServiceRef, dict[MetricName, RRDMetricData]] = {}
+    metric_data: Mapping[RRDMetric, PerformanceData],
+) -> Mapping[ServiceRef, Mapping[MetricName, PerformanceData]]:
+    result: dict[ServiceRef, dict[MetricName, PerformanceData]] = {}
     for metric, data in metric_data.items():
         service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
         result.setdefault(service, {})[metric.metric_name] = data
@@ -63,8 +63,8 @@ def _metric(name: str) -> RRDMetric:
     )
 
 
-def _data(*, value: float | None, warning: float | None = None) -> RRDMetricData:
-    return RRDMetricData(value=value, originals=[], warning=warning)
+def _data(*, value: float | None, warning: float | None = None) -> PerformanceData:
+    return PerformanceData(value=value, originals=[], warning=warning)
 
 
 def _attrs(title: str, *, color: str = "#28a2f3") -> CurveAttributes:
@@ -81,7 +81,7 @@ def _time_series(*values: float | None) -> TimeSeries:
 
 def _evaluate_value(
     quantity: Quantity,
-    metric_data: Mapping[RRDMetric, RRDMetricData],
+    metric_data: Mapping[RRDMetric, PerformanceData],
 ) -> float | None:
     return quantity.evaluate_value(
         EvaluationContext(performance_data=_perf(metric_data), time_series={}, time_range=_TR)
@@ -90,7 +90,7 @@ def _evaluate_value(
 
 def _evaluate_time_series(
     quantity: Quantity,
-    metric_data: Mapping[RRDMetric, RRDMetricData],
+    metric_data: Mapping[RRDMetric, PerformanceData],
     time_series: Mapping[RRDMetric, TimeSeries],
     time_range: TimeRange,
 ) -> TimeSeries:

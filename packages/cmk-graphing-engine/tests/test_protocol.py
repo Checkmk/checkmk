@@ -29,8 +29,8 @@ from cmk.graphing_engine import (
 from cmk.graphing_engine._evaluate import evaluate_graph
 from cmk.graphing_engine._objects import (
     EvaluationContext,
+    PerformanceData,
     Quantity,
-    RRDMetricData,
 )
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
@@ -43,8 +43,8 @@ def _metric(name: str) -> RRDMetric:
     )
 
 
-def _data(*, value: float | None) -> RRDMetricData:
-    return RRDMetricData(value=value, originals=[])
+def _data(*, value: float | None) -> PerformanceData:
+    return PerformanceData(value=value, originals=[])
 
 
 @dataclass(frozen=True)

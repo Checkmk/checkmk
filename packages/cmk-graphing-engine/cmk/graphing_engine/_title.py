@@ -7,17 +7,17 @@ import json
 import re
 from collections.abc import Callable, Mapping
 
-from ._objects import MetricName, RRDMetricData
+from ._objects import MetricName, PerformanceData
 
 _TITLE_EXPRESSION_PREFIX = "_EXPRESSION:"
 _TITLE_EXPRESSION_PATTERN = re.compile(re.escape(_TITLE_EXPRESSION_PREFIX) + r"\{.*?\}")
-_TITLE_SCALARS: Mapping[str, Callable[[RRDMetricData], float | None]] = {
-    "warn": lambda metric_data: metric_data.warning,
-    "crit": lambda metric_data: metric_data.critical,
-    "warn_lower": lambda metric_data: metric_data.lower_warning,
-    "crit_lower": lambda metric_data: metric_data.lower_critical,
-    "min": lambda metric_data: metric_data.minimum,
-    "max": lambda metric_data: metric_data.maximum,
+_TITLE_SCALARS: Mapping[str, Callable[[PerformanceData], float | None]] = {
+    "warn": lambda performance_data: performance_data.warning,
+    "crit": lambda performance_data: performance_data.critical,
+    "warn_lower": lambda performance_data: performance_data.lower_warning,
+    "crit_lower": lambda performance_data: performance_data.lower_critical,
+    "min": lambda performance_data: performance_data.minimum,
+    "max": lambda performance_data: performance_data.maximum,
 }
 
 
@@ -28,7 +28,7 @@ def _parse_title_expression(raw: str) -> Mapping[str, str]:
 
 def _evaluate_title_expression(
     raw: str,
-    translated_metrics: Mapping[MetricName, RRDMetricData],
+    translated_metrics: Mapping[MetricName, PerformanceData],
 ) -> float | None:
     expression = _parse_title_expression(raw)
     if (translated := translated_metrics.get(MetricName(expression["metric"]))) is None:
@@ -40,7 +40,7 @@ def _evaluate_title_expression(
 
 def evaluate_title(
     title: str,
-    translated_metrics: Mapping[MetricName, RRDMetricData],
+    translated_metrics: Mapping[MetricName, PerformanceData],
 ) -> str:
     for raw in _TITLE_EXPRESSION_PATTERN.findall(title):
         value = _evaluate_title_expression(raw, translated_metrics)

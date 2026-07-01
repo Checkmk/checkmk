@@ -19,8 +19,8 @@ from ._objects import (
     Graph,
     Line,
     MetricName,
+    PerformanceData,
     RRDMetric,
-    RRDMetricData,
     Rule,
     ScalarOf,
     ScalarType,
@@ -171,7 +171,7 @@ def build_service_graphs(
     registered_graphs: Sequence[_GraphPlugin],
     metrics: Mapping[str, metrics_v1.Metric],
     localizer: Callable[[str], str],
-    available: Mapping[MetricName, RRDMetricData],
+    available: Mapping[MetricName, PerformanceData],
     graph_type: str,
 ) -> Sequence[Graph]:
     """Build a service's matching template graphs plus a fallback single-metric graph per unclaimed

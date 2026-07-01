@@ -18,9 +18,9 @@ from ._objects import (
     Graph,
     MetricName,
     MinimalRange,
+    PerformanceData,
     Quantity,
     RRDMetric,
-    RRDMetricData,
     Rule,
     ServiceRef,
     TimeSeries,
@@ -155,8 +155,8 @@ def _evaluate_rule(rule: Rule, rule_id: str, context: EvaluationContext) -> Eval
 
 def _title_metrics(
     graph: Graph,
-    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
-) -> Mapping[MetricName, RRDMetricData]:
+    translated_metrics: Mapping[ServiceRef, Mapping[MetricName, PerformanceData]],
+) -> Mapping[MetricName, PerformanceData]:
     services = {
         ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
         for metric in graph.rrd_metrics()
@@ -171,7 +171,7 @@ def _title_metrics(
 
 def evaluate_graph(
     graph: Graph,
-    performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
+    performance_data: Mapping[ServiceRef, Mapping[MetricName, PerformanceData]],
     time_series: Mapping[RRDMetric, TimeSeries],
     time_range: TimeRange,
 ) -> EvaluatedGraph:

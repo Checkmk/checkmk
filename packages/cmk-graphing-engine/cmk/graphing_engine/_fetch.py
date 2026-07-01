@@ -13,9 +13,9 @@ from ._from_api import parse_translations_from_api
 from ._objects import (
     Graph,
     MetricName,
+    PerformanceData,
     RawPerformanceData,
     RRDMetric,
-    RRDMetricData,
     ServiceRef,
     TimeSeries,
 )
@@ -71,7 +71,7 @@ def _merge(series: Sequence[TimeSeries], time_range: TimeRange) -> TimeSeries:
 def _fetch_series(
     *,
     graph: Graph,
-    performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]],
+    performance_data: Mapping[ServiceRef, Mapping[MetricName, PerformanceData]],
     consolidation_function: ConsolidationFunction,
     time_range: TimeRange,
     rrd: RRDSource,
@@ -128,7 +128,7 @@ def fetch_performance_data(
     services: Iterable[ServiceRef],
     translations: Iterable[translations_v1.Translation],
     rrd: RRDSource,
-) -> Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]:
+) -> Mapping[ServiceRef, Mapping[MetricName, PerformanceData]]:
     parsed_translations = parse_translations_from_api(translations)
     performance_data = rrd.fetch_performance_data(list(dict.fromkeys(services)))
     return {

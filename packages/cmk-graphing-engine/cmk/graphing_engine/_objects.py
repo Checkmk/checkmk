@@ -116,7 +116,7 @@ class RRDOriginal:
 
 
 @dataclass(frozen=True, kw_only=True)
-class RRDMetricData:
+class PerformanceData:
     value: float | None
     originals: Sequence[RRDOriginal]
     lower_warning: float | None = None
@@ -135,11 +135,11 @@ class TimeSeries:
 
 @dataclass(frozen=True, kw_only=True)
 class EvaluationContext:
-    performance_data: Mapping[ServiceRef, Mapping[MetricName, RRDMetricData]]
+    performance_data: Mapping[ServiceRef, Mapping[MetricName, PerformanceData]]
     time_series: Mapping[RRDMetric, TimeSeries]
     time_range: TimeRange
 
-    def data_of(self, metric: RRDMetric) -> RRDMetricData | None:
+    def data_of(self, metric: RRDMetric) -> PerformanceData | None:
         service = ServiceRef(host_name=metric.host_name, service_name=metric.service_name)
         return self.performance_data.get(service, {}).get(metric.metric_name)
 
@@ -288,7 +288,7 @@ class ScalarType(enum.StrEnum):
     MAXIMUM = "maximum"
 
 
-_SCALAR_VALUE: Mapping[ScalarType, Callable[[RRDMetricData], float | None]] = {
+_SCALAR_VALUE: Mapping[ScalarType, Callable[[PerformanceData], float | None]] = {
     ScalarType.WARNING: lambda data: data.warning,
     ScalarType.CRITICAL: lambda data: data.critical,
     ScalarType.LOWER_WARNING: lambda data: data.lower_warning,

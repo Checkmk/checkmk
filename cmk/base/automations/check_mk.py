@@ -321,12 +321,7 @@ def _automation_service_discovery(
     force_snmp_cache_refresh, args = _extract_directive("@scan", args)
     _prevent_scan, args = _extract_directive("@noscan", args)
     raise_errors, args = _extract_directive("@raiseerrors", args)
-    # Error sensitivity
-    if raise_errors:
-        on_error = OnError.RAISE
-        os.dup2(os.open("/dev/null", os.O_WRONLY), 2)
-    else:
-        on_error = OnError.IGNORE
+    on_error = OnError.RAISE if raise_errors else OnError.IGNORE
 
     # `force_snmp_cache_refresh` overrides `use_outdated` for SNMP.
     file_cache_options = FileCacheOptions(use_outdated=True)

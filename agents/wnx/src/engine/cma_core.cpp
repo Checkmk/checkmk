@@ -1032,21 +1032,15 @@ namespace {
 constexpr std::chrono::milliseconds time_grane{250};
 }  // namespace
 
-void TheMiniBox::readAndAppend(HANDLE read_handle,
-                               std::chrono::milliseconds timeout) {
+void TheMiniBox::readAndAppend(HANDLE read_handle) {
     const auto buf = wtools::ReadFromHandle(read_handle);
     if (buf.empty()) {
         return;
     }
 
-    if (process_->getData().empty()) {
-        // after getting first data, we need to decrease timeout to
-        // prevent too long waiting for nothing
-        timeout = std::min(timeout, 10 * time_grane);
-    }
     appendResult(read_handle, buf);
-    XLOG::d.t("Appended [{}] bytes from '{}', timeout is [{}ms]", buf.size(),
-              wtools::ToUtf8(exec_), timeout.count());
+    XLOG::d.t("Appended [{}] bytes from '{}'", buf.size(),
+              wtools::ToUtf8(exec_));
 }
 
 bool TheMiniBox::waitForBreakLoop(std::chrono::milliseconds timeout) {
@@ -1071,25 +1065,44 @@ bool TheMiniBox::waitForUpdater(std::chrono::milliseconds timeout) {
     }
 
     auto *read_handle = getReadHandle();
+    auto remaining_timeout = timeout;
 
-    while (true) {
-        readAndAppend(read_handle, timeout);
-        if (waitForBreakLoop(timeout)) {
+    const auto pid = getProcessId();
+    while (remaining_timeout > std::chrono::milliseconds::zero()) {
+        readAndAppend(read_handle);
+        if (waitForStop(time_grane)) {
             break;
         }
-        timeout -= time_grane;
+
+        // Check if process has exited
+        auto [exitCode, error] = wtools::GetProcessExitCode(pid);
+        if (error == 0 && exitCode != STILL_ACTIVE) {
+            // Process has exited, read any remaining data
+            readWhatLeft();
+            if (process_->getData().empty()) {
+                setPhantomResult();
+            }
+            return true;
+        }
+        remaining_timeout -= time_grane;
     }
 
-    if (process_->getData().empty()) {
-        auto process_id = getProcessId();
-        failed_ = timeout < time_grane;
-        process_->kill(true);
-        XLOG::l("Process '{}' [{}] is killed", wtools::ToUtf8(exec_),
-                process_id);
-        return false;
-    }
-
+    // Timeout expired or break condition met
     readWhatLeft();
+    auto [exitCode, error] = wtools::GetProcessExitCode(pid);
+    if (error == 0 && exitCode != STILL_ACTIVE && process_->getData().empty()) {
+        setPhantomResult();
+    }
+    failed_ = remaining_timeout <= std::chrono::milliseconds::zero();
+    if (error != 0 || exitCode == STILL_ACTIVE) {
+        // Process is running or status is unknown
+        process_->kill(true);
+        XLOG::l("Process '{}' [{}] is killed", wtools::ToUtf8(exec_), pid);
+    } else {
+        XLOG::t("Process '{}' [{}] exits with [{}]", wtools::ToUtf8(exec_), pid,
+                exitCode);
+    }
+
     return true;
 }
 
@@ -1261,12 +1274,16 @@ std::vector<char> PluginEntry::getResultsAsync(bool start_process_now) {
 
     // check data are ready and new enough
     bool data_ok = false;
+    bool is_phantom = false;
     const std::chrono::seconds allowed_age(cacheAge());
     const auto data_age = getDataAge();
     bool going_to_be_old = false;
     {
         std::lock_guard l(data_lock_);
-        if (data_.empty()) {
+        if (data_.size() == 1 && data_[0] == '\1') {
+            is_phantom = true;
+            going_to_be_old = true;
+        } else if (data_.empty()) {
             // no data i.e. data is old
             // command to restart thread
             going_to_be_old = true;
@@ -1280,6 +1297,10 @@ std::vector<char> PluginEntry::getResultsAsync(bool start_process_now) {
             }
         }
     }
+    XLOG::t(
+        "Data age={}, cache_age={}, empty={}, ok={}, going_old={}, phantom={}",
+        duration_cast<std::chrono::seconds>(data_age).count(), cacheAge(),
+        data_ok, going_to_be_old, is_phantom);
     if (!data_ok) {
         XLOG::d("Data '{}' is too old, age is '{}' seconds", path(),
                 duration_cast<std::chrono::seconds>(data_age).count());
@@ -1294,6 +1315,9 @@ std::vector<char> PluginEntry::getResultsAsync(bool start_process_now) {
             XLOG::d.i("plugin '{}' is marked for restart", path());
             markAsForRestart();
         }
+    }
+    if (is_phantom) {
+        return {};
     }
 
     // we always return data even if data is OLD

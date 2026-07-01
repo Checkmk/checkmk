@@ -16,7 +16,7 @@ void main() {
             container_name: "ubuntu-2404-${container_safe_branch_name}-latest",
         ]);
         archiveArtifacts(
-            allowEmptyArchive: true,
+            allowEmptyArchive: false,
             artifacts: "results.sarif",
             fingerprint: true,
         );

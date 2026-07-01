@@ -21,7 +21,7 @@ exit \$exit_code
         ]);
 
         archiveArtifacts(
-            allowEmptyArchive: true,
+            allowEmptyArchive: false,
             artifacts: "results/mypy-results.xml",
             fingerprint: true,
         );

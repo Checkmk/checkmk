@@ -31,7 +31,7 @@ exit \$make_rc""",
             ]);
         }
         archiveArtifacts(
-            allowEmptyArchive: true,
+            allowEmptyArchive: false,
             artifacts: "results/**/test.xml",
             fingerprint: true,
         );

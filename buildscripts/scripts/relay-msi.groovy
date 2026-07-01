@@ -41,7 +41,7 @@ void main() {
         } finally {
             // Publish the JUnit XML
             archiveArtifacts(
-                allowEmptyArchive: true,
+                allowEmptyArchive: false,
                 artifacts: "artefacts/relay_msi_test_results.xml",
                 fingerprint: true,
             );

@@ -184,6 +184,65 @@ class _ParseContext:
         return _parse_color(definition.color)
 
 
+def _curve_display(quantity: _ApiQuantity, context: _ParseContext) -> CurveAttributes:
+    match quantity:
+        case str():
+            return metric_display_attributes(quantity, context.metrics, context.localizer)
+        case metrics_v1.Constant():
+            return CurveAttributes(
+                title=quantity.title.localize(context.localizer),
+                unit=_parse_unit(quantity.unit),
+                color=_parse_color(quantity.color),
+            )
+        case (
+            metrics_v2_unstable.LowerWarningOf()
+            | metrics_v2_unstable.LowerCriticalOf()
+            | metrics_v1.WarningOf()
+            | metrics_v1.CriticalOf()
+        ):
+            metric = metric_display_attributes(
+                quantity.metric_name, context.metrics, context.localizer
+            )
+            return CurveAttributes(
+                title=metric.title,
+                unit=metric.unit,
+                color=context.metric_color(quantity.metric_name),
+            )
+        case metrics_v1.MinimumOf() | metrics_v1.MaximumOf():
+            metric = metric_display_attributes(
+                quantity.metric_name, context.metrics, context.localizer
+            )
+            return CurveAttributes(
+                title=metric.title, unit=metric.unit, color=_parse_color(quantity.color)
+            )
+        case metrics_v1.Sum():
+            return CurveAttributes(
+                title=quantity.title.localize(context.localizer),
+                unit=_curve_display(quantity.summands[0], context).unit,
+                color=_parse_color(quantity.color),
+            )
+        case metrics_v1.Product():
+            return CurveAttributes(
+                title=quantity.title.localize(context.localizer),
+                unit=_parse_unit(quantity.unit),
+                color=_parse_color(quantity.color),
+            )
+        case metrics_v1.Difference():
+            return CurveAttributes(
+                title=quantity.title.localize(context.localizer),
+                unit=_curve_display(quantity.minuend, context).unit,
+                color=_parse_color(quantity.color),
+            )
+        case metrics_v1.Fraction():
+            return CurveAttributes(
+                title=quantity.title.localize(context.localizer),
+                unit=_parse_unit(quantity.unit),
+                color=_parse_color(quantity.color),
+            )
+        case _:
+            assert_never(quantity)
+
+
 def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
     # Plain metrics and scalars carry no display — build_curve resolves those from the registry / kind.
     # Constants and operations carry their intrinsic plugin display (title / unit / colour), which the
@@ -244,65 +303,6 @@ def _parse_quantity(quantity: _ApiQuantity, context: _ParseContext) -> Quantity:
                 dividend=_parse_quantity(quantity.dividend, context),
                 divisor=_parse_quantity(quantity.divisor, context),
                 display=_curve_display(quantity, context),
-            )
-        case _:
-            assert_never(quantity)
-
-
-def _curve_display(quantity: _ApiQuantity, context: _ParseContext) -> CurveAttributes:
-    match quantity:
-        case str():
-            return metric_display_attributes(quantity, context.metrics, context.localizer)
-        case metrics_v1.Constant():
-            return CurveAttributes(
-                title=quantity.title.localize(context.localizer),
-                unit=_parse_unit(quantity.unit),
-                color=_parse_color(quantity.color),
-            )
-        case (
-            metrics_v2_unstable.LowerWarningOf()
-            | metrics_v2_unstable.LowerCriticalOf()
-            | metrics_v1.WarningOf()
-            | metrics_v1.CriticalOf()
-        ):
-            metric = metric_display_attributes(
-                quantity.metric_name, context.metrics, context.localizer
-            )
-            return CurveAttributes(
-                title=metric.title,
-                unit=metric.unit,
-                color=context.metric_color(quantity.metric_name),
-            )
-        case metrics_v1.MinimumOf() | metrics_v1.MaximumOf():
-            metric = metric_display_attributes(
-                quantity.metric_name, context.metrics, context.localizer
-            )
-            return CurveAttributes(
-                title=metric.title, unit=metric.unit, color=_parse_color(quantity.color)
-            )
-        case metrics_v1.Sum():
-            return CurveAttributes(
-                title=quantity.title.localize(context.localizer),
-                unit=_curve_display(quantity.summands[0], context).unit,
-                color=_parse_color(quantity.color),
-            )
-        case metrics_v1.Product():
-            return CurveAttributes(
-                title=quantity.title.localize(context.localizer),
-                unit=_parse_unit(quantity.unit),
-                color=_parse_color(quantity.color),
-            )
-        case metrics_v1.Difference():
-            return CurveAttributes(
-                title=quantity.title.localize(context.localizer),
-                unit=_curve_display(quantity.minuend, context).unit,
-                color=_parse_color(quantity.color),
-            )
-        case metrics_v1.Fraction():
-            return CurveAttributes(
-                title=quantity.title.localize(context.localizer),
-                unit=_parse_unit(quantity.unit),
-                color=_parse_color(quantity.color),
             )
         case _:
             assert_never(quantity)
@@ -434,6 +434,50 @@ def _bidirectional_range(
     return upper
 
 
+def _attributes_for(
+    quantity: Quantity,
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
+) -> CurveAttributes:
+    """The display of a discovered quantity: plain metrics from the registry, scalar rules from their
+    kind, operations / constants from the intrinsic display they carry."""
+    match quantity:
+        case RRDMetric():
+            return metric_display_attributes(quantity.metric_name, metrics, localizer)
+        case ScalarOf():
+            metric = metric_display_attributes(quantity.metric.metric_name, metrics, localizer)
+            label, type_color = _RULE_DISPLAY[quantity.scalar_type]
+            # The author colour (MinimumOf / MaximumOf) wins; otherwise the scalar type's warn / crit colour;
+            # otherwise the metric's own colour.
+            return CurveAttributes(
+                title=localizer(label),
+                unit=metric.unit,
+                color=quantity.color or type_color or metric.color,
+            )
+        case _:
+            # A consumer quantity, resolved generically without the engine knowing its type. Either it
+            # delegates its display to a *representative* quantity it exposes via ``display_of`` (e.g. a
+            # combined aggregation → its first operand, so the display is resolved fresh from the
+            # registry and never cached at discovery — the graph stays purely structural), or it carries
+            # its own intrinsic display (an engine operation / constant the registry cannot reproduce).
+            if (display_of := getattr(quantity, "display_of", None)) is not None:
+                return _attributes_for(display_of(), metrics, localizer)
+            display = getattr(quantity, "display", None)
+            return (
+                display
+                if isinstance(display, CurveAttributes)
+                else CurveAttributes(title="", unit=_FALLBACK_UNIT, color=_FALLBACK_COLOR)
+            )
+
+
+def build_curve(
+    quantity: Quantity,
+    metrics: Mapping[str, metrics_v1.Metric],
+    localizer: Callable[[str], str],
+) -> Curve:
+    return Curve(quantity=quantity, attributes=_attributes_for(quantity, metrics, localizer))
+
+
 def _parse_lines(
     graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
     context: _ParseContext,
@@ -509,50 +553,6 @@ def parse_graph_from_api(
             )
         case _:
             assert_never(graph)
-
-
-def _attributes_for(
-    quantity: Quantity,
-    metrics: Mapping[str, metrics_v1.Metric],
-    localizer: Callable[[str], str],
-) -> CurveAttributes:
-    """The display of a discovered quantity: plain metrics from the registry, scalar rules from their
-    kind, operations / constants from the intrinsic display they carry."""
-    match quantity:
-        case RRDMetric():
-            return metric_display_attributes(quantity.metric_name, metrics, localizer)
-        case ScalarOf():
-            metric = metric_display_attributes(quantity.metric.metric_name, metrics, localizer)
-            label, type_color = _RULE_DISPLAY[quantity.scalar_type]
-            # The author colour (MinimumOf / MaximumOf) wins; otherwise the scalar type's warn / crit colour;
-            # otherwise the metric's own colour.
-            return CurveAttributes(
-                title=localizer(label),
-                unit=metric.unit,
-                color=quantity.color or type_color or metric.color,
-            )
-        case _:
-            # A consumer quantity, resolved generically without the engine knowing its type. Either it
-            # delegates its display to a *representative* quantity it exposes via ``display_of`` (e.g. a
-            # combined aggregation → its first operand, so the display is resolved fresh from the
-            # registry and never cached at discovery — the graph stays purely structural), or it carries
-            # its own intrinsic display (an engine operation / constant the registry cannot reproduce).
-            if (display_of := getattr(quantity, "display_of", None)) is not None:
-                return _attributes_for(display_of(), metrics, localizer)
-            display = getattr(quantity, "display", None)
-            return (
-                display
-                if isinstance(display, CurveAttributes)
-                else CurveAttributes(title="", unit=_FALLBACK_UNIT, color=_FALLBACK_COLOR)
-            )
-
-
-def build_curve(
-    quantity: Quantity,
-    metrics: Mapping[str, metrics_v1.Metric],
-    localizer: Callable[[str], str],
-) -> Curve:
-    return Curve(quantity=quantity, attributes=_attributes_for(quantity, metrics, localizer))
 
 
 def _parse_check_command(

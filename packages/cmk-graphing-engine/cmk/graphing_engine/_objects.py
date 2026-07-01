@@ -98,6 +98,18 @@ class MetricName(str):
 
 
 @dataclass(frozen=True, kw_only=True)
+class ServiceRef:
+    host_name: HostName
+    service_name: ServiceName
+
+
+@dataclass(frozen=True, kw_only=True)
+class RRDOriginal:
+    metric_name: MetricName
+    scale: float
+
+
+@dataclass(frozen=True, kw_only=True)
 class RRDMetricData:
     value: float | None
     originals: Sequence[RRDOriginal]
@@ -422,12 +434,6 @@ class Rule:
 
 
 @dataclass(frozen=True, kw_only=True)
-class ServiceRef:
-    host_name: HostName
-    service_name: ServiceName
-
-
-@dataclass(frozen=True, kw_only=True)
 class PerformanceValue:
     metric_name: MetricName
     value: float
@@ -449,12 +455,6 @@ class PerformanceData:
 class MetricTranslation:
     name: MetricName
     scale: float = 1.0
-
-
-@dataclass(frozen=True, kw_only=True)
-class RRDOriginal:
-    metric_name: MetricName
-    scale: float
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -5,13 +5,13 @@
 
 import re
 from collections.abc import Mapping
-from dataclasses import replace
 
 from ._objects import (
     MetricName,
     MetricTranslation,
     PerformanceData,
     RawPerformanceData,
+    RawPerformanceValue,
     RRDOriginal,
 )
 
@@ -72,21 +72,39 @@ def translate_performance_data(
     command_translations = _translations_for_command(
         raw_performance_data.check_command, translations
     )
-    result: dict[MetricName, PerformanceData] = {}
+    # Collect each canonical metric's source columns (the current columns, in order) and the raw value
+    # that carries its scaled value / scalars; on a merge the last raw value for a name wins.
+    originals_by_name: dict[MetricName, list[RRDOriginal]] = {}
+    raw_value_by_name: dict[MetricName, tuple[RawPerformanceValue, float]] = {}
     for raw_perf_value in raw_performance_data.values:
         prefix, bare_name = _split_predict_prefix(raw_perf_value.metric_name)
         translation = _find_translation(MetricName(bare_name), command_translations)
         name = MetricName(f"{prefix}{translation.name}")
-        scale = translation.scale
+        originals_by_name.setdefault(name, []).append(
+            RRDOriginal(metric_name=raw_perf_value.metric_name, scale=translation.scale)
+        )
+        raw_value_by_name[name] = (raw_perf_value, translation.scale)
+
+    result: dict[MetricName, PerformanceData] = {}
+    for name, (raw_perf_value, scale) in raw_value_by_name.items():
+        # Append the deprecated (pre-rename) column names as further originals so the historic segment
+        # is fetched and merged in. The current name's originals stay first, so live data wins on overlap.
+        prefix, bare_name = _split_predict_prefix(name)
+        present = {original.metric_name for original in originals_by_name[name]}
+        deprecated = [
+            RRDOriginal(metric_name=old_column, scale=old_scale)
+            for old_name, old_scale in _reverse_translations(
+                MetricName(bare_name), command_translations
+            ).items()
+            if (old_column := MetricName(f"{prefix}{old_name}")) not in present
+        ]
 
         def _scaled(value: float | None, scale: float = scale) -> float | None:
             return None if value is None else value * scale
 
-        original = RRDOriginal(metric_name=raw_perf_value.metric_name, scale=scale)
-        originals = [*result[name].originals, original] if name in result else [original]
         result[name] = PerformanceData(
             value=_scaled(raw_perf_value.value),
-            originals=originals,
+            originals=[*originals_by_name[name], *deprecated],
             lower_warning=_scaled(raw_perf_value.lower_warning),
             lower_critical=_scaled(raw_perf_value.lower_critical),
             warning=_scaled(raw_perf_value.warning),
@@ -94,19 +112,4 @@ def translate_performance_data(
             minimum=_scaled(raw_perf_value.minimum),
             maximum=_scaled(raw_perf_value.maximum),
         )
-
-    # Append the deprecated (pre-rename) column names as further originals so the historic segment is
-    # fetched and merged in. The current name's originals stay first, so live data wins on overlap.
-    for name, data in list(result.items()):
-        prefix, bare_name = _split_predict_prefix(name)
-        present = {original.metric_name for original in data.originals}
-        deprecated = [
-            RRDOriginal(metric_name=old_column, scale=scale)
-            for old_name, scale in _reverse_translations(
-                MetricName(bare_name), command_translations
-            ).items()
-            if (old_column := MetricName(f"{prefix}{old_name}")) not in present
-        ]
-        if deprecated:
-            result[name] = replace(data, originals=[*data.originals, *deprecated])
     return result

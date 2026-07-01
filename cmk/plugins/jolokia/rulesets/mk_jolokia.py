@@ -177,8 +177,11 @@ def _jolokia_instance_elements() -> Mapping[str, DictElement[Any]]:
                             title=Title("Login mode"),
                             elements=[
                                 SingleChoiceElement(
-                                    name="basic", title=Title("HTTP Basic Authentication")
+                                    name="basic",
+                                    # weblate-flags: read-only, vendor-name
+                                    title=Title("HTTP Basic authentication"),
                                 ),
+                                # weblate-flags: read-only, vendor-name
                                 SingleChoiceElement(name="digest", title=Title("HTTP Digest")),
                             ],
                             prefill=DefaultValue("basic"),

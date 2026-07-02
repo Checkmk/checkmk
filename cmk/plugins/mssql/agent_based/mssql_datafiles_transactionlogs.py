@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 import dataclasses
+from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from typing import Any, Literal, TypedDict
@@ -240,27 +241,29 @@ def _datafile_usage(
     instances: Sequence[MSSQLInstanceData],
     free_bytes_per_mountpoint: Mapping[str, float],
 ) -> DatafileUsage:
-    max_size_sum = 0.0
     allocated_size_sum = 0.0
     used_size_sum = 0.0
-    used_mointpoints = []
 
+    instances_per_mountpoint: defaultdict[str, list[MSSQLInstanceData]] = defaultdict(list)
+    instances_without_mountpoint: list[MSSQLInstanceData] = []
     for instance in instances:
-        allocated_size_sum += (allocated_size := instance["allocated_size"] or 0)
+        allocated_size_sum += instance["allocated_size"] or 0
         used_size_sum += instance["used_size"] or 0
         mountpoint = _get_mountpoint(free_bytes_per_mountpoint, instance["mountpoint"])
-        if (filesystem_free_size := free_bytes_per_mountpoint.get(mountpoint)) is not None:
-            if mountpoint in used_mointpoints:
-                filesystem_free_size = 0
-            else:
-                used_mointpoints.append(mountpoint)
-        max_size = _effective_max_size(
-            instance["max_size"],
-            filesystem_free_size,
-            allocated_size,
-            instance["unlimited"],
+        if mountpoint in free_bytes_per_mountpoint:
+            instances_per_mountpoint[mountpoint].append(instance)
+        else:
+            instances_without_mountpoint.append(instance)
+
+    max_size_sum = 0.0
+    for mountpoint_key, mountpoint_instances in instances_per_mountpoint.items():
+        max_size_sum += _aggregate_max_size(
+            mountpoint_instances, free_bytes_per_mountpoint[mountpoint_key]
         )
-        max_size_sum += max_size
+
+    # no mountpoint information, maybe no df section available?
+    # we fall back to each file's configured maximum
+    max_size_sum += sum(instance["max_size"] or 0 for instance in instances_without_mountpoint)
 
     return DatafileUsage(
         used=used_size_sum,
@@ -269,23 +272,23 @@ def _datafile_usage(
     )
 
 
-def _effective_max_size(
-    instance_max_size: float | None,
-    filesystem_free_size: float | None,
-    instance_allocated_size: float,
-    unlimited: bool,
+def _aggregate_max_size(
+    instances: Sequence[MSSQLInstanceData],
+    filesystem_free_size: float,
 ) -> float:
-    instance_max_size_float = instance_max_size or 0
+    allocated_sum = 0.0
+    headroom_sum = 0.0
+    has_unlimited = False
+    for instance in instances:
+        allocated = instance["allocated_size"] or 0
+        allocated_sum += allocated
+        if instance["unlimited"]:
+            has_unlimited = True
+        else:
+            headroom_sum += max(0.0, (instance["max_size"] or 0) - allocated)
 
-    if filesystem_free_size is None:
-        return instance_max_size_float
-
-    total_size = filesystem_free_size + instance_allocated_size
-
-    if unlimited:
-        return total_size
-
-    return min(instance_max_size_float, total_size)
+    usable_free = filesystem_free_size if has_unlimited else min(filesystem_free_size, headroom_sum)
+    return allocated_sum + usable_free
 
 
 def check_mssql_common(

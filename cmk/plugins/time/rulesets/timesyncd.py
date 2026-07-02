@@ -10,8 +10,10 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
+    InputHint,
     Integer,
     LevelDirection,
+    LevelsType,
     migrate_to_float_simple_levels,
     SimpleLevels,
     TimeMagnitude,
@@ -56,19 +58,32 @@ def _parameter_valuespec_timesyncd_time() -> Dictionary:
                     ),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Integer(),
-                    prefill_fixed_levels=DefaultValue((9, 10)),
+                    prefill_fixed_levels=DefaultValue((10, 16)),
                     migrate=_migrate_stratum_levels,
                 ),
             ),
             "quality_levels": DictElement(
                 required=False,
                 parameter_form=SimpleLevels[float](
-                    title=Title("Thresholds for quality of time"),
+                    title=Title("Time offset"),
                     help_text=Help("The deviation of the local clock from the time server."),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.MILLISECOND]),
                     prefill_fixed_levels=DefaultValue((0.2, 0.5)),
                     migrate=_migrate_ms_levels_to_seconds,
+                ),
+            ),
+            "jitter_levels": DictElement(
+                required=False,
+                parameter_form=SimpleLevels[float](
+                    title=Title("Jitter"),
+                    help_text=Help("The short-term variation of the time synchronization."),
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.MILLISECOND]),
+                    # Jitter is a stability signal, not a health metric; do not alert
+                    # on it by default. Users can opt in by configuring levels.
+                    prefill_levels_type=DefaultValue(LevelsType.NONE),
+                    prefill_fixed_levels=InputHint((0.15, 0.3)),
                 ),
             ),
             "alert_delay": DictElement(

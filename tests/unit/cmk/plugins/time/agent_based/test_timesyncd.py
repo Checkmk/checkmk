@@ -142,10 +142,10 @@ def test_discover_timesyncd(
                     summary="Time since last sync: 22 hours 1 minute",
                 ),
                 Metric("last_sync_time", 79260.0),
-                Result(state=State.OK, summary="Stratum: 2.00"),
+                Result(state=State.OK, summary="Stratum: 2"),
                 Result(state=State.OK, summary="Jitter: 0 seconds"),
-                Metric("jitter", 0.0, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
+                Metric("jitter", 0.0),
+                Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
             ],
         ),
         (
@@ -163,10 +163,10 @@ def test_discover_timesyncd(
                     summary="Time since last sync: 22 hours 1 minute",
                 ),
                 Metric("last_sync_time", 79260.0),
-                Result(state=State.OK, summary="Stratum: 2.00"),
+                Result(state=State.OK, summary="Stratum: 2"),
                 Result(state=State.OK, summary="Jitter: 0 seconds"),
-                Metric("jitter", 0.0, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
+                Metric("jitter", 0.0),
+                Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
             ],
         ),
         (
@@ -212,10 +212,10 @@ def test_discover_timesyncd(
                     summary="Time since last NTPMessage: 22 hours 1 minute (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)",
                 ),
                 Metric("last_sync_receive_time", 79260.36999988556, levels=(3600.0, 7200.0)),
-                Result(state=State.OK, summary="Stratum: 2.00"),
+                Result(state=State.OK, summary="Stratum: 2"),
                 Result(state=State.OK, summary="Jitter: 0 seconds"),
-                Metric("jitter", 0.0, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
+                Metric("jitter", 0.0),
+                Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
             ],
         ),
         (
@@ -230,10 +230,10 @@ def test_discover_timesyncd(
                     summary="Time since last sync: 22 hours 1 minute",
                 ),
                 Metric("last_sync_time", 79260.0),
-                Result(state=State.OK, summary="Stratum: 2.00"),
+                Result(state=State.OK, summary="Stratum: 2"),
                 Result(state=State.OK, summary="Jitter: 0 seconds"),
-                Metric("jitter", 0.0, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
+                Metric("jitter", 0.0),
+                Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
             ],
         ),
     ],
@@ -251,6 +251,73 @@ def test_check_timesyncd_freeze(
         datetime.datetime.fromtimestamp(server_time, tz=ZoneInfo("UTC")), tick=False
     ):
         assert list(timesyncd.check_timesyncd(params, section, section_ntpmessage)) == result
+
+
+@pytest.mark.usefixtures("empty_value_store")
+@pytest.mark.parametrize(
+    "string_table, params, result",
+    [
+        pytest.param(
+            [
+                ["Server:", "91.189.91.157", "(ntp.ubuntu.com)"],
+                ["Stratum:", "2"],
+                ["Offset:", "1ms"],
+                ["Jitter:", "200ms"],
+                ["[[[1569922392.37]]]"],
+            ],
+            {**timesyncd.default_check_parameters, "jitter_levels": ("fixed", (0.15, 0.3))},
+            [
+                # An offset below quality_levels stays OK ...
+                Result(state=State.OK, summary="Offset: 1 millisecond"),
+                Metric("time_offset", 0.001, levels=(0.2, 0.5)),
+                Result(state=State.OK, summary="Time since last sync: 22 hours 1 minute"),
+                Metric("last_sync_time", 79260.0),
+                Result(state=State.OK, summary="Stratum: 2"),
+                # ... while the jitter is judged against its own jitter_levels.
+                Result(
+                    state=State.WARN,
+                    summary="Jitter: 200 milliseconds (warn/crit at 150 milliseconds/300 milliseconds)",
+                ),
+                Metric("jitter", 0.2, levels=(0.15, 0.3)),
+                Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
+            ],
+            id="jitter levels decoupled from quality_levels",
+        ),
+        pytest.param(
+            [
+                ["Server:", "91.189.91.157", "(ntp.ubuntu.com)"],
+                ["Stratum:", "2"],
+                ["Offset:", "1ms"],
+                ["Jitter:", "5s"],
+                ["[[[1569922392.37]]]"],
+            ],
+            timesyncd.default_check_parameters,
+            [
+                Result(state=State.OK, summary="Offset: 1 millisecond"),
+                Metric("time_offset", 0.001, levels=(0.2, 0.5)),
+                Result(state=State.OK, summary="Time since last sync: 22 hours 1 minute"),
+                Metric("last_sync_time", 79260.0),
+                Result(state=State.OK, summary="Stratum: 2"),
+                # Jitter has no thresholds by default: even a large jitter stays OK.
+                Result(state=State.OK, summary="Jitter: 5 seconds"),
+                Metric("jitter", 5.0),
+                Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
+            ],
+            id="no jitter levels by default",
+        ),
+    ],
+)
+def test_check_timesyncd_jitter_levels(
+    string_table: StringTable,
+    params: timesyncd.CheckParams,
+    result: CheckResult,
+) -> None:
+    server_time = 1569922392.37 + 60 * 60 * 22 + 60
+    section = timesyncd.parse_timesyncd(string_table)
+    with time_machine.travel(
+        datetime.datetime.fromtimestamp(server_time, tz=ZoneInfo("UTC")), tick=False
+    ):
+        assert list(timesyncd.check_timesyncd(params, section, None)) == result
 
 
 @pytest.mark.usefixtures("empty_value_store")
@@ -310,10 +377,10 @@ def _string_table(offset: str, jitter: str, stratum: str, synced: bool = True) -
                 Metric("time_offset", 0.1, levels=(0.2, 0.5)),
                 Result(state=State.OK, summary="Time since last sync: 1 minute 0 seconds"),
                 Metric("last_sync_time", 60.0),
-                Result(state=State.OK, summary="Stratum: 2.00"),
+                Result(state=State.OK, summary="Stratum: 2"),
                 Result(state=State.OK, summary="Jitter: 0 seconds"),
-                Metric("jitter", 0.0, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
+                Metric("jitter", 0.0),
+                Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
             ],
             id="all levels OK",
         ),
@@ -327,10 +394,10 @@ def _string_table(offset: str, jitter: str, stratum: str, synced: bool = True) -
                 Metric("time_offset", 0.3, levels=(0.2, 0.5)),
                 Result(state=State.OK, summary="Time since last sync: 1 minute 0 seconds"),
                 Metric("last_sync_time", 60.0),
-                Result(state=State.OK, summary="Stratum: 2.00"),
+                Result(state=State.OK, summary="Stratum: 2"),
                 Result(state=State.OK, summary="Jitter: 0 seconds"),
-                Metric("jitter", 0.0, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
+                Metric("jitter", 0.0),
+                Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
             ],
             id="offset WARN",
         ),
@@ -344,60 +411,12 @@ def _string_table(offset: str, jitter: str, stratum: str, synced: bool = True) -
                 Metric("time_offset", 0.6, levels=(0.2, 0.5)),
                 Result(state=State.OK, summary="Time since last sync: 1 minute 0 seconds"),
                 Metric("last_sync_time", 60.0),
-                Result(state=State.OK, summary="Stratum: 2.00"),
+                Result(state=State.OK, summary="Stratum: 2"),
                 Result(state=State.OK, summary="Jitter: 0 seconds"),
-                Metric("jitter", 0.0, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
+                Metric("jitter", 0.0),
+                Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
             ],
             id="offset CRIT",
-        ),
-        pytest.param(
-            _string_table(offset="100ms", jitter="300ms", stratum="2"),
-            [
-                Result(state=State.OK, summary="Offset: 100 milliseconds"),
-                Metric("time_offset", 0.1, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Time since last sync: 1 minute 0 seconds"),
-                Metric("last_sync_time", 60.0),
-                Result(state=State.OK, summary="Stratum: 2.00"),
-                Result(
-                    state=State.WARN,
-                    summary="Jitter: 300 milliseconds (warn/crit at 200 milliseconds/500 milliseconds)",
-                ),
-                Metric("jitter", 0.3, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
-            ],
-            id="jitter WARN",
-        ),
-        pytest.param(
-            _string_table(offset="100ms", jitter="600ms", stratum="2"),
-            [
-                Result(state=State.OK, summary="Offset: 100 milliseconds"),
-                Metric("time_offset", 0.1, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Time since last sync: 1 minute 0 seconds"),
-                Metric("last_sync_time", 60.0),
-                Result(state=State.OK, summary="Stratum: 2.00"),
-                Result(
-                    state=State.CRIT,
-                    summary="Jitter: 600 milliseconds (warn/crit at 200 milliseconds/500 milliseconds)",
-                ),
-                Metric("jitter", 0.6, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
-            ],
-            id="jitter CRIT",
-        ),
-        pytest.param(
-            _string_table(offset="100ms", jitter="0", stratum="9"),
-            [
-                Result(state=State.OK, summary="Offset: 100 milliseconds"),
-                Metric("time_offset", 0.1, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Time since last sync: 1 minute 0 seconds"),
-                Metric("last_sync_time", 60.0),
-                Result(state=State.WARN, summary="Stratum: 9.00 (warn/crit at 9.00/10.00)"),
-                Result(state=State.OK, summary="Jitter: 0 seconds"),
-                Metric("jitter", 0.0, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
-            ],
-            id="stratum WARN",
         ),
         pytest.param(
             _string_table(offset="100ms", jitter="0", stratum="10"),
@@ -406,17 +425,34 @@ def _string_table(offset: str, jitter: str, stratum: str, synced: bool = True) -
                 Metric("time_offset", 0.1, levels=(0.2, 0.5)),
                 Result(state=State.OK, summary="Time since last sync: 1 minute 0 seconds"),
                 Metric("last_sync_time", 60.0),
-                Result(state=State.CRIT, summary="Stratum: 10.00 (warn/crit at 9.00/10.00)"),
+                Result(state=State.WARN, summary="Stratum: 10 (warn/crit at 10/16)"),
                 Result(state=State.OK, summary="Jitter: 0 seconds"),
-                Metric("jitter", 0.0, levels=(0.2, 0.5)),
-                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
+                Metric("jitter", 0.0),
+                Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
+            ],
+            id="stratum WARN",
+        ),
+        pytest.param(
+            _string_table(offset="100ms", jitter="0", stratum="16"),
+            [
+                Result(state=State.OK, summary="Offset: 100 milliseconds"),
+                Metric("time_offset", 0.1, levels=(0.2, 0.5)),
+                Result(state=State.OK, summary="Time since last sync: 1 minute 0 seconds"),
+                Metric("last_sync_time", 60.0),
+                Result(state=State.CRIT, summary="Stratum: 16 (warn/crit at 10/16)"),
+                Result(state=State.OK, summary="Jitter: 0 seconds"),
+                Metric("jitter", 0.0),
+                Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
             ],
             id="stratum CRIT",
         ),
     ],
 )
 def test_check_timesyncd_default_levels(string_table: StringTable, result: CheckResult) -> None:
-    """The default levels for offset, jitter and stratum yield OK, WARN and CRIT results."""
+    """The default levels for offset and stratum yield OK, WARN and CRIT results.
+
+    Jitter has no levels by default; see test_check_timesyncd_jitter_levels.
+    """
     server_time = 1569922392.37 + 60
     section = timesyncd.parse_timesyncd(string_table)
     with time_machine.travel(
@@ -489,10 +525,10 @@ def test_check_timesyncd_default_alert_delay(
             Result(state=State.OK, summary="Offset: 100 milliseconds"),
             Metric("time_offset", 0.1, levels=(0.2, 0.5)),
             *sync_result,
-            Result(state=State.OK, summary="Stratum: 2.00"),
+            Result(state=State.OK, summary="Stratum: 2"),
             Result(state=State.OK, summary="Jitter: 0 seconds"),
-            Metric("jitter", 0.0, levels=(0.2, 0.5)),
-            Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
+            Metric("jitter", 0.0),
+            Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
         ]
 
 
@@ -507,7 +543,7 @@ def test_check_timesyncd_default_alert_delay(
                 Metric("last_sync_time", 60.0),
             ],
             [
-                Result(state=State.OK, summary="Time since last NTPMessage: 1 minute 0 seconds"),
+                Result(state=State.OK, notice="Time since last NTPMessage: 1 minute 0 seconds"),
                 Metric("last_sync_receive_time", 60.36999988555908, levels=(3600.0, 7200.0)),
             ],
             id="last NTP message OK",
@@ -521,7 +557,7 @@ def test_check_timesyncd_default_alert_delay(
             [
                 Result(
                     state=State.WARN,
-                    summary="Time since last NTPMessage: 1 hour 1 minute "
+                    notice="Time since last NTPMessage: 1 hour 1 minute "
                     "(warn/crit at 1 hour 0 minutes/2 hours 0 minutes)",
                 ),
                 Metric("last_sync_receive_time", 3660.369999885559, levels=(3600.0, 7200.0)),
@@ -537,7 +573,7 @@ def test_check_timesyncd_default_alert_delay(
             [
                 Result(
                     state=State.CRIT,
-                    summary="Time since last NTPMessage: 2 hours 1 minute "
+                    notice="Time since last NTPMessage: 2 hours 1 minute "
                     "(warn/crit at 1 hour 0 minutes/2 hours 0 minutes)",
                 ),
                 Metric("last_sync_receive_time", 7260.369999885559, levels=(3600.0, 7200.0)),
@@ -568,10 +604,10 @@ def test_check_timesyncd_default_last_ntp_message(
             Metric("time_offset", 0.1, levels=(0.2, 0.5)),
             *sync_result,
             *ntp_message_result,
-            Result(state=State.OK, summary="Stratum: 2.00"),
+            Result(state=State.OK, summary="Stratum: 2"),
             Result(state=State.OK, summary="Jitter: 0 seconds"),
-            Metric("jitter", 0.0, levels=(0.2, 0.5)),
-            Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
+            Metric("jitter", 0.0),
+            Result(state=State.OK, notice="Synchronized on 91.189.91.157 (ntp.ubuntu.com)"),
         ]
 
 

@@ -28,6 +28,7 @@ def _migrate(rule: Mapping[str, object]) -> object:
 MIGRATED_RULE = {
     "stratum_level": ("fixed", (9, 10)),
     "quality_levels": ("fixed", (0.2, 0.5)),
+    "jitter_levels": ("fixed", (0.1, 0.2)),
     "alert_delay": ("fixed", (300.0, 3600.0)),
     "last_ntp_message": ("no_levels", None),
 }

@@ -63,11 +63,25 @@ function Resolve-TestDbEndpoint {
     Write-Host "component tests use the database at $endpoint_host" -ForegroundColor Green
 }
 
+# Remote host for the local-connection component tests (--remote-host).
+# The test binary is shipped to this Windows Oracle host and run there against
+# localhost, exercising local sysdba connections and registry-based instance
+# discovery that the network model never touches. All overridable from CI;
+# defaults describe the ORACLE-WIN-CI VM (see tests/README.md).
+$remote_host = if ($env:CI_ORA_WIN_REMOTE_HOST) { $env:CI_ORA_WIN_REMOTE_HOST } else { "oracle-win-ci.lan.checkmk.net" }
+$remote_user = if ($env:CI_ORA_WIN_REMOTE_USER) { $env:CI_ORA_WIN_REMOTE_USER } else { "administrator" }
+$remote_dir = if ($env:CI_ORA_WIN_REMOTE_DIR) { $env:CI_ORA_WIN_REMOTE_DIR } else { "C:\ci\mk-oracle-test" }
+$remote_oracle_home = if ($env:CI_ORA_WIN_ORACLE_HOME) { $env:CI_ORA_WIN_ORACLE_HOME } else { "C:\oracle\26ai\dbhomeFree" }
+# DB host as seen from the VM. The listeners bind the host address, not loopback,
+# so the on-VM connection must use the host name (or IP), never "localhost".
+$remote_db_host = if ($env:CI_ORA_WIN_DB_HOST) { $env:CI_ORA_WIN_DB_HOST } else { "oracle-win-ci" }
+
 $packBuild = $false
 $packClippy = $false
 $packFormat = $false
 $packCheckFormat = $false
 $packTest = $false
+$packRemoteTest = $false
 $packDoc = $false
 $packOci = $false
 
@@ -102,6 +116,7 @@ function Write-Help() {
     Write-Host "  -F, --check-format   check for  $package_name correct formatting"
     Write-Host "  -B, --build          build binary $package_name"
     Write-Host "  -T, --component-tests execute  $package_name component tests"
+    Write-Host "  -R, --remote-host    run component tests on the remote Oracle host (localhost DB)"
     Write-Host "  -O, --oci            repackage Oracle Instant Client"
     Write-Host "  --shorten link path  change dir from current using link"
     Write-Host ""
@@ -127,6 +142,7 @@ else {
             { $("-B", "--build") -contains $_ } { $packBuild = $true }
             { $("-C", "--clippy") -contains $_ } { $packClippy = $true }
             { $("-T", "--component-tests") -contains $_ } { $packTest = $true }
+            { $("-R", "--remote-host") -contains $_ } { $packRemoteTest = $true }
             { $("-D", "--documentation") -contains $_ } { $packDoc = $true }
             { $("-O", "--oci") -contains $_ } { $packOci = $true }
             "--clean" { $packClean = $true }
@@ -226,6 +242,99 @@ function Update-Dirs() {
     Write-Host "Using output dir: '$global:arte_dir'" -ForegroundColor White
 }
 
+function Invoke-RemoteComponentTest {
+    # Build the Windows test binary here, ship it to the remote Oracle host and
+    # run it there against localhost. This is the "local" model: it exercises
+    # host-local sysdba connections and registry-based instance discovery that
+    # the network model (--component-tests over TCP) never reaches.
+    if ([string]::IsNullOrEmpty($env:CI_ORA_WIN_TEST_PASSWORD)) {
+        Write-Error "CI_ORA_WIN_TEST_PASSWORD is absent, remote component testing cannot run" -ErrorAction Stop
+    }
+    $pass = $env:CI_ORA_WIN_TEST_PASSWORD
+    $target = "$remote_user@$remote_host"
+
+    # Non-interactive SSH. CI must authenticate with a key (point
+    # CI_ORA_WIN_SSH_KEYFILE at it); interactive local runs may omit it and rely
+    # on an already-open agent/ControlMaster session.
+    $ssh_opts = @("-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=accept-new")
+    $ssh_keyfile = $null
+    if (-not [string]::IsNullOrEmpty($env:CI_ORA_WIN_SSH_KEYFILE)) {
+        # Windows OpenSSH rejects key files with permissive ACLs, and Jenkins
+        # materialises the credential with inherited workspace permissions, so
+        # use a private copy restricted to the current user.
+        $ssh_keyfile = Join-Path ([System.IO.Path]::GetTempPath()) "mk-oracle-ssh-key-$PID"
+        Copy-Item $env:CI_ORA_WIN_SSH_KEYFILE $ssh_keyfile -Force
+        & icacls $ssh_keyfile /inheritance:r /grant:r "$($env:USERNAME):R" | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to restrict ACL on $ssh_keyfile" -ErrorAction Stop
+        }
+        $ssh_opts += @("-i", $ssh_keyfile)
+    }
+
+    # 1. Build the integration-test binary for the Windows target without running it.
+    Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target "--no-run"
+    $deps_dir = Join-Path (cargo metadata --no-deps | ConvertFrom-Json).target_directory (Join-Path $cargo_target "release" "deps")
+    $test_exe = Get-ChildItem -Path $deps_dir -Filter "test_ora_sql-*.exe" |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+    if ($null -eq $test_exe) {
+        Write-Error "No test_ora_sql-*.exe found in $deps_dir" -ErrorAction Stop
+    }
+    Write-Host "Remote component test binary: $($test_exe.FullName)" -ForegroundColor White
+
+    # 2. Generate the remote runner. Both endpoints resolve to the co-located DB
+    #    via $remote_db_host, using the installed Oracle client via ORACLE_HOME;
+    #    the binary resolves fixtures and TNS_ADMIN relative to its working dir.
+    #    CI_ORA2 is the external reference (system, standard auth). CI_ORA1 is the
+    #    local endpoint; its tests force the sysdba role, so it authenticates as
+    #    sys. Field order: host:user:pass:port:instance:role:service:sid:_:_
+    $conn_ext = "${remote_db_host}:system:${pass}:1521:_::FREE:FREE:_:"
+    $conn_local = "${remote_db_host}:sys:${pass}:1521:_:sysdba:FREE:FREE:_:"
+    $exe_leaf = $test_exe.Name
+    $remote_script = Join-Path ([System.IO.Path]::GetTempPath()) "mk-oracle-remote-run.ps1"
+    @"
+`$ErrorActionPreference = "Stop"
+Set-Location -Path `$PSScriptRoot
+`$env:ORACLE_HOME = "$remote_oracle_home"
+`$env:PATH = "`$env:ORACLE_HOME\bin;`$env:PATH"
+# test_environment asserts this Windows build flag also at run time
+`$env:CFLAGS = "-DNDEBUG"
+`$env:CI_ORA2_DB_TEST = "$conn_ext"
+`$env:CI_ORA1_DB_TEST = "$conn_local"
+& "`$PSScriptRoot\$exe_leaf" --test-threads=4
+exit `$LASTEXITCODE
+"@ | Set-Content -Path $remote_script -Encoding utf8BOM
+
+    try {
+        # 3. Stage binary, fixtures and runner on the remote host.
+        & ssh @ssh_opts $target "powershell -NoProfile -Command `"New-Item -ItemType Directory -Force -Path '$remote_dir\tests' | Out-Null`""
+        if ($LASTEXITCODE -ne 0) { Write-Error "Failed to create remote dir on $target" -ErrorAction Stop }
+        & scp @ssh_opts $test_exe.FullName "${target}:$remote_dir/"
+        if ($LASTEXITCODE -ne 0) { Write-Error "Failed to copy test binary" -ErrorAction Stop }
+        & scp @ssh_opts -r "tests/files" "${target}:$remote_dir/tests/"
+        if ($LASTEXITCODE -ne 0) { Write-Error "Failed to copy test fixtures" -ErrorAction Stop }
+        # The runtime-detection tests probe the factory runtime tree relative
+        # to their working directory.
+        & scp @ssh_opts -r "runtimes" "${target}:$remote_dir/"
+        if ($LASTEXITCODE -ne 0) { Write-Error "Failed to copy factory runtimes" -ErrorAction Stop }
+        & scp @ssh_opts $remote_script "${target}:$remote_dir/mk-oracle-remote-run.ps1"
+        if ($LASTEXITCODE -ne 0) { Write-Error "Failed to copy remote runner" -ErrorAction Stop }
+
+        # 4. Run the tests on the remote host against its local databases.
+        Write-Host "Remote component test on $target ($remote_dir) ..." -ForegroundColor White
+        & ssh @ssh_opts $target "powershell -NoProfile -ExecutionPolicy Bypass -File `"$remote_dir\mk-oracle-remote-run.ps1`""
+        if ($LASTEXITCODE -ne 0) { Write-Error "Remote component tests failed with code $LASTEXITCODE" -ErrorAction Stop }
+    }
+    finally {
+        # The runner embeds the password; remove it from both ends.
+        Remove-Item $remote_script -ErrorAction SilentlyContinue
+        & ssh @ssh_opts $target "powershell -NoProfile -Command `"Remove-Item -Recurse -Force -Path '$remote_dir' -ErrorAction SilentlyContinue`"" 2>$null
+        if ($null -ne $ssh_keyfile) {
+            Remove-Item $ssh_keyfile -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
 $result = 1
 try {
     $mainStartTime = Get-Date
@@ -247,7 +356,7 @@ try {
     if ($packClean) {
         Invoke-Cargo-With-Explicit-Package "clean"
     }
-    if ($packBuild -or $packTest -or - $packOci) {
+    if ($packBuild -or $packTest -or $packOci -or $packRemoteTest) {
         $target = "//omd/packages/oci:oci_light_win_x64"
         $env:BAZELISK_BASE_URL = "https://github.com/aspect-build/aspect-cli/releases/download"
         $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
@@ -308,6 +417,9 @@ try {
         else {
             Write-Host "Not elevated: permissions will not be checked" -ForegroundColor Red
         }
+    }
+    if ($packRemoteTest) {
+        Invoke-RemoteComponentTest
     }
     if ($packDoc) {
         Invoke-Cargo-With-Explicit-Package "doc"

@@ -48,6 +48,9 @@ from cmk.gui.watolib.host_attributes import (
     IPMICredentials,
     IPRange,
     MetaData,
+    MetricsAssociationAttributeFilter,
+    MetricsAssociationEnabled,
+    MetricsAssociationHostNameLookupRule,
     NetworkScanResult,
     NetworkScanSpec,
 )
@@ -924,3 +927,104 @@ class MetricsAssociationEnabledModel:
 MetricsAssociationModel = (
     tuple[Literal["enabled"], MetricsAssociationEnabledModel] | tuple[Literal["disabled"], None]
 )
+
+
+def render_view_site(value: str) -> str:
+    """Render a site for read-only responses.
+
+    Unknown sites (e.g. an object configured for a site that no longer exists) are rendered as
+    ``Unknown Site: <id>`` rather than failing, matching the previous implementation."""
+    if value not in active_config.sites:
+        return f"Unknown Site: {value}"
+    return value
+
+
+def snmp_community_or_none(value: str | tuple | None) -> SNMPCredentialsModel | None:
+    """Convert an internal SNMP credential to its model, preserving an explicit ``None``.
+
+    The ``HostAttributes`` TypedDict types the value as non-optional, but at runtime it can be
+    ``None`` (e.g. effective attributes of an object without SNMP configured)."""
+    if value is None:
+        return None
+    return SNMPCredentialsConverter.from_internal(value)
+
+
+def ipmi_credentials_or_none(value: IPMICredentials | None) -> IPMIParametersModel | None:
+    if value is None:
+        return None
+    return IPMIParametersModel.from_internal(value)
+
+
+def _lookup_rule_to_internal(
+    rule: MetricsAssociationFilterGroupModel,
+) -> MetricsAssociationHostNameLookupRule:
+    """Build one internal host name lookup rule from an API rule."""
+    internal = MetricsAssociationHostNameLookupRule(
+        resource_attributes=[
+            MetricsAssociationAttributeFilter(key=f.key, value=f.value)
+            for f in rule.resource_attributes
+        ],
+        scope_attributes=[
+            MetricsAssociationAttributeFilter(key=f.key, value=f.value)
+            for f in rule.scope_attributes
+        ],
+        data_point_attributes=[
+            MetricsAssociationAttributeFilter(key=f.key, value=f.value)
+            for f in rule.data_point_attributes
+        ],
+    )
+    if not isinstance(rule.host_name_template, ApiOmitted):
+        internal["host_name_template"] = rule.host_name_template
+    return internal
+
+
+def metrics_association_to_internal(
+    model: MetricsAssociationModel,
+) -> tuple[Literal["disabled"], None] | tuple[Literal["enabled"], MetricsAssociationEnabled]:
+    _status, config = model
+    if config is None:
+        return ("disabled", None)
+    return (
+        "enabled",
+        MetricsAssociationEnabled(
+            host_name_lookup_rules=[
+                _lookup_rule_to_internal(rule) for rule in config.host_name_lookup_rules
+            ]
+        ),
+    )
+
+
+def _lookup_rule_from_internal(
+    rule: MetricsAssociationHostNameLookupRule,
+) -> MetricsAssociationFilterGroupModel:
+    return MetricsAssociationFilterGroupModel(
+        resource_attributes=[
+            MetricsAssociationAttributeFilterModel(key=f["key"], value=f["value"])
+            for f in rule["resource_attributes"]
+        ],
+        scope_attributes=[
+            MetricsAssociationAttributeFilterModel(key=f["key"], value=f["value"])
+            for f in rule["scope_attributes"]
+        ],
+        data_point_attributes=[
+            MetricsAssociationAttributeFilterModel(key=f["key"], value=f["value"])
+            for f in rule["data_point_attributes"]
+        ],
+        host_name_template=rule.get("host_name_template", ApiOmitted()),
+    )
+
+
+def metrics_association_from_internal(
+    value: tuple[Literal["enabled"], MetricsAssociationEnabled] | tuple[Literal["disabled"], None],
+) -> MetricsAssociationModel:
+    _status, config = value
+    if config is None:
+        return ("disabled", None)
+    return (
+        "enabled",
+        MetricsAssociationEnabledModel(
+            host_name_lookup_rules=[
+                _lookup_rule_from_internal(rule) for rule in config["host_name_lookup_rules"]
+            ]
+        ),
+    )

@@ -13,6 +13,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.ccc import version
+from cmk.ccc.regex import WATO_FOLDER_PATH_NAME_REGEX
 from cmk.ccc.user import UserId
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema
@@ -223,7 +224,7 @@ def test_openapi_folder_non_existent_site(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     resp.assert_status_code(400)
-    assert "site" in resp.json["fields"]["update_attributes"]
+    assert any("update_attributes.site" in key for key in resp.json["fields"])
 
 
 def test_openapi_folder_config_collections(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
@@ -398,8 +399,8 @@ def test_openapi_create_folder_with_network_scan(
             ("ip_list", ["10.10.10.10", "10.10.10.9"]),
             ("ip_range", ("192.168.178.10", "192.168.178.20")),
         ],
-        "max_parallel_pings": 100,
         "scan_interval": 86400,
+        "max_parallel_pings": 100,
         "set_ipaddress": True,
         "time_allowed": [((0, 0), (23, 0))],
         "tag_criticality": "discovered",
@@ -696,6 +697,23 @@ def test_openapi_folder_remove_attribute(clients: ClientRegistry) -> None:
     assert "tag_address_family" not in resp.json["extensions"]["attributes"]
 
 
+def test_openapi_folder_update_empty_attributes_keeps_existing(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="/",
+        folder_name="new_folder",
+        title="foo",
+        attributes={"tag_address_family": "ip-v6-only"},
+    )
+
+    clients.Folder.edit(folder_name="~new_folder", attributes={})
+    resp = clients.Folder.get("~new_folder")
+    assert resp.json["extensions"]["attributes"]["tag_address_family"] == "ip-v6-only"
+
+    clients.Folder.bulk_edit(entries=[{"folder": "~new_folder", "attributes": {}}])
+    resp = clients.Folder.get("~new_folder")
+    assert resp.json["extensions"]["attributes"]["tag_address_family"] == "ip-v6-only"
+
+
 def test_openapi_folder_config_collections_recursive_list(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
@@ -753,8 +771,8 @@ def test_create_folder_with_name_as_empty_string(clients: ClientRegistry) -> Non
         parent="~",
         expect_ok=False,
     )
-    assert r.json["detail"] == "These fields have problems: name"
-    assert r.json["fields"]["name"][0] == "string '' is too short. The minimum length is 1."
+    r.assert_status_code(400)
+    assert r.json["fields"]["body.name"]["msg"] == "Value error, The name must not be empty."
 
 
 def test_openapi_folder_config_folders_with_duplicate_names_allowed_regression(
@@ -835,9 +853,8 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     resp1.assert_status_code(400)
-    assert (
-        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
-        in resp1.json["fields"]["_schema"][0]
+    assert resp1.json["fields"]["body"]["msg"].startswith(
+        "Value error, This endpoint only allows 1 action (set/update/remove) per call, you specified"
     )
 
     resp2 = clients.Folder.edit(
@@ -849,9 +866,8 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     resp2.assert_status_code(400)
-    assert (
-        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
-        in resp1.json["fields"]["_schema"][0]
+    assert resp2.json["fields"]["body"]["msg"].startswith(
+        "Value error, This endpoint only allows 1 action (set/update/remove) per call, you specified"
     )
 
     resp3 = clients.Folder.edit(
@@ -863,9 +879,8 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     resp3.assert_status_code(400)
-    assert (
-        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
-        in resp1.json["fields"]["_schema"][0]
+    assert resp3.json["fields"]["body"]["msg"].startswith(
+        "Value error, This endpoint only allows 1 action (set/update/remove) per call, you specified"
     )
 
     resp4 = clients.Folder.edit(
@@ -877,9 +892,8 @@ def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     resp4.assert_status_code(400)
-    assert (
-        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
-        in resp1.json["fields"]["_schema"][0]
+    assert resp4.json["fields"]["body"]["msg"].startswith(
+        "Value error, This endpoint only allows 1 action (set/update/remove) per call, you specified"
     )
 
 
@@ -904,8 +918,8 @@ def test_create_folder_name_with_newline(
     )
     resp.assert_status_code(400)
     assert (
-        resp.json["fields"]["name"][0]
-        == f"{folder_name!r} does not match pattern '^[-\\\\w]*\\\\Z'."
+        resp.json["fields"]["body.name"]["msg"]
+        == f"Value error, {folder_name!r} does not match pattern {WATO_FOLDER_PATH_NAME_REGEX!r}."
     )
 
 

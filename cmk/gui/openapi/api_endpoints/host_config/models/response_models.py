@@ -10,16 +10,13 @@ from typing import Annotated, Literal
 
 from pydantic import AfterValidator
 
-from cmk.gui.openapi.api_endpoints.models.folder_attribute_models import FolderViewAttributeModel
+from cmk.gui.openapi.api_endpoints.models.folder_models import FolderModel
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostAttributeResponseModel
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
     DomainObjectModel,
-    LinkableModel,
     LinkModel,
-    ObjectActionMemberModel,
-    ObjectCollectionMemberModel,
 )
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
 from cmk.gui.openapi.framework.model.converter import HostConverter
@@ -43,37 +40,6 @@ class HostExtensionsModel:
             description="In the case this is a cluster host, these are the cluster nodes.",
         )
     )
-
-
-@api_model
-class FolderMembersModel:
-    hosts: ObjectCollectionMemberModel = api_field(
-        description="A list of links pointing to the actual host-resources."
-    )
-    move: ObjectActionMemberModel = api_field(
-        description="An action which triggers the move of this folder to another folder."
-    )
-
-
-@api_model
-class FolderExtensionsModel:
-    path: str = api_field(description="The full path of this folder, slash delimited.")
-    attributes: FolderViewAttributeModel = api_field(
-        description="The folder's attributes. Hosts placed in this folder will inherit these attributes."
-    )
-
-
-@api_model
-class FolderModel(LinkableModel):
-    domainType: Literal["folder_config"] = api_field(
-        description="The domain type of the object.",
-    )
-    id: str = api_field(description="The full path of the folder, tilde-separated.")
-    title: str = api_field(description="The human readable title for this folder.")
-    members: FolderMembersModel = api_field(
-        description="Specific collections or actions applicable to this object."
-    )
-    extensions: FolderExtensionsModel = api_field(description="Data and Meta-Data of this object.")
 
 
 @api_model

@@ -13,7 +13,6 @@ from cmk.gui.openapi.endpoints import (
     cert,
     configuration_entity,
     contact_group_config,
-    folder_config,
     host_internal,
     host_tag_group,
     notification_rules,
@@ -41,6 +40,7 @@ from .api_endpoints import (
     comment as api_comment,
 )
 from .api_endpoints import downtime as api_downtime
+from .api_endpoints import folder_config as api_folder_config
 from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
 from .api_endpoints import host_group_config as api_host_group_config
@@ -72,7 +72,6 @@ def register(
     aux_tags.register(endpoint_registry)
     cert.register(endpoint_registry)
     contact_group_config.register(endpoint_registry)
-    folder_config.register(endpoint_registry)
     configuration_entity.register(endpoint_registry)
     host_internal.register(endpoint_registry)
     host_tag_group.register(endpoint_registry)
@@ -98,6 +97,10 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     api_host_config.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
+    api_folder_config.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

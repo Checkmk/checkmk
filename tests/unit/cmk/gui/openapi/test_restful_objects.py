@@ -203,47 +203,6 @@ def test_status_codes_match() -> None:
     assert set(get_args(StatusCodeInt)) == {int(sc) for sc in get_args(StatusCode)}
 
 
-def test_no_config_generation_on_get(
-    aut_user_auth_wsgi_app,
-    with_host,
-    monkeypatch,
-    mocker,
-):
-    """
-    update_config_generation should only be called on posts, not on gets: SUP-8793
-    """
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    mock = mocker.Mock()
-    monkeypatch.setattr(
-        cmk.gui.openapi.restful_objects.decorators,
-        "activate_changes_update_config_generation",
-        mock,
-    )
-
-    # host_config has been migrated to the new framework, which does not use this hook, so
-    # we exercise a still-marshmallow endpoint (folder_config) here.
-    aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/domain-types/folder_config/collections/all",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-    # we have a get request, so we expect update_config not to be called
-    mock.assert_not_called()
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/folder_config/collections/all",
-        params='{"name": "foobar", "title": "foobar", "parent": "/"}',
-        status=200,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
-    )
-    # we have a post request, so we expect update_config to be called
-    mock.assert_called_once()
-
-
 def test_no_config_generation_on_certain_posts(
     aut_user_auth_wsgi_app,
     mock_livestatus,

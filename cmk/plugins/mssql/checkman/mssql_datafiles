@@ -9,7 +9,9 @@ description:
  relative to the currently allocated size and for the currently
  allocated size itself. The effective maximum size is calculated
  as the lesser of the configured maximum size and the total of the
- currently used size plus free space.
+ currently allocated size plus the available filesystem space.
+ It is aggregated per filesystem, since files on the same
+ filesystem share its free space.
 
  This check needs the Checkmk mssql.vbs -plugin installed in
  the agent. Please refer to the online documentation

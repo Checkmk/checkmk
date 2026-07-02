@@ -351,14 +351,14 @@ SUP29484_DF = [
 
 SUP29484_MSSQL_DATAFILES = [
     [
-        "MSSQLSERVER",
-        "ppppppppppppppppp",
-        "ppppppppppppppppp_1",
-        r"E:\MSSQL_Data\ppppppppppppppppp.mdf",
-        "32768",
-        "32768",
-        "28437",
-        "0",
+        "MSSQLSERVER",  # inst
+        "ppppppppppppppppp",  # database
+        "ppppppppppppppppp_1",  # file_name
+        r"E:\MSSQL_Data\ppppppppppppppppp.mdf",  # physical_name
+        "32768",  # max_size
+        "32768",  # allocated_size
+        "28437",  # used_size
+        "0",  # unlimited
     ],
     [
         "MSSQLSERVER",
@@ -492,10 +492,7 @@ def test_datafile_usage_shared_mountpoint_counts_free_space_once() -> None:
 
     usage = msdt._datafile_usage([first, second], {"s:/": 1000})
 
-    # Both files live on s:/, so the 1000 bytes of free space must only be counted once.
-    # first sees free (1000) + allocated (3); second sees the already-counted mountpoint, so free is
-    # treated as 0 and it only contributes its own allocated (4).
-    assert usage.max == (1000 + 3) + 4
+    assert usage.max == 1000 + 3 + 4
 
 
 class _Scenario(NamedTuple):
@@ -601,12 +598,11 @@ def test_check_mssql_transactionlogs_multiple_mp_summary_SUP29484() -> None:
         )
     ) == [
         Result(state=State.OK, summary="Used: 103 GiB"),
-        Metric("data_size", 110937243648.0, boundaries=(0.0, 128849018880.0)),
+        Metric("data_size", 110937243648.0, boundaries=(0.0, 148176371712.0)),
         Result(state=State.OK, summary="Allocated used: 103 GiB"),
         Result(state=State.OK, summary="Allocated: 120 GiB"),
-        Metric("allocated_size", 128849018880.0, boundaries=(0.0, 128849018880.0)),
-        Result(
-            state=State.OK, summary="Maximum size: 120 GiB"
-        ),  # THIS IS A BUG! should be 138 GiB; now == allocated (no longer impossible), but the
-        # later files sharing E:\ are still falsely starved of free space
+        Metric("allocated_size", 128849018880.0, boundaries=(0.0, 148176371712.0)),
+        # all files are on E:\ which has 208.7GB free space
+        # if you build the sum of all max_size you come up at (32768 + 32768 + 32768 + 32768 + 10240) / 2**10 = 138GiB
+        Result(state=State.OK, summary="Maximum size: 138 GiB"),
     ]

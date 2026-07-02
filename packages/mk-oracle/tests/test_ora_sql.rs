@@ -2069,6 +2069,7 @@ mod custom_path_tests {
     const VER_V12_SQL: &str = include_str!("files/orasql_abs/ver_metric@12010000.sql");
     const VER_V19_SQL: &str = include_str!("files/orasql_abs/ver_metric@19000000.sql");
     const RUNTIME_BOTH_SQL: &str = include_str!("files/orasql_runtime/both.sql");
+    const RUNTIME_JOBS_SQL: &str = include_str!("files/orasql_runtime/jobs.sql");
     const CONFIG_BOTH_SQL: &str = include_str!("files/orasql_config/both.sql");
     const CONFIG_MAIN_ONLY_SQL: &str = include_str!("files/orasql_config/main_only.sql");
 
@@ -2109,6 +2110,8 @@ mod custom_path_tests {
         // Relative-path search roots. `both.sql` is intentionally present in
         // both roots so a test can prove the runtime root shadows the config one.
         write(&runtime_dir, "both.sql", RUNTIME_BOTH_SQL);
+        // Named after the builtin `jobs` section: overrides its factory query.
+        write(&runtime_dir, "jobs.sql", RUNTIME_JOBS_SQL);
         write(&config_dir, "both.sql", CONFIG_BOTH_SQL);
         write(&config_dir, "main_only.sql", CONFIG_MAIN_ONLY_SQL);
 
@@ -2287,6 +2290,39 @@ oracle:
             first_query(&section, 0, dirs).as_deref(),
             Some("select 'details:config-only' from dual"),
             "must fall through to the config search dir"
+        );
+    }
+
+    #[test]
+    fn test_builtin_section_overridden_by_search_dir_file_without_path() {
+        // A builtin section with *no* `path:` key still using the search
+        // roots: the unset path defaults to "" (a relative path), so each root
+        // itself becomes a candidate directory and the lookup stem is the
+        // section name. A `jobs.sql` in the runtime root must therefore
+        // override the factory query of the builtin `jobs` section.
+        let fx = fixtures();
+        let yaml = r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+"#;
+        let section = section_from_yaml(yaml, "jobs");
+        assert!(section.path().is_none(), "no path: configured for jobs");
+
+        assert_eq!(
+            first_query(&section, 19_00_00_00, &fx.search_dirs).as_deref(),
+            Some("select 'details:builtin-override' from dual"),
+            "jobs.sql in a search dir must override the builtin query"
+        );
+        // Sanity check: without the search dirs the factory query is used.
+        let factory = first_query(&section, 19_00_00_00, &[]);
+        assert!(factory.is_some(), "builtin jobs query must resolve");
+        assert_ne!(
+            factory.as_deref(),
+            Some("select 'details:builtin-override' from dual"),
+            "without search dirs the factory query must be returned"
         );
     }
 

@@ -260,6 +260,8 @@ impl Section {
     /// * Relative paths are joined under each entry of `search_dirs` (in
     ///   production: runtime directory first, config directory second), so the
     ///   first matching root wins on collisions.
+    /// * If path is not set, we set path to "" and treat it as a relative path,
+    ///   so the search roots are still used.
     ///
     /// Each candidate may be either a file or a directory;
     /// in the directory case the lookup stem is the custom-metric item name
@@ -270,7 +272,7 @@ impl Section {
         instance_version: InstanceNumVersion,
         search_dirs: &[PathBuf],
     ) -> Option<String> {
-        let path = self.path.as_deref()?;
+        let path = self.path.as_deref().unwrap_or(Path::new(""));
         let candidates: Vec<PathBuf> = if path.is_absolute() {
             vec![path.to_path_buf()]
         } else {

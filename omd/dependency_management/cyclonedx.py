@@ -5,7 +5,7 @@
 
 import base64
 import uuid
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from datetime import datetime, UTC
 from pathlib import Path
@@ -103,6 +103,13 @@ class LicenseInfo:
     id_: SPDXId
     text: str | None
 
+    def merge(self, other: Self) -> "LicenseInfo":
+        if self.id_ != other.id_:
+            raise ValueError(f"Conflicting license ids: {self.id_!r} != {other.id_!r}")
+        return LicenseInfo(
+            self.id_, _merge_agreeing(f"license text for {self.id_!r}", self.text, other.text)
+        )
+
     def to_json(self) -> JSONDict:
         # heuristic to determine between expression and id
         if " " in str(self.id_):
@@ -124,6 +131,19 @@ class LicenseInfo:
                 },
             }
         }
+
+
+def _merge_agreeing[T](what: str, a: T | None, b: T | None) -> T | None:
+    """Return the value that is set, ignoring Nones; raise if both are set and differ."""
+    if a is not None and b is not None and a != b:
+        raise ValueError(f"Conflicting {what}: {a!r} != {b!r}")
+    return a if a is not None else b
+
+
+def _merge_optional_license(a: LicenseInfo | None, b: LicenseInfo | None) -> LicenseInfo | None:
+    if a is None or b is None:
+        return a or b
+    return a.merge(b)
 
 
 class Hash(BaseModel):
@@ -162,6 +182,21 @@ class Component(BaseModel):
             }
             for l in self.labels
         ]
+
+    def merge(self, other: Self) -> Self:
+        if self.purl != other.purl:
+            raise ValueError(f"Cannot merge different purls: {self.ref} != {other.ref}")
+        if self.type_ != other.type_:
+            raise ValueError(f"Conflicting type for {self.ref}: {self.type_} != {other.type_}")
+        return self.model_copy(
+            update={
+                "hashes": self.hashes | other.hashes,
+                "files": self.files | other.files,
+                "labels": self.labels | other.labels,
+                "license_info": _merge_optional_license(self.license_info, other.license_info),
+                "cpe": _merge_agreeing(f"cpe for {self.ref}", self.cpe, other.cpe),
+            }
+        )
 
     def to_bom_json(self) -> JSONDict:
         result: JSONDict = {
@@ -225,6 +260,18 @@ class ComponentList(RootModel[list[Component]]):
 
     def __getitem__(self, item: int) -> Component:
         return self.root[item]
+
+
+def unify_components(components: Iterable[Component]) -> list[Component]:
+    """Merge components sharing a purl into a single component.
+
+    Merging combines files/labels/hashes and fills in optional fields (license,
+    cpe); it raises on genuinely conflicting values (see Component.merge).
+    """
+    unified: dict[PUrl, Component] = {}
+    for c in components:
+        unified[c.purl] = unified[c.purl].merge(c) if c.purl in unified else c
+    return list(unified.values())
 
 
 def components_without_license(

@@ -17,6 +17,7 @@ from cyclonedx import (
     LicenseDB,
     LicenseInfo,
     PUrl,
+    unify_components,
     Vulnerability,
     VulnerabilityState,
     VulnId,
@@ -129,7 +130,7 @@ def _main() -> None:
     bom = Bom()
     bom.components = [
         determine_license(automatically_researched_licenses, manually_researched_licenses, c)
-        for c in components
+        for c in unify_components(components)
     ]
 
     if args.vulnerability_info:

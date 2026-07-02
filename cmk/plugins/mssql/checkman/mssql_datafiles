@@ -11,7 +11,8 @@ description:
  as the lesser of the configured maximum size and the total of the
  currently allocated size plus the available filesystem space.
  It is aggregated per filesystem, since files on the same
- filesystem share its free space.
+ filesystem share its free space. A notice is emitted when the
+ filesystem space limits the effective maximum.
 
  This check needs the Checkmk mssql.vbs -plugin installed in
  the agent. Please refer to the online documentation

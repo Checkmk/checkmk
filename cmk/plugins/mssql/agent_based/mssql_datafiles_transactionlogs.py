@@ -9,7 +9,7 @@ import dataclasses
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -101,6 +101,7 @@ class DatafileUsage:
     used: float
     allocated: float
     max: float
+    capped_by_filesystem: bool
 
 
 def _format_item_mssql_datafiles(
@@ -186,6 +187,16 @@ def _mssql_datafiles_process_sizes(
         summary=f"Maximum size: {render.bytes(datafile_usage.max)}",
     )
 
+    if datafile_usage.capped_by_filesystem:
+        # at least one of the databases is capped by the filesystem size
+        yield Result(
+            state=State.OK,
+            notice=(
+                "The defined maximum size cannot be reached due to insufficient "
+                "filesystem space. Capped at the available filesystem space."
+            ),
+        )
+
 
 def _get_mountpoint(
     df_dict: Mapping[str, object],
@@ -256,10 +267,13 @@ def _datafile_usage(
             instances_without_mountpoint.append(instance)
 
     max_size_sum = 0.0
+    capped_by_filesystem = False
     for mountpoint_key, mountpoint_instances in instances_per_mountpoint.items():
-        max_size_sum += _aggregate_max_size(
+        aggregate = _aggregate_max_size(
             mountpoint_instances, free_bytes_per_mountpoint[mountpoint_key]
         )
+        max_size_sum += aggregate.max_size
+        capped_by_filesystem = capped_by_filesystem or aggregate.capped_by_filesystem
 
     # no mountpoint information, maybe no df section available?
     # we fall back to each file's configured maximum
@@ -269,13 +283,19 @@ def _datafile_usage(
         used=used_size_sum,
         allocated=allocated_size_sum,
         max=max_size_sum,
+        capped_by_filesystem=capped_by_filesystem,
     )
+
+
+class AggregateMaxSize(NamedTuple):
+    max_size: float
+    capped_by_filesystem: bool
 
 
 def _aggregate_max_size(
     instances: Sequence[MSSQLInstanceData],
     filesystem_free_size: float,
-) -> float:
+) -> AggregateMaxSize:
     allocated_sum = 0.0
     headroom_sum = 0.0
     has_unlimited = False
@@ -287,8 +307,15 @@ def _aggregate_max_size(
         else:
             headroom_sum += max(0.0, (instance["max_size"] or 0) - allocated)
 
-    usable_free = filesystem_free_size if has_unlimited else min(filesystem_free_size, headroom_sum)
-    return allocated_sum + usable_free
+    capped_by_filesystem = filesystem_free_size < headroom_sum
+
+    if has_unlimited:
+        return AggregateMaxSize(allocated_sum + filesystem_free_size, capped_by_filesystem)
+
+    return AggregateMaxSize(
+        allocated_sum + min(filesystem_free_size, headroom_sum),
+        capped_by_filesystem,
+    )
 
 
 def check_mssql_common(

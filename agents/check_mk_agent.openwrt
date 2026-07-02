@@ -490,7 +490,7 @@ section_mounts() {
     # call statfs()). If this lasts more then 2 seconds we
     # consider it as hanging. We need waitmax.
     if inpath waitmax; then
-        STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
+        STAT_VERSION=$(stat --version 2>/dev/null | head -1 | cut -d" " -f4)
         STAT_BROKE="5.3.0"
 
         echo '<<<nfsmounts>>>'

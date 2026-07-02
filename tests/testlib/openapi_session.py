@@ -1815,7 +1815,7 @@ class OtelCollectorAPI(BaseAPI):
     def delete_bundle(self, bundle_id: str, expect_ok: bool = True) -> requests.Response:
         """Delete an OpenTelemetry Quick Setup configuration bundle via REST API."""
         response = self.session.delete(
-            self.base_url + f"objects/otel_collector_config_bundles/{bundle_id}",
+            self.base_url + f"/objects/otel_collector_config_bundles/{bundle_id}",
         )
         if expect_ok and response.status_code != 204:
             raise UnexpectedResponse.from_response(response)

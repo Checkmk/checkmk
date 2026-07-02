@@ -158,7 +158,14 @@ class AddOTelConfiguration(CmkPage):
 
     @property
     def active_step(self) -> Locator:
-        return self.wizard_root.locator('li[aria-current="step"]')
+        return self.wizard_root.locator("li.cmk-wizard-step--active")
+
+    @staticmethod
+    def _field_input(container: Locator, label: str) -> Locator:
+        """Locate the ``<input>`` associated with a ``CmkLabel`` by its text."""
+        return (
+            container.locator("label").filter(has_text=label).locator("xpath=following::input[1]")
+        )
 
     @property
     def next_step_button(self) -> Locator:
@@ -168,13 +175,14 @@ class AddOTelConfiguration(CmkPage):
 
     @property
     def configuration_name_textfield(self) -> Locator:
-        return self.active_step.get_by_role("textbox", name="Configuration name")
+        return self._field_input(self.active_step, "Configuration name")
 
     @property
     def site_dropdown(self) -> Locator:
         return self.active_step.get_by_label("Site selection")
 
     def fill_configuration_name(self, configuration_name: str) -> None:
+        expect(self.configuration_name_textfield).not_to_have_value("")
         self.configuration_name_textfield.fill(configuration_name)
 
     # --- Step 2: collector receivers (GRPC + HTTP tabs) ---
@@ -206,11 +214,11 @@ class AddOTelConfiguration(CmkPage):
 
     @property
     def address_textfield(self) -> Locator:
-        return self._active_tab_panel.get_by_role("textbox", name="IP address or host name")
+        return self._field_input(self._active_tab_panel, "IP address or host name")
 
     @property
     def port_textfield(self) -> Locator:
-        return self._active_tab_panel.get_by_role("spinbutton", name="Port")
+        return self._field_input(self._active_tab_panel, "Port")
 
     @property
     def authentication_method_dropdown(self) -> Locator:
@@ -218,7 +226,7 @@ class AddOTelConfiguration(CmkPage):
 
     @property
     def username_textfield(self) -> Locator:
-        return self._active_tab_panel.get_by_role("textbox", name="Username")
+        return self._field_input(self._active_tab_panel, "Username")
 
     @property
     def password_dropdown(self) -> Locator:
@@ -240,9 +248,7 @@ class AddOTelConfiguration(CmkPage):
 
     @property
     def resource_attribute_textfield(self) -> Locator:
-        return self._active_tab_panel.get_by_role(
-            "textbox", name="Resource attribute for host name lookup"
-        )
+        return self._field_input(self._active_tab_panel, "Resource attribute for host name lookup")
 
     def select_dropdown_option(self, dropdown: Locator, option_name: str) -> None:
         dropdown.click()

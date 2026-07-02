@@ -145,6 +145,8 @@ def expected_items() -> dict[str, list[str]]:
                 ],
                 "synthetic_monitoring": ["robotmk_managed_robots_overview"],
                 "telemetry": [
+                    "otel_overview",
+                    "prometheus_overview",
                     "otel_collectors_receivers",
                     "otel_collectors_prom_scrapes",
                 ],

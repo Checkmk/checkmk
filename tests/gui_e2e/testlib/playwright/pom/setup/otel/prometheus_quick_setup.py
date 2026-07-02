@@ -101,7 +101,14 @@ class AddPrometheusQuickSetupConfiguration(CmkPage):
 
     @property
     def active_step(self) -> Locator:
-        return self.wizard_root.locator('li[aria-current="step"]')
+        return self.wizard_root.locator("li.cmk-wizard-step--active")
+
+    @staticmethod
+    def _field_input(container: Locator, label: str) -> Locator:
+        """Locate the ``<input>`` associated with a ``CmkLabel`` by its text."""
+        return (
+            container.locator("label").filter(has_text=label).locator("xpath=following::input[1]")
+        )
 
     @property
     def next_step_button(self) -> Locator:
@@ -111,32 +118,33 @@ class AddPrometheusQuickSetupConfiguration(CmkPage):
 
     @property
     def configuration_name_textfield(self) -> Locator:
-        return self.active_step.get_by_role("textbox", name="Configuration name")
+        return self._field_input(self.active_step, "Configuration name")
 
     @property
     def site_dropdown(self) -> Locator:
         return self.active_step.get_by_label("Site selection")
 
     def fill_configuration_name(self, configuration_name: str) -> None:
+        expect(self.configuration_name_textfield).not_to_have_value("")
         self.configuration_name_textfield.fill(configuration_name)
 
     # --- Step 2: scraper details ---
 
     @property
     def job_name_textfield(self) -> Locator:
-        return self.active_step.get_by_role("textbox", name="Job name")
+        return self._field_input(self.active_step, "Job name")
 
     @property
     def metrics_path_textfield(self) -> Locator:
-        return self.active_step.get_by_role("textbox", name="Metrics path")
+        return self._field_input(self.active_step, "Metrics path")
 
     @property
     def address_textfield(self) -> Locator:
-        return self.active_step.get_by_role("textbox", name="IP address or host name")
+        return self._field_input(self.active_step, "IP address or host name")
 
     @property
     def port_textfield(self) -> Locator:
-        return self.active_step.get_by_role("spinbutton", name="Port")
+        return self._field_input(self.active_step, "Port")
 
     @property
     def encryption_checkbox(self) -> Locator:

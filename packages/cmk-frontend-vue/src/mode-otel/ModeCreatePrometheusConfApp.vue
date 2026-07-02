@@ -135,12 +135,11 @@ async function onSaveClick(): Promise<void> {
   // Overview page and opens the "Activate changes" panel so the user can
   // apply the pending configuration changes.
   if (saveState.value === 'success') {
-    // Open the main-menu "Changes" panel in the top frame. The nav item is
-    // rendered by MainMenuApp with id="nav-item-changes"; clicking it toggles
-    // the activate-changes slide-in. We trigger it before navigating so the
-    // panel is already visible when the overview page loads.
+    // Open the main-menu "Changes" panel in the top frame.
     try {
-      const changesNavItem = top?.document.getElementById('nav-item-changes')
+      const changesNavItem =
+        top?.document.getElementById('nav-item-changes') ??
+        top?.document.querySelector<HTMLElement>('#popup_trigger_main_menu_changes a.popup_trigger')
       changesNavItem?.click()
     } catch {
       // Cross-origin or missing element — fall through to navigation.

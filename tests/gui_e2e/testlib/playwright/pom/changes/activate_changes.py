@@ -117,7 +117,7 @@ class ActivateChangesSlideout(LocatorHelper):
 
     @property
     def activation_succcess_banner(self) -> Locator:
-        return self.slideout.get_by_role("status").filter(has_text="Successfully activated")
+        return self.slideout.get_by_role("heading").filter(has_text="Successfully activated")
 
     def _extract_count_from_label(self, label_locator: Locator, label_name: str) -> int:
         """Get the number in parentheses from a label text."""

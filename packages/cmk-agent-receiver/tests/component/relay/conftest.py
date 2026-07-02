@@ -31,6 +31,11 @@ def ar_site(wiremock: Wiremock, tmp_path: pathlib.Path) -> AgentReceiverSite:
 
 
 @pytest.fixture()
+def site_name(ar_site: AgentReceiverSite) -> str:
+    return ar_site.config.site_name
+
+
+@pytest.fixture()
 def site_context(ar_site: AgentReceiverSite, monkeypatch: pytest.MonkeyPatch) -> Config:
     for key, value in ar_site.env.items():
         monkeypatch.setenv(key, value)

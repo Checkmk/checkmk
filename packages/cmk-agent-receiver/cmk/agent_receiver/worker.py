@@ -43,6 +43,33 @@ def _extract_client_cert_names(ssl_object: SSLObject | None) -> tuple[str | None
     )
 
 
+def _headers_with_verified_identity(
+    headers: list[tuple[bytes, bytes]], client_cn: str | None, issuer_cn: str | None
+) -> list[tuple[bytes, bytes]]:
+    """Return request headers carrying the trusted verified-identity headers.
+
+    Any client-supplied copy of the injected headers is stripped first, so the
+    only verified headers downstream can see are the ones derived from the
+    validated client certificate. When no client certificate was presented the
+    headers are omitted entirely: endpoints that require them then reject the
+    request, and a client cannot spoof an identity by injecting the headers
+    itself.
+    """
+    injected_uuid_key = INJECTED_UUID_HEADER.encode()
+    injected_issuer_key = INJECTED_ISSUER_HEADER.encode()
+    sanitized = [
+        (key, value)
+        for key, value in headers
+        if key.lower() not in (injected_uuid_key, injected_issuer_key)
+    ]
+    injected: list[tuple[bytes, bytes]] = []
+    if client_cn is not None:
+        injected.append((injected_uuid_key, client_cn.encode()))
+    if issuer_cn is not None:
+        injected.append((injected_issuer_key, issuer_cn.encode()))
+    return [*injected, *sanitized]
+
+
 class _ClientCertProtocol(H11Protocol):
     # copied from uvicorn.protocols.http.h11_impl.H11Protocol
     @override
@@ -68,7 +95,7 @@ class _ClientCertProtocol(H11Protocol):
                 break
 
             elif isinstance(event, h11.Request):
-                self.headers = [(key.lower(), value) for key, value in event.headers]
+                headers = [(key.lower(), value) for key, value in event.headers]
 
                 # ==================================================================================
                 # ==================================================================================
@@ -77,25 +104,7 @@ class _ClientCertProtocol(H11Protocol):
                 client_cn, issuer_cn = _extract_client_cert_names(
                     self.transport.get_extra_info("ssl_object")
                 )
-                self.headers = [
-                    (
-                        INJECTED_UUID_HEADER.encode(),
-                        (
-                            client_cn.encode()
-                            if client_cn is not None
-                            else b"missing: no client certificate provided"
-                        ),
-                    ),
-                    (
-                        INJECTED_ISSUER_HEADER.encode(),
-                        (
-                            issuer_cn.encode()
-                            if issuer_cn is not None
-                            else b"missing: no client certificate provided"
-                        ),
-                    ),
-                    *self.headers,
-                ]
+                self.headers = _headers_with_verified_identity(headers, client_cn, issuer_cn)
 
                 # ==================================================================================
                 # ==================================================================================

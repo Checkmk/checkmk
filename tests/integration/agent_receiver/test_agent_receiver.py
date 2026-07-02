@@ -79,7 +79,7 @@ def site_ca_fixture(site: Site, tmp_path_factory: pytest.TempPathFactory) -> Pat
 
 @pytest.mark.medium_test_chain
 def test_uuid_check_client_certificate(agent_receiver_url: str) -> None:
-    # try to acces the status endpoint by explicitly writing a fake UUID into the HTTP header
+    # try to access the status endpoint by explicitly writing a fake UUID into the HTTP header
     uuid_ = uuid.uuid4()
     agent_receiver_response = requests.get(
         f"{agent_receiver_url}/registration_status/{uuid_}",
@@ -87,10 +87,7 @@ def test_uuid_check_client_certificate(agent_receiver_url: str) -> None:
         verify=False,
     )
     assert agent_receiver_response.status_code == HTTPStatus.BAD_REQUEST
-    assert (
-        "Verified client UUID (missing: no client certificate provided) does not match UUID in URL"
-        in agent_receiver_response.json()["detail"]
-    )
+    assert "No verified client certificate provided" in agent_receiver_response.json()["detail"]
 
 
 class KeyPairInfo(NamedTuple):

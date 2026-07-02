@@ -74,8 +74,9 @@ def mtls_authorization_dependency(
       this dependency
 
     Raises:
-        HTTPException: if the certificate CN doesn't match the URL UUID, or the
-            certificate wasn't issued by the expected CA
+        HTTPException: if no verified client certificate was presented (an
+            injected header is absent), if the certificate CN doesn't match the
+            URL UUID, or if the certificate wasn't issued by the expected CA
 
     Example:
         @router.post(
@@ -86,10 +87,21 @@ def mtls_authorization_dependency(
     """
 
     def _mtls_authorization_check(
-        header_uuid: Annotated[str, Header(alias=INJECTED_UUID_HEADER)],
-        header_issuer_cn: Annotated[str, Header(alias=INJECTED_ISSUER_HEADER)],
         path_uuid: Annotated[str, Path(alias=path_alias)],
+        header_uuid: Annotated[str | None, Header(alias=INJECTED_UUID_HEADER)] = None,
+        header_issuer_cn: Annotated[str | None, Header(alias=INJECTED_ISSUER_HEADER)] = None,
     ) -> None:
+        # A missing header means the worker injected no verified identity because
+        # no client certificate was presented. Reject explicitly -- never via the
+        # equality checks below, so an absent identity can never match a value the
+        # caller controls in the URL. Rejecting here also keeps the endpoint's
+        # deliberate status and the human-readable no-certificate message instead
+        # of FastAPI's default 422.
+        if header_uuid is None:
+            raise HTTPException(
+                status_code=failure_status_code,
+                detail="No verified client certificate provided",
+            )
         if header_uuid != path_uuid:
             raise HTTPException(
                 status_code=failure_status_code,

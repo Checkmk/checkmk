@@ -812,7 +812,7 @@ section_nfs_mounts() {
     proc_mounts_file=${1}
 
     if inpath waitmax; then
-        STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
+        STAT_VERSION=$(stat --version 2>/dev/null | head -1 | cut -d" " -f4)
         STAT_BROKE="5.3.0"
 
         json_templ() {

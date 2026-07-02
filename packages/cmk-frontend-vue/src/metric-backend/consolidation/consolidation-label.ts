@@ -38,8 +38,8 @@ function functionLabels(): Record<
       sum_delta: _t('Sum delta'),
       sum_rate: _t('Sum rate'),
       quantile: _t('Quantile'),
-      frac_below: _t('Fraction below'),
-      frac_between: _t('Fraction between'),
+      fraction_below: _t('Fraction below'),
+      fraction_between: _t('Fraction between'),
       last_value: _t('Cumulative sum field')
     }
   }
@@ -104,12 +104,12 @@ export function compactFunction(model: ConsolidationModel): string {
       const percentile = +((model.params.quantile ?? DEFAULT_QUANTILE) * 100).toFixed(2)
       return `p${percentile}`
     }
-    case 'frac_below':
-      return _t('fraction <%{value}', { value: model.params.fracBelow ?? '?' })
-    case 'frac_between':
+    case 'fraction_below':
+      return _t('fraction <%{value}', { value: model.params.fractionBelowThreshold ?? '?' })
+    case 'fraction_between':
       return _t('fraction %{lower}–%{upper}', {
-        lower: model.params.fracLower ?? '?',
-        upper: model.params.fracUpper ?? '?'
+        lower: model.params.fractionLowerThreshold ?? '?',
+        upper: model.params.fractionUpperThreshold ?? '?'
       })
   }
 }

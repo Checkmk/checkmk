@@ -36,15 +36,19 @@ test('quantile renders as a lowercase percentile token, keeping up to two decima
 test('fraction functions render their thresholds', () => {
   expect(
     compactFunction(
-      model({ type: 'histogram', function: 'frac_below', params: { fracBelow: 0.2 } })
+      model({
+        type: 'histogram',
+        function: 'fraction_below',
+        params: { fractionBelowThreshold: 0.2 }
+      })
     )
   ).toBe('fraction <0.2')
   expect(
     compactFunction(
       model({
         type: 'histogram',
-        function: 'frac_between',
-        params: { fracLower: 0.1, fracUpper: 0.9 }
+        function: 'fraction_between',
+        params: { fractionLowerThreshold: 0.1, fractionUpperThreshold: 0.9 }
       })
     )
   ).toBe('fraction 0.1–0.9')

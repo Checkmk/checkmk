@@ -23,20 +23,20 @@ export type ConsolidationFunction =
   | 'sum_rate'
   | 'sum_delta'
   | 'quantile'
-  | 'frac_below'
-  | 'frac_between'
+  | 'fraction_below'
+  | 'fraction_between'
 
 export const DEFAULT_QUANTILE = 0.95
 
 export interface ConsolidationParams {
   /** For 'quantile': the quantile in the range 0–1 (default 0.95). */
   quantile?: number
-  /** For 'frac_below': the upper threshold. */
-  fracBelow?: number
-  /** For 'frac_between': the lower threshold. */
-  fracLower?: number
-  /** For 'frac_between': the upper threshold. */
-  fracUpper?: number
+  /** For 'fraction_below': the upper threshold. */
+  fractionBelowThreshold?: number
+  /** For 'fraction_between': the lower threshold. */
+  fractionLowerThreshold?: number
+  /** For 'fraction_between': the upper threshold. */
+  fractionUpperThreshold?: number
 }
 
 export interface ConsolidationModel {
@@ -73,8 +73,8 @@ export const CONSOLIDATION_CATALOG: Record<MetricType, FunctionSpec[]> = {
     { fn: 'sum_delta', raw: false, output: 'float' },
     { fn: 'sum_rate', raw: false, output: 'float' },
     { fn: 'quantile', raw: false, output: 'float' },
-    { fn: 'frac_below', raw: false, output: 'float' },
-    { fn: 'frac_between', raw: false, output: 'float' },
+    { fn: 'fraction_below', raw: false, output: 'float' },
+    { fn: 'fraction_between', raw: false, output: 'float' },
     { fn: 'last_value', raw: true, output: 'float' }
   ]
 }

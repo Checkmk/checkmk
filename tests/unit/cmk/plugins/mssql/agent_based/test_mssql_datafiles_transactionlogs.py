@@ -223,6 +223,11 @@ def test_discovery_mssql_transactionlogs(
                     # capped at allocated (256 MiB) + free (100 MiB)
                     summary="Maximum size: 356 MiB",
                 ),
+                Result(
+                    state=State.OK,
+                    notice="The defined maximum size cannot be reached due to insufficient "
+                    "filesystem space. Capped at the available filesystem space.",
+                ),
             ],
         ),
     ],
@@ -472,6 +477,59 @@ def test_datafile_on_different_mounts() -> None:
     # starved is limited by its filesystem: free (10) + allocated (50); its max_size (100000) is larger.
     # roomy is limited by its max_size (1000); its filesystem free (2000) + allocated (60) is larger.
     assert usage.max == 10 + 50 + 1000
+
+
+def test_datafile_usage_capped_by_filesystem_provenance() -> None:
+    capped: msdt.MSSQLInstanceData = {
+        "unlimited": False,
+        "max_size": 100000,
+        "allocated_size": 50,
+        "used_size": 7,
+        "mountpoint": "z:\\data\\file.mdf",
+    }
+    not_capped: msdt.MSSQLInstanceData = {
+        "unlimited": False,
+        "max_size": 100,
+        "allocated_size": 50,
+        "used_size": 7,
+        "mountpoint": "z:\\data\\file.mdf",
+    }
+
+    # free (10) is below the headroom (max 100000 - allocated 50) -> filesystem is the binding
+    # constraint, so the file cannot reach its defined maximum.
+    capped_usage = msdt._datafile_usage([capped], {"z:/": 10})
+    assert capped_usage.capped_by_filesystem is True
+
+    # free (1000) exceeds the headroom (max 100 - allocated 50) -> the configured maximum is the
+    # binding constraint, the filesystem is not.
+    not_capped_usage = msdt._datafile_usage([not_capped], {"z:/": 1000})
+    assert not_capped_usage.capped_by_filesystem is False
+
+    # No filesystem information at all is never reported as capped by the filesystem.
+    no_df_usage = msdt._datafile_usage([capped], {})
+    assert no_df_usage.capped_by_filesystem is False
+
+
+def test_datafile_usage_unlimited_neighbour_still_reports_capped_limited_file() -> None:
+    limited: msdt.MSSQLInstanceData = {
+        "unlimited": False,
+        "max_size": 100000,
+        "allocated_size": 50,
+        "used_size": 7,
+        "mountpoint": "z:\\data\\a.mdf",
+    }
+    unlimited: msdt.MSSQLInstanceData = {
+        "unlimited": True,
+        "max_size": 0,
+        "allocated_size": 4,
+        "used_size": 2,
+        "mountpoint": "z:\\data\\b.mdf",
+    }
+
+    usage = msdt._datafile_usage([limited, unlimited], {"z:/": 10})
+
+    assert usage.max == 50 + 4 + 10
+    assert usage.capped_by_filesystem is True
 
 
 def test_datafile_usage_shared_mountpoint_counts_free_space_once() -> None:

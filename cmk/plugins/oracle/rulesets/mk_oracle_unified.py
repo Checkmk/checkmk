@@ -157,37 +157,33 @@ SECTIONS: Sequence[SectionOptions] = (
 )
 
 
-def _auth_roles_choices() -> SingleChoice:
-    return SingleChoice(
-        title=Title("Role"),
-        help_text=Help("Specifies the database privilege role used when connecting to Oracle."),
-        elements=[
-            SingleChoiceElement(
-                name="sysdba",
-                title=Title("SYSDBA"),
-            ),
-            SingleChoiceElement(
-                name="sysoper",
-                title=Title("SYSOPER"),
-            ),
-            SingleChoiceElement(
-                name="sysasm",
-                title=Title("SYSASM"),
-            ),
-            SingleChoiceElement(
-                name="sysbackup",
-                title=Title("SYSBACKUP"),
-            ),
-            SingleChoiceElement(
-                name="sysdg",
-                title=Title("SYSDG"),
-            ),
-            SingleChoiceElement(
-                name="syskm",
-                title=Title("SYSKM"),
-            ),
-        ],
-    )
+def _auth_roles() -> list[SingleChoiceElement]:
+    return [
+        SingleChoiceElement(
+            name="sysdba",
+            title=Title("SYSDBA"),
+        ),
+        SingleChoiceElement(
+            name="sysoper",
+            title=Title("SYSOPER"),
+        ),
+        SingleChoiceElement(
+            name="sysasm",
+            title=Title("SYSASM"),
+        ),
+        SingleChoiceElement(
+            name="sysbackup",
+            title=Title("SYSBACKUP"),
+        ),
+        SingleChoiceElement(
+            name="sysdg",
+            title=Title("SYSDG"),
+        ),
+        SingleChoiceElement(
+            name="syskm",
+            title=Title("SYSKM"),
+        ),
+    ]
 
 
 def _auth_options(is_default_options: bool = True) -> Dictionary:
@@ -252,8 +248,50 @@ def _auth_options(is_default_options: bool = True) -> Dictionary:
                 required=is_default_options,
             ),
             "role": DictElement(
-                parameter_form=_auth_roles_choices(),
+                parameter_form=SingleChoice(
+                    title=Title("Role"),
+                    help_text=Help(
+                        "Specifies the database privilege role used when connecting to Oracle."
+                    ),
+                    elements=_auth_roles(),
+                ),
                 required=False,
+            ),
+            "asm_auth": DictElement(
+                required=False,
+                parameter_form=Dictionary(
+                    title=Title("ASM Authentication"),
+                    help_text=Help(
+                        "Separate credentials for accessing ASM. If omitted, the main "
+                        "authentication above is reused."
+                    ),
+                    elements={
+                        "username": DictElement(
+                            parameter_form=String(
+                                title=Title("ASM Username"),
+                                custom_validate=(validators.LengthInRange(min_value=1),),
+                            ),
+                            required=True,
+                        ),
+                        "password": DictElement(
+                            parameter_form=Password(
+                                title=Title("ASM Password"),
+                                custom_validate=(validators.LengthInRange(min_value=1),),
+                            ),
+                            required=True,
+                        ),
+                        "role": DictElement(
+                            parameter_form=SingleChoice(
+                                title=Title("ASM Role"),
+                                help_text=Help(
+                                    "Specifies the database privilege role used when connecting to Oracle."
+                                ),
+                                elements=_auth_roles(),
+                            ),
+                            required=False,
+                        ),
+                    },
+                ),
             ),
         },
     )

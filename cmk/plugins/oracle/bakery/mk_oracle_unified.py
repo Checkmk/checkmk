@@ -151,9 +151,16 @@ class GuiAuthUserPasswordData(BaseModel):
     password: Secret | None
 
 
+class GuiAsmAuthConf(BaseModel):
+    username: str
+    password: Secret
+    role: str | None = None
+
+
 class GuiAuthConf(BaseModel):
     auth_type: tuple[OracleAuthType, GuiAuthUserPasswordData | None] | None = None
     role: str | None = None
+    asm_auth: GuiAsmAuthConf | None = None
 
     class Config:
         use_enum_values = True
@@ -250,6 +257,9 @@ class OracleAuth(BaseModel):
     username: str | None = None
     password: str | None = None
     role: str | None = None
+    asm_username: str | None = None
+    asm_password: str | None = None
+    asm_role: str | None = None
     type: OracleAuthType | None = None
 
     class Config:
@@ -355,20 +365,35 @@ def _get_oracle_dict(config: GuiConfig) -> OracleMain:
 def _get_oracle_authentication(auth_config: GuiAuthConf | None) -> OracleAuth | None:
     if auth_config is None:
         return None
-    if auth_config.auth_type is None and auth_config.role:
-        return OracleAuth(role=auth_config.role)
+
+    asm_username = auth_config.asm_auth.username if auth_config.asm_auth else None
+    asm_password = auth_config.asm_auth.password.revealed if auth_config.asm_auth else None
+    asm_role = auth_config.asm_auth.role if auth_config.asm_auth else None
+    username: str | None = None
+    password: str | None = None
+    auth_type: OracleAuthType | None = None
+
     match auth_config.auth_type:
+        case None:
+            if not auth_config.role and not auth_config.asm_auth:
+                return None
         case (OracleAuthType.WALLET.value, _):
-            return OracleAuth(type=OracleAuthType.WALLET, role=auth_config.role)
+            auth_type = OracleAuthType.WALLET
         case (OracleAuthType.STANDARD.value, GuiAuthUserPasswordData() as auth_data):
-            return OracleAuth(
-                username=auth_data.username,
-                password=auth_data.password.revealed if auth_data.password else None,
-                type=OracleAuthType.STANDARD,
-                role=auth_config.role,
-            )
+            username = auth_data.username
+            password = auth_data.password.revealed if auth_data.password else None
+            auth_type = OracleAuthType.STANDARD
         case _:
             raise ValueError(f"Unsupported authentication type: {auth_config.auth_type}")
+    return OracleAuth(
+        username=username,
+        password=password,
+        type=auth_type,
+        role=auth_config.role,
+        asm_role=asm_role,
+        asm_username=asm_username,
+        asm_password=asm_password,
+    )
 
 
 def _get_oracle_connection(conn: GuiConnectionConf | None) -> OracleConnection | None:

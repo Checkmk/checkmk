@@ -16,8 +16,16 @@ description:
  This check has been developed with ProLiant DL360 G5 systems but should work
  on other HPE Proliant Servers too.
 
+ The reported controller condition, board condition and board status can each
+ take the value {other}, which by default maps to {WARN}. On ProLiant Gen11 /
+ iLO 6 the board condition is reported as {other} for perfectly healthy
+ controllers; the check parameters allow remapping the state for the {other}
+ value of each field independently.
+
 item:
  Index of the controller
 
 discovery:
- One service is created for each raid controller.
+ One service is created for each RAID controller. Placeholder rows that report
+ no valid controller data (all-zero cells, as seen on Gen11 / iLO 6) are
+ skipped.

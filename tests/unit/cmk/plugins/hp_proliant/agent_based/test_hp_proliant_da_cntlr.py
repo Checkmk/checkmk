@@ -8,7 +8,9 @@ from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.hp_proliant.agent_based.hp_proliant_da_cntlr import (
     check_hp_proliant_da_cntlr,
     ControllerID,
+    DEFAULT_PARAMETERS,
     discovery_hp_proliant_da_cntlr,
+    Params,
     parse_hp_proliant_da_cntlr,
 )
 
@@ -21,13 +23,14 @@ STRING_TABLE = [
 
 
 def test_discovery() -> None:
+    # The all-zero placeholder row ("9") is a phantom controller and must not be
+    # discovered, otherwise its service is permanently UNKNOWN.
     assert list(
         discovery_hp_proliant_da_cntlr(section=parse_hp_proliant_da_cntlr(STRING_TABLE))
     ) == [
         Service(item="0"),
         Service(item="3"),
         Service(item="6"),
-        Service(item="9"),
     ]
 
 
@@ -73,7 +76,34 @@ def test_discovery() -> None:
 def test_check(item: ControllerID, expected: list[Result]) -> None:
     assert (
         list(
-            check_hp_proliant_da_cntlr(item=item, section=parse_hp_proliant_da_cntlr(STRING_TABLE))
+            check_hp_proliant_da_cntlr(
+                item=item,
+                params=DEFAULT_PARAMETERS,
+                section=parse_hp_proliant_da_cntlr(STRING_TABLE),
+            )
         )
         == expected
     )
+
+
+def test_check_remap_other_state() -> None:
+    # Controller "6" reports Board-Condition = other (WARN by default); on
+    # Gen11 / iLO 6 this is normal for healthy controllers. Remapping the
+    # "other" board condition to OK clears the false WARN.
+    params: Params = {
+        **DEFAULT_PARAMETERS,
+        "board_condition_other_state": State.OK.value,
+    }
+    assert list(
+        check_hp_proliant_da_cntlr(
+            item="6",
+            params=params,
+            section=parse_hp_proliant_da_cntlr(STRING_TABLE),
+        )
+    ) == [
+        Result(
+            state=State.OK,
+            summary="Condition: ok, Board-Condition: other, Board-Status: enabled (Role: other, Model: 1, Slot: 6, Serial: PEYHN0ARCC307J)",
+            details="The instrument agent does not recognize the status of the controller. You may need to upgrade the instrument agent.",
+        )
+    ]

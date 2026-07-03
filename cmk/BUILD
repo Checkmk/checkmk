@@ -219,7 +219,6 @@ py_requirements_test(
         "setuptools-scm",
         "pysmi",  # used outside of cmk/ in omd/packages/net-snmp/compile_mibs.py
         "openapi-spec-validator",  # only imported by tests
-        "matplotlib",  # CMK-35581: wired up ahead of the actual usage landing
     ],
     libs = [
         # cloud and ultimatemt each transitively pull in ultimate -> pro -> community,

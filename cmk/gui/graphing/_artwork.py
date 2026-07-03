@@ -32,6 +32,7 @@ from cmk.gui.unit_formatter import (
 )
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
+from ._engine_series import get_step_label
 from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
@@ -1003,11 +1004,3 @@ def _add_step_to_title(title_label: str, step: int) -> str:
     if title_label is None:
         return step_label
     return f"{title_label} @ {step_label}"
-
-
-def get_step_label(step: int) -> str:
-    if step < 3600:
-        return "%dm" % (step / 60)
-    if step < 86400:
-        return "%dh" % (step / 3600)
-    return "%dd" % (step / 86400)

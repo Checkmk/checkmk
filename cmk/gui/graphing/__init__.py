@@ -35,7 +35,6 @@ from ._graph_display_config import (
 from ._graph_images import (
     graph_spec_from_request,
     GraphSpec,
-    render_graph_png,
 )
 from ._graph_metric_expressions import (
     GraphConsolidationFunction,
@@ -49,6 +48,7 @@ from ._graph_pdf import (
     get_mm_per_ex,
     render_graph_pdf,
 )
+from ._graph_png import render_png
 from ._graph_specification import (
     GraphEnvironment,
     GraphMetric,
@@ -211,7 +211,7 @@ __all__ = [
     "perfometers_from_api",
     "registered_metric_ids_and_titles",
     "render_graph_pdf",
-    "render_graph_png",
+    "render_png",
     "render_deferred_graphs_html",
     "render_engine_graph_group",
     "render_graphs_html",

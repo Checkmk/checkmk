@@ -96,7 +96,8 @@ describe('markdown.parse - scope of replacement', () => {
 describe('markdown - constructor options', () => {
   test('breaks: true converts single newlines into <br>', async () => {
     const html = await parse('first line\nsecond line')
-    expect(html).toContain('<br>')
+    // sanitize-html re-serializes void elements as self-closing (<br />).
+    expect(html).toMatch(/<br\s*\/?>/)
   })
 })
 
@@ -242,5 +243,62 @@ describe('stripQualityLineFromText - single-strip invariant', () => {
     expect(remaining).toHaveLength(1)
     expect(stripped).toContain('Data Quality: **Low**')
     expect(stripped).toContain('Body.')
+  })
+})
+
+describe('markdown.parse - sanitization', () => {
+  test('neutralizes hostile HTML echoed back in the answer', async () => {
+    const hostile = [
+      'Raw script tag: <script>alert("xss-script")</script>',
+      'Image with error handler: <img src="x" onerror="alert(\'xss-img\')">',
+      'SVG onload: <svg onload="alert(\'xss-svg\')"></svg>',
+      'Iframe: <iframe src="javascript:alert(\'xss-iframe\')"></iframe>',
+      'Styled span with handler: <span onmouseover="alert(\'xss-span\')" style="background:red">hover me</span>',
+      "JavaScript URL link: [click me](javascript:alert('xss-link'))",
+      'Data URL link: [data url](data:text/html,<script>alert(1)</script>)',
+      'Entities stay text: &lt;script&gt;alert(1)&lt;/script&gt;',
+      'Mixed case: <ScRiPt>alert("xss-case")</ScRiPt>'
+    ].join('\n\n')
+
+    const html = await parse(hostile)
+
+    expect(html).not.toMatch(/<script/i)
+    expect(html).not.toMatch(/<svg/i)
+    expect(html).not.toMatch(/<iframe/i)
+    expect(html).not.toMatch(/<img/i)
+    expect(html).not.toMatch(/\son\w+=/i)
+    expect(html).not.toContain('javascript:')
+    expect(html).not.toContain('data:text/html')
+    expect(html).not.toContain('style=')
+    expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
+  })
+
+  test('preserves legitimate markdown formatting and badges', async () => {
+    const md = [
+      '# Summary',
+      '',
+      'A **bold** and *italic* note with a [link](https://example.com) and `inline code`.',
+      '',
+      '| Metric | Status |',
+      '|--------|--------|',
+      '| Used   | crit   |',
+      '',
+      '# Service context',
+      '',
+      '* item one',
+      '* item two',
+      ''
+    ].join('\n')
+
+    const html = await parse(md)
+
+    expect(html).toContain('<h1>Summary</h1>')
+    expect(html).toContain('<strong>bold</strong>')
+    expect(html).toContain('<em>italic</em>')
+    expect(html).toContain('<a href="https://example.com">link</a>')
+    expect(html).toContain('<code>inline code</code>')
+    expect(html).toMatch(/<td[^>]*>Used<\/td>/)
+    expect(html).toContain(badge('crit'))
+    expect(html).toContain('class="ai-markdown-content__service-context"')
   })
 })

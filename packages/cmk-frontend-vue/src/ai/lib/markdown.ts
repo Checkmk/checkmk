@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { Marked, type Token, type Tokens } from 'marked'
+import sanitizeHtml from 'sanitize-html'
 
 type State = 'ok' | 'warn' | 'crit' | 'unknown'
 
@@ -91,6 +92,63 @@ const markdown = new Marked({
   }
 })
 
+// The rendered markdown is bound via v-html, so it must be sanitized: marked v17
+// no longer strips HTML, and the answer text can echo attacker-controlled
+// monitoring data (indirect prompt injection). The allowlist covers exactly what
+// the renderer legitimately emits -- tables, state badges (span + class), special
+// list classes, headings, code -- which is why we sanitize here instead of reusing
+// the CmkHtml component, whose narrower allowlist would strip those.
+const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [
+    'p',
+    'br',
+    'hr',
+    'blockquote',
+    'pre',
+    'code',
+    'span',
+    'strong',
+    'em',
+    'b',
+    'i',
+    's',
+    'del',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'ul',
+    'ol',
+    'li',
+    'table',
+    'thead',
+    'tbody',
+    'tr',
+    'th',
+    'td',
+    'a'
+  ],
+  allowedAttributes: {
+    a: ['href', 'title'],
+    th: ['align'],
+    td: ['align']
+  },
+  allowedClasses: {
+    span: [
+      'ai-markdown-content__badge',
+      'ai-markdown-content__badge--ok',
+      'ai-markdown-content__badge--warn',
+      'ai-markdown-content__badge--crit',
+      'ai-markdown-content__badge--unknown'
+    ],
+    ul: ['ai-markdown-content__service-context'],
+    ol: ['ai-markdown-content__recommended-actions']
+  },
+  allowedSchemes: ['http', 'https', 'mailto']
+}
+
 export async function parseMarkdown(text: string): Promise<string> {
-  return markdown.parse(text)
+  return sanitizeHtml(await markdown.parse(text), SANITIZE_OPTIONS)
 }

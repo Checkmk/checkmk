@@ -45,6 +45,7 @@ RUN zypper ref -s && \
         libevent-devel \
         libexpat-devel \
         libgnutls-devel \
+        libgsf \
         libjpeg62-devel \
         libltdl7 \
         libmariadb-devel \

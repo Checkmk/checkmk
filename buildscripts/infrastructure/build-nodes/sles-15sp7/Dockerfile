@@ -19,6 +19,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp7 sles15sp7 \
     enchant-devel \
     git \
     krb5-devel \
+    libgsf \
     make \
     python \
     python3-devel \

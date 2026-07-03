@@ -24,20 +24,31 @@ from cmk.graphing_engine import (
     SINotation,
     Stack,
     StandardScientificNotation,
+    StrictPrecision,
     TimeNotation,
     Unit,
 )
 from cmk.gui.graphing._engine_codec import community_graph_codec
 from cmk.gui.graphing._engine_dispatch import serialize_graphs
 from cmk.gui.graphing._frontend import (
+    derive_y_axis,
     global_time_picker_props,
     resolve_default_time_range_seconds,
     to_cmk_time_series_graph,
+    unit_to_unit_format,
 )
 from cmk.gui.type_defs import GraphTimerange
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
 from cmk.gui.valuespec import DropdownChoice
-from cmk.shared_typing.cmk_time_series_graph import GraphHeader, GraphOptions, Interaction, Size
+from cmk.shared_typing.cmk_time_series_graph import (
+    GraphHeader,
+    GraphOptions,
+    Interaction,
+    Precision,
+    Size,
+    UnitFormat,
+    YAxis,
+)
 from cmk.shared_typing.global_time_picker import CustomGraphTimeRange, FirstDayOfWeek
 
 _Notation = (
@@ -81,7 +92,12 @@ def test_to_cmk_time_series_graph_shell() -> None:
         header=GraphHeader(title="My Graph", show_graph_time=True),
         name="mygraph",
         x_axis=None,
-        y_axis=None,
+        y_axis=YAxis(
+            title="",
+            unit=UnitFormat(
+                notation="decimal", symbol="X", precision=Precision(type="auto", digits=2)
+            ),
+        ),
         font_size_pt=8.0,
     )
     assert result.interaction == Interaction(
@@ -191,3 +207,74 @@ def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
     assert result.options.header.title == "My Graph"
     [restored] = community_graph_codec().deserialize_graphs(json.loads(result.internal))
     assert restored == graph
+
+
+def test_unit_to_unit_format_decimal_auto_precision() -> None:
+    unit = Unit(notation=DecimalNotation("%"), precision=AutoPrecision(2))
+    assert unit_to_unit_format(unit) == UnitFormat(
+        notation="decimal", symbol="%", precision=Precision(type="auto", digits=2)
+    )
+
+
+def test_unit_to_unit_format_si_strict_precision() -> None:
+    unit = Unit(notation=SINotation("B/s"), precision=StrictPrecision(3))
+    assert unit_to_unit_format(unit) == UnitFormat(
+        notation="si", symbol="B/s", precision=Precision(type="strict", digits=3)
+    )
+
+
+def test_unit_to_unit_format_covers_every_notation() -> None:
+    for notation, expected in (
+        (IECNotation("B"), "iec"),
+        (StandardScientificNotation(""), "standard_scientific"),
+        (EngineeringScientificNotation(""), "engineering_scientific"),
+        (TimeNotation(), "time"),
+    ):
+        unit = Unit(notation=notation, precision=AutoPrecision(2))
+        assert unit_to_unit_format(unit).notation == expected
+
+
+def test_derive_y_axis_takes_the_unit_of_the_first_stack_member() -> None:
+    graph = Graph(
+        name="mygraph",
+        title="My Graph",
+        kind="template",
+        stacks=[
+            Stack(
+                members=[
+                    Curve(
+                        quantity=_RRD, attributes=CurveAttributes(title="m", unit=_UNIT, color="#m")
+                    )
+                ],
+                inverse=False,
+            )
+        ],
+    )
+    assert derive_y_axis(graph) == YAxis(
+        title="",
+        unit=UnitFormat(notation="decimal", symbol="X", precision=Precision(type="auto", digits=2)),
+    )
+
+
+def test_derive_y_axis_falls_back_to_a_line_when_there_are_no_stacks() -> None:
+    graph = Graph(
+        name="mygraph",
+        title="My Graph",
+        kind="template",
+        lines=[
+            Line(
+                curve=Curve(
+                    quantity=_RRD, attributes=CurveAttributes(title="l", unit=_UNIT, color="#l")
+                ),
+                inverse=False,
+            )
+        ],
+    )
+    y_axis = derive_y_axis(graph)
+    assert y_axis is not None
+    assert y_axis.unit.symbol == "X"
+
+
+def test_derive_y_axis_is_none_for_a_graph_with_no_curves() -> None:
+    graph = Graph(name="mygraph", title="Empty", kind="template")
+    assert derive_y_axis(graph) is None

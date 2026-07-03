@@ -6,11 +6,22 @@
 import json
 from collections.abc import Iterable, Sequence
 from dataclasses import asdict
-from typing import Final
+from typing import assert_never, Final, Literal
 
 from tzlocal import get_localzone_name
 
-from cmk.graphing_engine import Graph
+from cmk.graphing_engine import (
+    AutoPrecision,
+    DecimalNotation,
+    EngineeringScientificNotation,
+    Graph,
+    IECNotation,
+    SINotation,
+    StandardScientificNotation,
+    StrictPrecision,
+    TimeNotation,
+    Unit,
+)
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui.config import active_config
@@ -25,7 +36,9 @@ from cmk.shared_typing.cmk_time_series_graph import (
     GraphHeader,
     GraphOptions,
     Interaction,
+    Precision,
     Size,
+    UnitFormat,
     XAxis,
     YAxis,
 )
@@ -121,6 +134,63 @@ def _add_to(specification: GraphSpecification | None, internal: str) -> AddTo | 
     return AddTo(type=add_type, specification=specification.model_dump(), internal=internal)
 
 
+def unit_to_unit_format(unit: Unit) -> UnitFormat:
+    """Translate an engine ``Unit`` into the shared ``UnitFormat`` the Vue graph already speaks."""
+    notation: Literal[
+        "decimal", "si", "iec", "standard_scientific", "engineering_scientific", "time"
+    ]
+    match unit.notation:
+        case DecimalNotation():
+            notation = "decimal"
+        case SINotation():
+            notation = "si"
+        case IECNotation():
+            notation = "iec"
+        case StandardScientificNotation():
+            notation = "standard_scientific"
+        case EngineeringScientificNotation():
+            notation = "engineering_scientific"
+        case TimeNotation():
+            notation = "time"
+        case _:
+            assert_never(unit.notation)
+
+    precision: Precision
+    match unit.precision:
+        case AutoPrecision():
+            precision = Precision(type="auto", digits=unit.precision.digits)
+        case StrictPrecision():
+            precision = Precision(type="strict", digits=unit.precision.digits)
+        case _:
+            assert_never(unit.precision)
+
+    return UnitFormat(notation=notation, symbol=unit.notation.symbol, precision=precision)
+
+
+def y_axis_from_units(units: Iterable[Unit]) -> YAxis | None:
+    """The Y-axis derived from the first of an ordered sequence of curve units.
+
+    Every curve in a graph draws in one shared unit (enforced backend-side), so the axis unit is
+    the unit of any curve; None when there are no units at all, in which case the renderer falls
+    back to raw, unit-less ticks. Shared by derive_y_axis (the pre-evaluation Graph, here) and
+    _graph_png._derive_y_axis (the EvaluatedGraph), which carries the same CurveAttributes.unit
+    on its curves but has no common curve type to walk with this one.
+    """
+    return next((YAxis(title="", unit=unit_to_unit_format(unit)) for unit in units), None)
+
+
+def derive_y_axis(graph: Graph) -> YAxis | None:
+    """Derive the Y-axis (its unit) from the graph's own curves.
+
+    Mirrors yAxis.ts:deriveYAxis - template, single-timeseries and combined graphs draw every
+    curve in one unit (enforced backend-side), so the axis unit is the unit of any curve. None
+    when the graph has no curves; the renderer then falls back to raw, unit-less ticks.
+    """
+    return y_axis_from_units(
+        member.attributes.unit for stack in graph.stacks for member in stack.members
+    ) or y_axis_from_units(line.curve.attributes.unit for line in graph.lines)
+
+
 def to_cmk_time_series_graph(
     graph: Graph,
     *,
@@ -132,7 +202,11 @@ def to_cmk_time_series_graph(
     y_axis: YAxis | None = None,
     add_to_specification: GraphSpecification | None = None,
 ) -> CmkTimeSeriesGraph:
-    """Translate an engine graph definition into the shared ``CmkTimeSeriesGraph``."""
+    """Translate an engine graph definition into the shared ``CmkTimeSeriesGraph``.
+
+    ``y_axis`` defaults to ``derive_y_axis(graph)`` so every caller - the Vue graph group and
+    the PNG renderer alike - gets the same server-derived axis without re-deriving it.
+    """
     internal = json.dumps(serialize_graphs([graph]))
     return CmkTimeSeriesGraph(
         size=size,
@@ -140,7 +214,7 @@ def to_cmk_time_series_graph(
             header=GraphHeader(title=graph.title, show_graph_time=show_graph_time),
             name=graph.name,
             x_axis=x_axis,
-            y_axis=y_axis,
+            y_axis=y_axis if y_axis is not None else derive_y_axis(graph),
             font_size_pt=font_size_pt,
         ),
         interaction=interaction,

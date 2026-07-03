@@ -21934,6 +21934,10 @@ msgstr "Keine Legende für die Verfügbarkeitslevels zeigen"
 msgid "Do not display plug-in output in timeline"
 msgstr "Plugin-Ausgabe nicht in der Timeline anzeigen"
 
+#, fuzzy
+msgid "Do not display reboot required state"
+msgstr "Kein Datum anzeigen"
+
 msgid "Do not display the host name"
 msgstr "Keinen Host-Namen anzeigen"
 
@@ -32720,6 +32724,11 @@ msgstr ""
 "betrachtet."
 
 msgid ""
+"If a reboot is required, the selected status will be displayed. Default is "
+"warning."
+msgstr ""
+
+msgid ""
 "If a selection is set to <i>, this value differs between the selected hosts."
 "</i> Then, currently not all selected hosts share the same setting for this "
 "attribute. If you keep that selection, all hosts will keep their individual "
@@ -38490,11 +38499,6 @@ msgstr "Levels für das prozentuale Schrumpfen pro Zeitraum"
 
 msgid "Levels for time since last update"
 msgstr "Levels für die Zeit seit letztem Update"
-
-msgid "Levels for time until forced reboot due to pending important updates"
-msgstr ""
-"Levels für die Zeit bis zum erzwungenen Reboot aufgrund anstehender "
-"wichtiger Updates"
 
 msgid "Levels for total amount of connections"
 msgstr "Levels für Gesamtanzahl an Verbindungen"
@@ -59466,6 +59470,10 @@ msgstr "Service-Status-Gruppierung"
 
 msgid "Service state if no map rule matches"
 msgstr "Service-Zustand, wenn keine Map-Regel greift"
+
+#, fuzzy
+msgid "Service state if reboot required"
+msgstr "Service-Name ist erforderlich"
 
 msgid "Service state percentage"
 msgstr "Service-Zustand Prozentwert"
@@ -87076,6 +87084,10 @@ msgstr "Windows-Zeitdienst (Status)"
 msgid "Windows Time service peers"
 msgstr "Peers des Windows-Zeitdiensts"
 
+#, fuzzy
+msgid "Windows Update notification time"
+msgstr "Windows-Authentifizierung"
+
 msgid "Windows Updates"
 msgstr "Windows-Updates"
 
@@ -94955,6 +94967,17 @@ msgstr "Sie können diesen Reiter jetzt schließen."
 msgid "Copy code to clipboard"
 msgstr "Code in die Zwischenablage kopieren"
 
+#, fuzzy
+msgid "Microsoft Entra ID connections are only used by email checks"
+msgstr "Microsoft Entra-ID Verbindungen"
+
+msgid ""
+"A connection configured here only creates an OAuth2 token that the Check "
+"email, Check email delivery and Check mailboxes active checks use to "
+"authenticate against Microsoft 365 mailboxes. It is not a general-purpose "
+"identity provider or single sign-on connection."
+msgstr ""
+
 msgid "Tenant ID is required."
 msgstr "Tenant-ID ist erforderlich."
 
@@ -96696,6 +96719,11 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "Levels for time until forced reboot due to pending important updates"
+#~ msgstr ""
+#~ "Levels für die Zeit bis zum erzwungenen Reboot aufgrund anstehender "
+#~ "wichtiger Updates"
 
 #~ msgid "CPU utilization for appliances"
 #~ msgstr "CPU-Auslastung für Appliances"

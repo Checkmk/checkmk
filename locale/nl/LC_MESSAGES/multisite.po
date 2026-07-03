@@ -22888,6 +22888,10 @@ msgstr "Geen legende weergeven voor beschikbaarheidsniveaus"
 msgid "Do not display plug-in output in timeline"
 msgstr "Laat plugin uitvoer niet zien in tijdlijn"
 
+#, fuzzy
+msgid "Do not display reboot required state"
+msgstr "Geef geen datum weer"
+
 msgid "Do not display the host name"
 msgstr "Geef de hostnaam niet weer"
 
@@ -34334,6 +34338,11 @@ msgstr ""
 "beschouwd als een control plane knooppunt. Anders wordt het beschouwd als "
 "een worker node."
 
+msgid ""
+"If a reboot is required, the selected status will be displayed. Default is "
+"warning."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If a selection is set to <i>, this value differs between the selected hosts."
@@ -40234,10 +40243,6 @@ msgstr "Niveaus voor de procentuele inkrimping per tijdspanne"
 #, fuzzy
 msgid "Levels for time since last update"
 msgstr "Waarschuwingsniveau voor tijd sinds laatste bijwerking"
-
-msgid "Levels for time until forced reboot due to pending important updates"
-msgstr ""
-"Niveaus voor tijd tot gedwongen herstart wegens hangende belangrijke updates"
 
 msgid "Levels for total amount of connections"
 msgstr "Niveaus voor totaal aantal verbindingen"
@@ -62534,6 +62539,10 @@ msgstr "Groepering van dienstverleningsstatussen"
 
 msgid "Service state if no map rule matches"
 msgstr "Dienst status als er geen kaart regel overeenkomt"
+
+#, fuzzy
+msgid "Service state if reboot required"
+msgstr "als macro met de naam"
 
 msgid "Service state percentage"
 msgstr "Dienststaat percentage"
@@ -90999,6 +91008,10 @@ msgstr "Toon dienst status"
 msgid "Windows Time service peers"
 msgstr "Windows Diensten"
 
+#, fuzzy
+msgid "Windows Update notification time"
+msgstr "Windows-verificatie"
+
 msgid "Windows Updates"
 msgstr "Windows Updates"
 
@@ -99176,6 +99189,17 @@ msgid "Copy code to clipboard"
 msgstr "Geheim gekopieerd naar klembord"
 
 #, fuzzy
+msgid "Microsoft Entra ID connections are only used by email checks"
+msgstr "Checkpoint VSID verbindingen"
+
+msgid ""
+"A connection configured here only creates an OAuth2 token that the Check "
+"email, Check email delivery and Check mailboxes active checks use to "
+"authenticate against Microsoft 365 mailboxes. It is not a general-purpose "
+"identity provider or single sign-on connection."
+msgstr ""
+
+#, fuzzy
 msgid "Tenant ID is required."
 msgstr "is vereist"
 
@@ -100814,6 +100838,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Levels for time until forced reboot due to pending important updates"
+#~ msgstr ""
+#~ "Niveaus voor tijd tot gedwongen herstart wegens hangende belangrijke "
+#~ "updates"
 
 #, fuzzy
 #~ msgid "CPU utilization for appliances"

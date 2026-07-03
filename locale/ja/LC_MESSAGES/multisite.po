@@ -21790,6 +21790,10 @@ msgstr "可用性レベルの凡例を表示しない"
 msgid "Do not display plug-in output in timeline"
 msgstr "プラグインの出力をタイムラインに表示しない"
 
+#, fuzzy
+msgid "Do not display reboot required state"
+msgstr "日付を表示しない"
+
 msgid "Do not display the host name"
 msgstr "ホスト名を表示しない"
 
@@ -32542,6 +32546,11 @@ msgstr ""
 "ロールプレーンノードと見なします。そうでない場合は、ワーカーノードとみなされ"
 "ます。"
 
+msgid ""
+"If a reboot is required, the selected status will be displayed. Default is "
+"warning."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If a selection is set to <i>, this value differs between the selected hosts."
@@ -38213,9 +38222,6 @@ msgstr "時間軸ごとのパーセント縮小率のレベル"
 
 msgid "Levels for time since last update"
 msgstr "最終更新からの時間のレベル"
-
-msgid "Levels for time until forced reboot due to pending important updates"
-msgstr "重要なアップデート保留による強制再起動までの時間レベル"
 
 msgid "Levels for total amount of connections"
 msgstr "接続の合計量のレベル"
@@ -59323,6 +59329,10 @@ msgstr "サービスステータスのグループ化"
 
 msgid "Service state if no map rule matches"
 msgstr "一致するマップルールがない場合のサービス状態"
+
+#, fuzzy
+msgid "Service state if reboot required"
+msgstr "マクロ名は必須"
 
 msgid "Service state percentage"
 msgstr "サービス状態のパーセンテージ"
@@ -86088,6 +86098,10 @@ msgstr "サービスステータスを表示する"
 msgid "Windows Time service peers"
 msgstr "Windowsサービス"
 
+#, fuzzy
+msgid "Windows Update notification time"
+msgstr "Windows認証"
+
 msgid "Windows Updates"
 msgstr "Windows Updates"
 
@@ -94034,6 +94048,17 @@ msgid "Copy code to clipboard"
 msgstr "コードをクリップボードにコピーする"
 
 #, fuzzy
+msgid "Microsoft Entra ID connections are only used by email checks"
+msgstr "Checkpoint VSID接続"
+
+msgid ""
+"A connection configured here only creates an OAuth2 token that the Check "
+"email, Check email delivery and Check mailboxes active checks use to "
+"authenticate against Microsoft 365 mailboxes. It is not a general-purpose "
+"identity provider or single sign-on connection."
+msgstr ""
+
+#, fuzzy
 msgid "Tenant ID is required."
 msgstr "必須"
 
@@ -95701,6 +95726,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Levels for time until forced reboot due to pending important updates"
+#~ msgstr "重要なアップデート保留による強制再起動までの時間レベル"
 
 #~ msgid "CPU utilization for appliances"
 #~ msgstr "アプライアンスのCPU使用率"

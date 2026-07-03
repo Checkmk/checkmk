@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-07-02 06:05+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -22889,6 +22889,10 @@ msgstr "Não exibir legenda para níveis de disponibilidade"
 msgid "Do not display plug-in output in timeline"
 msgstr "Não mostrar a saída do plugin na linha de tempo"
 
+#, fuzzy
+msgid "Do not display reboot required state"
+msgstr "Não mostrar uma data"
+
 msgid "Do not display the host name"
 msgstr "Não mostrar o nome do anfitrião"
 
@@ -34336,6 +34340,11 @@ msgstr ""
 "Se um nó tiver qualquer uma destas funções, é considerado um nó do plano de "
 "controlo pelo Checkmk. Caso contrário, é considerado um nó de trabalho."
 
+msgid ""
+"If a reboot is required, the selected status will be displayed. Default is "
+"warning."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If a selection is set to <i>, this value differs between the selected hosts."
@@ -40220,11 +40229,6 @@ msgstr "Níveis para a percentagem de contracção por intervalo de tempo"
 #, fuzzy
 msgid "Levels for time since last update"
 msgstr "Nível de aviso para o tempo desde a última actualização"
-
-msgid "Levels for time until forced reboot due to pending important updates"
-msgstr ""
-"Níveis de tempo até à reinicialização forçada devido a actualizações "
-"importantes pendentes"
 
 msgid "Levels for total amount of connections"
 msgstr "Níveis para a quantidade total de ligações"
@@ -62530,6 +62534,10 @@ msgstr "Agrupamento do status do serviço"
 
 msgid "Service state if no map rule matches"
 msgstr "Estado do serviço se nenhuma regra do mapa corresponder"
+
+#, fuzzy
+msgid "Service state if reboot required"
+msgstr "como macro denominada"
 
 msgid "Service state percentage"
 msgstr "Percentagem do estado de serviço"
@@ -90920,6 +90928,10 @@ msgstr "Mostrar estado do serviço"
 msgid "Windows Time service peers"
 msgstr "Serviços Windows"
 
+#, fuzzy
+msgid "Windows Update notification time"
+msgstr "autenticação do Windows"
+
 msgid "Windows Updates"
 msgstr "Atualizações do Windows"
 
@@ -94341,7 +94353,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -94866,7 +94877,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -99070,6 +99080,17 @@ msgid "Copy code to clipboard"
 msgstr "Segredo copiado para a área de transferência"
 
 #, fuzzy
+msgid "Microsoft Entra ID connections are only used by email checks"
+msgstr "Ligações VSID da Check Point"
+
+msgid ""
+"A connection configured here only creates an OAuth2 token that the Check "
+"email, Check email delivery and Check mailboxes active checks use to "
+"authenticate against Microsoft 365 mailboxes. It is not a general-purpose "
+"identity provider or single sign-on connection."
+msgstr ""
+
+#, fuzzy
 msgid "Tenant ID is required."
 msgstr "é necessário"
 
@@ -100711,6 +100732,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Levels for time until forced reboot due to pending important updates"
+#~ msgstr ""
+#~ "Níveis de tempo até à reinicialização forçada devido a actualizações "
+#~ "importantes pendentes"
 
 #, fuzzy
 #~ msgid "CPU utilization for appliances"

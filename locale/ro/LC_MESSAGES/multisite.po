@@ -22958,6 +22958,10 @@ msgstr "Nu afișați legenda pentru nivelurile de disponibilitate"
 msgid "Do not display plug-in output in timeline"
 msgstr "Nu afișați ieșirea plugin-ului în cronologie"
 
+#, fuzzy
+msgid "Do not display reboot required state"
+msgstr "Nu afișați o dată"
+
 msgid "Do not display the host name"
 msgstr "Nu afișați numele gazdei"
 
@@ -34416,6 +34420,11 @@ msgstr ""
 "nod de plan de control. În caz contrar, acesta este considerat un nod de "
 "lucrător."
 
+msgid ""
+"If a reboot is required, the selected status will be displayed. Default is "
+"warning."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If a selection is set to <i>, this value differs between the selected hosts."
@@ -40358,11 +40367,6 @@ msgstr "Niveluri pentru contracția procentuală pe interval de timp"
 
 msgid "Levels for time since last update"
 msgstr "Niveluri pentru timpul scurs de la ultima actualizare"
-
-msgid "Levels for time until forced reboot due to pending important updates"
-msgstr ""
-"Niveluri pentru timpul până la repornirea forțată din cauza unor actualizări "
-"importante în așteptare"
 
 msgid "Levels for total amount of connections"
 msgstr "Niveluri pentru numărul total de conexiuni"
@@ -62714,6 +62718,10 @@ msgstr "Gruparea stării serviciului"
 msgid "Service state if no map rule matches"
 msgstr ""
 "Starea serviciului în cazul în care nicio regulă de hartă nu corespunde"
+
+#, fuzzy
+msgid "Service state if reboot required"
+msgstr "ca macro numit"
 
 msgid "Service state percentage"
 msgstr "Procentul de stare de serviciu"
@@ -91293,6 +91301,10 @@ msgstr "Afișați starea serviciului"
 msgid "Windows Time service peers"
 msgstr "Servicii Windows"
 
+#, fuzzy
+msgid "Windows Update notification time"
+msgstr "Autentificare Windows"
+
 msgid "Windows Updates"
 msgstr "Actualizări Windows"
 
@@ -99498,6 +99510,17 @@ msgid "Copy code to clipboard"
 msgstr "Copiați codurile în clipboard"
 
 #, fuzzy
+msgid "Microsoft Entra ID connections are only used by email checks"
+msgstr "Conexiuni Check Point VSID"
+
+msgid ""
+"A connection configured here only creates an OAuth2 token that the Check "
+"email, Check email delivery and Check mailboxes active checks use to "
+"authenticate against Microsoft 365 mailboxes. It is not a general-purpose "
+"identity provider or single sign-on connection."
+msgstr ""
+
+#, fuzzy
 msgid "Tenant ID is required."
 msgstr "este necesară"
 
@@ -101145,6 +101168,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Levels for time until forced reboot due to pending important updates"
+#~ msgstr ""
+#~ "Niveluri pentru timpul până la repornirea forțată din cauza unor "
+#~ "actualizări importante în așteptare"
 
 #, fuzzy
 #~ msgid "CPU utilization for appliances"

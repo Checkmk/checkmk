@@ -22660,6 +22660,10 @@ msgstr "Non visualizzare la legenda per i livelli di disponibilità"
 msgid "Do not display plug-in output in timeline"
 msgstr "Non mostrare l'output del plugin nella timeline"
 
+#, fuzzy
+msgid "Do not display reboot required state"
+msgstr "Non visualizzare una data"
+
 msgid "Do not display the host name"
 msgstr "Non visualizzare il nome dell'host"
 
@@ -34092,6 +34096,11 @@ msgstr ""
 "Se un nodo ha uno di questi ruoli, è considerato da Checkmk un nodo del "
 "piano di controllo. Altrimenti, è considerato un nodo lavoratore."
 
+msgid ""
+"If a reboot is required, the selected status will be displayed. Default is "
+"warning."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If a selection is set to <i>, this value differs between the selected hosts."
@@ -40008,11 +40017,6 @@ msgstr "Livelli per la crescita percentuale per intervallo di tempo"
 
 msgid "Levels for time since last update"
 msgstr "Livelli per il tempo trascorso dall'ultimo aggiornamento"
-
-msgid "Levels for time until forced reboot due to pending important updates"
-msgstr ""
-"Livelli di tempo fino al riavvio forzato a causa di aggiornamenti importanti "
-"in sospeso"
 
 msgid "Levels for total amount of connections"
 msgstr "Livelli per la quantità totale di connessioni"
@@ -62261,6 +62265,10 @@ msgstr "Raggruppamento dello stato di servizio"
 
 msgid "Service state if no map rule matches"
 msgstr "Stato del servizio se nessuna regola della mappa corrisponde"
+
+#, fuzzy
+msgid "Service state if reboot required"
+msgstr "Un nome per la macro è richiesto"
 
 msgid "Service state percentage"
 msgstr "Percentuale dello stato di servizio"
@@ -90736,6 +90744,10 @@ msgstr "Mostra lo stato del servizio"
 msgid "Windows Time service peers"
 msgstr "Servizi di Windows"
 
+#, fuzzy
+msgid "Windows Update notification time"
+msgstr "Autenticazione Windows"
+
 msgid "Windows Updates"
 msgstr "Aggiornamenti di Windows"
 
@@ -98934,6 +98946,17 @@ msgid "Copy code to clipboard"
 msgstr "Copiare i codici negli appunti"
 
 #, fuzzy
+msgid "Microsoft Entra ID connections are only used by email checks"
+msgstr "Connessioni VSID di Check Point"
+
+msgid ""
+"A connection configured here only creates an OAuth2 token that the Check "
+"email, Check email delivery and Check mailboxes active checks use to "
+"authenticate against Microsoft 365 mailboxes. It is not a general-purpose "
+"identity provider or single sign-on connection."
+msgstr ""
+
+#, fuzzy
 msgid "Tenant ID is required."
 msgstr "è necessario"
 
@@ -100575,6 +100598,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Levels for time until forced reboot due to pending important updates"
+#~ msgstr ""
+#~ "Livelli di tempo fino al riavvio forzato a causa di aggiornamenti "
+#~ "importanti in sospeso"
 
 #, fuzzy
 #~ msgid "CPU utilization for appliances"

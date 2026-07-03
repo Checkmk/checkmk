@@ -19,6 +19,7 @@ import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/F
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
+import type { CombinedGraphContentPresentation } from '@/dashboard/components/Wizard/types'
 
 import ColorSelector from '../ColorSelector/ColorSelector.vue'
 
@@ -37,6 +38,11 @@ const verticalAxisWidthMode = defineModel<'fixed' | 'absolute'>('verticalAxisWid
 })
 const fixedVerticalAxisWidth = defineModel<number>('fixedVerticalAxisWidth', { required: true })
 
+const presentation = defineModel<CombinedGraphContentPresentation>('presentation', {
+  required: false,
+  default: undefined
+})
+
 const fontSize = defineModel<number>('fontSize', { required: true })
 const color = defineModel<string>('color', { required: false, default: undefined })
 const timestamp = defineModel<boolean>('timestamp', { required: true })
@@ -48,6 +54,7 @@ const showBurgerMenu = defineModel<boolean>('showBurgerMenu', { required: true }
 const dontFollowTimerange = defineModel<boolean>('dontFollowTimerange', { required: true })
 
 const displayColorChooser = computed(() => color.value !== undefined && colorOptions.length > 0)
+const displayPresentation = computed(() => presentation.value !== undefined)
 </script>
 
 <template>
@@ -91,6 +98,33 @@ const displayColorChooser = computed(() => color.value !== undefined && colorOpt
     <TableFormRow>
       <FieldDescription>{{ _t('Graph styling') }}</FieldDescription>
       <FieldComponent>
+        <div v-if="displayPresentation">
+          <CmkLabel>{{ _t('Presentation') }}</CmkLabel>
+          <CmkIndent>
+            <CmkDropdown
+              :selected-option="presentation ?? null"
+              :label="_t('Select presentation')"
+              :options="{
+                type: 'fixed',
+                suggestions: [
+                  { name: 'lines', title: _t('Lines') },
+                  { name: 'stacked', title: _t('Stacked') },
+                  { name: 'sum', title: _t('Sum') },
+                  { name: 'average', title: _t('Average') },
+                  { name: 'min', title: _t('Minimum') },
+                  { name: 'max', title: _t('Maximum') }
+                ]
+              }"
+              @update:selected-option="
+                (value) => {
+                  if (value !== null) {
+                    presentation = value as CombinedGraphContentPresentation
+                  }
+                }
+              "
+            />
+          </CmkIndent>
+        </div>
         <div>
           <CmkLabel>{{ _t('Font size') }}</CmkLabel>
           <CmkIndent>

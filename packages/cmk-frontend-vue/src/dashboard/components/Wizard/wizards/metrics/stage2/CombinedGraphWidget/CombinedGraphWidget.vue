@@ -79,6 +79,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
 
   <CmkCatalogPanel :title="_t('Additional graph options')" variant="padded" :open="false">
     <GraphRenderOptions
+      v-model:presentation="handler.presentation.value"
       v-model:horizontal-axis="handler.horizontalAxis.value"
       v-model:vertical-axis="handler.verticalAxis.value"
       v-model:vertical-axis-width-mode="handler.verticalAxisWidthMode.value"

@@ -32,7 +32,12 @@ configure_make(
     ],
     build_data = [
         "@omd_packages//omd/packages/perl-modules:perl-modules.tar",
-        "@omd_packages//omd/packages/python3-modules:python3-modules.tar",
+        # Only the build backend (setuptools) is needed to run the Python
+        # bindings' `setup.py install` below. Depending on the full
+        # :python3-modules.tar here would drag all ~200 runtime wheels into the
+        # exec configuration and rebuild them from source on a cold exec cache
+        # (e.g. a Python bump) -- see CMK-35953.
+        "@omd_packages//omd/packages/python3-modules:python3-modules-build-backend.tar",
     ],
     configure_in_place = True,
     configure_options = [
@@ -91,9 +96,9 @@ configure_make(
         "RANLIB": "ranlib",
         "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
         "PERL_MODULES_TAR": "$(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar)",
-        "PYTHON_MODULES_TAR": "$(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar)",
+        "PYTHON_MODULES_TAR": "$(execpath @omd_packages//omd/packages/python3-modules:python3-modules-build-backend.tar)",
         "PERL_DIR": "$$(dirname $(execpath @omd_packages//omd/packages/perl-modules:perl-modules.tar))/perl-modules",
-        "PYTHONPATH": "$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules.tar))/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
+        "PYTHONPATH": "$$(dirname $(execpath @omd_packages//omd/packages/python3-modules:python3-modules-build-backend.tar))/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
     },
     lib_source = ":all_srcs",
     out_binaries = [

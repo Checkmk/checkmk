@@ -131,3 +131,29 @@ genrule(
     """.format(pyMajMin = PYTHON_MAJOR_DOT_MINOR),
     visibility = ["//visibility:public"],
 )
+
+# Minimal Python build backend (setuptools only), laid out like
+# :python3-modules but containing just the packages needed to *run* a
+# `setup.py`/pip build at build time. Consumers that need Python tooling in
+# their own build action (e.g. net-snmp's Python bindings) must depend on this
+# instead of :python3-modules.tar. Pulling the full runtime module set into the
+# exec configuration would otherwise force a second, from-source rebuild of all
+# ~200 wheels whenever the exec-config cache is cold (e.g. a Python bump) --
+# see CMK-35953.
+genrule(
+    name = "python3-modules-build-backend",
+    srcs = [
+        "setuptools_compile",
+    ],
+    outs = [
+        "python3-modules-build-backend.tar",
+    ],
+    cmd = """
+        mkdir -p build-backend
+        for MODULE in $(SRCS); do
+            tar --strip-components 1 -xf $$MODULE -C build-backend/
+        done
+        tar cf $@ -C build-backend .
+    """,
+    visibility = ["//visibility:public"],
+)

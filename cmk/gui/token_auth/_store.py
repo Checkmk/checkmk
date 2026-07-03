@@ -46,6 +46,10 @@ class TokenRevoked(TokenTypeError):
     """Token was revoked"""
 
 
+class TokenUseAlreadyConsumed(TokenTypeError):
+    """The requested one-time use of the token was already consumed"""
+
+
 class DashboardToken(BaseModel):
     type_: Literal["dashboard"] = "dashboard"
     owner: AnnotatedUserId
@@ -57,6 +61,13 @@ class DashboardToken(BaseModel):
     synced_at: datetime  # last time the token was modified/synced with the dashboard config
 
 
+AgentRegistrationUse = Literal["host_registration", "updater_registration"]
+
+# After one of the two uses of an agent registration token is consumed, the token
+# stays valid only this long, so the second registration can follow up shortly.
+AGENT_REGISTRATION_TOKEN_GRACE_PERIOD: Final = timedelta(minutes=10)
+
+
 class AgentRegistrationToken(BaseModel):
     type_: Literal["agent_registration"] = "agent_registration"
     host_name: Annotated[
@@ -66,6 +77,8 @@ class AgentRegistrationToken(BaseModel):
     ]
     connection_mode: HostAgentConnectionMode = HostAgentConnectionMode.PULL
     comment: str = ""
+    host_registration_completed_at: datetime | None = None
+    updater_registration_completed_at: datetime | None = None
 
 
 class RelayRegistrationToken(BaseModel):
@@ -181,6 +194,53 @@ class TokenStore:
     def revoke(self, token_id: TokenId) -> None:
         with self.read_locked() as data:
             data.revoke(token_id)
+
+    def consume_agent_registration_use(
+        self, token_id: TokenId, use: AgentRegistrationUse, now: datetime
+    ) -> None:
+        """Consume one of the two one-time uses of an agent registration token
+
+        The two uses (host registration and agent updater registration) are independent
+        and can be consumed in any order. After the first use is consumed, the token
+        stays valid only for a grace period so the second registration can follow up.
+        Once both uses are consumed, the token is revoked.
+
+        Raises InvalidToken, TokenTypeError or TokenUseAlreadyConsumed; in that case
+        nothing is persisted.
+        """
+        with self.read_locked() as data:
+            if (token := data.get(token_id)) is None:
+                raise InvalidToken(f"Could not find token {token_id!r}")
+            details = token.details
+            if not isinstance(details, AgentRegistrationToken):
+                raise TokenTypeError(
+                    f"Token {token_id} is not an agent registration token",
+                    token_type=details.type_,
+                )
+            match use:
+                case "host_registration":
+                    if details.host_registration_completed_at is not None:
+                        raise TokenUseAlreadyConsumed(
+                            f"Token {token_id} was already used for host registration",
+                            token_type=details.type_,
+                        )
+                    details.host_registration_completed_at = now
+                case "updater_registration":
+                    if details.updater_registration_completed_at is not None:
+                        raise TokenUseAlreadyConsumed(
+                            f"Token {token_id} was already used for agent updater registration",
+                            token_type=details.type_,
+                        )
+                    details.updater_registration_completed_at = now
+            if (
+                details.host_registration_completed_at is not None
+                and details.updater_registration_completed_at is not None
+            ):
+                token.revoked = True
+            else:
+                grace_end = now + AGENT_REGISTRATION_TOKEN_GRACE_PERIOD
+                if token.valid_until is None or token.valid_until > grace_end:
+                    token.valid_until = grace_end
 
     def delete(self, token_id: TokenId) -> None:
         with self.read_locked() as data:

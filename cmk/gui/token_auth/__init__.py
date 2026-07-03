@@ -15,6 +15,7 @@ from cmk.gui.token_auth._registry import (
 from cmk.gui.token_auth._store import (
     AgentDownloadToken,
     AgentRegistrationToken,
+    AgentRegistrationUse,
     AuthToken,
     DashboardToken,
     get_token_store,
@@ -23,12 +24,14 @@ from cmk.gui.token_auth._store import (
     TokenId,
     TokenStore,
     TokenType,
+    TokenUseAlreadyConsumed,
 )
 
 __all__ = [
     "AuthToken",
     "DashboardToken",
     "AgentRegistrationToken",
+    "AgentRegistrationUse",
     "AgentDownloadToken",
     "MKTokenExpiredOrRevokedException",
     "RelayRegistrationToken",
@@ -39,6 +42,7 @@ __all__ = [
     "TokenId",
     "TokenStore",
     "TokenType",
+    "TokenUseAlreadyConsumed",
     "get_token_store",
     "handle_token_page",
     "token_authenticated_page_registry",

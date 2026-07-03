@@ -1907,6 +1907,16 @@ def _ldap_sync_simple(
         # LDAP attribute in boolean format sends str "TRUE" or "FALSE"
         if user_attr == "disable_notifications":
             return {user_attr: {"disable": True} if attr_value == "TRUE" else {}}
+        # The sidebar position only supports "left" (Left) or the default Right. The default is
+        # represented by the *absence* of the key: a None value is stored as "None" and dropped
+        # again on load (see load_users() in cmk/gui/userdb/store.py). So for any non-"left" value
+        # we must remove the key instead of storing None, otherwise every sync re-adds it and
+        # produces a spurious pending change.
+        if user_attr == "ui_sidebar_position":
+            if attr_value == "left":
+                return {user_attr: "left"}
+            user.pop(user_attr, None)
+            return {}
         return {user_attr: attr_value}
     return {}
 

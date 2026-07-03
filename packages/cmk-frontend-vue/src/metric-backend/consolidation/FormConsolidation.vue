@@ -17,12 +17,14 @@ import CmkTimeSpan from '@/components/user-input/CmkTimeSpan/CmkTimeSpan.vue'
 import InlineEditPill from '../InlineEditPill.vue'
 import {
   compactFunction,
+  functionLabel,
   functionOptionLabel,
   lookbackLabel,
   typeLabel
 } from './consolidation-label'
-import { CONSOLIDATION_CATALOG, DEFAULT_QUANTILE, METRIC_TYPES, defaultFunction } from './types'
+import { DEFAULT_QUANTILE, METRIC_TYPES, defaultFunction, functionSpecsForType } from './types'
 import type {
+  AllowedFunctions,
   ConsolidationFunction,
   ConsolidationModel,
   ConsolidationParams,
@@ -35,6 +37,8 @@ const props = defineProps<{
   // The metric types the backend resolved for the current metric.
   // An empty list results in every type's functions to be offered.
   availableTypes: MetricType[]
+  // Restricts offered functions per type; undefined offers the full catalog.
+  allowedFunctions?: AllowedFunctions
 }>()
 
 const model = defineModel<ConsolidationModel>({ required: true })
@@ -48,7 +52,7 @@ const candidateTypes = computed<MetricType[]>(() =>
 )
 
 function suggestionsForType(type: MetricType) {
-  return CONSOLIDATION_CATALOG[type].map((spec) => ({
+  return functionSpecsForType(type, props.allowedFunctions).map((spec) => ({
     name: `${type}:${spec.fn}`,
     title: functionOptionLabel(type, spec.fn, spec.raw)
   }))
@@ -67,6 +71,16 @@ const functionOptions = computed<Suggestions>(() => {
 })
 
 const dropdownValue = computed(() => `${model.value.type}:${model.value.function}`)
+
+// One offered function leaves nothing to choose, so render it read-only, not a dropdown.
+const singleFunction = computed(
+  () =>
+    candidateTypes.value.reduce(
+      (count, type) => count + functionSpecsForType(type, props.allowedFunctions).length,
+      0
+    ) === 1
+)
+const singleFunctionLabel = computed(() => functionLabel(model.value.type, model.value.function))
 
 function applyFunction(type: MetricType, fn: ConsolidationFunction): void {
   // Reset params; they belonged to the previous function. Seed the quantile
@@ -88,7 +102,7 @@ watch(candidateTypes, (types) => {
     return
   }
   const type = types[0]!
-  applyFunction(type, defaultFunction(type))
+  applyFunction(type, defaultFunction(type, props.allowedFunctions))
 })
 
 const editing = ref(false)
@@ -233,7 +247,11 @@ const editAriaLabel = computed(
         class="metric-backend-form-consolidation__segment metric-backend-form-consolidation__segment--dimmed"
         >{{ typeToken }}</span
       >
+      <span v-if="singleFunction" class="metric-backend-form-consolidation__segment">{{
+        singleFunctionLabel
+      }}</span>
       <CmkDropdown
+        v-else
         ref="functionDropdownRef"
         :selected-option="dropdownValue"
         :options="functionOptions"

@@ -79,6 +79,23 @@ export const CONSOLIDATION_CATALOG: Record<MetricType, FunctionSpec[]> = {
   ]
 }
 
+/** Allowlist restricting the offered functions per type; a missing entry offers all. */
+export type AllowedFunctions = Partial<Record<MetricType, ConsolidationFunction[]>>
+
+/**
+ * Functions offered for a type, in catalog order. An allowlist filters them;
+ * a filter that matches nothing falls back to the full catalog.
+ */
+export function functionSpecsForType(type: MetricType, allowed?: AllowedFunctions): FunctionSpec[] {
+  const specs = CONSOLIDATION_CATALOG[type]
+  const allowList = allowed?.[type]
+  if (allowList === undefined) {
+    return specs
+  }
+  const filtered = specs.filter((spec) => allowList.includes(spec.fn))
+  return filtered.length > 0 ? filtered : specs
+}
+
 export function functionSpec(
   type: MetricType,
   fn: ConsolidationFunction
@@ -90,9 +107,12 @@ export function isFunctionValidForType(type: MetricType, fn: ConsolidationFuncti
   return functionSpec(type, fn) !== undefined
 }
 
-/** The default function for a type is the first (non-raw) entry of its catalog. */
-export function defaultFunction(type: MetricType): ConsolidationFunction {
-  return CONSOLIDATION_CATALOG[type][0]!.fn
+/** The default function for a type is the first it offers (catalog order, allowlist applied). */
+export function defaultFunction(
+  type: MetricType,
+  allowed?: AllowedFunctions
+): ConsolidationFunction {
+  return functionSpecsForType(type, allowed)[0]!.fn
 }
 
 export function outputType(type: MetricType, fn: ConsolidationFunction): ConsolidationOutputType {

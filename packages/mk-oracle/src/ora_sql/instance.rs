@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::config::ora_sql::Piggyback;
 use crate::config::{self, OracleConfig};
-use crate::emit::header;
+use crate::emit::{header, piggyback_footer, piggyback_header};
 use crate::ora_sql::backend::{
     make_custom_spot, make_spot, with_container, ClosedSpot, Opened, OpenedSpot, Spot,
 };
@@ -187,6 +188,14 @@ fn remap_filter(filter: SectionFilter, ora_sql: &config::ora_sql::Config) -> Opt
     }
 }
 
+fn wrap_for_piggyback(piggyback: Option<&Piggyback>, mut results: Vec<String>) -> Vec<String> {
+    if let Some(pb) = piggyback {
+        results.insert(0, piggyback_header(&pb.hostname().clone().into()));
+        results.push(piggyback_footer());
+    }
+    results
+}
+
 fn process_spot_works(works: Vec<OpenedSpotWorks>) -> Vec<ClosedSpotResults> {
     works
         .into_iter()
@@ -223,6 +232,7 @@ fn process_spot_works(works: Vec<OpenedSpotWorks>) -> Vec<ClosedSpotResults> {
                     output
                 })
                 .collect::<Vec<String>>();
+            let results = wrap_for_piggyback(spot.piggyback(), results);
             (spot.close(), results)
         })
         .collect::<Vec<_>>()
@@ -282,6 +292,7 @@ fn process_spot_works_para(works: Vec<ClosedSpotWorks>, threads: usize) -> Vec<C
                                         )
                                     })
                                     .collect::<Vec<String>>();
+                                let results = wrap_for_piggyback(job.spot.piggyback(), results);
 
                                 thread_output
                                     .lock()
@@ -641,6 +652,49 @@ mod tests {
             &ServiceName::from("B")
         );
     }
+    #[test]
+    fn test_wrap_for_piggyback_without_config_returns_output_unchanged() {
+        let results = vec![
+            "<<<oracle_instance:sep(124)>>>".to_string(),
+            "ORCLPDB1|OPEN|OPEN|...".to_string(),
+        ];
+        assert_eq!(
+            wrap_for_piggyback(None, results.clone()),
+            results,
+            "no piggyback configured must not add any markers"
+        );
+    }
+
+    #[test]
+    fn test_wrap_for_piggyback_with_config_adds_markers() {
+        use crate::config::section::Sections;
+
+        let piggyback = Piggyback::from_yaml(
+            &create_yaml("piggyback:\n  hostname: oracle-prod-db01\n"),
+            &Sections::default(),
+        )
+        .unwrap()
+        .unwrap();
+
+        let wrapped = wrap_for_piggyback(
+            Some(&piggyback),
+            vec![
+                "<<<oracle_instance:sep(124)>>>".to_string(),
+                "ORCLPDB1|OPEN|OPEN|...".to_string(),
+            ],
+        );
+
+        assert_eq!(
+            wrapped,
+            vec![
+                "<<<<oracle-prod-db01>>>>".to_string(),
+                "<<<oracle_instance:sep(124)>>>".to_string(),
+                "ORCLPDB1|OPEN|OPEN|...".to_string(),
+                "<<<<>>>>".to_string(),
+            ]
+        );
+    }
+
     #[test]
     fn test_filter_spots() {
         let all = calc_all_spots(

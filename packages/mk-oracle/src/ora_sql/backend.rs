@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::ora_sql::CustomInstance;
+use crate::config::ora_sql::{CustomInstance, Piggyback};
 use crate::config::{
     authentication::{AuthType, Authentication, Role},
     connection::EngineTag,
@@ -245,6 +245,7 @@ pub struct SpotBuilder {
     engine_type: Option<EngineType>,
     custom_engine: Option<Box<dyn OraDbEngine>>,
     database: Option<String>,
+    piggyback: Option<Piggyback>,
 }
 
 pub struct Closed;
@@ -257,6 +258,7 @@ pub struct Spot<State: Send> {
     pub target: Target,
     engine: Box<dyn OraDbEngine + Send + Sync>,
     _database: Option<String>,
+    piggyback: Option<Piggyback>,
     _state: PhantomData<State>,
 }
 
@@ -266,6 +268,7 @@ impl Clone for Spot<Closed> {
             target: self.target.clone(),
             engine: self.engine.clone(),
             _database: self._database.clone(),
+            piggyback: self.piggyback.clone(),
             _state: PhantomData::<Closed>,
         }
     }
@@ -283,6 +286,7 @@ impl Spot<Closed> {
             target: self.target,
             engine: self.engine,
             _database: self._database,
+            piggyback: self.piggyback,
             _state: PhantomData::<Opened>,
         })
     }
@@ -292,6 +296,10 @@ impl Spot<Closed> {
 
     pub fn database(&self) -> Option<&String> {
         self._database.as_ref()
+    }
+
+    pub fn piggyback(&self) -> Option<&Piggyback> {
+        self.piggyback.as_ref()
     }
 }
 
@@ -327,6 +335,7 @@ impl Spot<Opened> {
             target: self.target,
             engine: self.engine,
             _database: self._database,
+            piggyback: self.piggyback,
             _state: PhantomData::<Closed>,
         }
     }
@@ -345,6 +354,10 @@ impl Spot<Opened> {
 
     pub fn database(&self) -> Option<&String> {
         self._database.as_ref()
+    }
+
+    pub fn piggyback(&self) -> Option<&Piggyback> {
+        self.piggyback.as_ref()
     }
 }
 
@@ -408,6 +421,11 @@ impl SpotBuilder {
         self
     }
 
+    pub fn piggyback(mut self, piggyback: Option<Piggyback>) -> Self {
+        self.piggyback = piggyback;
+        self
+    }
+
     pub fn build(self) -> Result<ClosedSpot> {
         Ok(Spot {
             engine: self
@@ -419,6 +437,7 @@ impl SpotBuilder {
                 .target
                 .ok_or_else(|| anyhow::anyhow!("Target is absent"))?,
             _database: self.database,
+            piggyback: self.piggyback,
             _state: PhantomData::<Closed>,
         })
     }
@@ -435,6 +454,7 @@ pub fn make_custom_spot(instance: &CustomInstance) -> Result<ClosedSpot> {
     SpotBuilder::new()
         .custom_instance_target(instance)
         .engine_type(instance.endpoint().conn().engine_tag())
+        .piggyback(instance.piggyback().cloned())
         .build()
 }
 
@@ -482,6 +502,53 @@ oracle:
     fn test_create_client_from_config_correct() {
         let config = make_config_with_auth_type("standard").unwrap();
         assert!(make_spot(&config.endpoint()).is_ok());
+    }
+
+    #[test]
+    fn test_make_custom_spot_with_piggyback_config() {
+        use crate::config::section::Sections;
+        use crate::config::target::TargetIdBuilder;
+        use crate::config::yaml::test_tools::create_yaml;
+        use crate::types::ServiceName;
+
+        let piggyback = Piggyback::from_yaml(
+            &create_yaml("piggyback:\n  hostname: oracle-prod-db01\n"),
+            &Sections::default(),
+        )
+        .unwrap();
+        assert!(piggyback.is_some());
+
+        let instance = CustomInstance::new(
+            Authentication::default(),
+            crate::config::connection::Connection::default(),
+            TargetIdBuilder::new()
+                .service_name(Some(&ServiceName::from("ORCLPDB1")))
+                .build(),
+            None,
+            piggyback.clone(),
+        );
+
+        let spot = make_custom_spot(&instance).unwrap();
+        assert_eq!(spot.piggyback(), piggyback.as_ref());
+    }
+
+    #[test]
+    fn test_make_custom_spot_without_piggyback_config() {
+        use crate::config::target::TargetIdBuilder;
+        use crate::types::ServiceName;
+
+        let instance = CustomInstance::new(
+            Authentication::default(),
+            crate::config::connection::Connection::default(),
+            TargetIdBuilder::new()
+                .service_name(Some(&ServiceName::from("ORCLPDB1")))
+                .build(),
+            None,
+            None,
+        );
+
+        let spot = make_custom_spot(&instance).unwrap();
+        assert!(spot.piggyback().is_none());
     }
 
     #[test]

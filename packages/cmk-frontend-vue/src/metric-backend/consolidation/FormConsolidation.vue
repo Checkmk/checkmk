@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -21,7 +21,7 @@ import {
   lookbackLabel,
   typeLabel
 } from './consolidation-label'
-import { CONSOLIDATION_CATALOG, DEFAULT_QUANTILE, METRIC_TYPES } from './types'
+import { CONSOLIDATION_CATALOG, DEFAULT_QUANTILE, METRIC_TYPES, defaultFunction } from './types'
 import type {
   ConsolidationFunction,
   ConsolidationModel,
@@ -68,16 +68,28 @@ const functionOptions = computed<Suggestions>(() => {
 
 const dropdownValue = computed(() => `${model.value.type}:${model.value.function}`)
 
-function onFunctionUpdate(value: string | null): void {
-  if (value === null) {
-    return
-  }
-  const [type, fn] = value.split(':') as [MetricType, ConsolidationFunction]
+function applyFunction(type: MetricType, fn: ConsolidationFunction): void {
   // Reset params; they belonged to the previous function. Seed the quantile
   // default so its field isn't blank the moment the function is picked.
   const params: ConsolidationParams = fn === 'quantile' ? { quantile: DEFAULT_QUANTILE } : {}
   model.value = { ...model.value, type, function: fn, params }
 }
+
+function onFunctionUpdate(value: string | null): void {
+  if (value === null) {
+    return
+  }
+  const [type, fn] = value.split(':') as [MetricType, ConsolidationFunction]
+  applyFunction(type, fn)
+}
+
+watch(candidateTypes, (types) => {
+  if (types.includes(model.value.type)) {
+    return
+  }
+  const type = types[0]!
+  applyFunction(type, defaultFunction(type))
+})
 
 const editing = ref(false)
 

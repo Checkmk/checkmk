@@ -5,7 +5,7 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
-import { defineComponent, ref } from 'vue'
+import { defineComponent, nextTick, ref } from 'vue'
 
 import FormConsolidation from '@/metric-backend/consolidation/FormConsolidation.vue'
 import type { ConsolidationModel, MetricType } from '@/metric-backend/consolidation/types'
@@ -18,7 +18,7 @@ function renderWidget(initial: Partial<ConsolidationModel> = {}, availableTypes?
     lookbackSeconds: 300,
     ...initial
   })
-  const resolvedTypes = availableTypes ?? [model.value.type]
+  const resolvedTypes = ref<MetricType[]>(availableTypes ?? [model.value.type])
   const wrapper = defineComponent({
     components: { FormConsolidation },
     setup() {
@@ -32,7 +32,7 @@ function renderWidget(initial: Partial<ConsolidationModel> = {}, availableTypes?
     `
   })
   render(wrapper)
-  return { model }
+  return { model, availableTypes: resolvedTypes }
 }
 
 function chip() {
@@ -351,4 +351,24 @@ test('editing the lookback updates the chip once collapsed', async () => {
 
   await waitFor(() => expect(model.value.lookbackSeconds).toBe(60))
   expect(chip()).toHaveTextContent('1 m')
+})
+
+test('a changed metric type resets the function to the new type default', async () => {
+  const { model, availableTypes } = renderWidget({ type: 'sum', function: 'delta' }, ['sum'])
+
+  availableTypes.value = ['gauge']
+  await nextTick()
+
+  expect(model.value.type).toBe('gauge')
+  expect(model.value.function).toBe('last_value')
+})
+
+test('a still-available metric type keeps the current function', async () => {
+  const { model, availableTypes } = renderWidget({ type: 'sum', function: 'delta' }, ['sum'])
+
+  availableTypes.value = ['sum', 'gauge']
+  await nextTick()
+
+  expect(model.value.type).toBe('sum')
+  expect(model.value.function).toBe('delta')
 })

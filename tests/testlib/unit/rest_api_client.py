@@ -946,6 +946,18 @@ class HostConfigClient(RestApiClient):
             follow_redirects=follow_redirects,
         )
 
+    def register_via_token(
+        self, host_name: str, token: str, uuid: str, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/host_config_internal/{host_name}/actions/register_via_token/invoke",
+            body={"uuid": uuid},
+            headers={"Authorization": f"CMK-TOKEN {token}"},
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
     def _set_etag_header(
         self, host_name: str, etag: IF_MATCH_HEADER_OPTIONS
     ) -> Mapping[str, str] | None:

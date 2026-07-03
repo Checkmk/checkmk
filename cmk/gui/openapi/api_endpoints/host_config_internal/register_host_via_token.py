@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime, UTC
 from typing import Annotated
 from uuid import UUID
 
@@ -22,7 +23,7 @@ from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.token_auth import AgentRegistrationToken, get_token_store
+from cmk.gui.token_auth import AgentRegistrationToken, get_token_store, TokenUseAlreadyConsumed
 from cmk.utils.agent_registration import HostAgentConnectionMode, UUIDLinkManager
 
 from .models.request_models import RegisterHost
@@ -66,10 +67,26 @@ def register_host_via_token_v1(
             title="Forbidden",
             detail="The token was issued for a different host.",
         )
+    if api_context.token.details.host_registration_completed_at is not None:
+        raise _token_already_used()
     connection_mode = api_context.token.details.connection_mode
     _link_with_uuid(host_name, body.uuid, connection_mode)
-    get_token_store().revoke(api_context.token.token_id)
+    try:
+        get_token_store().consume_agent_registration_use(
+            api_context.token.token_id, "host_registration", datetime.now(UTC)
+        )
+    except TokenUseAlreadyConsumed:
+        raise _token_already_used()
     return ConnectionMode(connection_mode=connection_mode)
+
+
+def _token_already_used() -> ProblemException:
+    return ProblemException(
+        status=403,
+        title="Token already used",
+        detail="This token has already been used to register this host. "
+        "Please issue a new token to register again.",
+    )
 
 
 def _link_with_uuid(

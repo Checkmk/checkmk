@@ -93,6 +93,8 @@ snmp_section_if32_with_alias = SimpleSNMPSection(
                 contains(".1.3.6.1.2.1.1.1.0", "cisco"),
                 equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2694"),
             ),
+            # Evolution Series - XPAND IP
+            equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2378.2.2.4"),
             # Add more devices with 32-bit snmp but alias here
         ),
         exists(".1.3.6.1.2.1.2.2.1.*"),

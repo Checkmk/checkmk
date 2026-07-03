@@ -259,8 +259,7 @@ impl RegistrationEndpointCall for RegistrationCallNew<'_> {
 #[derive(Clone)]
 pub struct UpdaterRegistrationInput {
     pub site_id: site_spec::SiteID,
-    pub username: String,
-    pub password: String,
+    pub credentials: Credentials,
     pub protocol: Protocol,
     pub hostname: String,
 }
@@ -697,19 +696,9 @@ fn maybe_register_updater(
     let protocol =
         site_spec::discover_protocol(&connection_config.site_id, &connection_config.client_config)?;
 
-    let Credentials::UsernamePassword { username, password } = credentials else {
-        warn!(
-            "Sorry, the agent updater registration currently requires username/password credentials. \
-            You requested to register the agent updater while providing a one-time-token (OTT). \
-            Skipping agent updater registration."
-        );
-        return Ok(());
-    };
-
     let updater_input = UpdaterRegistrationInput {
         site_id: connection_config.site_id.clone(),
-        username: username.clone(),
-        password: password.clone(),
+        credentials: credentials.clone(),
         hostname: hostname.to_string(),
         protocol,
     };
@@ -756,14 +745,24 @@ fn _prepare_register_updater_cmd(
         .arg("-i")
         .arg(&updater_registration_config.site_id.site)
         .arg("-H")
-        .arg(&updater_registration_config.hostname)
-        .arg("-U")
-        .arg(&updater_registration_config.username)
-        .arg("-p")
-        .arg(updater_registration_config.protocol.as_str())
-        // this is a temporary solution, will be replaced with a more secure one in the future
-        .arg("--password-file")
-        .arg(password_file_path);
+        .arg(&updater_registration_config.hostname);
+    match &updater_registration_config.credentials {
+        Credentials::UsernamePassword { username, .. } => {
+            cmd.arg("-U")
+                .arg(username)
+                .arg("-p")
+                .arg(updater_registration_config.protocol.as_str())
+                // this is a temporary solution, will be replaced with a more secure one in the future
+                .arg("--password-file")
+                .arg(password_file_path);
+        }
+        Credentials::OneTimeToken { ott } => {
+            cmd.arg("-p")
+                .arg(updater_registration_config.protocol.as_str())
+                .arg("--ott")
+                .arg(ott);
+        }
+    }
     cmd.stdin(std::process::Stdio::null());
     Ok(cmd)
 }
@@ -849,11 +848,16 @@ pub fn register_updater_subprocess(
         .expect("Failed to get runtime directory");
     let password_file_path = runtime_dir.join(".pwd");
 
-    std::fs::write(&password_file_path, &updater_registration_config.password)
-        .context("Failed to write password to temporary file")?;
+    // A one-time token is passed on the command line instead: it is short-lived,
+    // scoped to a single host and already visible in this process' command line.
+    if let Credentials::UsernamePassword { password, .. } = &updater_registration_config.credentials
+    {
+        std::fs::write(&password_file_path, password)
+            .context("Failed to write password to temporary file")?;
 
-    #[cfg(unix)]
-    std::fs::set_permissions(&password_file_path, std::fs::Permissions::from_mode(0o600))?;
+        #[cfg(unix)]
+        std::fs::set_permissions(&password_file_path, std::fs::Permissions::from_mode(0o600))?;
+    }
 
     let result = (|| {
         let mut cmd = match _prepare_register_updater_cmd(
@@ -878,7 +882,16 @@ pub fn register_updater_subprocess(
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            warn!("Agent Updater registration failed: {}", stderr);
+            if stderr.contains("unrecognized arguments: --ott") {
+                warn!(
+                    "Agent Updater registration failed: The installed agent updater does not \
+                    support registration with a one-time token yet. Please update the agent \
+                    or register the agent updater manually with user credentials. ({})",
+                    stderr
+                );
+            } else {
+                warn!("Agent Updater registration failed: {}", stderr);
+            }
             return Ok(());
         }
 
@@ -1548,8 +1561,10 @@ mod tests {
             let cmd = _prepare_register_updater_cmd(
                 &UpdaterRegistrationInput {
                     site_id: site_id.clone(),
-                    username: "test-user".to_string(),
-                    password: "test-password".to_string(),
+                    credentials: types::Credentials::username_password(
+                        "test-user".to_string(),
+                        "test-password".to_string(),
+                    ),
                     hostname: "test-host".to_string(),
                     protocol,
                 },
@@ -1592,6 +1607,67 @@ mod tests {
                 "http",
                 "--password-file",
                 test_password_file.to_str().unwrap(),
+            ];
+
+            assert_eq!(cmd.get_program(), CMK_UPDATE_AGENT_CMD);
+            assert_eq!(args.len(), expected_args.len());
+
+            for (actual, expected) in args.iter().zip(expected_args.iter()) {
+                assert_eq!(actual, expected);
+            }
+        }
+
+        #[test]
+        fn test_prepare_register_updater_cmd_with_ott() {
+            let site_id = site_spec::SiteID {
+                server: "test-server".to_string(),
+                site: "test-site".to_string(),
+            };
+            let protocol = site_spec::Protocol::Http;
+            let test_password_file = std::path::Path::new("/tmp/test-password-file");
+
+            let cmd = _prepare_register_updater_cmd(
+                &UpdaterRegistrationInput {
+                    site_id: site_id.clone(),
+                    credentials: types::Credentials::one_time_token("0:test-token".to_string()),
+                    hostname: "test-host".to_string(),
+                    protocol,
+                },
+                CMK_UPDATE_AGENT_CMD,
+                test_password_file,
+            )
+            .unwrap();
+
+            let args: Vec<&OsStr> = cmd.get_args().collect();
+
+            #[cfg(windows)]
+            let expected_args = [
+                "updater",
+                "register",
+                "-s",
+                "test-server",
+                "-i",
+                "test-site",
+                "-H",
+                "test-host",
+                "-p",
+                "http",
+                "--ott",
+                "0:test-token",
+            ];
+            #[cfg(unix)]
+            let expected_args = [
+                "register",
+                "-s",
+                "test-server",
+                "-i",
+                "test-site",
+                "-H",
+                "test-host",
+                "-p",
+                "http",
+                "--ott",
+                "0:test-token",
             ];
 
             assert_eq!(cmd.get_program(), CMK_UPDATE_AGENT_CMD);

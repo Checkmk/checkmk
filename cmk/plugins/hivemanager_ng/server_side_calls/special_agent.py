@@ -12,11 +12,8 @@ from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, Sp
 
 class _Params(BaseModel, frozen=True):
     url: str
-    vhm_id: str
-    api_token: str
-    client_id: str
-    client_secret: Secret
-    redirect_url: str
+    username: str
+    password: Secret
 
 
 def _commands_function(
@@ -26,12 +23,9 @@ def _commands_function(
     yield SpecialAgentCommand(
         command_arguments=[
             params.url,
-            params.vhm_id,
-            params.api_token,
-            params.client_id,
-            "--secret-id",
-            params.client_secret,
-            params.redirect_url,
+            params.username,
+            "--password-id",
+            params.password,
         ]
     )
 

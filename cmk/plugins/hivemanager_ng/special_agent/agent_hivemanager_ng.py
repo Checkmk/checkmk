@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """agent_hivemanager_ng
 
-Checkmk special agent for Aerohive HiveManager NG."""
+Checkmk special agent for Extreme Networks ExtremeCloud IQ (formerly Aerohive HiveManager NG).
+"""
 
 import sys
 import traceback
@@ -17,20 +18,24 @@ import requests
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option
 
-SECRET_OPTION = "secret"
+SECRET_OPTION = "password"
 
-# The agent delivers at most this many devices.
-_PAGE_SIZE = 1000
+# Number of devices to request per page of the device list. Must be <= 100.
+_PAGE_SIZE = 100
 
-# Device field names forwarded to the check plugin; all other fields are dropped.
-_USED_FIELDS = {
-    "hostName",
-    "connected",
-    "activeClients",
-    "ip",
-    "serialId",
-    "osVersion",
-    "lastUpdated",
+# Seconds to wait for the API to respond.
+_REQUEST_TIMEOUT = 900
+
+# Mapping of the section field names the check plugin expects to the field names
+# returned by the ExtremeCloud IQ "GET /devices" endpoint.
+_DEVICE_FIELDS = {
+    "hostName": "hostname",
+    "connected": "connected",
+    "activeClients": "active_clients",
+    "ip": "ip_address",
+    "serialId": "serial_number",
+    "osVersion": "software_version",
+    "lastUpdated": "last_connect_time",
 }
 
 
@@ -47,71 +52,92 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     prog, description = __doc__.split("\n\n", maxsplit=1)
     parser = ArgumentParser(description=description, prog=prog)
     parser.add_argument("-d", "--debug", help="enable debugging", action="store_true")
-    parser.add_argument("url", help="URL to Aerohive NG, e.g. https://cloud.aerohive.com")
-    parser.add_argument("vhm_id", help="Numericl ID of the VHM e.g. 102")
-    parser.add_argument("api_token", help="API Access Token")
-    parser.add_argument("client_id", help="Client ID")
+    parser.add_argument(
+        "url",
+        help="Base URL of the ExtremeCloud IQ API, e.g. https://api.extremecloudiq.com",
+    )
+    parser.add_argument("username", help="ExtremeCloud IQ username")
     parser_add_secret_option(parser, long=f"--{SECRET_OPTION}", help="Client secret", required=True)
-    parser.add_argument("redirect_url", help="Redirect URL")
     return parser.parse_args(argv)
 
 
 def device_line(device: Mapping[str, object]) -> str:
-    """Render a single device as a section line, keeping only the used fields."""
-    return "|".join(f"{key}::{value}" for key, value in device.items() if key in _USED_FIELDS)
+    """Render a single device as a section line in the legacy field format."""
+    values = {section_key: device.get(api_key) for section_key, api_key in _DEVICE_FIELDS.items()}
+    # The check plugin expects a boolean-like string and an integer for these fields.
+    values["connected"] = bool(values["connected"])
+    active_clients = values["activeClients"]
+    values["activeClients"] = int(active_clients) if isinstance(active_clients, int | str) else 0
+    return "|".join(f"{key}::{value}" for key, value in values.items())
 
 
-def fetch_devices(args: Args) -> Sequence[Mapping[str, object]]:
-    """Query the HiveManager NG API and return the list of devices."""
-    params = {
-        "ownerId": args.vhm_id,
-        "pageSize": _PAGE_SIZE,
-    }
-    headers = {
-        "Authorization": "Bearer %s" % args.api_token,
-        "X-AH-API-CLIENT-ID": args.client_id,
-        "X-AH-API-CLIENT-SECRET": resolve_secret_option(args, SECRET_OPTION).reveal(),
-        "X-AH-API-CLIENT-REDIRECT-URI": args.redirect_url,
-        "Content-Type": "application/json",
-    }
+def login(base_url: str, username: str, password: str) -> str:
+    """Authenticate and return the JWT bearer token for subsequent requests."""
+    response = requests.post(
+        f"{base_url}/login",
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+        json={"username": username, "password": password},
+        timeout=_REQUEST_TIMEOUT,
+    )
+    response.raise_for_status()
+    access_token: str = response.json()["access_token"]
+    return access_token
 
-    try:
+
+def logout(base_url: str, headers: Mapping[str, str]) -> None:
+    requests.post(f"{base_url}/logout", headers=headers, timeout=_REQUEST_TIMEOUT)
+
+
+def fetch_devices(base_url: str, headers: Mapping[str, str]) -> Sequence[Mapping[str, object]]:
+    """Retrieve all devices, following the API's pagination until the last page."""
+    devices: list[Mapping[str, object]] = []
+    page = 1
+    while True:
         response = requests.get(
-            "%s/xapi/v1/monitor/devices" % args.url,
+            f"{base_url}/devices",
             headers=headers,
-            params=params,
-            timeout=900,
+            params={
+                "views": "FULL",  # include operational data such as the active client count
+                "page": str(page),
+                "limit": str(_PAGE_SIZE),
+            },
+            timeout=_REQUEST_TIMEOUT,
         )
-    except requests.RequestException:
-        bail_out(
-            "Request to the API failed. Please check your connection settings. "
-            "A guide to setup the API can be found on the Aerohive homepage.",
-            args.debug,
-        )
-
-    try:
-        json = response.json()
-    except ValueError as e:
-        bail_out(e.args[0], args.debug)
-
-    if json["error"]:
-        bail_out(
-            "Error in JSON response. Please check your connection settings. "
-            "A guide to setup the API can be found on the Aerohive "
-            "homepage.",
-            args.debug,
-        )
-
-    devices: Sequence[Mapping[str, object]] = json["data"]
-    return devices
+        response.raise_for_status()
+        payload = response.json()
+        devices += payload["data"]
+        if page >= payload["total_pages"]:
+            return devices
+        page += 1
 
 
 def main() -> int:
     args = parse_arguments(sys.argv[1:])
+    base_url = args.url.rstrip("/")
 
     sys.stdout.write("<<<hivemanager_ng_devices:sep(124)>>>\n")
+    try:
+        try:
+            jwt_token = login(
+                base_url, args.username, resolve_secret_option(args, SECRET_OPTION).reveal()
+            )
+            auth_headers = {
+                "Authorization": f"Bearer {jwt_token}",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            }
+            devices = fetch_devices(base_url, auth_headers)
+        except (ValueError, KeyError, TypeError) as exc:
+            bail_out("Unexpected response from the ExtremeCloud IQ API: %s" % exc, args.debug)
+        logout(base_url, auth_headers)
+    except requests.RequestException:
+        bail_out(
+            "Request to the ExtremeCloud IQ API failed. Please check your connection settings "
+            "and your credentials.",
+            args.debug,
+        )
 
-    for device in fetch_devices(args):
+    for device in devices:
         sys.stdout.write(device_line(device) + "\n")
 
     return 0

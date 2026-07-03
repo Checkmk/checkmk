@@ -731,6 +731,18 @@ def _instances() -> List[_NamedOption]:
                     required=True,
                 ),
                 **_endpoint(is_main_entry=False),
+                "piggyback_host": DictElement(
+                    parameter_form=String(
+                        title=Title("Monitoring host this database should be mapped to"),
+                        help_text=Help(
+                            "If you leave this empty then the database will appear on the host "
+                            "where the <tt>mk_oracle</tt> plug-in is running. In this case the "
+                            "SIDs of all monitored databases must be unique."
+                        ),
+                        custom_validate=(validators.LengthInRange(min_value=1),),
+                    ),
+                    required=False,
+                ),
             },
         ),
     )

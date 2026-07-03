@@ -228,6 +228,7 @@ class GuiInstanceConf(BaseModel):
     oracle_id: tuple[Literal["alias", "descriptor", "sid"], GuiOracleIdentificationConf]
     auth: GuiAuthConf | None = None
     connection: GuiConnectionConf | None = None
+    piggyback_host: str | None = None
 
 
 class GuiConfig(BaseModel):
@@ -279,6 +280,10 @@ class OracleInstanceAdditionalOptions(BaseModel):
     use_host_client: str | None = None
 
 
+class OraclePiggyback(BaseModel):
+    hostname: str
+
+
 class OracleInstance(BaseModel):
     service_name: str | None = None
     instance_name: str | None = None
@@ -286,6 +291,7 @@ class OracleInstance(BaseModel):
     alias: str | None = None
     authentication: OracleAuth | None = None
     connection: OracleConnection | None = None
+    piggyback: OraclePiggyback | None = None
 
 
 class OracleMain(BaseModel):
@@ -495,6 +501,9 @@ def _get_oracle_instances(instances: list[GuiInstanceConf] | None) -> list[Oracl
             alias=oracle_id.alias,
             authentication=_get_oracle_authentication(instance.auth),
             connection=_get_oracle_connection(instance.connection),
+            piggyback=OraclePiggyback(hostname=instance.piggyback_host)
+            if instance.piggyback_host
+            else None,
         )
         result.append(oracle_instance)
     return result

@@ -98242,6 +98242,10 @@ msgstr "Anchura del eje vertical"
 msgid "Graph styling"
 msgstr "Ajuste de gráficos"
 
+#, fuzzy
+msgid "Select presentation"
+msgstr "Conexiones rechazadas"
+
 msgid "Date and time stamp (right upper corner)"
 msgstr ""
 

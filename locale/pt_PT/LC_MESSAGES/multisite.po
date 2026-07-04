@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-07-02 06:05+0000\n"
+"PO-Revision-Date: 2026-07-03 17:57+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -97421,6 +97421,10 @@ msgstr "Largura do eixo vertical"
 #, fuzzy
 msgid "Graph styling"
 msgstr "Afinação de gráficos"
+
+#, fuzzy
+msgid "Select presentation"
+msgstr "Ligações rejeitadas"
 
 msgid "Date and time stamp (right upper corner)"
 msgstr ""

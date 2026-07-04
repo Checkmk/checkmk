@@ -97529,6 +97529,10 @@ msgstr "Verticale as breedte"
 msgid "Graph styling"
 msgstr "Grafiek afstemming"
 
+#, fuzzy
+msgid "Select presentation"
+msgstr "Afgewezen verbindingen"
+
 msgid "Date and time stamp (right upper corner)"
 msgstr ""
 

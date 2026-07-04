@@ -97843,6 +97843,10 @@ msgstr "Lățimea axei verticale"
 msgid "Graph styling"
 msgstr "Acordarea graficului"
 
+#, fuzzy
+msgid "Select presentation"
+msgstr "Conexiuni respinse"
+
 msgid "Date and time stamp (right upper corner)"
 msgstr ""
 

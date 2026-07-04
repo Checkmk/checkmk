@@ -97288,6 +97288,10 @@ msgstr "Larghezza dell'asse verticale"
 msgid "Graph styling"
 msgstr "Messa a punto del grafico"
 
+#, fuzzy
+msgid "Select presentation"
+msgstr "Connessioni rifiutate"
+
 msgid "Date and time stamp (right upper corner)"
 msgstr ""
 

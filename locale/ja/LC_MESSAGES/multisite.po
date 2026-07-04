@@ -92420,6 +92420,10 @@ msgstr "縦軸幅"
 msgid "Graph styling"
 msgstr "グラフの調整"
 
+#, fuzzy
+msgid "Select presentation"
+msgstr "オプション選択"
+
 msgid "Date and time stamp (right upper corner)"
 msgstr ""
 

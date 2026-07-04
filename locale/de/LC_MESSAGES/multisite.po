@@ -93450,6 +93450,10 @@ msgstr "Vertikale Achse"
 msgid "Graph styling"
 msgstr "Graph-Styling"
 
+#, fuzzy
+msgid "Select presentation"
+msgstr "Option auswählen"
+
 msgid "Date and time stamp (right upper corner)"
 msgstr "Datums- und Zeitstempel (rechte obere Ecke)"
 

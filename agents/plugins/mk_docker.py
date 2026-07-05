@@ -183,10 +183,10 @@ class Section(list):
             sys.stdout.flush()
 
 
-def report_exception_to_server(exc, location):
+def report_exception_to_server(exc, location, piggytarget=None):
     LOGGER.info("handling exception: %s", exc)
     msg = "Plug-in exception in %s: %s" % (location, exc)
-    sec = Section("docker_node_info")
+    sec = Section("docker_node_info", piggytarget=piggytarget)
     sec.append(json.dumps({"Unknown": msg}))
     sec.write()
 
@@ -296,6 +296,27 @@ class MKDockerClient(docker.DockerClient):
         self.node_info = self.info()
 
         self._df_caller = ParallelDfCall(call=super().df)
+
+    @classmethod
+    def for_container(cls, config, container_id, real_container_id, node_info):
+        """Build a client scoped to a single container.
+
+        Unlike __init__, this doesn't list every container on the node, and it never
+        crosses a process boundary as a live object: each worker process calls this
+        itself after being started with only plain, picklable arguments. A connected
+        docker.DockerClient can't be pickled (and shouldn't be shared between processes
+        even where pickling isn't required), which breaks under start methods other
+        than "fork" (e.g. "forkserver", the default since Python 3.14).
+        """
+        self = cls.__new__(cls)
+        docker.DockerClient.__init__(self, config["base_url"], version=cls.API_VERSION)
+        self.node_info = node_info
+        self.all_containers = {container_id: self.containers.get(real_container_id)}
+        self._env = {"REMOTE": os.getenv("REMOTE", "")}
+        self._container_stats = {}
+        self._device_map = None
+        self._df_caller = ParallelDfCall(call=lambda: docker.DockerClient.df(self))
+        return self
 
     def df(self):
         return self._df_caller()
@@ -685,10 +706,18 @@ def write_empty_section(name, piggytarget=None):
 
 
 def call_container_sections(client, config):
+    # Force "fork" explicitly (regardless of the interpreter's default start method) so
+    # that Section._OUTPUT_LOCK / MKDockerClient._DEVICE_MAP_LOCK are trivially shared
+    # via inherited memory, instead of relying on forkserver's/spawn's preload behavior
+    # to provide that guarantee. Safe here: this is a Linux-only, single-threaded plugin,
+    # and the worker args are picklable regardless, so this is purely about keeping the
+    # shared-lock semantics obvious rather than about correctness of argument passing.
+    ctx = multiprocessing.get_context("fork")
     jobs = []
-    for container_id in client.all_containers:
-        job = multiprocessing.Process(
-            target=_call_single_containers_sections, args=(client, config, container_id)
+    for container_id, container in client.all_containers.items():
+        job = ctx.Process(
+            target=_call_single_containers_sections,
+            args=(config, client.node_info, container_id, container.id),
         )
         job.start()
         jobs.append(job)
@@ -697,7 +726,17 @@ def call_container_sections(client, config):
         job.join()
 
 
-def _call_single_containers_sections(client, config, container_id):
+def _call_single_containers_sections(config, node_info, container_id, real_container_id):
+    try:
+        client = MKDockerClient.for_container(config, container_id, real_container_id, node_info)
+    except Exception as exc:
+        if DEBUG:
+            raise
+        # Even when we can't reach the container at all, still write a piggyback section
+        # for it -- otherwise the container's host silently stops getting any data.
+        report_exception_to_server(exc, "MKDockerClient.for_container", piggytarget=container_id)
+        return
+
     LOGGER.info("container id: %s", container_id)
     for name, section in CONTAINER_API_SECTIONS:
         if is_disabled_section(config, name):
@@ -707,7 +746,7 @@ def _call_single_containers_sections(client, config, container_id):
         except Exception as exc:
             if DEBUG:
                 raise
-            report_exception_to_server(exc, section.__name__)
+            report_exception_to_server(exc, section.__name__, piggytarget=container_id)
 
     agent_success = False
     if not is_disabled_section(config, "docker_container_agent"):
@@ -716,7 +755,7 @@ def _call_single_containers_sections(client, config, container_id):
         except Exception as exc:
             if DEBUG:
                 raise
-            report_exception_to_server(exc, "section_container_agent")
+            report_exception_to_server(exc, "section_container_agent", piggytarget=container_id)
     if agent_success:
         return
 
@@ -728,7 +767,7 @@ def _call_single_containers_sections(client, config, container_id):
         except Exception as exc:
             if DEBUG:
                 raise
-            report_exception_to_server(exc, section.__name__)
+            report_exception_to_server(exc, section.__name__, piggytarget=container_id)
 
 
 # .

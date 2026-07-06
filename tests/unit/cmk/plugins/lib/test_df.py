@@ -717,3 +717,20 @@ def test_get_filesystem_levels_magic_factor(
 )
 def test__check_summary_text(filesystem_levels: df.FilesystemLevels, summary: str) -> None:
     assert df._check_summary_text(filesystem_levels) == summary
+
+
+@pytest.mark.parametrize("allocatable_fs", [0, -1])
+def test_check_filesystem_levels_bad_allocatable_filesystem_size(allocatable_fs: int) -> None:
+    value = list(
+        df.check_filesystem_levels(
+            filesystem_size=0,
+            allocatable_filesystem_size=allocatable_fs,
+            free_space=0,
+            used_space=0,
+            params=df.FILESYSTEM_DEFAULT_PARAMS,
+            show_levels="always",
+        )
+    )
+    expected = [Result(state=State.WARN, summary="Size of usable filesystem is 0 B")]
+
+    assert value == expected

@@ -36,8 +36,9 @@ def get_device_type_label(section: _WithDescription) -> HostLabelGenerator:
             This label is set to the model extracted from the device sent via SNMP.
 
     """
+    upper_description = section.description.upper()
     for device_type in SNMPDeviceType:
-        if device_type.name in section.description.upper():
+        if any(alias in upper_description for alias in device_type.aliases):
             if device_type is SNMPDeviceType.SWITCH and _is_fibrechannel_switch(
                 section.description
             ):
@@ -52,14 +53,19 @@ def get_device_type_label(section: _WithDescription) -> HostLabelGenerator:
 
 # TODO: replace this by HostLabel instances.
 class SNMPDeviceType(enum.Enum):
-    APPLIANCE = enum.auto()
-    FIREWALL = enum.auto()
-    PRINTER = enum.auto()
-    ROUTER = enum.auto()
-    SENSOR = enum.auto()
-    SWITCH = enum.auto()
-    UPS = enum.auto()
-    WLC = enum.auto()
+    APPLIANCE = ("APPLIANCE",)
+    FIREWALL = ("FIREWALL",)
+    PRINTER = ("PRINTER",)
+    ROUTER = ("ROUTER",)
+    SENSOR = ("SENSOR",)
+    SWITCH = ("SWITCH", "SWCH")
+    UPS = ("UPS",)
+    WLC = ("WLC",)
+
+    @property
+    def aliases(self) -> tuple[str, ...]:
+        aliases: tuple[str, ...] = self.value
+        return aliases
 
 
 _FIBRECHANNEL_MARKER: Final = {"fc", "fibrechannel", "fibre channel"}

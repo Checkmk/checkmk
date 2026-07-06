@@ -437,6 +437,26 @@ fn test_execute_config_reference() {
     );
 }
 
+// windows ps1 legacy plugin doesn't support custom SQL sections
+#[cfg(not(windows))]
+#[test]
+fn test_execute_config_custom_sqls() {
+    use std::path::Path;
+
+    let cfg = legacy_cfg_path();
+    let vars = mk_oracle::config::migration::convert_config(Path::new(&cfg)).unwrap();
+
+    // variables set inside the section function are extracted per section
+    assert_eq!(vars["SQLS_SECTIONS"], "mycustomsection1 mycustomsection2");
+    assert_eq!(vars["SQLS.mycustomsection1.SQLS_SIDS"], "MYINST3");
+    assert_eq!(vars["SQLS.mycustomsection1.SQLS_DIR"], "/etc/check_mk");
+    assert_eq!(vars["SQLS.mycustomsection1.SQLS_SQL"], "MyCustomSQL.sql");
+    // section 1 values must not leak into section 2
+    assert_eq!(vars["SQLS.mycustomsection2.SQLS_SQL"], "OtherSQL.sql");
+    assert!(!vars.contains_key("SQLS.mycustomsection2.SQLS_SIDS"));
+    assert!(!vars.contains_key("SQLS.mycustomsection2.SQLS_DIR"));
+}
+
 #[test]
 fn test_migrate_reference_config_connection_and_auth() {
     let cfg = legacy_cfg_path();
@@ -583,6 +603,52 @@ fn test_migrate_reference_config_custom_metrics_cache_age() {
 }
 
 #[test]
+fn test_migrate_reference_config_custom_metrics() {
+    let cfg = legacy_cfg_path();
+    let output = run_bin().args(["-M", &cfg]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+    let metrics: Vec<_> = ora
+        .all_sections()
+        .iter()
+        .filter(|s| s.is_custom_metric())
+        .collect();
+    #[cfg(windows)]
+    // windows ps1 legacy plugin doesn't support custom SQL sections
+    assert!(metrics.is_empty(), "no custom metrics on windows");
+    #[cfg(not(windows))]
+    {
+        assert_eq!(
+            metrics.len(),
+            2,
+            "one custom metric per SQLS_SECTIONS entry"
+        );
+        assert_eq!(
+            metrics[0].item_value().unwrap().as_str(),
+            "mycustomsection1",
+            "item name must be the legacy section function name"
+        );
+        assert_eq!(
+            metrics[0].path(),
+            Some(std::path::Path::new("/etc/check_mk/MyCustomSQL.sql")),
+            "path must be SQLS_DIR/SQLS_SQL"
+        );
+        assert_eq!(
+            metrics[1].item_value().unwrap().as_str(),
+            "mycustomsection2"
+        );
+        assert_eq!(
+            metrics[1].path(),
+            Some(std::path::Path::new("OtherSQL.sql")),
+            "no SQLS_DIR must give a relative path"
+        );
+    }
+}
+
+#[test]
 fn test_migrate_reference_config_discovery() {
     let cfg = legacy_cfg_path();
     let output = run_bin().args(["-M", &cfg]).ok().unwrap();
@@ -619,7 +685,13 @@ fn test_migrate_reference_config_sections() {
     let config = mk_oracle::config::OracleConfig::load_str(&stdout)
         .expect("migrated output must be valid YAML");
     let ora = config.ora_sql().expect("must have oracle config");
-    let sections = ora.all_sections();
+    // custom metrics are appended to sections; covered by
+    // test_migrate_reference_config_custom_metrics
+    let sections: Vec<_> = ora
+        .all_sections()
+        .iter()
+        .filter(|s| !s.is_custom_metric())
+        .collect();
 
     let find = |name: &str| -> &mk_oracle::config::section::Section {
         sections

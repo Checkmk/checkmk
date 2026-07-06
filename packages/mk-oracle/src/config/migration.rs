@@ -53,6 +53,15 @@ struct LegacyDbUser {
     piggyback_host: Option<String>,
 }
 
+/// Custom SQL section from legacy config: a function name listed in
+/// SQLS_SECTIONS plus the SQLS_* variables set inside that function.
+#[derive(Debug, PartialEq)]
+struct LegacyCustomSql {
+    name: String,
+    dir: Option<String>,
+    sql_file: String,
+}
+
 fn optional_value(s: &str) -> Option<String> {
     (!s.is_empty()).then(|| s.to_string())
 }
@@ -146,6 +155,35 @@ fn parse_remote_instance(name: &str, value: &str) -> Option<LegacyDbUser> {
         alias_or_sid: sid,
         piggyback_host: optional_value(field(5)),
     })
+}
+
+/// Parse custom SQL sections from SQLS_SECTIONS and the per-section
+/// `SQLS.<section>.<VAR>` entries extracted by the config shell script.
+/// Top-level SQLS_DIR/SQLS_SQL act as defaults, as in the legacy plugin.
+fn parse_custom_sqls(variables: &HashMap<String, String>) -> Vec<LegacyCustomSql> {
+    let Some(section_names) = variables.get("SQLS_SECTIONS") else {
+        return Vec::new();
+    };
+
+    section_names
+        .split([',', ' '])
+        .filter(|s| !s.is_empty())
+        .filter_map(|name| {
+            let section_var = |var: &str| variables.get(&format!("SQLS.{name}.{var}"));
+            let Some(sql_file) = section_var("SQLS_SQL").or_else(|| variables.get("SQLS_SQL"))
+            else {
+                log::warn!("{name}: SQLS_SQL not defined, skipping custom SQL section");
+                return None;
+            };
+            Some(LegacyCustomSql {
+                name: name.to_string(),
+                dir: section_var("SQLS_DIR")
+                    .or_else(|| variables.get("SQLS_DIR"))
+                    .cloned(),
+                sql_file: sql_file.clone(),
+            })
+        })
+        .collect()
 }
 
 pub fn convert(
@@ -268,9 +306,17 @@ pub fn convert(
     let mut skip_sids = parse_sid_list(variables, "SKIP_SIDS");
     skip_sids.extend(find_excluded_instances(variables));
 
+    // Windows legacy plugin doesn't support custom SQL sections
+    let custom_sqls = if cfg!(windows) {
+        Vec::new()
+    } else {
+        parse_custom_sqls(variables)
+    };
+
     out.extend(format_options(max_tasks));
     out.extend(format_instances(&dbuser, &dbuser_extras));
     out.extend(format_sections(&all, &asyncs, &normals, &asms));
+    out.extend(format_custom_metrics(&custom_sqls));
     out.extend(format_cache_age(cache_maxage));
     out.extend(format_custom_metrics_cache_age(sqls_max_cache_age));
     out.extend(format_discovery(&only_sids, &skip_sids));
@@ -360,6 +406,23 @@ fn format_sections(
         if let Some(aff) = affinity {
             lines.push(format!("          affinity: \"{aff}\"\n"));
         }
+    }
+    lines
+}
+
+// TODO(CMK-34630): SQLS_SIDS is ignored, all custom metrics apply to every instance
+fn format_custom_metrics(custom_sqls: &[LegacyCustomSql]) -> Vec<String> {
+    if custom_sqls.is_empty() {
+        return Vec::new();
+    }
+    let mut lines = vec!["    custom_metrics:\n".to_string()];
+    for custom in custom_sqls {
+        let path = match &custom.dir {
+            Some(dir) => format!("{}/{}", dir.trim_end_matches('/'), custom.sql_file),
+            None => custom.sql_file.clone(),
+        };
+        lines.push(format!("      - {}:\n", custom.name));
+        lines.push(format!("          path: {path}\n"));
     }
     lines
 }
@@ -490,6 +553,23 @@ const KNOWN_VARIABLES: &[&str] = &[
 /// Variable name prefixes for dynamic matching (e.g. REMOTE_INSTANCE_XE).
 const KNOWN_PREFIXES: &[&str] = &["DBUSER_", "REMOTE_INSTANCE_", "EXCLUDE_"];
 
+/// Variables set inside custom SQL section functions.
+#[cfg(unix)]
+const CUSTOM_SQL_SECTION_VARIABLES: &[&str] = &[
+    "SQLS_SECTION_NAME",
+    "SQLS_SECTION_SEP",
+    "SQLS_SIDS",
+    "SQLS_DIR",
+    "SQLS_SQL",
+    "SQLS_PARAMETERS",
+    "SQLS_ITEM_NAME",
+    "SQLS_ITEM_SID",
+    "SQLS_DBUSER",
+    "SQLS_DBPASSWORD",
+    "SQLS_DBSYSCONNECT",
+    "SQLS_TNSALIAS",
+];
+
 /// Execute a legacy config file in its native shell and return extracted variables.
 ///
 /// Sources the config in the platform's shell (bash on Linux, ksh on AIX,
@@ -541,6 +621,7 @@ fn build_posix_script(config_path: &Path) -> String {
         .map(|p| format!("{p}*"))
         .collect::<Vec<_>>()
         .join("|");
+    let section_vars = CUSTOM_SQL_SECTION_VARIABLES.join(" ");
     format!(
         r#". {quoted_path}
 for __n in {vars}; do
@@ -549,7 +630,17 @@ for __n in {vars}; do
 done
 set 2>/dev/null | while IFS='=' read -r __n __rest; do
   case "$__n" in {prefixes}) eval "__v=\$$__n"; [ -n "$__v" ] && printf '%s %s\n' "$__n" "$__v";; esac
-done"#
+done
+for __sec in $(echo "$SQLS_SECTIONS" | tr ',' ' '); do
+  type "$__sec" >/dev/null 2>&1 || continue
+  unset {section_vars}
+  "$__sec" >/dev/null 2>&1
+  for __n in {section_vars}; do
+    eval "__v=\$$__n"
+    [ -n "$__v" ] && printf '%s %s\n' "SQLS.$__sec.$__n" "$__v"
+  done
+done
+true"#
     )
 }
 
@@ -707,6 +798,88 @@ mod tests {
             assert_eq!(inst.auth().username(), "user");
             assert_eq!(inst.conn().hostname().to_string(), "remotehost");
         }
+    }
+
+    #[test]
+    fn test_parse_custom_sqls_per_section_vars() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "mycustomsection1".into()),
+            ("SQLS.mycustomsection1.SQLS_SIDS".into(), "MYINST3".into()),
+            (
+                "SQLS.mycustomsection1.SQLS_DIR".into(),
+                "/etc/check_mk".into(),
+            ),
+            (
+                "SQLS.mycustomsection1.SQLS_SQL".into(),
+                "MyCustomSQL.sql".into(),
+            ),
+        ]);
+        let result = parse_custom_sqls(&vars);
+        assert_eq!(
+            result,
+            vec![LegacyCustomSql {
+                name: "mycustomsection1".into(),
+                dir: Some("/etc/check_mk".into()),
+                sql_file: "MyCustomSQL.sql".into(),
+            }]
+        );
+    }
+
+    #[test]
+    fn test_parse_custom_sqls_global_fallback() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            ("SQLS_DIR".into(), "/global/dir".into()),
+            ("SQLS_SQL".into(), "global.sql".into()),
+        ]);
+        let result = parse_custom_sqls(&vars);
+        assert_eq!(
+            result,
+            vec![LegacyCustomSql {
+                name: "sec1".into(),
+                dir: Some("/global/dir".into()),
+                sql_file: "global.sql".into(),
+            }]
+        );
+    }
+
+    #[test]
+    fn test_parse_custom_sqls_missing_sql_skipped() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "nosql withsql".into()),
+            ("SQLS.nosql.SQLS_DIR".into(), "/etc/check_mk".into()),
+            ("SQLS.withsql.SQLS_SQL".into(), "query.sql".into()),
+        ]);
+        let result = parse_custom_sqls(&vars);
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].name, "withsql");
+    }
+
+    #[test]
+    fn test_parse_custom_sqls_no_sections() {
+        assert!(parse_custom_sqls(&HashMap::new()).is_empty());
+    }
+
+    #[test]
+    fn test_format_custom_metrics_dir_trailing_slash() {
+        let custom = LegacyCustomSql {
+            name: "sec1".into(),
+            dir: Some("/etc/check_mk/".into()),
+            sql_file: "query.sql".into(),
+        };
+        let out: String = format_custom_metrics(&[custom]).join("");
+        assert!(out.contains("          path: /etc/check_mk/query.sql\n"));
+    }
+
+    #[test]
+    fn test_format_custom_metrics_no_dir_relative_path() {
+        let custom = LegacyCustomSql {
+            name: "sec1".into(),
+            dir: None,
+            sql_file: "query.sql".into(),
+        };
+        let out: String = format_custom_metrics(&[custom]).join("");
+        assert!(out.contains("          path: query.sql\n"));
     }
 
     #[test]
@@ -1046,6 +1219,7 @@ mod tests {
         assert!(script.contains("CACHE_MAXAGE"));
         assert!(script.contains("REMOTE_INSTANCE_"));
         assert!(script.contains("EXCLUDE_"));
+        assert!(script.contains("SQLS.$__sec.$__n"));
     }
 
     #[cfg(unix)]

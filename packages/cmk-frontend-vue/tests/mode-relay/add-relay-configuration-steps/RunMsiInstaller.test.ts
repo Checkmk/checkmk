@@ -85,6 +85,17 @@ describe('RunMsiInstaller', () => {
     expect(cmd).toContain('mock-token-abc')
   })
 
+  test('install command runs the interactive installer (no /passive flag)', async () => {
+    vi.spyOn(Api.prototype, 'post').mockResolvedValue(mockTokenResponse)
+    mountWithWizardContext(RunMsiInstaller, baseProps)
+
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/This token remains valid for/)
+
+    const cmd = screen.getByTestId('run-msi-installer-command').textContent ?? ''
+    expect(cmd).not.toContain('/passive')
+  })
+
   test('Next button is blocked until a valid token is generated', async () => {
     const { navigation } = mountWithWizardContext(RunMsiInstaller, baseProps)
 

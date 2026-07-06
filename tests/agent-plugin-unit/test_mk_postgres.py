@@ -225,6 +225,34 @@ class TestLinux:
         assert myPostgresOnLinux.my_env["PGPASSFILE"] == "/home/.pgpass"
         assert myPostgresOnLinux.name == "mydb"
 
+    @patch("os.path.isfile", return_value=True)
+    @patch("subprocess.Popen")
+    def test_run_sql_as_db_user_su_options_precede_user(
+        self,
+        mock_Popen: Mock,
+        mock_isfile: Mock,
+    ) -> None:
+        process_mock = Mock()
+        process_mock.configure_mock(**{"communicate.return_value": (b"", None), "returncode": 0})
+        mock_Popen.return_value = process_mock
+        instance = {
+            "pg_database": "mydb",
+            "pg_port": "1234",
+            "name": "mydb",
+            "pg_user": "myuser",
+            "pg_passfile": "/home/.pgpass",
+            "pg_version": "12.3",
+            "pg_host": "",
+        }  # type: dict[str, str | None]
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
+        assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
+
+        myPostgresOnLinux.run_sql_as_db_user("SELECT 1")
+
+        argv = mock_Popen.call_args[0][0]
+        # Bug: this causes trouble with newer linux utils versions, see CMK-34792
+        assert argv[:3] == ["su", "-", "postgres"]
+
     @patch("subprocess.Popen")
     def test_get_instances(
         self,

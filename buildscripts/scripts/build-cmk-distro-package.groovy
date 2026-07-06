@@ -20,7 +20,7 @@ def main() {
     check_environment_variables([
         "DOCKER_REGISTRY",
         "NEXUS_BUILD_CACHE_URL",
-        "BAZEL_CACHE_URL",
+        "BAZEL_CACHE_URL_230",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -32,7 +32,7 @@ def main() {
         "DEBEMAIL='feedback@checkmk.com'",
     ] + (params.DISABLE_CACHE ? [
         "NEXUS_BUILD_CACHE_URL=",
-        "BAZEL_CACHE_URL=",
+        "BAZEL_CACHE_URL_230=",
         "BAZEL_CACHE_USER=",
         "BAZEL_CACHE_PASSWORD="] : []);
 
@@ -199,7 +199,7 @@ def main() {
                             usernameVariable: 'NEXUS_USERNAME'),
                         usernamePassword(
                             credentialsId: 'bazel-caching-credentials',
-                            /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
+                            /// BAZEL_CACHE_URL_230 must be set already, e.g. via Jenkins config
                             passwordVariable: 'BAZEL_CACHE_PASSWORD',
                             usernameVariable: 'BAZEL_CACHE_USER'),
                     ]) {

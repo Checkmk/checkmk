@@ -40,19 +40,19 @@ echo "information about caching"
 echo "========================================================================="
 bazel --version
 
-if [[ -n "${BAZEL_CACHE_URL}" ]]; then
-    echo "Bazel remote cache configured to \"${BAZEL_CACHE_URL}\""
+if [[ -n "${BAZEL_CACHE_URL_230}" ]]; then
+    echo "Bazel remote cache configured to \"${BAZEL_CACHE_URL_230}\""
     if [ -n "${BAZEL_CACHE_USER}" ] && [ -n "${BAZEL_CACHE_PASSWORD}" ]; then
         echo "Read/Write access to Bazel cache configured"
-        BAZEL_REMOTE_CACHE_ARGUMENT="--remote_cache=grpcs://${BAZEL_CACHE_USER}:${BAZEL_CACHE_PASSWORD}@${BAZEL_CACHE_URL}"
+        BAZEL_REMOTE_CACHE_ARGUMENT="--remote_cache=grpcs://${BAZEL_CACHE_USER}:${BAZEL_CACHE_PASSWORD}@${BAZEL_CACHE_URL_230}"
     else
         echo "Read-only access to Bazel cache configured"
-        BAZEL_REMOTE_CACHE_ARGUMENT="--remote_cache=grpcs://${BAZEL_CACHE_URL}"
+        BAZEL_REMOTE_CACHE_ARGUMENT="--remote_cache=grpcs://${BAZEL_CACHE_URL_230}"
     fi
 else
     echo
     echo "BAZEL REMOTE CACHING NOT CONFIGURED!"
-    echo "To do so, set BAZEL_CACHE_URL maybe addionally also BAZEL_CACHE_USER and BAZEL_CACHE_PASSWORD to get read-write access"
+    echo "To do so, set BAZEL_CACHE_URL_230 maybe addionally also BAZEL_CACHE_USER and BAZEL_CACHE_PASSWORD to get read-write access"
     echo
     BAZEL_REMOTE_CACHE_ARGUMENT="--remote_cache="""
 fi

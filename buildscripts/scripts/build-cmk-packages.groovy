@@ -35,7 +35,7 @@ def main() {
         "JOB_BASE_NAME",
         "DOCKER_REGISTRY",
         "NEXUS_BUILD_CACHE_URL",
-        "BAZEL_CACHE_URL",
+        "BAZEL_CACHE_URL_230",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");

@@ -11,7 +11,7 @@ def main() {
 
     check_environment_variables([
         "DOCKER_REGISTRY",
-        "BAZEL_CACHE_URL",
+        "BAZEL_CACHE_URL_230",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");

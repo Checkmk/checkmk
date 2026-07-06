@@ -1,17 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
-
-pkg_files(
-    name = "cmk-automation-client-pkg",
-    srcs = ["client.py"],
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
-    prefix = "bin",
-    renames = {"client.py": "cmk-automation-client"},
-    visibility = ["//omd:__pkg__"],
-)
 
 py_library(
     name = "automations",

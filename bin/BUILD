@@ -55,7 +55,6 @@ pkg_files(
     srcs = [
         ":check_mk.py",
         ":cmk-automation-helper.py",
-        ":cmk-broker-test.py",
         ":cmk-cert.py",
         ":cmk-config-anonymizer",
         ":cmk-convert-rrds",
@@ -91,7 +90,6 @@ pkg_files(
     renames = {
         "check_mk.py": "check_mk",
         "cmk-automation-helper.py": "cmk-automation-helper",
-        "cmk-broker-test.py": "cmk-broker-test",
         "cmk-cert.py": "cmk-cert",
         "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
         "cmk-migrate-oracle-rulesets.py": "cmk-migrate-oracle-rulesets",
@@ -188,13 +186,6 @@ py_library(
 py_library(
     name = "cmk_automation_helper_py",
     srcs = ["cmk-automation-helper.py"],
-    imports = ["."],
-    tags = ["no-mypy"],
-)
-
-py_library(
-    name = "cmk_broker_test_py",
-    srcs = ["cmk-broker-test.py"],
     imports = ["."],
     tags = ["no-mypy"],
 )

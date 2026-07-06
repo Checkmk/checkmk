@@ -17,3 +17,19 @@ py_binary(
     visibility = ["//visibility:public"],
     deps = [":runpath_patch"],
 )
+
+py_binary(
+    name = "console_scripts_gen",
+    srcs = ["console_scripts_gen.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_test(
+    # uses `unittest` to avoid overhead.
+    name = "console_scripts_gen_test",
+    size = "small",
+    srcs = ["console_scripts_gen_test.py"],
+    imports = ["."],
+    main = "console_scripts_gen_test.py",
+    deps = [":console_scripts_gen"],
+)

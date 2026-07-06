@@ -1840,9 +1840,6 @@ allows = [
 # Files that depend on more than one component, yet we do not want to
 # add all those dependencies to one of those components.
 
-[file_dependencies."bin/cmk-broker-test.py"]
-allows = ["@ccc", "@messaging"]
-
 [file_dependencies."bin/cmk-piggyback-hub.py"]
 allows = ["@ccc", "cmk.crash", "cmk.piggyback", "cmk.utils"]
 

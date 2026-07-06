@@ -2,6 +2,7 @@
 
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:pip.bzl", "whl_filegroup")
+load("//bazel/rules:console_scripts.bzl", "wheel_console_scripts")
 load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 
 def _package_wheel_impl(
@@ -32,13 +33,35 @@ def _package_wheel_impl(
         portable_mtime = False,
     )
 
+    # Generate bin/ console-script wrappers from the wheel's entry points. The wheel
+    # records its console_scripts in *.dist-info/entry_points.txt; since we unzip wheels
+    # instead of installing them, we materialise the wrappers ourselves. Wheels without
+    # console_scripts yield an empty wrapper directory, so this is a no-op for them.
+    # The wrapper TreeArtifact is packaged directly with pkg_tar (like the wheel above)
+    # so the executable bit is preserved instead of being flattened by pkg_files.
+    console_scripts_name = name + "_console_scripts"
+    wheel_console_scripts(
+        name = console_scripts_name,
+        whl = whl,
+    )
+    bin_tar_name = name + "_bin_tar"
+    pkg_tar(
+        name = bin_tar_name,
+        srcs = [console_scripts_name],
+        package_dir = "bin",
+        strip_prefix = console_scripts_name,
+        mtime = 1767744000,
+        portable_mtime = False,
+    )
+    extra_deps = [wheel_tar_name, bin_tar_name]
+
     # Merge the wheel tar with any additional files. The additional files keep
     # their own destinations (e.g. bin/, share/) outside site-packages, and the
     # wheel tar is merged verbatim via deps so it is not affected by them.
     pkg_tar(
         name = name,
         srcs = additional_files,
-        deps = [wheel_tar_name],
+        deps = extra_deps,
         mtime = 1767744000,
         portable_mtime = False,
         visibility = visibility,

@@ -170,7 +170,3 @@ def main() -> int:
             return 0
         write("\nGiving up (interrupted)\n")
         return 2
-
-
-if __name__ == "__main__":
-    sys.exit(main())

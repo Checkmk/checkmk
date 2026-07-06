@@ -101,6 +101,7 @@ py_cmk_package(
 py_wheel(
     name = "whl",
     distribution = "checkmk",
+    entry_points = {"console_scripts": ["cmk-automation-client = cmk.automations.client:main"]},
     requires = [
         # alphabetical order
         "apispec",

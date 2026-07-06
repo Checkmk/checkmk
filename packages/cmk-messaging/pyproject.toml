@@ -3,6 +3,10 @@ name = "cmk-messaging"
 version = "0.1.0"
 dynamic = ["dependencies"]
 
+# keep in sync with py_wheel rule
+[project.scripts]
+cmk-broker-test = "cmk.messaging.broker_test:main"
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"

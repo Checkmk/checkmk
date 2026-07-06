@@ -133,6 +133,7 @@ STAGES:
           ./tests/agent-plugin-unit/bootstrap.sh --check-sources >> ${RESULTS}/results.txt || make_rc=$?
           ./scripts/check_no_py_test.sh \
               `# permanent exceptions by design, deliberately kept on plain py_test` \
+              --known-offender bazel/rules/BUILD \
               --known-offender non-free/packages/cmk-network-flow/BUILD \
               --known-offender packages/cmk-frontend/BUILD \
               --known-offender tests/unit/qa_metrics/test_coverage/BUILD \

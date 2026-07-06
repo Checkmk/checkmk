@@ -21,6 +21,7 @@ py_library(
         "cmk/messaging/_connection.py",
         "cmk/messaging/_constants.py",
         "cmk/messaging/_logging.py",
+        "cmk/messaging/broker_test.py",
         "cmk/messaging/rabbitmq.py",
     ],
     data = ["cmk/messaging/py.typed"],
@@ -52,6 +53,12 @@ py_cmk_test(
 py_wheel(
     name = "wheel",
     distribution = "cmk-messaging",
+    # TODO: Duplicated from pyproject.toml
+    entry_points = {
+        "console_scripts": [
+            "cmk-broker-test = cmk.messaging.broker_test:main",
+        ],
+    },
     strip_path_prefixes = ["packages/cmk-messaging"],
     # TODO: Duplicated from pyproject.toml
     version = "0.1.0",

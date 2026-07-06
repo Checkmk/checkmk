@@ -12,26 +12,17 @@ import { ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
-import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
-import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
-import CmkInput from '@/components/user-input/CmkInput.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
-import CmkTimeSpan from '@/components/user-input/CmkTimeSpan/CmkTimeSpan.vue'
 
-import FormHelp from '@/form/private/FormHelp.vue'
 import { type ValidationMessages } from '@/form/private/validation'
 
 import FormMetricBackendAttributes from '@/metric-backend/FormMetricBackendAttributes.vue'
+import FormMetricBackendConsolidation from '@/metric-backend/FormMetricBackendConsolidation.vue'
 import FormMetricNameAutocompleter from '@/metric-backend/FormMetricNameAutocompleter.vue'
 
 const { _t } = usei18n()
-
-const AGGREGATION_LOOKBACK_HELP_TEXT = _t(
-  'The time window used to aggregate data for each point on the chart.<ul>' +
-    '<li>Sum metrics: Calculates the rate per second over this range.</li>' +
-    '<li>Histogram metrics: Uses all samples in this range to calculate percentiles (e.g. p99).</li></ul>'
-)
 
 export interface Query {
   metricName: string | null
@@ -46,53 +37,20 @@ const props = defineProps<{
   backendValidation?: ValidationMessages
 }>()
 
-enum ValidationLocation {
-  METRIC_NAME = 'metric_name',
-  AGGREGATION_LOOKBACK = 'aggregation_lookback',
-  AGGREGATION_HISTOGRAM_PERCENTILE = 'aggregation_histogram_percentile'
-}
-
-type ValidationByLocation = {
-  [ValidationLocation.METRIC_NAME]: string[]
-  [ValidationLocation.AGGREGATION_LOOKBACK]: string[]
-  [ValidationLocation.AGGREGATION_HISTOGRAM_PERCENTILE]: string[]
-}
-
-const validationByLocation = ref<ValidationByLocation>({
-  [ValidationLocation.METRIC_NAME]: [],
-  [ValidationLocation.AGGREGATION_LOOKBACK]: [],
-  [ValidationLocation.AGGREGATION_HISTOGRAM_PERCENTILE]: []
-})
+// Only the metric name is validated here; the rest moved to FormMetricBackendConsolidation.
+const metricNameValidation = ref<string[]>([])
 
 immediateWatch(
   () => props.backendValidation,
   (newValidation: ValidationMessages | undefined) => {
-    validationByLocation.value = {
-      [ValidationLocation.METRIC_NAME]: [],
-      [ValidationLocation.AGGREGATION_LOOKBACK]: [],
-      [ValidationLocation.AGGREGATION_HISTOGRAM_PERCENTILE]: []
-    }
-    if (newValidation && newValidation.length > 0) {
-      newValidation.forEach((message) => {
-        const location = message.location[0] as ValidationLocation
-        validationByLocation.value[location].push(message.message)
-        switch (location) {
-          case ValidationLocation.METRIC_NAME:
-            metricName.value = (message.replacement_value as MetricBackendCustomQuery).metric_name
-            break
-          case ValidationLocation.AGGREGATION_LOOKBACK:
-            aggregationLookback.value = (
-              message.replacement_value as MetricBackendCustomQuery
-            ).aggregation_lookback
-            break
-          case ValidationLocation.AGGREGATION_HISTOGRAM_PERCENTILE:
-            aggregationHistogramPercentile.value = (
-              message.replacement_value as MetricBackendCustomQuery
-            ).aggregation_histogram_percentile
-            break
-        }
-      })
-    }
+    metricNameValidation.value = []
+    newValidation?.forEach((message) => {
+      if (message.location[0] !== 'metric_name') {
+        return
+      }
+      metricNameValidation.value.push(message.message)
+      metricName.value = (message.replacement_value as MetricBackendCustomQuery).metric_name
+    })
   }
 )
 
@@ -124,14 +82,14 @@ const aggregationHistogramPercentile = defineModel<number>('aggregationHistogram
           ><CmkLabelRequired />
         </td>
         <td>
-          <FormValidation :validation="validationByLocation.metric_name"></FormValidation>
+          <CmkInlineValidation :validation="metricNameValidation"></CmkInlineValidation>
           <FormMetricNameAutocompleter
             v-model:metric-name="metricName"
             v-model:metric-types="metricTypes"
             :label="_t('Metric name')"
             :placeholder="_t('Metric name')"
-            :has-error="validationByLocation.metric_name.length > 0"
-            @update:metric-name="validationByLocation.metric_name = []"
+            :has-error="metricNameValidation.length > 0"
+            @update:metric-name="metricNameValidation = []"
           />
         </td>
       </tr>
@@ -141,39 +99,12 @@ const aggregationHistogramPercentile = defineModel<number>('aggregationHistogram
         v-model:data-point-attributes="dataPointAttributes"
         :metric-name="metricName"
       />
-      <tr>
-        <td>{{ _t('Aggregation lookback') }}</td>
-        <td>
-          <!-- We can't use the backend-validation from the CmkTimeSpan
-            as applying the replacement_value cleans the backend-validation
-            effectively causing it to not show the validation messages -->
-          <FormValidation :validation="validationByLocation.aggregation_lookback"></FormValidation>
-          <CmkTimeSpan
-            v-model:data="aggregationLookback"
-            :label="''"
-            :title="''"
-            :input-hint="1"
-            :displayed-magnitudes="['hour', 'minute', 'second']"
-            :validators="[]"
-            :backend-validation="[]"
-            @update:data="validationByLocation.aggregation_lookback = []"
-          />
-          <CmkHelpText :help="AGGREGATION_LOOKBACK_HELP_TEXT" />
-          <FormHelp :help="AGGREGATION_LOOKBACK_HELP_TEXT" />
-        </td>
-      </tr>
-      <tr>
-        <td>{{ _t('Percentile (histograms)') }}</td>
-        <td>
-          <CmkInput
-            v-model="aggregationHistogramPercentile"
-            type="number"
-            :unit="'%'"
-            :external-errors="validationByLocation.aggregation_histogram_percentile"
-            @update:model-value="validationByLocation.aggregation_histogram_percentile = []"
-          />
-        </td>
-      </tr>
+      <FormMetricBackendConsolidation
+        v-model:aggregation-lookback="aggregationLookback"
+        v-model:aggregation-histogram-percentile="aggregationHistogramPercentile"
+        :metric-types="metricTypes"
+        :backend-validation="props.backendValidation ?? []"
+      />
       <slot name="additional-rows"></slot>
     </tbody>
   </table>

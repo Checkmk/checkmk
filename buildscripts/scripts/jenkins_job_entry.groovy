@@ -27,7 +27,7 @@ void main(job_definition_file) {
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
     try {
         withCredentialFileAtLocation(creds: [
-            [credentialsId:"remote.bazelrc", location:"${checkout_dir}/remote.bazelrc"],
+            [credentialsId:"remote.bazelrc-250", location:"${checkout_dir}/remote.bazelrc"],
         ]) {
             load("${checkout_dir}/${job_definition_file}").main();
         }

@@ -507,6 +507,10 @@ def check_filesystem_levels(
     params: Mapping[str, Any],
     show_levels: Literal["onmagic", "always", "onproblem"] = "onproblem",
 ) -> Generator[Result | Metric]:
+    if allocatable_filesystem_size <= 0:
+        yield Result(state=State.WARN, summary="Size of usable filesystem is 0 B")
+        return
+
     # Get warning and critical levels already with 'magic factor' applied
     filesystem_levels = get_filesystem_levels(filesystem_size / 1024.0, params)
     warn_mb, crit_mb = (

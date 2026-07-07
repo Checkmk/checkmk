@@ -101,7 +101,7 @@ def test_check_wireless_ethernet_statuses_duplex(
     params: CheckParams, duplex: str, state: int
 ) -> None:
     status = _RawWirelessEthernetStatusFactory.build(
-        ports=[{"name": "port 1", "linkNegotiation": {"duplex": duplex}}]
+        ports=[{"name": "port 1", "linkNegotiation": {"duplex": duplex, "speed": "10"}}]
     )
     string_table = [[f"[{json.dumps(status)}]"]]
     section = parse_wireless_ethernet_statuses(string_table)
@@ -117,7 +117,8 @@ def test_check_wireless_ethernet_statuses_power_mode(
     params: CheckParams, mode: str, state: int
 ) -> None:
     status = _RawWirelessEthernetStatusFactory.build(
-        power={"mode": mode}, ports=[{"name": "port 1"}]
+        power={"mode": mode},
+        ports=[{"name": "port 1", "linkNegotiation": {"speed": "10"}}],
     )
     string_table = [[f"[{json.dumps(status)}]"]]
     section = parse_wireless_ethernet_statuses(string_table)
@@ -137,7 +138,7 @@ def test_check_wireless_ethernet_statuses_power(
             "ac": {"isConnected": flag},
             "poe": {"isConnected": flag},
         },
-        ports=[{"name": "port 1"}],
+        ports=[{"name": "port 1", "linkNegotiation": {"speed": "10"}}],
     )
     string_table = [[f"[{json.dumps(status)}]"]]
     section = parse_wireless_ethernet_statuses(string_table)

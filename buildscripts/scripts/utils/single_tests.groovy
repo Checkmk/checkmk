@@ -39,6 +39,9 @@ Map common_prepare(Map args) {
         |distro:................ │${params.DISTRO}│
         |checkout_dir:.......... │${checkout_dir}│
         |make_target:........... │${args.make_target}│
+        |fake_artifacts:........ │${params.FAKE_ARTIFACTS}│
+        |force_build:........... │${params.DISABLE_JENKINS_CACHE == true}│
+        |disable_cache:......... │${params.DISABLE_CACHE}│
         |===================================================
         """.stripMargin());
 
@@ -59,6 +62,7 @@ void fetch_package(Map args) {
 
     inside_container_minimal(safe_branch_name: args.safe_branch_name) {
         def this_parameters = [
+            force_build: args.force_build ?: false,
             relative_job_name: relative_job_name,
             build_params: [
                 /// currently CUSTOM_GIT_REF must match, but in the future

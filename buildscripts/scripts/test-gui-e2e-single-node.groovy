@@ -24,6 +24,8 @@ void main() {
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def disable_cache = params.DISABLE_CACHE;
     def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
     test_jenkins_helper.assert_fips_testing(use_case, NODE_LABELS);
 
@@ -56,6 +58,8 @@ void main() {
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
                 fake_artifacts: fake_artifacts,
+                disable_cache: disable_cache,
+                force_build: force_build,
                 docker_tag: setup_values.docker_tag,
                 safe_branch_name: setup_values.safe_branch_name,
             );
@@ -82,6 +86,7 @@ void main() {
                             branch_name: setup_values.safe_branch_name,
                             make_target: make_target,
                             test_filter: params.TEST_FILTER,
+                            faked_artifacts: fake_artifacts,
                             // can hit 150min during the heavy chain runs (without wait time)
                             // runs of heavy chain are around 15-30min depending on the edition
                             // Only Pro edition usually takes 150min

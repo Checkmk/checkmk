@@ -24,6 +24,8 @@ void main() {
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def disable_cache = params.DISABLE_CACHE;
     def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
     helper.assert_fips_testing(use_case, NODE_LABELS);
 
@@ -46,6 +48,8 @@ void main() {
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
                 fake_artifacts: fake_artifacts,
+                disable_cache: disable_cache,
+                force_build: force_build,
                 docker_tag: setup_values.docker_tag,
                 safe_branch_name: setup_values.safe_branch_name,
             );
@@ -83,6 +87,8 @@ void main() {
             make_target: "-C tests ${make_target}", // k8s does not allow dir()
             test_filter: params.TEST_FILTER,
             faked_artifacts: fake_artifacts,
+            force_build: force_build,
+            disable_cache: disable_cache,
             // runs are around 45-60min
             // using FoS of 3
             timeout: 180,

@@ -30,13 +30,16 @@ void main() {
     def safe_branch_name = versioning.safe_branch_name();
 
     /// NOTE: this way ALL parameter are being passed through..
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+
     def job_parameters_common = [
         // FIXME: all parameters from all triggered jobs have to be handled here
         EDITION: edition,
         VERSION: params.VERSION,
         OVERRIDE_DISTROS: params.OVERRIDE_DISTROS,
         CIPARAM_REMOVE_RC_CANDIDATES: params.CIPARAM_REMOVE_RC_CANDIDATES,
-        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
+        FAKE_ARTIFACTS: fake_artifacts,
         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
         SET_LATEST_TAG: params.SET_LATEST_TAG,
         SET_BRANCH_LATEST_TAG: params.SET_BRANCH_LATEST_TAG,
@@ -83,6 +86,8 @@ void main() {
         |run_update_tests:...... │${run_update_tests}│
         |use_case:.............. │${use_case}│
         |safe_branch_name:...... │${safe_branch_name}│
+        |force_build:........... │${force_build}│
+        |fake_artifacts:........ │${fake_artifacts}│
         |===================================================
         """.stripMargin());
 
@@ -98,7 +103,7 @@ void main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                force_build: params.DISABLE_JENKINS_CACHE == true,
+                force_build: force_build,
                 relative_job_name: "${edition_base_folder}/build-cmk-deliverables",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,
@@ -112,7 +117,7 @@ void main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                force_build: params.DISABLE_JENKINS_CACHE == true,
+                force_build: force_build,
                 relative_job_name: "${edition_base_folder}/build-cmk-image",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,
@@ -129,7 +134,7 @@ void main() {
                         raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        force_build: params.DISABLE_JENKINS_CACHE == true,
+                        force_build: force_build,
                         relative_job_name: "${edition_base_folder}/test-integration-docker",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
@@ -144,7 +149,7 @@ void main() {
                         raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        force_build: params.DISABLE_JENKINS_CACHE == true,
+                        force_build: force_build,
                         relative_job_name: "${edition_base_folder}/test-integration-packages",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
@@ -159,7 +164,7 @@ void main() {
                         raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        force_build: params.DISABLE_JENKINS_CACHE == true,
+                        force_build: force_build,
                         relative_job_name: "${edition_base_folder}/test-composition",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
@@ -174,7 +179,7 @@ void main() {
                         raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        force_build: params.DISABLE_JENKINS_CACHE == true,
+                        force_build: force_build,
                         relative_job_name: "${edition_base_folder}/test-update",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
@@ -190,7 +195,7 @@ void main() {
                     raiseOnError: false,) {
                     smart_build(
                         use_upstream_build: true,
-                        force_build: params.DISABLE_JENKINS_CACHE == true,
+                        force_build: force_build,
                         relative_job_name: "${builders_base_folder}/test-component-mk-oracle",
                         build_params: job_parameters,
                         build_params_no_check: job_parameters_no_check,
@@ -206,7 +211,7 @@ void main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                force_build: params.DISABLE_JENKINS_CACHE == true,
+                force_build: force_build,
                 relative_job_name: "${edition_base_folder}/build-cmk-deliverables",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,

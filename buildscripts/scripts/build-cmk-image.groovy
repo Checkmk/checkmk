@@ -48,6 +48,9 @@ void main() {
 
     def push_to_registry = params.PUSH_TO_REGISTRY == true;
     def build_image = params.PUSH_TO_REGISTRY_ONLY != true;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def disable_cache = params.DISABLE_CACHE;
 
     print(
         """
@@ -59,6 +62,9 @@ void main() {
         |source_dir:.......... │${source_dir}│
         |push_to_registry:.... │${push_to_registry}│
         |build_image:......... │${build_image}│
+        |fake_artifacts:...... │${fake_artifacts}│
+        |force_build:......... │${force_build}│
+        |disable_cache:....... │${disable_cache}│
         |package_dir:......... │${package_dir}│
         |branch_base_folder:.. │${branch_base_folder}│
         |===================================================
@@ -91,14 +97,14 @@ void main() {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    force_build: params.DISABLE_JENKINS_CACHE == true,
+                    force_build: force_build,
                     relative_job_name: "${branch_base_folder}/builders/build-cmk-source_tgz",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,
                         VERSION: params.VERSION,
                         EDITION: params.EDITION,
-                        DISABLE_CACHE: params.DISABLE_CACHE,
-                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
+                        DISABLE_CACHE: disable_cache,
+                        FAKE_ARTIFACTS: fake_artifacts,
                     ],
 
                     build_params_no_check: [
@@ -136,15 +142,15 @@ void main() {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    force_build: params.DISABLE_JENKINS_CACHE == true,
+                    force_build: force_build,
                     relative_job_name: "${branch_base_folder}/builders/trigger-cmk-distro-package",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,
                         VERSION: params.VERSION,
                         EDITION: params.EDITION,
                         DISTRO: "ubuntu-22.04",
-                        DISABLE_CACHE: params.DISABLE_CACHE,
-                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
+                        DISABLE_CACHE: disable_cache,
+                        FAKE_ARTIFACTS: fake_artifacts,
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

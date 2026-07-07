@@ -27,6 +27,9 @@ void main() {
     def version = params.VERSION;
     def distro = params.DISTRO;
     def edition = params.EDITION;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def disable_cache = params.DISABLE_CACHE;
 
     def make_target = "test-relay-integration";
     def download_dir = "downloaded_packages_for_docker_tests/${cmk_version_rc_aware}";
@@ -60,6 +63,9 @@ void main() {
         |checkout_dir:.......... │${checkout_dir}│
         |make_target:........... │${make_target}│
         |docker_tag:............ │${setup_values.docker_tag}│
+        |fake_artifacts:........ │${fake_artifacts}│
+        |force_build:........... │${force_build}│
+        |disable_cache:......... │${disable_cache}│
         |===================================================
         """.stripMargin());
 
@@ -82,7 +88,9 @@ void main() {
                 distro: package_distro,
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
-                fake_artifacts: params.FAKE_WINDOWS_ARTIFACTS,
+                fake_artifacts: fake_artifacts,
+                disable_cache: disable_cache,
+                force_build: force_build,
                 docker_tag: setup_values.docker_tag,
                 safe_branch_name: setup_values.safe_branch_name,
             );

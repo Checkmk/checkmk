@@ -19,13 +19,18 @@ void main() {
     def branch_base_folder = package_helper.branch_base_folder(true);
     def safe_branch_name = versioning.safe_branch_name();
 
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def disable_cache = params.DISABLE_CACHE;
+
     /// NOTE: this way ALL parameter are being passed through..
     /// DISTRO is set lazily below, once the FIPS distro list has been resolved.
     def job_parameters = [
         EDITION: params.EDITION,
         VERSION: params.VERSION,
         OVERRIDE_DISTROS: params.OVERRIDE_DISTROS,
-        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
+        FAKE_ARTIFACTS: fake_artifacts,
+        DISABLE_CACHE: disable_cache,
         CUSTOM_GIT_REF: effective_git_ref,
 
         /// Hardcode the USE_CASE to fips, because this is our only use case here
@@ -45,7 +50,9 @@ void main() {
         |version:............... │${params.VERSION}│
         |safe_branch_name:...... │${safe_branch_name}│
         |override_distros:...... │${params.OVERRIDE_DISTROS}│
-        |fake_artifacts:........ │${params.FAKE_ARTIFACTS}│
+        |fake_artifacts:........ │${fake_artifacts}│
+        |force_build:........... │${force_build}│
+        |disable_cache:......... │${disable_cache}│
         |custom_git_ref:........ │${effective_git_ref}│
         |safe_branch_name:...... │${safe_branch_name}│
         |===================================================
@@ -72,7 +79,7 @@ void main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                force_build: params.DISABLE_JENKINS_CACHE == true,
+                force_build: force_build,
                 relative_job_name: "${branch_base_folder}/fips/test-composition-fips",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,
@@ -86,7 +93,7 @@ void main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                force_build: params.DISABLE_JENKINS_CACHE == true,
+                force_build: force_build,
                 relative_job_name: "${branch_base_folder}/fips/test-gui-e2e-fips",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,
@@ -100,7 +107,7 @@ void main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                force_build: params.DISABLE_JENKINS_CACHE == true,
+                force_build: force_build,
                 relative_job_name: "${branch_base_folder}/fips/test-integration-fips",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,

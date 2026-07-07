@@ -14,13 +14,15 @@ void main() {
     def all_editions = [];
     def safe_branch_name = versioning.safe_branch_name();
 
+    def disable_cache = true;
+
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         all_editions = versioning.get_editions();
     }
     def editions_to_test = all_editions;
 
     def job_parameters = [
-        booleanParam(name: "DISABLE_CACHE", value: true),
+        booleanParam(name: "DISABLE_CACHE", value: disable_cache),
         stringParam(name: 'CIPARAM_OVERRIDE_BUILD_NODE', value: params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE),
         stringParam(name: 'CUSTOM_GIT_REF', value: effective_git_ref),
         stringParam(name: "CIPARAM_BISECT_COMMENT", value: params.CIPARAM_BISECT_COMMENT),
@@ -37,6 +39,7 @@ void main() {
         |editions:.............. │${editions_to_test}│
         |branch_base_folder:.... │${branch_base_folder}│
         |job_parameters:........ │${job_parameters}│
+        |disable_cache:......... │${disable_cache} (always active)│
         |fixed_node:............ |${params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE}|
         |===================================================
         """.stripMargin());

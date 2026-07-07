@@ -36,6 +36,9 @@ void main() {
         params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def disable_cache = params.DISABLE_CACHE;
 
     currentBuild.description += (
         """
@@ -55,6 +58,9 @@ void main() {
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |branch_version:........... │${branch_version}│
         |docker_tag:............... │${docker_tag}│
+        |fake_artifacts:........... │${fake_artifacts}│
+        |force_build:.............. │${force_build}│
+        |disable_cache:............ │${disable_cache}│
         |===================================================
         """.stripMargin());
 
@@ -82,7 +88,7 @@ void main() {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    force_build: params.DISABLE_JENKINS_CACHE == true,
+                    force_build: force_build,
                     relative_job_name: relative_job_name,
                     build_params: [
                         DISTRO: distro,
@@ -90,7 +96,8 @@ void main() {
                         VERSION: params.VERSION,
                         DOCKER_TAG: docker_tag,
                         CUSTOM_GIT_REF: effective_git_ref,
-                        FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
+                        FAKE_ARTIFACTS: fake_artifacts,
+                        DISABLE_CACHE: disable_cache,
                         // FIPS node specifier has to be respected
                         CIPARAM_OVERRIDE_BUILD_NODE: (params.USE_CASE == "fips") ? "fips" : params.CIPARAM_OVERRIDE_BUILD_NODE,
                     ],

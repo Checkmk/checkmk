@@ -20,6 +20,8 @@ void main() {
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def disable_cache = params.DISABLE_CACHE;
     def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
     helper.assert_fips_testing(use_case, NODE_LABELS);
 
@@ -57,6 +59,8 @@ void main() {
             make_target: "-C tests ${make_target}", // k8s does not allow dir()
             test_filter: params.TEST_FILTER,
             faked_artifacts: fake_artifacts,
+            force_build: force_build,
+            disable_cache: disable_cache,
             // can hit 5min during the heavy chain runs (without wait time)
             // using FoS of 3
             timeout: 15,

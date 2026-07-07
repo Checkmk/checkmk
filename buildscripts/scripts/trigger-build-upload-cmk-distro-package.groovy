@@ -24,6 +24,8 @@ void main() {
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def trigger_post_submit_heavy_chain = params.TRIGGER_POST_SUBMIT_HEAVY_CHAIN;
     def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def disable_cache = params.DISABLE_CACHE;
 
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -80,6 +82,8 @@ void main() {
         |distro:................... │${distro}│
         |checkout_dir:............. │${checkout_dir}│
         |branch_base_folder:....... │${branch_base_folder}│
+        |force_build:.............. │${force_build}│
+        |disable_cache:............ │${disable_cache}│
         |trigger_fips_chain:....... │${trigger_fips_chain}│
         |selected_fips_distros:.... │${selected_fips_distros}│
         |===================================================
@@ -108,7 +112,7 @@ void main() {
                 smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    force_build: params.DISABLE_JENKINS_CACHE == true,
+                    force_build: force_build,
                     relative_job_name: "${branch_base_folder}/builders/trigger-cmk-distro-package",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,

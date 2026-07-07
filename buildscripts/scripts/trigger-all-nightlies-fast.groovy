@@ -12,6 +12,10 @@ void main() {
     def branch_base_folder = package_helper.branch_base_folder(true);
     def safe_branch_name = versioning.safe_branch_name();
 
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def disable_cache = params.DISABLE_CACHE;
+
     def all_editions = [];
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         all_editions = versioning.get_editions();
@@ -25,6 +29,8 @@ void main() {
 
     def job_parameters = [
         CUSTOM_GIT_REF: effective_git_ref,
+        FAKE_ARTIFACTS: fake_artifacts,
+        DISABLE_CACHE: disable_cache,
     ];
     def job_parameters_no_check = [
         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
@@ -45,6 +51,9 @@ void main() {
         |job_parameters_no_check:│${job_parameters_no_check}│
         |fixed_node:............ |${params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE}|
         |safe_branch_name:...... │${safe_branch_name}│
+        |force_build:........... │${force_build}│
+        |fake_artifacts:........ │${fake_artifacts}│
+        |disable_cache:......... │${disable_cache}│
         |===================================================
         """.stripMargin());
 
@@ -65,7 +74,7 @@ void main() {
             ) {
                 smart_build(
                     use_upstream_build: true,
-                    force_build: params.DISABLE_JENKINS_CACHE == true,
+                    force_build: force_build,
                     relative_job_name: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
                     build_params: job_parameters,
                     build_params_no_check: job_parameters_no_check,
@@ -82,7 +91,7 @@ void main() {
         ) {
             smart_build(
                 use_upstream_build: true,
-                force_build: params.DISABLE_JENKINS_CACHE == true,
+                force_build: force_build,
                 relative_job_name: "${branch_base_folder}/builders/build-cmk-relay-image",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,

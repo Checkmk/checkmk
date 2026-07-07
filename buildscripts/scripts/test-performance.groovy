@@ -15,6 +15,8 @@ void main() {
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def disable_cache = params.DISABLE_CACHE;
 
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
@@ -42,6 +44,8 @@ void main() {
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
                 fake_artifacts: fake_artifacts,
+                disable_cache: disable_cache,
+                force_build: force_build,
                 docker_tag: setup_values.docker_tag,
                 safe_branch_name: setup_values.safe_branch_name,
             );

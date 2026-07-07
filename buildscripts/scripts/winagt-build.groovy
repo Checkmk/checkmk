@@ -21,10 +21,6 @@ void main() {
         lock(label: "win_sign_key", quantity: 1, resource : null) {
             withCredentials([
                 usernamePassword(
-                    credentialsId: 'win_sign',
-                    passwordVariable: 'WIN_SIGN_PASSWORD',
-                    usernameVariable: ''),
-                usernamePassword(
                     credentialsId: 'nexus',
                     passwordVariable: 'NEXUS_PASSWORD',
                     usernameVariable: 'NEXUS_USERNAME'),
@@ -42,7 +38,6 @@ void main() {
                 withEnv(["CMK_VERSION=${cmk_version}"]) {
                     windows.build(
                     TARGET: 'agent_with_sign',
-                    PASSWORD: WIN_SIGN_PASSWORD,
                     CREDS: NEXUS_USERNAME + ':' + NEXUS_PASSWORD,
                     CACHE_URL: 'https://artifacts.lan.tribe29.com/repository/omd-build-cache/'
                 );

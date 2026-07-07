@@ -15,7 +15,6 @@ void main() {
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
-    // def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def distro = params.DISTRO;
     def edition = params.EDITION;

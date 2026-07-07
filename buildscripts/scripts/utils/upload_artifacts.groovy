@@ -10,37 +10,30 @@ cache_directories = [".cache", ".java-caller"]
 versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
 /* groovylint-disable ParameterCount */
-void download_deb(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION, DISTRO) {
-    CMK_VERSION_RC_LESS = versioning.strip_rc_number_from_version(CMK_VERSION);
-    def FILE_PATTERN = "check-mk-${EDITION}-${CMK_VERSION_RC_LESS}_0.${DISTRO}_amd64.deb";
-    download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, DISTRO);
+void download_deb(download_source, port, cmk_version, download_dest, edition, distro) {
+    def cmk_version_rc_less = versioning.strip_rc_number_from_version(cmk_version);
+    def file_pattern = "check-mk-${edition}-${cmk_version_rc_less}_0.${distro}_amd64.deb";
+    download_version_dir(download_source, port, cmk_version, download_dest, file_pattern, distro);
 }
 /* groovylint-enable ParameterCount */
 
-void download_source_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION) {
-    CMK_VERSION_RC_LESS = versioning.strip_rc_number_from_version(CMK_VERSION);
-    def FILE_PATTERN = "check-mk-${EDITION}-${CMK_VERSION_RC_LESS}.tar.gz";
-    download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, 'source tar');
+void download_source_tar(download_source, port, cmk_version, download_dest, edition) {
+    def cmk_version_rc_less = versioning.strip_rc_number_from_version(cmk_version);
+    def file_pattern = "check-mk-${edition}-${cmk_version_rc_less}.tar.gz";
+    download_version_dir(download_source, port, cmk_version, download_dest, file_pattern, 'source tar');
 }
 
 /* groovylint-disable ParameterCount */
-void download_version_dir(DOWNLOAD_SOURCE,
-                         PORT,
-                         CMK_VERSION,
-                         DOWNLOAD_DEST,
-                         PATTERN = "*",
-                         INFO = 'all packages',
-                         EXCLUDE_PATTERN = ""
-) {
+void download_version_dir(download_source, port, cmk_version, download_dest, pattern = "*", info = 'all packages', exclude_pattern = "") {
     println("""
         ||== download_version_dir() ================================================================
-        || DOWNLOAD_SOURCE = |${DOWNLOAD_SOURCE}|
-        || PORT =            |${PORT}|
-        || CMK_VERSION =     |${CMK_VERSION}|
-        || DOWNLOAD_DEST =   |${DOWNLOAD_DEST}|
-        || PATTERN =         |${PATTERN}|
-        || EXCLUDE_PATTERN = |${EXCLUDE_PATTERN}|
-        || INFO =            |${INFO}|
+        || download_source = |${download_source}|
+        || port =            |${port}|
+        || cmk_version =     |${cmk_version}|
+        || download_dest =   |${download_dest}|
+        || pattern =         |${pattern}|
+        || exclude_pattern = |${exclude_pattern}|
+        || info =            |${info}|
         ||==========================================================================================
         """.stripMargin());
 
@@ -51,13 +44,13 @@ void download_version_dir(DOWNLOAD_SOURCE,
             credentialsId: 'jenkins-fips-server',
             keyFileVariable: 'ssh_key')
     ]) {
-        sh("mkdir -p ${DOWNLOAD_DEST}");
+        sh("mkdir -p ${download_dest}");
         sh("""
             rsync --recursive --links --perms --times --verbose \
-                --exclude=${EXCLUDE_PATTERN} \
-                -e "ssh -o StrictHostKeyChecking=no -i ${ssh_key} -p ${PORT}" \
-                ${DOWNLOAD_SOURCE}/${CMK_VERSION}/${PATTERN} \
-                ${DOWNLOAD_DEST}/
+                --exclude=${exclude_pattern} \
+                -e "ssh -o StrictHostKeyChecking=no -i ${ssh_key} -p ${port}" \
+                ${download_source}/${cmk_version}/${pattern} \
+                ${download_dest}/
         """);
     }
 }
@@ -66,9 +59,9 @@ void download_version_dir(DOWNLOAD_SOURCE,
 void download_file(Map args) {
     println("""
         ||== download_file() ================================================================
-        || BASE_URL =        |${args.base_url}|
-        || DOWNLOAD_DEST =   |${args.download_dest}|
-        || FILE_NAME =       |${args.file_name}|
+        || base_url =        |${args.base_url}|
+        || download_dest =   |${args.download_dest}|
+        || file_name =       |${args.file_name}|
         ||==========================================================================================
         """.stripMargin());
 
@@ -123,19 +116,19 @@ void upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_p
 }
 /* groovylint-enable ParameterCount */
 
-void upload_files_to_nexus(SOURCE_PATTERN, UPLOAD_DEST) {
+void upload_files_to_nexus(source_pattern, upload_dest) {
     println("""
         ||== upload_files_to_nexus() ================================================
-        || SOURCE_PATTERN      = |${SOURCE_PATTERN}|
-        || UPLOAD_DEST      = |${UPLOAD_DEST}|
+        || source_pattern      = |${source_pattern}|
+        || upload_dest      = |${upload_dest}|
         ||======================================================================
         """.stripMargin());
 
     withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
         sh("""
-            for i in ${SOURCE_PATTERN}; do
+            for i in ${source_pattern}; do
                 echo "Upload \${i} to Nexus";
-                curl -sSf -u "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" --upload-file "\${i}" "${UPLOAD_DEST}";
+                curl -sSf -u "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" --upload-file "\${i}" "${upload_dest}";
             done
         """);
     }
@@ -313,32 +306,32 @@ void execute_cmd_on_archive_server(cmd) {
     }
 }
 
-void deploy_to_website(CMK_VERS) {
+void deploy_to_website(cmk_vers) {
     stage("Deploy to Website") {
-        // CMK_VERS can contain a rc information like v2.1.0p6-rc1.
+        // cmk_vers can contain a rc information like v2.1.0p6-rc1.
         // On the website, we only want to have official releases.
-        def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
-        def SYMLINK_PATH = smb_base_path + TARGET_VERSION;
+        def target_version = versioning.strip_rc_number_from_version(cmk_vers);
+        def symlink_pattern = smb_base_path + target_version;
 
         // We also do not want to keep rc versions on the archive.
         // Move contents of the RC folder into the release folder. Using mv with glob (src/*)
         // avoids the nested-folder trap of "mv src dest/" when dest already exists. Skip
-        // entirely on re-runs when CMK_VERS no longer exists (already deployed).
-        if (TARGET_VERSION != CMK_VERS) {
-            assert CMK_VERS : "CMK_VERS must not be empty (would make operations unsafe on ${downloads_path})";
-            assert TARGET_VERSION : "TARGET_VERSION must not be empty (would make operations unsafe on ${downloads_path})";
+        // entirely on re-runs when cmk_vers no longer exists (already deployed).
+        if (target_version != cmk_vers) {
+            assert cmk_vers : "cmk_vers must not be empty (would make operations unsafe on ${downloads_path})";
+            assert target_version : "target_version must not be empty (would make operations unsafe on ${downloads_path})";
             execute_cmd_on_archive_server(
-                "mkdir -p ${downloads_path}${TARGET_VERSION} && " +
-                "mv ${downloads_path}${CMK_VERS}/* ${downloads_path}${TARGET_VERSION}/ && " +
-                "rmdir ${downloads_path}${CMK_VERS} || true"
+                "mkdir -p ${downloads_path}${target_version} && " +
+                "mv ${downloads_path}${cmk_vers}/* ${downloads_path}${target_version}/ && " +
+                "rmdir ${downloads_path}${cmk_vers} || true"
             );
         }
-        execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${TARGET_VERSION} ${SYMLINK_PATH};");
+        execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${target_version} ${symlink_pattern};");
     }
 }
 
-void update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
-    def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
+void update_bom_symlinks(cmk_vers, branch_latest=false, latest=false) {
+    def target_version = versioning.strip_rc_number_from_version(cmk_vers);
 
     inside_container(set_docker_group_id: true,
         mount_credentials: true,
@@ -352,13 +345,13 @@ void update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
                             buildscripts/scripts/assert_build_artifacts.py \
                             --editions_file "${checkout_dir}/editions.yml" \
                             dump_meta_artifacts_mapping \
-                            --version ${TARGET_VERSION} \
+                            --version ${target_version} \
                         """,
                         returnStdout: true)
                 );
                 bom_mapping_branch_latest.each { symlink, target ->
                     execute_cmd_on_archive_server(
-                        "ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${smb_base_path}${symlink};"
+                        "ln -sf --no-dereference ${downloads_path}${target_version}/${target} ${smb_base_path}${symlink};"
                     );
                 }
             }
@@ -371,13 +364,13 @@ void update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
                             --editions_file "${checkout_dir}/editions.yml" \
                             dump_meta_artifacts_mapping \
                             --version_agnostic \
-                            --version ${TARGET_VERSION} \
+                            --version ${target_version} \
                         """,
                         returnStdout: true)
                 );
                 mapping_latest.each { symlink, target ->
                     execute_cmd_on_archive_server(
-                        "ln -sf --no-dereference ${downloads_path}${TARGET_VERSION}/${target} ${smb_base_path}${symlink};"
+                        "ln -sf --no-dereference ${downloads_path}${target_version}/${target} ${smb_base_path}${symlink};"
                     );
                 }
             }
@@ -385,9 +378,9 @@ void update_bom_symlinks(CMK_VERS, branch_latest=false, latest=false) {
     }
 }
 
-void cleanup_rc_candidates_of_version(CMK_VERS) {
-    def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS);
-    execute_cmd_on_archive_server("rm -rf ${downloads_path}${TARGET_VERSION}-rc*;");
+void cleanup_rc_candidates_of_version(cmk_vers) {
+    def target_version = versioning.strip_rc_number_from_version(cmk_vers);
+    execute_cmd_on_archive_server("rm -rf ${downloads_path}${target_version}-rc*;");
 // cleanup of tst server would come to early as "build-cmk-container" needs the rc candiates available
 // that cleanup is and will be done by bw-release
 }

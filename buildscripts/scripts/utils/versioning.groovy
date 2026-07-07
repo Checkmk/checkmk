@@ -196,12 +196,12 @@ String print_image_tag() {
 }
 
 void patch_folders(String edition) {
-    REPO_PATCH_RULES[edition]["paths_to_be_removed"].each { FOLDER ->
-        sh("find -name ${FOLDER} -exec rm -rf {} ';' || true");
+    REPO_PATCH_RULES[edition]["paths_to_be_removed"].each { folder ->
+        sh("find -name ${folder} -exec rm -rf {} ';' || true");
     }
 
-    REPO_PATCH_RULES[edition]["folders_to_be_created"].each { FOLDER ->
-        sh("mkdir -p ${FOLDER}");
+    REPO_PATCH_RULES[edition]["folders_to_be_created"].each { folder ->
+        sh("mkdir -p ${folder}");
     }
 }
 

@@ -12,21 +12,12 @@ void main() {
     def branch_base_folder = package_helper.branch_base_folder(true);
     def safe_branch_name = versioning.safe_branch_name();
 
+    def disable_cache = params.DISABLE_CACHE;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
     def fake_artifacts = params.FAKE_ARTIFACTS;
-    def disable_cache = params.DISABLE_CACHE;
+    def override_editions = params.EDITIONS.trim() ?: "";
 
     def all_editions = [];
-    inside_container_minimal(safe_branch_name: safe_branch_name) {
-        all_editions = versioning.get_editions();
-    }
-    def editions_to_test = all_editions;
-
-    if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 12..15) {
-        // build only "ultimate" edition on high noon or a little bit later
-        editions_to_test = ["ultimatemt"];
-    }
-
     def job_parameters = [
         CUSTOM_GIT_REF: effective_git_ref,
         FAKE_ARTIFACTS: fake_artifacts,
@@ -37,7 +28,16 @@ void main() {
         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
     ];
 
-    def override_editions = params.EDITIONS.trim() ?: "";
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        all_editions = versioning.get_editions();
+    }
+    def editions_to_test = all_editions;
+
+    if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 12..15) {
+        // build only "ultimate" edition on high noon or a little bit later
+        editions_to_test = ["ultimatemt"];
+    }
+
     if (override_editions) {
         editions_to_test = override_editions.replaceAll(',', ' ').split(' ').grep();
     }
@@ -45,15 +45,15 @@ void main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |editions:.............. │${editions_to_test}│
         |branch_base_folder:.... │${branch_base_folder}│
+        |disable_cache:......... │${disable_cache}│
+        |editions:.............. │${editions_to_test}│
+        |fake_artifacts:........ │${fake_artifacts}│
+        |fixed_node:............ |${params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE}|
+        |force_build:........... │${force_build}│
         |job_parameters:........ │${job_parameters}│
         |job_parameters_no_check:│${job_parameters_no_check}│
-        |fixed_node:............ |${params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE}|
         |safe_branch_name:...... │${safe_branch_name}│
-        |force_build:........... │${force_build}│
-        |fake_artifacts:........ │${fake_artifacts}│
-        |disable_cache:......... │${disable_cache}│
         |===================================================
         """.stripMargin());
 

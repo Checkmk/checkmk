@@ -7,25 +7,44 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 // groovylint-disable MethodSize
 void main() {
     check_job_parameters([
-        "VERSION",
-        "OVERRIDE_DISTROS",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "FAKE_ARTIFACTS",
+        "VERSION",
+        "OVERRIDE_DISTROS",
     ]);
 
     check_environment_variables([
-        "EDITION",
         "CROSS_EDITION_TARGET",
+        "EDITION",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
-    def edition = params.EDITION;
-    def all_distros = [];
-    def selected_distros = [];
-    def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
+    def safe_branch_name = versioning.safe_branch_name();
+    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
+    def branch_base_folder = package_helper.branch_base_folder(true);
+    // this is save on master as there are no tags/versions built other than daily
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
+    def docker_tag = versioning.select_docker_tag(
+        params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
+        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
+    );
+
+    def cross_edition_target = params.CROSS_EDITION_TARGET ?: "";
+    def disable_cache = params.DISABLE_CACHE;
+    def edition = params.EDITION;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+
+    def all_distros = [];
+    // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
+    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
+    def deliverables_dir = "${checkout_dir}/test-results";
+    def relative_job_name = "${branch_base_folder}/builders/test-update-single";
+    def selected_distros = [];
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         all_distros = versioning.get_distros(override: "all");
@@ -36,49 +55,27 @@ void main() {
         );
     }
 
-    /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
-    def branch_base_folder = package_helper.branch_base_folder(true);
-
-    // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
-    // this is save on master as there are no tags/versions built other than daily
-    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
-    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
-    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
-
-    def docker_tag = versioning.select_docker_tag(
-        params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
-        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
-    );
-    def cross_edition_target = params.CROSS_EDITION_TARGET ?: "";
-    def deliverables_dir = "${checkout_dir}/test-results";
-    def force_build = params.DISABLE_JENKINS_CACHE == true;
-    def disable_cache = params.DISABLE_CACHE;
-    def fake_artifacts = params.FAKE_ARTIFACTS;
-
     print(
         """
         |===== CONFIGURATION ===============================
-        |selected_distros:......... │${selected_distros}│
         |all_distros:.............. │${all_distros}│
-        |edition:.................. │${edition}│
-        |cross_edition_target:..... │${cross_edition_target}│
+        |branch_base_folder:....... │${branch_base_folder}│
         |branch_name:.............. │${branch_name}│
-        |safe_branch_name:......... │${safe_branch_name}│
+        |branch_version:........... │${branch_version}│
+        |checkout_dir:............. │${checkout_dir}│
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
-        |branch_version:........... │${branch_version}│
+        |cross_edition_target:..... │${cross_edition_target}│
         |deliverables_dir:......... │${deliverables_dir}│
-        |docker_tag:............... │${docker_tag}│
-        |cross_edition_target:..... │${cross_edition_target}|
-        |checkout_dir:............. │${checkout_dir}│
-        |branch_base_folder:....... │${branch_base_folder}│
-        |force_build:.............. │${force_build}│
-        |fake_artifacts:........... │${fake_artifacts}│
         |disable_cache:............ │${disable_cache}│
+        |docker_tag:............... │${docker_tag}│
+        |edition:.................. │${edition}│
+        |fake_artifacts:........... │${fake_artifacts}│
+        |force_build:.............. │${force_build}│
+        |safe_branch_name:......... │${safe_branch_name}│
+        |selected_distros:......... │${selected_distros}│
         |===================================================
         """.stripMargin());
-
-    def relative_job_name = "${branch_base_folder}/builders/test-update-single";
 
     /// avoid failures due to leftover artifacts from prior runs
     /// and create folder before entering containers to not delete the folder after leaving the container

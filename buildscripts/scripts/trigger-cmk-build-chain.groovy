@@ -8,31 +8,37 @@ import java.time.LocalDate
 void main() {
     /// make sure the listed parameters are set
     check_job_parameters([
-        "VERSION",
-        "OVERRIDE_DISTROS",
         "CIPARAM_REMOVE_RC_CANDIDATES",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "FAKE_ARTIFACTS",
+        "OVERRIDE_DISTROS",
         "SET_LATEST_TAG",
         "SET_BRANCH_LATEST_TAG",
         "PUSH_TO_REGISTRY",
         "PUSH_TO_REGISTRY_ONLY",
+        "VERSION",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+
+    def safe_branch_name = versioning.safe_branch_name();
+
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     def edition = JOB_BASE_NAME.split("-")[-1];
     def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}";
     def builders_base_folder = "${base_folder}/builders";
     def edition_base_folder = "${base_folder}/nightly-${edition}";
-
     def use_case = LocalDate.now().getDayOfWeek().toString() in ["SATURDAY", "SUNDAY"] ? "weekly" : "daily";
-    def safe_branch_name = versioning.safe_branch_name();
 
     /// NOTE: this way ALL parameter are being passed through..
-    def fake_artifacts = params.FAKE_ARTIFACTS;
-    def force_build = params.DISABLE_JENKINS_CACHE == true;
-
+    def all_editions = ["ultimate", "pro", "ultimatemt", "community", "cloud"]
+    def build_image = true;
+    def run_int_tests = true;
+    def run_comp_tests = !(edition in ["cloud"]);
+    def run_image_tests = !(edition in ["cloud", "ultimatemt"]);
+    def run_update_tests = (edition in all_editions);
     def job_parameters_common = [
         // FIXME: all parameters from all triggered jobs have to be handled here
         EDITION: edition,
@@ -50,48 +56,38 @@ void main() {
         // PUBLISH_IN_MARKETPLACE will only be set during the release process (aka bw-release)
         PUBLISH_IN_MARKETPLACE: false,
     ];
-
     def job_parameters_use_case = [
         USE_CASE: use_case,
     ];
-
     def job_parameters_no_check = [
         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
         CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
     ];
+    def success = true;
 
     job_parameters = job_parameters_common + job_parameters_use_case;
-    def all_editions = ["ultimate", "pro", "ultimatemt", "community", "cloud"]
 
     // TODO we should take this list from a single source of truth
     assert edition in all_editions : (
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}");
 
-    def build_image = true;
-    def run_int_tests = true;
-    def run_comp_tests = !(edition in ["cloud"]);
-    def run_image_tests = !(edition in ["cloud", "ultimatemt"]);
-    def run_update_tests = (edition in all_editions);
-
     print(
         """
         |===== CONFIGURATION ===============================
+        |build_image:........... │${build_image}│
         |edition:............... │${edition}│
         |edition_base_folder:... │${edition_base_folder}│
-        |build_image:........... │${build_image}│
-        |run_comp_tests:........ │${run_comp_tests}│
-        |run_int_tests:......... │${run_int_tests}│
-        |run_image_tests:....... │${run_image_tests}│
-        |run_update_tests:...... │${run_update_tests}│
-        |use_case:.............. │${use_case}│
-        |safe_branch_name:...... │${safe_branch_name}│
         |force_build:........... │${force_build}│
         |fake_artifacts:........ │${fake_artifacts}│
+        |run_comp_tests:........ │${run_comp_tests}│
+        |run_image_tests:....... │${run_image_tests}│
+        |run_int_tests:......... │${run_int_tests}│
+        |run_update_tests:...... │${run_update_tests}│
+        |safe_branch_name:...... │${safe_branch_name}│
+        |use_case:.............. │${use_case}│
         |===================================================
         """.stripMargin());
-
-    def success = true;
 
     // use smart_stage to capture build result, but continue with next steps
     // this runs the consecutive stages and jobs in any case which makes it easier to re-run or fix only those distros with the next run

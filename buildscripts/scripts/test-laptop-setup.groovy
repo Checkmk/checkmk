@@ -17,14 +17,14 @@ void main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
-    def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
+    def safe_branch_name = versioning.safe_branch_name();
 
     print(
         """
         |===== CONFIGURATION ===============================
-        |safe_branch_name:........... │${safe_branch_name}│
         |branch_version:............. │${branch_version}│
+        |safe_branch_name:........... │${safe_branch_name}│
         |===================================================
         """.stripMargin());
 

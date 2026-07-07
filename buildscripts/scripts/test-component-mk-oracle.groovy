@@ -4,21 +4,22 @@
 
 void main() {
     check_job_parameters([
+        "DISABLE_CACHE",
         ["EDITION", true],
         ["VERSION", true],
-        "DISABLE_CACHE",
     ]);
-
-    def edition = params.EDITION;
-    def version = params.VERSION;
-    def disable_cache = params.DISABLE_CACHE;
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, version);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
+
+    def edition = params.EDITION;
+    def version = params.VERSION;
+    def disable_cache = params.DISABLE_CACHE;
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         parallel(

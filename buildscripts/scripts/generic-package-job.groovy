@@ -14,19 +14,16 @@ void validate_parameters() {
 
 void main() {
     check_job_parameters([
-        "PACKAGE_PATH",
-        "SECRET_VARS",
         "COMMAND_LINE",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "DISTRO",
+        "PACKAGE_PATH",
+        "SECRET_VARS",
     ]);
 
     validate_parameters();
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    currentBuild.description = "Running ${params.PACKAGE_PATH}<br>${currentBuild.description}";
-
-    def distro = params.DISTRO;
 
     def safe_branch_name = versioning.safe_branch_name();
     def docker_tag = versioning.select_docker_tag(
@@ -34,6 +31,7 @@ void main() {
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
 
+    def distro = params.DISTRO;
     def output_file = params.PACKAGE_PATH.split("/")[-1] + ".txt";
 
     def inside_container_args = [
@@ -42,6 +40,8 @@ void main() {
         pull: true,
         set_docker_group_id: true,
     ];
+
+    currentBuild.description = "Running ${params.PACKAGE_PATH}<br>${currentBuild.description}";
 
     if (distro != "REFERENCE_IMAGE") {
         inside_container_args += [

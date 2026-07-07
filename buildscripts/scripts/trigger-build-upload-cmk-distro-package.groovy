@@ -6,11 +6,11 @@
 
 void main() {
     check_job_parameters([
-        "EDITION",
         "DISTRO",
-        "VERSION",
+        "EDITION",
         "FAKE_ARTIFACTS",
         "TRIGGER_POST_SUBMIT_HEAVY_CHAIN",
+        "VERSION",
     ]);
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
@@ -19,35 +19,36 @@ void main() {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
-    def selected_fips_distros = [];
-    def distro = params.DISTRO;
-    def fake_artifacts = params.FAKE_ARTIFACTS;
-    def trigger_post_submit_heavy_chain = params.TRIGGER_POST_SUBMIT_HEAVY_CHAIN;
-    def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
-    def force_build = params.DISABLE_JENKINS_CACHE == true;
-    def disable_cache = params.DISABLE_CACHE;
-
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def branch_name = safe_branch_name;
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
-
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
 
+    def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
+    def disable_cache = params.DISABLE_CACHE;
+    def distro = params.DISTRO;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def trigger_post_submit_heavy_chain = params.TRIGGER_POST_SUBMIT_HEAVY_CHAIN;
+
+    def selected_fips_distros = [];
+    def branch_name = safe_branch_name;
+
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
-    def setup_values = single_tests.common_prepare(version: "daily", docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
     def all_editions = ["ultimate", "pro", "ultimatemt", "community", "cloud", params.EDITION].unique().sort();
     def fips_edition = "pro";
+    def fips_job_name = "${branch_base_folder}/trigger-fips-chain";
+    def setup_values = single_tests.common_prepare(version: "daily", docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
+    def trigger_fips_chain = false;
+
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         // run everything requiring python in this container
         selected_fips_distros = versioning.get_distros(use_case: "fips");
     }
 
-    def trigger_fips_chain = false;
-    def fips_job_name = "${branch_base_folder}/trigger-fips-chain";
     // The time 1100 has been chosen to not collide with the CI maintenance window
     if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) == 11) {
         // it is the timeframe to trigger the FIPS jobs
@@ -73,19 +74,19 @@ void main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |safe_branch_name:......... │${safe_branch_name}│
+        |all_editions:............. │${all_editions}│
+        |branch_base_folder:....... │${branch_base_folder}│
         |branch_name:.............. │${branch_name}│
+        |branch_version:........... │${branch_version}│
+        |checkout_dir:............. │${checkout_dir}│
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
-        |branch_version:........... │${branch_version}│
-        |all_editions:............. │${all_editions}│
-        |distro:................... │${distro}│
-        |checkout_dir:............. │${checkout_dir}│
-        |branch_base_folder:....... │${branch_base_folder}│
-        |force_build:.............. │${force_build}│
         |disable_cache:............ │${disable_cache}│
-        |trigger_fips_chain:....... │${trigger_fips_chain}│
+        |distro:................... │${distro}│
+        |force_build:.............. │${force_build}│
+        |safe_branch_name:......... │${safe_branch_name}│
         |selected_fips_distros:.... │${selected_fips_distros}│
+        |trigger_fips_chain:....... │${trigger_fips_chain}│
         |===================================================
         """.stripMargin());
 

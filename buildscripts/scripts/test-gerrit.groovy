@@ -10,23 +10,22 @@ void main() {
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
-    def result_dir = "${checkout_dir}/results";
-    def time_job_started = new Date();
-    def time_stage_started = time_job_started;
-    def safe_branch_name = versioning.safe_branch_name();
-
     def branch_base_folder = package_helper.branch_base_folder(true);
-    def stage_info = null;
+    def safe_branch_name = versioning.safe_branch_name();
 
     def analyse_mapping = [:];
     def artifacts_base_dir = "tmp_artifacts";
+    def result_dir = "${checkout_dir}/results";
+    def stage_info = null;
+    def time_job_started = new Date();
+    def time_stage_started = time_job_started;
 
     print(
         """
         |===== CONFIGURATION ===============================
+        |GERRIT_BRANCH:............(global)  │${GERRIT_BRANCH}│
         |GERRIT_PATCHSET_REVISION:.(global)  │${GERRIT_PATCHSET_REVISION}│
         |GERRIT_CHANGE_SUBJECT:....(global)  │${GERRIT_CHANGE_SUBJECT}│
-        |GERRIT_BRANCH:............(global)  │${GERRIT_BRANCH}│
         |===================================================
         """.stripMargin());
 

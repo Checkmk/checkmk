@@ -4,24 +4,25 @@
 
 void main() {
     check_job_parameters([
-        "EDITION",
         "DISTRO",
+        "EDITION",
         "FAKE_ARTIFACTS",
     ]);
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
-    def result_dir = "results";
+
+    def disable_cache = params.DISABLE_CACHE;
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
-    def disable_cache = params.DISABLE_CACHE;
 
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
     def download_dir = "package_download";
     def make_target = "test-performance-docker";
+    def result_dir = "results";
 
     def setup_values = single_tests.common_prepare(
         version: "daily",

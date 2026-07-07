@@ -5,19 +5,18 @@
 // groovylint-disable MethodSize
 void main() {
     check_job_parameters([
-        "CIPARAM_NAME",
+        "CIPARAM_CLEANUP_WORKSPACE",
+        "CIPARAM_COMMAND",
         "CIPARAM_DIR",
         "CIPARAM_ENV_VARS",
         "CIPARAM_ENV_VAR_LIST_STR",
-        "CIPARAM_SEC_VAR_LIST_STR",
-        "CIPARAM_GIT_FETCH_TAGS",
         "CIPARAM_GIT_FETCH_NOTES",
-        "CIPARAM_COMMAND",
-        "CIPARAM_RESULT_CHECK_FILE_PATTERN",
-        // common-parameters
-        "CUSTOM_GIT_REF",
+        "CIPARAM_GIT_FETCH_TAGS",
+        "CIPARAM_NAME",
         "CIPARAM_OVERRIDE_BUILD_NODE",
-        "CIPARAM_CLEANUP_WORKSPACE",
+        "CIPARAM_RESULT_CHECK_FILE_PATTERN",
+        "CIPARAM_SEC_VAR_LIST_STR",
+        "CUSTOM_GIT_REF",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -28,6 +27,11 @@ void main() {
     def env_var_list = [];
     def sec_var_list = [];
     def credentials = [];
+    def cmd_status = 1; // be sure to fail, in case of other failures
+    def extended_cmd = "set -x; ${params.CIPARAM_COMMAND}".replace(
+        "JOB_SPECIFIC_SPACE_PLACEHOLDER", "${checkout_dir}"
+    );
+    def result_dir = "${params.CIPARAM_RESULT_CHECK_FILE_PATTERN.split('/')[0]}";
 
     if (params.CIPARAM_ENV_VAR_LIST_STR) {
         env_var_list = params.CIPARAM_ENV_VAR_LIST_STR.split("#").collect {
@@ -38,26 +42,21 @@ void main() {
         sec_var_list = params.CIPARAM_SEC_VAR_LIST_STR.split("#");
         credentials = sec_var_list.collect { string(credentialsId: it, variable: it)}
     }
-    def result_dir = "${params.CIPARAM_RESULT_CHECK_FILE_PATTERN.split('/')[0]}";
-    def extended_cmd = "set -x; ${params.CIPARAM_COMMAND}".replace(
-        "JOB_SPECIFIC_SPACE_PLACEHOLDER", "${checkout_dir}"
-    );
-    def cmd_status = 1; // be sure to fail, in case of other failures
 
     print(
         """
         |===== CONFIGURATION ===============================
-        |CIPARAM_NAME.......................|${params.CIPARAM_NAME}|
+        |CIPARAM_COMMAND....................|${params.CIPARAM_COMMAND}|
         |CIPARAM_DIR........................|${params.CIPARAM_DIR}|
         |CIPARAM_ENV_VARS...................|${params.CIPARAM_ENV_VARS}|
+        |CIPARAM_RESULT_CHECK_FILE_PATTERN..|${params.CIPARAM_RESULT_CHECK_FILE_PATTERN}|
+        |CIPARAM_NAME.......................|${params.CIPARAM_NAME}|
         |ENV_VAR_LIST.......................|${params.CIPARAM_ENV_VAR_LIST_STR}|
+        |extended_cmd.......................|${extended_cmd}|
         |env_var_list.......................|${env_var_list}|
+        |result_dir.........................|${result_dir}|
         |SEC_VAR_LIST.......................|${params.CIPARAM_SEC_VAR_LIST_STR}|
         |sec_var_list.......................|${sec_var_list}|
-        |CIPARAM_COMMAND....................|${params.CIPARAM_COMMAND}|
-        |extended_cmd.......................|${extended_cmd}|
-        |CIPARAM_RESULT_CHECK_FILE_PATTERN..|${params.CIPARAM_RESULT_CHECK_FILE_PATTERN}|
-        |result_dir.........................|${result_dir}|
         |===================================================
         """.stripMargin());
 

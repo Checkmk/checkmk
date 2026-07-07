@@ -11,53 +11,53 @@
 // groovylint-disable MethodSize
 void main() {
     check_job_parameters([
-        ["EDITION", true],
-        ["DISTRO", true],
-        ["VERSION", true],
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
         "DISABLE_CACHE",
+        ["DISTRO", true],
+        ["EDITION", true],
         // TODO: Rename to FAKE_AGENT_ARTIFACTS -> we're also faking the linux updaters now
         "FAKE_ARTIFACTS",
+        ["VERSION", true],
     ]);
-
-    def distro = params.DISTRO;
-    def edition = params.EDITION;
-    def version = params.VERSION;
-    def disable_cache = params.DISABLE_CACHE;
-    def fake_artifacts = params.FAKE_ARTIFACTS;
-    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     def safe_branch_name = versioning.safe_branch_name();
-    def branch_version = versioning.get_branch_version(checkout_dir);
     def branch_base_folder = package_helper.branch_base_folder(false);
-
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def causes = currentBuild.getBuildCauses();
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, version);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
-    def causes = currentBuild.getBuildCauses();
+    def distro = params.DISTRO;
+    def disable_cache = params.DISABLE_CACHE;
+    def edition = params.EDITION;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def version = params.VERSION;
+
+    def bazel_log_prefix = "bazel_log_";
+    def signing_build_instance = null;
     def triggerd_by = "";
+
     for (cause in causes) {
         if (cause.upstreamProject != null) {
             triggerd_by += cause.upstreamProject + "/" + cause.upstreamBuild + "\n";
         }
     }
-    def bazel_log_prefix = "bazel_log_";
-    def signing_build_instance = null;
 
     print(
         """
         |===== CONFIGURATION ===============================
+        |checkout_dir:............. │${checkout_dir}│
+        |disable_cache:............ │${disable_cache}│
         |distro:................... │${distro}│
         |edition:.................. │${edition}│
-        |safe_branch_name:......... │${safe_branch_name}│
-        |checkout_dir:............. │${checkout_dir}│
-        |triggerd_by:.............. │${triggerd_by}│
         |fake_artifacts:........... │${fake_artifacts}│
-        |disable_cache:............ │${disable_cache}│
         |force_build:.............. │${force_build}│
+        |safe_branch_name:......... │${safe_branch_name}│
+        |triggerd_by:.............. │${triggerd_by}│
         |===================================================
         """.stripMargin());
 

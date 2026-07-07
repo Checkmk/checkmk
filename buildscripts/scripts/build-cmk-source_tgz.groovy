@@ -9,37 +9,40 @@
 
 void main() {
     check_job_parameters([
-        ["EDITION", true],
-        ["VERSION", true],
         ["DISABLE_CACHE", true],
+        ["EDITION", true],
         ["FAKE_ARTIFACTS", false],
+        ["VERSION", true],
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
-    def edition = params.EDITION;
-    def version = params.VERSION;
-    def fake_artifacts = params.FAKE_ARTIFACTS;
-    def force_build = params.DISABLE_JENKINS_CACHE == true;
-    def disable_cache = params.DISABLE_CACHE;
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, version);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
+    def disable_cache = params.DISABLE_CACHE;
+    def edition = params.EDITION;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def version = params.VERSION;
+
+    def stages = [:];
+
     print(
         """
         |===== CONFIGURATION ===============================
-        |checkout_dir:............. │${checkout_dir}│
-        |safe_branch_name:......... │${safe_branch_name}│
         |branch_version:........... │${branch_version}│
+        |checkout_dir:............. │${checkout_dir}│
         |cmk_version:.............. │${cmk_version}│
-        |edition:.................. │${edition}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
+        |disable_cache:............ │${disable_cache}│
+        |edition:.................. │${edition}│
         |fake_artifacts:........... │${fake_artifacts}│
         |force_build:.............. │${force_build}│
-        |disable_cache:............ │${disable_cache}│
+        |safe_branch_name:......... │${safe_branch_name}│
         |===================================================
         """.stripMargin());
 
@@ -56,8 +59,6 @@ void main() {
             }
         }
     }
-
-    def stages = [:];
 
     if (!fake_artifacts) {
         stages += package_helper.provide_agent_binaries(

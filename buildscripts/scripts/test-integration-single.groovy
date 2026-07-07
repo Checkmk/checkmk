@@ -4,24 +4,25 @@
 
 void main() {
     check_job_parameters([
-        ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-24.04')
+        ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
         ["FAKE_ARTIFACTS", true],  // forwarded to package build job
         "TEST_FILTER",  // a filter string to select which tests to run
-        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
     ]);
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
     def distro = params.DISTRO;
+    def disable_cache = params.DISABLE_CACHE;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
-    def disable_cache = params.DISABLE_CACHE;
+    def test_filter = params.TEST_FILTER;
 
-    def make_target = "test-integration-k8s";
     def download_dir = "package_download";
+    def make_target = "test-integration-k8s";
     def test_results_dir = "test-results";
 
     def setup_values = single_tests.common_prepare(
@@ -68,7 +69,7 @@ void main() {
             distro: distro,
             branch_name: setup_values.safe_branch_name,
             make_target: "-C tests ${make_target}", // k8s does not allow dir()
-            test_filter: params.TEST_FILTER,
+            test_filter: test_filter,
             faked_artifacts: fake_artifacts,
             force_build: force_build,
             disable_cache: disable_cache,

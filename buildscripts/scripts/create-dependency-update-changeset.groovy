@@ -4,9 +4,10 @@
 
 void main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def safe_branch_name = versioning.safe_branch_name();
-    def repo_name = "check_mk"
 
+    def safe_branch_name = versioning.safe_branch_name();
+
+    def repo_name = "check_mk"
     def reviewers = ["maximilian.wirtz", "hannes.rantzsch"]
     def url_reviewers = reviewers.collect { "reviewer=$it" }.join(",")
 

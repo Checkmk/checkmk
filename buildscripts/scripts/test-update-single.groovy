@@ -5,6 +5,8 @@
 String build_make_target(edition, cross_edition_target="") {
     switch (edition) {
         // The make targets are written without the -docker suffix in tests/Makefile.
+        case 'cloud':
+            return "test-update-cloud";
         case 'community':
             switch (cross_edition_target) {
                 case 'ultimate':
@@ -25,8 +27,6 @@ String build_make_target(edition, cross_edition_target="") {
             }
         case 'ultimate':
             return "test-update-ultimate";
-        case 'cloud':
-            return "test-update-cloud";
         case 'ultimatemt':
             return "test-update-ultimatemt";
         default:
@@ -36,38 +36,39 @@ String build_make_target(edition, cross_edition_target="") {
 
 void main() {
     check_job_parameters([
-        ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
-        ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-24.04')
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
+        ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-24.04')
+        ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
         "FAKE_ARTIFACTS",
         "TEST_FILTER",  // a filter string to select which tests to run
         "VERSION",
     ]);
 
     check_environment_variables([
-        "EDITION",
         "CROSS_EDITION_TARGET",
-        "OTEL_SDK_DISABLED",
+        "EDITION",
         "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "OTEL_SDK_DISABLED",
     ]);
 
-    def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+    def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
 
+    def cross_edition_target = params.CROSS_EDITION_TARGET ?: "";
+    def disable_cache = params.DISABLE_CACHE;
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
-    def disable_cache = params.DISABLE_CACHE;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
-    def cross_edition_target = params.CROSS_EDITION_TARGET ?: "";
+    def download_dir = "package_download";
+    def test_results_dir = "test-results";
+
     if (cross_edition_target) {
         // see CMK-18366
         distro = "ubuntu-24.04";
     }
     def make_target = build_make_target(edition, cross_edition_target);
-    def download_dir = "package_download";
-    def test_results_dir = "test-results";
 
     def setup_values = single_tests.common_prepare(
         version: params.VERSION,

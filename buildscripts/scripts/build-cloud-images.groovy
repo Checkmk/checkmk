@@ -17,10 +17,10 @@ String build_cloud_images_names(version) {
 
 void main() {
     check_job_parameters([
-        "EDITION",
-        "VERSION",
         "BUILD_CLOUD_IMAGES",
+        "EDITION",
         "PUBLISH_IN_MARKETPLACE",
+        "VERSION",
     ])
 
     if (params.EDITION != 'cloud') {
@@ -28,8 +28,10 @@ void main() {
     }
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+
     def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version = versioning.get_cmk_version(versioning.safe_branch_name(), branch_version, params.VERSION)
+
     if (cmk_version != versioning.strip_rc_number_from_version(cmk_version)) {
         error("You may try to build a release candidate (${cmk_version}) for the cloud images but " +
             "this is currently not supported. During a release, we will build the cloud images when a package rc was " +
@@ -41,9 +43,9 @@ void main() {
     print(
         """
         |===== VERSIONS =====
-        |cmk_version:..... │${cmk_version}│
         |ami_image_name:.. │${ami_image_name}│
         |azure_image_name: │${azure_image_name}│
+        |cmk_version:..... │${cmk_version}│
         |====================
         """.stripMargin());
 

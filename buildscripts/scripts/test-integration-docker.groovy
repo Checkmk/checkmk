@@ -4,11 +4,11 @@
 
 void main() {
     check_job_parameters([
-        "EDITION",
-        "VERSION",
-        "DISABLE_CACHE",
-        "FAKE_ARTIFACTS",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
+        "DISABLE_CACHE",
+        "EDITION",
+        "FAKE_ARTIFACTS",
+        "VERSION",
     ]);
 
     check_environment_variables([
@@ -24,24 +24,28 @@ void main() {
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
-
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
+
+    def disable_cache = params.DISABLE_CACHE;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
     // this is save on master as there are no tags/versions built other than daily
     def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
-    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
-
+    def distro = "ubuntu-22.04";
     def make_target = "test-docker-docker";
     def package_dir = "${checkout_dir}/downloaded_packages_for_docker_tests";
-    def source_dir = package_dir + "/" + cmk_version_rc_aware;
-    def fake_artifacts = params.FAKE_ARTIFACTS;
-    def force_build = params.DISABLE_JENKINS_CACHE == true;
-    def disable_cache = params.DISABLE_CACHE;
-
-    def distro = "ubuntu-22.04";
-
     def relative_job_name = "${branch_base_folder}/builders/trigger-cmk-distro-package";
+    def source_dir = package_dir + "/" + cmk_version_rc_aware;
+    /// In order to ensure a fixed order for stages executed in parallel,
+    /// we wait an increasing amount of time (N * 100ms).
+    /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
+    /// like changing order or amount of stages, which will happen with stages started `via parallel()`
+    def timeOffsetForOrder = 0;
+
     def setup_values = single_tests.common_prepare(
         version: params.VERSION,
         make_target: make_target,
@@ -51,12 +55,6 @@ void main() {
     stage("Prepare workspace") {
         cleanup_directory("${package_dir}");
     }
-
-    /// In order to ensure a fixed order for stages executed in parallel,
-    /// we wait an increasing amount of time (N * 100ms).
-    /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
-    /// like changing order or amount of stages, which will happen with stages started `via parallel()`
-    def timeOffsetForOrder = 0;
     def stages = [
         "Build source package": {
             sleep(0.1 * timeOffsetForOrder++);

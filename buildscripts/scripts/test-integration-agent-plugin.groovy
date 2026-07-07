@@ -4,10 +4,10 @@
 
 void main() {
     check_job_parameters([
-        ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
-        ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-24.04')
-        "TEST_FILTER",  // a filter string to select which tests to run
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
+        ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-24.04')
+        ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
+        "TEST_FILTER",  // a filter string to select which tests to run
         "VERSION",
     ]);
 
@@ -25,14 +25,16 @@ void main() {
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
-    def version = params.VERSION;
+    def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
+    def disable_cache = params.DISABLE_CACHE;
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
-    def disable_cache = params.DISABLE_CACHE;
+    def version = params.VERSION;
 
     def make_target = "test-integration-agent-plugin";
+    def mk_oracle_binary_path = "${checkout_dir}/omd/packages/mk-oracle/mk-oracle.rhel8"
 
     def setup_values = single_tests.common_prepare(
         version: version,
@@ -43,28 +45,28 @@ void main() {
     currentBuild.description += (
         """
         |Run update tests for packages<br>
-        |safe_branch_name: ${safe_branch_name}<br>
         |branch_version: ${branch_version}<br>
         |cmk_version: ${cmk_version}<br>
         |cmk_version_rc_aware: ${cmk_version_rc_aware}<br>
         |edition: ${edition}<br>
         |make_target: ${make_target}<br>
+        |safe_branch_name: ${safe_branch_name}<br>
         """.stripMargin());
 
     print(
         """
         |===== CONFIGURATION ===============================
-        |safe_branch_name:...... │${safe_branch_name}│
         |branch_version:........ │${branch_version}│
+        |checkout_dir:.......... │${checkout_dir}│
         |cmk_version:........... │${cmk_version}
         |cmk_version_rc_aware:.. │${cmk_version_rc_aware}
-        |edition:............... │${edition}│
-        |checkout_dir:.......... │${checkout_dir}│
-        |make_target:........... │${make_target}│
+        |disable_cache:......... │${disable_cache}│
         |docker_tag:............ │${setup_values.docker_tag}│
+        |edition:............... │${edition}│
         |fake_artifacts:........ │${fake_artifacts}│
         |force_build:........... │${force_build}│
-        |disable_cache:......... │${disable_cache}│
+        |make_target:........... │${make_target}│
+        |safe_branch_name:...... │${safe_branch_name}│
         |===================================================
         """.stripMargin());
 
@@ -82,10 +84,7 @@ void main() {
         all_stages["build-mk-oracle-rhel8"]();
     }
 
-    def mk_oracle_binary_path = "${checkout_dir}/omd/packages/mk-oracle/mk-oracle.rhel8"
-
     // this is a quick fix for FIPS based tests, see CMK-20851
-    def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
     if (build_node == "fips") {
         // Do not start builds on FIPS node
         println("Detected build node 'fips', switching this to 'fra'.");

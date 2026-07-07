@@ -23,18 +23,17 @@ void main() {
     def push_to_registry = params.PUSH_TO_REGISTRY == true;
 
     def artifact_directory = "${checkout_dir}/artifacts"
-
-    def tarball_name = "check-mk-relay-${cmk_version}.tar"
     def sbom_name = "check-mk-relay-${cmk_version}-bill-of-materials.json"
+    def tarball_name = "check-mk-relay-${cmk_version}.tar"
 
     print(
         """
         |===== CONFIGURATION ===============================
+        |artifact_directory:.. │${artifact_directory}│
         |branch_name:......... │${branch_name}│
+        |branch_version:...... │${branch_version}│
         |cmk_version:......... │${cmk_version}│
         |cmk_version_rc_aware: │${cmk_version_rc_aware}│
-        |artifact_directory:.. │${artifact_directory}│
-        |branch_version:...... │${branch_version}│
         |push_to_registry:.... │${push_to_registry}│
         |===================================================
         """.stripMargin())

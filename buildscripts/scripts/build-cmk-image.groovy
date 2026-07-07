@@ -7,24 +7,24 @@
 /* groovylint-disable MethodSize */
 void main() {
     check_job_parameters([
-        "EDITION",
-        "VERSION",
-        "SET_LATEST_TAG",
-        "SET_BRANCH_LATEST_TAG",
-        "PUSH_TO_REGISTRY",
-        "PUSH_TO_REGISTRY_ONLY",
         "BUILD_IMAGE_WITHOUT_CACHE",
         "CUSTOM_CMK_BASE_IMAGE",
         "DISABLE_CACHE",
+        "EDITION",
         "FAKE_ARTIFACTS",
+        "PUSH_TO_REGISTRY",
+        "PUSH_TO_REGISTRY_ONLY",
+        "SET_LATEST_TAG",
+        "SET_BRANCH_LATEST_TAG",
+        "VERSION",
     ]);
 
     check_environment_variables([
-        "WEB_DEPLOY_DEST",
-        "WEB_DEPLOY_PORT",
         "INTERNAL_DEPLOY_DEST",
         "INTERNAL_DEPLOY_PORT",
         "NODE_NAME",
+        "WEB_DEPLOY_DEST",
+        "WEB_DEPLOY_PORT",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -32,41 +32,45 @@ void main() {
     def test_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
+    def safe_branch_name = versioning.safe_branch_name();
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
-
-    def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
     // this is save on master as there are no tags/versions built other than daily
-    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
     def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
-    def package_dir = "${checkout_dir}/download";
-    def source_dir = package_dir + "/" + cmk_version_rc_aware;
-
-    def push_to_registry = params.PUSH_TO_REGISTRY == true;
     def build_image = params.PUSH_TO_REGISTRY_ONLY != true;
+    def disable_cache = params.DISABLE_CACHE;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
-    def disable_cache = params.DISABLE_CACHE;
+    def push_to_registry = params.PUSH_TO_REGISTRY == true;
+
+    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
+    def package_dir = "${checkout_dir}/download";
+    def source_dir = package_dir + "/" + cmk_version_rc_aware;
+    /// In order to ensure a fixed order for stages executed in parallel,
+    /// we wait an increasing amount of time (N * 100ms).
+    /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
+    /// like changing order or amount of stages, which will happen with stages started `via parallel()`
+    def timeOffsetForOrder = 0;
 
     print(
         """
         |===== CONFIGURATION ===============================
+        |build_image:......... │${build_image}│
+        |branch_base_folder:.. │${branch_base_folder}│
         |branch_name:......... │${branch_name}│
+        |branch_version:...... │${branch_version}│
         |cmk_version:......... │${cmk_version}│
         |cmk_version_rc_aware: │${cmk_version_rc_aware}│
-        |branch_version:...... │${branch_version}│
-        |source_dir:.......... │${source_dir}│
-        |push_to_registry:.... │${push_to_registry}│
-        |build_image:......... │${build_image}│
+        |disable_cache:....... │${disable_cache}│
         |fake_artifacts:...... │${fake_artifacts}│
         |force_build:......... │${force_build}│
-        |disable_cache:....... │${disable_cache}│
         |package_dir:......... │${package_dir}│
-        |branch_base_folder:.. │${branch_base_folder}│
+        |push_to_registry:.... │${push_to_registry}│
+        |source_dir:.......... │${source_dir}│
         |===================================================
         """.stripMargin());
 
@@ -77,12 +81,6 @@ void main() {
             }
         }
     }
-
-    /// In order to ensure a fixed order for stages executed in parallel,
-    /// we wait an increasing amount of time (N * 100ms).
-    /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
-    /// like changing order or amount of stages, which will happen with stages started `via parallel()`
-    def timeOffsetForOrder = 0;
 
     def stages = [
         "Build source package": {

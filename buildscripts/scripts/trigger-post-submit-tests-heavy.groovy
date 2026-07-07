@@ -6,10 +6,10 @@ void main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
-    def safe_branch_name = versioning.safe_branch_name();
-
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
+    def safe_branch_name = versioning.safe_branch_name();
+
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
@@ -40,8 +40,8 @@ void main() {
         "test-update-pro-ultimatemt",
         "winagt-test-mk-oracle",
     ];
-
     def trigger_xss_crawl = false;
+
     // The time 2000 has been chosen to not collide with the CI maintenance window
     if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) == 20) {
         trigger_xss_crawl = true;
@@ -50,11 +50,11 @@ void main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |safe_branch_name:.... │${safe_branch_name}│
-        |job_names:........... │${job_names}│
         |branch_base_folder:.. │${checkout_dir}│
         |fake_artifacts:...... │${fake_artifacts}│
         |force_build:......... │${force_build}│
+        |job_names:........... │${job_names}│
+        |safe_branch_name:.... │${safe_branch_name}│
         |trigger_xss_crawl:... │${trigger_xss_crawl}│
         |===================================================
         """.stripMargin());

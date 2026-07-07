@@ -3,8 +3,9 @@
 /// file: test-agent-plugin-unit.groovy
 
 void main() {
-    def python_version = params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD;
     def distro = params.DISTRO;
+    def python_version = params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD;
+
     def output_file = "agent-plugin-unit-junit-${python_version}.txt";
 
     dir("${checkout_dir}") {

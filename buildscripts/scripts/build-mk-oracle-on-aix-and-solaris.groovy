@@ -8,11 +8,10 @@ void main() {
     ])
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def version = params.VERSION;
 
     def branch_version = versioning.get_branch_version(checkout_dir);
     def safe_branch_name = versioning.safe_branch_name();
-    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, version);
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {

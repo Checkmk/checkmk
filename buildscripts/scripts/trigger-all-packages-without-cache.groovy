@@ -5,15 +5,14 @@
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 void main() {
-    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
-
-    def all_editions = [];
     def safe_branch_name = versioning.safe_branch_name();
 
+    def all_editions = [];
     def disable_cache = true;
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
@@ -36,11 +35,11 @@ void main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |editions:.............. │${editions_to_test}│
         |branch_base_folder:.... │${branch_base_folder}│
-        |job_parameters:........ │${job_parameters}│
         |disable_cache:......... │${disable_cache} (always active)│
+        |editions:.............. │${editions_to_test}│
         |fixed_node:............ |${params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE}|
+        |job_parameters:........ │${job_parameters}│
         |===================================================
         """.stripMargin());
 

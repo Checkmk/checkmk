@@ -19,7 +19,6 @@ void main() {
     def safe_branch_name = versioning.safe_branch_name();
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
-
     /// Get the ID of the docker group from the node(!). This must not be
     /// executed inside the container (as long as the IDs are different)
     def docker_group_id = get_docker_group_id();
@@ -28,12 +27,12 @@ void main() {
         """
         |===== CONFIGURATION ===============================
         |branch_version:........... │${branch_version}│
+        |checkout_dir:............. │${checkout_dir}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |cmk_version:.............. │${cmk_version}│
-        |safe_branch_name:......... │${safe_branch_name}│
         |docker_group_id:.......... │${docker_group_id}│
         |docker_registry_no_http:.. │${docker_registry_no_http}│
-        |checkout_dir:............. │${checkout_dir}│
+        |safe_branch_name:......... │${safe_branch_name}│
         |===================================================
         """.stripMargin());
 

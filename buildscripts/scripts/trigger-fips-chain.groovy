@@ -5,11 +5,11 @@
 void main() {
     /// make sure the listed parameters are set
     check_job_parameters([
-        "EDITION",
-        "VERSION",
-        "OVERRIDE_DISTROS",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
+        "EDITION",
         "FAKE_ARTIFACTS",
+        "OVERRIDE_DISTROS",
+        "VERSION",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -19,9 +19,9 @@ void main() {
     def branch_base_folder = package_helper.branch_base_folder(true);
     def safe_branch_name = versioning.safe_branch_name();
 
+    def disable_cache = params.DISABLE_CACHE;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
-    def disable_cache = params.DISABLE_CACHE;
 
     /// NOTE: this way ALL parameter are being passed through..
     /// DISTRO is set lazily below, once the FIPS distro list has been resolved.
@@ -36,29 +36,26 @@ void main() {
         /// Hardcode the USE_CASE to fips, because this is our only use case here
         USE_CASE: 'fips',
     ];
-
     def job_parameters_no_check = [
         CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
     ];
+    def success = true;
 
     print(
         """
         |===== CONFIGURATION ===============================
+        |custom_git_ref:........ │${effective_git_ref}│
+        |disable_cache:......... │${disable_cache}│
         |edition:............... │${params.EDITION}│
-        |version:............... │${params.VERSION}│
-        |safe_branch_name:...... │${safe_branch_name}│
-        |override_distros:...... │${params.OVERRIDE_DISTROS}│
         |fake_artifacts:........ │${fake_artifacts}│
         |force_build:........... │${force_build}│
-        |disable_cache:......... │${disable_cache}│
-        |custom_git_ref:........ │${effective_git_ref}│
+        |override_distros:...... │${params.OVERRIDE_DISTROS}│
         |safe_branch_name:...... │${safe_branch_name}│
+        |version:............... │${params.VERSION}│
         |===================================================
         """.stripMargin());
-
-    def success = true;
 
     // We currently run those tests sequential due to resource constraints.
     // use smart_stage to capture build result, but continue with next steps

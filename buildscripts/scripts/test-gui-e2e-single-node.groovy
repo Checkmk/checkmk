@@ -4,13 +4,12 @@
 
 void main() {
     check_job_parameters([
-        ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-24.04')
+        ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
         ["FAKE_ARTIFACTS", true],  // forwarded to package build job
         "TEST_FILTER",  // a filter string to select which tests to run
         ["USE_CASE", false],
-        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
-    // "DISABLE_CACHE",    // forwarded to package build job (todo)
     ]);
 
     check_environment_variables([
@@ -21,16 +20,17 @@ void main() {
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
+    def disable_cache = params.DISABLE_CACHE;
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
-    def disable_cache = params.DISABLE_CACHE;
     def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
+
     test_jenkins_helper.assert_fips_testing(use_case, NODE_LABELS);
 
-    def make_target = "test-gui-e2e-${edition}-docker";
     def download_dir = "package_download";
+    def make_target = "test-gui-e2e-${edition}-docker";
     def result_dir = "test-results";
 
     def setup_values = single_tests.common_prepare(

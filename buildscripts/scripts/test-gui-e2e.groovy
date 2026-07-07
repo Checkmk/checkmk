@@ -6,65 +6,65 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 void main() {
     check_job_parameters([
-        "EDITION",
-        "VERSION",
-        "OVERRIDE_DISTROS",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
+        "EDITION",
+        "OVERRIDE_DISTROS",
         "USE_CASE",
+        "VERSION",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
-    def branch_base_folder = package_helper.branch_base_folder(true);
-    def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
-    def all_distros = versioning.get_distros(override: "all");
-    def selected_distros = versioning.get_distros(
-        edition: params.EDITION,
-        use_case: use_case,
-        override: params.OVERRIDE_DISTROS
-    );
     def safe_branch_name = versioning.safe_branch_name();
+    def all_distros = versioning.get_distros(override: "all");
     def branch_version = versioning.get_branch_version(checkout_dir);
-    // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
-    // this is save on master as there are no tags/versions built other than daily
-    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
+    def branch_base_folder = package_helper.branch_base_folder(true);
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(
         params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
+
+    // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
+    // this is save on master as there are no tags/versions built other than daily
+    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
+    def disable_cache = params.DISABLE_CACHE;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
-    def disable_cache = params.DISABLE_CACHE;
+    def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
+    def relative_job_name = "${branch_base_folder}/builders/test-gui-e2e-f12less";
+    def selected_distros = versioning.get_distros(
+        edition: params.EDITION,
+        use_case: use_case,
+        override: params.OVERRIDE_DISTROS
+    );
 
     currentBuild.description += (
         """
         |Run GUI E2E tests for<br>
-        |VERSION: ${params.VERSION}<br>
         |EDITION: ${params.EDITION}<br>
+        |VERSION: ${params.VERSION}<br>
         |selected_distros: ${selected_distros}<br>
         """.stripMargin());
 
     print(
         """
         |===== CONFIGURATION ===============================
-        |selected_distros:......... │${selected_distros}│
         |branch_name:.............. │${branch_name}│
-        |safe_branch_name:......... │${safe_branch_name}│
+        |branch_version:........... │${branch_version}│
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
-        |branch_version:........... │${branch_version}│
+        |disable_cache:............ │${disable_cache}│
         |docker_tag:............... │${docker_tag}│
         |fake_artifacts:........... │${fake_artifacts}│
         |force_build:.............. │${force_build}│
-        |disable_cache:............ │${disable_cache}│
+        |selected_distros:......... │${selected_distros}│
+        |safe_branch_name:......... │${safe_branch_name}│
         |===================================================
         """.stripMargin());
-
-    def relative_job_name = "${branch_base_folder}/builders/test-gui-e2e-f12less";
 
     /// avoid failures due to leftover artifacts from prior runs
     sh("rm -rf ${checkout_dir}/test-results");

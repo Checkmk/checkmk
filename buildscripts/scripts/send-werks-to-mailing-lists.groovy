@@ -42,10 +42,10 @@ void main() {
     }
 
     check_job_parameters([
-        "SEND_WERK_MAILS_OF_BRANCHES",
-        "SEND_WERK_MAILS",
         "ADD_WERK_GIT_NOTES",
         "ASSUME_NO_MAILS_SENT_EXCEPT",
+        "SEND_WERK_MAILS_OF_BRANCHES",
+        "SEND_WERK_MAILS",
         "WERKS_MAIL_ADDRESS",
     ]);
 

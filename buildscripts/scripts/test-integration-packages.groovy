@@ -6,12 +6,12 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 void main() {
     check_job_parameters([
-        "EDITION",
-        "VERSION",
-        "OVERRIDE_DISTROS",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
-        "USE_CASE",
+        "EDITION",
         "FAKE_ARTIFACTS",
+        "OVERRIDE_DISTROS",
+        "USE_CASE",
+        "VERSION",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -19,13 +19,27 @@ void main() {
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
-
-    // TODO: we should always use USE_CASE directly from the job parameters
-    def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
-    def all_distros = [];
-    def selected_distros = [];
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
+    def docker_tag = versioning.select_docker_tag(
+        params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // FIXME, 'build tag'
+        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
+    );
+
+    // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
+    // this is save on master as there are no tags/versions built other than daily
+    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
+    def disable_cache = params.DISABLE_CACHE;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    // TODO: we should always use USE_CASE directly from the job parameters
+    def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
+
+    def all_distros = [];
+    def deliverables_dir = "${checkout_dir}/test-results";
+    def selected_distros = [];
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         all_distros = versioning.get_distros(override: "all");
@@ -36,42 +50,28 @@ void main() {
         );
     }
 
-    // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
-    // this is save on master as there are no tags/versions built other than daily
-    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
-    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
-    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
-    def docker_tag = versioning.select_docker_tag(
-        params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // FIXME, 'build tag'
-        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
-    );
-    def deliverables_dir = "${checkout_dir}/test-results";
-    def fake_artifacts = params.FAKE_ARTIFACTS;
-    def force_build = params.DISABLE_JENKINS_CACHE == true;
-    def disable_cache = params.DISABLE_CACHE;
-
     currentBuild.description += (
         """
         |Run integration tests for packages<br>
-        |VERSION: ${params.VERSION}<br>
         |EDITION: ${params.EDITION}<br>
         |selected_distros: ${selected_distros}<br>
+        |VERSION: ${params.VERSION}<br>
         """.stripMargin());
 
     print(
         """
         |===== CONFIGURATION ===============================
         |all_distros:.............. │${all_distros}│
-        |selected_distros:......... │${selected_distros}│
         |branch_name:.............. │${branch_name}│
-        |safe_branch_name:......... │${safe_branch_name}│
+        |branch_version:........... │${branch_version}│
         |cmk_version:.............. │${cmk_version}│
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
-        |branch_version:........... │${branch_version}│
+        |disable_cache:............ │${disable_cache}│
         |docker_tag:............... │${docker_tag}│
         |fake_artifacts:........... │${fake_artifacts}│
         |force_build:.............. │${force_build}│
-        |disable_cache:............ │${disable_cache}│
+        |safe_branch_name:......... │${safe_branch_name}│
+        |selected_distros:......... │${selected_distros}│
         |===================================================
         """.stripMargin());
 

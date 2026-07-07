@@ -15,11 +15,11 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 // groovylint-disable MethodSize
 void main() {
     check_job_parameters([
-        "SYNC_WITH_IMAGES_WITH_UPSTREAM",
-        "PUBLISH_IMAGES",
-        "OVERRIDE_DISTROS",
         "BUILD_IMAGE_WITHOUT_CACHE",
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
+        "OVERRIDE_DISTROS",
+        "PUBLISH_IMAGES",
+        "SYNC_WITH_IMAGES_WITH_UPSTREAM",
     ]);
 
     check_environment_variables([
@@ -28,14 +28,16 @@ void main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+
     def all_distros = versioning.get_distros(override: "all")
     def distros = versioning.get_distros(edition: "all", use_case: "all", override: params.OVERRIDE_DISTROS);
-
-    def vers_tag = params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD ?: versioning.get_docker_tag(checkout_dir);
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
+
+    def vers_tag = params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD ?: versioning.get_docker_tag(checkout_dir);
     def publish_images = params.PUBLISH_IMAGES == true;
     def publish_special_images = params.PUBLISH_SPECIAL_IMAGES_WITH_CUSTOM_GIT_REF;
+
     if ("${params.CUSTOM_GIT_REF}" == "") {
         // if the build is started without a specific CUSTOM_GIT_REF (default case) publish the special images
         publish_special_images = true;
@@ -45,12 +47,12 @@ void main() {
         """
         |===== CONFIGURATION ===============================
         |all_distros:.............. │${all_distros}│
+        |branch_version:........... │${branch_version}│
         |distros:.................. │${distros}│
         |publish_images:........... │${publish_images}│
         |publish_special_images:... │${publish_images}│
-        |vers_tag:................. │${vers_tag}│
         |safe_branch_name:......... │${safe_branch_name}│
-        |branch_version:........... │${branch_version}│
+        |vers_tag:................. │${vers_tag}│
         |===================================================
         """.stripMargin());
 

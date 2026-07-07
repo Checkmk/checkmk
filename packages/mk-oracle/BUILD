@@ -1,8 +1,10 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_library", "rust_test_suite")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
-load("//bazel/rules:xcomp/rust.bzl", "rust_binary")
+load("//bazel/rules:xcomp/rust.bzl", "rust_binary", "rust_test")
+load("//bazel/rules:xcomp/rust_wine_test.bzl", "rust_wine_test")
+load("//bazel/testing:static_crt.bzl", "static_crt_test")
 
 file_from_flag(
     name = "version.rs",
@@ -109,6 +111,31 @@ rust_binary(
     deps = all_crate_deps() + [":mk-oracle-lib"],
 )
 
+rust_binary(
+    name = "mk-oracle-windows",
+    srcs = ["src/main.rs"],
+    aliases = aliases(),
+    # Same artifact name as the Windows-node cargo build; the -windows
+    # target name only disambiguates from the host binary.
+    binary_name = "mk-oracle",
+    crate_name = "mk_oracle",
+    edition = "2021",
+    opt = True,
+    platform = "//bazel/platforms:x86_64-windows-msvc",
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    strip = True,
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps() + [":mk-oracle-lib"],
+)
+
+static_crt_test(
+    name = "mk-oracle-windows-static-crt",
+    binary = ":mk-oracle-windows",
+)
+
 build_test(
     name = "build_test",
     targets = [":mk-oracle"],
@@ -205,6 +232,32 @@ rust_test_suite(
 rust_doc(
     name = "doc",
     crate = ":mk-oracle-lib",
+)
+
+# The lib unit tests, cross compiled for Windows: the legacy Windows
+# job's unfiltered `cargo test` runs these on Windows too (they cover
+# permissions_windows.rs and the registry/platform code). Executed
+# under Wine by :mk-oracle-tests-wine.
+rust_test(
+    name = "mk-oracle-lib-test-internal-windows",
+    compile_data = [
+        "tests/files/not-ora_sql.yml",
+        "tests/files/not-yaml.yml",
+        "tests/files/test-config.yml",
+        "tests/files/test-mini.yml",
+        "tests/files/endpoints.txt",
+    ],
+    crate = ":mk-oracle-lib",
+    platform = "//bazel/platforms:x86_64-windows-msvc",
+    tags = ["manual"],
+)
+
+# Runs the Windows lib test binary under the pinned Wine.
+rust_wine_test(
+    name = "mk-oracle-tests-wine",
+    binaries = [":mk-oracle-lib-test-internal-windows"],
+    prepare = "wine-prepare.sh",
+    skip_file = "wine-skipped-tests.txt",
 )
 
 sh_library(

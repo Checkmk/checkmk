@@ -33,6 +33,10 @@ void main() {
                 string(
                     credentialsId: "CI_ORA_TEST_PASSWORD",
                     variable:"CI_ORA_TEST_PASSWORD"),
+                string(
+                    credentialsId: "sectigo_2023_pin",
+                    variable: "SECTIGO_2023_PIN"
+                ),
             ]) {
                 // The windows.build function will create stages.
                 withEnv(["CMK_VERSION=${cmk_version}"]) {

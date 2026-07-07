@@ -482,7 +482,7 @@ function Start-BazelSigning {
         $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
         # $signed_dir = (bazel info bazel-bin 2>$null).Trim() - not reliable when bazel is not configured properly
         Write-Host "dir with files is $signed_dir"
-        &bazel build //agents/windows/plugins:all
+        &bazel build //agents/windows/plugins:all --action_env=SECTIGO_2023_PIN
         if ($LASTEXITCODE -eq 0) {
             $env:SignedPluginsFolder = Join-Path (Get-Item -Force ..\..\bazel-bin).Target "\agents\windows\plugins\signed"
             Write-Host "Signed files are located in $env:SignedPluginsFolder"

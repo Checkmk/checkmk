@@ -7,7 +7,7 @@ if "%1" == "" powershell Write-Host "Invalid binary to sign" -ForegroundColor Re
 
 
 set ext=raw
-set pin=469673
+set pin=%SECTIGO_2023_PIN%
 set cert=7b97b15df65358623576584b7aafbe04d6668a0e
 copy /Y %1 %1.%ext%
 c:\common\scsigntool.exe -pin %pin% sign /sha1 %cert% /tr http://timestamp.sectigo.com /td sha256 /fd sha256 %1

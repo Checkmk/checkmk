@@ -5,7 +5,7 @@
 
 if "%1" == "" powershell Write-Host "Invalid binary to quick sign" -ForegroundColor Red && goto usage
 
-set pin=469673
+set pin=%SECTIGO_2023_PIN%
 set cert=7b97b15df65358623576584b7aafbe04d6668a0e
 c:\common\scsigntool.exe -pin %pin% sign /sha1 %cert% /tr http://timestamp.sectigo.com /td sha256 /fd sha256 %1
 exit /b %ERRORLEVEL%

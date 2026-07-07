@@ -3,11 +3,12 @@
 /// file: winagt-build-linux.groovy
 ///
 /// Builds the Windows agent artifacts that can be produced on Linux --
-/// currently the Rust binary cmk-agent-ctl, cross compiled via the xwin
-/// toolchain (//bazel/toolchains/cc/xwin, CMK-34215) -- and runs its
-/// unit tests under the pinned Wine and asserts that its PE import
-/// table is free of dynamic-CRT references. Test results are published
-/// with one JUnit testcase per Rust test (via collect_rust_tests).
+/// currently the Rust binaries (cmk-agent-ctl, mk-sql), cross compiled
+/// via the xwin toolchain (//bazel/toolchains/cc/xwin, CMK-34215) -- and
+/// runs their unit tests under the pinned Wine and asserts that their
+/// PE import tables are free of dynamic-CRT references. Test results are
+/// published with one JUnit testcase per Rust test (via
+/// collect_rust_tests).
 ///
 /// The job grows with each artifact the cross-compile work makes
 /// producible (unsigned MSI and service exe with CMK-34218/CMK-34220,
@@ -33,11 +34,13 @@ void main() {
     // test), so adding a binary here wires up the whole job.
     def targets = [
         "//packages/cmk-agent-ctl:cmk-agent-ctl-windows",
+        "//packages/mk-sql:mk-sql-windows",
     ];
     // The Wine unit-test tiers of the targets above (a separate list:
     // not every artifact has one).
     def wine_test_targets = [
         "//packages/cmk-agent-ctl:cmk-agent-ctl-tests-wine",
+        "//packages/mk-sql:mk-sql-tests-wine",
     ];
     def target_args = targets.join(" ");
     def crt_test_args = targets.collect { it + "-static-crt" }.join(" ");

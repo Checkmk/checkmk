@@ -1,0 +1,38 @@
+Windows Registry Editor Version 5.00
+
+; The SQL Server registry entries the registry-discovery unit tests
+; expect: the three instances of the CI Windows node (count hardwired in
+; expected_count_in_registry(), names in expected_instances_in_config()).
+; Imported into the throwaway Wine prefix by rust-test-wine.sh; instance
+; IDs follow the .reg fixtures under tests/files/windows-registry/.
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL]
+"MSSQLSERVER"="MSSQL16.MSSQLSERVER"
+"SQLEXPRESS_NAME"="MSSQL13.SQLEXPRESS_ID"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQLServer\SuperSocketNetLib\Tcp]
+"Enabled"=dword:00000001
+"ListenOnAllIPs"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQLServer\SuperSocketNetLib\Tcp\IPAll]
+"TcpPort"="1433"
+"TcpDynamicPorts"=""
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\Tcp]
+"Enabled"=dword:00000001
+"ListenOnAllIPs"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQLEXPRESS_ID\MSSQLServer\SuperSocketNetLib\Tcp\IPAll]
+"TcpPort"=""
+"TcpDynamicPorts"="54094"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\Instance Names\SQL]
+"SQLEXPRESS_WOW"="MSSQL12.SQLEXPRESS_WOW"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp]
+"Enabled"=dword:00000001
+"ListenOnAllIPs"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Microsoft SQL Server\MSSQL12.SQLEXPRESS_WOW\MSSQLServer\SuperSocketNetLib\Tcp\IPAll]
+"TcpPort"=""
+"TcpDynamicPorts"="54095"
